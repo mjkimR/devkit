@@ -1,3 +1,4 @@
+import re
 import tomllib
 from pathlib import Path
 
@@ -86,17 +87,26 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
 
 
 MAINTENANCE_PRESETS = {
-    "all": {"drift-reconciliation", "weekly-report", "review-refactor"},
+    "all": {"drift-reconciliation", "weekly-report", "review-refactor", "performance-pass"},
     "upkeep": {"drift-reconciliation", "review-refactor"},
     "reporting": {"weekly-report"},
     "refactoring": {"review-refactor"},
+    "performance": {"performance-pass", "review-refactor"},
 }
 REVIEW_REFACTOR = ("SKILL.md", "references/applying.md", "references/criteria.md")
+PERFORMANCE_PASS = (
+    "SKILL.md",
+    "references/measurement.md",
+    "references/profiling.md",
+    "references/candidates.md",
+    "references/changes.md",
+)
+DIRECTORY_PLAYBOOKS = {"review-refactor": REVIEW_REFACTOR, "performance-pass": PERFORMANCE_PASS}
 
 
 def _maintenance_files(name: str) -> set[str]:
-    if name == "review-refactor":
-        return {f"playbooks/review-refactor/{part}" for part in REVIEW_REFACTOR}
+    if name in DIRECTORY_PLAYBOOKS:
+        return {f"playbooks/{name}/{part}" for part in DIRECTORY_PLAYBOOKS[name]}
     return {f"playbooks/{name}.md"}
 
 
@@ -142,23 +152,44 @@ def test_maintenance_uses_default_all_and_valid_presets() -> None:  # SPEC-revie
     assert {asset.id for asset in bundle.assets} == MAINTENANCE_PRESETS["all"]
     asset = next(asset for asset in bundle.assets if asset.id == "review-refactor")
     assert (asset.kind, asset.sources) == ("playbook", (("common", "playbooks/review-refactor"),))
+    # SPEC-performance-pass AC-01
+    asset = next(asset for asset in bundle.assets if asset.id == "performance-pass")
+    assert (asset.kind, asset.sources) == ("playbook", (("common", "playbooks/performance-pass"),))
+
+
+def _playbook_root(name: str) -> Path:
+    return _bundle_root(ENTRY_POINTS["maintenance"]) / "playbooks" / name
 
 
 def _review_refactor_root() -> Path:
-    return _bundle_root(ENTRY_POINTS["maintenance"]) / "playbooks/review-refactor"
+    return _playbook_root("review-refactor")
 
 
 def _collapsed(text: str) -> str:
     return " ".join(text.split())
 
 
+def _description_and_body(root: Path) -> tuple[str, str]:
+    header, body = (root / "SKILL.md").read_text().split("\n---\n", 1)
+    return _collapsed(header.split("description:", 1)[1]), _collapsed(body)
+
+
+def _assert_self_contained_within_budget(root: Path, expected: tuple[str, ...]) -> dict[str, Path]:
+    files = {path.relative_to(root).as_posix(): path for path in root.rglob("*.md")}
+    assert set(files) == set(expected)
+    for name, path in files.items():
+        data = path.read_bytes()
+        assert len(data) <= 12288, name
+        assert not re.search(rb"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB)-[a-z]", data), name
+    linked = set(re.findall(r"`(references/[a-z-]+\.md)`", files["SKILL.md"].read_text()))
+    assert linked == {name for name in files if name.startswith("references/")}
+    return files
+
+
 def test_review_refactor_entry_condition_and_description() -> None:  # SPEC-review-refactor AC-03
-    text = (_review_refactor_root() / "SKILL.md").read_text()
-    header, body = text.split("\n---\n", 1)
-    description = _collapsed(header.split("description:", 1)[1])
+    description, body = _description_and_body(_review_refactor_root())
     assert "review and refactoring pass over user-selected code, agent guidance or CLI command roots" in description
     assert "consolidates duplicated logic and removes unneeded code" in description
-    body = _collapsed(body)
     assert "Run only when the user invoked or confirmed this playbook" in body
     assert "`devkit playbook get maintenance/review-refactor`" in body
     assert "authorize no change" in body
@@ -166,17 +197,79 @@ def test_review_refactor_entry_condition_and_description() -> None:  # SPEC-revi
 
 
 def test_review_refactor_is_self_contained_and_within_budget() -> None:  # SPEC-review-refactor AC-04
-    import re
+    _assert_self_contained_within_budget(_review_refactor_root(), REVIEW_REFACTOR)
 
-    root = _review_refactor_root()
-    files = {path.relative_to(root).as_posix(): path for path in root.rglob("*.md")}
-    assert set(files) == set(REVIEW_REFACTOR)
-    for name, path in files.items():
-        data = path.read_bytes()
-        assert len(data) <= 12288, name
-        assert not re.search(rb"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB)-[a-z]", data), name
-    linked = set(re.findall(r"`(references/[a-z-]+\.md)`", files["SKILL.md"].read_text()))
-    assert linked == {name for name in files if name.startswith("references/")}
+
+def _maintenance_preset_assets() -> dict[str, set[str]]:
+    bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
+    presets = {name: set(assets) for name, assets in bundle.presets.items()}
+    return {**presets, "all": {asset.id for asset in bundle.assets}}
+
+
+def test_performance_pass_is_always_deployed_with_review_refactor() -> None:  # SPEC-performance-pass AC-02
+    presets = _maintenance_preset_assets()
+    assert any("performance-pass" in assets for assets in presets.values())
+    for name, assets in presets.items():
+        if "performance-pass" in assets:
+            assert "review-refactor" in assets, name
+
+
+REQUIRED_REVIEW_REFACTOR_CITATIONS = {
+    ("references/applying.md", heading)
+    for heading in (
+        "Work items and route",
+        "Branch and edit tasks",
+        "Subagent edits",
+        "Commits and verification",
+        "Review",
+        "Report",
+        "Integration",
+        "Contract removals",
+    )
+} | {("references/criteria.md", "Preservation evidence")}
+
+
+def _headings(path: Path) -> set[str]:
+    return {
+        re.sub(r"^\d+(\.\d+)*\.? ", "", line.lstrip("#").strip())
+        for line in path.read_text().splitlines()
+        if re.match(r"^#+ ", line)
+    }
+
+
+def test_performance_pass_cites_existing_review_refactor_headings() -> None:  # SPEC-performance-pass AC-03
+    citations = {
+        match
+        for path in _playbook_root("performance-pass").rglob("*.md")
+        for match in re.findall(r'review-refactor (references/[a-z-]+\.md) "([^"]+)"', _collapsed(path.read_text()))
+    }
+    assert not REQUIRED_REVIEW_REFACTOR_CITATIONS - citations, REQUIRED_REVIEW_REFACTOR_CITATIONS - citations
+    for file, heading in citations:
+        assert heading in _headings(_review_refactor_root() / file), (file, heading)
+
+
+def test_performance_pass_entry_condition_and_description() -> None:  # SPEC-performance-pass AC-04
+    description, body = _description_and_body(_playbook_root("performance-pass"))
+    assert "performance pass over user-selected slow commands or operations" in description
+    assert "behavior-preserving speedups" in description
+    assert "Run only when the user invoked or confirmed this playbook" in body
+    assert "`devkit playbook get maintenance/performance-pass`" in body
+    assert "Invocation, an external runner naming this playbook and a clean measurement authorize no change" in body
+    assert "an unattended run stops at the decision round with nothing applied" in body
+
+
+def test_performance_pass_is_self_contained_and_within_budget() -> None:  # SPEC-performance-pass AC-05
+    root = _playbook_root("performance-pass")
+    files = _assert_self_contained_within_budget(root, PERFORMANCE_PASS)
+    assert {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()} == set(PERFORMANCE_PASS)
+    references = [name for name in PERFORMANCE_PASS if name.startswith("references/")]
+    items = re.split(r"\n\s*\n|\n(?=\d+\. )", files["SKILL.md"].read_text())
+    for name in references:
+        linking = [_collapsed(item).lower() for item in items if f"`{name}`" in item]
+        assert linking, name
+        assert all("read" in item and ("before" in item or "when" in item) for item in linking), name
+        text = files[name].read_text()
+        assert not [other for other in references if other != name and other in text], name
 
 
 def test_cli_tool_deploys_its_guide_and_rules_only_when_selected(tmp_path: Path) -> None:  # SPEC-cli-toolkit AC-12

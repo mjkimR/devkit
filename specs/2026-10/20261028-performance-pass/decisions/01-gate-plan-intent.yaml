@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-performance-pass: Separate maintenance playbook for performance passes,
+  authored with authoring/skill-authoring as a router (SKILL.md entry plus references);
+  reuse review-refactor''s parallel application and differential evidence by reference.'
+by: user
+at: '2026-10-27T23:03:09.095093Z'

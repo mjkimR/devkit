@@ -1,15 +1,15 @@
 ---
-id: PADR-measure-performance-unprofiled-and-interleaved-in-one-session
+id: ADR-measure-performance-unprofiled-and-interleaved-in-one-session
 title: Measure performance unprofiled and interleaved in one session
 summary: For performance pass baselines and results, we time the real process unprofiled, interleave old and new variants on one machine in one session and report median, minimum and range, to keep savings honest against profiler inflation and noise, accepting longer measurement runs.
-proposal: PROP-performance-pass
-status: draft
+proposal: SPEC-performance-pass
+status: accepted
 created_at: 2026-10-27
 ---
 
-# [PADR-measure-performance-unprofiled-and-interleaved-in-one-session] Measure performance unprofiled and interleaved in one session
+# [ADR-measure-performance-unprofiled-and-interleaved-in-one-session] Measure performance unprofiled and interleaved in one session
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-27
 
 ---
@@ -19,7 +19,7 @@ created_at: 2026-10-27
 Reported savings must survive repetition. A deterministic profiler inflated wall time 2.7x in an earlier measurement
 and distorts shares between call-heavy and I/O-bound code; in-process timers miss interpreter shutdown and work in
 child processes; the first run after a code or cache-format change rebuilds caches; concurrent agents add noise; and
-before/after numbers taken in different checkouts or sessions are not comparable (`materials/pass-evidence.md` §3).
+before/after numbers taken in different checkouts or sessions are not comparable (`docs/materials/2026-10/20261028-performance-pass/pass-evidence.md` §3).
 
 ## 2. Decision Drivers
 
