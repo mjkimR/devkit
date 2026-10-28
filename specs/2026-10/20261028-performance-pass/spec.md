@@ -2,7 +2,7 @@
 id: SPEC-performance-pass
 title: Performance pass maintenance playbook
 summary: Add a maintenance playbook that measures, profiles and applies behavior-preserving performance changes to user-selected commands with differential preservation evidence, separate from review-refactor.
-status: in-progress
+status: completed
 created: 2026-10-28
 related_capabilities:
   - CAP-DLV-review-refactor

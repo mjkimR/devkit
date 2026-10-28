@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-performance-pass
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-performance-pass.md
     resolution: modified
@@ -21,7 +21,9 @@ targets:
 - `CAP-DLV-performance-pass` (new) states the run, measurement and change contracts and the report interface of the
   playbook as committed, including the review round 1 fixes: the work item's branch and integration follow its
   feature workflow, the single-variant noise floor, the managed-directory fallback, removals as contract changes,
-  a change with no measurable change returning to the decision round, and survey completion.
+  a change with no measurable change returning to the decision round, and survey completion; after
+  `reconcile-check-01` also revalidation when HEAD moved, load in every measurement and baseline, the report outcome
+  update after integration, the preference for removing repeated work and the remaining attribution checks.
   `UC-speed-up-selected-slow-operations` (new) carries the goal, steps, extensions and scenarios.
 - `CAP-DIST-context-and-playbooks` §5: reading a co-deployed playbook's body resources is reference reading, no
   invocation; its `usecases` list gains the new use case (traceability back-link).

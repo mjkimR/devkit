@@ -75,6 +75,9 @@ latency, subprocess count or peak memory of operations the user selects; mainten
    integration approval; invocation and a clean measurement MUST NOT authorize a change.
 8. **Following edits**: the playbook's agent MUST NOT edit receipt-owned files, MUST record a correctness defect
    found on the way as a follow-up, and MUST NOT stash.
+9. **Revalidation**: IF HEAD or a relevant dirty path moved since intake before agreed changes are applied, THEN the
+   agent MUST re-run the baseline and revalidate the evidence first, and a change whose intent shifted MUST return to
+   the decision round.
 
 ## 4. Measurement Contract
 
@@ -98,13 +101,15 @@ states the procedure.
    slowest run; a median difference below it MUST be reported as no measurable change, and IF one outlier decides,
    THEN five more repetitions per variant MUST run before concluding.
 7. **Quiet machine**: WHILE an edit task, verification or other workload of the run is active, the agent MUST NOT
-   take a timed run; it MUST record the load before and after each comparison.
+   take a timed run; it MUST record the load before and after each measurement, baselines included.
 8. **Composite operations**: WHERE a target is composite, its components MUST be timed unprofiled and their sum
    checked against the total before ranking.
 9. **Attribution**: profiling MUST only attribute cost and MUST NOT report a saving; a hotspot's share MUST be
-   confirmed unprofiled before it becomes a candidate, and subprocesses MUST be counted and timed separately.
+   confirmed unprofiled before it becomes a candidate, and subprocesses MUST be counted and timed separately. WHERE a
+   hotspot builds large object graphs, collector time and object counts SHOULD be measured; cold and warm runs SHOULD
+   be profiled separately, and startup and import time SHOULD be measured on their own.
 10. **Baseline record**: each baseline MUST record revision, environment, exact command, state, run count, median,
-    minimum and range; every comparison, the final one included, MUST re-run the older revision in the same session,
+    minimum, range and the load before and after; every comparison, the final one included, MUST re-run the older revision in the same session,
     and numbers recorded in another session MUST count as context only.
 
 ## 5. Change Contract
@@ -112,7 +117,9 @@ states the procedure.
 1. **Candidates**: each candidate MUST record location, the mechanism of the cost, its measured share unprofiled,
    the proposed change, an expected saving derived from the share, risk, classification, planned differential inputs,
    route and edited paths. IF the expected saving is below the noise floor, THEN the candidate MUST be dropped and
-   counted in the coverage; a measured cost no change can remove MUST be reported as kept with its reason.
+   counted in the coverage; a measured cost no change can remove MUST be reported as kept with its reason. A
+   candidate that removes repeated work (one scan instead of many, a memo within one run, fewer processes) SHOULD be
+   preferred over micro-optimization of a single call.
 2. **Behavior-preserving**: a change MUST count as behavior-preserving only when stdout, stderr, exit codes, written
    files and their bytes, persisted formats, error behavior and the order of observable side effects stay the same
    for every accepted input (`ADR-classify-performance-changes-by-observable-behavior`).
@@ -162,6 +169,7 @@ measured, components attributed, candidates dropped below the noise floor, gaps)
 records, each change with its candidate, classification, differential inputs and count, verification, measured
 before and after and commit; decisions with provenance, follow-ups, counts and the final interleaved measurement
 against the intake revision; and the outcome (`stopped at decision round`, `applied` or `partially applied`) with the
-work items' integration state. A run is complete when no decision is pending, every agreed change is committed or
+work items' integration state; a report written before a work item integrates MUST have its outcome updated when
+that work item integrates or stops. A run is complete when no decision is pending, every agreed change is committed or
 routed and the final measurement is recorded; a `survey` run that applied nothing is complete with its decisions
 recorded and outcome `stopped at decision round`.
