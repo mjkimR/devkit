@@ -1,0 +1,1 @@
+- For incubation work, inspect `uv run devkit config show`; use `/incubate` only when the effective approach is `incubation`. Read `get-context incubation` once and current `.devkit/incubation.md` when present. Asset selection never changes the approach.

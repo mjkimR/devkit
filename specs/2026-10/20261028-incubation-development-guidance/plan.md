@@ -26,8 +26,8 @@ ownership. Shared current-state docs and guides are reflected only after the pol
 - `templates/current-context.md`: mutable current facts, not a Unit, transcript or managed state writer.
 - `AGENTS.md` and guidance pointer: approach-aware entry without redirecting SDD projects.
 
-The common inspection command is `uv run devkit config show`; its effective approach value/source shape is supplied
-by the policy implementation. Guidance consumes that interface rather than adding a second configuration reader.
+The common inspection command is `uv run devkit config show`; its effective value is `configuration.development.approach`, with
+`sources["development.approach"]` describing its source. Guidance consumes that interface rather than adding a second configuration reader.
 
 ## 4. Storage & State Management
 

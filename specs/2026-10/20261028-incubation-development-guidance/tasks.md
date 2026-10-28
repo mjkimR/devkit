@@ -6,8 +6,8 @@ plan: PLAN-incubation-development-guidance
 
 # Task Breakdown: Incubation development guidance
 
-- [ ] **Task 1**: Add opt-in incubation catalog assets and real selection/projection/context-preservation tests.
-  - **_Boundary**: packages/devkit-catalog/
+- [x] **Task 1**: Add opt-in incubation catalog assets and real selection/projection/context-preservation tests.
+  - **_Boundary**: packages/devkit-catalog/, .devkit/architecture.toml
   - _Requirements: AC-01, AC-04, AC-05, AC-06_
   - **Verification**: catalog bundle tests; catalog lint/types; sync check and affected tests.
 - [ ] **Task 2**: Verify actual policy consumers and adaptive, research, usage, delegation and resume scenarios with observed artifacts.

@@ -11,6 +11,7 @@ dependencies = []
 response-style = "devkit_catalog.response_style"
 maintenance = "devkit_catalog.maintenance"
 cli-tool = "devkit_catalog.cli_tool"
+incubation = "devkit_catalog.incubation"
 
 [dependency-groups]
 dev = ["devkit-dist", "devkit-agt"]  # bundle tests use devkit-dist's manifest reader; rule tests the rules engine
