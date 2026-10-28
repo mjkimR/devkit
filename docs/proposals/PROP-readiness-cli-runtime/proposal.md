@@ -2,7 +2,7 @@
 id: PROP-readiness-cli-runtime
 title: Explain the running CLI reference in citation diagnostics
 summary: "Clarify that missing CLI commands or options are checked against the currently running CLI and can indicate either an invalid citation or an older runtime, without changing checks or integration behavior."
-status: reviewing
+status: accepted
 created_at: 2026-10-28
 target_area: capabilities/integration/
 priority: high
