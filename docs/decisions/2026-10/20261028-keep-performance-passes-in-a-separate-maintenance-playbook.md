@@ -50,8 +50,8 @@ reduction grounds) do not apply to latency.
 
 - Positive: each playbook stays focused and within budget; latency evidence has its own criteria.
 - Negative: two playbooks to keep aligned where they share steps.
-- Follow-up: if a later run shows the two share most of their procedure, merge them (the proposal's retirement
-  criterion).
+- Follow-up: if a later run shows the two share most of their procedure, merge them (the retirement
+  criterion of `SPEC-performance-pass`).
 
 ## 6. Confirmation
 
