@@ -1,0 +1,32 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:09:10.778398Z'
+status: completed
+summary: Independent reconcile review found residual template ADR obligation, stale instruction descriptions and accepted ADR wording
+findings:
+- issue: Document-only capability template imposes prior ADR obligation
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/capability.md:24
+  failure_condition: A document-only consumer applies the shared capability template
+  suggested_action: Make exception policy approach-owned and add an asset regression assertion
+  resolution: open
+  severity: P1
+- issue: Agent Guidance contract describes pre-split instruction content and spec context
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:122,143,148
+  failure_condition: Consumer infers instruction ownership or UX timing from the current contract
+  suggested_action: Declare spec instructions empty and attribute shared instructions to docs and SDD policies to spec
+  resolution: open
+  severity: P2
+- issue: Accepted ADR text still describes pending acceptance
+  evidence: docs/decisions/2026-10/20261028-document-and-sdd-bundles.md:34
+  failure_condition: Later work reads the accepted distribution decision
+  suggested_action: Repair accepted-state wording without changing the decision and include reconcile target
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only reviewer; identical snapshot b2c98f50 and unchanged HEAD
+checks: {}
+diff_scope:
+  base: a10c138b8708f6ab0f0b7b49829445c9152a7c07
+  head: c712cb3368df5cc851af32d78dd16e2204d5575f

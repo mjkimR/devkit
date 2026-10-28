@@ -186,7 +186,7 @@ e2e combinations; individual packages need no duplicate installation suites.
 | **`devkit_agt.features.gate`** (agt) | Git hook wrappers enforcing commit policies. | `gate install`, `gate run` |
 | **`devkit_agt.features.compact`** (agt) | Bounded command execution with persistent log capture. | `devkit run` |
 | **`devkit_docs.features.documents`** (docs) | Document model, index and memo, namespaces, references, browse and search. | `docs resolve`, `docs refs`, `docs list`, `docs search` |
-| **`devkit_docs.features.governance`** (docs) | Document rule implementations and the entrypoint path contract. | Library API (rule wrappers in the `spec` bundle) |
+| **`devkit_docs.features.governance`** (docs) | Document rule implementations and the entrypoint path contract. | Library API (rule wrappers in the `docs` bundle) |
 | **`devkit_spec.features`** (spec) | Proposals, delivery, scope, worker inspection, policy, entrypoints and lifecycle rules. | `spec new`, `spec proposal`, `spec policy`, `spec entrypoints`, `spec scope`, `spec worker` |
 | **`devkit_dist.features.search`** (dist) | Lexical (BM25), dense (embeddings), and hybrid document retrieval. | Library API |
 | **`devkit_dist.features.host`** (dist) | Host environment discovery, lifecycle event hook dispatch, exact project MCP registrations. | `host status` |
@@ -198,3 +198,7 @@ The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` a
 keeps owning configuration workspace, retained executor and same-clone identity distinct. Domain mutation guards
 consume the process-local binding without importing the transport. Dist discovers only the narrow
 `devkit.mcp.registrations` launch provider; removing that package leaves dist able to retire exact owned entries.
+
+The document wheel owns `devkit_docs/bundles/docs/bundle/`. Its auto-selected docs bundle carries shared
+instructions, document rule wrappers, templates and steering context; `devkit_spec/bundles/spec/bundle/` owns SDD
+lifecycle assets. No asset has two owners (`ADR-document-and-sdd-bundles`).

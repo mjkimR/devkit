@@ -48,7 +48,7 @@ class UxLinksRule(BaseRule):
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
-            related=("spec:ux-writing", "spec:usecase-writing"),
+            related=("docs:ux-writing", "docs:usecase-writing"),
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

@@ -34,7 +34,7 @@ ux/
 ---
 
 ## 3. Template & CLI Discovery
-- **Authoring a New UX Document**: Copy and adapt `.devkit/managed/spec/templates/ux.md`, following the `ux-writing`
+- **Authoring a New UX Document**: Copy and adapt `.devkit/managed/docs/templates/ux.md`, following the `ux-writing`
   instruction.
 - **Listing Registered UX Documents**:
   ```bash

@@ -92,7 +92,7 @@ capabilities:
 ### Scenario 3: Seeds only the missing skeleton files
 - **Covers**: 2b
 - **Given**: a repository with its own `docs/README.md`
-- **When**: the developer runs `devkit add spec:docs-skeleton`
+- **When**: the developer runs `devkit add docs:docs-skeleton`
 - **Then**: the skeleton files that did not exist are written, and `docs/README.md` is unchanged
 
 ### Scenario 4: Contains legacy documents without rewriting them

@@ -1,0 +1,23 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:12:17.753867Z'
+status: completed
+summary: Completed document bundle split through final report. Tracked sync outputs AGENTS.md and .devkit/installation.json were already in payload; no extra sync-output paths. Host-approved architecture metadata and four exact reference repairs are declared in tasks. Captured FB-sync-start-envelope-value.
+findings: []
+assumptions:
+- 'Codex emulated: absolute worktree cwd/paths, operation escalations, explicit scope checks and reviewer snapshots substitute for native path enforcement'
+- Host advanced base for follow-up drafts and another session committed its own proposal; those intentional base changes are not worker writes
+unverified_areas:
+- Host must merge advanced base, link its three incubation proposal destinations in reconcile, and run integration readiness on final content
+checks:
+  sync_start: PASS exit=0 before first edit; literal zero is refused by CLI
+  tests: PASS affected full fallback 5879 passed14skipped; targeted526 after semantic fixes; official smoke complete
+  build: PASS isolated built-wheel docs consumer without devkit-spec and official just smoke
+  lint: PASS docs/spec Ruff format/check and Pyright; CI governance clean; sync --check clean
+  review: PASS independent code review2 findings fixed; independent reconcile3 findings fixed and independently reverified
+diff_scope:
+  base: a10c138b8708f6ab0f0b7b49829445c9152a7c07
+  head: 8e052796ce9d1c889b1a9fb8c5b9dfab21acb805
+activity_effort: medium

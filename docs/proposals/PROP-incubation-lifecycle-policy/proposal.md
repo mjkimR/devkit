@@ -25,6 +25,7 @@ boundaries:
   - guides/
   excludes: []
 task_kind: feature
+depends_on: [SPEC-document-bundle-split]
 workflow: sdd-proposal
 ---
 

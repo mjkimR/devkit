@@ -4,7 +4,7 @@ the UX review before code (SPEC-ux-documentation AC-11, AC-12, AC-14)."""
 from __future__ import annotations
 
 from devkit_dist.features.distribution.services.bundles import load_bundle
-from spec_support.bundle_text import BUNDLE, raw, text
+from spec_support.bundle_text import DOCS, raw, text
 
 COLUMNS = "| Trigger | Step | From | To | Target | Capability | Feedback |"
 
@@ -20,21 +20,19 @@ def test_the_template_carries_the_element_links_and_sections() -> None:
 
 
 def test_the_seed_holds_the_ux_directory_but_no_register() -> None:
-    seed = BUNDLE / "seed/docs"
+    seed = DOCS / "seed/docs"
     assert (seed / "ux/README.md").is_file()
     assert not (seed / "steering/ux-objects.md").exists()
     assert "| **`ux/`** | UX Documents |" in raw("seed/docs/README.md")
-    assert "templates/{capability,usecase,ux,decision,proposal,milestone}.md" in text("AGENTS.md.jinja")
+    assert "templates/{capability,usecase,ux,decision,milestone}.md" in text("AGENTS.md.jinja")
 
 
 def test_ux_writing_is_a_core_instruction_with_the_agreed_rules() -> None:
-    bundle = load_bundle(BUNDLE)
+    bundle = load_bundle(DOCS)
     assert "ux-writing" in bundle.select(["core"])
     guide = text("instructions/ux-writing.md")
     for phrase in (
         "draft two or three contrasting candidates",
-        "This happens in Planning only",
-        "takes the recommended candidate and records the others as an assumption in `spec.md`",
         "Never draw a character-cell layout",
         "Name every object by its glossary term",
         "`docs/steering/ux-objects.md`",
@@ -43,7 +41,6 @@ def test_ux_writing_is_a_core_instruction_with_the_agreed_rules() -> None:
         "the wireframe, mock-up or screenshot tool is the project's",
         "A system step cites the screen its response appears on",
         "an ID the change creates (a new UX, UC or CAP ID) is plain text",
-        "A `session` task applies this instruction and runs no review",
     ):
         assert phrase in guide, phrase
     assert "a step may cite the UX ID of the screen it happens on" in text("instructions/usecase-writing.md")

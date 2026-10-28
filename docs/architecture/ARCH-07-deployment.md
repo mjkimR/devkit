@@ -114,3 +114,7 @@ and spec plus runtime. Runtime-only discovery may return no services. No wheel d
 import locations; linked-worktree interpreters and editable sources are refused. Registration and its absolute
 paths remain ignored machine-local state. Removing a task checkout cannot remove its server runtime. Owning
 configuration loss blocks new approval/resume; only the same approved call's exact terminal cleanup may finish.
+
+The devkit-docs wheel registers `docs = "devkit_docs.bundles.docs"` in `devkit.bundles`. Its default core is
+auto-selected alongside spec:core for devkit-spec installations. Built-wheel isolation without devkit-spec is
+verified by `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`.

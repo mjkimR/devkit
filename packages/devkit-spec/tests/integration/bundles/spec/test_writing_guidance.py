@@ -6,7 +6,8 @@ from __future__ import annotations
 import re
 
 from devkit_dist.features.distribution.services.bundles import load_bundle
-from spec_support.bundle_text import BUNDLE, raw, text
+from spec_support.bundle_text import DOCS as BUNDLE
+from spec_support.bundle_text import raw, text
 
 INSTRUCTIONS = {
     "contract-authoring",

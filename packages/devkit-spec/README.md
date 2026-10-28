@@ -22,8 +22,8 @@ shared artifact tools are in [MCP runtime](../../guides/install/mcp.md)):
 
 ```bash
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
-uv run devkit sync                   # deploy the spec bundle's default preset
-uv run devkit add spec:docs-skeleton  # optional: seed absent docs/ files, then leave them project-owned
+uv run devkit sync                   # deploy docs:core and spec:core
+uv run devkit add docs:docs-skeleton  # optional: seed absent docs/ files, then leave them project-owned
 uv run devkit spec --version         # [VERSION: devkit-spec <version>]
 ```
 
@@ -94,3 +94,8 @@ Tests mirror runtime features under `tests/unit/features/` for pure parsing and 
 live under `tests/integration/bundles/spec/`; installed entry-point contracts are under
 `tests/integration/package/`. Shared fixtures live in `tests/support/spec_support/`. Rule-owned tests remain
 with their distributable rule folders. Repository consumer smoke checks exercise wheel installation end to end.
+
+Shared document instructions, templates and document rules belong to docs:core. SDD reads both
+`uv run devkit get-context spec` and `uv run devkit get-context docs`. The supported SDD asset selection includes
+both bundles; restore an explicitly removed docs selection with `uv run devkit add docs`. Removing spec assets
+does not uninstall its command extensions or disable its runtime policies.

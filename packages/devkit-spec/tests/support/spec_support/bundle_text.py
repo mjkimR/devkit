@@ -10,12 +10,20 @@ from pathlib import Path
 
 from devkit_dist.features.distribution.services.bundles.templates import render_template
 
+DOCS = Path(__file__).resolve().parents[4] / "devkit-docs/src/devkit_docs/bundles/docs/bundle"
+
 BUNDLE = Path(__file__).resolve().parents[3] / "src/devkit_spec/bundles/spec/bundle"
 
 
 def raw(path: str | Path, environment: str = "local") -> str:
     """The document's rendered text; a bundle-relative path or a missing file falls back to its ``.jinja`` source."""
-    source = BUNDLE / path if isinstance(path, str) else path
+    if isinstance(path, str):
+        shared = path.startswith(("instructions/", "seed/")) or (
+            path.startswith("templates/") and path != "templates/proposal.md"
+        )
+        source = (DOCS if shared else BUNDLE) / path
+    else:
+        source = path
     if not source.exists():
         source = source.with_name(source.name + ".jinja")
     data = source.read_bytes()

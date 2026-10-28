@@ -49,12 +49,12 @@ def test_templates_separate_membership_and_prerequisites() -> None:
     proposal = text("templates/proposal.md")
     assert "# depends_on: [PROP-foundation, SPEC-parser]" in proposal
     assert "never carried to spec.md" in proposal
-    milestone = text("templates/milestone.md")
+    milestone = text("skills/spec/references/roadmap-catalog.md")
     assert "direct PROP" in milestone and "phase-level outcomes" in milestone
     assert "initially have one proposal" in milestone and "User and agent jointly review" in milestone
     assert "Handoff does not carry milestone metadata to SPEC" in milestone
     assert "CLI flags, branch names, file layouts" in milestone
-    assert "no delivery lineage is stored" in text("seed/docs/roadmap/README.md")
+    assert "no delivery lineage is stored" in text("skills/spec/references/roadmap-catalog.md")
 
 
 def git(root: Path, *args: str) -> str:

@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:06:37.759692Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both reviewer findings: official built-wheel smoke passes and active ownership/preset/template repairs pass document checks'
+findings:
+- issue: Existing consumer smoke invokes removed spec:docs-skeleton preset
+  evidence: tests/e2e/smoke.sh:386; manifest selection probe raises SelectionError
+  failure_condition: just smoke reaches the SDD extension installation segment
+  suggested_action: Use docs:docs-skeleton and verify the consumer flow
+  resolution: resolved
+  severity: P2
+- issue: Active contracts and adoption/UX documents retain old shared asset ownership
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:88,102,109,295; docs/usecases/harness/UC-adopt-in-an-existing-repository.md:95; docs/ux/README.md:37
+  failure_condition: Consumers follow the missing preset or template paths
+  suggested_action: Repair exact ownership and paths and include reconciliation targets
+  resolution: resolved
+  severity: P2
+checks:
+  smoke: PASS just smoke complete including SDD extension and seeded docs
+  tests: PASS affected full fallback 5879 passed 14 skipped; architecture regression 3 passed
+  lint: PASS bash -n and exact repaired docs governance
+diff_scope:
+  base: 38fd5a3da09a4d6dfc872e1e57a0a91b662ad5ee
+  head: 3b0be2ee95e10e429eac3556a6c69fcaf44aac70

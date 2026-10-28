@@ -131,7 +131,7 @@ class TaskCoverageRule(BaseRule):
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
-            related=("spec:contract-authoring",),
+            related=("docs:contract-authoring",),
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

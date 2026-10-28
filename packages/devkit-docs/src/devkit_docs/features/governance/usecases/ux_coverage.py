@@ -33,7 +33,7 @@ class UxCoverageRule(BaseRule):
             phase=Phase.LINTER,
             severity=Severity.WARNING,
             guide="guide.md",
-            related=("spec:ux-writing", "spec:usecase-writing"),
+            related=("docs:ux-writing", "docs:usecase-writing"),
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

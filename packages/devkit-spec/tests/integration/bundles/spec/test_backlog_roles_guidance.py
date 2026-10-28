@@ -133,7 +133,7 @@ def test_xl_has_a_judgeable_definition_with_an_example_of_each_side(tmp_path: Pa
     assert "a new CLI command with a viewer redesign it does not need (two specs)" in template
     assert "a parser bugfix with a new search" in template
     assert "Not XL: two agent contracts and the command checks that route work to them" in template
-    seed = text("seed/docs/proposals/README.md")
+    seed = text("skills/spec/references/proposals-catalog.md")
     assert "the work would need two or more specs or a different `task_kind`" in seed
     (tmp_path / ".devkit").mkdir()
     scaffolded = (tmp_path / create_proposal(tmp_path, "x", today=TODAY).path).read_text(encoding="utf-8")

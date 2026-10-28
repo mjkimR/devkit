@@ -50,7 +50,7 @@ that the direction is settled. `promoted` records an actual handoff to follow-up
 | :--- | :--- | :--- |
 | `repo` | Rule | Draft it with the `spec-rule` skill |
 | `repo` | Playbook | Draft `playbooks/<slug>/SKILL.md` as a `kind = "playbook"` asset of the in-repository bundle (devkit's `in-repo-bundle` instruction) |
-| `repo` | Decision | Draft an ADR from `.devkit/managed/spec/templates/decision.md` |
+| `repo` | Decision | Draft an ADR from `.devkit/managed/docs/templates/decision.md` |
 | `repo` | Fix | A defect uses task-kind `bugfix`; choose depth by the classification above. Draft an unresolved material direction with `uv run devkit spec proposal new <slug>` |
 | `upstream` | Forward | Draft a report for the owning tool; submit only with explicit external-send authorization |
 | `unknown` | Ownership review | Propose destinations; keep unresolved items open |

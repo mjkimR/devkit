@@ -44,7 +44,7 @@ Reported at line 1 of `spec.md` when that is a target, otherwise of the first na
    spec too (`devkit rules fix specs/<YYYY-MM>/<YYYYMMDD>-<slug>/spec.md`). A `spec.md` without a `status:` line is
    fixed by hand.
 
-Read the `spec:living-spec-writing` instruction (Completed Specs and Traceability) before setting a spec `completed`
+Read the spec constitution (completed-spec preservation) and the `docs:living-spec-writing` instruction (Traceability) before setting a spec `completed`
 by hand or moving it back to an earlier stage: it says what a completed spec means for later work.
 
 ## 4. Configuration

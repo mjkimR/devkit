@@ -392,13 +392,13 @@ Each rule is a class in a package (`ADR-spec-package-on-devkit`). The document r
 `devkit_docs.features.governance.usecases.<name>`, beside the document model they check (`ADR-document-package`);
 the lifecycle rules (`RULE-spec-lifecycle`, `RULE-spec-progress`, `RULE-task-coverage`, `RULE-reconcile-contract`,
 `RULE-proposal-boundaries`) and the rejected-proposal hygiene live in `devkit_spec.features.governance.usecases.<name>`.
-Every rule ships in the `spec` bundle, whichever package implements it. The bundle deploys
+Document rule assets ship in the `docs` bundle; lifecycle rule assets ship in `spec`. Each owner deploys
 `rules/<name>/rule.py`, a thin subclass (devkit instantiates only classes a rule file defines), and the guide
-`rules/<name>/guide.md`, to `.devkit/managed/spec/rules/<name>/`. Keeping the logic in the package means one tested
+`rules/<name>/guide.md`, to `.devkit/managed/<owner>/rules/<name>/`. Keeping the logic in the package means one tested
 implementation and a deployed file that never changes when the rule does. A rule whose judgment lives in a bundle
-instruction names it in `related` (`spec:living-spec-writing` for the reference, traceability, summary, steering,
-identifier and lifecycle rules, `spec:contract-authoring` for `RULE-task-coverage`, `spec:ux-writing` and
-`spec:usecase-writing` for `RULE-ux-links` and `RULE-ux-coverage`), and `devkit rules explain` prints its deployed
+instruction names it in `related` (`docs:living-spec-writing` for the reference, traceability, summary, steering,
+identifier and lifecycle rules, `docs:contract-authoring` for `RULE-task-coverage`, `docs:ux-writing` and
+`docs:usecase-writing` for `RULE-ux-links` and `RULE-ux-coverage`), and `devkit rules explain` prints its deployed
 path. `devkit_docs.features.governance` exposes `document_index(ctx)`, `namespaces(ctx)` and the targeting helpers the rules share.
 
 A rule's tests live in its folder, `rules/<name>/tests/test_rule.py`, and deploy with it. They load the rule with
@@ -407,7 +407,7 @@ subclass, so the deployed file and the package implementation are tested togethe
 it with `check(RULE, tmp_path, files, ...)`; they use nothing from the repository's `tests/`. `devkit rules test
 RULE-<id>` runs the deployed copy's tests in an isolated pytest run (no project configuration or `conftest.py`), and
 without IDs every rule's tests. The repository's own `pytest` collects the same files under
-`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`.
+both packages' `bundles/<owner>/bundle/rules/`.
 
 ### 4.4 Error Codes
 

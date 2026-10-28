@@ -1,0 +1,13 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:12:16.402145Z'
+status: completed
+summary: Captured observed sync_start authoring/validation syntax conflict as FB-sync-start-envelope-value after final-report preparation
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
+diff_scope:
+  base: a10c138b8708f6ab0f0b7b49829445c9152a7c07
+  head: 22819c52fadb7078e2245c08e5adec927aa29354

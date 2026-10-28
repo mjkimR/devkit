@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:11:40.137443Z'
+status: completed
+summary: Independent docs bundle ships document guidance/rules/templates and optional neutral skeleton; spec retains SDD lifecycle guidance. Review and reconcile findings fixed and verified; Host integration remains.
+findings: []
+assumptions:
+- Host approved exact extension .devkit/architecture.toml for docs bundle data_roots and repair-only tests/e2e/smoke.sh plus three active docs references
+unverified_areas:
+- Host must merge advanced base, attach its three follow-up proposal references to reconcile and verify final integration content
+checks:
+  tests: PASS affected full fallback 5879 passed 14 skipped; later template/guidance changes 526 passed including isolated docs-only wheel consumer
+  build: PASS just smoke complete; built-wheel docs-only consumer without devkit-spec passes
+  lint: PASS docs/spec Ruff format/check and Pyright; cumulative governance errors0 warnings0; sync --check clean
+diff_scope:
+  base: a10c138b8708f6ab0f0b7b49829445c9152a7c07
+  head: 89a265000a7d0967421a35b8b5ff4a380faf12e4

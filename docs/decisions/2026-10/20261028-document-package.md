@@ -62,7 +62,7 @@ Adopt the separate devkit-docs wheel.
 6. **Scanner**: the document model keeps using devkit-agt's Markdown scanner; moving it to devkit-core is unrelated
    to this boundary.
 7. **Distribution**: the spec bundle keeps shipping every rule asset, and the document rules' wrappers import
-   devkit_docs. A document-only installation is separate work (`PROP-document-bundle-split`).
+   devkit_docs. A document-only installation is separate work (`SPEC-document-bundle-split`).
 
 ## 5. Consequences
 
@@ -72,7 +72,7 @@ Adopt the separate devkit-docs wheel.
   longer fails `devkit rules check`; `devkit spec policy`, which SDD work runs before classification, still rejects it. Projects with
   `[[tool.spec.namespaces]]` must move them to `[[tool.docs.namespaces]]`; a leftover entry is rejected as an
   unknown key. Releases build one more wheel.
-- **Follow-ups**: `PROP-document-bundle-split` provides a document-only installation. The viewer hard-codes kind
+- **Follow-ups**: `SPEC-document-bundle-split` provides a document-only installation. The viewer hard-codes kind
   prefixes and layout; a change to the kind table must be mirrored there.
 
 ## 6. Confirmation

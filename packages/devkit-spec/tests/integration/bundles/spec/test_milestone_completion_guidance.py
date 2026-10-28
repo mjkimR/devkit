@@ -35,7 +35,7 @@ SCENARIOS = [
     ("inconclusive required inspection", PROCEDURE, ("missing or inconclusive", "name the remaining check")),
     (
         "semantic scope changed",
-        "templates/milestone.md",
+        "skills/spec/references/roadmap-catalog.md",
         ("Actual semantic scope changes reset both to pending",),
     ),
     (
@@ -87,7 +87,9 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
     assert data is not None
     assert set(data) == {"id", "title", "summary", "status", "created_at", "depends_on"}
     assert "milestone-completion.md" in text("skills/spec-next/references/next-work.md", environment)
-    assert "Done records stay as written unless merged" in text("seed/docs/roadmap/README.md", environment)
+    assert "Done records stay as written unless merged" in text(
+        "skills/spec/references/roadmap-catalog.md", environment
+    )
     procedure = text(PROCEDURE, environment)
     for clause in (
         "--all-namespaces -n 0",
@@ -103,16 +105,16 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_normal_handoff_adds_no_milestone_ceremony(environment: str) -> None:
-    assert "normal handoff does not" in text("templates/milestone.md", environment)
-    assert "normal handoff does not" in text("seed/docs/roadmap/README.md", environment)
+    assert "normal handoff does not" in text("skills/spec/references/roadmap-catalog.md", environment)
+    assert "normal handoff does not" in text("skills/spec/references/roadmap-catalog.md", environment)
     for entrypoint in ("skills/spec/SKILL.md", "skills/spec-next/SKILL.md", "skills/spec/references/worktree.md"):
         assert "membership invalidation]" not in text(entrypoint, environment)
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_granularity_is_a_recommendation(environment: str) -> None:
-    template = text("templates/milestone.md", environment)
-    seed = text("seed/docs/roadmap/README.md", environment)
+    template = text("skills/spec/references/roadmap-catalog.md", environment)
+    seed = text("skills/spec/references/roadmap-catalog.md", environment)
     assert "prefer a broader theme over a milestone that only sequences one proposal" in template
     assert "Prefer observable phase-level outcomes" in template
     assert "over a milestone that only sequences one proposal" in seed
@@ -135,6 +137,6 @@ def test_merge_procedure(environment: str) -> None:
         "close it only through [milestone completion](milestone-completion.md)",
     ):
         assert clause in backlog, clause
-    seed = text("seed/docs/roadmap/README.md", environment)
+    seed = text("skills/spec/references/roadmap-catalog.md", environment)
     assert "small milestones of any status may merge into a broader theme milestone" in seed
     assert "A merge is not an in-place extension" in seed

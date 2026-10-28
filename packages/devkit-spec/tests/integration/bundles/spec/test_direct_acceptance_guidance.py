@@ -18,7 +18,7 @@ def test_acceptances_are_recorded_with_the_accept_command() -> None:
         "skills/spec/references/backlog.md",
         "skills/spec-next/references/next-work.md",
         "skills/spec-next/references/workflow-signals.md",
-        "seed/docs/proposals/README.md",
+        "skills/spec/references/proposals-catalog.md",
     ):
         assert ACCEPT in text(rel), rel
     workflow = text("workflows/sdd-proposal.md")
