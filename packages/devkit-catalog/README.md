@@ -6,6 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
+| `incubation` | `core` | Adaptive idea discovery, implementation, optional support and mutable current context without SDD delivery records |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
 | `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for the feature layout, layer imports, command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
@@ -15,6 +16,19 @@ uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirec
 uv run devkit list                                   # catalog bundles are listed as unselected
 uv run devkit add response-style                    # an opt-in catalog bundle
 ```
+
+## Incubation
+
+`uv run devkit add incubation` explicitly selects the incubation bundle. Install devkit-docs alongside catalog for
+shared document formats; devkit-spec is not required. `/incubate` checks the effective development approach through
+`uv run devkit config show` before product actions. Selection changes assets, not project policy.
+
+The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
+action. Optional product-clarifier, incubation-researcher and usage-reviewer roles return bounded evidence. The
+coordinator keeps mutable current facts in project-owned `.devkit/incubation.md`; sync never seeds or overwrites it.
+No per-change SDD Unit, envelope or immutable experiment history is required. Independent project checks still run.
+An explicit adoption request prepares spec assets while keeping incubation active, then uses the separately
+delivered `sdd-baseline` playbook for readiness and activation.
 
 ## Adding a bundle
 

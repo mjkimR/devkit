@@ -1,0 +1,395 @@
+[
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "No pending items.\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "add",
+      "milk"
+    ],
+    "exit": 0,
+    "stdout": "Added 1: milk\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "add",
+      "bread"
+    ],
+    "exit": 0,
+    "stdout": "Added 2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "1: milk\n2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "done",
+      "1"
+    ],
+    "exit": 0,
+    "stdout": "Done 1: milk\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "done",
+      "99"
+    ],
+    "exit": 2,
+    "stdout": "",
+    "stderr": "error: item 99 does not exist\n"
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "add",
+      "   "
+    ],
+    "exit": 2,
+    "stdout": "",
+    "stderr": "error: item name cannot be blank\n"
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/invalid-0.json",
+      "add",
+      "eggs"
+    ],
+    "exit": 2,
+    "stdout": "",
+    "stderr": "error: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\n"
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/invalid-1.json",
+      "add",
+      "eggs"
+    ],
+    "exit": 2,
+    "stdout": "",
+    "stderr": "error: data must be a JSON list\n"
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/invalid-2.json",
+      "add",
+      "eggs"
+    ],
+    "exit": 2,
+    "stdout": "",
+    "stderr": "error: invalid completion state\n"
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "add",
+      "우유"
+    ],
+    "exit": 0,
+    "stdout": "Added 3: 우유\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/shopping.py",
+      "--data",
+      "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-18o1jsx5/shopping.json",
+      "list"
+    ],
+    "exit": 0,
+    "stdout": "2: bread\n3: 우유\n",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:20:09.529291Z'
+status: completed
+review: review-01.yaml
+summary: Implementer corrected the sole independent P2 by updating only the intentional catalog e2e inventory expectation; focused module-script/wheel/parser checks pass
+findings:
+- issue: The catalog module-category regression still expects the pre-e2e category list.
+  evidence: packages/devkit/tests/integration/package/test_module_script.py:201; independently rerun single regression failed because actual stderr lists bundles e2e integration instead of bundles integration.
+  failure_condition: The new catalog e2e tier exists and the module helper reports available categories, causing the required affected/full suite to fail.
+  suggested_action: Update the test-only inventory expectation to include e2e, preserving other assertions, and rerun the targeted regression.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS focused34 and affected post-fix selection; prior full5906pass14skip sole assertion now corrected
+  boundary: PASS only Host-authorized inventory assertion and metadata/reflection changed after initial review
+diff_scope:
+  base: 94a2a369ce88b69511d5bf87c7fc89673f33e50f
+  head: fee195e2f43878b07fae382b58e5ae5563afa3a1

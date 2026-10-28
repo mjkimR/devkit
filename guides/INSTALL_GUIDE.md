@@ -120,6 +120,29 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   `devkit-agt` that predates `devkit-dist` follows
   [Upgrading across the package split](install/existing-repository.md#upgrading-across-the-package-split).
 
+### Idea incubation
+
+For a user-approved incubation path, declare devkit-docs and devkit-catalog using the package commands above;
+no devkit-spec requirement is needed. Set shared `.devkit/config.toml` policy explicitly:
+
+```toml
+[development]
+approach = "incubation"
+
+[integration]
+provider = "project"
+```
+
+Select `uv run devkit add incubation`, then inspect `uv run devkit config show` and
+`uv run devkit get-context incubation`. `/incubate` handles adaptive discovery, research, implementation and
+actual-usage verification; optional support roles are not mandatory phases. The coordinator creates mutable
+`.devkit/incubation.md` when useful. Leave that project-owned file available to normal version control and preserve
+its bytes during installation. No complete backlog or SDD Unit is needed before the first useful action.
+
+The absent approach defaults to `sdd`; selecting the catalog bundle never changes that value. Do not implicitly
+remove existing SDD assets or reopen its history. Retain project checks and use a separately requested verified
+baseline procedure for voluntary SDD adoption.
+
 ## Step 4: Recommend bundles
 
 After the base installation, follow [Bundle Recommendations](install/bundle-recommendations.md): match the repository

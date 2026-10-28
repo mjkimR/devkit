@@ -31,6 +31,7 @@ recommend comes from it.
 | `authoring` (built in, `devkit-agt`) | Both of the above. | Default `all` |
 | `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (run by `devkit-agt`). |
 | `cli-tool` (`devkit-catalog`) | The repository builds, or the user plans, a Python command-line tool that agents run. | Default `all`: the `cli-tool-structure` instruction (click, `devkit-cli`, the required feature layout, import budget) and five structure rules run by `devkit-agt`; `guide`: the instruction only (the preset to take with `devkit-dist` alone). |
+| `incubation` (`devkit-catalog`) | The user wants to discover and build an idea without per-change SDD records, with resumable current product context. | Explicit `core`: `/incubate`, optional product clarification/research/usage roles and current-context template. Install devkit-docs plus devkit-catalog, choose shared incubation policy, then `uv run devkit add incubation`. No devkit-spec dependency. |
 | `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line; `[presentation] language = "ko"` supplies an inherited Korean default; an explicit `[bundles.response-style.variables] language` value wins. Run sync after edits. |
 | `maintenance` (`devkit-catalog`) | The user wants bounded drift review, evidence-based weekly reports with separately authorized publication, review and refactoring passes that reduce accumulated code, guidance and CLI surface, or measured performance passes over slow commands. | `upkeep`: drift-reconciliation and review-refactor; `reporting`: weekly-report; `refactoring`: review-refactor alone; `performance`: performance-pass with review-refactor; default `all`: the four playbooks. Selection never executes them; unavailable evidence remains explicit gaps. |
 
@@ -81,5 +82,7 @@ Inspect `uv run devkit config show`; the absent approach defaults to `sdd`. Loca
 supported. Document checks and the project's run/build/lint/test commands remain active. Package or bundle selection
 does not activate either approach. Installed spec extensions reject new SDD lifecycle records in incubation while
 retaining existing SDD artifact checks. Independent project integration uses explicit passing review/tests/lint
-claims and the ordinary approval/route/cleanup checks. Product discovery guidance and voluntary baseline adoption
-are separate assets; changing this setting does not establish a verified SDD baseline.
+claims and the ordinary approval/route/cleanup checks. Select `incubation:core` from devkit-catalog for `/incubate`
+and optional product clarification, research and usage-verification roles. The coordinator maintains project-owned
+`.devkit/incubation.md`; sync and re-selection preserve it. Baseline adoption is a separate explicit procedure;
+installing assets or changing this setting does not establish a verified SDD baseline.

@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:26:43.970118Z'
+status: completed
+summary: Delivered opt-in incubation catalog entry, optional support roles, mutable current context, true no-spec policy consumer and bounded actual usage/reconstruction/resume evidence; shared contracts/install guides reconciled independently
+findings: []
+assumptions:
+- Independent medium code review P2 corrected and reverified; separate reconcile reviewer verified11 targets with finding0
+- Scoped turns ran in Codex emulated worktrees; labelled synthetic product choices are distinguished from actual command evidence
+unverified_areas:
+- Bounded exercise coverage is not real-user usability, every-host execution or general model reliability; optional baseline activation remains separately tracked
+checks:
+  tests: PASS post-fix affected44; focused34; actual policy/catalog/documented-code/parser39; prior full5906 passing cases14skip reused after sole P2 assertion fix
+  build: PASS built docs/catalog wheels install without spec; actual default/explicit/invalid policy, rule/context and removal/readd consumer
+  lint: PASS catalog Ruff/format/Pyright, exact helper-test lint and cumulative CI governance errors0 warnings0
+diff_scope:
+  base: b671dd684472b4e00831cec79240feef2c30ad5d
+  head: f62baa1f5ad878f428493c279d921dd8d476a081

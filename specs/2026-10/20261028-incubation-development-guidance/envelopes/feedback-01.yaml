@@ -1,0 +1,13 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:25:58.674276Z'
+status: completed
+summary: Swept repository and upstream observations across all scoped guidance turns; existing FB-usecase-parser-affected-selection tracks the only reusable selector gap, with no additional unrecorded observation
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=1
+diff_scope:
+  base: 43a12db67b4addbf2e35a69a311a722fd0eb681e
+  head: e238a231673d9acdaf0c6d1aa06da4916d7d90e9
