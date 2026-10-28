@@ -77,6 +77,15 @@ class ListStatusUnknownNotice(DocsError):
     fix = f"Pass a status the documents of the selected kinds carry ({DEVKIT} docs list shows them)"
 
 
+class OverlayFailedWarning(DocsError):
+    """A ``devkit.docs.status_overlay`` extension failed to load, raised or returned something other than
+    ``{document ID: {field: text}}`` with no field ``list`` already shows (``WARNING``); its display is left out."""
+
+    code = "DOCS_OVERLAY_FAILED"
+    level = Level.WARNING
+    fix = "Fix or uninstall the package that registers the named devkit.docs.status_overlay extension"
+
+
 class EntrypointsPathError(DocsError):
     """An entrypoint path is not a literal workspace-relative path: empty, absolute, with a ``..`` segment, a glob,
     a backslash, a drive colon or a control character (``INPUT_ERROR``)."""

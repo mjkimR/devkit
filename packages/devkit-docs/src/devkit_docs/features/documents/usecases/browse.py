@@ -12,7 +12,7 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
-from devkit_docs.base.errors import ListStatusUnknownNotice
+from devkit_docs.base.errors import ListStatusUnknownNotice, OverlayFailedWarning
 from devkit_docs.features.documents import Document, DocumentIndex, Kind, Reference
 from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.repositories.config import read_docs_config
@@ -133,22 +133,59 @@ def _text(value: object) -> str:
 
 OVERLAY_GROUP = "devkit.docs.status_overlay"
 """Entry-point group of the status overlays a delivery process registers: each value is a callable
-``overlay(root, documents) -> {document ID: {field: value}}`` whose ``status`` replaces the shown status and whose
+``overlay(root, documents) -> {document ID: {field: text}}`` whose ``status`` replaces the shown status and whose
 other fields are added to the document's ``list`` line. devkit-spec shows a draft proposal whose ``plan-<slug>``
 branch exists as ``reviewing`` with its ``planning_branch``."""
 
 Overlay = Callable[[Path, Sequence[Document]], Mapping[str, Mapping[str, str]]]
 
+# The fields ``list`` already shows for a document; an overlay may replace ``status`` only.
+RESERVED_FIELDS = frozenset(
+    {"id", "kind", "path", "title", "area", "summary", "namespace", "historical", "tasks"}
+    | set(PROPOSAL_FIELDS)
+    | set(FEEDBACK_FIELDS)
+)
 
-def _overlays(index: DocumentIndex) -> dict[str, dict[str, str]]:
-    """``document ID -> display fields`` of every registered status overlay; a later one wins a field both set.
-    Only the display changes; no document is written."""
+
+def _overlays(index: DocumentIndex) -> tuple[dict[str, dict[str, str]], list[AdvisoryError]]:
+    """``document ID -> display fields`` of every registered status overlay, in entry-point order, with a
+    ``DOCS_OVERLAY_FAILED`` warning for each overlay left out; a later overlay wins a field both set. Only the display
+    changes; no document is written."""
     merged: dict[str, dict[str, str]] = {}
-    for entry in sorted(metadata.entry_points(group=OVERLAY_GROUP), key=lambda entry: entry.name):
-        overlay: Overlay = entry.load()
-        for document_id, fields in overlay(index.root, index.documents).items():
+    failed: list[AdvisoryError] = []
+    for entry in sorted(metadata.entry_points(group=OVERLAY_GROUP), key=lambda item: (item.name, item.value)):
+        try:
+            overlay: Overlay = entry.load()
+            returned = overlay(index.root, index.documents)
+        except Exception as exc:
+            failed.append(_overlay_failed(entry.name, str(exc) or type(exc).__name__))
+            continue
+        problem = _overlay_problem(returned)
+        if problem:
+            failed.append(_overlay_failed(entry.name, problem))
+            continue
+        for document_id, fields in returned.items():
             merged.setdefault(document_id, {}).update(fields)
-    return merged
+    return merged, failed
+
+
+def _overlay_problem(returned: object) -> str | None:
+    """Why ``returned`` is no ``{document ID: {field: text}}`` an overlay may give; ``None`` when it is one."""
+    if not isinstance(returned, Mapping):
+        return f"returned {type(returned).__name__}, expected a mapping of document IDs to fields"
+    for document_id, fields in returned.items():
+        if not isinstance(document_id, str) or not isinstance(fields, Mapping):
+            return "expected a mapping of document IDs to field mappings"
+        for field, value in fields.items():
+            if not isinstance(field, str) or not isinstance(value, str):
+                return f"{document_id}: fields and values must be text"
+            if field in RESERVED_FIELDS:
+                return f"{document_id}: the field {field} is one list already shows"
+    return None
+
+
+def _overlay_failed(name: str, problem: str) -> AdvisoryError:
+    return OverlayFailedWarning(f"status overlay {name} left out: {problem}", f"extension: {name}")
 
 
 def _shown_status(document: Document, overlays: Mapping[str, Mapping[str, str]]) -> str:
@@ -341,7 +378,7 @@ class ListDocumentsUseCase(BaseUseCase):
         )
         statuses = set(requested)
         wanted = {Kind(kind) for kind in kinds}
-        overlays = _overlays(index)
+        overlays, overlay_failures = _overlays(index)
         matching = [
             document
             for document in index.documents
@@ -360,7 +397,7 @@ class ListDocumentsUseCase(BaseUseCase):
         )
         shown = page(selected, offset, limit)
         tasks = {document.path: _tasks(index.root, document) for document in shown}
-        notices = [*index.problems, *_unknown_statuses(index, wanted, requested, overlays)]
+        notices = [*index.problems, *overlay_failures, *_unknown_statuses(index, wanted, requested, overlays)]
         historical = {document.path: index.is_browsing_historical(document) for document in shown}
         return ListResult(
             selected, shown, len(matching) - len(selected), tasks, notices, scope, overlays, where, historical

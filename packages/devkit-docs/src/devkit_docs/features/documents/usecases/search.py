@@ -1,4 +1,4 @@
-"""Document search: devkit's ranking (``devkit_dist.features.search``) with the spec search policy.
+"""Document search: devkit's ranking (``devkit_dist.features.search``) with the document search policy.
 
 The policy on top of the generic ranking:
 
@@ -149,7 +149,7 @@ def search_documents(
     min_similarity: float = DEFAULT_MIN_SIMILARITY,
     accept: Callable[[Document], bool] | None = None,
 ) -> SpecSearchResult:
-    """Rank the documents of ``index`` for ``query`` under the spec search policy; ``limit`` ``0`` returns all.
+    """Rank the documents of ``index`` for ``query`` under the document search policy; ``limit`` ``0`` returns all.
 
     ``accept`` narrows the candidates further (a namespace selection).
     """

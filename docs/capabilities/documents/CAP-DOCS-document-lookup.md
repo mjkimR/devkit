@@ -125,16 +125,23 @@ changes an argument, output, code or exit status.
 ### 3.6 Status Overlays (`list`)
 
 1. **Registration**: `list` MUST load every callable registered in the entry-point group `devkit.docs.status_overlay`,
-   in entry-point name order. Each is called as `overlay(root, documents)` and returns
-   `{document ID: {field: value}}`.
+   in entry-point name order (then value). Each is called as `overlay(root, documents)` and returns
+   `{document ID: {field: text}}`.
 2. **Shown status**: WHERE an overlay sets `status` for a document, `list` MUST show that value as the document's
    status and MUST apply `--status` and the `DOCS_LIST_STATUS_UNKNOWN` notice (3.4) to it.
 3. **Extra fields**: every other field an overlay sets MUST be added to the document's line, after `path`, and to its JSON
    record.
 4. **Precedence**: IF two overlays set the same field of one document, THEN the one loaded later MUST win.
-5. **Display only**: an overlay MUST NOT write a document; `resolve`, `refs`, `search` and the rules read the
+5. **Reserved fields**: an overlay MAY set `status` but MUST NOT set a field `list` already shows (`id`, `kind`,
+   `path`, `title`, `area`, `summary`, `namespace`, `historical`, `tasks`, the proposal fields and the feedback
+   fields).
+6. **Failure isolation**: IF an overlay fails to load, raises, returns anything other than a mapping of document IDs to
+   mappings of text fields, or sets a reserved field, THEN `list` MUST leave that overlay's whole result out, add one
+   `DOCS_OVERLAY_FAILED` warning naming it (`extension: <name>`), and still apply the other overlays and exit as
+   without it.
+7. **Display only**: an overlay MUST NOT write a document; `resolve`, `refs`, `search` and the rules read the
    declared status. Without a registered overlay, `list` shows the declared status.
-6. **devkit-spec's overlay**: devkit-spec registers `spec =
+8. **devkit-spec's overlay**: devkit-spec registers `spec =
    devkit_spec.features.proposals.services.planning:planning_overlay`: a `draft` proposal whose `plan-<slug>` branch
    exists, locally or fetched, is shown with `status=reviewing` and `planning_branch` (`CAP-DLV-proposal-incubation`
    rule 10, `ADR-document-package`).
@@ -199,4 +206,5 @@ notices always exit `0`.
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
 | `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `list`: a malformed `[tool.docs]` table, namespaces included (`CAP-DOCS-namespaces`). |
 | `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
+| `DOCS_OVERLAY_FAILED` | `WARNING` | `devkit_docs.base.errors.OverlayFailedWarning` | `list`: a `devkit.docs.status_overlay` extension failed to load, raised, returned a malformed result or set a reserved field (3.6); its result is left out and the detail names it. The exit code is unchanged. |
 | `DOCS_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_docs.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (3.6), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |

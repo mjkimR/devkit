@@ -49,7 +49,7 @@ created_at: 2026-10-13
 
 ## 3. Extensions
 
-- **2a.** The `[tool.spec]` table is malformed: the run fails with `SPEC_CONFIG_INVALID` attributed to the rule,
+- **2a.** The `[tool.docs]` table is malformed: the run fails with `DOCS_CONFIG_INVALID` attributed to the rule,
   because the rules cannot tell which documents follow which conventions; the agent corrects the table; resumes at
   step 1.
 - **3a.** A violation is `open` (no deterministic repair: a reference to an ID no document declares, a dead
@@ -83,11 +83,11 @@ created_at: 2026-10-13
 - **Then**: the check reports `RULE-traceability-link` on the capability with `status=fixable`, the fix appends the
   use case ID to the capability's `usecases` in the list's existing style, and a recheck reports no violation
 
-### Scenario 2: Fails the run on a malformed policy table
+### Scenario 2: Fails the run on a malformed namespace table
 - **Covers**: 2a
-- **Given**: `.devkit/config.toml` has a `[tool.spec]` table with an unknown key
+- **Given**: `.devkit/config.toml` has a `[tool.docs]` table with an unknown key
 - **When**: the agent runs `devkit rules check`
-- **Then**: the run fails with `SPEC_CONFIG_INVALID` naming the table and exits `2`
+- **Then**: the run fails with `DOCS_CONFIG_INVALID` naming the table and exits `2`
 
 ### Scenario 3: Reports a reference to a missing document, never guessing
 - **Covers**: 3a

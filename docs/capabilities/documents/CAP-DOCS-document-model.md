@@ -69,7 +69,7 @@ workspace cache; these files stay ID-free and unindexed, and their references do
    THEN a YAML-reading operation MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2` before reusing a memoized
    parse result; it MUST NOT fall back to Python parsing or report the binding failure as `DOCS_DOCUMENT_INVALID`.
    These contracts are verified by `packages/devkit-core/tests/unit/core/test_frontmatter.py` and
-   `packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`.
+   `packages/devkit-docs/tests/integration/features/documents/test_memo_index.py`.
 5. **Uniqueness**: IDs are repository-wide and MUST be unique across `docs/`, `specs/` and every namespace docs root.
    The index keeps every declaration of an ID, so a duplicate is detectable (`DOCS_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).
@@ -207,7 +207,7 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    that cannot be rebuilt, is a non-regular file or cannot be written, THEN the index MUST return a fresh build's
    result with no advisory, notice or exit-status change, logging one line visible under `-v`; a non-regular file
    at the memo path is never removed or replaced. A missing memo is created without a log line
-   (`packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`).
+   (`packages/devkit-docs/tests/integration/features/documents/test_memo_index.py`).
 6. **Resolution**: resolving an ID MUST go through the canonical mapping (section 3.5) and return the one document
    it names, else raise `DOCS_ID_UNRESOLVED` (no document) or `DOCS_ID_DUPLICATE` (several declare the ID, or
    several declare the alias; `[TARGET]` lists their paths).

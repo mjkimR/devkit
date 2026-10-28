@@ -1627,7 +1627,7 @@
     },
     ".devkit/managed/spec/rules/code_entrypoints/rule.py": {
       "mode": 420,
-      "sha256": "1faa910480a1d4badd8c834aefef3ec41209b66860a2b60876ded94769001f1c"
+      "sha256": "efadba7b218e01919ca8cf5a2a64ce6960894aebc14687430098381104350995"
     },
     ".devkit/managed/spec/rules/code_entrypoints/tests/test_rule.py": {
       "mode": 420,
@@ -1639,7 +1639,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,
-      "sha256": "16213710c22c0005a5f9eb4d8dd21c9fe77a5adf0ed500b9201b6a0f8b35288d"
+      "sha256": "c892f109bd33502c2f5cef8abe2bd5cfd40d87d84e7efeab864ba05f377ccb21"
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
@@ -1651,7 +1651,7 @@
     },
     ".devkit/managed/spec/rules/document_summary/rule.py": {
       "mode": 420,
-      "sha256": "e5f3dc2981bcc0b65d950ccf539f853de45e9c5b10ffe6673c01c2124f8756b6"
+      "sha256": "064de8f969a6feec2a95986ce6563ccff6246ab26e69319dd56dab687be6d7ba"
     },
     ".devkit/managed/spec/rules/document_summary/tests/test_rule.py": {
       "mode": 420,
@@ -1663,7 +1663,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/rule.py": {
       "mode": 420,
-      "sha256": "05e50cf50cab34a48af881f27dbb1ab4a5e5050561a2ea94bd69b708b87ce7e6"
+      "sha256": "84a0967a9f1cd804aa75638f168cd8efd01b20cd87f2b65808ad9c0ed4c8c40a"
     },
     ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
@@ -1699,7 +1699,7 @@
     },
     ".devkit/managed/spec/rules/spec_format/rule.py": {
       "mode": 420,
-      "sha256": "164782ef7e75d1cac765beca12e7bcf3f7964de4f88556728c8fcd4d679e3f79"
+      "sha256": "585384416faddad6b954fea0ac4621c5f40b60cf95a8abd0bbae790003a1cf1b"
     },
     ".devkit/managed/spec/rules/spec_format/tests/test_rule.py": {
       "mode": 420,
@@ -1735,7 +1735,7 @@
     },
     ".devkit/managed/spec/rules/steering_documents/rule.py": {
       "mode": 420,
-      "sha256": "be5f9c6b1ae7de0447193093b5f124ebeb24310eed126b8bdf4e2f346a251e94"
+      "sha256": "b375a7ff80bf6adcb53845797a9c81615106190394aac875a1e77e421d9a4f47"
     },
     ".devkit/managed/spec/rules/steering_documents/tests/test_rule.py": {
       "mode": 420,
@@ -1759,7 +1759,7 @@
     },
     ".devkit/managed/spec/rules/traceability_link/rule.py": {
       "mode": 420,
-      "sha256": "d4638cc7d30ab4a1450f9956afe443587a3218d4b15d38d6aae1a4ade71be4e5"
+      "sha256": "59f38357baefde1d57298bf57cd607ce028840d5c4b86e9cb5094dfd0ede8e27"
     },
     ".devkit/managed/spec/rules/traceability_link/tests/test_rule.py": {
       "mode": 420,
@@ -1771,7 +1771,7 @@
     },
     ".devkit/managed/spec/rules/ux_coverage/rule.py": {
       "mode": 420,
-      "sha256": "a7a745b8d0320ac50f7011291b2ecdbc7d420c9b596321aa464375db7a4a5f1f"
+      "sha256": "b898c983d4222fedc6439b07ce99c8ad6fbd86476c59b2cd488e53fd8e03af05"
     },
     ".devkit/managed/spec/rules/ux_coverage/tests/test_rule.py": {
       "mode": 420,
@@ -1783,7 +1783,7 @@
     },
     ".devkit/managed/spec/rules/ux_links/rule.py": {
       "mode": 420,
-      "sha256": "79dfbe327787f5d609062d0b6d29c7e4b4b67218170bb81035d47501fcbac3da"
+      "sha256": "30f90df537c37e9f97275e440a9af6fb9c05177db0f0b9feac2fb3f0df3583d2"
     },
     ".devkit/managed/spec/rules/ux_links/tests/test_rule.py": {
       "mode": 420,

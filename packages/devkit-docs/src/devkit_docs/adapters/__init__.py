@@ -1,1 +1,1 @@
-"""Shared CLI transport adapters of ``devkit spec``."""
+"""Shared CLI transport adapters of ``devkit docs``."""

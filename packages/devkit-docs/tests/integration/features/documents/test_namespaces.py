@@ -149,7 +149,7 @@ def monorepo(workspace: Path, write: Write) -> Path:
     return workspace
 
 
-def _spec(root: Path, *args: str) -> Result:
+def _docs(root: Path, *args: str) -> Result:
     return CliRunner().invoke(devkit_cli, ["docs", *args, "-w", str(root)])
 
 
@@ -160,31 +160,31 @@ def _ids(result: Result) -> list[str]:
 
 def test_list_follows_the_current_directory(monorepo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(monorepo / "services/api/src")
-    assert _ids(_spec(monorepo, "list", "--format", "json")) == ["CAP-API-search", "CAP-CORE-search"]
-    assert _ids(_spec(monorepo, "list", "--all-namespaces", "--format", "json")) == [
+    assert _ids(_docs(monorepo, "list", "--format", "json")) == ["CAP-API-search", "CAP-CORE-search"]
+    assert _ids(_docs(monorepo, "list", "--all-namespaces", "--format", "json")) == [
         "CAP-API-search",
         "CAP-CORE-search",
         "CAP-WEB-search",
     ]
-    assert _ids(_spec(monorepo, "list", "--namespace", "global", "--format", "json")) == ["CAP-CORE-search"]
+    assert _ids(_docs(monorepo, "list", "--namespace", "global", "--format", "json")) == ["CAP-CORE-search"]
     monkeypatch.chdir(monorepo)
-    assert len(_ids(_spec(monorepo, "list", "--format", "json"))) == 3
+    assert len(_ids(_docs(monorepo, "list", "--format", "json"))) == 3
 
 
 def test_list_text_shows_namespaces_only_when_configured(monorepo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(monorepo)
-    first = _spec(monorepo, "list", "--namespace", "web", "--limit", "1").stdout.splitlines()
+    first = _docs(monorepo, "list", "--namespace", "web", "--limit", "1").stdout.splitlines()
     assert first[0].startswith("[DOCUMENT: CAP-CORE-search ") and " namespace=global " in first[0]
     assert first[-1].endswith("--namespace web -w " + str(monorepo) + " --limit 1 --offset 1]")
 
 
 def test_search_follows_the_namespace(monorepo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(monorepo / "services/api")
-    assert set(_ids(_spec(monorepo, "search", "search", "--mode", "lexical", "--format", "json"))) == {
+    assert set(_ids(_docs(monorepo, "search", "search", "--mode", "lexical", "--format", "json"))) == {
         "CAP-API-search",
         "CAP-CORE-search",
     }
-    result = _spec(monorepo, "search", "search", "--namespace", "nope")
+    result = _docs(monorepo, "search", "search", "--namespace", "nope")
     assert result.exit_code == 2 and "(ARGUMENT_INVALID)" in result.stderr
 
 
@@ -194,10 +194,10 @@ def test_rejected_proposal_feedback_is_discoverable_with_namespace(workspace: Pa
     feedback = "docs/proposals/PROP-review/feedback/observed.md"
     write(anchor, _doc("PROP-review", "namespace: api\n").replace("active", "rejected"))
     write(feedback, _doc("FB-observed", "title: Observation\n").replace("active", "open") + "`PROP-review`\n")
-    result = _spec(workspace, "list", "feedback", "--namespace", "api", "--format", "json")
+    result = _docs(workspace, "list", "feedback", "--namespace", "api", "--format", "json")
     assert result.exit_code == 0, result.output
     assert _ids(result) == ["FB-observed"]
-    assert _ids(_spec(workspace, "list", "feedback", "--namespace", "web", "--format", "json")) == []
+    assert _ids(_docs(workspace, "list", "feedback", "--namespace", "web", "--format", "json")) == []
     index = DocumentIndex.load(workspace)
     assert index.resolve("FB-observed").path == feedback
     assert not index.is_historical(index.resolve("FB-observed"))

@@ -48,11 +48,15 @@ Adopt the separate devkit-docs wheel.
    spec bundles, feedback and milestones are document structure. What a delivery process does with them stays in
    that process.
 3. **Extension point**: a delivery process changes how `devkit docs list` shows documents through the entry-point
-   group `devkit.docs.status_overlay`; devkit-spec registers the Planning display of draft proposals. Other
+   group `devkit.docs.status_overlay`; devkit-spec registers the Planning display of draft proposals. A failing
+   overlay is left out with a `DOCS_OVERLAY_FAILED` warning, like devkit's other extension groups. Other
    lifecycle behavior moves only when a seam requires it.
 4. **Configuration**: document namespaces move from `[[tool.spec.namespaces]]` to `[[tool.docs.namespaces]]`,
    owned and read by devkit-docs. This supersedes the namespaces part of `[tool.spec]` in
-   `ADR-spec-package-on-devkit`.
+   `ADR-spec-package-on-devkit`. The rules and the `devkit docs` commands read only `[tool.docs]`, so a malformed
+   `[tool.spec]` is reported by the commands that read it (`devkit spec policy`, `scope`, `proposal`, integration),
+   no longer by a rules run. The document memo moves with its package to `.devkit/transient/docs/`, superseding the
+   location in `ADR-parse-memo-location-and-format`.
 5. **Commands and codes**: `devkit docs resolve|refs|list|search` replace the `devkit spec` forms. The document
    codes move from `SPEC_` to `DOCS_`, and `DOCS_CONFIG_INVALID` reports a malformed `[tool.docs]`.
 6. **Scanner**: the document model keeps using devkit-agt's Markdown scanner; moving it to devkit-core is unrelated
@@ -64,7 +68,8 @@ Adopt the separate devkit-docs wheel.
 
 - **Positive**: the document layer has no import edge to the delivery process, and the architecture declaration
   enforces that. Idea incubation or another process can reuse the document system.
-- **Negative / Risks**: agents and guidance must use the renamed commands and codes. Projects with
+- **Negative / Risks**: agents and guidance must use the renamed commands and codes. A malformed `[tool.spec]` no
+  longer fails `devkit rules check`; `devkit spec policy`, which SDD work runs before classification, still rejects it. Projects with
   `[[tool.spec.namespaces]]` must move them to `[[tool.docs.namespaces]]`; a leftover entry is rejected as an
   unknown key. Releases build one more wheel.
 - **Follow-ups**: `PROP-document-bundle-split` provides a document-only installation. The viewer hard-codes kind

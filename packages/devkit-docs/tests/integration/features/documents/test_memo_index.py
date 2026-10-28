@@ -14,19 +14,19 @@ from typing import Any
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit_agt.features.rules.services.testing import check, load_rule
+from devkit_agt.features.rules.services.testing import check
 from devkit_core.core import YamlBindingUnavailableError
 from devkit_dist.cli import cli as devkit_cli
+from docs_support.types import Write
+
 from devkit_docs.features.documents import DocumentIndex
 from devkit_docs.features.documents.repositories import index as index_module
 from devkit_docs.features.documents.repositories import memo as memo_module
 from devkit_docs.features.documents.repositories.memo import ParseMemo, decode_entry
-from spec_support.types import Write
-
-import devkit_spec
+from devkit_docs.features.governance.usecases.document_reference import DocumentReferenceRule
 
 MEMO = ".devkit/transient/docs/document-index.json"
-RULE = load_rule(Path(devkit_spec.__file__).parent / "bundles/spec/bundle/rules/document_reference/rule.py")
+RULE = DocumentReferenceRule()
 
 
 @pytest.fixture(autouse=True)

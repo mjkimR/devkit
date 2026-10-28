@@ -14,7 +14,7 @@ def _doc(document_id: str, body: str = "", **fields: str) -> str:
     return f"---\nid: {document_id}\n{header}---\n{body}"
 
 
-def _spec(*args: str, workspace: Path) -> Result:
+def _docs(*args: str, workspace: Path) -> Result:
     return CliRunner().invoke(devkit_cli, ["docs", *args, "-w", str(workspace)])
 
 
@@ -32,7 +32,7 @@ def docs(workspace: Path, write: Write) -> Path:
 
 
 def test_resolve(docs: Path) -> None:
-    result = _spec("resolve", "UC-b", "SPEC-open", workspace=docs)
+    result = _docs("resolve", "UC-b", "SPEC-open", workspace=docs)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == [
         "[DOCUMENT: UC-b kind=usecase status=active path=docs/usecases/core/UC-b.md]",
@@ -41,14 +41,14 @@ def test_resolve(docs: Path) -> None:
 
 
 def test_resolve_reports_each_unresolved_id_after_the_resolved_ones(docs: Path) -> None:
-    result = _spec("resolve", "UC-b", "UC-none", "UC-other", workspace=docs)
+    result = _docs("resolve", "UC-b", "UC-none", "UC-other", workspace=docs)
     assert result.exit_code == 2
     assert result.stdout.startswith("[DOCUMENT: UC-b ")
     assert result.stderr.count("(DOCS_ID_UNRESOLVED)") == 2
 
 
 def test_resolve_json(docs: Path) -> None:
-    result = _spec("resolve", "UC-b", "UC-none", "--format", "json", workspace=docs)
+    result = _docs("resolve", "UC-b", "UC-none", "--format", "json", workspace=docs)
     payload = json.loads(result.stdout)
     assert result.exit_code == 2 and result.stderr == ""
     assert [d["id"] for d in payload["documents"]] == ["UC-b"]
@@ -56,7 +56,7 @@ def test_resolve_json(docs: Path) -> None:
 
 
 def test_refs_out_marks_dangling_references(docs: Path) -> None:
-    result = _spec("refs", "CAP-CORE-a", workspace=docs)
+    result = _docs("refs", "CAP-CORE-a", workspace=docs)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == [
         "[REF: UC-b path=docs/usecases/core/UC-b.md status=active fields=body count=1]",
@@ -66,36 +66,36 @@ def test_refs_out_marks_dangling_references(docs: Path) -> None:
 
 
 def test_refs_in_pages(docs: Path) -> None:
-    result = _spec("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", workspace=docs)
+    result = _docs("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", workspace=docs)
     lines = result.stdout.splitlines()
     assert lines[0].startswith("[REF: UC-b ")
     assert lines[1] == "[PAGE: total=2 offset=0 limit=1 count=1 next=1]"
     assert lines[2] == f"[NEXT_CMD: uv run devkit docs refs CAP-CORE-a --direction in -w {docs} --limit 1 --offset 1]"
-    second = _spec("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", "--offset", "1", workspace=docs)
+    second = _docs("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", "--offset", "1", workspace=docs)
     assert second.stdout.splitlines()[0].startswith("[REF: UC-c ")
 
 
 def test_refs_of_an_unknown_id(docs: Path) -> None:
-    result = _spec("refs", "UC-none", workspace=docs)
+    result = _docs("refs", "UC-none", workspace=docs)
     assert result.exit_code == 2 and "(DOCS_ID_UNRESOLVED)" in result.stderr
 
 
 def test_feedback_of_a_completed_bundle_is_listed_without_history(docs: Path, write: Write) -> None:
     # AC-01: the bundle's other files stay hidden.
     write("specs/2026-10/20261001-done/feedback/x.md", _doc("FB-x", status="open"))
-    payload = json.loads(_spec("list", "feedback", "--status", "open", "--format", "json", workspace=docs).stdout)
+    payload = json.loads(_docs("list", "feedback", "--status", "open", "--format", "json", workspace=docs).stdout)
     assert [(d["id"], d["historical"]) for d in payload["documents"]] == [("FB-x", False)]
-    assert "SPEC-done" not in _spec("list", "spec", workspace=docs).stdout
+    assert "SPEC-done" not in _docs("list", "spec", workspace=docs).stdout
 
 
 def test_list_hides_history_and_counts_tasks(docs: Path) -> None:
-    result = _spec("list", "spec", workspace=docs)
+    result = _docs("list", "spec", workspace=docs)
     assert result.stdout.splitlines() == [
         "[DOCUMENT: SPEC-open kind=spec status=draft path=specs/2026-10/20261002-open/spec.md tasks=1/2 title=Open]",
         "[PAGE: total=1 offset=0 limit=20 count=1 next=- hidden=1]",
         f"[HISTORY_CMD: uv run devkit docs list spec --history -w {docs}]",
     ]
-    assert "SPEC-done" in _spec("list", "spec", "--history", workspace=docs).stdout
+    assert "SPEC-done" in _docs("list", "spec", "--history", workspace=docs).stdout
 
 
 @pytest.mark.parametrize(
@@ -109,7 +109,7 @@ def test_list_hides_history_and_counts_tasks(docs: Path) -> None:
     ],
 )
 def test_list_filters(docs: Path, args: tuple[str, ...], ids: list[str]) -> None:
-    payload = json.loads(_spec("list", *args, "--format", "json", workspace=docs).stdout)
+    payload = json.loads(_docs("list", *args, "--format", "json", workspace=docs).stdout)
     assert [d["id"] for d in payload["documents"]] == ids
 
 
@@ -128,7 +128,7 @@ def statuses(workspace: Path, write: Write) -> Path:
 
 def test_list_names_an_unknown_status(statuses: Path) -> None:
     # AC-01: the page and the exit code stay as they were; one notice names the value and the known statuses.
-    result = _spec("list", "spec", "--status", "bogus", workspace=statuses)
+    result = _docs("list", "spec", "--status", "bogus", workspace=statuses)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == ["[PAGE: total=0 offset=0 limit=20 count=0 next=- hidden=0]"]
     assert result.stderr.count(UNKNOWN_STATUS) == 1
@@ -140,7 +140,7 @@ def test_list_names_an_unknown_status(statuses: Path) -> None:
 
 def test_list_json_carries_the_unknown_status_notice(statuses: Path) -> None:
     # AC-02
-    result = _spec("list", "spec", "--status", "bogus", "--format", "json", workspace=statuses)
+    result = _docs("list", "spec", "--status", "bogus", "--format", "json", workspace=statuses)
     payload = json.loads(result.stdout)
     assert result.exit_code == 0 and payload["total"] == 0
     [notice] = payload["notices"]
@@ -150,7 +150,7 @@ def test_list_json_carries_the_unknown_status_notice(statuses: Path) -> None:
 
 def test_list_names_only_the_unknown_statuses(statuses: Path) -> None:
     # AC-03: the comparison stays case-insensitive and the known value is not named.
-    result = _spec("list", "spec", "--status", "Planned,bogus", "--format", "json", workspace=statuses)
+    result = _docs("list", "spec", "--status", "Planned,bogus", "--format", "json", workspace=statuses)
     payload = json.loads(result.stdout)
     assert [d["id"] for d in payload["documents"]] == ["SPEC-later", "SPEC-next"]
     [notice] = payload["notices"]
@@ -160,7 +160,7 @@ def test_list_names_only_the_unknown_statuses(statuses: Path) -> None:
 def test_list_counts_hidden_statuses_as_known(statuses: Path, write: Write) -> None:
     # AC-04: a status on a historical spec, or on a spec of another namespace, is known; a named status shows its
     # historical documents (SPEC-list-terminal-statuses-historical AC-03).
-    hidden = _spec("list", "spec", "--status", "completed", workspace=statuses)
+    hidden = _docs("list", "spec", "--status", "completed", workspace=statuses)
     assert hidden.exit_code == 0 and "total=1 " in hidden.stdout
     assert UNKNOWN_STATUS not in hidden.stderr
     write("specs/2026-10/20261004-web/spec.md", _doc("SPEC-web", status="blocked", namespace="web"))
@@ -169,38 +169,38 @@ def test_list_counts_hidden_statuses_as_known(statuses: Path, write: Write) -> N
         '[[tool.docs.namespaces]]\nname = "api"\npath = "services/api"\n'
         '[[tool.docs.namespaces]]\nname = "web"\npath = "apps/web"\n',
     )
-    other = _spec("list", "spec", "--status", "blocked", "--namespace", "api", workspace=statuses)
+    other = _docs("list", "spec", "--status", "blocked", "--namespace", "api", workspace=statuses)
     assert other.exit_code == 0 and "total=0 " in other.stdout
     assert UNKNOWN_STATUS not in other.stderr
 
 
 def test_list_without_kinds_counts_every_kind(statuses: Path) -> None:
     # AC-05
-    every = _spec("list", "--status", "open", workspace=statuses)
+    every = _docs("list", "--status", "open", workspace=statuses)
     assert every.exit_code == 0 and "[DOCUMENT: FB-x " in every.stdout
     assert UNKNOWN_STATUS not in every.stderr
-    specs = _spec("list", "spec", "--status", "open", "--format", "json", workspace=statuses)
+    specs = _docs("list", "spec", "--status", "open", "--format", "json", workspace=statuses)
     [notice] = json.loads(specs.stdout)["notices"]
     assert notice["code"] == "DOCS_LIST_STATUS_UNKNOWN" and notice["message"].startswith("--status open:")
 
 
 def test_list_without_status_values_adds_no_notice(statuses: Path) -> None:
-    result = _spec("list", "spec", "--status", ",", "--format", "json", workspace=statuses)
+    result = _docs("list", "spec", "--status", ",", "--format", "json", workspace=statuses)
     payload = json.loads(result.stdout)
     assert payload["total"] == 2 and payload["notices"] == []
 
 
 def test_negative_paging_is_an_argument_error(docs: Path) -> None:
-    result = _spec("list", "--limit", "-1", workspace=docs)
+    result = _docs("list", "--limit", "-1", workspace=docs)
     assert result.exit_code == 2 and "(ARGUMENT_INVALID)" in result.stderr
 
 
 def test_invalid_documents_are_warnings(docs: Path, write: Write) -> None:
     write("docs/bad.md", "---\nid: [x]\n---\n")
-    result = _spec("list", "usecase", workspace=docs)
+    result = _docs("list", "usecase", workspace=docs)
     assert result.exit_code == 0 and "(DOCS_DOCUMENT_INVALID)" in result.stderr
-    assert _spec("--strict", "list", workspace=docs).exit_code == 2  # --strict belongs to the command, not the group
-    assert _spec("list", "--strict", workspace=docs).exit_code == 1
+    assert _docs("--strict", "list", workspace=docs).exit_code == 2  # --strict belongs to the command, not the group
+    assert _docs("list", "--strict", workspace=docs).exit_code == 1
 
 
 def test_list_by_entrypoint_overlap(workspace: Path, write: Write) -> None:
@@ -214,7 +214,7 @@ def test_list_by_entrypoint_overlap(workspace: Path, write: Write) -> None:
     def ids(path: str) -> list[str]:
         return [
             d["id"]
-            for d in json.loads(_spec("list", "--file", path, "--format", "json", workspace=workspace).stdout)[
+            for d in json.loads(_docs("list", "--file", path, "--format", "json", workspace=workspace).stdout)[
                 "documents"
             ]
         ]
@@ -224,7 +224,7 @@ def test_list_by_entrypoint_overlap(workspace: Path, write: Write) -> None:
     assert ids("src/cli.py") == ["CAP-CORE-a"]
     assert ids("src/other.py") == []
     for invalid in ("/src/app", "src/*.py", "../src", "src/../app"):
-        result = _spec("list", "--file", invalid, workspace=workspace)
+        result = _docs("list", "--file", invalid, workspace=workspace)
         assert result.exit_code == 2 and "(DOCS_ENTRYPOINTS_PATH_INVALID)" in result.stderr, invalid
 
 
@@ -248,7 +248,7 @@ def feedback(workspace: Path, write: Write) -> Path:
 
 
 def _ids(workspace: Path, *args: str) -> list[str]:
-    result = _spec("list", *args, "--format", "json", workspace=workspace)
+    result = _docs("list", *args, "--format", "json", workspace=workspace)
     assert result.exit_code == 0, result.output
     return [d["id"] for d in json.loads(result.stdout)["documents"]]
 
@@ -274,7 +274,7 @@ def test_where_matches_booleans_and_list_elements(feedback: Path) -> None:
 @pytest.mark.parametrize("item", ["severity", "=critical", "severity=", "severity=,", " =x"])
 def test_malformed_where_is_an_argument_error(feedback: Path, item: str) -> None:
     # AC-04
-    result = _spec("list", "--where", item, workspace=feedback)
+    result = _docs("list", "--where", item, workspace=feedback)
     assert result.exit_code == 2 and result.stdout == ""
     assert "(ARGUMENT_INVALID)" in result.stderr and f"--where {item}:" in result.stderr
 
@@ -286,15 +286,15 @@ def test_feedback_is_ordered_by_severity_within_its_kind(feedback: Path) -> None
 
 def test_feedback_lines_and_records_carry_severity_scope_and_target(feedback: Path) -> None:
     # AC-06
-    lines = _spec("list", "--where", "scope=upstream", "--where", "severity=critical", workspace=feedback).stdout
+    lines = _docs("list", "--where", "scope=upstream", "--where", "severity=critical", workspace=feedback).stdout
     assert lines.splitlines()[0] == (
         "[DOCUMENT: FB-a kind=feedback status=open path=specs/2026-10/feedback/20261013-a.md "
         'severity=critical scope=upstream target="devkit docs list" title=a]'
     )
-    capability = _spec("list", "capability", workspace=feedback).stdout.splitlines()[0]
+    capability = _docs("list", "capability", workspace=feedback).stdout.splitlines()[0]
     assert "severity=" not in capability and "scope=" not in capability and "target=" not in capability
     records = {
-        d["id"]: d for d in json.loads(_spec("list", "--format", "json", workspace=feedback).stdout)["documents"]
+        d["id"]: d for d in json.loads(_docs("list", "--format", "json", workspace=feedback).stdout)["documents"]
     }
     assert (records["FB-a"]["severity"], records["FB-a"]["scope"], records["FB-a"]["target"]) == (
         "critical",
@@ -307,12 +307,12 @@ def test_feedback_lines_and_records_carry_severity_scope_and_target(feedback: Pa
     assert (
         "[DOCUMENT: FB-f kind=feedback status=open path=specs/2026-10/feedback/20261013-f.md "
         "severity=- scope=- target=- title=f]"
-    ) in _spec("list", "feedback", workspace=feedback).stdout.splitlines()
+    ) in _docs("list", "feedback", workspace=feedback).stdout.splitlines()
 
 
 def test_next_page_command_repeats_every_where(feedback: Path) -> None:
     # AC-07
-    result = _spec(
+    result = _docs(
         "list",
         "feedback",
         "--where",
@@ -333,7 +333,7 @@ def test_feedback_with_unknown_owner_remains_discoverable(feedback: Path, write:
     _feedback(write, "ambiguous-owner", severity="workaround", scope="unknown", target='"devkit workflow next"')
     assert _ids(feedback, "feedback", "--status", "open", "--where", "scope=unknown") == ["FB-ambiguous-owner"]
     payload = json.loads(
-        _spec("list", "feedback", "--where", "scope=unknown", "--format", "json", workspace=feedback).stdout
+        _docs("list", "feedback", "--where", "scope=unknown", "--format", "json", workspace=feedback).stdout
     )
     assert payload["documents"][0]["target"] == "devkit workflow next"
 
@@ -356,7 +356,7 @@ def test_proposal_lines_and_records_carry_task_kind_and_effort_hints(workspace: 
     )
     write("docs/capabilities/core/CAP-CORE-a.md", _doc("CAP-CORE-a", status="active", title="Cap"))
 
-    lines = _spec("list", "proposal", workspace=workspace).stdout.splitlines()
+    lines = _docs("list", "proposal", workspace=workspace).stdout.splitlines()
     assert lines[:2] == [
         "[DOCUMENT: PROP-a kind=proposal status=draft path=docs/proposals/PROP-a/proposal.md "
         "task_kind=feature planning_effort=low dev_effort=high title=Alpha]",
@@ -364,7 +364,7 @@ def test_proposal_lines_and_records_carry_task_kind_and_effort_hints(workspace: 
         "task_kind=- planning_effort=- dev_effort=- title=Beta]",
     ]
     records = {
-        d["id"]: d for d in json.loads(_spec("list", "--format", "json", workspace=workspace).stdout)["documents"]
+        d["id"]: d for d in json.loads(_docs("list", "--format", "json", workspace=workspace).stdout)["documents"]
     }
     assert (
         records["PROP-a"]["task_kind"],
@@ -380,7 +380,7 @@ def test_proposal_lines_and_records_carry_task_kind_and_effort_hints(workspace: 
 def test_feedback_resolution_status_filter(docs: Path, write: Write, status: str) -> None:
     for state in ("open", "promoted", "resolved"):
         write(f"specs/2026-10/20261001-done/feedback/{state}.md", _doc(f"FB-{state}", status=state))
-    result = _spec("list", "feedback", "--status", status, "--format", "json", workspace=docs)
+    result = _docs("list", "feedback", "--status", status, "--format", "json", workspace=docs)
     assert result.exit_code == 0
     assert [d["id"] for d in json.loads(result.stdout)["documents"]] == [f"FB-{status}"]
 
@@ -394,14 +394,14 @@ def aliased(workspace: Path, write: Write) -> Path:
 
 
 def test_resolve_an_alias(aliased: Path) -> None:
-    result = _spec("resolve", "CAP-CORE-old", "CAP-CORE-new", workspace=aliased)
+    result = _docs("resolve", "CAP-CORE-old", "CAP-CORE-new", workspace=aliased)
     assert result.exit_code == 0 and result.stderr == ""
     path = "docs/capabilities/core/CAP-CORE-new.md"
     assert result.stdout.splitlines() == [
         f"[DOCUMENT: CAP-CORE-new kind=capability status=active path={path} alias=CAP-CORE-old]",
         f"[DOCUMENT: CAP-CORE-new kind=capability status=active path={path}]",
     ]
-    payload = json.loads(_spec("resolve", "CAP-CORE-old", "CAP-CORE-new", "--format", "json", workspace=aliased).stdout)
+    payload = json.loads(_docs("resolve", "CAP-CORE-old", "CAP-CORE-new", "--format", "json", workspace=aliased).stdout)
     assert [(d["id"], d["alias"]) for d in payload["documents"]] == [
         ("CAP-CORE-new", "CAP-CORE-old"),
         ("CAP-CORE-new", None),
@@ -410,13 +410,13 @@ def test_resolve_an_alias(aliased: Path) -> None:
 
 
 def test_refs_with_aliases(aliased: Path) -> None:
-    incoming = _spec("refs", "CAP-CORE-new", "--direction", "in", "--format", "json", workspace=aliased)
+    incoming = _docs("refs", "CAP-CORE-new", "--direction", "in", "--format", "json", workspace=aliased)
     items = json.loads(incoming.stdout)["items"]
     assert [(item["id"], len(item["references"])) for item in items] == [("UC-r", 2), ("UC-s", 1)]
-    outgoing = _spec("refs", "UC-r", "--format", "json", workspace=aliased)
+    outgoing = _docs("refs", "UC-r", "--format", "json", workspace=aliased)
     items = json.loads(outgoing.stdout)["items"]
     assert [(item["id"], item["path"], len(item["references"])) for item in items] == [
         ("CAP-CORE-new", "docs/capabilities/core/CAP-CORE-new.md", 2)
     ]
-    by_alias = _spec("refs", "CAP-CORE-old", "--direction", "in", "--format", "json", workspace=aliased)
+    by_alias = _docs("refs", "CAP-CORE-old", "--direction", "in", "--format", "json", workspace=aliased)
     assert json.loads(by_alias.stdout)["id"] == "CAP-CORE-new"
