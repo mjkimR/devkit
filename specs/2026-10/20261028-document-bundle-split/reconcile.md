@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-document-bundle-split
-status: pending
+status: resolved
 targets:
 - file: docs/architecture/ARCH-05-2-components.md
   resolution: modified
