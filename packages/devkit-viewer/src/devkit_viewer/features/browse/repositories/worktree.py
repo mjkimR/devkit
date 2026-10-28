@@ -147,7 +147,7 @@ class WorkingTreeReader:
         if section not in ("milestones", "proposals", "feedback"):
             raise path_invalid(section)
         roots = (
-            ["docs/roadmap"]
+            ["docs/roadmap", "docs/roadmap/_archive"]
             if section == "milestones"
             else ["docs/proposals"]
             if section == "proposals"
@@ -175,7 +175,7 @@ class WorkingTreeReader:
                         for item in entries
                         if item.type == "blob"
                         and (
-                            re.fullmatch(r"docs/roadmap/MS-[^/]+\.md", item.path)
+                            re.fullmatch(r"docs/roadmap/(?:_archive/)?MS-[^/]+\.md", item.path)
                             if section == "milestones"
                             else "/feedback/" in item.path and item.name.endswith(".md") and item.name != "README.md"
                         )

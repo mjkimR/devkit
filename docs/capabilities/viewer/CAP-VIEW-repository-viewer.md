@@ -1,7 +1,7 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local page, served by devkit viewer serve, that shows the working trees of several repositories, overlays Planning proposals from local plan-* worktrees and refs, pages dashboard lists, opens the release handbook before an on-demand Living Spec book and supplies autohub's viewer library."
+summary: "A read-only local repository page and Svelte library with Planning overlays, paged dashboard lists, live and archived milestone roadmaps, document details and the release handbook before the on-demand Living Spec."
 area: viewer
 status: active
 entrypoints:
@@ -129,7 +129,7 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 
 ### 4.1 Dashboard loading and tab caches
 
-- **Selective reads**: WHEN a local dashboard section opens, it MUST list frontmatter only for direct `docs/roadmap/MS-*.md` files, `docs/proposals/PROP-*/proposal.md` anchors, or non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Check: `tests/integration/features/browse/test_worktree.py`.
+- **Selective reads**: WHEN a local dashboard section opens, it MUST list frontmatter only for `docs/roadmap/MS-*.md` and flat `docs/roadmap/_archive/MS-*.md` files, `docs/proposals/PROP-*/proposal.md` anchors, or non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Check: `tests/integration/features/browse/test_worktree.py`.
 - **Initial pages**: WHEN a section opens through a source with `dashboardList`, it MUST request full bodies only for its first 6 eligible milestones, 9 proposals or 6 feedback entries. All candidate headers are read once to determine global ordering and exact counts. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
 - **Page ordering**: WHEN Load more is selected, the section MUST append at most one page using the same ordered list. Milestones order by active then planned; proposals by review, draft then accepted; open feedback by critical, blocked, workaround then friction, followed by unknown severities. Each group sorts by ID, then path to resolve ties. Membership and sort metadata stay fixed until Refresh or a fresh tab load after expiry. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
 - **Page failure**: IF a body page fails, THEN the section MUST retain its previous cards and cursor and offer Retry for that page. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
@@ -241,8 +241,14 @@ The local source supports recursive metadata requests to avoid one HTTP call per
   Planning overlay does not apply. Check: `frontend/src/lib/RoadmapView.test.ts`.
 - **Members**: direct PROP anchors whose `milestone` names the milestone in the registered working tree. Rejected proposals are not members.
   SPEC milestone metadata is ignored, including historical metadata; SPECs never replace proposals by slug.
-  The roadmap loader reads milestone and proposal anchors only. Direct proposals do not certify completion.
+  The roadmap loader reads root/flat-archive milestone and proposal anchors only. It resolves the complete milestone set before filtering history, so hidden done/dropped prerequisites remain satisfied. Direct proposals do not certify completion.
   One member per slug is displayed.
+
+Archived milestone discovery MUST work through optimized dashboard headers and generic tree/blob sources,
+including post-load classification: done/dropped increase totalCount but not openCount. The generic dashboard and
+roadmap readers descend only into the reserved archive besides their existing directories. History/detail/deep
+links retain archived paths; reopened active files return to root browsing. Checks: dashboard loading/extraction,
+roadmap and RoadmapView frontend tests; backend working-tree selective-header tests.
 
 ## 6. The library for autohub
 

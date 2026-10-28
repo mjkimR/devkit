@@ -157,3 +157,22 @@ def test_dashboard_lists_a_milestone_core_accepts(repo: Path) -> None:
         "items": [{"path": "docs/roadmap/MS-bom.md", "content": "---\nid: MS-bom\n---\n", "encoding": "utf-8"}],
         "errors": [],
     }
+
+
+@pytest.mark.parametrize("status", ["done", "dropped"])
+def test_dashboard_archive_and_nested_detail(repo: Path, status: str) -> None:
+    path = f"docs/roadmap/_archive/MS-{status}.md"
+    target = repo / path
+    target.parent.mkdir(parents=True)
+    header = f"---\nid: MS-{status}\nstatus: {status}\n---\n"
+    target.write_text(header + "# Retained detail\n")
+    nested = target.parent / "year/MS-ignore.md"
+    nested.parent.mkdir()
+    nested.write_text("ignore unrelated nesting")
+    reader = WorkingTreeReader(repo)
+    assert reader.dashboard_headers("milestones") == {
+        "items": [{"path": path, "content": header, "encoding": "utf-8"}],
+        "errors": [],
+    }
+    assert reader.blob(path) == target.read_bytes()
+    assert path in {item.path for item in reader.tree("docs/roadmap/_archive")}

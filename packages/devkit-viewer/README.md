@@ -41,3 +41,6 @@ Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-distribution-and-
 - `frontend/`: one Svelte source for the page (`src/app/`) and the component library (`src/lib/`) that autohub
   vendors as an `npm pack` tarball. `just viewer <lint|check|test|build|pack>` runs its checks; only those changing
   the frontend need Node.
+
+Dashboard and roadmap discovery includes terminal milestones in the flat `docs/roadmap/_archive/`.
+Their history, prerequisite satisfaction, totals and detail paths remain available; open counts exclude done/dropped.

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from devkit_core.core import ArgumentError
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
-from devkit_docs.features.documents import DocumentIndex
+from devkit_docs.features.documents import DocumentIndex, milestone_path_valid
 from devkit_docs.features.documents.models.ids import Kind
 
 
@@ -18,7 +18,8 @@ def milestone_id(root: Path, value: str | None) -> str | None:
         not value.startswith("MS-")
         or found is None
         or found[0].kind is not Kind.MILESTONE
-        or found[0].path != f"docs/roadmap/{found[0].id}.md"
+        or Path(found[0].path).stem != found[0].id
+        or not milestone_path_valid(found[0].path, found[0].status)
     ):
         raise ArgumentError(
             f"--milestone {value!r} must name one existing global milestone",

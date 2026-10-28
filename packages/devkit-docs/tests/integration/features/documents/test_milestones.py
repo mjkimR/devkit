@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 from devkit_dist.cli import cli
 
@@ -36,3 +37,34 @@ def test_kind_scoped_fields_and_unresolved_provenance() -> None:
         ("decomposed_from", "PROP-gone"),
         ("supersedes", "PROP-old"),
     ]
+
+
+@pytest.mark.parametrize("status", ["done", "dropped"])
+def test_archived_identity_refs_and_cli_history(workspace: Path, write, status: str) -> None:
+    path = f"docs/roadmap/_archive/MS-old-{status}.md"
+    identifier = f"MS-old-{status}"
+    write(
+        path,
+        f"---\nid: {identifier}\naliases: [MS-alias]\ntitle: Archived history\nsummary: Archived history searchable marker.\nstatus: {status}\n---\n# [{identifier}] History\n",
+    )
+    write("docs/roadmap/MS-live.md", f"---\nid: MS-live\nstatus: active\ndepends_on: [{identifier}]\n---\n")
+    write("docs/roadmap/_archive/MS-invalid.md", "---\nid: MS-invalid\nstatus: active\n---\n")
+    index = DocumentIndex.load(workspace)
+    assert index.resolve("MS-alias").path == path
+    assert set(index.incoming(identifier)) == {"MS-live"}
+    assert index.resolve("MS-invalid").path.endswith("_archive/MS-invalid.md")
+    assert not index.is_historical(index.resolve("MS-invalid"))
+    runner = CliRunner()
+
+    def invoke(*args: str):
+        result = runner.invoke(cli, ["docs", *args, "-w", str(workspace)])
+        assert result.exit_code == 0, result.output
+        return result.stdout
+
+    assert path in invoke("resolve", "MS-alias")
+    assert "MS-live" in invoke("refs", identifier, "--direction", "in")
+    assert identifier not in invoke("list", "milestone")
+    assert identifier in invoke("list", "milestone", "--status", status)
+    assert identifier in invoke("list", "milestone", "--history")
+    assert f"[HIT: {identifier} " not in invoke("search", identifier, "--mode", "lexical")
+    assert f"[HIT: {identifier} " in invoke("search", identifier, "--mode", "lexical", "--history")

@@ -2,7 +2,7 @@
 id: SPEC-milestone-archive
 title: Archive done and dropped milestones within the roadmap
 summary: "Archives done and dropped global milestones in one flat roadmap directory while preserving identity, history visibility, dependencies and lifecycle authority across document tools and the viewer."
-status: planned
+status: in-progress
 created: 2026-10-28
 related_capabilities: []
 related_usecases: []

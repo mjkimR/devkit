@@ -34,7 +34,8 @@ export interface BranchDocuments {
 
 const FINISHED = new Set(['done', 'dropped']);
 const ORDER = ['active', 'planned', 'done', 'dropped'];
-const MILESTONE = /^docs\/roadmap\/MS-[^/]+\.md$/;
+export const isMilestonePath = (path: string) =>
+	/^docs\/roadmap\/(?:_archive\/)?MS-[^/]+\.md$/.test(path);
 const PROPOSAL = /^docs\/proposals\/PROP-[^/]+\/proposal\.md$/;
 
 /** Local branches whose Units the roadmap reads besides the selected branch. */
@@ -88,7 +89,7 @@ export function buildRoadmap(
 				winners.set(candidate.slug, candidate);
 		}
 	const milestones = base
-		.filter((doc) => MILESTONE.test(doc.path) && text(doc.meta.id))
+		.filter((doc) => isMilestonePath(doc.path) && text(doc.meta.id))
 		.map((doc) => ({
 			id: text(doc.meta.id),
 			title: doc.title,
@@ -142,9 +143,16 @@ export async function loadRoadmapDocuments(
 	const docs = root.some((i) => i.path === 'docs' && i.type === 'tree') ? await list('docs') : [];
 	const has = (path: string) => docs.some((i) => i.path === path && i.type === 'tree');
 	const paths: string[] = [];
-	if (has('docs/roadmap'))
-		for (const item of await list('docs/roadmap'))
-			if (item.type === 'blob' && MILESTONE.test(item.path)) paths.push(item.path);
+	if (has('docs/roadmap')) {
+		const roadmap = await list('docs/roadmap');
+		const archived = roadmap.some(
+			(item) => item.path === 'docs/roadmap/_archive' && item.type === 'tree'
+		)
+			? await list('docs/roadmap/_archive')
+			: [];
+		for (const item of [...roadmap, ...archived])
+			if (item.type === 'blob' && isMilestonePath(item.path)) paths.push(item.path);
+	}
 	if (has('docs/proposals'))
 		for (const item of await list('docs/proposals'))
 			if (item.type === 'tree' && /^PROP-/.test(item.name)) paths.push(`${item.path}/proposal.md`);

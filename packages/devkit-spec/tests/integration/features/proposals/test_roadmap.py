@@ -116,7 +116,12 @@ def test_decomposition_rejects_planning_branch(workspace: Path) -> None:
 @pytest.mark.parametrize("alias", [False, True])
 def test_milestone_membership_notices_preserve_milestone(workspace: Path, status: str, alias: bool) -> None:
     milestone(workspace)
-    path = workspace / "docs/roadmap/MS-foundation.md"
+    path = workspace / (
+        "docs/roadmap/_archive/MS-foundation.md" if status in {"done", "dropped"} else "docs/roadmap/MS-foundation.md"
+    )
+    if status in {"done", "dropped"}:
+        (workspace / "docs/roadmap/MS-foundation.md").unlink()
+        path.parent.mkdir(parents=True)
     path.write_text(
         f"---\nid: MS-foundation\naliases: [MS-old]\nstatus: {status}\n"
         "scope_confirmed: true\ndecomposition_confirmed: true\n---\n"
@@ -138,8 +143,13 @@ def test_milestone_membership_notices_preserve_milestone(workspace: Path, status
 @pytest.mark.parametrize("status", ["done", "dropped"])
 def test_inactive_milestone_cli_notice_is_nonblocking_under_strict(workspace: Path, format: str, status: str) -> None:
     milestone(workspace)
-    path = workspace / "docs/roadmap/MS-foundation.md"
-    path.write_text(path.read_text().replace("status: planned", f"status: {status}"))
+    path = workspace / (
+        "docs/roadmap/_archive/MS-foundation.md" if status in {"done", "dropped"} else "docs/roadmap/MS-foundation.md"
+    )
+    if status in {"done", "dropped"}:
+        (workspace / "docs/roadmap/MS-foundation.md").unlink()
+        path.parent.mkdir(parents=True)
+    path.write_text(f"---\nid: MS-foundation\nstatus: {status}\n---\n")
     result = CliRunner().invoke(
         cli,
         [
@@ -165,3 +175,31 @@ def test_inactive_milestone_cli_notice_is_nonblocking_under_strict(workspace: Pa
         )
     else:
         assert "SPEC_PROPOSAL_MILESTONE_INACTIVE" in result.stderr and "[NOTICE]" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("location", "status"),
+    [
+        ("docs/roadmap", "done"),
+        ("docs/roadmap/_archive", "active"),
+        ("docs/roadmap/nested", "done"),
+        ("docs/roadmap/_archive/year", "dropped"),
+    ],
+)
+def test_invalid_milestone_placement_never_writes(workspace: Path, location: str, status: str) -> None:
+    path = workspace / location / "MS-foundation.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(f"---\nid: MS-foundation\nstatus: {status}\n---\n")
+    with pytest.raises(ArgumentError):
+        create_proposal(workspace, "member", milestone="MS-foundation")
+    assert not (workspace / "docs/proposals").exists()
+
+
+def test_duplicate_milestone_identity_never_writes(workspace: Path) -> None:
+    milestone(workspace)
+    path = workspace / "docs/roadmap/_archive/MS-foundation.md"
+    path.parent.mkdir()
+    path.write_text("---\nid: MS-foundation\nstatus: done\n---\n")
+    with pytest.raises(ArgumentError):
+        create_proposal(workspace, "member", milestone="MS-foundation")
+    assert not (workspace / "docs/proposals").exists()

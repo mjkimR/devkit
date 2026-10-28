@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { indexDocuments, parseBlob, renderDocument } from './documents';
+import { documentAnchor, indexDocuments, parseBlob, renderDocument } from './documents';
 import type { RepositoryDataSource } from './repository';
 
 const base64 = (text: string) => btoa(String.fromCharCode(...new TextEncoder().encode(text)));
@@ -94,4 +94,20 @@ describe('indexDocuments', () => {
 		expect(errors).toHaveLength(1);
 		expect(errors[0]).toMatch(/^docs\/b\.md: /);
 	});
+});
+
+it('retains archived milestone paths in ID links and deep-link anchors', () => {
+	const path = 'docs/roadmap/_archive/MS-history.md';
+	const target = parseBlob(
+		path,
+		'---\nid: MS-history\nstatus: done\n---\n# [MS-history] History\n',
+		'utf-8'
+	);
+	const origin = parseBlob('docs/page.md', '---\nid: CAP-P-page\n---\nSee `MS-history`.', 'utf-8');
+	const wrapper = document.createElement('div');
+	wrapper.innerHTML = renderDocument(origin, [origin, target]).html;
+	const link = wrapper.querySelector('a')!;
+	expect(link.dataset.docPath).toBe(path);
+	expect(link.getAttribute('href')).toBe(`#${documentAnchor(path)}`);
+	expect(decodeURIComponent(documentAnchor(path).slice(4))).toBe(path);
 });

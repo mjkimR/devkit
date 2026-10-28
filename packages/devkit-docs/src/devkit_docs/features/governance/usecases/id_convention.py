@@ -56,6 +56,7 @@ from devkit_docs.features.documents import (
     definition,
     definitions,
     in_feedback,
+    milestone_path_valid,
     visible_lines,
 )
 from devkit_docs.features.documents.models.ids import legacy_references
@@ -98,7 +99,8 @@ _PATH_REMEDIATIONS = {
     Kind.SPEC: _DATED_REMEDIATION,
     Kind.FEEDBACK: _DATED_REMEDIATION,
     Kind.MILESTONE: (
-        f"Rename or move the file to docs/roadmap/MS-{{slug}}.md (the ID is the file stem), then run `{FIX_COMMAND}`"
+        f"Rename or move the file to docs/roadmap/MS-{{slug}}.md for planned/active or docs/roadmap/_archive/MS-{{slug}}.md for done/dropped"
+        f" (the ID is the file stem), then run `{FIX_COMMAND}`"
     ),
 }
 _LIVING_REMEDIATION = (
@@ -366,19 +368,17 @@ def _targets(ctx: RuleContext) -> list[_Target]:
         if len(parts) >= 5 and parts[3] == "feedback" and not path.endswith("/README.md"):
             targets.append(_feedback(path))
     registered = namespaces(ctx)
+    milestone_status = {d.path: d.status for d in document_index(ctx).documents if d.kind is Kind.MILESTONE}
     for docs_root in docs_roots(registered):
         for path in _markdown(ctx, f"{docs_root}/roadmap"):
             if not is_document_file(Path(path).name):
                 continue
             stem = _stem(path)
             slug = stem.removeprefix("MS-")
-            valid = (
-                docs_root == "docs"
-                and len(path.split("/")) == 3
-                and stem.startswith("MS-")
-                and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) is not None
-                and _has_letter(slug)
-            )
+            status = milestone_status.get(path)
+            if status not in {"planned", "active", "done", "dropped"}:
+                status = None
+            valid = docs_root == "docs" and milestone_path_valid(path, status)
             targets.append(
                 _Target(
                     path,
@@ -387,7 +387,7 @@ def _targets(ctx: RuleContext) -> list[_Target]:
                     expected_id=stem if valid else "",
                     path_issue=""
                     if valid
-                    else "Milestone must be stored at docs/roadmap/MS-{slug}.md with a word-led kebab-case slug",
+                    else "Milestone needs a word-led slug at docs/roadmap/MS-{slug}.md (planned/active) or docs/roadmap/_archive/MS-{slug}.md (done/dropped)",
                 )
             )
     for docs_root in docs_roots(registered):
@@ -568,7 +568,7 @@ class IdConventionRule(BaseRule):
 
         targets = _targets(ctx)
         owners: dict[str, list[str]] = {}
-        unique = (Kind.DECISION, *_living_kinds())
+        unique = (Kind.DECISION, Kind.MILESTONE, *_living_kinds())
         for target in targets:
             if target.expected_id and (target.kind in unique or target.expected_id.startswith("SPEC-")):
                 owners.setdefault(target.expected_id, []).append(target.path)

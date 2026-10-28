@@ -1,3 +1,4 @@
+import { isMilestonePath } from '../../api/roadmap';
 import type { RepositoryDocument } from '../../api/documents';
 
 export interface MilestoneItemData {
@@ -106,7 +107,7 @@ export function extractDashboardData(documents: RepositoryDocument[]): Dashboard
 		const meta = doc.meta || {};
 
 		// 1. Milestones
-		if (path.startsWith('docs/roadmap/MS-') && path.endsWith('.md')) {
+		if (isMilestonePath(path)) {
 			const id = String(meta.id || path.split('/').at(-1)?.replace(/\.md$/, ''));
 			const title = doc.title || id;
 			const status = String(meta.status || 'planned').toLowerCase();

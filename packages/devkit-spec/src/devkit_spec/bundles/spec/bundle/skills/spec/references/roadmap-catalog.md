@@ -1,6 +1,8 @@
 # Repository roadmap
 
-Milestones are global documents named MS-<slug>.md, created from the deployed milestone template. User and agent
+Milestones are global documents named MS-<slug>.md, created from the deployed milestone template.
+Planned/active files live at `docs/roadmap/`; done/dropped files live at `docs/roadmap/_archive/`.
+Keep IDs, aliases and filenames unchanged. User and agent
 jointly review each theme and decompose it into direct proposal members. Proposal anchors declare membership;
 milestone bodies do not list work. Handoff does not carry milestone metadata into specs, and historical SPEC
 metadata is ignored. Inspect code/Git on demand for downstream outcomes; no delivery lineage is stored.
@@ -20,7 +22,10 @@ work: confirmed under Completion review with status done in one commit. Missing 
 proposal absence or handoff alone proves no delivery. Actual semantic scope changes reset both to pending; normal handoff does not; unchanged
 approval survives interruption after rechecking facts. Done records stay as written unless merged; extending a done
 milestone's own scope requires a user-owned reopen to active or another milestone. Repeated close of unchanged done
-writes nothing.
+writes nothing. Close/drop/reopen commit the status, applicable assertions/disposition and file movement together
+under the existing user decision. Drop creates no completion assertion. Reopen moves to the root, sets active and
+resets both assertions to pending. Repeated unchanged archived drop writes nothing.
+Stop on destination collisions; no archive-only approval is added to an approved transition.
 
 On the user's Backlog decision, small milestones of any status may merge into a broader theme milestone. The theme
 lists the merged IDs in aliases, the merged files are deleted in the same commit and devkit rules fix moves current

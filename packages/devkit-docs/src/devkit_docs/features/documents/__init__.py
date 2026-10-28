@@ -16,6 +16,7 @@ from devkit_docs.features.documents.models.kinds import (
     relation_prefixes,
 )
 from devkit_docs.features.documents.models.markdown import VisibleLine, visible_lines
+from devkit_docs.features.documents.models.milestones import milestone_path_valid
 from devkit_docs.features.documents.models.model import Document, Issue, Reference
 from devkit_docs.features.documents.models.parse import parse_document
 from devkit_docs.features.documents.repositories.index import (
@@ -49,6 +50,7 @@ __all__ = [
     "is_document_file",
     "is_id",
     "kind_of",
+    "milestone_path_valid",
     "parse_document",
     "relation_prefixes",
     "rewrite",
