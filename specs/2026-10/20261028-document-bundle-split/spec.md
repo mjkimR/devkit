@@ -1,43 +1,25 @@
 ---
-id: PROP-document-bundle-split
+id: SPEC-document-bundle-split
 title: Install the document system without SDD
-summary: "Ships document formats, authoring guidance, templates and document rules in a docs bundle, independently of the spec bundle's SDD lifecycle assets."
-status: accepted
-created_at: 2026-10-28
-target_area: packages/devkit-docs/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-milestone: MS-idea-incubation
-boundaries:
-  owns:
-    - packages/devkit-docs/
-    - packages/devkit-spec/
-    - guides/
-    - docs/capabilities/documents/
-    - docs/capabilities/delivery/
-    - docs/capabilities/governance/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/steering/glossary.md
-    - .devkit/config.toml
-    - .devkit/installation.json
-    - AGENTS.md
-    - pyproject.toml
-    - uv.lock
-    - scripts/affected_tests.py
-  excludes:
-    - packages/devkit-dist/src/
-    - packages/devkit/src/
-task_kind: feature
+summary: Ships document formats, authoring guidance, templates and document rules in a docs bundle, independently of the spec bundle's SDD lifecycle assets.
+status: planned
+created: 2026-10-28
 decomposed_from: PROP-document-layer-package
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-document-bundle-split] Install the document system without SDD
+# [SPEC-document-bundle-split] Install the document system without SDD
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-document-bundle-split on 2026-10-28.
+- **Preserved Materials**: `docs/materials/2026-10/20261028-document-bundle-split`
+- Target Docs Blueprint: `PROP-document-bundle-split-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `ADR-document-package` separated the document implementation into devkit-docs. The `spec` bundle still owns all
 its deployable instructions, rules, templates and skeletons. Installing devkit-docs alone therefore supplies
@@ -47,19 +29,38 @@ A document-only bundle lets another development approach use the existing format
 instructions. This is the distribution prerequisite of `MS-idea-incubation`, not its complete incubation path.
 The preceding package refactor is integrated at `26a3c494`; it is not an unresolved prerequisite.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Install the document system without SDD so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — distribution boundary**: recommend two bundles, `docs` in devkit-docs and `spec` in devkit-spec, rather
-  than document/lifecycle presets in one wheel. See `PADR-document-and-sdd-bundles` and
-  `materials/distribution-evidence.md`.
+  than document/lifecycle presets in one wheel. See `ADR-document-and-sdd-bundles` and
+  `docs/materials/2026-10/20261028-document-bundle-split/distribution-evidence.md`.
 - **Q2 — clean guidance**: move document guidance and rewrite mixed passages, rule `related` identifiers,
   templates and seeded READMEs by meaning. Preserve SDD-only obligations in the spec constitution and skills.
   A document-only installation must contain no instruction to invoke `/spec`, create a Unit, traverse workflows,
   record approval/envelopes or preserve completed delivery artifacts.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Bundle selection and ownership
+#### Bundle selection and ownership
 
 1. `devkit-docs` registers `docs = "devkit_docs.bundles.docs"` in `devkit.bundles`. Its `core` default is
    `auto_select = true`, matching the existing package-installation model. devkit-spec keeps its auto-selected
@@ -85,7 +86,7 @@ The preceding package refactor is integrated at `26a3c494`; it is not an unresol
    assets with `uv run devkit remove spec`, but installed devkit-spec command extensions remain installed. A
    clean document-only consumer installs devkit-docs without devkit-spec and is the isolation acceptance case.
 
-### Rule inventory
+#### Rule inventory
 
 | Owner | Existing rule assets | Judgment after the split |
 | --- | --- | --- |
@@ -97,7 +98,7 @@ and does not make the SDD lifecycle mandatory. Rejected-proposal and milestone h
 extensions, not docs bundle assets. They are absent from the clean docs-only environment because devkit-spec
 is not installed; removing selected spec assets alone does not disable those installed extensions.
 
-### Separation of authoring and lifecycle policy
+#### Separation of authoring and lifecycle policy
 
 The docs constitution retains document identity, frontmatter, full-ID references, applicable structure, summaries,
 namespace and steering lookup, authoring instructions and current-state documentation. It does not impose SDD
@@ -109,7 +110,7 @@ SDD's policy for superseding accepted decisions. The generic docs guidance allow
 approach to decide revision and retention. Existing SDD consumers retain the original obligations through spec.
 Rule behavior, document kind vocabulary, statuses and command names stay as established by `ADR-document-package`.
 
-### Validation scenarios
+#### Validation scenarios
 
 - **AC-01 — document-only installation**: Given an isolated consumer environment with devkit-docs and its
   dependencies but no devkit-spec distribution, when sync and `get-context docs` run, then docs core assets,
@@ -135,7 +136,7 @@ Rule behavior, document kind vocabulary, statuses and command names stay as esta
   bundle entrypoints. This repository selects both core bundles, syncs its tracked outputs and passes
   `devkit sync --check`, affected tests, lint, type checks and the cumulative governance check.
 
-### Scope exclusions and dependent work
+#### Scope exclusions and dependent work
 
 - **Scope Excluded**: incubation entry skills, product clarification/research/usage-verification roles and
   resumable incubation context. Those depend on the document-only foundation.
@@ -148,15 +149,16 @@ Rule behavior, document kind vocabulary, statuses and command names stay as esta
 The Host retains milestone follow-up decomposition and tracking; no omitted milestone exit criterion is claimed
 complete by this proposal. `target-docs.md` identifies the Living Spec reflection and documentation repairs.
 
-### Planning review
+#### Planning review
 
 The medium-effort Challenger inspected wheel ownership, manifest selection, explicit opt-outs, document rule
 implementations, instructions and seeds at `9492bd01`. It returned no material findings. No open design question
 requires a separate worker answer; the proposed direction remains subject to Host/user `plan-accept`.
 Consumer installation and semantic text verification remain Development evidence.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Accept the direction and hand off one feature spec after the Host validates this Planning result. Retire the
 proposal at handoff. Development completes only when AC-01 through AC-06 and the document-only consumer smoke
 pass. The proposed direction requires `plan-accept`; this worker records no acceptance or handoff authority.
+

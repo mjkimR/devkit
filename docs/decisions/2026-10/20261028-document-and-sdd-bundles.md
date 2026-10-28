@@ -1,13 +1,13 @@
 ---
-id: PADR-document-and-sdd-bundles
+id: ADR-document-and-sdd-bundles
 title: Separate document assets from SDD assets
 summary: "For repositories using documents without SDD, we ship document assets in a docs bundle and retain lifecycle assets in spec, to select guidance independently, accepting two context reads for SDD."
-proposal: PROP-document-bundle-split
-status: draft
+proposal: SPEC-document-bundle-split
+status: accepted
 created_at: 2026-10-28
 ---
 
-# [PADR-document-and-sdd-bundles] Separate document assets from SDD assets
+# [ADR-document-and-sdd-bundles] Separate document assets from SDD assets
 
 ## 1. Context & Problem Statement
 

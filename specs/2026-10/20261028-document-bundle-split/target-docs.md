@@ -13,7 +13,7 @@ status: draft
 - `ARCH-05-2-components`: application-owned docs bundle location.
 - `ARCH-07-deployment`: wheel asset ownership and bundle discovery if its current tables enumerate providers.
 - `ADR-document-package`: remains accepted and unchanged; the distribution follow-up is realized by the promoted PADR.
-- `PADR-document-and-sdd-bundles`: promote at handoff to record independent distribution and default selection.
+- `ADR-document-and-sdd-bundles`: promote at handoff to record independent distribution and default selection.
 - Root glossary steering row: get-context docs owns steering discovery.
 - Package READMEs and `guides/INSTALL_GUIDE.md`, `guides/install/{bundle-recommendations,new-repository,existing-repository}.md`:
   document-only versus SDD package choices, docs:docs-skeleton, get-context ownership and asset/runtime distinction.

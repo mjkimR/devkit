@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-document-bundle-split
+by: user
+at: '2026-10-28T03:52:11.679243Z'
