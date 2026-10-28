@@ -2,7 +2,7 @@
 id: PROP-document-bundle-split
 title: Install the document system without SDD
 summary: Splits the spec bundle's distribution so a repository can install document formats, instructions, templates and rules without the SDD lifecycle assets.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-28
 target_area: delivery/
 priority: medium                      # critical | high | medium | low
