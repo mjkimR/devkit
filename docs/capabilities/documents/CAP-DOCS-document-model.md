@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Defines Markdown document identity, references and indexing with a required LibYAML safe parser for frontmatter, including strict schema checks, parser locations and a distinct missing-binding failure."
+summary: "Defines Markdown document identity, references, indexing and frontmatter parsing, and the independent docs bundle of shared formats, writing guidance and document rules."
 area: documents
 status: active
 usecases:
@@ -11,6 +11,7 @@ entrypoints:
   - packages/devkit-docs/src/devkit_docs/features/documents/
   - packages/devkit-core/src/devkit_core/core/frontmatter.py
   - packages/devkit-core/src/devkit_core/core/yaml.py
+  - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml
 created_at: 2026-10-13
 ---
 

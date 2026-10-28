@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Spec guidance covers delivery skills, workers and source feedback, with base-snapshot prerequisite recommendations, explicit lifecycle edge disposition and coarse milestones closed through two current user confirmations."
+summary: "Spec guidance supplies SDD lifecycle skills, workflows, roles and policy while the independent docs bundle owns shared authoring instructions, templates, steering context and document scaffolds."
 area: harness
 status: active
 created_at: 2026-10-13
