@@ -8,7 +8,7 @@ target: devkit_dist.features.distribution.models.invocation; devkit_agt gate/wor
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-27
 ---
 
@@ -42,3 +42,10 @@ Code consistency: the agent-facing invocation from `ADR-keep-uv-run-as-the-agent
 ```text
 AGENT_INVOCATION (distribution), DEVKIT (gate), literals (host, workflow, worktree, rules)
 ```
+
+## Disposition
+
+- **Disposition**: Dismissed by the user's decision: `devkit_dist.features.project.models.invocation` provides the
+  shared constant and helper, and gate and workflow use the helper. The separate constant in
+  `devkit_spec.base.errors` preserves the base-to-feature import boundary; `test_the_agent_invocation_matches_devkit_dist`
+  checks its equality with the shared constant. Remaining literal duplication alone does not justify this follow-up.
