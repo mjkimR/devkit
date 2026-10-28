@@ -1,0 +1,36 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-28T06:01:16.897262Z'
+status: completed
+summary: Read-only reader inventory confirms index/history reuse, root-only validation/authoring/viewer gaps, global scope and existing done-or-dropped readiness
+findings:
+- issue: Milestone index already supports archive history but path convention rejects it
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/repositories/index.py:123-152,220-260; features/governance/usecases/id_convention.py:368-405
+  failure_condition: An archived milestone is explicitly checked by the current root-only convention
+  suggested_action: Extend only the global reserved flat path and non-mutating placement checks
+  resolution: open
+- issue: Proposal milestone authoring checks canonical root-only path
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/roadmap.py:11-28
+  failure_condition: An archived milestone ID or resolving alias is supplied to proposal new
+  suggested_action: Accept both supported canonical paths, retaining inactive notices
+  resolution: open
+- issue: Viewer dashboard and roadmap discovery are root-only
+  evidence: packages/devkit-viewer/src/devkit_viewer/features/browse/repositories/worktree.py:145-182; frontend/src/lib/features/dashboard/loading.ts:29-40,94-113; frontend/src/lib/api/roadmap.ts:132-150
+  failure_condition: Terminal milestones move into archive but optimized or generic viewer discovery omits them
+  suggested_action: Include archive headers and preserve existing history/detail/readiness contracts
+  resolution: open
+- issue: Both terminal statuses already satisfy milestone readiness
+  evidence: docs/decisions/2026-10/20261022-roadmap-and-milestones.md:150-156; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/references/next-work.md:6-11
+  failure_condition: Path changes make archived done or dropped dependencies unknown
+  suggested_action: Preserve current semantics and test each status independently
+  resolution: open
+assumptions:
+- Codex emulated read-only role; equal before/after snapshot and unchanged HEAD
+checks:
+  source_inspection: PASS current source and contracts; no CLI-refactor blocker found
+  boundary: PASS equal tree dbf30cbae3c5edfdfcbe94b95d75e4188fbf1be9 and unchanged982b9c1f
+diff_scope:
+  base: 982b9c1f927b0c1c273b8474a34a53546e7b0913
+  head: 982b9c1f927b0c1c273b8474a34a53546e7b0913
