@@ -37,7 +37,9 @@ Group open feedback from a fresh context and recommend where each group goes. Yo
 Modify, stage and commit nothing. Return as YAML `status` (`completed | needs_input | failed`), `summary`, `findings`, `assumptions`, `unverified_areas` and `diff_scope.head` (the HEAD you read). One finding per group:
 
 - `issue`: the group's FB IDs, its target and its confirmed ownership (`repo`, `upstream`, `unknown`).
-- `suggested_action`: the recommended destination from the Step 2 table with its reason, possible duplicates of another open item and dismissal candidates.
-- `evidence`: the paths and lines you read; `failure_condition`: what goes wrong if the destination is applied without the user's review.
+- `suggested_action`: the smallest sufficient destination from Step 2 with its reason and the material direction
+  decision still needed (or direction settled), possible duplicates and dismissal candidates.
+- `evidence`: the paths and lines supporting the observation and any verified cause; label an unverified cause.
+  `failure_condition`: what goes wrong if the destination is applied without the user's review.
 
 An empty listing is `completed` with no findings. If an item cannot be read or its ownership cannot be judged from its target and Evidence, keep it in its own group with ownership `unknown` and name it in `unverified_areas`.
