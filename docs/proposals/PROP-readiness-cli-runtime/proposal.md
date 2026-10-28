@@ -2,7 +2,7 @@
 id: PROP-readiness-cli-runtime
 title: Validate branch CLI contracts with an explicit readiness runtime
 summary: Choose a safe way to validate changed CLI contracts during integration without confusing the retained base runtime with the source branch.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing
 created_at: 2026-10-28
 target_area: capabilities/integration/
 priority: high                        # critical | high | medium | low
