@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-incubation-lifecycle-policy
-status: pending
+status: resolved
 targets:
 - file: docs/architecture/ARCH-05-2-components.md
   resolution: modified
@@ -37,7 +37,7 @@ ownership and independent project provider are reflected in their owning capabil
 architecture, glossary, package READMEs and installation guidance agree with the implementation.
 
 Code review findings were fixed and independently reverified. Tests: affected full fallback 5898 passed,14 skipped;
-dist-only1271 passed; installed document-only consumer proves common inspection and actual project readiness without
+after the root attachment correction the affected selector passed1420 tests; dist-only1271 passed; installed document-only consumer proves common inspection and actual project readiness without
 devkit-spec; official smoke passed. The project retains the default SDD approach.
 
 ## Remaining milestone work

@@ -2,7 +2,7 @@
 id: SPEC-incubation-lifecycle-policy
 title: Apply explicit development approach policy across lifecycle consumers
 summary: Owns an inspectable project development approach outside devkit-spec and aligns runtime lifecycle checks, integration and installed guidance while preserving independent verification and existing SDD artifacts.
-status: in-progress
+status: completed
 created: 2026-10-28
 depends_on:
   - SPEC-document-bundle-split
