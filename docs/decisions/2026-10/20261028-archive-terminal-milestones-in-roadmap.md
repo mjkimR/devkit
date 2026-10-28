@@ -1,13 +1,13 @@
 ---
-id: PADR-archive-terminal-milestones-in-roadmap
+id: ADR-archive-terminal-milestones-in-roadmap
 title: Archive terminal milestones in a flat roadmap directory
 summary: "For a roadmap that separates live themes from history, we keep done and dropped milestones in one flat archive, to preserve identity and browsing while clearing the root, accepting coordinated reader and guidance updates."
-proposal: PROP-milestone-archive
-status: draft
+proposal: SPEC-milestone-archive
+status: accepted
 created_at: 2026-10-28
 ---
 
-# [PADR-archive-terminal-milestones-in-roadmap] Archive terminal milestones in a flat roadmap directory
+# [ADR-archive-terminal-milestones-in-roadmap] Archive terminal milestones in a flat roadmap directory
 
 ## 1. Context & Problem Statement
 
@@ -33,7 +33,7 @@ index already supports nested Markdown; validator, authoring and viewer path ass
 
 ## 4. Decision Outcome
 
-Recommend the flat archive, pending Host/user acceptance. Live milestones remain at the global roadmap root;
+Use the flat archive. Live milestones remain at the global roadmap root;
 done/dropped files use `docs/roadmap/_archive/` with the same filename and identity. Both statuses already satisfy
 milestone prerequisites, and history stays derived from status rather than directory.
 

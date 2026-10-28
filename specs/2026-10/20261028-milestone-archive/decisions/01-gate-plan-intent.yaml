@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-milestone-archive: Start Planning immediately for done and dropped milestone
+  archiving'
+by: user
+at: '2026-10-28T06:13:57.292574Z'

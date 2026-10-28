@@ -1,38 +1,24 @@
 ---
-id: PROP-milestone-archive
+id: SPEC-milestone-archive
 title: Archive done and dropped milestones within the roadmap
-summary: "Archives done and dropped global milestones in one flat roadmap directory while preserving identity, history visibility, dependencies and lifecycle authority across document tools and the viewer."
-status: accepted
-created_at: 2026-10-28
-target_area: capabilities/documents/
-priority: low
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-docs/
-    - packages/devkit-spec/
-    - packages/devkit-viewer/
-    - docs/capabilities/documents/
-    - docs/capabilities/delivery/
-    - docs/capabilities/governance/
-    - docs/capabilities/harness/
-    - docs/capabilities/viewer/
-    - docs/usecases/documents/
-    - docs/usecases/delivery/
-    - docs/decisions/
-    - docs/roadmap/
-  excludes:
-    - packages/devkit-cli/
-    - packages/devkit-dist/
-task_kind: feature
-workflow: sdd-proposal
+summary: Archives done and dropped global milestones in one flat roadmap directory while preserving identity, history visibility, dependencies and lifecycle authority across document tools and the viewer.
+status: planned
+created: 2026-10-28
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-milestone-archive] Archive done and dropped milestones within the roadmap
+# [SPEC-milestone-archive] Archive done and dropped milestones within the roadmap
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-milestone-archive on 2026-10-28.
+- **Preserved Materials**: `docs/materials/2026-10/20261028-milestone-archive`
+- Target Docs Blueprint: `PROP-milestone-archive-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-DOCS-document-model` and `ADR-roadmap-and-milestones` retain terminal milestone history. The root roadmap
 contains four `done` files and two `planned` files at base `b17db06f`; there are no `dropped` files. History filters
@@ -40,13 +26,32 @@ already hide done/dropped documents, but filesystem browsing still mixes them wi
 
 One reserved flat archive can separate storage without another status or index. The document index already reads
 nested Markdown and derives history from status; path validators, proposal membership and viewer discovery still
-assume root-only milestone files. `materials/reader-inventory.md` records the source evidence and a bounded probe.
+assume root-only milestone files. `docs/materials/2026-10/20261028-milestone-archive/reader-inventory.md` records the source evidence and a bounded probe.
 
 Planning uses the current docs/spec/viewer ownership. No structural prerequisite or active CLI-refactor dependency
 was found in these seams. Development rechecks its base and repairs renamed reader locations within this scope;
 a later change that breaks this agreement returns to the Host rather than inventing a dependency or duplicate API.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Archive done and dropped milestones within the roadmap so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — terminal scope, settled**: include both `done` and `dropped`. Keep their statuses distinct; archiving does
   not certify completion. This was resolved before this Planning turn.
@@ -55,14 +60,14 @@ a later change that breaks this agreement returns to the Host rather than invent
 - **Q3 — reader coverage**: index/history/aliases already work by identity and status. Extend proposal membership,
   viewer dashboard header discovery, post-load dashboard classification/counts and roadmap loading to the reserved archive location.
 - **Q4 — retained history**: recommend relocating the exact four unchanged files in
-  `materials/relocation-candidates.json` after readers and checks pass. That manifest is an approval candidate,
+  `docs/materials/2026-10/20261028-milestone-archive/relocation-candidates.json` after readers and checks pass. That manifest is an approval candidate,
   not relocation authority; the Host presents it with the proposed Development effects.
 
-`PADR-archive-terminal-milestones-in-roadmap` compares keeping the root, one archive and partitioned alternatives.
+`ADR-archive-terminal-milestones-in-roadmap` compares keeping the root, one archive and partitioned alternatives.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Storage and validation
+#### Storage and validation
 
 1. Global `planned`/`active` milestones live at `docs/roadmap/MS-<slug>.md`; global `done`/`dropped` milestones live
    at `docs/roadmap/_archive/MS-<slug>.md`. Keep the word-led kebab-case slug and matching ID/H1. No other nesting,
@@ -77,7 +82,7 @@ a later change that breaks this agreement returns to the Host rather than invent
 5. Prefer a small pure accepted-path helper in the existing document layout owner if needed by both Python
    validators. Do not make indexing reject invalid documents or add a general path abstraction/resolver.
 
-### Lookup and prerequisites
+#### Lookup and prerequisites
 
 6. Retain status-derived default/history visibility, `resolve`, alias resolution and incoming/outgoing `refs`.
    The document scanner and history model do not need a second archive registry. Index both supported locations.
@@ -88,7 +93,7 @@ a later change that breaks this agreement returns to the Host rather than invent
    milestone set before applying history display filters. Hiding a terminal document must not turn a known edge into
    an unknown one. Preserve MS-only edges and direct PROP-only membership; SPECs acquire no milestone field.
 
-### Viewer and lifecycle guidance
+#### Viewer and lifecycle guidance
 
 9. Include archive headers in the existing backend dashboard list, frontend dashboard discovery, post-load
    `extractDashboardData` classification/count aggregation and roadmap loader. Cover both optimized `dashboardList` sources and generic tree/blob source fallback. Do not read the whole repository
@@ -104,7 +109,7 @@ a later change that breaks this agreement returns to the Host rather than invent
 12. Repeating an unchanged archived close/drop writes nothing. Milestone merging still works for either location:
     retain merged IDs as aliases, preserve explicit scope disposition and never infer delivery from removal.
 
-### Existing-history relocation and authority
+#### Existing-history relocation and authority
 
 The captured candidate set is:
 
@@ -127,7 +132,7 @@ applying it. New terminal files, changed source contents or destination conflict
 candidate and authority for changed effects; do not silently broaden this batch. Plain file checks suffice; no new
 runtime manifest protocol, hash lock or migration reader is introduced.
 
-### Validation scenarios
+#### Validation scenarios
 
 - **AC-01 — layout**: Given root live and archived terminal milestones, when convention/format checks run, then
   supported pairs pass with the same ID/H1; archived live, root terminal, arbitrary nested and namespaced locations
@@ -155,7 +160,7 @@ runtime manifest protocol, hash lock or migration reader is introduced.
   consumer smoke, viewer frontend lint/check/test/build, sync and cumulative governance run, then they pass.
   Include real done/dropped/collision/reopen fixtures and archived detail/loading tests; rebuild the committed page.
 
-### Verification boundary and exclusions
+#### Verification boundary and exclusions
 
 Development selects exact test paths from the inventory. Reuse document lookup/history/namespace tests, milestone
 convention and proposal roadmap tests, viewer backend selective-read tests and frontend dashboard/roadmap/deep-link
@@ -168,10 +173,11 @@ command named by its `[FRONTEND_CHECK: ...]` result and the required viewer buil
   other document kinds, partitioned archives and retroactive completion evidence.
 - **Scope Excluded**: actual archive moves or milestone status changes during Planning.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Keep one feature spec: storage convention and all required readers jointly deliver the archive path. Planning
 found no independent structural prerequisite and retains M/medium hints. Host/user acceptance approves the
 proposed direction; handoff starts Development only under its existing policy. Any exact relocation authority must
 name the reviewed effects; no worker accepts or hands off. Completion requires AC-01 through AC-08 and current
 Living Spec/guidance reflection. The milestone theme decisions and historical records remain otherwise unchanged.
+

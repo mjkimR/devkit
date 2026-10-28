@@ -14,11 +14,11 @@ status: draft
 - `CAP-HARN-agent-guidance`: atomic close/drop/reopen movement, existing authority and historical merging.
 - `CAP-VIEW-repository-viewer`: optimized/backend/generic milestone discovery, post-load classification/counts, history, dependencies and detail links.
 - Applicable document/delivery use cases: repair path-specific lookup/history/authoring statements only where they exist.
-- Promote `PADR-archive-terminal-milestones-in-roadmap` for the storage-only partial supersession. Preserve unrelated
+- Promote `ADR-archive-terminal-milestones-in-roadmap` for the storage-only partial supersession. Preserve unrelated
   outcomes of `ADR-roadmap-and-milestones` and `ADR-milestone-merging`; any old-ADR change is reference-only.
 - Source bundle rule guides, roadmap/Backlog/milestone-completion/spec-next guidance, docs milestone template and package
   READMEs: root versus archive placement and lifecycle movement. Use source assets and sync generated outputs.
-- The exact four roadmap source/destination paths in `materials/relocation-candidates.json`: only after concrete
+- The exact four roadmap source/destination paths in `docs/materials/2026-10/20261028-milestone-archive/relocation-candidates.json`: only after concrete
   authority and reader verification. No live exact file-link repair was found; preserve recorded historical paths.
 
 No new UX screen is drafted: the existing dashboard/roadmap/history/detail interfaces remain. Frontend path/loading
