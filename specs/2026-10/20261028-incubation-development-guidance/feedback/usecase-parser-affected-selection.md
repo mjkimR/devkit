@@ -8,7 +8,7 @@ target: scripts/affected_tests.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-28
 ---
 
@@ -49,3 +49,15 @@ assert any(step.extension for step in parsed.steps)
 After correcting '- **2a. Label**:' to '- **2a.** Label:':
 1 passed
 ```
+
+## Disposition
+
+Resolved by the session change to `scripts/affected_tests.py`: changes under `docs/usecases/`, including deleted
+files, select `test_ux_repository_usecases.py` in addition to the existing document checks.
+The regression in `packages/devkit/tests/e2e/package/test_affected_tests.py` covers existing and deleted usecases
+and the unrelated `docs/usecases-other/` prefix. The existing full fallback is preserved.
+
+Verification: the focused Red run reproduced the failures before the fixes; both changed regression files passed
+90 tests after the fixes. The cumulative affected selection passed 1,573 tests. Ruff, Pyright, governance rules,
+and `devkit sync --check` passed. Independent code review of commit `2664c8c6c9d5d27e3fd247949b8f6d21d91ad9ab`
+reported no findings; the Host verified the reviewed tree was unchanged.
