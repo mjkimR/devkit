@@ -2,7 +2,7 @@
 id: PROP-performance-pass
 title: Performance pass maintenance playbook
 summary: Add a maintenance playbook that measures, profiles and applies behavior-preserving performance changes to user-selected commands with differential preservation evidence, separate from review-refactor.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-27
 target_area: delivery/
 priority: high                        # critical | high | medium | low
