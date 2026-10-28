@@ -13,6 +13,7 @@ usecases:
   - UC-resolve-stale-activity-branches
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
+  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/SKILL.md
 ---
 
 # [CAP-HARN-agent-guidance] Agent Guidance Assets

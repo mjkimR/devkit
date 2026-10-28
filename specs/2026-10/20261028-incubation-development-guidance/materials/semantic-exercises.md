@@ -62,8 +62,8 @@ changed. Authored fixtures remain for worktree cleanup; no source reset, commit 
 The exercises do not prove general model reliability, real-user usability, concurrency, crash durability, permission
 failure or cross-platform behavior. No build/lint/type configuration exists for the sample app, so those app checks
 were unverified; production catalog checks are separate. No SDD activation or historical artifact reconstruction ran.
-Policy review fixes, shared documentation and mandatory independent code/reconcile reviews remain pending before
-final completion. Source changes to relevant policy or guidance require affected evidence to be rechecked.
+At the original capture revision, policy review fixes, shared documentation and independent reviews were pending.
+Final workflow envelopes record their closure. Relevant policy or guidance changes require affected evidence to be rechecked.
 
 ## Built-wheel identities
 
@@ -85,3 +85,12 @@ The official affected selection returned 11 passed and 2 failed tests inherited 
 its new SPEC_LIFECYCLE_INACTIVE, INTEGRATION_APPROACH_MISMATCH and INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED
 codes were not yet documented there. Those policy changes are outside this turn's write scope. They require the
 Host's latest verified policy merge and a fresh affected run; this report does not claim that affected suite passed.
+
+## Verification after the integrated policy base
+
+On the verified policy base (main `2ee13ec1`, guidance accepted head `43a12db6`), the actual no-spec wheel consumer,
+catalog tests, formerly failing documented-code checks and explicit repository-usecase parser passed together
+(39 tests). Catalog source and the semantic exercise inputs were unchanged, so their bounded observations remain
+applicable. The full guidance affected run passed 5906 tests with 14 skipped and found one stale module-area
+expectation caused by the added catalog e2e tier. That test-only assertion was corrected without changing helper
+behavior; the module-script file, actual no-spec wheel consumer and UC parser then passed together (34 tests).

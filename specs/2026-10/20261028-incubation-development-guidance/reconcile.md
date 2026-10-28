@@ -43,3 +43,9 @@ protected. The independent reviewer verifies these targets before this record be
 
 `FB-usecase-parser-affected-selection` records the observed selector gap; the source selector is outside this
 feature and remains unchanged. The explicit usecase parser regression is included in final verification.
+
+## Entrypoint review
+
+Derivation proposed broad catalog, guide and architecture-config paths; these were rejected because they are not
+behavior doorways. The existing capability doorway remains `incubate/SKILL.md`; the same exact source is added to
+the new usecase and the incubation portion of agent guidance while preserving its existing SDD doorway.

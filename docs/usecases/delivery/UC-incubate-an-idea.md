@@ -9,6 +9,8 @@ status: active
 capabilities:
   - CAP-DLV-idea-incubation
   - CAP-HARN-agent-guidance
+entrypoints:
+  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/SKILL.md
 ---
 
 # [UC-incubate-an-idea] Advance an idea and leave resumable current context
