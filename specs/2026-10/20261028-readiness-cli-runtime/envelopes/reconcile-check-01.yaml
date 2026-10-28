@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T00:42:24.968416Z'
+status: completed
+summary: 'Author self-check PASS at low effort: remediation and guide agree; existing integration contracts and operational reference remain accurate; no Living Spec targets or entrypoints.'
+findings: []
+assumptions:
+- 'No capability target: text explains existing running-CLI behavior; rule guide is runtime-owned, not selected bundle content.'
+checks:
+  agreement: PASS inspected scoped diff against AC-01/02 and retained-runtime import-failure documentation
+  scope: PASS only diagnostic guidance; no runtime behavior or authority change
+diff_scope:
+  base: f24cab8b57b09e98c68cd67afd017b80f179fe3d
+  head: e0088fa61638a50e95eae5a18bb68c483ac16662

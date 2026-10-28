@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T00:43:14.795646Z'
+status: completed
+summary: 'Delivered the narrowed CLI citation guidance: running CLI reference, invalid citation or older runtime as possible causes, and help comparison. Underlying runtime mismatch remains outside scope; no integration performed.'
+findings: []
+assumptions:
+- Low effort author review and self-checked reconcile passed with no findings; Host owns final scope inspection and integration.
+- 'Worktree isolation is emulated: explicit cwd, allowed paths, per-operation escalation and scoped Git commits substitute for native isolation.'
+checks:
+  tests: PASS 17 rule-local; Red 2 expected failures; affected 3406 passed in 23.57s with full fallback retained
+  build: PASS no build artifacts or packaging changes; no build required for diagnostic text
+  lint: PASS lint-check devkit; check devkit; committed rules check --ci --base main
+diff_scope:
+  base: f24cab8b57b09e98c68cd67afd017b80f179fe3d
+  head: e92e8e3b2b7a8924f6861da6c2c8e873019af672

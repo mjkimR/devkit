@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T00:42:39.307905Z'
+status: completed
+summary: Milestone guidance (template, Backlog reference) and CAP-HARN-agent-guidance now state that a milestone binds nothing and Planning settles scope and requirements. Self-review and reconcile at low effort passed; ready for integration.
+findings: []
+assumptions:
+- Guidance-only change; milestone statuses, completion review and existing docs/roadmap documents are unchanged.
+checks:
+  tests: 'PASS just test-affected: 1947 passed'
+  build: PASS devkit-spec wheel built and carries the updated template
+  lint: PASS just rules-check and rules check --ci --base main; devkit sync --check clean; git diff --check clean
+diff_scope:
+  base: d47d21f1f678d0073c0c83d2a6e8de566c2d2827
+  head: 142f87621b73eaeda51f065ceac76887a6e23dca

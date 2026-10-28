@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T00:41:52.084612Z'
+status: completed
+summary: 'PASS: self-checked reconcile at low effort; CAP-HARN-agent-guidance reflects the non-binding milestone boundary stated in the template and the Backlog reference, with no other Living Spec impact.'
+findings: []
+checks:
+  reflection: PASS the only Living Spec target is modified
+  architecture: PASS no structural change
+diff_scope:
+  base: d47d21f1f678d0073c0c83d2a6e8de566c2d2827
+  head: c8b9f6eb12b6018512c79aeccffb52b290259612
+activity_effort: low

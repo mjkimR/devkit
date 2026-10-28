@@ -32,9 +32,14 @@ One violation per citation, at its line and column, for the first problem in it:
 
 ## 3. Remediation
 
-There is no autofix: which command a stale citation should become is a judgment.
+CLI citations are checked against the currently running CLI. A missing command or option can mean an invalid
+citation or an older runtime. Lookup failure alone does not establish which cause applies. Check the running CLI's
+help and compare it with the intended interface before changing the citation.
 
-- Cite the command as it is now; `devkit <command> --help` lists subcommands and options.
+There is no autofix: deciding whether to change the citation requires that comparison.
+
+- For an invalid citation, cite the intended command correctly; `devkit <command> --help` lists the running CLI's
+  subcommands and options.
 - A planned, rejected or removed command is not an invocation: describe it in prose (a `bundle init` subcommand)
   rather than as inline code starting with `devkit`.
 - A plugin a document describes but the project does not install, or a planned command a document must cite, is a
