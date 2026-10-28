@@ -1051,7 +1051,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "65a40d692201dcbbbfecc74dfacfaa7fc18b6c8437f9276306da6cb8e31e8663"
+      "sha256": "cc7f6c219fe5e0f25f23189c592ae59cdbed307476265116e0e49640df35c425"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1275,7 +1275,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "65a40d692201dcbbbfecc74dfacfaa7fc18b6c8437f9276306da6cb8e31e8663"
+      "sha256": "cc7f6c219fe5e0f25f23189c592ae59cdbed307476265116e0e49640df35c425"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1903,7 +1903,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "65a40d692201dcbbbfecc74dfacfaa7fc18b6c8437f9276306da6cb8e31e8663"
+      "sha256": "cc7f6c219fe5e0f25f23189c592ae59cdbed307476265116e0e49640df35c425"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
@@ -2011,7 +2011,7 @@
     },
     ".devkit/managed/spec/templates/milestone.md": {
       "mode": 420,
-      "sha256": "351a50f98b9fe835def424361cfc1bd90b480060b0cff506d858ce8dea1e10e2"
+      "sha256": "5f8f2abc8db569658e316f1c6e650df8e8a636ebaefb12bc412c62a36f2e6d9e"
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,
