@@ -1,0 +1,23 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-28T04:26:38.803548Z'
+status: completed
+review: challenger-01.yaml
+summary: Independent Challenger recheck confirms prior/proposed ownership guard closes session-label bypass, including absent SDD runtime and deleted bindings
+findings:
+- issue: Project/session integration can bypass retained SDD artifact validation.
+  evidence: proposal.md:112-118,141-144; packages/devkit/src/devkit_agt/features/integration/usecases/service.py:224-225; packages/devkit/src/devkit_agt/features/integration/services/providers.py:149-155
+  failure_condition: An incubation session diff changes or deletes an existing SDD anchor or companion through the project provider, especially after devkit-spec and lifecycle rules are absent.
+  suggested_action: Inspect prior/proposed workflow-owned units independently of caller task kind and refuse or run the lifecycle validator for touched retained artifacts. Add doc-only retained-history and session-label tests.
+  resolution: resolved
+  severity: P1
+unverified_areas:
+- Implementation must demonstrate snapshot ownership detection and actual lifecycle validator execution
+checks:
+  targeted_recheck: PASS same Challenger independently verified original P1 corrected without waiver
+  boundary: PASS equal tree 25251ed54d2e54b1010268a713363833cfbf35a3 and unchanged HEAD
+diff_scope:
+  base: 28adcdcfdee94384cce06a2f0e79f1d5e6f50dbc
+  head: 7ed8b46b24620750aa8c59ec93a6a801d738b16d
