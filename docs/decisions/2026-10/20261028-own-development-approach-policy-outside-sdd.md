@@ -31,7 +31,7 @@ Existing SDD consumers must retain their defaults, while incubation omits per-ch
 
 ## 4. Decision Outcome
 
-Recommend the devkit-dist option, pending Host/user acceptance. The shared values are `sdd` and `incubation`,
+Use the devkit-dist option. The shared values are `sdd` and `incubation`,
 with `sdd` when absent. `devkit config show` reports the effective approach and source. No local or environment
 override is supported. SDD remains default; incubation is an explicit project choice.
 
@@ -43,7 +43,7 @@ label, refusing unless the matching lifecycle validator runs. Missing optional S
 history checks; untouched history does not require that tooling.
 
 No dependency resolver, mandatory iteration Unit, new application package or broad structural refactor is introduced.
-The proposal's applicability table and AC-01 through AC-08 define the feature scope.
+`SPEC-incubation-lifecycle-policy` defines the applicability and verification boundary.
 
 ## 5. Consequences
 

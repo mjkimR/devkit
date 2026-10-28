@@ -76,3 +76,24 @@ def test_installed_cli_reports_omissions_and_inactive_mutation(tmp_path, synced_
     assert json.loads(result.stdout)["error"]["code"] == "SPEC_LIFECYCLE_INACTIVE"
     policy = runner.invoke(cli, ["spec", "policy", "-w", str(repo), "--format", "json"])
     assert json.loads(policy.stdout)["development"] == {"approach": "incubation", "source": ".devkit/config.toml"}
+
+
+def test_root_attachment_preserves_bound_sdd_validation(tmp_path):
+    from devkit_core.core import run_git
+
+    from devkit_spec.features.delivery.usecases.attach import attach_check
+
+    config(tmp_path)
+    run_git(tmp_path, "init", "-q")
+    run_git(tmp_path, "config", "user.name", "Test")
+    run_git(tmp_path, "config", "user.email", "test@example.com")
+    run_git(tmp_path, "config", "commit.gpgsign", "false")
+    anchor = tmp_path / "anchor.md"
+    anchor.write_text('---\n"workflow": sdd-spec-feature\n---\n# Retained root Unit\n')
+    run_git(tmp_path, "add", ".")
+    run_git(tmp_path, "commit", "-qm", "retain root Unit")
+    assert attach_check(tmp_path, "dev-demo", ".", "HEAD")
+    anchor.write_text("---\nworkflow: custom\n---\n# Generic root Unit\n")
+    run_git(tmp_path, "add", ".")
+    run_git(tmp_path, "commit", "-qm", "generic root Unit")
+    assert attach_check(tmp_path, "dev-demo", ".", "HEAD") == []
