@@ -1,9 +1,7 @@
 ---
 id: PADR-adopt-sdd-through-an-evidenced-baseline-playbook
 title: Adopt SDD through an evidenced baseline playbook
-summary: For voluntary incubation graduation, we prepare an evidenced retained baseline
-  through a spec playbook before activating SDD, to avoid invented delivery history,
-  accepting a semantic readiness review.
+summary: "For voluntary incubation graduation, we prepare an evidenced retained baseline through a spec playbook before activating SDD, to avoid invented delivery history, accepting a semantic readiness review."
 proposal: PROP-incubation-sdd-baseline
 status: draft
 created_at: 2026-10-28

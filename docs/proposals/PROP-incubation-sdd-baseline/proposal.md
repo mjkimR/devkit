@@ -1,9 +1,7 @@
 ---
 id: PROP-incubation-sdd-baseline
 title: Adopt SDD from a verified implemented baseline
-summary: Establishes an evidenced retained-product baseline through an explicit SDD
-  adoption playbook before activating SDD, without reconstructing incubation delivery
-  history.
+summary: "Establishes an evidenced retained-product baseline through an explicit SDD adoption playbook before activating SDD, without reconstructing incubation delivery history."
 status: reviewing
 created_at: 2026-10-28
 target_area: delivery/
@@ -91,6 +89,10 @@ Hypothesis: one explicit baseline playbook in the existing spec bundle can reuse
 Development refreshes its base and checks the accepted prerequisite contracts before filling exact commands and references. A changed prerequisite that breaks the agreed transition is a Host problem, not permission to invent a second setting. No independent structural prerequisite was found.
 
 - **Scope Excluded**: automatic graduation, a new application framework, a generic configuration resolver or policy writer, a new baseline CLI/API/workflow engine, historical experiment reconstruction, changes to incubation discovery/roles/live-context format, automatic legacy containment, unrelated code cleanup and a persistent adoption service.
+
+### Planning review
+
+The medium Challenger inspected the committed proposal, reuse comparison, PADR and prerequisite boundaries at `26ad7f98`. It reported no material findings. The proposal has no separate open design question; direction acceptance remains with Host/user. Actual adoption and missing-evidence/source-change/partial-failure exercises remain Development evidence.
 
 ## 4. Lifecycle & Retirement Criteria
 
