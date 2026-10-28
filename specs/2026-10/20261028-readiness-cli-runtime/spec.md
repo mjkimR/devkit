@@ -1,29 +1,23 @@
 ---
-id: PROP-readiness-cli-runtime
+id: SPEC-readiness-cli-runtime
 title: Explain the running CLI reference in citation diagnostics
-summary: "Clarify that missing CLI commands or options are checked against the currently running CLI and can indicate either an invalid citation or an older runtime, without changing checks or integration behavior."
-status: accepted
-created_at: 2026-10-28
-target_area: capabilities/integration/
-priority: high
-size: S
-planning_effort: low
-dev_effort: low
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/rules/services/builtins/cli_contract/
-    - docs/capabilities/integration/
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit-mcp/
-    - packages/devkit/src/devkit_agt/features/integration/
-task_kind: bugfix
-workflow: sdd-proposal
+summary: Clarify that missing CLI commands or options are checked against the currently running CLI and can indicate either an invalid citation or an older runtime, without changing checks or integration behavior.
+status: planned
+created: 2026-10-28
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-bugfix
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-readiness-cli-runtime] Explain the running CLI reference in citation diagnostics
+# [SPEC-readiness-cli-runtime] Explain the running CLI reference in citation diagnostics
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-readiness-cli-runtime on 2026-10-28.
+- **Preserved Materials**: `docs/materials/2026-10/20261028-readiness-cli-runtime`
+
+### 1. Background & Hypothesis
 
 `FB-readiness-cli-contract-checks-the-base-runtime` records valid branch CLI additions rejected against the older
 retained runtime. `RULE-cli-contract` uses the currently running CLI's Click tree. Its missing-command and
@@ -32,13 +26,35 @@ missing-option guidance does not explain that the runtime itself can be older th
 The user selected a small guidance change. This proposal improves the reader's next diagnostic step; it does not
 make branch CLI additions pass integration or deliver the broader integration-runtime solution.
 
-## 2. Technical Spike Questions
+## 2. Defect Characterization
+
+- **Current behavior**: <trigger, environment and the observed wrong result, with evidence>
+- **Expected behavior and its basis**: <the result the existing contract requires, citing its capability, use case, ADR or test>
+- **Behavior to preserve**: <call paths, input boundaries and contracts that must keep working, with their tests>
+- **Reproduction conditions**: <the command, data and environment that reproduce the defect>
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 The direction is settled by the user. No further comparison, Scout, Challenger or user question is required for
-this low-effort Planning turn. The earlier comparison in `materials/runtime-options.md` is historical evidence,
+this low-effort Planning turn. The earlier comparison in `docs/materials/2026-10/20261028-readiness-cli-runtime/runtime-options.md` is historical evidence,
 not the current scope or Development acceptance criteria.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Clarify the existing missing-command and missing-option diagnostic guidance in the CLI-contract rule. The guidance
 MUST say that citations are checked against the currently running CLI. It MUST explain both possible causes: the
@@ -59,14 +75,14 @@ only if its existing diagnostic guidance otherwise conflicts; no new behavioral 
 A brief dogfood note MAY point to the separately authorized retained-runtime recovery already described in
 `CAP-INT-mcp-services`. It MUST NOT define a new workflow or imply permission to build, install or execute a runtime.
 
-### Scope excluded
+#### Scope excluded
 
 - Runtime selection, installation, launch or build machinery, including automatic source execution.
 - Changes to validation, Click-root handling, readiness, exit codes, CLI options, digests or authority.
 - Runtime fingerprints, metadata manifests, whole-runtime wheel tests, cleanup tests or consumer-upgrade scenarios.
 - Delivering the originally proposed broader integration-runtime fix.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Development starts after the Host's normal acceptance and handoff. Its focused acceptance criteria are:
 
@@ -80,7 +96,7 @@ Development starts after the Host's normal acceptance and handoff. Its focused a
 Use focused rule regression tests and relevant repository checks during Development. Planning checks proposal
 boundaries, document rules and envelopes only. No runtime build or integration scenario is required by this scope.
 
-## Planning decisions
+### Planning decisions
 
 - The user's direction replaces the earlier runtime-design scope with diagnostic guidance only. Size is S and
   both Planning and Development effort are low because the direction leaves nothing further to settle.
@@ -89,7 +105,14 @@ boundaries, document rules and envelopes only. No runtime build or integration s
 - Earlier envelopes and materials remain historical evidence. Their broader runtime acceptance criteria and
   recommendations do not apply to the current proposal or its Development work.
 
-## Source feedback
+### Source feedback
 
 - `FB-readiness-cli-contract-checks-the-base-runtime` remains promoted to this proposal. The current goal covers
   its diagnostic guidance only; Planning does not claim the underlying integration/runtime behavior is fixed.
+
+### Target Area & Boundaries
+
+- Target Area: capabilities/integration/
+- Planned Boundaries: `packages/devkit/src/devkit_agt/features/rules/services/builtins/cli_contract/`, `docs/capabilities/integration/`
+- Excluded Boundaries: `packages/devkit-spec/`, `packages/devkit-mcp/`, `packages/devkit/src/devkit_agt/features/integration/`
+
