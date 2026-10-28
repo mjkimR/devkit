@@ -81,6 +81,7 @@ def test_first_turn_derives_range_scope_and_preserves_state(repo: Path) -> None:
     result = inspect(repo, runner=passed)
     assert result["base"] == git(repo, "rev-parse", "main")
     assert result["head"] == returned
+    assert result["rules_base"] == result["base"]
     assert result["inputs"]["unit"]["source"] == "activity-branch"
     assert result["outside_scope"] == []
     assert result["checks"]["envelopes"]["status"] == "pass"
@@ -137,15 +138,72 @@ def test_override_scope_is_replacement_and_component_prefix(repo: Path) -> None:
     assert all(e["source"] == "argument" for e in result["scope"])
 
 
-def test_missing_scope_input_does_not_stop_other_checks(repo: Path) -> None:
+@pytest.mark.parametrize("outside", [False, True])
+def test_absent_optional_reconcile_still_audits_scope(repo: Path, outside: bool) -> None:
     (repo / UNIT / "reconcile.md").unlink()
+    if outside:
+        write(repo, "unrelated/file", "outside")
+    worker(repo, 1)
+    result = inspect(repo, runner=passed)
+    assert result["checks"]["scope"]["status"] == ("fail" if outside else "pass")
+    assert result["outside_scope"] == (["unrelated/file"] if outside else [])
+    assert {e["source"] for e in result["scope"]} == {"unit", "boundary", "materials"}
+    assert result["exit_code"] == int(outside)
+
+
+@pytest.mark.parametrize("invalid", ["reconcile.md", "tasks.md"])
+def test_invalid_present_or_missing_required_scope_record_is_not_run(repo: Path, invalid: str) -> None:
+    path = repo / UNIT / invalid
+    if invalid == "tasks.md":
+        path.unlink()
+    else:
+        path.write_text("---\ntargets: invalid\n---\n")
     worker(repo, 1)
     result = inspect(repo, runner=passed)
     assert result["checks"]["scope"]["status"] == "not-run"
     assert "outside_scope" not in result
     assert result["checks"]["rules"]["status"] == "pass"
-    assert result["exit_code"] == 0
     assert result["notices"][0]["code"] == "SPEC_WORKER_CHECK_NOT_RUN"
+
+
+def test_rules_keep_earlier_turn_target_in_cumulative_comparison(repo: Path) -> None:
+    write(repo, "docs/contract.md", "created in first turn")
+    previous = worker(repo, 1)
+    write(repo, "src/code.py", "changed in second turn")
+    returned = worker(repo, 2)
+    calls = []
+
+    def cumulative_check(root: Path, args: Sequence[str]) -> dict:
+        calls.append(list(args))
+        if args[0] == "rules":
+            changed = git(root, "diff", "--name-only", args[-1], "HEAD").splitlines()
+            return {"status": "pass" if "docs/contract.md" in changed else "fail"}
+        return passed(root, args)
+
+    result = inspect(repo, runner=cumulative_check)
+    assert result["base"] == previous
+    assert result["head"] == returned
+    assert "docs/contract.md" not in result["changed_paths"]
+    assert result["checks"]["rules"]["status"] == "pass"
+    assert result["rules_base"] == git(repo, "rev-parse", "main")
+    assert result["inputs"]["rules_base"] == {"value": result["rules_base"], "source": "branch-merge-base"}
+    assert calls[0][-1] == result["rules_base"]
+    assert result["checks"]["rules"]["status"] == "pass"
+
+
+def test_rules_base_override_and_manual_fallback(repo: Path) -> None:
+    previous = worker(repo, 1)
+    worker(repo, 2)
+    result = inspect(repo, rules_base=previous, runner=passed)
+    assert result["rules_base"] == previous
+    assert result["inputs"]["rules_base"]["source"] == "argument"
+    git(repo, "config", "--unset", "branch.dev-example.devkitBase")
+    result = inspect(repo, base="main", runner=passed)
+    assert result["rules_base"] == result["base"]
+    assert result["inputs"]["rules_base"]["source"] == "audit-base-fallback"
+    git(repo, "config", "branch.dev-example.devkitBase", "missing-recorded-branch")
+    with pytest.raises(WorkerBaseUnresolvedError):
+        inspect(repo, base="main", runner=passed)
 
 
 def test_head_mismatch_skips_rules(repo: Path) -> None:
