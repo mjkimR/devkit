@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-incubation-sdd-baseline
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md
     resolution: modified
@@ -48,3 +48,11 @@ incorporation and sequential integration remain the Host's next verification bou
 The focused installation guide follows canonical package-source replacement in the consumer's actual group/source/ref,
 retains optional catalog, prevents a duplicate direct base requirement and checks the required PyYAML binary binding.
 It deliberately does not prescribe a universal remove command or silently alter another dependency group.
+
+## Independent verification
+
+Initial whole-feature code review found the absent-provider activation gap. It was fixed with explicit effects and
+a real absent-table scenario, then independently rechecked including correction of an initially invalid None-string
+fixture claim. Initial reconcile review found the new guide's installation-source mismatch; canonical dependency
+replacement and binary-binding verification were folded and independently rechecked. Both reviews have no open findings.
+The final affected selection passed1502tests; targeted actual scenario/assets/parser checks passed10.

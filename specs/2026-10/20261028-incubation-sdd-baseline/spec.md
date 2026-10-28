@@ -2,7 +2,7 @@
 id: SPEC-incubation-sdd-baseline
 title: Adopt SDD from a verified implemented baseline
 summary: "Establishes an evidenced retained-product baseline through an explicit SDD adoption playbook before activation, without reconstructing incubation delivery history."
-status: in-progress
+status: completed
 created: 2026-10-28
 depends_on:
   - SPEC-incubation-lifecycle-policy
