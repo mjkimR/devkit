@@ -9,7 +9,6 @@ priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-maintenance-operations
 boundaries:
   owns:
     - packages/devkit-catalog/src/devkit_catalog/maintenance/
@@ -145,6 +144,10 @@ reference sends the agent to another of its own references.
 `PADR-measure-performance-unprofiled-and-interleaved-in-one-session`:
 
 - Time the real process from outside; an in-process timer misses startup, shutdown and child processes.
+- Timing loop (`user`, no bundled script): use an installed benchmark tool when available (for example
+  `hyperfine`), otherwise write a short loop. Either way it meets the requirements below: variants as argument
+  lists, a warm-up run, at least five interleaved repetitions, each run's exit code checked and output compared,
+  median, minimum and range reported.
 - Run each command from an argument list or a script file, never from an unquoted shell variable (zsh does not split
   it). Check each run's exit code, and its output digest against the other runs of the same variant, normalizing
   paths that differ between variants' directories; drop failed runs.
@@ -200,13 +203,12 @@ reference sends the agent to another of its own references.
 - Dispositions follow `review-refactor`'s table: apply with behavior preserved (joins the run's work item), contract
   change (its own work item through the normal workflow), defer (destination and restart condition), keep (reason).
   All candidates of the run are decided in one round; unanswered ones stay pending.
-- Route and write scope (pending question `q1`; recommended option shown): the run's agreed behavior-preserving
+- Route and write scope (`user`, `q1`): the run's agreed behavior-preserving
   changes form one work item that follows the repository's feature workflow at the depth its own classification gives
   (with the `spec` bundle, `session` when no contract or specification text changes), whether it edits one module or
   several. The decision round states the route and the edited paths, which are the write scope. `review-refactor`'s
   "Work items and route" section is not followed: the direct-mode overall-refactor route for several modules is
-  granted to `review-refactor` runs only. If the user chooses the refactor route instead, the design adds a PADR
-  extending that grant and the Living Spec and classification targets in `materials/design-options.md` O7.
+  granted to `review-refactor` runs only and is not extended (`materials/design-options.md` O7).
 
 ### Application and evidence (`references/changes.md`)
 
@@ -271,5 +273,8 @@ reference sends the agent to another of its own references.
   a parseable citation form (O2); report in `SKILL.md` (O3); preset `performance`, `upkeep` unchanged (O5); the
   measurement protocol and change classification PADRs; for performance changes every found difference is a contract
   change.
-- Open for the user (`worker` envelope questions): `q1` the route of the behavior-preserving work item, `q2` the
-  milestone (`MS-maintenance-operations` is `done`), `q3` the timing helper script (O4).
+- Decided by `user` (`answer-01`): `q1` the behavior-preserving work item follows the repository's feature workflow
+  at its own depth, for one module or several (O7 A); `q2` the proposal carries no milestone, because the work
+  proceeds right after acceptance (`MS-maintenance-operations` stays `done`); `q3` procedure only, no bundled timing
+  script, with tool-neutral timing-loop requirements in `references/measurement.md` (O4 B): devkit content stays
+  general-purpose, and a script would add the first bundle executable with its deploy contract and tests.

@@ -47,7 +47,9 @@ playbook exists only when a selected preset deploys that playbook.
 - Reading that text is reference reading, not an invocation: no intake, batch or decision round of `review-refactor`
   starts. `CAP-DIST-context-and-playbooks` states this for co-deployed playbooks.
 - Every preset that deploys `performance-pass` also deploys `review-refactor`.
-- Not followed: `review-refactor`'s "Work items and route" (the route is `performance-pass`'s own) and its
+- Not followed: `review-refactor`'s "Work items and route"; the run's behavior-preserving work item follows the
+  repository's feature workflow at its own depth, for one module or several (`user`), because the direct-mode
+  overall-refactor route is granted to `review-refactor` runs only. Also not followed: its
   "approved behavior change" inside the behavior-preserving work item (every found difference is a contract change,
   `PADR-classify-performance-changes-by-observable-behavior`).
 - `performance-pass` states only what it adds or overrides: measurement per change on a quiet machine, its

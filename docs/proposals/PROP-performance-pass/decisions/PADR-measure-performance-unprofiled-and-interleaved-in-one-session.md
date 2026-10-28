@@ -36,6 +36,8 @@ before/after numbers taken in different checkouts or sessions are not comparable
 
 ## 4. Decision Outcome
 
+- The playbook ships no timing script (`user`): an installed benchmark tool is used when available, otherwise the
+  agent's own short loop, and either meets the requirements below.
 - Time the real process from outside, with exact argument list, working directory and environment; check each run's
   exit code and its output digest against the other runs of the same variant (paths normalized between variants'
   directories), and drop failed runs.

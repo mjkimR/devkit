@@ -30,12 +30,12 @@ retrieval resolves body resources against the parent of `source.path`) and the `
 | A. Report fields in `SKILL.md` (chosen) | Every mode ends with a report; `skill-authoring` keeps every-run instructions in `SKILL.md`; `review-refactor` does the same | About 1.5 KB in `SKILL.md` | None within budget |
 | B. `references/report.md` | The draft named it | One more file | A reference every run must read is an every-run instruction outside `SKILL.md` |
 
-## O4. Timing helper script (user question)
+## O4. Timing helper script (user question; `user` chose B)
 
 | Option | Evidence | Cost | Risk |
 | --- | --- | --- | --- |
-| A. A standard-library `scripts/compare_runs.py` that runs variants as argument lists, interleaved, with warm-up, checks each run's exit code and output digest and prints median, minimum and range as JSON (recommended) | `skill-authoring` script support: repetitive, deterministic steps become a script; the zsh and interleaving traps are mechanical (`pass-evidence.md` §3); `hyperfine` is not installed on this machine | One script; its unit tests under `packages/devkit-catalog/tests/unit/` (added to `boundaries.owns`); a statement in `CAP-DIST-manifest-spec` that playbook directories keep executable bits, with a deploy test; the one-line manual fallback in `SKILL.md` | First script in any bundle source; a broken script misleads until fixed |
-| B. Procedure only, naming an installed benchmark tool as an example and a hand loop otherwise | No bundle ships a script yet | None | Each run re-creates the loop and can repeat the traps |
+| A. A standard-library `scripts/compare_runs.py` that runs variants as argument lists, interleaved, with warm-up, checks each run's exit code and output digest and prints median, minimum and range as JSON (recommended in round 1) | `skill-authoring` script support: repetitive, deterministic steps become a script; the zsh and interleaving traps are mechanical (`pass-evidence.md` §3); `hyperfine` is not installed on this machine | One script; its unit tests under `packages/devkit-catalog/tests/unit/` (added to `boundaries.owns`); a statement in `CAP-DIST-manifest-spec` that playbook directories keep executable bits, with a deploy test; the one-line manual fallback in `SKILL.md` | First script in any bundle source; a broken script misleads until fixed |
+| B. Procedure only, naming an installed benchmark tool as an example and a hand loop otherwise, with tool-neutral loop requirements (chosen by `user`: content stays general-purpose; no first bundle executable, deploy contract or script tests) | No bundle ships a script yet | None | Each run re-creates the loop and can repeat the traps |
 
 ## O5. Presets
 
@@ -44,11 +44,11 @@ retrieval resolves body resources against the parent of `source.path`) and the `
 | A. Implicit `all` plus a new preset `performance` with `performance-pass` and `review-refactor`; `upkeep` unchanged (chosen) | O2 A requires co-deployment; `refactoring` is the precedent of a single-purpose preset; `upkeep` holds recurring upkeep, while a pass targets operations the user names | Bundle test, README and recommendation guide | A `performance` user also receives `review-refactor`, which runs only on invocation |
 | B. Also add `performance-pass` to `upkeep` | Both are maintenance | Same | Existing `upkeep` projects receive a new playbook on their next sync without asking for it |
 
-## O7. Route of the behavior-preserving work item (user question `q1`)
+## O7. Route of the behavior-preserving work item (user question `q1`; `user` chose A)
 
 | Option | Evidence | Cost | Risk |
 | --- | --- | --- | --- |
-| A. The repository's feature workflow at its own depth, for one module or several (recommended) | The direct-mode overall-refactor route for several modules is granted to `review-refactor` runs only (`CAP-DLV-delivery-workflows`, `ARCH-04-delivery-strategy`, the `spec` classification reference); the 2026-10-27 pass ran as ordinary development on its own branch | None outside this proposal's scope | A multi-module pass gets the feature workflow's records at its depth (with `spec`, `session` when no contract changes) |
+| A. The repository's feature workflow at its own depth, for one module or several (recommended; chosen by `user`) | The direct-mode overall-refactor route for several modules is granted to `review-refactor` runs only (`CAP-DLV-delivery-workflows`, `ARCH-04-delivery-strategy`, the `spec` classification reference); the 2026-10-27 pass ran as ordinary development on its own branch | None outside this proposal's scope | A multi-module pass gets the feature workflow's records at its depth (with `spec`, `session` when no contract changes) |
 | B. Extend the direct-mode overall-refactor route to `performance-pass` | Matches `review-refactor` | A PADR plus edits to `CAP-DLV-delivery-workflows`, `ARCH-04-delivery-strategy` and the `devkit-spec` classification source, outside the current `boundaries.owns` | Widens a grant whose reason (direction settled batch by batch) is `review-refactor`'s |
 
 ## O6. Router size
