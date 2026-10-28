@@ -1,7 +1,7 @@
 ---
 id: CAP-MCP-runtime-registration
 title: "MCP Runtime and Project Registration"
-summary: "An optional retained MCP runtime binds invocation and presentation context to an owning workspace and reconciles ignored project registrations without changing host trust; lifecycle mutations run through Host-authorized CLI operations while shared artifact MCP remains available."
+summary: "An optional retained MCP runtime binds workspace and presentation context and reconciles ignored registrations without changing host trust. Lifecycle mutation stays Host-authorized, shared artifact MCP remains available, and general status omits speculative registration advice."
 status: active
 area: mcp
 usecases:
@@ -96,16 +96,26 @@ which discovers the optional provider and reconciles local entries without touch
 `devkit sync --registrations-only [-w DIR] [--format text|json]` accepts no other sync mode or selection flag
 (`ARGUMENT_INVALID`) and prints `[MCP_REGISTRATION: changes=<n>]` (JSON `{"actions": [...], "notices": [...]}`).
 Each planned change carries its path (relative to the checkout, or absolute for a linked worktree's common Git
-info/exclude) and the kind `create`, `update` or `remove` from the captured bytes. A read-only check answers which
-selected hosts ordinary sync would register but this checkout does not hold (register in effect, provider entry
-point installed but not loaded, eligible destination, no matching owned entry), so status can report a fresh
-checkout's missing registration without importing devkit-mcp or the MCP SDK.
+info/exclude) and the kind `create`, `update` or `remove` from the captured bytes.
 Without an installed provider and ownership state this mode does nothing. The trusted lifecycle guard runs
 again before that initialization; copied opt-out and cloud configuration remain effective. Opt-out, uninstall and selected-agent removal retire only exact
 owned entries. An unloadable installed provider is an error, not an uninstall signal.
 
+**General status boundary.** General `devkit status` MUST NOT emit `MCP_REGISTRATION_PENDING`.
+It MUST NOT load the MCP registration provider, probe runtime readiness or write registration state.
+It omits the missing-registration check and its ownership-ledger/destination inspection.
+Explicit `devkit mcp status`, `devkit mcp setup`, ordinary sync and registrations-only sync diagnose actual
+registration plans. See `ADR-remove-speculative-mcp-status-notice` and
+`packages/devkit-dist/tests/integration/features/distribution/test_sync_reporting.py`.
+
+**Withheld registration writes.** WHEN locked sync withholds a selected host's actual registration-plan state
+of `write`, it MUST return `MCP_REGISTRATION_PENDING` with fix `uv run devkit sync --registrations-only`.
+An absent provider or a provider returning `None` produces no pending notice.
+A runtime-unavailable provider retains its `MCP_RUNTIME_UNAVAILABLE` warning without a pending notice.
+See `packages/devkit-dist/tests/integration/features/distribution/test_sync_reporting.py`.
+
 Known user/ancestor/local/managed same-name declarations are inspected read-only and reported as collisions;
-unknown effective selection remains unknown. Resolve global entries through host-owned tools. Status distinguishes
+unknown effective selection remains unknown. Resolve global entries through host-owned tools. `devkit mcp status` distinguishes
 desired, recorded and project registration, runtime availability and unknown effective connection/form/trust/
 permission state, without returning environment values or other servers' settings. The always-unknown facts appear
 in JSON only; text prints `[MCP: action= package= runtime=]` and one `[MCP_HOST: ...]` line per host, and

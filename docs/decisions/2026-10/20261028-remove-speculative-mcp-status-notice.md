@@ -1,13 +1,13 @@
 ---
-id: PADR-remove-speculative-mcp-status-notice
+id: ADR-remove-speculative-mcp-status-notice
 title: Remove speculative MCP registration notices from general status
 summary: "For provider-free general status, we remove speculative MCP registration pending notices and retain diagnostics from actual registration plans, to avoid ungrounded retry advice, accepting explicit MCP commands for registration diagnosis."
-proposal: PROP-mcp-runtime-pending
-status: draft
+proposal: SPEC-mcp-runtime-pending
+status: accepted
 created_at: 2026-10-28
 ---
 
-# [PADR-remove-speculative-mcp-status-notice] Remove speculative MCP registration notices from general status
+# [ADR-remove-speculative-mcp-status-notice] Remove speculative MCP registration notices from general status
 
 ## 1. Context & Problem Statement
 
@@ -42,5 +42,5 @@ check replaces the removed inference.
 
 ## 6. Confirmation
 
-AC-1 through AC-5 in `PROP-mcp-runtime-pending` require a provider-result matrix, no-load/no-probe assertions,
+AC-1 through AC-5 in `SPEC-mcp-runtime-pending` require a provider-result matrix, no-load/no-probe assertions,
 locked-sync notice preservation, independent status diagnostics and consistent Living Spec wording.

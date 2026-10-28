@@ -549,33 +549,6 @@ def plan(
     return result
 
 
-def unregistered_hosts(root: Path, agents: list[str] | tuple[str, ...]) -> list[str]:
-    """Selected hosts whose registration ordinary sync would create but this checkout does not hold, read-only.
-
-    A host counts when ``[mcp] register`` is in effect, a ``devkit.mcp.registrations`` provider is installed (its
-    entry point is never loaded, so neither devkit-mcp nor the MCP SDK is imported), the host has a supported
-    destination that is neither tracked nor a visible foreign file, and the ledger holds no owned entry matching the
-    destination's current one. A non-Git checkout yields ``[]``. Raises ``RegistrationError`` for a malformed ledger
-    or destination, as ``plan`` does.
-    """
-    root = root.resolve()
-    if not metadata.entry_points(group=GROUP) or common_dir(root) is None:
-        return []
-    if not read_effective_config(root).values["mcp"]["register"]:
-        return []
-    entries = _ledger(root)["entries"]
-    hosts = []
-    for host in sorted({_host(agent) for agent in agents} & DESTINATIONS.keys()):
-        relative = DESTINATIONS[host]
-        snap = _snapshot(root / relative, root)
-        if _tracked(root, relative) or (snap is not None and not _ignored(root, relative)):
-            continue
-        record = entries.get(host)
-        if record is None or _entry(host, snap[0] if snap else None) != record["entry"]:
-            hosts.append(host)
-    return hosts
-
-
 def _write(path: Path, value: tuple[bytes, int] | None, anchor: Path) -> None:
     guard_execution()
     _safe(path, anchor)

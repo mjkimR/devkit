@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional deployment, canonical receipts, shared subagent model policy and restricted checkout-local configuration, with execution, presentation and personal rendering provenance and optional read-only project status checks."
+summary: "Transactional deployment, canonical receipts, shared subagent model policy and restricted checkout-local configuration, with execution, presentation and personal rendering provenance and optional read-only project status checks. General status omits speculative MCP registration advice."
 area: distribution
 status: active
 entrypoints:
@@ -487,10 +487,15 @@ environment is installed both restores the managed copies the later steps read a
 an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
 workspace that is already synchronized: when a sync is needed it exits `1` with a `NOT_SYNCHRONIZED` error (fix
 `uv run devkit sync`), the last stderr block in text and under `errors` in JSON. `devkit sync --registrations-only`, which reconciles only optional local MCP
-registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`. When the locked sync leaves a
-desired registration of a selected host unwritten, it returns the `MCP_REGISTRATION_PENDING` notice with that command
-as its fix, and `devkit status` returns the same notice while a checkout with a receipt lacks the registration (one
-without a receipt needs a plain sync, which registers too).
+registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`.
+
+**Withheld registration writes.** WHEN locked sync withholds a selected host's actual registration-plan state
+of `write`, it MUST return `MCP_REGISTRATION_PENDING` with fix `uv run devkit sync --registrations-only`.
+Absent-provider, `None` and runtime-unavailable plans produce no pending notice; the runtime-unavailable warning
+is retained. General `devkit status` omits this speculative registration check, including its MCP ownership-ledger
+and destination inspection, and never loads the registration provider or probes runtime readiness.
+Explicit MCP and sync commands retain actual registration diagnostics. See `ADR-remove-speculative-mcp-status-notice`
+and `packages/devkit-dist/tests/integration/features/distribution/test_sync_reporting.py`.
 
 ### Bundle template inputs
 

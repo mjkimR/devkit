@@ -1076,12 +1076,6 @@ def _registration_pending(hosts: list[str]) -> McpRegistrationPendingNotice:
     )
 
 
-def registration_pending_notices(root: Path, agents: list[str] | tuple[str, ...]) -> list[AdvisoryError]:
-    """``MCP_REGISTRATION_PENDING`` when a selected host's desired registration is absent (read-only)."""
-    hosts = registrations.unregistered_hosts(root, agents)
-    return [_registration_pending(hosts)] if hosts else []
-
-
 def commit_locked(
     root: Path,
     installed: list[InstalledBundle],

@@ -57,7 +57,6 @@ from devkit_dist.features.distribution.usecases.sync import (
     planned_guidance_block,
     planned_subagent_changes,
     read_deployed,
-    registration_pending_notices,
     require_project_dir,
     tool_identity,
 )
@@ -148,8 +147,7 @@ class ProjectStatus:
 
     ``notices``: warnings that change no exit code (an installed package the project does not deploy failed to load,
     an unsupported ``[presentation] language`` resolved to ``en``, deployed rule, gate or workflow assets that no
-    installed engine runs, override drift under ``override_drift = "warn"``), and the ``MCP_REGISTRATION_PENDING``
-    notice of a selected host whose desired local MCP registration this checkout does not hold.
+    installed engine runs, override drift under ``override_drift = "warn"``).
     """
 
     # Whether a receipt exists; without one every other entry describes an empty installation.
@@ -412,13 +410,6 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
                 host_errors.extend(host_report.errors)
             except HostError as exc:
                 host_errors.append(exc)
-        # A checkout never synchronized needs a plain sync, which also registers: no separate registration step.
-        registration: list[AdvisoryError] = []
-        try:
-            if receipt is not None:
-                registration = registration_pending_notices(root, config.agents)
-        except HostError as exc:
-            host_errors.append(exc)
         drift_problems: list[AdvisoryError] = []
         drift_warnings: list[AdvisoryError] = []
         if drift:
@@ -453,7 +444,6 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
                 *warnings,
                 *language_notices(root),
                 *engine_notices(receipt.asset_records if receipt else ()),
-                *registration,
                 *status_check_notices(root),
             ],
         )
