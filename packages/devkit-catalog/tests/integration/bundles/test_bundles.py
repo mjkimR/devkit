@@ -254,7 +254,7 @@ def test_performance_pass_entry_condition_and_description() -> None:  # SPEC-per
     assert "behavior-preserving speedups" in description
     assert "Run only when the user invoked or confirmed this playbook" in body
     assert "`devkit playbook get maintenance/performance-pass`" in body
-    assert "authorize no change" in body
+    assert "Invocation, an external runner naming this playbook and a clean measurement authorize no change" in body
     assert "an unattended run stops at the decision round with nothing applied" in body
 
 
@@ -263,7 +263,11 @@ def test_performance_pass_is_self_contained_and_within_budget() -> None:  # SPEC
     files = _assert_self_contained_within_budget(root, PERFORMANCE_PASS)
     assert {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()} == set(PERFORMANCE_PASS)
     references = [name for name in PERFORMANCE_PASS if name.startswith("references/")]
+    items = re.split(r"\n\s*\n|\n(?=\d+\. )", files["SKILL.md"].read_text())
     for name in references:
+        linking = [_collapsed(item).lower() for item in items if f"`{name}`" in item]
+        assert linking, name
+        assert all("read" in item and ("before" in item or "when" in item) for item in linking), name
         text = files[name].read_text()
         assert not [other for other in references if other != name and other in text], name
 

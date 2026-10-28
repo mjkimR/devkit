@@ -1,7 +1,7 @@
 # Applying agreed changes
 
 Read once the decision round approved changes. The application procedure is `review-refactor`'s, resolved as the
-playbook's entry file describes; this file names the sections that apply, overrides two points and adds the
+playbook's entry file describes; this file names the sections that apply, overrides three points and adds the
 performance evidence.
 
 ## 1. Sections that apply
@@ -9,7 +9,7 @@ performance evidence.
 Follow these sections of the resolved `review-refactor` text, in order:
 
 1. `review-refactor references/applying.md "Branch and edit tasks"`: the work item's own branch, dirty paths that do
-   not belong to the run, edit tasks with write scopes.
+   not belong to the run, edit tasks with write scopes; the branch follows the third override.
 2. `review-refactor references/applying.md "Subagent edits"`: isolated checkouts, disjoint write scopes, results
    moved onto the branch one at a time.
 3. `review-refactor references/applying.md "Commits and verification"`: verification before and after each change,
@@ -19,7 +19,8 @@ Follow these sections of the resolved `review-refactor` text, in order:
 5. `review-refactor references/applying.md "Review"`: a fresh reviewer before integration.
 6. `review-refactor references/applying.md "Report"`: the work item's report in the final response and the commit
    body.
-7. `review-refactor references/applying.md "Integration"`: the repository's integration path and its own approval.
+7. `review-refactor references/applying.md "Integration"`: the repository's integration path and its own approval;
+   the path follows the third override.
 8. `review-refactor references/applying.md "Contract removals"`: for an approved removal, its own work item. Its
    compatibility-policy exception does not apply here: a removed option is a contract change.
 
@@ -33,6 +34,9 @@ The route of the work item is this playbook's decision round route;
    `review-refactor`'s approved behavior change inside the behavior-preserving work item does not apply to this run.
 2. Edit tasks may run in parallel in isolated checkouts, but every timing run waits until no edit task or
    verification runs. Schedule the measurements between edit tasks, never beside them.
+3. The work item's branch and integration path are those of the feature workflow the decision round routed it to,
+   whatever the number of modules it edits. Where the cited sections name the overall-refactor workflow's branch
+   policy or its integration path (with the `spec` bundle, task kind `overall-refactor`), that text does not apply.
 
 ## 3. Per-change measurement
 

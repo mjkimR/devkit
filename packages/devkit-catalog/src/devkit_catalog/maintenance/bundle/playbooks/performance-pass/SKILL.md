@@ -36,8 +36,8 @@ decision round does: an unattended run stops at the decision round with nothing 
 
 | Mode | Entry | Read | Ends |
 | --- | --- | --- | --- |
-| `survey` | The user names candidate operations and wants a ranked list | measurement, profiling, candidates | Decision round with nothing applied. An approved change turns the run `targeted`; record the switch in the report |
-| `targeted` | The user names operations to speed up | Every reference in phase order | Report with measured before/after per change |
+| `survey` | The user names candidate operations and wants a ranked list | measurement, profiling when needed (section 2), candidates | Decision round with nothing applied. An approved change turns the run `targeted`; record the switch in the report |
+| `targeted` | The user names operations to speed up | Every reference in phase order, each on its read condition (sections 2 and 5) | Report with measured before/after per change |
 
 ## 2. Measure and attribute
 
@@ -54,8 +54,8 @@ them before the decision round:
 
 1. Run `devkit playbook get maintenance/review-refactor`.
 2. For each cited file, read `references/<file>` next to the returned `source.path`. When that path is an override
-   directory without the file, read the managed copy; files missing from an override directory are read from
-   upstream.
+   directory without the file, read the same relative path under the bundle's managed directory
+   (`.devkit/managed/maintenance/playbooks/review-refactor/references/<file>`).
 3. Reading that text is reference reading, not an invocation: none of `review-refactor`'s intake, batches or decision
    round starts.
 4. If a cited heading is missing from the file you read, stop the run and report the missing section; never

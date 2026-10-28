@@ -43,6 +43,8 @@ checks around it when it does not make them.
 
 1. Per variant, drop the single slowest run and take the range of the rest.
 2. The noise floor is the larger of the two variants' ranges.
+   For a single variant, such as a baseline before any change exists, the noise floor is that variant's range after
+   dropping its slowest run; candidate selection and attribution use this value.
 3. A median difference below the noise floor is "no measurable change". Report it in those words, never as a saving.
 4. If one outlier decides whether a difference clears the floor, run five more repetitions per variant before
    concluding.
