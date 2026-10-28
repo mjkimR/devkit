@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-worker-inspection-fixes
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
@@ -18,3 +18,6 @@ targets:
 ## Verification
 
 Baseline Red: 5 failed, 2 passed before production edits. Green: 48 worker inspector tests passed; affected suite 1445 passed; package lint and type checks passed. The actual reconcile-rule regression additionally confirms the originally failing comparison by explicit --rules-base previous while retaining the same audit range. Only `.devkit/installation.json` is a tracked sync output. Emulated role isolation uses absolute read scopes, explicit approvals, before/after alternate-index snapshots and actual diff review; no native confinement is claimed.
+
+
+Independent code and reconcile reviews passed with no findings. Both before/after alternate-index snapshots and HEAD checks matched. Entrypoint derivation selected the worker CLI commands doorway; receipt, README, tests and whole worker directory candidates were rejected because they are not contract entrypoints. True cumulative governance against feature merge base b17db06f2d28b2316878d15d5debee1257c5a611 passed with zero errors and warnings.
