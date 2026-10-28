@@ -1,15 +1,15 @@
 ---
-id: PADR-reuse-review-refactor-application-through-exact-playbook-retrieval
+id: ADR-reuse-review-refactor-application-through-exact-playbook-retrieval
 title: Reuse review-refactor application through exact playbook retrieval
 summary: For applying agreed performance changes, we resolve review-refactor by exact playbook retrieval and cite its application and evidence sections by heading, always co-deploying it, to keep one application procedure that follows overrides, accepting a preset constraint and a heading test.
-proposal: PROP-performance-pass
-status: draft
+proposal: SPEC-performance-pass
+status: accepted
 created_at: 2026-10-27
 ---
 
-# [PADR-reuse-review-refactor-application-through-exact-playbook-retrieval] Reuse review-refactor application through exact playbook retrieval
+# [ADR-reuse-review-refactor-application-through-exact-playbook-retrieval] Reuse review-refactor application through exact playbook retrieval
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-27
 
 ---
@@ -51,7 +51,7 @@ playbook exists only when a selected preset deploys that playbook.
   repository's feature workflow at its own depth, for one module or several (`user`), because the direct-mode
   overall-refactor route is granted to `review-refactor` runs only. Also not followed: its
   "approved behavior change" inside the behavior-preserving work item (every found difference is a contract change,
-  `PADR-classify-performance-changes-by-observable-behavior`).
+  `ADR-classify-performance-changes-by-observable-behavior`).
 - `performance-pass` states only what it adds or overrides: measurement per change on a quiet machine, its
   preservation criteria, the reviewer brief additions and its report fields.
 

@@ -1,0 +1,44 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T23:14:21.181207Z'
+status: completed
+summary: 'code-reviewer round 1 (activity-effort medium, native isolated subagent): AC-01..AC-11 checked against a7788da6..78608ec5; REVISE with 1 P2 and 4 P3 findings'
+findings:
+- issue: changes.md follows review-refactor Branch and edit tasks and Integration as written; with the spec bundle those choose the overall-refactor branch policy and integration path for a multi-module work item, contradicting the feature-workflow route.
+  evidence: performance-pass/references/changes.md:11-27; review-refactor/references/applying.md:34-35, :103-105
+  failure_condition: A spec-bundle run whose agreed behavior-preserving changes edit several modules branches and integrates as task kind overall-refactor.
+  suggested_action: 'Add an override: the work item''s branch and integration path are those of the feature workflow it was routed to.'
+  resolution: open
+  severity: P2
+- issue: The noise floor is defined only for two variants but is used at candidate selection where only the baseline exists.
+  evidence: performance-pass/references/measurement.md:44-46; references/candidates.md:25; references/profiling.md:51
+  failure_condition: A survey run decides 'below the noise floor' from one variant's runs with an unstated threshold.
+  suggested_action: State the single-variant case in measurement.md section 4.
+  resolution: open
+  severity: P3
+- issue: The AC-04 test does not check the external-runner and clean-measurement clause; the AC-05 test does not check that each reference link carries a read condition.
+  evidence: packages/devkit-catalog/tests/integration/bundles/test_bundles.py test_performance_pass_entry_condition_and_description, test_performance_pass_is_self_contained_and_within_budget
+  failure_condition: Dropping those clauses from SKILL.md still passes the tests.
+  suggested_action: Assert the full sentence and a read condition on each reference link line.
+  resolution: open
+  severity: P3
+- issue: The mode table lists profiling unconditionally for survey while section 2 reads it only when measurement does not name the cost.
+  evidence: performance-pass/SKILL.md:39-40 against SKILL.md:46-47
+  failure_condition: Agents differ on whether a survey must always profile.
+  suggested_action: Mark profiling as conditional in the table.
+  resolution: open
+  severity: P3
+- issue: The override fallback names both 'the managed copy' and 'upstream' without a location for the managed copy.
+  evidence: performance-pass/SKILL.md:56-58
+  failure_condition: An override directory lacking references/criteria.md leaves the agent guessing the managed path.
+  suggested_action: 'Name one source: the same relative path under the bundle''s managed directory.'
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test devkit-catalog 76; just test-affected 86
+  lint: PASS just lint-check; just rules-check errors=0; hygiene PASS
+diff_scope:
+  base: a7788da6f10f986db3bc50245fa4fe3bc160bd39
+  head: 78608ec54a331b565bb72c29ea63715a01a77711

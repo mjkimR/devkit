@@ -1,15 +1,15 @@
 ---
-id: PADR-classify-performance-changes-by-observable-behavior
+id: ADR-classify-performance-changes-by-observable-behavior
 title: Classify performance changes by observable behavior
 summary: For performance changes, we count only changes that keep every observable result, error path and persisted format as behavior-preserving and route new cross-run state, concurrency or output changes as contract changes, accepting more separate work items.
-proposal: PROP-performance-pass
-status: draft
+proposal: SPEC-performance-pass
+status: accepted
 created_at: 2026-10-27
 ---
 
-# [PADR-classify-performance-changes-by-observable-behavior] Classify performance changes by observable behavior
+# [ADR-classify-performance-changes-by-observable-behavior] Classify performance changes by observable behavior
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-27
 
 ---
@@ -17,7 +17,7 @@ created_at: 2026-10-27
 ## 1. Context & Problem Statement
 
 Faster code often changes behavior on inputs the corpus does not contain: a scan API that raises where the old call
-returned `False` broke every listing on one symlink loop (`materials/pass-evidence.md` §2). Some speedups change the
+returned `False` broke every listing on one symlink loop (`docs/materials/2026-10/20261028-performance-pass/pass-evidence.md` §2). Some speedups change the
 contract outright: state kept between runs can serve stale answers and occupies disk; concurrency changes ordering,
 error reporting and resource use. `review-refactor` routes behavior-preserving changes as refactors and contract
 changes as their own work items; performance changes need the same split with criteria of their own.
