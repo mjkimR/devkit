@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional deployment, canonical receipts, shared subagent model policy and restricted checkout-local configuration, with execution, presentation and personal rendering provenance and optional read-only project status checks. General status omits speculative MCP registration advice."
+summary: "Transactional deployment, canonical receipts and effective shared/local configuration, including explicit shared development approach inspection and subagent model policy."
 area: distribution
 status: active
 entrypoints:
@@ -130,7 +130,7 @@ devkit = false                          # opt out of an auto-selected bundle
 ```
 
 - **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `worktree`,
-  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`, `subagents`; anything else is `CONFIG_INVALID`. The list is
+  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`, `subagents`, `development`; anything else is `CONFIG_INVALID`. The list is
   the same whether or not `devkit-agt` is installed, so a configuration reads the same in both installations and
   typos are still caught.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
@@ -597,3 +597,20 @@ The built-in commented config template includes `[shared] adapter = "local"`. Th
 a lowercase adapter ID; both shared and checkout-local readers validate it. `DEVKIT_SHARED_ADAPTER` overrides
 this key only when the artifact service selects its adapter. It grants no filesystem or cloud mutation authority.
 `CAP-COLL-shared-artifacts` defines adapter selection, namespace comparison and explicit unavailable errors.
+
+
+## Shared development approach
+
+`[development] approach = "sdd" | "incubation"` is shared project policy owned by devkit-dist's project feature.
+The absent table/key resolves to `sdd`. Selecting packages/assets or invoking skills does not change it.
+`devkit config show` reports `configuration.development.approach` and `sources["development.approach"]`, whose source
+is `default` or `.devkit/config.toml`. No environment override exists; local configuration rejects the table with
+`CONFIG_LOCAL_KEY_FORBIDDEN`.
+
+IF the development table has an unknown key, wrong shape, type or value, THEN policy-dependent operations MUST
+refuse with `DEVELOPMENT_CONFIG_INVALID` (exit 2) before writing. The commented config template shows its default.
+`packages/devkit-dist/tests/integration/features/project/test_development.py` and the dist-only suite enforce this.
+
+Libraries import `DevelopmentApproach`, `read_development_approach(root)` and `development_approach(config)` from
+`devkit_dist.features.project`; the pure parsed-config form supports committed snapshots without another reader.
+Document namespaces and document operations retain their own configuration contracts.

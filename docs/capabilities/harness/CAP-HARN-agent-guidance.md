@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Spec guidance supplies SDD lifecycle skills, workflows, roles and policy while the independent docs bundle owns shared authoring instructions, templates, steering context and document scaffolds."
+summary: "Approach-aware SDD entry uses shared policy while the independent docs bundle owns authoring formats and instructions; incubation preserves independent checks without implicit delivery records."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -378,3 +378,13 @@ Host to coordinate; never edit another worker's checkout. Retained rejected PROP
 blocked. Missing targets never mean ready. Do not rewrite completed history, infer successors through provenance
 or store a lineage graph. On-demand code/Git inspection can answer downstream milestone outcome questions;
 proposal disappearance is not completion evidence.
+
+
+## Approach-aware SDD entry
+
+The installed spec pointer, constitution and router inspect `devkit config show` before selecting SDD routing.
+For `sdd`, existing intake/classification/stage/Git/approval rules apply. For `incubation`, they direct ordinary work
+to the project's incubation guidance and independent checks without implicit SDD Units, per-change envelopes or
+immutable iteration history. Existing explicitly bound SDD artifacts keep their checks. Installing or selecting spec
+assets never switches the approach. Incubation entry/roles/context are separately delivered; this policy supplies no
+product discovery coordinator.

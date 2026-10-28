@@ -55,3 +55,24 @@ def test_composed_and_direct_accept_handoff_refuse(tmp_path):
             operation()
     assert not (tmp_path / "specs").exists()
     assert not (tmp_path / "docs").exists()
+
+
+def test_installed_cli_reports_omissions_and_inactive_mutation(tmp_path, synced_template):
+    import json
+
+    from click.testing import CliRunner
+    from devkit_dist.cli import cli
+    from spec_support.delivery import _make_synced_repo
+
+    repo = _make_synced_repo(tmp_path, synced_template, extra_config='[development]\napproach="incubation"')
+    runner = CliRunner()
+    result = runner.invoke(cli, ["rules", "check", "-w", str(repo), "--format", "json"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)
+    assert len(data["omissions"]) == 5 and not data["errors"]
+    assert all(o["code"] == "SDD_LIFECYCLE_INACTIVE" for o in data["omissions"])
+    result = runner.invoke(cli, ["spec", "new", "demo", "-w", str(repo), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    assert json.loads(result.stdout)["error"]["code"] == "SPEC_LIFECYCLE_INACTIVE"
+    policy = runner.invoke(cli, ["spec", "policy", "-w", str(repo), "--format", "json"])
+    assert json.loads(policy.stdout)["development"] == {"approach": "incubation", "source": ".devkit/config.toml"}

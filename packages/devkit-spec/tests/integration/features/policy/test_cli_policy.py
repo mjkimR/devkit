@@ -20,6 +20,7 @@ def test_defaults(workspace: Path) -> None:
     result = _policy(workspace)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == [
+        "[DEVELOPMENT_APPROACH: approach=sdd source=default]",
         "[GATE_POLICY: plan-accept policy=ask source=default]",
         "[GATE_POLICY: proposal-handoff policy=ask source=default]",
         "[GATE_POLICY: dev-integration policy=ask source=default]",

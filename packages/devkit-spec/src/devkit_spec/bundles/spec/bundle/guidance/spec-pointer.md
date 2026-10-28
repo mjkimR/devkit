@@ -1,1 +1,1 @@
-- Before development, inspect `uv run devkit config show`. For `sdd`, run `uv run devkit get-context spec` once and use `/spec <intent>` (`/spec-next` to resume). For `incubation`, use its guidance and independent checks without implicit SDD records.
+- Inspect `uv run devkit config show`: for sdd, run `uv run devkit get-context spec`. Start work with `/spec <intent>`; each new task intake runs its intake step first. `/spec-next` resumes SDD. For incubation, use its guidance and independent checks without SDD records.

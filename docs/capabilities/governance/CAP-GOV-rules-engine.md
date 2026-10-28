@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-rules-engine
 title: "Governance Rules Engine"
-summary: "Deterministic static invariant verification, convergence checking and rule-owned per-file extraction reuse."
+summary: "Deterministic static verification, convergence rechecks, explicit rule omission evidence and rule-owned per-file extraction reuse."
 area: governance
 status: active
 entrypoints:
@@ -82,3 +82,16 @@ and rule-codec `payload`. The memo is trusted local derived state, not authentic
 Unchanged serialized bytes cause no replacement. Concurrent writers use last atomic replacement; lost entries cause
 later misses. Stores remain loaded separately from computed judgments across invalidations.
 `ADR-persist-python-facts-and-reuse-in-snapshots` owns the storage and writer policy.
+
+
+## Explicit rule omissions
+
+A rule MAY expose `omission(ctx) -> RuleOmission | None` through the optional applicability contract. Existing rules
+without the hook execute unchanged. `RuleOmission(rule_id, code, reason)` identifies a deliberate omission, distinct
+from target-scope `skipped` IDs and successful execution. The evaluator calls the hook for check and convergence
+recheck candidates; fix writes and failed-fix unknown writes retain existing all-active rescoping behavior.
+
+WHEN omissions exist, rules JSON MUST include `omissions: [{rule_id, code, reason}]` and text MUST emit one
+`[RULE_OMITTED: <id> code=<code> reason=<reason>]` per omission. Without omissions the existing JSON shape is retained.
+An omission does not suppress document rules or independent project checks. Applicability errors are rule-execution
+errors, not omissions. `packages/devkit/tests/unit/features/rules/engine/test_scoping.py` enforces rescoping.
