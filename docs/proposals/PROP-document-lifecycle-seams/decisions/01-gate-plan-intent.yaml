@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: user asked to run Planning in the session; size L, planning_effort high shown
+by: user
+at: '2026-10-28T01:11:22.892869Z'
