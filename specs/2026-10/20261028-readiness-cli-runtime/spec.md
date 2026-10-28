@@ -1,118 +1,63 @@
 ---
 id: SPEC-readiness-cli-runtime
 title: Explain the running CLI reference in citation diagnostics
-summary: Clarify that missing CLI commands or options are checked against the currently running CLI and can indicate either an invalid citation or an older runtime, without changing checks or integration behavior.
+summary: "Clarify the running CLI reference and possible causes of missing commands or options without changing validation or integration behavior."
 status: planned
 created: 2026-10-28
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-bugfix
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-readiness-cli-runtime] Explain the running CLI reference in citation diagnostics
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-readiness-cli-runtime on 2026-10-28.
-- **Preserved Materials**: `docs/materials/2026-10/20261028-readiness-cli-runtime`
-
-### 1. Background & Hypothesis
-
-`FB-readiness-cli-contract-checks-the-base-runtime` records valid branch CLI additions rejected against the older
-retained runtime. `RULE-cli-contract` uses the currently running CLI's Click tree. Its missing-command and
-missing-option guidance does not explain that the runtime itself can be older than the cited interface.
-
-The user selected a small guidance change. This proposal improves the reader's next diagnostic step; it does not
-make branch CLI additions pass integration or deliver the broader integration-runtime solution.
+The accepted guidance scope addresses the diagnostic part of `FB-readiness-cli-contract-checks-the-base-runtime`.
+It does not deliver the broader integration runtime solution recorded in historical Planning materials.
 
 ## 2. Defect Characterization
 
-- **Current behavior**: <trigger, environment and the observed wrong result, with evidence>
-- **Expected behavior and its basis**: <the result the existing contract requires, citing its capability, use case, ADR or test>
-- **Behavior to preserve**: <call paths, input boundaries and contracts that must keep working, with their tests>
-- **Reproduction conditions**: <the command, data and environment that reproduce the defect>
+- **Current behavior**: `RULE-cli-contract` reports an unknown command or option against the running Click tree.
+  Its remediation tells the reader to correct the citation without explaining that the running runtime can be older
+  than the cited interface. `cli_contract/rule.py` defines this shared remediation.
+- **Expected behavior and its basis**: the accepted direction requires remediation to identify the currently
+  running CLI as the reference and describe an invalid citation or an older runtime as possible causes.
+  Lookup failure alone proves neither cause.
+- **Behavior to preserve**: rule ID, severity, citation file/line/column, unknown command or option messages,
+  failure and exit behavior, matching, settings, Click-root handling, providers, readiness, digests and authority.
+  Existing rule-local tests cover citation extraction, matching, settings and the running root.
+- **Reproduction conditions**: add a parameterized rule-local test using the existing Click fixture and a citation
+  of either an unknown command or an unknown option. Assert the remediation explains both causes and the running CLI.
+  Run that test before changing production code, then rerun it after the fix.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: runtime selection, installation, launch or build; fingerprints, subprocesses, caches,
+  root fail-closed behavior, integration behavior, whole-runtime wheel tests, consumer upgrades and cleanup tests.
+- **Scope Excluded**: changing rule matching, options, lookup failures, settings, providers, readiness, digest or authority.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Missing interface guidance
 
-## 5. Carried Proposal Notes
+- **Given** a citation of an unknown command or option in the running CLI fixture
+- **When** `RULE-cli-contract` evaluates the citation
+- **Then** its remediation identifies the currently running CLI as the reference, names an invalid citation or
+  an older runtime as possible causes, and directs the reader to compare help with the intended interface.
+  It does not claim that a runtime mismatch is proven.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Preserve validation and consistent guidance
 
-### 2. Technical Spike Questions
+- **Given** the existing rule fixtures and the unknown command and option regression cases
+- **When** the rule tests run
+- **Then** existing validation results remain unchanged, each regression retains its rule ID, location, error
+  severity and unknown command or option message, and the rule guide agrees with the remediation.
 
-The direction is settled by the user. No further comparison, Scout, Challenger or user question is required for
-this low-effort Planning turn. The earlier comparison in `docs/materials/2026-10/20261028-readiness-cli-runtime/runtime-options.md` is historical evidence,
-not the current scope or Development acceptance criteria.
+## 5. Assumptions & Source Feedback
 
-### 3. Proposed Design & Impact
-
-Clarify the existing missing-command and missing-option diagnostic guidance in the CLI-contract rule. The guidance
-MUST say that citations are checked against the currently running CLI. It MUST explain both possible causes: the
-citation is invalid, or the running runtime is older than the cited interface. It MUST NOT assert that runtime
-incompatibility is proven merely because lookup failed.
-
-Recommended wording for Development to refine within the existing advisory layout:
-
-> CLI citations are checked against the currently running CLI. A missing command or option can mean an invalid
-> citation or an older runtime. Check the running CLI's help and compare it with the intended interface.
-
-Retain the existing rule ID, citation location, unresolved command or option, failure result and exit behavior.
-Keep current matching, options, settings, Click-root handling, readiness, digest and authority behavior unchanged.
-The implementation scope is diagnostic text plus focused rule-local regression coverage. Update the existing rule
-guide or operational reference only where needed to keep its explanation consistent. A capability edit is needed
-only if its existing diagnostic guidance otherwise conflicts; no new behavioral contract is proposed.
-
-A brief dogfood note MAY point to the separately authorized retained-runtime recovery already described in
-`CAP-INT-mcp-services`. It MUST NOT define a new workflow or imply permission to build, install or execute a runtime.
-
-#### Scope excluded
-
-- Runtime selection, installation, launch or build machinery, including automatic source execution.
-- Changes to validation, Click-root handling, readiness, exit codes, CLI options, digests or authority.
-- Runtime fingerprints, metadata manifests, whole-runtime wheel tests, cleanup tests or consumer-upgrade scenarios.
-- Delivering the originally proposed broader integration-runtime fix.
-
-### 4. Lifecycle & Retirement Criteria
-
-Development starts after the Host's normal acceptance and handoff. Its focused acceptance criteria are:
-
-- **AC1**: Given an unknown command or option, the diagnostic identifies the currently running CLI as the reference
-  and states invalid citation and older runtime as possible causes without asserting a proven mismatch.
-- **AC2**: The same fixtures preserve the rule ID, citation location, unresolved command or option and failure
-  result. Existing passing citations and matching/settings behavior remain unchanged.
-- **AC3**: Any touched guide or operational reference agrees with the diagnostic. It adds no runtime workflow or
-  behavior change and grants no authority.
-
-Use focused rule regression tests and relevant repository checks during Development. Planning checks proposal
-boundaries, document rules and envelopes only. No runtime build or integration scenario is required by this scope.
-
-### Planning decisions
-
-- The user's direction replaces the earlier runtime-design scope with diagnostic guidance only. Size is S and
-  both Planning and Development effort are low because the direction leaves nothing further to settle.
-- Withdraw and delete the `explicit-readiness-cli-surface` PADR. Its runtime/check-context design exceeds the
-  user-selected guidance scope; this change needs no lasting architectural decision or replacement PADR.
-- Earlier envelopes and materials remain historical evidence. Their broader runtime acceptance criteria and
-  recommendations do not apply to the current proposal or its Development work.
-
-### Source feedback
-
-- `FB-readiness-cli-contract-checks-the-base-runtime` remains promoted to this proposal. The current goal covers
-  its diagnostic guidance only; Planning does not claim the underlying integration/runtime behavior is fixed.
-
-### Target Area & Boundaries
-
-- Target Area: capabilities/integration/
-- Planned Boundaries: `packages/devkit/src/devkit_agt/features/rules/services/builtins/cli_contract/`, `docs/capabilities/integration/`
-- Excluded Boundaries: `packages/devkit-spec/`, `packages/devkit-mcp/`, `packages/devkit/src/devkit_agt/features/integration/`
-
+- The current rule still uses the running Click tree, matching the accepted premise at the handoff base.
+- Baseline measurement uses the head with the remediation change disabled: the narrow regression fails before
+  the fix and passes after it. No runtime performance measurement applies to this text change.
+- `FB-readiness-cli-contract-checks-the-base-runtime` is already promoted; this scope fully delivers diagnostic
+  guidance and does not claim the underlying runtime mismatch is fixed.
