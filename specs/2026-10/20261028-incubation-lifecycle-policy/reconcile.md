@@ -42,7 +42,7 @@ devkit-spec; official smoke passed. The project retains the default SDD approach
 
 ## Remaining milestone work
 
-`PROP-incubation-development-guidance` owns the incubation entry/roles/context; `PROP-incubation-sdd-baseline` owns baseline adoption.
+`SPEC-incubation-development-guidance` owns the incubation entry/roles/context; `SPEC-incubation-sdd-baseline` owns baseline adoption.
 Those explicitly excluded features are in separate Host-coordinated worktrees; this spec claims no milestone
 completion. Host will incorporate their final identifiers at integration.
 
