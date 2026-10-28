@@ -1,39 +1,26 @@
 ---
-id: PROP-incubation-development-guidance
+id: SPEC-incubation-development-guidance
 title: Develop and resume an idea without SDD lifecycle records
-summary: "Ships opt-in incubation guidance, optional clarification, research and usage-verification roles, and mutable current product context independently of SDD assets."
-status: accepted
-created_at: 2026-10-28
-target_area: delivery/
-priority: medium
-size: L
-planning_effort: medium
-dev_effort: medium
-milestone: MS-idea-incubation
-depends_on: [PROP-incubation-lifecycle-policy]
-boundaries:
-  owns:
-    - packages/devkit-catalog/
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/
-    - docs/usecases/delivery/
-    - docs/usecases/harness/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/steering/
-    - guides/
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit-docs/
-    - packages/devkit-dist/
-    - packages/devkit/
-task_kind: feature
-workflow: sdd-proposal
+summary: Ships opt-in incubation guidance, optional clarification, research and usage-verification roles, and mutable current product context independently of SDD assets.
+status: planned
+created: 2026-10-28
+depends_on:
+  - PROP-incubation-lifecycle-policy
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-incubation-development-guidance] Develop and resume an idea without SDD lifecycle records
+# [SPEC-incubation-development-guidance] Develop and resume an idea without SDD lifecycle records
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-incubation-development-guidance on 2026-10-28.
+- **Preserved Materials**: `docs/materials/2026-10/20261028-incubation-development-guidance`
+- Target Docs Blueprint: `PROP-incubation-development-guidance-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `MS-idea-incubation` describes a complete development path from an incomplete idea to an app that can remain in
 incubation. `SPEC-document-bundle-split` supplies shared document formats without SDD assets. The lifecycle-policy
@@ -41,20 +28,39 @@ proposal owns runtime applicability; this proposal supplies the agent's discover
 
 The existing spec entry skill and support roles operate on SDD delivery requests. Product discovery needs to identify
 users, problems and a useful first flow before those delivery requests exist. An opt-in catalog bundle can coordinate
-that work without a new wheel or lifecycle records. Ownership evidence is in `materials/ownership-evidence.md`.
+that work without a new wheel or lifecycle records. Ownership evidence is in `docs/materials/2026-10/20261028-incubation-development-guidance/ownership-evidence.md`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Develop and resume an idea without SDD lifecycle records so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — ownership**: recommend an opt-in `incubation` bundle in devkit-catalog, rather than an extra wheel or
-  putting approach-specific guidance into docs or spec. See `PADR-keep-incubation-guidance-opt-in-and-current-state-based`.
+  putting approach-specific guidance into docs or spec. See `ADR-keep-incubation-guidance-opt-in-and-current-state-based`.
 - **Q2 — interaction**: one `/incubate` entry skill adapts discovery, research, implementation and verification to
   the next useful action. Optional support roles do not create mandatory phases.
 - **Q3 — resume**: recommend a project-owned `.devkit/incubation.md` with current facts and the next action. It is
   mutable Markdown, not a Unit, managed asset, approval record or history of discarded choices.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Distribution and entry
+#### Distribution and entry
 
 1. Register `incubation = "devkit_catalog.incubation"` through the existing `devkit.bundles` mechanism. Keep it opt-in
    with `auto_select` absent, like the other catalog bundles. No extra runtime dependency or new CLI is introduced.
@@ -72,7 +78,7 @@ that work without a new wheel or lifecycle records. Ownership evidence is in `ma
 6. Read `get-context incubation` once for the selected entry, and `get-context docs` before document authoring.
    Documents are added when they describe retained behavior or help the next decision, not as a complete set up front.
 
-### Adaptive work loop
+#### Adaptive work loop
 
 - On entry, read existing current context and relevant run instructions before asking questions. Reuse answers already
   in the conversation or repository. Ask only what is missing for the next useful action, with a recommendation when
@@ -94,7 +100,7 @@ that work without a new wheel or lifecycle records. Ownership evidence is in `ma
 - Maintain current documents and `.devkit/incubation.md` when a retained choice or executable flow changes and before
   pausing or handing off. The coordinator owns that file; parallel roles return results rather than editing it.
 
-### Optional support contracts
+#### Optional support contracts
 
 | Role | Responsibility and return | Write and Git boundary |
 | --- | --- | --- |
@@ -107,7 +113,7 @@ Roles are optional: use one when the question or verification scope separates us
 of the bundle does not require invoking all roles. The coordinator checks actual diff boundaries and folds evidence
 into current context. A failed role result remains failed; it is not a product decision or approval.
 
-### Current context
+#### Current context
 
 `.devkit/incubation.md` is project-owned Markdown created by `/incubate` when useful, preserved by sync and eligible
 for normal version control. It is not placed in managed or transient storage and has no devkit document ID or lifecycle
@@ -126,7 +132,7 @@ experiments. Remove superseded choices and failed experiments that no longer inf
 uncertainty while it still matters. A temporary execution checklist may live in a coordinator-chosen scratch area;
 it does not become a spec Unit or a durable product contract.
 
-### Interfaces with concurrent proposals
+#### Interfaces with concurrent proposals
 
 - The lifecycle-policy proposal owns setting location, inspection output, command preconditions and readiness.
   Its draft shared `sdd|incubation` setting is unapproved; this proposal relies only on an inspectable effective
@@ -141,7 +147,7 @@ it does not become a spec Unit or a durable product contract.
 - All three Planning units write separate proposal directories. Implementation remains dependent on the accepted
   policy, and overlapping guides or architecture changes integrate sequentially after a scope comparison.
 
-### Validation scenarios
+#### Validation scenarios
 
 - **AC-01 — isolated selection**: Given built devkit-docs and devkit-catalog wheels in a clean consumer without
   devkit-spec, when incubation is selected and sync runs, then the skill, pointer, roles and context template deploy
@@ -171,17 +177,18 @@ preservation. Semantic checks use a bounded sample app and synthetic scenario in
 record actual commands/interactions, produced context and unmet observations. A text-token assertion alone cannot
 establish adaptive discovery or usable resumption. No production app is shipped by this proposal.
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: Runtime approach-policy implementation, command readiness providers or a second policy source.
 - **Scope Excluded**: SDD baseline activation, retroactive delivery records and a new lifecycle/workflow engine.
 - **Scope Excluded**: A new wheel, universal app stack, framework scaffold catalog or persistent autonomous service.
 - **Scope Excluded**: Mandatory subagent invocation, immutable incubation history and automatic approach switching.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Accept the catalog ownership, optional-role and mutable-context direction after Host/user review, then hand off one
 feature spec after the prerequisite policy contract is accepted. Retire this proposal only through the authorized
 handoff. Before claiming Development complete, pass AC-01 through AC-06, build-wheel isolation, scenario walkthroughs,
 relevant lint/types, affected tests and cumulative governance checks. The broader milestone remains open until its
 other proposals complete.
+

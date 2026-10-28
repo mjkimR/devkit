@@ -170,7 +170,7 @@ this change supplies no artifact conversion or history rewrite.
 
 ### Successor Planning inputs
 
-`PROP-incubation-development-guidance` can plan against the proposed shared reader/`config show` contract,
+`SPEC-incubation-development-guidance` can plan against the proposed shared reader/`config show` contract,
 incubation's lack of implicit SDD records, and preservation of independent checks once this direction is accepted.
 Its bundle name, entry skill, optional roles, current-context artifact and product discovery flow remain open to
 its own Planning. Guidance Planning can run alongside policy Development, with final binding to the implemented
@@ -180,7 +180,7 @@ its final transition writes and entry behavior depend on the accepted policy and
 ### Non-goals
 
 - **Scope Excluded**: incubation entry skills, product discovery/research/usage roles and resumable product context;
-  these remain `PROP-incubation-development-guidance`.
+  these remain `SPEC-incubation-development-guidance`.
 - **Scope Excluded**: voluntary baseline adoption, automatic graduation, rewriting existing SDD history or switching
   this repository to incubation; adoption remains `PROP-incubation-sdd-baseline`.
 - **Scope Excluded**: disabling project checks, all custom workflows or all commit gates; a generic bypass flag;

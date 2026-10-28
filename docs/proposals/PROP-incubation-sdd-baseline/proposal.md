@@ -28,7 +28,7 @@ task_kind: feature
 workflow: sdd-proposal
 depends_on:
 - PROP-incubation-lifecycle-policy
-- PROP-incubation-development-guidance
+- SPEC-incubation-development-guidance
 ---
 
 # [PROP-incubation-sdd-baseline] Adopt SDD from a verified implemented baseline
@@ -53,7 +53,7 @@ Hypothesis: one explicit baseline playbook in the existing spec bundle can reuse
 
 1. Add the explicitly invoked or confirmed `sdd-baseline` playbook to devkit-spec's existing spec bundle. Ordinary incomplete-idea development never invokes it automatically. The incubation entry may recommend it when the user asks for adoption, but elapsed time, code size and experiment count do not trigger it.
 2. If devkit-spec is absent, present installation and asset-selection effects before using the repository's supported installation instructions. Keep the effective approach incubation while preparing. Installing or selecting spec assets does not itself establish baseline readiness or authorize activation. The policy feature must make this combination coherent.
-3. Accept semantic inputs from existing incubation context: current goal and constraints, retained choices versus assumptions, unresolved questions, implementation and run/check evidence. Read the actual implementation and current documents. The playbook imposes no context filename or schema on `PROP-incubation-development-guidance` and does not require historical context to exist.
+3. Accept semantic inputs from existing incubation context: current goal and constraints, retained choices versus assumptions, unresolved questions, implementation and run/check evidence. Read the actual implementation and current documents. The playbook imposes no context filename or schema on `SPEC-incubation-development-guidance` and does not require historical context to exist.
 4. Reuse `devkit docs` lookup/references, docs-owned authoring instructions/templates and the project's independent run/lint/build/test commands. Reuse the evidence and explicit disposition method of `CAP-DLV-drift-reconciliation` without requiring its optional maintenance bundle. Do not run feature-only `spec-sync` as if a completed feature Unit existed.
 
 ### Baseline preparation and evidence
@@ -84,7 +84,7 @@ Hypothesis: one explicit baseline playbook in the existing spec bundle can reuse
 
 ### Boundaries and parallel Planning
 
-`PROP-incubation-lifecycle-policy` owns authoritative policy selection and runtime enforcement. `PROP-incubation-development-guidance` owns the incubation entry, optional roles and live context. Their implementation must be available before this feature's end-to-end adoption exercise and activation integration can complete. This Planning can proceed from the semantic interfaces above without choosing their schema or context path.
+`PROP-incubation-lifecycle-policy` owns authoritative policy selection and runtime enforcement. `SPEC-incubation-development-guidance` owns the incubation entry, optional roles and live context. Their implementation must be available before this feature's end-to-end adoption exercise and activation integration can complete. This Planning can proceed from the semantic interfaces above without choosing their schema or context path.
 
 Development refreshes its base and checks the accepted prerequisite contracts before filling exact commands and references. A changed prerequisite that breaks the agreed transition is a Host problem, not permission to invent a second setting. No independent structural prerequisite was found.
 

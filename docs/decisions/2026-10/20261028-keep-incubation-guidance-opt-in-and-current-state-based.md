@@ -1,13 +1,13 @@
 ---
-id: PADR-keep-incubation-guidance-opt-in-and-current-state-based
+id: ADR-keep-incubation-guidance-opt-in-and-current-state-based
 title: Keep incubation guidance opt-in and current-state based
 summary: "For developing ideas without SDD, we ship an opt-in incubation catalog bundle and mutable current context, to resume useful work without delivery records, accepting semantic evaluation of guidance."
-proposal: PROP-incubation-development-guidance
-status: draft
+proposal: SPEC-incubation-development-guidance
+status: accepted
 created_at: 2026-10-28
 ---
 
-# [PADR-keep-incubation-guidance-opt-in-and-current-state-based] Keep incubation guidance opt-in and current-state based
+# [ADR-keep-incubation-guidance-opt-in-and-current-state-based] Keep incubation guidance opt-in and current-state based
 
 ## 1. Context & Problem Statement
 
