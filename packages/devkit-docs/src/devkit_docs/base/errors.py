@@ -78,8 +78,9 @@ class ListStatusUnknownNotice(DocsError):
 
 
 class OverlayFailedWarning(DocsError):
-    """A ``devkit.docs.status_overlay`` extension failed to load, raised or returned something other than
-    ``{document ID: {field: text}}`` with no field ``list`` already shows (``WARNING``); its display is left out."""
+    """A ``devkit.docs.status_overlay`` extension failed to load, raised, returned something other than
+    ``{document ID: {field: text}}``, named a field that is no lower-case identifier or set a field ``list`` already
+    shows (``WARNING``); its display is left out."""
 
     code = "DOCS_OVERLAY_FAILED"
     level = Level.WARNING
