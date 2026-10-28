@@ -8,7 +8,7 @@ summary: "Implement and verify integration claim recovery and nonblocking inacti
 # Tasks
 
 - [x] **Task 1**: Specialize missing session claim recovery and retain integration regression coverage.
-  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`, `packages/devkit-spec/tests/integration/features/delivery/`, `docs/capabilities/integration/CAP-INT-mcp-services.md`, `specs/2026-10/feedback/20261027-integrate-asks-for-a-new-request-when-claims-are-missing.md`
+  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`, `packages/devkit-spec/tests/integration/features/delivery/`, `docs/capabilities/integration/CAP-INT-mcp-services.md`, `docs/development/reference/integration.md` (Host-authorized recovery-row correction), `docs/capabilities/delivery/CAP-DLV-delivery-workflows.md` (Host-authorized conditional provider evidence description), `specs/2026-10/feedback/20261027-integrate-asks-for-a-new-request-when-claims-are-missing.md`
   - _Requirements: AC-01, AC-02_
   - **Verification**: Integration CLI and readiness integration suites.
 

@@ -2,7 +2,7 @@
 id: SPEC-input-recovery-notices
 title: Actionable integration input recovery and milestone notices
 summary: "Recover missing integration claims by correcting the same invocation and report inactive milestone assignment without blocking proposal creation."
-status: in-progress
+status: completed
 created: 2026-10-28
 related_capabilities:
   - CAP-INT-mcp-services
