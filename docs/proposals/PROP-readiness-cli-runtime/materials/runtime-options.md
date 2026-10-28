@@ -1,5 +1,9 @@
 # Runtime options and evidence
 
+Historical comparison from the earlier medium-effort Planning turn. The user's subsequent direction narrowed
+`PROP-readiness-cli-runtime` to diagnostic guidance only. Its current proposal supersedes every recommendation
+and Development acceptance reference below; no runtime mechanism or broader verification is required by that scope.
+
 Planning inspected worktree head `bfab43d8a9d00aa26a6a7081e0d25f0cb5b742d9`, based on
 `6ffb1ea17a1ee861318925ebd585d03777f2c637`. No source runtime, install or temporary probe was executed.
 
