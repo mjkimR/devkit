@@ -14,6 +14,7 @@ created_at: 2026-10-17
 usecases:
   - UC-reconcile-living-spec-drift
   - UC-review-and-refactor-accumulated-slop
+  - UC-speed-up-selected-slow-operations
 ---
 
 # [CAP-DIST-context-and-playbooks] Context Loading and Playbook Discovery
@@ -242,3 +243,6 @@ Each run starts fresh procedure progress, checks prerequisites and obeys project
 permissions and user constraints. Schedules do not provide future gated approvals, and unavailable
 approval UI is not approval. External systems own cadence, launch, retries, overlap control and
 execution history; devkit supplies instructions and context requirements (`ADR-external-playbook-execution`).
+A playbook may read a co-deployed playbook's body resources as reference text, resolved through exact retrieval
+as §4 describes; that reading is no invocation and starts none of that playbook's intake or decision rounds
+(`ADR-reuse-review-refactor-application-through-exact-playbook-retrieval`).

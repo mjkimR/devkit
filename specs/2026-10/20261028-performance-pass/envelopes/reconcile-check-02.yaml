@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T23:18:36.992666Z'
+status: completed
+summary: 'Implementer self-verification of the reconcile-check-01 fixes (activity-effort medium; scope not expanded): CAP-DLV-performance-pass now states revalidation (3.9), load per measurement and in the baseline record (4.7, 4.10), the remaining attribution checks (4.9), the repeated-work preference (5.1) and the outcome update (6), each matching SKILL.md and the references; reconcile.md resolved.'
+findings: []
+checks:
+  rules: PASS devkit rules check docs and the unit errors=0
+diff_scope:
+  base: ec0439a549f7742db4c3963c759d1dc65b98ad4b
+  head: bcbee8b654d0054ae18a0b9f0592641004729068
+activity_effort: medium

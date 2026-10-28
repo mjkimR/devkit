@@ -384,6 +384,7 @@ def _check_session_task(
     if not isinstance(claims, dict):
         claims = {}
 
+    source_reason_count = len(reasons)
     task_kind = claims.get("task_kind")
     effort = claims.get("effort")
     if task_kind not in SESSION_KINDS:
@@ -419,6 +420,8 @@ def _check_session_task(
         Evidence("TARGET_SHA", context.finish.target_sha),
         Evidence("SESSION_CLAIMS", claims_summary),
     ]
+    if len(reasons) > source_reason_count:
+        evidence.append(Evidence("SESSION_CLAIMS_INVALID", "--claims"))
     return evidence, reasons
 
 

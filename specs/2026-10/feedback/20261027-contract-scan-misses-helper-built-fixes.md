@@ -8,7 +8,7 @@ target: packages/devkit/tests/integration/package/test_agent_output_contract.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-27
 ---
 
@@ -45,3 +45,12 @@ created_at: 2026-10-27
 Missed by the scan, found by review: gate/models/contracts.py, native_plan_accept.py, native_handoff.py,
 base/errors.py acceptance_unrecorded_fix, proposals/usecases/binding.py, workflow/usecases/handoff.py.
 ```
+
+## Disposition
+
+- **Disposition**: `packages/devkit/tests/integration/package/test_rendered_advisory_contract.py` and
+  `packages/devkit/tests/support/testsupport/advisory_contract.py`: resolved through the user-selected session
+  scope of explicit constructed-advisory regression tests plus the existing AST scan. Gate commit-message paths,
+  conditional handoff choices, proposal acceptance and zero/one/several unbound workflow helpers share placeholder,
+  invocation-prefix and retry-directive checks. Invalid computed-field fixtures verify detection. The targeted
+  contract suites pass; unexecuted dynamic paths remain outside this coverage, and no global collection hook was added.

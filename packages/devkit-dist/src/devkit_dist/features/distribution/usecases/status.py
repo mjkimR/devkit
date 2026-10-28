@@ -45,6 +45,7 @@ from devkit_dist.features.distribution.services.installation.engines import engi
 from devkit_dist.features.distribution.services.installation.local_render import runtime_receipt
 from devkit_dist.features.distribution.services.installation.overrides import drift_advisory
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
+from devkit_dist.features.distribution.services.installation.status_checks import status_check_notices
 from devkit_dist.features.distribution.services.installation.transaction import pending_journal, project_lock
 from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE, occupied, snapshot
 from devkit_dist.features.distribution.usecases.override_commands import deployed_drift
@@ -453,6 +454,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
                 *language_notices(root),
                 *engine_notices(receipt.asset_records if receipt else ()),
                 *registration,
+                *status_check_notices(root),
             ],
         )
 
