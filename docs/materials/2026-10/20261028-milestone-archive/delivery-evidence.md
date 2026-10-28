@@ -38,3 +38,12 @@ fresh consumer sync/hooks/worktrees, optional MCP, dense search, SDD extension a
 Three-package lint/format and Pyright passed; sync and governance reported no remaining drift or violations.
 The installed Node is 22.22.0 and npm reports the existing 22.22.2+ engine requirement; all mandatory frontend
 commands executed successfully with the unchanged lockfile.
+
+## Independent review correction
+
+The reviewer reproduced an AC-03 defect: a unique alias selected one document whose canonical ID was duplicated
+at the other valid location. Permanent regression cases failed four ways before the fix (alias on either owner,
+archived done or dropped). Membership now checks canonical-ID uniqueness after resolving the supplied spelling.
+No proposal directory is created for those ambiguous identities. The final frontend suite passed 111 tests.
+The selector full fallback on the committed implementation passed 5,947 tests with 14 existing skips; subsequent
+verification narrows to the correction delta rather than repeating unchanged full content.

@@ -17,6 +17,7 @@ def milestone_id(root: Path, value: str | None) -> str | None:
     if (
         not value.startswith("MS-")
         or found is None
+        or index.canonical(found[0].id) is None
         or found[0].kind is not Kind.MILESTONE
         or Path(found[0].path).stem != found[0].id
         or not milestone_path_valid(found[0].path, found[0].status)

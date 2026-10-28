@@ -203,3 +203,16 @@ def test_duplicate_milestone_identity_never_writes(workspace: Path) -> None:
     with pytest.raises(ArgumentError):
         create_proposal(workspace, "member", milestone="MS-foundation")
     assert not (workspace / "docs/proposals").exists()
+
+
+@pytest.mark.parametrize("alias_owner", ["root", "archive"])
+@pytest.mark.parametrize("status", ["done", "dropped"])
+def test_alias_to_duplicate_canonical_milestone_never_writes(workspace: Path, alias_owner: str, status: str) -> None:
+    for owner, directory, state in [("root", "docs/roadmap", "active"), ("archive", "docs/roadmap/_archive", status)]:
+        path = workspace / directory / "MS-foundation.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        alias = "aliases: [MS-unique]\n" if owner == alias_owner else ""
+        path.write_text(f"---\nid: MS-foundation\nstatus: {state}\n{alias}---\n")
+    with pytest.raises(ArgumentError):
+        create_proposal(workspace, "member", milestone="MS-unique")
+    assert not (workspace / "docs/proposals").exists()
