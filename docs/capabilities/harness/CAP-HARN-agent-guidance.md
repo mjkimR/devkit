@@ -27,8 +27,8 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: the bundle manifest and presets, the constitution, the seven instructions, the guidance pointer, the
-  `spec*` skills and their references, the two playbooks, the document templates and the docs skeleton; the role
+- **In-Scope**: the bundle manifest and presets, the constitution,  the guidance pointer, the
+  `spec*` skills and their references, the playbooks and proposal template; the role
   contracts as deployed assets.
 - **Out-of-Scope**:
   - Workflow definitions and role contract semantics: `CAP-DLV-delivery-workflows`.
@@ -47,9 +47,9 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    development work, including work started without a skill, and read each relevant instruction body before the
    action it governs. An instruction never overrides a mandatory check; a conflict is reported, not resolved by
    picking one. Every role contract under `subagents/` runs `devkit get-context spec` itself, so nested roles load
-   the same context. The constitution names `docs/steering/` and the `documents` list of the response (the bundle
-   declares `context_documents = "docs/steering"`) and directs the agent to read a steering file's body before a
-   wording, naming, interface or content decision its summary covers (`ADR-background-pointer-in-constitution`).
+   the same lifecycle context. Before document work, SDD also loads `devkit get-context docs`; docs owns shared
+   writing instructions and the steering summaries. Read relevant steering bodies when their summaries concern
+   the decision (`ADR-document-and-sdd-bundles`).
 2. **One pointer in `AGENTS.md`**: the bundle adds exactly one line to the root `AGENTS.md` guidance block (the
    `spec-pointer` fragment); everything else is reached through `devkit get-context spec` and the skills.
 3. **Managed files are read-only**: files under `.devkit/managed/` and projected agent files are never edited;
@@ -85,7 +85,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    invocation; the intake reply ends with the offer and waits for the answer before a Unit, branch or edit is created. No match and search errors stay silent. The post-selection procedure is the `spec` reference
    `references/playbooks.md`, read only on a match; no `spec-playbook` skill exists. Explicit invocation through
    `devkit-playbook` and failing-rule remediation stay available.
-8. **Templates by path**: new documents start from `.devkit/managed/spec/templates/<kind>.md`; seeded files are
+8. **Templates by path**: shared documents start from `.devkit/managed/docs/templates/<kind>.md`; the proposal template stays under spec; seeded files are
    written once where absent and are project-owned afterwards.
 9. **Skill names**: every skill of the bundle is named `spec` or `spec-<procedure>`. Rationale:
    `ADR-spec-package-on-devkit`.
@@ -98,33 +98,35 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 
 | Preset | Selection | Assets |
 | --- | --- | --- |
-| `core` | Automatic on `devkit sync` (`auto_select`) | Instructions, the guidance pointer, the rules, `templates`, skills, workflows, role contracts and playbooks. |
-| `docs-skeleton` | Opt-in: `devkit add spec:docs-skeleton` (or `[presets] spec = ["core", "docs-skeleton"]`) | The `docs-skeleton` seed. |
+| `core` | Automatic on `devkit sync` (`auto_select`) | Lifecycle guidance, five lifecycle rules, proposal template, skills, workflows, role contracts and playbooks. |
+
+The devkit-docs wheel auto-selects docs:core for shared document guidance. Its optional `docs:docs-skeleton`
+preset seeds absent document files. The supported SDD setup selects both core bundles.
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. The constitution
 (`AGENTS.md` at the bundle root) is deployed to `.devkit/managed/spec/AGENTS.md` whatever the presets.
 
 | Asset kind | Assets |
 | --- | --- |
-| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `usecase-writing`, `ux-writing`, `architecture-writing` (`ADR-writing-and-terminology-guidance`, `ADR-usecases-replace-stories`, `ADR-ux-screen-documents`) |
+| `instruction` | Shared instructions belong to docs:core (`CAP-DOCS-document-model`); spec declares none. |
 | `guidance` | `spec-pointer` |
-| `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `steering-documents`, `ux-links`, `ux-coverage`, `code-entrypoints`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
+| `rule` | `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
 | `skill` | the 15 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-overall-refactor`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `ux-reviewer`, `scout`, `triage`, `decomposer`, `planning-worker`, `development-worker` |
 | `playbook` | `brownfield-adoption`, `feedback-hygiene`, `adr-compaction` |
-| `document` | `templates`; `docs-skeleton` (`seeded = true`, `target = "docs"`) |
+| `document` | `templates` holds the proposal template. docs owns the shared templates and optional skeleton. |
 
 ### 4.2 Constitution
 
 `devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}],
-"documents": [{"path", "title", "summary"}]}`, the documents being the steering files of `docs/steering/`.
+"documents": []}`. Shared instructions and steering summaries are returned by `devkit get-context docs`.
 The constitution's sections:
 
 1. **Context**: read it once per agent context and each relevant instruction before the action it governs; a
    mandatory check wins over an instruction.
 2. **Living Spec and Scope**: `docs/` holds the current contract; feature specs are `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`;
-   steering documents under `docs/steering/`, read on demand from the `documents` list; namespaces under
+   shared document context loaded through docs; namespaces under
    `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
 3. **Classification and Authority**: the three axes, the `sdd-<planning-depth>[-<task-kind>]` workflow names, raising
    and lowering the depth, the approval boundaries `plan-accept`, `proposal-handoff` and `dev-integration` with
@@ -292,25 +294,26 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 
 ### 4.6 Templates
 
-`.devkit/managed/spec/templates/{capability,usecase,decision,proposal,milestone}.md`: frontmatter with a required English
+`.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md` and
+`.devkit/managed/spec/templates/proposal.md`: frontmatter with a required English
 `summary`, the H1 `# [<ID>] <Title>` convention and the section skeleton of each document kind (`devkit spec proposal
 new` and `padr` write the proposal and PADR shapes themselves; `CAP-DLV-proposal-incubation`).
 
 ### 4.7 Docs Skeleton
 
-The `docs-skeleton` asset seeds `docs/`, each file written once where absent and then project-owned:
+The docs bundle's `docs-skeleton` asset seeds `docs/`, each file written once where absent and then project-owned:
 
 ```text
 docs/
 ├── README.md                                  # entry
 ├── steering/glossary.md, glossary.yaml        # steering documents: terms, search synonyms
 ├── architecture/                              # README.md and arc42 chapters ARCH-01, 03, 05-1, 05-2, 06, 07, 08
-├── capabilities/README.md, usecases/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
+├── capabilities/README.md, usecases/README.md, decisions/README.md, materials/README.md, ux/README.md
 └── development/setup.md, workflow.md, ci-cd.md
 ```
 
-The directory READMEs state each directory's naming and authoring conventions and point at `devkit docs list` for
-discovery instead of catalog tables.
+The directory READMEs describe document authoring without SDD entry obligations. SDD proposal and roadmap catalog
+guidance stays in the spec skill references. Existing seeded bytes stay project-owned.
 
 The seeded `steering/glossary.md` (steering frontmatter `title` and `summary`) table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
 the definition also states what a term excludes, `Owner` is the defining document ID or owning component, `Avoid` lists

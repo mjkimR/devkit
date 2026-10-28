@@ -383,7 +383,7 @@ assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secr
     uv run devkit sync >/dev/null
     test ! -e docs
     test -f .devkit/managed/spec/bundle.toml
-    uv run devkit add spec:docs-skeleton >/dev/null
+    uv run devkit add docs:docs-skeleton >/dev/null
     uv run python -c '
 from pathlib import Path
 from devkit_docs.features.documents import DocumentIndex
