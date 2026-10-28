@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode
-from devkit_dist.features.distribution.models.errors import McpRegistrationPendingNotice
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.usecases.override_commands import create_override
@@ -298,22 +297,15 @@ def test_configuration_paths_are_workspace_relative(installed: list[InstalledBun
     assert _error(broken)["code"] == "CONFIG_INVALID" and str(root) not in broken.stdout
 
 
-# Finding 9: a never-synced checkout's next step is a plain sync, not a registration step.
-
-
-def test_status_without_receipt_omits_registration_pending(
-    installed: list[InstalledBundle], root: Path, monkeypatch: pytest.MonkeyPatch
+def test_status_json_omits_registration_pending_with_and_without_receipt(
+    installed: list[InstalledBundle], root: Path
 ) -> None:
     update_config(root, presets={"team": ["all"]}, agents=["claude-code"])
-    pending = [McpRegistrationPendingNotice("local MCP registration is not set up in this checkout: claude")]
-    monkeypatch.setattr(
-        "devkit_dist.features.distribution.usecases.status.registration_pending_notices", lambda *_: pending
-    )
     status = json.loads(_invoke("status", "-w", str(root)).stdout)
     assert "MCP_REGISTRATION_PENDING" not in {item["code"] for item in status["notices"]}
     sync_project(root, installed)
     status = json.loads(_invoke("status", "-w", str(root)).stdout)
-    assert "MCP_REGISTRATION_PENDING" in {item["code"] for item in status["notices"]}
+    assert "MCP_REGISTRATION_PENDING" not in {item["code"] for item in status["notices"]}
 
 
 # Finding 10: one wording per condition.

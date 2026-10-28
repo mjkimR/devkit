@@ -146,9 +146,7 @@ def clone(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return root
 
 
-def test_locked_sync_and_status_report_a_registration_left_for_later(
-    installed: list[InstalledBundle], clone: Path
-) -> None:
+def test_locked_sync_reports_a_registration_left_for_later(installed: list[InstalledBundle], clone: Path) -> None:
     update_config(clone, presets={"team": ["all"]}, agents=["claude-code"])
     sync_project(clone, installed[:1])
     ledger = json.loads((clone / registrations.LEDGER).read_text())
@@ -162,7 +160,7 @@ def test_locked_sync_and_status_report_a_registration_left_for_later(
     assert not (clone / ".mcp.json").exists()
     status = get_project_status(clone, installed[:1])
     assert status.errors == []
-    assert [notice.code for notice in status.notices] == ["MCP_REGISTRATION_PENDING"]
+    assert status.notices == []
     sync_project(clone, installed[:1])
     assert "MCP_REGISTRATION_PENDING" not in [
         notice.code for notice in get_project_status(clone, installed[:1]).notices
@@ -208,3 +206,114 @@ def test_check_skips_the_post_sync_preview_that_dry_run_runs(
     assert previews == [] and "gate hooks would change" not in check.stderr
     dry = CliRunner().invoke(cli, ["sync", "--dry-run", "-w", str(project)])
     assert dry.exit_code == 0 and len(previews) == 1 and "gate hooks would change" in dry.stderr
+
+
+@pytest.mark.parametrize("receipt", [False, True])
+@pytest.mark.parametrize("outcome", ["absent", "none", "unavailable", "write"])
+def test_general_status_never_inspects_registration(
+    installed: list[InstalledBundle], clone: Path, monkeypatch: pytest.MonkeyPatch, receipt: bool, outcome: str
+) -> None:
+    others = registrations.metadata.entry_points
+    monkeypatch.setattr(
+        registrations.metadata,
+        "entry_points",
+        lambda group: [] if group == registrations.GROUP else others(group=group),
+    )
+    update_config(clone, presets={"team": ["all"]}, agents=["claude-code"])
+    if receipt:
+        sync_project(clone, installed[:1])
+    calls = []
+
+    def provider(*args, **kwargs):
+        calls.append("probe")
+        if outcome == "unavailable":
+            raise registrations.RuntimeUnavailable("fixture runtime unavailable")
+        if outcome == "none":
+            return None
+        return registrations.LaunchDescriptor("/retained/python", ("-m", "x"), str(clone), str(clone), "local")
+
+    def load():
+        calls.append("load")
+        return provider
+
+    monkeypatch.setattr(
+        registrations.metadata,
+        "entry_points",
+        lambda group: (
+            ([] if outcome == "absent" else [SimpleNamespace(load=load)])
+            if group == registrations.GROUP
+            else others(group=group)
+        ),
+    )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("general status must not inspect, plan or write MCP registration")
+
+    for name in ("_ledger", "_snapshot", "plan", "apply"):
+        monkeypatch.setattr(registrations, name, forbidden)
+    status = get_project_status(clone, installed[:1])
+    assert "MCP_REGISTRATION_PENDING" not in [notice.code for notice in status.notices]
+    assert calls == []
+    assert not (clone / registrations.LEDGER).exists()
+    assert not (clone / ".mcp.json").exists()
+
+
+@pytest.mark.parametrize("mode", ["plan", "locked", "registrations-only"])
+@pytest.mark.parametrize("outcome", ["absent", "none", "unavailable", "write"])
+def test_actual_registration_outcomes_are_preserved(
+    installed: list[InstalledBundle],
+    clone: Path,
+    discovered: list[InstalledBundle],
+    monkeypatch: pytest.MonkeyPatch,
+    mode: str,
+    outcome: str,
+) -> None:
+    others = registrations.metadata.entry_points
+    monkeypatch.setattr(
+        registrations.metadata,
+        "entry_points",
+        lambda group: [] if group == registrations.GROUP else others(group=group),
+    )
+    update_config(clone, presets={"team": ["all"]}, agents=["claude-code"])
+    sync_project(clone, installed[:1])
+    calls = []
+
+    def provider(*args, **kwargs):
+        calls.append("plan")
+        if outcome == "unavailable":
+            raise registrations.RuntimeUnavailable("fixture runtime unavailable")
+        if outcome == "none":
+            return None
+        return registrations.LaunchDescriptor("/retained/python", ("-m", "x"), str(clone), str(clone), "local")
+
+    monkeypatch.setattr(
+        registrations.metadata,
+        "entry_points",
+        lambda group: (
+            ([] if outcome == "absent" else [SimpleNamespace(load=lambda: provider)])
+            if group == registrations.GROUP
+            else others(group=group)
+        ),
+    )
+    if mode == "plan":
+        planned = registrations.plan(clone, ["claude-code"])
+        notices = [notice.code for notice in planned.notices]
+        assert (
+            planned.states.get("claude")
+            == {"absent": None, "none": "absent", "unavailable": "runtime-unavailable", "write": "write"}[outcome]
+        )
+        assert bool(planned.changes) == (outcome == "write")
+    elif mode == "locked":
+        notices = [notice.code for notice in sync_project(clone, installed[:1], locked=True).notices]
+    else:
+        result = CliRunner().invoke(cli, ["sync", "--registrations-only", "--format", "json", "-w", str(clone)])
+        assert result.exit_code == 0, result.output
+        report = json.loads(result.stdout)
+        notices = [notice["code"] for notice in report["notices"]]
+        assert bool(report["actions"]) == (outcome == "write")
+    expected = ["MCP_RUNTIME_UNAVAILABLE"] if outcome == "unavailable" else []
+    if mode == "locked" and outcome == "write":
+        expected = ["MCP_REGISTRATION_PENDING"]
+    assert notices == expected
+    assert calls == ([] if outcome == "absent" else ["plan"])
+    assert (clone / ".mcp.json").exists() == (mode == "registrations-only" and outcome == "write")
