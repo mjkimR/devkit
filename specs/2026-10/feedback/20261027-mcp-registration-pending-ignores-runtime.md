@@ -8,7 +8,7 @@ target: devkit_dist.features.host.usecases.registrations.unregistered_hosts; dev
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-27
 ---
 
@@ -41,3 +41,7 @@ created_at: 2026-10-27
 ```text
 status notices: MCP_REGISTRATION_PENDING (every run); sync --registrations-only: MCP_RUNTIME_UNAVAILABLE
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-mcp-runtime-pending`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.
