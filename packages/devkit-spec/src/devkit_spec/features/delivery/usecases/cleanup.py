@@ -60,7 +60,11 @@ _SWEEP_FIX = f"run {DEVKIT} spec scope sweep --apply to remove the finished work
 
 
 def _has_spec_bundle(base: Path) -> bool:
-    return (base / ".devkit" / "managed" / "spec").is_dir()
+    return (
+        (base / ".devkit" / "managed" / "spec").is_dir()
+        or (base / "specs").is_dir()
+        or (base / "docs" / "proposals").is_dir()
+    )
 
 
 def _prune_slug(slug: str) -> str:

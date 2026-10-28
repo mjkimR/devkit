@@ -7,6 +7,14 @@ description: Main entry skill for development intent; conversational router and 
 
 Use this skill for `/spec <intent>`, any development task, feature request, troubleshooting or general engineering question. It routes each intent to the delivery workflow that fits; the spec constitution (`devkit get-context spec`) defines the axes, workflows and approval boundaries.
 
+## Development approach
+
+Before SDD routing, read `uv run devkit config show`. When `configuration.development.approach` is `incubation`,
+use the project's incubation guidance (the `/incubate` entry when selected). Do not classify ordinary incubation
+changes into SDD depths, create Units or request SDD envelopes/approvals. Keep document-format and independent
+project checks. An unreadable policy stops policy-dependent work; do not guess or switch it automatically.
+Existing deliberately SDD-bound Units retain their checks and remain inspectable. The stages below apply to SDD.
+
 ## Constraints
 
 - If `devkit spec policy` fails, stop policy-dependent work.

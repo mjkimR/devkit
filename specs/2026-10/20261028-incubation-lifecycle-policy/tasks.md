@@ -15,7 +15,7 @@ plan: PLAN-incubation-lifecycle-policy
   - _Requirements: AC-02, AC-03, AC-04, AC-05, AC-08_
   - **Verification**: direct/composed mutation, rule and retained artifact regression tests.
 - [ ] **Task 3**: Independent project readiness and retained snapshot authority.
-  - **_Boundary**: packages/devkit/, packages/devkit-spec/
+  - **_Boundary**: packages/devkit/, packages/devkit-spec/, .devkit/architecture.toml
   - _Requirements: AC-02, AC-04, AC-06, AC-07_
   - **Verification**: real Git snapshot/provider integration and claims tests.
 - [ ] **Task 4**: Conditional SDD guidance and consumer installation contracts.

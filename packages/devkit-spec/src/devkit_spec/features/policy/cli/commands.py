@@ -41,6 +41,7 @@ def policy_cmd(workspace_root: str | None, output_format: str) -> None:
     if is_json(output_format):
         echo_json(
             {
+                "development": policy["development"],
                 "approvals": approvals,
                 "stages_off": stages_off,
                 "git": git,
@@ -51,6 +52,7 @@ def policy_cmd(workspace_root: str | None, output_format: str) -> None:
         )
         exit_on_warnings(notices)
         return
+    click.echo(fields_line("DEVELOPMENT_APPROACH", **policy["development"]))
     for gate, entry in approvals.items():
         click.echo(sentinel("GATE_POLICY", gate, **entry))
     for stage in stages_off:
