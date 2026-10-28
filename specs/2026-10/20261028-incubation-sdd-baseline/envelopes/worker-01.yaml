@@ -1,0 +1,23 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:39:05.245920Z'
+status: completed
+summary: Prepared baseline playbook and ordinary report template, core registration and isolated asset tests. Task 1 complete; Task 2 and final review/reconcile remain pending prerequisite integration. Tracked sync output .devkit/installation.json recorded in tasks.
+findings: []
+assumptions:
+- 'Codex emulated: absolute cwd/paths, per-operation escalation and committed scope inspection substitute for native path enforcement'
+- Host schedules shared-document and actual adoption validation after merged policy and guidance; no dependency stub serves as end-to-end evidence
+unverified_areas:
+- Actual success/missing-evidence/source-change/partial-failure adoption exercises, shared Living Spec and independent code/reconcile review remain pending; Host must merge advanced base before final verification
+checks:
+  sync_start: PASS exit=0 before first edit
+  tests: PASS 1433 affected tests including 3 new isolated asset tests
+  lint: PASS spec Ruff format/check, Pyright and CI governance errors=0 warnings=0
+  sync: PASS sync --check clean
+  adoption: SKIP prerequisite implementations not integrated; no actual activation performed
+diff_scope:
+  base: 7264bb43dc6b517528a80ec12066c28e0fbdc287
+  head: c3fce11c567dd80b11160c771093080182dcf4f8
+activity_effort: medium
