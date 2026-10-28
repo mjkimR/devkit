@@ -39,6 +39,9 @@ gates = "devkit_agt.features.gate.usecases.hooks.local_config:config_tables"
 workflow = "devkit_agt.features.workflow.repositories.project.config:config_tables"
 worktree = "devkit_agt.features.worktree.repositories.config:config_tables"
 
+[project.entry-points."devkit.status_checks"]
+gate-hooks = "devkit_agt.features.gate.usecases.status:status_check"
+
 [project.entry-points."devkit.post_sync"]
 gate-hooks = "devkit_agt.features.gate.usecases.hooks.local_config:post_sync"
 

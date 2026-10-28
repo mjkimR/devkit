@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T23:31:18.819373Z'
+status: completed
+summary: General project status now includes existing gate hook warnings through an optional harness-owned status check. Both independent reviews passed; source feedback is resolved. Development is complete and ready for Host integration.
+findings: []
+assumptions:
+- Gate diagnosis is reused without executing rules or repairing hooks; host_hooks remains separate.
+- The head-with-check-disabled baseline has 0 missing-entry notices; enabled has exactly 1 and hook/config bytes and modes remain unchanged; actual pre-commit 4.1.0 install -f also reproduced.
+- Host has advanced main independently; worker did not merge, and Host owns incorporating the latest base and cumulative integration verification.
+checks:
+  tests: 'PASS just test-affected mode=full: 5828 passed, 14 skipped; just test-dist without harness: 1247 passed'
+  build: PASS offline devkit-dist and devkit-agt wheels; provider registered only in harness metadata
+  lint: PASS lint-check and Pyright both packages; governance rules --ci --base main
+diff_scope:
+  base: a719887776db1c8ea9f3862c591d44b8d950f356
+  head: a9fd5ddec5d6aedbb74a1c296a8415f1ba081ed1

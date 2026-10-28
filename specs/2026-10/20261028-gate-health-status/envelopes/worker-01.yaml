@@ -1,0 +1,29 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T23:31:45.814832Z'
+status: completed
+summary: Completed optional gate diagnostics in project status through final-change-report; independent code and reconcile reviews passed, Living Spec and source feedback resolved, all required checks passed. No bundle assets changed and no sync outputs. Stopped before integration; Host owns current-base preparation and integration.
+findings: []
+assumptions:
+- 'Codex host isolation is emulated, not native: every command used explicit worktree cwd and Git -C, edits/commits stayed inside the Host allowlist, operations needing sandbox access used separate approvals, nested review HEAD/tree snapshots matched and reviewers reported no outside reads.'
+- Providers use devkit.status_checks in deterministic name/value order and return validated WARNING/NOTICE advisories; the harness gate provider reuses existing diagnosis without gate execution, auto repair or host-hook coupling.
+- Head with optional check disabled is the specified baseline; actual pre-commit 4.1.0 force-install case is verified. No base checkout or merge was performed.
+- Plan intent authority is the carried explicit user decision; workflow dev-integration passed automatically by policy. Worker performed no integration, push or publication.
+unverified_areas:
+- Host must incorporate independently advanced main and perform final cumulative integration verification; this worker intentionally did not merge.
+checks:
+  sync_start: PASS devkit sync --check exited 0 before first edit; no drift
+  tests: PASS just test-affected mode=full 5828 passed,14 skipped; just test-dist without harness 1247 passed
+  build: PASS offline devkit-dist and devkit-agt wheels; only harness wheel registers the status provider
+  lint: PASS lint-check and Pyright both packages; devkit rules check --ci --base main; git diff --check
+  review: PASS independent nested code reviewer, no findings; HEAD/tree unchanged
+  reconcile: PASS independent nested reconcile reviewer, no findings; all targets reflected and resolved
+  baseline: 'PASS overwritten hook: disabled 0 notices, enabled 1 GATE_HOOK_ENTRY_MISSING; exact dedicated-status advisory equality and unchanged hook/config bytes and modes'
+  scope: PASS all tracked changes within Host allowlist; no lock, managed asset or other-task edits
+  feedback: PASS source FB-gate-hook-problems-invisible-to-status resolved; sweep recorded=0 duplicates=0; no open critical feedback
+diff_scope:
+  base: a719887776db1c8ea9f3862c591d44b8d950f356
+  head: 0f9a5dcbd17ad64619f2e36d98106eb3f31ef469
+activity_effort: medium
