@@ -2,7 +2,7 @@
 id: PROP-milestone-archive
 title: Archive done and dropped milestones within the roadmap
 summary: "Separate done and dropped milestone files into docs/roadmap/_archive while preserving milestone identity, historical lookup and dependency resolution. Define close, drop, reopen and existing-history relocation without coupling the change to CLI restructuring."
-status: draft
+status: reviewing
 created_at: 2026-10-28
 target_area: capabilities/documents/
 priority: low
