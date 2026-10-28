@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-incubation-lifecycle-policy: Continue MS-idea-incubation after the integrated
+  document bundle split'
+by: user
+at: '2026-10-28T04:30:42.316656Z'

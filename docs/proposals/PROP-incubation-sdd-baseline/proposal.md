@@ -27,7 +27,7 @@ boundaries:
 task_kind: feature
 workflow: sdd-proposal
 depends_on:
-- PROP-incubation-lifecycle-policy
+- SPEC-incubation-lifecycle-policy
 - PROP-incubation-development-guidance
 ---
 
@@ -45,7 +45,7 @@ Hypothesis: one explicit baseline playbook in the existing spec bundle can reuse
 
 - **Q1 — reuse**: recommend a dedicated `sdd-baseline` playbook in `spec:core`, reusing document templates, lookup and bounded drift evidence practices. Keep debt containment in `brownfield-adoption` optional and separately authorized. See `materials/reuse-and-boundary-evidence.md` and `PADR-adopt-sdd-through-an-evidenced-baseline-playbook`.
 - **Q2 — readiness**: recommend a coverage-and-evidence threshold for the user-selected retained product, rather than a fixed number of documents or a passing rule run alone.
-- **Q3 — activation**: prepare while the effective approach remains incubation; activate SDD only after the current baseline and exact policy effects are ready for the user's decision. The authoritative policy interface comes from `PROP-incubation-lifecycle-policy`.
+- **Q3 — activation**: prepare while the effective approach remains incubation; activate SDD only after the current baseline and exact policy effects are ready for the user's decision. The authoritative policy interface comes from `SPEC-incubation-lifecycle-policy`.
 
 ## 3. Proposed Design & Impact
 
@@ -68,7 +68,7 @@ Hypothesis: one explicit baseline playbook in the existing spec bundle can reuse
 ### Activation and recovery
 
 11. Present the exact ready baseline revision/report, retained scope, actual check outcomes, selected SDD assets and effective policy changes. The user's activation decision applies to those exact effects. Reuse an explicit decision already bound to the same source and effects; otherwise obtain the decision now. Baseline preparation intent alone does not authorize activation against an unknown final scope.
-12. Change the authoritative approach to SDD through the interface selected by `PROP-incubation-lifecycle-policy`, synchronize the selected guidance, and verify that inspection, selected assets, rules and next development routing agree. Preserve existing approval, worktree, integration and project-check settings unless separately authorized; propose no universal SDD settings profile.
+12. Change the authoritative approach to SDD through the interface selected by `SPEC-incubation-lifecycle-policy`, synchronize the selected guidance, and verify that inspection, selected assets, rules and next development routing agree. Preserve existing approval, worktree, integration and project-check settings unless separately authorized; propose no universal SDD settings profile.
 13. Revalidate evidence if relevant source or dirty content changes before activation. On an installation, policy-update or synchronization failure, report actual partial state and recovery instead of claiming adoption. Do not hide skipped checks or infer rollback from failure. Resume preparation from the report after rechecking its evidence; the process creates no persistent execution service.
 14. Subsequent changes follow ordinary selected SDD policies. The baseline itself does not create retrospective proposals, spec Units, workflow approvals or ADRs for abandoned experiments. Keep existing SDD historical artifacts unchanged; this playbook neither reopens completed Units nor grants permission to mutate earlier accepted SDD decisions. A repository already in SDD uses ordinary reconciliation or brownfield adoption as appropriate rather than pretending to graduate from incubation again.
 
@@ -84,7 +84,7 @@ Hypothesis: one explicit baseline playbook in the existing spec bundle can reuse
 
 ### Boundaries and parallel Planning
 
-`PROP-incubation-lifecycle-policy` owns authoritative policy selection and runtime enforcement. `PROP-incubation-development-guidance` owns the incubation entry, optional roles and live context. Their implementation must be available before this feature's end-to-end adoption exercise and activation integration can complete. This Planning can proceed from the semantic interfaces above without choosing their schema or context path.
+`SPEC-incubation-lifecycle-policy` owns authoritative policy selection and runtime enforcement. `PROP-incubation-development-guidance` owns the incubation entry, optional roles and live context. Their implementation must be available before this feature's end-to-end adoption exercise and activation integration can complete. This Planning can proceed from the semantic interfaces above without choosing their schema or context path.
 
 Development refreshes its base and checks the accepted prerequisite contracts before filling exact commands and references. A changed prerequisite that breaks the agreed transition is a Host problem, not permission to invent a second setting. No independent structural prerequisite was found.
 

@@ -1,53 +1,55 @@
 ---
-id: PROP-incubation-lifecycle-policy
+id: SPEC-incubation-lifecycle-policy
 title: Apply explicit development approach policy across lifecycle consumers
-summary: "Owns an inspectable project development approach outside devkit-spec and aligns runtime lifecycle checks, integration and installed guidance while preserving independent verification and existing SDD artifacts."
-status: accepted
-created_at: 2026-10-28
-target_area: delivery/
-priority: medium
-size: L
-planning_effort: medium
-dev_effort: medium
-milestone: MS-idea-incubation
-depends_on: [SPEC-document-bundle-split]
-boundaries:
-  owns:
-    - packages/devkit-dist/
-    - packages/devkit/
-    - packages/devkit-spec/
-    - packages/devkit-docs/
-    - docs/capabilities/
-    - docs/usecases/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/steering/glossary.md
-    - guides/
-    - tests/e2e/smoke.sh
-    - .devkit/config.toml
-    - .devkit/installation.json
-    - AGENTS.md
-  excludes:
-    - packages/devkit-core/
-    - packages/devkit-advisory/
-    - packages/devkit-cli/
-task_kind: feature
-workflow: sdd-proposal
+summary: Owns an inspectable project development approach outside devkit-spec and aligns runtime lifecycle checks, integration and installed guidance while preserving independent verification and existing SDD artifacts.
+status: planned
+created: 2026-10-28
+depends_on:
+  - SPEC-document-bundle-split
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-incubation-lifecycle-policy] Apply explicit development approach policy across lifecycle consumers
+# [SPEC-incubation-lifecycle-policy] Apply explicit development approach policy across lifecycle consumers
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-incubation-lifecycle-policy on 2026-10-28.
+- **Preserved Materials**: `docs/materials/2026-10/20261028-incubation-lifecycle-policy`
+- Target Docs Blueprint: `PROP-incubation-lifecycle-policy-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `SPEC-document-bundle-split` supplies document-only assets. Selecting or removing assets does not define runtime
 policy: installed devkit-spec registers integration, attachment, cleanup, hygiene and document-display extensions.
-Some already check for a managed spec directory; others do not. See `materials/consumer-inventory.md`.
+Some already check for a managed spec directory; others do not. See `docs/materials/2026-10/20261028-incubation-lifecycle-policy/consumer-inventory.md`.
 
 `MS-idea-incubation` motivates a development approach that does not introduce SDD Units or per-change lifecycle
 records. It retains document formats and independent build, test and usage checks. An explicit project-owned
 approach can coordinate these consumers without deriving policy from Python installation or stale managed files.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Apply explicit development approach policy across lifecycle consumers so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — owner and defaults**: recommend devkit-dist ownership of `[development] approach = "sdd" | "incubation"`,
   with an omitted key resolving to `sdd`. `devkit config show` exposes the value and source without devkit-spec.
@@ -56,12 +58,12 @@ approach can coordinate these consumers without deriving policy from Python inst
 - **Q3 — overrides**: recommend no environment or clone-local override. The shared project config is authoritative.
   A task branch's proposed policy change cannot lower the base's integration readiness.
 
-`PADR-own-development-approach-policy-outside-sdd` compares alternatives. These are proposed choices pending
+`ADR-own-development-approach-policy-outside-sdd` compares alternatives. These are proposed choices pending
 Host/user acceptance, not decisions already made by the user.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Shared policy contract
+#### Shared policy contract
 
 1. devkit-dist's existing project feature owns a typed reader for `[development]`, its commented config template,
    validation and `devkit config show` output. No application imports enter devkit-core.
@@ -77,7 +79,7 @@ Host/user acceptance, not decisions already made by the user.
 5. SDD remains the default so existing repositories keep their behavior. The repository developing this feature
    keeps `sdd`. Guides show an explicit incubation configuration and its independent verification commands.
 
-### Consumer applicability
+#### Consumer applicability
 
 | Consumer | `sdd` | `incubation` |
 | --- | --- | --- |
@@ -102,7 +104,7 @@ custom workflows. Incubation never makes a workflow mandatory for ordinary edits
 artifacts is not a policy failure. Existing explicit SDD work must be settled through its existing authority;
 this change supplies no artifact conversion or history rewrite.
 
-### Omitted checks and integration
+#### Omitted checks and integration
 
 - An omitted lifecycle rule is not a successful rule execution. Extend rule reporting with deterministic omission
   records containing the rule ID, code `SDD_LIFECYCLE_INACTIVE` and reason. Preserve target-scope `skipped` semantics;
@@ -134,7 +136,7 @@ this change supplies no artifact conversion or history rewrite.
 - Check snapshot configuration from that snapshot, not the live working tree. Policy-dependent malformed config
   fails closed. Unrelated document operations retain their independent configuration boundary.
 
-### Validation scenarios
+#### Validation scenarios
 
 - **AC-01 — common inspection and validation**: Given devkit-dist without devkit-spec, when `config show` reads no
   setting, then it reports `sdd`/default. Explicit incubation reports its shared-file source. Invalid shared values
@@ -168,7 +170,7 @@ this change supplies no artifact conversion or history rewrite.
   No local/env override, implicit migration, mandatory iteration history or skipped-as-pass result is introduced.
   Run lint/types, `just test-affected` with full fallback, consumer smoke and cumulative governance.
 
-### Successor Planning inputs
+#### Successor Planning inputs
 
 `PROP-incubation-development-guidance` can plan against the proposed shared reader/`config show` contract,
 incubation's lack of implicit SDD records, and preservation of independent checks once this direction is accepted.
@@ -177,7 +179,7 @@ its own Planning. Guidance Planning can run alongside policy Development, with f
 interfaces before its own verification. `PROP-incubation-sdd-baseline` can research baseline evidence independently;
 its final transition writes and entry behavior depend on the accepted policy and current-context contracts.
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: incubation entry skills, product discovery/research/usage roles and resumable product context;
   these remain `PROP-incubation-development-guidance`.
@@ -188,7 +190,7 @@ its final transition writes and entry behavior depend on the accepted policy and
 - **Scope Excluded**: moving packages solely for structure. No independent structural prerequisite is required by
   this design; a discovered prerequisite returns to the Host rather than silently expanding the feature.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Acceptance approves the explicit policy and consumer applicability direction and promotes its PADR. Handoff starts
 one feature spec. Implementation must pass AC-01 through AC-08; it does not complete `MS-idea-incubation`.
@@ -201,3 +203,4 @@ proposed direction. Runtime behavior, package isolation and snapshot/omission ev
 The medium Challenger identified one P1 gap in session integration over retained workflow-owned artifacts. Planning
 closed it by requiring prior/proposed ownership detection before task-kind dispatch and coded refusal unless the
 matching lifecycle validator runs. This design correction is part of AC-04, AC-06 and AC-07, not a waiver.
+
