@@ -2,7 +2,7 @@
 id: PROP-pr-merge-recovery
 title: Recover uncertain pull request merge outcomes across CLI calls
 summary: "Preserve clone-local pull request merge attempt evidence across CLI calls and reconcile it with remote state, so unknown merges are not replayed and closed pending requests are refused. Recovery evidence never grants approval."
-status: reviewing
+status: rejected
 created_at: 2026-10-28
 target_area: capabilities/integration/
 priority: high
