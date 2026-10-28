@@ -141,7 +141,7 @@ its bytes during installation. No complete backlog or SDD Unit is needed before 
 
 The absent approach defaults to `sdd`; selecting the catalog bundle never changes that value. Do not implicitly
 remove existing SDD assets or reopen its history. Retain project checks and use a separately requested verified
-baseline procedure for voluntary SDD adoption.
+[baseline procedure](install/incubation-sdd-adoption.md) for voluntary SDD adoption.
 
 ## Step 4: Recommend bundles
 

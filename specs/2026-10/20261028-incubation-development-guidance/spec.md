@@ -149,7 +149,7 @@ it does not become a spec Unit or a durable product contract.
   Its accepted shared `sdd|incubation` setting is inspected through `config show`, using
   `configuration.development.approach` and its source. The integrated policy preserves independent checks;
   this guidance adds no second policy source.
-- `PROP-incubation-sdd-baseline` consumes current goal, retained choices, implementation and verification evidence
+- `SPEC-incubation-sdd-baseline` consumes current goal, retained choices, implementation and verification evidence
   semantically. It need not parse this context filename or require historical records. Voluntary transition is owned
   there; `/incubate` records the user's intent and points to the accepted transition entry when available.
   For an explicit adoption request, explain preparing the spec package/assets while the effective approach remains

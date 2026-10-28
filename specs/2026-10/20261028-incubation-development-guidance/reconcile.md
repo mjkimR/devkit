@@ -35,7 +35,7 @@ approach-aware agent guidance, architecture ownership, glossary and installation
 ## Scope and deferred work
 
 Shared runtime applicability is implemented by `SPEC-incubation-lifecycle-policy`; this feature consumes it without
-changing runtime code. Optional baseline readiness/activation remains `PROP-incubation-sdd-baseline`, whose accepted
+changing runtime code. Optional baseline readiness/activation remains `SPEC-incubation-sdd-baseline`, whose accepted
 work is tracked separately. No milestone completion is claimed. Existing SDD history and project checks remain
 protected. The independent medium reviewer verified all 11 targets against the complete guidance feature and found no material mismatch.
 

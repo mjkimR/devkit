@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-incubation-sdd-baseline: User requested parallel Planning where proposal-only
+  writes are independent; implementation prerequisites remain pending'
+by: user
+at: '2026-10-28T04:33:39.423413Z'

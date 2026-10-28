@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:24:07.370972Z'
+status: completed
+summary: Independent whole-feature reconcile verified five Living Spec targets and provider/evidence boundaries; found one focused installation-guide mismatch
+findings:
+- issue: The adoption guide standalone installation example bypasses the canonical package-source procedure.
+  evidence: guides/install/incubation-sdd-adoption.md:17-25 omits base replacement and no-build-package pyyaml/CSafeLoader check; guides/INSTALL_GUIDE.md:67-102 defines those requirements.
+  failure_condition: A document-only incubation consumer retains direct docs/agt beside spec or installs a PyYAML build without required LibYAML binding.
+  suggested_action: Reference canonical step3 replacement in actual dependency group/source/ref, retain optional catalog, use no-build-package pyyaml and verify CSafeLoader before continuing.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only role; unchanged HEAD/tree and explicit absolute reads substitute for native enforcement
+checks:
+  coverage: PASS five ID-bearing targets reflected; baseline-only scope excludes separately reviewed policy/guidance changes
+  boundary: PASS unchanged a1165e3d and treecda3da9cc83dfbff9d981e8687e02998a5f5a0c2
+diff_scope:
+  base: 7264bb43dc6b517528a80ec12066c28e0fbdc287
+  head: a1165e3d4199f2906c59cefa8f53e285f22ed477

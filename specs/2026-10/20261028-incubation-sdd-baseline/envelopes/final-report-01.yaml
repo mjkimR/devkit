@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:28:16.805881Z'
+status: completed
+summary: Delivered explicit baseline playbook, ordinary report, true source/evidence exercises and retained-state adoption contracts. Initial code and reconcile findings corrected and independently closed; Host final guidance/base incorporation and integration remain separate.
+findings: []
+assumptions:
+- Code/reconcile reviewers covered entire owned baseline across turns; separately reviewed prerequisite implementations were context/exemptions
+- Synthetic product inputs and simulated decisions drive scripted coordinator actions; observed terminal outcomes are real, autonomous semantic inference is not claimed
+unverified_areas:
+- No network package install transition repeated; newguide follows canonical group/source/ref replacement and binding checks. Host must incorporate final verified guidance/main and sequentially integrate.
+checks:
+  tests: PASS 1502 affected tests; corrected10-check actual scenario/assets/usecase-parser batch
+  build: PASS actual spec wheel contains corrected baseline entry/report/core registration; real consumer sync/get/search and next SDD route exercised
+  lint: PASS Ruff format/check and Pyright; cumulative governance errors0warnings0; sync check clean
+diff_scope:
+  base: 9fc51885b409707f0ae268624b4c6df23fba10bb
+  head: ad221340f9091e4fe846e7684726978d7efa8982
