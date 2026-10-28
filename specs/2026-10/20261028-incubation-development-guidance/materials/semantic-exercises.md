@@ -74,3 +74,14 @@ final completion. Source changes to relevant policy or guidance require affected
 - `devkit_core-0.1.4-py3-none-any.whl`: `2d04a6ce900ac79a9bcfcf155d4015baa704e59a05a7d71838327d8dedab544f`
 - `devkit_dist-0.1.4-py3-none-any.whl`: `916458fe2714bb100680559ef57118931552b8b5afb290781133489e7e66c604`
 - `devkit_docs-0.1.4-py3-none-any.whl`: `3e01a8efa218da9b22938b2c3a600d07324173049d5f6313bb3923d978b41013`
+
+## Scoped-turn regression results
+
+Catalog tests, including the actual no-spec wheel consumer: 33 passed. Ruff/format/Pyright and the committed
+new capability/usecase checks passed. Explicit repository-usecase parser regression passed after correcting
+extension markers to the parsed template form. The selector omission is tracked as `FB-usecase-parser-affected-selection`.
+
+The official affected selection returned 11 passed and 2 failed tests inherited from the stacked policy snapshot:
+its new SPEC_LIFECYCLE_INACTIVE, INTEGRATION_APPROACH_MISMATCH and INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED
+codes were not yet documented there. Those policy changes are outside this turn's write scope. They require the
+Host's latest verified policy merge and a fresh affected run; this report does not claim that affected suite passed.

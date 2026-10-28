@@ -31,16 +31,16 @@ capabilities:
 
 ## 3. Extensions
 
-- **2a. SDD approach**: the agent stops product work and explains the shared configuration action; the use case ends without changing approach.
-- **2b. Unreadable policy**: inspection reports its actual error, including `DEVELOPMENT_CONFIG_INVALID` for an invalid approach; the agent reports the configuration action and the use case ends.
-- **3a. Missing or stale context**: the agent recovers current facts from source/run instructions and missing product answers without reconstructing discarded history; resumes at step 4.
-- **4a. Missing product decision**: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
-- **5a. Goal or constraint change**: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
-- **5b. Optional support**: the agent delegates a separable question or usage scope with explicit boundaries, verifies the returned evidence and folds it into current choices; resumes at step 6.
-- **5c. Failed or out-of-scope role result**: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
-- **6a. Failed retained behavior**: the agent repairs the implementation within the agreed goal and repeats affected verification; resumes at step 6.
-- **6b. Missing verification evidence**: the agent reports the check as unverified and records the gap/next action without claiming successful retained behavior; proceeds to step 7 with that limitation.
-- **7a. Explicit SDD adoption request**: the agent explains preparing SDD assets while incubation remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
+- **2a.** SDD approach: the agent stops product work and explains the shared configuration action; the use case ends without changing approach.
+- **2b.** Unreadable policy: inspection reports its actual error, including `DEVELOPMENT_CONFIG_INVALID` for an invalid approach; the agent reports the configuration action and the use case ends.
+- **3a.** Missing or stale context: the agent recovers current facts from source/run instructions and missing product answers without reconstructing discarded history; resumes at step 4.
+- **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
+- **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
+- **5b.** Optional support: the agent delegates a separable question or usage scope with explicit boundaries, verifies the returned evidence and folds it into current choices; resumes at step 6.
+- **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
+- **6a.** Failed retained behavior: the agent repairs the implementation within the agreed goal and repeats affected verification; resumes at step 6.
+- **6b.** Missing verification evidence: the agent reports the check as unverified and records the gap/next action without claiming successful retained behavior; proceeds to step 7 with that limitation.
+- **7a.** Explicit SDD adoption request: the agent explains preparing SDD assets while incubation remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
 
 ## 4. Postconditions
 
