@@ -112,9 +112,11 @@ class Exercise:
         return self.run(sys.executable, "-m", "devkit_dist", *args, "-w", str(self.root), expected=expected)
 
     def configure(self, approach: str, provider: str | None, preset: str = "core") -> None:
-        (self.root / ".devkit/config.toml").write_text(
-            f'[development]\napproach="{approach}"\n[integration]\nprovider="{provider}"\n[presets]\nspec="{preset}"\n'
-        )
+        config = f'[development]\napproach="{approach}"\n'
+        if provider is not None:
+            config += f'[integration]\nprovider="{provider}"\n'
+        config += f'[presets]\nspec="{preset}"\n'
+        (self.root / ".devkit/config.toml").write_text(config)
 
     def config(self) -> dict:
         return json.loads(self.cli("config", "show").stdout)["configuration"]
@@ -151,6 +153,9 @@ def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(
     tmp_path: Path, initial_provider: str | None
 ) -> None:
     exercise = Exercise(tmp_path / "consumer", initial_provider)
+    if initial_provider is None:
+        assert "[integration]" not in (exercise.root / ".devkit/config.toml").read_text()
+        assert exercise.config().get("integration", {}).get("provider") is None
     assert exercise.config()["development"]["approach"] == "incubation"
     inactive = exercise.cli("spec", "new", "next-change", expected=2)
     assert "SPEC_LIFECYCLE_INACTIVE" in inactive.stderr

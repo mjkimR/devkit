@@ -93,8 +93,15 @@ Executed after the correction:
 uv run pytest packages/devkit-spec/tests/e2e/bundles/spec/test_sdd_baseline_scenarios.py packages/devkit-spec/tests/integration/bundles/spec/test_sdd_baseline_guidance.py packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py --basetemp .devkit/transient/incubation-baseline/run-provider-fix -q
 ```
 
-Observed result:10 passed in24.91seconds. This includes six scripted scenarios (three initial-provider cases:
+Initial correction run:10 passed in24.91seconds. Independent recheck subsequently found that None was serialized as the string "None", so that run did not establish absent-provider coverage. The fixture was corrected to omit its integration table and assert absent inspection before activation. The final rerun below supersedes that specific coverage claim.
+
+The intended final batch includes six scripted scenarios (three initial-provider cases:
 project, spec and absent), three deployed asset checks and the actual repository use-case parser check. No policy
-runtime was stubbed. The absent-provider case executes the actual approach inspection, app checks, authorized
+runtime was stubbed. The corrected absent-provider case executes the actual approach inspection, app checks, authorized
 provider configuration, sync consistency and next-change SDD routing. User decisions remain synthetic test data.
 The final document influence selection also passed12tests; source Ruff/Pyright and cumulative governance passed.
+
+Final corrected command: the same10-check batch above with `--basetemp .devkit/transient/incubation-baseline/run-provider-correct`.
+Observed result:10 passed in25.60seconds. The absent-provider scenario asserts that the initial shared configuration
+contains no integration table and inspection contains no provider before it authorizes and applies spec configuration.
+Its actual command observations remain in that ignored fixture's ordinary material report.
