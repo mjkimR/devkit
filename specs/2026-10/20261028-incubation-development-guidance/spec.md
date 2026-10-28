@@ -1,66 +1,77 @@
 ---
 id: SPEC-incubation-development-guidance
 title: Develop and resume an idea without SDD lifecycle records
-summary: Ships opt-in incubation guidance, optional clarification, research and usage-verification roles, and mutable current product context independently of SDD assets.
+summary: "Ships opt-in incubation guidance, optional support roles and mutable current context independently of SDD, with observed iteration and resume verification."
 status: planned
 created: 2026-10-28
-depends_on:
-  - PROP-incubation-lifecycle-policy
+depends_on: [PROP-incubation-lifecycle-policy]
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-incubation-development-guidance] Develop and resume an idea without SDD lifecycle records
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-incubation-development-guidance on 2026-10-28.
-- **Preserved Materials**: `docs/materials/2026-10/20261028-incubation-development-guidance`
-- Target Docs Blueprint: `PROP-incubation-development-guidance-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-`MS-idea-incubation` describes a complete development path from an incomplete idea to an app that can remain in
-incubation. `SPEC-document-bundle-split` supplies shared document formats without SDD assets. The lifecycle-policy
-proposal owns runtime applicability; this proposal supplies the agent's discovery, implementation and resume behavior.
-
-The existing spec entry skill and support roles operate on SDD delivery requests. Product discovery needs to identify
-users, problems and a useful first flow before those delivery requests exist. An opt-in catalog bundle can coordinate
-that work without a new wheel or lifecycle records. Ownership evidence is in `docs/materials/2026-10/20261028-incubation-development-guidance/ownership-evidence.md`.
+Document formats are independently available, but product discovery, iterative implementation and resumption still
+need an entry that does not route every change through SDD. The catalog bundle supplies that entry without a new
+wheel or spec dependency. `ADR-keep-incubation-guidance-opt-in-and-current-state-based` fixes its ownership and context.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Develop and resume an idea without SDD lifecycle records so that system capabilities are extended.
+- As an idea owner, I can start with an incomplete goal and reach a useful implemented or researched next action.
+- As a coordinator, I can use optional clarification, research and actual-usage support inside explicit boundaries.
+- As a later agent, I can resume from retained current facts and executable instructions without conversation history.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: runtime approach policy, a second policy source or a readiness provider.
+- **Scope Excluded**: automatic SDD activation, retrospective Units or immutable incubation history.
+- **Scope Excluded**: a new wheel, application framework/scaffold catalog or autonomous execution service.
+- **Scope Excluded**: mandatory delegation or a complete document set before implementation.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Isolated opt-in distribution
 
-## 5. Carried Proposal Notes
+- **Given** built docs/catalog wheels without devkit-spec.
+- **When** incubation is explicitly selected and sync runs.
+- **Then** incubation skill, pointer, three roles and context template deploy from catalog; docs formats remain available and no SDD lifecycle assets are installed. Without selection, no incubation assets deploy.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Adaptive incomplete-idea entry
 
-### 2. Technical Spike Questions
+- **Given** a partial goal and existing conversation/repository facts.
+- **When** the entry skill runs in a labelled scenario walkthrough.
+- **Then** it reuses known answers and asks only questions needed for the next useful research or implementation action, without a complete backlog, architecture, Unit or mandatory document set.
 
-- **Q1 — ownership**: recommend an opt-in `incubation` bundle in devkit-catalog, rather than an extra wheel or
-  putting approach-specific guidance into docs or spec. See `ADR-keep-incubation-guidance-opt-in-and-current-state-based`.
-- **Q2 — interaction**: one `/incubate` entry skill adapts discovery, research, implementation and verification to
-  the next useful action. Optional support roles do not create mandatory phases.
-- **Q3 — resume**: recommend a project-owned `.devkit/incubation.md` with current facts and the next action. It is
-  mutable Markdown, not a Unit, managed asset, approval record or history of discarded choices.
+### [AC-03] Evidenced implementation and reconstruction
 
-### 3. Proposed Design & Impact
+- **Given** a concrete uncertainty and representative product flow.
+- **When** research or a bounded experiment informs implementation and the flow is exercised.
+- **Then** evidence identifies method, source/artifact, outcome, limits and decision; reconstruction inside the goal updates current code/tests/docs without SDD records. A goal or constraint change returns to the user; skipped checks remain unverified.
 
-#### Distribution and entry
+### [AC-04] Optional bounded delegation
+
+- **Given** separable clarification, research or usage-check work.
+- **When** a role runs, or the coordinator elects inline work.
+- **Then** payload/results preserve absolute boundaries and source identity without invented decisions, Git authority or a mandatory role sequence. Exercise both inline and delegated scenarios.
+
+### [AC-05] Mutable current context and resume
+
+- **Given** retained choices, run instructions and a recorded limitation.
+- **When** another session resumes or sync/reselection runs.
+- **Then** current context at `.devkit/incubation.md` preserves its project-owned bytes, lets the session identify and validate the next action, and requires no discarded-experiment history. Only the coordinator writes it.
+
+### [AC-06] Approach applicability and SDD preservation
+
+- **Given** effective SDD or unreadable approach policy.
+- **When** `/incubate` runs.
+- **Then** it stops product work and reports a configuration action. In incubation it consumes the common policy and docs context while retaining independent checks. Catalog installation never changes approach or existing SDD guidance.
+
+## 5. Agreed Agent Contracts
+
+### Distribution and entry
 
 1. Register `incubation = "devkit_catalog.incubation"` through the existing `devkit.bundles` mechanism. Keep it opt-in
    with `auto_select` absent, like the other catalog bundles. No extra runtime dependency or new CLI is introduced.
@@ -147,48 +158,10 @@ it does not become a spec Unit or a durable product contract.
 - All three Planning units write separate proposal directories. Implementation remains dependent on the accepted
   policy, and overlapping guides or architecture changes integrate sequentially after a scope comparison.
 
-#### Validation scenarios
 
-- **AC-01 — isolated selection**: Given built devkit-docs and devkit-catalog wheels in a clean consumer without
-  devkit-spec, when incubation is selected and sync runs, then the skill, pointer, roles and context template deploy
-  from their catalog owner, docs formats remain available, and no SDD skill/workflow/envelope requirement is installed.
-  Catalog installation without selection deploys no incubation assets. Check receipt and projected role contracts.
-- **AC-02 — incomplete idea**: Given only a product goal and partial constraints in a scenario walkthrough, when
-  `/incubate` runs, then it uses available answers, asks only missing next-action questions and reaches a research or
-  implementation action without a complete backlog, architecture, proposal, Unit or mandatory document set.
-- **AC-03 — evidence and iteration**: Given a concrete uncertainty and a representative flow, when research or a
-  bounded experiment informs implementation, then the result identifies method, evidence, limits and decision; the
-  app flow can be run and exercised. Reconstructing inside the goal changes current code/tests/docs without SDD records,
-  while a goal/constraint change requests user direction. Unexecuted checks remain explicitly unverified or skipped.
-- **AC-04 — optional delegation**: Given a separable clarification, research or usage-check scope, when a role is used,
-  then its payload and result preserve boundaries and evidence and do not invent authority. An inline iteration can
-  finish without any role; no prescribed sequence requires all three. Exercise both inline and delegated walkthroughs.
-- **AC-05 — resume and ownership**: Given a completed action with retained choices, a limitation and run instructions,
-  when another session resumes, then it reads `.devkit/incubation.md`, identifies the next useful action and verifies
-  relevant facts without conversation reconstruction. Sync and re-selection preserve existing context bytes; superseded
-  experiments can be removed without a historical Unit or immutable decision record. Roles never write the context.
-- **AC-06 — applicability and SDD preservation**: Given effective SDD or unreadable approach policy, when `/incubate`
-  is invoked, then it stops product work and reports the next configuration action. Given incubation, it uses the common
-  policy and document context without weakening independent project checks. Existing SDD entry guidance and its tests
-  remain unchanged; installing the catalog alone changes no development approach.
+## 6. Verification Boundary and Assumptions
 
-Mechanical checks cover manifest/projection inventories, references, wheel isolation, opt-in selection and context
-preservation. Semantic checks use a bounded sample app and synthetic scenario inputs clearly labelled as test data;
-record actual commands/interactions, produced context and unmet observations. A text-token assertion alone cannot
-establish adaptive discovery or usable resumption. No production app is shipped by this proposal.
-
-#### Non-goals
-
-- **Scope Excluded**: Runtime approach-policy implementation, command readiness providers or a second policy source.
-- **Scope Excluded**: SDD baseline activation, retroactive delivery records and a new lifecycle/workflow engine.
-- **Scope Excluded**: A new wheel, universal app stack, framework scaffold catalog or persistent autonomous service.
-- **Scope Excluded**: Mandatory subagent invocation, immutable incubation history and automatic approach switching.
-
-### 4. Lifecycle & Retirement Criteria
-
-Accept the catalog ownership, optional-role and mutable-context direction after Host/user review, then hand off one
-feature spec after the prerequisite policy contract is accepted. Retire this proposal only through the authorized
-handoff. Before claiming Development complete, pass AC-01 through AC-06, build-wheel isolation, scenario walkthroughs,
-relevant lint/types, affected tests and cumulative governance checks. The broader milestone remains open until its
-other proposals complete.
-
+Mechanical asset tests cannot establish adaptive discovery or usable resume. Bounded scenario walkthroughs use
+labelled synthetic inputs and a sample app, recording real commands/interactions and unmet observations.
+The current independent turn implements catalog assets/tests only. Policy-dependent wheel consumers, semantic
+walkthroughs and shared Living Spec reflection remain pending until the Host incorporates the policy implementation.
