@@ -2,7 +2,7 @@
 id: SPEC-gate-health-status
 title: Expose gate hook warnings in project status
 summary: "Include existing gate hook diagnostics in general project status through optional checks without a distribution dependency on the harness."
-status: in-progress
+status: completed
 created: 2026-10-28
 related_capabilities: [CAP-DIST-sync-and-transactions, CAP-GATE-commit-gates]
 related_usecases: []
