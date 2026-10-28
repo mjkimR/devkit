@@ -1,0 +1,23 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:59:48.103934Z'
+status: completed
+summary: Executed real stacked-code adoption scenarios with explicit synthetic decisions and added the two Host-released baseline contracts. Necessary project-to-spec provider effect is explicit. Task 2, final verified-base checks, shared routing/guides and independent reviews remain pending; receipt sync output unchanged in scope.
+findings: []
+assumptions:
+- 'Codex emulated: absolute worktree cwd/paths, per-operation escalation and actual scope inspection substitute for native enforcement'
+- Synthetic decisions drive scripted coordinator actions; actual CLI/app outcomes are observed and no readiness engine or autonomous semantic proof is claimed
+unverified_areas:
+- 'Host must merge policy regression fixes: affected run has five inherited failures (pointer/default policy/cleanup/documented code). Existing shared harness/policy/adoption guides and final code/reconcile review remain pending.'
+checks:
+  sync_start: PASS exit=0 at accepted stacked head before edits
+  scenarios: PASS 8 checks; actual app unittest and usage, config/selection/sync, missing evidence, changed-source failure, actual sync partial failure and next SDD route
+  tests: 'FAIL affected run: 1484 passed, 5 inherited policy failures; no baseline scenario failed'
+  lint: PASS Ruff format/check, Pyright and cumulative governance errors=0 warnings=0
+  sync: PASS sync --check clean
+diff_scope:
+  base: a137b7011df36c3fe19335fc70560060e779a9f3
+  head: 3b25410198c2b5a88eb36cf39b646b71f33b57ec
+activity_effort: medium
