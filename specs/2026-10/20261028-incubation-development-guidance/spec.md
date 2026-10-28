@@ -5,8 +5,8 @@ summary: "Ships opt-in incubation guidance, optional support roles and mutable c
 status: in-progress
 created: 2026-10-28
 depends_on: [SPEC-incubation-lifecycle-policy]
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-idea-incubation]
+related_usecases: [UC-incubate-an-idea]
 workflow: sdd-spec-feature
 ---
 
