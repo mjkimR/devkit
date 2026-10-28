@@ -1,0 +1,26 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:06:22.720755Z'
+status: completed
+summary: Verified actual docs/catalog wheels without spec, installed-skill inline implementation, optional frozen usage role and fresh-context reconstruction/resume; retained observed artifacts and authored Host-released CAP/UC. Task2/2.1 complete; shared Task3/reconcile/reviews pending latest policy fixes and write release. Recorded FB-usecase-parser-affected-selection.
+findings: []
+assumptions:
+- 'Codex emulated: absolute cwd/paths, per-operation escalation and before/after file/production snapshots replace native confinement'
+- Product goals/direction choices in semantic exercises were labelled synthetic; actual commands/artifacts are distinct from real user approval/usability
+- Host released exact new CAP-DLV-idea-incubation and UC-incubate-an-idea paths plus ignored .devkit/transient/incubation-guidance fixtures
+unverified_areas:
+- Latest policy fixes not merged; inherited affected failures are policy code documentation outside current write scope. Shared contracts/guides/architecture/ADRs and mandatory independent code/reconcile reviews remain pending; no final completion/integration claimed.
+checks:
+  sync_start: PASS exit=0 before first edit at accepted86263d6e
+  catalog: PASS 33 tests including real no-spec wheel policy/config/context/rules consumer
+  tests: FAIL official affected11passed2failed inherited policy documented-code omissions; latest policy merge and rerun required
+  semantic: PASS inline32 subprocesses; frozen optional usage twice; fresh-context reconstruction32 before/after and data bytes preserved; SDD/invalid fixtures unchanged
+  parser: PASS explicit repository-usecase parser regression after template marker correction
+  lint: PASS catalog Ruff/format/Pyright and committed cumulative governance errors0 warnings0
+  sync: PASS sync --check clean; no tracked sync outputs
+diff_scope:
+  base: 86263d6e55a87fcb834b24828249bdcc7d462a3d
+  head: 986a7003f7eafbc2b044e07322d1af4dde909675
+activity_effort: medium
