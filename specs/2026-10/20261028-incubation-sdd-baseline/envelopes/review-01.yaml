@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:17:03.041422Z'
+status: completed
+summary: Independent initial review covered entire owned baseline feature and found one missing-provider activation-completeness gap
+findings:
+- issue: A project without an integration provider can pass the listed activation commands but cannot use normal integration.
+  evidence: playbooks/sdd-baseline/SKILL.md:60-71; .devkit/transient/incubation-baseline/review-01/no-provider/observed.json reproduces sync/config/policy/check exit0 and INTEGRATION_CONFIG_INVALID from actual provider reader; services/providers.py:99-107.
+  failure_condition: An incubation repository has no integration table and changes only its approach; later integration refuses the absent provider.
+  suggested_action: Present configuring spec when provider is absent among exact authorized effects, or report incomplete configuration; add an absent-provider scenario and preserve compatible existing settings.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only role; absolute cwd, isolated ignored probes and equal pre/post tracked snapshots substitute for native enforcement
+checks:
+  boundary: PASS unchanged047917e9 and identical treea9f3eb84fec0b58039f7edb614d5fbf6f7bae526
+  tests: PASS fresh8scenarios,12docs,1parser,static and governance evidence reviewed; actual no-provider probe reproduced gap
+diff_scope:
+  base: 7264bb43dc6b517528a80ec12066c28e0fbdc287
+  head: 047917e9cee0f79836537eb157556de09d36a231
