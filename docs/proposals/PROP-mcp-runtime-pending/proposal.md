@@ -2,7 +2,7 @@
 id: PROP-mcp-runtime-pending
 title: Remove speculative MCP registration notices from general status
 summary: "Remove MCP_REGISTRATION_PENDING from general devkit status while preserving diagnostics from actual registration plans, including locked sync's notice for a concrete registration write it withheld."
-status: reviewing
+status: accepted
 created_at: 2026-10-28
 target_area: capabilities/mcp/
 priority: high
