@@ -35,7 +35,7 @@ must serve other development approaches, while spec assets intentionally impose 
 
 ## 4. Decision Outcome
 
-Recommend `incubation:core` in devkit-catalog, one `/incubate` coordinator, three optional support contracts and a
+Use `incubation:core` in devkit-catalog, one `/incubate` coordinator, three optional support contracts and a
 project-owned mutable `.devkit/incubation.md`. The skill reads the common effective approach before acting; bundle
 selection itself grants no runtime approach change. Shared document instructions remain in docs.
 
@@ -48,7 +48,7 @@ history. The baseline proposal consumes semantic facts and does not require pars
 - Positive: the complete incubation path is opt-in, independent of SDD assets and resumable across sessions.
 - Negative: consumers install catalog and docs, and guidance behavior needs semantic walkthrough evidence.
 - Risks: stale context can mislead a later session; source identity, current checks and explicit uncertainty limit that
-  risk. Applicable policy must be refreshed against the accepted lifecycle-policy interface before Development.
+  risk. The entry consumes the shared policy inspection interface; relevant changes require affected consumer verification.
 - Follow-up: optional SDD adoption remains `SPEC-incubation-sdd-baseline`; runtime applicability remains
   `SPEC-incubation-lifecycle-policy`.
 
@@ -57,4 +57,7 @@ history. The baseline proposal consumes semantic facts and does not require pars
 Build-wheel isolation, catalog manifest/projection/reference tests and context-byte preservation exercise distribution.
 Bounded scenario walkthroughs exercise incomplete-goal discovery, research/experiments, inline and delegated iteration,
 usage verification and cross-session resume. Review compares results to AC-01 through AC-06; token checks alone are
-insufficient. The implementation plan selects exact test paths after the policy interface is accepted.
+insufficient. `packages/devkit-catalog/tests/integration/bundles/test_incubation.py` and
+`packages/devkit-catalog/tests/e2e/bundles/incubation/test_installed_consumer.py` verify distribution and policy
+consumption. `SPEC-incubation-development-guidance` retains labelled scenario, actual command and fresh-context
+resume evidence; those bounded observations do not establish general model reliability or real-user usability.

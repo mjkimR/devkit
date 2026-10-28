@@ -1,0 +1,90 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "experiments/json-feasibility/check_flow.py"
+      ],
+      "exit": 0,
+      "stdout": "{\"result\": \"passed\", \"cli_processes\": 32, \"source_sha256\": \"008fd9adc442f96387fd9bd643d611efbb5e16767af3871755c585ac75e05467\", \"transcript\": \"/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-transcript.json\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "shopping.py",
+        "--data",
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/json-feasibility/flow-run-zgletljj/shopping.json",
+        "list"
+      ],
+      "exit": 0,
+      "stdout": "2: bread\n3: 우유\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "shopping.py",
+        "--data",
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/reconstruction/continued-shopping.json",
+        "add",
+        "eggs"
+      ],
+      "exit": 0,
+      "stdout": "Added 4: eggs\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "shopping.py",
+        "--data",
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/reconstruction/continued-shopping.json",
+        "done",
+        "2"
+      ],
+      "exit": 0,
+      "stdout": "Done 2: bread\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "shopping.py",
+        "--data",
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/reconstruction/continued-shopping.json",
+        "list"
+      ],
+      "exit": 0,
+      "stdout": "3: 우유\n4: eggs\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "experiments/json-feasibility/probe.py"
+      ],
+      "exit": 0,
+      "stdout": "{\"replacements\": 100, \"repeated_reads\": 2000, \"final_items\": 100, \"bytes\": 5635, \"result\": \"passed\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/venv/bin/python",
+        "-m",
+        "devkit_dist",
+        "rules",
+        "check",
+        "-w",
+        "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app"
+      ],
+      "exit": 0,
+      "stdout": "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules=13]\n[OK: no error-severity violation remains]\n",
+      "stderr": ""
+    }
+  ],
+  "compile": "passed for app/core/checkers/this script without bytecode",
+  "original_data_sha256": "f880c9b1cb3f9a96d17f65acb5f373bc0227eca9ac384d51fc6989c54bbd6eb4",
+  "original_data_unchanged": true,
+  "continued_copy": "/Users/mj/workspace/workbench/repos/devkit-wt-dev-incubation-development-guidance/.devkit/transient/incubation-guidance/sample-app/experiments/reconstruction/continued-shopping.json"
+}

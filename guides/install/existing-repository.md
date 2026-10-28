@@ -232,3 +232,15 @@ For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and
 For document formats without SDD lifecycle obligations, choose devkit-docs instead of the base harness requirement.
 It auto-selects docs:core. For SDD, devkit-spec additionally selects spec:core. The document skeleton is opt-in
 through `uv run devkit add docs:docs-skeleton`; existing seeded files remain project-owned.
+
+### Idea incubation entry
+
+When the approved installation is for idea incubation, use devkit-docs plus devkit-catalog and explicitly select
+`uv run devkit add incubation`. Configure shared `[development] approach = "incubation"` and inspect
+`uv run devkit config show`; the optional independent integration provider is `project`. Follow
+[the incubation setup](../INSTALL_GUIDE.md#idea-incubation) for the complete configuration.
+
+Start or resume with `/incubate`. It reuses available answers, implements the next useful flow and verifies actual
+usage; the optional clarification/research/usage roles do not create a mandatory sequence. The coordinator keeps
+current facts in project-owned `.devkit/incubation.md`, which sync preserves. Asset selection alone changes no
+approach, and incubation does not require eventual graduation or reconstructed delivery history.

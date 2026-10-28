@@ -1,5 +1,5 @@
 ---
-id: SPEC-incubation-lifecycle-policy-target
+id: PROP-incubation-lifecycle-policy-target
 title: Development approach policy target documents
 summary: "Maps shared approach inspection, lifecycle applicability, independent integration and conditional guidance to their owning current contracts."
 status: draft

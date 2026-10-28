@@ -2,11 +2,11 @@
 id: SPEC-incubation-development-guidance
 title: Develop and resume an idea without SDD lifecycle records
 summary: "Ships opt-in incubation guidance, optional support roles and mutable current context independently of SDD, with observed iteration and resume verification."
-status: in-progress
+status: completed
 created: 2026-10-28
 depends_on: [SPEC-incubation-lifecycle-policy]
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-idea-incubation]
+related_usecases: [UC-incubate-an-idea]
 workflow: sdd-spec-feature
 ---
 
@@ -146,9 +146,9 @@ it does not become a spec Unit or a durable product contract.
 #### Interfaces with concurrent proposals
 
 - The lifecycle-policy proposal owns setting location, inspection output, command preconditions and readiness.
-  Its draft shared `sdd|incubation` setting is unapproved; this proposal relies only on an inspectable effective
-  approach and preservation of independent checks. Before Development, refresh this proposal against its accepted
-  interface; an incompatible choice returns to Planning rather than inventing a second policy source.
+  Its accepted shared `sdd|incubation` setting is inspected through `config show`, using
+  `configuration.development.approach` and its source. The integrated policy preserves independent checks;
+  this guidance adds no second policy source.
 - `SPEC-incubation-sdd-baseline` consumes current goal, retained choices, implementation and verification evidence
   semantically. It need not parse this context filename or require historical records. Voluntary transition is owned
   there; `/incubate` records the user's intent and points to the accepted transition entry when available.
@@ -163,5 +163,6 @@ it does not become a spec Unit or a durable product contract.
 
 Mechanical asset tests cannot establish adaptive discovery or usable resume. Bounded scenario walkthroughs use
 labelled synthetic inputs and a sample app, recording real commands/interactions and unmet observations.
-The current independent turn implements catalog assets/tests only. Policy-dependent wheel consumers, semantic
-walkthroughs and shared Living Spec reflection remain pending until the Host incorporates the policy implementation.
+The integrated policy supplies actual common inspection. Built-wheel consumers and labelled semantic walkthroughs
+record observations in `materials/semantic-exercises.md`; shared Living Spec reflection is verified independently.
+Historical worker records retain earlier scoped-turn limitations and do not describe final readiness.

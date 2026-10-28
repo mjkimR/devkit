@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:32:36.271998Z'
+status: completed
+summary: Host accepted final turn write scope and reran returned-head unit checks; cumulative feature governance uses main while turn scope remains anchored at43a12db6
+findings: []
+assumptions:
+- Composite worker-inspect scoped rules result was FAIL due to a cumulative reconcile target created in an earlier accepted turn; FB-worker-inspect-scoped-reconcile-base records it. Independent correct-base governance, exact scoped writes and unit checks passed.
+checks:
+  tests: PASS Host rerun44 affected checks; actual no-spec and app/role/resume evidence retained; sole full-suite inventory failure corrected and focused checks passed
+  build: PASS actual docs+catalog built-wheel consumer without spec
+  lint: PASS cumulative CI governance against main and scoped feedback rules; source lint/types already verified
+diff_scope:
+  base: 43a12db67b4addbf2e35a69a311a722fd0eb681e
+  head: 954833452d2ccd1099849b1dd788fe434ffe99a2

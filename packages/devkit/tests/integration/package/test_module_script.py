@@ -198,7 +198,7 @@ def test_an_unknown_area_of_a_bundle_module_lists_categories(script_env: dict[st
     assert result.returncode == 2
     assert "Unknown area for devkit-catalog: nosuch" in result.stderr
     assert "unbound variable" not in result.stderr
-    assert "Available areas: bundles integration " in result.stderr
+    assert "Available areas: bundles e2e integration " in result.stderr
     assert not Path(script_env["CALLS"]).exists()
 
 

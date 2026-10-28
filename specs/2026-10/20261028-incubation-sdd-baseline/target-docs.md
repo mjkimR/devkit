@@ -1,5 +1,5 @@
 ---
-id: SPEC-incubation-sdd-baseline-target
+id: PROP-incubation-sdd-baseline-target
 title: Incubation SDD baseline target documents
 summary: "Maps the optional evidenced baseline playbook to its delivery capability, adoption use case, installation guidance and existing adoption boundaries."
 status: draft

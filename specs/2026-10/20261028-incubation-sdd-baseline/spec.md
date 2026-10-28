@@ -21,7 +21,7 @@ workflow: sdd-spec-feature
 Incubation can remain a complete development path. When the user chooses SDD, retained behavior, structure,
 choices and verification need a truthful baseline before future changes inherit SDD obligations.
 `ADR-adopt-sdd-through-an-evidenced-baseline-playbook` selects a focused playbook over a new runtime or retrospective Unit.
-`SPEC-incubation-sdd-baseline-target` lists the current-contract reflection.
+`PROP-incubation-sdd-baseline-target` lists the current-contract reflection.
 Planning evidence remains in `docs/materials/2026-10/20261028-incubation-sdd-baseline/`.
 
 ## 2. User Stories

@@ -48,4 +48,4 @@ when delivered; the baseline playbook owns readiness/activation/recovery.
 - AC-06: actual common-policy mismatch/incubation consumer scenarios after policy implementation, plus asset wording/ownership checks.
 - `just lint-check catalog`, `just check catalog`, catalog integration tests and `just test-affected` with full fallback.
 - Run source sync check; incubation is unselected in this development repository, so it produces no tracked projection changes.
-- Independent medium code review and reconcile verification follow full implementation. Current turn stops cleanly at build-verify if prerequisites/shared writes remain unavailable.
+- Independent medium code review and reconcile verification follow full implementation. Final verification covers the whole guidance feature and excludes separately reviewed Host-owned policy changes.
