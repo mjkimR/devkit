@@ -384,7 +384,7 @@ assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secr
     uv run devkit add spec:docs-skeleton >/dev/null
     uv run python -c '
 from pathlib import Path
-from devkit_spec.features.documents import DocumentIndex
+from devkit_docs.features.documents import DocumentIndex
 index = DocumentIndex.load(Path.cwd())
 assert not index.problems, index.problems
 for document_id in (
@@ -393,7 +393,7 @@ for document_id in (
 ):
     assert index.resolve(document_id).path == f"docs/architecture/{document_id}.md"
 '
-    uv run devkit spec resolve ARCH-03-context ARCH-07-deployment ARCH-08-cross-cutting >/dev/null
+    uv run devkit docs resolve ARCH-03-context ARCH-07-deployment ARCH-08-cross-cutting >/dev/null
     uv run devkit sync --check >/dev/null
     uv run devkit rules check
     echo "--- viewer: install its wheel, serve this project and fetch the bundled page"

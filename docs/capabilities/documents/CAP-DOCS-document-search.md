@@ -1,15 +1,15 @@
 ---
 id: CAP-DOCS-document-search
 title: Document Search
-summary: "Defines devkit spec search, which ranks spec documents for a free-text query, expands glossary synonyms through a required LibYAML safe parser, and narrows results by kind, history and namespace."
+summary: "Defines devkit docs search, which ranks spec documents for a free-text query, expands glossary synonyms through a required LibYAML safe parser, and narrows results by kind, history and namespace."
 area: documents
 status: active
 usecases:
   - UC-find-the-right-documents
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/documents/usecases/search.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/usecases/search.py
   - packages/devkit-core/src/devkit_core/core/yaml.py
-  - packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/cli/commands.py
 created_at: 2026-10-13
 ---
 
@@ -17,10 +17,10 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-`devkit spec search` finds documents by meaning when the exact ID is not known. The ranking is devkit's
+`devkit docs search` finds documents by meaning when the exact ID is not known. The ranking is devkit's
 (`CAP-SRCH-document-search`); devkit-spec adds the spec
 search policy on top: which documents are candidates, which fields are embedded, exact-match pinning and glossary
-expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-DOCS-document-lookup`).
+expansion. Going from a known ID to its path stays `devkit docs resolve` (`CAP-DOCS-document-lookup`).
 
 ## 2. Scope & Boundary
 
@@ -52,7 +52,7 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
    contains every word of a term of a cluster, consecutively and in order, the whole cluster (`primary` plus
    `synonyms`) is appended, minus terms whose words the query already contains. Useful for terms in another language.
    Terms of different clusters that tokenize to the same words (`C++` and `C#` are both `c`) expand to the union of
-   their clusters, in glossary order, so no cluster is lost. Without the file there is no expansion. If the PyYAML LibYAML binding is unavailable while reading the file, search MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`; it MUST NOT report `SPEC_GLOSSARY_INVALID` or fall back to Python parsing.
+   their clusters, in glossary order, so no cluster is lost. Without the file there is no expansion. If the PyYAML LibYAML binding is unavailable while reading the file, search MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`; it MUST NOT report `DOCS_GLOSSARY_INVALID` or fall back to Python parsing.
 5. **Modes**: `--mode auto` (default) is `hybrid` when devkit's search extra is installed
    (`uv add 'devkit-spec[search]'`, which adds `devkit[search]`), else `lexical`. `lexical`, `dense` and `hybrid`
    force one; an explicit `dense` or `hybrid` without the extra MUST fail with devkit's `SEARCH_EXTRA_MISSING`.
@@ -71,7 +71,7 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
 ### 4.1 Command
 
 ```text
-devkit spec search QUERY... [--kind KIND]... [--history] [--namespace NAME | --all-namespaces]
+devkit docs search QUERY... [--kind KIND]... [--history] [--namespace NAME | --all-namespaces]
     [--mode auto|lexical|dense|hybrid] [--limit/-n N] [--min-similarity F] [-w ROOT] [--format text|json]
 ```
 
@@ -79,9 +79,9 @@ The words of `QUERY...` are joined with single spaces, and the joined query must
 document kinds of `CAP-DOCS-document-model`.
 
 ```bash
-devkit spec search "link integrity between documents"
-devkit spec search CAP-CORE-search                  # an exact ID, alias, path or file name is pinned first
-devkit spec search "cache policy" --kind decision --kind capability --history
+devkit docs search "link integrity between documents"
+devkit docs search CAP-CORE-search                  # an exact ID, alias, path or file name is pinned first
+devkit docs search "cache policy" --kind decision --kind capability --history
 ```
 
 ### 4.2 Text Output
@@ -117,18 +117,18 @@ terms:
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | `docs/steering/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`. |
+| `DOCS_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | `docs/steering/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`. |
 | `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | PyYAML has no usable LibYAML binding when a YAML read begins; exit `2`, before glossary validation. |
 
 devkit's `SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND` and `SEARCH_MODEL_INVALID` pass through for explicit dense
 or hybrid searches; `ARGUMENT_INVALID` for a blank query, a negative `--limit` or an invalid namespace
 selection; `SPEC_CONFIG_INVALID` for a malformed `[tool.spec]` table. Unreadable documents are
-`SPEC_DOCUMENT_INVALID` warnings. Exit codes: `0` success (also with no hit for a non-blank query), `2` an error,
+`DOCS_DOCUMENT_INVALID` warnings. Exit codes: `0` success (also with no hit for a non-blank query), `2` an error,
 warnings `1` only under `--strict`.
 
 ### 4.6 Library
 
-`devkit_spec.features.documents.usecases.search.search_documents(index, query, kinds=..., history=..., mode=..., limit=..., min_similarity=...,
+`devkit_docs.features.documents.usecases.search.search_documents(index, query, kinds=..., history=..., mode=..., limit=..., min_similarity=...,
 accept=...)` returns `SpecSearchResult` (`query`, `expanded`, `mode`, `hits` of `SpecHit`: `document`, `score`,
 `pinned`); `accept` narrows candidates further (a namespace selection). `load_glossary`, `expand_query` and
 `metadata` (the embedded text) expose the policy steps.

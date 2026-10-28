@@ -57,10 +57,11 @@ def rejected_proposals(root: Path) -> list[AdvisoryError] | None:
 
 def milestone_members(root: Path) -> list[AdvisoryError]:
     """Warn from base documents only; branch checks belong to Backlog decisions."""
+    from devkit_docs.features.documents import DocumentIndex
+    from devkit_docs.features.documents.models.ids import Kind
+    from devkit_docs.features.documents.models.model import is_unit_anchor
+
     from devkit_spec.base.errors import MilestoneDoneUnsettledWarning, MilestoneDroppedUnsettledWarning
-    from devkit_spec.features.documents import DocumentIndex
-    from devkit_spec.features.documents.models.ids import Kind
-    from devkit_spec.features.documents.models.model import is_unit_anchor
 
     index = DocumentIndex.load(root)
     found: list[AdvisoryError] = []

@@ -27,16 +27,14 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, c
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
-
-from devkit_spec.features.governance import FIX_COMMAND, explicitly_targeted
+from devkit_docs.features.governance import FIX_COMMAND, explicitly_targeted
+from devkit_docs.utils.text import trailing_comment
 
 RULE_ID = "RULE-spec-lifecycle"
 COMPLETED = "completed"
 RESOLVED = "resolved"
 _STATUS_LINE = re.compile(r"^status:[ \t]*[^\r\n]*", re.MULTILINE)
-_COMMENT = re.compile(r"[ \t]+#[^\r\n]*$")  # a trailing YAML comment: "#" after whitespace
 # A quoted YAML scalar on one line: "..." with backslash escapes, '...' with '' for a quote.
-_QUOTED = re.compile(r"\"(?:[^\"\\\r\n]|\\.)*\"|'(?:[^'\r\n]|'')*'")
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,22 +206,6 @@ def stale(bundle: Bundle) -> bool:
 def has_status_line(ctx: RuleContext, path: str) -> bool:
     text = _read(ctx, path)
     return text is not None and with_status(text, COMPLETED) is not None
-
-
-def trailing_comment(line: str, start: int) -> str | None:
-    """The trailing YAML comment of the one-line value that starts at ``line[start:]`` (``None``: none).
-
-    A ``#`` counts only after whitespace and outside a quoted scalar: ``"draft #2"`` is a value, not a comment. An
-    unterminated quote has no comment.
-    """
-    value = len(line) - len(line[start:].lstrip(" \t"))
-    if line[value : value + 1] in ('"', "'"):
-        quoted = _QUOTED.match(line, value)
-        if quoted is None:
-            return None
-        value = quoted.end()
-    comment = _COMMENT.search(line, value)
-    return comment.group() if comment else None
 
 
 def with_status(text: str, status: str) -> str | None:

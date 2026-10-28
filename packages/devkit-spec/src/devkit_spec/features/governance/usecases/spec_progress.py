@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
+from devkit_docs.features.governance import FIX_COMMAND
 
-from devkit_spec.features.governance import FIX_COMMAND
 from devkit_spec.features.governance.usecases.spec_lifecycle import (
     Bundle,
     bundles,

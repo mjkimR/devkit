@@ -26,11 +26,11 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
 from devkit_core.core.yaml import safe_compose
+from devkit_docs.base.errors import EntrypointsPathError
+from devkit_docs.features.documents import Document
+from devkit_docs.features.governance import document_index, is_proposal_anchor, namespaces
 
-from devkit_spec.base.errors import EntrypointsPathError
-from devkit_spec.features.documents import Document
 from devkit_spec.features.entrypoints import exists, normalize
-from devkit_spec.features.governance import document_index, is_proposal_anchor, namespaces
 
 RULE_ID = "RULE-proposal-boundaries"
 CHECKED_STATUSES = frozenset({"draft", "reviewing", "accepted"})

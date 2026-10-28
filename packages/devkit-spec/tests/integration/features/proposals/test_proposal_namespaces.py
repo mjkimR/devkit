@@ -8,13 +8,14 @@ from click.testing import CliRunner
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core.frontmatter import parse
 from devkit_dist.cli import cli as devkit_cli
+from devkit_docs.base.errors import DocsConfigError
 from spec_support.proposals import TODAY, accept, spec_dir
 from spec_support.types import Write
 
-from devkit_spec.base.errors import ProposalInvalidError, SpecConfigError
+from devkit_spec.base.errors import ProposalInvalidError
 from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
 
-CONFIG = '[[tool.spec.namespaces]]\nname = "api"\npath = "services/api"\n'
+CONFIG = '[[tool.docs.namespaces]]\nname = "api"\npath = "services/api"\n'
 
 
 def _meta(path: Path) -> dict[str, object]:
@@ -52,9 +53,9 @@ def test_unknown_namespace_is_an_argument_error(workspace: Path, write: Write) -
 
 
 def test_global_needs_no_registry(workspace: Path, write: Write) -> None:
-    write(".devkit/config.toml", "[tool.spec]\nnamespaces = 3\n")
+    write(".devkit/config.toml", "[tool.docs]\nnamespaces = 3\n")
     create_spec(workspace, "a", namespace="global", day=TODAY)
-    with pytest.raises(SpecConfigError):
+    with pytest.raises(DocsConfigError):
         create_spec(workspace, "b", namespace="api", day=TODAY)
 
 

@@ -22,12 +22,11 @@ from pathlib import Path
 from devkit_agt.features.rules import LineKind, LinkRelocation, relocate_links, scan
 from devkit_core.core import FrontmatterError, atomic_write_text
 from devkit_core.core.frontmatter import locate
-
-from devkit_spec.features.documents import Document, DocumentIndex, Reference, parse_document, visible_lines
-from devkit_spec.features.documents.models.ids import ID_SOURCE
-from devkit_spec.features.documents.models.model import BODY
-from devkit_spec.features.documents.repositories.index import SOURCE_DIRECTORIES
-from devkit_spec.features.documents.services.rewrite import rewrite
+from devkit_docs.features.documents import Document, DocumentIndex, Reference, parse_document, visible_lines
+from devkit_docs.features.documents.models.ids import ID_SOURCE
+from devkit_docs.features.documents.models.model import BODY
+from devkit_docs.features.documents.repositories.index import SOURCE_DIRECTORIES
+from devkit_docs.features.documents.services.rewrite import rewrite
 
 LINK = "link"
 ID = "id"

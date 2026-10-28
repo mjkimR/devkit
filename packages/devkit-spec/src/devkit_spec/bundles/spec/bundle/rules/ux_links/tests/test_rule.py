@@ -7,9 +7,8 @@ from pathlib import Path
 import pytest
 from devkit_agt.features.rules import Violation
 from devkit_agt.features.rules.services.testing import check, load_rule
-
-from devkit_spec.features.documents import DocumentIndex
-from devkit_spec.features.governance.services.ux import use_case
+from devkit_docs.features.documents import DocumentIndex
+from devkit_docs.features.governance.services.ux import use_case
 
 RULE = load_rule(__file__)
 UC = "docs/usecases/account/UC-sign-in.md"

@@ -80,7 +80,7 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   reference in an ADR or PADR, skips completed specs, materials and files that are not valid UTF-8, and writes only the
   targets when the run names any.
 - **By hand**: a missing or duplicated ID is fixed by hand; the rule never guesses which document was meant. Find a
-  document's path with `devkit spec resolve <ID>` and what references it with `devkit spec refs <ID> --direction in`.
+  document's path with `devkit docs resolve <ID>` and what references it with `devkit docs refs <ID> --direction in`.
   Create the intended document or correct the exact ID; give each document its own ID, then update the references to
   it; replace a document link with the target's ID; remove an already handed-off proposal or rename it to an unused
   slug; remove a `depends_on` edge to break a cycle; keep a colliding alias on one document only, and correct a

@@ -26,6 +26,6 @@ read [backfill](references/backfill.md) instead.
 
 ## Completion
 
-- [ ] `devkit rules check <document>` passes, and `devkit spec list capability --file <path>` (or `usecase`) lists the
+- [ ] `devkit rules check <document>` passes, and `devkit docs list capability --file <path>` (or `usecase`) lists the
   document for a written path.
 - [ ] The report states rejected candidates that matter later.

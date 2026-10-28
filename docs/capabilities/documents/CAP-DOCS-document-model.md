@@ -8,7 +8,7 @@ usecases:
   - UC-find-the-right-documents
   - UC-keep-the-living-spec-consistent
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/documents/
+  - packages/devkit-docs/src/devkit_docs/features/documents/
   - packages/devkit-core/src/devkit_core/core/frontmatter.py
   - packages/devkit-core/src/devkit_core/core/yaml.py
 created_at: 2026-10-13
@@ -19,7 +19,7 @@ created_at: 2026-10-13
 ## 1. Summary
 
 The document model decides which files are spec documents, how each one is identified and how documents reference
-each other. `devkit_spec.features.documents` implements it as a workspace index built from the files on every load,
+each other. `devkit_docs.features.documents` implements it as a workspace index built from the files on every load,
 reusing a file's parse result, also between processes, only while its path and text are unchanged. The
 lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
@@ -64,14 +64,14 @@ workspace cache; these files stay ID-free and unindexed, and their references do
    MUST be parsed through the shared LibYAML safe boundary (`devkit_core.core.yaml`). The parser preserves Python
    value types and rejects duplicate keys. `id`, `reconcile_id` and `status`, when present, MUST be strings. A file
    that cannot be read as UTF-8, or whose frontmatter breaks either requirement, MUST be left out of the index and
-   reported as a `SPEC_DOCUMENT_INVALID` warning; every other document MUST stay usable. Parser marks, when
+   reported as a `DOCS_DOCUMENT_INVALID` warning; every other document MUST stay usable. Parser marks, when
    available, MUST be reported as 1-based document lines and columns. IF the PyYAML LibYAML binding is unavailable,
    THEN a YAML-reading operation MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2` before reusing a memoized
-   parse result; it MUST NOT fall back to Python parsing or report the binding failure as `SPEC_DOCUMENT_INVALID`.
+   parse result; it MUST NOT fall back to Python parsing or report the binding failure as `DOCS_DOCUMENT_INVALID`.
    These contracts are verified by `packages/devkit-core/tests/unit/core/test_frontmatter.py` and
    `packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`.
 5. **Uniqueness**: IDs are repository-wide and MUST be unique across `docs/`, `specs/` and every namespace docs root.
-   The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`). Aliases share
+   The index keeps every declaration of an ID, so a duplicate is detectable (`DOCS_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).
 6. **Summary**: `summary` is one or two English sentences saying what the document defines. It is REQUIRED on
    capabilities, use cases, UX documents, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
@@ -144,7 +144,7 @@ live; the index itself does not check it.
 | `MAT` | `material` | `docs/materials/...` |
 | `MS` | `milestone` | `docs/roadmap/MS-<slug>.md` (global only) |
 
-The table order is the kind order: `devkit spec list` sorts by it. Living Spec documents of a namespace live under
+The table order is the kind order: `devkit docs list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).
 
 The kind definition table in the documents models is the single definition of kinds
@@ -209,7 +209,7 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    at the memo path is never removed or replaced. A missing memo is created without a log line
    (`packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`).
 6. **Resolution**: resolving an ID MUST go through the canonical mapping (section 3.5) and return the one document
-   it names, else raise `SPEC_ID_UNRESOLVED` (no document) or `SPEC_ID_DUPLICATE` (several declare the ID, or
+   it names, else raise `DOCS_ID_UNRESOLVED` (no document) or `DOCS_ID_DUPLICATE` (several declare the ID, or
    several declare the alias; `[TARGET]` lists their paths).
 7. **Reference queries**: outgoing references are grouped by canonical target ID (an alias with its document) and
    incoming references, written with the document's ID or a resolving alias, by source ID, both in ID order. A target
@@ -241,7 +241,7 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    replacement, lists the IDs of the ADRs it retires (`ADR-immutable-decisions-editable-records`). One `devkit rules fix` then moves current documents to the new ID.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
    taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;
-   wherever a command takes an ID argument that it resolves through the index (`devkit spec resolve`, `refs`,
+   wherever a command takes an ID argument that it resolves through the index (`devkit docs resolve`, `refs`,
    `entrypoints --target`, `proposal new --milestone`), an alias resolves to its canonical document.
 
 ## 4. Interfaces & Data Contracts
@@ -274,17 +274,17 @@ Commands that print documents in JSON use the record `id`, `kind`, `path` (works
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read as UTF-8 or has malformed frontmatter (including a non-string `id`, `reconcile_id` or `status`); it is left out of the index. Returned under `notices`; exit `0`, `1` under `--strict`. |
-| `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | A YAML read starts without PyYAML's `CSafeLoader`; exit `2` before parsing or memo reuse, and never as `SPEC_DOCUMENT_INVALID`. |
-| `SPEC_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
-| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID, or (no document declaring it as its ID) the alias; `[TARGET]` lists them. |
+| `DOCS_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read as UTF-8 or has malformed frontmatter (including a non-string `id`, `reconcile_id` or `status`); it is left out of the index. Returned under `notices`; exit `0`, `1` under `--strict`. |
+| `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | A YAML read starts without PyYAML's `CSafeLoader`; exit `2` before parsing or memo reuse, and never as `DOCS_DOCUMENT_INVALID`. |
+| `DOCS_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
+| `DOCS_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID, or (no document declaring it as its ID) the alias; `[TARGET]` lists them. |
 
 ### 4.4 Library
 
 ```python
-from devkit_spec.features.documents import DocumentIndex, Kind, is_id, kind_of, rewrite
+from devkit_docs.features.documents import DocumentIndex, Kind, is_id, kind_of, rewrite
 
-index = DocumentIndex.load(root)  # documents, by_id, by_alias, problems (SPEC_DOCUMENT_INVALID), historical
+index = DocumentIndex.load(root)  # documents, by_id, by_alias, problems (DOCS_DOCUMENT_INVALID), historical
 document = index.resolve("CAP-CORE-search")  # an ID or an alias; UnresolvedIdError, DuplicateIdError
 document, alias = index.lookup("CAP-CORE-old")  # alias is None for a declared ID
 index.canonical("CAP-CORE-old")  # (document, alias) or None when no document or several match

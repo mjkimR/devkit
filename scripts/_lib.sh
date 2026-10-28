@@ -68,6 +68,7 @@ dist devkit-dist
 mcp devkit-mcp
 starter devkit-starter
 catalog devkit-catalog
+docs devkit-docs
 spec devkit-spec
 viewer devkit-viewer
 NAMES

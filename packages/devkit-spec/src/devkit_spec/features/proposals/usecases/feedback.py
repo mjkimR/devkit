@@ -6,9 +6,9 @@ import re
 from pathlib import Path
 
 from devkit_core.core import FrontmatterError
+from devkit_docs.features.documents import parse_document
 
 from devkit_spec.base.errors import ProposalInvalidError
-from devkit_spec.features.documents import parse_document
 from devkit_spec.features.proposals.usecases.scaffold import first_segment_has_letter
 
 FEEDBACK = "feedback"

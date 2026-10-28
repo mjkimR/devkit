@@ -58,4 +58,4 @@ A reviewer marks a finding that repeats an earlier one by starting its `issue` w
 
 ## 5. Planning at `high`
 
-Compare two or more options and run `scout` before the first `challenger`, starting from `devkit spec refs <ID> --direction in` for each capability and ADR the proposal touches, so the `challenger` input cites the list. Each round is a new `challenger-NN` envelope, closed after its fold as in [planning](planning.md) step 3.
+Compare two or more options and run `scout` before the first `challenger`, starting from `devkit docs refs <ID> --direction in` for each capability and ADR the proposal touches, so the `challenger` input cites the list. Each round is a new `challenger-NN` envelope, closed after its fold as in [planning](planning.md) step 3.

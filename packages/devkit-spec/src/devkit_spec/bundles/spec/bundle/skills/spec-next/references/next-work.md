@@ -3,7 +3,7 @@
 Use this when no Unit is in progress (a fetched plan-/dev- branch for the slug also counts). Never resume a task only
 because its branch exists. Recommend; do not start, accept or activate anything.
 
-1. Run `devkit spec list proposal --all-namespaces -n 0` and `devkit spec list milestone --all-namespaces -n 0`; read
+1. Run `devkit docs list proposal --all-namespaces -n 0` and `devkit docs list milestone --all-namespaces -n 0`; read
    frontmatter for ordering fields the output omits. Keep each draft's namespace in the recommendation.
 2. Apply the [direct unit prerequisite procedure](#direct-unit-prerequisite-procedure) to every candidate, including
    critical drafts. Eligible: unit-ready, displayed status `draft`, no true `needs_decompose`. A milestone is ready

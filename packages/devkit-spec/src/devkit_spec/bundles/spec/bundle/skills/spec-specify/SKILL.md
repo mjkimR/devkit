@@ -11,8 +11,8 @@ without documents is `session` depth and needs no `spec.md`.
 
 ## 1. Prerequisites
 
-- Check overlap with active specs (`devkit spec list spec`) and the Living Spec (`devkit spec search "<query>"`,
-  `devkit spec refs <ID> --direction in`). Completed specs are history, not inputs.
+- Check overlap with active specs (`devkit docs list spec`) and the Living Spec (`devkit docs search "<query>"`,
+  `devkit docs refs <ID> --direction in`). Completed specs are history, not inputs.
 - Read `devkit spec policy`, the `contract-authoring` instruction and the `living-spec-writing` instruction.
 
 ## 2. Create or open the bundle

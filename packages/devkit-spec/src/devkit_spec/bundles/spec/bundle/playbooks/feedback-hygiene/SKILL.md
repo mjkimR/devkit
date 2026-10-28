@@ -13,7 +13,7 @@ feedback through the `spec` skill's
 ## Step 1: Collect and group
 
 ```bash
-uv run devkit spec list feedback --status open --all-namespaces -n 0
+uv run devkit docs list feedback --status open --all-namespaces -n 0
 ```
 
 - If the listing is empty, report an empty backlog and stop. Narrow with `--where scope=<scope>` or

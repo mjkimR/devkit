@@ -9,8 +9,8 @@ from devkit_agt.features.rules import extract_links
 from devkit_agt.features.rules.models.markdown import local_target
 from devkit_core.core import FrontmatterError, GitError, atomic_write_text, run_git
 from devkit_core.core.frontmatter import locate
+from devkit_docs.features.documents import visible_lines
 
-from devkit_spec.features.documents import visible_lines
 from devkit_spec.features.proposals.services.rewrite import (
     _CODE_SPAN_PATH,
     LINK,

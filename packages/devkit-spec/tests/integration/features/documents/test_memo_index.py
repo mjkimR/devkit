@@ -17,15 +17,15 @@ from click.testing import CliRunner, Result
 from devkit_agt.features.rules.services.testing import check, load_rule
 from devkit_core.core import YamlBindingUnavailableError
 from devkit_dist.cli import cli as devkit_cli
+from devkit_docs.features.documents import DocumentIndex
+from devkit_docs.features.documents.repositories import index as index_module
+from devkit_docs.features.documents.repositories import memo as memo_module
+from devkit_docs.features.documents.repositories.memo import ParseMemo, decode_entry
 from spec_support.types import Write
 
 import devkit_spec
-from devkit_spec.features.documents import DocumentIndex
-from devkit_spec.features.documents.repositories import index as index_module
-from devkit_spec.features.documents.repositories import memo as memo_module
-from devkit_spec.features.documents.repositories.memo import ParseMemo, decode_entry
 
-MEMO = ".devkit/transient/spec/document-index.json"
+MEMO = ".devkit/transient/docs/document-index.json"
 RULE = load_rule(Path(devkit_spec.__file__).parent / "bundles/spec/bundle/rules/document_reference/rule.py")
 
 
@@ -206,7 +206,7 @@ def test_no_fingerprint_means_no_memo(transient: Path, write: Write, monkeypatch
     _base(write)
     monkeypatch.setattr(memo_module, "fingerprint", lambda: None)
     assert _view(_load(transient)) == _view(_fresh(transient))
-    assert not (transient / ".devkit/transient/spec").exists()
+    assert not (transient / ".devkit/transient/docs").exists()
 
 
 def _git(root: Path, *args: str) -> None:
@@ -237,8 +237,8 @@ def test_a_branch_switch_and_back_equals_a_fresh_build(transient: Path, write: W
         _assert_fresh(transient)
 
 
-def _spec(root: Path, *args: str) -> Result:
-    return CliRunner().invoke(devkit_cli, ["spec", *args, "-w", str(root)])
+def _docs(root: Path, *args: str) -> Result:
+    return CliRunner().invoke(devkit_cli, ["docs", *args, "-w", str(root)])
 
 
 COMMANDS = (
@@ -256,7 +256,7 @@ def _outputs(root: Path) -> list[tuple[int, str, str]]:
     results = []
     for command in COMMANDS:
         index_module._parsed.clear()
-        result = _spec(root, *command)
+        result = _docs(root, *command)
         results.append((result.exit_code, result.stdout, result.stderr))
     return results
 
@@ -396,11 +396,11 @@ def test_a_discarded_memo_is_logged_only_under_verbose(transient: Path, write: W
     _base(write)
     _load(transient)
     CORRUPTIONS["invalid JSON"](transient / MEMO)
-    quiet = _spec(transient, "list")
+    quiet = _docs(transient, "list")
     assert "document memo" not in quiet.stderr
     CORRUPTIONS["invalid JSON"](transient / MEMO)
     index_module._parsed.clear()
-    verbose = _spec(transient, "list", "-v")
+    verbose = _docs(transient, "list", "-v")
     assert "document memo" in verbose.stderr and "discarded" in verbose.stderr
     assert verbose.stdout == quiet.stdout and verbose.exit_code == quiet.exit_code == 0
 
@@ -416,7 +416,7 @@ def test_a_directory_at_the_memo_path_is_left_alone(transient: Path, write: Writ
 @pytest.mark.skipif(os.name != "posix" or os.geteuid() == 0, reason="needs POSIX permissions without root")
 def test_an_unwritable_memo_directory_is_left_as_it_was(transient: Path, write: Write) -> None:
     _base(write)
-    spec = transient / ".devkit/transient/spec"
+    spec = transient / ".devkit/transient/docs"
     spec.mkdir()
     spec.chmod(0o555)
     try:
@@ -471,7 +471,7 @@ def test_a_workspace_without_transient_gets_no_memo(workspace: Path, write: Writ
     assert sorted(p.relative_to(workspace) for p in workspace.rglob("*")) == before
 
 
-@pytest.mark.parametrize("link", [".devkit/transient", ".devkit/transient/spec", MEMO, ".devkit"])
+@pytest.mark.parametrize("link", [".devkit/transient", ".devkit/transient/docs", MEMO, ".devkit"])
 def test_a_symbolic_link_on_the_way_is_not_followed(tmp_path: Path, link: str) -> None:
     root, outside = tmp_path / "root", tmp_path / "outside"
     outside.mkdir()
@@ -482,8 +482,8 @@ def test_a_symbolic_link_on_the_way_is_not_followed(tmp_path: Path, link: str) -
         (outside / "memo.json").write_text("outside", encoding="utf-8")
         (root / link).symlink_to(outside / "memo.json")
     else:
-        if link == ".devkit/transient/spec":
-            (outside / "spec").mkdir()
+        if link == ".devkit/transient/docs":
+            (outside / "docs").mkdir()
         (outside / "transient").mkdir(exist_ok=True)
         (root / link).symlink_to(outside / Path(link).name if link != ".devkit" else outside)
     before = sorted((p.relative_to(outside), p.read_bytes() if p.is_file() else b"") for p in outside.rglob("*"))
@@ -528,7 +528,7 @@ def test_loads_with_a_supplied_list_or_reader_never_write(transient: Path, write
     files = sorted((transient / "docs").rglob("*.md"))
     _load(transient, files=files)
     _load(transient, read=lambda path: path.read_text(encoding="utf-8"))
-    assert not (transient / ".devkit/transient/spec").exists()
+    assert not (transient / ".devkit/transient/docs").exists()
     _load(transient)
     before = ((transient / MEMO).read_bytes(), (transient / MEMO).stat().st_mtime_ns)
     CHANGES["content edit"](transient)
@@ -546,6 +546,6 @@ def test_a_supplied_list_reuses_the_memo(transient: Path, write: Write, parses: 
     files = sorted((transient / "docs").rglob("*.md"))
     _load(transient, files=files)
     assert parses == []
-    shutil.rmtree(transient / ".devkit/transient/spec")
+    shutil.rmtree(transient / ".devkit/transient/docs")
     _load(transient, files=files)
     assert len(parses) == len(files)

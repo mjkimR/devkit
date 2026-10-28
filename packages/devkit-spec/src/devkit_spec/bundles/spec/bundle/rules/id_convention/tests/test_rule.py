@@ -18,7 +18,7 @@ def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:
 
 def _namespaces(*names: str) -> str:
     """``.devkit/config.toml`` registering a namespace per name, with source path ``packages/<name>``."""
-    return "".join(f'[[tool.spec.namespaces]]\nname = "{name}"\npath = "packages/{name}"\n\n' for name in names)
+    return "".join(f'[[tool.docs.namespaces]]\nname = "{name}"\npath = "packages/{name}"\n\n' for name in names)
 
 
 def _has(violations: list[Violation], file: str, fragment: str) -> bool:
@@ -418,10 +418,10 @@ def test_namespace_docs_roots_need_registration(tmp_path: Path) -> None:
 
 
 def test_malformed_namespace_config_fails_the_run(tmp_path: Path) -> None:
-    write_files(tmp_path, {".devkit/config.toml": '[[tool.spec.namespaces]]\nname = "global"\npath = "x"\n'})
+    write_files(tmp_path, {".devkit/config.toml": '[[tool.docs.namespaces]]\nname = "global"\npath = "x"\n'})
     result = evaluate_rules(RuleContext(workspace_root=tmp_path), [RULE])
-    assert [(error.code, error.rule_id) for error in result.errors] == [("SPEC_CONFIG_INVALID", RULE.id)]
-    assert "tool.spec.namespaces[0]" in str(result.errors[0])
+    assert [(error.code, error.rule_id) for error in result.errors] == [("DOCS_CONFIG_INVALID", RULE.id)]
+    assert "tool.docs.namespaces[0]" in str(result.errors[0])
 
 
 def test_feedback_of_a_completed_bundle_is_checked_like_current_documents(tmp_path: Path) -> None:

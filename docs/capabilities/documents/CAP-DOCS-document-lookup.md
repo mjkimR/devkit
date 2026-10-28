@@ -1,13 +1,13 @@
 ---
 id: CAP-DOCS-document-lookup
 title: Document Lookup
-summary: "Defines devkit spec resolve, refs and list: map IDs to paths, follow references both ways, and browse documents by kind, status (with a notice for an unused status), area, text, frontmatter field, history, namespace or owned code path, with feedback by severity, paging and JSON output."
+summary: "Defines devkit docs resolve, refs and list: map IDs to paths, follow references both ways, and browse documents by kind, status (with a notice for an unused status), area, text, frontmatter field, history, namespace or owned code path, with feedback by severity, paging and JSON output."
 area: documents
 status: active
 usecases:
   - UC-find-the-right-documents
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/cli/commands.py
 created_at: 2026-10-13
 ---
 
@@ -16,8 +16,8 @@ created_at: 2026-10-13
 ## 1. Summary
 
 Three commands give an agent deterministic access to the document index (`CAP-DOCS-document-model`): `devkit spec
-resolve` maps IDs to paths, `devkit spec refs` follows the references of one document in either direction, and
-`devkit spec list` browses documents with filters. They are the exact-match counterpart of `devkit spec search`
+resolve` maps IDs to paths, `devkit docs refs` follows the references of one document in either direction, and
+`devkit docs list` browses documents with filters. They are the exact-match counterpart of `devkit docs search`
 (`CAP-DOCS-document-search`), which ranks by meaning when the ID is not known. Each call loads the index through
 the parse memo of `CAP-DOCS-document-model` where the workspace has one (section 3.4 there), so a repeated call in an
 unchanged workspace parses again only documents whose frontmatter holds a value the memo cannot store. The memo never
@@ -44,34 +44,34 @@ changes an argument, output, code or exit status.
 1. **Workspace**: every command takes `-w/--workspace-root` (default: the devkit project containing the current
    directory), `--format text|json` and devkit's output options (`-q`, `-v`, `--strict`), as every `devkit spec`
    command does (`CAP-HARN-command-mount`). Paths in the output MUST be workspace-relative.
-2. **Warnings and notices**: files the index left out are `SPEC_DOCUMENT_INVALID` warnings, and an unknown
-   `list --status` value is a `SPEC_LIST_STATUS_UNKNOWN` notice (3.4); both go to stderr (under `notices` in JSON).
+2. **Warnings and notices**: files the index left out are `DOCS_DOCUMENT_INVALID` warnings, and an unknown
+   `list --status` value is a `DOCS_LIST_STATUS_UNKNOWN` notice (3.4); both go to stderr (under `notices` in JSON).
    They MUST NOT change the exit code, except a warning under `--strict`.
 3. **Namespaces ignored for identity**: `resolve` and `refs` MUST resolve IDs repository-wide whatever namespace is
    selected; only `list` (and `search`) narrows by namespace.
 
-### 3.2 `devkit spec resolve ID...`
+### 3.2 `devkit docs resolve ID...`
 
 1. Prints one `[DOCUMENT: ...]` line per resolved ID, in argument order. An ID argument may be an alias
    (`CAP-DOCS-document-model` section 3.5): the line names the canonical document and adds `alias=<alias>`; no notice
    is emitted.
 2. Each unresolved or duplicated ID (a colliding alias included) MUST be reported as an error after the lines that
-   did resolve (`SPEC_ID_UNRESOLVED`, `SPEC_ID_DUPLICATE`); the command then exits `2`.
+   did resolve (`DOCS_ID_UNRESOLVED`, `DOCS_ID_DUPLICATE`); the command then exits `2`.
 
-### 3.3 `devkit spec refs ID`
+### 3.3 `devkit docs refs ID`
 
 1. `--direction out` (default) lists the documents ID references; `--direction in` the documents that reference ID.
 2. One `[REF: <id> ...]` line per document on the other side, in ID order. `fields` lists where the references are
    (`body` or frontmatter field names, sorted, comma-separated), `count` how many references there are.
 3. `path=-` and `status=-` mark an ID that no single document declares: a dangling reference, or a duplicated ID.
 4. The `proposal` provenance field is not a reference and MUST NOT appear.
-5. An unresolvable ID argument fails with `SPEC_ID_UNRESOLVED` or `SPEC_ID_DUPLICATE` (exit `2`); an alias argument
+5. An unresolvable ID argument fails with `DOCS_ID_UNRESOLVED` or `DOCS_ID_DUPLICATE` (exit `2`); an alias argument
    names its document.
 6. **Aliases**: `--direction in` includes references written with an alias that resolves to the document;
    `--direction out` groups a reference written with an alias under its canonical ID, as one target with the
    references written either way.
 
-### 3.4 `devkit spec list [KIND]...`
+### 3.4 `devkit docs list [KIND]...`
 
 1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `ux`, `architecture`, `decision`, `proposal`,
    `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material`, `milestone` (default: all).
@@ -80,7 +80,7 @@ changes an argument, output, code or exit status.
      history hiding: the documents whose status it names are listed whatever their history. Status vocabularies
      come from the templates, which a project may override, so a value is never rejected: one that no indexed
      document of the selected kinds (every kind without `KIND`) carries as the status `list` shows (a draft
-     proposal in Planning shows `reviewing`), historical or in another namespace included, adds one `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
+     proposal in Planning shows `reviewing`), historical or in another namespace included, adds one `DOCS_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
      its `[FIX]` (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
      gives an empty page plus the notice.
    - `--area/-a TEXT`: case-insensitive substring of the frontmatter `area`.
@@ -99,7 +99,7 @@ changes an argument, output, code or exit status.
    - `--file PATH`: documents whose frontmatter `entrypoints` overlap the workspace-relative path: an entry equal to
      it, under it, or a directory containing it (whole path segments, case-sensitive; `CAP-TRACE-code-entrypoints`).
      The path need not exist, so a deleted file still finds its documents; a path that breaks the entrypoint path
-     contract (absolute, a glob, a `..` segment) MUST fail with `SPEC_ENTRYPOINTS_PATH_INVALID` (exit `2`) before
+     contract (absolute, a glob, a `..` segment) MUST fail with `DOCS_ENTRYPOINTS_PATH_INVALID` (exit `2`) before
      any document is read. Only capabilities and use cases declare `entrypoints`.
    - `--namespace NAME` / `--all-namespaces`: the namespace selection (`CAP-DOCS-namespaces`). Default: the namespace
      of the current directory plus the global documents.
@@ -119,7 +119,7 @@ changes an argument, output, code or exit status.
    historical (`0` with `--history` or `--status`).
 3. When more items follow, `[NEXT_CMD: uv run devkit spec ...]` repeats the command with every given filter, `-w` when it
    was given, `--limit` and the next `--offset`; each `--where` is repeated as given, in order.
-4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: uv run devkit spec list ... --history]` last: the command with
+4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: uv run devkit docs list ... --history]` last: the command with
    every given filter, `--history`, `-w` when it was given and `--limit` when it is not the default.
 
 ## 4. Interfaces & Data Contracts
@@ -127,15 +127,15 @@ changes an argument, output, code or exit status.
 ### 4.1 Usage
 
 ```bash
-devkit spec resolve CAP-CORE-search UC-find-docs     # the path of each ID
-devkit spec refs CAP-CORE-search                      # what it references
-devkit spec refs CAP-CORE-search --direction in       # what references it
-devkit spec list usecase --status active --area core  # browse
-devkit spec list capability --file src/engine/        # documents owning a code path
-devkit spec list spec --history --all-namespaces      # completed bundles too, every package
-devkit spec list milestone --history                 # include done/dropped milestones
-devkit spec list feedback --where severity=critical -n 0   # open critical feedback (settled ones are historical)
-devkit spec list feedback --status resolved            # resolved feedback, without --history
+devkit docs resolve CAP-CORE-search UC-find-docs     # the path of each ID
+devkit docs refs CAP-CORE-search                      # what it references
+devkit docs refs CAP-CORE-search --direction in       # what references it
+devkit docs list usecase --status active --area core  # browse
+devkit docs list capability --file src/engine/        # documents owning a code path
+devkit docs list spec --history --all-namespaces      # completed bundles too, every package
+devkit docs list milestone --history                 # include done/dropped milestones
+devkit docs list feedback --where severity=critical -n 0   # open critical feedback (settled ones are historical)
+devkit docs list feedback --status resolved            # resolved feedback, without --history
 ```
 
 ### 4.2 Text Output
@@ -148,8 +148,8 @@ devkit spec list feedback --status resolved            # resolved feedback, with
 [DOCUMENT: PROP-search kind=proposal status=draft path=docs/proposals/PROP-search/proposal.md task_kind=feature planning_effort=medium dev_effort=medium title="Search"]
 [DOCUMENT: FB-slow-sync kind=feedback status=open path=specs/2026-10/feedback/20261013-slow-sync.md severity=critical scope=upstream target="devkit sync" title="Sync blocks"]
 [PAGE: total=42 offset=0 limit=20 count=20 next=20 hidden=3]
-[NEXT_CMD: uv run devkit spec list spec --limit 20 --offset 20]
-[HISTORY_CMD: uv run devkit spec list spec --history]
+[NEXT_CMD: uv run devkit docs list spec --limit 20 --offset 20]
+[HISTORY_CMD: uv run devkit docs list spec --history]
 ```
 
 `resolve` prints `[DOCUMENT: <id> kind= status= path=]`, with `alias=<alias>` appended when the argument was an
@@ -175,10 +175,10 @@ notices always exit `0`.
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
-| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID; `[TARGET]` lists them. |
-| `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read or has malformed frontmatter; it is left out. A `refs` that then fails (`SPEC_ID_UNRESOLVED`) still reports these warnings, before the error in text and under `notices` of `{"error": ...}` in JSON. |
+| `DOCS_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
+| `DOCS_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID; `[TARGET]` lists them. |
+| `DOCS_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read or has malformed frontmatter; it is left out. A `refs` that then fails (`DOCS_ID_UNRESOLVED`) still reports these warnings, before the error in text and under `notices` of `{"error": ...}` in JSON. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
 | `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.SpecConfigError` | `list`: a malformed `[tool.spec]` table, namespaces included (`CAP-DLV-project-policy`). |
-| `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
-| `SPEC_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_spec.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (a draft proposal in Planning shows `reviewing`), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |
+| `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
+| `DOCS_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_spec.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (a draft proposal in Planning shows `reviewing`), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |

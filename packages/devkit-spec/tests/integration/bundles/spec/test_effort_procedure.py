@@ -108,7 +108,7 @@ def test_high_planning_runs_scout_and_the_request_reports_its_absence() -> None:
     assert "`scout` and `challenger` required" in planning_row.split("|")[-2]
     loop = _section(text(LOOP), "## 5. Planning at `high`")
     assert "run `scout` before the first `challenger`" in loop
-    assert "`devkit spec refs <ID> --direction in` for each capability and ADR the proposal touches" in loop
+    assert "`devkit docs refs <ID> --direction in` for each capability and ADR the proposal touches" in loop
     proposal = text(BUNDLE / "workflows/sdd-proposal.md")
     assert "or a `scout` at `high` that left none, the request names the gap" in proposal
     orchestrate = text(BUNDLE / "skills/spec-orchestrate/SKILL.md")

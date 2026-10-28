@@ -13,4 +13,4 @@ Fill the `spec.md` skeleton's sections at the `specify` stage, under the shared 
 5. **Security, privacy and compliance**: add this section only when the change has permission boundaries, sensitive
    data or auth constraints.
 6. Leave `related_capabilities` or `related_usecases` as `[]` when none exist; every listed ID resolves
-   (`devkit spec resolve <ID>`).
+   (`devkit docs resolve <ID>`).

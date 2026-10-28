@@ -6,13 +6,9 @@ from typing import Any
 
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_docs.base.errors import EntrypointsPathError
 
-from devkit_spec.base.errors import (
-    EntrypointsPathError,
-    ProposalNotFoundError,
-    ScopeInputInvalidError,
-    ScopeSpecNotFoundError,
-)
+from devkit_spec.base.errors import ProposalNotFoundError, ScopeInputInvalidError, ScopeSpecNotFoundError
 from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, SKELETON_MARKER, TARGET_DOCS
 from devkit_spec.features.entrypoints import (
     Reason,

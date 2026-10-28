@@ -353,13 +353,13 @@ def graph_root(tmp_path: Path) -> Path:
         "packages/devkit-spec/src/devkit_spec/__init__.py": "VERSION = 1\n",
         "packages/devkit-spec/src/devkit_spec/features/scope/__init__.py": "from .models.registry import register\n",
         "packages/devkit-spec/src/devkit_spec/features/scope/models/registry.py": "def register(): pass\n",
-        "packages/devkit-spec/src/devkit_spec/features/documents.py": "VALUE = 3\n",
+        "packages/devkit-docs/src/devkit_docs/features/documents.py": "VALUE = 3\n",
         "packages/devkit-spec/tests/test_scope.py": "from devkit_spec.features.scope import register\n",
-        "packages/devkit-spec/tests/test_documents.py": "from devkit_spec.features.documents import VALUE\n",
+        "packages/devkit-spec/tests/test_documents.py": "from devkit_docs.features.documents import VALUE\n",
         "packages/devkit-spec/tests/test_root.py": "import devkit_spec\n",
         "packages/devkit-spec/tests/test_cli.py": "from devkit_dist.cli import cli\n",
         "packages/devkit/tests/external/test_consumer.py": "import devkit_spec.features.scope.models.registry\n",
-        "packages/devkit/tests/external/test_unrelated.py": "import devkit_spec.features.documents\n",
+        "packages/devkit/tests/external/test_unrelated.py": "import devkit_docs.features.documents\n",
     }
     for name, content in files.items():
         put(tmp_path, name, content)
@@ -452,7 +452,7 @@ def test_transitive_function_local_helpers_and_cycles(affected: ModuleType, grap
 
 def test_conftest_only_applies_to_descendants(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, f"{SPEC_TESTS}/nested/conftest.py", "import devkit_spec.features.scope.models.registry")
-    put(graph_root, f"{SPEC_TESTS}/nested/test_nested.py", "import devkit_spec.features.documents")
+    put(graph_root, f"{SPEC_TESTS}/nested/test_nested.py", "import devkit_docs.features.documents")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
     assert f"{SPEC_TESTS}/nested/test_nested.py" in selection.paths
     assert f"{SPEC_TESTS}/test_documents.py" not in selection.paths
@@ -461,7 +461,7 @@ def test_conftest_only_applies_to_descendants(affected: ModuleType, graph_root: 
 def test_relative_helpers_and_ambiguous_pythonpath_are_conservative(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, f"{SPEC_TESTS}/nested/helper.py", "import devkit_spec.features.scope.models.registry")
     put(graph_root, f"{SPEC_TESTS}/nested/test_relative.py", "from .helper import value")
-    put(graph_root, f"{SPEC_TESTS}/helper.py", "import devkit_spec.features.documents")
+    put(graph_root, f"{SPEC_TESTS}/helper.py", "import devkit_docs.features.documents")
     put(graph_root, f"{TESTS}/helper.py", "import devkit_spec.features.scope.models.registry")
     put(graph_root, f"{SPEC_TESTS}/test_ambiguous.py", "from helper import value")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
@@ -494,7 +494,7 @@ def test_ambiguous_module_inventory_selects_full(affected: ModuleType, graph_roo
 
 def test_opaque_and_wildcard_consumers_remain_broad(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, f"{SPEC_TESTS}/test_dynamic.py", "import importlib\nimportlib.import_module(module)")
-    put(graph_root, f"{SPEC_TESTS}/test_star.py", "from devkit_spec.features.documents import *")
+    put(graph_root, f"{SPEC_TESTS}/test_star.py", "from devkit_docs.features.documents import *")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
     assert {f"{SPEC_TESTS}/test_dynamic.py", f"{SPEC_TESTS}/test_star.py"} <= set(selection.paths)
 
@@ -555,7 +555,7 @@ def test_relative_helper_package_initializer_keeps_its_dependency(affected: Modu
     put(
         graph_root,
         f"{SPEC_TESTS}/test_package_helper.py",
-        "import devkit_spec.features.documents\nfrom . import helpers",
+        "import devkit_docs.features.documents\nfrom . import helpers",
     )
     assert f"{SPEC_TESTS}/test_package_helper.py" in affected.select(graph_root, [SCOPE_SOURCE]).paths
 
@@ -564,7 +564,7 @@ def test_relative_helper_package_initializer_keeps_its_dependency(affected: Modu
 def test_root_cli_coverage_survives_an_unrelated_fine_import(
     affected: ModuleType, graph_root: Path, consumer: str
 ) -> None:
-    put(graph_root, consumer, "from devkit_dist.cli import cli\nimport devkit_spec.features.documents")
+    put(graph_root, consumer, "from devkit_dist.cli import cli\nimport devkit_docs.features.documents")
     assert consumer in affected.select(graph_root, [SCOPE_SOURCE]).paths
 
 

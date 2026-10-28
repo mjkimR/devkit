@@ -7,7 +7,7 @@ x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]
 hosts:
-  # Shell access runs `devkit spec resolve` and `devkit rules check`; disallowedTools prevents file writes.
+  # Shell access runs `devkit docs resolve` and `devkit rules check`; disallowedTools prevents file writes.
   claude-code:
     status: native
     tools: [Read, Grep, Glob, Bash]

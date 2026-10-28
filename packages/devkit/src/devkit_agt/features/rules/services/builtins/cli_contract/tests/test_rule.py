@@ -165,7 +165,7 @@ def test_an_option_value_is_not_read_as_a_subcommand(tmp_path: Path) -> None:
 def test_exclude_and_unchecked_commands(tmp_path: Path) -> None:
     files = {
         "docs/decisions/adr.md": "`devkit scope finish`\n",
-        "docs/plugins.md": "`devkit spec list` and `devkit scope update --planned`\n",
+        "docs/plugins.md": "`devkit docs list` and `devkit scope update --planned`\n",
         "docs/guide.md": "`devkit scope finish`\n",
     }
     settings = {"exclude": ["docs/decisions/**"], "unchecked_commands": ["spec", "scope update"]}

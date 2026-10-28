@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_spec.features.documents import Document, DocumentIndex
+from devkit_docs.features.documents import Document, DocumentIndex
+
 from spec_support.types import Write
 
 BUNDLE = "specs/2026-10/20261001-one"

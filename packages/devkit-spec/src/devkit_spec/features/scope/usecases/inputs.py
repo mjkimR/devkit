@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit_core.core import GitError, run_git
+from devkit_docs.base.errors import EntrypointsPathError
 
-from devkit_spec.base.errors import EntrypointsPathError
 from devkit_spec.features.entrypoints import normalize
 from devkit_spec.features.proposals.usecases.scaffold import clean_slug
 from devkit_spec.features.scope.models.deadline import Deadline

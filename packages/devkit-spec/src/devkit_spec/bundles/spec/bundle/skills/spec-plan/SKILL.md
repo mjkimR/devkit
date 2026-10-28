@@ -11,8 +11,8 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
 
 ## Procedure
 
-1. **Invariants**: check the design against accepted ADRs (`devkit spec search "<topic>" --kind decision`),
-   `docs/architecture/` and the capabilities it touches (`devkit spec refs <CAP-ID> --direction in`).
+1. **Invariants**: check the design against accepted ADRs (`devkit docs search "<topic>" --kind decision`),
+   `docs/architecture/` and the capabilities it touches (`devkit docs refs <CAP-ID> --direction in`).
 2. **Changed invariant**: if an architectural rule that must hold has to change, propose an ADR
    (`docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, template `.devkit/managed/spec/templates/decision.md`).
 3. **Choices**: inside the agreed intent, take the recommended option and record its reason. Outside it, raise a

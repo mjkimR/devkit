@@ -29,8 +29,7 @@ from pathlib import PurePosixPath
 from devkit_agt.features.rules import LineKind, Phase, RuleContext, Severity, Violation, match_path, scan
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
-
-from devkit_spec.features.governance import explicitly_targeted
+from devkit_docs.features.governance import explicitly_targeted
 
 RULE_ID = "RULE-task-coverage"
 COMPLETED = "completed"

@@ -8,6 +8,7 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
+from devkit_docs.utils.paths import _bundle_dir
 
 from devkit_spec.base.errors import (
     DEVKIT,
@@ -29,7 +30,6 @@ from devkit_spec.features.scope import (
     own,
 )
 from devkit_spec.features.scope.models.location import Location
-from devkit_spec.utils.paths import _bundle_dir
 
 
 def _spec_dir(root: Path, value: str | None) -> str:
@@ -37,7 +37,7 @@ def _spec_dir(root: Path, value: str | None) -> str:
         raise ArgumentError(
             "--spec <dir> is required",
             target_files=["--spec"],
-            fix=f"Pass --spec with a spec bundle directory ({DEVKIT} spec list spec --history lists them)",
+            fix=f"Pass --spec with a spec bundle directory ({DEVKIT} docs list spec --history lists them)",
         )
     relative = _bundle_dir(root, value)
     if not (root / relative).is_dir():

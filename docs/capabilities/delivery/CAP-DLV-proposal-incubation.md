@@ -108,7 +108,7 @@ removes it.
    (`SPEC_PROPOSAL_REJECTED_PENDING`, the `devkit.hygiene` extension) until its cleanup is done. Open questions of
    the last Planning run are closed with `choice: null` answers giving the rejection as the decision (01 §6.2), so
    they do not hold the merge of the Planning branch.
-10. **Discovery is dynamic**: active proposals are listed with `devkit spec list proposal`, never through catalog
+10. **Discovery is dynamic**: active proposals are listed with `devkit docs list proposal`, never through catalog
     tables maintained in README files. A `draft` whose `plan-<slug>` exists, locally or fetched from a remote, is
     listed as `reviewing` with its `planning_branch`: Planning is running there (01 §5.1). Only the display changes;
     the base's `status` is never written for it, and a branch made elsewhere shows once it is fetched.

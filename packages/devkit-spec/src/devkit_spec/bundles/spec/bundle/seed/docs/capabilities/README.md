@@ -22,8 +22,8 @@ capabilities/
 - **Authoring a New Capability**: Copy and adapt `.devkit/managed/spec/templates/capability.md`.
 - **Listing Registered Capabilities**: Dynamically discover capabilities via CLI frontmatter parsing:
   ```bash
-  devkit spec list capability
-  devkit spec list capability --area <area>
+  devkit docs list capability
+  devkit docs list capability --area <area>
   ```
 
 ## 2. Authoring Principles

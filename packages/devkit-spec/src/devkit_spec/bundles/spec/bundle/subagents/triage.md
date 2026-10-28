@@ -28,7 +28,7 @@ Group open feedback from a fresh context and recommend where each group goes. Yo
 ## Procedure
 
 1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md`, or its override under `.devkit/overrides/`.
-2. Apply its Step 1 to the feedback the payload names, by default `uv run devkit spec list feedback --status open --all-namespaces -n 0`: read each item's target and Evidence, confirm its ownership, group by target and order the groups.
+2. Apply its Step 1 to the feedback the payload names, by default `uv run devkit docs list feedback --status open --all-namespaces -n 0`: read each item's target and Evidence, confirm its ownership, group by target and order the groups.
 3. Apply its Step 2 table to each group: one recommended destination with its reason. Check each item against the other open items for a duplicate, and name an item without observed Evidence as a dismissal candidate.
 4. Read only; run no command that writes, and never run Step 3: a status change is the Host's, after the user's decision.
 

@@ -7,7 +7,7 @@ status: active
 usecases:
   - UC-find-the-right-documents
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/documents/services/namespaces.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/services/namespaces.py
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
 created_at: 2026-10-13
 ---
@@ -17,9 +17,9 @@ created_at: 2026-10-13
 ## 1. Summary
 
 A monorepo registers its packages as namespaces, each with its own Living Spec under `docs/packages/<name>/` (the
-same layout as `docs/`). A namespace narrows what browsing shows, never what exists: `devkit spec list` and
-`devkit spec search` show the selected namespace plus the global documents, while IDs, `resolve`, `refs` and the
-reference rules stay repository-wide. `devkit_spec.features.documents.services.namespaces` implements it.
+same layout as `docs/`). A namespace narrows what browsing shows, never what exists: `devkit docs list` and
+`devkit docs search` show the selected namespace plus the global documents, while IDs, `resolve`, `refs` and the
+reference rules stay repository-wide. `devkit_docs.features.documents.services.namespaces` implements it.
 
 ## 2. Scope & Boundary
 
@@ -96,8 +96,8 @@ path = "services/api"   # the package's source directory
 
 | Option | Commands | Effect |
 | --- | --- | --- |
-| `--namespace NAME` | `devkit spec list`, `devkit spec search` | `NAME` plus global documents; `global` for the global documents only. |
-| `--all-namespaces` | `devkit spec list`, `devkit spec search` | Every namespace. |
+| `--namespace NAME` | `devkit docs list`, `devkit docs search` | `NAME` plus global documents; `global` for the global documents only. |
+| `--all-namespaces` | `devkit docs list`, `devkit docs search` | Every namespace. |
 | `--namespace NAME` | `devkit spec new`, `devkit spec proposal new` | Writes the bundle's `namespace` field (`CAP-DLV-spec-bundles`, `CAP-DLV-proposal-incubation`). Omitted, the field is the namespace the current directory selects (section 3.3, rule 3), and none outside every package. |
 
 ### 4.3 Output
@@ -115,7 +115,7 @@ path = "services/api"   # the package's source directory
 
 ### 4.5 Library
 
-`devkit_spec.features.documents.services.namespaces`: `select` (the selection of the options or the current directory), `detect` (the namespace
+`devkit_docs.features.documents.services.namespaces`: `select` (the selection of the options or the current directory), `detect` (the namespace
 of a directory), `require` (validate a name), `namespace_resolver` (the namespace of each indexed document),
 `living_path` (`docs/packages/<name>/X` as the `docs/X` it mirrors, for the given namespaces or, given `None`, for
 every `docs/packages/<name>/`) and `docs_roots` (`docs` plus every namespace docs root).

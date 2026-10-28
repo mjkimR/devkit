@@ -15,7 +15,7 @@ EXISTING = {
     "docs/capabilities/delivery/CAP-DLV-a.md": "---\nid: CAP-DLV-a\n---\n",
     "docs/usecases/delivery/UC-a.md": "---\nid: UC-a\n---\n",
     "docs/packages/api/capabilities/core/CAP-CORE-a.md": "---\nid: CAP-CORE-a\n---\n",
-    CONFIG: '[[tool.spec.namespaces]]\nname = "api"\npath = "packages/api"\n',
+    CONFIG: '[[tool.docs.namespaces]]\nname = "api"\npath = "packages/api"\n',
 }
 
 

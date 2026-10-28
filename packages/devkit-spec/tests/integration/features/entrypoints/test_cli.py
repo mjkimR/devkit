@@ -130,7 +130,7 @@ def test_code_and_exclude_filters(bundles: Path) -> None:
     result = _derive(bundles, "--all", "--exclude", "src/other/", "--skipped")
     assert "[SKIPPED: src/other kind=boundary reason=excluded]" in result.stdout.splitlines()
     assert "src/pkg(2)" in result.stdout
-    assert _code(_derive(bundles, "--all", "--code", "../x", "--format", "json")) == "SPEC_ENTRYPOINTS_PATH_INVALID"
+    assert _code(_derive(bundles, "--all", "--code", "../x", "--format", "json")) == "DOCS_ENTRYPOINTS_PATH_INVALID"
 
 
 def test_unmatched_code_is_refused_before_writing(bundles: Path) -> None:
@@ -221,7 +221,7 @@ def test_invalid_documents_are_warnings(bundles: Path, write: Write) -> None:
     write("docs/usecases/x/UC-broken.md", "---\nid: [\n---\n")
     result = _derive(bundles, "--spec", "specs/2026-10/20261001-one")
     assert result.exit_code == 0
-    assert "(SPEC_DOCUMENT_INVALID)" in result.stderr
+    assert "(DOCS_DOCUMENT_INVALID)" in result.stderr
 
 
 def test_candidates_group_each_document_by_state() -> None:

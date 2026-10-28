@@ -18,7 +18,7 @@ neither drift nor consistency; a failing check proves only its own condition.
 
 ## 2. Collect evidence
 
-Use existing tools only: in a devkit-spec repository `devkit spec resolve <ID>`, `devkit spec refs <ID> --direction
+Use existing tools only: in a devkit-spec repository `devkit docs resolve <ID>`, `devkit docs refs <ID> --direction
 out` and entrypoints; `devkit rules check <path>` where installed; tests. Install nothing without asking. Compare
 documented commands, options, interfaces, terminology and behavior with implementation, tests and guidance.
 

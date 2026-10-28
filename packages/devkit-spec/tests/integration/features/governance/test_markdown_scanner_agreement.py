@@ -9,8 +9,8 @@ from __future__ import annotations
 import pytest
 from devkit_agt.features.rules import LineKind, count_tasks, scan
 from devkit_core.core.frontmatter import locate
+from devkit_docs.features.documents import visible_lines
 
-from devkit_spec.features.documents import visible_lines
 from devkit_spec.features.entrypoints import parse_boundaries
 from devkit_spec.features.governance.usecases.task_coverage import _covered, _defined
 from devkit_spec.features.proposals.services.body import demote_headings

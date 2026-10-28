@@ -74,8 +74,8 @@ spec = "devkit_spec.cli:cli"         # the command group mounted as `devkit spec
 
 | Command | Capability |
 | --- | --- |
-| `devkit spec resolve`, `refs`, `list` | `CAP-DOCS-document-lookup` |
-| `devkit spec search` | `CAP-DOCS-document-search` |
+| `devkit docs resolve`, `refs`, `list` | `CAP-DOCS-document-lookup` |
+| `devkit docs search` | `CAP-DOCS-document-search` |
 | `devkit spec entrypoints` | `CAP-TRACE-code-entrypoints` |
 | `devkit spec new` | `CAP-DLV-spec-bundles` |
 | `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check` | `CAP-DLV-proposal-incubation` |
@@ -111,7 +111,7 @@ After the items they print:
 
 ```text
 [PAGE: total=57 offset=0 limit=20 count=20 next=20 hidden=0]
-[NEXT_CMD: uv run devkit spec list capability --limit 20 --offset 20]
+[NEXT_CMD: uv run devkit docs list capability --limit 20 --offset 20]
 ```
 
 `next` is the offset of the following page, `-` on the last page; `[NEXT_CMD: ...]` repeats the command's own

@@ -81,7 +81,7 @@ repository-wide, so a slug is unique across `docs/` and every package.
 ## 3. Remediation
 
 1. Move the file to the required path (for a Living Spec document or milestone, the ID is the file stem; for a dated
-   document, use the decision or start date). `devkit rules fix` never moves files; `devkit spec resolve <ID>` finds
+   document, use the decision or start date). `devkit rules fix` never moves files; `devkit docs resolve <ID>` finds
    a document by ID.
 2. **Autofix**: `devkit rules fix` sets the `id` / `reconcile_id` and `area` lines (inserting a missing one: the ID as
    the first header line, `area` after the `id` line) and rewrites the heading token (in a spec bundle file, to

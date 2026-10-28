@@ -1,11 +1,11 @@
 """``RULE-document-reference``, loaded by ``devkit rules`` from this synchronized copy.
 
-The implementation is ``devkit_spec.features.governance.usecases.document_reference`` in the installed devkit-spec package; the class
+The implementation is ``devkit_docs.features.governance.usecases.document_reference`` in the installed devkit-spec package; the class
 defined here is what ``devkit rules`` instantiates, and the guide beside this file is what ``devkit rules explain``
 prints.
 """
 
-from devkit_spec.features.governance.usecases.document_reference import DocumentReferenceRule as _Implementation
+from devkit_docs.features.governance.usecases.document_reference import DocumentReferenceRule as _Implementation
 
 
 class DocumentReferenceRule(_Implementation):

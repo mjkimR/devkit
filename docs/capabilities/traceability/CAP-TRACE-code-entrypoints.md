@@ -10,7 +10,7 @@ usecases:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/entrypoints/
   - packages/devkit-spec/src/devkit_spec/features/entrypoints/cli/commands.py
-  - packages/devkit-spec/src/devkit_spec/features/governance/usecases/code_entrypoints.py
+  - packages/devkit-docs/src/devkit_docs/features/governance/usecases/code_entrypoints.py
 created_at: 2026-10-13
 ---
 
@@ -20,7 +20,7 @@ created_at: 2026-10-13
 
 Capabilities and use cases MAY declare `entrypoints` in their frontmatter: the files and directories where their
 implementation starts. An entrypoint is an anchor for finding code from a document and documents from code. devkit-spec
-keeps the declarations alive (`RULE-code-entrypoints`), finds documents by path (`devkit spec list --file`,
+keeps the declarations alive (`RULE-code-entrypoints`), finds documents by path (`devkit docs list --file`,
 `CAP-DOCS-document-lookup`) and proposes declarations from the spec bundles that already name both sides
 (`devkit spec entrypoints derive`). `devkit_spec.features.entrypoints` implements it.
 
@@ -57,7 +57,7 @@ entrypoints:
    `.` is the whole workspace. Files and directories are both allowed.
 3. A path MUST NOT be empty, absolute, contain a `..` segment, a backslash, a colon (drive), a glob character (`*`,
    `?`, `[`, `]`), NUL or a line break. Where a command takes a path argument under this contract, a violation fails
-   with `SPEC_ENTRYPOINTS_PATH_INVALID`.
+   with `DOCS_ENTRYPOINTS_PATH_INVALID`.
 4. Paths compare by whole segments, case-sensitively: `src/a` covers `src/a/b.py`, not `src/ab`.
 5. **Entrypoint-bearing documents** are the Markdown files under `docs/capabilities/` and `docs/usecases/`, and under
    the same directories of a namespace docs root `docs/packages/<name>/` (`CAP-DOCS-namespaces`).
@@ -80,9 +80,9 @@ Phase `linter`, severity `error`, not fixable (`CAP-GOV-spec-rules`).
 
 ### 3.3 Reverse Query
 
-`devkit spec list [capability|usecase] --file <path>` lists the documents whose `entrypoints` equal the path, lie under
+`devkit docs list [capability|usecase] --file <path>` lists the documents whose `entrypoints` equal the path, lie under
 it, or are a directory containing it (`CAP-DOCS-document-lookup`). The path need not exist, so a deleted file still
-finds its documents; it MUST follow the path contract (`SPEC_ENTRYPOINTS_PATH_INVALID`).
+finds its documents; it MUST follow the path contract (`DOCS_ENTRYPOINTS_PATH_INVALID`).
 
 ### 3.4 Derivation Inputs
 
@@ -125,7 +125,7 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
    `spec.md` is optional and labels the bundle with its ID (the directory name without one).
 2. **`--all`** derives every bundle whose `specs/<YYYY-MM>/<bundle>/spec.md` status is in `--status` (default
    `completed,in-progress`, comma-separated, case-insensitive), in spec ID order. Bundles come from the document index:
-   a `spec.md` with malformed frontmatter is a `SPEC_DOCUMENT_INVALID` warning and its bundle is left out. A bundle
+   a `spec.md` with malformed frontmatter is a `DOCS_DOCUMENT_INVALID` warning and its bundle is left out. A bundle
    without inputs is skipped (`kind=bundle`, `input-missing` or `invalid-input`). Pairs are merged by (document,
    path): folded pairs are left out, each merged pair carries `count` (the number of specs that produced it) and
    `specs`, and pairs below `--min-count` (default `1`) are dropped.
@@ -142,7 +142,7 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
      and let `--apply` write the other selections of a run with one mistyped path.
 4. **`--exclude <path>`** (repeatable) drops candidates equal to or under a path (hub files every bundle touches) and
    reports each as `reason=excluded` (`kind=boundary`).
-5. `--code` and `--exclude` values follow the path contract (`SPEC_ENTRYPOINTS_PATH_INVALID`).
+5. `--code` and `--exclude` values follow the path contract (`DOCS_ENTRYPOINTS_PATH_INVALID`).
 
 ### 3.6 Apply
 
@@ -226,7 +226,7 @@ Option conflicts fail with devkit's `ARGUMENT_INVALID`: `--spec` with `--all` or
 One object: `pairs` (`doc`, `doc_path`, `code`, then `spec`, `task`, `folded_into`, or `count` and `specs` with
 `--all`, then `state`, `exists`), `skipped` (`kind`, `value`, `spec`, `task`, `reason`), `applied` (`doc`,
 `doc_path`, `added`), `summary` (`pairs`, `new`, `declared`, `skipped`, `applied`), `errors` and `notices`. Files that
-could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
+could not be indexed are `DOCS_DOCUMENT_INVALID` warnings under `notices`.
 
 ### 4.4 Exit Codes
 
@@ -239,18 +239,18 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 | --- | --- | --- | --- |
 | `SPEC_ENTRYPOINTS_INPUT_MISSING` | `ERROR` (`INPUT_ERROR`) | `EntrypointsInputMissingError` | `--spec`: the bundle has no `tasks.md` or `reconcile.md`. |
 | `SPEC_ENTRYPOINTS_INPUT_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsInputInvalidError` | `--spec`: `tasks.md` or `reconcile.md` cannot be read, or `reconcile.md` has no frontmatter or malformed `targets`. |
-| `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsPathError` | A `--code` or `--exclude` path, or a `devkit spec list --file` path, breaks the path contract. |
+| `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsPathError` | A `--code` or `--exclude` path, or a `devkit docs list --file` path, breaks the path contract. |
 | `SPEC_ENTRYPOINTS_TARGET_UNKNOWN` | `ERROR` (`INPUT_ERROR`) | `EntrypointsTargetError` | A `--target` ID or alias names no document, or the document or path is not among the derived documents. |
 | `SPEC_ENTRYPOINTS_CODE_UNMATCHED` | `ERROR` (`INPUT_ERROR`) | `EntrypointsCodeUnmatchedError` | A `--code` path equals, contains and lies under no candidate of the derived documents (of the `--target` documents with `--apply`); `[TARGET]` lists them and nothing is written. |
 | `SPEC_ENTRYPOINTS_APPLY_FAILED` | `ERROR` (`MAINTENANCE`) | `EntrypointsApplyError` | `--apply` could not read or write some documents, or their `entrypoints` is not a list of strings; `[TARGET]` lists them, the documents listed as applied were written. |
-| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents, or no document has it as its ID and several declare it as an alias. |
-| `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file could not be indexed; a malformed `spec.md` leaves its bundle out of `--all`. |
+| `DOCS_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents, or no document has it as its ID and several declare it as an alias. |
+| `DOCS_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file could not be indexed; a malformed `spec.md` leaves its bundle out of `--all`. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | An option conflict (section 4.1). |
 
 ### 4.6 Library
 
 `devkit_spec.features.entrypoints`: `normalize`, `covers`, `overlaps`, `exists`, `entrypoint_bearing` (the path contract;
-it maps every `docs/packages/<name>/` through `devkit_spec.features.documents.services.namespaces.living_path`, registered or not, so it needs no
+it maps every `docs/packages/<name>/` through `devkit_docs.features.documents.services.namespaces.living_path`, registered or not, so it needs no
 configuration); `load_bundle`, `parse_boundaries` (inputs); `derive`, `aggregate`, `select`, `exclude`,
 `classify_boundary`, `declared_entrypoints`, `fold_by_directory_selectors`, `adopt_nested_selectors`,
 `unmatched_selectors` (pairs); `feedback_file` (whether a path

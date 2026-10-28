@@ -39,6 +39,8 @@ extraPaths = [
     "./packages/devkit-advisory/src",
     "./packages/devkit-starter/src",
     "./packages/devkit-catalog/src",
+    "./packages/devkit-docs/src",
+    "./packages/devkit-docs/tests/support",
     "./packages/devkit-spec/src",
     "./packages/devkit-spec/tests/support",
     "./packages/devkit-viewer/src",
@@ -49,6 +51,7 @@ extraPaths = [
 [dependency-groups]
 dev = [
     "devkit-agt[search,mcp]",  # optional runtimes exercised by tests and consumer smoke
+    "devkit-docs[search]",
     "devkit-spec[search]",
     "devkit-viewer",
     "devkit-dev",
@@ -63,6 +66,7 @@ dev = [
 devkit-agt = { workspace = true }
 devkit-advisory = { workspace = true }
 devkit-dist = { workspace = true }
+devkit-docs = { workspace = true }
 devkit-embed = { path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" }
 devkit-spec = { workspace = true }
 devkit-viewer = { workspace = true }
@@ -82,6 +86,7 @@ testpaths = [
     "packages/devkit-starter/tests",
     "packages/devkit-catalog/tests",
     "packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules",
+    "packages/devkit-docs/tests",
     "packages/devkit-spec/tests",
     "packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules",
     "packages/devkit-viewer/tests",
@@ -91,6 +96,7 @@ testpaths = [
 pythonpath = [
     "packages/devkit-dist/tests/support",
     "packages/devkit/tests/support",
+    "packages/devkit-docs/tests/support",
     "packages/devkit-spec/tests/support",
     "packages/devkit-viewer/tests/support",
     "tools/devkit-dev/tests",

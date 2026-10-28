@@ -3,11 +3,11 @@ them."""
 
 import re
 
-PROPOSALS = "docs/proposals"
-PROPOSAL_FILE = "proposal.md"
-TARGET_DOCS = "target-docs.md"
-# devkit's not-skeleton check: specify stays open until the spec, plan and tasks are written and the line removed.
-SKELETON_MARKER = "<!-- devkit:skeleton -->"
+# The layout names the document layer validates; delivery modules read them from here.
+from devkit_docs.base.layout import PROPOSAL_FILE as PROPOSAL_FILE
+from devkit_docs.base.layout import PROPOSALS as PROPOSALS
+from devkit_docs.base.layout import SKELETON_MARKER as SKELETON_MARKER
+from devkit_docs.base.layout import TARGET_DOCS as TARGET_DOCS
 
 PROPOSAL_UNIT = re.compile(r"(?:.+/)?docs/proposals/PROP-(?P<slug>[^/]+)")
 SPEC_UNIT = re.compile(r"(?:.+/)?specs/\d{4}-\d{2}/\d{8}-(?P<slug>[^/]+)")

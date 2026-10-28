@@ -15,11 +15,18 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from devkit_spec.base.errors import EntrypointsPathError
-from devkit_spec.features.documents import Document
+from devkit_docs.base.errors import EntrypointsPathError
+from devkit_docs.features.documents import Document
+from devkit_docs.features.governance.services.entrypoint_paths import (
+    ROOT,
+    covers,
+    entrypoint_bearing,
+    exists,
+    normalize,
+)
+
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
 from devkit_spec.features.entrypoints.repositories.bundle import Bundle
-from devkit_spec.features.entrypoints.services.paths import ROOT, covers, entrypoint_bearing, exists, normalize
 
 NOT_APPLICABLE = ("n/a", "none")
 EXCLUDED_TREES = ("docs", "specs")

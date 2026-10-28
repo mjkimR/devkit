@@ -5,11 +5,11 @@ import os
 from pathlib import Path
 
 import pytest
+from devkit_docs.features.documents import DocumentIndex
 from spec_support.proposals import MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
-from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.proposals import create_proposal, handoff_proposal
 from devkit_spec.features.proposals.usecases import handoff as handoff_module
 from devkit_spec.features.proposals.usecases import specs as specs_module

@@ -33,14 +33,14 @@ One observation, one file, committed with the work. Capture writes `status: open
    - Spec Unit work: `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<name>.md` in the current spec bundle.
    - Otherwise: `specs/<YYYY-MM>/feedback/<YYYYMMDD>-<name>.md`, today's date.
 
-   `<name>` is kebab-case and unused (`devkit spec resolve FB-<name>` finds nothing).
+   `<name>` is kebab-case and unused (`devkit docs resolve FB-<name>` finds nothing).
 3. Fill it from the [feedback template](references/template.md):
    - `target` names the asset path or command a maintainer should open.
    - `origin: user` when the user raised the point. If the user's word is the only support, record a `question`.
    - Write your own assessment of the merits, never "the user asked for it".
    - `severity: critical` only when the next task here will certainly block at the same point.
    - `recurring: true` when you have seen this before in this repository.
-4. Return to the task; `devkit spec list feedback` discovers the file.
+4. Return to the task; `devkit docs list feedback` discovers the file.
 
 Read the [sweep procedure](references/sweep.md) for a `collect-feedback` or `report-session` stage, a Planning run's
 return or an explicit user-requested session sweep.

@@ -309,7 +309,7 @@ docs/
 └── development/setup.md, workflow.md, ci-cd.md
 ```
 
-The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
+The directory READMEs state each directory's naming and authoring conventions and point at `devkit docs list` for
 discovery instead of catalog tables.
 
 The seeded `steering/glossary.md` (steering frontmatter `title` and `summary`) table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):

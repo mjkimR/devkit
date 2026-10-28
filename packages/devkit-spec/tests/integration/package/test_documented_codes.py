@@ -12,7 +12,7 @@ CODE = re.compile(r"""\bcode\s*(?::\s*str\s*)?=\s*["']([A-Z][A-Z0-9_]+)["']""")
 
 def test_every_code_is_documented() -> None:
     codes = {match.group(1) for path in SRC.rglob("*.py") for match in CODE.finditer(path.read_text())}
-    assert "SPEC_ID_UNRESOLVED" in codes  # the scan works
+    assert "SPEC_CONFIG_INVALID" in codes  # the scan works
     documented = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "docs").rglob("*.md"))
     assert sorted(code for code in codes if f"`{code}`" not in documented) == []
 

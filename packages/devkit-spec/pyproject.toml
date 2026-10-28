@@ -8,11 +8,12 @@ dependencies = [
     "devkit-core==0.1.4",
     "click>=8.1.7",
     "devkit-agt==0.1.4",
+    "devkit-docs==0.1.4",
 ]
 
 [project.optional-dependencies]
-# Dense and hybrid `devkit spec search`: devkit's search extra (numpy, tokenizers, the embedding model).
-search = ["devkit-agt[search]"]
+# Dense and hybrid `devkit docs search`, through devkit-docs' search extra.
+search = ["devkit-docs[search]"]
 
 # The bundle: deployed by `devkit sync` (auto_select).
 [project.entry-points."devkit.bundles"]
@@ -39,6 +40,10 @@ spec = "devkit_spec.features.delivery.usecases.attach:attach_check"
 [project.entry-points."devkit.hygiene"]
 spec-rejected-proposals = "devkit_spec.features.governance.usecases.hygiene:rejected_proposals"
 
+# Status overlay: `devkit docs list` shows a draft proposal whose plan-<slug> branch exists as reviewing.
+[project.entry-points."devkit.docs.status_overlay"]
+spec = "devkit_spec.features.proposals.services.planning:planning_overlay"
+
 # Config template extension: `devkit config template` writes the commented [tool.spec] tables into .devkit/config.toml.
 [project.entry-points."devkit.config_template"]
 spec = "devkit_spec.features.policy.services.config:template"
@@ -54,6 +59,7 @@ dev = [
 [tool.uv.sources]
 devkit-core = { workspace = true }
 devkit-agt = { workspace = true }
+devkit-docs = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

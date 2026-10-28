@@ -156,10 +156,10 @@ def test_triage_returns_groups_and_never_changes_a_status() -> None:
 def test_the_decomposer_returns_children_edges_and_an_exit_without_feedback_assignment() -> None:
     body = flat(_contract("decomposer")[1])
     for phrase in (
-        "`uv run devkit spec refs PROP-<slug> --direction in -n 0`",
+        "`uv run devkit docs refs PROP-<slug> --direction in -n 0`",
         "return `needs_input` with the reason",
         "every child is below `size: XL`",
-        "a proposed `slug` (one that `devkit spec resolve PROP-<slug>` does not find), `title`, English `summary`, `scope`",
+        "a proposed `slug` (one that `devkit docs resolve PROP-<slug>` does not find), `title`, English `summary`, `scope`",
         "`planning_effort` and `dev_effort` chosen afresh, `boundaries` by nearest existing parent, `depends_on` edges",
         "the parent PADRs, answers and materials it inherits, or none",
         "`incoming_edges`",

@@ -11,8 +11,8 @@ verification by effort is in its `references/effort.md` and `references/review-l
 
 ## Steps
 
-1. **Impact**: from `spec.md` and the code changes, find affected documents (`devkit spec refs <ID> --direction in`,
-   `devkit spec search "<topic>"`). Update or create capabilities, use cases (templates in
+1. **Impact**: from `spec.md` and the code changes, find affected documents (`devkit docs refs <ID> --direction in`,
+   `devkit docs search "<topic>"`). Update or create capabilities, use cases (templates in
    `.devkit/managed/spec/templates/`) and `docs/architecture/`; if the change did introduce or rename a domain term,
    update `docs/steering/glossary.md` where it exists. Write no index tables in directory `README.md` files.
    - Screens: write each draft of the spec's `Screens` section to `docs/ux/<area>/UX-<slug>.md` (template `ux`), the

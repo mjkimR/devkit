@@ -37,7 +37,7 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
 ```
 
 - Leave out what Git, `reconcile.md` and the latest review envelope already hold. Record assumptions the user should see with `--assume`.
-- If `devkit spec list feedback --status open --where severity=critical` lists items, add each to the report presented to the user as one line, `FB-<slug> → <target>`.
+- If `devkit docs list feedback --status open --where severity=critical` lists items, add each to the report presented to the user as one line, `FB-<slug> → <target>`.
 
 ## 3. Integration result (after `spec-integrate`)
 

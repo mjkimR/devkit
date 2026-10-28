@@ -11,7 +11,7 @@ while additional scope is not authored. Use unit depends_on for PROP/SPEC prereq
 MS-only.
 
 Exit conditions are recommended to state observable phase-level outcomes and capability boundaries. Keep CLI flags, branch
-names, file layouts and scenario tests in proposals/specs. Use devkit spec list milestone to discover current
+names, file layouts and scenario tests in proposals/specs. Use devkit docs list milestone to discover current
 milestones and --history to include done/dropped records. Existing transition authority is unchanged.
 
 Close planned/active milestones through Backlog: review sufficient decomposition, settled direct proposal work

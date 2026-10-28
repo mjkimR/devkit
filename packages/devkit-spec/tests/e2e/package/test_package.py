@@ -14,9 +14,8 @@ from click.testing import CliRunner
 from devkit_dist.cli import COMMANDS
 from devkit_dist.cli import cli as devkit_cli
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_docs.features.documents import DocumentIndex
 from spec_support import bundle_text
-
-from devkit_spec.features.documents import DocumentIndex
 
 ROOT = Path(__file__).resolve().parents[3]
 BUNDLE = ROOT / "src/devkit_spec/bundles/spec/bundle"
@@ -112,10 +111,10 @@ def test_devkit_config_template_writes_the_spec_tables(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["notices"] == []
-    assert {"tool.spec", "tool.spec.namespaces", "tool.spec.scope"} <= set(payload["added"])
+    assert {"tool.spec", "tool.docs.namespaces", "tool.spec.scope"} <= set(payload["added"])
     text = (tmp_path / ".devkit/config.toml").read_text(encoding="utf-8")
     assert (
-        '# [tool.spec]\n#   worktree = "auto"  # "auto" | "required";' in text and "# [[tool.spec.namespaces]]" in text
+        '# [tool.spec]\n#   worktree = "auto"  # "auto" | "required";' in text and "# [[tool.docs.namespaces]]" in text
     )
     assert tomllib.loads(text) == {"schema": 1}  # every line it wrote is a comment
 
@@ -152,5 +151,5 @@ def test_roadmap_template_and_guidance_are_packaged() -> None:
     backlog = bundle_text.text("skills/spec/references/backlog.md")
     selection = bundle_text.text("skills/spec-next/references/next-work.md")
     assert "--decomposed-from" in backlog and "[milestone completion](milestone-completion.md)" in backlog
-    assert "devkit spec list milestone --all-namespaces -n 0" in selection
+    assert "devkit docs list milestone --all-namespaces -n 0" in selection
     assert (BUNDLE / "seed/docs/roadmap/README.md").is_file()

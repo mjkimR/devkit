@@ -60,7 +60,7 @@ def check_arguments(slug: str, sha: str | None) -> None:
             f"{slug!r} is not a proposal slug",
             target_files=["SLUG"],
             fix="Pass the slug of an existing proposal: lowercase letters, digits and single hyphens, at most 59 "
-            f"characters ({devkit_command('spec list proposal')} shows them)",
+            f"characters ({devkit_command('docs list proposal')} shows them)",
         )
     if sha is not None and not SHA.fullmatch(sha):
         raise ReportArgumentError(
@@ -105,7 +105,7 @@ def source(root: Path, slug: str, sha: str) -> Source:
             raise ProposalNotFoundError(
                 f"proposal PROP-{slug} is not in commit {sha[:12]}",
                 target_files=[anchor],
-                fix=f"Pass the slug of a committed proposal ({devkit_command('spec list proposal')} shows them)",
+                fix=f"Pass the slug of a committed proposal ({devkit_command('docs list proposal')} shows them)",
             )
         dirty = run_git(root, "status", "--porcelain", "--untracked-files=normal").decode().splitlines()
         if any(line.strip() for line in dirty):

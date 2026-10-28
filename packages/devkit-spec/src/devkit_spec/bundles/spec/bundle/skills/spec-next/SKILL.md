@@ -14,11 +14,11 @@ below; start nothing else until the user approves.
    checkout kind (feature branch, task worktree, base), leftovers (`devkit worktree finish <branch>`) and stale
    branches with their resume or discard path (§4 of the `spec` skill's `references/branches.md`). Never remove or
    resume one unasked.
-2. `devkit spec list spec`: per listed bundle, tasks done vs pending and pending reconciliation. Spec status
+2. `devkit docs list spec`: per listed bundle, tasks done vs pending and pending reconciliation. Spec status
    `completed` does not prove integration; check Git/PR state.
-3. `devkit spec list proposal --history`: proposals `reviewing`, `accepted` and waiting for handoff, or `rejected`
+3. `devkit docs list proposal --history`: proposals `reviewing`, `accepted` and waiting for handoff, or `rejected`
    and awaiting cleanup.
-4. `devkit spec list feedback --status open --where severity=critical`, and the open count without `--where`.
+4. `devkit docs list feedback --status open --where severity=critical`, and the open count without `--where`.
 5. `devkit workflow next --unit <dir>` for each unit the user or steps 2–3 name. Recommend its `[NEXT_SKILL]` with the
    `[UNMET]` evidence and follow any `[FIX]` or `[ACTION]`. For any other line or advisory, read
    [workflow signals](references/workflow-signals.md).

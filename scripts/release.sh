@@ -45,6 +45,7 @@ cli_wheel=$(basename "$out"/devkit_cli-*.whl)
 dist_wheel=$(basename "$out"/devkit_dist-*.whl)
 devkit_wheel=$(basename "$out"/devkit_agt-*.whl)
 advisory_wheel=$(basename "$out"/devkit_advisory-*.whl)
+docs_wheel=$(basename "$out"/devkit_docs-*.whl)
 spec_wheel=$(basename "$out"/devkit_spec-*.whl)
 mcp_wheel=$(basename "$out"/devkit_mcp-*.whl)
 viewer_wheel=$(basename "$out"/devkit_viewer-*.whl)
@@ -66,8 +67,8 @@ uv add --dev "devkit-agt[search] @ $base/$devkit_wheel" "devkit-dist[search] @ $
 # Optional MCP runtime and native approval (installed intentionally)
 uv add --dev "devkit-mcp @ $base/$mcp_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-core @ $base/$core_wheel" "devkit-cli @ $base/$cli_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
-# Spec-Driven Development extension (includes native handoff MCP runtime and the required devkit wheels)
-uv add --dev "devkit-spec @ $base/$spec_wheel" "devkit-mcp @ $base/$mcp_wheel" "devkit-agt @ $base/$devkit_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-core @ $base/$core_wheel" "devkit-cli @ $base/$cli_wheel" "devkit-advisory @ $base/$advisory_wheel"
+# Spec-Driven Development extension (includes the document system, native handoff MCP runtime and the required devkit wheels)
+uv add --dev "devkit-spec @ $base/$spec_wheel" "devkit-docs @ $base/$docs_wheel" "devkit-mcp @ $base/$mcp_wheel" "devkit-agt @ $base/$devkit_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-core @ $base/$core_wheel" "devkit-cli @ $base/$cli_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # Local read-only viewer of devkit repositories: devkit viewer serve (includes the required devkit wheels)
 uv add --dev "devkit-viewer @ $base/$viewer_wheel" "devkit-agt @ $base/$devkit_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-core @ $base/$core_wheel" "devkit-cli @ $base/$cli_wheel" "devkit-advisory @ $base/$advisory_wheel"

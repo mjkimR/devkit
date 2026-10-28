@@ -38,6 +38,6 @@ ux/
   instruction.
 - **Listing Registered UX Documents**:
   ```bash
-  devkit spec list ux
-  devkit spec list ux --area <area>
+  devkit docs list ux
+  devkit docs list ux --area <area>
   ```

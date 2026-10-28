@@ -36,6 +36,6 @@ usecases/
 - **Authoring a New Use Case**: Copy and adapt `.devkit/managed/spec/templates/usecase.md`.
 - **Listing Registered Use Cases**: Dynamically discover use cases via CLI frontmatter parsing grouped by area:
   ```bash
-  devkit spec list usecase
-  devkit spec list usecase --area <area>
+  devkit docs list usecase
+  devkit docs list usecase --area <area>
   ```

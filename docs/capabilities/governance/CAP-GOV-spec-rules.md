@@ -296,7 +296,7 @@ A proposal's boundary is copied into its spec at handoff, so it names real paths
 
 ### 3.13 `RULE-document-summary`
 
-`summary` is the main signal of `devkit spec search` (`CAP-DOCS-document-search`).
+`summary` is the main signal of `devkit docs search` (`CAP-DOCS-document-search`).
 
 - MUST report: a capability, use case, UX document, decision, architecture document, milestone, `proposal.md` or `spec.md` without `summary`
   (a file still carrying the skeleton marker `<!-- devkit:skeleton -->` is exempt until written); a `summary` that is

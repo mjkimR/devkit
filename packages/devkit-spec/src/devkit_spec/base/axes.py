@@ -2,12 +2,14 @@
 
 from collections.abc import Mapping
 
+# The effort vocabulary of proposal frontmatter is the document layer's; delivery modules read it from here.
+from devkit_docs.base.layout import DEV_EFFORT as DEV_EFFORT
+from devkit_docs.base.layout import EFFORTS as EFFORTS
+from devkit_docs.base.layout import PLANNING_EFFORT as PLANNING_EFFORT
+
 TASK_KINDS = ("feature", "bugfix")
 DEFAULT_TASK_KIND = "feature"
-EFFORTS = ("low", "medium", "high")
 DEFAULT_EFFORT = "medium"
-PLANNING_EFFORT = "planning_effort"
-DEV_EFFORT = "dev_effort"
 PROPOSAL_WORKFLOW = "sdd-proposal"
 SPEC_WORKFLOW_PREFIX = "sdd-spec-"
 

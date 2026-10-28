@@ -182,7 +182,7 @@ Repository-wide effects to present in the plan:
   path = "services/api"   # the package's source directory, relative to the top level
   ```
 
-  Document IDs and references stay repository-wide; `devkit spec list` and `devkit spec search` take
+  Document IDs and references stay repository-wide; `devkit docs list` and `devkit docs search` take
   `--namespace <name>` or `--all-namespaces`.
 
 ## Already installed

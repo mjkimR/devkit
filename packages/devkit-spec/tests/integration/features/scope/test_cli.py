@@ -185,7 +185,7 @@ def test_update_failure_prints_the_ack_then_the_error(repo: Path) -> None:
     assert data["ack"]["status"] == "failed" and data["errors"][0]["code"] == "SPEC_SCOPE_TOKEN_MISSING"
     # Off an activity branch nothing is guessed: no candidates, and the fix says how to find the bundle.
     advisory = data["errors"][0]["advisory"]
-    assert "details" not in advisory and "uv run devkit spec list spec --history" in advisory["fix"]
+    assert "details" not in advisory and "uv run devkit docs list spec --history" in advisory["fix"]
     # A slug is matched exactly: dev-form never picks the bundle 20261003-login-form that merely ends in -form.
     (repo / "specs/2026-10/20261003-login-form").mkdir(parents=True)
     git(repo, "checkout", "-q", "-b", "dev-form")
