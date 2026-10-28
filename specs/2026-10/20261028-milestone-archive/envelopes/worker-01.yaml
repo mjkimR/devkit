@@ -1,0 +1,26 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T06:40:58.175328Z'
+status: completed
+summary: Implemented and independently verified SPEC-milestone-archive through final change report. Four approved terminal milestone files moved with identical bytes. Added only tracked sync output .devkit/installation.json; exact Host-approved scope extension tests/e2e/smoke.sh repairs prior incubation catalog fixture. Host latest-main incorporation and integration remain.
+findings: []
+assumptions:
+- Codex isolation is emulated through absolute worktree commands, explicit write scope, pinned commits and before/after support-role snapshots, not native enforcement.
+- Initial code reviewer disclosed only one outside read of base-checkout response-style SKILL.md; no outside writes/index/HEAD changes. All subsequent review/reconcile reads stayed in this worktree.
+- Host-supplied base advance during authorized parallel feedback work is intentional; this worker never merged main and Host will incorporate latest main before integration.
+unverified_areas:
+- Fourteen suite tests skipped. Host final latest-main incorporation and local integration are pending; no required implementation remains.
+checks:
+  sync_start: PASS exit=0
+  sync: PASS final check exit0 and tracked output .devkit/installation.json only
+  tests: PASS affected full fallback5947 passed14 skipped; alias delta1451 and frontend111
+  build: PASS complete consumer smoke including built wheels; viewer pack/build and committed page
+  lint: PASS docs/spec/viewer Ruff and Pyright; cumulative rules21 zero violations
+  review: PASS independent code P2 corrected/rechecked and separate reconcile P2 corrected/rechecked
+  outcome: PASS baseline archived membership refused; valid terminal membership/history/viewer now covered and passing
+diff_scope:
+  base: a8c9c7cfccd12d47f5eb6273a604f535ce9f22cd
+  head: d54dd42d91e04b523461eb36245fba854e963b06
+activity_effort: medium
