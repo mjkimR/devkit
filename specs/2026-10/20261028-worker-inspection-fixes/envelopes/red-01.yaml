@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T06:09:20.897143Z'
+status: completed
+summary: Permanent regression tests reproduce absent optional reconcile and a prior-turn target lost by per-turn rules comparison before production changes
+findings: []
+assumptions:
+- Red run includes uncommitted permanent tests; production still at baseline
+checks:
+  reproduced: 'PASS baseline: 5 failed, 2 passed; scope not-run vs pass/fail, rules runner fails when earlier-created contract is excluded, new rules_base input absent'
+diff_scope:
+  base: d5a74bd7cc977d30f7fe68cc765f64a9b5ba8ba1
+  head: ''

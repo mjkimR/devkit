@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-28
 ---
 
@@ -43,3 +43,8 @@ Explicit --scope unit --scope playbook --scope manifest --scope test --scope rec
 ```
 
 The target's derive_scope reads reconcile.md unconditionally after parsing tasks.md. This observation concerns early scoped-turn inspection, not final reconciliation requirements.
+
+
+## Disposition
+
+Resolved by `SPEC-worker-inspection-fixes`. Optional absent reconciliation now preserves unit/task scope while malformed present and missing required records remain not-run. Cumulative rules use an independent rules_base while accepted-turn ancestry and changed paths retain base. Verification: 48 worker inspector regression tests, including actual RULE-reconcile-contract evaluation for an earlier-turn-created target, overrides, invalid references and compact/full/text evidence; affected tests and package lint/types pass.

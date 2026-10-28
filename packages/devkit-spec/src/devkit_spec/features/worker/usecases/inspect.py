@@ -142,17 +142,26 @@ class InspectWorkerUseCase(BaseUseCase):
         unit: str | None = None,
         base: str | None = None,
         head: str | None = None,
+        rules_base: str | None = None,
         scope: Sequence[str] | None = None,
         base_checkout: str | None = None,
         details: bool = True,
         runner: Callable[[Path, Sequence[str]], dict[str, Any]] = run_check,
     ) -> dict[str, Any]:
-        root, tip, chosen = inputs(root, unit, base, head, base_checkout)
+        root, tip, chosen = inputs(root, unit, base, head, base_checkout, rules_base)
         unit = str(chosen["unit"]["value"])
         base, head = str(chosen["base"]["value"]), str(chosen["head"]["value"])
+        rules_base = str(chosen["rules_base"]["value"])
         checks: dict[str, Any] = {}
         notices: list[dict[str, Any]] = []
-        result: dict[str, Any] = {"inputs": chosen, "base": base, "head": head, "checks": checks, "notices": notices}
+        result: dict[str, Any] = {
+            "inputs": chosen,
+            "base": base,
+            "head": head,
+            "rules_base": rules_base,
+            "checks": checks,
+            "notices": notices,
+        }
         checks["ancestry"] = {"status": "pass" if is_ancestor(root, base, head) else "fail"}
         checks["head"] = {"status": "pass" if tip == head else "fail", "actual": tip}
         # Disable rename detection so both removed and added names are checked against the scope.
@@ -192,7 +201,7 @@ class InspectWorkerUseCase(BaseUseCase):
             "result": loaded.inspection_dict(details=details),
         }
         checks["rules"] = (
-            runner(root, ["rules", "check", "--ci", "--base", base])
+            runner(root, ["rules", "check", "--ci", "--base", rules_base])
             if tip == head
             else {"status": "not-run", "cause": "Worktree HEAD differs from returned head"}
         )

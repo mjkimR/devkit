@@ -1,0 +1,24 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T06:18:37.629456Z'
+status: completed
+summary: 'Completed direct bugfix through final change report: absent optional reconcile preserves exact task scope; independent rules_base defaults to recorded branch merge base, explicit --rules-base overrides and manual fallback is labelled. Both named source feedback resolved after verified fixes. Independent code/reconcile reviews have no findings. Tracked sync output: .devkit/installation.json (sync output). No merge/integration performed; Host owns latest-base incorporation and integration.'
+findings: []
+assumptions:
+- 'Codex boundaries emulated: explicit worktree cwd/path scopes, per-operation escalations and actual diff/snapshot verification substitute for native confinement; no native guarantee claimed'
+unverified_areas:
+- Latest main incorporation and final cumulative integration verification remain Host duties; this worker never merged
+checks:
+  sync_start: PASS exit=0; initial devkit sync --check matched selection before first edit
+  sync_end: PASS exit=0; no generated drift after source bundle update
+  tests: PASS affected 1445; worker inspector 48; actual RULE-reconcile-contract regression cumulative pass/scoped override fail while audit range unchanged
+  baseline: PASS Red 5 failed2passed before production edits at d5a74bd7; Green same regression conditions pass; true feature merge base b17db06f cumulative rules errors0warnings0
+  lint: PASS spec Ruff check/format and Pyright0 errors/warnings; cumulative governance errors0warnings0
+  build: PASS spec wheel and sdist built under ignored .devkit/transient/worker-inspection-fixes/dist
+  review: PASS isolated medium code review and separate reconcile review; no findings, unchanged HEAD and alternate-index snapshots
+diff_scope:
+  base: d5a74bd7cc977d30f7fe68cc765f64a9b5ba8ba1
+  head: 50f66dc100d8a0e5f68c14d2ad35c36f302c2244
+activity_effort: medium

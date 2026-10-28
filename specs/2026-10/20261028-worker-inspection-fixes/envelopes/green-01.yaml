@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T06:12:54.889775Z'
+status: completed
+summary: Optional absent reconcile keeps exact task scope; cumulative rules use an independent recorded merge base with explicit override and labelled manual fallback
+findings: []
+assumptions:
+- Green verification includes current uncommitted implementation and documentation
+checks:
+  resolved: PASS 48 inspector tests; actual reconcile rule accepts earlier-turn target cumulatively and rejects the scoped override without changing audit paths
+  preserved: PASS existing dirty, stale head, outside scope, blocked records, malformed records; affected 1445 passed; lint/types passed
+diff_scope:
+  base: d5a74bd7cc977d30f7fe68cc765f64a9b5ba8ba1
+  head: ''

@@ -34,6 +34,9 @@ def worker_group() -> None:
 @worker_group.command(name="inspect")
 @click.option("--unit", default=None, help="Committed unit directory; otherwise derive from the activity branch")
 @click.option("--base", default=None, help="Last accepted commit; otherwise derive from committed worker records")
+@click.option(
+    "--rules-base", default=None, help="Cumulative rules comparison commit; otherwise the base-branch merge base"
+)
 @click.option("--head", default=None, help="Returned commit; otherwise the latest worker envelope's adding commit")
 @click.option("--scope", multiple=True, help="Complete literal path scope (repeat); replaces derived scope")
 @click.option(
@@ -48,6 +51,7 @@ def inspect_cmd(
     unit: str | None,
     base: str | None,
     head: str | None,
+    rules_base: str | None,
     scope: tuple[str, ...],
     scope_file: Path | None,
     base_checkout: str | None,
@@ -74,7 +78,14 @@ def inspect_cmd(
             ) from exc
     root = resolve_root(workspace_root) if workspace_root is not None else Path.cwd()
     result = InspectWorkerUseCase().execute(
-        root, unit=unit, base=base, head=head, scope=entries, base_checkout=base_checkout, details=details
+        root,
+        unit=unit,
+        base=base,
+        head=head,
+        rules_base=rules_base,
+        scope=entries,
+        base_checkout=base_checkout,
+        details=details,
     )
     if is_json(output_format):
         echo_json(result if details else summarize_inspection(result))

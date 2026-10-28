@@ -12,7 +12,11 @@ The range a worker is judged on starts at the unit's last accepted head:
 
 ## Validate
 
-Run `devkit spec worker inspect --format json` in the worktree. If your record differs from a derived input, override it with `--base`, `--head`, `--scope`/`--scope-file`, `--unit` or `--base-checkout`; an override replaces the input, never unions with it. A not-run check is not a pass. Pass its `base`, `head` and `changed_paths` to read-only reviewers.
+Run `devkit spec worker inspect --format json` in the worktree. If your record differs from a derived input, override it with `--base`, `--head`, `--scope`/`--scope-file`, `--unit` or `--base-checkout`; an override replaces the input, never unions with it. The accepted-turn `base`, ancestry and `changed_paths` remain the write audit. Cumulative rules use the independent
+`rules_base`, derived from the recorded base-branch merge base; `--rules-base` overrides only that input. Inspect its
+value/source, including a manual `audit-base-fallback` when no base branch is recorded. Absent optional reconcile adds
+no scope; malformed present records remain not-run. A not-run check is not a pass. Pass `base`, `head` and
+`changed_paths` to read-only reviewers, and retain `rules_base` with the rules evidence.
 
 The range from `<accepted>` to the returned final HEAD `<returned>` (the commit that holds the `worker` envelope) passes when:
 

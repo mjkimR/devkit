@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T06:18:15.105374Z'
+status: completed
+summary: Two reproduced worker-inspection bugs fixed and independently reviewed; partial turns retain task scope and cumulative rules_base is independent from exact accepted-turn auditing
+findings: []
+assumptions:
+- Reviews completed with no findings under emulated isolation, verified by matching before/after snapshots; no native guarantee
+checks:
+  tests: 'PASS just test-affected --base d5a74bd7: 1445 passed; worker inspector 48 passed; actual reconcile-rule cumulative/scoped comparison verified'
+  build: 'PASS uv build --package devkit-spec: wheel and source distribution built in ignored worker artifact directory; just check devkit-spec: 0 errors/warnings'
+  lint: 'PASS just lint-check devkit-spec; final cumulative rules --ci --base b17db06f: errors0 warnings0; sync --check clean'
+diff_scope:
+  base: d5a74bd7cc977d30f7fe68cc765f64a9b5ba8ba1
+  head: 26d6cf59911a5d352445b90c0938b0a50751cf29
