@@ -2,36 +2,21 @@
 id: PLAN-incubation-lifecycle-policy
 spec: SPEC-incubation-lifecycle-policy
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-incubation-lifecycle-policy` Apply explicit development approach policy across lifecycle consumers
+# Technical Plan
 
-## 1. Architecture Overview & Impact
-- Target Area: delivery/
-- Target Docs Blueprint: `PROP-incubation-lifecycle-policy-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+The shared reader remains in devkit-dist project; generic integration and omission reporting remain in devkit-agt. SDD judgments remain in devkit-spec. `ADR-own-development-approach-policy-outside-sdd` authorizes the contract; `ARCH-05-2-components` continues to govern layers. No core or public advisory/CLI changes are required.
 
-### Planned Boundaries:
-- `packages/devkit-dist/`
-- `packages/devkit/`
-- `packages/devkit-spec/`
-- `packages/devkit-docs/`
-- `docs/capabilities/`
-- `docs/usecases/`
-- `docs/architecture/`
-- `docs/decisions/`
-- `docs/steering/glossary.md`
-- `guides/`
-- `tests/e2e/smoke.sh`
-- `.devkit/config.toml`
-- `.devkit/installation.json`
-- `AGENTS.md`
+## 2. Components & Interfaces
 
-### Excluded Boundaries:
-- `packages/devkit-core/`
-- `packages/devkit-advisory/`
-- `packages/devkit-cli/`
+- Typed shared development approach reader accepts parsed configuration for snapshot reuse and root for normal inspection. Existing effective-config reporting owns defaults/source.
+- Spec mutation use cases reject inactive lifecycle before writes. Guidance inspects approach before routing.
+- Rule applicability uses a generic optional omission contract; only spec rules decide SDD ownership. Prior anchor ownership keeps comparison checks applicable after binding/anchor deletion.
+- Project readiness reuses cumulative linter and explicit review/tests/lint claims; generic snapshot ownership detection refuses retained Unit work without lifecycle validation. Existing provider identity, digest, route and cleanup checks remain.
+- Shared guides and capabilities reflect the consumer applicability matrix. No automatic development approach change occurs.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 3. Error Handling & Verification
+
+Invalid development config is DEVELOPMENT_CONFIG_INVALID; inactive lifecycle mutation is SPEC_LIFECYCLE_INACTIVE. Lifecycle omissions use SDD_LIFECYCLE_INACTIVE. A mismatched project provider uses INTEGRATION_APPROACH_MISMATCH and touched retained Units require INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED. Test common config without devkit-agt, SDD regressions, incubation rules, actual provider integration, snapshot boundaries, lint/types, affected tests, smoke and final sync/governance.
