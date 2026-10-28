@@ -125,7 +125,7 @@ registered.
 | Code | Next action |
 | --- | --- |
 | `INTEGRATION_CONFIG_INVALID` | Configure or install the named readiness provider and use a supported route. |
-| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: resolve each reported condition (`[DETAIL]`) in the source worktree (`[TARGET]`), commit and prepare again. |
+| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: missing or invalid session claims are identified by provider evidence `SESSION_CLAIMS_INVALID`; `[TARGET]` names `--claims` and `[FIX]` directs correction and retry of the same prepare or integrate command with explicit claims. Other readiness failures direct source-worktree fixes, commit and preparation again. |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
 | `INTEGRATION_RULE_RUNTIME_MISMATCH` | The source needs no change. With separately granted authority, build a runtime from the source's code outside the worktree being removed and run `devkit integration integrate <branch>` from the base checkout with it; never edit the rules, skip readiness or use the worktree's own runtime. |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: run `[FIX]` to present the scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |
@@ -137,3 +137,7 @@ registered.
 Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`,
 `Readiness`, `ReadinessProvider`, `IntegrationRequest`, `IntegrationResult`, `CleanupTarget`, `CleanupScope`,
 `CleanupResult`, `ScopedCleanup` and typed errors. `devkit_agt.features.worktree` owns merge and finish primitives.
+
+Session claims remain explicit on both `prepare` and `integrate`; neither command persists or reuses the other's claims.
+Correcting invocation input alone requires no source change. Ordinary source-readiness, digest and authority checks
+remain in force (`packages/devkit/tests/integration/features/integration/test_cli.py`).

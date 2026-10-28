@@ -126,14 +126,12 @@ def test_milestone_membership_notices_preserve_milestone(workspace: Path, status
     data = parse((workspace / result.path).read_text()).data
     assert data is not None and data["milestone"] == "MS-foundation"
     assert path.read_bytes() == before
-    notices = [
-        notice.to_dict()["advisory"] for notice in result.notices if notice.code == "SPEC_PROPOSAL_MILESTONE_INACTIVE"
-    ]
+    notices = [notice.to_dict() for notice in result.notices if notice.code == "SPEC_PROPOSAL_MILESTONE_INACTIVE"]
     assert len(notices) == (1 if status in {"done", "dropped"} else 0)
     if notices:
         assert notices[0]["level"] == "NOTICE"
         assert "MS-foundation" in notices[0]["message"] and status in notices[0]["message"]
-        assert "membership" in notices[0]["fix"]
+        assert "membership" in notices[0]["advisory"]["fix"]
 
 
 @pytest.mark.parametrize("format", ["text", "json"])

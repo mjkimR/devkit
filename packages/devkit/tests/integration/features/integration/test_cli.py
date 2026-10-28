@@ -416,3 +416,46 @@ def test_missing_session_claims_retries_same_command(repo, ready_provider, monke
     payload = json.loads(retried.output)
     assert payload["request"]["digest"] == digest
     assert payload["status"] == ("prepared" if command == "prepare" else "completed")
+
+
+def test_missing_claims_do_not_hide_source_readiness_failure(repo, ready_provider, monkeypatch):
+    from devkit_agt.features.integration import Evidence
+
+    base, _worktree = repo
+    original = ready_provider.check
+    ready_provider.allowed = False
+
+    def check(context):
+        result = original(context)
+        if context.task.claims_json == "{}":
+            return replace(
+                result,
+                evidence=(*result.evidence, Evidence("SESSION_CLAIMS_INVALID", "--claims")),
+                reasons=(*result.reasons, "claims input is incomplete"),
+            )
+        return result
+
+    monkeypatch.setattr(ready_provider, "check", check)
+    args = [
+        "prepare",
+        "dev-demo",
+        "--task-kind",
+        "session",
+        "--task-id",
+        "fixture",
+        "-w",
+        str(base),
+        "--format",
+        "json",
+    ]
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code == 2, result.output
+    advisory = json.loads(result.output)["error"]["advisory"]
+    assert advisory["details"] == ["finish the fixture checks", "claims input is incomplete"]
+    assert "resolve any other reported readiness conditions" in advisory["fix"]
+    claims = '{"task_kind":"feature","effort":"low","review":true,"tests":true,"lint":true}'
+    retried = CliRunner().invoke(cli, [*args, "--claims", claims])
+    assert retried.exit_code == 2, retried.output
+    advisory = json.loads(retried.output)["error"]["advisory"]
+    assert advisory["details"] == ["finish the fixture checks"]
+    assert "commit the final changes and prepare a new" in advisory["fix"]
