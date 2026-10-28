@@ -2,7 +2,7 @@
 id: SPEC-milestone-non-binding
 title: Non-binding milestone guidance
 summary: "Milestone guidance states that a milestone frames a theme without binding Planning, so agents never treat its goal, exit condition or non-goals as constraints on design options."
-status: planned
+status: in-progress
 created: 2026-10-28
 related_capabilities: [CAP-HARN-agent-guidance]
 related_usecases: []
