@@ -2,7 +2,7 @@
 id: PROP-pr-merge-recovery
 title: Recover uncertain pull request merge outcomes across CLI calls
 summary: Define how integration identifies prior pull request merge attempts and resumes safely after unknown outcomes or closed pending requests.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-28
 target_area: capabilities/integration/
 priority: high                        # critical | high | medium | low
