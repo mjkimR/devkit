@@ -14,11 +14,18 @@ approach = "incubation"
 ```
 
 Reuse an existing table rather than add a duplicate. Preserve the project's other settings.
-If the spec package is absent, present the dependency/asset effects before installing it through the project's
-supported source. For a uv project using this repository's Git source:
+If the spec package is absent, read [canonical package sources](../INSTALL_GUIDE.md#step-3-package-sources)
+and the [already-installed route](existing-repository.md#already-installed) before changing dependencies.
+Inspect the existing direct base requirement and its actual dependency group, source and ref. Present replacing
+that direct devkit-docs, devkit-agt or devkit-dist requirement with devkit-spec in the same group; do not append
+a second direct base requirement. Preserve the supported source/ref and keep an existing optional devkit-catalog
+requirement. Apply only the approved replacement using the canonical procedure, including `--no-build-package pyyaml`.
+Use the project's real group rather than assuming every existing installation uses the development group.
+
+After dependency replacement, verify the runtime binding and then prepare assets:
 
 ```bash
-uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
+uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibYAML binding is unavailable'"
 uv run devkit sync
 uv run devkit add spec
 uv run devkit config show

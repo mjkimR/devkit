@@ -44,3 +44,7 @@ The final policy snapshot is present; eight real CLI/app scenario/asset checks p
 document checks and the use-case parser regression. Source/scenario evidence is labelled synthetic product inputs
 and simulated user decisions. Autonomous product-scope inference is not claimed. Guidance final source/main
 incorporation and sequential integration remain the Host's next verification boundary.
+
+The focused installation guide follows canonical package-source replacement in the consumer's actual group/source/ref,
+retains optional catalog, prevents a duplicate direct base requirement and checks the required PyYAML binary binding.
+It deliberately does not prescribe a universal remove command or silently alter another dependency group.
