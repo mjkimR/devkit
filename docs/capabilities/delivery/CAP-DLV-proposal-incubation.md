@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal creation validates milestone membership and notices done/dropped milestones without changing their lifecycle. Incubation and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
+summary: "Proposal creation validates live and archived milestone membership with nonblocking terminal notices. Incubation and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -259,7 +259,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `namespace` | Optional (`--namespace`): `global` or a registered namespace (`CAP-DOCS-namespaces`); carried to `spec.md`. Every file of the bundle belongs to it. |
 | `priority` | `critical`, `high` (scaffolded), `medium`, `low`. |
 | `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL`: the work would produce two or more specs, or bundles deliverables of a different nature (work that would need separate specs or a different `task_kind`). `XL`: a new CLI command with a viewer redesign it does not need (two specs), or a parser bugfix with a new search feature (`bugfix` and `feature`); not `XL`: two agent contracts and the command checks that route work to them, in one `feature` spec. An `XL` draft is decomposed before Planning (rule 13). |
-| `milestone` | Optional (`--milestone`): one existing global MS ID under docs/roadmap/, or one of its aliases (the canonical ID is written); validated before writing and never carried to `spec.md`. A done or dropped milestone returns `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation or changing the milestone. |
+| `milestone` | Optional (`--milestone`): one existing global MS ID at the root for planned/active or in its flat _archive/ for done/dropped, or one of its aliases (the canonical ID is written); canonical filename/identity and status/location are validated before writing and never carried to `spec.md`. A done or dropped milestone returns `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation or changing the milestone. |
 | `boundaries` | `owns` (scaffolded: the target area) and `excludes` (scaffolded: `docs/decisions/`); carried to `plan.md` and `tasks.md`. |
 | `task_kind` | `feature` (scaffolded default) or `bugfix` (`--task-kind`): the provisional `task-kind`, confirmed at `plan-accept`; the spec follows `sdd-spec-<task_kind>`. |
 | `planning_effort` | `low`, `medium` (scaffolded default) or `high` (`--planning-effort`): non-authoritative Planning `activity-effort` hint, confirmed at `plan-intent`; not carried to `spec.md`. |

@@ -29,3 +29,8 @@ Decomposition: pending
 Direct proposal work: pending
 
 The selected development approach defines completion authority and how these assertions are maintained.
+
+Keep planned/active milestones at `docs/roadmap/MS-<slug>.md` and done/dropped at
+`docs/roadmap/_archive/MS-<slug>.md`. Close/drop/reopen include the movement with the authorized
+status and applicable assertions/disposition in one commit. Drop never confirms completion assertions;
+reopen returns active to the root and resets both assertions. Keep IDs, aliases and filenames unchanged.

@@ -1,8 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Start Planning immediately for done and dropped milestone archiving
-by: user
-at: '2026-10-28T05:51:07.639979Z'

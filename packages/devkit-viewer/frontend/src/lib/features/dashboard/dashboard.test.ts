@@ -141,3 +141,21 @@ describe('extractDashboardData', () => {
 		expect(result.feedback.open[1].severity).toBe('friction');
 	});
 });
+
+it('counts flat archived done and dropped documents as history only', () => {
+	const docs = ['done', 'dropped'].map((status) => ({
+		path: `docs/roadmap/_archive/MS-${status}.md`,
+		meta: { id: `MS-${status}`, status },
+		body: '',
+		raw: '',
+		title: status
+	}));
+	const result = extractDashboardData(docs);
+	expect(result.milestones.totalCount).toBe(2);
+	expect(result.milestones.openCount).toBe(0);
+	expect(result.milestones.all.map((m) => m.status)).toEqual(['done', 'dropped']);
+	expect(
+		extractDashboardData([{ ...docs[0], path: 'docs/roadmap/_archive/year/MS-done.md' }]).milestones
+			.totalCount
+	).toBe(0);
+});

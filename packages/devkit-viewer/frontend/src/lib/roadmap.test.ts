@@ -10,7 +10,10 @@ const doc = (path: string, meta: Record<string, string | string[]>, title = path
 	return parseBlob(path, `---\n${lines.join('\n')}\ntitle: ${title}\n---\n\n# ${title}\n`, 'utf-8');
 };
 const milestone = (id: string, status: string, dependsOn?: string[]) =>
-	doc(`docs/roadmap/${id}.md`, dependsOn ? { id, status, depends_on: dependsOn } : { id, status });
+	doc(
+		`docs/roadmap/${['done', 'dropped'].includes(status) ? '_archive/' : ''}${id}.md`,
+		dependsOn ? { id, status, depends_on: dependsOn } : { id, status }
+	);
 const proposal = (slug: string, status: string, milestone: string) =>
 	doc(`docs/proposals/PROP-${slug}/proposal.md`, { id: `PROP-${slug}`, status, milestone });
 const spec = (slug: string, status: string, milestone: string) =>
@@ -98,6 +101,9 @@ describe('loadRoadmapDocuments', () => {
 	const files: Record<string, string> = {
 		'docs/roadmap/MS-b.md': '---\nid: MS-b\nstatus: active\n---\n# B\n',
 		'docs/roadmap/README.md': '# Roadmap\n',
+		'docs/roadmap/_archive/MS-old.md': '---\nid: MS-old\nstatus: done\n---\n# Old\n',
+		'docs/roadmap/_archive/MS-dropped.md': '---\nid: MS-dropped\nstatus: dropped\n---\n# Dropped\n',
+		'docs/roadmap/_archive/year/MS-ignore.md': '# Ignore\n',
 		'docs/proposals/PROP-p/proposal.md': '---\nid: PROP-p\nmilestone: MS-b\n---\n# P\n',
 		'docs/proposals/PROP-broken/proposal.md': '---\nid: PROP-broken\nmilestone: [broken\n---\n',
 		'docs/proposals/PROP-q/notes.md': '# not a bundle anchor\n',
@@ -133,9 +139,26 @@ describe('loadRoadmapDocuments', () => {
 		);
 		expect(documents.map((d) => d.path)).toEqual([
 			'docs/proposals/PROP-p/proposal.md',
+			'docs/roadmap/_archive/MS-dropped.md',
+			'docs/roadmap/_archive/MS-old.md',
 			'docs/roadmap/MS-b.md'
 		]);
 		expect(errors).toHaveLength(1);
 		expect(errors[0]).toMatch(/^docs\/proposals\/PROP-broken\/proposal\.md: /);
 	});
+});
+
+it('keeps done and dropped archived prerequisites satisfied before history filtering', () => {
+	const base = [
+		milestone('MS-done', 'done'),
+		milestone('MS-drop', 'dropped'),
+		milestone('MS-live', 'active', ['MS-done', 'MS-drop'])
+	];
+	for (const history of [false, true]) {
+		const live = buildRoadmap(base, [], { history }).find((m) => m.id === 'MS-live')!;
+		expect([live.ready, live.unknown, live.waitingFor]).toEqual([true, [], []]);
+	}
+	const reopened = milestone('MS-done', 'active');
+	expect(reopened.path).toBe('docs/roadmap/MS-done.md');
+	expect(buildRoadmap([reopened], [], { history: false })[0].status).toBe('active');
 });

@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Defines Markdown document identity, references, indexing and frontmatter parsing, and the independent docs bundle of shared formats, writing guidance and document rules."
+summary: "Markdown identity, references, indexing and parsing, including flat terminal milestone storage, and the independent docs bundle of shared formats, writing guidance and document rules."
 area: documents
 status: active
 usecases:
@@ -101,6 +101,15 @@ Proposal-local feedback also stays current while a rejected proposal awaits clea
 into the spec; Host deletion without handoff preserves it in the month-level backlog
 (`CAP-DLV-proposal-incubation`). Existing discovery, resolution and namespace rules apply before and after moves.
 
+### Milestone placement
+
+Global planned/active milestones MUST use the roadmap root; done/dropped MUST use its one flat `_archive/`
+directory with the same filename, ID and aliases (`ADR-archive-terminal-milestones-in-roadmap`).
+Other nesting and namespace roadmaps are invalid. Placement creates no new status or registry.
+The index MUST retain invalid archived live documents so governance can report their placement.
+Existing lookup, alias, reference and status-derived history semantics apply across both locations.
+Checks: `RULE-id-convention`, `test_milestones.py`.
+
 ### Milestone completion assertions
 
 Milestone bodies carry a `Completion review` section with exactly two plain assertions:
@@ -108,7 +117,7 @@ Milestone bodies carry a `Completion review` section with exactly two plain asse
 both as confirmed with status done in one commit. Missing assertions on open documents mean unconfirmed; stored
 assertions alone do not authorize a later close. These are body content, not parsed fields, checklist items,
 reference edges or a machine-certified delivery contract. Actual semantic scope changes reset both to pending; normal handoff does not;
-existing done records remain historical without migration. `CAP-HARN-agent-guidance` owns review, invalidation,
+existing done records retain their historical assertions during content-preserving archive moves. `CAP-HARN-agent-guidance` owns review, invalidation,
 interruption and reopen procedures (`ADR-roadmap-and-milestones`).
 
 ### Feedback lifecycle
@@ -143,7 +152,7 @@ live; the index itself does not check it.
 | `SPEC`, `PLAN`, `TASKS`, `REC` | `spec`, `plan`, `tasks`, `reconcile` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/{spec,plan,tasks,reconcile}.md` |
 | `FB` | `feedback` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`, `specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`, `docs/proposals/PROP-<slug>/feedback/<slug>.md` |
 | `MAT` | `material` | `docs/materials/...` |
-| `MS` | `milestone` | `docs/roadmap/MS-<slug>.md` (global only) |
+| `MS` | `milestone` | `docs/roadmap/MS-<slug>.md` (planned/active) or `docs/roadmap/_archive/MS-<slug>.md` (done/dropped), global only |
 
 The table order is the kind order: `devkit docs list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).

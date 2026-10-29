@@ -1,3 +1,4 @@
+import { isMilestonePath } from '../../api/roadmap';
 import { extractDashboardData } from './dashboard';
 import {
 	parseBlob,
@@ -33,8 +34,8 @@ export async function loadDashboardSection(
 					ref,
 					signal,
 					['docs/roadmap'],
-					(item) => /^docs\/roadmap\/MS-[^/]+\.md$/.test(item.path),
-					() => false,
+					(item) => isMilestonePath(item.path),
+					(item) => item.path === 'docs/roadmap/_archive',
 					true,
 					false
 				)
@@ -103,7 +104,7 @@ function eligiblePaths(metadata: RepositoryDocument[], section: DashboardSection
 }
 function matchesSection(path: string, section: DashboardSection) {
 	if (path.split('/').some((part) => part === '..' || part === '.' || !part)) return false;
-	if (section === 'milestones') return /^docs\/roadmap\/MS-[^/]+\.md$/.test(path);
+	if (section === 'milestones') return isMilestonePath(path);
 	if (section === 'proposals') return /^docs\/proposals\/PROP-[^/]+\/proposal\.md$/.test(path);
 	return (
 		/^(docs|specs)\//.test(path) &&

@@ -5,6 +5,8 @@ import type { RepositoryDataSource } from './repository';
 
 const files: Record<string, Record<string, string>> = {
 	main: {
+		'docs/roadmap/_archive/MS-old.md':
+			'---\nid: MS-old\ntitle: Archived milestone\nstatus: done\n---\n# Historical detail\n',
 		'docs/roadmap/MS-b.md': '---\nid: MS-b\ntitle: Main milestone\nstatus: active\n---\n# B\n',
 		'specs/2026-10/20261019-s/spec.md':
 			'---\nid: SPEC-s\ntitle: Done on main\nstatus: completed\nmilestone: MS-b\n---\n# S\n'
@@ -93,4 +95,17 @@ describe('RoadmapView', () => {
 		await screen.findByText('In planning');
 		expect(reads).toHaveLength(count);
 	});
+});
+
+it('opens an archived milestone from the history control using its retained path', async () => {
+	const onOpen = vi.fn();
+	render(RoadmapView, { source: source(false, []), branch: 'main', onOpen });
+	await screen.findByText('Main milestone');
+	expect(screen.queryByText('Archived milestone')).toBeNull();
+	await fireEvent.click(screen.getByRole('checkbox'));
+	await screen.findByText('Archived milestone');
+	await fireEvent.click(
+		screen.getByText('Archived milestone').closest('li')!.querySelector('button')!
+	);
+	expect(onOpen).toHaveBeenCalledWith('docs/roadmap/_archive/MS-old.md');
 });

@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T06:40:14.298547Z'
+status: completed
+summary: Delivered flat terminal milestone archive across document validation, canonical proposal membership, selective viewer readers/counts/readiness/details and atomic lifecycle guidance. Four approved done milestones moved with unchanged bytes; independent code and reconcile findings were corrected and rechecked.
+findings: []
+assumptions:
+- Host approved exactly tests/e2e/smoke.sh baseline catalog-discovery fixture repair; incubation remains opt-in, all smoke stages and guards preserved.
+- Node22.22.0 emitted existing22.22.2+ engine warnings; required frontend commands all executed successfully and lockfile is unchanged.
+unverified_areas:
+- Fourteen full-suite tests were skipped by the suite. Latest-main incorporation and local integration remain Host work after this return.
+checks:
+  tests: PASS affected full fallback5947 passed14 skipped; alias fix Red4 Green34 and affected delta1451; frontend111 passed
+  build: PASS complete wheel consumer smoke and viewer pack/build with committed regenerated page
+  lint: PASS docs/spec/viewer Ruff and Pyright; cumulative governance21 rules zero violations
+  review: PASS independent code correction recheck and separate reconcile correction recheck
+  sync: PASS initial and final exit0; only tracked sync output .devkit/installation.json
+diff_scope:
+  base: a8c9c7cfccd12d47f5eb6273a604f535ce9f22cd
+  head: f44c7ee6cd2d3ade35954a1645c65e1a3b1d1b4a
+activity_effort: medium

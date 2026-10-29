@@ -1010,7 +1010,7 @@
     },
     ".agents/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "15ba306aa8c852ee3ade524e4cdf585ad340e777e96953f7d8433a76ebe54c29"
+      "sha256": "b9ad48346aa0be76f007b1a6d4934a5ff33eedd9ffb49f5e3efaa8127bc29245"
     },
     ".agents/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1082,7 +1082,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "a159291254fdb029226feb7512acc31248f43793bfd6dc7f3e1326c518851f3d"
+      "sha256": "2b632fea174ce4eb705d92f409097788ff7d1b8a3cebc034385816f91a7d6465"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1118,7 +1118,7 @@
     },
     ".agents/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "8ed8ca901548484b7eb580c0d66d4b1fc3aa4a940cdc846dba60024589b55d81"
+      "sha256": "310e4f445fd665f79f4135893a7fb82e25441a11eed2759e36641411bc14d9ce"
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1138,7 +1138,7 @@
     },
     ".agents/skills/spec/references/roadmap-catalog.md": {
       "mode": 420,
-      "sha256": "ba5b66bdc4649a12c75c9dfcb1e2bc4c57b97b351ac77baeb3412794f0a032ac"
+      "sha256": "c9cc93d1499740d2dc00a81bbcf03f0fc6dc09f23ceab823714f8984ebfa6d51"
     },
     ".agents/skills/spec/references/source-feedback.md": {
       "mode": 420,
@@ -1246,7 +1246,7 @@
     },
     ".claude/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "15ba306aa8c852ee3ade524e4cdf585ad340e777e96953f7d8433a76ebe54c29"
+      "sha256": "b9ad48346aa0be76f007b1a6d4934a5ff33eedd9ffb49f5e3efaa8127bc29245"
     },
     ".claude/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1314,7 +1314,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "a159291254fdb029226feb7512acc31248f43793bfd6dc7f3e1326c518851f3d"
+      "sha256": "2b632fea174ce4eb705d92f409097788ff7d1b8a3cebc034385816f91a7d6465"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1350,7 +1350,7 @@
     },
     ".claude/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "8ed8ca901548484b7eb580c0d66d4b1fc3aa4a940cdc846dba60024589b55d81"
+      "sha256": "310e4f445fd665f79f4135893a7fb82e25441a11eed2759e36641411bc14d9ce"
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1370,7 +1370,7 @@
     },
     ".claude/skills/spec/references/roadmap-catalog.md": {
       "mode": 420,
-      "sha256": "ba5b66bdc4649a12c75c9dfcb1e2bc4c57b97b351ac77baeb3412794f0a032ac"
+      "sha256": "c9cc93d1499740d2dc00a81bbcf03f0fc6dc09f23ceab823714f8984ebfa6d51"
     },
     ".claude/skills/spec/references/source-feedback.md": {
       "mode": 420,
@@ -1658,7 +1658,7 @@
     },
     ".devkit/managed/docs/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "da2665c9f46a0ff7d876294ccbd79f4f3661c1a1432fd02d03171130bde1d660"
+      "sha256": "238722fc86b15b3797d0dc17db9d073b802567481db08a7fcc2fe426dc22b001"
     },
     ".devkit/managed/docs/rules/id_convention/rule.py": {
       "mode": 420,
@@ -1666,11 +1666,11 @@
     },
     ".devkit/managed/docs/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "08051b8f5ad386dd4634c00e041968b025d046a77d7da32d11f1150d9e78c72f"
+      "sha256": "e5a575434c3d2051b571ada45b9a056b1c0309d5f346851b99f90192ac0c2121"
     },
     ".devkit/managed/docs/rules/spec_format/guide.md": {
       "mode": 420,
-      "sha256": "c0293b93859c7ac46c530650c4953cf9ea8bcd5c4dde90780deaa3a47e75ae67"
+      "sha256": "b5010431060550fb9a46e89922acb2fc6c579ef6e47eadb7a3513fbeaf20e4f7"
     },
     ".devkit/managed/docs/rules/spec_format/rule.py": {
       "mode": 420,
@@ -1678,7 +1678,7 @@
     },
     ".devkit/managed/docs/rules/spec_format/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "f9ea849a280124fc2335ad27e4bc2b3350b19494e9bbe35f31497eea3c8aba2d"
+      "sha256": "5cddd3b5280d1530f7773b1066fafa4920442f28ff047ef3af42933c81da94d0"
     },
     ".devkit/managed/docs/rules/steering_documents/guide.md": {
       "mode": 420,
@@ -1738,7 +1738,7 @@
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,
-      "sha256": "2fb68b4de2cc7cd20ba505884824aab5929da72c8d0ae69640a41efd1599c7f3"
+      "sha256": "d51fece293d75c8d2d49afa2139c208741733af61f15c7962a5ed4879ddc25fd"
     },
     ".devkit/managed/docs/templates/usecase.md": {
       "mode": 420,
@@ -1922,7 +1922,7 @@
     },
     ".devkit/managed/spec/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "15ba306aa8c852ee3ade524e4cdf585ad340e777e96953f7d8433a76ebe54c29"
+      "sha256": "b9ad48346aa0be76f007b1a6d4934a5ff33eedd9ffb49f5e3efaa8127bc29245"
     },
     ".devkit/managed/spec/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1990,7 +1990,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "a159291254fdb029226feb7512acc31248f43793bfd6dc7f3e1326c518851f3d"
+      "sha256": "2b632fea174ce4eb705d92f409097788ff7d1b8a3cebc034385816f91a7d6465"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
@@ -2026,7 +2026,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "8ed8ca901548484b7eb580c0d66d4b1fc3aa4a940cdc846dba60024589b55d81"
+      "sha256": "310e4f445fd665f79f4135893a7fb82e25441a11eed2759e36641411bc14d9ce"
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
@@ -2046,7 +2046,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/roadmap-catalog.md": {
       "mode": 420,
-      "sha256": "ba5b66bdc4649a12c75c9dfcb1e2bc4c57b97b351ac77baeb3412794f0a032ac"
+      "sha256": "c9cc93d1499740d2dc00a81bbcf03f0fc6dc09f23ceab823714f8984ebfa6d51"
     },
     ".devkit/managed/spec/skills/spec/references/source-feedback.md": {
       "mode": 420,

@@ -1,0 +1,25 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T06:34:58.172672Z'
+status: completed
+review: review-01.yaml
+summary: 'Independent correction review PASS: canonical-ID uniqueness guard and four permanent alias-owner/status cases resolve finding 1 before writes.'
+findings:
+- issue: Proposal creation through an alias accepts a duplicated canonical milestone ID.
+  evidence: 'roadmap.py:16 and ignored review-01/probe_identity.py: FAIL duplicate canonical ID accepted via alias; proposal written at docs/proposals/PROP-member/proposal.md'
+  failure_condition: A valid active root and archived done/dropped milestone share a canonical ID and one has a unique alias; alias authoring writes ambiguous membership.
+  suggested_action: Require the canonical ID to uniquely resolve the same document after alias resolution and cover aliases on both duplicate owners before writes.
+  resolution: resolved
+  severity: P2
+assumptions:
+- Independent reviewer rechecked only correction delta under emulated absolute-path pinned-ref snapshot boundaries; no outside reads in this round.
+checks:
+  tests: PASS Red4 Green34 proposal tests and affected delta1451
+  lint: PASS spec Ruff and Pyright
+  scope: PASS before after tree bcc5efc436bca76c5e028ed34f8dbc52a253094b unchanged
+diff_scope:
+  base: 2116c17c6fe26c49ca720cd846a78e579ff98c14
+  head: b250407fbb950180950477a31f3612727372e0b3
+activity_effort: medium

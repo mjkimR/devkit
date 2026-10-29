@@ -60,7 +60,9 @@ just smoke                    # wheel installation, CLI mounting, bundle deploym
 
 Python 3.12 or later, macOS or Linux. The [development guide](../../docs/development/setup.md) lists prerequisites.
 
-Repository roadmaps use global `docs/roadmap/MS-<slug>.md` milestone documents. Assign one with
+Repository roadmaps use global `docs/roadmap/MS-<slug>.md` for planned/active milestones and
+`docs/roadmap/_archive/MS-<slug>.md` for done/dropped history. Close/drop/reopen combine their existing
+user decision, applicable assertions/disposition and movement in one commit; identities stay unchanged. Assign one with
 `devkit spec proposal new <slug> --milestone MS-<slug>`; only direct PROP anchors are members.
 Handoff does not carry milestone metadata into specs, and historical SPEC metadata is ignored.
 Direct specs have no milestone creation option;

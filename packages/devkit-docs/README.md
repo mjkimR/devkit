@@ -38,3 +38,7 @@ The docs context owns shared writing instructions, steering discovery and templa
 `uv run devkit get-context docs` before document work. Installing devkit-spec additionally selects its lifecycle
 assets. `uv run devkit remove spec` removes selected assets, not installed Python command extensions.
 A clean document-only runtime installs devkit-docs without devkit-spec.
+
+Global milestones use the roadmap root for planned/active and one flat `docs/roadmap/_archive/` for done/dropped.
+The same IDs and aliases resolve in either location; history visibility remains status-derived.
+Document rules report invalid placement without moving files or changing lifecycle status.

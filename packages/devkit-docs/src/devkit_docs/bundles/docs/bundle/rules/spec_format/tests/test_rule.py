@@ -295,3 +295,15 @@ def test_milestone_status_is_validated_and_created_at_fixed_independently(tmp_pa
     found = check(RULE, tmp_path, files, fix=True)
     assert any("milestone status" in v.message and not v.fixed for v in found)
     assert "created_at:" in (tmp_path / path).read_text()
+
+
+def test_archive_format_fix_preserves_status_and_placement(tmp_path: Path) -> None:
+    for status in ("done", "dropped"):
+        path = f"docs/roadmap/_archive/MS-{status}.md"
+        original = f"---\nid: MS-{status}\ntitle: History\nstatus: {status}\n---\n# Retained body\n"
+        assert check(RULE, tmp_path, {path: original}) == []  # Existing default historical targeting.
+        check(RULE, tmp_path, targets=[path], fix=True)
+        result = (tmp_path / path).read_text()
+        assert f"status: {status}" in result and "created_at:" in result
+        assert result.endswith("# Retained body\n")
+        assert not (tmp_path / f"docs/roadmap/MS-{status}.md").exists()

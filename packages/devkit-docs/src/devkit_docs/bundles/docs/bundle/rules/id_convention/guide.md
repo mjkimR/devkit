@@ -39,7 +39,7 @@ The ID is the file stem:
 | Capability | `docs/capabilities/{area}/CAP-{AREA}-{slug}.md` | `{AREA}` upper-case letters and digits; `area: {area}` |
 | Use case | `docs/usecases/{area}/UC-{slug}.md` | `area: {area}`; only `README.md` directly under `docs/usecases/` |
 | Architecture | `docs/architecture/ARCH-{slug}.md` or `ARCH-{NN}[-{n}]-{slug}.md` | `{NN}` an arc42 chapter, `{n}` a sub-document (1-9) |
-| Milestone | `docs/roadmap/MS-{slug}.md` | global only: no nested or namespaced roadmap location |
+| Milestone | `docs/roadmap/MS-{slug}.md` for planned/active; `docs/roadmap/_archive/MS-{slug}.md` for done/dropped | global only; no other nesting or namespace roadmap |
 
 The first segment of `{slug}` must contain a letter: `CAP-HARN-001-foo` and `UC-010-bar` are sequence numbers.
 `{NN}` is an arc42 chapter `01`-`11` in arc42's order (`05-1` containers, `05-2` components), except `09` (decisions
@@ -103,3 +103,7 @@ No settings. Namespaces come from `[[tool.docs.namespaces]]` in `.devkit/config.
 
 No inline suppression. Quote an old date- or number-based identifier inside inline code or a code block, or keep it
 in a `materials/` directory; `[rules] exclude` removes a file from every rule.
+
+Milestone placement is checked against lifecycle status. Invalid archived live documents stay indexed so the
+rule can report them. Placement has no autofix: it never moves files or changes lifecycle status. Duplicate
+identities across root/archive remain errors. Existing metadata fixes and explicit historical targeting remain.

@@ -600,7 +600,7 @@ def test_misplaced_path_remediation_names_each_kinds_location(tmp_path: Path) ->
     }
     violations = check(RULE, tmp_path, files)
     remediations = {v.file: v.remediation for v in violations if v.message.startswith("Invalid partition path")}
-    milestone = "Rename or move the file to docs/roadmap/MS-{slug}.md (the ID is the file stem), then run `uv run devkit rules fix`"
+    milestone = "Rename or move the file to docs/roadmap/MS-{slug}.md for planned/active or docs/roadmap/_archive/MS-{slug}.md for done/dropped (the ID is the file stem), then run `uv run devkit rules fix`"
     dated = "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date, then run `uv run devkit rules fix`"
     living = (
         "Rename or move the file to the required path (the ID is the file stem), then run `uv run devkit rules fix`"
@@ -684,3 +684,50 @@ def test_fix_keeps_trailing_comments(tmp_path: Path) -> None:
         "area: core   # Must match parent directory\r\nsummary: '#1 # quoted'\r\n---\r\n# [CAP-CORE-login] Login\r\n"
     )
     assert check(RULE, tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    ("directory", "status", "valid"),
+    [
+        ("docs/roadmap", "planned", True),
+        ("docs/roadmap", "active", True),
+        ("docs/roadmap/_archive", "done", True),
+        ("docs/roadmap/_archive", "dropped", True),
+        ("docs/roadmap/_archive", "active", False),
+        ("docs/roadmap/_archive", "planned", False),
+        ("docs/roadmap", "done", False),
+        ("docs/roadmap", "dropped", False),
+        ("docs/roadmap/2026", "done", False),
+        ("docs/roadmap/_archive/2026", "done", False),
+        ("docs/packages/api/roadmap/_archive", "done", False),
+    ],
+)
+def test_milestone_status_location_pairs(tmp_path: Path, directory: str, status: str, valid: bool) -> None:
+    path = f"{directory}/MS-example.md"
+    original = f"---\nid: MS-example\nstatus: {status}\n---\n# [MS-example] Example\n"
+    files = {path: original, ".devkit/config.toml": _namespaces("api")}
+    violations = check(RULE, tmp_path, files, targets=[path], fix=True)
+    assert bool([v for v in violations if not v.fixed]) is not valid
+    assert (tmp_path / path).read_text() == original
+    assert len(list((tmp_path / "docs").rglob("MS-*.md"))) == 1
+
+
+def test_archived_metadata_repair_and_cross_location_identity_collision(tmp_path: Path) -> None:
+    archive = "docs/roadmap/_archive/MS-example.md"
+    check(
+        RULE,
+        tmp_path,
+        {archive: "---\nid: MS-wrong\nstatus: done\n---\n# [MS-wrong] Example\n"},
+        targets=[archive],
+        fix=True,
+    )
+    assert "id: MS-wrong" in (tmp_path / archive).read_text()  # Existing historical fix exclusion remains.
+    (tmp_path / archive).write_text("---\nid: MS-example\nstatus: done\n---\n# [MS-example] Example\n")
+    root = "docs/roadmap/MS-example.md"
+    violations = check(
+        RULE,
+        tmp_path,
+        {root: "---\nid: MS-example\nstatus: active\n---\n# [MS-example] Example\n"},
+        targets=[root, archive],
+    )
+    assert any("duplicated" in v.message for v in violations)

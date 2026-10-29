@@ -24,10 +24,26 @@ Direct proposal work: pending
 
 1. Present both assertions with the candidate. Missing or previously confirmed assertions authorize nothing.
 2. Immediately before writing, re-read scope and membership and recheck the evidence. If either changed, or the approved candidate cannot be re-established after a pause, present the candidate again; an interruption alone does not invalidate the user's confirmation.
-3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`.
+3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`; move the file from `docs/roadmap/` to `docs/roadmap/_archive/` in that same commit.
 
 ## Later changes
 
 - Wording or format corrections that keep the meaning do not reset the assertions.
-- To extend a `done` milestone, get the user's decision to reopen it to `active` and reset both assertions, or put the new scope in another milestone. Merging it into a broader theme milestone ([Backlog](backlog.md)) is not such an extension: the theme's own assertions decide its close.
-- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are unless merged.
+- To extend a `done` milestone, get the user's decision to reopen it to `active` and reset both assertions to pending, moving it from `_archive/` to the roadmap root in the same commit, or put the new scope in another milestone. Merging it into a broader theme milestone ([Backlog](backlog.md)) is not such an extension: the theme's own assertions decide its close.
+- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are unless merged or an exact content-preserving relocation batch is approved.
+
+## Placement, drop and retained history
+
+- Keep global planned/active files at `docs/roadmap/MS-<slug>.md` and done/dropped files at
+  `docs/roadmap/_archive/MS-<slug>.md`. Keep the same filename, ID and aliases.
+- For drop, present unsettled members and successor dependencies and the concrete reassignment, clearing or rejection.
+  On the user's decision, record that disposition, set dropped and move into `_archive/` in one Backlog commit.
+  Drop does not create or confirm either completion assertion. Repeating an unchanged archived drop writes nothing.
+- The close/drop/reopen candidate includes its file movement. Reuse approval for those exact effects; no extra
+  archive-only gate applies. Recheck the source and destination immediately before applying; a destination collision
+  stops the operation without overwriting. A changed candidate needs the existing fresh decision procedure.
+- For a reviewed existing-history relocation batch, present the exact source/destination files and their current
+  contents. After reader verification, reuse the user's authority for that exact unchanged batch and move only those
+  files, comparing bytes before/after. Keep absent historical assertions absent; no status or evidence is invented.
+- Historical merging works from either supported location: retain merged IDs as aliases of the theme and apply the
+  existing Backlog scope disposition. The theme's own status selects its location.

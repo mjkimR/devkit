@@ -359,3 +359,43 @@ describe('Planning overlay seed', () => {
 		expect(milestones.overlay).toBeUndefined();
 	});
 });
+
+it.each([false, true])(
+	'loads reserved archive metadata through optimized=%s without broad scanning',
+	async (optimized) => {
+		const files = {
+			'docs/roadmap/MS-live.md': '---\nid: MS-live\nstatus: active\n---\n# Live',
+			'docs/roadmap/_archive/MS-done.md': '---\nid: MS-done\nstatus: done\n---\n# Done',
+			'docs/roadmap/_archive/MS-dropped.md': '---\nid: MS-dropped\nstatus: dropped\n---\n# Dropped',
+			'docs/roadmap/_archive/year/MS-ignore.md': '# ignored',
+			'docs/architecture/ARCH-ignore.md': '# ignored'
+		};
+		const source = fixture(files);
+		if (optimized)
+			source.dashboardList = vi.fn(async () => ({
+				items: Object.entries(files).map(([path, content]) => ({
+					path,
+					content,
+					encoding: 'utf-8'
+				})),
+				errors: []
+			}));
+		const page = await openDashboardPage(source, 'main', 'milestones', signal());
+		expect(page.metadata.map((d) => d.path).sort()).toEqual(
+			Object.keys(files)
+				.filter((p) => !p.includes('/year/') && !p.includes('/architecture/'))
+				.sort()
+		);
+		expect(page.paths).toEqual(['docs/roadmap/MS-live.md']);
+		expect(page.documents.map((d) => d.meta.id)).toEqual(['MS-live']);
+		if (optimized) expect(source.tree).not.toHaveBeenCalled();
+		else
+			expect(
+				vi
+					.mocked(source.tree)
+					.mock.calls.map(([path]) => path)
+					.sort()
+			).toEqual(['docs/roadmap', 'docs/roadmap/_archive']);
+		expect(await openDashboardPage(source, 'main', 'milestones', signal())).toBe(page);
+	}
+);
