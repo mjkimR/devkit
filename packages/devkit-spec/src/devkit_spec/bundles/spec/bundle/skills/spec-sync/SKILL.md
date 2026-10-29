@@ -17,8 +17,8 @@ instruction. Record and evidence rules: the `spec` skill's `references/completio
    update `docs/steering/glossary.md` where it exists. Write no index tables in directory `README.md` files.
    - Screens: write each draft of the spec's `Screens` section to `docs/ux/<area>/UX-<slug>.md` (template `ux`), the
      step citations it needs to the use cases, and the drafted register rows to `docs/steering/ux-objects.md`,
-     creating the file with the project's first UX document; turn the drafts' plain-text new IDs into code spans
-     (`ADR-ux-drafts-before-code`). `RULE-ux-links` and `RULE-ux-coverage` check them from here on.
+     creating the file with the project's first UX document; turn the drafts' plain-text new IDs into code spans.
+     `RULE-ux-links` and `RULE-ux-coverage` check them from here on.
    - Copy none of the spec's user stories into `docs/`: they state the request, not the contract. Fold the delivered
      behavior into the use cases it changes: new or changed steps, extensions with their codes, postconditions and
      scenarios (`usecase-writing`).
