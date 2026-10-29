@@ -19,8 +19,9 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-The `spec` bundle ships fourteen deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
-sync` deploys them with the bundle's `core` preset, and devkit's rule engine runs them beside its own rules:
+Fourteen deterministic rules keep the Living Spec and the feature specs consistent: the `docs` bundle ships the nine
+document rules and the `spec` bundle the five spec lifecycle rules. `devkit sync` deploys them with each bundle's `core`
+preset, and devkit's rule engine runs them beside its own rules:
 `devkit rules check` (whole workspace or named targets), `check --staged` (the commit gate), `check --ci --base <ref>`
 and `devkit rules fix`. This capability is the catalog and the contract summary of each rule; the full guide of a rule
 (examples, remediation steps) is what `devkit rules explain <RULE-id>` prints, deployed beside the rule.

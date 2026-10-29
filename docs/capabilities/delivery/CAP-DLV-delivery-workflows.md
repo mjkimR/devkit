@@ -22,7 +22,7 @@ entrypoints:
 ## 1. Summary
 
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
-(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), seven host-neutral role contracts
+(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), nine host-neutral role contracts
 (`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset, and the
 `devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
@@ -35,7 +35,7 @@ sequence.
 
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
-  the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the seven role contracts, and the
+  the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the nine role contracts, and the
   `devkit_agt.features.integration.readiness` provider (`devkit_spec.features.delivery.usecases.integration.check`) for Unit and `session` tasks, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:

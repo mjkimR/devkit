@@ -688,8 +688,6 @@ it, nothing has landed, so the service withdraws its own two acceptance writes (
 record), leaves the Planning worktree as it was and reports `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` with the gate's
 output as details. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
 
-| Code | Mode | Meaning | Action |
-| --- | --- | --- | --- |
 `proposal report` checks the slug and `--source-sha` before it reads the checkout, so a missing proposal is never
 reported as a dirty tree.
 
