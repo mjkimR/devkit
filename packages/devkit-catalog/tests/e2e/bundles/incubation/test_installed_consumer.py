@@ -77,6 +77,18 @@ def test_installed_incubation_without_spec(tmp_path: Path) -> None:
         "discovery-planner",
     ):
         assert (consumer / f".codex/agents/{role}.toml").is_file()
+
+    workspace_example = (research / "references/workspace.md").read_text().split("```sh\n", 1)[1].split("```", 1)[0]
+    workspace_script = tmp_path / "research-workspace.sh"
+    workspace_script.write_text(workspace_example + '\nprintf \'%s\\n\' "$research_run" "$research_task"\n')
+    run("bash", "-n", str(workspace_script), cwd=consumer)
+    allocations = [run("bash", "-eu", str(workspace_script), cwd=consumer).splitlines() for _ in range(2)]
+    assert allocations[0][0] != allocations[1][0]
+    for run_path, task_path in allocations:
+        assert (consumer / run_path).is_dir()
+        assert (consumer / task_path).resolve().is_relative_to((consumer / run_path).resolve())
+        assert run("git", "check-ignore", "--", run_path, task_path, cwd=consumer).splitlines() == [run_path, task_path]
+        assert not run("git", "ls-files", "--", run_path, task_path, cwd=consumer).strip()
     current = consumer / ".devkit/incubation.md"
     current.write_bytes(b"# Current facts\nGoal: household list\nUnverified: offline merge\n")
     expected_context = current.read_bytes()

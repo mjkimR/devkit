@@ -20,7 +20,7 @@ Example after verifying the project path and ignore state:
 ```sh
 mkdir -p .devkit/transient/incubation-research
 research_run="$(mktemp -d .devkit/transient/incubation-research/run-XXXXXX)"
-research_task="$(mktemp -d "$research_run/task-XXXXXX)"
+research_task="$(mktemp -d "$research_run/task-XXXXXX")"
 ```
 
 Check the actual run/task paths in Git before placing files there; later task-specific ignore exceptions can

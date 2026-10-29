@@ -1,0 +1,25 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T07:05:05.782592Z'
+status: completed
+summary: Independent review found one P2 shell-allocation example defect; remaining AC coverage agrees with declared evidence limits.
+findings:
+- issue: The task-directory allocation example contains an unmatched double quote.
+  evidence: packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate-research/references/workspace.md:23; zsh -n on the extracted shell block exits 1 with unmatched quote.
+  failure_condition: Running the supplied shell example fails parsing and allocates no task directory.
+  suggested_action: Correct to research_task="$(mktemp -d "$research_run/task-XXXXXX")" and syntax-check the fenced example.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only review; before/after snapshot unchanged.
+unverified_areas:
+- Native host confinement and general discovery quality/cost are not established.
+checks:
+  tests: PASS 99 affected tests on reviewed source
+  lint: PASS lint, format, type and cumulative rules
+diff_scope:
+  base: 6b7286ac4998433d9b1a290fdc5217d731e7847d
+  head: 3bb5f0a4f375e79bc00a92908f652fc08fc22943
+activity_effort: medium

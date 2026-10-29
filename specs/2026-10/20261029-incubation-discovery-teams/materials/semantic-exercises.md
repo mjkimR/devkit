@@ -36,7 +36,7 @@ to originals where a path was replaced.
 | Real primary-source research | Generic/emulated incubation-researcher; one contract read and two official page opens, no searches/writes | Official Zotero sync/groups pages distinguish personal WebDAV file sync from group attachment sync. The role reported this as a constraint, with actual offline/API/server behavior untested. This was separate from fictional product evidence. |
 | SDD approach control | Installed pre-workspace research entry read its consumer; config returned effective SDD | Stopped product work without changing approach or creating retained notes. |
 | Invalid approach control | Installed pre-workspace entry attempted context inspection | Exit 2, `DEVELOPMENT_CONFIG_INVALID`; stopped without repair, product work or helper calls. |
-| Refined workspace/promotion | Final workspace guidance in a Git consumer; generic/emulated explorer and planner wrote separate assigned scratch files | 700 retained words; exact run/task paths ignored and untracked, no helper writes outside scratch, source/config/managed/projection hashes and HEAD/index unchanged. Master retained only research synthesis/current facts, with resolving non-scratch evidence links. |
+| Refined workspace/promotion | Workspace-refined guidance before the shell-example correction in a Git consumer; generic/emulated explorer and planner wrote separate assigned scratch files | 700 retained words; exact run/task paths ignored and untracked, no helper writes outside scratch, source/config/managed/projection hashes and HEAD/index unchanged. Master retained only research synthesis/current facts, with resolving non-scratch evidence links. |
 
 All generic roles followed their installed effective contracts with explicit boundaries. They were not native
 registered-role/sandbox enforcement tests. The primary-source-only role had no repository read scope for a
@@ -82,3 +82,14 @@ race, ignore-rule combination or native host permission configuration.
 
 An ordinary small question remains permitted inline. The exercise budgets are fixture bounds, not mandatory
 product defaults. The new skill adds no allocator registry, runtime scheduler or test-generated product code.
+
+## Review regression: executable allocation example
+
+Independent code review found an unmatched quote in the task-directory example. The installed-consumer e2e
+was extended to extract the shipped shell block, syntax-check it and execute it twice, checking distinct run
+paths, task containment, effective Git ignoring and no tracked scratch content. It failed on the old example
+with a shell parse error. After the exact quote correction, zsh syntax validation and the affected suite passed
+(99 tests), including the built-wheel consumer regression. Catalog lint/format/type checks passed.
+The earlier live workspace exercise used ordinary filesystem operations and did not execute that literal
+example; its observed results remain bounded to the recorded bundle digest. The regression tests the final
+shipped example directly rather than claiming that earlier run covered its syntax.
