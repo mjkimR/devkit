@@ -60,10 +60,7 @@ package, feature, layer or test tier. The rules agents most often need:
 
 ## Compatibility
 
-- No external consumers exist yet: schemas (`bundle.toml`, `.devkit/config.toml`, `.devkit/installation.json`),
-  CLI commands and APIs change in place, without version bumps, migrations, shims or legacy readers. Delete this
-  rule once a real consumer exists.
-- Exception: `devkit-advisory` (`devkit.advisory`) and `devkit-cli` (`devkit_cli`) have runtime consumers in other
+- `devkit-advisory` (`devkit.advisory`) and `devkit-cli` (`devkit_cli`) have runtime consumers in other
   repositories and are semver contracts: within `0.x` a breaking change needs a minor bump, released in lockstep
   with `devkit-dist` and `devkit-agt` (`ARCH-07-deployment`).
 
