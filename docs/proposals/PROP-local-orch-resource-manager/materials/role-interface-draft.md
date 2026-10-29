@@ -1,10 +1,15 @@
-# Lifecycle resource manager interface draft
+# git-operator interface draft
 
 This is Planning input for the spec bundle role, not an installed agent contract.
 
+The user selected role name `git-operator` and source `level: lean`. Existing `ADR-lean-subagent-level` maps
+lean to Sonnet medium, `gpt-6.1-terra` medium and Flash with effort omitted. The supported Antigravity per-role
+schema cannot express effort; do not promise Flash high or emulate it in prompts. Terra medium was not tested
+by the earlier Luna/Sol probe. Project model overrides remain available.
+
 ## Host dispatch
 
-Create `resource-manager` on the first lifecycle job for this conversation/repository. Reuse its exact agent
+Create `git-operator` on the first lifecycle job for this conversation/repository. Reuse its exact agent
 identity for later jobs; a missing identity starts a new instance with current state. Use the host's native
 subagent continuation rather than an additional daemon. Keep the main conversation for decisions and coordination.
 

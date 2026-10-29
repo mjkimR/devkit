@@ -128,3 +128,16 @@ The independent medium challenger found two P2 contract gaps: explicit supersess
 clause in `ADR-five-subagent-levels`, and mapping zero-exit CLI partial cleanup into the existing three role
 statuses. Both were folded into the proposal, PADR, target documents and role draft. Original CLI status/exit/
 effects remain distinct from role completion; no persisted state or CLI schema was added.
+
+## 7. User-selected role and preset revision
+
+The user selected `git-operator` as the role name and `lean` as its default, replacing the earlier provisional
+standard recommendation above. This is explicit direction, not a new inference from the preserved experiment.
+`ADR-lean-subagent-level` already implements Sonnet medium, `gpt-6.1-terra` medium and Flash with effort omitted
+because Antigravity's supported per-role schema cannot express it. No Flash high-effort guarantee or prompt-based
+emulation follows from lean.
+
+The original inputs, results, invocations and prior envelopes remain unchanged. Terra medium was not tested in
+that Luna/Sol comparison; Sol results cannot be transferred to it. No additional model probe or distribution
+engine change was performed for this revision. The user-selected configuration remains subject to the stated
+execution, total-cost, latency and cross-host evidence limits.

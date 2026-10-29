@@ -1,7 +1,7 @@
 ---
 id: PROP-local-orch-resource-manager
-title: Reusable resource manager subagent for local orchestration
-summary: "Delegates lifecycle operations to one reusable subagent per Host conversation and repository to reduce main-agent intervention and context load. Recommends an initial standard model default with compact overrides and explicit evidence limits."
+title: Reusable git-operator subagent for local orchestration
+summary: "Delegates lifecycle operations to one reusable git-operator per Host conversation and repository to reduce main-agent intervention and context load. Uses the user-selected lean preset without transferring prior Sol evidence to Terra."
 status: reviewing
 created_at: 2026-10-29
 target_area: delivery/
@@ -26,7 +26,7 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-local-orch-resource-manager] Reusable resource manager subagent for local orchestration
+# [PROP-local-orch-resource-manager] Reusable git-operator subagent for local orchestration
 
 ## 1. Background & Hypothesis
 
@@ -34,7 +34,7 @@ Local orchestration delegates Planning and Development turns but leaves worktree
 execution and cleanup in the Host. Their operating references and intermediate output compete with discussion
 and coordination. `CAP-DLV-delivery-workflows` and `ADR-orchestration-workers` define that boundary.
 
-Recommend adopting one lifecycle resource manager per Host conversation and repository. Create it on first use
+Adopt one reusable `git-operator` per Host conversation and repository. Create it on first use
 and reuse it for later jobs. Use native subagent execution/continuation, without an asynchronous runtime of our own.
 The intended benefit is less Host operational context and intervention across multiple units. Total-cost and
 conversation-latency improvements remain unmeasured.
@@ -58,21 +58,21 @@ conversation-latency improvements remain unmeasured.
   identity, start a fresh instance from CLI/Git observations and current Host authority. Codex read-only invocation
   and follow-up were exercised; Claude and Antigravity live execution was not.
 
-The recommendation in `PADR-reusable-lifecycle-resource-manager` uses initial `level: standard`, with `compact`
-available through project overrides. This is provisional: the small instructed sample did not establish a quality
-difference, compact execution parity or net savings. A mid-tier full-role baseline avoids treating decision replay
-as proof that multi-step mutation/recovery can be down-tiered safely. Revisit the default after matched live jobs
-establish scope preservation and recovery without extra Host reconstruction.
+The user selected the role name `git-operator` and default `level: lean`, replacing the earlier provisional
+standard recommendation in `PADR-reusable-lifecycle-resource-manager`. Existing project overrides remain available.
+`ADR-lean-subagent-level` already defines lean: Claude Code Sonnet with medium effort, Codex `gpt-6.1-terra` with
+medium effort, and Antigravity Flash with effort omitted because its supported per-role schema cannot express it.
+Lean makes no Flash high-effort guarantee and adds no prompt-based effort emulation.
 
-`CAP-DIST-agent-projections` maps standard to Codex Sol and Claude Sonnet. Antigravity standard inherits model
-and effort; it does not force a mid-tier model. Existing project mappings can select that host's available model.
-No new model router, fallback controller or distribution engine change is required.
+The prior probe compared requested Luna and Sol configurations; it did not test Terra medium. Its results remain
+historical evidence, not validation of the selected model. The choice is explicit user direction, not a measured
+Terra reliability or cost conclusion. No model router, fallback controller or distribution engine change is needed.
 
 ## 3. Proposed Design & Impact
 
 ### Delegated execution
 
-- Add a `resource-manager` role as the normal helper for recurring `local-orchestrated` lifecycle jobs.
+- Add a `git-operator` role with `level: lean` as the normal helper for recurring `local-orchestrated` lifecycle jobs.
   Preserve one-shot Planning/Development workers.
 - Delegate worktree creation/attachment and setup, handoff execution, integration preparation and already-authorized
   execution, exact merged-resource cleanup and recovery inspection.
@@ -126,10 +126,11 @@ changes. A concrete missing CLI boundary discovered later is a scope problem, no
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning recommends adoption with `dev_effort: medium`. The role contract, ownership boundary and provisional
+Planning recommends adoption with `dev_effort: medium`. The role contract, ownership boundary and selected
 model default are ready for `plan-accept`; acceptance and Development handoff remain Host/user decisions.
 No production agent assets or lifecycle behavior changed in Planning.
 
-Reconsider the model default if matched live evidence shows compact preserves execution scope and recovery without
-extra Host reconstruction. No total-cost, mutation-reliability or latency superiority is claimed.
+Validate the selected lean configuration during Development without rerunning the historical probe as part of
+this Planning revision. Terra medium execution, total cost and latency remain unmeasured; Sol evidence does not
+transfer to Terra. No total-cost, mutation-reliability or latency superiority is claimed.
 On acceptance, hand off to one feature spec; on rejection, retain the draft until normal hygiene retires it.
