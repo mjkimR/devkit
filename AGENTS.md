@@ -58,12 +58,6 @@ package, feature, layer or test tier. The rules agents most often need:
 - Default output carries only what changes the agent's next step; diagnostics are `logging` calls.
 - Libraries never print: commands write through `devkit_dist.adapters.cli`.
 
-## Compatibility
-
-- `devkit-advisory` (`devkit.advisory`) and `devkit-cli` (`devkit_cli`) have runtime consumers in other
-  repositories and are semver contracts: within `0.x` a breaking change needs a minor bump, released in lockstep
-  with `devkit-dist` and `devkit-agt` (`ARCH-07-deployment`).
-
 ## Packages
 
 Each package's README describes its modules; `docs/capabilities/<area>/` holds the contracts.

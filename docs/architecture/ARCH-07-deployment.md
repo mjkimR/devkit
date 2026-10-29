@@ -51,7 +51,8 @@ uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirect
 `uv.lock` pins the resolved commits. A Git requirement on `devkit-agt` brings `devkit-dist`, `devkit-core`, `devkit-cli` and
 `devkit-advisory` from the same commit (their workspace sources), and the `search` extra brings the model wheel from the release
 `packages/devkit-dist/pyproject.toml` pins. Every workspace distribution under `packages/` and `tools/` shares the version in root `VERSION` and is released
-from its matching `vX.Y.Z` tag. `just version-sync` updates static package and bundle manifest versions, versioned internal requirements
+from its matching `vX.Y.Z` tag. Versions follow semver: within `0.x` a release carrying a breaking change to any
+distribution's schemas, commands or APIs bumps the minor version, otherwise the patch version. `just version-sync` updates static package and bundle manifest versions, versioned internal requirements
 and `uv.lock`. Existing internal version constraints become exact matching pins; unversioned requirements retain
 their spelling. The separately built devkit-embed wheel keeps its model version. `just version-check` and
 `scripts/release.sh` enforce metadata consistency; release builds also check the tag and `uv lock --check`.

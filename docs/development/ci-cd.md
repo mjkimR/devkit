@@ -144,8 +144,8 @@ Synchronization also runs `uv run --no-active devkit sync` after locking to refr
 preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
 
 Root `VERSION` names the last released version between releases and moves to the next one only in the release
-commit; the next number is chosen then, because a breaking change to `devkit-advisory` or `devkit-cli` needs a minor
-bump. Prepare a release in this order:
+commit; the next number is chosen then, because a breaking change needs a minor bump
+(`ARCH-07-deployment` §1). Prepare a release in this order:
 
 1. Finish every `docs/` change the release carries.
 2. Set `VERSION` to the release version and run `just version-sync`.
