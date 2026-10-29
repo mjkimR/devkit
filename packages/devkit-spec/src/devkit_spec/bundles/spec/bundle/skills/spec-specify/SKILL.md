@@ -49,8 +49,8 @@ for one bound to `sdd-spec-bugfix`.
   with one draft per screen, modal or panel in the `ux` template's shape (`ux-writing`), with the use case step
   citations and the `docs/steering/ux-objects.md` rows the drafts need. Write an ID the change creates (a new UX, UC or
   CAP ID) as plain text and existing IDs as code spans. On a bundle handed off from a proposal, carry the Screens
-  drafts of `target-docs.md` into this section, so `spec-sync` and the reconcile verification read one place
-  (`ADR-ux-drafts-before-code`). Where a screen's arrangement is open, take the recommended candidate and record the
+  drafts of `target-docs.md` into this section, so `spec-sync` and the reconcile verification read one place.
+  Where a screen's arrangement is open, take the recommended candidate and record the
   others as an assumption.
 
 ## 5. Completion

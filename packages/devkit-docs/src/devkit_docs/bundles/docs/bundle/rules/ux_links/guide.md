@@ -4,7 +4,7 @@
 
 A UX document (`docs/ux/<area>/UX-<slug>.md`, or the same path under a namespace docs root) describes one screen,
 modal or panel; a use case step cites the UX ID of the screen it happens on, and each row of the document's
-Interactions table names the step it serves (`ADR-ux-step-links-and-coverage`). This rule reports what the two sides
+Interactions table names the step it serves. This rule reports what the two sides
 contradict, so the screen contract and the task flow stay in step. Steps that cite no screen are only a warning
 (`RULE-ux-coverage`).
 

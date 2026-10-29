@@ -3,7 +3,7 @@
 ## 1. Overview
 
 Once a UX document lists a use case in `usecases`, each step of that use case is expected to cite the screen it
-happens on, and each interaction of the document to name the step it serves (`ADR-ux-step-links-and-coverage`). Not
+happens on, and each interaction of the document to name the step it serves. Not
 every step happens on a screen (a mail sent, a background job) and a screen may carry global controls no single task
 needs, so gaps are warnings; contradictions are `RULE-ux-links`'s.
 

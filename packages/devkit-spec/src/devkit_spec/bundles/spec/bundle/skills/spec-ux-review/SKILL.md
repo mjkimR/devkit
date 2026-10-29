@@ -5,7 +5,7 @@ description: Review drafted screens before code by walking each linked use case 
 
 # spec-ux-review: UX Walkthrough Review
 
-The `ux-reviewer` role runs this skill in isolation and read-only (`ADR-ux-review-before-code`). It is an optional
+The `ux-reviewer` role runs this skill in isolation and read-only. It is an optional
 delegation before code, never a stage:
 
 - Planning: on the Screens drafts of `target-docs.md`.

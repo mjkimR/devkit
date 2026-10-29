@@ -24,7 +24,7 @@ The range from `<accepted>` to the returned final HEAD `<returned>` (the commit 
 - Every path of `git -C <worktree> diff --name-only <accepted> <returned>` is in the write scope, the worker's records included; envelopes you committed since `<accepted>` are exempt only while unchanged since your commit.
 - The worktree is clean, and the base checkout's status and HEAD match what you recorded before spawning.
 - The unit's checks pass on `<returned>`, confirmed by CI or a rerun; for a run that stopped on a problem, validate its paths only.
-- Each `(sync output)` entry `tasks.md` gained between `<accepted>` and `<returned>` passes only when you confirm all of these, because `devkit spec worker inspect` derives its scope from `_Boundary:` at `<returned>`, so its scope pass is no evidence for that entry (`ADR-admit-change-sync-outputs`):
+- Each `(sync output)` entry `tasks.md` gained between `<accepted>` and `<returned>` passes only when you confirm all of these, because `devkit spec worker inspect` derives its scope from `_Boundary:` at `<returned>`, so its scope pass is no evidence for that entry:
   - the worker's `sync_start` check is `PASS exit=0`;
   - `devkit sync --check` exits `0` on `<returned>`;
   - the path is under `seeded` or `files` in the returned head's `.devkit/installation.json`, is `.devkit/installation.json` itself, or is the file that holds the managed guidance block (`AGENTS.md`; the receipt records that block only as a hash).
