@@ -206,7 +206,9 @@ switching, fixed management tiers, production implementation by the research ent
 the existing feedback handoff pipeline. Native P2P is optional host functionality; structured returns suffice.
 
 Planning uses medium effort. Current evidence is contract/asset inspection, primary-source pattern research and
-independent scout analysis; implementation and semantic quality are not yet verified. The bundle is not selected
+independent scout analysis and a zero-finding challenger review. The proposal-targeted and committed-snapshot
+governance checks passed with 21 rules and no findings; affected documentation tests passed 12 tests. A pytest
+cache-write warning did not affect those results. Role implementation and semantic quality are not yet verified. The bundle is not selected
 in this development checkout, so source authoring does not require activating it here.
 
 ## 8. Lifecycle
