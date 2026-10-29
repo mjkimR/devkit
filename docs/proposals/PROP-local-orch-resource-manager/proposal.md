@@ -2,7 +2,7 @@
 id: PROP-local-orch-resource-manager
 title: Reusable git-operator subagent for local orchestration
 summary: "Delegates lifecycle operations to one reusable git-operator per Host conversation and repository to reduce main-agent intervention and context load. Uses the user-selected lean preset without transferring prior Sol evidence to Terra."
-status: reviewing
+status: accepted
 created_at: 2026-10-29
 target_area: delivery/
 priority: high
