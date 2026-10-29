@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-incubation-discovery-teams
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-idea-incubation.md
     resolution: modified

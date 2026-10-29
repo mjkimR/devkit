@@ -2,7 +2,7 @@
 id: SPEC-incubation-discovery-teams
 title: Explicit incubation research entry and discovery teams
 summary: "Provide an explicitly invoked research skill and optional discovery roles that compare early product directions and retain honest initial documents and a roadmap before development."
-status: in_progress
+status: completed
 created: 2026-10-29
 related_capabilities: [CAP-DLV-idea-incubation, CAP-HARN-agent-guidance]
 related_usecases: [UC-incubate-an-idea, UC-research-an-idea-and-shape-a-roadmap]
