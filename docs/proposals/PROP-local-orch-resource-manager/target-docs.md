@@ -40,7 +40,8 @@ relevant worktree/handoff references. Keep dispatch and decision guidance in the
 to the manager. Existing distribution projection and model presets remain unchanged.
 
 Add proportionate bundle contract/projection checks. Retain Planning evidence for repeated jobs, lightweight
-versus mid-tier execution and main-context reduction. Use native continuation mechanisms and identify untested
+versus mid-tier execution and main-context reduction. Record the provisional standard default, compact overrides
+and Antigravity standard inheritance explicitly. Use native continuation mechanisms and identify untested
 hosts rather than claiming complete live coverage.
 
 ## 4. Before and after
@@ -50,5 +51,5 @@ hosts rather than claiming complete live coverage.
 | Execution | Host reads instructions and operates CLI | Reusable manager operates existing CLI and returns concise results |
 | Main context | Operations coexist with user decisions | Decisions, coordination and material exceptions remain |
 | Lifetime | Planning/Development workers run one turn | Workers stay one-shot; manager serves recurring jobs |
-| Model choice | Lifecycle operations use the Host model | Lightweight and mid-tier comparison determines manager default |
+| Model choice | Lifecycle operations use the Host model | Initial standard default with compact override; cross-host preset limits remain explicit |
 | Authority | Host carries authority; CLI guards effects | Same authority and guards with explicit delegated execution |
