@@ -1,0 +1,2 @@
+# Product request
+I keep technical articles and notes for several personal projects and sometimes share a reading list with one collaborator. I can maintain a small tool, not a hosted platform. Investigate product directions and an initial roadmap before we build anything. Keep questions unresolved if the evidence does not settle them. Use the supplied fictional source pack, and do not claim it describes real products or users.

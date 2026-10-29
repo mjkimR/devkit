@@ -1,0 +1,92 @@
+[
+  {
+    "variant": "baseline",
+    "path": "inputs/idea.md",
+    "original_sha256": "7ce5d08f84508b2d716befd8d99c1be0e93dc022927fc2c85018c029a80f861c",
+    "stored_sha256": "7ce5d08f84508b2d716befd8d99c1be0e93dc022927fc2c85018c029a80f861c"
+  },
+  {
+    "variant": "baseline",
+    "path": "inputs/architecture.md",
+    "original_sha256": "c89863fbd0b3bc895d8c8fd00bc2bb5a1b6ca0536075d3e632fecd9a94c8085b",
+    "stored_sha256": "c89863fbd0b3bc895d8c8fd00bc2bb5a1b6ca0536075d3e632fecd9a94c8085b"
+  },
+  {
+    "variant": "baseline",
+    "path": "inputs/sources.md",
+    "original_sha256": "660bfd64a9b4d1427a0a65d8f94f263eb84f06a05ce687d4d192c36819fa4899",
+    "stored_sha256": "660bfd64a9b4d1427a0a65d8f94f263eb84f06a05ce687d4d192c36819fa4899"
+  },
+  {
+    "variant": "baseline",
+    "path": "research/product-directions.md",
+    "original_sha256": "fdaa045b6d376e437dc2ee6b1968f941972b9eeb5f53a28a245e616df089aea6",
+    "stored_sha256": "fdaa045b6d376e437dc2ee6b1968f941972b9eeb5f53a28a245e616df089aea6"
+  },
+  {
+    "variant": "baseline",
+    "path": ".devkit/incubation.md",
+    "original_sha256": "3a5818993764bfc67cf4663fb8c9ec35223217fdcf1162c36b15566720830084",
+    "stored_sha256": "4c31d35b52de30bae310f75e80f520fe100a940e8f1a6ce65398737bcb666b79"
+  },
+  {
+    "variant": "candidate",
+    "path": "inputs/idea.md",
+    "original_sha256": "7ce5d08f84508b2d716befd8d99c1be0e93dc022927fc2c85018c029a80f861c",
+    "stored_sha256": "7ce5d08f84508b2d716befd8d99c1be0e93dc022927fc2c85018c029a80f861c"
+  },
+  {
+    "variant": "candidate",
+    "path": "inputs/architecture.md",
+    "original_sha256": "c89863fbd0b3bc895d8c8fd00bc2bb5a1b6ca0536075d3e632fecd9a94c8085b",
+    "stored_sha256": "c89863fbd0b3bc895d8c8fd00bc2bb5a1b6ca0536075d3e632fecd9a94c8085b"
+  },
+  {
+    "variant": "candidate",
+    "path": "inputs/sources.md",
+    "original_sha256": "660bfd64a9b4d1427a0a65d8f94f263eb84f06a05ce687d4d192c36819fa4899",
+    "stored_sha256": "660bfd64a9b4d1427a0a65d8f94f263eb84f06a05ce687d4d192c36819fa4899"
+  },
+  {
+    "variant": "candidate",
+    "path": "docs/materials/reading-discovery.md",
+    "original_sha256": "e70315e23bd34549e1c2f6b1c91cdb69b6eff635dd6b1675629531c0e5ff5a92",
+    "stored_sha256": "e70315e23bd34549e1c2f6b1c91cdb69b6eff635dd6b1675629531c0e5ff5a92"
+  },
+  {
+    "variant": "candidate",
+    "path": ".devkit/incubation.md",
+    "original_sha256": "391664e53ed51e5c40dd987ad93d86e2d2a4d4ca2699a89c16874197a0e2f956",
+    "stored_sha256": "391664e53ed51e5c40dd987ad93d86e2d2a4d4ca2699a89c16874197a0e2f956"
+  },
+  {
+    "variant": "workspace",
+    "path": "inputs/idea.md",
+    "original_sha256": "7ce5d08f84508b2d716befd8d99c1be0e93dc022927fc2c85018c029a80f861c",
+    "stored_sha256": "7ce5d08f84508b2d716befd8d99c1be0e93dc022927fc2c85018c029a80f861c"
+  },
+  {
+    "variant": "workspace",
+    "path": "inputs/architecture.md",
+    "original_sha256": "c89863fbd0b3bc895d8c8fd00bc2bb5a1b6ca0536075d3e632fecd9a94c8085b",
+    "stored_sha256": "c89863fbd0b3bc895d8c8fd00bc2bb5a1b6ca0536075d3e632fecd9a94c8085b"
+  },
+  {
+    "variant": "workspace",
+    "path": "inputs/sources.md",
+    "original_sha256": "660bfd64a9b4d1427a0a65d8f94f263eb84f06a05ce687d4d192c36819fa4899",
+    "stored_sha256": "660bfd64a9b4d1427a0a65d8f94f263eb84f06a05ce687d4d192c36819fa4899"
+  },
+  {
+    "variant": "workspace",
+    "path": "docs/materials/reading-tool-research.md",
+    "original_sha256": "3feb0da83656ead53546729ac852dcab2b84582d73e5e40b8bd4c6cdfdf3bd34",
+    "stored_sha256": "3feb0da83656ead53546729ac852dcab2b84582d73e5e40b8bd4c6cdfdf3bd34"
+  },
+  {
+    "variant": "workspace",
+    "path": ".devkit/incubation.md",
+    "original_sha256": "af6db3914d4b297b15443fab11f3ddebdc61df82525ed6c0cfc20c72e3f0f4d9",
+    "stored_sha256": "af6db3914d4b297b15443fab11f3ddebdc61df82525ed6c0cfc20c72e3f0f4d9"
+  }
+]

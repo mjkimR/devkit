@@ -4,8 +4,8 @@ title: Explicit incubation research entry and discovery teams
 summary: "Provide an explicitly invoked research skill and optional discovery roles that compare early product directions and retain honest initial documents and a roadmap before development."
 status: in_progress
 created: 2026-10-29
-related_capabilities: [CAP-DLV-idea-incubation]
-related_usecases: [UC-incubate-an-idea]
+related_capabilities: [CAP-DLV-idea-incubation, CAP-HARN-agent-guidance]
+related_usecases: [UC-incubate-an-idea, UC-research-an-idea-and-shape-a-roadmap]
 workflow: sdd-spec-feature
 ---
 
@@ -31,6 +31,8 @@ Scope Excluded: an agent bus, scheduler, new wheel, model router, fixed hierarch
 automatic implementation, publication, SDD adoption, a new document kind/parser and feedback lifecycle changes.
 
 The invoking Host is the master. Existing role IDs remain available; three distinct optional roles are added.
+Research run/task scratch is allocated under `.devkit/transient/incubation-research/`; optional note writes are
+limited to assigned task directories, while product source and retained synthesis remain read-only to members.
 `invocation = "user"` uses existing distribution projection, rather than hand-authored native invocation fields.
 No product UI or screens change. Product discovery still requires effective incubation; authoring this feature
 in devkit's SDD checkout does not activate incubation there.
@@ -105,6 +107,14 @@ consensus proves global optimality. Missing execution evidence remains unverifie
 - **Then** retained evidence records actual role actions, outputs, checks and limits; synthetic return replays are
   labelled, and candidate distinctness, source support, commitments, resume fidelity and effort are assessed
   without claiming universal quality or treating keyword assertions as live research evidence.
+
+### [AC-10] Allocated scratch and selective promotion
+
+- **Given** a research run that needs writable notes and a project-owned transient area.
+- **When** the coordinator allocates run/task directories and validates role outputs.
+- **Then** Git paths are checked as ignored/untracked where applicable, members write only explicitly assigned
+  scratch notes or authorized experiments, and the coordinator retains selected results and evidence in materials
+  without durable links depending solely on transient files; no ignore-rule edits or automatic deletion occur.
 
 ## 4. Verification
 

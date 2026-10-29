@@ -7,6 +7,8 @@ import os
 import subprocess
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[6]
 
 
@@ -63,17 +65,35 @@ def test_installed_incubation_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".devkit/managed/spec").exists()
     assert not (consumer / ".agents/skills/spec").exists()
     assert (consumer / ".agents/skills/incubate/SKILL.md").is_file()
-    for role in ("product-clarifier", "incubation-researcher", "usage-reviewer"):
+    research = consumer / ".agents/skills/incubate-research"
+    assert (research / "SKILL.md").is_file()
+    assert yaml.safe_load((research / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
+    for role in (
+        "product-clarifier",
+        "incubation-researcher",
+        "usage-reviewer",
+        "direction-explorer",
+        "discovery-critic",
+        "discovery-planner",
+    ):
         assert (consumer / f".codex/agents/{role}.toml").is_file()
     current = consumer / ".devkit/incubation.md"
     current.write_bytes(b"# Current facts\nGoal: household list\nUnverified: offline merge\n")
     expected_context = current.read_bytes()
+    roadmap = consumer / "docs/materials/discovery-roadmap.md"
+    roadmap.parent.mkdir(parents=True, exist_ok=True)
+    roadmap.write_text("# Proposed roadmap\nInvestigate offline collaboration before implementation.\n")
+    expected_roadmap = roadmap.read_bytes()
     cli("rules", "check")
     cli("remove", "incubation")
     assert not (consumer / ".agents/skills/incubate/SKILL.md").exists()
+    assert not research.exists()
     assert current.read_bytes() == expected_context
+    assert roadmap.read_bytes() == expected_roadmap
     cli("add", "incubation")
     assert current.read_bytes() == expected_context
+    assert roadmap.read_bytes() == expected_roadmap
+    assert (research / "SKILL.md").is_file()
     cli("sync", "--check")
     config.write_text(config.read_text().replace('approach = "incubation"', 'approach = "invalid"'))
     error = json.loads(cli("config", "show", "--format", "json", expected=2))

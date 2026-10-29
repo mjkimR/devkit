@@ -6,6 +6,8 @@ import re
 import tomllib
 from pathlib import Path
 
+import pytest
+import yaml
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.bundles.subagents import read_contract
 from devkit_dist.features.distribution.services.installation.config import update_config
@@ -15,7 +17,14 @@ from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
 BUNDLE = PACKAGE / "src/devkit_catalog/incubation/bundle"
-ROLES = {"product-clarifier", "incubation-researcher", "usage-reviewer"}
+ROLES = {
+    "product-clarifier",
+    "incubation-researcher",
+    "usage-reviewer",
+    "direction-explorer",
+    "discovery-critic",
+    "discovery-planner",
+}
 
 
 def _installed() -> list[InstalledBundle]:
@@ -45,7 +54,9 @@ def test_incubation_projects_roles_and_entry_without_seeding_product_state(tmp_p
         assert (tmp_path / f".claude/agents/{role}.md").is_file()
         assert (tmp_path / f".agents/agents/{role}.md").is_file()
         projected = tomllib.loads((tmp_path / f".codex/agents/{role}.toml").read_text())
-        assert projected["sandbox_mode"] == ("workspace-write" if role == "incubation-researcher" else "read-only")
+        assert projected["sandbox_mode"] == (
+            "read-only" if role in {"product-clarifier", "usage-reviewer"} else "workspace-write"
+        )
     assert not (tmp_path / ".devkit/incubation.md").exists()
     assert not (tmp_path / "docs").exists()
     assert not (tmp_path / "specs").exists()
@@ -59,14 +70,21 @@ def test_reselection_preserves_project_owned_context_and_settings(tmp_path: Path
     context = tmp_path / ".devkit/incubation.md"
     context.write_bytes(b"# Household list\nCurrent decision: keep offline use.\nUnverified: two-user merge.\n")
     expected = context.read_bytes()
+    roadmap = tmp_path / "docs/materials/initial-roadmap.md"
+    roadmap.parent.mkdir(parents=True)
+    roadmap.write_text("# Proposed roadmap\nUnknown: shared edit frequency.\n")
+    expected_roadmap = roadmap.read_bytes()
     sync_project(tmp_path, _installed())
     update_config(tmp_path, opt_out=["incubation"])
     sync_project(tmp_path, _installed())
     assert not (tmp_path / ".agents/skills/incubate/SKILL.md").exists()
+    assert not (tmp_path / ".agents/skills/incubate-research").exists()
     assert not (tmp_path / ".codex/agents/usage-reviewer.toml").exists()
+    assert not (tmp_path / ".codex/agents/direction-explorer.toml").exists()
     update_config(tmp_path, presets={"incubation": ["core"]})
     sync_project(tmp_path, _installed())
     assert context.read_bytes() == expected
+    assert roadmap.read_bytes() == expected_roadmap
     assert tomllib.loads(config.read_text())["presentation"]["language"] == "ko"
 
 
@@ -82,8 +100,9 @@ def test_roles_keep_optional_execution_and_coordinator_context_ownership() -> No
     assert_rule(researcher, "payload permits", "experiment", "only", "sandbox/prototype boundary")
 
 
-def test_guidance_is_self_contained_and_references_are_conditional() -> None:
-    skill = BUNDLE / "skills/incubate/SKILL.md"
+@pytest.mark.parametrize("name", ["incubate", "incubate-research"])
+def test_guidance_is_self_contained_and_references_are_conditional(name: str) -> None:
+    skill = BUNDLE / f"skills/{name}/SKILL.md"
     text = skill.read_text()
     references = set(re.findall(r"`(references/[a-z-]+\.md)`", text))
     assert references == {
@@ -96,4 +115,23 @@ def test_guidance_is_self_contained_and_references_are_conditional() -> None:
         assert not re.search(r"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB)-[a-z]", content), path
         assert len(path.read_bytes()) <= 12288, path
     assert "configuration.development.approach" in text
-    assert_rule((skill.parent / "references/delegation.md").read_text(), "no SDD envelope")
+    assert_rule((BUNDLE / "skills/incubate/references/delegation.md").read_text(), "no SDD envelope")
+
+
+def test_research_entry_projects_explicit_invocation_for_each_host(tmp_path: Path) -> None:
+    update_config(tmp_path, agents=["codex", "claude-code", "antigravity"], presets={"incubation": ["core"]})
+    sync_project(tmp_path, _installed())
+    relative = "skills/incubate-research"
+    managed = tmp_path / ".devkit/managed/incubation" / relative
+    codex = tmp_path / ".agents" / relative
+    claude = tmp_path / ".claude" / relative
+    antigravity = tmp_path / ".agents" / relative
+    # The shared skill keeps the source; policy belongs to native projection metadata.
+    assert (codex / "SKILL.md").read_bytes() == (managed / "SKILL.md").read_bytes()
+    assert yaml.safe_load((codex / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
+    frontmatter = (claude / "SKILL.md").read_text().split("---", 2)[1]
+    assert yaml.safe_load(frontmatter)["disable-model-invocation"] is True
+    assert (antigravity / "SKILL.md").is_file()
+    assert not (managed / "agents/openai.yaml").exists()
+    assert not (tmp_path / ".devkit/incubation.md").exists()
+    assert not (tmp_path / "docs").exists()

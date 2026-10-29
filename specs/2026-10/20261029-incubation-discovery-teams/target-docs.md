@@ -9,6 +9,11 @@ targets:
   - file: docs/capabilities/delivery/CAP-DLV-idea-incubation.md
   - file: docs/usecases/delivery/UC-incubate-an-idea.md
   - file: docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md
+  - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+  - file: guides/INSTALL_GUIDE.md
+  - file: guides/install/bundle-recommendations.md
+  - file: guides/install/new-repository.md
+  - file: guides/install/existing-repository.md
 ---
 
 # Target Living Spec for PROP-incubation-discovery-teams

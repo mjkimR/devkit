@@ -6,7 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `incubation` | `core` | Adaptive idea discovery, implementation, optional support and mutable current context without SDD delivery records |
+| `incubation` | `core` | Explicit research teams, adaptive product iteration, optional support and mutable current context without SDD delivery records |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
 | `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for the feature layout, layer imports, command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
@@ -24,8 +24,27 @@ shared document formats; devkit-spec is not required. `/incubate` checks the eff
 `uv run devkit config show` before product actions. Selection changes assets, not project policy.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action. Optional product-clarifier, incubation-researcher and usage-reviewer roles return bounded evidence. The
-coordinator keeps mutable current facts in project-owned `.devkit/incubation.md`; sync never seeds or overwrites it.
+action. Explicit `/incubate-research` starts a bounded investigation of an ambiguous idea, product direction or
+architecture choice before development. The invoking agent coordinates optional product-clarifier,
+incubation-researcher, direction-explorer, discovery-critic, discovery-planner and usage-reviewer assignments.
+There is no required team size or role sequence. The research entry declares `invocation = "user"`; distribution
+projects native explicit-invocation settings where supported, with the same trigger stated in the skill body.
+
+```text
+/incubate-research Compare ways to organize technical reading for a solo-maintained product.
+Research competitors and workarounds, compare directions, and draft initial documents and a roadmap.
+```
+
+Research returns supported findings, alternative directions, a provisional recommendation, unknowns and a
+proportionate product brief, research/architecture notes and conditional outcome/dependency roadmap. Reuse the
+project's documents; default new notes to `docs/materials/`, labelled as discovery/planning. Work uses allocated
+run/task directories under `.devkit/transient/incubation-research/`, after Git ignore/untracked checks where
+applicable. Members write only assigned scratch notes; the coordinator promotes selected results and supporting
+evidence, verifies durable references and performs no automatic cleanup or ignore-rule edits. Research completion
+starts no implementation, publication or SDD lifecycle. A small question can stay inline.
+
+The coordinator keeps mutable current facts, retained note links and useful alternative reopening conditions in
+project-owned `.devkit/incubation.md`; sync never seeds or overwrites it.
 No per-change SDD Unit, envelope or immutable experiment history is required. Independent project checks still run.
 An explicit adoption request prepares spec assets while keeping incubation active, then uses the separately
 delivered `sdd-baseline` playbook for readiness and activation.

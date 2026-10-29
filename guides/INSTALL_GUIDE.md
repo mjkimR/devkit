@@ -135,7 +135,9 @@ provider = "project"
 
 Select `uv run devkit add incubation`, then inspect `uv run devkit config show` and
 `uv run devkit get-context incubation`. `/incubate` handles adaptive discovery, research, implementation and
-actual-usage verification; optional support roles are not mandatory phases. The coordinator creates mutable
+actual-usage verification. Explicit `/incubate-research` coordinates early direction research and initial documents/roadmap;
+allocated `.devkit/transient/incubation-research/` task notes are selectively promoted to durable materials.
+Optional support roles are not mandatory phases. The coordinator creates mutable
 `.devkit/incubation.md` when useful. Leave that project-owned file available to normal version control and preserve
 its bytes during installation. No complete backlog or SDD Unit is needed before the first useful action.
 

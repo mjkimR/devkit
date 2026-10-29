@@ -5,7 +5,8 @@
    - `product-clarifier`: candidate users/problems, alternatives and missing product questions.
    - `incubation-researcher`: evidence for one concrete decision, or an experiment with an explicit bounded write area.
    - `usage-reviewer`: a representative flow exercised in an assigned test environment against stated expectations.
-3. Pass one goal, absolute read boundaries, any permitted write boundary, source/artifact identity, expected output and the host permissions already granted. Name the installed role contract by absolute path and state whether the host isolates natively or emulates it.
+   - `direction-explorer`, `discovery-critic`, `discovery-planner`: independent alternatives, cross-candidate criticism and planning drafts during an explicitly selected `/incubate-research` investigation.
+3. Pass one goal, absolute read boundaries, any permitted task-scratch or experiment write boundary, source/artifact identity, expected output, stop condition and the host permissions already granted. Name the installed role contract by absolute path and state whether the host isolates natively or emulates it.
 4. On an emulated host, set explicit boundaries and compare actual source/index/HEAD before and after; never claim a native guarantee.
 5. Wait for each role you started; validate its evidence and failure conditions before folding it into retained choices.
 6. Reject out-of-scope writes or invented authority as evidence and report the actual state to the coordinator; never reset or discard another actor's work.

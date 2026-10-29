@@ -1,0 +1,8 @@
+request: return:specify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: specify
+note: Refine the approved discovery feature with user-directed transient run/task
+  scratch and selective promotion; no runtime or scope expansion.
+at: '2026-10-29T06:53:30.204272Z'
