@@ -5,6 +5,10 @@ summary: "For local orchestration, we reuse a lifecycle executor with an initial
 proposal: PROP-local-orch-resource-manager
 status: draft
 created_at: 2026-10-29
+supersedes:
+  - ADR-host-cli-lifecycle-authority
+  - ADR-orchestration-workers
+  - ADR-five-subagent-levels
 ---
 
 # [PADR-reusable-lifecycle-resource-manager] Reusable lifecycle execution with a standard model default
