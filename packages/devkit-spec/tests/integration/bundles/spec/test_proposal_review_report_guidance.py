@@ -1,13 +1,18 @@
 """Proposal review guidance verifies committed proposal without shared artifact report."""
 
-from spec_support.bundle_text import text
+from distsupport.guidance import assert_rule
+from spec_support.bundle_text import raw, text
 
 
 def test_review_guidance_inspects_committed_proposal() -> None:
     review = text("skills/spec-review-proposal/SKILL.md")
     assert "[PROPOSAL_REVIEW_POLICY: auto_write=...]" not in review
     assert "--report-uri" not in review
-    assert "Read the proposal, every PADR and the envelopes" in review
+    assert_rule(
+        raw("skills/spec-review-proposal/SKILL.md"),
+        "read the proposal, every padr and the envelopes",
+        "committed source",
+    )
     assert "devkit spec proposal accept" in review
 
 
@@ -22,7 +27,10 @@ def test_stale_recovery_guidance_preserves_no_report() -> None:
     completion = text("skills/spec/references/completion.md")
     assert "report URI" not in completion
     assert "A stale source or report" not in completion
-    assert (
-        "A stale source invalidates the old request: inspect the partial state and authorize only the remaining "
-        "effects, preserving the source SHA, authority and recovery state."
-    ) in completion
+    assert_rule(
+        raw("skills/spec/references/completion.md"),
+        "stale source invalidates the old request",
+        "partial state",
+        "authorize only the remaining effects",
+        "preserving the source sha, authority and recovery state",
+    )

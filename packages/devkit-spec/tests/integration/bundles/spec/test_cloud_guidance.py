@@ -12,6 +12,7 @@ from devkit_dist.features.distribution.services.installation.discovery import di
 from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
 from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import flat
 
 MAINTAINED = {"advisory", "authoring", "devkit", "harness", "response-style", "spec"}
@@ -92,5 +93,5 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     assert "devkit spec proposal report" in review
     cloud_review = flat(inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
     assert "--report-uri" not in cloud_review
-    orchestrate = flat(local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data.decode())
-    assert "optional project MCP tools" in orchestrate
+    orchestrate = local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data.decode()
+    assert_rule(orchestrate, "optional", "project MCP tools")

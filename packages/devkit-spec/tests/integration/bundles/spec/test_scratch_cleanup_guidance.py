@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from spec_support.bundle_text import flat, text
+from distsupport.guidance import assert_rule
+from spec_support.bundle_text import flat, raw, text
 
 PAYLOAD = "skills/spec-delegate/references/payload.md"
 WORKER = "subagents/development-worker.md"
@@ -17,22 +18,21 @@ WORKFLOWS = Path(__file__).resolve().parents[6] / "docs/capabilities/delivery/CA
 # AC-01
 @pytest.mark.parametrize("environment", ENVIRONMENTS)
 def test_the_development_worker_leaves_scratch_files_to_worktree_removal(environment: str) -> None:
-    worker = text(WORKER, environment)
-    assert "Keep authored scratch files in an ignored path inside the worktree and leave them there" in worker
-    assert "removing the worktree cleans them, so never delete them yourself" in worker
-    assert "Pytest-managed fixtures (`tmp_path`) may use an isolated system temporary directory" in worker
-    assert "pass `--basetemp` on the command line, not through `PYTEST_ADDOPTS`" in worker
+    worker = raw(WORKER, environment)
+    assert_rule(worker, "authored scratch files", "ignored path inside the worktree", "leave them")
+    assert_rule(worker, "authored scratch files", "removing the worktree cleans them", "never delete them yourself")
+    assert_rule(worker, "pytest-managed fixtures (`tmp_path`)", "isolated system temporary directory")
+    assert_rule(worker, "`--basetemp`", "command line", "not through `PYTEST_ADDOPTS`")
 
 
 # AC-02
 @pytest.mark.parametrize("environment", ENVIRONMENTS)
 def test_payloads_never_ask_for_create_then_delete(environment: str) -> None:
-    payload = text(PAYLOAD, environment)
-    assert "Never ask a worker to delete a scratch file or fixture it created" in payload
-    assert "removing the worktree (`devkit worktree finish` or integration cleanup) cleans them" in payload
-    planning = text(PLANNING_WORKER, environment)
-    assert "Leave them there for removing the worktree to clean, never delete them yourself" in planning
-    assert "Remove them before the last commit" not in planning
+    payload = raw(PAYLOAD, environment)
+    assert_rule(payload, "never ask a worker", "delete", "scratch file or fixture", "it created")
+    assert_rule(payload, "scratch file", "removing the worktree", "`devkit worktree finish`", "integration cleanup")
+    assert_rule(raw(PLANNING_WORKER, environment), "removing the worktree", "never delete them yourself")
+    assert "Remove them before the last commit" not in text(PLANNING_WORKER, environment)
 
 
 def test_the_delivery_workflow_contract_mirrors_the_guidance() -> None:

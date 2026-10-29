@@ -5,56 +5,46 @@ from pathlib import Path
 
 import pytest
 from devkit_core.core.frontmatter import parse
-from spec_support.bundle_text import text
+from distsupport.guidance import assert_rule
+from spec_support.bundle_text import raw, text
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_pickup_order_and_lifecycle_guards(environment: str) -> None:
-    next_work = text("skills/spec-next/references/next-work.md", environment)
-    for phrase in (
-        "including critical drafts",
-        "A critical blocked draft stays blocked",
-        "git rev-parse <base>",
-        "git show <commit>:<path>",
-        "report the base ref and commit",
-        "Do not fetch implicitly",
-        "Never substitute completion",
-        "unfinished proposal",
-        "rejected",
-        "proposal, unfinished spec",
-        "invalid/unknown target",
-        "Do not recursively reopen",
-        "Explicit user pickup can override order",
-        "cannot waive malformed references or cycle",
-        "direct-spec intake",
-        "Critical drafts first, whatever their milestone",
+    next_work = raw("skills/spec-next/references/next-work.md", environment)
+    for rule in (
+        ("prerequisite procedure", "every candidate", "including critical drafts"),
+        ("blocked candidate", "unfinished proposal", "rejected proposal", "unfinished spec", "invalid/unknown target"),
+        ("blocked candidate", "a critical blocked draft stays blocked"),
+        ("`git rev-parse <base>`", "report the base ref and commit", "`git show <commit>:<path>`"),
+        ("`git rev-parse <base>`", "do not fetch implicitly", "never substitute completion", "activity branch"),
+        ("`status: completed`", "do not recursively reopen", "prerequisites"),
+        ("explicit user pickup can override order", "cannot waive malformed references or cycles"),
+        ("explicit proposal pickup", "direct-spec intake"),
+        ("critical drafts first", "whatever their milestone"),
     ):
-        assert phrase in next_work, phrase
-    backlog = text("skills/spec/references/backlog.md", environment)
-    for phrase in (
-        "--direction in -n 0",
-        "leave completed ones unchanged",
-        "Before splitting, superseding, rejecting, deleting or reclassifying a proposal",
-        "required child/successor set",
-        "only when the prerequisite is explicitly waived",
-        "same authorized change",
-        "If a dependent lies outside your write scope, stop and ask the Host to coordinate",
+        assert_rule(next_work, *rule)
+    backlog = raw("skills/spec/references/backlog.md", environment)
+    for rule in (
+        ("before splitting, superseding, rejecting, deleting or reclassifying a proposal",),
+        ("`devkit docs refs prop-<slug> --direction in -n 0`", "`depends_on`", "leave completed ones unchanged"),
+        ("with the user", "required child/successor set", "only when the prerequisite is explicitly waived"),
+        ("commit the disposition", "same authorized change"),
+        ("dependent", "outside your write scope", "stop", "ask the host to coordinate"),
     ):
-        assert phrase in backlog, phrase
-    classification = text("skills/spec/references/classification.md", environment)
-    assert "Before direct-spec intake or explicit proposal pickup" in classification
+        assert_rule(backlog, *rule)
+    classification = raw("skills/spec/references/classification.md", environment)
+    assert_rule(classification, "before direct-spec intake or explicit proposal pickup", "prerequisite procedure")
 
 
 def test_templates_separate_membership_and_prerequisites() -> None:
     proposal = text("templates/proposal.md")
     assert "# depends_on: [PROP-foundation, SPEC-parser]" in proposal
     assert "never carried to spec.md" in proposal
-    milestone = text("skills/spec/references/roadmap-catalog.md")
-    assert "direct PROP" in milestone and "phase-level outcomes" in milestone
-    assert "initially have one proposal" in milestone and "User and agent jointly review" in milestone
-    assert "Handoff does not carry milestone metadata to SPEC" in milestone
-    assert "CLI flags, branch names, file layouts" in milestone
-    assert "no delivery lineage is stored" in text("skills/spec/references/roadmap-catalog.md")
+    milestone = raw("skills/spec/references/roadmap-catalog.md")
+    assert_rule(milestone, "user and agent jointly review", "direct prop members", "initially have one proposal")
+    assert_rule(milestone, "prefer observable phase-level outcomes", "cli flags, branch names, file layouts")
+    assert_rule(milestone, "handoff does not carry milestone metadata to spec", "no delivery lineage is stored")
 
 
 def git(root: Path, *args: str) -> str:

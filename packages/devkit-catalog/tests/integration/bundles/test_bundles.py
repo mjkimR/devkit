@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
 SOURCE = PACKAGE / "src"
@@ -54,17 +55,17 @@ def test_response_style_deploys_configured_language(tmp_path: Path, language: st
     text = target.read_text()
     assert "{{" not in text and "{%" not in text
     guidance = (tmp_path / "AGENTS.md").read_text()
-    assert "read and apply the `response-style` skill" in guidance
+    assert_rule(guidance, "read and apply", "`response-style`")
     assert ".devkit/managed/response-style/instructions/" not in guidance
     assert ("Use ko as the default" if language == "ko" else "Use the language of the user's current request") in text
     assert "default conversation language" not in guidance
     assert "→ **Core sentence.** Explanation" in guidance
     assert "# Reply style" in text
     assert "→ **Core sentence.** Supporting explanation." in text
-    assert "Required user and workflow formats take precedence" in text
-    assert "return it without framing" in text
-    assert "state what is finished and what remains" in text
-    assert "Follow repository and task language requirements" in text
+    assert_rule(text, "workflow formats", "precedence")
+    assert_rule(text, "only", "artifact", "without framing")
+    assert_rule(text, "work report", "finished", "remains")
+    assert_rule(text, "repository and task language", "deliverables")
     assert (
         "unless the user explicitly requests another language" in text
         if language == "ko"
@@ -171,7 +172,7 @@ def _collapsed(text: str) -> str:
 
 def _description_and_body(root: Path) -> tuple[str, str]:
     header, body = (root / "SKILL.md").read_text().split("\n---\n", 1)
-    return _collapsed(header.split("description:", 1)[1]), _collapsed(body)
+    return _collapsed(header.split("description:", 1)[1]), body
 
 
 def _assert_self_contained_within_budget(root: Path, expected: tuple[str, ...]) -> dict[str, Path]:
@@ -188,12 +189,11 @@ def _assert_self_contained_within_budget(root: Path, expected: tuple[str, ...]) 
 
 def test_review_refactor_entry_condition_and_description() -> None:  # SPEC-review-refactor AC-03
     description, body = _description_and_body(_review_refactor_root())
-    assert "review and refactoring pass over user-selected code, agent guidance or CLI command roots" in description
-    assert "consolidates duplicated logic and removes unneeded code" in description
-    assert "Run only when the user invoked or confirmed this playbook" in body
-    assert "`devkit playbook get maintenance/review-refactor`" in body
-    assert "authorize no change" in body
-    assert "an unattended run stops at the decision round with nothing applied" in body
+    assert_rule(description, "review", "refactor", "user-selected", "code", "agent guidance", "CLI command roots")
+    assert_rule(description, "consolidates", "duplicated", "removes", "unneeded")
+    assert_rule(body, "only when", "invoked", "confirmed", "`devkit playbook get maintenance/review-refactor`")
+    assert_rule(body, "invocation", "authorize no change")
+    assert_rule(body, "unattended", "stops", "decision round", "nothing applied")
 
 
 def test_review_refactor_is_self_contained_and_within_budget() -> None:  # SPEC-review-refactor AC-04
@@ -250,12 +250,11 @@ def test_performance_pass_cites_existing_review_refactor_headings() -> None:  # 
 
 def test_performance_pass_entry_condition_and_description() -> None:  # SPEC-performance-pass AC-04
     description, body = _description_and_body(_playbook_root("performance-pass"))
-    assert "performance pass over user-selected slow commands or operations" in description
-    assert "behavior-preserving speedups" in description
-    assert "Run only when the user invoked or confirmed this playbook" in body
-    assert "`devkit playbook get maintenance/performance-pass`" in body
-    assert "Invocation, an external runner naming this playbook and a clean measurement authorize no change" in body
-    assert "an unattended run stops at the decision round with nothing applied" in body
+    assert_rule(description, "performance pass", "user-selected", "slow")
+    assert_rule(description, "only", "agreed", "behavior-preserving", "speedups")
+    assert_rule(body, "only when", "invoked", "confirmed", "`devkit playbook get maintenance/performance-pass`")
+    assert_rule(body, "invocation", "external runner", "clean measurement", "authorize no change")
+    assert_rule(body, "unattended", "stops", "decision round", "nothing applied")
 
 
 def test_performance_pass_is_self_contained_and_within_budget() -> None:  # SPEC-performance-pass AC-05

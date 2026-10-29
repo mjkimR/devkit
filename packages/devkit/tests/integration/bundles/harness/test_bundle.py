@@ -19,6 +19,7 @@ from devkit_dist.features.distribution.services.installation.discovery import In
 from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.override_commands import create_override
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[4]
 BUNDLE = PACKAGE / "src/devkit_agt/bundles/harness/bundle"
@@ -45,9 +46,9 @@ def test_the_bundle_is_auto_selected_with_its_core_preset() -> None:
 
 def test_the_constitution_holds_the_harness_contracts() -> None:
     constitution = (BUNDLE / "AGENTS.md").read_text("utf-8")
-    assert "`[rules]` and `[gates]`" in constitution
-    assert "`devkit rules check --staged`, `--ci`" in constitution
-    assert "commit the receipt" in constitution
+    assert_rule(constitution, "`[rules]`", "`[gates]`", "`.devkit/config.toml`")
+    assert_rule(constitution, "`devkit rules check --staged`", "`--ci`", "only", "`.devkit/installation.json`")
+    assert_rule(constitution, "commit", "receipt", "every change")
     assert len(constitution.splitlines()) <= 100
 
 
@@ -95,8 +96,8 @@ def test_the_run_preset_adds_one_agents_md_line_pointing_at_devkit_run(tmp_path:
     assert (target / ".devkit/managed/harness/instructions/devkit-run.md").is_file()
     block = (target / "AGENTS.md").read_text()
     [line] = [line for line in block.splitlines() if "devkit run" in line]
-    assert line.startswith("- Run tests, linters and type checks as `uv run devkit run -- <command>`")
-    assert "`.devkit/managed/harness/instructions/devkit-run.md`" in line
+    assert_rule(line, "tests", "linters", "type checks", "`uv run devkit run -- <command>`")
+    assert_rule(line, "read", "`.devkit/managed/harness/instructions/devkit-run.md`", "before")
 
 
 def test_the_context_delivers_the_moved_guidance(tmp_path: Path) -> None:
@@ -105,7 +106,7 @@ def test_the_context_delivers_the_moved_guidance(tmp_path: Path) -> None:
     update_config(target, presets={"harness": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit-agt", "0.1.0", load_bundle(BUNDLE))])
     context = GetContext().execute(target, "harness").to_dict()
-    assert "`[rules]` and `[gates]`" in context["constitution"]
+    assert_rule(context["constitution"], "`[rules]`", "`[gates]`")
     headers = {entry["header"].split("\n", 1)[0] for entry in context["instructions"]}
     assert headers == {f"name: {name}" for name in INSTRUCTIONS}
     bodies = "\n".join(Path(entry["path"]).read_text() for entry in context["instructions"])

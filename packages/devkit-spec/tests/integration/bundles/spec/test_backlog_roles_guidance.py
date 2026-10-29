@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import raw, text
 from spec_support.proposals import TODAY
 
@@ -19,34 +20,41 @@ XL_DEFINITION = "would need two or more specs or task kinds"
 
 
 def test_triage_is_delegated_above_five_open_items_on_a_native_host() -> None:
-    hygiene = text("playbooks/feedback-hygiene/SKILL.md")
-    assert "When the listing has more than 5 items and the host runs the `triage` role natively" in hygiene
-    assert "from a clean checkout (`git status --porcelain` empty)" in hygiene
-    assert (
-        "Otherwise run this step inline; on a dirty checkout, delegate from a clean task worktree or run it inline"
-        in hygiene
-    )
-    assert "its body names the `triage` role when one was used" in hygiene
+    hygiene = raw("playbooks/feedback-hygiene/SKILL.md")
+    assert_rule(hygiene, "more than 5 items", "`triage` role natively", "delegate", "`spec-delegate`")
+    assert_rule(hygiene, "`triage`", "clean checkout", "`git status --porcelain` empty")
+    assert_rule(hygiene, "`triage`", "otherwise run this step inline", "dirty checkout", "clean task worktree")
+    assert_rule(hygiene, "commit", "body names the `triage` role", "when one was used")
 
 
 def test_the_decomposer_runs_from_backlog_only_and_the_host_verifies_and_applies() -> None:
-    backlog = text(BACKLOG)
-    for phrase in (
-        "Delegate the split to the `decomposer` (Backlog roles, below) only from Backlog and never on your own"
-        " initiative: for a `needs_decompose` draft once its Planning return is merged, on the user's request to split"
-        " a draft, and for an `XL` draft",
-        "they return a message, recorded in no envelope, and the Host applies only what the user decides",
-        "the checkout is clean (`git status --porcelain` empty)",
-        "`git status --porcelain` is still empty (`spec-delegate` step 4)",
-        "`git diff <head> -- docs/proposals/PROP-<slug>` is empty",
-        "every existing ID the return cites resolves with `devkit docs resolve`",
-        "a proposed child or milestone slug must not resolve",
-        "Never assign the parent's open feedback to a child",
-        "the Backlog commit body names the role used",
+    backlog = raw(BACKLOG)
+    for rule in (
+        (
+            "`decomposer`",
+            "only from backlog",
+            "never on your own initiative",
+            "`needs_decompose` draft",
+            "planning return is merged",
+            "user's request to split",
+            "`xl` draft",
+        ),
+        ("`triage`", "`decomposer`", "read-only", "no envelope", "applies only what the user decides"),
+        ("before", "checkout is clean", "`git status --porcelain` empty"),
+        ("after", "`git status --porcelain` is still empty", "`spec-delegate` step 4"),
+        ("before applying a split", "`git diff <head> -- docs/proposals/prop-<slug>` is empty"),
+        ("every existing id", "resolves with `devkit docs resolve`"),
+        ("proposed child or milestone slug", "must not resolve"),
+        ("never assign the parent's open feedback to a child",),
+        ("backlog commit body", "names the role used"),
     ):
-        assert phrase in backlog, phrase
-    assert "`needs_decompose` and `XL` drafts (decompose first with the `decomposer`" in text(
-        "skills/spec-next/references/next-work.md"
+        assert_rule(backlog, *rule)
+    assert_rule(
+        raw("skills/spec-next/references/next-work.md"),
+        "`needs_decompose`",
+        "`xl` drafts",
+        "decompose first",
+        "`decomposer`",
     )
 
 
@@ -57,9 +65,9 @@ def test_the_backlog_commit_rule_stays_in_requests_and_decomposition() -> None:
 
 
 def test_spec_delegate_names_both_roles_and_their_payload() -> None:
-    delegate = text(DELEGATE)
-    assert "`ux-reviewer`, `triage`, `decomposer`)" in delegate
-    assert "A Backlog role (`triage`, `decomposer`) also returns a message: no envelope" in delegate
+    delegate = raw(DELEGATE)
+    assert_rule(delegate, "support role", "`ux-reviewer`", "`triage`", "`decomposer`")
+    assert_rule(delegate, "backlog role", "`triage`", "`decomposer`", "returns a message", "no envelope")
     payload = raw("skills/spec-delegate/references/payload.md")
     assert "| `triage` |" in payload and "| `decomposer` |" in payload
 
@@ -106,7 +114,7 @@ def test_the_support_role_snapshot_sees_a_write_to_an_already_modified_file(tmp_
 def test_the_snapshot_replaces_the_status_comparison() -> None:
     delegate = text(DELEGATE)
     assert "leaves `git status --short` unchanged" not in delegate
-    assert "`git diff --name-only <before> <after>` between the snapshots taken before and after the run" in delegate
+    assert_rule(raw(DELEGATE), "`git diff --name-only <before> <after>`", "snapshots", "before and after the run")
 
 
 def test_the_size_gate_reads_as_decompose_first_everywhere() -> None:
@@ -116,15 +124,19 @@ def test_the_size_gate_reads_as_decompose_first_everywhere() -> None:
         "workflows/sdd-proposal.md",
         "skills/spec-next/references/next-work.md",
     ):
-        assert "never edit the size to pass" in text(path), path
-    assert "show it with `planning_effort` in the plan-intent request" in text("skills/spec/SKILL.md")
+        assert_rule(raw(path), "decompose first", "never edit the size to pass")
+    assert_rule(raw("skills/spec/SKILL.md"), "judge `size`", "`planning_effort`", "plan-intent request")
     assert "exit: [anchor-exists, frontmatter(proposal.md size S|M|L|)]" in raw("workflows/sdd-proposal.md")
-    planning = text("skills/spec/references/planning.md")
-    assert (
-        "If the proposal must be split (or carries `needs_decompose: true`, or a `size` other than absent or exactly"
-        " `S`, `M` or `L`), return it: set `status: draft` and `needs_decompose: true`"
-    ) in planning
-    assert "no `needs_decompose`, `size: XL`, `supersedes` or depth escalation" in text(BACKLOG)
+    planning = raw("skills/spec/references/planning.md")
+    assert_rule(
+        planning,
+        "must be split",
+        "`needs_decompose: true`",
+        "`size` other than absent or exactly `s`, `m` or `l`",
+        "return it",
+        "`status: draft`",
+    )
+    assert_rule(raw(BACKLOG), "no `needs_decompose`, `size: xl`, `supersedes` or depth escalation")
 
 
 def test_xl_has_a_judgeable_definition_with_an_example_of_each_side(tmp_path: Path) -> None:
@@ -133,12 +145,12 @@ def test_xl_has_a_judgeable_definition_with_an_example_of_each_side(tmp_path: Pa
     assert "a new CLI command with a viewer redesign it does not need (two specs)" in template
     assert "a parser bugfix with a new search" in template
     assert "Not XL: two agent contracts and the command checks that route work to them" in template
-    seed = text("skills/spec/references/proposals-catalog.md")
-    assert "the work would need two or more specs or a different `task_kind`" in seed
+    seed = raw("skills/spec/references/proposals-catalog.md")
+    assert_rule(seed, "`size: xl`", "two or more specs", "different `task_kind`")
     (tmp_path / ".devkit").mkdir()
     scaffolded = (tmp_path / create_proposal(tmp_path, "x", today=TODAY).path).read_text(encoding="utf-8")
     assert XL_DEFINITION in scaffolded
-    for document in (template, seed, scaffolded, text(BACKLOG)):
+    for document in (template, text("skills/spec/references/proposals-catalog.md"), scaffolded, text(BACKLOG)):
         assert "major overhaul" not in document
 
 

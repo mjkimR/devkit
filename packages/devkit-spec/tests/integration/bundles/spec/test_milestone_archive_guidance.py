@@ -11,7 +11,8 @@ import pytest
 from devkit_core.core.frontmatter import parse
 from devkit_docs.features.documents import DocumentIndex
 from devkit_docs.features.documents.models.milestones import milestone_path_valid
-from spec_support.bundle_text import text
+from distsupport.guidance import assert_rule
+from spec_support.bundle_text import raw
 
 
 def git(root: Path, *args: str) -> str:
@@ -35,22 +36,20 @@ def milestone(root: Path, slug: str, status: str) -> Path:
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_archive_transition_instructions(environment: str) -> None:
-    procedure = text("skills/spec/references/milestone-completion.md", environment)
-    for clause in (
-        "same commit",
-        "Drop does not create or confirm either completion assertion",
-        "unchanged archived drop writes nothing",
-        "destination collision",
-        "no extra",
-        "exact unchanged batch",
-        "comparing bytes before/after",
-        "Keep absent historical assertions absent",
-        "either supported location",
+    procedure = raw("skills/spec/references/milestone-completion.md", environment)
+    for rule in (
+        ("`status: done`", "move the file", "`docs/roadmap/_archive/`", "same commit"),
+        ("drop", "move into `_archive/`", "one backlog commit", "does not create or confirm", "completion assertion"),
+        ("unchanged archived drop", "writes nothing"),
+        ("file movement", "no extra archive-only gate", "destination collision", "without overwriting"),
+        ("relocation batch", "exact unchanged batch", "only those files", "comparing bytes before/after"),
+        ("keep absent historical assertions absent",),
+        ("merge", "either supported location"),
     ):
-        assert clause in procedure, clause
-    backlog = text("skills/spec/references/backlog.md", environment)
+        assert_rule(procedure, *rule)
+    backlog = raw("skills/spec/references/backlog.md", environment)
     assert "docs/roadmap/_archive/MS-<slug>.md" in backlog
-    assert "reset both assertions to pending in one approved commit" in backlog
+    assert_rule(backlog, "reopen", "move back to the root", "reset both assertions to pending", "one approved commit")
 
 
 def test_simulated_close_reopen_drop_and_history_merge(tmp_path: Path) -> None:

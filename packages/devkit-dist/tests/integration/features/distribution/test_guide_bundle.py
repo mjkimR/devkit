@@ -18,6 +18,7 @@ from devkit_dist.features.distribution.services.installation.config import updat
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from distsupport.guidance import assert_rule
 
 INSTRUCTIONS = ["consumption", "in-repo-bundle", "resource-kinds"]
 # Commands of devkit-agt: never a directive of this bundle.
@@ -53,13 +54,13 @@ def test_the_bundle_names_no_harness_command() -> None:
 def test_the_constitution_keeps_the_distribution_contracts() -> None:
     constitution = (_root() / "AGENTS.md").read_text("utf-8")
     for directive in (
-        "only when its header matches the work",  # instruction bodies on demand
         "`devkit-playbook`",  # playbooks are explicit
         "`devkit add <bundle>[:<preset>]`",  # selection
         "`devkit remove <bundle>`",
-        "commit `.devkit/installation.json`",  # the receipt travels with the change
     ):
         assert directive in constitution, directive
+    assert_rule(constitution, "instruction body", "only when", "header", "matches")  # instruction bodies on demand
+    assert_rule(constitution, "commit", "`.devkit/installation.json`")  # the receipt travels with the change
     assert "Snapshot gates" not in constitution  # the snapshot-gate contract is the harness's
 
 
@@ -76,7 +77,7 @@ def test_the_in_repo_example_never_declares_both_devkit_requirements() -> None:
     for dependencies in groups:
         names = {re.split(r"[\s\[@=<>]", dependency, maxsplit=1)[0] for dependency in dependencies}
         assert not {"devkit-dist", "devkit-agt"} <= names
-    assert "Declare `devkit-agt` instead of `devkit-dist`" in text
+    assert_rule(text, "`devkit-agt`", "instead of", "`devkit-dist`")
 
 
 @pytest.mark.parametrize("presets", [["core", "run"], ["run"]])

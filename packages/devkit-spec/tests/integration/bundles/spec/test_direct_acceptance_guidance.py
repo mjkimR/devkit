@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import flat, raw, text
 
 from devkit_spec.features.proposals import create_proposal
@@ -31,25 +32,35 @@ def test_backlog_states_the_direct_acceptance_procedure() -> None:
     for phrase in (
         f"{ACCEPT} <slug> --by user --direct --check",
         f"{ACCEPT} <slug> --by user|policy --direct --note",
-        "Planning skipped",
-        "pull_request = required",
         "collect-feedback",
-        "only on the base checkout",
     ):
         assert phrase in backlog, phrase
+    backlog_raw = raw("skills/spec/references/backlog.md")
+    assert_rule(backlog_raw, "present", "planning skipped", "`dev_effort`", "`pull_request = required`")
+    assert_rule(backlog_raw, "commit a direct acceptance", "only on the base checkout")
     workflow = text("workflows/sdd-proposal.md")
     assert "Planning: skipped (direct acceptance)" in workflow
-    assert "no Planning run, no `activity-effort` and no `worker` envelope" in workflow
+    assert_rule(
+        raw("workflows/sdd-proposal.md"),
+        "direct acceptance",
+        "no planning run",
+        "no `activity-effort`",
+        "no `worker` envelope",
+    )
     assert "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED" in workflow
-    assert "a direct acceptance included: it has no Planning run" in text("skills/spec/references/effort.md")
+    assert_rule(raw("skills/spec/references/effort.md"), "direct acceptance", "no planning run", "no effort")
 
 
 def test_the_lowering_rule_names_the_session_reclassification() -> None:
-    assert "session reclassification of a queued draft" in text("AGENTS.md")
-    backlog = text("skills/spec/references/backlog.md")
-    assert "## Session reclassification of a queued draft" in raw("skills/spec/references/backlog.md")
-    for phrase in ("within the authorized goal, scope and constraints", "no `PADR-*.md`", "new slug", "git revert"):
-        assert phrase in backlog, phrase
+    assert_rule(raw("AGENTS.md"), "lower it only through", "session reclassification of a queued draft")
+    backlog = raw("skills/spec/references/backlog.md")
+    assert "## Session reclassification of a queued draft" in backlog
+    for rule in (
+        ("queued draft", "`session` task", "within the authorized goal, scope and constraints"),
+        ("require", "no `padr-*.md` in `decisions/`"),
+        ("session takes a new slug", "never integrates", "`git revert` the deletion"),
+    ):
+        assert_rule(backlog, *rule)
     assert "session reclassification" in text("skills/spec/references/feedback-retirement.md")
     assert "session reclassification" in text("skills/spec-next/references/next-work.md")
 

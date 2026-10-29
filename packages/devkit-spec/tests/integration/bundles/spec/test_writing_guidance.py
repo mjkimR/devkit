@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import DOCS as BUNDLE
 from spec_support.bundle_text import raw, text
 
@@ -67,4 +68,13 @@ def test_the_usecase_and_architecture_guides_and_the_usecase_template() -> None:
     assert text("templates/usecase.md").count("usecase-writing") == 2
     architecture = text("instructions/architecture-writing.md")
     assert "fitness function" in architecture
-    assert "source, stimulus, environment, response and measure" in architecture
+    assert_rule(
+        raw("instructions/architecture-writing.md"),
+        "quality requirement",
+        "scenario",
+        "source",
+        "stimulus",
+        "environment",
+        "response",
+        "measure",
+    )

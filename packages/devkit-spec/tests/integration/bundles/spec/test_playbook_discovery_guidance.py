@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import BUNDLE, raw, text
 
 SKILL = "skills/spec/SKILL.md"
@@ -24,7 +25,7 @@ PLAYBOOKS = [
 
 
 def _intake_step(environment: str) -> str:
-    skill = text(SKILL, environment)
+    skill = raw(SKILL, environment)
     start = skill.index("1. **Playbook discovery at intake**")
     return skill[start : skill.index("2. Classify per the constitution", start)]
 
@@ -35,14 +36,14 @@ def test_intake_runs_one_bounded_search_before_classification(environment: str) 
     skill = text(SKILL, environment)
     step = _intake_step(environment)
     assert skill.index("1. **Playbook discovery at intake**") < skill.index("2. Classify per the constitution")
-    assert "before classification and before any Unit is created" in step
-    assert "Intake is a `/spec <intent>` or a user's own message that requests a change or an operation outside" in step
-    assert "no message from another agent (Host payload, worker turn, nested role), no hook and no stage" in step
-    assert 'Run one `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` per intake' in step
-    assert "canonical artifact nouns (ADR, feedback, Living Spec, proposal, playbook, rule, release)" in step
-    assert "no automatic refinement follows" in step
-    assert "as the requested operation on its artifact" in step
-    assert "without qualifiers that only name the subject" in step
+    assert_rule(step, "playbook discovery at intake", "before classification", "before any unit")
+    assert_rule(step, "intake is", "`/spec <intent>`", "user's own message", "outside the agreed scope")
+    assert_rule(step, "no message from another agent", "host payload", "worker turn", "no hook", "is intake")
+    assert_rule(step, "run one", '`devkit playbook search "<english query>" --limit 3 --max-bytes 4096`', "per intake")
+    assert_rule(step, "canonical artifact nouns", "adr", "living spec", "release", "paraphrase")
+    assert_rule(step, "no automatic refinement")
+    assert_rule(step, "query in english", "requested operation", "on its artifact")
+    assert_rule(step, "without qualifiers", "only name the subject")
     assert "Do not search or route to playbooks" not in skill
 
 
@@ -50,60 +51,61 @@ def test_intake_runs_one_bounded_search_before_classification(environment: str) 
 def test_skip_table_conversation_stops_and_not_skipped_cases() -> None:
     step = _intake_step("local")
     for row in (
-        "| Continuation of an existing proposal or Unit:",
-        "| A follow-up within the same task:",
-        "| The entry is already explicit:",
-        "| Execution inside a selected playbook |",
-        "| An information-only question that requests no change and no operation |",
+        ("| continuation", "existing proposal or unit"),
+        ("| a follow-up", "same task"),
+        ("| the entry is already explicit", "names a playbook id"),
+        ("| execution inside a selected playbook", "no nested search"),
+        ("| an information-only question", "no change and no operation"),
     ):
-        assert row in step, row
-    assert "Task kind and planning depth never exempt a task" in step
-    assert "once the user said not to use playbooks in this conversation" in step
-    assert "never offer a candidate the user declined again in the same conversation, even for a reworded" in step
-    assert "Not skipped: a new request after earlier work finished" in step
-    assert "a question that asks how to perform an operation" in step
+        assert_rule(step, *row)
+    assert_rule(step, "task kind", "planning depth", "never exempt")
+    assert_rule(step, "skip every later intake", "not to use playbooks")
+    assert_rule(step, "never offer a candidate", "declined", "same conversation", "reworded")
+    assert_rule(step, "not skipped", "new request", "earlier work finished")
+    assert_rule(step, "not skipped", "how to perform an operation")
 
 
 # AC-03
 def test_selection_rule_offers_operations_never_topics() -> None:
     step = _intake_step("local")
-    assert "Scores never decide" in step
+    assert_rule(step, "scores never decide")
     for condition in ("**operation, not topic**", "**primary operation**", "**scope fits**", "**one line**"):
         assert condition in step, condition
-    assert '"Feedback Quick Fixes" never offers `feedback-hygiene`' in step
-    assert "at most one offer line per intake" in step
+    assert_rule(step, "topic match", "never offered", '"feedback quick fixes" never offers `feedback-hygiene`')
+    assert_rule(step, "at most one offer line", "per intake")
 
 
 # AC-04
 def test_confirm_first_offer_silent_no_match_and_recorded_selection() -> None:
     step = _intake_step("local")
-    reference = text(REFERENCE)
-    assert "nothing of it runs before the user confirms, and the confirmation is its explicit invocation" in step
-    assert "wait for the answer before creating a Unit, a branch or an edit" in step
-    assert "wait for the answer before creating a Unit, a branch or an edit" in reference
-    assert "No match continues the ordinary path silently, with no question and no draft offer" in step
+    reference = raw(REFERENCE)
+    assert_rule(step, "nothing of it runs", "before the user confirms", "explicit invocation")
+    assert_rule(step, "wait for the answer", "before creating a unit, a branch or an edit")
+    assert_rule(reference, "wait for the answer", "before creating a unit, a branch or an edit")
+    assert_rule(step, "no match", "silently", "no question", "no draft offer")
     for code in ("NOT_SYNCHRONIZED", "CONFIG_LOCAL_RENDER_STALE", "ARGUMENT_INVALID", "SEARCH_EXTRA_MISSING"):
         assert code in step, code
-    assert "a lock timeout) counts as no match: never run its remediation for discovery's sake" in step
-    assert "record the playbook ID in the `plan-intent` note" in reference
-    assert "Nothing of the playbook runs before the user confirms" in reference
-    assert "never offer that candidate again in the conversation" in reference
+    assert_rule(step, "lock timeout", "counts as no match", "never run its remediation")
+    assert_rule(reference, "record the playbook id", "`plan-intent` note")
+    assert_rule(reference, "nothing of the playbook runs", "before the user confirms")
+    assert_rule(reference, "decline", "never offer that candidate again")
 
 
 # AC-05
 def test_post_selection_procedure_is_a_reference_read_only_on_a_match() -> None:
     step = _intake_step("local")
-    assert "On a match read [playbooks](references/playbooks.md); only on a match." in step
-    reference = text(REFERENCE)
-    assert reference.startswith("# Playbooks found at intake Read this only on a match")
+    assert_rule(step, "on a match read [playbooks](references/playbooks.md)", "only on a match")
+    reference = raw(REFERENCE)
+    assert reference.startswith("# Playbooks found at intake\n")
+    assert_rule(reference, "read this only on a match")
     for action in (
-        "Run `devkit get-context <bundle>`",
-        "Read the selected playbook body",
-        "Check its prerequisites",
-        "Follow the procedure through its completion conditions",
-        "runs no nested playbook search",
+        ("run `devkit get-context <bundle>`",),
+        ("read the selected playbook body",),
+        ("check its prerequisites", "stops the playbook"),
+        ("follow the procedure", "completion conditions"),
+        ("no nested", "playbook search"),
     ):
-        assert action in reference, action
+        assert_rule(reference, *action)
     assert not (BUNDLE / "skills/spec-playbook").exists()
     assert "spec-playbook" not in raw("bundle.toml")
 
@@ -117,13 +119,12 @@ def test_playbook_entry_reads_invoked_or_confirmed(path: Path) -> None:
 
 
 def test_adr_compaction_confirmation_authorizes_deletions_at_session_depth() -> None:
-    body = text("playbooks/adr-compaction/SKILL.md")
-    assert "only when the user invoked or confirmed it" in body
-    assert "that invocation authorizes the run's ADR deletions. It runs at `session` depth" in body
+    body = raw("playbooks/adr-compaction/SKILL.md")
+    assert_rule(body, "only when", "invoked or confirmed", "authorizes", "adr deletions", "`session` depth")
 
 
 # AC-08
 def test_guidance_pointer_keeps_the_intake_rule_in_one_line() -> None:
     pointer = raw("guidance/spec-pointer.md")
     assert len(pointer.strip().splitlines()) == 1
-    assert "Start work with `/spec <intent>`; each new task intake runs its intake step first" in pointer
+    assert_rule(pointer, "`/spec <intent>`", "each new task intake", "intake step first")

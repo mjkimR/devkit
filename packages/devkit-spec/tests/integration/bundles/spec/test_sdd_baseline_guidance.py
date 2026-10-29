@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import BUNDLE, raw, text
 
 ENTRY = "playbooks/sdd-baseline/SKILL.md"
@@ -56,24 +57,24 @@ def test_synced_consumer_discovers_entry_and_report_without_creating_a_unit(tmp_
 
 
 def test_guidance_orders_evidence_before_activation_and_preserves_current_state() -> None:
-    body = text(ENTRY)
+    body = raw(ENTRY)
     assert body.index("## 2. Compare") < body.index("## 3. Activate")
-    for required in (
-        "Use only when the user invokes or confirms",
-        "Keep the effective approach incubation",
-        "Never waive a required retained behavior or missing required evidence into readiness",
-        "Recheck the relevant source and dirty paths",
-        "Reuse an explicit user decision already bound to the same source and effects",
-        "Edit only `.devkit/config.toml`",
-        "If the provider is absent or `project`, present configuring `spec` as a necessary activation effect",
-        "If that provider change is not authorized, report the mismatch",
-        "claim neither successful adoption nor automatic rollback",
-        "Create no retrospective proposal, spec Unit, workflow approval, envelope or ADR",
-    ):
-        assert required in body
-    assert "uv run devkit spec new" not in body
-    assert "uv run devkit workflow envelope" not in body
-    report = text("playbooks/sdd-baseline/references/report-template.md")
+    assert_rule(body, "use only when", "invokes or confirms", "adopt SDD")
+    assert_rule(body, "keep", "effective approach", "incubation", "preparation")
+    assert_rule(body, "never waive", "required retained behavior", "required evidence", "readiness")
+    assert_rule(body, "recheck", "source", "dirty paths", "invalidate")
+    assert_rule(body, "reuse", "explicit user decision", "same source and effects")
+    assert_rule(body, "edit only", "`.devkit/config.toml`", '`[development] approach = "sdd"`')
+    assert_rule(body, "provider", "absent or `project`", "configuring `spec`", "necessary activation effect")
+    assert_rule(body, "provider change", "not authorized", "report the mismatch", "do not claim")
+    assert_rule(body, "neither", "successful adoption", "automatic rollback")
+    assert_rule(
+        body, "create no", "retrospective", "proposal", "spec Unit", "workflow approval", "envelope", "ADR", "discarded"
+    )
+    flat_body = text(ENTRY)
+    assert "uv run devkit spec new" not in flat_body
+    assert "uv run devkit workflow envelope" not in flat_body
+    report = raw("playbooks/sdd-baseline/references/report-template.md")
     assert "<verified/gap/excluded>" in report
-    assert "actual policy/asset inspection" in report
-    assert "real versus simulated decisions" in report
+    assert_rule(report, "actual", "policy/asset inspection", "after activation")
+    assert_rule(report, "real", "simulated decisions")

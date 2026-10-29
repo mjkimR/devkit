@@ -9,6 +9,7 @@ import tomllib
 import pytest
 from devkit_core.core import frontmatter
 from devkit_docs.utils.text import foreign_letters
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import BUNDLE, DOCS, flat, raw, text
 
 ROLES = sorted(path.name.removesuffix(".jinja") for path in (BUNDLE / "subagents").glob("*.md*"))
@@ -28,9 +29,8 @@ def test_the_constitution_names_the_list_and_its_trigger(environment: str) -> No
     constitution = raw(DOCS / "AGENTS.md", environment)
     lines = [line for line in constitution.split("\n- ") if "`docs/steering/`" in line]
     assert len(lines) == 1, lines
-    line = flat(lines[0])
-    assert "`devkit get-context docs` lists each file's title and summary under `documents`" in line
-    assert "Read a file's body before a wording, naming, interface or content decision its summary covers" in line
+    assert_rule(lines[0], "`devkit get-context docs`", "lists", "title", "summary", "`documents`")
+    assert_rule(lines[0], "read", "body", "before", "naming", "decision", "summary")
 
 
 @pytest.mark.parametrize("role", ROLES)

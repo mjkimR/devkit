@@ -11,6 +11,7 @@ from devkit_dist.features.distribution.services.bundles.subagents import read_co
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
 BUNDLE = PACKAGE / "src/devkit_catalog/incubation/bundle"
@@ -74,13 +75,11 @@ def test_roles_keep_optional_execution_and_coordinator_context_ownership() -> No
         content = (BUNDLE / f"subagents/{role}.md").read_bytes()
         contract = read_contract(content, "incubation", role)
         assert contract.hosts["codex"].status == "emulated"
-        assert "Only the coordinator writes `.devkit/incubation.md`" in contract.body
-        assert "Leave the index and HEAD unchanged" in contract.body
-        assert "source/artifact identity" in contract.body
-        assert "failure conditions" in contract.body
+        assert_rule(contract.body, "only", "coordinator", "writes", "`.devkit/incubation.md`")
+        assert_rule(contract.body, "index", "HEAD", "unchanged")
+        assert_rule(contract.body, "return", "`status`", "source/artifact identity", "failure conditions")
     researcher = (BUNDLE / "subagents/incubation-researcher.md").read_text()
-    assert "payload permits an experiment" in researcher
-    assert "absolute sandbox/prototype boundary" in researcher
+    assert_rule(researcher, "payload permits", "experiment", "only", "sandbox/prototype boundary")
 
 
 def test_guidance_is_self_contained_and_references_are_conditional() -> None:
@@ -97,4 +96,4 @@ def test_guidance_is_self_contained_and_references_are_conditional() -> None:
         assert not re.search(r"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB)-[a-z]", content), path
         assert len(path.read_bytes()) <= 12288, path
     assert "configuration.development.approach" in text
-    assert "No SDD envelope is required" in (skill.parent / "references/delegation.md").read_text()
+    assert_rule((skill.parent / "references/delegation.md").read_text(), "no SDD envelope")

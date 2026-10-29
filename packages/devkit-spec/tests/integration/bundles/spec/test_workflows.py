@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from distsupport.guidance import assert_rule
 from spec_support.bundle_text import flat, raw
 
 WORKFLOWS = (
@@ -82,7 +83,8 @@ def test_a_worker_is_projected_with_its_host_execution_contract(synced: Path, wo
     prose = flat(prompt)
     assert "Host projection: emulated." in prose
     assert "The host does not enforce the contract's boundaries itself" in prose
-    assert "## Procedure" in prose and "On Codex, `workspace-write` confines no path" in prose
+    assert "## Procedure" in prose
+    assert_rule(prompt, "Codex", "`workspace-write`", "confines no path")
 
 
 def test_no_skill_is_projected_for_a_procedure_only_a_role_runs(synced: Path) -> None:

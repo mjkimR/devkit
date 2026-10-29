@@ -62,5 +62,5 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/devkit_docs/bundles/docs/bundle/rules"]
-pythonpath = ["tests/support"]
+pythonpath = ["tests/support", "../devkit-dist/tests/support"]
 addopts = ["--import-mode=importlib"]

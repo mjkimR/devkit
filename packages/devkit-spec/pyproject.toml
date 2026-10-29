@@ -90,11 +90,11 @@ venv = ".venv"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 include = ["src", "tests"]
-extraPaths = ["tests", "tests/support"]
+extraPaths = ["tests", "tests/support", "../devkit-dist/tests/support"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/devkit_spec/bundles/spec/bundle/rules"]  # a rule's tests live in its folder (`<rule>/tests/`)
-pythonpath = ["tests", "tests/support"]
+pythonpath = ["tests", "tests/support", "../devkit-dist/tests/support"]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"
 

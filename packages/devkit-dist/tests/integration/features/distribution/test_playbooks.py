@@ -24,6 +24,7 @@ from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit_dist.features.search import Embedder
 from distsupport.distribution import cli, make_bundle, write_bundle
+from distsupport.guidance import assert_rule
 from distsupport.search import write_model
 
 
@@ -120,15 +121,17 @@ REMOVED_PHRASES = ("do not authorize playbook discovery", "references from other
 @pytest.mark.parametrize("agent", [None, "codex", "claude-code"])
 def test_generated_skill_is_spec_neutral(agent: str | None) -> None:
     files = skill_files(agent)
-    body = " ".join(files["SKILL.md"].decode().split())
+    raw = files["SKILL.md"].decode()
+    body = " ".join(raw.split())
     for term in (*SPEC_ASSET_TERMS, *REMOVED_PHRASES):
         assert term not in body, term
-    assert "only when the user explicitly invokes devkit-playbook for the current task" in body
-    assert "only when the user explicitly invokes devkit-playbook or confirms an offered playbook" in body
-    assert "When another installed entry skill offers a playbook and the user confirms it" in body
-    assert "that confirmation is the explicit invocation of the named playbook" in body
-    assert "Only in this explicitly requested discovery: if no suitable playbook was found" in body
-    assert "Retrieval grants no execution authority" in body
+    assert_rule(raw, "only when", "explicitly invokes", "devkit-playbook", "current task")
+    assert_rule(
+        raw, "description:", "only when", "explicitly invokes", "devkit-playbook", "confirms", "offered playbook"
+    )
+    assert_rule(raw, "entry skill", "offers a playbook", "confirms", "confirmation", "explicit invocation")
+    assert_rule(raw, "only in", "explicitly requested discovery", "no suitable playbook", "ask")
+    assert_rule(raw, "retrieval", "no execution authority")
 
 
 def test_guidance_line_and_cli_help_are_spec_neutral() -> None:

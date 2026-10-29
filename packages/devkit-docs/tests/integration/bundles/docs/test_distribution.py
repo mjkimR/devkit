@@ -10,6 +10,7 @@ from importlib.metadata import entry_points
 from pathlib import Path
 
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from distsupport.guidance import assert_rule
 
 BUNDLE = Path(__file__).resolve().parents[4] / "src/devkit_docs/bundles/docs/bundle"
 RULES = {
@@ -68,8 +69,8 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
     spec = BUNDLE.parents[5] / "devkit-spec/src/devkit_spec/bundles/spec/bundle"
     # Existing SDD history obligations remain explicit on the lifecycle side.
     constitution = (spec / "AGENTS.md.jinja").read_text()
-    assert "a changed decision is a new ADR" in constitution
-    assert "stays in place as history" in constitution
+    assert_rule(constitution, "changed decision", "new ADR", "`supersedes`")
+    assert_rule(constitution, "`status: completed`", "in place as history", "new spec")
 
 
 def test_selection_round_trip_and_project_owned_seed_bytes(tmp_path: Path) -> None:
