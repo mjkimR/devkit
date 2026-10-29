@@ -1,6 +1,6 @@
 ---
 sources:
-  ADR-delivery-classification: 959114012720cc2134f16f70bb96a192395bfd08
+  ADR-delivery-classification: b9c9711e7d9070d27a6db699ad186d81518cf409
   ARCH-08-1-agent-output: 6b76bd19787465ed1e7ec7aee1904077cc75042c
   ARCH-08-2-resource-taxonomy: 63719695df440fdec009db0952ef2cd87d90aeea
   ARCH-08-cross-cutting: 3bf334671a435d6d6956b2a8be623aafadd34924
@@ -31,7 +31,7 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
