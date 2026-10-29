@@ -2,7 +2,7 @@
 id: PROP-local-orch-resource-manager
 title: Reusable resource manager subagent for local orchestration
 summary: "Delegates lifecycle operations to one reusable subagent per Host conversation and repository to reduce main-agent intervention and context load. Compares lightweight and mid-tier models before selecting the role default."
-status: draft
+status: reviewing
 created_at: 2026-10-29
 target_area: delivery/
 priority: high
