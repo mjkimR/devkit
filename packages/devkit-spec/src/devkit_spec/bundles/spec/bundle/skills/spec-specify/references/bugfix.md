@@ -14,8 +14,7 @@ Fill the skeleton's `Defect Characterization` items; write no user story.
 - **Reproduction conditions**: the exact command, data and environment, or the observation conditions when automation
   is impossible.
 - **Acceptance criteria**: one `[AC-NN]` scenario for the resolved behavior and one per preserved behavior.
-- **Screens**: when the fix changes a screen, draft it per `SKILL.md` §4; the optional UX review runs inside
-  `characterize`, before `plan-tasks`.
+- **Screens**: when the fix changes a screen, draft it per `SKILL.md` §4.
 
 ## Stage `reproduce`
 

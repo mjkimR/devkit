@@ -11,4 +11,4 @@
 6. Reject out-of-scope writes or invented authority as evidence and report the actual state to the coordinator; never reset or discard another actor's work.
 7. Selecting a role grants it no product decision, commit authority or write to `.devkit/incubation.md`.
 
-The return holds `status` (`completed`, `needs_input` or `failed`), summary, source/artifact identity, observations with evidence and failure conditions, recommendation, assumptions and unverified areas; an experiment adds its actual changed paths, commands and outcomes. No SDD envelope is required.
+The return holds the fields each role contract lists; an `incubation-researcher` experiment adds its actual changed paths, commands and outcomes. No SDD envelope is required.

@@ -47,8 +47,8 @@ SCENARIOS = [
     ),
     (
         "semantic scope changed",
-        "skills/spec/references/roadmap-catalog.md",
-        (("semantic scope changes", "reset both to pending"),),
+        PROCEDURE,
+        (("semantic scope changes", "reset both completion assertions to pending"),),
     ),
     (
         "unchanged interrupted approval",
@@ -103,10 +103,8 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
     assert data is not None
     assert set(data) == {"id", "title", "summary", "status", "created_at", "depends_on"}
     assert "milestone-completion.md" in text("skills/spec-next/references/next-work.md", environment)
-    assert_rule(
-        raw("skills/spec/references/roadmap-catalog.md", environment), "done records stay as written", "unless merged"
-    )
     procedure = raw(PROCEDURE, environment)
+    assert_rule(procedure, "existing `done` records stay as they are", "unless merged")
     assert_rule(procedure, "--direction in -n 0", "--all-namespaces -n 0", "not prose references")
     assert_rule(
         procedure,
@@ -119,8 +117,10 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_normal_handoff_adds_no_milestone_ceremony(environment: str) -> None:
-    catalog = raw("skills/spec/references/roadmap-catalog.md", environment)
-    assert_rule(catalog, "semantic scope changes reset both to pending", "normal handoff does not")
+    procedure = raw(PROCEDURE, environment)
+    assert_rule(
+        procedure, "semantic scope changes reset both completion assertions to pending", "normal handoff does not"
+    )
     for entrypoint in ("skills/spec/SKILL.md", "skills/spec-next/SKILL.md", "skills/spec/references/worktree.md"):
         assert "membership invalidation]" not in text(entrypoint, environment)
 
@@ -154,5 +154,8 @@ def test_merge_procedure(environment: str) -> None:
         "`planned` or `active` while scope remains",
         "close it only through [milestone completion](milestone-completion.md)",
     )
-    seed = raw("skills/spec/references/roadmap-catalog.md", environment)
-    assert_rule(seed, "small milestones of any status", "broader theme milestone", "not an in-place extension")
+    assert_rule(raw(PROCEDURE, environment), "merging into a broader theme milestone", "not such an extension")
+    catalog = raw("skills/spec/references/roadmap-catalog.md", environment)
+    assert_rule(
+        catalog, "merge follow [backlog](backlog.md) milestones", "[milestone completion](milestone-completion.md)"
+    )

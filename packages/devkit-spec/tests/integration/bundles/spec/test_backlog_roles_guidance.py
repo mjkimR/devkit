@@ -55,6 +55,7 @@ def test_the_decomposer_runs_from_backlog_only_and_the_host_verifies_and_applies
         "`xl` drafts",
         "decompose first",
         "`decomposer`",
+        "backlog.md#the-xl-size-gate",
     )
 
 
@@ -118,14 +119,16 @@ def test_the_snapshot_replaces_the_status_comparison() -> None:
 
 
 def test_the_size_gate_reads_as_decompose_first_everywhere() -> None:
-    for path in (
-        "skills/spec/SKILL.md",
-        BACKLOG,
-        "workflows/sdd-proposal.md",
-        "skills/spec-next/references/next-work.md",
-    ):
-        assert_rule(raw(path), "decompose first", "never edit the size to pass")
-    assert_rule(raw("skills/spec/SKILL.md"), "judge `size`", "`planning_effort`", "plan-intent request")
+    assert_rule(raw(BACKLOG), "decompose first", "never edit the size to pass")
+    # The workflow and the pickup reference point at the backlog's gate instead of restating it.
+    assert_rule(raw("workflows/sdd-proposal.md"), "decompose first", "`references/backlog.md`", "the xl size gate")
+    assert "../../spec/references/backlog.md#the-xl-size-gate" in raw("skills/spec-next/references/next-work.md")
+    assert_rule(
+        raw("skills/spec/SKILL.md"),
+        "judge `size` against the `XL` definition ([backlog](references/backlog.md))",
+        "`planning_effort`",
+        "plan-intent request",
+    )
     assert "exit: [anchor-exists, frontmatter(proposal.md size S|M|L|)]" in raw("workflows/sdd-proposal.md")
     planning = raw("skills/spec/references/planning.md")
     assert_rule(
@@ -145,8 +148,8 @@ def test_xl_has_a_judgeable_definition_with_an_example_of_each_side(tmp_path: Pa
     assert "a new CLI command with a viewer redesign it does not need (two specs)" in template
     assert "a parser bugfix with a new search" in template
     assert "Not XL: two agent contracts and the command checks that route work to them" in template
-    seed = raw("skills/spec/references/proposals-catalog.md")
-    assert_rule(seed, "`size: xl`", "two or more specs", "different `task_kind`")
+    assert_rule(raw(BACKLOG), "`size: xl`", "two or more specs", "different `task_kind`")
+    assert_rule(raw("skills/spec/references/proposals-catalog.md"), "`size: xl`", "backlog.md#the-xl-size-gate")
     (tmp_path / ".devkit").mkdir()
     scaffolded = (tmp_path / create_proposal(tmp_path, "x", today=TODAY).path).read_text(encoding="utf-8")
     assert XL_DEFINITION in scaffolded

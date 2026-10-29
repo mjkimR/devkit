@@ -40,4 +40,4 @@ The payload gives one goal, absolute read/write boundaries, source/artifact iden
 
 ## Return
 
-Return `status` (completed, needs_input or failed), summary, source/artifact identity, observations with evidence and failure conditions, recommendation, assumptions and unverified areas, including unreached scope; an experiment adds its actual changed paths, commands and outcomes. Create no SDD envelope or product approval. `completed` needs evidence with explicit limits; a missing capability or failed execution stays failed or unverified.
+Return `status` (completed, needs_input or failed), summary, source/artifact identity, observations with evidence and failure conditions, recommendation, assumptions and unverified areas, including unreached scope. Create no SDD envelope or product approval. `completed` needs evidence with explicit limits; a missing capability or failed execution stays failed or unverified.

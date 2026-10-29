@@ -29,7 +29,7 @@ Run `spec-ux-review` in a fresh context against the drafted screens and the use 
 ## Procedure
 
 1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-ux-review/SKILL.md`, or its override under `.devkit/overrides/`.
-2. Follow its Steps against the drafts the payload names (a Screens section of `spec.md` or `target-docs.md`), the use cases they cite, `docs/steering/ux-objects.md` when it exists and the Evidence each screen links.
+2. Follow its Steps against the Inputs the payload names.
 
 ## Return
 

@@ -4,9 +4,9 @@ Proposals mature features, spikes and architectural improvements, each as a bund
 
 ## 1. Lifecycle
 
-- **Draft & Review (`draft` / `reviewing`)**: in Backlog, scaffold with `devkit spec proposal new <slug>` (`--task-kind bugfix` for a defect) and state the core hypothesis and spike questions in `proposal.md`; `plan-intent` records the authorized task intent without repeating an existing user instruction. Planning runs on `plan-<slug>` ([planning](planning.md)). Preliminary decisions go in `decisions/PADR-{slug}.md`, research in `materials/`.
-- **Graduation (`accepted`)**: `plan-accept` (`ask|auto`), recorded with `devkit spec proposal accept` after Planning or directly for an eligible draft in Backlog, sets `status: accepted`. The independent `proposal-handoff` boundary also follows `ask|auto`; accept and handoff may share one request or happen separately. `devkit spec proposal handoff <slug>` then starts Development: it creates the spec at `specs/{YYYY-MM}/{YYYYMMDD}-{slug}/` bound to `sdd-spec-<task_kind>`, carries the `plan-intent` and `plan-accept` records, promotes PADRs into `docs/decisions/`, moves `materials/` and any other bundle file (such as a `notes.md`) into `docs/materials/`, copies `target-docs.md` (if present) to the spec directory, rewrites Markdown links and ID references into the bundle, and removes the bundle directory. Follow up the reported unresolved links (`spec-next` skill).
-- **Rejection (`rejected`)**: change only `status: rejected`, with the user's reason in the commit message. A later hygiene pass records the rejection ADR in `docs/decisions/` (referencing the proposal and the rejection commit) and deletes the bundle directory in the same commit.
+- **Draft & Review (`draft` / `reviewing`)**: in Backlog, scaffold with `devkit spec proposal new <slug>` (`--task-kind bugfix` for a defect) and state the core hypothesis and spike questions in `proposal.md`. Planning runs on `plan-<slug>` ([planning](planning.md)). Preliminary decisions go in `decisions/PADR-{slug}.md`, research in `materials/`.
+- **Graduation (`accepted`)**: `plan-accept`, recorded with `devkit spec proposal accept` after Planning or directly for an eligible draft in Backlog, sets `status: accepted`. Accept and handoff may share one request or happen separately. `devkit spec proposal handoff <slug>` then starts Development: it creates the spec at `specs/{YYYY-MM}/{YYYYMMDD}-{slug}/` bound to `sdd-spec-<task_kind>`, carries the `plan-intent` and `plan-accept` records, promotes PADRs into `docs/decisions/`, moves `materials/` and any other bundle file (such as a `notes.md`) into `docs/materials/`, copies `target-docs.md` (if present) to the spec directory, rewrites Markdown links and ID references into the bundle, and removes the bundle directory. Follow up the reported unresolved links (`spec-next` skill).
+- **Rejection (`rejected`)**: changes the status only, then a later hygiene cleanup (the `sdd-proposal` workflow's Gate rules).
 - Git history keeps historical context; keep no `archive/` directories.
 
 ## 2. Bundle layout and frontmatter
@@ -25,8 +25,7 @@ docs/proposals/PROP-{slug}/
   on `worker-NN.yaml` envelopes, never copied to `spec.md`.
 - **`materials/` Markdown**: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`; recommended, not checked (`RULE-spec-format` skips `materials/`). Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`.
 - **`target-docs.md`**: what `docs/` will look like once accepted (`proposal.md` holds the why): capability ledger, use cases, architecture and decisions, conventions and governance, before/after comparisons. Recommended for `size: M/L` or expected Living Spec structural changes.
-- **`size: XL`**: the work would need two or more specs or a different `task_kind`; decompose it before `plan-intent`
-  ([XL size gate](backlog.md#the-xl-size-gate)).
+- **`size: XL`**: decompose it before `plan-intent` ([XL size gate](backlog.md#the-xl-size-gate)).
 
 ## 3. CLI
 

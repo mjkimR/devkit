@@ -9,17 +9,13 @@ Use for `/spec <intent>`, any development task, feature request, troubleshooting
 
 ## Development approach
 
-Before SDD routing, read `uv run devkit config show`. Under `configuration.development.approach = incubation`,
-follow the project's incubation guidance (the `/incubate` entry when selected): no SDD depths, Units, envelopes or
-approvals for ordinary changes; keep document-format and independent project checks. Deliberately SDD-bound Units
-keep their checks and stay inspectable. An unreadable policy stops policy-dependent work; never guess or switch it.
-The rest of this skill applies to SDD.
+Before SDD routing, read `uv run devkit config show`; under `incubation`, route ordinary work as the constitution's
+opening paragraph says (the `/incubate` entry when selected). An unreadable policy stops policy-dependent work; never
+guess or switch it. The rest of this skill applies to SDD.
 
 ## Constraints
 
 - If `devkit spec policy` fails, stop policy-dependent work.
-- Before deciding an approval boundary or a Git action, read the [completion policy](references/completion.md#policy).
-- Where guidance names a bare `devkit ...` command, invoke the project's documented form (`uv run devkit ...`).
 - Under `FEEDBACK_POLICY reminder=contextual`, suggest an optional `/spec-feedback` sweep when completed work produced reusable observations (not for routine completions or wording edits); it never gates completion or merge.
 
 ## Route the intent
@@ -52,7 +48,7 @@ The rest of this skill applies to SDD.
 | `session` | `sdd-session-<task_kind>` | Agree the intent in the conversation; no records. |
 | `overall-refactor` | `sdd-overall-refactor` | `direct` only, with the user; no Unit. |
 | `spec` | `sdd-spec-<task_kind>` | On `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."` (`--workflow sdd-spec-bugfix` for a defect), record `plan-intent`, commit. |
-| `proposal` | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix`; judge `size` against the `XL` definition ([backlog](references/backlog.md)), show it with `planning_effort` in the plan-intent request, then record `plan-intent`. An unmet `size S\|M\|L` check means decompose first; never edit the size to pass. Planning on `plan-<slug>` per [planning](references/planning.md), or a direct acceptance ([backlog](references/backlog.md)). Development on `dev-<slug>` from `devkit spec proposal handoff <slug>`. |
+| `proposal` | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix`; judge `size` against the `XL` definition ([backlog](references/backlog.md)), show it with `planning_effort` in the plan-intent request, then record `plan-intent`. Planning on `plan-<slug>` per [planning](references/planning.md), or a direct acceptance ([backlog](references/backlog.md)). Development on `dev-<slug>` from `devkit spec proposal handoff <slug>`. |
 | Spike, independent review, or reconcile verification in an isolated context | Support role | `spec-delegate`, as the `activity-effort` asks. |
 {% if execution.environment == "local" %}| Native approval preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |
 {% else %}| Integration after separately existing CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |

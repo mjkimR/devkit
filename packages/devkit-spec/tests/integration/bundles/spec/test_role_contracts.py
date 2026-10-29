@@ -80,6 +80,8 @@ def test_the_ux_reviewer_is_an_isolated_read_only_role_bound_to_its_skill() -> N
     assert hosts["antigravity"]["commandExecutionPolicy"] == "sandbox"
     assert_rule(body, "modify", "stage", "commit nothing")
     assert_rule(body, "no finding", "severity")
+    assert_rule(body, "read", "`.devkit/managed/spec/skills/spec-ux-review/SKILL.md`")
+    assert_rule(body, "follow", "Steps", "Inputs", "payload")
     skill = raw("skills/spec-ux-review/SKILL.md")
     for tokens in (
         ("actor", "try", "right thing"),
@@ -248,18 +250,22 @@ def test_the_development_worker_result_is_self_contained() -> None:
 
 # Planning steps an executor runs in either mode, moved out of the contract
 # (ADR-executor-neutral-planning-steps-in-a-spec-reference): each phrase must be gone from the contract, and the
-# reference must still state its rule (the tokens).
+# reference must still state its rule (the tokens). Recording answers is stated once, in worker-records.md §2,
+# which the reference points to (``MOVED_ANSWER_PHRASES``).
 MOVED_PLANNING_PHRASES = {
     "Collect every question for the user in one round": ("every question", "one round"),
-    "as a commit of their own": ("envelope answer", "first", "separate commit"),
     "status: reviewing": ("first turn", "status: reviewing"),
     "needs_decompose: true": ("needs_decompose: true", "status: draft"),
-    "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>": (
-        "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>",
-    ),
     "--questions-file": ("`worker` envelope", "--questions-file"),
     "check `dev_effort` in `proposal.md`": ("before the final work commit", "`dev_effort`", "`proposal.md`"),
     "[planning run coverage]": ("[planning run coverage]",),
+}
+MOVED_ANSWER_PHRASES = {
+    "as a commit of their own": ("records them first in a commit of its own", "separate commit"),
+    "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>": (
+        "devkit workflow envelope answer --unit <dir>",
+        "--answers-to worker-NN.yaml",
+    ),
 }
 
 
@@ -269,6 +275,11 @@ def test_the_planning_steps_live_in_the_spec_reference_for_any_executor() -> Non
     for phrase, tokens in MOVED_PLANNING_PHRASES.items():
         assert_rule(reference, *tokens)
         assert phrase not in flat(body), phrase
+    records = raw("skills/spec/references/worker-records.md")
+    for phrase, tokens in MOVED_ANSWER_PHRASES.items():
+        assert_rule(records, *tokens)
+        assert phrase not in flat(body), phrase
+    assert_rule(reference, "answers", "record them first", "[worker records](worker-records.md) §2", "then fold")
     assert_rule(reference, "runner", "`direct`", "`planning-worker`")
     assert "[planning](references/planning.md)" in text("skills/spec/SKILL.md")
     assert_rule(body, "follow", "`.devkit/managed/spec/skills/spec/references/planning.md`")
@@ -365,10 +376,7 @@ def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> Non
     assert_rule(records, "no separate", "question or problem kind")
     assert "--answers-to worker-NN.yaml" in flat(records) and "--resolves worker-NN.yaml" in flat(records)
     planning = text(PLANNING)
-    assert (
-        "--questions-file" in planning
-        and "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>" in planning
-    )
+    assert "--questions-file" in planning and "[worker records](worker-records.md) §2" in planning
     development = _contract("development-worker")[1]
     assert_rule(development, "end the turn", "exactly one `worker` envelope")
     assert_rule(development, "recovery request", '"Problems and resolutions"', "`worker-records.md`")

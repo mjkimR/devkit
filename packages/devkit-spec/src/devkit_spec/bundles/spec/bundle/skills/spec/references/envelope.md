@@ -22,7 +22,7 @@ diff_scope: { base: "<ref>", head: "<sha>" }
 ```
 
 - `completed` with no findings is a valid pass.
-- `severity` is `P1`, `P2` or `P3` on every finding of a `review`, `reconcile-check` or `challenger` envelope, and only there, at every effort, recorded as the reviewer set it ([review loop](review-loop.md) section 3).
+- `severity` per [review loop](review-loop.md) section 3 (`review`, `reconcile-check` and `challenger` only).
 - `needs_input` names the missing input or the decision only the human can make. `failed` (timeout, cancellation, tool failure, unsupported host feature, stale `diff_scope`) is never completion evidence.
 - Docs impact has no key: it goes into `reconcile.md`, verified by a `reconcile-check` envelope.
 

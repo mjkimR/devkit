@@ -170,8 +170,8 @@ All other rules of the `sdd-spec-feature` body apply, except that the bundle sta
 
 ## Evidence contract
 
-- **Red before Green.** Record reproduction with `devkit workflow envelope new --unit <dir> --kind red --stage reproduce --summary "..." --check reproduced="PASS <command>: <observed failure>" --head $(git rev-parse HEAD)` (omit `--head` when there is no revision yet). A compile, environment or test-setup failure unrelated to the defect is not reproduction evidence; a build failure that is the defect is.
-- **Green** records the same conditions giving the expected result (`--check resolved="PASS ..."`) and the preserved behavior (`--check preserved="PASS ..."`) with the commands run, in `envelopes/green-NN.yaml`. The added reproduction test stays as a regression test.
+- **Red before Green.** A recorded reproduction precedes the fix. A compile, environment or test-setup failure unrelated to the defect is not reproduction evidence; a build failure that is the defect is.
+- **Green** records the same conditions giving the expected result and the preserved behavior, with the commands run. The added reproduction test stays as a regression test. The envelope commands for both are in `spec-specify`'s `references/bugfix.md`.
 - **Alternative evidence** (external outage, environment-dependent or flaky defects): fix the observation conditions and expected results in `spec.md` first; the Green envelope then states resolution confirmed or residual uncertainty. One non-occurrence is not resolution.
 - Evidence is judged by `envelope-check-pass`; `diff_scope` is recorded for traceability, and `revision-ancestor(red green)` is available when a project wants stricter ordering. `devkit workflow envelope check --unit <dir>` reports malformed envelope files; a malformed file never satisfies a check.
 
@@ -180,4 +180,4 @@ All other rules of the `sdd-spec-feature` body apply, except that the bundle sta
 - `plan-intent` records the intent with the expected behavior included.
 - Implementation choices inside the agreed expected behavior are decided with the recommended option and recorded. When it cannot be kept (the defect turns out to be a design problem, or the expected behavior itself is disputed), the work stops as a problem and the Host decides recovery or a close.
 - At the review feedback breakpoint, feedback that changes the fix within the expected behavior is reverified through the existing return paths; feedback that changes the expected behavior is a close.
-- Effort never lowers the floor: the Red and Green evidence holds at every effort, as do the gates, exit checks and `required` policies; roles follow the `spec` skill's `references/effort.md`, at `high` its `references/review-loop.md`.
+- Red and Green evidence holds at every effort; roles follow the `spec` skill's `references/effort.md`, at `high` its `references/review-loop.md`.

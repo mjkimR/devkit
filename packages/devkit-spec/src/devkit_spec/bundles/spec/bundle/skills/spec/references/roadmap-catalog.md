@@ -1,8 +1,8 @@
 # Repository roadmap
 
-Milestones are global documents `MS-<slug>.md` with a word-led slug (for example `MS-release-1-0`), created from the
-deployed milestone template: planned/active at `docs/roadmap/`, done/dropped at `docs/roadmap/_archive/`. Keep IDs,
-aliases and filenames unchanged. Discover them with `devkit docs list milestone` (`--history` adds done/dropped).
+Milestones are global documents `MS-<slug>.md` with a word-led slug (for example `MS-release-1-0`); creation and
+placement follow [Backlog](backlog.md) Milestones. Discover them with `devkit docs list milestone` (`--history` adds
+done/dropped).
 
 ## Goal and membership
 
@@ -24,9 +24,4 @@ phase-level outcomes over CLI flags, branch names, file layouts and scenario tes
 ## Lifecycle
 
 Status changes, close, drop, reopen and merge follow [Backlog](backlog.md) Milestones and
-[milestone completion](milestone-completion.md). In short:
-
-- Semantic scope changes reset both to pending (the two Completion review assertions); normal handoff does not.
-- Done records stay as written unless merged.
-- On the user's Backlog decision, small milestones of any status may merge into a broader theme milestone; a merge is
-  not an in-place extension.
+[milestone completion](milestone-completion.md).

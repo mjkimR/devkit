@@ -42,7 +42,7 @@ def test_settled_assumptions_go_into_settles() -> None:
 
 def test_planning_clears_boundary_reports_before_plan_accept() -> None:
     proposal = raw("workflows/sdd-proposal.md")
-    assert_rule(proposal, "before requesting it", "clears every `RULE-proposal-boundaries` report")
+    assert_rule(proposal, "before requesting it", "`references/planning.md` step 5")
     assert_rule(proposal, "each `challenger` round", "`reverify` that closes it", "`review=`")
     assert_rule(raw(PLANNING), "devkit rules check", "clear every `RULE-proposal-boundaries` report")
     template = text("templates/proposal.md")

@@ -13,9 +13,7 @@ UX document links both (`usecases`, `capabilities`). Start from the `ux` templat
 ## One element, linked both ways
 
 - One document per element. A modal or panel shown by several screens is its own document, cited by their Content.
-- A use case step cites the UX ID of the screen it happens on, next to its capability citations
-  (`usecase-writing`). A system step cites the screen its response appears on; only a step that truly happens off
-  screen (a mail sent, a background job) cites none.
+- Use case steps cite the screens they happen on, per `usecase-writing`.
 - Each Interactions row names the step it serves as `` `UC-<slug>` <key> `` (`3`, `2a`, `*a`). A global control
   (navigation, help) may leave the Step cell empty. List every use case a Step cell names in `usecases`.
 - Every screen has an exit (a row targeting another element, `close`, `back` or `end`) unless the task ends on it;

@@ -47,8 +47,7 @@ for `sdd-spec-bugfix`.
 - Drop an optional section that does not apply instead of writing "N/A".
 - **Screens**: when the change adds or changes what a person sees and operates, add a `Screens` section to `spec.md`
   with one draft per screen, modal or panel in the `ux` template's shape (`ux-writing`), with the use case step
-  citations and `docs/steering/ux-objects.md` rows they need. Write an ID the change creates (a new UX, UC or CAP ID)
-  as plain text, existing IDs as code spans. A bundle handed off from a proposal: carry the Screens drafts of
+  citations and `docs/steering/ux-objects.md` rows they need. A bundle handed off from a proposal: carry the Screens drafts of
   `target-docs.md` here, so `spec-sync` and the reconcile verification read one place. An open screen arrangement:
   take the recommended candidate and record the others as an assumption.
 

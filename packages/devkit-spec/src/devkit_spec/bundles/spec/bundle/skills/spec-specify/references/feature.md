@@ -8,8 +8,7 @@ At the `specify` stage, fill the `spec.md` skeleton under the shared contracts o
 2. **Non-goals**: what this feature will not do.
 3. **Acceptance scenarios**: the happy path, boundary values, the interface's error contract (exit codes, status or
    error codes, payloads) and unauthorized cases, each confirmable by a test or a CLI run.
-4. **Screens**: when the feature changes what a person sees, draft its screens per `SKILL.md` §4; the optional UX
-   review runs before `spec-plan`.
+4. **Screens**: when the feature changes what a person sees, draft its screens per `SKILL.md` §4.
 5. **Security, privacy and compliance**: only when the change has permission boundaries, sensitive data or auth
    constraints.
 6. Leave `related_capabilities` or `related_usecases` as `[]` when none exist; every listed ID resolves

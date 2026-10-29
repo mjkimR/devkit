@@ -9,8 +9,7 @@ Take the next useful action toward the user's product goal, keeping enough curre
 
 ## Constraints
 
-- Before product actions, run `uv run devkit config show` and use its effective `configuration.development.approach`, not bundle selection or installed packages. If inspection fails, stop product work and report its code and configuration action. If the approach is not `incubation`, stop product work and explain the shared `.devkit/config.toml` setting `[development] approach = "incubation"`; change it only on the user's direction.
-- Do not classify edits into SDD depths or require per-change proposals, Units, approvals or envelopes; never reopen retained SDD decisions or completed artifacts.
+- Before product actions, check the effective `configuration.development.approach` from `uv run devkit config show`, not bundle selection or installed packages. When it is not `incubation`, explain the shared `.devkit/config.toml` setting `[development] approach = "incubation"`; change it only on the user's direction.
 
 ## Procedure
 
@@ -21,12 +20,9 @@ Take the next useful action toward the user's product goal, keeping enough curre
 5. Read `references/delegation.md` before assigning a separable question or verification scope to an optional role; inline work needs no role.
 6. Read `references/current-context.md` before writing current context, pausing, resuming in another session or answering an explicit SDD adoption request.
 7. Write only documents that help the next decision or describe retained behavior.
-8. Present a goal or constraint change to the user before dependent work.
-9. Fix failed retained behavior, rerun its affected checks and report remaining gaps.
+8. Fix failed retained behavior, rerun its affected checks and report remaining gaps.
 
 ## Completion of an action
 
 - State the observed result, source/artifact identity, checks actually run, limitations and next useful action.
-- Update `.devkit/incubation.md` when resume facts change, preserving unrelated content.
-- Never claim that an unexecuted check passed or that an abandoned experiment is retained behavior.
 - Continue authorized work while a useful next action remains; incubation never requires eventual SDD adoption.

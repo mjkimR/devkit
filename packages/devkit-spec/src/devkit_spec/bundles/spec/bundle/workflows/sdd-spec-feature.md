@@ -152,7 +152,7 @@ There is no Development direction gate and no return from Development to Plannin
 
 ## Roles and effort
 
-The `code-reviewer` and `reconcile-reviewer` roles follow the `activity-effort` of the Development activity as the `spec` skill's `references/effort.md` defines it for the Unit path, at `high` in the bounded rounds of its `references/review-loop.md`. The implementer writes, fixes and resolves the reconcile at every effort; the reviewer role only verifies it. Effort never lowers the floor: gates, this workflow's exit checks and `required` policies hold at every effort, and the review envelope is recorded before `dev-integration` even at `low`. `[DELEGATE]` in `next` names the role and its contract when a stage prefers isolation; `spec-delegate` decides how it runs.
+The `code-reviewer` and `reconcile-reviewer` roles follow the `activity-effort` of the Development activity as the `spec` skill's `references/effort.md` defines it for the Unit path, at `high` in the bounded rounds of its `references/review-loop.md`. The implementer writes, fixes and resolves the reconcile at every effort; the reviewer role only verifies it. `[DELEGATE]` in `next` names the role and its contract when a stage prefers isolation; `spec-delegate` decides how it runs.
 
 ## Gate rules
 
@@ -174,6 +174,4 @@ An external runner dispatches stages from this schema, binds `gate:dev-integrati
 
 ## Project policy
 
-Read `devkit spec policy` before integration decisions (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[tool.spec] worktree`). `dev-integration = "auto"` passes only after the required review, reconcile and checks, reported as `[GATE_PASSED: dev-integration ... source=policy]`, never as a human approval; explicit user authority, worktree and PR policy, external protections and action permissions still apply.
-
-Shared base `dev-integration=auto` also authorizes the Host to invoke verified local merge and exact cleanup through the authorized local executor, reporting `authority: policy`. It grants no publication or cloud authority and does not override host permissions. Preparation grants no authority; source-only policy changes cannot authorize themselves.
+Read `devkit spec policy` before integration decisions (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[tool.spec] worktree`). What `dev-integration = "auto"` authorizes in each environment and how it is reported follow the `spec` skill's `references/completion.md` (`dev-integration`); explicit user authority, worktree and PR policy, external protections and action permissions still apply.

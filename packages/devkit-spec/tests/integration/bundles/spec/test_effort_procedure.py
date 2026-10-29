@@ -90,13 +90,7 @@ def test_severity_is_p1_p2_or_p3_on_every_review_finding() -> None:
     assert_rule(loop, "severity changes no check")
     envelope = raw(BUNDLE / "skills/spec/references/envelope.md")
     assert 'severity: "medium"' not in envelope and 'severity: "P2"' in envelope
-    assert_rule(
-        envelope,
-        "`severity` is `P1`, `P2` or `P3`",
-        "every finding of a `review`, `reconcile-check` or `challenger`",
-        "at every effort",
-        "recorded as the reviewer set it",
-    )
+    assert_rule(envelope, "`severity` per [review loop](review-loop.md) section 3", "`challenger` only")
     review = raw(BUNDLE / "skills/spec-review/SKILL.md")
     assert 'severity: "P2"' in review
     assert_rule(review, "`severity` of `P1`, `P2` or `P3`", "at every effort")

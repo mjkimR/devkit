@@ -81,14 +81,12 @@ def test_confirm_first_offer_silent_no_match_and_recorded_selection() -> None:
     reference = raw(REFERENCE)
     assert_rule(step, "nothing of it runs", "before the user confirms", "explicit invocation")
     assert_rule(step, "wait for the answer", "before creating a unit, a branch or an edit")
-    assert_rule(reference, "wait for the answer", "before creating a unit, a branch or an edit")
     assert_rule(step, "no match", "silently", "no question", "no draft offer")
     for code in ("NOT_SYNCHRONIZED", "CONFIG_LOCAL_RENDER_STALE", "ARGUMENT_INVALID", "SEARCH_EXTRA_MISSING"):
         assert code in step, code
     assert_rule(step, "lock timeout", "counts as no match", "never run its remediation")
     assert_rule(reference, "record the playbook id", "`plan-intent` note")
-    assert_rule(reference, "nothing of the playbook runs", "before the user confirms")
-    assert_rule(reference, "decline", "never offer that candidate again")
+    assert_rule(reference, "confirmation grants what an explicit invocation grants", "no more")
 
 
 # AC-05

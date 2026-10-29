@@ -10,4 +10,3 @@ records, decision revision and artifact retention.
 - Read the glossary before naming a domain concept; find existing documents with `devkit docs list` and `devkit docs search` before writing another.
 - Run `devkit rules check` for document identity, frontmatter, structure and reference checks.
 - Templates: `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md`.
-- Change managed assets through `devkit override` or their source bundle, never by editing `.devkit/managed/`.

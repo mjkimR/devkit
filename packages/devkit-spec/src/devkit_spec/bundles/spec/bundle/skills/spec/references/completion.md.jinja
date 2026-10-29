@@ -20,7 +20,7 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 ### `dev-integration`
 
 - `policy=ask`: present the verified result and obtain the user's OK:
-{% if execution.environment == "local" %}  - Run `devkit integration prepare <branch> --task-kind unit --task-id <id> --unit <dir> --route local --format json`, present its exact scope with the verified result, then run `devkit integration integrate <branch> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>` after the user's conversational OK. A changed digest requires a fresh preparation and decision. A PR route uses `--route pull-request` and requires separate publication authority.
+{% if execution.environment == "local" %}  - Prepare, present the exact scope and integrate after the user's conversational OK by `spec-integrate` step 5.
 {% else %}  - Explicit CLI route: a conversational OK unless already authorized. A PR: its ready state.
 {% endif %}  - Never write the OK to a file. Pass `--given dev-integration` to each later `devkit workflow next --unit <dir>`, and name the actual conversational or policy authority in the integration report.
   - On an objection, run `devkit workflow return --unit <dir> --to review-refine --note "..."`; an objection about direction is a [close](depth-and-close.md).

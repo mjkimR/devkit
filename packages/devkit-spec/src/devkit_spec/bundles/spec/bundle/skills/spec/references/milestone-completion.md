@@ -1,6 +1,6 @@
 # Milestone completion review
 
-Read for a requested Backlog close review, or to propose one after the milestone's known work finishes. Only direct PROP anchors declare membership; handoff does not carry it to SPEC. Semantic scope changes reset both completion assertions to pending; normal handoff does not.
+Read for a requested Backlog close review, or to propose one after the milestone's known work finishes.
 
 ## Prepare one candidate
 
@@ -28,6 +28,7 @@ Direct proposal work: pending
 
 ## Later changes
 
+- Semantic scope changes reset both completion assertions to pending; normal handoff does not.
 - Wording or format corrections that keep the meaning do not reset the assertions.
 - To extend a `done` milestone, on the user's decision reopen it to `active` and reset both assertions to pending, moving it from `_archive/` to the roadmap root in the same commit, or put the new scope in another milestone. Merging into a broader theme milestone ([Backlog](backlog.md)) is not such an extension: the theme's own assertions decide its close.
 - Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are unless merged or an exact content-preserving relocation batch is approved.

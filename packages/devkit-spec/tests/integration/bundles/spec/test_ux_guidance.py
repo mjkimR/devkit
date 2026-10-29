@@ -25,7 +25,7 @@ def test_the_seed_holds_the_ux_directory_but_no_register() -> None:
     assert (seed / "ux/README.md").is_file()
     assert not (seed / "steering/ux-objects.md").exists()
     assert "| **`ux/`** | UX Documents |" in raw("seed/docs/README.md")
-    assert "templates/{capability,usecase,ux,decision,milestone}.md" in text("AGENTS.md.jinja")
+    assert "templates/{capability,usecase,ux,decision,milestone}.md" in text(DOCS / "AGENTS.md")
 
 
 def test_ux_writing_is_a_core_instruction_with_the_agreed_rules() -> None:
@@ -39,7 +39,7 @@ def test_ux_writing_is_a_core_instruction_with_the_agreed_rules() -> None:
     assert_rule(guide, "`docs/steering/ux-objects.md`", "first UX document", "nothing seeds")
     assert_rule(guide, "visual style", "steering style files", "never restate")
     assert_rule(guide, "medium", "wireframe", "mock-up", "screenshot", "project's")
-    assert_rule(guide, "system step", "cites", "screen", "response")
+    assert_rule(guide, "use case steps", "cite", "screens", "`usecase-writing`")
     assert_rule(guide, "draft", "change creates", "UX, UC or CAP ID", "plain text")
     usecase = raw("instructions/usecase-writing.md")
     assert_rule(usecase, "step", "may cite", "UX ID", "screen")
@@ -50,17 +50,10 @@ def test_drafts_and_the_review_precede_the_plan() -> None:
     specify = raw("skills/spec-specify/SKILL.md")
     assert_rule(specify, "**Screens**", "add", "`Screens` section", "`spec.md`", "`ux`", "`ux-writing`")
     assert_rule(specify, "**Screens**", "carry", "Screens drafts", "`target-docs.md`")
-    assert_rule(specify, "**Screens**", "change creates", "UX, UC or CAP ID", "plain text", "code spans")
     assert_rule(specify, "Screens section", "offer", "optional UX review", "before the plan", "`ux-reviewer`")
     assert_rule(specify, "`ux-reviewer`", "before `spec-plan` (feature)", "`plan-tasks` (bugfix)")
-    assert_rule(raw("skills/spec-specify/references/feature.md"), "**Screens**", "optional UX", "before `spec-plan`")
-    assert_rule(
-        raw("skills/spec-specify/references/bugfix.md"),
-        "**Screens**",
-        "UX review",
-        "`characterize`",
-        "before `plan-tasks`",
-    )
+    for reference in ("feature", "bugfix"):
+        assert_rule(raw(f"skills/spec-specify/references/{reference}.md"), "**Screens**", "draft", "`SKILL.md` §4")
 
 
 def test_spec_sync_writes_the_drafts_and_lists_them() -> None:

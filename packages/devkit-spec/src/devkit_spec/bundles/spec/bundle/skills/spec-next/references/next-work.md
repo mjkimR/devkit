@@ -21,7 +21,7 @@ because its branch exists. Recommend; do not start, accept or activate anything.
    (`devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`) when its direction is settled,
    or a session reclassification for `session`-depth work (the `spec` skill's `references/backlog.md`). Report as
    Backlog actions: other drafts in unready/done/dropped milestones, `needs_decompose` and `XL` drafts (decompose
-   first with the `decomposer`; never edit the size to pass) and invalid dependencies.
+   first with the `decomposer`: [XL size gate](../../spec/references/backlog.md#the-xl-size-gate)) and invalid dependencies.
 5. When a milestone's known work has finished, offer the
    [milestone completion review](../../spec/references/milestone-completion.md); never close one silently.
 

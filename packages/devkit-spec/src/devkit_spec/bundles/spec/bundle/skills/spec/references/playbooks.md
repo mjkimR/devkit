@@ -7,13 +7,8 @@ skip cases, search and selection rule stay in the skill.
 
 - Name the candidate as `<bundle>/<playbook>` with what it does, in one line next to the classification statement:
   "Playbook `spec/adr-compaction` consolidates ADRs; confirm to use it, or decline to continue as ordinary work."
-  End the reply there and wait for the answer before creating a Unit, a branch or an edit.
-- Nothing of the playbook runs before the user confirms: no file move, deletion, status update or other step. The
-  confirmation is the playbook's explicit invocation, so a prerequisite "the user invoked or confirmed it" holds. It
-  grants what an explicit invocation grants, no more: workflow gates, permissions and user constraints still apply;
-  confirming `spec/adr-compaction` authorizes its deletions at `session` depth.
-- A decline continues the ordinary path; never offer that candidate again in the conversation, even for a reworded
-  request. When the user says not to use playbooks, run no discovery for the rest of the conversation.
+- The confirmation grants what an explicit invocation grants, no more: workflow gates, permissions and user
+  constraints still apply; confirming `spec/adr-compaction` authorizes its deletions at `session` depth.
 
 ## 2. Classification and records
 
