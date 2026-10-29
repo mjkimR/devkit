@@ -42,7 +42,9 @@ The evidence is bounded; baseline performed well, and no general quality, cost o
 ## Entrypoints
 
 Retain existing doorways and add the explicit research skill where behavior starts. Broad bundle directories,
-test files and installation guides are not new behavior doorways. Derivation is reviewed during reconciliation.
+test files and installation guides are not new behavior doorways. Derivation was reviewed: all four capability/use-case targets already contain their selected skill doorways.
+The suggested broad bundle, README, guide and test paths were rejected; the symbolic isolated-probe boundary
+is evaluation-only and has no durable code entrypoint. No additional derived pairs were applied.
 
 ## Scope and follow-up
 

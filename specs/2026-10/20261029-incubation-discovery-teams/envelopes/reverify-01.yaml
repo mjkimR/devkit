@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T07:09:42.500096Z'
+status: completed
+review: review-01.yaml
+summary: Applied the exact shell quoting correction; the installed-consumer regression failed before the fix and now allocates two distinct ignored research runs.
+findings:
+- issue: The task-directory allocation example contains an unmatched double quote.
+  evidence: packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate-research/references/workspace.md:23; zsh -n on the extracted shell block exits 1 with unmatched quote.
+  failure_condition: Running the supplied shell example fails parsing and allocates no task directory.
+  suggested_action: Correct to research_task="$(mktemp -d "$research_run/task-XXXXXX")" and syntax-check the fenced example.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 99 affected tests, including red/green allocation regression
+  lint: PASS catalog lint and type checks; zsh syntax check
+diff_scope:
+  base: 6b7286ac4998433d9b1a290fdc5217d731e7847d
+  head: 3e7c1a5b80f507e456fbaa11bbaaaab0468bb45d
+activity_effort: medium
