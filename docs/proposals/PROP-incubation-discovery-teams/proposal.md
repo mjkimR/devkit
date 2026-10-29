@@ -2,7 +2,7 @@
 id: PROP-incubation-discovery-teams
 title: Incubation discovery teams for product direction and roadmap
 summary: "Extend opt-in incubation with host-orchestrated discovery teams that research ambiguous ideas, compare product directions, and prepare an evidence-backed initial document set and roadmap before development."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing
 created_at: 2026-10-29
 target_area: delivery/
 priority: high                        # critical | high | medium | low
