@@ -121,3 +121,10 @@ requiring their own measurements.
 
 The implementation should exercise normal preparation/handoff/integration/cleanup in isolated fixtures and the
 dirty/moved-ref/unknown-result cases. Production mutation probes were not part of this Planning.
+
+## 6. Challenger closure
+
+The independent medium challenger found two P2 contract gaps: explicit supersession of the scout-only default
+clause in `ADR-five-subagent-levels`, and mapping zero-exit CLI partial cleanup into the existing three role
+statuses. Both were folded into the proposal, PADR, target documents and role draft. Original CLI status/exit/
+effects remain distinct from role completion; no persisted state or CLI schema was added.

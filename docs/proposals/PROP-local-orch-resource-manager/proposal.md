@@ -93,10 +93,15 @@ authority for remote effects. Read-only preparation needs no mutation authority.
 Refresh state before mutation. Return completed and remaining effects, observed refs, checks and stable blocker
 codes. Agent memory is procedural continuity, not Git truth or approval authority. Inspect unknown/partial outcomes
 before attempting only a supported remaining operation. Changed scope, dirty resources, active writers, semantic
-conflicts and permission/runtime blockers return to the Host. A zero exit with partial effects is reported as partial.
+conflicts and permission/runtime blockers return to the Host. Preserve original CLI status, exit code and effects
+separately from the role status. Use completed only after all requested effects and checks are verified complete;
+needs_input means the remainder requires Host decision/action; failed means an execution failure. A zero-exit
+partial cleanup is never completed until its requested cleanup effects are verified complete.
 
 Update affected Host-only invocation clauses through `PADR-reusable-lifecycle-resource-manager`; retain unrelated
-authority and worker decisions in `ADR-host-cli-lifecycle-authority` and `ADR-orchestration-workers`. Caller
+authority and worker decisions in `ADR-host-cli-lifecycle-authority` and `ADR-orchestration-workers`. Also supersede
+the scout-only source-preset/default-inheritance clause of `ADR-five-subagent-levels` for this role, preserving
+preset mappings and unrelated distribution policy. Caller
 guidance keeps approval/coordination boundaries while operation-specific references move to the role.
 
 ### Acceptance evidence
@@ -108,7 +113,8 @@ guidance keeps approval/coordination boundaries while operation-specific referen
 - **AC3 — Scope preservation:** Changed refs/scope, dirty resources, active writers or missing authority preserve
   resources and return the exact blocker. The manager grants no approval or publication rights.
 - **AC4 — Partial recovery:** Inspect partial/unknown state before executing only a verified remaining operation
-  within current authority. Preserve recovery identity and completed effects.
+  within current authority. Preserve recovery identity and completed effects. Include a zero-exit CLI partial
+  cleanup result and verify that role status cannot claim completed while requested effects remain.
 - **AC5 — Evidence:** Check role/projection contracts and repeated jobs; record exercised hosts and missing
   metrics; distinguish replay from mutation evidence. Compare Host burden at the same head with the role disabled.
 

@@ -21,7 +21,8 @@ targets:
 - `CAP-DLV-delivery-workflows`: add manager lifetime, first-use creation, reuse, job/result boundary, selected
   model level and recovery after context loss. Preserve one-shot Planning/Development workers.
 - `CAP-INT-mcp-services`: distinguish Host business authority from delegated execution of exact approved effects.
-  Preserve readiness, digest checks, route limits and partial-result recovery.
+  Preserve readiness, digest checks, route limits and partial-result recovery. Map CLI partial effects separately
+  into the existing three role statuses, including zero-exit incomplete cleanup.
 - `UC-drive-development-to-integration` and `UC-incubate-and-hand-off-a-proposal`: show delegated preparation,
   handoff, authorized execution and cleanup, including return to the Host for decisions.
 
@@ -31,7 +32,9 @@ targets:
   conversation and repository.
 - `docs/steering/glossary.md`: register the lifecycle resource manager and refine the Host definition if accepted.
 - A Planning PADR records the execution boundary and evidence-based model default. On acceptance, supersede only
-  affected Host-only clauses of `ADR-host-cli-lifecycle-authority` and `ADR-orchestration-workers`.
+  affected Host-only clauses of `ADR-host-cli-lifecycle-authority` and `ADR-orchestration-workers`, plus the
+  scout-only source-preset/default-inheritance clause of `ADR-five-subagent-levels` for this role. Preserve mappings
+  and unrelated distribution policy.
 
 ## 3. Agent assets and verification
 

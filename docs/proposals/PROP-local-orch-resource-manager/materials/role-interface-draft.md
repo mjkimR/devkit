@@ -36,8 +36,12 @@ returns the required work and evidence without claiming completion.
 ## Result
 
 Return `status: completed|needs_input|failed`, repository/Unit identity, observed source/target refs, completed
-effects, remaining effects, checks and stable blocker/advisory codes. A process exit of zero does not override a
-partial status. Report whether any output or host evidence was unavailable. Full command output stays in the
+effects, remaining effects, checks and stable blocker/advisory codes. Preserve original CLI status, exit code and effects separately.
+Map role status as follows: completed only when all requested effects/checks are verified complete; needs_input
+when remaining effects require Host decisions or action; failed for an execution failure. After a zero-exit CLI
+partial cleanup, inspect and finish only supported, already-authorized effects; otherwise return needs_input or
+failed with both completed_effects and remaining_effects. Never emit a fourth role status named partial.
+Report whether any output or host evidence was unavailable. Full command output stays in the
 manager context or retained task evidence; it does not enter the main conversation unless the Host needs it.
 
 These are role message fields, not a new persisted journal or CLI schema. Keep default summary within one short

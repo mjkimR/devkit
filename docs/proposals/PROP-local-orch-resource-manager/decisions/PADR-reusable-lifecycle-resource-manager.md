@@ -52,6 +52,9 @@ execution role; the probe does not show Luna to be unsafe or Sol to be cost-effe
 - Source-authoring fixes, semantic reconciliation and resolution of merge conflicts remain with the implementer
   or Host. The manager can report that source preparation is required; it does not invent production edits.
 - Each job supplies current identities and effect authority. Remembered state never expands that authority.
+- Preserve original CLI status/exit/effects separately from role status. Use completed only for all verified
+  requested effects/checks, needs_input for a Host-dependent remainder, and failed for execution failure. Always
+  carry completed_effects and remaining_effects; zero-exit partial cleanup cannot imply completion.
 - After context loss, rebuild from CLI/Git state and current Host input. Do not persist an approval store or a
   resource-manager service.
 - Serialize conflicting jobs within the conversation and require quiescent writers before cleanup. Do not claim
@@ -60,7 +63,9 @@ execution role; the probe does not show Luna to be unsafe or Sol to be cost-effe
   existing project mappings can select its available model without changing distribution behavior.
 
 On promotion, supersede only Host-only lifecycle invocation clauses in `ADR-host-cli-lifecycle-authority` and
-`ADR-orchestration-workers`; keep their unrelated authority, worker and recovery decisions.
+`ADR-orchestration-workers`; keep their unrelated authority, worker and recovery decisions. Supersede the
+scout-only source-preset/default-inheritance clause of `ADR-five-subagent-levels` for this manager; preserve
+its preset mappings and unrelated distribution policy.
 
 ## 5. Consequences
 
