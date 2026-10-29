@@ -1,0 +1,29 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-29T11:24:26.641385Z'
+status: completed
+summary: Reusable execution and provisional standard default are bounded; close source-model policy supersession and partial-status mapping gaps.
+findings:
+- issue: The standard role default changes an accepted model-selection decision that the PADR does not identify.
+  evidence: ADR-five-subagent-levels lines 44-45 requires only scout to select a source preset; PADR-reusable-lifecycle-resource-manager selects standard but names only two other decisions in supersession scope.
+  failure_condition: Development changes role defaults/tests while leaving the scout-only inheritance decision authoritative.
+  suggested_action: Explicitly supersede the affected scout-only/default-inheritance clause while preserving mappings and unrelated distribution policy.
+  resolution: open
+  severity: P2
+- issue: Partial completion has no explicit mapping into the permitted three role statuses.
+  evidence: role-interface-draft.md lines 38-40 permits completed|needs_input|failed but refers to partial status; CAP-INT-mcp-services permits zero exit with remaining cleanup effects.
+  failure_condition: A landed integration with remaining cleanup produces unsupported partial status or a misleading completed result.
+  suggested_action: Define completed only for all verified effects; needs_input for Host-dependent remainder; failed for execution failure; always carry completed/remaining effects and verify zero-exit partial cleanup.
+  resolution: open
+  severity: P2
+assumptions:
+- 'Codex emulated boundary: explicit assigned cwd and read-only commands; no native path guarantee; no deliberate outside-worktree reads.'
+unverified_areas:
+- Production mutation reliability, total cost, latency, Claude and Antigravity live execution are unmeasured.
+checks:
+  scope: PASS before/after tree 1682f103971f976673ba167e007747373348d133 unchanged
+diff_scope:
+  base: c508b2deee403fb5c6d8ce3609c96c02dc71b0fd
+  head: 84c0012352c2a9d3826f373e5dc498e80a073885

@@ -1,8 +1,8 @@
 ---
 id: PROP-local-orch-resource-manager
-title: Reusable resource manager subagent for local orchestration
-summary: "Delegates lifecycle operations to one reusable subagent per Host conversation and repository to reduce main-agent intervention and context load. Compares lightweight and mid-tier models before selecting the role default."
-status: draft
+title: Reusable git-operator subagent for local orchestration
+summary: "Delegates lifecycle operations to one reusable git-operator per Host conversation and repository to reduce main-agent intervention and context load. Uses the user-selected lean preset without transferring prior Sol evidence to Terra."
+status: accepted
 created_at: 2026-10-29
 target_area: delivery/
 priority: high
@@ -26,78 +26,111 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-local-orch-resource-manager] Reusable resource manager subagent for local orchestration
+# [PROP-local-orch-resource-manager] Reusable git-operator subagent for local orchestration
 
 ## 1. Background & Hypothesis
 
-Local orchestration delegates Planning and Development turns, but the Host still prepares worktrees, performs
-handoff, executes integration and cleanup, and investigates partial failures. Recurring operating instructions
-and intermediate output occupy the conversation that also owns user interaction and decisions.
-`CAP-DLV-delivery-workflows` and `ADR-orchestration-workers` define the current worker boundary.
+Local orchestration delegates Planning and Development turns but leaves worktree preparation, handoff, integration
+execution and cleanup in the Host. Their operating references and intermediate output compete with discussion
+and coordination. `CAP-DLV-delivery-workflows` and `ADR-orchestration-workers` define that boundary.
 
-One reusable lifecycle resource manager per Host conversation and repository should reduce operational
-intervention and context load. Create it on the first lifecycle request and reuse it for later requests.
-Existing host subagent mechanisms provide background execution and continuation; custom asynchronous execution
-is not the research objective. The primary benefit is preserving the Host's attention for discussion and
-coordination across multiple units. Lower total model cost is a secondary hypothesis.
+Adopt one reusable `git-operator` per Host conversation and repository. Create it on first use
+and reuse it for later jobs. Use native subagent execution/continuation, without an asynchronous runtime of our own.
+The intended benefit is less Host operational context and intervention across multiple units. Total-cost and
+conversation-latency improvements remain unmeasured.
 
-A lightweight model is a candidate, not a settled default. A mid-tier model may avoid enough retries and Host
-intervention to be preferable. Model selection should follow observed end-to-end behavior.
+## 2. Planning Findings
 
-## 2. Technical Spike Questions
+`MAT-resource-manager-planning-evidence` preserves the method, inputs, returned JSON and limits.
 
-- **Q1 — Adoption benefit:** Against Host execution of the same operations, measure Host operational tool calls,
-  instruction loading, intermediate output and interventions over a multi-unit session with matched starting
-  states. Distinguish main-context savings from total token use and lifecycle completion time.
-- **Q2 — Lightweight versus mid-tier:** Compare a lightweight level (`compact` or `minimal`) with `standard`,
-  using the same role contract and fixtures. Cover preparation, handoff, authorized integration, scoped cleanup,
-  dirty worktrees, moved refs, partial completion and unknown outcomes. Record correctness, inappropriate
-  mutations, avoidable escalation, retries, completion time and total usage including Host recovery. Distinguish
-  necessary escalation from failure to handle a routine operation. Select the default from these results rather
-  than branch cleanup simplicity or happy-path speed alone.
-- **Q3 — Context boundary:** Which operating references can move entirely to the manager while leaving the Host
-  enough information to authorize effects, schedule units and accept results?
-- **Q4 — Reuse:** Specify per-job state refresh, recovery after context loss and continuation guidance for
-  Codex/ChatGPT, Claude Code and Antigravity. Validate native invocation paths; a cross-session daemon or new
-  scheduler is not a prerequisite.
+- **Q1 — Adoption benefit:** Existing guarded CLI operations provide a useful delegation unit. Two live read-only
+  model probes returned correct state summaries from separate contexts. This demonstrates query/summary feasibility,
+  not a measured multi-unit benefit. Development compares a matched sequence with the role disabled at the same
+  head as baseline; a worker need not check out another commit.
+- **Q2 — Model level:** Both requested configurations (Luna and Sol) passed 12/12 contract-driven decision cases.
+  Sol supplied full commands in all three execute cases; Luna did so in one and used permitted natural-language
+  actions in two. This is not a correctness failure or mutation-reliability comparison. One Luna follow-up failed
+  without a diagnostic before a changed-input retry succeeded. Tokens, reliable latency and total cost were unavailable.
+- **Q3 — Context boundary:** Keep dispatch, approval, scheduling, result acceptance and semantic decisions in the
+  Host. Move operating steps, logs and routine recovery inspection to the manager. The role interface draft in
+  this bundle specifies per-job identity/authority and concise actual-effect results.
+- **Q4 — Reuse:** Reuse the exact agent identity within the conversation/repository. After context loss or missing
+  identity, start a fresh instance from CLI/Git observations and current Host authority. Codex read-only invocation
+  and follow-up were exercised; Claude and Antigravity live execution was not.
+
+The user selected the role name `git-operator` and default `level: lean`, replacing the earlier provisional
+standard recommendation in `PADR-reusable-lifecycle-resource-manager`. Existing project overrides remain available.
+`ADR-lean-subagent-level` already defines lean: Claude Code Sonnet with medium effort, Codex `gpt-6.1-terra` with
+medium effort, and Antigravity Flash with effort omitted because its supported per-role schema cannot express it.
+Lean makes no Flash high-effort guarantee and adds no prompt-based effort emulation.
+
+The prior probe compared requested Luna and Sol configurations; it did not test Terra medium. Its results remain
+historical evidence, not validation of the selected model. The choice is explicit user direction, not a measured
+Terra reliability or cost conclusion. No model router, fallback controller or distribution engine change is needed.
 
 ## 3. Proposed Design & Impact
 
-- Add a lifecycle resource manager role to the spec bundle as the normal helper for recurring operations in
-  `local-orchestrated` mode. Reuse one instance within a Host conversation and repository. Load detailed operating
-  instructions in its context and return concise results instead of raw logs.
-- Delegate worktree creation/attachment and setup, handoff execution, already-authorized integration execution,
-  merged branch/worktree cleanup and recovery inspection. Invoke complete existing CLI operations; do not append
-  redundant cleanup to integration that already performs it.
-- Keep user decisions, unit scheduling, worker result acceptance and semantic conflict decisions with the Host.
-  The manager executes only the current job's authorized effects. Return changed scope, unexpected dirty state,
-  semantic conflicts and permission/runtime blockers for Host handling.
-- Use existing model levels from `CAP-DIST-agent-projections`; choose the role default after Q2 and retain project
-  overrides. A new routing subsystem or automatic escalation between models is outside this feature.
-- Reuse guarded CLI operations and stable error codes. Composed handoff already prepares the worktree and checks
-  state. Scoped integration already revalidates readiness and performs cleanup under `CAP-INT-mcp-services`.
-- Each job identifies the operation, repository/worktree, unit/branch, current relevant refs and Host-carried
-  authority for its effects. Include the prepared digest where required. Return completed effects, observed refs,
-  remaining work and blockers. Agent memory is procedural continuity, not Git truth or approval authority.
-- The Host stops writers before handing their worktree to cleanup. Serialize conflicting jobs within the
-  conversation and preserve CLI locks and guards. The manager is not a repository-wide mutex. Inspect unknown
-  outcomes before attempting only the remaining operation.
-- Update Host-only execution wording through the appropriate decision and contract changes. Preserve business
-  approval, host permissions, publication limits, readiness checks and exact cleanup scope under
-  `ADR-host-cli-lifecycle-authority` and `ARCH-04-1-ecosystem-boundaries`.
-- Verify first creation and reuse, self-contained jobs, compact completion/blocked results and the Q2 scenarios.
-  Record model/host versions, unavailable measurements and host coverage gaps. Token or latency savings remain
-  unverified until measured; assess adoption through Host burden and correctness together.
-- **Scope Excluded:** A persistent service, custom async scheduler, durable approval/recovery store, global lock
-  service, general Git repair agent, arbitrary branch deletion and lifecycle CLI engine changes. Reconsider engine
-  changes only if Planning identifies a concrete missing boundary that prevents safe use of existing operations.
+### Delegated execution
+
+- Add a `git-operator` role with `level: lean` as the normal helper for recurring `local-orchestrated` lifecycle jobs.
+  Preserve one-shot Planning/Development workers.
+- Delegate worktree creation/attachment and setup, handoff execution, integration preparation and already-authorized
+  execution, exact merged-resource cleanup and recovery inspection.
+- Use complete existing CLI operations. Normal integration already includes cleanup; do not append a redundant
+  cleanup job. `CAP-INT-mcp-services` retains readiness, digest, route and partial-result semantics.
+- Source-authoring fixes, semantic reconciliation and conflict resolution remain with the implementer or Host.
+  The manager reports required source preparation and invents no production edits to make readiness pass.
+- The Host keeps user decisions, unit scheduling, worker result acceptance and semantic conflict decisions.
+  It quiesces writers before cleanup. The manager serializes conflicting jobs within the conversation, without
+  claiming repository-wide mutual exclusion.
+
+### Job and result boundary
+
+Each job supplies operation, repository/base/worktree identity, Unit/branch, current relevant refs and exact
+Host-carried authority for its effects. Include the prepared digest where required and separate publication
+authority for remote effects. Read-only preparation needs no mutation authority.
+
+Refresh state before mutation. Return completed and remaining effects, observed refs, checks and stable blocker
+codes. Agent memory is procedural continuity, not Git truth or approval authority. Inspect unknown/partial outcomes
+before attempting only a supported remaining operation. Changed scope, dirty resources, active writers, semantic
+conflicts and permission/runtime blockers return to the Host. Preserve original CLI status, exit code and effects
+separately from the role status. Use completed only after all requested effects and checks are verified complete;
+needs_input means the remainder requires Host decision/action; failed means an execution failure. A zero-exit
+partial cleanup is never completed until its requested cleanup effects are verified complete.
+
+Update affected Host-only invocation clauses through `PADR-reusable-lifecycle-resource-manager`; retain unrelated
+authority and worker decisions in `ADR-host-cli-lifecycle-authority` and `ADR-orchestration-workers`. Also supersede
+the scout-only source-preset/default-inheritance clause of `ADR-five-subagent-levels` for this role, preserving
+preset mappings and unrelated distribution policy. Caller
+guidance keeps approval/coordination boundaries while operation-specific references move to the role.
+
+### Acceptance evidence
+
+- **AC1 — Reuse:** Sequential jobs in one conversation/repository reuse the same manager identity; a missing
+  identity rebuilds current state without reusing prior effect authority.
+- **AC2 — Routine completion:** A ready, authorized job invokes existing CLI with exact arguments and returns
+  observed effects without making the Host reconstruct commands or read raw logs.
+- **AC3 — Scope preservation:** Changed refs/scope, dirty resources, active writers or missing authority preserve
+  resources and return the exact blocker. The manager grants no approval or publication rights.
+- **AC4 — Partial recovery:** Inspect partial/unknown state before executing only a verified remaining operation
+  within current authority. Preserve recovery identity and completed effects. Include a zero-exit CLI partial
+  cleanup result and verify that role status cannot claim completed while requested effects remain.
+- **AC5 — Evidence:** Check role/projection contracts and repeated jobs; record exercised hosts and missing
+  metrics; distinguish replay from mutation evidence. Compare Host burden at the same head with the role disabled.
+
+### Non-goals
+
+**Scope Excluded:** A persistent service, custom async scheduler, durable approval/recovery store, global lock
+service, general Git repair agent, arbitrary branch deletion, production-source fixes and lifecycle CLI engine
+changes. A concrete missing CLI boundary discovered later is a scope problem, not permission to bypass a guard.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- This is a Backlog draft. Registration neither starts Planning nor approves lifecycle execution or a model level.
-- Planning records the operation boundary, Host-context reduction and lightweight versus mid-tier comparison in
-  this bundle. Acceptance requires a recommended role contract and model default with evidence and visible gaps.
-- If neither model preserves correctness while reducing Host burden, present the failed hypothesis and revised
-  scope or rejection for the user's decision.
-- On acceptance, follow `sdd-proposal` and hand off to one feature spec. On rejection, retain the rejected draft
-  until normal hygiene retires it.
+Planning recommends adoption with `dev_effort: medium`. The role contract, ownership boundary and selected
+model default are ready for `plan-accept`; acceptance and Development handoff remain Host/user decisions.
+No production agent assets or lifecycle behavior changed in Planning.
+
+Validate the selected lean configuration during Development without rerunning the historical probe as part of
+this Planning revision. Terra medium execution, total cost and latency remain unmeasured; Sol evidence does not
+transfer to Terra. No total-cost, mutation-reliability or latency superiority is claimed.
+On acceptance, hand off to one feature spec; on rejection, retain the draft until normal hygiene retires it.

@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Plan the reusable lifecycle resource manager and compare lightweight versus
+  mid-tier models; brief adoption and model-selection conclusions.
+by: user
+at: '2026-10-29T11:12:58.412220Z'
