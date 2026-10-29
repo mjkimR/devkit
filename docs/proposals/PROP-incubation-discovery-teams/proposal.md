@@ -2,7 +2,7 @@
 id: PROP-incubation-discovery-teams
 title: Explicit incubation research entry and discovery teams
 summary: "Add an explicit incubation research skill that coordinates bounded discovery teams to compare product directions and retain an evidence-backed initial document set and roadmap before development."
-status: reviewing
+status: accepted
 created_at: 2026-10-29
 target_area: delivery/
 priority: medium
