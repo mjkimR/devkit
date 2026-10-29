@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-incubation-discovery-teams: Authorize Planning of incubation discovery
+  teams, initial product documents and roadmap preparation.'
+by: user
+at: '2026-10-29T06:32:51.258426Z'

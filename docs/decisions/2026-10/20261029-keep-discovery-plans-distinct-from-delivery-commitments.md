@@ -1,13 +1,13 @@
 ---
-id: PADR-keep-discovery-plans-distinct-from-delivery-commitments
+id: ADR-keep-discovery-plans-distinct-from-delivery-commitments
 title: Keep discovery plans distinct from delivery commitments
 summary: "For pre-development discovery, we retain labelled project-owned research and planning notes, to prepare useful documents and roadmaps without claiming implemented behavior, accepting semantic review."
-proposal: PROP-incubation-discovery-teams
-status: draft
+proposal: SPEC-incubation-discovery-teams
+status: accepted
 created_at: 2026-10-29
 ---
 
-# [PADR-keep-discovery-plans-distinct-from-delivery-commitments] Keep discovery plans distinct from delivery commitments
+# [ADR-keep-discovery-plans-distinct-from-delivery-commitments] Keep discovery plans distinct from delivery commitments
 
 ## 1. Context & Problem Statement
 

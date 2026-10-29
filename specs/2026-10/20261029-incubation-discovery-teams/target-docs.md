@@ -3,7 +3,7 @@ id: PROP-incubation-discovery-teams-target
 title: Target Living Spec for incubation discovery teams
 summary: "Extend incubation contracts with an explicit research entry, adaptive teams and honest pre-development document and roadmap synthesis."
 status: draft
-proposal: PROP-incubation-discovery-teams
+proposal: SPEC-incubation-discovery-teams
 created_at: 2026-10-29
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-idea-incubation.md
