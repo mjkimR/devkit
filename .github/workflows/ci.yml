@@ -39,6 +39,8 @@ jobs:
       - uses: extractions/setup-just@v2
       - run: uv python install 3.12
       - run: just init
+      # Tests and rules read the bundle copies under .devkit/managed/, which Git ignores; sync rebuilds them.
+      - run: uv run --no-active devkit sync
       - run: just lint-check
       - run: just check
       - run: just test

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import unicodedata
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -28,7 +29,7 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     pinned = [workspace_root / directory for directory in (MANAGED_PATH, OVERRIDES_PATH)]
     for target in targets:
         path = Path(target)
-        absolute = Path(os.path.normpath(path if path.is_absolute() else workspace_root / path))
+        absolute = _on_disk(Path(os.path.normpath(path if path.is_absolute() else workspace_root / path)))
         if not absolute.is_relative_to(workspace_root):
             absolute = absolute.resolve()
         if not absolute.is_relative_to(workspace_root):
@@ -69,3 +70,17 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
                 fix=f"Correct the path {target}, or drop it",
             )
     return files
+
+
+def _on_disk(path: Path) -> Path:
+    """``path``, or its spelling in the other Unicode normalization form when only that one exists.
+
+    A file system that keeps names as written (Linux) finds an NFD name only when typed in NFD; macOS matches both.
+    """
+    if path.exists():
+        return path
+    for form in ("NFC", "NFD"):
+        spelled = Path(unicodedata.normalize(form, str(path)))
+        if spelled != path and spelled.exists():
+            return spelled
+    return path

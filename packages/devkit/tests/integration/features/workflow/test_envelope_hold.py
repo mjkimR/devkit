@@ -423,6 +423,9 @@ def test_finish_merge_refuses_a_held_branch_through_the_installed_guard(tmp_path
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init", "-q", "-b", "main")
+    # `finish --merge` commits the merge itself; a CI runner has no global identity.
+    _git(repo, "config", "user.name", "t")
+    _git(repo, "config", "user.email", "t@t")
     (repo / "README.md").write_text("x\n")
     head = _commit(repo, "base")
     worktree = start(locate(repo.resolve()), "dev-x").path

@@ -66,9 +66,10 @@ def serve_cmd(repos: tuple[str, ...], scans: tuple[str, ...], port: int) -> None
     repositories = RegisterRepositoriesUseCase().execute(repos, scans, Path.cwd())
     server = ViewerServer(repositories, port)
     signal.signal(signal.SIGTERM, _stop)
-    click.echo(f"[VIEWER: url={server.url} repos={len(repositories)}]")
-    sys.stdout.flush()
     try:
+        # Inside the try: a SIGTERM right after the sentinel line still stops cleanly.
+        click.echo(f"[VIEWER: url={server.url} repos={len(repositories)}]")
+        sys.stdout.flush()
         server.serve_forever()
     except KeyboardInterrupt:
         pass
