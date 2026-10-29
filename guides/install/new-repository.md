@@ -106,7 +106,9 @@ When the approved installation is for idea incubation, use devkit-docs plus devk
 `uv run devkit config show`; the optional independent integration provider is `project`. Follow
 [the incubation setup](../INSTALL_GUIDE.md#idea-incubation) for the complete configuration.
 
-Start or resume with `/incubate`. It reuses available answers, implements the next useful flow and verifies actual
-usage; the optional clarification/research/usage roles do not create a mandatory sequence. The coordinator keeps
+Start or resume with `/incubate`. For a broad investigation before development, explicitly select
+`/incubate-research`; it compares directions and retains initial documents and a conditional roadmap. Research
+uses allocated `.devkit/transient/incubation-research/` task spaces and the coordinator promotes selected results
+to durable materials. Product iteration and optional roles impose no mandatory team sequence. The coordinator keeps
 current facts in project-owned `.devkit/incubation.md`, which sync preserves. Asset selection alone changes no
 approach, and incubation does not require eventual graduation or reconstructed delivery history.

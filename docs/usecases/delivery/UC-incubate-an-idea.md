@@ -39,6 +39,7 @@ entrypoints:
 - **3a.** Missing or stale context: the agent recovers current facts from source/run instructions and missing product answers without reconstructing discarded history; resumes at step 4.
 - **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
 - **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
+- **4b.** Broad direction investigation: the agent suggests the explicit research entry; on user selection it transfers current facts to `UC-research-an-idea-and-shape-a-roadmap`; otherwise it continues bounded ordinary work at step 4.
 - **5b.** Optional support: the agent delegates a separable question or usage scope with explicit boundaries, verifies the returned evidence and folds it into current choices; resumes at step 6.
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
 - **6a.** Failed retained behavior: the agent repairs the implementation within the agreed goal and repeats affected verification; resumes at step 6.
@@ -96,6 +97,13 @@ truthful verification; mutable coordinator-owned resume facts; voluntary adoptio
 - **Given**: failed intended behavior or an unavailable required check.
 - **When**: the agent verifies the action.
 - **Then**: it repairs and reruns affected checks where possible, while missing evidence remains an explicit limitation.
+
+### Scenario 8: Select broad research explicitly
+
+- **Covers**: 4b
+- **Given**: an ordinary incubation question that suggests a broader direction investigation.
+- **When**: the agent proposes the research doorway.
+- **Then**: it starts that team activity only on user selection; small work can continue without a team or SDD records.
 
 ### Scenario 7: Keep adoption voluntary
 

@@ -3,7 +3,7 @@
 Develop the agreed product through the next useful discovery, research, implementation or verification action.
 Incubation can remain the project's approach; product size or elapsed time never forces graduation.
 
-- Read this context once per agent context; use `/incubate` for idea discovery, iterative implementation and resume.
+- Read this context once per agent context; use `/incubate` for iterative product work and resume, and explicitly invoke `/incubate-research` for a bounded research-team investigation before development.
 - Before product work, require the effective `configuration.development.approach` from `uv run devkit config show` to be `incubation`; if inspection fails or the approach is SDD, stop product work and report the shared configuration action.
 - Selecting this bundle changes assets only; never implicitly switch approach, remove SDD assets or reopen existing SDD history.
 - Before document authoring, read `uv run devkit get-context docs` and the relevant writing instructions.

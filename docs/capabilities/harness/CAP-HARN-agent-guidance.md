@@ -8,6 +8,7 @@ created_at: 2026-10-13
 usecases:
   - UC-route-development-intent
   - UC-incubate-an-idea
+  - UC-research-an-idea-and-shape-a-roadmap
   - UC-adopt-in-an-existing-repository
   - UC-adopt-sdd-from-incubation
   - UC-handle-delivery-problems-and-exceptions
@@ -15,6 +16,7 @@ usecases:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
   - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate-research/SKILL.md
 ---
 
 # [CAP-HARN-agent-guidance] Agent Guidance Assets
@@ -406,15 +408,18 @@ product discovery coordinator.
 
 ## Incubation entry and current context
 
-The opt-in `incubation:core` catalog bundle supplies `/incubate`, its conditional references, the incubation pointer,
-three optional support contracts and a current-context template (`CAP-DLV-idea-incubation`). Install devkit-docs
+The opt-in `incubation:core` catalog bundle supplies `/incubate`, explicit `/incubate-research`, conditional references,
+the incubation pointer, six optional support contracts and a current-context template (`CAP-DLV-idea-incubation`). Install devkit-docs
 and devkit-catalog and select incubation explicitly; devkit-spec is not required. The entry inspects common
 `configuration.development.approach` before product work and stops on SDD or invalid policy rather than switching
 approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action. Product-clarifier, incubation-researcher and usage-reviewer roles return bounded evidence only when useful;
-no iteration requires all roles. Their role contracts preserve source/index/HEAD authority and distinguish
+action. Explicit research adds direction-explorer, discovery-critic and discovery-planner assignments to the
+product-clarifier, incubation-researcher and usage-reviewer roles. The coordinator allocates ignored transient
+run/task scratch when writing is needed, validates member evidence and promotes selected initial documents and
+a conditional roadmap without transient-only dependencies. No action requires all roles or starts implementation
+merely because research completed. Their role contracts preserve source/index/HEAD authority and distinguish
 emulated boundaries from native confinement. The coordinator owns mutable project context at
 `.devkit/incubation.md`, including current goal/choices, source-specific run/check evidence, uncertainty and next
 action. Sync owns its pristine template and preserves the project-owned file. Explicit adoption requests route to

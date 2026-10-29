@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-incubation-discovery-teams
+by: user
+at: '2026-10-29T06:32:51.260529Z'

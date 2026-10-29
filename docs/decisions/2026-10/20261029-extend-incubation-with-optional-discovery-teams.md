@@ -1,14 +1,14 @@
 ---
-id: PADR-extend-incubation-with-optional-discovery-teams
+id: ADR-extend-incubation-with-optional-discovery-teams
 title: Extend incubation with optional discovery teams
 summary: "For ambiguous product direction, we add an explicit incubation research entry and bounded discovery teams, to compare evidence before development, accepting additional optional guidance."
-proposal: PROP-incubation-discovery-teams
-status: draft
+proposal: SPEC-incubation-discovery-teams
+status: accepted
 supersedes: ADR-keep-incubation-guidance-opt-in-and-current-state-based
 created_at: 2026-10-29
 ---
 
-# [PADR-extend-incubation-with-optional-discovery-teams] Extend incubation with optional discovery teams
+# [ADR-extend-incubation-with-optional-discovery-teams] Extend incubation with optional discovery teams
 
 ## 1. Context & Problem Statement
 
