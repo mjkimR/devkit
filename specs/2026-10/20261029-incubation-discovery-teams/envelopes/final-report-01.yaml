@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T07:13:04.035792Z'
+status: completed
+summary: Delivered explicit optional incubation research teams with per-run transient scratch and selective materials promotion; reviewed correction and independent ten-target reconciliation complete.
+findings: []
+assumptions:
+- Research walkthroughs are bounded emulated execution evidence; general quality, cost and native confinement are unproven.
+checks:
+  tests: PASS 99 affected tests, including installed-consumer allocation regression
+  build: PASS catalog/docs wheel build and consumer installation without devkit-spec
+  lint: PASS catalog lint-check, Pyright, diff check and cumulative 21 governance rules
+diff_scope:
+  base: 6b7286ac4998433d9b1a290fdc5217d731e7847d
+  head: 8743320b26a3cf613d28d78d7a290c6e079d7b6b
+activity_effort: medium
