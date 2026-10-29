@@ -76,7 +76,7 @@ role: reviewer                      # equals the asset id and the projected file
 title: Reviewer
 description: Reviews a change against its specification and returns findings with evidence.
 skill: review                       # optional: the procedure the role executes
-level: deep                         # optional: inherit | minimal | compact | standard | deep | maximal; conflicts with native model/effort
+level: deep                         # optional: inherit | minimal | compact | lean | standard | deep | maximal; conflicts with native model/effort
 hosts:
   claude-code:
     status: native                  # native | emulated | unsupported | unverified
@@ -126,15 +126,17 @@ rejected.
 | `inherit` | omit / omit | omit / omit | omit / omit |
 | `minimal` | `haiku` / `low` | `gpt-6-luna` / `low` | omit / omit |
 | `compact` | `haiku` / omit | `gpt-6-luna` / omit | `flash` / omit |
+| `lean` | `sonnet` / `medium` | `gpt-6.1-terra` / `medium` | `flash` / omit |
 | `standard` | `sonnet` / omit | `gpt-6.1-sol` / omit | omit / omit |
 | `deep` | `opus` / omit | `gpt-6-astra` / omit | omit / omit |
 | `maximal` | `opus` / `high` | `gpt-6-astra` / `high` | omit / omit |
 
-Omitted effort follows native runtime inheritance. The five opt-in names are distinct from native effort tokens;
+Omitted effort follows native runtime inheritance. The six opt-in names are distinct from native effort tokens;
 `inherit` is the implicit default outside those presets. `light` is invalid rather than an alias.
 
 **Native fallback**: WHEN an Antigravity built-in preset cannot express its intended model/effort pair, devkit
-MUST omit both model and effort without warnings. Only compact selects Flash. No preset substitutes Pro for Argon,
+MUST use only supported native fields without warnings. Compact and lean select Flash and omit effort;
+other built-in presets omit both fields. Lean does not guarantee Flash high effort. No preset substitutes Pro for Argon,
 and no unsupported native effort field is emitted. Explicit project mappings remain subject to strict native
 validation. `packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
 
@@ -144,4 +146,6 @@ the parent's exact effort on Antigravity. Model/effort inheritance is independen
 
 `CAP-DIST-sync-and-transactions` defines shared project overrides, validation and precedence. Delivery
 `activity-effort` remains procedural depth. Bundle plan uses built-in mappings and source levels without reading
-project config. `ADR-five-subagent-levels` records this policy and its native-runtime limitations.
+project config. `ADR-five-subagent-levels` records the original mappings and native-runtime limitations;
+`ADR-lean-subagent-level` adds lean without changing existing levels. Lean fixes medium effort where supported;
+it is a resource preset, not a guaranteed quality ranking below standard.

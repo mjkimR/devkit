@@ -700,7 +700,7 @@ def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryE
                             'Bundle-qualified role overrides: {"spec:scout" = {level = "compact"}}; common contracts only',
                         ),
                     ),
-                    help="Shared-only subagent model policy; levels: inherit, minimal, compact, standard, deep, maximal. Antigravity supports model tiers but no effort.",
+                    help="Shared-only subagent model policy; levels: inherit, minimal, compact, lean, standard, deep, maximal. Antigravity supports model tiers but no effort.",
                 ),
             ),
             "devkit-dist",

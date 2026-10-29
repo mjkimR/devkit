@@ -247,7 +247,7 @@ def test_contract_extension_keys_are_kept_but_never_rendered(tmp_path: Path) -> 
     assert "x-model-profile" not in (target / ".claude/agents/reviewer.md").read_text()
 
 
-@pytest.mark.parametrize("level", ["inherit", "minimal", "compact", "standard", "deep", "maximal"])
+@pytest.mark.parametrize("level", ["inherit", "minimal", "compact", "lean", "standard", "deep", "maximal"])
 def test_source_level_projects_all_hosts(level: str) -> None:
     body = CONTRACT.replace("skill: review", f"level: {level}\nskill: review").replace(
         "  antigravity: unsupported", "  antigravity: native"
@@ -260,9 +260,13 @@ def test_source_level_projects_all_hosts(level: str) -> None:
             tomllib.loads(rendered.decode()) if host == "codex" else yaml.safe_load(rendered.decode().split("---\n")[1])
         )
         assert "level" not in data
-        assert ("model" in data) == (level != "inherit" and (host != "antigravity" or level == "compact"))
+        assert ("model" in data) == (level != "inherit" and (host != "antigravity" or level in {"compact", "lean"}))
         effort_key = "model_reasoning_effort" if host == "codex" else "effort"
-        assert (effort_key in data) == (host != "antigravity" and level in {"minimal", "maximal"})
+        assert (effort_key in data) == (host != "antigravity" and level in {"minimal", "lean", "maximal"})
+        if level == "lean":
+            assert data["model"] == {"claude-code": "sonnet", "codex": "gpt-6.1-terra", "antigravity": "flash"}[host]
+            if host != "antigravity":
+                assert data[effort_key] == "medium"
         assert "maxTurns" in data if host == "claude-code" else True
         if host == "antigravity":
             assert "effort" not in data
@@ -306,6 +310,34 @@ def test_policy_sync_reset_digests_dry_run_and_foreign_files(tmp_path: Path) -> 
     assert foreign.read_text() == "foreign"
     assert sync_project(target, [item]).actions == []
     assert config.read_text().startswith(initial_config)
+
+
+@pytest.mark.parametrize("role_override", [False, True])
+def test_lean_policy_syncs_exact_native_settings(tmp_path: Path, role_override: bool) -> None:
+    body = CONTRACT.replace("  antigravity: unsupported", "  antigravity: native")
+    item = make_bundle(tmp_path, "team", body)
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["claude-code", "codex", "antigravity"])
+    config = target / ".devkit/config.toml"
+    selection = (
+        '[subagents.roles."team:reviewer"]\nlevel="lean"' if role_override else '[subagents]\ndefault_level="lean"'
+    )
+    config.write_text(config.read_text() + "\n" + selection + "\n")
+    sync_project(target, [item])
+    for relative, model, effort_key in [
+        (".claude/agents/reviewer.md", "sonnet", "effort"),
+        (".codex/agents/reviewer.toml", "gpt-6.1-terra", "model_reasoning_effort"),
+        (".agents/agents/reviewer.md", "flash", None),
+    ]:
+        text = (target / relative).read_text()
+        data = tomllib.loads(text) if relative.endswith(".toml") else yaml.safe_load(text.split("---\n")[1])
+        assert data["model"] == model
+        if effort_key:
+            assert data[effort_key] == "medium"
+        else:
+            assert not {"effort", "model_reasoning_effort"} & data.keys()
+    assert sync_project(target, [item]).actions == []
 
 
 @pytest.mark.parametrize(

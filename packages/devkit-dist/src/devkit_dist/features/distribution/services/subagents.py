@@ -26,6 +26,11 @@ DEFAULTS = {
         "codex": ModelSettings("gpt-6-luna"),
         "antigravity": ModelSettings("flash"),
     },
+    "lean": {
+        "claude-code": ModelSettings("sonnet", "medium"),
+        "codex": ModelSettings("gpt-6.1-terra", "medium"),
+        "antigravity": ModelSettings("flash"),
+    },
     "standard": {
         "claude-code": ModelSettings("sonnet"),
         "codex": ModelSettings("gpt-6.1-sol"),

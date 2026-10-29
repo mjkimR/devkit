@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-LEVELS = ("inherit", "minimal", "compact", "standard", "deep", "maximal")
+LEVELS = ("inherit", "minimal", "compact", "lean", "standard", "deep", "maximal")
 
 
 @dataclass(frozen=True)

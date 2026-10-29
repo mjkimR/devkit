@@ -11,16 +11,19 @@ from devkit_dist.features.distribution.services.subagents import parse_subagents
     [
         ("minimal", "claude-code", "haiku", "low"),
         ("compact", "claude-code", "haiku", None),
+        ("lean", "claude-code", "sonnet", "medium"),
         ("standard", "claude-code", "sonnet", None),
         ("deep", "claude-code", "opus", None),
         ("maximal", "claude-code", "opus", "high"),
         ("minimal", "codex", "gpt-6-luna", "low"),
         ("compact", "codex", "gpt-6-luna", None),
+        ("lean", "codex", "gpt-6.1-terra", "medium"),
         ("standard", "codex", "gpt-6.1-sol", None),
         ("deep", "codex", "gpt-6-astra", None),
         ("maximal", "codex", "gpt-6-astra", "high"),
         ("minimal", "antigravity", None, None),
         ("compact", "antigravity", "flash", None),
+        ("lean", "antigravity", "flash", None),
         ("standard", "antigravity", None, None),
         ("deep", "antigravity", None, None),
         ("maximal", "antigravity", None, None),
@@ -116,6 +119,20 @@ def test_partial_overrides_of_inherited_and_bounded_effort() -> None:
     assert resolve_settings(bounded, "t:r", "maximal", "codex") == ModelSettings("custom", "high")
     explicit = parse_subagents({"levels": {"deep": {"codex": {"effort": "high"}}}})
     assert resolve_settings(explicit, "t:r", "deep", "codex") == ModelSettings("gpt-6-astra", "high")
+
+
+def test_lean_selection_precedence_overrides_and_reset() -> None:
+    policy = parse_subagents(
+        {
+            "default_level": "standard",
+            "roles": {"team:r": {"level": "lean"}},
+            "levels": {"lean": {"codex": {"model": "custom"}}},
+        }
+    )
+    assert resolve_settings(policy, "team:r", "compact", "codex") == ModelSettings("custom", "medium")
+    assert resolve_settings(policy, "other:r", "lean", "codex") == ModelSettings("gpt-6.1-sol")
+    policy = parse_subagents({"default_level": "lean", "levels": {"lean": {"codex": {"effort": "inherit"}}}})
+    assert resolve_settings(policy, "team:r", None, "codex") == ModelSettings("gpt-6.1-terra")
 
 
 def test_explicit_antigravity_override_does_not_use_builtin_fallback() -> None:
