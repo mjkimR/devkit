@@ -2,7 +2,7 @@
 
 Read this when approaching review or completion, and before any gate or Git action.
 
-Before reporting completion, classify the Living Spec impact: contract changes go to capabilities or use cases, structure to architecture, decisions and lasting policy to ADRs, changed policy to rules or playbooks. A new general rule or reusable procedure is an optional draft; a no-impact change needs a stated reason.
+Before reporting completion, classify the Living Spec impact: contracts → capabilities or use cases, structure → architecture, decisions and lasting policy → ADRs, changed policy → rules or playbooks. A new general rule or reusable procedure is an optional draft; a no-impact change needs a stated reason.
 
 ## Policy
 
@@ -39,7 +39,7 @@ A `session` task follows its workflow's completion conditions; do not abandon re
 
 ## Deferred Work Handoff
 
-Before deleting a source proposal or reporting completion, find concrete work the roadmap or final scope explicitly retains for later.
+Before deleting a source proposal or reporting completion, find concrete work the roadmap or final scope explicitly defers.
 
 1. Track each item as feedback (`/spec-feedback`) by default, or as a draft proposal when concrete: update a matching open `PROP-...` (`devkit docs search "<topic>" --kind proposal`), else run `devkit spec proposal new <slug>`.
 2. Record the source, remaining scope, reason, restart conditions and expected acceptance checks.

@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: eaee3ce05a4ecaacbab0789f7f12e5585c0b647c
+  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
   CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
   CAP-DLV-workflow-envelopes: ba3e36ff09f879615ad60389b433b58cdf4097ee
   CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
@@ -13,15 +13,17 @@ title: Drive development to integration
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
+- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Incubate an idea](incubate-an-idea.md)
 - [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
@@ -31,6 +33,7 @@ title: Drive development to integration
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
 - [Collaboration](../areas/collaboration.md)

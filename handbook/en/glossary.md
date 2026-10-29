@@ -4,7 +4,7 @@ generated: true
 # Glossary
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -15,6 +15,7 @@ The terms of devkit as its documents use them, from the Living Spec glossary.
 | Term | Definition | Owner |
 | :--- | :--- | :--- |
 | **devkit bundle** | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |
+| **Subagent model level** | Distribution-owned preset (minimal, compact, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` |
 | **Preset** | A named asset selection of a bundle (e.g. `core`, `default`). | `CAP-DIST-manifest-spec` |
 | **Managed files** | Pristine synchronized copies under `.devkit/managed/<bundle>/`; never edited by hand. | `CAP-DIST-workspace-ownership` |
 | **Projections** | Native agent files projected into `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, etc. | `CAP-DIST-agent-projections` |
@@ -30,11 +31,17 @@ The terms of devkit as its documents use them, from the Living Spec glossary.
 | **Per-file rule facts** | Immutable rule-owned syntax extracted from one logical Python path; persistent reuse is keyed by cached source bytes, explicit extraction context and executing-source fingerprint. Excludes shared AST objects and cross-file judgments. | `CAP-GOV-rule-authoring` |
 | **Rule phase** | Execution category of a rule: `syntax`, `hygiene`, `linter`, `contract`. | `CAP-GOV-rules-engine` |
 | **Snapshot run** | Rule execution against an exact Git snapshot: staged tree (`devkit rules check --staged`) or base commit comparison (`--ci --base <ref>`). | `CAP-GOV-rules-engine` |
+| **Steering document** | An ID-free Markdown file directly in `docs/steering/`, one per project-wide background topic (the glossary, product, style), with only `title` and `summary` frontmatter; `devkit get-context docs` lists every one in each agent context and an agent reads its body when a decision concerns its summary. Excludes contracts (capabilities, use cases, architecture, decisions) and evidence (materials). | `ADR-steering-documents-directory` |
+| **UX document** | A Living Spec document (`UX-<slug>`, kind `ux`) describing one interface element a person sees and operates, a screen, modal or panel, by purpose, content tree, states and interactions; use case steps cite it and each interaction names the step it serves. Excludes visual style and the wireframe medium. | `ADR-ux-screen-documents` |
+| **UX object register** | The steering file `docs/steering/ux-objects.md` listing each object's representations and calls to action per role, for the objects the use cases with UX documents touch; created with a project's first UX document, never seeded. | `ADR-ux-screen-documents` |
 
 ### 3. Delivery Workflows and Tasks
 
 | Term | Definition | Owner |
 | :--- | :--- | :--- |
+| **Development approach** | Shared project choice of SDD or incubation, independent of installed packages and selected assets; excludes clone-local execution environment and publication authority. | `CAP-DIST-sync-and-transactions` |
+| **Incubation current context** | Mutable current product facts used to resume incubation: goal, retained choices versus assumptions, run/check evidence, uncertainty and next useful action; excludes SDD Units/envelopes, transcripts and immutable experiment history. | `CAP-DLV-idea-incubation` |
+| **Work scope observation** | Invocation-local evidence from one snapshot, pinned branch tree or accessible worktree, with task attribution, provenance and missing layers; excludes a persistent registry revision or write authority. | `CAP-COLL-work-scope-registry` |
 | **Workflow** | A multi-stage delivery procedure declared as data (`kind = "workflow"`): ordered stages with entry/exit checks, approval gates, and returns. | `CAP-DLV-workflow-orchestration` |
 | **Unit** | A directory driven by a workflow, tracked by its anchor file (e.g. `spec.md` or `proposal.md`). | `CAP-DLV-workflow-orchestration` |
 | **Stage** | A discrete step in a workflow (`intent`, `specify`, `build-verify`, `handoff`); evaluates whether checks are met. | `CAP-DLV-workflow-definitions` |

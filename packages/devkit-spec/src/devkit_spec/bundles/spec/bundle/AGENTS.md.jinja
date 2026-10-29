@@ -1,10 +1,10 @@
 # Spec-Driven Delivery
 
-Read `uv run devkit config show` first. The following SDD lifecycle applies only when
-`configuration.development.approach` is `sdd` (the default). In `incubation`, keep independent project and document
-checks, use the project's incubation guidance, and require no implicit Unit, SDD stage, approval/envelope or immutable
-iteration history. Existing explicitly bound SDD artifacts keep their lifecycle checks; inspection remains available.
-Installing or selecting spec assets does not change the approach.
+Read `uv run devkit config show` first. This lifecycle applies only when `configuration.development.approach` is
+`sdd` (the default). Under `incubation`, follow the project's incubation guidance and keep independent project and
+document checks, with no implicit Unit, SDD stage, approval/envelope or immutable iteration history; explicitly bound
+SDD artifacts keep their lifecycle checks and inspection stays available. Installing or selecting spec assets does not
+change the approach.
 
 Start development with the `spec` skill (`/spec <intent>`); `/spec-next` orients in work already under way. Explicit
 user instructions take precedence. Never end the user's session on your own.
@@ -15,25 +15,25 @@ user instructions take precedence. Never end the user's session on your own.
 - Read each relevant instruction listed with it before the action it governs. If an instruction conflicts with a
   mandatory check, follow the check and report the conflict.
 - Add a rule or check only for an identifiable failure or a reusable practice, at proportionate cost.
-- Where bundle text or skills name a bare `devkit ...` command, run the project's documented form (`uv run devkit ...`
-  per `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`).
+- Run a bare `devkit ...` command named in bundle text or skills in the project's documented form (`uv run devkit ...`,
+  `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`).
 
 ## 2. Living Spec and Scope
 
 - `docs/` is the Living Spec, the current contract: capabilities, use cases, architecture and decisions. A feature spec
-  is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`) and stays as history once completed.
+  is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`). A spec with `status: completed`
+  stays in place as history; start a later behavior change in a new spec.
 - Before using document contracts, run `uv run devkit get-context docs` once per agent context and apply its instructions.
 - Read current contracts and active specs (`devkit docs list spec`) before drafting new work. In a package namespace
   (`docs/packages/<name>/`), `list` and `search` cover that namespace plus global documents; pass `--all-namespaces`
   for cross-package impact.
 - Refer to ID-bearing documents by full ID, never by path (`devkit docs resolve <ID>`, `devkit docs refs <ID>`).
+- In SDD, a changed decision is a new ADR with `supersedes`; wording, metadata and reference repairs and ADR compaction
+  may edit an existing ADR without changing its decision.
 - Implement no Non-Goal and no unrequested feature, refactor or speculative scope. A lasting policy change or an
   exception to a MUST needs an ADR; state a one-off exception within the approved scope in the review or final report.
 - A task's `_Boundary:_` is the expected scope: explain a necessary extension in the report. Write boundaries given to
   a delegated role are strict.
-
-- In SDD, a changed decision is a new ADR with `supersedes`; wording, metadata and reference repairs and ADR compaction may edit an existing ADR without changing its decision.
-- A spec with `status: completed` stays in place as history; start a later behavior change in a new spec.
 
 ## 3. Classification and Authority
 
@@ -57,9 +57,10 @@ user instructions take precedence. Never end the user's session on your own.
   Host chooses sequencing, workers, implementation, review and fixes without further approval; a scope or constraint
   change needs new authority.
 - Records name `user` or `policy` and carry decisions, never conversation quotes, paraphrases or dates.
-
-- UX alternatives are chosen in proposal Planning or inline Planning before `plan-intent`. Development takes the recommended candidate and records alternatives as an assumption in `spec.md`.
-- In SDD, draft screens in `target-docs.md` for proposals or `spec.md` for specs before code. `spec-sync` writes the retained drafts and citations. Offer optional `ux-reviewer` before code; a `session` task runs no UX review.
+- Choose UX alternatives in proposal Planning or inline Planning before `plan-intent`; Development takes the recommended
+  candidate and records the alternatives as an assumption in `spec.md`.
+- Draft screens before code, in `target-docs.md` for proposals or `spec.md` for specs; `spec-sync` writes the retained
+  drafts and citations. Offer the optional `ux-reviewer` before code; a `session` task runs no UX review.
 
 ## 4. Verification and Completion
 
@@ -71,6 +72,7 @@ user instructions take precedence. Never end the user's session on your own.
 
 ## 5. Managed Files
 
-- Shared templates: `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md`; proposal template: `.devkit/managed/spec/templates/proposal.md`.
+- Templates: `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md`; proposal:
+  `.devkit/managed/spec/templates/proposal.md`.
 - Read policy through `devkit spec policy`, never by parsing `.devkit/config.toml`.
 - Change `.devkit/managed/` through `devkit override` or the project's own bundle, never by editing it.

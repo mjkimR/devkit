@@ -13,7 +13,7 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
 
 1. **Invariants**: check the design against accepted ADRs (`devkit docs search "<topic>" --kind decision`),
    `docs/architecture/` and the capabilities it touches (`devkit docs refs <CAP-ID> --direction in`).
-2. **Changed invariant**: if an architectural rule that must hold has to change, propose an ADR
+2. **Changed invariant**: if an architectural invariant has to change, propose an ADR
    (`docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, template `.devkit/managed/docs/templates/decision.md`).
 3. **Choices**: inside the agreed intent, take the recommended option and record its reason. Outside it, raise a
    problem for the Host; a bugfix that needs a different defect scope returns to `characterize`.
@@ -25,8 +25,8 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
 
 ## Plan output
 
-Read the skeleton, then rewrite it, keeping its frontmatter. Cite documents by full ID, the unit's own spec included.
-Always write sections 1, 2 and 6; add the others only when the change has that content:
+Rewrite the skeleton, keeping its frontmatter. Cite documents by full ID, the unit's own spec included. Always write
+sections 1, 2 and 6; add the others only when the change has that content:
 
 1. `Constitution & Invariant Review`: conflicts with ADRs, architecture or capabilities and the ADR each needs, or
    "None".
@@ -34,8 +34,7 @@ Always write sections 1, 2 and 6; add the others only when the change has that c
 3. `Component & Interface Design`: a diagram and the normative interface snippet.
 4. `Storage & State Management`.
 5. `Error Handling & Edge Cases`.
-6. `Verification & Test Plan`: the commands under the repository's test policy, and which results can be
-   reused.
+6. `Verification & Test Plan`: the commands under the repository's test policy, and which results can be reused.
 
 ## Completion
 

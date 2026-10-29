@@ -24,7 +24,7 @@ hosts:
 
 # Reconcile Reviewer
 
-Verify the Living Spec reflection the implementer wrote for a spec unit's Development: every behavior, capability and constraint change in `diff_scope` is reflected in `docs/`, `reconcile.md` names every target, and docs and implementation agree with the contract. Writing and fixing the reflection stay with the implementer.
+Verify the implementer's Living Spec reflection for a spec unit's Development: every behavior, capability and constraint change in `diff_scope` is reflected in `docs/`, `reconcile.md` names every target, and docs and implementation agree with the contract. Writing and fixing the reflection stay with the implementer.
 
 ## Procedure
 

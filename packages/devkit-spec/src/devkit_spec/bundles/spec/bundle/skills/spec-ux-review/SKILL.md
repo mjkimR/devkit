@@ -6,11 +6,14 @@ description: Review drafted screens before code by walking each linked use case 
 # spec-ux-review: UX Walkthrough Review
 
 The `ux-reviewer` role runs this skill in isolation and read-only (`ADR-ux-review-before-code`). It is an optional
-delegation before code, never a stage: in Planning on the Screens drafts of `target-docs.md`; at spec depth after the
-Screens section of `spec.md` is written and before the plan (inside `specify` before `spec-plan` for
-`sdd-spec-feature`, inside `characterize` before `plan-tasks` for `sdd-spec-bugfix`), recorded at that stage so its
-fixes precede `plan.md` and `tasks.md`. The effort reference recommends it at `medium` and `high` when screens change.
-A `session` task applies the `ux-writing` instruction and runs no review.
+delegation before code, never a stage:
+
+- Planning: on the Screens drafts of `target-docs.md`.
+- Spec depth: after the Screens section of `spec.md` is written and before the plan (inside `specify` before
+  `spec-plan` for `sdd-spec-feature`, inside `characterize` before `plan-tasks` for `sdd-spec-bugfix`), recorded at
+  that stage so its fixes precede `plan.md` and `tasks.md`.
+- The effort reference recommends it at `medium` and `high` when screens change. A `session` task applies the
+  `ux-writing` instruction and runs no review.
 
 ## Inputs
 
@@ -23,8 +26,8 @@ A `session` task applies the `ux-writing` instruction and runs no review.
 
 ### Step 1: Walkthrough
 
-For each linked use case, walk its main success scenario and then each extension through the screens its steps
-cite. At every step answer four questions, each with the screen content that decides it:
+Walk each linked use case's main success scenario, then each extension, through the screens its steps cite. At
+every step answer four questions, each with the screen content that decides it:
 
 1. Will the actor try to do the right thing here?
 2. Will the actor notice that the control for it is available?
@@ -35,8 +38,8 @@ A "no" is a finding naming the use case, the step key and the screen.
 
 ### Step 2: Rubric
 
-Score each screen 0, 1 or 2 on every item; give evidence (the draft's section, node or row) for every score below
-2, and a finding for each 0 or 1:
+Score each screen 0, 1 or 2 on every item; every score below 2 gets evidence (the draft's section, node or row) and
+a finding:
 
 - **R1 task fit**: the primary task and the facts to commit to it are present; secondary items have a place.
 - **R2 one primary region**: no competing primary regions and no information dumping.
@@ -49,7 +52,7 @@ Score each screen 0, 1 or 2 on every item; give evidence (the draft's section, n
 
 ### Step 3: Link items, by hand
 
-Before code the drafts are not in `docs/ux/`, so `RULE-ux-links` and `RULE-ux-coverage` do not read them. Check
+Before code the drafts are not in `docs/ux/`, so `RULE-ux-links` and `RULE-ux-coverage` do not read them; check
 their items on the drafts yourself: `usecases` and Step cells agree with the step citations, every step is covered,
 targets name drafted or existing screens, every screen has an exit, a modal closes, every screen is reachable from
 an entry. Label each such finding `link check (reviewer judgment)` in its `issue` and keep it out of the rubric; the

@@ -5,17 +5,16 @@ description: Verify the git diff, acceptance criteria and test results before de
 
 # spec-review: Pre-Completion Verification Workflow
 
-Use this skill at the `review-refine` stage (all tasks checked) or before submitting a pull request. Review committed
-content so the envelope's `--head` names it; if uncommitted changes are included, say so in `assumptions`.
+Use at the `review-refine` stage (all tasks checked) or before submitting a pull request. Review committed content
+so the envelope's `--head` names it; if uncommitted changes are included, say so in `assumptions`.
 
 ## Constraints
 
 - Never weaken, delete or rewrite tests or acceptance criteria to make a check pass; record the limitation as a
   finding, and a needed contract change as a problem for the Host.
 - At `activity-effort` medium and high the `code-reviewer` role runs this skill through `spec-delegate`; at low, the
-  Developer. Every finding carries `evidence`, a `failure_condition` and a `severity` of `P1`, `P2` or `P3` at every
-  effort. Rounds and re-verification follow the `spec` skill's `references/effort.md` and
-  `references/review-loop.md`.
+  Developer. Each finding carries `evidence`, a `failure_condition` and a `severity` of `P1`, `P2` or `P3` at every
+  effort. Rounds and re-verification: the `spec` skill's `references/effort.md` and `references/review-loop.md`.
 - Zero findings is a valid PASS.
 
 ## Steps
@@ -23,7 +22,7 @@ content so the envelope's `--head` names it; if uncommitted changes are included
 ### Step 1: Diff
 
 `git diff` against the base. Findings: changes outside `_Boundary:` without a stated reason (any change outside a
-delegated write scope), implemented non-goals or unrequested features, stray files and debug leftovers.
+delegated write scope), implemented non-goals or unrequested features, stray files, debug leftovers.
 
 ### Step 2: Acceptance criteria
 
@@ -32,9 +31,9 @@ implemented. A bugfix has its Red and Green envelopes and keeps the regression t
 
 ### Step 3: Checks
 
-Run the repository's test policy on the reviewed content (e.g., `just test-affected`, keeping selector fallbacks and
+Run the repository's test policy on the reviewed content (e.g. `just test-affected`, keeping selector fallbacks and
 named frontend checks), the linters, and `devkit rules check --staged` (staged) or
-`devkit rules check --ci --base <ref>` (committed branch). As a delegated reviewer, rerun only missing or stale checks.
+`devkit rules check --ci --base <ref>` (committed branch). A delegated reviewer reruns only missing or stale checks.
 
 ### Step 4: Drift
 
@@ -62,7 +61,8 @@ EOF
   `devkit workflow envelope reverify --unit <dir> --stage review-refine --from latest --resolve <N|all> --waive <N>=<reason>`.
 - A `session`-depth task gives the same content in the final response or PR body.
 - Feedback after a passed review that changes implementation returns to build/reverify; a direction change is a close.
-- After `devkit workflow return`, the earlier review no longer passes `review-refine`. A `reverify` of it closes its findings only; the stage needs a fresh independent review envelope of the fixed range.
+- After `devkit workflow return`, the earlier review no longer passes `review-refine`: a `reverify` of it closes its
+  findings only, and the stage needs a fresh independent review envelope of the fixed range.
 
 ## Completion
 

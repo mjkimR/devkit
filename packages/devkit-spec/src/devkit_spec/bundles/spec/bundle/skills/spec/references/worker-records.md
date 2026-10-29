@@ -6,7 +6,7 @@ The rule: one run leaves one `worker` envelope, holding its questions and its pr
 
 ## 1. The `worker` envelope (one per run)
 
-Every run ends with exactly one `worker` envelope, whether it completed, waits for answers or stopped on a problem. A worker writes its own; in `direct` mode you write it when you stop for the user or end the activity. A run that pauses without a question or problem records `completed` with the pending step in its summary.
+Every run ends with exactly one `worker` envelope, whether it completed, waits for answers or stopped on a problem. A worker writes its own; in `direct` mode you write it when you stop for the user or end the activity. A pause without a question or problem records `completed` with the pending step in its summary.
 
 ```bash
 devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what this run did>" \
@@ -16,7 +16,7 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
 - `--stage` is the stage `devkit workflow next` names after the run's other records; `--effort` is the only record of the applied effort.
 - `--head` is `git -C <worktree> rev-parse HEAD` after the last work commit; the commit that adds the envelope is the run's final HEAD.
 - **Questions**: add `--questions-file -`, a YAML list of `id`, `title` (40 characters at most), `prompt`, `context` (what the answer decides and why it matters now, for a reader who has not seen the work), `options` (`{id, description, recommended}`, one recommended) and `allow_note`. When an option depends on a condition, also state what holds when it does not.
-- **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; pass `--status needs_input` when only the user can decide. A problem is what breaks the agreed goal, scope or contract or cannot be solved; a choice you can make, or waiting for answers, is not one.
+- **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; pass `--status needs_input` when only the user can decide. A problem breaks the agreed goal, scope or contract or cannot be solved; a choice you can make, or waiting for answers, is not one.
 - **Emergency commit**: a run that stops on a problem commits its unfinished work with the envelope. Only this commit may use `git commit --no-verify`, and only on ordinary commit-gate refusal of the unfinished files, never for sandbox or approval denial; name each skipped check in `--tried`.
 - On any refused or unavailable approval, on every host, stop that operation and preserve the state; never reroute through another tool, path, process, broader request or setting.
 - If the record or commit itself is denied, stop, preserve the state and return `failed` with the actual last commit, dirty paths and the absent/uncommitted record or commit; never invent a committed envelope.

@@ -23,7 +23,7 @@ hosts:
 
 # Challenger
 
-Find what would make a proposal, spec or design fail or unnecessary before anyone implements it. You do not edit files or make the decision.
+Before implementation, find what would make a proposal, spec or design fail or unnecessary. You neither edit files nor decide.
 
 ## Procedure
 
@@ -37,7 +37,7 @@ Run `uv run devkit get-context spec` once. To find a referenced document ID, Gre
 6. **Decisions hidden in the text**: choices presented as settled that the human has not made.
 
 - Report a finding only for a material consequence within the agreed scope: name the acceptance criterion, user outcome, operational cost or contract it affects and a trigger the inputs or the existing system support. Report a supported data-loss, security or contract failure even when it is rare or its fix is small. Style and cosmetic ambiguity are not findings.
-- Give every finding `evidence` and a `failure_condition`. Zero findings is a normal result; say what you examined.
+- Give every finding `evidence` and a `failure_condition`. Zero findings is normal; say what you examined.
 - Recommend the smallest change that meets the agreed acceptance criteria. Put a nonessential suggestion in the summary marked optional, or omit it.
 - At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 

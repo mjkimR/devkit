@@ -7,7 +7,8 @@ because its branch exists. Recommend; do not start, accept or activate anything.
    frontmatter for ordering fields the output omits. Keep each draft's namespace in the recommendation.
 2. Apply the [direct unit prerequisite procedure](#direct-unit-prerequisite-procedure) to every candidate, including
    critical drafts. Eligible: unit-ready, displayed status `draft`, no true `needs_decompose`. A milestone is ready
-   when every `depends_on` ID is done or dropped; resolve hidden ones with `--history` from either the root or reserved `_archive/` location, never assume them. Resolve the complete milestone set before filtering history. A draft
+   when every `depends_on` ID is done or dropped; resolve hidden ones with `--history` from the root or the reserved
+   `_archive/` location, never assume them. Resolve the complete milestone set before filtering history. A draft
    whose `size` is not absent or exactly `S`, `M` or `L` is not eligible either.
 3. Rank eligible drafts by enum, not text:
    1. Critical drafts first, whatever their milestone, ordered by milestone state: active, ready planned, none,

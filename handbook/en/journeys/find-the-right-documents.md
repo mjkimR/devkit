@@ -11,15 +11,17 @@ title: Find the right documents
 # Find the right documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
+- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Incubate an idea](incubate-an-idea.md)
 - [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
@@ -29,6 +31,7 @@ title: Find the right documents
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
 - [Collaboration](../areas/collaboration.md)

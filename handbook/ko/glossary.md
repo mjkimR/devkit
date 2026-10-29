@@ -4,7 +4,7 @@ generated: true
 # 용어집
 
 <!-- handbook:provenance -->
-> 소스 커밋 `5e71d74c8e5a` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `022b9f03bbd2` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -15,6 +15,7 @@ devkit 문서가 쓰는 용어이며 Living Spec 용어집에서 생성됩니다
 | 용어 | 번역어 | 정의 | 출처 |
 | :--- | :--- | :--- | :--- |
 | **devkit bundle** | devkit 번들 | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |
+| **Subagent model level** | 서브에이전트 모델 수준 | Distribution-owned preset (minimal, compact, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` |
 | **Preset** | 프리셋 | A named asset selection of a bundle (e.g. `core`, `default`). | `CAP-DIST-manifest-spec` |
 | **Managed files** | 관리 파일 | Pristine synchronized copies under `.devkit/managed/<bundle>/`; never edited by hand. | `CAP-DIST-workspace-ownership` |
 | **Projections** | 프로젝션 | Native agent files projected into `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, etc. | `CAP-DIST-agent-projections` |
@@ -30,11 +31,17 @@ devkit 문서가 쓰는 용어이며 Living Spec 용어집에서 생성됩니다
 | **Per-file rule facts** | 파일별 규칙 팩트 | Immutable rule-owned syntax extracted from one logical Python path; persistent reuse is keyed by cached source bytes, explicit extraction context and executing-source fingerprint. Excludes shared AST objects and cross-file judgments. | `CAP-GOV-rule-authoring` |
 | **Rule phase** | 규칙 페이즈 | Execution category of a rule: `syntax`, `hygiene`, `linter`, `contract`. | `CAP-GOV-rules-engine` |
 | **Snapshot run** | 스냅샷 실행 | Rule execution against an exact Git snapshot: staged tree (`devkit rules check --staged`) or base commit comparison (`--ci --base <ref>`). | `CAP-GOV-rules-engine` |
+| **Steering document** | 스티어링 문서 | An ID-free Markdown file directly in `docs/steering/`, one per project-wide background topic (the glossary, product, style), with only `title` and `summary` frontmatter; `devkit get-context docs` lists every one in each agent context and an agent reads its body when a decision concerns its summary. Excludes contracts (capabilities, use cases, architecture, decisions) and evidence (materials). | `ADR-steering-documents-directory` |
+| **UX document** | UX 문서 | A Living Spec document (`UX-<slug>`, kind `ux`) describing one interface element a person sees and operates, a screen, modal or panel, by purpose, content tree, states and interactions; use case steps cite it and each interaction names the step it serves. Excludes visual style and the wireframe medium. | `ADR-ux-screen-documents` |
+| **UX object register** | UX 객체 목록 | The steering file `docs/steering/ux-objects.md` listing each object's representations and calls to action per role, for the objects the use cases with UX documents touch; created with a project's first UX document, never seeded. | `ADR-ux-screen-documents` |
 
 ### 3. Delivery Workflows and Tasks
 
 | 용어 | 번역어 | 정의 | 출처 |
 | :--- | :--- | :--- | :--- |
+| **Development approach** | 개발 방식 | Shared project choice of SDD or incubation, independent of installed packages and selected assets; excludes clone-local execution environment and publication authority. | `CAP-DIST-sync-and-transactions` |
+| **Incubation current context** | 인큐베이션 현재 컨텍스트 | Mutable current product facts used to resume incubation: goal, retained choices versus assumptions, run/check evidence, uncertainty and next useful action; excludes SDD Units/envelopes, transcripts and immutable experiment history. | `CAP-DLV-idea-incubation` |
+| **Work scope observation** | 작업 범위 관찰 | Invocation-local evidence from one snapshot, pinned branch tree or accessible worktree, with task attribution, provenance and missing layers; excludes a persistent registry revision or write authority. | `CAP-COLL-work-scope-registry` |
 | **Workflow** | 워크플로 | A multi-stage delivery procedure declared as data (`kind = "workflow"`): ordered stages with entry/exit checks, approval gates, and returns. | `CAP-DLV-workflow-orchestration` |
 | **Unit** | 유닛 | A directory driven by a workflow, tracked by its anchor file (e.g. `spec.md` or `proposal.md`). | `CAP-DLV-workflow-orchestration` |
 | **Stage** | 단계 | A discrete step in a workflow (`intent`, `specify`, `build-verify`, `handoff`); evaluates whether checks are met. | `CAP-DLV-workflow-definitions` |

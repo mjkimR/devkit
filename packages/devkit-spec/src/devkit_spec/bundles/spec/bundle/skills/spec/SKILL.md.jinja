@@ -5,22 +5,22 @@ description: Main entry skill for development intent; conversational router and 
 
 # spec: Conversational Router and Pair Programmer
 
-Use this skill for `/spec <intent>`, any development task, feature request, troubleshooting or general engineering question. It routes each intent to the delivery workflow that fits; the spec constitution (`devkit get-context spec`) defines the axes, workflows and approval boundaries.
+Use for `/spec <intent>`, any development task, feature request, troubleshooting or general engineering question; route each intent to the delivery workflow that fits. The spec constitution (`devkit get-context spec`) defines the axes, workflows and approval boundaries.
 
 ## Development approach
 
-Before SDD routing, read `uv run devkit config show`. When `configuration.development.approach` is `incubation`,
-use the project's incubation guidance (the `/incubate` entry when selected). Do not classify ordinary incubation
-changes into SDD depths, create Units or request SDD envelopes/approvals. Keep document-format and independent
-project checks. An unreadable policy stops policy-dependent work; do not guess or switch it automatically.
-Existing deliberately SDD-bound Units retain their checks and remain inspectable. The stages below apply to SDD.
+Before SDD routing, read `uv run devkit config show`. Under `configuration.development.approach = incubation`,
+follow the project's incubation guidance (the `/incubate` entry when selected): no SDD depths, Units, envelopes or
+approvals for ordinary changes; keep document-format and independent project checks. Existing deliberately SDD-bound
+Units keep their checks and stay inspectable. An unreadable policy stops policy-dependent work; never guess or switch
+it. The stages below apply to SDD.
 
 ## Constraints
 
 - If `devkit spec policy` fails, stop policy-dependent work.
 - Before deciding an approval boundary or a Git action, read the [completion policy](references/completion.md#policy).
 - Where guidance names a bare `devkit ...` command, invoke the project's documented form (`uv run devkit ...`).
-- Under `FEEDBACK_POLICY reminder=contextual`, suggest an optional `/spec-feedback` sweep when completed work produced reusable observations; it never gates completion or merge. Routine completions and wording edits get no reminder.
+- Under `FEEDBACK_POLICY reminder=contextual`, suggest an optional `/spec-feedback` sweep when completed work produced reusable observations (never for routine completions or wording edits); it never gates completion or merge.
 
 ## Route the intent
 

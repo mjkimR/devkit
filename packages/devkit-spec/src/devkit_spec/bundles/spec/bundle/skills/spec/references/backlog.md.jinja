@@ -13,10 +13,10 @@ Backlog keeps queued requests as draft proposals, follow-ups as feedback and mil
 
 ## The XL size gate
 
-`size: XL` means the work would produce two or more specs, or bundles deliverables of a different nature: work that would need separate specs or a different `task_kind`. A rough `XL` draft stays valid in Backlog, but it cannot pass `plan-intent` or start Planning: the `intent-proposal` exit reads `size` absent or exactly `S`, `M` or `L`, so `devkit workflow next` shows `frontmatter(proposal.md size S|M|L|)` unmet. Read that unmet check as the directive "decompose first"; never edit the size to pass it. The exits, both through the `decomposer` and applied on the user's decision:
+`size: XL` means the work would need two or more specs or a different `task_kind`. A rough `XL` draft stays valid in Backlog, but cannot pass `plan-intent` or start Planning: the `intent-proposal` exit reads `size` absent or exactly `S`, `M` or `L`, so `devkit workflow next` shows `frontmatter(proposal.md size S|M|L|)` unmet. Read that as "decompose first"; never edit the size to pass it. The exits, both through the `decomposer` and applied on the user's decision:
 
-- **Split**: `devkit spec proposal new <child> --decomposed-from PROP-<parent>` per child, keeping the parent's `milestone`.
-- **Promote**: when there are three or more children or the theme is long-running, create `docs/roadmap/MS-<slug>.md` (Milestones, below) and place the children in it; apply the relation to the parent's milestone the return proposes, with the reset of that milestone's completion review a scope change requires.
+- **Split**: decompose as above, one child per `--decomposed-from`.
+- **Promote**: with three or more children or a long-running theme, create `docs/roadmap/MS-<slug>.md` (Milestones, below) and place the children in it; apply the relation to the parent's milestone the return proposes, resetting that milestone's completion review as a scope change requires.
 
 A decomposer `needs_input` on an `XL` draft means it was mis-sized: show the user a size correction with the role's reason; only the user's decision changes the size.
 
@@ -69,11 +69,8 @@ Before splitting, superseding, rejecting, deleting or reclassifying a proposal:
 - Keep planned/active milestones at `docs/roadmap/MS-<slug>.md` and done/dropped at `docs/roadmap/_archive/MS-<slug>.md`; filenames, IDs and aliases stay unchanged.
 - Create `docs/roadmap/MS-<slug>.md` from `.devkit/managed/docs/templates/milestone.md` and follow its section guidance; membership lives only in a direct proposal's `milestone` field.
 - A milestone, in any status, frames a theme and binds nothing: proposal Planning concretizes and settles scope and requirements. In design discussions and Planning, judge options on their merits; never use the milestone's goal, exit condition or non-goals as constraints.
-- Every status change is the user's decision on a concrete candidate. Activate: show each dependency not `done` or `dropped`. Close: follow [milestone completion](milestone-completion.md). Drop: show unsettled members and dependent milestones, and prepare their reassignment, clearing or rejection. On approval, commit that disposition, dropped status and movement into `_archive/` together; create no completion assertion. Repeated unchanged archived drop writes nothing. Reopen: move back to the root, set active and reset both assertions to pending in one approved commit. Include the move in the existing candidate; no extra archive-only approval applies. Stop on a destination collision without overwriting.
-- Merge: on the user's decision, small milestones of any status may merge into a broader theme milestone. In one commit, list the merged IDs in the theme's `aliases`, restate its goal and exit condition with both Completion review assertions pending, delete the merged files, run `devkit rules fix` and remove `depends_on` edges between the merged milestones; completed specs and Git keep the delivery record.
-- Merged source files may come from the root or `_archive/`; the theme status selects its own location.
+- Every status change is the user's decision on a concrete candidate. Activate: show each dependency not `done` or `dropped`. Close and drop: follow [milestone completion](milestone-completion.md), which also governs the file move. Reopen: move back to the root, set active and reset both assertions to pending in one approved commit.
+- Merge: on the user's decision, small milestones of any status may merge into a broader theme milestone, from the root or `_archive/`. In one commit, list the merged IDs in the theme's `aliases`, restate its goal and exit condition with both Completion review assertions pending, delete the merged files, run `devkit rules fix` and remove `depends_on` edges between the merged milestones; completed specs and Git keep the delivery record. The theme's status selects its location.
 - After a merge, move remaining scope to draft proposals in the theme, keep the theme `planned` or `active` while scope remains, and close it only through [milestone completion](milestone-completion.md).
 
-Catalog guidance: [proposals catalog](proposals-catalog.md).
-
-Catalog guidance: [roadmap catalog](roadmap-catalog.md).
+Catalog guidance: [proposals catalog](proposals-catalog.md), [roadmap catalog](roadmap-catalog.md).

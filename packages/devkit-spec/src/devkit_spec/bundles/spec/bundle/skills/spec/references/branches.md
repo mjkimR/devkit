@@ -1,6 +1,6 @@
 # Activity branches: start, continue, leftovers and stale branches
 
-Read this when you start an activity's branch without a worktree, continue a branch that already exists, or report leftover and stale branches in `/spec-next`. Starting and finishing a worktree is [worktree](worktree.md).
+Read this to start an activity's branch without a worktree, continue an existing branch, or report leftover and stale branches in `/spec-next`. Worktree start and finish: [worktree](worktree.md).
 
 ## 1. Names
 
@@ -14,7 +14,7 @@ Read this when you start an activity's branch without a worktree, continue a bra
 
 ## 3. Continue an existing branch
 
-Resuming after a stop, switching an activity's mode, and handing an inline-Planned `dev-<slug>` to a worker or cloud run continue the branch:
+Resuming after a stop, switching an activity's mode and handing an inline-Planned `dev-<slug>` to a worker or cloud run all continue the branch:
 
 ```bash
 devkit worktree start <branch> --existing-branch <branch|remote/branch> --unit <dir>

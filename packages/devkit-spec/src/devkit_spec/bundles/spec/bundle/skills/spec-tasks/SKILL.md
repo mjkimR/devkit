@@ -12,8 +12,7 @@ of `sdd-spec-bugfix`), keeping its frontmatter. A bugfix bundle has none yet: cr
 ## Rules
 
 - Each task yields one result that can be verified on its own; keep code and its tests in one task.
-- `_Boundary:` names the paths the task is expected to touch. It is an estimate: a needed extra path is made and
-  explained in the report. A task a `development-worker` builds also names the `docs/` paths its checks require,
+- `_Boundary:` estimates the paths the task touches; make a needed extra path and explain it in the report. A task a `development-worker` builds also names the `docs/` paths its checks require,
   because its `spec-delegate` write scope is strict.
 - `_Requirements: AC-01, AC-02_` on a child line indented two spaces links the scenarios the task serves; every
   `[AC-NN]` is covered by a task.

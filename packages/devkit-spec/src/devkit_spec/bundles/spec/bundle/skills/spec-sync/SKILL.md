@@ -5,9 +5,9 @@ description: Reconcile a completed feature spec and discovered behaviors into th
 
 # spec-sync: Living Specification Reconciliation Workflow
 
-Use this skill at the `living-spec-draft` stage, after `spec-review` passes. Write `docs/` by the
-`living-spec-writing` instruction. The record and evidence rules are in the `spec` skill's `references/completion.md`;
-verification by effort is in its `references/effort.md` and `references/review-loop.md`.
+Run at the `living-spec-draft` stage, after `spec-review` passes. Write `docs/` by the `living-spec-writing`
+instruction. Record and evidence rules: the `spec` skill's `references/completion.md`; verification by effort: its
+`references/effort.md` and `references/review-loop.md`.
 
 ## Steps
 
@@ -19,10 +19,10 @@ verification by effort is in its `references/effort.md` and `references/review-l
      step citations it needs to the use cases, and the drafted register rows to `docs/steering/ux-objects.md`,
      creating the file with the project's first UX document; turn the drafts' plain-text new IDs into code spans
      (`ADR-ux-drafts-before-code`). `RULE-ux-links` and `RULE-ux-coverage` check them from here on.
-   - The spec's user stories state the request, not the contract; copy none into `docs/`. Fold the delivered behavior
-     into the use cases it changes: new or changed steps, extensions with their codes, postconditions and scenarios
-     (`usecase-writing`).
-2. **Record**: create `reconcile.md` in the bundle, one target per changed Living Spec file, or the no-impact
+   - Copy none of the spec's user stories into `docs/`: they state the request, not the contract. Fold the delivered
+     behavior into the use cases it changes: new or changed steps, extensions with their codes, postconditions and
+     scenarios (`usecase-writing`).
+2. **Record**: create `reconcile.md` in the bundle with one target per changed Living Spec file, or the no-impact
    reasoning in the body:
 
    ```yaml

@@ -3,7 +3,7 @@ sources:
   CAP-GOV-evaluation-lifecycle: 3e13fc27305e7933a1876ea9879a7423b5a771e0
   CAP-GOV-rule-authoring: 021370486fb2490d8cfe8e1e7df20da1260a990c
   CAP-GOV-rules-engine: fc9db7b9335944c5ef2c6554f65533f2149e07c6
-  CAP-GOV-spec-rules: adab7d427d7d35c29e7379d1110c93d516470654
+  CAP-GOV-spec-rules: d6966cab23d742d0782429acf8acaba4bcbca90d
   UC-adopt-in-an-existing-repository: 37265d4dcac0d34967bb003908a49d0df4a036a8
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
@@ -13,16 +13,18 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
+- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Incubate an idea](../journeys/incubate-an-idea.md)
 - [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
@@ -32,6 +34,7 @@ title: Governance rules
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)
 - [Collaboration](collaboration.md)

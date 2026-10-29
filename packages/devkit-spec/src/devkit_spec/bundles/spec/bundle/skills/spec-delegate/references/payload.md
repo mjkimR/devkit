@@ -8,7 +8,7 @@ Read this when building a payload (`spec-delegate` step 2).
 | `relevant_files` | Starting points to read: files, AC, non-goals, ADRs |
 | `allowed_boundaries` | Read scope, write scope and denied paths, as the repository's declared paths |
 | `changed_paths` | Review roles: `changed_paths` of `devkit spec worker inspect --format json`, or `git diff --no-renames --name-only <base> <head>` |
-| `diff_scope` | Base and head under review; required for the reviewers and the workers |
+| `diff_scope` | Base and head under review; required for reviewers and workers |
 | `expected_output_format` | Summary, comparison table, envelope or docs diff |
 
 | Role | `relevant_files` | Also pass |
@@ -33,5 +33,5 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 - Never ask a worker to delete a scratch file or fixture it created: authored scratch files stay in the ignored path inside the worktree, and removing the worktree (`devkit worktree finish` or integration cleanup) cleans them.
 - Add linked open source feedback to the write scope, by its actual path, only when the worker fixes it directly; otherwise update it yourself at completion.
 - Before delegating a move or deletion, add each document that links to the target as an exact link-repair-only write path.
-- Name the official documentation reads the work needs as read authority, separate from any mutation authority; if the worker cannot read them, supply the verified content.
-- Planning: when the turn needs newer base IDs or CLI features, refresh the branch and installed instructions first (the worker never merges). Name an ignored probe path inside the proposal directory, preparing one if none exists.
+- Name the official documentation the work needs as read authority, separate from any mutation authority; if the worker cannot read it, supply the verified content.
+- Planning: when the turn needs newer base IDs or CLI features, refresh the branch and installed instructions first (the worker never merges). Name an ignored probe path inside the proposal directory (prepare one if none exists).

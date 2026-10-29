@@ -8,7 +8,7 @@ Read this when a rule declares settings a project may tune, or when a project ch
   are `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None`.
 - Override `validate_settings(settings)` to raise `ValueError` for values the types cannot express; check patterns
   with `devkit_agt.features.rules.validate_pattern`.
-- Read the values per file with `ctx.settings(self, rel)`; do not cache or mutate them.
+- Read values per file with `ctx.settings(self, rel)`; never cache or mutate them.
 - If settings can change the result for unchanged files, rescan the rule's own targets.
 
 ## Configuring (project)

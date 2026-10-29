@@ -23,6 +23,6 @@ Only a party that can talk to the user closes; a worker or Cloud Agent records a
 | Supersede | An accepted proposal's direction is wrong | Add a draft proposal under a new slug with `--supersedes PROP-<old>` and the attempt's material in `materials/`; delete the old accepted proposal in the same commit | The user |
 | Abandon | The accepted work is dropped | Write a rejection ADR and delete the accepted proposal | The user |
 
-1. Commit the close directly to the base as Backlog work, after [feedback retirement](feedback-retirement.md) and the prerequisite disposition in [repository Backlog](backlog.md). A new draft starts over with `plan-intent` in Backlog.
+1. After [feedback retirement](feedback-retirement.md) and the prerequisite disposition in [repository Backlog](backlog.md), commit the close directly to the base as Backlog work. A new draft starts over with `plan-intent` in Backlog.
 2. Close the dev PR and remote branch (`gh pr close`, `git push <remote> --delete dev-<slug>`).
 3. Once what the branch learned is copied out, run `devkit worktree finish dev-<slug> --discard` from the base checkout; it is the only allowed way to delete an unmerged activity branch.

@@ -5,8 +5,8 @@ description: Entry skill for orientation; inspect repository state and active sp
 
 # spec-next: Engineering Workflow Navigator
 
-Diagnose repository state and recommend one concrete next step with its evidence. Run only the diagnosis commands
-below; start nothing else until the user approves.
+Recommend one concrete next step with its evidence. Run only the diagnosis commands below; start nothing else until
+the user approves.
 
 ## Diagnosis
 
@@ -14,8 +14,8 @@ below; start nothing else until the user approves.
    checkout kind (feature branch, task worktree, base), leftovers (`devkit worktree finish <branch>`) and stale
    branches with their resume or discard path (§4 of the `spec` skill's `references/branches.md`). Never remove or
    resume one unasked.
-2. `devkit docs list spec`: per listed bundle, tasks done vs pending and pending reconciliation. Spec status
-   `completed` does not prove integration; check Git/PR state.
+2. `devkit docs list spec`: per bundle, tasks done vs pending and pending reconciliation. Spec status `completed`
+   does not prove integration; check Git/PR state.
 3. `devkit docs list proposal --history`: proposals `reviewing`, `accepted` and waiting for handoff, or `rejected`
    and awaiting cleanup.
 4. `devkit docs list feedback --status open --where severity=critical`, and the open count without `--where`.
@@ -25,8 +25,9 @@ below; start nothing else until the user approves.
 
 ## Recommendation
 
-- If critical open feedback exists, recommend a feedback hygiene pass first (the user invokes `/devkit-playbook` or names
-  `spec/feedback-hygiene` when the project has one); the stage recommendation comes second. Give other open feedback one line.
+- If critical open feedback exists, recommend a feedback hygiene pass first (the user invokes `/devkit-playbook` or
+  names `spec/feedback-hygiene` when the project has one), then the stage recommendation. Give other open feedback one
+  line.
 - In progress means a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec; queued drafts are not.
 
 | State | Recommend |

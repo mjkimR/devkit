@@ -5,9 +5,9 @@ description: Author, test and register a deterministic project governance rule a
 
 # spec-rule: Governance Rule & Autofix Authoring Workflow
 
-Use this skill to turn a project convention, boundary or document check into a rule that `devkit rules check` runs in
-the session, the commit gate (`--staged`) and CI. The spec bundle's own rules (`devkit rules explain
-RULE-spec-lifecycle`) are worked examples.
+Turn a project convention, boundary or document check into a rule that `devkit rules check` runs in the session,
+the commit gate (`--staged`) and CI. Worked examples: `devkit rules explain RULE-spec-lifecycle` and the spec bundle's
+other rules.
 
 ## Constraints
 
@@ -30,20 +30,20 @@ Read [templates](references/templates.md) before Step 2.
    - Phase `Phase.LINTER` for the active gate; `Phase.HYGIENE` with `promote_to=Phase.LINTER` for a rule that meets
      existing debt (`devkit rules check --phase hygiene` runs it).
    - Severity `error` fails the run; `warning` and `info` do not. Exceptions go in `.devkit/config.toml` with a reason
-     comment; suppression comments do not exist.
+     comment; there are no suppression comments.
    - Settings a project may tune ([config](references/config.md)).
-   - A rule that reads files beyond its targets (a whole-workspace scan, a configuration file) declares
-     `inputs=("<pattern>", ...)`: the workspace patterns, in the `**` grammar of `[rules] exclude`, of every file whose
-     content can change its findings. A run with explicit targets then skips it when no target matches; full runs and
-     the snapshot gates always run it. A rule that reports only its targets leaves `inputs` unset.
+   - If the rule reads files beyond its targets (a whole-workspace scan, a configuration file), declare
+     `inputs=("<pattern>", ...)`: workspace patterns (`[rules] exclude` `**` grammar) for every file whose content can
+     change its findings. A run with explicit targets then skips the rule when no target matches; full runs and the
+     snapshot gates always run it. A rule that reports only its targets leaves `inputs` unset.
 2. **Create** `rules/<name>/rule.py`, `guide.md` and `tests/test_rule.py`, and register the asset in `bundle.toml` and
    the project's preset. If an instruction holds the rule's judgment, name it with `related=("<bundle>:<asset-id>",)`.
 3. **Implement** `check`. Give each `Violation` an actionable `remediation`. Add `fix` only when repository state
    determines exactly one result; otherwise report a remediation. A second fix run must change nothing.
-4. **Test** valid input, a violation, targeting, settings, the fix and its idempotency, with helpers kept in the test
-   file because `devkit rules test` runs it without the project's `conftest.py`. With `inputs`, also test that a
-   target matching each pattern reports a seeded violation and, with `opened_files`, that every file a
-   whole-workspace check opens matches a pattern.
+4. **Test** valid input, a violation, targeting, settings, the fix and its idempotency. Keep helpers in the test file:
+   `devkit rules test` runs it without the project's `conftest.py`. With `inputs`, also test that a target matching
+   each pattern reports a seeded violation and, with `opened_files`, that every file a whole-workspace check opens
+   matches a pattern.
 5. **Validate**:
 
    ```bash

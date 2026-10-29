@@ -11,11 +11,11 @@ sources:
   CAP-DIST-manifest-spec: 44c8ec1792cd306367a6cb09a3e7ef580ee7c2c9
   CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
   CAP-DIST-workspace-ownership: 11ecf337d2748f5d3f69272dfaf004bd8c83d9ba
-  CAP-DLV-delivery-workflows: eaee3ce05a4ecaacbab0789f7f12e5585c0b647c
+  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
   CAP-DLV-human-interaction: 8e7d688916e7c8dea4d0f26e562191a4a6c423cc
   CAP-DLV-idea-incubation: c1ff3be1b056ec9d5746689d189c17fdde8bee89
   CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
-  CAP-DLV-proposal-incubation: 6a15a36e8d3fc2402928cfaa44b31689cc9ed168
+  CAP-DLV-proposal-incubation: d1a2660dea8664dd37171ac723f4d54305ae72be
   CAP-DLV-spec-bundles: b743cb4567d0a510097b1dc902a9a066f962c6cc
   CAP-DLV-workflow-envelopes: ba3e36ff09f879615ad60389b433b58cdf4097ee
   CAP-DLV-workflow-orchestration: 7617520b7cd6028e8eda909cf6b3171822ad02c1
@@ -31,15 +31,17 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](README.md)
 - [Adopt devkit in an existing repository](journeys/adopt-in-an-existing-repository.md)
+- [Adopt SDD from incubation](journeys/adopt-sdd-from-incubation.md)
 - [Drive development to integration](journeys/drive-development-to-integration.md)
 - [Find the right documents](journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](journeys/handle-delivery-problems-and-exceptions.md)
+- [Incubate an idea](journeys/incubate-an-idea.md)
 - [Incubate and hand off a proposal](journeys/incubate-and-hand-off-a-proposal.md)
 - [Inspect weekly repository progress](journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](journeys/keep-the-living-spec-consistent.md)
@@ -49,6 +51,7 @@ title: Concepts
 - [Review and refactor accumulated slop](journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](journeys/route-development-intent.md)
 - [Run parallel work safely](journeys/run-parallel-work-safely.md)
+- [Speed up selected slow operations](journeys/speed-up-selected-slow-operations.md)
 - [Advisories](areas/advisory.md)
 - [Agent-first CLI toolkit](areas/cli.md)
 - [Collaboration](areas/collaboration.md)

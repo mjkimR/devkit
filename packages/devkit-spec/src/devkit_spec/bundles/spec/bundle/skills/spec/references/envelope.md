@@ -14,7 +14,7 @@ findings:
     evidence: "path:line or source URL"
     failure_condition: "Under which input or state it fails (required for challenger and reviewer)"
     suggested_action: "Recommended next step"
-    severity: "P2"            # review, reconcile-check and challenger findings only
+    severity: "P2"            # see below
 assumptions: ["Assumptions made inside the approved scope"]
 unverified_areas: ["Scope not explored or needing confirmation"]
 checks: { tests: "PASS 14/14" }        # when the role ran checks
@@ -22,7 +22,7 @@ diff_scope: { base: "<ref>", head: "<sha>" }
 ```
 
 - `completed` with no findings is a valid pass.
-- `severity` is `P1`, `P2` or `P3` on every finding of a `review`, `reconcile-check` or `challenger` envelope, at every effort, recorded as the reviewer set it ([review loop](review-loop.md) section 3).
+- `severity` is `P1`, `P2` or `P3` on every finding of a `review`, `reconcile-check` or `challenger` envelope, and only there, at every effort, recorded as the reviewer set it ([review loop](review-loop.md) section 3).
 - `needs_input` names the missing input or the decision only the human can make. `failed` (timeout, cancellation, tool failure, unsupported host feature, stale `diff_scope`) is never completion evidence.
 - Docs impact has no key: it goes into `reconcile.md`, verified by a `reconcile-check` envelope.
 
@@ -41,7 +41,7 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
 
 ## 3. Integration result (after `spec-integrate`)
 
-Report in the conversation; integration writes no envelope, because a file written after the merge would need another commit.
+Report in the conversation; integration writes no envelope (a file written after the merge would need another commit).
 
 1. The result of `devkit rules check --ci --base <ref>`.
 2. The base integrated, the conflicts resolved and what was re-verified.

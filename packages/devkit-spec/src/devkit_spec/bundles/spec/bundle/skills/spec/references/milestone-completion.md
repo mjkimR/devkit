@@ -1,6 +1,6 @@
 # Milestone completion review
 
-Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. The shared milestone template is `.devkit/managed/docs/templates/milestone.md`. In SDD, only direct PROP anchors declare milestone membership; handoff does not carry it to SPEC. The milestone frames direction, not binding implementation requirements. Planning settles scope. Semantic scope changes reset both completion assertions to pending; normal handoff does not. Record confirmed assertions and done status together only after user confirmation.
+Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. Only direct PROP anchors declare membership; handoff does not carry it to SPEC. Semantic scope changes reset both completion assertions to pending; normal handoff does not.
 
 ## Prepare one candidate
 
@@ -34,16 +34,15 @@ Direct proposal work: pending
 
 ## Placement, drop and retained history
 
-- Keep global planned/active files at `docs/roadmap/MS-<slug>.md` and done/dropped files at
-  `docs/roadmap/_archive/MS-<slug>.md`. Keep the same filename, ID and aliases.
-- For drop, present unsettled members and successor dependencies and the concrete reassignment, clearing or rejection.
-  On the user's decision, record that disposition, set dropped and move into `_archive/` in one Backlog commit.
-  Drop does not create or confirm either completion assertion. Repeating an unchanged archived drop writes nothing.
-- The close/drop/reopen candidate includes its file movement. Reuse approval for those exact effects; no extra
-  archive-only gate applies. Recheck the source and destination immediately before applying; a destination collision
-  stops the operation without overwriting. A changed candidate needs the existing fresh decision procedure.
+File placement follows [Backlog](backlog.md) Milestones.
+
+- Drop: present unsettled members and dependent milestones with the concrete reassignment, clearing or rejection. On
+  the user's decision, record that disposition, set dropped and move into `_archive/` in one Backlog commit. Drop does
+  not create or confirm either completion assertion. Repeating an unchanged archived drop writes nothing.
+- The close/drop/reopen candidate includes its file movement; reuse approval for those exact effects, with no extra
+  archive-only gate. Recheck source and destination immediately before applying; a destination collision stops the
+  operation without overwriting. A changed candidate needs a fresh decision.
 - For a reviewed existing-history relocation batch, present the exact source/destination files and their current
   contents. After reader verification, reuse the user's authority for that exact unchanged batch and move only those
-  files, comparing bytes before/after. Keep absent historical assertions absent; no status or evidence is invented.
-- Historical merging works from either supported location: retain merged IDs as aliases of the theme and apply the
-  existing Backlog scope disposition. The theme's own status selects its location.
+  files, comparing bytes before/after. Keep absent historical assertions absent; invent no status or evidence.
+- A merge ([Backlog](backlog.md)) works from either supported location; merged IDs stay as theme aliases.

@@ -23,7 +23,7 @@ hosts:
 
 # Code Reviewer
 
-Run `spec-review` in isolation against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. Reconcile verification belongs to `reconcile-reviewer`.
+Run `spec-review` in isolation against the actual diff, acceptance criteria and check results, unbiased by the implementer's self-assessment. Reconcile verification belongs to `reconcile-reviewer`.
 
 ## Procedure
 

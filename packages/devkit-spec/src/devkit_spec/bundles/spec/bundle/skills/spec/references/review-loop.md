@@ -1,6 +1,6 @@
 # Review loop at `high`
 
-Read this when code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`) or Planning criticism (`challenger`) runs at `activity-effort` `high`. Stages, checks and gates are unchanged; the loop is procedure above them.
+Read this when code review (`code-reviewer`), reconcile verification (`reconcile-reviewer`) or Planning criticism (`challenger`) runs at `activity-effort` `high`. The loop changes no stage, check or gate.
 
 ## 1. Rounds
 
@@ -25,9 +25,7 @@ A batch MAY skip the next round only when every fix meets all four conditions:
 | Contract | No public API, schema, error code, CLI output or other package touched | The contract's meaning is unchanged | No decision changed |
 | Evidence | Behavior fixes: a test reproducing the `failure_condition` passes (for a P1, it failed before the fix). Text-only: the diff is limited to the named location | The edited text and the actual diff agree | The edited text agrees with the finding |
 
-- If any condition is uncertain for any fix, run the next round for the whole batch.
-- Record the reason and evidence in the record that closes the round.
-- A recurring finding cannot be self-verified.
+If any condition is uncertain for any fix, run the next round for the whole batch. Record the reason and evidence in the record that closes the round. A recurring finding cannot be self-verified.
 
 ## 3. Severity
 

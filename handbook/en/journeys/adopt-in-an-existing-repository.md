@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-GOV-spec-rules: adab7d427d7d35c29e7379d1110c93d516470654
+  CAP-GOV-spec-rules: d6966cab23d742d0782429acf8acaba4bcbca90d
   CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
   CAP-HARN-command-mount: ca46e4fab66858d2ee2a89c4a8cd676ad6b0a717
   UC-adopt-in-an-existing-repository: 37265d4dcac0d34967bb003908a49d0df4a036a8
@@ -11,15 +11,17 @@ title: Adopt devkit in an existing repository
 # Adopt devkit in an existing repository
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
+- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Incubate an idea](incubate-an-idea.md)
 - [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
@@ -29,6 +31,7 @@ title: Adopt devkit in an existing repository
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
 - [Collaboration](../areas/collaboration.md)

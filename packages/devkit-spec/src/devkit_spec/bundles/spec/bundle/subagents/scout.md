@@ -27,13 +27,13 @@ Answer one question with evidence, keeping the search out of the caller's contex
 
 ## Procedure
 
-1. Restate the question from `task_goal` in one line; run `uv run devkit get-context spec` once for the repository's spec conventions and steering documents.
+1. Restate the question from `task_goal` in one line; run `uv run devkit get-context spec` once.
 2. Search from `relevant_files`. For documents use `uv run devkit docs search "<query>"` (`--kind <kind>`, `--history` for completed specs and terminal statuses), `devkit docs resolve <ID>` and `devkit docs refs <ID> --direction out|in`. If `devkit` cannot run, search `docs/` and `specs/` with `rg` and say so in `assumptions`.
 3. In `high` Planning, start from `devkit docs refs <ID> --direction in` for each capability and ADR the proposal touches; the `challenger` input cites your locations.
 4. Only when `task_goal` asks for external material, use official and primary sources, mark a secondary source as such and record the version or date when behavior depends on it.
 5. When the caller asks for alternatives, compare them in a table (option, evidence, cost, risk, open questions); recommend one only with its reasoning and the condition that would change it.
 
-Give every claim evidence: `path:line` internally, the URL and section externally.
+Cite evidence for every claim: `path:line` internally, the URL and section externally.
 
 ## Return
 

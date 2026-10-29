@@ -1,6 +1,6 @@
 # spec-rule templates
 
-Read this at Step 2 of the `spec-rule` skill. Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this complete, fixable example: Markdown files under the configured paths must end with a newline. Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
+Read this at Step 2 of the `spec-rule` skill. Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this fixable example (Markdown files under the configured paths end with a newline). Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
 
 ## Layout and registration
 
@@ -26,7 +26,7 @@ assets = ["final-newline"]
 
 ## Guide
 
-devkit's guide sections, read by an agent that just hit a violation:
+Sections, for an agent that just hit a violation:
 
 ```markdown
 # [RULE-myrepo-final-newline] Final Newline
@@ -176,9 +176,9 @@ def test_settings_apply_per_path(tmp_path: Path) -> None:
     assert [v.file for v in check(RULE, tmp_path, files, settings=settings)] == ["guides/a.md"]
 ```
 
-`check` runs the real engine (settings parser, one fix pass and one recheck); `evaluate` returns the whole `EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not on message text.
+`check` runs the real engine (settings parser, one fix pass, one recheck); `evaluate` returns the whole `EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not message text.
 
-A rule that declares `inputs` also tests the skip and that the declaration is complete. `opened_files` records every workspace file opened while it is active; it, `evaluate` and `write_files` come from the same module, `match_path` from `devkit_agt.features.rules`:
+With `inputs`, also test the skip and that the declaration is complete. `opened_files` records every workspace file opened while active; it, `evaluate` and `write_files` come from the same module, `match_path` from `devkit_agt.features.rules`:
 
 ```python
 def test_inputs_cover_every_file_the_rule_reads(tmp_path: Path) -> None:

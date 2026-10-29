@@ -1,17 +1,13 @@
 # Proposals
 
-An incubation space to propose and mature new features, technical spikes, or architectural improvements. Every proposal is managed as an isolated bundle directory (`PROP-{slug}/`).
-
----
+Proposals mature features, spikes and architectural improvements, each as a bundle directory `PROP-{slug}/`.
 
 ## 1. Zero-Clutter Lifecycle Principles
 
-- **Draft & Review (`draft` / `reviewing`)**: In Backlog, scaffold the bundle using `devkit spec proposal new <slug>` (`--task-kind bugfix` for a defect) and define the core hypothesis and spike questions in `proposal.md`; `plan-intent` records the authorized task intent without repeating an existing user instruction. Planning runs on its own `plan-<slug>` branch and collects its questions for the user in one round. Isolate preliminary decisions into `decisions/PADR-{slug}.md` and research into `materials/`.
+- **Draft & Review (`draft` / `reviewing`)**: In Backlog, scaffold with `devkit spec proposal new <slug>` (`--task-kind bugfix` for a defect) and state the core hypothesis and spike questions in `proposal.md`; `plan-intent` records the authorized task intent without repeating an existing user instruction. Planning runs on `plan-<slug>` ([planning](planning.md)). Put preliminary decisions in `decisions/PADR-{slug}.md` and research in `materials/`.
 - **Graduation (`accepted`)**: `plan-accept` under its `ask|auto` policy, recorded with `devkit spec proposal accept` after Planning or directly for an eligible draft in Backlog, sets `status: accepted`. The independent `proposal-handoff` boundary also follows `ask|auto`; accept and handoff may share one request or happen separately. Development then starts with `devkit spec proposal handoff <slug>`, which creates the execution specification at `specs/{YYYY-MM}/{YYYYMMDD}-{slug}/` bound to `sdd-spec-<task_kind>`, carries the `plan-intent` and `plan-accept` records, promotes PADRs into `docs/decisions/`, moves `materials/` and any other bundle file (such as a `notes.md`) into `docs/materials/`, copies `target-docs.md` (if present) to the spec directory, rewrites Markdown links and ID references pointing into the bundle, and removes the bundle directory. Follow up the reported unresolved links (`spec-next` skill).
 - **Rejection (`rejected`)**: Change only `status: rejected`, with the user's reason in the commit message. A later hygiene pass records the rejection ADR in `docs/decisions/` (referencing the proposal and the rejection commit) and deletes the bundle directory in the same commit.
-- Historical context and discussions are tracked via Git history. No `archive/` directories are maintained.
-
----
+- Git history keeps historical context; keep no `archive/` directories.
 
 ## 2. Bundle Layout & Frontmatter Conventions
 
@@ -23,20 +19,18 @@ docs/proposals/PROP-{slug}/
 └── materials/             # (Optional) On-demand research, benchmarks, external surveys
 ```
 
-- **`proposal.md` Frontmatter**: `devkit spec proposal new` writes it; the fields and their values are annotated in
-  the proposal template (`.devkit/managed/spec/templates/proposal.md`).
-  - **`planning_effort` / `dev_effort`**: Non-authoritative `activity-effort` hints (`low` | `medium` | `high`, default `medium`) for Planning and Development; `dev_effort` is refined during Planning before `plan-accept` and returned by `handoff`, while confirmed run effort is recorded on `worker-NN.yaml` envelopes (never copied to `spec.md`).
+- **`proposal.md` Frontmatter**: `devkit spec proposal new` writes it; the proposal template
+  (`.devkit/managed/spec/templates/proposal.md`) annotates the fields.
+  - **`planning_effort` / `dev_effort`**: non-authoritative hints ([effort](effort.md)); `handoff` returns `dev_effort`,
+    and the applied effort is recorded only on `worker-NN.yaml` envelopes, never copied to `spec.md`.
 - **`materials/` Markdown**: follow the material convention: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`. `RULE-spec-format` skips `materials/` directories, so the frontmatter is recommended, not checked. Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`.
-- **`target-docs.md` (Recommended)**: Focuses on "What docs/ changes will look like once accepted", while `proposal.md` focuses on "Why". Covers capability ledger, use cases, architecture & decisions, conventions & governance, and before/after comparisons. Recommended for `size: M/L` or when Living Spec structural changes are expected.
-- **`size: XL`**: the work would need two or more specs or a different `task_kind`. A rough `XL` draft may wait in
-  Backlog, but it is decomposed (split with `--decomposed-from` or promoted to a milestone) before `plan-intent` and
-  Planning.
-
----
+- **`target-docs.md`**: what `docs/` will look like once accepted (`proposal.md` holds the why): capability ledger, use cases, architecture and decisions, conventions and governance, before/after comparisons. Recommended for `size: M/L` or expected Living Spec structural changes.
+- **`size: XL`**: the work would need two or more specs or a different `task_kind`; decompose it before `plan-intent`
+  ([XL size gate](backlog.md#the-xl-size-gate)).
 
 ## 3. CLI Proposal Management & Dynamic Discovery
 
-Do not manually maintain catalog tables in README files. Active proposals are discovered dynamically by parsing frontmatter metadata:
+Do not maintain proposal tables in README files; the CLI reads frontmatter:
 
 ```bash
 devkit spec proposal new <slug>                        # Scaffold proposal bundle

@@ -5,7 +5,7 @@ description: Delegate to Scout, Challenger, Code Reviewer, Reconcile Reviewer, U
 
 # spec-delegate: Support Role Invocation
 
-Use this skill to hand one isolated task to a support role (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `ux-reviewer`, `triage`, `decomposer`) or, in `local-orchestrated` mode, to a worker (`planning-worker`, `development-worker`). Treat a role's result as an opinion with evidence; completion rests on the agreed AC, checks, the final diff and reconciliation.
+Hand one isolated task to a support role (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `ux-reviewer`, `triage`, `decomposer`) or, in `local-orchestrated` mode, to a worker (`planning-worker`, `development-worker`). A role's result is an opinion with evidence; completion rests on the agreed AC, checks, the final diff and reconciliation.
 
 ## Constraints
 
@@ -13,15 +13,15 @@ Use this skill to hand one isolated task to a support role (`scout`, `challenger
 - Fill `allowed_boundaries` with the task's actual declared paths; the post-run diff, not the prompt, enforces them.
 - A support role never touches the index or HEAD; a worker commits only on its activity branch.
 - Zero findings is a valid result.
-- For a `session` task, the role returns a message: write no envelope and start no worker. A Backlog role (`triage`, `decomposer`) also returns a message: no envelope; the Backlog commit body names the role used.
+- A `session` task's role returns a message: no envelope, no worker. A Backlog role (`triage`, `decomposer`) also returns a message: no envelope; the Backlog commit body names the role used.
 
 ## Procedure
 
-1. **Choose the route** from the stage's `isolation` (`[DELEGATE: ... isolation=none|preferred|required ...]`) and the host status, and record it in the envelope's `assumptions`:
-   - `native`, `emulated` or `unverified`: spawn an isolated subagent per [hosts](references/hosts.md); if the status is not `native`, say so in the call.
+1. **Choose the route** from the stage's `isolation` (`[DELEGATE: ... isolation=none|preferred|required ...]`) and the host status; record it in the envelope's `assumptions`:
+   - `native`, `emulated` or `unverified`: spawn an isolated subagent per [hosts](references/hosts.md); if not `native`, say so in the call.
    - `unsupported` with isolation `required`: stop with `needs_input`.
    - `unsupported`, or `preferred` without a fresh context: substitute in the main session and follow the contract body yourself.
-2. **Build the payload** per [payload](references/payload.md) and record the head SHA you passed. Give a projected role only the payload, with the actual change and intent instead of the main session's narrative. For a support role, also record the snapshot below; it covers tracked edits and untracked files, so a write to an already-modified file shows too:
+2. **Build the payload** per [payload](references/payload.md) and record the head SHA you passed. Give a projected role only the payload, with the actual change and intent instead of the main session's narrative. For a support role, also record this snapshot (it covers tracked edits and untracked files, so a write to an already-modified file shows too):
 
    ```bash
    index="$(git rev-parse --git-path devkit-delegate.index)"

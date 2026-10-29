@@ -11,16 +11,18 @@ translated_from: en/areas/cli.md@769efa12f3b66406
 # 에이전트 우선 CLI 도구 키트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `5e71d74c8e5a` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `022b9f03bbd2` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
+- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
 - [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
 - [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
@@ -30,6 +32,7 @@ translated_from: en/areas/cli.md@769efa12f3b66406
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [협업](collaboration.md)
 - [컴팩트 명령 출력](compact.md)

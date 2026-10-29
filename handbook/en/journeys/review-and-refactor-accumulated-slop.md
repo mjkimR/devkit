@@ -2,7 +2,7 @@
 sources:
   CAP-DIST-content-packages: 71d426703b854a24bdce4cd0c44b130ed8a106dc
   CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
-  CAP-DLV-delivery-workflows: eaee3ce05a4ecaacbab0789f7f12e5585c0b647c
+  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
   CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
   CAP-DLV-performance-pass: b37939e6d8e45835bae34bf596322b6bdc5d74b3
   CAP-DLV-review-refactor: a8eac89c524a4351fd3e5044fb3972beee3014c3
@@ -13,16 +13,18 @@ title: Review and refactor accumulated slop
 # Review and refactor accumulated slop
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.5` at source commit `022b9f03bbd2`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
+- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
 - [Drive development to integration](drive-development-to-integration.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Incubate an idea](incubate-an-idea.md)
 - [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
@@ -31,6 +33,7 @@ title: Review and refactor accumulated slop
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
 - [Collaboration](../areas/collaboration.md)

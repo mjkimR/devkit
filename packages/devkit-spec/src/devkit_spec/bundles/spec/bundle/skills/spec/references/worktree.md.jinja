@@ -1,6 +1,6 @@
 # Worktree procedure
 
-Read this before work that runs in a task worktree: every `spec` and `proposal` activity in `direct` mode under `[GIT_POLICY: worktree=required ...]`, and any task the `GIT_POLICY` levels in [git policy](git-policy.md) put in a worktree under `auto`. A request that names the checkout ("on main", "in this worktree") overrides the policy for that task only; record the deviation as a user request in the final change report's assumptions.
+Read this before work that runs in a task worktree: every `spec` and `proposal` activity in `direct` mode under `[GIT_POLICY: worktree=required ...]`, and any task the `GIT_POLICY` levels in [git policy](git-policy.md) put in a worktree under `auto`. A request that names the checkout ("on main", "in this worktree") overrides the policy for that task only ([git policy](git-policy.md) deviations).
 
 - `<base>` is the checkout the request arrived in; `<branch>` is `plan-<slug>` or `dev-<slug>` ([branches](branches.md)).
 - Policy is read from the checkout a command runs in, so a running branch sees a base policy change only after merging the base.
@@ -23,11 +23,11 @@ Read this before work that runs in a task worktree: every `spec` and `proposal` 
 
 ## 2. Work (in the worktree)
 
-Run the workflow's stages, checking each boundary with `devkit workflow next --unit <dir>`, and commit on `<branch>` at every stage boundary. Push nothing and merge nothing into the base before `dev-integration`.
+Run the workflow's stages, check each boundary with `devkit workflow next --unit <dir>` and commit on `<branch>` at every boundary. Push nothing and merge nothing into the base before `dev-integration`.
 
 ## 3. Integrate and finish (in `<base>`)
 
-Integrate with `spec-integrate`; it owns the merge routes and their recovery. Finishing the worktree adds:
+`spec-integrate` owns the merge routes and their recovery. Finishing the worktree adds:
 
 - Through a PR: after the merge, run `devkit worktree finish <branch>` (no `--merge`). A PR merged by squash or rebase stays `WORKTREE_UNMERGED`; remove that worktree and branch only with the user's authorization.
 - A conflict in `.devkit/installation.json` when integrating the base: keep either side, run `devkit sync` and stage the receipt it writes.

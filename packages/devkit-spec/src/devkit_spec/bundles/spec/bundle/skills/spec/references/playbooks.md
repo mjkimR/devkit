@@ -1,8 +1,7 @@
 # Playbooks found at intake
 
-Read this only on a match, after intake discovery (`spec` skill, routing step 1) found a candidate that passes the
-selection rule. It is the procedure after selection; the trigger, skip cases, search and selection rule stay in the
-skill.
+Read this only on a match, after intake discovery (`spec` skill, routing step 1) selected a candidate. The trigger,
+skip cases, search and selection rule stay in the skill.
 
 ## 1. Offer and confirmation
 
@@ -26,11 +25,10 @@ skill.
 
 ## 3. Use the playbook
 
-1. Run `devkit get-context <bundle>` for the playbook's bundle unless that context is already loaded in the current
-   agent context.
+1. Run `devkit get-context <bundle>` for the playbook's bundle unless it is already loaded in this agent context.
 2. Read the selected playbook body at the path the search returned, or with
    `devkit playbook get <bundle>/<playbook>`; read linked resources only when a step needs them.
-3. Check its prerequisites; one that fails stops the playbook and is reported, and the task continues as ordinary
-   work only on the user's decision.
+3. Check its prerequisites; a failed one stops the playbook and is reported; the task continues as ordinary work
+   only on the user's decision.
 4. Follow the procedure through its completion conditions with fresh progress. A step inside it runs no nested
    playbook search.

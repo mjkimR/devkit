@@ -1,7 +1,7 @@
 # Feedback template
 
 Read this when writing a feedback file. Copy the block inside the four-backtick fence, replace every `<...>`
-placeholder, follow the comment, then delete it.
+placeholder, follow the comment, then delete the comment.
 
 ````markdown
 ---
@@ -67,8 +67,8 @@ If category is other, state the nature in the first line below.
 
 ## Detail level
 
-`FEEDBACK_POLICY detail` in `devkit spec policy` sets the level; frontmatter and your assessment are complete at every
-level.
+`FEEDBACK_POLICY detail` in `devkit spec policy` sets the level; every level has complete frontmatter and your
+assessment.
 
 - **brief**: the applicable section's context, the observation or proposed change, a short assessment and Evidence.
 - **standard**: the applicable section and Evidence.

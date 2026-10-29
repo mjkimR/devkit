@@ -14,8 +14,7 @@ once. Record only the authority actually given:
   `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user`.
 - `plan-accept`: after the Host presents the findings and effects and receives the user's decision, run
   `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user`.
-  `proposal-handoff` can share the same conversation; each
-  policy stays independent.
+  `proposal-handoff` can share the conversation; each policy stays independent.
 - A decline: `devkit workflow answer --unit <dir> --request gate:<gate> --action decline --by user --note "<decision>"`.
 {% if execution.environment == "local" %}- `dev-integration`: present the verified report and effects, obtain conversational approval, then run
   `devkit integration integrate` ([policy](../../spec/references/completion.md#policy)).

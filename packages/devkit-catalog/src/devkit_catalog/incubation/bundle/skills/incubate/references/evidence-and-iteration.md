@@ -9,6 +9,6 @@
 7. Run applicable build, lint and tests, then exercise actual usage against the expected flow; a unit test alone does not establish usable interaction.
 8. Record exact command or interaction, relevant environment, source/artifact identity, observed outcome and coverage limitation.
 9. If source or retained behavior changes, rerun the affected verification; keep unaffected evidence with its original identity and applicability.
-10. Fix failures in intended retained behavior, repeat its checks and report remaining gaps rather than describing skipped checks as passed.
+10. Fix failures in intended retained behavior, repeat its checks and report remaining gaps; never describe skipped checks as passed.
 
 Example evidence: `python app.py --add milk` followed by `python app.py --list`, with the actual output and tested revision. A mocked transcript is scenario input, not an observed product run.

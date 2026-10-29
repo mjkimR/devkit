@@ -4,7 +4,7 @@ How thoroughly one activity of a slug is done: `low`, `medium` (the default) or 
 
 ## Selecting the effort
 
-When an activity starts, choose the effort within the authorized scope, state it with its reason and pass it to the executor as run input. Effort selection adds no approval gate.
+When an activity starts, choose the effort within the authorized scope, state it with its reason and pass it to the executor as run input; selection adds no approval gate.
 
 - Preserve an explicit user selection, and use the effort a handoff returns without asking again.
 - For a proposal, the `planning_effort` and `dev_effort` hints in `proposal.md` are the initial recommendation; Planning updates `dev_effort` before `plan-accept`. An override at start needs no commit.
@@ -24,11 +24,11 @@ When an activity starts, choose the effort within the authorized scope, state it
 
 ## Rules
 
-- Gates, exit checks and `required` policies hold at every effort; effort sets only the optional procedure above them. On the Unit path, record the review envelope also at `low`.
+- Gates, exit checks and `required` policies hold at every effort; effort sets only the optional procedure above them. On the Unit path, record the review envelope at `low` too.
 - At `medium` and `high` the initial review runs in a subagent regardless of change size; a worker nests it (Host → worker → `code-reviewer`). On the Unit path the caller records its fields as the envelope.
 - The implementer writes the Living Spec reflection and `reconcile.md` at every effort. Each verification is a `reconcile-check` envelope; fix findings in the reconcile and check again, not by reopening the code review.
 - At `medium`, the implementer MAY skip the first `reconcile-reviewer` call only when every affected contract and document is identified, its agreement with the diff is shown, and nothing is cross-component or open to interpretation. Cross-component means behavior or agent-facing text changes in more than one package or capability area, or in a package and the repository tooling; the change's own Living Spec reflection does not count. If any condition is uncertain, call the reviewer. When skipping, record the reason and evidence in the `reconcile-check` envelope as self-verification.
 - After the initial `medium` review, the implementer verifies fixes itself and calls the reviewer again only for expanded scope or uncertain correctness. Name who verified what in `reverify` or the new `reconcile-check`; a failed or stale initial call never counts as the first review.
 - The UX review is an optional delegation, not a stage or a gate (`spec-ux-review`): it runs in Planning on the Screens drafts, or at spec depth inside `specify` (or `characterize`) before the plan; its findings carry no severity and never enter the review loop. A `session` task runs none.
 - Effort never changes integration policy ([completion](completion.md#policy)).
-- A worker records the applied effort with `--effort` in its `worker` envelope, the only authoritative record; a `session` task reports it in its final response or PR body.
+- A worker records the applied effort with `--effort` in its `worker` envelope ([worker records](worker-records.md)); a `session` task reports it in its final response or PR body.

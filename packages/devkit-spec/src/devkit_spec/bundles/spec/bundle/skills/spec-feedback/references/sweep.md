@@ -14,8 +14,8 @@ Read this for a workflow stage sweep, a Planning run's return or a user-requeste
 ## Procedure
 
 1. **Collect** unrecorded observations from this session and `git diff`.
-2. **Deduplicate** against `devkit docs list feedback --status open --all-namespaces -n 0`: a candidate with a listed
-   file's `target` and the same nature is a duplicate. Skip it and keep the listed ID.
+2. **Deduplicate** against `devkit docs list feedback --status open --all-namespaces -n 0`: skip a candidate with a
+   listed file's `target` and the same nature, and keep the listed ID.
 3. **Record** each remaining observation with the skill's recording procedure.
 4. **Report by entry**:
    - **User request**: recorded IDs, duplicate IDs, and the open and critical counts (`--where severity=critical`). If
@@ -36,5 +36,5 @@ Read this for a workflow stage sweep, a Planning run's return or a user-requeste
 
 Before every Planning return to the user, questions included, sweep this run and write a new `feedback` envelope at
 `collect-feedback` under the proposal's `envelopes/`, before the run's `worker` envelope and last commit. An earlier
-PASS does not cover later work even when `next` passes the stage, because the engine does not check freshness; a
+PASS does not cover later work even when `next` passes the stage (the engine does not check freshness), and a
 user-requested sweep does not replace it.
