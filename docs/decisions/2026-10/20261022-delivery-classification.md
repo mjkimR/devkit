@@ -43,7 +43,7 @@ Every request not started now is a draft proposal (`SPEC-backlog-roadmap-and-iss
 also waits as a draft once it is queued. Direct acceptance always ends in a spec Unit with `spec.md`, `plan.md`,
 `tasks.md` and a reconcile, which is heavier than the session the work needs. Deleting a draft is already Backlog
 work, but deleting it in order to do the work as a session lowers the depth the request has by structure (a
-proposal), and the lowering rule allows lowering only through a proposal's handoff (01 §2.2, `classification.md` §3,
+proposal), and the lowering rule allows lowering only through a proposal's handoff (01 §2.2,
 the bundle `AGENTS.md`, `CAP-HARN-agent-guidance`), because an agent could classify low to save cost. The user chose
 to allow it on their explicit decision (`answer-01.yaml`, question `session-reclassification`).
 
@@ -212,7 +212,7 @@ to allow it on their explicit decision (`answer-01.yaml`, question `session-recl
     at stage boundaries; the reconciler verifies the implementer's reconcile at `activity-effort` `high` instead of
     drafting it. (ADR-task-kind-and-planning-depth)
   - Completed specs bound to the retired workflow ids keep their binding as history. (ADR-task-kind-and-planning-depth)
-  - The lowering rule gains one stated exception in 01 §2.2 and Q19, `classification.md` §3, the bundle `AGENTS.md`,
+  - The lowering rule gains one stated exception in 01 §2.2 and Q19, the bundle `AGENTS.md`,
     `CAP-HARN-agent-guidance` and the `CAP-DLV-delivery-workflows` non-goal on depth changes; `backlog.md` grants the
     deletion, and `feedback-retirement.md`, `CAP-DLV-proposal-incubation` §3.1, the `sdd-proposal` feedback paragraph
     and 01 §6.2 list it among the deletions that preserve open feedback.

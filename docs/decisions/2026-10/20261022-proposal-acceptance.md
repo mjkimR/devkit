@@ -64,7 +64,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
 - Keep the `sdd-proposal` schema: `collect-feedback` is shared with Development and must stay required for Planning.
 - Depth is not size (01 §2.2): small work can need its direction decided, large work can be clear.
 - A draft whose existence means the direction is open must never skip Planning: a supersede reverses an earlier
-  `plan-accept`, and a depth escalation exists because the direction must be decided first (`classification.md` §4).
+  `plan-accept`, and a depth escalation exists because the direction must be decided first (`depth-and-close.md`).
 - The user's explicit `plan-accept` is the safeguard; the rule must not pretend a tool can judge a direction.
 - Exact review identity, explicit user authority, local MCP priority, bounded retry, existing integration ownership,
   and a read-only viewer outweigh automatic regeneration or invisible recovery.
