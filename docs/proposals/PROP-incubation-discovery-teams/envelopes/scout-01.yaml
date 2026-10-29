@@ -1,0 +1,33 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-29T06:24:04.610798Z'
+status: completed
+summary: Existing context and material notes support SDD-independent discovery; native roadmap and capability semantics require explicit boundaries.
+findings:
+- issue: Project-owned context and material notes provide an SDD-independent discovery output.
+  evidence: CAP-DLV-idea-incubation Current context; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/seed/docs/README.md:3-18; CAP-DOCS-document-model:143-155
+  suggested_action: Link proportionate labelled research/planning notes from mutable incubation context; use indexed material semantics only when identity is needed.
+  resolution: open
+- issue: Native capabilities and milestone/proposal semantics exceed an unvalidated discovery recommendation.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/capability.md:15-25; templates/milestone.md:12-35; ADR-roadmap-and-milestones:142-173; ADR-document-and-sdd-bundles:34-45
+  suggested_action: Keep proposed behavior and roadmap conditional; apply native document semantics explicitly rather than invent current capability or SDD commitments.
+  resolution: open
+- issue: Existing roles handle next questions, one uncertainty and observed usage, leaving broader exploration/synthesis responsibilities undefined.
+  evidence: packages/devkit-catalog/src/devkit_catalog/incubation/bundle/subagents/product-clarifier.md:33-40; incubation-researcher.md:33-39; usage-reviewer.md:33-39
+  suggested_action: Keep existing role boundaries and assign distinct alternative-development, cross-candidate criticism and synthesis responsibilities without granting context or Git writes.
+  resolution: open
+- issue: Asset/format checks cannot establish semantic discovery quality.
+  evidence: ADR-keep-incubation-guidance-opt-in-and-current-state-based:55-63; CAP-DOCS-document-model:58-79,174-194
+  suggested_action: Use observed bounded research and fresh-context resume exercises; synthetic role returns verify fold-back only and do not establish live research quality.
+  resolution: open
+assumptions:
+- Codex route emulated; read-only role; before/after snapshot unchanged.
+unverified_areas:
+- Future discovery workflow and actual agent quality were not exercised.
+checks: {}
+diff_scope:
+  base: d9ad366c8cb93cb490b9b6b255c22676caa6403b
+  head: 4ef0edc2b9f78fb50a0b7346f74103bbbcfeed2b
+activity_effort: medium

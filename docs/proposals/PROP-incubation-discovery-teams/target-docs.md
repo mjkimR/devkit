@@ -1,50 +1,71 @@
 ---
 id: PROP-incubation-discovery-teams-target
-title: Target Living Spec Structure for PROP-incubation-discovery-teams
+title: Target Living Spec for incubation discovery teams
+summary: "Extend incubation contracts with an explicit research entry, adaptive teams and honest pre-development document and roadmap synthesis."
 status: draft
 proposal: PROP-incubation-discovery-teams
 created_at: 2026-10-29
-# The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
-# devkit spec scope compare reads them to find overlaps with other work.
-targets: []
+targets:
+  - file: docs/capabilities/delivery/CAP-DLV-idea-incubation.md
+  - file: docs/usecases/delivery/UC-incubate-an-idea.md
+  - file: docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md
 ---
 
-# [Blueprint] PROP-incubation-discovery-teams: Target Living Spec Structure for Incubation discovery teams for product direction and roadmap
+# Target Living Spec for PROP-incubation-discovery-teams
 
-This document defines the target blueprint of how the docs/ backbone (Living Spec) will evolve if proposal PROP-incubation-discovery-teams is accepted. It represents a hypothesis plan subject to adjustment during implementation. Upon handoff, it is copied into specs/ to serve as a baseline for plan.md boundaries and reconcile.md targets.
+This blueprint describes the proposed retained contracts, not implemented behavior.
 
----
+## 1. Capabilities
 
-## 1. System Capabilities Plan (docs/capabilities/)
+Extend `CAP-DLV-idea-incubation` with explicit research entry, adaptive master/team assignments, research source
+limits, independent alternatives, optional cross-candidate criticism, initial document/roadmap synthesis and resume.
+Keep existing next-action iteration, approach inspection, six-role optionality and project-owned context rules.
 
-<Specify new, modified, or deprecated CAP documents, rationale, and key changes.>
+## 2. Use Cases
 
----
+Update `UC-incubate-an-idea` to distinguish a suggested research invocation from automatic broad discovery or
+implementation. Existing small inline work and actual-usage verification remain supported.
 
-## 2. Use Cases Plan (docs/usecases/)
+Add UC-research-an-idea-and-shape-a-roadmap under `docs/usecases/delivery/`. Its main scenario is explicit
+invocation, policy/context recovery, scoped research allocation, validated comparison, document synthesis and
+return of an initial roadmap and unresolved user decisions. Extensions cover missing user facts, invalid approach,
+insufficient evidence, absent delegation, duplicate directions, failed/out-of-scope returns and fresh-context resume.
+Link the use case and capability both ways. No screens or product UI are introduced.
 
-<Specify new or modified UC documents, their scenarios and updated acceptance criteria.>
+## 3. Decisions and Architecture
 
-### Screens (docs/ux/)
+PADR-extend-incubation-with-optional-discovery-teams supersedes
+`ADR-keep-incubation-guidance-opt-in-and-current-state-based`, preserving its opt-in/content-only ownership,
+source-specific evidence and mutable current context while adding the explicit entry and three optional roles.
 
-<Only when the proposal changes what a person sees: one draft per screen, modal or panel in the ux template's shape
-(ux-writing), with the use case step citations and docs/steering/ux-objects.md rows they need. Write IDs this proposal
-creates as plain text. Drop this subsection otherwise.>
+PADR-keep-discovery-plans-distinct-from-delivery-commitments defines labelled project-owned discovery output
+rather than invented current capability or implicit SDD work. Both are promoted through ordinary proposal handoff.
 
----
+`ARCH-05-2-components` already permits catalog-owned content-only incubation assets; no component, runtime or
+dependency direction changes. There is no architecture-document target unless implementation discovers one.
 
-## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
+## 4. Assets and References
 
-<Specify impacted ARCH documents and candidate ADRs (PADRs).>
+Within `packages/devkit-catalog/src/devkit_catalog/incubation/bundle/`:
 
----
+- Add `skills/incubate-research/SKILL.md` with conditional references for orchestration and synthesis.
+- Add `subagents/direction-explorer.md`, `subagents/discovery-critic.md` and `subagents/discovery-planner.md`.
+- Update `bundle.toml`, the existing incubation entry/references, guidance pointer and current-context template
+  only where needed to describe the research doorway, role boundaries and retained discovery pointers.
+- Reuse existing role IDs and one-question research contracts; update tool access only where actual web research
+  requires a supported native capability.
 
-## 4. Development Conventions & Governance (docs/development/ & .devkit/)
+Update the catalog README with invocation examples and output/authority limits. Consumer guidance contains no
+repository-specific CAP/ADR IDs and does not require a spec bundle.
 
-<Specify new rules, workflows, skills, or CLI changes.>
+## 5. Verification and Before/After
 
----
+Before: one iterative entry and three optional support roles; direction comparison and document synthesis are
+left mostly to the coordinator's general judgment.
 
-## 5. System Before & After Comparison (Before & After)
+Proposed: one additional explicitly invoked research skill, six optional role contracts, adaptive assignments and
+a proportionate pre-development research/document/roadmap result. Existing incubation remains useful by itself.
 
-<Compare As-Is and To-Be structures, optionally with Mermaid diagrams.>
+Use catalog integration/e2e tests for distribution, docs-only installation, retained IDs, native projection and
+context preservation. Use observed bounded walkthroughs for substantive candidate comparison, evidence support,
+critic behavior, synthesis and fresh-context resume. Missing live-agent coverage remains explicit.
