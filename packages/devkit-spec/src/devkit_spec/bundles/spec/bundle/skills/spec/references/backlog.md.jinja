@@ -8,12 +8,12 @@ Backlog keeps queued requests as draft proposals, follow-ups as feedback and mil
 - Before editing, splitting or deleting a draft, fetch (within existing network authorization) and run `devkit spec proposal check <slug>`; on `SPEC_PROPOSAL_IN_PLANNING`, leave the draft to its Planning branch.
 - Promote open feedback into drafts only through the `feedback-hygiene` playbook.
 - Decompose with `devkit spec proposal new <child> --decomposed-from PROP-<parent>`: keep the parent's `--milestone MS-<slug>`, choose each child's effort hints afresh, and delete the parent in the same commit after [feedback retirement](feedback-retirement.md).
-- Delegate the split to the `decomposer` (Backlog roles, below) only from Backlog and never on your own initiative: for a `needs_decompose` draft once its Planning return is merged, on the user's request to split a draft, and for an `XL` draft.
+- Delegate the split to the `decomposer` only from Backlog, never on your own initiative: for a `needs_decompose` draft once its Planning return is merged, on the user's request to split a draft, and for an `XL` draft.
 - Commit Backlog edits in the current checkout, outside the worktree and PR policies, with only their agreed files. Commit a direct acceptance or a reclassification deletion only on the base checkout, once you know you can push to the base. Undo a stranded commit with `git revert`.
 
 ## The XL size gate
 
-`size: XL` means the work would need two or more specs or a different `task_kind`. A rough `XL` draft stays valid in Backlog, but cannot pass `plan-intent` or start Planning: the `intent-proposal` exit reads `size` absent or exactly `S`, `M` or `L`, so `devkit workflow next` shows `frontmatter(proposal.md size S|M|L|)` unmet. Read that as "decompose first"; never edit the size to pass it. The exits, both through the `decomposer` and applied on the user's decision:
+`size: XL` means the work would need two or more specs or a different `task_kind`. A rough `XL` draft stays valid in Backlog but cannot pass `plan-intent` or start Planning: the `intent-proposal` exit needs `size` absent or exactly `S`, `M` or `L`, so `devkit workflow next` shows `frontmatter(proposal.md size S|M|L|)` unmet. Read that as "decompose first"; never edit the size to pass it. Both exits go through the `decomposer` and apply on the user's decision:
 
 - **Split**: decompose as above, one child per `--decomposed-from`.
 - **Promote**: with three or more children or a long-running theme, create `docs/roadmap/MS-<slug>.md` (Milestones, below) and place the children in it; apply the relation to the parent's milestone the return proposes, resetting that milestone's completion review as a scope change requires.
@@ -24,9 +24,9 @@ A decomposer `needs_input` on an `XL` draft means it was mis-sized: show the use
 
 `triage` (the `feedback-hygiene` playbook, Step 1) and `decomposer` are read-only: they return a message, recorded in no envelope, and the Host applies only what the user decides.
 
-1. **Before**: the checkout is clean (`git status --porcelain` empty); on a dirty one, delegate from a clean task worktree or stay inline. For the `decomposer`, `devkit spec proposal check <slug>` passes on the base and a Planning return is merged first; pass the base HEAD as `diff_scope.head`.
-2. **After**: `git status --porcelain` is still empty (`spec-delegate` step 4). Before applying a split, `git diff <head> -- docs/proposals/PROP-<slug>` is empty and `devkit docs refs PROP-<slug> --direction in -n 0` is unchanged; a change in either sends the draft back to the role or inline.
-3. **IDs**: every existing ID the return cites resolves with `devkit docs resolve`, or drop it and report it; a proposed child or milestone slug must not resolve. Write edges to children after the children exist, in the same commit.
+1. **Before**: the checkout is clean (`git status --porcelain` empty); otherwise delegate from a clean task worktree or stay inline. For the `decomposer`, `devkit spec proposal check <slug>` passes on the base after any Planning return is merged; pass the base HEAD as `diff_scope.head`.
+2. **After**: `git status --porcelain` is still empty (`spec-delegate` step 4). Before applying a split, `git diff <head> -- docs/proposals/PROP-<slug>` is empty and `devkit docs refs PROP-<slug> --direction in -n 0` is unchanged; otherwise send the draft back to the role or work inline.
+3. **IDs**: every existing ID the return cites resolves with `devkit docs resolve`, or drop and report it; a proposed child or milestone slug must not resolve. Write edges to children after the children exist, in the same commit.
 4. **Apply** with the existing procedures: `feedback-hygiene` Steps 2 and 3; `proposal new --decomposed-from` (with `--milestone`), `devkit spec proposal padr` and a materials copy for each inherited item the user keeps, the prerequisite disposition and the feedback retirement. Never assign the parent's open feedback to a child.
 5. **Record**: the Backlog commit body names the role used. Gates and milestone status changes stay with the user.
 
@@ -34,8 +34,8 @@ A decomposer `needs_input` on an `XL` draft means it was mis-sized: show the use
 
 When a Planning run returns a draft with `needs_decompose: true` ([Planning](planning.md)), the Host:
 
-1. Establishes authority to merge the return under the existing Git policy, reusing existing authorization for these exact effects. The return is not `plan-accept`.
-2. Merges it with `devkit worktree finish plan-<slug> --merge --local-only` from the base, or through a PR when policy requires one. The unit integration path cannot integrate a draft; never manufacture `plan-accept` for it.
+1. Establishes authority to merge the return under the Git policy, reusing existing authorization for these exact effects. The return is not `plan-accept`; never manufacture one for it.
+2. Merges it with `devkit worktree finish plan-<slug> --merge --local-only` from the base, or through a PR when policy requires one; the unit integration path cannot integrate a draft.
 3. Coordinates the removal of a fetched remote Planning branch; never delete only its tracking ref.
 4. Creates the children with `--decomposed-from` only after `devkit spec proposal check <slug>` passes on the base.
 
@@ -66,9 +66,9 @@ Before splitting, superseding, rejecting, deleting or reclassifying a proposal:
 
 ## Milestones
 
-- Keep planned/active milestones at `docs/roadmap/MS-<slug>.md` and done/dropped at `docs/roadmap/_archive/MS-<slug>.md`; filenames, IDs and aliases stay unchanged.
+- Planned/active milestones live at `docs/roadmap/MS-<slug>.md`, done/dropped at `docs/roadmap/_archive/MS-<slug>.md`; filenames, IDs and aliases stay unchanged.
 - Create `docs/roadmap/MS-<slug>.md` from `.devkit/managed/docs/templates/milestone.md` and follow its section guidance; membership lives only in a direct proposal's `milestone` field.
-- A milestone, in any status, frames a theme and binds nothing: proposal Planning concretizes and settles scope and requirements. In design discussions and Planning, judge options on their merits; never use the milestone's goal, exit condition or non-goals as constraints.
+- A milestone, in any status, frames a theme and binds nothing: proposal Planning settles scope and requirements. Design discussions and Planning judge options on their merits, never against the milestone's goal, exit condition or non-goals.
 - Every status change is the user's decision on a concrete candidate. Activate: show each dependency not `done` or `dropped`. Close and drop: follow [milestone completion](milestone-completion.md), which also governs the file move. Reopen: move back to the root, set active and reset both assertions to pending in one approved commit.
 - Merge: on the user's decision, small milestones of any status may merge into a broader theme milestone, from the root or `_archive/`. In one commit, list the merged IDs in the theme's `aliases`, restate its goal and exit condition with both Completion review assertions pending, delete the merged files, run `devkit rules fix` and remove `depends_on` edges between the merged milestones; completed specs and Git keep the delivery record. The theme's status selects its location.
 - After a merge, move remaining scope to draft proposals in the theme, keep the theme `planned` or `active` while scope remains, and close it only through [milestone completion](milestone-completion.md).

@@ -1,25 +1,25 @@
 # Completion and approval policy
 
-Read this when approaching review or completion, and before any gate or Git action.
+Read when approaching review or completion, and before any gate or Git action.
 
-Before reporting completion, classify the Living Spec impact: contracts → capabilities or use cases, structure → architecture, decisions and lasting policy → ADRs, changed policy → rules or playbooks. A new general rule or reusable procedure is an optional draft; a no-impact change needs a stated reason.
+Before reporting completion, classify the Living Spec impact: contracts → capabilities or use cases, structure → architecture, decisions and lasting policy → ADRs, changed policy → rules or playbooks. A new general rule or reusable procedure is an optional draft; no impact needs a stated reason.
 
 ## Policy
 
 The constitution defines the boundaries and their `ask|auto` values. Run `devkit spec policy` before deciding one.
 
 - An `ask` boundary needs authority for its exact effects; reuse an explicit decision already given instead of asking again.
-- `auto` delegates the boundary to the Host after readiness checks; report the policy as the authority, never as a human approval or review.
+- `auto` delegates the boundary to the Host after readiness checks; report the policy as the authority, never as human approval or review.
 - A stale source invalidates the old request: inspect the partial state and authorize only the remaining effects, preserving the source SHA, authority and recovery state.
 - Planning integration is part of `plan-accept`; `dev-integration` governs only the final Development result.
-- Neither value bypasses readiness, host restrictions or publication policy, or grants commit or publication authority. After a host refusal, do not switch execution routes to evade it.
+- Neither value bypasses readiness, host restrictions or publication policy, or grants commit or publication authority. Never switch execution routes to evade a host refusal.
 - The Host gives approval after validating worker boundaries, committed scope and required checks; workers return that evidence and never ask for business approval.
 {% if execution.environment == "local" %}- Under `ask`, the Host presents the exact source, report, target and effects, obtains the user's conversational decision, then invokes the CLI. CLI invocation alone is not approval, and the CLI does not authenticate the conversation.
 {% else %}- Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval.
 {% endif %}
 ### `dev-integration`
 
-- `policy=ask`: present the verified result, then obtain the user's OK:
+- `policy=ask`: present the verified result and obtain the user's OK:
 {% if execution.environment == "local" %}  - Run `devkit integration prepare <branch> --task-kind unit --task-id <id> --unit <dir> --route local --format json`, present its exact scope with the verified result, then run `devkit integration integrate <branch> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>` after the user's conversational OK. A changed digest requires a fresh preparation and decision. A PR route uses `--route pull-request` and requires separate publication authority.
 {% else %}  - Explicit CLI route: a conversational OK unless already authorized. A PR: its ready state.
 {% endif %}  - Never write the OK to a file. Pass `--given dev-integration` to each later `devkit workflow next --unit <dir>`, and name the actual conversational or policy authority in the integration report.
@@ -31,11 +31,11 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 ## Reconciliation evidence
 
 - Set `reconcile.md` to `resolved` only when every target is reflected in the comparison diff or has a waiver of at least 20 non-whitespace characters. A required contract mismatch cannot be waived.
-- The rules require each `modified` target to change on the branch (earlier commits since the merge base count) but do not prove semantic impact; compare it yourself.
+- The rules require each `modified` target to change on the branch (commits since the merge base count) but do not prove semantic impact; compare it yourself.
 - Verify the reconciliation with a `reconcile-check` envelope at `living-spec-draft` at every effort ([effort](effort.md), [review loop](review-loop.md)). After review fixes or changed inputs, recheck the impact and return `reconcile.md` to `pending` for new targets.
 - An intermediate commit is never completion evidence: the final cumulative check runs on the integrated head. Before {% if execution.environment == "local" %}the native approval{% else %}integration approval{% endif %}, prepare the task branch against the base, re-verify changed paths and run the cumulative check.
 
-A `session` task follows its workflow's completion conditions; do not abandon remaining authorized work for a session time limit. If the task addresses named feedback, follow [source feedback](source-feedback.md).
+A `session` task follows its workflow's completion conditions; never abandon remaining authorized work for a session time limit. For a task addressing named feedback, follow [source feedback](source-feedback.md).
 
 ## Deferred Work Handoff
 

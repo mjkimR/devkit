@@ -1,16 +1,16 @@
 # Worktree procedure
 
-Read this before work that runs in a task worktree: every `spec` and `proposal` activity in `direct` mode under `[GIT_POLICY: worktree=required ...]`, and any task the `GIT_POLICY` levels in [git policy](git-policy.md) put in a worktree under `auto`. A request that names the checkout ("on main", "in this worktree") overrides the policy for that task only ([git policy](git-policy.md) deviations).
+Read this before work in a task worktree: every `spec` and `proposal` activity in `direct` mode under `[GIT_POLICY: worktree=required ...]`, and any task the [git policy](git-policy.md) levels put in a worktree under `auto`. A request that names the checkout ("on main", "in this worktree") overrides the policy for that task only ([git policy](git-policy.md) deviations).
 
 - `<base>` is the checkout the request arrived in; `<branch>` is `plan-<slug>` or `dev-<slug>` ([branches](branches.md)).
-- Policy is read from the checkout a command runs in, so a running branch sees a base policy change only after merging the base.
+- Policy is read from the checkout a command runs in: a running branch sees a base policy change only after merging the base.
 
 ## 1. Start (in `<base>`, before any bundle or edit)
 
 - `proposal` Planning: `devkit worktree start plan-<slug>` and the printed `cd`; the proposal bundle is the unit.
-- `proposal` Development: present the accepted proposal and worktree/setup effects, obtain conversational approval under `ask`, then run `devkit spec proposal handoff <slug> --effort low|medium|high` from the retained base. Under `auto`, the command reads `proposal-handoff` from the base and uses the declared `dev_effort`.
-  - Continue in the returned worktree path with the selected effort; run `devkit workflow next --unit <dir>` and the post-handoff link check.
-  - On a partial result, inspect `devkit worktree status` and preserve the created worktree for recovery.
+- `proposal` Development: present the accepted proposal and its worktree/setup effects, obtain conversational approval under `ask`, then run `devkit spec proposal handoff <slug> --effort low|medium|high` from the retained base. Under `auto`, the command reads `proposal-handoff` from the base and uses the declared `dev_effort`.
+  - Continue in the returned worktree path at the selected effort; run `devkit workflow next --unit <dir>` and the post-handoff link check.
+  - On a partial result, inspect `devkit worktree status` and keep the created worktree for recovery.
 - `spec` depth: `devkit worktree start dev-<slug>`, the printed `cd`, then `devkit spec new <slug>` (`--workflow sdd-spec-bugfix` for a defect); record `plan-intent` and commit.
 - `session` depth bound for a PR: `dev-<slug>`, in a worktree only when the `GIT_POLICY` levels call for one, else `--no-worktree`; no bundle.
 - On `WORKTREE_BRANCH_EXISTS`, continue the branch ([branches](branches.md) §3) or choose another slug.
@@ -18,20 +18,20 @@ Read this before work that runs in a task worktree: every `spec` and `proposal` 
 ### Sandboxed sessions
 
 - The task worktree is always `<parent of base>/<base name>-wt-<branch>`, beside the base checkout. `--workspace-root` only names a directory inside the checkout to start from; it does not move the worktree.
-- A linked worktree's commits write the base's shared Git directory (`git -C <worktree> rev-parse --git-common-dir`): its index, refs and objects live outside the worktree.
-- If either path is outside the session's writable roots, request the host's approval for each operation that needs it, naming the operation and target, or continue once the user has added the path to the writable roots. Never move or re-create the worktree elsewhere, copy the repository, or change a host setting yourself.
+- A linked worktree's commits write the base's shared Git directory (`git -C <worktree> rev-parse --git-common-dir`): index, refs and objects live outside the worktree.
+- If either path is outside the session's writable roots, request the host's approval for each operation that needs it, naming operation and target, or continue once the user adds the path to the writable roots. Never move or re-create the worktree elsewhere, copy the repository, or change a host setting yourself.
 
 ## 2. Work (in the worktree)
 
-Run the workflow's stages, check each boundary with `devkit workflow next --unit <dir>` and commit on `<branch>` at every boundary. Push nothing and merge nothing into the base before `dev-integration`.
+Run the workflow's stages; at every boundary check with `devkit workflow next --unit <dir>` and commit on `<branch>`. Push nothing and merge nothing into the base before `dev-integration`.
 
 ## 3. Integrate and finish (in `<base>`)
 
 `spec-integrate` owns the merge routes and their recovery. Finishing the worktree adds:
 
-- Through a PR: after the merge, run `devkit worktree finish <branch>` (no `--merge`). A PR merged by squash or rebase stays `WORKTREE_UNMERGED`; remove that worktree and branch only with the user's authorization.
-- A conflict in `.devkit/installation.json` when integrating the base: keep either side, run `devkit sync` and stage the receipt it writes.
-- On `POST_FINISH_EXTENSION_FAILED`, resolve the cause, then run `devkit spec scope sweep --apply` and `devkit spec proposal prune <slug>`. After local integration has already landed, `devkit worktree finish <branch> --local-only` validates and performs only remaining guarded cleanup.
+- Through a PR: after the merge, run `devkit worktree finish <branch>` (no `--merge`). A squash- or rebase-merged PR stays `WORKTREE_UNMERGED`; remove that worktree and branch only with the user's authorization.
+- A `.devkit/installation.json` conflict when integrating the base: keep either side, run `devkit sync` and stage the receipt it writes.
+- On `POST_FINISH_EXTENSION_FAILED`, resolve the cause, then run `devkit spec scope sweep --apply` and `devkit spec proposal prune <slug>`. After local integration already landed, `devkit worktree finish <branch> --local-only` validates and performs only the remaining guarded cleanup.
 - A refused finish runs no cleanup and leaves the task registered; `devkit spec scope release -w <worktree path>` withdraws an abandoned task.
 - `WORKTREE_DIRTY`: commit or discard in the worktree, never remove it by force. `WORKTREE_LOCKED`, and `WORKTREE_NOT_FOUND` for a merged branch devkit did not create: act only once the user agrees.
 

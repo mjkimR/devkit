@@ -1,15 +1,10 @@
 # Current facts, resume and voluntary adoption
 
-1. Before resume, read project-owned `.devkit/incubation.md` when it exists and compare its next action with current files and relevant source/artifact identity.
-2. If the context is absent or stale, recover current facts from implementation, run instructions and the user; do not reconstruct discarded experiments or an entire conversation.
-3. Create or update it from `.devkit/managed/incubation/templates/current-context.md` when useful; read the template, never execute it or overwrite existing project content wholesale.
-4. Keep current goal, users, constraints and representative flow; separate retained user decisions, implementation choices and assumptions requiring evidence.
-5. Keep executable setup/run/check instructions, observed results and their source/artifact identity, limitations, open questions and the next useful action.
-6. Remove superseded choices or experiments that no longer inform the product; retain an uncertainty while it still affects the next action.
-7. Preserve unrelated content and secrets/PII boundaries; record references instead of sensitive data.
-8. Before pausing or handing off, update changed resume facts and explain unverified evidence; only the coordinator writes this file.
-9. If the user explicitly requests SDD adoption, explain preparing the spec package/assets while the effective approach remains incubation.
-10. Once the `sdd-baseline` playbook in `spec:core` is available and invoked or confirmed, route retained current facts to it; it owns readiness, exact activation effects and recovery.
-11. Do not activate SDD from this skill, infer graduation from size/time/experiment count or reconstruct earlier delivery records.
-
-A small app can finish or stay maintained in incubation; documents, context or the spec package existing is not an activation decision.
+1. Before resuming, read project-owned `.devkit/incubation.md` if it exists and check its next action against the current files and source/artifact identity.
+2. If it is absent or stale, recover current facts from the implementation, run instructions and the user; do not reconstruct discarded experiments or the whole conversation.
+3. Create or update it from `.devkit/managed/incubation/templates/current-context.md` (read the template, never execute it); never overwrite existing project content wholesale, and record references instead of secrets or PII.
+4. Record the goal, users, constraints and representative flow, keeping retained user decisions, implementation choices and assumptions needing evidence apart; then setup/run/check instructions, observed results with their source/artifact identity, limitations, open questions and the next useful action.
+5. Remove superseded choices and experiments that no longer inform the product; keep an uncertainty while it affects the next action.
+6. Before pausing or handing off, update changed resume facts and explain unverified evidence.
+7. On an explicit SDD adoption request, explain preparing the spec package/assets while the effective approach stays incubation. Once the `sdd-baseline` playbook in `spec:core` is available and invoked or confirmed, route the retained current facts to it; it owns readiness, exact activation effects and recovery.
+8. Never activate SDD from this skill, infer graduation from size, time or experiment count, or reconstruct earlier delivery records; existing documents, context or the spec package are no activation decision.

@@ -12,10 +12,11 @@ of `sdd-spec-bugfix`), keeping its frontmatter. A bugfix bundle has none yet: cr
 ## Rules
 
 - Each task yields one result that can be verified on its own; keep code and its tests in one task.
-- `_Boundary:` estimates the paths the task touches; make a needed extra path and explain it in the report. A task a `development-worker` builds also names the `docs/` paths its checks require,
-  because its `spec-delegate` write scope is strict.
-- `_Requirements: AC-01, AC-02_` on a child line indented two spaces links the scenarios the task serves; every
-  `[AC-NN]` is covered by a task.
+- `_Boundary:` estimates the paths the task touches; a needed extra path is made and explained in the report. A task
+  a `development-worker` builds also names the `docs/` paths its checks require, because its `spec-delegate` write
+  scope is strict.
+- `_Requirements: AC-01, AC-02_` on a child line indented two spaces links the scenarios the task serves; a task
+  covers every `[AC-NN]`.
 - Tasks hold implementation and verification only. Review, Living Spec sync and a bugfix's envelopes are stage
   evidence; the reproduction test is a task.
 - Write no task counts; progress comes from the checkboxes.

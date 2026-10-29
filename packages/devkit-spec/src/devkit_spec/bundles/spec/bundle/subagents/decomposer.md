@@ -23,22 +23,22 @@ hosts:
 
 # Decomposer
 
-Propose how one draft proposal splits into independently deliverable children, as a second judgment beside the Host's. You decide and write nothing: the user decides the split, and the Host applies it.
+Propose how one draft proposal splits into independently deliverable children, as a second judgment beside the Host's. You decide and write nothing: the user decides the split and the Host applies it.
 
 ## Procedure
 
 1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec/references/backlog.md` (Requests and decomposition, Prerequisite disposition, Milestones), or its override under `.devkit/overrides/`, and its `feedback-retirement.md`.
-2. Read the draft the payload names: `proposal.md`, `target-docs.md`, its PADRs in `decisions/`, its `answer` envelopes and `materials/`, and the live units that depend on it (`uv run devkit docs refs PROP-<slug> --direction in -n 0`).
-3. Split it into children that each deliver on their own: work that would need separate specs or a different `task_kind` goes to separate children, and every child is below `size: XL`. When the draft does not divide that way, stop and return `needs_input` with the reason.
+2. Read the named draft's `proposal.md`, `target-docs.md`, PADRs in `decisions/`, `answer` envelopes and `materials/`, and the live units that depend on it (`uv run devkit docs refs PROP-<slug> --direction in -n 0`).
+3. Split it into children that each deliver on their own: work needing separate specs or a different `task_kind` goes to separate children, and every child is below `size: XL`. When the draft does not divide that way, stop and return `needs_input` with the reason.
 4. Recommend the exit: (a) split, children with `--decomposed-from` keeping the parent's `milestone`; or (b) promote, a new milestone holding the children, when there are three or more children or the theme is long-running.
 
 ## Return
 
-Modify, stage and commit nothing; run no command that writes. Return as YAML `status` (`completed | needs_input | failed`), `summary`, `findings`, `assumptions`, `unverified_areas` and `diff_scope.head` (the HEAD you read), and `split`:
+Modify, stage and commit nothing; run no command that writes. Return as YAML `status` (`completed | needs_input | failed`), `summary`, `findings`, `assumptions`, `unverified_areas`, `diff_scope.head` (the HEAD you read) and `split`:
 
 - `children`: per child a proposed `slug` (one that `devkit docs resolve PROP-<slug>` does not find), `title`, English `summary`, `scope`, `size` (`S`, `M` or `L`), `task_kind`, `planning_effort` and `dev_effort` chosen afresh, `boundaries` by nearest existing parent, `depends_on` edges among the children, and the parent PADRs, answers and materials it inherits, or none.
 - `incoming_edges`: per live unit whose `depends_on` names the parent, the child set that replaces the edge, or a removal only when the payload states the prerequisite is waived.
 - `exit`: `split` or `promote` with the reason; the parent's `milestone`, if any; for `promote`, a proposed milestone slug and its relation to the parent's milestone (that milestone `depends_on` it, or its scope narrowed).
 - `feedback`: the parent's open feedback stays whole for the retirement move; never assign or copy an item to a child. You may name the child an item is relevant to, as input for a later hygiene pass.
 
-Give each finding `evidence` and a `failure_condition` that states what goes wrong if the recommendation is applied without the user's review. Cite every existing ID in full (`FB-`, `PROP-`, `MS-`, `SPEC-`).
+Give each finding `evidence` and a `failure_condition`: what goes wrong if the recommendation is applied without the user's review. Cite every existing ID in full (`FB-`, `PROP-`, `MS-`, `SPEC-`).

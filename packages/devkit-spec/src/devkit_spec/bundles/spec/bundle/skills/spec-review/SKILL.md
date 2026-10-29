@@ -6,14 +6,14 @@ description: Verify the git diff, acceptance criteria and test results before de
 # spec-review: Pre-Completion Verification Workflow
 
 Use at the `review-refine` stage (all tasks checked) or before submitting a pull request. Review committed content
-so the envelope's `--head` names it; if uncommitted changes are included, say so in `assumptions`.
+so the envelope's `--head` names it; state any included uncommitted changes in `assumptions`.
 
 ## Constraints
 
 - Never weaken, delete or rewrite tests or acceptance criteria to make a check pass; record the limitation as a
   finding, and a needed contract change as a problem for the Host.
 - At `activity-effort` medium and high the `code-reviewer` role runs this skill through `spec-delegate`; at low, the
-  Developer. Each finding carries `evidence`, a `failure_condition` and a `severity` of `P1`, `P2` or `P3` at every
+  Developer does. Each finding carries `evidence`, a `failure_condition` and a `severity` of `P1`, `P2` or `P3` at every
   effort. Rounds and re-verification: the `spec` skill's `references/effort.md` and `references/review-loop.md`.
 - Zero findings is a valid PASS.
 
@@ -26,7 +26,7 @@ delegated write scope), implemented non-goals or unrequested features, stray fil
 
 ### Step 2: Acceptance criteria
 
-Every `[AC-NN]` scenario in `spec.md`, including its edge and error cases, is tested and passing; no non-goal is
+Every `[AC-NN]` scenario in `spec.md`, edge and error cases included, is tested and passing; no non-goal is
 implemented. A bugfix has its Red and Green envelopes and keeps the regression test.
 
 ### Step 3: Checks
@@ -37,8 +37,8 @@ named frontend checks), the linters, and `devkit rules check --staged` (staged) 
 
 ### Step 4: Drift
 
-Record each requirement, API change or constraint the implementation revealed as a finding; one that changes the
-agreed contract is a problem for the Host.
+Each requirement, API change or constraint the implementation revealed is a finding; one that changes the agreed
+contract is a problem for the Host.
 
 ## Report
 
@@ -60,7 +60,8 @@ EOF
 - For a pass, omit `--findings-file`. After fixes, close the round with
   `devkit workflow envelope reverify --unit <dir> --stage review-refine --from latest --resolve <N|all> --waive <N>=<reason>`.
 - A `session`-depth task gives the same content in the final response or PR body.
-- Feedback after a passed review that changes implementation returns to build/reverify; a direction change is a close.
+- Feedback after a passed review that changes the implementation returns to build/reverify; a direction change is a
+  close.
 - After `devkit workflow return`, the earlier review no longer passes `review-refine`: a `reverify` of it closes its
   findings only, and the stage needs a fresh independent review envelope of the fixed range.
 

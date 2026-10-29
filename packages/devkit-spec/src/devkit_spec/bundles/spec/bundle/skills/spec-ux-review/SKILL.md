@@ -5,36 +5,31 @@ description: Review drafted screens before code by walking each linked use case 
 
 # spec-ux-review: UX Walkthrough Review
 
-The `ux-reviewer` role runs this skill in isolation and read-only. It is an optional
-delegation before code, never a stage:
-
-- Planning: on the Screens drafts of `target-docs.md`.
-- Spec depth: after the Screens section of `spec.md` is written and before the plan (inside `specify` before
-  `spec-plan` for `sdd-spec-feature`, inside `characterize` before `plan-tasks` for `sdd-spec-bugfix`), recorded at
-  that stage so its fixes precede `plan.md` and `tasks.md`.
-- The effort reference recommends it at `medium` and `high` when screens change. A `session` task applies the
-  `ux-writing` instruction and runs no review.
+The `ux-reviewer` role runs this skill isolated and read-only: an optional delegation before code, never a stage
+(when to run it: the `spec` skill's `references/effort.md`). It reviews the Screens drafts of `target-docs.md` in
+Planning (recorded at `spike`), or of `spec.md` at spec depth before the plan (recorded inside `specify` for
+`sdd-spec-feature`, `characterize` for `sdd-spec-bugfix`), so its fixes precede `plan.md` and `tasks.md`.
 
 ## Inputs
 
-- The Screens drafts in the UX template's shape (`ux-writing`), with the use case step citations they need.
+- The Screens drafts in the UX template's shape (`ux-writing`), with their use case step citations.
 - The use cases the drafts list in `usecases`, as they will read after the change.
 - `docs/steering/ux-objects.md` when it exists, and the register rows drafted with the screens.
-- The Evidence each draft links (a wireframe, mock-up or screenshot), when present.
+- The Evidence each draft links (wireframe, mock-up or screenshot), when present.
 
 ## Steps
 
 ### Step 1: Walkthrough
 
 Walk each linked use case's main success scenario, then each extension, through the screens its steps cite. At
-every step answer four questions, each with the screen content that decides it:
+every step answer, citing the deciding screen content:
 
 1. Will the actor try to do the right thing here?
 2. Will the actor notice that the control for it is available?
 3. Will the actor connect the control with the goal?
 4. After the action, will the actor see progress toward the goal?
 
-A "no" is a finding naming the use case, the step key and the screen.
+A "no" is a finding naming the use case, step key and screen.
 
 ### Step 2: Rubric
 
@@ -47,17 +42,17 @@ a finding:
 - **R4 feedback**: every interaction gives feedback; irreversible ones confirm or can be undone.
 - **R5 terms**: labels use the use case's and the glossary's terms.
 - **R6 objects**: representations and calls to action match `docs/steering/ux-objects.md` plus the drafted rows for
-  the role; record it as not applicable, with the reason, only when neither the file nor drafted rows exist or no
-  steering slot is free.
+  the role; not applicable, with the reason, only when neither the file nor drafted rows exist or no steering slot
+  is free.
 
 ### Step 3: Link items, by hand
 
-Before code the drafts are not in `docs/ux/`, so `RULE-ux-links` and `RULE-ux-coverage` do not read them; check
-their items on the drafts yourself: `usecases` and Step cells agree with the step citations, every step is covered,
-targets name drafted or existing screens, every screen has an exit, a modal closes, every screen is reachable from
-an entry. Label each such finding `link check (reviewer judgment)` in its `issue` and keep it out of the rubric; the
-rules confirm it at `living-spec-draft`. Use rule results as inputs only for screens already in `docs/ux/` that the
-drafts link and leave unchanged; report them, never re-judge them.
+Drafts are not yet in `docs/ux/`, so `RULE-ux-links` and `RULE-ux-coverage` do not read them; check their items on
+the drafts yourself: `usecases` and Step cells agree with the step citations, every step is covered, targets name
+drafted or existing screens, every screen has an exit, a modal closes, every screen is reachable from an entry.
+Label each such finding `link check (reviewer judgment)` in its `issue` and keep it out of the rubric; the rules
+confirm it at `living-spec-draft`. For screens already in `docs/ux/` that the drafts link and leave unchanged, report
+rule results as inputs; never re-judge them.
 
 ## Report
 
@@ -75,11 +70,10 @@ devkit workflow envelope new --unit <dir> --kind ux-review --stage <specify|char
 YAML
 ```
 
-- At most two rounds per unit. A second round reviews the revised drafts and the first round's findings.
-- In Development the implementer closes the last round with a further `ux-review` envelope that repeats each finding
+- At most two rounds per unit; a second round reviews the revised drafts and the first round's findings.
+- In Development the implementer closes the last round with a further `ux-review` envelope repeating each finding
   with `resolution: resolved`, or `resolution: waived` and a `waiver` reason.
-- In Planning open findings go to the user at `plan-accept`, listed in the acceptance request next to the
-  `challenger` and `scout` envelopes.
+- In Planning open findings go to the user at `plan-accept` (the `spec` skill's `references/planning.md`).
 
 ## Completion
 

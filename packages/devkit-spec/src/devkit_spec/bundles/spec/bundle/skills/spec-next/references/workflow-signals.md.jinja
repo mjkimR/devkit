@@ -12,9 +12,9 @@ once. Record only the authority actually given:
 
 - `plan-intent`: an existing explicit task instruction counts;
   `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user`.
-- `plan-accept`: after the Host presents the findings and effects and receives the user's decision, run
-  `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user`.
-  `proposal-handoff` can share the conversation; each policy stays independent.
+- `plan-accept`: after the Host presents the findings and effects and receives the user's decision,
+  `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user`. `proposal-handoff` can share
+  the conversation; each policy stays independent.
 - A decline: `devkit workflow answer --unit <dir> --request gate:<gate> --action decline --by user --note "<decision>"`.
 {% if execution.environment == "local" %}- `dev-integration`: present the verified report and effects, obtain conversational approval, then run
   `devkit integration integrate` ([policy](../../spec/references/completion.md#policy)).
@@ -33,6 +33,6 @@ once. Record only the authority actually given:
 - `sdd-session-feature`, `sdd-session-bugfix` and `sdd-overall-refactor` have no unit; `next` does not evaluate them.
 - `collect-feedback` is Planning's sweep before `direction-handoff`:
   [run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage).
-- `spike` has no exit check, so `[DONE: ... spike]` is not Planning evidence: the `scout` and `challenger` envelopes
+- `spike` has no exit check, so `[DONE: ... spike]` is not Planning evidence; the `scout` and `challenger` envelopes
   and their `reverify` recorded at `spike` are, at the effort the `spec` skill's `references/planning.md` step 3
   requires.

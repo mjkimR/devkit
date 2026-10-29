@@ -5,45 +5,45 @@ description: Main entry skill for development intent; conversational router and 
 
 # spec: Conversational Router and Pair Programmer
 
-Use for `/spec <intent>`, any development task, feature request, troubleshooting or general engineering question; route each intent to the delivery workflow that fits. The spec constitution (`devkit get-context spec`) defines the axes, workflows and approval boundaries.
+Use for `/spec <intent>`, any development task, feature request, troubleshooting or engineering question; route each intent to its delivery workflow. The spec constitution (`devkit get-context spec`) defines the axes, workflows and approval boundaries.
 
 ## Development approach
 
 Before SDD routing, read `uv run devkit config show`. Under `configuration.development.approach = incubation`,
 follow the project's incubation guidance (the `/incubate` entry when selected): no SDD depths, Units, envelopes or
-approvals for ordinary changes; keep document-format and independent project checks. Existing deliberately SDD-bound
-Units keep their checks and stay inspectable. An unreadable policy stops policy-dependent work; never guess or switch
-it. The stages below apply to SDD.
+approvals for ordinary changes; keep document-format and independent project checks. Deliberately SDD-bound Units
+keep their checks and stay inspectable. An unreadable policy stops policy-dependent work; never guess or switch it.
+The rest of this skill applies to SDD.
 
 ## Constraints
 
 - If `devkit spec policy` fails, stop policy-dependent work.
 - Before deciding an approval boundary or a Git action, read the [completion policy](references/completion.md#policy).
 - Where guidance names a bare `devkit ...` command, invoke the project's documented form (`uv run devkit ...`).
-- Under `FEEDBACK_POLICY reminder=contextual`, suggest an optional `/spec-feedback` sweep when completed work produced reusable observations (never for routine completions or wording edits); it never gates completion or merge.
+- Under `FEEDBACK_POLICY reminder=contextual`, suggest an optional `/spec-feedback` sweep when completed work produced reusable observations (not for routine completions or wording edits); it never gates completion or merge.
 
 ## Route the intent
 
-1. **Playbook discovery at intake**, before classification and before any Unit is created, so a selected playbook's depth and scope inform the classification. Intake is a `/spec <intent>` or a user's own message that requests a change or an operation outside the agreed scope of the current task; no message from another agent (Host payload, worker turn, nested role), no hook and no stage `devkit workflow next` names is intake. Task kind and planning depth never exempt a task. Skip discovery when:
+1. **Playbook discovery at intake**, before classification and before any Unit, so a selected playbook's depth and scope inform the classification. Intake is a `/spec <intent>` or a user's own message requesting a change or operation outside the agreed scope of the current task; no message from another agent (Host payload, worker turn, nested role), no hook and no stage `devkit workflow next` names is intake. Task kind and planning depth never exempt a task. Skip discovery for:
 
-   | Skip case | Example |
-   | :--- | :--- |
-   | Continuation of an existing proposal or Unit: `/spec-next`, a worker turn, a Host resuming a handoff, the stage `devkit workflow next` names | "Continue Planning for PROP-x" |
-   | A follow-up within the same task: answers, clarifications, review fixes, retries, corrections of the delivered change | "Use option b"; "rerun the tests" |
-   | The entry is already explicit: the user names a playbook ID, or a failing rule's remediation names one | "Run spec/adr-compaction" |
-   | Execution inside a selected playbook | A playbook step asks for a change; no nested search |
-   | An information-only question that requests no change and no operation | "What does `devkit sync` write?" |
+   | Skip case |
+   | :--- |
+   | Continuation of an existing proposal or Unit: `/spec-next`, a worker turn, a Host resuming a handoff, the stage `devkit workflow next` names |
+   | A follow-up within the same task: answers, clarifications, review fixes, retries, corrections of the delivered change ("use option b", "rerun the tests") |
+   | The entry is already explicit: the user names a playbook ID, or a failing rule's remediation names one |
+   | Execution inside a selected playbook: a step that asks for a change gets no nested search |
+   | An information-only question that requests no change and no operation ("what does `devkit sync` write?") |
 
-   Also skip every later intake once the user said not to use playbooks in this conversation, and never offer a candidate the user declined again in the same conversation, even for a reworded request. Not skipped: a new request after earlier work finished, even inside a Planning or Development conversation ("now clean up open feedback"), and a question that asks how to perform an operation ("how do I adopt devkit here?").
+   Also skip every later intake once the user said not to use playbooks in this conversation; never offer a candidate the user declined again in the same conversation, even for a reworded request. Not skipped: a new request after earlier work finished, even inside a Planning or Development conversation ("now clean up open feedback"), and a question asking how to perform an operation ("how do I adopt devkit here?").
 
-   Run one `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` per intake (these values override the project's `[playbooks]` settings on purpose). Write the query in English as the requested operation on its artifact, with the repository's canonical artifact nouns (ADR, feedback, Living Spec, proposal, playbook, rule, release) in place of the user's paraphrase and without qualifiers that only name the subject ("write a playbook for changelog checks", not "write a release playbook for changelog checks"); no automatic refinement follows. Scores never decide. Offer a candidate only when all hold:
-   - **operation, not topic**: its `description` names the operation the request asks you to perform on the artifact; a request to build, fix or change the tool, code or documents about that artifact is a topic match and is never offered ("Feedback Quick Fixes" never offers `feedback-hygiene`);
+   Run one `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` per intake (deliberately overriding the project's `[playbooks]` settings). Write the query in English as the requested operation on its artifact, with the canonical artifact nouns (ADR, feedback, Living Spec, proposal, playbook, rule, release) in place of the user's paraphrase and without qualifiers that only name the subject ("write a playbook for changelog checks", not "write a release playbook for changelog checks"); no automatic refinement follows. Scores never decide. Offer a candidate only when all hold:
+   - **operation, not topic**: its `description` names the operation the request asks you to perform on the artifact; building, fixing or changing the tool, code or documents about that artifact is a topic match and is never offered ("Feedback Quick Fixes" never offers `feedback-hygiene`);
    - **primary operation**: it covers the request's main operation, not one step of a larger change;
    - **scope fits**: its scope does not exceed the requested scope ("refactor the sync module" never offers a repository-wide review playbook);
    - **one line**: at most one offer line per intake.
 
-   Name a passing candidate in that one line with the classification statement of step 2; nothing of it runs before the user confirms, and the confirmation is its explicit invocation. End the intake reply with the offer and wait for the answer before creating a Unit, a branch or an edit. On a match read [playbooks](references/playbooks.md); only on a match. No match continues the ordinary path silently, with no question and no draft offer. A search error (`NOT_SYNCHRONIZED`, `CONFIG_LOCAL_RENDER_STALE`, `ARGUMENT_INVALID`, `SEARCH_EXTRA_MISSING`, a lock timeout) counts as no match: never run its remediation for discovery's sake, and report it in one line only when it also blocks the task.
-2. Classify per the constitution and [classification](references/classification.md); state the classification and activity effort ([effort](references/effort.md)). Ask only when the goal, scope or constraints are unresolved.
+   Name a passing candidate in that line with step 2's classification statement; nothing of it runs before the user confirms, and the confirmation is its explicit invocation. End the intake reply with the offer and wait for the answer before creating a Unit, a branch or an edit. On a match read [playbooks](references/playbooks.md); only on a match. No match continues the ordinary path silently, with no question and no draft offer. A search error (`NOT_SYNCHRONIZED`, `CONFIG_LOCAL_RENDER_STALE`, `ARGUMENT_INVALID`, `SEARCH_EXTRA_MISSING`, a lock timeout) counts as no match: never run its remediation for discovery's sake; report it in one line only when it also blocks the task.
+2. Classify per the constitution and [classification](references/classification.md); state the classification and activity effort ([effort](references/effort.md)). Ask only when goal, scope or constraints are unresolved.
 3. Before creating a Unit or making the first edit, read [git policy](references/git-policy.md) and settle the branch: in a worktree per [worktree](references/worktree.md), otherwise per [branches](references/branches.md).
 4. Start the workflow:
 
@@ -52,16 +52,16 @@ it. The stages below apply to SDD.
 | `session` | `sdd-session-<task_kind>` | Agree the intent in the conversation; no records. |
 | `overall-refactor` | `sdd-overall-refactor` | `direct` only, with the user; no Unit. |
 | `spec` | `sdd-spec-<task_kind>` | On `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."` (`--workflow sdd-spec-bugfix` for a defect), record `plan-intent`, commit. |
-| `proposal` | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix`; judge `size` against the `XL` definition ([backlog](references/backlog.md)) and show it with `planning_effort` in the plan-intent request, then record `plan-intent`. An unmet `size S\|M\|L` check means decompose first, never edit the size to pass. Planning on `plan-<slug>` per [planning](references/planning.md), or a direct acceptance ([backlog](references/backlog.md)). Development on `dev-<slug>` from `devkit spec proposal handoff <slug>`. |
+| `proposal` | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix`; judge `size` against the `XL` definition ([backlog](references/backlog.md)), show it with `planning_effort` in the plan-intent request, then record `plan-intent`. An unmet `size S\|M\|L` check means decompose first; never edit the size to pass. Planning on `plan-<slug>` per [planning](references/planning.md), or a direct acceptance ([backlog](references/backlog.md)). Development on `dev-<slug>` from `devkit spec proposal handoff <slug>`. |
 | Spike, independent review, or reconcile verification in an isolated context | Support role | `spec-delegate`, as the `activity-effort` asks. |
 {% if execution.environment == "local" %}| Native approval preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |
 {% else %}| Integration after separately existing CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |
 {% endif %}
-Read a workflow's rules in `.devkit/managed/spec/workflows/<workflow-id>.md` and its stages with `devkit workflow show <workflow-id>` (`--unit <dir>` once a Unit exists). To go back within Development, run `devkit workflow return --unit <dir> --to <stage>`; Development never returns to Planning. Record envelopes per [envelope](references/envelope.md) and a run's questions and problems per [worker records](references/worker-records.md).
+A workflow's rules are in `.devkit/managed/spec/workflows/<workflow-id>.md`, its stages in `devkit workflow show <workflow-id>` (`--unit <dir>` once a Unit exists). Go back within Development with `devkit workflow return --unit <dir> --to <stage>`; Development never returns to Planning. Record envelopes per [envelope](references/envelope.md) and a run's questions and problems per [worker records](references/worker-records.md).
 
 ## Completion
 
-1. When approaching review or completion, read [completion](references/completion.md).
+1. Approaching review or completion, read [completion](references/completion.md).
 2. Before `dev-integration`, run the `collect-feedback` sweep the workflow names (`spec-feedback`), unless `[STAGE_POLICY: collect-feedback state=off]`.
 3. Present the final change report in the [envelope](references/envelope.md) format, then integrate with `spec-integrate`.
 

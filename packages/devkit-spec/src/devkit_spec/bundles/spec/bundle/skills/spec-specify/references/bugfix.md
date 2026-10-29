@@ -7,7 +7,7 @@ The expected behavior was agreed at `plan-intent`; characterization is Developme
 
 Fill the skeleton's `Defect Characterization` items; write no user story.
 
-- **Current behavior**: trigger, environment, observed wrong result, with evidence (log, failing command, test).
+- **Current behavior**: trigger, environment and observed wrong result, with evidence (log, failing command, test).
 - **Expected behavior and its basis**: the result the contract requires, citing its capability, use case, ADR or test by
   ID. If it cannot be kept (disputed, or a design decision rather than a defect), raise a problem for the Host.
 - **Behavior to preserve**: neighboring paths and contracts that must keep working, their existing tests and the gap.

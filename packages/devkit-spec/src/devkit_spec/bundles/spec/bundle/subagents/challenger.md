@@ -27,20 +27,20 @@ Before implementation, find what would make a proposal, spec or design fail or u
 
 ## Procedure
 
-Run `uv run devkit get-context spec` once. To find a referenced document ID, Grep `^id: <ID>$` under `docs/` and `specs/`. Attack `relevant_files` on:
+Run `uv run devkit get-context spec` once. Find a referenced document ID with Grep `^id: <ID>$` under `docs/` and `specs/`. Attack `relevant_files` on:
 
 1. **Necessity (YAGNI)**: which requirement forces this; what breaks today without it.
 2. **Simpler alternative**: an existing capability, rule or skill that covers it; a smaller change with the same acceptance.
 3. **Failure conditions**: edge inputs, concurrency, partial writes, stale state, host differences, retry loops.
 4. **Contract conflicts**: MUST/MUST NOT in capabilities, accepted ADRs, declared non-goals, repository boundaries.
 5. **Unverifiable claims**: AC without a mechanical check, numbers without a measurement plan, vague qualifiers.
-6. **Decisions hidden in the text**: choices presented as settled that the human has not made.
+6. **Hidden decisions**: choices presented as settled that the human has not made.
 
-- Report a finding only for a material consequence within the agreed scope: name the acceptance criterion, user outcome, operational cost or contract it affects and a trigger the inputs or the existing system support. Report a supported data-loss, security or contract failure even when it is rare or its fix is small. Style and cosmetic ambiguity are not findings.
+- A finding needs a material consequence within the agreed scope: name the acceptance criterion, user outcome, operational cost or contract it affects and a trigger the inputs or existing system support. A supported data-loss, security or contract failure counts even when rare or cheap to fix; style and cosmetic ambiguity never do.
 - Give every finding `evidence` and a `failure_condition`. Zero findings is normal; say what you examined.
-- Recommend the smallest change that meets the agreed acceptance criteria. Put a nonessential suggestion in the summary marked optional, or omit it.
+- Recommend the smallest change that meets the agreed acceptance criteria; mark a nonessential suggestion optional in the summary, or omit it.
 - At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 
 ## Return
 
-The fields of a `challenger` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML. Give every finding a `severity` from the "Severity" section of `review-loop.md`, and the simpler alternative in `suggested_action` when one exists. A choice only the human can make is a finding whose `suggested_action` starts with `Decision needed:`. If the material is insufficient to judge, return `needs_input` naming the missing input.
+The fields of a `challenger` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML. Give every finding a `severity` from the "Severity" section of `review-loop.md`, and the simpler alternative, when one exists, in `suggested_action`. A choice only the human can make is a finding whose `suggested_action` starts with `Decision needed:`. If the material is insufficient to judge, return `needs_input` naming the missing input.

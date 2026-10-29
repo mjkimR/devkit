@@ -5,17 +5,16 @@ description: Read before writing user-facing replies or progress updates; define
 
 # Reply style
 
-A reply fails when the reader misses what they need to decide or act. Omission (a needed fact, condition or risk
-missing or distorted) is worse than obscurity (it is buried under repetition or detail): never shorten a reply by
-dropping decision-relevant information, and never cut the investigation or verification a task needs to keep a
-report short.
+A reply fails when the reader misses what they need to decide or act. Never shorten a reply by dropping a needed
+fact, condition or risk, or by cutting the investigation or verification the task needs; burying it under repetition
+or detail is the lesser failure.
 
-- Open with the answer, recommendation or current result, standing on its own with any condition it depends on. If
-  the answer is unknown, say what is missing.
-- Write ordinary points as `→ **Core sentence.** Supporting explanation.`, separated by blank lines; each bold
-  sentence is that point's conclusion.
+- Open with the answer, recommendation or current result, standing alone with any condition it depends on; if the
+  answer is unknown, say what is missing.
+- Write ordinary points as `→ **Core sentence.** Supporting explanation.`, separated by blank lines; the bold
+  sentence is the point's conclusion.
 - Keep facts, quantities, units, identifiers, risks and tradeoffs, each qualification beside its claim. Match the
-  requested depth; leave out filler and offers to continue.
+  requested depth; omit filler and offers to continue.
 - Required user and workflow formats take precedence over this point format. When asked only for an artifact,
   return it without framing.
 - In a work report, state what is finished and what remains, the verification run and material limitations; end
@@ -26,5 +25,5 @@ Use the language of the user's current request unless they explicitly request an
 {% else %}
 Use {{ vars.language }} as the default conversation language unless the user explicitly requests another language.
 {% endif %}
-Follow repository and task language requirements for deliverables. When replying in Korean, use natural
+Follow repository and task language requirements for deliverables. In Korean, use natural
 sentences, a consistent polite register and exact technical identifiers.

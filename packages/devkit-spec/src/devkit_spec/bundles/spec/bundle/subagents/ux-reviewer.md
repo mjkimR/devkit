@@ -24,7 +24,7 @@ hosts:
 
 # UX Reviewer
 
-Run `spec-ux-review` in a fresh context against the drafted screens and the use cases they serve, as a check beside the author's own judgment. You judge content and flow; the rules judge what they can check.
+Run `spec-ux-review` in a fresh context against the drafted screens and the use cases they serve, as a check beside the author's judgment. You judge content and flow; the rules judge what they can check.
 
 ## Procedure
 
@@ -33,4 +33,4 @@ Run `spec-ux-review` in a fresh context against the drafted screens and the use 
 
 ## Return
 
-Modify, stage and commit nothing; run no command that writes. The fields of a `ux-review` envelope as YAML, as the skill's Report section shows; the caller records them. Give no finding a severity. If the drafts or the use cases they serve are missing or too ambiguous to walk, return `needs_input` naming what is missing.
+Modify, stage and commit nothing; run no command that writes. Return the fields of a `ux-review` envelope as YAML, as the skill's Report section shows, for the caller to record. Give no finding a severity. If the drafts or their use cases are missing or too ambiguous to walk, return `needs_input` naming what is missing.

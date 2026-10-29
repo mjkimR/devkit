@@ -1,6 +1,6 @@
 # spec-rule templates
 
-Read this at Step 2 of the `spec-rule` skill. Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this fixable example (Markdown files under the configured paths end with a newline). Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
+Read this at Step 2 of the `spec-rule` skill. Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this fixable example (Markdown files under the configured paths end with a newline): rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
 
 ## Layout and registration
 

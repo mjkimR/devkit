@@ -5,24 +5,23 @@ description: Reconcile a completed feature spec and discovered behaviors into th
 
 # spec-sync: Living Specification Reconciliation Workflow
 
-Run at the `living-spec-draft` stage, after `spec-review` passes. Write `docs/` by the `living-spec-writing`
-instruction. Record and evidence rules: the `spec` skill's `references/completion.md`; verification by effort: its
-`references/effort.md` and `references/review-loop.md`.
+Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `living-spec-writing` instruction. The
+`spec` skill's `references/completion.md` owns record and evidence rules; its `references/effort.md` and
+`references/review-loop.md` own verification by effort.
 
 ## Steps
 
-1. **Impact**: from `spec.md` and the code changes, find affected documents (`devkit docs refs <ID> --direction in`,
+1. **Impact**: find affected documents from `spec.md` and the diff (`devkit docs refs <ID> --direction in`,
    `devkit docs search "<topic>"`). Update or create capabilities, use cases (templates in
    `.devkit/managed/docs/templates/`) and `docs/architecture/`; if the change did introduce or rename a domain term,
-   update `docs/steering/glossary.md` where it exists. Write no index tables in directory `README.md` files.
-   - Screens: write each draft of the spec's `Screens` section to `docs/ux/<area>/UX-<slug>.md` (template `ux`), the
-     step citations it needs to the use cases, and the drafted register rows to `docs/steering/ux-objects.md`,
-     creating the file with the project's first UX document; turn the drafts' plain-text new IDs into code spans.
-     `RULE-ux-links` and `RULE-ux-coverage` check them from here on.
-   - Copy none of the spec's user stories into `docs/`: they state the request, not the contract. Fold the delivered
-     behavior into the use cases it changes: new or changed steps, extensions with their codes, postconditions and
-     scenarios (`usecase-writing`).
-2. **Record**: create `reconcile.md` in the bundle with one target per changed Living Spec file, or the no-impact
+   update `docs/steering/glossary.md` where it exists. No index tables in directory `README.md` files.
+   - Screens: write each draft of the spec's `Screens` section to `docs/ux/<area>/UX-<slug>.md` (template `ux`) with
+     its step citations to the use cases, and the `Screens` section's register rows to `docs/steering/ux-objects.md`
+     (created with the project's first UX document); make plain-text new IDs code spans. `RULE-ux-links` and
+     `RULE-ux-coverage` check them from then on.
+   - Copy no user stories into `docs/` (they state the request, not the contract); fold the delivered behavior into
+     the use cases it changes: steps, extensions with codes, postconditions, scenarios (`usecase-writing`).
+2. **Record**: create `reconcile.md` in the bundle with one target per changed Living Spec file, or no-impact
    reasoning in the body:
 
    ```yaml
@@ -35,20 +34,18 @@ instruction. Record and evidence rules: the `spec` skill's `references/completio
    ---
    ```
 
-   List every written UX document, changed use case and `docs/steering/ux-objects.md` as a target; every drafted screen
+   Every written UX document, changed use case and `docs/steering/ux-objects.md` is a target; every drafted screen
    has a `docs/ux/` target.
-3. **Deferred work and source feedback**: apply the Deferred Work Handoff of `completion.md` and
-   [source feedback](../spec/references/source-feedback.md), and record destinations and resolutions in
-   `reconcile.md`.
-4. **Entrypoints**: run the `spec-entrypoints` skill for this bundle.
-5. **Verify**: run the reconcile check for the effort and record it with
-   `devkit workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft`; the other flags are in
-   the `spec` skill's [envelope reference](../spec/references/envelope.md). Return an
-   implementation-versus-contract mismatch to `build-verify` (`fix-verify` for a bugfix); never document it away.
-   Run `devkit rules check --staged` or `devkit rules check --ci --base <ref>`, plus the project lint where it covers
-   Markdown.
-6. **Complete**: once every target is reflected or waived, set `reconcile.md` `status: resolved`, then run
-   `devkit rules fix <dir>/spec.md` to set the spec `completed`. Commit the documentation with the feature code or
+3. **Deferred work and source feedback**: apply `completion.md`'s Deferred Work Handoff and
+   [source feedback](../spec/references/source-feedback.md); record destinations and resolutions in `reconcile.md`.
+4. **Entrypoints**: run `spec-entrypoints` for this bundle.
+5. **Verify**: run the reconcile check for the effort; record it with
+   `devkit workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft` (other flags: the
+   `spec` skill's [envelope reference](../spec/references/envelope.md)). Return an implementation-versus-contract
+   mismatch to `build-verify` (`fix-verify` for a bugfix); never document it away. Run `devkit rules check --staged`
+   or `--ci --base <ref>`, plus the project lint where it covers Markdown.
+6. **Complete**: once every target is reflected or waived, set `reconcile.md` `status: resolved`, then
+   `devkit rules fix <dir>/spec.md` sets the spec `completed`. Commit the documentation with the feature code or
    right after it.
 
 ## Completion

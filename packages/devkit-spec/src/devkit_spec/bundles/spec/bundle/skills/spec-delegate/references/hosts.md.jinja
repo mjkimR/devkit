@@ -8,7 +8,7 @@ Read this when spawning an isolated subagent or before starting a worker.
 | Codex CLI | `collaboration.spawn_agent` with `agent_type: <role>` when available | `.codex/agents/<role>.toml` |
 | Antigravity | `invoke_subagent` with the role name | `.agents/agents/<role>.md` |
 
-- Give a projected named role only the payload. If its projection is missing or stale, repair it with `devkit status` and an authorized `devkit sync`; never edit projected files.
+- Give a projected named role only the payload. Repair a missing or stale projection with `devkit status` and an authorized `devkit sync`; never edit projected files.
 - A missing role does not prove the root is untrusted; diagnose availability separately from trust.
 - If the named role cannot load and host project-instruction loading is permitted, spawn a generic native subagent that follows the effective managed/override contract by absolute path, and report the emulation. Never substitute the upstream contract for an override.
 - An explicit host trust restriction stops this fallback; do not bypass it with another role, tool, path or host setting. Trust changes belong to the user.

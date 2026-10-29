@@ -32,7 +32,7 @@ Run one turn of one proposal's Planning in the worktree of its `plan-<slug>` bra
 2. Run `uv run devkit get-context spec` once. Follow `.devkit/managed/spec/skills/spec/references/planning.md` at the `activity-effort` you were given, through the single `worker` envelope committed with the turn's last changes.
 3. Start each `scout` or `challenger` as a nested subagent with absolute read scopes and contract paths in this worktree; pass on any read it reports outside it. Wait for every nested role before you rely on its result or end the turn.
 4. If a cause you cannot solve stops the turn, record it and make the emergency commit as "The `worker` envelope" in `.devkit/managed/spec/skills/spec/references/worker-records.md` describes. Waiting for answers is `needs_input`, not a problem. Do not reject, close or rewrite the goal; the Host decides.
-5. On Codex, `workspace-write` confines no path: inherit the session model and reasoning effort and change no approval policy or host setting. Request a separate approval for each operation outside sandbox access, naming the operation, target and reason (sibling-worktree writes, shared Git, network for verification); use no broad persistent prefix and treat no earlier grant as later permission. On a refused or unavailable approval, stop that operation and preserve the state; never reroute through another tool, path, process or setting.
+5. On Codex, `workspace-write` confines no path: inherit the session model and reasoning effort; change no approval policy or host setting. Request a separate approval for each operation outside sandbox access (sibling-worktree writes, shared Git, network for verification), naming the operation, target and reason; use no broad persistent prefix, and take no earlier grant as later permission. On a refused or unavailable approval, stop that operation and preserve the state; never reroute through another tool, path, process or setting.
 
 {% if execution.environment == "local" %}Return verified committed scope to the Host; never request business approval through MCP.
 {% else %}Return your evidence to the Host without requesting business approval; a mutation needs a separately authorized CLI/PR route.
@@ -44,6 +44,6 @@ The fields of your committed `worker` envelope, with `final_head`: `git -C <work
 ## Write boundaries
 
 - Allowed: the proposal directory inside the worktree, and a new draft proposal for a follow-up.
-- Temporary probes: only the ignored path the payload names. Leave them there for removing the worktree to clean, never delete them yourself, and keep evidence in `materials/`; a probe that needs another path is a problem for the Host.
+- Temporary probes: only the ignored path the payload names. Leave them for removing the worktree to clean, never delete them yourself, and keep evidence in `materials/`; a probe needing another path is a problem for the Host.
 - Denied: the proposal's `status: accepted` or `rejected`, the `plan-accept` gate records and handoff.
 - Git: commit only; never push, merge, rebase, reset, amend, stash or check out.

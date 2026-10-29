@@ -1,72 +1,72 @@
 # Spec-Driven Delivery
 
-Read `uv run devkit config show` first. This lifecycle applies only when `configuration.development.approach` is
-`sdd` (the default). Under `incubation`, follow the project's incubation guidance and keep independent project and
-document checks, with no implicit Unit, SDD stage, approval/envelope or immutable iteration history; explicitly bound
-SDD artifacts keep their lifecycle checks and inspection stays available. Installing or selecting spec assets does not
-change the approach.
+Run `uv run devkit config show` first: this lifecycle applies only when `configuration.development.approach` is `sdd`
+(the default). Under `incubation`, follow the project's incubation guidance with independent project and document
+checks and no implicit Unit, SDD stage, approval, envelope or immutable iteration history; explicitly bound SDD
+artifacts keep their lifecycle checks and stay inspectable. Installing or selecting spec assets never changes the
+approach.
 
-Start development with the `spec` skill (`/spec <intent>`); `/spec-next` orients in work already under way. Explicit
-user instructions take precedence. Never end the user's session on your own.
+Start development with the `spec` skill (`/spec <intent>`); `/spec-next` orients in work under way. Explicit user
+instructions take precedence. Never end the user's session on your own.
 
 ## 1. Context
 
-- Read this guide once per agent context before development work, including work started without a skill.
-- Read each relevant instruction listed with it before the action it governs. If an instruction conflicts with a
-  mandatory check, follow the check and report the conflict.
+- Read this guide once per agent context before development work, including work started without a skill, and each
+  relevant instruction listed with it before the action it governs. If an instruction conflicts with a mandatory
+  check, follow the check and report the conflict.
 - Add a rule or check only for an identifiable failure or a reusable practice, at proportionate cost.
-- Run a bare `devkit ...` command named in bundle text or skills in the project's documented form (`uv run devkit ...`).
+- Run a bare `devkit ...` command from bundle text or skills in the project's documented form (`uv run devkit ...`).
 
 ## 2. Living Spec and Scope
 
-- `docs/` is the Living Spec, the current contract: capabilities, use cases, architecture and decisions. A feature spec
-  is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`). A spec with `status: completed`
-  stays in place as history; start a later behavior change in a new spec.
-- Before using document contracts, run `uv run devkit get-context docs` once per agent context and apply its instructions.
+- `docs/` is the Living Spec: the current capabilities, use cases, architecture and decisions. A feature spec is
+  `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`). A spec with `status: completed` stays in
+  place as history; start a later behavior change in a new spec.
+- Before document work, run `uv run devkit get-context docs` once per agent context and apply it.
 - Read current contracts and active specs (`devkit docs list spec`) before drafting new work. In a package namespace
-  (`docs/packages/<name>/`), `list` and `search` cover that namespace plus global documents; pass `--all-namespaces`
-  for cross-package impact.
+  (`docs/packages/<name>/`), `list` and `search` cover it plus global documents; `--all-namespaces` adds
+  cross-package impact.
 - Refer to ID-bearing documents by full ID, never by path (`devkit docs resolve <ID>`, `devkit docs refs <ID>`).
 - In SDD, a changed decision is a new ADR with `supersedes`; wording, metadata and reference repairs and ADR compaction
   may edit an existing ADR without changing its decision.
 - Implement no Non-Goal and no unrequested feature, refactor or speculative scope. A lasting policy change or an
   exception to a MUST needs an ADR; state a one-off exception within the approved scope in the review or final report.
-- A task's `_Boundary:_` is the expected scope: explain a necessary extension in the report. Write boundaries given to
-  a delegated role are strict.
+- A task's `_Boundary:_` is the expected scope; explain a necessary extension in the report. A delegated role's write
+  boundaries are strict.
 
 ## 3. Classification and Authority
 
-- Classify work on three axes; the `spec` skill's `references/classification.md` adds the criteria:
+- Classify on three axes; the `spec` skill's `references/classification.md` adds the criteria:
   - `task-kind`: `feature` (default), `bugfix` (a defect against an agreed contract: reproduce, Red then Green) or
-    `overall-refactor` (a structural change across the project with no new behavior: `sdd-overall-refactor`, no depth).
-  - `planning-depth`: what must be settled first, not size. `session`: nothing, no Unit. `spec`: the contract, with a
-    clear direction. `proposal`: the direction; Planning, then handoff.
+    `overall-refactor` (a project-wide structural change with no new behavior: `sdd-overall-refactor`, no depth).
+  - `planning-depth`, by what must be settled first, not size: `session` (nothing, no Unit), `spec` (the contract,
+    with a clear direction) or `proposal` (the direction: Planning, then handoff).
   - `activity-effort`: `low`, `medium` (default) or `high` per activity; it never lowers gates, exit checks or
     `required` policies.
 - The workflow is `sdd-<planning-depth>[-<task-kind>]`; `sdd-proposal` hands off to `sdd-spec-<task_kind>`.
 - Only the Host raises the depth, never a worker. Lower it only through a proposal's handoff or the session
   reclassification of a queued draft; never lower a proposal in review or accepted, or a spec Unit.
-- The approval boundaries are `plan-accept` (proposal direction), `proposal-handoff` (start Development) and
-  `dev-integration` (land the Development result), each `ask` (default) or `auto`.
-- Follow the workflow's stages, checks, gates and returns as `devkit workflow next --unit <dir>` reports them, never an
-  ad-hoc sequence. A Unit writes `spec.md`, `plan.md` and `tasks.md` before production code.
+- Approval boundaries, each `ask` (default) or `auto`: `plan-accept` (proposal direction), `proposal-handoff` (start
+  Development) and `dev-integration` (land the Development result).
+- Follow the stages, checks, gates and returns that `devkit workflow next --unit <dir>` reports, never an ad-hoc
+  sequence. A Unit writes `spec.md`, `plan.md` and `tasks.md` before production code.
 - Before classification, gate and Git decisions, run `devkit spec policy` and read the `spec` skill's
   `references/completion.md`; before formal worktree work, its `references/worktree.md`.
-- An explicit task instruction supplies `plan-intent`: do not request the same consent again. Within approved scope the
+- An explicit task instruction supplies `plan-intent`; do not ask for the same consent again. Within approved scope the
   Host chooses sequencing, workers, implementation, review and fixes without further approval; a scope or constraint
   change needs new authority.
 - Records name `user` or `policy` and carry decisions, never conversation quotes, paraphrases or dates.
-- Choose UX alternatives in proposal Planning or inline Planning before `plan-intent`; Development takes the recommended
-  candidate and records the alternatives as an assumption in `spec.md`.
-- Draft screens before code, in `target-docs.md` for proposals or `spec.md` for specs; `spec-sync` writes the retained
-  drafts and citations. Offer the optional `ux-reviewer` before code; a `session` task runs no UX review.
+- UX: choose alternatives in proposal or inline Planning before `plan-intent` (Development takes the recommended
+  candidate and records the alternatives as an assumption in `spec.md`); draft screens before code in `target-docs.md`
+  (proposals) or `spec.md` (specs), and `spec-sync` writes the retained drafts and citations; offer the optional
+  `ux-reviewer` before code, never for a `session` task.
 
 ## 4. Verification and Completion
 
-- Before reporting completion, compare the final diff, the agreed requirements, the check results and the Living Spec
-  impact (`spec-review`, `spec-sync`). Fix implementation defects rather than rewriting documentation to endorse them.
-- A `session` task writes no Unit or records; it reports the change, effort, review result, verification and remaining
-  constraints in its final response or PR body. A needed Living Spec change raises it to `spec`.
+- Before reporting completion, compare the final diff, agreed requirements, check results and Living Spec impact
+  (`spec-review`, `spec-sync`). Fix implementation defects; never rewrite documentation to endorse them.
+- A `session` task writes no Unit or records; its final response or PR body reports the change, effort, review result,
+  verification and remaining constraints. A needed Living Spec change raises it to `spec`.
 - Completion, commit, integration and ending the session are separate events.
 
 ## 5. Managed Files

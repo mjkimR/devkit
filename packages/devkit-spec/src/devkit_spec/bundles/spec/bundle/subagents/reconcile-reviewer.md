@@ -29,12 +29,12 @@ Verify the implementer's Living Spec reflection for a spec unit's Development: e
 ## Procedure
 
 1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`.
-2. Run `git diff <base> <head>` for `diff_scope` and compare it with the docs changes and `reconcile.md`. Each of these is a finding: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
+2. Compare `git diff <base> <head>` for `diff_scope` with the docs changes and `reconcile.md`. Findings: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
 3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 
 ## Return
 
-Modify, stage and commit nothing. The fields of a `reconcile-check` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML; the caller records them. `summary` names the verified targets or the confirmed no-impact. Give every finding a `severity` from the "Severity" section of `review-loop.md`.
+Modify, stage and commit nothing. Return the fields of a `reconcile-check` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML for the caller to record; `summary` names the verified targets or the confirmed no-impact. Give every finding a `severity` from the "Severity" section of `review-loop.md`.
 
 - If it is ambiguous which contract applies, return `needs_input`.
 - If `git rev-parse HEAD` differs from the `diff_scope` head, report the verification as stale.

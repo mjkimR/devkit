@@ -1,7 +1,7 @@
 # Feedback template
 
-Read this when writing a feedback file. Copy the block inside the four-backtick fence, replace every `<...>`
-placeholder, follow the comment, then delete the comment.
+Read this when writing a feedback file. Copy the block inside the four-backtick fence, replace every `<...>`,
+follow the comment, then delete it.
 
 ````markdown
 ---
@@ -72,7 +72,7 @@ assessment.
 
 - **brief**: the applicable section's context, the observation or proposed change, a short assessment and Evidence.
 - **standard**: the applicable section and Evidence.
-- **detailed**: standard plus this section before Evidence. Write `unknown` for a missing fact instead of rerunning a
+- **detailed**: standard plus this section before Evidence. Write `unknown` for a missing fact rather than rerun a
   risky or expensive command, and `not applicable` for a field that does not apply.
 
 ```markdown

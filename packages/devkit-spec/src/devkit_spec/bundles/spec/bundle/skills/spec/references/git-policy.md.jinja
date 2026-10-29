@@ -5,7 +5,7 @@ Read this before a task's first edit and before any Git action, once `devkit spe
 ## Worktree (`direct` mode only)
 
 - `worktree=required`: every `spec` and `proposal` activity runs in its own worktree from creation to cleanup ([worktree](worktree.md)); `session` depth never needs one.
-- `worktree=auto`: use a worktree when the checkout holds changes unrelated to the task, another task is in flight in it, or the user asks. Otherwise start the activity branch in this checkout with `devkit worktree start <branch> --no-worktree` ([branches](branches.md) §2).
+- `worktree=auto`: use a worktree when the checkout holds changes unrelated to the task, another task is in flight in it, or the user asks; otherwise start the activity branch in this checkout with `devkit worktree start <branch> --no-worktree` ([branches](branches.md) §2).
 - With `--no-worktree`, the branch switch applies to every session using that directory, and another session can commit to the task branch; the direct user coordinates shared sessions.
 
 ## Integration path
@@ -16,10 +16,10 @@ Read this before a task's first edit and before any Git action, once `devkit spe
 ## Branch cleanup
 
 - `delete_branch=yes`: after a confirmed merge and under existing deletion authority ({% if execution.environment == "local" %}including shared base `dev-integration=auto` through the local MCP executor{% else %}a separately authorized CLI/PR route in cloud execution{% endif %}), `devkit worktree finish` deletes the merged task branch with `git branch -d`; report a branch it could not delete. `delete_branch=no` keeps it.
-- Remote branches are never deleted by this policy; an unmerged branch goes only through a [close](depth-and-close.md).
+- This policy never deletes remote branches; an unmerged branch goes only through a [close](depth-and-close.md).
 
 ## Deviations
 
 - Report each `auto` choice and its reason in the final change report's assumptions.
 - A request that names the checkout or the integration path overrides the policy for that task; report it as a user request.
-- When an action the policy requires is unavailable, treat it as a blocker; never downgrade silently.
+- An action the policy requires that is unavailable is a blocker; never downgrade silently.
