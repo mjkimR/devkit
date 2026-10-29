@@ -389,7 +389,7 @@ The source scout contract selects `level: compact`; it requests Haiku, Luna or F
 All other shipped roles omit neutral level, model, effort and `x-model-profile` settings and inherit through
 native host defaults. Projects can override or reset scout's level in `.devkit/config.toml`.
 `CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-five-subagent-levels` defines the scout
-exception and five presets. No model level changes `activity-effort`, write scope or verification gates.
+exception and original five presets; `ADR-lean-subagent-level` adds lean. No model level changes `activity-effort`, write scope or verification gates.
 `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` checks every shipped role.
 
 | Role | Skill | Default model level / effort | Writes | Envelope kind |

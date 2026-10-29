@@ -173,14 +173,15 @@ level = "compact"
 The accepted keys are `default_level`, `levels`, `roles`. Selection precedence is role override, explicitly
 configured project default, source `level`, then implicit inheritance. Explicit `inherit` removes lower-precedence
 model/effort, including authored native fields. Without any neutral selection, explicit native source fields stay.
-`default_level` accepts `inherit`, `minimal`, `compact`, `standard`, `deep`, `maximal`; custom levels and the
+`default_level` accepts `inherit`, `minimal`, `compact`, `lean`, `standard`, `deep`, `maximal`; custom levels and the
 removed name `light` are invalid.
 
-`levels.<minimal|compact|standard|deep|maximal>.<claude-code|codex|antigravity>` accepts `model` and `effort` strings only. Omission
+`levels.<minimal|compact|lean|standard|deep|maximal>.<claude-code|codex|antigravity>` accepts `model` and `effort` strings only. Omission
 retains each built-in field. String `inherit` resets that field to omission; empty strings and null-like values
 are invalid. Model-only overrides retain the built-in effort unless explicitly reset. On Claude Code and Codex,
-compact, standard and deep have no built-in effort override; minimal fixes low and maximal fixes high.
-Antigravity compact selects Flash with no effort override; every other built-in preset inherits both fields.
+compact, standard and deep have no built-in effort override; minimal fixes low, lean fixes medium and maximal
+fixes high. Antigravity compact and lean select Flash with no effort override; every other built-in preset
+inherits both fields. Lean cannot request per-role high effort on Antigravity.
 This built-in capability fallback does not relax explicit invalid mapping validation.
 Antigravity model accepts `flash`, `pro`, `inherit` only; Claude Code/Codex accept opaque nonempty native identifiers
 without control characters. Their actual existence and account availability are runtime-owned.

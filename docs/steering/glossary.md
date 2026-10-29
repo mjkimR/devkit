@@ -15,7 +15,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
 | **devkit bundle** | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |  | `bundle.toml` |
-| **Subagent model level** | Distribution-owned preset (minimal, compact, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` | model profile | `level`, `SubagentPolicy`, `ModelSettings`, `[subagents]` |
+| **Subagent model level** | Distribution-owned preset (minimal, compact, lean, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` | model profile | `level`, `SubagentPolicy`, `ModelSettings`, `[subagents]` |
 | **Preset** | A named asset selection of a bundle (e.g. `core`, `default`). | `CAP-DIST-manifest-spec` |  |  |
 | **Managed files** | Pristine synchronized copies under `.devkit/managed/<bundle>/`; never edited by hand. | `CAP-DIST-workspace-ownership` |  | `.devkit/managed/<bundle>/` |
 | **Projections** | Native agent files projected into `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, etc. | `CAP-DIST-agent-projections` |  | `.agents/skills/`, `.claude/skills/`, `.codex/skills/` |
