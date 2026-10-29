@@ -1,7 +1,7 @@
 ---
 sources:
-  ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
-  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
+  ARCH-08-1-agent-output: 6b76bd19787465ed1e7ec7aee1904077cc75042c
+  CAP-ADV-agent-advisory-protocol: 572af49f008a71f993b3b82c2d457b7610529192
 title: Advisories
 ---
 
@@ -91,9 +91,9 @@ For an error, the mode tells the agent its next step:
 
 | Mode | Situation | What the agent does |
 | --- | --- | --- |
-| `INPUT_ERROR` | A flag, argument or input file is wrong | Correct the `[TARGET]` and rerun |
+| `INPUT_ERROR` | A flag, argument or input file is wrong, or a check of the agent's own content failed (failing tests or rule violations in a commit, an empty commit message) | Correct the `[TARGET]` and rerun |
 | `AUTO` | A safe deterministic fix exists | Run `[FIX]` once, retry once, stop either way |
-| `BLOCKED` | A deliberate guardrail refused (a commit gate, a workflow rule) | Report and stop; changing the rule is the user's call |
+| `BLOCKED` | A deliberate guardrail refused on policy (a protected branch, a policy gate, a workflow rule) | Report and stop; changing the rule is the user's call |
 | `INTERACTION` | A human decision or permission is needed | Ask the user; `[FIX]` is for after they agree |
 | `MAINTENANCE` | A defect in the code or tool | Report and stop; repairing it is a separate task |
 | `HALT` | Continuing could corrupt state | Report what was left half-done; do not retry or finish by hand |
@@ -102,15 +102,20 @@ For an error, the mode tells the agent its next step:
 Warnings always carry `CONTINUE` and notices `NOTE`: the operation already succeeded, so the agent tells the user
 and runs `[FIX]` only when asked. `AUTO` is the only mode that authorizes a retry.
 
+The line between `INPUT_ERROR` and `BLOCKED` is who has to act. A commit refused because its tests fail or its
+documents violate a rule is `INPUT_ERROR`: the agent fixes its own change and commits again. `BLOCKED` is kept for
+policy the agent must not work around.
+
 As a person you rarely act on advisories yourself; you see them relayed by your agent. When the agent asks you
 something, it is usually an `INTERACTION` error's `[REPORT]` question or a `CONTINUE` warning the user has to know
 about.
 
 ## Machine channels
 
-- `--format json` prints one object on stdout. A failure is `{"error": {...}}` with `code`, `level`, `message`,
-  `exit_code` and an `advisory` object holding the mode, the action text and every non-empty field; warnings and
-  notices of a successful result sit under `notices`. Nothing is printed on stderr, so an agent host that merges
+- `--format json` prints one compact object on stdout (no indentation, since every byte reaches the agent's
+  context). Commands that only ever print JSON accept `--format json` too, so an agent can pass it everywhere. A
+  failure is `{"error": {...}}` with `code`, `level`, `message`, `exit_code` and an `advisory` object holding the
+  mode, the action text and every non-empty field; warnings and notices of a successful result sit under `notices`. Nothing is printed on stderr, so an agent host that merges
   the channels never reads an advisory twice.
 - MCP tools return the rendered block as the error text, or append warning and notice blocks after the result.
 - HTTP services can use the same envelope in an RFC 7807 problem document.
@@ -135,9 +140,9 @@ To give a click tool this output contract for free, see [Agent-first CLI toolkit
 
 ## Sources
 
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   levels, block format, fields, mode derivation, the canonical action texts and the authoring checklist.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
   how advisories sit among a command's stdout, stderr and exit codes.
-- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/advisory.md): the
+- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/advisory.md): the
   `devkit.advisory` Python API.

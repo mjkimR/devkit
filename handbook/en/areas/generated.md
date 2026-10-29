@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-DIST-sync-and-transactions: d1d1ac401be230f3b198a8ee39267d84831b7353
-  CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
-  CAP-GEN-tracked-artifacts: a934a5865acf8170b874bff2de6ddc36f5c401f4
+  CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
+  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
+  CAP-GEN-tracked-artifacts: 17bfdf1f5ddc90d9ec2653cd5a8589db07041202
 title: Generated Files
 ---
 
@@ -17,7 +17,7 @@ Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own
 each regenerated one conflict even when their inputs merge cleanly, and a textual merge is rarely what the generator
 would write. `devkit generated` (from `devkit-agt`) settles such conflicts by regenerating instead of merging, and
 checks that committed copies are up to date. The contract is
-[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md).
+[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md).
 
 Nothing runs automatically. You, or your agent, run `resolve` when a merge, rebase or cherry-pick stops, and CI runs
 `check`. Where this fits in the life of a branch is described in [Concepts](../concepts.md).
@@ -70,9 +70,10 @@ side, runs the commands in order and stages the result. It never commits. Then:
   by hand;
 - during a rebase each replayed commit may stop again, so run `resolve` at each stop.
 
-It refuses before changing anything when a conflict it does not own is an *input* of an artifact in the plan
-(`GENERATED_INPUTS_CONFLICTED`): resolve and stage those inputs first, then rerun, so no command reads conflict
-markers. A failed command is `GENERATED_COMMAND_FAILED`; a command that changed files it did not declare is
+It refuses before changing anything when a conflict it does not own is an *input* of an artifact in the plan, or a
+file one of them `updates` (`GENERATED_INPUTS_CONFLICTED`): resolve and stage those files first, then rerun, so no
+command reads conflict markers or stages a file with markers inside. The refusal's `[FIX]` gives the exact `git add`
+and `resolve` commands. A failed command is `GENERATED_COMMAND_FAILED`; a command that changed files it did not declare is
 `GENERATED_OUTPUT_UNDECLARED`, and its changes stay in the work tree for review. Either way nothing is staged and a
 rerun starts over cleanly.
 
@@ -82,10 +83,12 @@ A clean textual merge is not a conflict, so `resolve` does not touch it, yet the
 the merged inputs. Two commands cover that:
 
 - `uv run devkit generated check` regenerates every artifact in a temporary detached worktree of `HEAD` (or
-  `--rev REV`) and reports each stale one as `GENERATED_STALE`, exiting `1`. Your checkout is not touched, and the
+  `--rev REV`) and reports each stale one as `GENERATED_STALE`, exiting `1` with the exact `regen` command as its
+  fix. Only a change to the files an artifact owns (`paths`) makes it stale; a change to a file it merely `updates`
+  is listed but does not. Text output names only the stale artifacts. Your checkout is not touched, and the
   commands run as in a fresh clone, so they must work without ignored files. Run it in CI.
 - `uv run devkit generated regen [ID...]` reruns the commands in place and stages nothing. It refuses with
-  `GENERATED_UNMERGED` while the index has conflicts; use `resolve` then.
+  `GENERATED_UNMERGED` while the index has conflicts, whose `[FIX]` is `uv run devkit generated resolve`.
 
 ## Limits and trust
 

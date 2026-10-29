@@ -6,7 +6,7 @@ sources:
   CAP-WT-task-worktrees: null
   UC-handle-delivery-problems-and-exceptions: null
 title: 전달 문제와 예외 처리하기
-translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@7298a26e6886207a
+translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@8c658d5762921c08
 ---
 
 # 전달 문제와 예외 처리하기
@@ -60,13 +60,13 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@7298a26e
 코드가 기본 브랜치에 통합되지 않도록 방지하는지, 그리고 작업을 어떻게 안전하게 복구하거나 정상 종료하는지 살펴봅니다.
 
 유스케이스는
-[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)입니다.
+[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)입니다.
 엔벨로프(envelope), 유닛(Unit), `exception` 단계 등의 개념은 [개념](../concepts.md)에서 설명합니다.
 
 ## 1. 문제(Problem) 여부 판단
 
 작업 실행자(워커 또는 에이전트 자신)는 마주한 장애물을 기 합의된 명세와 대조하여 분류합니다
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
 
 | 장애물 유형 | 실행자의 조치 |
 | --- | --- |
@@ -84,7 +84,7 @@ uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <ef
 ```
 
 미완료된 작업 상태와 작성한 엔벨로프를 함께 작업 브랜치에 커밋하고, 기본 브랜치로 통합하지 않은 채 해당 실행 턴을 안전하게 종료합니다
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
+([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
 
 ## 3. 유닛의 보류(Hold) 상태 전환
 
@@ -134,8 +134,8 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
 
   명령어 실행 결과로 `merged=no discarded=yes`가 확인됩니다. 작업 트리에 커밋되지 않은 변경 사항이 남아 있는 경우 워크트리를
   임의로 삭제하지 않습니다 (`WORKTREE_DIRTY`)
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문),
-  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문),
+  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 - **엔벨로프 기록 자체를 작성할 수 없는 환경적 장애:** 호스트 환경 권한 등으로 인해 엔벨로프 작성이나 비상 커밋이 거부되는 경우,
   워커는 원인, 시도한 명령어 내역, 실제 마지막 커밋, 변경된 경로, 누락된 기록 항목을 정직하게 담아 `failed` 상태로 반환하며
   결과를 꾸며내지 않습니다. 메인 에이전트는 이 반환을 보류 상태로 취급하고 자체적으로 복구 절차를 직접 수행합니다.
@@ -152,7 +152,7 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
 | 코드 | 의미 | 해야 할 일 |
 | --- | --- | --- |
 | `WORKTREE_BLOCKED` | 브랜치 병합이 거부되었습니다. 미해결 문제나 미답변 질문마다 구체적인 상세 정보가 출력됩니다. | 문제를 해결하거나 질문에 답변한 후 병합을 다시 시도하십시오. |
-| `ENVELOPE_REFERENCE_INVALID` | `resolution` 엔벨로프가 문제가 등록되지 않은 일반 `worker` 엔벨로프를 참조하고 있습니다. | 실제 문제가 기록되어 있는 올바른 엔벨로프 파일을 지정하십시오. |
+| `ENVELOPE_REFERENCE_INVALID` | `resolution` 엔벨로프가 문제가 등록되지 않은 일반 `worker` 엔벨로프를 참조하고 있습니다. | 실제 문제가 기록되어 있는 올바른 엔벨로프 파일을 지정하십시오. 거부 메시지에 문제를 담은 `worker` 엔벨로프가 모두 나열됩니다. |
 | `HANDOFF_HELD` | 현재 보류 상태인 유닛은 다른 에이전트나 단계로 핸드오프할 수 없습니다. | 먼저 보류 원인을 해결하십시오. |
 | `WORKTREE_DIRTY` | 작업 워크트리에 커밋되지 않았거나 추적되지 않는(untracked) 변경 파일이 남아 있습니다. | 변경 사항을 커밋하거나 외부로 백업한 후 다시 discard 명령을 실행하십시오. |
 

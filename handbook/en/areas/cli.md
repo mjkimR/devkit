@@ -1,9 +1,9 @@
 ---
 sources:
-  ARCH-05-3-command-plugins: ec76f9e3d68a8d43196eb96180530ecaff83900a
-  ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
-  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
-  CAP-CLI-agent-cli-toolkit: aaddc88dd7e643c5dbbf7f7d61ddfcb68bc1809f
+  ARCH-05-3-command-plugins: 47eeea36023fbe6920a4efe689e6ca7e55503412
+  ARCH-08-1-agent-output: 6b76bd19787465ed1e7ec7aee1904077cc75042c
+  CAP-ADV-agent-advisory-protocol: 572af49f008a71f993b3b82c2d457b7610529192
+  CAP-CLI-agent-cli-toolkit: 6bfd99780ae25184921a2004cd8ac4a2bdc25e67
 title: Agent-first CLI toolkit
 ---
 
@@ -97,6 +97,11 @@ The boundary does the rest:
 - A flag wins over the environment; a variable counts as on only when it is exactly `1`; `-q` with `-v` is
   `ARGUMENT_INVALID`.
 - Raise `devkit.advisory.ArgumentError` for a semantic argument check.
+- A command that only ever prints JSON uses `@boundary(json_only=True)` instead of `FORMAT_OPTION`; the boundary
+  then accepts `--format json` as a no-op, so an agent can pass it to every command.
+
+`echo_json` prints compact JSON (no indentation, no spaces after separators), because every byte lands in the
+agent's context; `render_json` returns the same text for a caller that budgets its output size.
 
 Other helpers: `exit_on_warnings` (exit `1` under `--strict` after a warning), `exit_on_problems` and
 `report_exit_code` for commands that report collected problems, `LazyGroup` to import subcommand modules only when
@@ -104,7 +109,7 @@ they run, and `devkit_cli.testing.invoke` with `Outcome.json()` and `Outcome.cod
 
 `devkit` itself is built this way: `devkit_dist.adapters.cli` binds `Boundary("devkit")` (`DEVKIT_QUIET`,
 `DEVKIT_VERBOSE`, `DEVKIT_STRICT`), and the root group is a `LazyGroup` extended with `devkit.commands` plugins
-(`ARCH-05-3-command-plugins`), which is how `devkit spec` and `devkit run` mount
+(`ARCH-05-3-command-plugins`), which is how `devkit docs`, `devkit spec` and `devkit run` mount
 ([Harness](harness.md)).
 
 ## Keep a tool's structure healthy
@@ -132,11 +137,11 @@ repositories already consume it, it is a semver contract released in lockstep wi
 
 ## Sources
 
-- [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md):
+- [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md):
   the boundary, helpers, test helper and the `cli-tool` rules.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
   the output contract the toolkit implements.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   the advisories it renders.
-- [ARCH-05-3-command-plugins](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-05-3-command-plugins.md):
+- [ARCH-05-3-command-plugins](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-05-3-command-plugins.md):
   how `devkit` mounts command plugins.

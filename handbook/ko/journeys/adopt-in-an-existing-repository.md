@@ -5,7 +5,7 @@ sources:
   CAP-HARN-command-mount: null
   UC-adopt-in-an-existing-repository: null
 title: 기존 저장소에 devkit 도입하기
-translated_from: en/journeys/adopt-in-an-existing-repository.md@67c0dd2b17682b6d
+translated_from: en/journeys/adopt-in-an-existing-repository.md@2299327ca7e2b38b
 ---
 
 # 기존 저장소에 devkit 도입하기
@@ -58,8 +58,13 @@ translated_from: en/journeys/adopt-in-an-existing-repository.md@67c0dd2b17682b6d
 향후 관련 작업을 진행할 때 점진적으로 이관하도록 남겨 둡니다.
 
 이 페이지의 바탕이 되는 유스케이스는
-[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
+[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
 번들, 동기화(sync), Living Spec 같은 핵심 개념은 [개념](../concepts.md)을 참고하십시오.
+
+이 경로는 레거시 규칙 위반을 격리해 두고 점진적으로 이관하는 방법입니다. 아이디어를 인큐베이션해 왔고 그렇게 유지해 온 제품에서
+스펙 주도 전달을 도입하려 한다면, 인큐베이션 베이스라인을 요청하십시오. 이 경우
+[`UC-adopt-sdd-from-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-adopt-sdd-from-incubation.md) (영어 원문)을
+따르며, SDD를 활성화하기 전에 제품을 검증하고 레거시 문서는 이동하지 않습니다.
 
 ## 시작하기 전에
 
@@ -73,14 +78,16 @@ uv add --dev devkit devkit-spec
 uv run devkit sync
 ```
 
-devkit-spec은 자체 실행 파일을 따로 제공하지 않습니다. 엔트리 포인트를 통해 `spec` 번들과 `devkit spec` 명령어 그룹을 등록하므로,
-모든 작업은 프로젝트 환경에 설치된 단일 `devkit` 실행 파일 하나로 실행됩니다
-([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문)).
+devkit-spec을 설치하면 devkit-docs도 함께 설치됩니다. 두 패키지 모두 자체 실행 파일을 따로 제공하지 않습니다. 엔트리 포인트를 통해
+`spec`·`docs` 번들과 `devkit spec`·`devkit docs` 명령어 그룹을 등록하므로, 모든 작업은 프로젝트 환경에 설치된 단일 `devkit`
+실행 파일 하나로 실행됩니다
+([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문)).
 
 이어서 `devkit sync`를 실행하면 다음 세 가지 작업이 진행됩니다
-([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)):
+([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)):
 
-- 번들의 `core` 프리셋을 `.devkit/managed/spec/` 디렉터리로 복사합니다.
+- 두 번들의 `core` 프리셋을 `.devkit/managed/spec/`와 `.devkit/managed/docs/` 디렉터리로 복사합니다. `docs`에는 공유 문서
+  지침, 템플릿, 문서 규칙이, `spec`에는 전달 수명 주기가 담겨 있습니다.
 - 스킬과 역할 계약을 지원 대상 에이전트 호스트 디렉터리로 프로젝션합니다.
 - 루트 `AGENTS.md`의 관리 블록에 안내 포인터 라인을 추가합니다.
 
@@ -90,10 +97,11 @@ devkit-spec은 자체 실행 파일을 따로 제공하지 않습니다. 엔트�
 
 ```bash
 uv run devkit spec --version
+uv run devkit docs --version
 ```
 
-`[VERSION: devkit-spec <version>]` 형태로 출력됩니다. 참고로 `devkit --version`은 spec 패키지가 아니라 devkit 자체의 버전을
-출력한다는 점에 유의하십시오.
+`[VERSION: devkit-spec <version>]`와 `[VERSION: devkit-docs <version>]` 형태로 출력됩니다. 참고로 `devkit --version`은 이
+패키지들이 아니라 devkit 자체의 버전을 출력한다는 점에 유의하십시오.
 
 ## 3. 베이스라인 점검
 
@@ -101,10 +109,10 @@ uv run devkit spec --version
 uv run devkit rules check
 ```
 
-이제 스펙 거버넌스 규칙이 `docs/` 및 `specs/` 디렉터리에 이미 존재하는 Markdown 문서들을 검사합니다. 기존 저장소(brownfield)에서는
+이제 문서 규칙과 스펙 거버넌스 규칙이 `docs/` 및 `specs/` 디렉터리에 이미 존재하는 Markdown 문서들을 검사합니다. 기존 저장소(brownfield)에서는
 대개 위반 사항이 보고됩니다. 예를 들어 ADR-0001과 같은 번호 기반 ID, 필수 프론트매터 누락, Living Spec 레이아웃 표준과 맞지 않는 경로
-등이 감지됩니다. 검사 결과는 위반 규칙, 대상 파일, 해결 조치 사항을 담은 `[VIOLATION: ...]` 형태로 출력됩니다. 11가지 규칙 목록은
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
+등이 감지됩니다. 검사 결과는 위반 규칙, 대상 파일, 해결 조치 사항을 담은 `[VIOLATION: ...]` 형태로 출력됩니다. 14가지 규칙(`docs`가 제공하는 문서 규칙 9개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
 있으며, `uv run devkit rules explain <RULE-id>`로 개별 규칙의 가이드를 확인할 수 있습니다.
 
 ## 4. 에이전트를 통한 레거시 문서 격리
@@ -116,7 +124,7 @@ uv run devkit rules check
 
 1. 기존 레거시 Markdown 목록을 취합하고, 파일이 많거나 여러 성격이 혼재된 경우 사용자와 함께 검토합니다.
 2. 레거시 파일들을 `docs/materials/_legacy/<원래 경로>` 위치로 이동합니다. 자료(`materials/`) 디렉터리는 자유 형식
-   디렉터리이므로 스펙 거버넌스 규칙 검사 대상에서 제외됩니다.
+   디렉터리이므로 문서 규칙과 스펙 거버넌스 규칙 검사 대상에서 제외됩니다.
 3. 저장소 내 다른 파일에서 이동된 경로를 참조하던 링크를 일괄 갱신합니다.
 4. 본격적인 내용 이관에 앞서 파일 이동만을 별도의 단일 커밋으로 제안하므로, 파일 이동 내역과 향후 내용 수정을 명확히 분리하여 검토할 수 있습니다.
 
@@ -135,11 +143,11 @@ uv run devkit gate status
 
 ## 추가 선택 옵션
 
-- **문서 기본 골격 구성:** `uv run devkit add spec:docs-skeleton` 명령어는 아직 존재하지 않는 골격 파일만 안전하게 생성합니다.
+- **문서 기본 골격 구성:** `uv run devkit add docs:docs-skeleton` 명령어는 아직 존재하지 않는 골격 파일만 안전하게 생성합니다.
   예를 들어 기존의 `docs/README.md` 같은 파일은 덮어쓰지 않고 유지됩니다.
 - **명령어만 사용하고 번들 배포 건너뛰기:** `.devkit/config.toml`에 `[presets] spec = false`를 설정하고
-  `uv run devkit sync`를 실행합니다. 관리 파일이나 프로젝션 파일은 배포되지 않지만 `devkit spec` 명령어는 계속
-  사용할 수 있습니다.
+  `uv run devkit sync`를 실행합니다. `spec` 번들의 관리 파일이나 프로젝션 파일은 배포되지 않지만 `devkit spec` 명령어는
+  계속 사용할 수 있습니다. `docs`까지 제거하면 SDD가 지원되지 않는 구성이 되며, `uv run devkit add docs`로 복원합니다.
 - **정책 검토:** `uv run devkit spec policy` 명령어로 현재 설정된 승인 게이트 목록을 확인합니다. 확정된 결정 사항은
   `.devkit/config.toml`에 기록하십시오. 자세한 내용은 [전달](../areas/delivery.md) 문서를 참고하십시오.
 

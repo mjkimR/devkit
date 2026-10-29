@@ -4,7 +4,7 @@ sources:
   CAP-INT-mcp-services: null
   CAP-MCP-runtime-registration: null
 title: 호스트
-translated_from: en/areas/host.md@c39331657384ce21
+translated_from: en/areas/host.md@73f2cc1f44921dd2
 ---
 
 # 호스트
@@ -178,8 +178,8 @@ devkit host status --format json
 
 ## 관련 자료
 
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문):
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문):
   훅 에셋 규약, 공유 설정 소유권, 디스패치 메커니즘, 관찰자 및 상태 진단.
-- [Host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/host.md): MCP 서비스를 포함한
+- [Host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/host.md): MCP 서비스를 포함한
   명령어 및 오류 코드 레퍼런스.
 - 관련 문서: [MCP](mcp.md)(`CAP-MCP-runtime-registration`), [통합](integration.md).

@@ -6,7 +6,7 @@ sources:
   CAP-MCP-runtime-registration: null
   UC-drive-development-to-integration: null
 title: MCP
-translated_from: en/areas/mcp.md@19690e342d2cced5
+translated_from: en/areas/mcp.md@c8130ad29347978e
 ---
 
 # MCP
@@ -69,16 +69,24 @@ translated_from: en/areas/mcp.md@19690e342d2cced5
 
 | 작업 목적 | 실행 명령 |
 | --- | --- |
-| 어떤 런타임이 사용되는지 확인 | `devkit mcp status --descriptor --format json` |
-| 프로젝트 항목 등록 | `devkit mcp setup [--host codex\|claude\|antigravity]` |
+| 어떤 런타임이 사용되는지 확인 | `devkit mcp status --descriptor [--executable <python>] --format json` |
+| 프로젝트 항목 등록 | `devkit mcp setup [--executable <python>] [--host codex\|claude\|antigravity ...]` |
 | 목표 등록, 기록된 등록, 프로젝트 등록 상태 확인 | `devkit mcp status --format json` |
 | devkit 자체 등록 항목 제거 | `devkit mcp remove` |
 
 런타임이 설치되어 있으면 일반적인 `devkit sync` 명령이 선택된 각 에이전트의 프로젝트 파일에 있는 devkit 등록 항목을 자동으로 맞춥니다.
 Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agents/mcp_config.json`을 사용합니다. 자동 등록을
 해제하려면 `[mcp] register = false`로 설정하세요. 새로 생성된 작업 워크트리는 잠긴 에셋 복원 직후 `devkit sync --registrations-only`를
-통해 필요한 항목을 설정합니다([워크트리](worktree.md) 참고). 호스트별 상세 설정 절차는
-[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.4/guides/install/mcp.md) (영어 원문) 가이드를 참고하세요.
+통해 필요한 항목을 설정합니다([워크트리](worktree.md) 참고).
+
+검증된 런타임이 없으면 `mcp setup`은 아무것도 쓰기 전에 `MCP_RUNTIME_UNAVAILABLE`로 거부합니다. 일반 sync 뒤에는 같은 코드가
+경고로만 보고됩니다. `--host`(반복 가능)는 지정한 호스트로 등록을 제한하며, setup은 프로젝트 전체를 맞추므로 지정하지 않은
+호스트의 소유 항목은 제거됩니다. 이후 `--host` 없이 실행하면 설정된 에이전트가 다시 등록됩니다.
+
+`devkit status`는 MCP 등록을 전혀 검사하지 않습니다. locked sync가 원래 했을 등록 쓰기를 보류하면
+`uv run devkit sync --registrations-only`를 해결 방법으로 하는 `MCP_REGISTRATION_PENDING`을 보고합니다. 실제 등록 계획은
+`devkit mcp status`, `mcp setup`, 그리고 두 가지 sync 모드에서 진단합니다. 호스트별 상세 설정 절차는
+[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.5/guides/install/mcp.md) (영어 원문) 가이드를 참고하세요.
 
 ## 등록 작업의 파일 변경 원칙
 
@@ -92,11 +100,13 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
   동일한 내용의 항목을 임의로 넘겨받지 않습니다.
 - 호스트의 신뢰 설정, 권한, 전역 설정은 호스트 고유 영역으로 유지됩니다. 사용자 설정이나 관리 설정에 선언된 동일한 이름의 항목은
   충돌로만 보고되며 읽기 전용으로 취급됩니다.
-- 변경 작업이 중간에 중단되면 다음 작업 전에 먼저 복구됩니다. `--dry-run` 및 `--check` 옵션은 실제 쓰기 없이 계획만 수립하며,
-  locked sync는 호스트 파일을 변경하지 않고 유효성만 검증합니다.
+- 변경 작업이 중간에 중단되면 다음 작업 전에 먼저 복구됩니다(`MCP_REGISTRATION_INTERRUPTED`, `uv run devkit sync`로 해결).
+  `--dry-run` 및 `--check` 옵션은 실제 쓰기 없이 계획만 수립하며, locked sync는 호스트 파일을 변경하지 않고 유효성만 검증합니다.
+- devkit이 마지막 소유 항목을 제거할 때, 유지되는 좁은 범위의 제외 규칙을 한 번 알려 줍니다(`MCP_EXCLUSIONS_RETAINED`). 더 이상
+  필요 없다면 직접 제거하세요.
 
-등록이 완료되었다고 해서 실제 연결까지 확인된 것은 아닙니다. status 명령은 실제 연결 상태, 폼 지원 여부, 신뢰 및 권한 상태를
-알 수 없음(unknown)으로 보고합니다.
+등록이 완료되었다고 해서 실제 연결까지 확인된 것은 아닙니다. `devkit mcp status`는 실제 연결 상태, 신뢰 및 권한 상태를 알 수
+없음(unknown)으로 보고합니다(JSON). 텍스트 출력은 `[MCP: ...]` 한 줄과 호스트마다 `[MCP_HOST: ...]` 한 줄을 출력합니다.
 
 ## 서버 보호 메커니즘
 
@@ -104,10 +114,10 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 소유 설정 작업 공간(owning configuration workspace)입니다. 도구 입력을 통해서는 작업 공간을 변경할 수 없습니다.
 
 - **실행 클래스(Execution classes).** 각 도구는 `read_only`, `bounded_write`, `preflight`, `interactive`, `approved_resume`
-  중 하나로 선언되며, 선언되지 않은 도구는 `interactive`로 취급됩니다. 네이티브 확인은 사용자가 수락(accept)과 승인(approve)을 모두
-  완료했을 때만 유효합니다. 거절, 취소, 연결 끊김이 발생하거나 폼을 지원하지 않는 호스트에서는 어떠한 권한도 부여되지 않습니다.
-- **클라우드 환경**에서는 읽기 전용 도구만 노출되며, 승인 폼 요청과 쓰기 작업은 거부됩니다. 가드 검사는 대기 후 및 실제 영향이
-  발생하기 직전에 반복 수행됩니다.
+  중 하나로 선언되며, 선언되지 않은 도구는 `interactive`로 취급됩니다. 전송 계층은 확인 폼을 요청하지 않으며 비즈니스 권한도
+  부여하지 않습니다. 승인은 Host가 권한을 부여한 CLI의 몫입니다.
+- **클라우드 환경**에서는 읽기 전용 도구만 노출되며, 쓰기 작업은 거부됩니다. 가드 검사는 잠금 대기 후 및 실제 영향이 발생하기
+  직전에 반복 수행됩니다.
 - **코드 변경 감지(Stale code).** 서버는 로드된 devkit 코드의 해시를 기록합니다. 디스크의 코드가 변경되면 읽기 전용이 아닌 모든 호출이
   `MCP_RUNTIME_STALE` 오류로 거부됩니다. 이 경우 서비스를 재시작하거나 다시 연결해야 합니다. 읽기 전용 도구는 정상 작동합니다.
 - **작업 공간 유실.** 소유 작업 공간이 없거나 형식이 잘못된 경우 안전하게 실패(fail closed) 처리됩니다(`MCP_WORKSPACE_UNAVAILABLE`).
@@ -118,11 +128,12 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 제시한 뒤, `ask` 정책에 따라 사용자의 결정을 받아 CLI를 직접 호출합니다(`CAP-INT-mcp-services`, [통합](integration.md) 참고).
 호스트의 도구 신뢰 프롬프트나 샌드박스 확인 등은 이 비즈니스 승인 결정과 별개의 문제입니다.
 
-폼 텍스트가 표시될 때 사용 언어는 소유 작업 공간의 설정을 따릅니다. 이 설정이 가드 검사나 등록 자체를 변경하지는 않습니다.
+도구가 반환하는 도메인 텍스트의 언어는 소유 작업 공간의 설정을 따릅니다. 언어나 작업 공간을 고르는 도구 인자는 없으며, 이
+설정이 가드 검사나 등록 자체를 변경하지는 않습니다.
 
 ## 공유 아티팩트 도구
 
-공유 아티팩트 서비스는 `shared_put`(별도의 승인 폼이 필요 없는 범위 한정 쓰기)과 읽기 전용 도구인 `shared_get`, `shared_list`를
+공유 아티팩트 서비스는 `shared_put`(승인이 필요 없는 범위 한정 쓰기)과 읽기 전용 도구인 `shared_get`, `shared_list`를
 제공합니다. 이 도구들은 `devkit shared` CLI와 동일한 식별자, 보존 주기, 어댑터 규칙을 따릅니다(`CAP-COLL-shared-artifacts`).
 클라우드 환경에서는 쓰기 도구가 목록에 노출되지 않으며 호출도 거부됩니다.
 
@@ -132,15 +143,19 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 | --- | --- |
 | `MCP_RUNTIME_UNAVAILABLE` | 서비스 패키지와 일치하는 유지 런타임을 설치하거나 선택한 뒤 다시 동기화합니다. |
 | `MCP_RUNTIME_STALE` | 서비스를 재시작하거나 다시 연결한 뒤 명령을 다시 호출합니다. |
-| `MCP_REGISTRATION_CONFLICT` | 수정되었거나 소유권이 없는 항목을 확인하고, 동기화 전에 정확한 소유권을 복원합니다. |
-| `MCP_REGISTRATION_UNAVAILABLE` | 호스트 파일을 직접 수정하지 말고, 호스트 설정 절차나 CLI 경로를 사용합니다. |
+| `MCP_REGISTRATION_CONFLICT` | 지목된 파일(수정되었거나 형식이 잘못되었거나 소유권이 없는 항목)을 어떻게 복원할지 사용자가 결정한 뒤 동기화합니다. |
+| `MCP_REGISTRATION_UNAVAILABLE` | 대상이 추적 중이거나, 보이는 파일이거나, 외부 파일을 숨기게 됩니다. 그대로 두고 호스트 설정 절차를 사용합니다. |
+| `MCP_REGISTRATION_INTERRUPTED`, `MCP_LEDGER_UNIGNORED` | `uv run devkit sync`를 실행합니다. |
+| `MCP_REGISTRATION_PENDING` | locked sync가 쓰기를 보류했습니다. `uv run devkit sync --registrations-only`를 실행합니다. |
+| `MCP_HOST_UNSUPPORTED`, `MCP_REGISTRATION_SHADOWED` | 선택된 호스트에 어댑터가 없거나, 같은 이름의 사용자·관리 항목이 프로젝트 항목을 가립니다. 호스트 고유 도구로 해결합니다. |
+| `MCP_CHECKOUT_REQUIRED` | `--workspace-root`가 `.devkit/`을 가진 Git 체크아웃의 최상위를 가리키게 합니다. |
 | `MCP_INTERACTIVE_UNAVAILABLE` | 로컬 대화형 Host나 CLI 경로를 사용합니다. |
 
 ## 출처
 
-- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문):
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문):
   런타임 계약, 등록, Host 워크플로와 공유 아티팩트 서비스.
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
   (프로젝트 MCP 등록 경계)과
-  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/host.md#mcp-services).
+  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/host.md#mcp-services).
 - 관련 문서: [호스트](host.md), [협업](collaboration.md), [통합](integration.md).

@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-GOV-evaluation-lifecycle: 09513061ab84de0d59808868b0c34cee64b0e455
-  CAP-HARN-agent-guidance: dbab285c20602e97d78db8768dc21e0a5613b379
-  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
+  CAP-GOV-evaluation-lifecycle: 3e13fc27305e7933a1876ea9879a7423b5a771e0
+  CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
+  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
 title: Resolve stale activity branches
 ---
@@ -58,8 +58,8 @@ nothing on its own.
 
 For activity branches and task worktrees, see [Concepts](../concepts.md) and the [worktree area](../areas/worktree.md).
 
-Source: [`UC-resolve-stale-activity-branches`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/delivery/UC-resolve-stale-activity-branches.md),
-contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
+Source: [`UC-resolve-stale-activity-branches`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-resolve-stale-activity-branches.md),
+contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
 (section "Stale Branches").
 
 ## Before you start
@@ -79,7 +79,7 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/
    ```
 
    The `feedback-hygiene` playbook runs it too. Hygiene extensions belong to the `hygiene` phase
-   ([`CAP-GOV-evaluation-lifecycle`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md),
+   ([`CAP-GOV-evaluation-lifecycle`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md),
    [governance area](../areas/governance.md)).
 2. **Read the result.** Each `plan-*` or `dev-*` branch, local or remote-tracking, whose last activity (the later of its
    last commit and its pull request's last update) is older than `stale_after` gets a line, most idle first:
@@ -89,7 +89,8 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/
    [SUMMARY: checked=yes branches=... stale=1 stale_after=14d]
    ```
 
-   Each one is also a `WORKTREE_STALE_BRANCH` warning whose `[FIX]` names the resume command and the discard
+   Each one is also a `WORKTREE_STALE_BRANCH` warning whose `[REPORT]` asks you whether to resume or discard it. Its
+   `[FIX]` is the exact resume command when the branch's unit is recorded, and a `[DETAIL]` names the discard
    commands. The report changes nothing.
 3. **Decide.** The agent tells you about each stale branch with both paths and takes neither unasked.
 4. **To discard:** the agent first closes the branch's open pull request and deletes its remote copies (devkit leaves
@@ -101,7 +102,7 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/
 
    This removes the worktree, deletes the unmerged branch and prints `[WORKTREE_FINISHED: ...]` with
    `merged=no discarded=yes`.
-5. **To resume:** the agent runs the command the warning names, for example
+5. **To resume:** the agent runs the command the warning's `[FIX]` names, for example
 
    ```sh
    uv run devkit worktree start plan-<slug> --existing-branch plan-<slug> --unit docs/proposals/PROP-<slug>
@@ -119,15 +120,17 @@ contract [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/
   in a hygiene run the extension shows as `HYGIENE_EXTENSION_FAILED` without failing the run. Fix the value.
 - **`WORKTREE_STALE_SKIPPED` notice, `checked=no`.** `gh` is missing or logged out, so nothing was judged. Log in and
   rerun. This is not a failure.
-- **`WORKTREE_STALE_PR_UNKNOWN`, `pr=unknown`.** `gh pr list` failed; branches were judged by their last commit alone.
+- **`pr=unknown`.** `gh pr list` failed; branches were judged by their last commit alone. A repository with a GitHub
+  remote also gets a `WORKTREE_STALE_PR_UNKNOWN` notice; one without a GitHub remote, where the lookup fails on every
+  run, only logs it.
 - **The branch carries an accepted proposal still in the base.** Discarding it is a close: you decide supersede or
   abandon, the agent commits the close (for an abandon, the rejection ADR and the deletion of the accepted proposal) to the base as Backlog
   work, and only then discards the branch
-  ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
+  ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
 - **The branch exists only on a remote.** The `[FIX]` names `git -C <base> push origin --delete dev-<slug>` and no
   local discard; once the remote copy is gone nothing is left.
-- **`WORKTREE_DIRTY`.** The worktree has uncommitted or untracked changes. devkit never removes it by force; you
-  decide what happens to the changes, then rerun.
+- **`WORKTREE_DIRTY`.** The worktree has uncommitted or untracked changes. devkit checks this before any change and
+  never removes the worktree by force; you decide what happens to the changes, then rerun.
 - **`WORKTREE_BASE_ON_BRANCH`.** The branch was started with `--no-worktree` and the base checkout is still on it. Its
   `[FIX]` switches the base back to the branch it started from; rerun.
 - **`WORKTREE_LOCKED`.** The worktree is locked. Its `[FIX]` is `git worktree unlock <path>`, run only once you agree.

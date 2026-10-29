@@ -1,10 +1,10 @@
 ---
 sources:
-  CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
-  CAP-HOST-lifecycle-observation: bae2e546b3e578a9a4e3f3094cb304851174520b
-  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
-  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
-  UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
+  CAP-COLL-shared-artifacts: 83dfa43f60f67f8a6eab85414d90c95ba27e2982
+  CAP-HOST-lifecycle-observation: ae687191311536ae259168b69a18e389f35997ac
+  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
+  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
+  UC-drive-development-to-integration: ede0ca1f9647c2e9e1a520d97818d09fa7bcb5e4
 title: MCP
 ---
 
@@ -67,16 +67,25 @@ worktree's `.venv` or an editable linked-worktree source. Then let sync register
 
 | You want to | Run |
 | --- | --- |
-| Check which runtime would be used | `devkit mcp status --descriptor --format json` |
-| Register the project entry | `devkit mcp setup [--host codex\|claude\|antigravity]` |
+| Check which runtime would be used | `devkit mcp status --descriptor [--executable <python>] --format json` |
+| Register the project entries | `devkit mcp setup [--executable <python>] [--host codex\|claude\|antigravity ...]` |
 | See desired, recorded and project registration | `devkit mcp status --format json` |
 | Remove devkit's own entry | `devkit mcp remove` |
 
 With the runtime installed, ordinary `devkit sync` reconciles the devkit entry of each selected agent's project file:
 `.codex/config.toml` for Codex, `.mcp.json` for Claude Code, and `.agents/mcp_config.json` for Antigravity. Set
 `[mcp] register = false` to opt out. New task worktrees get their entry through `devkit sync --registrations-only`
-right after locked asset restoration (see [Worktree](worktree.md)). The step-by-step host setup is the guide
-[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.4/guides/install/mcp.md).
+right after locked asset restoration (see [Worktree](worktree.md)).
+
+`mcp setup` refuses with `MCP_RUNTIME_UNAVAILABLE` before writing anything when no verified runtime exists; after an
+ordinary sync the same code is only a warning. `--host` (repeatable) limits registration to the named hosts, and
+because setup reconciles the whole project, owned entries of every other host are removed; a later run without
+`--host` registers the configured agents again.
+
+`devkit status` does not inspect MCP registration at all. When locked sync holds back a registration write it would
+have made, it reports `MCP_REGISTRATION_PENDING` with `uv run devkit sync --registrations-only` as the fix; `devkit mcp
+status`, `mcp setup` and the two sync modes are where real registration plans are diagnosed. The step-by-step host setup is the guide
+[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.5/guides/install/mcp.md).
 
 ## What registration will and will not touch
 
@@ -90,11 +99,13 @@ Registration is careful about files that are not its own:
   does not own is never adopted.
 - Host trust, permissions and global settings stay with the host. Same-name declarations in user or managed settings
   are reported as collisions, read-only.
-- An interrupted change is recovered before the next one. `--dry-run` and `--check` plan without writing; locked sync
-  validates without changing host files.
+- An interrupted change is recovered before the next one (`MCP_REGISTRATION_INTERRUPTED`, fixed by `uv run devkit
+  sync`). `--dry-run` and `--check` plan without writing; locked sync validates without changing host files.
+- When devkit removes its last owned entry, it reports the narrow exclusions it keeps once
+  (`MCP_EXCLUSIONS_RETAINED`); remove them by hand if you no longer want them.
 
-Registered does not mean connected: status reports the effective connection, form support, trust and permission as
-unknown.
+Registered does not mean connected: `devkit mcp status` reports the effective connection, trust and permission as
+unknown (in JSON); its text prints one `[MCP: ...]` line and one `[MCP_HOST: ...]` line per host.
 
 ## How the server protects you
 
@@ -102,10 +113,10 @@ unknown.
 configuration workspace (the checkout whose configuration applies). Tool input cannot change the workspace.
 
 - **Execution classes.** Each tool declares itself `read_only`, `bounded_write`, `preflight`, `interactive` or
-  `approved_resume`; an undeclared tool counts as `interactive`. A native confirmation counts only when you both
-  accept and approve; a decline, cancel, disconnect or a host without form support grants nothing.
-- **Cloud environments** expose only read-only tools and refuse forms and writes. Guards repeat after waits and
-  before effects.
+  `approved_resume`; an undeclared tool counts as `interactive`. The transport asks for no confirmation form and
+  grants no business authority: approval belongs to the Host-authorized CLI.
+- **Cloud environments** expose only read-only tools and refuse writes. Guards repeat after lock waits and before
+  effects.
 - **Stale code.** The server records a hash of the devkit code it loaded. If that code changed on disk, every
   non-read-only call is refused with `MCP_RUNTIME_STALE`: restart or reconnect the service. Read-only tools keep
   working.
@@ -117,12 +128,12 @@ Lifecycle mutations (integration, cleanup) are not MCP tools. The Host checks th
 target and effects, takes your decision under `ask`, and then calls the CLI (`CAP-INT-mcp-services`, see
 [Integration](integration.md)). Host trust, tool and sandbox prompts are a separate matter from that decision.
 
-When form text is shown, its language follows the owning workspace's preference; that never changes a guard or a
-registration.
+Domain text a tool returns follows the owning workspace's language preference; no tool argument selects a language
+or workspace, and the preference never changes a guard or a registration.
 
 ## Shared artifact tools
 
-The shared-artifact service offers `shared_put` (a bounded write that needs no approval form) and the read-only
+The shared-artifact service offers `shared_put` (a bounded write that needs no approval) and the read-only
 `shared_get` and `shared_list`. They follow the same identity, retention and adapter rules as the
 `devkit shared` CLI (`CAP-COLL-shared-artifacts`). In a cloud environment the write tool is neither listed nor
 accepted.
@@ -133,15 +144,19 @@ accepted.
 | --- | --- |
 | `MCP_RUNTIME_UNAVAILABLE` | Install or select a retained runtime with matching service packages, then reconcile. |
 | `MCP_RUNTIME_STALE` | Restart or reconnect the service, then call again. |
-| `MCP_REGISTRATION_CONFLICT` | Inspect edited or unowned entries; restore exact ownership before syncing. |
-| `MCP_REGISTRATION_UNAVAILABLE` | Leave host files alone; use host setup or the CLI route. |
+| `MCP_REGISTRATION_CONFLICT` | You decide how to restore the named file (edited, malformed or unowned entries), then sync. |
+| `MCP_REGISTRATION_UNAVAILABLE` | The destination is tracked, visible or would hide foreign files; leave it alone and use host setup. |
+| `MCP_REGISTRATION_INTERRUPTED`, `MCP_LEDGER_UNIGNORED` | Run `uv run devkit sync`. |
+| `MCP_REGISTRATION_PENDING` | Locked sync held back a write; run `uv run devkit sync --registrations-only`. |
+| `MCP_HOST_UNSUPPORTED`, `MCP_REGISTRATION_SHADOWED` | A selected host has no adapter, or a user or managed entry of the same name shadows the project one; resolve it with the host's own tools. |
+| `MCP_CHECKOUT_REQUIRED` | Point `--workspace-root` at the top level of a Git checkout that holds `.devkit/`. |
 | `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or the CLI route. |
 
 ## Sources
 
-- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/mcp/CAP-MCP-runtime-registration.md):
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/mcp/CAP-MCP-runtime-registration.md):
   runtime contract, registration, Host workflow and shared artifact services.
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
   (project MCP registration boundary) and the
-  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/host.md#mcp-services).
+  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/host.md#mcp-services).
 - Related: [Host](host.md), [Collaboration](collaboration.md), [Integration](integration.md).

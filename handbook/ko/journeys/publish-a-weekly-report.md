@@ -4,7 +4,7 @@ sources:
   UC-inspect-weekly-repository-progress: null
   UC-publish-a-weekly-report: null
 title: 주간 보고서 게시하기
-translated_from: en/journeys/publish-a-weekly-report.md@d707a4ae7471c38f
+translated_from: en/journeys/publish-a-weekly-report.md@08e4e68031de0e4e
 ---
 
 # 주간 보고서 게시하기
@@ -55,8 +55,8 @@ translated_from: en/journeys/publish-a-weekly-report.md@d707a4ae7471c38f
 
 보고서 생성은 별도의 단계(`UC-inspect-weekly-repository-progress`)에서 진행됩니다. 두 작업 모두 선택형 `maintenance` 카탈로그 번들의 `weekly-report` 플레이북에 포함되어 있습니다. 자세한 내용은 [전달 영역](../areas/delivery.md)을 참고하고, 플레이북 전반에 관한 내용은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문),
-계약 [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+출처: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문),
+계약 [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
 
 ## 시작하기 전에
 

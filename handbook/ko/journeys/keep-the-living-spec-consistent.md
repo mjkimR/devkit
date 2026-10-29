@@ -6,7 +6,7 @@ sources:
   CAP-TRACE-code-entrypoints: null
   UC-keep-the-living-spec-consistent: null
 title: Living Spec 일관성 유지하기
-translated_from: en/journeys/keep-the-living-spec-consistent.md@cac4759bde05e33d
+translated_from: en/journeys/keep-the-living-spec-consistent.md@de85e56bda890404
 ---
 
 # Living Spec 일관성 유지하기
@@ -63,17 +63,18 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)에서 다룹니다. 본 문서에서 사용되는 핵심 개념(Living Spec,
 거버넌스 규칙, 커밋 게이트(commit gate) 등)은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
+출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
 
 ## 시작하기 전에
 
-- 프로젝트가 `spec` 번들을 선택했고, `devkit sync`가 관련 규칙을 이미 배포한 상태여야 합니다(규칙은 `core` 프리셋에 포함되어 배포됩니다).
+- 프로젝트가 `docs` 번들을 선택했고, `devkit sync`가 문서 규칙을 이미 배포한 상태여야 합니다(규칙은 `core` 프리셋에 포함되어 배포됩니다).
+  스펙 주도 전달을 사용하면 `spec` 번들이 기능 스펙과 제안의 수명 주기 규칙을 더합니다.
 - 이 규칙들은 일반적인 devkit 거버넌스 규칙이므로 `.devkit/config.toml`의 `[rules]` 섹션에서 설정하는 페이즈(phase), 심각도(severity),
   예외 설정이 모두 동일하게 적용됩니다. 자세한 내용은 [거버넌스 규칙](../areas/governance.md) 영역 문서를 참고하십시오.
 
 ## 단계별 점검 및 유지 절차
 
-1. **변경 사항 검사:** 작업 공간 전체 또는 수정한 파일들에 대해 스펙 거버넌스 규칙을 실행합니다.
+1. **변경 사항 검사:** 작업 공간 전체 또는 수정한 파일들에 대해 규칙을 실행합니다.
 
    ```sh
    uv run devkit rules check                      # whole workspace
@@ -106,8 +107,8 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 
 ## 주요 스펙 규칙과 검사 항목
 
-11가지 규칙 목록은
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
+14가지 규칙(`docs`가 제공하는 문서 규칙 9개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
 정리되어 있습니다. 가장 자주 접하게 되는 규칙은 다음과 같습니다.
 
 | 규칙 | 감지되는 위반 상황 | 자동 수정 지원 |
@@ -118,15 +119,20 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 | `RULE-spec-lifecycle` | `spec.md`, `tasks.md`, `reconcile.md`의 생명주기 상태가 서로 불일치함 | `status: completed`로 동기화 |
 | `RULE-reconcile-contract` | `resolved` 기록에 명시된 `modified` 대상 문서가 실제 Git diff에서 변경되지 않음 | 수동 수정 필요 |
 | `RULE-code-entrypoints` | `entrypoints`에 선언된 소스 코드 파일 경로가 존재하지 않음 | 수동 수정 필요 |
+| `RULE-steering-documents` | `docs/steering/`의 파일에 `id`가 있거나 `title`·`summary`가 없거나, 디렉터리가 상한을 넘음 | 수동 수정 필요 |
+| `RULE-ux-links` | UX 문서와 그 문서를 인용하는 유스케이스 단계가 서로 맞지 않음 | 수동 수정 필요 |
+
+프로젝트의 개발 방식이 인큐베이션인 동안에도 문서 규칙은 평소와 같이 판정하지만, 수명 주기 규칙은 SDD 워크플로에 명시적으로 바인딩된
+유닛에만 적용됩니다. 적용할 유닛이 없으면 검사 성공이 아니라 누락 증거로 `SDD_LIFECYCLE_INACTIVE`를 보고합니다.
 
 문서가 ID를 부여받는 체계와 참조가 해석되는 원리는 문서 모델인
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
 정의되어 있습니다([문서](../areas/documents.md) 영역 참고).
 
 ## 문제 해결
 
-- **`SPEC_CONFIG_INVALID` 에러로 명령어 실행 실패 (종료 코드 `2`):** `.devkit/config.toml`의 `[tool.spec]` 테이블 설정에 알 수 없는 키가
-  포함되는 등 구문 오류가 있는 경우입니다. 이는 개별 문서의 규칙 위반이 아니라 설정 오류입니다. 규칙 엔진이 문서별 적용 규약을 판별할 수
+- **`DOCS_CONFIG_INVALID` 에러로 명령어 실행 실패 (종료 코드 `2`):** 문서 네임스페이스를 등록하는 `.devkit/config.toml`의
+  `[tool.docs]` 테이블 설정에 알 수 없는 키가 포함되는 등 구문 오류가 있는 경우입니다. 이는 개별 문서의 규칙 위반이 아니라 설정 오류입니다. 규칙 엔진이 문서별 적용 규약을 판별할 수
   없으므로 아무런 검사도 진행되지 않습니다. 설정 테이블을 올바르게 수정한 후 다시 실행하십시오.
 - **자동 수정(`fix`) 실행 후에도 위반 사항이 `open` 상태로 남아 있는 경우:** 모호함 없이 기계적으로 수정할 수 없는 위반 사항입니다. 예를 들어
   저장소 어디에도 선언되지 않은 미식별 ID 참조, 삭제된 코드 엔트리포인트, 필수 누락된 reconcile 증빙 등이 이에 해당합니다. 자동 수정 기능은
@@ -135,7 +141,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
   있던 코드를 삭제하거나 다른 위치로 이동했기 때문입니다. `RULE-code-entrypoints`는 유효하지 않은 경로를 선언하고 있는 모든 문서를 즉시
   감지합니다. 해당 코드를 복원하거나, 문서의 엔트리포인트 선언을 이동된 새 코드 경로로 갱신하거나, 불필요한 선언을 제거한 뒤 다시 커밋하십시오.
   코드 경로 추적성 계약에 대한 자세한 내용은
-  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
+  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
   정의되어 있습니다([추적성](../areas/traceability.md) 영역 참고).
 - **`reconcile.md` 관련 오류로 커밋이 거부되는 경우:** 이번 커밋에서 실제로 수정하지 않은 문서를 `modified` 대상으로 지정한 채 reconcile
   기록을 `resolved` 상태로 표시했기 때문입니다. Living Spec 문서의 실제 수정 내용을 해당 reconcile 기록과 반드시 함께 스테이징하여 커밋하십시오.
@@ -143,11 +149,11 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
   자동 수정이 가능한 경우 `fix:` 힌트가 함께 제공됩니다. 만약 `RULES_RUN_FAILED`가 발생했다면 규칙 검사 엔진 자체가 정상 실행되지 못했음을
   의미합니다 (예: 새로운 작업 워크트리 환경에 관리 파일인 규칙 파일들이 아직 배포되지 않은 상태이며, 이 경우 `devkit sync`를 먼저 실행해야 합니다).
   커밋 게이트 메커니즘은
-  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
+  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
   ([커밋 게이트](../areas/gate.md) 영역 참고)에 정의되어 있습니다.
 
 ## 기대 효과 및 완료 상태
 
-지정된 대상 파일과 커밋된 트리 전체가 모든 스펙 거버넌스 규칙을 완벽히 통과하며, 문서 간 링크와 생명주기 상태는 각 파일 고유의 서식
+지정된 대상 파일과 커밋된 트리 전체가 모든 문서 규칙과 수명 주기 규칙을 완벽히 통과하며, 문서 간 링크와 생명주기 상태는 각 파일 고유의 서식
 스타일에 맞추어 단정하게 정리됩니다. 이미 완료된 스펙 번들은 안전하게 보존됩니다. 규칙 검사에서 거부된 커밋은 Git 이력에 아예 생성되지
 않으므로, 불완전하게 검증된 변경 사항이 저장소에 섞여 들어갈 위험이 사전에 완벽히 차단됩니다.

@@ -3,7 +3,7 @@ sources:
   CAP-GATE-commit-gates: null
   UC-keep-the-living-spec-consistent: null
 title: 커밋 게이트
-translated_from: en/areas/gate.md@36c9376a8b13e3d3
+translated_from: en/areas/gate.md@80d667bcbcbbd643
 ---
 
 # 커밋 게이트
@@ -59,7 +59,8 @@ translated_from: en/areas/gate.md@36c9376a8b13e3d3
 ## 훅 설치 및 관리
 
 일반적으로는 수동으로 작업할 필요가 없습니다. 파일을 변경하는 모든 `devkit sync` 실행 시 `gate-hooks` 사후 동기화 확장을
-통해 디스패처가 자동으로 설치됩니다. 수동으로 설치하거나 상태를 점검하려면 다음 명령을 사용합니다.
+통해 디스패처가 자동으로 설치되며, 실제로 무언가를 바꿨을 때만 `gate hooks: ...` 줄을 출력합니다(`--dry-run`은 바뀔 내용을
+보여 줍니다). 수동으로 설치하거나 상태를 점검하려면 다음 명령을 사용합니다.
 
 | 작업 내용 | 실행 명령 |
 | --- | --- |
@@ -70,12 +71,19 @@ translated_from: en/areas/gate.md@36c9376a8b13e3d3
 
 훅은 공통 Git 디렉터리에 위치하므로 동일한 클론에 속한 모든 워크트리가 이를 공유합니다. 각 단계마다 `<hook>.d/` 디렉터리 내의
 실행 파일들을 알파벳 순으로 실행하는 경량 디스패처가 배치됩니다. devkit의 기본 항목은 `20-devkit`이며, 사용자 정의 스크립트를
-그 앞이나 뒤(`10-custom-check`, `30-custom-check`)에 자유롭게 배치할 수 있습니다. 기존에 존재하던 훅은 `<hook>.legacy`로
-안전하게 백업된 후 `00-legacy`를 통해 연쇄 실행되며, 이때 `GATE_HOOK_PRESERVED` 경고가 출력됩니다.
+그 앞이나 뒤(`15-custom-check`, `30-custom-check`)에 자유롭게 배치할 수 있습니다. 기존에 존재하던 훅은
+`<hook>.devkit-preserved`로 옮겨진 후 `00-legacy`를 통해 연쇄 실행되며, 이때 `GATE_HOOK_PRESERVED` 경고가 출력됩니다.
+
+[pre-commit](https://pre-commit.com/) 프레임워크와는 어느 순서로 설치해도 함께 동작합니다. devkit을 나중에 설치하면
+pre-commit의 훅이 `10-pre-commit` 항목이 됩니다. devkit 다음에 `pre-commit install`을 실행하면 pre-commit이 디스패처를 옆으로
+옮기고 먼저 실행하는데, 디스패처는 그 상태에서도 자신의 항목을 계속 실행하며 다음 sync나 `devkit gate install`이 원래 배치로
+되돌립니다. `devkit gate uninstall`은 훅을 pre-commit에 되돌려 줍니다.
 
 만약 `core.hooksPath`가 다른 경로로 설정되어 있다면 devkit은 이를 덮어쓰지 않으며, `devkit gate status` 실행 시
 `GATE_HOOKS_PATH_SET` 경고를 통해 활성화된 게이트가 동작하지 않음을 알립니다. 아직 디스패처 항목이 생성되지 않은 단계에서 새
-게이트를 활성화한 경우에는 `devkit sync`를 다시 실행하십시오. 그전까지는 상태 확인 시 `GATE_HOOK_ENTRY_MISSING`이 보고됩니다.
+게이트를 활성화한 경우에는 `devkit sync`를 다시 실행하십시오. 그전까지는 상태 확인 시 `GATE_HOOK_ENTRY_MISSING`이 보고됩니다. 일반 `uv run devkit status`도 같은 두 경고를 `notices`
+아래에 보여 주므로, 아무도 `devkit gate status`를 실행하지 않아도 훅 설정 문제가 드러납니다. 이 명령은 점검만 할 뿐 게이트를
+실행하거나 훅을 복구하지 않습니다.
 
 ## 매 커밋마다 실행되는 기본 게이트
 
@@ -85,7 +93,7 @@ translated_from: en/areas/gate.md@36c9376a8b13e3d3
 | --- | --- | --- |
 | `rules-check` | `pre-commit` | 커밋 대상(staged)에 `devkit rules check --staged`를 실행하고, 오류(error) 수준 위반이 있으면 커밋을 차단합니다(`GATE_RULES_FAILED`) |
 | `verify-commands` | `pre-commit` | 프로젝트 자체 검증 명령을 실행하고, 하나라도 실패하면 커밋을 차단합니다(`GATE_VERIFY_FAILED`) |
-| `message-nonempty` | `commit-msg` | 커밋 메시지가 비어 있으면 커밋을 차단합니다 |
+| `message-nonempty` | `commit-msg` | 커밋 메시지가 비어 있으면 커밋을 차단합니다(`GATE_MESSAGE_EMPTY`) |
 
 `rules-check`는 스테이징된 변경 사항만을 정확히 평가하므로, 스테이징되지 않은 수정 사항이 위반을 숨기거나 불필요한 위반을
 일으키지 않습니다. 평가 대상 규칙은 게이트가 아니라 `[rules]` 설정에서 조정합니다. 자세한 내용은
@@ -104,14 +112,20 @@ commands = ["just lint-check", "just check"]
 실행되므로, 한 번의 거부만으로 실패한 모든 명령과 로그 파일 경로를 한눈에 파악할 수 있습니다([컴팩트 명령 출력](compact.md)
 참고). 검증 명령은 Git 인덱스가 아니라 작업 트리의 파일을 직접 읽으므로, 둘 사이에 차이가 있을 경우 `GATE_VERIFY_UNSTAGED`
 안내가 표시됩니다. 이곳에는 신속하게 끝나는 검사만 지정하고, 시간이 오래 걸리는 테스트 스위트는 CI 파이프라인에 위임하는 것이 좋습니다.
+`devkit gate status`는 설정된 명령 수를 보여 주며, 목록이 비어 있으면 게이트를 건너뛴다고 표시합니다.
 
 ## 거부(Refusal) 원인 분석
 
 모든 커밋 차단은 Agent Advisory Protocol 오류([어드바이저리](advisory.md))로 보고되므로, 오류 코드만으로도 문제의 성격을
 명확히 파악할 수 있습니다.
 
-- `BLOCKED`(종료 코드 `1`): 게이트 검사가 실행되어 정책 위반으로 커밋을 거부했습니다. 원인을 수정한 뒤 다시 커밋하십시오.
-  정책 자체를 수정할지 여부는 사용자가 결정해야 합니다.
+- `INPUT_ERROR`(종료 코드 `1`): 게이트 검사가 실행되어 커밋 자체에서 문제를 찾았습니다. 세 내장 게이트는 이 방식으로
+  거부합니다(`GATE_RULES_FAILED`, `GATE_VERIFY_FAILED`, `GATE_MESSAGE_EMPTY`). 스테이징한 변경이나 메시지를 고친 뒤 다시
+  커밋하십시오.
+- `BLOCKED`(종료 코드 `1`): 커밋하는 쪽이 우회해서는 안 되는 정책에 따라 게이트가 거부했습니다. 상황을 보고하십시오. 정책
+  자체를 수정할지 여부는 사용자가 결정해야 합니다. `--strict`(`DEVKIT_STRICT=1`)에서는 게이트 경고를 보고한 단계도 이 종류의
+  `GATE_STRICT_WARNINGS` 블록으로 끝납니다. 다만 경고 심각도의 규칙 위반(`GATE_RULES_WARNINGS`)은 세지 않습니다. 커밋 거부
+  여부는 규칙의 심각도가 정하기 때문입니다.
 - `AUTO`(종료 코드 `2`): 게이트가 정상 판정을 내릴 수 없는 상태이며, 단일 조치로 자동 해결할 수 있습니다. 주로 새 워크트리나
   클론에서 관리 대상 규칙 파일이 누락되어 발생하며, `devkit sync`를 실행하면 해결됩니다(`RULES_RUN_FAILED`, `GATE_VERIFY_NOT_RUN`).
 - 환경 설정 오류(종료 코드 `2`): 게이트 설정 자체가 잘못된 상태이며, 오류 메시지의 `[FIX]` 항목에 복구 방법이 안내됩니다. 예를 들어
@@ -136,7 +150,8 @@ commands = ["just lint-check", "just check"]
 `devkit gate install`을 실행하면 설치된 모든 게이트가 주석 처리된 테이블 형태로 `devkit.config`에 기록됩니다. 현재 클론의
 설정을 변경하려면 테이블 헤더와 변경하려는 설정 키의 주석만 해제하십시오. 팀 공통으로 이미 설정된 키는 실수로 덮어쓰지 않도록
 값 없이 표시됩니다. 이 파일은 추가 전용(append-only) 방식으로 관리되므로 새 게이트가 추가되면 새 테이블이 덧붙여지며, 기존에
-작성한 내용은 덮어쓰이지 않습니다.
+작성한 내용은 덮어쓰이지 않습니다. 추적되는 쪽에도 템플릿이 있습니다. `devkit config template`은 내장 게이트의
+`[gates.settings.<id>]` 테이블을 주석 처리된 상태로 `.devkit/config.toml`에 추가합니다.
 
 `enabled` 속성은 모든 게이트 테이블에서 공통으로 지원됩니다. 설치되지 않은 게이트를 활성화하도록 설정하면 차단 단계에서
 오류가 발생하므로, 오타나 `devkit sync` 누락으로 인해 검증 정책이 의도치 않게 비활성화되는 것을 방지합니다.
@@ -145,8 +160,10 @@ commands = ["just lint-check", "just check"]
 
 게이트는 거버넌스 규칙과 마찬가지로 플러그인 패키지 디렉터리 형태로 작성합니다. `BaseGate` 서브클래스(`id`, `stage`, `order`,
 `enabled_by_default`, 타입 어노테이션이 적용된 `settings`, `run(ctx)`)가 정의된 `gate.py`, 상대 경로로 임포트되는 보조 모듈,
-그리고 동일 디렉터리 내의 `tests/`로 구성됩니다. 통과 시에는 `GateResult.passed()` 또는 `GateResult.skipped()`를 반환하고,
-커밋을 차단할 때는 오류 코드와 조치 가이드(`fix`)를 담아 `GateRefusedError`를 발생시킵니다. 번들 매니페스트에는 다음과 같이 선언합니다.
+그리고 동일 디렉터리 내의 `tests/`로 구성됩니다. 통과 시에는 `GateResult.passed()` 또는 `GateResult.skipped()`를 반환합니다.
+커밋을 차단할 때는 커밋을 고치는 것이 해결책이면 `GateFindingsError`(`INPUT_ERROR`)를, 정책에 따른 거부이면
+`GateRefusedError`(`BLOCKED`)를 오류 코드와 조치 가이드(`fix`)를 담아 발생시킵니다. 선택적인 `setup(settings)`는
+`devkit gate status`가 해당 게이트에 대해 보여 줄 내용을 반환합니다. 번들 매니페스트에는 다음과 같이 선언합니다.
 
 ```toml
 [[assets]]
@@ -163,8 +180,8 @@ assets = ["staged-file-limit"]
 
 ## 관련 자료
 
-- [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문):
+- [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문):
   훅 래퍼, 내장 게이트, 게이트 인터페이스 규약, 배포 및 설정 계층.
-- [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/gate.md): 명령어, 종료 코드 및
+- [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/gate.md): 명령어, 종료 코드 및
   오류 코드 레퍼런스.
 - 커밋 게이트는 [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md) 여정의 일상적인 개발 루프에 포함되어 있습니다.

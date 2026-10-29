@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-HOST-lifecycle-observation: bae2e546b3e578a9a4e3f3094cb304851174520b
-  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
-  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
+  CAP-HOST-lifecycle-observation: ae687191311536ae259168b69a18e389f35997ac
+  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
+  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
 title: Host
 ---
 
@@ -169,8 +169,8 @@ never stands in for either.
 
 ## Sources
 
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/host/CAP-HOST-lifecycle-observation.md):
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/host/CAP-HOST-lifecycle-observation.md):
   hook assets, shared configuration ownership, dispatch, observer and status.
-- [Host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/host.md): commands and
+- [Host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/host.md): commands and
   codes, including MCP services.
 - Related: [MCP](mcp.md) (`CAP-MCP-runtime-registration`), [Integration](integration.md).

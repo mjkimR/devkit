@@ -1,8 +1,8 @@
 ---
 sources:
-  ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
-  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
-  CAP-CMP-bounded-execution: 87e63739d2b77d61bffe3162d7f68e93b3051ad2
+  ARCH-08-1-agent-output: 6b76bd19787465ed1e7ec7aee1904077cc75042c
+  CAP-ADV-agent-advisory-protocol: 572af49f008a71f993b3b82c2d457b7610529192
+  CAP-CMP-bounded-execution: 46503e105fa4406f7dd9f90878ce99bef82ac7d8
 title: Compact command output
 ---
 
@@ -122,16 +122,18 @@ recipes, select the opt-in preset with `devkit add harness:run`, which adds one 
 the runner.
 
 Gates and workflow checks reuse the same runner: the `verify-commands` commit gate runs every command through it
-and puts only the bounded view in its refusal ([Commit gates](gate.md)). Library callers use
-`devkit_agt.features.compact.run_command`, which never prints and returns a `CommandRun`.
+and puts only the bounded view in its refusal ([Commit gates](gate.md)), and `devkit generated` reports a failed
+regeneration command the same way ([Generated Files](generated.md)). Library callers use
+`devkit_agt.features.compact.run_command`, which never prints and returns a `CommandRun`; its `failure_details` are
+the advisory detail lines both of those reuse.
 
 ## Sources
 
-- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/compact/CAP-CMP-bounded-execution.md):
+- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/compact/CAP-CMP-bounded-execution.md):
   execution, logs, the bounded view and its budgets, output and the library.
-- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/compact.md): usage,
+- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/compact.md): usage,
   error codes and module map.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
   the output contract `devkit run` shares with every command.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   the advisory grammar the runner recognizes.

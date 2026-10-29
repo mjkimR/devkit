@@ -1,10 +1,11 @@
 ---
 sources:
-  CAP-DOCS-document-model: 65a68b9b0c43ddbcd7817e14d278f31c640a221a
-  CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
-  CAP-GOV-spec-rules: d995eca73f4dea46ac7a5836f25cdfa4bf158b6e
-  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
-  UC-keep-the-living-spec-consistent: 7ebdf1e2f7ae6581fa9140d1898d755de57b5667
+  CAP-DOCS-document-model: 89280a2bb6003fe052fa7ee3ed50e368270bf9c6
+  CAP-DOCS-namespaces: ee66025d062f5c547b58bd25964db7bef2f8c39e
+  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
+  CAP-GOV-spec-rules: adab7d427d7d35c29e7379d1110c93d516470654
+  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
+  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
 title: Keep the Living Spec consistent
 ---
 
@@ -61,17 +62,18 @@ Whether the documents say the *right* thing is a different question; that is
 [Reconcile Living Spec drift](reconcile-living-spec-drift.md). For the vocabulary used here (Living Spec, rules,
 commit gate), see [Concepts](../concepts.md).
 
-Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-keep-the-living-spec-consistent.md).
+Source: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-keep-the-living-spec-consistent.md).
 
 ## Before you start
 
-- The project selects the `spec` bundle, and `devkit sync` has deployed its rules (they come with its `core` preset).
+- The project selects the `docs` bundle, and `devkit sync` has deployed its document rules (they come with its
+  `core` preset). With spec-driven delivery the `spec` bundle adds the lifecycle rules of feature specs and proposals.
 - The rules are ordinary devkit rules, so everything about phases, severities and tuning in `[rules]` of
   `.devkit/config.toml` applies; see the [governance area](../areas/governance.md).
 
 ## Step by step
 
-1. **Check what you changed.** Run the spec rules over the whole workspace or over the files you touched:
+1. **Check what you changed.** Run the rules over the whole workspace or over the files you touched:
 
    ```sh
    uv run devkit rules check                      # whole workspace
@@ -104,8 +106,9 @@ To learn what a rule checks and how to repair it by hand, run `uv run devkit rul
 
 ## What the rules look for
 
-The eleven rules are catalogued in
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-spec-rules.md).
+The fourteen rules, nine document rules shipped by `docs` and five lifecycle rules shipped by `spec`, are
+catalogued in
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md).
 The ones you meet most often:
 
 | Rule | You see it when | Fix |
@@ -116,15 +119,21 @@ The ones you meet most often:
 | `RULE-spec-lifecycle` | `spec.md`, `tasks.md` and `reconcile.md` disagree on status | sets `status: completed` |
 | `RULE-reconcile-contract` | a `resolved` record claims a `modified` target the diff did not change | by hand |
 | `RULE-code-entrypoints` | an `entrypoints` path no longer exists | by hand |
+| `RULE-steering-documents` | a file in `docs/steering/` carries an `id`, lacks `title` or `summary`, or the directory grows past its caps | by hand |
+| `RULE-ux-links` | a UX document and the use case steps that cite it disagree | by hand |
+
+While the project's development approach is incubation, the document rules judge as always, but the lifecycle rules
+apply only to Units explicitly bound to an SDD workflow. Where none applies, a run reports `SDD_LIFECYCLE_INACTIVE` as
+omission evidence rather than a successful check.
 
 How documents get their IDs and how references resolve is the document model,
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/documents/CAP-DOCS-document-model.md)
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md)
 (see the [documents area](../areas/documents.md)).
 
 ## When it goes wrong
 
-- **The run fails with `SPEC_CONFIG_INVALID` (exit `2`).** The `[tool.spec]` table in `.devkit/config.toml` is
-  malformed, for example it has an unknown key. This is not a violation: the rules cannot tell which documents follow
+- **The run fails with `DOCS_CONFIG_INVALID` (exit `2`).** The `[tool.docs]` table in `.devkit/config.toml`, which
+  registers document namespaces, is malformed, for example it has an unknown key. This is not a violation: the rules cannot tell which documents follow
   which conventions, so nothing is judged. Correct the table and run again.
 - **A violation stays `open` after `fix`.** There is no deterministic repair: a reference to an ID no document
   declares, a dead entrypoint, missing reconcile evidence. The fix leaves it unchanged on purpose. Follow its
@@ -132,17 +141,17 @@ How documents get their IDs and how references resolve is the document model,
 - **The commit is refused for a capability you did not touch.** You deleted or moved code that a capability declares
   in `entrypoints`, and `RULE-code-entrypoints` reports every document that declares a deleted path. Restore the code,
   point the declaration at the moved code, or remove it, then commit again. The path contract is
-  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)
+  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)
   (see the [traceability area](../areas/traceability.md)).
 - **The commit is refused on a `reconcile.md`.** You marked it `resolved` with a `modified` target that this commit
   does not change. Stage the Living Spec edit together with the record.
 - **The gate refuses with `GATE_RULES_FAILED`.** Each `[DETAIL]` line names the rule, file and line, with a `fix:` hint
   when the rule has one. A `RULES_RUN_FAILED` instead means the run could not judge the commit at all (for example
   managed rule files are missing in a fresh worktree: run `devkit sync`). Gate behavior is
-  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/gate/CAP-GATE-commit-gates.md)
+  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/gate/CAP-GATE-commit-gates.md)
   (see the [gate area](../areas/gate.md)).
 
 ## What you end up with
 
-The targeted files and the committed tree pass every spec rule, links and statuses are written in the files' own
+The targeted files and the committed tree pass every document and lifecycle rule, links and statuses are written in the files' own
 style, and completed bundles are untouched. A refused commit creates no commit, so nothing half-checked lands.

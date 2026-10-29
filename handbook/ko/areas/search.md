@@ -5,7 +5,7 @@ sources:
   CAP-SRCH-document-search: null
   UC-find-the-right-documents: null
 title: 검색
-translated_from: en/areas/search.md@6d61be7017a9b89c
+translated_from: en/areas/search.md@ece317be47783ab8
 ---
 
 # 검색
@@ -14,22 +14,22 @@ translated_from: en/areas/search.md@6d61be7017a9b89c
 > 소스 커밋 `5e71d74c8e5a` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
-검색(search) 기능은 `devkit playbook search` 및 `devkit spec search` 명령을 지원하는 랭킹 엔진입니다. 문서를
+검색(search) 기능은 `devkit playbook search` 및 `devkit docs search` 명령을 지원하는 랭킹 엔진입니다. 문서를
 문서 ID, 메타데이터 텍스트, 선택적인 본문으로만 인식하며, 검색 질의에 대해 어휘적(lexical) 방식, 의미적(semantic) 방식,
 또는 두 방식을 결합하여 순위를 매깁니다. 어떤 문서를 검색 후보로 삼을지, 정확히 일치하는 문서를 맨 앞에 고정할지는
 랭킹 엔진을 호출하는 상위 명령이 결정합니다. 상세 계약은
-[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/search/CAP-SRCH-document-search.md) (영어 원문)에 정의되어 있습니다.
+[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/search/CAP-SRCH-document-search.md) (영어 원문)에 정의되어 있습니다.
 
 ## 관련 명령 및 대상
 
 | 명령 | 대상 후보 | 사양 계약 |
 | --- | --- | --- |
 | `uv run devkit playbook search "<query>"` | 동기화된 플레이북 헤더(`name`, `description`) | `CAP-DIST-context-and-playbooks` |
-| `uv run devkit spec search <query>` | 현재 Living Spec 문서 | `CAP-DOCS-document-search` |
+| `uv run devkit docs search <query>` | 현재 Living Spec 문서 | `CAP-DOCS-document-search` |
 
 Living Spec 문서를 종합적으로 탐색하는 전체 과정은 여정
 [알맞은 문서 찾기](../journeys/find-the-right-documents.md)(`UC-find-the-right-documents`)에서 다룹니다. 플레이북
-탐색 방법은 [배포](distribution.md)를, spec 검색 명령은 [문서](documents.md)를 참고하세요.
+탐색 방법은 [배포](distribution.md)를, 문서 검색 명령은 [문서](documents.md)를 참고하세요.
 
 ## 검색 모드 선택
 
@@ -51,7 +51,7 @@ dense 단독 모드는 BM25보다 순위가 약간 낮았지만, hybrid 모드�
 ## search extra 설치
 
 extra 의존성은 별도의 독립적인 요구사항으로 추가하지 말고, 프로젝트에 이미 선언된 devkit 패키지에 붙여서 지정해야 합니다. 즉,
-`devkit-agt[search]` 또는 `devkit-dist[search]`(spec 검색의 경우 `devkit-spec[search]`) 형태로 선언합니다. 이를 통해
+`devkit-agt[search]` 또는 `devkit-dist[search]`, 문서 검색의 경우 `devkit-docs[search]`(`devkit-spec[search]`에 포함됨) 형태로 선언합니다. 이를 통해
 `numpy`, `tokenizers`, 그리고 기본 모델인 `potion-base-8m`을 제공하는 `devkit-embed` 모델 패키지가 함께 설치됩니다. 이 모델은
 정적이고 로컬에서 동작하므로 네트워크 통신이 필요 없고, 수십 밀리초 이내에 빠르게 로드됩니다. 또한 dense, hybrid 또는 `auto` 검색을
 처음 실행할 때만 임포트되며, lexical 검색 시에는 전혀 임포트되지 않습니다.

@@ -1,14 +1,14 @@
 ---
 sources:
-  CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
-  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
-  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
-  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
-  UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
+  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
+  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
+  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
+  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
+  UC-drive-development-to-integration: ede0ca1f9647c2e9e1a520d97818d09fa7bcb5e4
   UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
-  UC-route-development-intent: 50d6278b292da8b936bc1bd6587bde501f490ee6
-  UC-run-parallel-work-safely: eb22803d64e8af4f3479c6c935942508db14f5cf
+  UC-route-development-intent: b3ee3ac9c76d14a4b97f0645eef8954f339330d5
+  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
 title: Worktree
 ---
 
@@ -78,11 +78,14 @@ units and integration.
 devkit worktree start dev-login
 ```
 
-devkit refuses a branch that already exists locally or on any reachable remote (`WORKTREE_BRANCH_EXISTS`), refuses
-nesting inside a linked worktree (`WORKTREE_NESTED`), then creates the worktree from the base HEAD. A fresh checkout
-lacks the base's ignored files, so `start` also:
+devkit refuses a branch that already exists locally or on any reachable remote (`WORKTREE_BRANCH_EXISTS`, which asks
+whether to continue it and, when the branch's unit is recorded, offers the exact `--existing-branch` command), refuses
+nesting inside a linked worktree (`WORKTREE_NESTED`, whose fix is the same command with `-w` naming the base
+checkout), then creates the worktree from the base HEAD. A fresh checkout lacks the base's ignored files, so `start`
+also:
 
-1. copies your `.devkit/config.local.toml`, if any, as a snapshot (later edits on either side do not propagate);
+1. copies the base checkout's `.devkit/config.local.toml`, if any, as a snapshot (later edits on either side do not
+   propagate);
 2. runs `[worktree] setup` (for example `uv sync`) in the worktree;
 3. runs `devkit sync --locked` to restore the managed bundle copies that rules, gates, `get-context` and playbooks
    need, then `devkit sync --registrations-only` for the optional MCP entry (`CAP-MCP-runtime-registration`).
@@ -96,14 +99,14 @@ Two variants:
 - `devkit worktree start dev-login --no-worktree` creates the branch in the current checkout and carries your
   uncommitted changes over. No setup runs. Every session using that directory sees the switch, so it gives no
   isolation between concurrent sessions.
-- `devkit worktree start dev-login --existing-branch [<remote>/]dev-login --unit <dir>` continues a branch that was
-  started elsewhere: another checkout, another machine, a cloud run. Nothing is reset. devkit fetches nothing, so
+- `devkit worktree start dev-login --existing-branch [<remote>/]dev-login --unit <dir>` (the unit is
+  repository-relative) continues a branch that was started elsewhere: another checkout, another machine, a cloud run. Nothing is reset. devkit fetches nothing, so
   fetch first; a local copy that is behind or diverged is `WORKTREE_BRANCH_OUT_OF_SYNC`, and installed attach checks
   confirm the unit belongs to the branch (`WORKTREE_ATTACH_REFUSED`).
 
 How the workflow chooses between these is part of the journey
 [Route development intent](../journeys/route-development-intent.md) (`UC-route-development-intent`). Parallel tasks
-in separate worktrees can compare their scopes through the shared registry, see
+in separate worktrees can be compared and observed by the orchestrating Host, see
 [Run parallel work safely](../journeys/run-parallel-work-safely.md) (`UC-run-parallel-work-safely`) and
 [Collaboration](collaboration.md).
 
@@ -117,15 +120,15 @@ The underlying command is:
 devkit worktree finish dev-login --merge [--local-only]
 ```
 
-It runs in the base checkout and, in order:
+It runs in the base checkout. A worktree with uncommitted or untracked changes is refused before anything changes
+(`WORKTREE_DIRTY`); it is never removed by force. Otherwise, in order:
 
 1. **Integrates.** The base must be on a branch and clean, and the task branch must already contain the base HEAD
    (`WORKTREE_MERGE_NOT_FF`: merge the base into the branch, never rebase, since records cite commit SHAs). Installed
    finish guards run; devkit-agt refuses a branch whose units hold an unresolved problem or unanswered question
    (`WORKTREE_BLOCKED`). The base then lands the branch as a merge commit built outside any checkout (or a
    fast-forward under `merge = "ff-only"`) and pushes to its upstream unless `--local-only`.
-2. **Removes** the worktree. Uncommitted or untracked changes stop it (`WORKTREE_DIRTY`); it is never removed by
-   force.
+2. **Removes** the worktree. If it became dirty since the check, `WORKTREE_DIRTY` stops it here too.
 3. **Deletes** the branch with `git branch -d` (unless `delete_branch = false`).
 4. Runs post-finish extensions, such as devkit-spec's cleanup of the scope record and handed-off proposal.
 
@@ -136,7 +139,8 @@ To drop a task without integrating it (an abandon, a supersede, a depth escalati
 `devkit worktree finish dev-login --discard`. It removes a clean worktree and deletes the branch with `git branch -D`;
 remote branches and pull requests stay yours to close.
 
-A refusal after the merge step prints what was already done. Fix the cause and rerun the same command. Recovery for
+A refusal after the merge step prints what was already done as a `[WORKTREE_FINISH_PARTIAL: ...]` line, never the
+success line `[WORKTREE_FINISHED: ...]`. Fix the cause and rerun the same command. Recovery for
 blocked or interrupted delivery is covered in
 [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
 (`UC-handle-delivery-problems-and-exceptions`); the full flow to landing is
@@ -154,7 +158,8 @@ without a worktree. It changes nothing. A linked worktree with `merged=yes dirty
 Nothing expires an activity branch. `devkit worktree status --stale` reports `plan-*` and `dev-*` branches, local and
 remote-tracking, idle longer than `[worktree] stale_after` (default 14 days), judged by the last commit and the last
 pull request update. It needs an authenticated `gh`; without it you get a `WORKTREE_STALE_SKIPPED` notice. Each
-stale branch is a `WORKTREE_STALE_BRANCH` warning whose fix names the resume command and the discard commands, and the
+stale branch is a `WORKTREE_STALE_BRANCH` warning that asks you whether to resume or discard it: its fix is the exact
+resume command when the branch's unit is recorded, and a detail names the discard commands. The
 same report appears in `devkit rules check --phase hygiene`. Nothing is cleaned up automatically; the journey
 [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 (`UC-resolve-stale-activity-branches`) walks through the decision.
@@ -180,8 +185,8 @@ that misbehaves fails closed for checks and guards, and only warns after a finis
 
 ## Sources
 
-- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
   paths, start variants, finish steps, status, configuration and stale branches.
-- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/worktree.md):
+- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/worktree.md):
   commands and error codes.
 - Related: [Integration](integration.md), [Collaboration](collaboration.md).

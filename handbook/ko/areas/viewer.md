@@ -8,7 +8,7 @@ sources:
   CAP-GEN-tracked-artifacts: null
   CAP-VIEW-repository-viewer: null
 title: 뷰어
-translated_from: en/areas/viewer.md@11dd5242784c0fe2
+translated_from: en/areas/viewer.md@80872106fbe4d455
 ---
 
 # 뷰어
@@ -55,7 +55,7 @@ translated_from: en/areas/viewer.md@11dd5242784c0fe2
 - [용어집](../glossary.md)
 <!-- /handbook:generated -->
 
-뷰어(viewer)는 에이전트가 `devkit spec` 명령으로 참조하는 문서들(Living Spec, 제안서, 스펙 번들, 마일스톤, 피드백)을
+뷰어(viewer)는 에이전트가 `devkit docs` 및 `devkit spec` 명령으로 참조하는 문서들(Living Spec, 제안서, 스펙 번들, 마일스톤, 피드백)을
 하나 이상의 devkit 저장소에 걸쳐 편리하게 열람할 수 있는 로컬 읽기 전용 웹 페이지입니다(`CAP-VIEW-repository-viewer`).
 선택형 패키지인 `devkit-viewer`를 통해 제공되며, `devkit viewer` 명령으로 구동됩니다. 뷰어는 문서 열람을 위한 도구이며,
 승인, 게이트 결정, 질문 답변 등 상태를 변경하는 작업은 여기서 수행되지 않습니다. 각 문서의 역할과 구조는 [개념](../concepts.md)을,
@@ -83,17 +83,18 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 - **Dashboard**: 마일스톤, 제안서, 피드백을 보여 줍니다. 각 섹션은 독립적으로 로드되며 Load more 버튼으로 페이징됩니다.
 - **Read**: `handbook/manifest.json`이 있으면 저장소의 릴리스 핸드북을 선택한 언어(브라우저에 기억됨)로 보여 주고,
   태그와 함께 체크아웃의 `VERSION`이 핸드북보다 앞서면 안내를 표시합니다. 핸드북이 없으면 짧은 안내만 보여 줍니다.
-  **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 장(chapter)별로 분류되고 문서 간 링크를
-  ID 기반으로 연결합니다(`ADR-handbook-first-book-on-request`, `ADR-handbook-staleness-from-version`).
+  **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 Overview, Architecture, Capabilities, Use Cases, UX,
+  Steering, Decisions, Development 장(chapter)으로 분류되고 문서 간 링크를 ID 기반으로 연결합니다(`ADR-handbook-first-book-on-request`, `ADR-handbook-staleness-from-version`).
 - **Proposals** 및 **Specs**: `docs/proposals/PROP-*/proposal.md` 파일과 `specs/` 하위의 스펙 번들 목록을 파일 구성, 필터링 옵션,
   작업 진행 상황과 함께 제공합니다.
 - **로드맵**: `docs/roadmap/` 하위의 마일스톤을 active, planned 순서로 정렬하여 표시하며, `depends_on`을 바탕으로 준비 상태를 보여
-  줍니다(`done` 및 `dropped` 상태는 히스토리 토글로 확인할 수 있습니다).
+  줍니다. `docs/roadmap/_archive/`에 보관된 `done` 및 `dropped` 마일스톤은 히스토리 토글로 확인할 수 있으며, 숨겨진 완료
+  선행 조건도 충족된 것으로 계산됩니다.
 - **파일 탐색**: 작업 트리의 파일들을 표시하며, Markdown, frontmatter 메타데이터, Mermaid 다이어그램을 렌더링합니다.
 
 뷰어는 현재 체크아웃된 브랜치를 기준으로, 커밋되지 않은 파일과 추적되지 않는 파일까지 포함하여 등록된 작업 트리의 저장된 파일들을
 실시간으로 보여 줍니다(`ADR-viewer-working-tree`). 브랜치를 자동으로 전환하지는 않습니다. 문서는 브라우저에서 직접 파싱되므로,
-고정된 devkit-spec 버전이 서로 다른 여러 저장소도 모두 정상 렌더링되며, frontmatter 형식이 잘못된 문서는 읽을 수 없음으로 표시되면서
+고정된 devkit-docs 버전이 서로 다른 여러 저장소도 모두 정상 렌더링되며, frontmatter 형식이 잘못된 문서는 읽을 수 없음으로 표시되면서
 다른 정상 문서는 계속 열람할 수 있습니다.
 
 ### 캐시 및 최신 상태
@@ -146,10 +147,10 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 
 ## 출처
 
-- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
+- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
   서비스, 엔드포인트, Planning 출처, 페이지 동작, 로드맵, 라이브러리와 리뷰 페이지.
-- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/viewer.md).
-- [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261024-viewer-working-tree.md),
-  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
-  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
-  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).
+- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/viewer.md).
+- [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261024-viewer-working-tree.md),
+  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
+  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
+  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).

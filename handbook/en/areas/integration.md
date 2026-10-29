@@ -2,10 +2,11 @@
 sources:
   ADR-host-cli-lifecycle-authority: b827428c1717216975fb8b6119b1bc3dc128f8f2
   ADR-local-and-pull-request-integration: 8bfbc80942deeb24ba0d91d151c015528f18794e
-  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
-  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
-  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
-  UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
+  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
+  CAP-GOV-evaluation-lifecycle: 3e13fc27305e7933a1876ea9879a7423b5a771e0
+  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
+  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
+  UC-drive-development-to-integration: ede0ca1f9647c2e9e1a520d97818d09fa7bcb5e4
 title: Integration
 ---
 
@@ -77,12 +78,18 @@ host tool permissions are not business authority. The reasoning is recorded in `
 ## Prepare, then integrate
 
 ```text
-devkit integration prepare <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request]
-devkit integration integrate <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--expected-digest <digest>]
+devkit integration prepare <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>]
+devkit integration integrate <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>] [--expected-digest <digest>]
 ```
 
+Run both from the base checkout, not from inside the task worktree that integration would remove; there either
+command refuses with `WORKTREE_RUN_FROM_BASE`, whose fix is the same command with `-w` naming the base checkout.
+
 1. `prepare` validates the committed source, the target, the project policy, the readiness provider and the exact
-   cleanup scope. It changes nothing and prints `[INTEGRATION_PREPARED: ...]` with a `request.digest`.
+   cleanup scope. It changes nothing and prints `[INTEGRATION_PREPARED: ...]` with the digest, route and network
+   use, followed by an `[INTEGRATION_SCOPE: ...]` line saying whether the worktree and branch will be removed, which
+   extension cleanups run and what the readiness provider discloses. `--format json` returns the same approval scope
+   and the planned steps.
 2. The Host presents that result. Under `ask`, you approve it in the conversation.
 3. `integrate --expected-digest <digest>` builds a fresh request and repeats every check before it changes
    anything. Under `ask` the digest is required; if anything it binds (source, target, policy, readiness, cleanup
@@ -90,9 +97,17 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
    supplied one still has to match.
 
 The digest is a concurrency precondition, not a credential: it proves the request is the one you saw, not that you
-approved it.
+approved it. When `integrate` runs under `ask` without a digest, or with one that no longer matches, the refusal
+(`INTEGRATION_AUTHORITY_REQUIRED` or `INTEGRATION_REQUEST_STALE`) is an interaction for you: its fix is the
+`prepare` command that presents the current scope, and the matching `integrate` command is given only as a detail for
+after you approve it.
 
-Exit codes follow the usual agent contract: `0` success, `1` a negative or partial result, `2` a refusal.
+Caller `--claims` (for example the review, test and lint results of a session) are explicit on each command; neither
+command stores or reuses the other's claims, so pass them to both.
+
+Exit codes: `0` success, including a `partial` result whose only problem is the `INTEGRATION_CLEANUP_INCOMPLETE`
+warning (Git integration is done, scoped cleanup remains); `1` an execution stopped by an error after some effect;
+`2` a refusal before any effect. `--strict` raises a warning to `1` but never lowers a `2`.
 
 ## Choose a route
 
@@ -116,9 +131,11 @@ preparing again.
 
 | Code | What to do |
 | --- | --- |
-| `INTEGRATION_NOT_READY` | Resolve the reported completion condition, then prepare again. |
-| `INTEGRATION_AUTHORITY_REQUIRED` | Check the base policy and route; under `ask`, get the decision before integrating. |
-| `INTEGRATION_REQUEST_STALE` | Inspect what already happened, prepare the remaining scope, decide again. |
+| `INTEGRATION_NOT_READY` | Resolve the reported completion condition, then prepare again. When the evidence is `SESSION_CLAIMS_INVALID`, nothing in the source needs to change: correct `--claims` and rerun the same command. |
+| `INTEGRATION_RULE_RUNTIME_MISMATCH` | A synchronized rule of the source imports something the running runtime (built from the target) lacks. The source needs no change: with separately granted authority, build a runtime from the source's code outside the worktree and integrate from the base checkout with it. |
+| `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest: present the scope with the suggested `prepare`, then integrate once approved. Otherwise check the base policy and route. |
+| `INTEGRATION_REQUEST_STALE` | For a changed scope: present it again and decide. After partial effects: inspect what already happened, prepare the remaining scope, decide again. |
+| `INTEGRATION_APPROACH_MISMATCH`, `INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED` | Project readiness met SDD work (below): use the spec provider's lifecycle, or run the named Unit's lifecycle validation. |
 | `INTEGRATION_TARGET_MOVED` | Merge the current base into the branch, rerun checks, then decide again. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Finish the remaining cleanup (below). |
 | `INTEGRATION_LANDED_UNCHECKED` | Run the provider's landed-target check before calling the work integrated. |
@@ -136,6 +153,25 @@ Typical recoveries:
   merged twice.
 - When an outcome is unknown, look at Git or the pull request first. Never replay an unknown remote write.
 
+## A runtime from the target judges the source's rules
+
+Readiness runs with the installed devkit of the runtime that invokes it, which is built from the target, while the
+synchronized rules it evaluates are the source's (`CAP-GOV-evaluation-lifecycle`). When a branch adds a rule whose
+module the target's runtime does not have, integration names each rule file and missing import with
+`INTEGRATION_RULE_RUNTIME_MISMATCH` before the provider runs, and changes nothing. The check only parses the rule
+modules; it never executes source code, and integration never builds a runtime from the source by itself
+(`UC-drive-development-to-integration`, extension 7h).
+
+## Integration without SDD
+
+In a project whose committed development approach is incubation, the installed `project` readiness provider handles
+`--task-kind session` integration without inventing SDD units, stages or envelopes. Its `--claims` must report
+passing `review`, `tests` and `lint` results; the provider runs the cumulative linter rules against the prospective
+result, but it does not rerun your review, tests or lint, and it discloses them as claims. It refuses committed SDD
+targets (`INTEGRATION_APPROACH_MISMATCH`), and refuses a change that touches the records of a retained workflow Unit
+until that Unit's lifecycle validation has run (`INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED`). The spec provider hands
+ordinary incubation sessions to this provider.
+
 ## Extending integration
 
 Packages plug in through `devkit_agt.features.integration`: a `ReadinessProvider` decides whether the work is complete,
@@ -148,9 +184,11 @@ the MCP runtime remains for shared proposal-review artifacts, which acceptance d
 
 ## Sources
 
-- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/integration/CAP-INT-mcp-services.md):
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/integration/CAP-INT-mcp-services.md):
   CLI contract, authority, routes, recovery and codes.
-- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/delivery/UC-drive-development-to-integration.md).
-- [ADR-host-cli-lifecycle-authority](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261023-host-cli-lifecycle-authority.md),
-  [ADR-local-and-pull-request-integration](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261022-local-and-pull-request-integration.md).
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-drive-development-to-integration.md).
+- [ADR-host-cli-lifecycle-authority](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261023-host-cli-lifecycle-authority.md),
+  [ADR-local-and-pull-request-integration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261022-local-and-pull-request-integration.md).
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
+  which rules run where.
 - Related: [Worktree](worktree.md) (`CAP-WT-task-worktrees`).

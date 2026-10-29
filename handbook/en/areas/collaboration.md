@@ -1,12 +1,13 @@
 ---
 sources:
-  CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
-  CAP-COLL-work-scope-registry: e60ca6b5e8eccf19fac5b506233860376125ae9a
-  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
-  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
-  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
-  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
-  UC-run-parallel-work-safely: eb22803d64e8af4f3479c6c935942508db14f5cf
+  ADR-host-owned-scope-observation: c9a162208f45dcad00a16fce1a1f447a27afda54
+  CAP-COLL-shared-artifacts: 83dfa43f60f67f8a6eab85414d90c95ba27e2982
+  CAP-COLL-work-scope-registry: 23990ff536e67c96f25dff1857c08cbd0c4c8838
+  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
+  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
+  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
+  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
+  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
 title: Collaboration
 ---
 
@@ -90,36 +91,56 @@ document that does not exist yet, a target without `entrypoints`, a `_Boundary` 
 treated as "no overlap". A `[DIFF: ...]` line means `reconcile.md` and `target-docs.md` disagree; devkit never merges
 the two lists for you. Paths follow the literal path rules of `CAP-TRACE-code-entrypoints`.
 
-## Register running tasks and watch for overlaps
+## Observe running work
 
-Running tasks keep their scope in a registry shared by every worktree of the repository. In the normal workflow you
-rarely call these commands yourself: `devkit spec proposal handoff` in a linked worktree registers the new bundle,
-and the `spec-tasks` and `spec-sync` skills refresh the record after writing `tasks.md` and `reconcile.md`. By hand:
+Once tasks run, the orchestrating Host observes them when it needs evidence for scheduling or integration order.
+Workers have nothing to publish: they register no scope, send no updates and acknowledge nothing. One command
+collects what the Host can see, read-only:
+
+```sh
+devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fetch <remote>]
+```
+
+- **Depth.** `snapshot` reads only the registry's creation snapshots; `refs` adds the local and remote-tracking
+  `plan-*`/`dev-*` branches; `worktrees` (the default) adds every accessible worktree's declarations and its
+  committed, staged, unstaged and untracked changes.
+- **Network is opt-in.** Without `--fetch`, remote refs are whatever was last fetched. `--fetch <remote>` (repeatable,
+  configured remotes only) refreshes just their remote-tracking branches. Another machine's unpushed work is never
+  visible; for frequent multi-PC work, push declarations and changes through pull requests.
+- **Gaps stay visible.** A missing base, an ambiguous task identity, an unreadable or changing source, or an exhausted
+  time budget (`--timeout`, `--source-timeout`) leaves the usable evidence in place and reports
+  `SPEC_SCOPE_COLLECTION_PARTIAL` with the missing coverage; uncomputed pairs never count as zero overlap. Only when
+  no inventory source can be read at all does it fail with `SPEC_SCOPE_COLLECTION_FAILED`.
+
+The output lists the candidates (`[SCOPE_CANDIDATE: ...]`), each observation and the same `[PAIR: ...]` and
+`[EVIDENCE: ...]` lines as `compare`, ending with a summary that says whether coverage and comparisons are complete.
+
+### The shared registry
+
+The registry holds a snapshot of each task's scope, shared by every worktree of the repository. Snapshots are taken
+automatically when `devkit spec proposal handoff` or `devkit spec new` creates a unit in a linked worktree; this is
+best effort, and a failure never affects the creation. `collect` reads these snapshots; they can lag behind the
+worktree. You rarely need the registry commands directly:
 
 | You want to | Run |
 | --- | --- |
-| Register this worktree's task (prints its owner token once) | `devkit spec scope register --spec <dir>` |
+| Register this worktree's task by hand (prints its owner token once) | `devkit spec scope register --spec <dir>` |
 | See every record and this worktree's overlaps | `devkit spec scope query` |
-| Check a bundle about to start against running work | `devkit spec scope query --spec <dir>` |
-| Recollect the scope after changes | `devkit spec scope update --spec <dir>` |
+| Check a bundle about to start against the records | `devkit spec scope query --spec <dir>` |
 | Read the event history | `devkit spec scope query --history [--task <id>]` |
-| Withdraw an abandoned task | `devkit spec scope release -w <worktree>` |
+| Withdraw an abandoned task | `devkit spec scope release` |
 | Remove records whose worktree is gone | `devkit spec scope sweep --apply` |
 
 A few behaviours are worth knowing:
 
 - One worktree holds one token. A second registration from the same worktree is refused
   (`SPEC_SCOPE_TOKEN_EXISTS`), so a record is never orphaned.
-- `update` is optimistic: it presents the token and the revision it read. If the record changed in between you get
-  `SPEC_SCOPE_STALE_REVISION` and nothing is written. When an update times out and you did not see its outcome,
-  retry it with the same `--request-id`; the stored answer is returned without a second write.
-- Queries are side-effect free: they create no directory, lock or file. An empty or partly readable answer is not
-  proof that nothing overlaps.
-- The journal (`journal.jsonl`) is diagnostic only. It never feeds an overlap verdict, and a failed append is just a
-  `SPEC_SCOPE_JOURNAL_UNAVAILABLE` warning.
+- Queries and `collect` are side-effect free: they create no directory, lock or file and never touch owner tokens.
+  An empty or partly readable answer is not proof that nothing overlaps.
+- The journal (`journal.jsonl`) is diagnostic only. It never feeds an overlap verdict.
 - When a task is integrated through `devkit worktree finish` or `devkit integration integrate`, devkit-spec's
   post-finish cleanup removes that task's record and prunes the handed-off proposal directory. Other stale records
-  wait for an explicit `sweep`.
+  wait for an explicit `sweep`; one that changed since it was read is kept (`SPEC_SCOPE_STALE_REVISION`).
 
 Overlap evidence joins declarations with Git observations. It proves neither a merge conflict nor independence, and
 it is not an exclusive claim; deciding what runs in parallel stays with the orchestrator.
@@ -178,10 +199,12 @@ this release.
 
 ## Sources
 
-- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md):
+- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md):
   scope inputs, comparison, registry, commands, output and codes.
-- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
+- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
   artifact identity, retention, storage and adapter extensions.
-- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
+- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
   the parallel-work scenario.
+- [ADR-host-owned-scope-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261025-host-owned-scope-observation.md):
+  why the Host observes and workers publish nothing.
 - Related: [Worktree](worktree.md) (`CAP-WT-task-worktrees`), [MCP](mcp.md).

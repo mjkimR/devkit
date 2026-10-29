@@ -1,10 +1,10 @@
 ---
 sources:
   CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
-  CAP-DOCS-document-lookup: d908536d3cc6b3c3676c21f0858e5fd4d416cca6
-  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
-  UC-keep-the-living-spec-consistent: 7ebdf1e2f7ae6581fa9140d1898d755de57b5667
-  UC-run-parallel-work-safely: eb22803d64e8af4f3479c6c935942508db14f5cf
+  CAP-DOCS-document-lookup: f16d8d88730261a376acc66ccb8e11ce209d4b49
+  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
+  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
+  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
 title: Traceability
 ---
 
@@ -16,9 +16,10 @@ title: Traceability
 
 Traceability links Living Spec documents to code. A capability or use case can declare `entrypoints`: the files
 and directories where its implementation starts. That one field lets you go from a document to its code, from a
-code path back to its documents, and lets the commit gate notice when code disappears under a document. The
+code path back to its documents, and lets the commit gate notice when code disappears under a document. devkit-docs
+owns the path contract, the rule and the reverse query; devkit-spec adds the derivation from spec bundles. The
 contract is
-[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md).
+[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md).
 
 An entrypoint is where reading starts, not a complete list of the implementation and not proof that the code does
 what the document says. Coverage and correctness stay with tests and review. The Living Spec and its documents are
@@ -39,8 +40,8 @@ entrypoints:
 - No absolute paths, `..`, backslashes, drive colons or glob characters. Comparison is by whole segment and
   case-sensitive: `src/a` covers `src/a/b.py`, not `src/ab`.
 
-The same path contract applies to the code paths of the work-scope registry, which is how parallel tasks see that
-they touch the same code; see [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+The same path contract applies to the code paths of work-scope comparison, which is how the Host sees that parallel
+tasks touch the same code; see [Run parallel work safely](../journeys/run-parallel-work-safely.md)
 (`UC-run-parallel-work-safely`).
 
 ## Find the documents that own a path
@@ -48,13 +49,13 @@ they touch the same code; see [Run parallel work safely](../journeys/run-paralle
 Before you change a file, ask which documents claim it:
 
 ```bash
-uv run devkit spec list capability --file src/engine/
-uv run devkit spec list usecase --file src/engine/parse.py
+uv run devkit docs list capability --file src/engine/
+uv run devkit docs list usecase --file src/engine/parse.py
 ```
 
 It lists documents whose entrypoints equal the path, lie under it, or are a directory containing it. The path
 need not exist, so a file you just deleted still finds its documents. A path that breaks the contract fails with
-`SPEC_ENTRYPOINTS_PATH_INVALID` before any document is read. The rest of `devkit spec list` is described in
+`DOCS_ENTRYPOINTS_PATH_INVALID` before any document is read. The rest of `devkit docs list` is described in
 [Documents](documents.md) and `CAP-DOCS-document-lookup`.
 
 ## Keep declarations alive
@@ -90,13 +91,18 @@ uv run devkit spec entrypoints derive --spec <bundle-dir> \
 How to use it well:
 
 1. Run it without `--apply` first. Each `[CANDIDATES: ...]` line shows one document with its paths by state: `new`,
-   `missing`, `folded` (covered by a shorter candidate) or `declared`.
+   `missing`, `folded` (covered by a shorter candidate) or `declared`. Documents are paged 20 at a time
+   (`--limit`, `--offset`, with a `[NEXT_CMD: ...]` for the next page), and skipped inputs are counted per reason
+   (`[SKIPPED_COUNT: ...]`; `--skipped` lists each one).
 2. Review before applying. A bundle that touched a capability only for wording still pairs it with every path its
    tasks named. Drop such documents, keep directory candidates only for documents that own the package, and
    `--exclude` hub files that every bundle touches. The `spec-entrypoints` skill carries this review; `spec-sync`
    runs it on the current bundle.
-3. Apply per document with `--apply --target <ID>` and `--code <path>`. Only the `entrypoints` block of the
-   frontmatter is rewritten, every other byte is kept, and a rerun writes nothing.
+3. Apply per document with `--apply --target <ID>` and `--code <path>`. A `--code` path may also name a folded
+   candidate (to write it as is) or a file under a directory candidate (a doorway file). A `--code` path that matches
+   no candidate refuses the whole run with `SPEC_ENTRYPOINTS_CODE_UNMATCHED` before anything is written, so a typo
+   never lets the other selections slip through. Only the `entrypoints` block of the frontmatter is rewritten, every
+   other byte is kept, and a rerun writes nothing. Paging never limits what `--apply` writes.
 
 Use `--all` with `--min-count` to backfill older documents: a pair produced by several specs is a stronger
 candidate. Error codes and the full option list are in the contract.

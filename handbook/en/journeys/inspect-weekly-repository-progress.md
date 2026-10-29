@@ -56,9 +56,9 @@ already in the repository. It reads only: it fetches nothing, switches no branch
 creates no follow-up work. Publishing the finished report is a separate step with its own authority.
 
 The use case is
-[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-inspect-weekly-repository-progress.md),
+[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-inspect-weekly-repository-progress.md),
 built on
-[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
 Playbooks are explained in [Concepts](../concepts.md).
 
 ## Before you start
@@ -128,6 +128,6 @@ both outcomes, the limitations and the next steps.
 ## Next
 
 Publishing the verified report to a destination you choose is
-[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-publish-a-weekly-report.md),
+[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md),
 covered in [Publish a weekly report](publish-a-weekly-report.md). Areas: [Delivery](../areas/delivery.md) and
 [Governance](../areas/governance.md).

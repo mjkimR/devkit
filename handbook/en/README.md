@@ -2,9 +2,12 @@
 sources:
   ARCH-01-introduction-and-goals: 9057d8c207781509028fb8f0335905634db97a9c
   ARCH-03-context: da101a47ee997b3705720a96951abc661301ea62
-  ARCH-05-1-containers: b0628213670ab9fb128a861e5fb816d60dfbefe9
-  CAP-DIST-content-packages: dcd5bdbf45e7fbe1e26f52118902c300bbf646e6
-  CAP-DLV-release-handbook: 98941d4b7793e2ac6a7fc50b92c337ede376e3ce
+  ARCH-05-1-containers: cb3b0e165eb94c1f1bff13af613ae3864be8a451
+  CAP-DIST-content-packages: 71d426703b854a24bdce4cd0c44b130ed8a106dc
+  CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
+  CAP-DLV-idea-incubation: c1ff3be1b056ec9d5746689d189c17fdde8bee89
+  CAP-DLV-incubation-sdd-baseline: 8899fda9b8975eb5cf9848c226df2ee8f43abc14
+  CAP-DLV-release-handbook: ef9a59be9a4712194710b04969671a12582c28d7
 title: devkit handbook
 ---
 
@@ -26,7 +29,7 @@ links to the documents it draws on; when a page and the Living Spec disagree, th
 ## What devkit gives you
 
 devkit is one command, `devkit`, shipped as Python wheels released together at one version
-([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-05-1-containers.md)):
+([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-05-1-containers.md)):
 
 - **Distribution** (`devkit-dist`): packages agent assets into bundles, deploys the ones your project selects with
   `devkit sync`, projects skills and subagents into each agent's native directories, and loads guidance on demand.
@@ -34,33 +37,56 @@ devkit is one command, `devkit`, shipped as Python wheels released together at o
 - **Harness** (`devkit-agt`): repository rules (`devkit rules`), data-driven delivery workflows (`devkit workflow`),
   commit gates (`devkit gate`), task worktrees (`devkit worktree`), tracked generated files, approval-bound
   integration (`devkit integration`) and bounded command output (`devkit run`).
-- **Spec-driven delivery** (`devkit-spec`): the Living Spec document model, proposals and spec bundles
-  (`devkit spec`), the `spec` bundle of skills and role contracts, and the rules that keep the documents consistent.
+- **Documents** (`devkit-docs`): the document model of the Living Spec, the `devkit docs` commands that resolve,
+  list, search and follow references between documents, the document rules, and the auto-selected `docs` bundle of
+  shared formats and writing guidance. It knows no delivery process.
+- **Spec-driven delivery** (`devkit-spec`): proposals and spec bundles (`devkit spec`), delivery policy, worker
+  inspection, the `spec` bundle of skills, workflows and role contracts, and the lifecycle rules that keep the
+  documents consistent. It builds on `devkit-docs`.
 - **Libraries for other repositories**: `devkit-advisory` (the `devkit.advisory` advisory protocol, standard
   library only) and `devkit-cli` (the agent-first output contract for any click tool).
 - **Optional extras**: `devkit-mcp` (MCP transport), `devkit-viewer` (a local read-only page over your
-  repositories), `devkit-catalog` (opt-in bundles) and the `search` extra for dense and hybrid document search.
+  repositories), `devkit-catalog` (opt-in bundles such as `incubation`, `maintenance` and `response-style`) and the
+  `search` extra for dense and hybrid document search.
 
 The goals behind these pieces, deterministic results, transactional sync, strict layering and POSIX-only
 operation, are set out in
-[`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-01-introduction-and-goals.md).
+[`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-01-introduction-and-goals.md).
 
 ## The overall model
 
 devkit sits between three parties
-([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-03-context.md)):
+([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-03-context.md)):
 
 - **You** configure project policy in `.devkit/config.toml`, confirm what the agent proposes and make the
   decisions devkit reserves for a person, such as approving an integration.
 - **The agent** runs `devkit` commands, reads the one-line `[KIND: ...]` results on stdout and the advisories on
-  stderr, and follows the stage the workflow engine reports.
+  stderr, and follows the guidance of the project's development approach: under SDD, the stage the workflow engine
+  reports.
 - **Git and your workspace** hold everything durable: deployed assets and their receipt, the Living Spec, work
   units, envelopes, hooks and worktrees. devkit runs no daemon and calls no LLM itself.
 
-In practice the loop looks like this: `devkit sync` deploys guidance; the agent reads it with
-`devkit get-context <bundle>`; a development request is classified and bound to one workflow; the agent follows
-`devkit workflow next` stage by stage, recording reviews and questions as envelopes; rules and commit gates keep the
-repository consistent; and finished work lands on the base branch through `devkit integration` once you approve it.
+### Two development approaches
+
+Every project makes one shared choice of **development approach**, `sdd` (the default) or `incubation`, recorded
+as `[development] approach` in `.devkit/config.toml`. `uv run devkit config show` reports the effective value and
+where it comes from. Installing a package or selecting a bundle never changes it; only an explicit edit you agree to
+does ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
+
+- **SDD** (spec-driven development) is the full delivery procedure. `devkit sync` deploys guidance; the agent reads
+  it with `devkit get-context <bundle>`; a development request is classified and bound to one workflow; the agent
+  follows `devkit workflow next` stage by stage, recording reviews and questions as envelopes; rules and commit
+  gates keep the repository consistent; and finished work lands on the base branch through `devkit integration`
+  once you approve it.
+- **Incubation** is for an idea whose product is still taking shape. The opt-in `incubation` bundle's `/incubate`
+  entry advances the next useful product action (a question, a bounded experiment, an implementation, a usage
+  check) and keeps only the current facts needed to resume in `.devkit/incubation.md`, with no spec bundles,
+  envelopes or approvals per change. Document checks and your project's own checks still apply
+  ([`CAP-DLV-idea-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-idea-incubation.md)).
+  A small app can stay in incubation for good; when you want later changes to go through SDD, the `sdd-baseline`
+  playbook verifies what you keep and switches the approach only on your decision
+  ([`CAP-DLV-incubation-sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md)).
+
 [Concepts](concepts.md) explains each of these pieces and how they connect.
 
 ## Where to start
@@ -68,16 +94,23 @@ repository consistent; and finished work lands on the base branch through `devki
 1. Read [Concepts](concepts.md) for the vocabulary used everywhere else.
 2. Install devkit. You can give your agent the installation guide and let it propose a plan, or install the release
    wheels yourself and run `uv run devkit sync`
-   ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/distribution/CAP-DIST-content-packages.md)
+   ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md)
    describes which wheels bring which bundles).
-3. If your repository already has code and documents, follow
-   [Adopt in an existing repository](journeys/adopt-in-an-existing-repository.md); otherwise pick a journey below.
+3. Pick your starting point:
+   - a repository that already has code and documents: [Adopt in an existing repository](journeys/adopt-in-an-existing-repository.md);
+   - a new idea you want to explore before committing to specs: [Incubate an idea](journeys/incubate-an-idea.md),
+     and later, if you want, [Adopt SDD from incubation](journeys/adopt-sdd-from-incubation.md);
+   - otherwise, the SDD journeys below, starting with [Route development intent](journeys/route-development-intent.md).
 
 ## Journeys
 
 Getting oriented:
 - [Adopt in an existing repository](journeys/adopt-in-an-existing-repository.md)
 - [Find the right documents](journeys/find-the-right-documents.md)
+
+Exploring an idea:
+- [Incubate an idea](journeys/incubate-an-idea.md)
+- [Adopt SDD from incubation](journeys/adopt-sdd-from-incubation.md)
 
 Delivering work:
 - [Route development intent](journeys/route-development-intent.md)
@@ -91,6 +124,7 @@ Keeping the Living Spec healthy:
 - [Keep the Living Spec consistent](journeys/keep-the-living-spec-consistent.md)
 - [Reconcile Living Spec drift](journeys/reconcile-living-spec-drift.md)
 - [Review and refactor accumulated slop](journeys/review-and-refactor-accumulated-slop.md)
+- [Speed up selected slow operations](journeys/speed-up-selected-slow-operations.md)
 
 Reporting progress:
 - [Inspect weekly repository progress](journeys/inspect-weekly-repository-progress.md)
@@ -104,7 +138,7 @@ Reporting progress:
 | [cli](areas/cli.md) | The agent-first output contract for click tools |
 | [collaboration](areas/collaboration.md) | Shared report artifacts and the work scope registry |
 | [compact](areas/compact.md) | Bounded command output with full logs on disk |
-| [delivery](areas/delivery.md) | Workflows, proposals, spec bundles, envelopes, policy and reports |
+| [delivery](areas/delivery.md) | Development approaches, incubation, workflows, proposals, spec bundles, envelopes, policy and maintenance playbooks |
 | [distribution](areas/distribution.md) | Bundles, sync, receipts, projections, context and playbooks |
 | [documents](areas/documents.md) | The document model, lookup, search and namespaces |
 | [gate](areas/gate.md) | Commit hooks and layered gate policy |

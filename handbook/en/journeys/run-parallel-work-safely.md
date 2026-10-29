@@ -1,10 +1,10 @@
 ---
 sources:
-  CAP-COLL-work-scope-registry: e60ca6b5e8eccf19fac5b506233860376125ae9a
-  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
-  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
-  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
-  UC-run-parallel-work-safely: eb22803d64e8af4f3479c6c935942508db14f5cf
+  CAP-COLL-work-scope-registry: 23990ff536e67c96f25dff1857c08cbd0c4c8838
+  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
+  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
+  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
+  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
 title: Run parallel work safely
 ---
 
@@ -60,15 +60,15 @@ scope is still unknown, so you decide what runs in parallel and in which order i
 Task worktrees and activity branches are explained in [Concepts](../concepts.md); the registry itself in the
 [collaboration area](../areas/collaboration.md).
 
-Source: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/collaboration/UC-run-parallel-work-safely.md),
-contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md).
+Source: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md),
+contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md).
 
 ## Before you start
 
 - The repository is a Git repository with `devkit-spec` installed.
 - Each task declares its scope in its bundle: `target-docs.md` or `reconcile.md` targets, the `_Boundary` entries of
   `tasks.md`, and the `entrypoints` of the documents it targets. Entrypoints turn a document into code paths
-  ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
+  ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
   A `_Boundary` entry under `specs/` is skipped, except the exact path of another spec bundle's feedback file
   (`specs/**/feedback/<name>.md`): it is collected as code, so two tasks that resolve the same feedback file overlap
   on it.
@@ -82,7 +82,7 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    uv run devkit spec policy     # look at [GIT_POLICY: worktree=...]
    ```
 
-   See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-project-policy.md).
+   See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md).
 2. **Compare the planned scopes** before anything starts. This reads declarations only and writes nothing:
 
    ```sh
@@ -94,44 +94,50 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    `[SUMMARY: sets=2 pairs=1 overlapping=1]`.
 3. **Start the tasks** you decided to run in parallel, each on its activity branch in its own task worktree
    (`uv run devkit worktree start dev-<slug>`;
-   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
-4. **Register each task** from its worktree:
+   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
+   When `devkit spec new` or `devkit spec proposal handoff` creates the unit in a linked worktree, it records an
+   initial scope snapshot in the registry on its own. That registration is best effort: if it fails, creation still
+   succeeds and nobody has to repair it.
+4. **Let the work run.** Workers write their declarations and changes through the normal delivery workflow. They
+   have no duty to register, update or acknowledge scope, and `devkit workflow next` collects nothing.
+5. **Observe when you need evidence.** The orchestrating agent asks for it explicitly, from any checkout:
 
    ```sh
-   uv run devkit spec scope register --spec <dir>
+   uv run devkit spec scope collect                        # default --mode worktrees
+   uv run devkit spec scope collect --mode refs --fetch origin
    ```
 
-   The registry stores the declared and Git-observed scope and prints the worktree's owner token once.
-5. **Update after planning changes.** Whenever a task writes `tasks.md` or `reconcile.md`:
+   The mode chooses how deep to look: `snapshot` reads only the registry records, `refs` adds local and fetched
+   `plan-*` and `dev-*` branches, and `worktrees` adds each accessible worktree's declarations and its committed,
+   staged, unstaged and untracked paths. `--fetch` refreshes a configured remote first; without it, remote branches
+   are what the last fetch saw. Output lists each `[SCOPE_CANDIDATE: ...]` and `[SCOPE_OBSERVATION: ...]`, the
+   `[PAIR: ...]` and `[EVIDENCE: ...]` lines, and a `[SUMMARY: ... coverage=complete|partial ...]`. Collecting changes
+   no record, token or journal.
+6. **Order integration.** Use the overlaps, where each observation came from, and the coverage that is missing to
+   decide what keeps running in parallel; integrate overlapping work one after another.
+7. **Finish.** Integration removes the worktree, and the post-finish cleanup removes that worktree's scope record.
+   Other records stay.
 
-   ```sh
-   uv run devkit spec scope update --spec <dir>
-   ```
-
-   The result is `[SCOPE_ACK: status=applied ... overlaps=N ...]` plus the overlapping records. An overlap never
-   grants or refuses a write; it is information for scheduling.
-6. **Order integration.** `uv run devkit spec scope query` lists the records and this worktree's overlaps with the
-   others; integrate overlapping work one after another.
-7. **Finish.** `devkit worktree finish` integrates the branch and removes the worktree, and the post-finish cleanup
-   removes that worktree's scope record. Other records stay.
-
-## Reading "unresolved"
+## Reading "unresolved" and "partial"
 
 An input that cannot become a path is counted as unresolved with its reason (for example `reason=no-entrypoints` for a
 capability target without `entrypoints`, a planned document, a waived target or a missing file). Unresolved never
 means "no overlap". Adding `entrypoints` to the capabilities you target makes the comparison sharper.
 
+`coverage=partial` with a `SPEC_SCOPE_COLLECTION_PARTIAL` warning means some source, base, identity or comparison
+could not be observed within its budget. The evidence that was collected is still usable, and the warning names
+each missing source with its reason. Pairs that were not computed never count as zero overlap.
+
 ## When it goes wrong
 
-- **`SPEC_SCOPE_TOKEN_EXISTS`.** This worktree already registered a task. The first record and token stay; continue
-  with `update`.
-- **`SPEC_SCOPE_TOKEN_MISSING`.** This worktree registered nothing. Nothing is written; the task simply takes no part
-  in the registry.
-- **`SPEC_SCOPE_STALE_REVISION` with `[SCOPE_ACK: status=stale ...]`.** The record changed between your read and your
-  write. Nothing was written; run `update` again.
-- **`SPEC_SCOPE_TIMEOUT` with `status=timeout`.** The lock or Git took too long. Retry with the same request ID
-  (`devkit spec scope update --spec <dir> --request-id <id>`); an update that already applied is answered from the
-  stored record without a second write.
+- **`SPEC_SCOPE_COLLECTION_PARTIAL`.** Usable evidence with gaps; the run exits `0` (`1` under `--strict`). Decide
+  with the gaps in view, or repair access and collect again.
+- **`SPEC_SCOPE_COLLECTION_FAILED`.** No selected inventory source could be read. Repair access to the sources named
+  in `[TARGET]` and collect again.
+- **`ARGUMENT_INVALID`.** The mode and fetch arguments conflict (for example `--mode snapshot` with `--fetch`), or a
+  budget or remote is invalid. Correct the arguments.
+- **Work on another machine is missing.** No observation reads another PC's unpushed or uncommitted changes. For
+  frequent multi-PC work, push declarations and changes, ideally through pull requests, so `refs` mode sees them.
 - **A record outlives its worktree** (the cleanup failed, or the worktree was removed without a finish). From the base
   checkout run `uv run devkit spec scope sweep --apply`. Stale records whose revision is unchanged are removed
   (`[SWEEP: <task> verdict=removed reason=worktree-missing ...]`); a record whose revision moved is kept and reported
@@ -139,6 +145,6 @@ means "no overlap". Adding `entrypoints` to the capabilities you target makes th
 
 ## What you end up with
 
-Each running task's record reflects its latest scope, you know every pair's shared documents and code and how much is
-unknown, no task was ever blocked, and finished tasks leave no records behind. Overlap evidence is a join of
-declarations and Git observations: it proves neither a merge conflict nor independence.
+You know every pair's shared documents and code, where each observation came from and how much coverage is missing,
+no task was ever blocked or given extra bookkeeping, and finished tasks leave no records behind. Overlap evidence is
+a join of declarations and Git observations: it proves neither a merge conflict nor independence.

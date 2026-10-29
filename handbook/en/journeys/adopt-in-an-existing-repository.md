@@ -1,9 +1,10 @@
 ---
 sources:
-  CAP-GOV-spec-rules: d995eca73f4dea46ac7a5836f25cdfa4bf158b6e
-  CAP-HARN-agent-guidance: dbab285c20602e97d78db8768dc21e0a5613b379
-  CAP-HARN-command-mount: e0a433da6ecfc088b4ba2199dae7b843b73e47f0
-  UC-adopt-in-an-existing-repository: bc34f546639b3305ac410f895f7ab66b72c41a0b
+  CAP-GOV-spec-rules: adab7d427d7d35c29e7379d1110c93d516470654
+  CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
+  CAP-HARN-command-mount: ca46e4fab66858d2ee2a89c4a8cd676ad6b0a717
+  UC-adopt-in-an-existing-repository: 37265d4dcac0d34967bb003908a49d0df4a036a8
+  UC-adopt-sdd-from-incubation: 84cab126d6e7b0c498c33f38a07531ed16c0c6d3
 title: Adopt devkit in an existing repository
 ---
 
@@ -56,8 +57,13 @@ work to follow spec-driven delivery from today, without first rewriting every le
 from installation to a passing `devkit rules check`, then leaves the legacy content to migrate as work touches it.
 
 The use case behind this page is
-[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/harness/UC-adopt-in-an-existing-repository.md).
+[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/harness/UC-adopt-in-an-existing-repository.md).
 For the terms bundle, sync and Living Spec, see [Concepts](../concepts.md).
+
+This path contains legacy rule debt and lets it migrate gradually. If you have been incubating an idea and want to
+adopt spec-driven delivery from that retained product instead, ask for the incubation baseline: it follows
+[`UC-adopt-sdd-from-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-adopt-sdd-from-incubation.md),
+which verifies the product before activating SDD and moves no legacy documents.
 
 ## Before you start
 
@@ -71,15 +77,17 @@ uv add --dev devkit devkit-spec
 uv run devkit sync
 ```
 
-devkit-spec has no executable of its own. It registers the `spec` bundle and the `devkit spec` command group through
-entry points, so everything runs through the one `devkit` executable of your project environment
-([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-command-mount.md)).
+devkit-spec brings devkit-docs with it. Neither has an executable of its own: they register the `spec` and `docs`
+bundles and the `devkit spec` and `devkit docs` command groups through entry points, so everything runs through the
+one `devkit` executable of your project environment
+([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-command-mount.md)).
 
 `devkit sync` then does three things
-([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-agent-guidance.md)):
+([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md)):
 
-- copies the bundle's `core` preset to `.devkit/managed/spec/`;
-- projects its skills and role contracts into each agent host's own directories;
+- copies the `core` presets of both bundles to `.devkit/managed/spec/` and `.devkit/managed/docs/`: `docs` holds the
+  shared document guidance, templates and document rules, `spec` the delivery lifecycle;
+- projects the skills and role contracts into each agent host's own directories;
 - adds the guidance pointer line to the managed block of your root `AGENTS.md`.
 
 It writes nothing under `docs/` or `specs/`. Your existing documents stay exactly as they are.
@@ -88,9 +96,11 @@ It writes nothing under `docs/` or `specs/`. Your existing documents stay exactl
 
 ```bash
 uv run devkit spec --version
+uv run devkit docs --version
 ```
 
-You see `[VERSION: devkit-spec <version>]`. Note that `devkit --version` reports devkit itself, not the spec package.
+You see `[VERSION: devkit-spec <version>]` and `[VERSION: devkit-docs <version>]`. Note that `devkit --version`
+reports devkit itself, not these packages.
 
 ## 3. Take the baseline
 
@@ -98,11 +108,11 @@ You see `[VERSION: devkit-spec <version>]`. Note that `devkit --version` reports
 uv run devkit rules check
 ```
 
-The spec rules now read the Markdown already under `docs/` and `specs/`. In a brownfield repository they usually
-report violations: number-based IDs such as ADR-0001, missing frontmatter, paths that do not match the Living Spec
+The document and spec rules now read the Markdown already under `docs/` and `specs/`. In a brownfield repository
+they usually report violations: number-based IDs such as ADR-0001, missing frontmatter, paths that do not match the Living Spec
 layout. Each finding is a `[VIOLATION: ...]` line naming the rule, the file and a remediation. The catalog of the
-eleven rules is in
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-spec-rules.md);
+fourteen rules (nine document rules shipped by `docs`, five lifecycle rules shipped by `spec`) is in
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md);
 `uv run devkit rules explain <RULE-id>` prints one rule's guide.
 
 ## 4. Let the agent contain the legacy documents
@@ -114,7 +124,7 @@ The agent follows the playbook:
 
 1. It lists the legacy Markdown and reviews a long or mixed set with you.
 2. It moves the legacy files under `docs/materials/_legacy/<original path>`. Material directories are free-form, and
-   no spec rule checks them.
+   no document or spec rule checks them.
 3. It updates references to the moved paths elsewhere in the repository.
 4. It proposes the containment as one commit, before any migration, so you review moves and content edits apart.
 
@@ -133,10 +143,11 @@ touches it.
 
 ## Options along the way
 
-- **Seed a docs skeleton.** `uv run devkit add spec:docs-skeleton` writes only the skeleton files that do not exist
+- **Seed a docs skeleton.** `uv run devkit add docs:docs-skeleton` writes only the skeleton files that do not exist
   yet. An existing `docs/README.md`, for example, stays unchanged.
 - **Keep the commands, skip the bundle.** Set `[presets] spec = false` in `.devkit/config.toml` and run
-  `uv run devkit sync`. No managed files or projections are deployed, while `devkit spec` stays available.
+  `uv run devkit sync`. No managed files or projections of the `spec` bundle are deployed, while `devkit spec` stays
+  available. Removing `docs` as well leaves SDD unsupported; `uv run devkit add docs` restores it.
 - **Review your policy.** `uv run devkit spec policy` shows which approval gates wait for you; record your decisions
   in `.devkit/config.toml`. See [Delivery](../areas/delivery.md).
 

@@ -10,7 +10,7 @@ sources:
   UC-route-development-intent: null
   UC-run-parallel-work-safely: null
 title: 워크트리
-translated_from: en/areas/worktree.md@091c1620f04acbe5
+translated_from: en/areas/worktree.md@cf91e8fda0493a85
 ---
 
 # 워크트리
@@ -82,11 +82,13 @@ translated_from: en/areas/worktree.md@091c1620f04acbe5
 devkit worktree start dev-login
 ```
 
-devkit은 로컬이나 연결 가능한 원격 저장소에 이미 존재하는 브랜치에 대한 생성을 거부하고(`WORKTREE_BRANCH_EXISTS`), 기존
-연결 워크트리 내부에서의 중첩 생성을 거부한 뒤(`WORKTREE_NESTED`), 베이스 브랜치의 HEAD를 기준으로 새 워크트리를 생성합니다.
+devkit은 로컬이나 연결 가능한 원격 저장소에 이미 존재하는 브랜치에 대한 생성을 거부하고(`WORKTREE_BRANCH_EXISTS`: 이어서
+작업할지 묻고, 브랜치의 유닛이 기록되어 있으면 정확한 `--existing-branch` 명령을 제시합니다), 기존 연결 워크트리 내부에서의
+중첩 생성을 거부한 뒤(`WORKTREE_NESTED`: 해결 방법은 `-w`로 베이스 체크아웃을 지정한 같은 명령입니다), 베이스 브랜치의 HEAD를
+기준으로 새 워크트리를 생성합니다.
 새로 생성된 체크아웃에는 베이스의 gitignore 대상 파일들이 누락되어 있으므로, `start` 명령은 다음 설정 작업도 함께 수행합니다.
 
-1. 베이스에 `.devkit/config.local.toml` 파일이 있으면 이를 스냅샷으로 복사합니다(이후 양쪽에서 수정하더라도 상호 전파되지 않습니다).
+1. 베이스 체크아웃에 `.devkit/config.local.toml` 파일이 있으면 이를 스냅샷으로 복사합니다(이후 양쪽에서 수정하더라도 상호 전파되지 않습니다).
 2. 새로 생성된 워크트리 내에서 `[worktree] setup` 설정(예: `uv sync`)을 실행합니다.
 3. `devkit sync --locked`를 실행하여 규칙 검사, 커밋 게이트, `get-context`, 플레이북 실행에 필요한 관리 번들 사본들을
    복원하고, 이어서 선택형 MCP 등록을 위한 `devkit sync --registrations-only`를 실행합니다(`CAP-MCP-runtime-registration`).
@@ -100,15 +102,15 @@ setup이나 sync 과정에서 오류가 발생하더라도 워크트리는 그�
 - `devkit worktree start dev-login --no-worktree`: 새 워크트리를 만들지 않고 현재 체크아웃에 바로 브랜치를 생성하며, 커밋되지
   않은 로컬 변경 사항을 그대로 유지합니다. 별도의 setup 명령은 실행되지 않습니다. 해당 디렉터리를 사용하는 모든 세션이 브랜치
   전환의 영향을 받으므로, 동시 세션 간의 작업 격리는 제공되지 않습니다.
-- `devkit worktree start dev-login --existing-branch [<remote>/]dev-login --unit <dir>`: 다른 체크아웃, 다른 컴퓨터, 또는
+- `devkit worktree start dev-login --existing-branch [<remote>/]dev-login --unit <dir>`(유닛은 저장소 기준 상대 경로): 다른 체크아웃, 다른 컴퓨터, 또는
   클라우드 환경 등 외부에서 이미 시작된 브랜치를 이어서 작업할 때 사용합니다. 기존 상태를 임의로 초기화(reset)하지 않습니다.
   devkit이 원격 브랜치를 자동으로 fetch하지는 않으므로 먼저 fetch를 완료해야 합니다. 로컬 복사본이 원격보다 뒤처져 있거나 서로
   갈라진 경우 `WORKTREE_BRANCH_OUT_OF_SYNC` 오류가 발생하며, 설치된 연결 검사기(attach check)를 통해 해당 유닛이 브랜치에
   정상적으로 속해 있는지 확인합니다(`WORKTREE_ATTACH_REFUSED`).
 
 워크플로에서 이러한 시작 방식들을 선택하는 기준은 [개발 요청 라우팅하기](../journeys/route-development-intent.md)
-(`UC-route-development-intent`) 여정에 기술되어 있습니다. 분리된 워크트리에서 실행되는 병렬 작업들은 공유 레지스트리를 통해
-각자의 작업 범위를 상호 점검할 수 있습니다. 자세한 내용은 [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+(`UC-route-development-intent`) 여정에 기술되어 있습니다. 분리된 워크트리에서 실행되는 병렬 작업들은 오케스트레이션하는
+Host가 비교하고 관찰할 수 있습니다. 자세한 내용은 [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
 (`UC-run-parallel-work-safely`) 및 [협업](collaboration.md)을 참고하세요.
 
 ## 작업 완료 및 정리
@@ -121,7 +123,8 @@ Host가 주도하는 워크플로에서 통합은 `devkit integration`을 통해
 devkit worktree finish dev-login --merge [--local-only]
 ```
 
-이 명령은 베이스 체크아웃에서 실행되며, 다음 순서로 엄격하게 진행됩니다.
+이 명령은 베이스 체크아웃에서 실행됩니다. 커밋되지 않은 변경 사항이나 추적되지 않는 파일이 있는 워크트리는 아무것도 바뀌기
+전에 거부되며(`WORKTREE_DIRTY`), 강제로 삭제되는 일은 없습니다. 그렇지 않으면 다음 순서로 엄격하게 진행됩니다.
 
 1. **통합(Integration).** 베이스는 특정 브랜치에 위치해야 하며 작업 트리가 깨끗해야 합니다. 또한 작업 브랜치는 이미 베이스의
    최신 HEAD를 포함하고 있어야 합니다(`WORKTREE_MERGE_NOT_FF`: 베이스 브랜치를 작업 브랜치로 병합해야 하며, 각종 기록에서
@@ -129,8 +132,7 @@ devkit worktree finish dev-login --merge [--local-only]
    유닛 내에 해결되지 않은 문제나 답변되지 않은 질문이 남아 있는 브랜치의 통합을 거부합니다(`WORKTREE_BLOCKED`). 이후 베이스는
    별도의 체크아웃을 거치지 않고 직접 구성된 병합 커밋을 통해(또는 `merge = "ff-only"` 설정인 경우 fast-forward로) 브랜치
    변경 사항을 반영하며, `--local-only` 플래그가 지정되지 않은 한 업스트림 원격 저장소로 push합니다.
-2. **워크트리 제거.** 커밋되지 않은 변경 사항이나 추적되지 않는 파일이 남아 있으면 작업이 즉시 중단됩니다(`WORKTREE_DIRTY`).
-   워크트리를 강제로 삭제하는 일은 없습니다.
+2. **워크트리 제거.** 검사 이후 변경 사항이 생겼다면 여기서도 `WORKTREE_DIRTY`로 중단됩니다.
 3. **브랜치 삭제.** `git branch -d` 명령으로 로컬 브랜치를 안전하게 삭제합니다(`delete_branch = false`로 설정된 경우 제외).
 4. **완료 후 확장 실행.** devkit-spec의 작업 범위 기록 정리나 전달 완료된 제안서 디렉터리 정리 등 완료 후속(post-finish)
    확장 작업을 실행합니다.
@@ -143,7 +145,8 @@ devkit worktree finish dev-login --merge [--local-only]
 명령을 사용합니다. 깨끗한 상태의 워크트리를 제거하고 `git branch -D`로 브랜치를 강제 삭제합니다. 단, 원격 브랜치와 풀 리퀘스트는
 직접 닫아야 합니다.
 
-병합 단계 이후에 작업이 거부된 경우, 이미 완료된 단계들이 함께 출력됩니다. 오류 원인을 해결한 뒤 동일한 명령을 다시 실행하세요.
+병합 단계 이후에 작업이 거부된 경우, 이미 완료된 단계들이 성공 줄 `[WORKTREE_FINISHED: ...]`가 아닌
+`[WORKTREE_FINISH_PARTIAL: ...]` 줄로 출력됩니다. 오류 원인을 해결한 뒤 동일한 명령을 다시 실행하세요.
 진행이 차단되거나 중단된 작업의 복구 절차는 [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
 (`UC-handle-delivery-problems-and-exceptions`)를, 최종 반영까지의 전체 흐름은
 [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
@@ -161,8 +164,8 @@ devkit worktree finish dev-login --merge [--local-only]
 활동 브랜치는 일정 시간이 지난다고 해서 자동으로 만료되지 않습니다. `devkit worktree status --stale` 명령은 마지막 커밋
 시점과 마지막 풀 리퀘스트 갱신 시점을 기준으로 `[worktree] stale_after`(기본값: 14일) 이상 유휴 상태로 방치된 로컬 및
 원격 추적 `plan-*`, `dev-*` 브랜치를 탐지하여 보고합니다. 이 기능을 실행하려면 인증된 `gh` CLI가 필요하며, 인증되지 않은 경우
-`WORKTREE_STALE_SKIPPED` 알림이 출력됩니다. 오래된 브랜치마다 `WORKTREE_STALE_BRANCH` 경고가 발생하며, 경고 메시지에는
-작업 재개 명령과 폐기 명령이 함께 안내됩니다. 동일한 점검 결과는 `devkit rules check --phase hygiene` 실행 시에도 보고됩니다.
+`WORKTREE_STALE_SKIPPED` 알림이 출력됩니다. 오래된 브랜치마다 재개할지 폐기할지 묻는 `WORKTREE_STALE_BRANCH` 경고가
+발생합니다. 브랜치의 유닛이 기록되어 있으면 정확한 재개 명령이 해결 방법으로, 폐기 명령은 세부 정보로 안내됩니다. 동일한 점검 결과는 `devkit rules check --phase hygiene` 실행 시에도 보고됩니다.
 브랜치가 자동으로 삭제되는 일은 결코 없으며,
 [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)(`UC-resolve-stale-activity-branches`)
 여정을 통해 정리 여부를 체계적으로 결정할 수 있습니다.
@@ -189,8 +192,8 @@ stale_after = "14d"     # "<N>d" 또는 "<N>w"
 
 ## 출처
 
-- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문):
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문):
   경로, start 변형, finish 단계, status, 설정과 오래된 브랜치.
-- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/worktree.md):
+- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/worktree.md):
   명령과 오류 코드.
 - 관련 문서: [통합](integration.md), [협업](collaboration.md).

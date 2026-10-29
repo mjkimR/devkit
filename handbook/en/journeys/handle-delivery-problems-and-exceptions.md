@@ -1,9 +1,9 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: e1366a8cbed7bace6c51651085abc7d50b588768
-  CAP-DLV-workflow-envelopes: ac166b8217314babc0f4e8ab346a6a9041f85fef
-  CAP-HARN-agent-guidance: dbab285c20602e97d78db8768dc21e0a5613b379
-  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
+  CAP-DLV-delivery-workflows: eaee3ce05a4ecaacbab0789f7f12e5585c0b647c
+  CAP-DLV-workflow-envelopes: ba3e36ff09f879615ad60389b433b58cdf4097ee
+  CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
+  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
   UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
 title: Handle delivery problems and exceptions
 ---
@@ -58,13 +58,13 @@ This journey shows how the agent tells them apart, how a problem holds the work 
 work recovers or closes cleanly.
 
 The use case is
-[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md).
+[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md).
 Envelopes, Units and the `exception` stage are explained in [Concepts](../concepts.md).
 
 ## 1. Is it a problem?
 
 The executor, a worker or the agent itself, checks the obstacle against the agreement
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
 
 | The obstacle is | The executor |
 | --- | --- |
@@ -83,7 +83,7 @@ uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <ef
 ```
 
 It commits the unfinished work together with the envelope and ends the run without integrating
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
+([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
 
 ## 3. The Unit is held
 
@@ -131,8 +131,8 @@ Unit stood. Gates passed before the problem stay passed.
   ```
 
   The result says `merged=no discarded=yes`. It never removes a worktree with uncommitted changes (`WORKTREE_DIRTY`)
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/worktree/CAP-WT-task-worktrees.md),
-  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md),
+  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
 - **The record itself cannot be written.** If the host denies the envelope or the emergency commit, the worker
   returns `failed` with the cause, the commands it tried, the actual last commit, the dirty paths and the missing
   records, never an invented result. The agent treats that return as blocked and runs the recovery itself.
@@ -149,7 +149,7 @@ opened to get around the cap.
 | Code | Meaning | What to do |
 | --- | --- | --- |
 | `WORKTREE_BLOCKED` | The merge was refused; one detail per open problem or question. | Resolve or answer, then rerun. |
-| `ENVELOPE_REFERENCE_INVALID` | The resolution names a `worker` envelope that carries no problem. | Name the envelope that holds the problem. |
+| `ENVELOPE_REFERENCE_INVALID` | The resolution names a `worker` envelope that carries no problem. | Name the envelope that holds the problem; the refusal lists each `worker` envelope that carries one. |
 | `HANDOFF_HELD` | A held Unit cannot be handed off. | Resolve the hold first. |
 | `WORKTREE_DIRTY` | The worktree has uncommitted or untracked changes. | Commit or move them out, then discard again. |
 

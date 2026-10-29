@@ -1,9 +1,9 @@
 ---
 sources:
-  CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
-  CAP-DOCS-document-search: b1fd38fddef38d5c97d094208acf6b5077e6f3f4
+  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
+  CAP-DOCS-document-search: 60fc2aff10caad2a5b56dc61ad347369aafa2634
   CAP-SRCH-document-search: c77c202fd04e0cdec4687133cbef9637642eb0ca
-  UC-find-the-right-documents: 722935d391e97c4a537ebe9d3950228b540dc591
+  UC-find-the-right-documents: fbfaa41c0802e14b1f363c666a5b4de450716895
 title: Search
 ---
 
@@ -13,22 +13,22 @@ title: Search
 > Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
-The search area is the ranking engine behind `devkit playbook search` and `devkit spec search`. It knows documents
+The search area is the ranking engine behind `devkit playbook search` and `devkit docs search`. It knows documents
 only as an ID, some metadata text and an optional body, and it ranks them against a query lexically, by meaning or
 both. Which documents are candidates, and pinning an exact match first, is left to the command that calls it. The
 contract is
-[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/search/CAP-SRCH-document-search.md).
+[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/search/CAP-SRCH-document-search.md).
 
 ## Where you meet it
 
 | Command | Candidates | Contract |
 | --- | --- | --- |
 | `uv run devkit playbook search "<query>"` | synchronized playbook headers (`name`, `description`) | `CAP-DIST-context-and-playbooks` |
-| `uv run devkit spec search <query>` | current Living Spec documents | `CAP-DOCS-document-search` |
+| `uv run devkit docs search <query>` | current Living Spec documents | `CAP-DOCS-document-search` |
 
 Finding Living Spec documents end to end is the journey
 [Find the right documents](../journeys/find-the-right-documents.md) (`UC-find-the-right-documents`); playbook
-discovery is covered in [Distribution](distribution.md) and the spec command in [Documents](documents.md).
+discovery is covered in [Distribution](distribution.md) and the document command in [Documents](documents.md).
 
 ## Pick a mode
 
@@ -50,7 +50,8 @@ wording differs from your query.
 ## Install the search extra
 
 Add the extra to the devkit requirement your project already declares, never as a second requirement:
-`devkit-agt[search]` or `devkit-dist[search]` (and `devkit-spec[search]` for spec search). It brings `numpy`,
+`devkit-agt[search]` or `devkit-dist[search]`, and `devkit-docs[search]` for document search (which
+`devkit-spec[search]` includes). It brings `numpy`,
 `tokenizers` and the `devkit-embed` model package, which provides the default model `potion-base-8m`. The model is
 static and local: it needs no network, loads in tens of milliseconds and is imported only on the first dense, hybrid
 or `auto` search, never for a lexical one.

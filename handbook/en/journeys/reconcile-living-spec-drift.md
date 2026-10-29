@@ -1,6 +1,6 @@
 ---
 sources:
-  CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
+  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
   CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
 title: Reconcile Living Spec drift
@@ -59,8 +59,8 @@ Structural consistency is the separate journey [Keep the Living Spec consistent]
 Per-feature reconciliation during delivery is `spec-sync`; this playbook catches what accumulates between features.
 See [Concepts](../concepts.md) for the Living Spec and playbooks.
 
-Source: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-reconcile-living-spec-drift.md),
-contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md).
+Source: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-reconcile-living-spec-drift.md),
+contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md).
 
 ## Before you start
 
@@ -74,7 +74,7 @@ contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/
 1. **Invoke the playbook.** Run `/devkit-playbook` and pick `drift-reconciliation`, or confirm it when the `spec`
    skill offers it in one line for a request such as "reconcile the Living Spec with the code". Playbooks never run
    on ordinary wording alone; your confirmation is the explicit invocation
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md),
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md),
    [distribution area](../areas/distribution.md)).
 2. **Intake.** The agent records the repository, `HEAD` and dirty paths, the selected contracts or area, the
    permitted roots, any prior reports and where the report goes. It then lists the candidates of one bounded batch.

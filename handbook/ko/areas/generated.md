@@ -4,7 +4,7 @@ sources:
   CAP-GATE-commit-gates: null
   CAP-GEN-tracked-artifacts: null
 title: 생성 파일
-translated_from: en/areas/generated.md@eb9c20a6124c013e
+translated_from: en/areas/generated.md@5d8011da4228aecc
 ---
 
 # 생성 파일
@@ -18,7 +18,7 @@ translated_from: en/areas/generated.md@eb9c20a6124c013e
 브랜치에서 각각 파일을 재생성한 경우 원본 입력 파일들이 충돌 없이 병합되더라도 생성 파일에서 충돌이 발생하기 쉽습니다. 게다가 단순
 텍스트 병합 결과는 생성기가 실제로 출력했을 내용과 일치하지 않는 경우가 대부분입니다. `devkit generated`(`devkit-agt` 제공)는
 이러한 충돌을 텍스트 병합 대신 '명령어 재생성' 방식으로 깔끔하게 해결하며, 커밋된 파일이 최신 상태인지도 검사합니다. 관련 규약은
-[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md) (영어 원문)을
+[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md) (영어 원문)을
 참고하십시오.
 
 이 작업은 자동으로 실행되지 않습니다. merge, rebase, cherry-pick 도중 충돌이 발생해 중단되면 사용자 또는 에이전트가 `resolve`
@@ -77,9 +77,10 @@ uv run devkit generated resolve             # 기준 파일 초기화(seed), 재
   해결해야 합니다.
 - rebase 진행 중에는 커밋이 순차적으로 다시 적용되면서 매 커밋마다 멈출 수 있으므로, 멈출 때마다 `resolve`를 반복 실행하십시오.
 
-아티팩트가 소유하지 않은 충돌 파일이 현재 해결하려는 아티팩트의 *입력(inputs)* 파일 중 하나라면, 파일을 수정하기 전에 즉시
-실행을 거부합니다(`GENERATED_INPUTS_CONFLICTED`). 명령어가 Git 충돌 마커를 잘못 읽어들이지 않도록, 먼저 해당 입력 파일의
-충돌을 수동으로 해결하고 스테이징한 후 `resolve`를 다시 실행하십시오. 명령어 실행이 실패하면 `GENERATED_COMMAND_FAILED`가
+아티팩트가 소유하지 않은 충돌 파일이 현재 해결하려는 아티팩트의 *입력(inputs)* 파일이거나 그 아티팩트가 `updates`로 고쳐 쓰는
+파일이라면, 파일을 수정하기 전에 즉시 실행을 거부합니다(`GENERATED_INPUTS_CONFLICTED`). 명령어가 Git 충돌 마커를 잘못
+읽어들이거나 마커가 남은 파일을 스테이징하지 않도록, 먼저 해당 파일의 충돌을 수동으로 해결하고 스테이징한 후 `resolve`를 다시
+실행하십시오. 거부 메시지의 `[FIX]`가 실행할 `git add`와 `resolve` 명령을 정확히 알려 줍니다. 명령어 실행이 실패하면 `GENERATED_COMMAND_FAILED`가
 발생하며, 선언되지 않은 파일을 수정한 명령어는 `GENERATED_OUTPUT_UNDECLARED` 오류를 내고 변경 사항은 검토할 수 있도록 작업
 트리에 그대로 남겨둡니다. 두 경우 모두 아무것도 스테이징되지 않으므로, 원인을 조치한 후 깨끗하게 다시 실행할 수 있습니다.
 
@@ -89,12 +90,14 @@ uv run devkit generated resolve             # 기준 파일 초기화(seed), 재
 파일의 내용과 생성 파일의 내용이 불일치할 수 있습니다. 이를 점검하고 해결하기 위한 두 가지 명령이 있습니다.
 
 - `uv run devkit generated check`: `HEAD`(또는 `--rev <REV>`)의 임시 분리(detached) 워크트리에서 모든 아티팩트를 처음부터
-  다시 생성해 보고, 오래된(stale) 아티팩트가 발견되면 각각 `GENERATED_STALE`로 보고하며 종료 코드 `1`로 끝납니다. 현재
+  다시 생성해 보고, 오래된(stale) 아티팩트가 발견되면 각각 `GENERATED_STALE`로 보고하며 정확한 `regen` 명령을 조치로
+  제시하고 종료 코드 `1`로 끝납니다. 아티팩트가 소유한 파일(`paths`)이 바뀐 경우에만 오래된 것으로 판단하며, `updates`로만 고쳐
+  쓰는 파일의 변경은 목록에 나오지만 판정에는 영향을 주지 않습니다. 텍스트 출력에는 오래된 아티팩트만 표시됩니다. 현재
   체크아웃된 작업 공간에는 전혀 영향을 주지 않으며, 새로 클론한 환경처럼 실행되므로 Git 무시(ignored) 파일 없이도 정상 동작해야
   합니다. 이 명령은 CI 파이프라인에서 실행하십시오.
 - `uv run devkit generated regen [ID...]`: 현재 작업 트리에서 명령어를 직접 다시 실행하며, 결과를 자동으로 스테이징하지는
-  않습니다. Git 인덱스에 충돌이 남아 있는 상태에서는 `GENERATED_UNMERGED` 오류와 함께 실행을 거부하므로, 이때는 `resolve`를
-  사용해야 합니다.
+  않습니다. Git 인덱스에 충돌이 남아 있는 상태에서는 `GENERATED_UNMERGED` 오류와 함께 실행을 거부하며, 이 오류의 `[FIX]`는
+  `uv run devkit generated resolve`입니다.
 
 ## 제약 사항과 신뢰성
 

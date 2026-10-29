@@ -3,11 +3,12 @@ sources:
   ADR-host-cli-lifecycle-authority: null
   ADR-local-and-pull-request-integration: null
   CAP-DLV-project-policy: null
+  CAP-GOV-evaluation-lifecycle: null
   CAP-INT-mcp-services: null
   CAP-WT-task-worktrees: null
   UC-drive-development-to-integration: null
 title: 통합
-translated_from: en/areas/integration.md@274c413b33d1358a
+translated_from: en/areas/integration.md@12a4fcf57f7a357e
 ---
 
 # 통합
@@ -77,12 +78,17 @@ integrate의 두 단계로 나누어, 로컬 병합이나 풀 리퀘스트 중 �
 ## prepare 후 integrate
 
 ```text
-devkit integration prepare <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request]
-devkit integration integrate <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--expected-digest <digest>]
+devkit integration prepare <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>]
+devkit integration integrate <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>] [--expected-digest <digest>]
 ```
 
+두 명령 모두 통합이 제거할 작업 워크트리 안이 아니라 베이스 체크아웃에서 실행합니다. 워크트리 안에서 실행하면
+`WORKTREE_RUN_FROM_BASE`로 거부되며, 해결 방법은 `-w`로 베이스 체크아웃을 지정해 같은 명령을 실행하는 것입니다.
+
 1. `prepare`는 커밋된 소스, 대상, 프로젝트 정책, 준비 상태 제공자(readiness provider), 정확한 정리 범위를 검증합니다.
-   실제 변경은 전혀 발생하지 않으며, `request.digest`가 포함된 `[INTEGRATION_PREPARED: ...]`를 출력합니다.
+   실제 변경은 전혀 발생하지 않으며, 다이제스트·경로·네트워크 사용 여부가 담긴 `[INTEGRATION_PREPARED: ...]`와 함께,
+   워크트리와 브랜치 제거 여부, 실행될 확장 정리 작업, 준비 상태 제공자의 공개 내용을 알려 주는 `[INTEGRATION_SCOPE: ...]`
+   줄을 출력합니다. `--format json`은 같은 승인 범위와 계획된 단계를 반환합니다.
 2. Host는 이 결과를 사용자에게 안내합니다. `ask` 정책에서는 사용자가 대화에서 이를 승인합니다.
 3. `integrate --expected-digest <digest>`는 요청을 새로 구성하여, 실제 변경을 적용하기 전에 모든 검사를 다시 수행합니다.
    `ask` 정책에서는 다이제스트 지정이 필수입니다. 다이제스트에 바인딩된 항목(소스, 대상, 정책, 준비 상태, 정리 범위) 중 하나라도
@@ -90,9 +96,17 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
    값을 지정한 경우에는 여전히 일치해야 합니다.
 
 다이제스트는 자격 증명이 아니라 동시성 전제 조건(concurrency precondition)입니다. 즉, 요청이 사용자가 확인한 바로 그 요청임을
-보장할 뿐, 사용자가 승인했음을 증명하지는 않습니다.
+보장할 뿐, 사용자가 승인했음을 증명하지는 않습니다. `ask` 정책에서 다이제스트 없이, 또는 더 이상 일치하지 않는 다이제스트로
+`integrate`를 실행하면 거부(`INTEGRATION_AUTHORITY_REQUIRED` 또는 `INTEGRATION_REQUEST_STALE`)는 사용자와의 상호작용으로
+처리됩니다. 해결 방법은 현재 범위를 보여 주는 `prepare` 명령이며, 이에 맞는 `integrate` 명령은 사용자가 승인한 뒤에 쓰도록
+세부 정보로만 제시됩니다.
 
-종료 코드는 표준 에이전트 계약을 따릅니다. `0`은 성공, `1`은 부정적이거나 부분적인 결과, `2`는 실행 거부입니다.
+호출자 `--claims`(예: 세션의 리뷰, 테스트, 린트 결과)는 각 명령에 명시적으로 전달합니다. 어느 명령도 다른 명령의 claims를
+저장하거나 재사용하지 않으므로 두 명령 모두에 전달하세요.
+
+종료 코드: `0`은 성공이며, 유일한 문제가 `INTEGRATION_CLEANUP_INCOMPLETE` 경고인 `partial` 결과(Git 통합은 끝났고 범위 지정
+정리만 남은 경우)도 포함합니다. `1`은 일부 효과가 적용된 뒤 오류로 중단된 실행, `2`는 어떤 효과도 적용되기 전의 거부입니다.
+`--strict`는 경고를 `1`로 올리지만 `2`를 낮추지는 않습니다.
 
 ## 경로 선택
 
@@ -115,9 +129,11 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
 
 | 코드 | 조치 방법 |
 | --- | --- |
-| `INTEGRATION_NOT_READY` | 보고된 완료 조건을 해결한 뒤 다시 prepare를 실행합니다. |
-| `INTEGRATION_AUTHORITY_REQUIRED` | 베이스 정책과 경로를 확인합니다. `ask` 정책에서는 통합 전에 대화에서 승인 결정을 받으세요. |
-| `INTEGRATION_REQUEST_STALE` | 이미 처리된 내역을 확인하고, 남은 범위를 prepare한 뒤 다시 결정을 진행합니다. |
+| `INTEGRATION_NOT_READY` | 보고된 완료 조건을 해결한 뒤 다시 prepare를 실행합니다. 증거가 `SESSION_CLAIMS_INVALID`이면 소스는 바꿀 필요가 없습니다. `--claims`를 고쳐 같은 명령을 다시 실행하세요. |
+| `INTEGRATION_RULE_RUNTIME_MISMATCH` | 소스의 동기화된 규칙이 실행 중인 런타임(대상에서 빌드됨)에 없는 것을 임포트합니다. 소스는 바꿀 필요가 없습니다. 별도로 권한을 받은 뒤 워크트리 밖에서 소스 코드로 런타임을 빌드하고, 그 런타임으로 베이스 체크아웃에서 통합하세요. |
+| `INTEGRATION_AUTHORITY_REQUIRED` | `ask` 정책에서 다이제스트가 없으면 제안된 `prepare`로 범위를 보여 주고, 승인을 받은 뒤 통합합니다. 그 밖에는 베이스 정책과 경로를 확인합니다. |
+| `INTEGRATION_REQUEST_STALE` | 범위가 바뀐 경우 다시 보여 주고 결정합니다. 일부 효과가 적용된 경우 이미 처리된 내역을 확인하고, 남은 범위를 prepare한 뒤 다시 결정합니다. |
+| `INTEGRATION_APPROACH_MISMATCH`, `INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED` | 프로젝트 준비 상태 제공자가 SDD 작업을 만났습니다(아래 참고). spec 제공자의 수명 주기를 사용하거나, 지목된 유닛의 수명 주기 검증을 실행하세요. |
 | `INTEGRATION_TARGET_MOVED` | 현재 베이스 브랜치를 작업 브랜치에 병합하고 검사를 다시 실행한 뒤 결정을 다시 진행합니다. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | 남은 정리 작업을 완료합니다(아래 설명 참고). |
 | `INTEGRATION_LANDED_UNCHECKED` | 통합 완료로 처리하기 전에, 제공자의 대상 브랜치 반영 검사를 실행합니다. |
@@ -134,6 +150,23 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
 - 결과를 알 수 없는 경우: 항상 Git이나 풀 리퀘스트 상태를 먼저 확인해야 합니다. 결과를 알 수 없는 원격 쓰기 작업을 무작정 다시
   실행해서는 안 됩니다.
 
+## 대상에서 빌드한 런타임이 소스의 규칙을 판정
+
+준비 상태 검사는 이를 호출한 런타임, 즉 대상에서 빌드된 런타임에 설치된 devkit으로 실행되지만, 평가하는 동기화된 규칙은
+소스의 것입니다(`CAP-GOV-evaluation-lifecycle`). 브랜치가 추가한 규칙의 모듈이 대상 런타임에 없으면, 통합은 제공자를 실행하기
+전에 `INTEGRATION_RULE_RUNTIME_MISMATCH`로 각 규칙 파일과 누락된 임포트를 알려 주고 아무것도 바꾸지 않습니다. 이 검사는 규칙
+모듈을 파싱만 할 뿐 소스 코드를 실행하지 않으며, 통합이 스스로 소스에서 런타임을 빌드하는 일도 없습니다
+(`UC-drive-development-to-integration`, 확장 7h).
+
+## SDD 없는 통합
+
+커밋된 개발 방식(development approach)이 인큐베이션인 프로젝트에서는 설치된 `project` 준비 상태 제공자가 SDD 유닛, 단계,
+엔벨로프를 만들어 내지 않고 `--task-kind session` 통합을 처리합니다. `--claims`에는 통과한 `review`, `tests`, `lint` 결과가
+있어야 합니다. 제공자는 예정된 병합 결과에 대해 누적 린터 규칙을 실행하지만, 리뷰·테스트·린트를 다시 실행하지는 않으며 이를
+claims로 공개합니다. 커밋된 SDD 대상은 거부하고(`INTEGRATION_APPROACH_MISMATCH`), 유지 중인 워크플로 유닛의 기록을 건드리는
+변경은 해당 유닛의 수명 주기 검증이 실행될 때까지 거부합니다(`INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED`). spec 제공자는 일반
+인큐베이션 세션을 이 제공자에게 넘깁니다.
+
 ## 통합 기능 확장
 
 패키지는 `devkit_agt.features.integration`을 통해 기능을 확장할 수 있습니다. `ReadinessProvider`는 작업 완료 여부를 판단하고,
@@ -146,9 +179,11 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
 
 ## 출처
 
-- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/integration/CAP-INT-mcp-services.md) (영어 원문):
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/integration/CAP-INT-mcp-services.md) (영어 원문):
   CLI 계약, 권한, 경로, 복구와 코드.
-- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/delivery/UC-drive-development-to-integration.md).
-- [ADR-host-cli-lifecycle-authority](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261023-host-cli-lifecycle-authority.md),
-  [ADR-local-and-pull-request-integration](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261022-local-and-pull-request-integration.md).
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-drive-development-to-integration.md).
+- [ADR-host-cli-lifecycle-authority](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261023-host-cli-lifecycle-authority.md),
+  [ADR-local-and-pull-request-integration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261022-local-and-pull-request-integration.md).
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md) (영어 원문):
+  어떤 규칙이 어디서 실행되는지.
 - 관련 문서: [워크트리](worktree.md)(`CAP-WT-task-worktrees`).

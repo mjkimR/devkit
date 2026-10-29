@@ -8,7 +8,7 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-resolve-stale-activity-branches: null
 title: 거버넌스 규칙
-translated_from: en/areas/governance.md@b915c87b97b2ca2f
+translated_from: en/areas/governance.md@6830f5ac61740f8a
 ---
 
 # 거버넌스 규칙
@@ -64,7 +64,7 @@ devkit은 모호한 프롬프트 지침 대신 결정론적(deterministic) 규�
 규칙 엔진 자체는 특정 문서 모델에 종속되지 않습니다. 내장 규칙은 어떤 저장소에서든 보편적으로 적용되는 항목(상대 Markdown
 링크 유효성, 파일 길이 제한, 커밋된 시크릿/비밀 정보 방지, 정리되지 않은 빌드 산출물 방지 등)만을 검사합니다. 스펙, 유스케이스,
 아키텍처 결정 등에 관한 도메인 규칙은 해당 문서를 정의하는 번들에서 `kind = "rule"` 에셋으로 제공됩니다. 아래에 소개하는
-`spec` 번들의 11가지 거버넌스 규칙이 대표적인 예입니다.
+`docs` 번들의 문서 규칙과 `spec` 번들의 생명주기 규칙이 대표적인 예입니다.
 
 ## 작업 내용 검사하기
 
@@ -81,7 +81,9 @@ devkit은 모호한 프롬프트 지침 대신 결정론적(deterministic) 규�
 각 위반 사항은 `[VIOLATION: <RULE-id> severity= file= line= status= message= remediation= guide=]` 형식의 한 줄로
 출력됩니다. `status=fixable`은 `devkit rules fix` 명령으로 자동 해결할 수 있음을 나타내며, `guide=`는 `explain` 명령이
 출력하는 배포된 가이드 문서 위치를 가리킵니다. error 심각도의 위반이 하나라도 있으면 명령 실행이 실패합니다. `--format json`
-플래그를 사용하면 단일 JSON 객체 형태로 결과를 받아볼 수 있으며, `--summary-only`는 규칙별 위반 건수만 요약 출력합니다.
+플래그를 사용하면 단일 JSON 객체 형태로 결과를 받아볼 수 있으며, `--summary-only`는 규칙별 위반 건수만 요약 출력합니다. `[SUMMARY]` 줄은 해당 실행에서 활성화된 규칙 수(`rules=N`)를 셉니다.
+활성 규칙이 하나도 없는 실행은 `rules=0`과 `RULES_NONE_ACTIVE` 알림과 함께 통과하므로, 깨끗한 검사 결과로 오인되지 않습니다.
+의도적으로 적용되지 않는 규칙은 통과로 세지 않고 `[RULE_OMITTED: <id> code= reason=]` 줄(JSON에서는 `omissions`)을 출력합니다.
 
 자동 수정(`fix`)은 1회의 수리 패스 후 1회의 재검사만 수행하며, 무한 루프를 돌지 않으므로 실행 비용이 매우 예측 가능합니다.
 자동 수정기는 파일을 임의로 이동하지 않고, `.devkit/managed/`나 `.devkit/overrides/` 경로를 절대 건드리지 않으며, 올바른
@@ -140,24 +142,32 @@ max_lines = 800
 들지 않는 저장소 전반의 상태, 예를 들어 방치된 `plan-*`, `dev-*` 브랜치 등을 탐지하여 보고하며
 ([오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md) 참고), 검사 실행 자체를 실패시키지는 않습니다.
 
-## spec 거버넌스 규칙
+## 문서 규칙과 생명주기 규칙
 
-`spec` 번들의 `core` 프리셋은 Living Spec과 기능 스펙의 일관성을 엄격하게 유지하는 11가지 `linter` 규칙을 제공합니다.
-`RULE-spec-progress`와 `RULE-proposal-boundaries`만 경고(warning) 수준이고 나머지는 모두 오류(error) 수준입니다.
+14가지 `linter` 규칙이 Living Spec과 기능 스펙의 일관성을 유지합니다. `docs` 번들(`devkit-docs` 제공)의 `core` 프리셋이 9가지
+문서 규칙을, `spec` 번들의 `core` 프리셋이 스펙 주도 생명주기의 5가지 규칙을 배포합니다. `RULE-spec-progress`,
+`RULE-proposal-boundaries`, `RULE-ux-coverage`만 경고(warning) 수준이고 나머지는 모두 오류(error) 수준입니다.
 
-| 규칙 | 보장하는 조건 | 자동 수정(`fix`) 지원 |
-| --- | --- | --- |
-| `RULE-document-reference` | 모든 참조가 코드 스팬 형태의 정확하고 해석 가능한 전체 ID여야 하며, 중복 ID나 중복 별칭이 없어야 함 | 대괄호 표기, 별칭, 이관 완료된 제안 ID 자동 변환 |
-| `RULE-id-convention` | 파일 경로, 문서 ID, `area` 속성 및 H1 제목 토큰이 상호 일치해야 하며, 날짜나 숫자 기반 임의 ID를 허용하지 않음 | `id`, `area`, H1 일치 정렬 |
-| `RULE-spec-format` | 기능, 유스케이스, 제안, 마일스톤 문서의 필수 프런트매터 필드 누락 방지 | 누락된 기본 필드 자동 채움 |
-| `RULE-traceability-link` | 유스케이스와 기능 간의 양방향 추적성 링크가 상호 누락 없이 존재해야 함 | 누락된 역방향 ID 자동 추가 |
-| `RULE-task-coverage` | 모든 수락 기준에 대응하는 구현 작업이 존재해야 하며, 작업에 명시된 참조가 유효해야 함 | 수동 조치 |
-| `RULE-spec-lifecycle` | 스펙 상태, 작업 체크리스트 완료 여부, 리콘사일(reconcile) 상태가 상호 일치해야 함 | `completed` 상태 자동 설정 |
-| `RULE-spec-progress` | 완료 체크된 작업이 하나라도 있는 스펙은 반드시 `in-progress` 상태여야 함 | `in-progress` 상태 자동 설정 |
-| `RULE-reconcile-contract` | `reconcile.md`의 형식이 올바르고, 수정 대상 문서들이 실제로 변경되어야 함 | 수동 조치 |
-| `RULE-code-entrypoints` | 기능 및 유스케이스에 선언된 코드 엔트리포인트가 실제 코드에 존재해야 함 | 수동 조치 |
-| `RULE-proposal-boundaries` | 제안 문서에 명시된 소유 대상 경로들이 실제로 존재해야 함 | 수동 조치 |
-| `RULE-document-summary` | 검색 대상 문서에 간결한 영문 `summary`가 작성되어 있어야 함 | 수동 조치 |
+| 규칙 | 번들 | 보장하는 조건 | 자동 수정(`fix`) 지원 |
+| --- | --- | --- | --- |
+| `RULE-document-reference` | `docs` | 모든 참조가 코드 스팬 형태의 정확하고 해석 가능한 전체 ID여야 하며(스티어링 문서와 용어집 Owner 포함), 중복 ID나 중복 별칭이 없어야 함 | 대괄호 표기, 별칭, 이관 완료된 제안 ID 자동 변환 |
+| `RULE-id-convention` | `docs` | 파일 경로, 문서 ID, `area` 속성 및 H1 제목 토큰이 상호 일치해야 하며(완료·중단된 마일스톤은 `docs/roadmap/_archive/` 아래), 날짜나 숫자 기반 임의 ID를 허용하지 않음 | `id`, `area`, H1 일치 정렬 |
+| `RULE-spec-format` | `docs` | 기능, 유스케이스, UX 문서, 제안, 마일스톤 문서의 필수 프런트매터 필드 누락 방지 | 누락된 기본 필드 자동 채움 |
+| `RULE-traceability-link` | `docs` | 유스케이스와 기능 간의 양방향 추적성 링크가 상호 누락 없이 존재해야 함 | 누락된 역방향 ID 자동 추가 |
+| `RULE-code-entrypoints` | `docs` | 기능 및 유스케이스에 선언된 코드 엔트리포인트가 실제 코드에 존재해야 함 | 수동 조치 |
+| `RULE-document-summary` | `docs` | 검색 대상 문서에 간결한 영문 `summary`가 작성되어 있어야 함 | 수동 조치 |
+| `RULE-steering-documents` | `docs` | `docs/steering/`이 평평하고 작게 유지되며, 각 파일에 `title`과 짧은 영문 `summary`가 있어야 함 | 수동 조치 |
+| `RULE-ux-links` | `docs` | UX 문서와 그 문서를 인용하는 유스케이스 단계가 서로 일치해야 함 | 수동 조치 |
+| `RULE-ux-coverage` | `docs` | 화면이 있는 유스케이스의 각 단계가 UX 문서를 인용해야 함 | 수동 조치 |
+| `RULE-task-coverage` | `spec` | 모든 수락 기준에 대응하는 구현 작업이 존재해야 하며, 작업에 명시된 참조가 유효해야 함 | 수동 조치 |
+| `RULE-spec-lifecycle` | `spec` | 스펙 상태, 작업 체크리스트 완료 여부, 리콘사일(reconcile) 상태가 상호 일치해야 함 | `completed` 상태 자동 설정 |
+| `RULE-spec-progress` | `spec` | 완료 체크된 작업이 하나라도 있는 스펙은 반드시 `in-progress` 상태여야 함 | `in-progress` 상태 자동 설정 |
+| `RULE-reconcile-contract` | `spec` | `reconcile.md`의 형식이 올바르고, 수정 대상 문서들이 실제로 변경되어야 함 | 수동 조치 |
+| `RULE-proposal-boundaries` | `spec` | 제안 문서에 명시된 소유 대상 경로들이 실제로 존재해야 함 | 수동 조치 |
+
+프로젝트의 개발 방식(development approach, `.devkit/config.toml`의 `[development] approach`)이 인큐베이션이면, 문서 규칙은
+이전과 똑같이 판정하지만 생명주기 규칙은 여전히 스펙 주도 워크플로에 묶인 문서에만 적용됩니다. 검사할 대상이 없으면 통과 대신
+`SDD_LIFECYCLE_INACTIVE` 생략(omission)을 보고합니다.
 
 완료된 스펙 번들은 과거 이력으로 취급됩니다. 사용자가 경로를 직접 지정할 때만 검사 대상이 되며, 자동 수정(`fix`)으로 내용을
 임의 덮어쓰지 않습니다. 자유로운 형식의 `materials/` 디렉터리는 규칙 적용에서 제외됩니다. 이 규칙들을 활용한 일상적인
@@ -183,6 +193,8 @@ rules/doc_heading/
 - 타입 어노테이션이 적용된 `settings`(frozen dataclass), 대상 파일 외의 파일도 읽어야 하는 경우 `inputs`, 규칙의 근거가 되는
   지침이나 플레이북을 가리키는 `related`, `hygiene` 페이즈에서 시작하는 규칙인 경우 `promote_to`를 선언합니다.
 - `fix` 메서드는 수정한 파일 경로 목록을 반환하도록 구현하며, 파일 쓰기는 반드시 `ctx.cache.write_text`를 통해서만 수행해야 합니다.
+- Markdown을 다룰 때는 펜스나 주석을 직접 추적하지 말고 `devkit_agt.features.rules.scan`을 기반으로 작성하십시오. 그래야 무엇이
+  코드, 주석, 작업 항목인지에 대해 규칙이 devkit과 같은 판단을 내립니다.
 - `devkit rules check --rules-dir rules`로 즉시 검사해 볼 수 있으며,
   `devkit rules test RULE-doc-heading --rules-dir rules`를 통해 단위 테스트를 실행할 수 있습니다(내부적으로
   `devkit_agt.features.rules.services.testing`의 `load_rule`과 `check`를 사용).
@@ -197,7 +209,7 @@ rules/doc_heading/
 | `RULES_LOAD_FAILED` | 관리 규칙 파일이 누락되었거나 임의 변경(드리프트)됨: `devkit sync`를 실행해 복원하거나, 의도적인 수정인 경우 `devkit override create <bundle>:<asset>`으로 오버라이드 유지 |
 | `RULES_SETTINGS_INVALID`, `RULES_CONFIG_INVALID` | 오류 메시지에 안내된 `[rules]` 테이블 설정 수정 |
 | `RULES_TARGET_INVALID` | 관리 사본 디렉터리가 아닌, 작업 공간 내부의 유효한 파일이나 디렉터리를 지정 |
-| `SPEC_CONFIG_INVALID` | 잘못 작성된 `[tool.spec]` 테이블 설정 수정 |
+| `DOCS_CONFIG_INVALID` | 잘못 작성된 `[tool.docs]` 테이블 설정 수정 |
 
 파일별 Python 팩트를 추출하는 규칙은 `.devkit/transient/` 디렉터리 내의 로컬 메모(memo) 캐시를 활용하여 여러 실행에 걸쳐
 분석 결과를 재사용합니다(파일별 규칙 팩트, per-file rule facts). 이 캐시는 파생 상태(derived state)이므로 메모 파일이 없거나
@@ -205,13 +217,13 @@ rules/doc_heading/
 
 ## 관련 자료
 
-- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
+- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
   규칙 엔진 아키텍처, 규칙 소스 및 파일별 팩트.
-- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
   검사 대상 선정, 스코핑, 규칙 페이즈, 정책 계층 및 스냅샷 게이트.
-- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
+- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
   규칙 프로토콜 규약, 워크스페이스 캐시 API, 규칙 단위 테스트 작성법.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-spec-rules.md):
-  11개 spec 거버넌스 규칙 상세 명세.
-- [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/rules.md): 명령어, 출력 형식, 종료
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+  문서 규칙과 생명주기 규칙 상세 명세.
+- [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/rules.md): 명령어, 출력 형식, 종료
   코드, 내장 규칙 카탈로그.

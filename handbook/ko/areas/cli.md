@@ -5,7 +5,7 @@ sources:
   CAP-ADV-agent-advisory-protocol: null
   CAP-CLI-agent-cli-toolkit: null
 title: 에이전트 우선 CLI 도구 키트
-translated_from: en/areas/cli.md@486c0e54011f4135
+translated_from: en/areas/cli.md@769efa12f3b66406
 ---
 
 # 에이전트 우선 CLI 도구 키트
@@ -99,6 +99,11 @@ def scan(output_format: str) -> None:
 - CLI 플래그가 환경 변수 설정보다 항상 우선합니다. 환경 변수 값은 정확히 `1`일 때만 활성화된 것으로 간주하며, `-q`와 `-v`를
   동시에 지정하면 `ARGUMENT_INVALID` 오류가 발생합니다.
 - 인자의 의미론적 유효성 검사(semantic check) 실패 시에는 `devkit.advisory.ArgumentError`를 발생시킵니다.
+- 항상 JSON만 출력하는 명령어는 `FORMAT_OPTION` 대신 `@boundary(json_only=True)`를 사용합니다. 이때 바운더리는 `--format json`을
+  아무 동작도 하지 않는 옵션으로 받아 주므로, 에이전트는 모든 명령어에 이 옵션을 붙일 수 있습니다.
+
+`echo_json`은 압축된 JSON(들여쓰기 없음, 구분자 뒤 공백 없음)을 출력합니다. 모든 바이트가 에이전트의 컨텍스트로 들어가기
+때문입니다. 출력 크기를 예산 안에서 관리해야 하는 호출자는 `render_json`으로 같은 텍스트를 받을 수 있습니다.
 
 그 밖의 지원 유틸리티로는 `exit_on_warnings`(`--strict` 모드에서 경고 발생 시 종료 코드 `1`로 종료), 수집한 문제를 보고하는 명령어를
 위한 `exit_on_problems`와 `report_exit_code`, 하위 명령 모듈을 실제로 실행할 때만 지연 로딩하는 `LazyGroup`, 그리고 테스트 검증용
@@ -106,7 +111,7 @@ def scan(output_format: str) -> None:
 
 `devkit` 자체도 이 구조로 구현되었습니다. `devkit_dist.adapters.cli`가 `Boundary("devkit")`(`DEVKIT_QUIET`, `DEVKIT_VERBOSE`,
 `DEVKIT_STRICT`)를 연결하고, 루트 그룹은 `devkit.commands` 플러그인으로 확장 가능한 `LazyGroup`으로 구성됩니다(`ARCH-05-3-command-plugins`).
-`devkit spec`과 `devkit run` 명령어도 이 방식으로 마운트됩니다([하네스](harness.md)).
+`devkit docs`, `devkit spec`, `devkit run` 명령어도 이 방식으로 마운트됩니다([하네스](harness.md)).
 
 ## 도구 구조의 건전성 유지하기
 
@@ -133,11 +138,11 @@ def scan(output_format: str) -> None:
 
 ## 출처
 
-- [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md) (영어 원문):
+- [CAP-CLI-agent-cli-toolkit](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md) (영어 원문):
   boundary 데코레이터, 헬퍼 유틸리티, 테스트 도구 및 `cli-tool` 거버넌스 규칙 규격.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
   툴킷이 구현하는 에이전트 우선 출력 계약.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   툴킷이 렌더링하는 어드바이저리 프로토콜 규격.
-- [ARCH-05-3-command-plugins](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-05-3-command-plugins.md):
+- [ARCH-05-3-command-plugins](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-05-3-command-plugins.md):
   `devkit`이 하위 명령 플러그인을 동적으로 마운트하는 방식.

@@ -4,9 +4,9 @@ sources:
   ADR-handbook-staleness-from-version: 131d31e3a445b2b224f4e69911e5578b564f6fef
   ADR-viewer-planning-proposal-overlay: 9846db226f8b490434bf16f96ec8214b3771f855
   ADR-viewer-working-tree: a30f877468912cf550d6214ce4d1e219b2192950
-  CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
-  CAP-GEN-tracked-artifacts: a934a5865acf8170b874bff2de6ddc36f5c401f4
-  CAP-VIEW-repository-viewer: 72250394d5598dd6e28792b3312f0accad466f13
+  CAP-COLL-shared-artifacts: 83dfa43f60f67f8a6eab85414d90c95ba27e2982
+  CAP-GEN-tracked-artifacts: 17bfdf1f5ddc90d9ec2653cd5a8589db07041202
+  CAP-VIEW-repository-viewer: 90dd40df3d3961de3fa328ce3f459c5cfba6e7ef
 title: Viewer
 ---
 
@@ -54,7 +54,7 @@ title: Viewer
 - [Glossary](../glossary.md)
 <!-- /handbook:generated -->
 
-The viewer is a local, read-only web page for the documents agents read through `devkit spec`: the Living Spec,
+The viewer is a local, read-only web page for the documents agents read through `devkit docs` and `devkit spec`: the Living Spec,
 proposals, spec bundles, milestones and feedback, across one or more devkit repositories
 (`CAP-VIEW-repository-viewer`). It ships in the optional `devkit-viewer` package and mounts `devkit viewer`. It is a
 place to look, not to act: no approval, gate decision or answer is recorded there. For what these documents are, see
@@ -84,18 +84,20 @@ The page has a repository picker, a label for the checked-out branch and these t
   Load more.
 - **Read**: the repository's release handbook when `handbook/manifest.json` exists, in the language you pick
   (remembered in the browser), with its tag and a note when the checkout's `VERSION` has moved past it; otherwise a
-  short absence note. The **Living Spec book** control computes the book of `docs/`, grouped by chapter with links
-  between documents by ID, only when you ask for it (`ADR-handbook-first-book-on-request`,
+  short absence note. The **Living Spec book** control computes the book of `docs/`, grouped into the chapters
+  Overview, Architecture, Capabilities, Use Cases, UX, Steering, Decisions and Development, with links between
+  documents by ID, only when you ask for it (`ADR-handbook-first-book-on-request`,
   `ADR-handbook-staleness-from-version`).
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and the bundles under `specs/`, with their files,
   filters and task progress.
-- **로드맵**: the milestones under `docs/roadmap/`, ordered active then planned, with readiness from `depends_on`
-  (`done` and `dropped` appear with the history toggle).
+- **로드맵**: the milestones under `docs/roadmap/`, ordered active then planned, with readiness from `depends_on`.
+  `done` and `dropped` milestones, kept in `docs/roadmap/_archive/`, appear with the history toggle; a hidden finished
+  prerequisite still counts as satisfied.
 - **파일 탐색**: the working tree, rendering Markdown, frontmatter and Mermaid.
 
 The viewer shows the saved files of the registered working tree, including uncommitted and untracked ones, on the
 branch currently checked out (`ADR-viewer-working-tree`). It never switches branches. Documents are parsed in the
-browser, so repositories that pin different devkit-spec versions all render, and a document with malformed
+browser, so repositories that pin different devkit-docs versions all render, and a document with malformed
 frontmatter is listed as unreadable while the rest still show.
 
 ### Freshness
@@ -147,10 +149,10 @@ The frontend under `packages/devkit-viewer/frontend/` is one Svelte source with 
 
 ## Sources
 
-- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md):
+- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md):
   serving, endpoints, Planning sources, page behaviour, roadmap, library and the review page.
-- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/viewer.md).
-- [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261024-viewer-working-tree.md),
-  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
-  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
-  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).
+- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/viewer.md).
+- [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261024-viewer-working-tree.md),
+  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
+  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
+  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).

@@ -58,8 +58,8 @@ Generating the report is a separate step (`UC-inspect-weekly-repository-progress
 playbook of the opt-in `maintenance` catalog bundle; see the [delivery area](../areas/delivery.md) and, for playbooks
 in general, [Concepts](../concepts.md).
 
-Source: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-publish-a-weekly-report.md),
-contract [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+Source: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md),
+contract [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
 
 ## Before you start
 

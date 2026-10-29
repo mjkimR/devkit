@@ -4,7 +4,7 @@ sources:
   CAP-ADV-agent-advisory-protocol: null
   CAP-CMP-bounded-execution: null
 title: 컴팩트 명령 출력
-translated_from: en/areas/compact.md@6d0e5dc3adbc6a01
+translated_from: en/areas/compact.md@bfb23f21015952de
 ---
 
 # 컴팩트 명령 출력
@@ -128,17 +128,18 @@ devkit run --format json -- npm run lint
 `devkit add harness:run`을 실행하여 선택형 프리셋을 추가하십시오. `AGENTS.md`에 실행기 사용을 권고하는 간결한 지침 한 줄이 등록됩니다.
 
 커밋 게이트와 워크플로 검사에서도 동일한 실행기를 재사용합니다. 예를 들어 `verify-commands` 커밋 게이트는 모든 검증 명령어를 이 실행기를
-통해 실행하며, 거부 메시지에는 제한된 컴팩트 뷰만 포함합니다([커밋 게이트](gate.md)). 파이썬 라이브러리 레벨의 호출자는
+통해 실행하며, 거부 메시지에는 제한된 컴팩트 뷰만 포함합니다([커밋 게이트](gate.md)). `devkit generated`도 실패한 재생성 명령을
+같은 방식으로 보고합니다([생성 파일](generated.md)). 파이썬 라이브러리 레벨의 호출자는
 `devkit_agt.features.compact.run_command`를 활용할 수 있으며, 이 함수는 표준 출력에 아무것도 직접 출력하지 않고
-`CommandRun` 객체를 반환합니다.
+`CommandRun` 객체를 반환합니다. 이 객체의 `failure_details`가 두 곳에서 함께 쓰는 어드바이저리 상세 줄입니다.
 
 ## 출처
 
-- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/compact/CAP-CMP-bounded-execution.md) (영어 원문):
+- [CAP-CMP-bounded-execution](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/compact/CAP-CMP-bounded-execution.md) (영어 원문):
   명령 실행 제어, 로그 관리 정책, 제한된 발췌 뷰 및 예산 계산 로직, 출력 형식과 라이브러리 API.
-- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/compact.md):
+- [Compact reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/compact.md):
   명령어 사용법, 에러 코드 목록 및 모듈 맵.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
   `devkit run`이 모든 하위 명령어와 공유하는 출력 계약 규격.
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   실행기가 인식하고 보존하는 어드바이저리 문법 구조.

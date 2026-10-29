@@ -1,7 +1,7 @@
 ---
 sources:
-  CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
-  UC-keep-the-living-spec-consistent: 7ebdf1e2f7ae6581fa9140d1898d755de57b5667
+  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
+  UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
 title: Commit gates
 ---
 
@@ -58,7 +58,8 @@ memory; see [Concepts](../concepts.md).
 ## Get the hooks in place
 
 You usually do nothing: every writing `devkit sync` installs the dispatchers through its `gate-hooks` post-sync
-extension. To install or inspect by hand:
+extension, and reports a `gate hooks: ...` line only when it changed something (`--dry-run` shows what it would
+change). To install or inspect by hand:
 
 | You want to | Run |
 | --- | --- |
@@ -69,12 +70,19 @@ extension. To install or inspect by hand:
 
 Hooks live in the common Git directory, so every worktree of a clone shares them. Each stage gets a small
 dispatcher that runs the executable files in `<hook>.d/` in name order; devkit's entry is `20-devkit`, and your own
-scripts can sit before or after it (`10-custom-check`, `30-custom-check`). An existing hook is moved to
-`<hook>.legacy` and chained through `00-legacy`, with a `GATE_HOOK_PRESERVED` warning.
+scripts can sit before or after it (`15-custom-check`, `30-custom-check`). An existing hook is moved to
+`<hook>.devkit-preserved` and chained through `00-legacy`, with a `GATE_HOOK_PRESERVED` warning.
+
+The [pre-commit](https://pre-commit.com/) framework works in either install order. When devkit installs after it,
+pre-commit's hook becomes the `10-pre-commit` entry. When `pre-commit install` runs after devkit, it moves the
+dispatcher aside and runs it first; the dispatcher keeps running its entries, and the next sync or
+`devkit gate install` restores the usual layout. `devkit gate uninstall` hands the hook back to pre-commit.
 
 If `core.hooksPath` points elsewhere, devkit leaves it alone and `devkit gate status` warns with
 `GATE_HOOKS_PATH_SET` that your enabled gates do not run. After enabling a gate in a stage with no entry yet, run
-`devkit sync` again; until then status reports `GATE_HOOK_ENTRY_MISSING`.
+`devkit sync` again; until then status reports `GATE_HOOK_ENTRY_MISSING`. The general `uv run devkit status` shows
+the same two warnings under `notices`, so a broken hook setup surfaces even when nobody runs `devkit gate status`;
+it only inspects and never runs gates or repairs hooks.
 
 ## What runs on every commit
 
@@ -84,7 +92,7 @@ Three gates are built in, all on by default:
 | --- | --- | --- |
 | `rules-check` | `pre-commit` | Runs `devkit rules check --staged` on the commit and refuses on error-severity violations (`GATE_RULES_FAILED`) |
 | `verify-commands` | `pre-commit` | Runs the project's own verification commands and refuses when one fails (`GATE_VERIFY_FAILED`) |
-| `message-nonempty` | `commit-msg` | Refuses a blank message |
+| `message-nonempty` | `commit-msg` | Refuses a blank message (`GATE_MESSAGE_EMPTY`) |
 
 `rules-check` evaluates exactly what is being committed, so unstaged edits cannot hide or cause a finding. Tune the
 rules it evaluates in `[rules]`, not the gate; see [Governance rules](governance.md).
@@ -101,15 +109,21 @@ Hooks run with Git's environment, where `.venv/bin` is usually not on `PATH`, so
 `just`. Every command runs even after a failure, through devkit's bounded runner, so one refusal lists every failing
 command with its log path (see [Compact command output](compact.md)). The commands see the working tree, not the
 index; when they could differ, a `GATE_VERIFY_UNSTAGED` note says so. Keep the list to quick checks and leave slow
-suites to CI.
+suites to CI. `devkit gate status` shows how many commands are configured, or that the gate is skipped while the
+list is empty.
 
 ## Read a refusal
 
 Every refusal is an Agent Advisory Protocol error ([Advisories](advisory.md)), so the code tells you and your agent
 what kind of problem it is:
 
-- `BLOCKED` (exit `1`): a gate ran and refused. Fix the cause, then commit again; changing the policy is the user's
-  decision.
+- `INPUT_ERROR` (exit `1`): a gate ran and found a problem in the commit itself. The three built-in gates refuse
+  this way (`GATE_RULES_FAILED`, `GATE_VERIFY_FAILED`, `GATE_MESSAGE_EMPTY`): fix the staged change or the message,
+  then commit again.
+- `BLOCKED` (exit `1`): a gate refused on policy the committer must not work around. Report it; changing the policy
+  is the user's decision. Under `--strict` (`DEVKIT_STRICT=1`) a stage that reported a gate warning also ends with a
+  `GATE_STRICT_WARNINGS` block of this kind; warning-severity rule findings (`GATE_RULES_WARNINGS`) never count,
+  because a rule's severity decides whether it refuses a commit.
 - `AUTO` (exit `2`): the gates could not judge, and one fix covers it, usually `devkit sync` in a fresh worktree or
   clone whose managed rule files are missing (`RULES_RUN_FAILED`, `GATE_VERIFY_NOT_RUN`).
 - Setup errors (exit `2`): the gate setup itself is broken and the error's `[FIX]` names the repair, for example
@@ -134,7 +148,8 @@ Two layers contribute a `[gates]` table; the later one wins:
 `devkit gate install` writes every installed gate into `devkit.config` as a commented table. To change a setting
 for your clone, uncomment the table header and only the keys you change; keys the team already sets are shown
 without their value so you do not copy them by accident. The file is append-only: new gates get new tables, your
-lines are never rewritten.
+lines are never rewritten. The tracked side has a template too: `devkit config template` adds the built-in gates'
+`[gates.settings.<id>]` tables, commented, to `.devkit/config.toml`.
 
 `enabled` works in every gate table. An entry for a gate that is not installed fails blocking stages, so a typo or a
 forgotten `devkit sync` cannot silently switch policy off.
@@ -143,8 +158,10 @@ forgotten `devkit sync` cannot silently switch policy off.
 
 A gate is a plugin package directory like a rule: a `gate.py` with a `BaseGate` subclass (`id`, `stage`, `order`,
 `enabled_by_default`, typed `settings`, `run(ctx)`), helper modules imported relatively and `tests/` beside them.
-Return `GateResult.passed()` or `GateResult.skipped()`, and raise `GateRefusedError` with a code and a `fix` to
-refuse. Declare it in your bundle:
+Return `GateResult.passed()` or `GateResult.skipped()`. To refuse, raise `GateFindingsError` (`INPUT_ERROR`) when
+correcting the commit is the remedy, or `GateRefusedError` (`BLOCKED`) for a policy refusal, each with a code and a
+`fix`. An optional `setup(settings)` returns what `devkit gate status` shows for the gate. Declare it in your
+bundle:
 
 ```toml
 [[assets]]
@@ -161,9 +178,9 @@ at `900` so it sees the final message.
 
 ## Sources
 
-- [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/gate/CAP-GATE-commit-gates.md):
+- [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/gate/CAP-GATE-commit-gates.md):
   hook wrappers, built-in gates, the gate contract, distribution and configuration layers.
-- [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/gate.md): commands, exit
+- [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/gate.md): commands, exit
   codes and error codes.
 - Gates are part of the everyday loop in
   [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md).

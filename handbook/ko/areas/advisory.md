@@ -3,7 +3,7 @@ sources:
   ARCH-08-1-agent-output: null
   CAP-ADV-agent-advisory-protocol: null
 title: 어드바이저리
-translated_from: en/areas/advisory.md@b95845425935fb12
+translated_from: en/areas/advisory.md@9d8ab7d2080bebb4
 ---
 
 # 어드바이저리
@@ -92,9 +92,9 @@ translated_from: en/areas/advisory.md@b95845425935fb12
 
 | 모드 | 상황 | 에이전트의 동작 |
 | --- | --- | --- |
-| `INPUT_ERROR` | 플래그, 인자 또는 입력 파일이 잘못되었습니다 | `[TARGET]`을 수정한 후 다시 실행합니다 |
+| `INPUT_ERROR` | 플래그, 인자 또는 입력 파일이 잘못되었거나, 에이전트가 만든 내용에 대한 검사가 실패했습니다(커밋의 테스트 실패나 규칙 위반, 빈 커밋 메시지) | `[TARGET]`을 수정한 후 다시 실행합니다 |
 | `AUTO` | 안전하고 결정적인 자동 해결책이 있습니다 | `[FIX]`를 1회 실행하고 1회 재시도한 뒤, 결과와 관계없이 멈춥니다 |
-| `BLOCKED` | 명시적인 가드레일(커밋 게이트, 워크플로 규칙 등)에 의해 작업이 거부되었습니다 | 상황을 보고하고 중단합니다. 규칙 변경 여부는 사용자의 판단에 맡깁니다 |
+| `BLOCKED` | 명시적인 가드레일(보호 브랜치, 정책 게이트, 워크플로 규칙 등)이 정책에 따라 작업을 거부했습니다 | 상황을 보고하고 중단합니다. 규칙 변경 여부는 사용자의 판단에 맡깁니다 |
 | `INTERACTION` | 사람의 의사결정이나 명시적 권한 승인이 필요합니다 | 사용자에게 확인을 요청합니다. `[FIX]`는 동의를 얻은 후에만 실행합니다 |
 | `MAINTENANCE` | 코드베이스나 실행 도구 자체의 결함입니다 | 상황을 보고하고 중단합니다. 결함 수리는 별도의 작업 단위로 처리합니다 |
 | `HALT` | 계속 진행할 경우 시스템 상태가 손상될 위험이 있습니다 | 미완료 상태로 남은 내역을 보고합니다. 임의로 재시도하거나 수동으로 마무리를 시도하지 않습니다 |
@@ -103,12 +103,17 @@ translated_from: en/areas/advisory.md@b95845425935fb12
 경고는 항상 `CONTINUE`, 알림은 항상 `NOTE` 모드를 갖습니다. 기본 작업 자체는 이미 성공한 상태이므로, 에이전트는 해당 내용을 사용자에게
 안내하고 사용자의 명시적 요청이 있을 때만 `[FIX]`를 실행합니다. 재시도를 자동으로 수행할 수 있는 권한을 부여하는 모드는 `AUTO`뿐입니다.
 
+`INPUT_ERROR`와 `BLOCKED`를 가르는 기준은 누가 조치해야 하느냐입니다. 테스트가 실패하거나 문서가 규칙을 위반해 거부된 커밋은
+`INPUT_ERROR`입니다. 에이전트가 자신의 변경을 고친 뒤 다시 커밋하면 됩니다. `BLOCKED`는 에이전트가 우회해서는 안 되는 정책에만 쓰입니다.
+
 개발자(사용자)가 어드바이저리를 직접 마주하는 일은 드물며, 대부분 에이전트가 전달해 주는 내용을 확인하게 됩니다. 에이전트가 사용자에게
 확인을 요청한다면 보통 `INTERACTION` 오류의 `[REPORT]` 질문이거나, 사용자가 알아두어야 할 `CONTINUE` 경고입니다.
 
 ## 머신 연동 채널
 
-- `--format json` 옵션을 지정하면 stdout에 단일 JSON 객체를 출력합니다. 작업 실패 시 `{"error": {...}}` 구조로 반환되며, `code`,
+- `--format json` 옵션을 지정하면 stdout에 압축된(들여쓰기 없는) 단일 JSON 객체를 출력합니다. 모든 바이트가 에이전트의
+  컨텍스트로 들어가기 때문입니다. JSON만 출력하는 명령어도 `--format json`을 받으므로, 에이전트는 모든 명령어에 이 옵션을 붙여도
+  됩니다. 작업 실패 시 `{"error": {...}}` 구조로 반환되며, `code`,
   `level`, `message`, `exit_code` 및 모드·지시문 텍스트·비어 있지 않은 모든 필드를 담은 `advisory` 객체를 포함합니다. 성공한 작업의
   경고 및 알림은 `notices` 필드 아래에 포함됩니다. 이때 stderr에는 아무것도 출력되지 않으므로, 두 스트림을 통합하여 수집하는 에이전트
   호스트에서도 동일한 어드바이저리가 중복 전달되지 않습니다.
@@ -135,9 +140,9 @@ translated_from: en/areas/advisory.md@b95845425935fb12
 
 ## 출처
 
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md) (영어 원문):
   심각도 레벨, 블록 형식, 필드 구성, 모드 도출 규칙, 표준 지시문 텍스트 및 작성자 점검표.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
   명령어의 stdout, stderr 및 종료 코드 체계 내에서 어드바이저리가 차지하는 역할과 구조.
-- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/advisory.md):
+- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/advisory.md):
   `devkit.advisory` Python API 레퍼런스.

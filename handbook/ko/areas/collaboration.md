@@ -1,5 +1,6 @@
 ---
 sources:
+  ADR-host-owned-scope-observation: null
   CAP-COLL-shared-artifacts: null
   CAP-COLL-work-scope-registry: null
   CAP-DLV-project-policy: null
@@ -8,7 +9,7 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 협업
-translated_from: en/areas/collaboration.md@13c3ea83bffe4d1b
+translated_from: en/areas/collaboration.md@e3d213dde5537819
 ---
 
 # 협업
@@ -90,36 +91,55 @@ devkit spec scope compare --proposal login-flow --spec specs/2026-10/20261020-au
 무시하지 않습니다. `[DIFF: ...]` 줄은 `reconcile.md`와 `target-docs.md`의 내용이 서로 불일치함을 의미하며, devkit이 이를 임의로
 병합하지 않습니다. 모든 경로는 `CAP-TRACE-code-entrypoints`에 정의된 리터럴 경로 규칙을 엄격히 따릅니다.
 
-## 실행 중인 작업을 등록하고 겹침 지켜보기
+## 실행 중인 작업 관찰하기
 
-실행 중인 작업은 저장소의 모든 워크트리가 공유하는 레지스트리에 작업 범위를 보관합니다. 일반적인 워크플로에서는 이 명령어를
-직접 호출할 일이 드뭅니다. 연결된 워크트리에서 `devkit spec proposal handoff`를 실행하면 새 번들이 등록되고,
-`spec-tasks`와 `spec-sync` 스킬이 `tasks.md`와 `reconcile.md`를 작성한 뒤 기록을 자동으로 갱신합니다. 수동으로 실행할 때는
-다음 명령어를 사용합니다.
+작업이 실행되는 동안 오케스트레이션하는 Host는 스케줄링이나 통합 순서를 정할 증거가 필요할 때 작업을 관찰합니다. 워커는 게시할
+것이 없습니다. 작업 범위를 등록하지도, 갱신을 보내지도, 확인 응답(ACK)을 하지도 않습니다. Host가 볼 수 있는 것을 읽기 전용으로
+수집하는 명령은 하나입니다.
+
+```sh
+devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fetch <remote>]
+```
+
+- **관찰 깊이.** `snapshot`은 레지스트리의 생성 스냅샷만 읽고, `refs`는 로컬 및 원격 추적 `plan-*`/`dev-*` 브랜치를 더하며,
+  `worktrees`(기본값)는 접근 가능한 모든 워크트리의 선언과 커밋·스테이징·미스테이징·미추적 변경까지 더합니다.
+- **네트워크는 선택 사항.** `--fetch`가 없으면 원격 ref는 마지막으로 fetch한 상태 그대로입니다. `--fetch <remote>`(반복 가능,
+  설정된 원격만)는 해당 원격 추적 브랜치만 갱신합니다. 다른 컴퓨터에서 push하지 않은 작업은 절대 보이지 않으므로, 여러 PC에서
+  자주 작업한다면 선언과 변경을 풀 리퀘스트로 push하세요.
+- **빈틈은 드러납니다.** 베이스를 알 수 없거나, 작업 식별이 모호하거나, 소스를 읽을 수 없거나 바뀌고 있거나, 시간 예산
+  (`--timeout`, `--source-timeout`)이 소진되면, 사용 가능한 증거는 그대로 두고 누락된 범위와 함께
+  `SPEC_SCOPE_COLLECTION_PARTIAL`을 보고합니다. 계산되지 않은 쌍을 겹침 0으로 세지 않습니다. 어떤 인벤토리 소스도 읽을 수 없을
+  때만 `SPEC_SCOPE_COLLECTION_FAILED`로 실패합니다.
+
+출력은 후보(`[SCOPE_CANDIDATE: ...]`), 각 관찰, 그리고 `compare`와 같은 `[PAIR: ...]`·`[EVIDENCE: ...]` 줄을 나열하고,
+범위와 비교가 완전한지 알려 주는 요약으로 끝납니다.
+
+### 공유 레지스트리
+
+레지스트리는 저장소의 모든 워크트리가 공유하는 각 작업 범위의 스냅샷을 보관합니다. 연결된 워크트리에서
+`devkit spec proposal handoff`나 `devkit spec new`가 유닛을 만들 때 스냅샷이 자동으로 기록됩니다. 이는 최선 노력(best effort)
+방식이며, 실패해도 생성 작업에는 영향을 주지 않습니다. `collect`는 이 스냅샷을 읽지만, 스냅샷은 워크트리보다 뒤처질 수 있습니다.
+레지스트리 명령을 직접 실행할 일은 드뭅니다.
 
 | 작업 목적 | 실행 명령어 |
 | --- | --- |
-| 현재 워크트리의 작업 등록(소유자 토큰 1회 출력) | `devkit spec scope register --spec <dir>` |
+| 현재 워크트리의 작업을 수동 등록(소유자 토큰 1회 출력) | `devkit spec scope register --spec <dir>` |
 | 모든 작업 기록과 현재 워크트리의 겹침 현황 확인 | `devkit spec scope query` |
-| 시작 예정인 번들과 실행 중인 작업 간의 충돌 검사 | `devkit spec scope query --spec <dir>` |
-| 변경 사항 발생 후 작업 범위 재수집 | `devkit spec scope update --spec <dir>` |
+| 시작 예정인 번들과 기록 간의 겹침 검사 | `devkit spec scope query --spec <dir>` |
 | 작업 이벤트 히스토리 조회 | `devkit spec scope query --history [--task <id>]` |
-| 중단된 작업의 등록 철회 | `devkit spec scope release -w <worktree>` |
+| 중단된 작업의 등록 철회 | `devkit spec scope release` |
 | 워크트리가 삭제된 잔여 기록 정리 | `devkit spec scope sweep --apply` |
 
 알아 두면 유용한 핵심 동작 방식은 다음과 같습니다.
 
 - 워크트리당 하나의 토큰만 보유합니다. 동일한 워크트리에서 중복 등록을 시도하면 거부되므로(`SPEC_SCOPE_TOKEN_EXISTS`)
   기록이 고아 상태로 남지 않습니다.
-- `update`는 낙관적 동시성 제어(optimistic concurrency) 방식으로 동작합니다. 토큰과 함께 사전에 읽은 리비전을 제시하며,
-  그 사이에 기록이 변경되었다면 `SPEC_SCOPE_STALE_REVISION` 오류와 함께 쓰기 작업이 취소됩니다. 업데이트 도중 타임아웃이 발생하여
-  결과를 확인하지 못했다면 동일한 `--request-id`로 재시도하십시오. 추가 쓰기 없이 기존에 저장된 응답이 그대로 반환됩니다.
-- 조회 작업은 일체의 부작용(side-effect)을 유발하지 않습니다. 디렉터리, 잠금, 파일을 생성하지 않습니다. 응답이 비어 있거나
-  일부만 읽을 수 있는 상태라 하더라도 작업 간에 충돌이 전혀 없음을 보증하는 증거는 아닙니다.
-- 저널(`journal.jsonl`)은 단순 진단용입니다. 작업 겹침 여부를 판정하는 데는 전혀 관여하지 않으며, 저널 기록 추가에 실패하더라도
-  `SPEC_SCOPE_JOURNAL_UNAVAILABLE` 경고만 출력됩니다.
+- 조회와 `collect`는 일체의 부작용을 유발하지 않습니다. 디렉터리, 잠금, 파일을 생성하지 않고 소유자 토큰도 건드리지 않습니다.
+  응답이 비어 있거나 일부만 읽을 수 있다고 해서 겹침이 전혀 없다는 증거는 아닙니다.
+- 저널(`journal.jsonl`)은 단순 진단용입니다. 작업 겹침 여부를 판정하는 데는 전혀 관여하지 않습니다.
 - 작업이 `devkit worktree finish` 또는 `devkit integration integrate`를 통해 통합되면, devkit-spec의 완료 후 정리 루틴이
-  해당 작업의 레지스트리 기록을 제거하고 인계된 제안 디렉터리를 정리합니다. 그 외의 오래된 잔여 기록은 명시적인 `sweep` 실행을 통해 정리합니다.
+  해당 작업의 레지스트리 기록을 제거하고 인계된 제안 디렉터리를 정리합니다. 그 외의 오래된 잔여 기록은 명시적인 `sweep`으로
+  정리하며, 읽은 뒤 바뀐 기록은 유지됩니다(`SPEC_SCOPE_STALE_REVISION`).
 
 중복 감지 결과는 문서 선언과 Git 추적 데이터를 결합한 참고 지표입니다. 이는 Git 병합 충돌 가능성이나 완전한 작업 독립성을 단정하는 것이
 아니며, 자원에 대한 배타적 점유를 의미하지도 않습니다. 병렬 실행 여부에 대한 최종 판단은 오케스트레이터의 역할입니다.
@@ -176,10 +196,12 @@ devkit shared list --kind proposal-review --slug example --format json
 
 ## 출처
 
-- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문):
+- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문):
   작업 범위 입력 요소, 비교 알고리즘, 레지스트리 아키텍처, CLI 명령어, 출력 규격 및 어드바이저리 코드.
-- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
+- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
   아티팩트 식별 체계, 보존 주기 정책, 로컬 저장소 구조 및 어댑터 확장 규격.
-- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
+- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
   안전한 병렬 작업 시나리오.
+- [ADR-host-owned-scope-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261025-host-owned-scope-observation.md) (영어 원문):
+  Host가 관찰하고 워커는 아무것도 게시하지 않는 이유.
 - 관련 문서: [워크트리](worktree.md)(`CAP-WT-task-worktrees`), [MCP](mcp.md).

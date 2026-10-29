@@ -4,7 +4,7 @@ sources:
   UC-inspect-weekly-repository-progress: null
   UC-publish-a-weekly-report: null
 title: 주간 저장소 진행 상황 점검하기
-translated_from: en/journeys/inspect-weekly-repository-progress.md@fd4a0a7c98ad16bb
+translated_from: en/journeys/inspect-weekly-repository-progress.md@8e63b9a5de337b57
 ---
 
 # 주간 저장소 진행 상황 점검하기
@@ -59,8 +59,8 @@ translated_from: en/journeys/inspect-weekly-repository-progress.md@fd4a0a7c98ad1
 작업은 별도의 권한과 승인이 필요한 독립된 단계로 분리되어 있습니다.
 
 유스케이스는
-[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-inspect-weekly-repository-progress.md) (영어 원문)이며,
-[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)를
+[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-inspect-weekly-repository-progress.md) (영어 원문)이며,
+[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)를
 바탕으로 합니다. 플레이북의 기본 개념은 [개념](../concepts.md)에서 설명합니다.
 
 ## 시작하기 전에
@@ -133,6 +133,6 @@ uv run devkit playbook get maintenance/weekly-report
 ## 다음 단계
 
 검증된 보고서를 사용자가 선택한 외부 대상에 공식 게시하는 절차는
-[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)이며,
+[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)이며,
 [주간 보고서 게시하기](publish-a-weekly-report.md)에서 다룹니다. 관련 영역: [전달](../areas/delivery.md) 및
 [거버넌스 규칙](../areas/governance.md).
