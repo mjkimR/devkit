@@ -1,6 +1,6 @@
 schema = 1
 name = "docs"
-version = "0.1.4"
+version = "0.1.5"
 default_preset = "core"
 auto_select = true
 context_documents = "docs/steering"

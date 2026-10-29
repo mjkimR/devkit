@@ -1,14 +1,14 @@
 [project]
 name = "devkit-dist"
-version = "0.1.4"
+version = "0.1.5"
 description = "Agent asset distribution: bundles, agent projections, sync, context loading, playbooks and native hooks in the devkit CLI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "devkit-core==0.1.4",
-    "devkit-cli==0.1.4",  # the agent-first command-line boundary, released in lockstep
+    "devkit-core==0.1.5",
+    "devkit-cli==0.1.5",  # the agent-first command-line boundary, released in lockstep
     "click>=8.2",
-    "devkit-advisory==0.1.4",  # released in lockstep with the other devkit wheels, from the same tag
+    "devkit-advisory==0.1.5",  # released in lockstep with the other devkit wheels, from the same tag
     "jinja2>=3.1.6,<4",
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",

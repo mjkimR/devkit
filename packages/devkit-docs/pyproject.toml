@@ -1,13 +1,13 @@
 [project]
 name = "devkit-docs"
-version = "0.1.4"
+version = "0.1.5"
 description = "The devkit document system: the document model, lookup and search, namespaces and the document rules"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "devkit-core==0.1.4",
+    "devkit-core==0.1.5",
     "click>=8.1.7",
-    "devkit-agt==0.1.4",
+    "devkit-agt==0.1.5",
 ]
 
 [project.optional-dependencies]

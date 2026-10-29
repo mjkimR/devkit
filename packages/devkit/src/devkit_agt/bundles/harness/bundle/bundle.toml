@@ -1,6 +1,6 @@
 schema = 1
 name = "harness"
-version = "0.1.4"
+version = "0.1.5"
 default_preset = "core"
 # Deployed without `devkit add` wherever devkit-agt is installed; `devkit remove harness` opts a project out.
 auto_select = true

@@ -1,14 +1,14 @@
 [project]
 name = "devkit-agt"
-version = "0.1.4"
+version = "0.1.5"
 description = "Developer harness for devkit: repository rules, delivery workflows, commit gates, task worktrees and bounded command output"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "devkit-core==0.1.4",
+    "devkit-core==0.1.5",
     "click>=8.1.7",
-    "devkit-advisory==0.1.4",  # released in lockstep with the other devkit wheels, from the same tag
-    "devkit-dist==0.1.4",  # the devkit executable and distribution, released in lockstep from the same tag
+    "devkit-advisory==0.1.5",  # released in lockstep with the other devkit wheels, from the same tag
+    "devkit-dist==0.1.5",  # the devkit executable and distribution, released in lockstep from the same tag
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",
 ]
@@ -16,7 +16,7 @@ dependencies = [
 # The extras of devkit-dist under the names devkit-agt always had: a project that depends on devkit-agt adds the
 # extra here, never a second requirement on devkit-dist.
 [project.optional-dependencies]
-mcp = ["devkit-mcp==0.1.4"]
+mcp = ["devkit-mcp==0.1.5"]
 search = ["devkit-dist[search]"]
 
 # devkit-agt ships no console script: devkit-dist owns `devkit`, and these commands mount under it.

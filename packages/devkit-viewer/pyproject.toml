@@ -1,13 +1,13 @@
 [project]
 name = "devkit-viewer"
-version = "0.1.4"
+version = "0.1.5"
 description = "Local read-only viewer of devkit repositories: the Living Spec, proposals, specs and the roadmap"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "devkit-core==0.1.4",
+    "devkit-core==0.1.5",
     "click>=8.1.7",
-    "devkit-agt==0.1.4",
+    "devkit-agt==0.1.5",
 ]
 
 # The command group mounted under devkit: `devkit viewer ...`.
