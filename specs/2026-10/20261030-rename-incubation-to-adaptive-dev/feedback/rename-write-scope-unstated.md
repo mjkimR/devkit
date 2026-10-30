@@ -8,7 +8,7 @@ target: CAP-DOCS-document-model
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -52,3 +52,13 @@ packages/devkit-docs/src/devkit_docs/features/documents/repositories/index.py:23
 docs/decisions/2026-10/20261022-immutable-decisions-editable-records.md:75-78 alias references in ADRs are fixed
 proposal template boundaries.excludes example: - docs/decisions/
 ```
+
+## Disposition
+
+Resolved by `SPEC-lifecycle-feedback-fixes` (AC-06): `CAP-DOCS-document-model` section 3.5 item 5 states that the
+rule fix rewrites references in ADRs, PADRs and every spec bundle's `feedback/` files, that a rename's write scope
+owns those paths (completed bundle files outside `feedback/` excepted), and names
+`devkit docs refs <old-id> --direction in -n 0` to list them. The spec bundle's proposal template comments the
+`excludes` example accordingly; `devkit sync` redeployed it. Verified by independent review against
+`index.is_historical`, `RULE-document-reference` and `ADR-immutable-decisions-editable-records`, and by
+`devkit sync --check` and `just rules-check`.

@@ -47,7 +47,8 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   when its raw `.md.jinja` source is overridden; source or variable changes require a sync. Every file read outside
   the override tree must match its canonical receipt hash or validated personal render evidence. Missing or stale
   personal evidence is `CONFIG_LOCAL_RENDER_STALE`; other unsynchronized files are `NOT_SYNCHRONIZED`. Both direct
-  the caller to sync. Bodies are never returned; see `CAP-DIST-sync-and-transactions`.
+  the caller to sync; the former names `devkit sync --locked` first, which changes no committed file, and a plain
+  sync only when that reports `RECEIPT_STALE`. Bodies are never returned; see `CAP-DIST-sync-and-transactions`.
 - A bundle the receipt does not record is `SELECTION_INVALID` targeting `BUNDLE_NAME`, with the synchronized bundles
   as `[DETAIL]`. Only on this error path are the installed packages discovered: the fix is `uv run devkit add
   <bundle>` for an installed bundle with a default preset, else `uv run devkit list` (a typo, or a bundle whose preset
@@ -224,7 +225,7 @@ partial results. Existing transaction, lock, unsafe-path and configuration advis
 | Absent synchronized bundle or playbook (unknown, wrong kind or unselected, and no effective header declares the alias) | `SELECTION_INVALID` | Inspect `uv run devkit list` and explicit bundle/preset selection; target `PLAYBOOK_ID` |
 | Alias declared by more than one effective playbook header of the bundle | `PLAYBOOK_ALIAS_AMBIGUOUS` | Name the playbook by its exact asset ID, or keep the alias on one playbook; target the declaring playbooks |
 | No receipt, missing effective entrypoint or modified managed content | `NOT_SYNCHRONIZED` | `devkit sync` |
-| Stale/missing personal-render evidence, including unrelated assets | `CONFIG_LOCAL_RENDER_STALE` | `devkit sync` |
+| Stale/missing personal-render evidence, including unrelated assets | `CONFIG_LOCAL_RENDER_STALE` | `devkit sync --locked`, which changes no committed file; a plain `devkit sync` only when it reports `RECEIPT_STALE` |
 | Invalid receipt or zero/multiple/unowned/wrong-bundle entrypoints | `RECEIPT_INVALID` | Existing receipt repair advisory |
 | Invalid effective UTF-8 or frontmatter | `BUNDLE_INVALID` | Fix the named effective source; sync managed-source changes |
 

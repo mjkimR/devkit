@@ -2155,7 +2155,7 @@
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,
-      "sha256": "b6e8ced5023c34f84cc5e5cfd5f402e5586eb62f116e78dc018791fdd8097c24"
+      "sha256": "119622bffc1628c4d2104fc12464f8d593ae9cd7fcfd19b0d10cf527174a5fb8"
     },
     ".devkit/managed/spec/workflows/sdd-overall-refactor.md": {
       "mode": 420,

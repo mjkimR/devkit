@@ -256,6 +256,10 @@ def envelope_worker_cmd(**options: Any) -> None:
     --problem/--tried/--recovery an execution problem (status failed, or
     needs_input when only a person can decide); --findings-file what the
     problem consists of, one finding each.
+
+    --stage must be a stage the bound workflow declares (the one
+    `uv run devkit workflow next` names); it is checked whenever the
+    definition loads.
     """
     _write("worker", **options)
 

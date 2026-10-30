@@ -1,0 +1,42 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:17:17.404862Z'
+status: completed
+summary: 'Nested reconcile-reviewer over cbe8fc18..819997a6: the three capability targets and the distribution reference match the implementation; no-impact claims hold; three dispositions verified. Open: location claim for FB-worker-envelope-stage-unchecked-at-write, rename exception list too narrow, reference file missing from targets, stale RULE-document-reference guide clause.'
+findings:
+- issue: reconcile.md says the move of FB-worker-envelope-stage-unchecked-at-write to specs/ is on the base; base and main still hold it under docs/proposals/PROP-git-operator-planning-completion-route/feedback/.
+  evidence: git ls-tree main / cbe8fc18; reconcile.md Source feedback dispositions, third bullet
+  failure_condition: The Host looks for the file at the recorded specs/ path when this unit integrates first.
+  suggested_action: Restate the location and let the Host apply the disposition at whichever path the target holds.
+  resolution: open
+  severity: P2
+- issue: CAP-DOCS 3.5 item 5 exception list omits materials and done or dropped milestones, which rules fix also never rewrites.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/document_reference.py:397; index.py:239-242; CAP-DOCS-document-model.md:252-256
+  failure_condition: A Planning agent widens owns into materials or archived milestones.
+  suggested_action: Extend the exception to historical files and materials.
+  resolution: open
+  severity: P2
+- issue: docs/development/reference/distribution.md changed but is not a reconcile.md target.
+  evidence: git diff cbe8fc18 819997a6 -- docs/development/reference/distribution.md
+  failure_condition: An audit through reconcile targets misses the reference edit.
+  suggested_action: Add it as a modified target.
+  resolution: open
+  severity: P3
+- issue: The RULE-document-reference guide says rules fix never rewrites an alias reference in an ADR or PADR, contradicting code, ADR-immutable-decisions-editable-records and the new 3.5 item 5 text.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md:77-80
+  failure_condition: A Planning agent reads rules explain and excludes ADRs and PADRs again.
+  suggested_action: 'Outside this unit: capture as feedback or deferred work.'
+  resolution: open
+  severity: P3
+checks:
+  head: PASS 819997a6 not stale
+  targets: PASS 3 capabilities match code
+  no_impact: PASS
+  template_sync: PASS
+  source_feedback: FAIL 4th record misstates location
+diff_scope:
+  base: cbe8fc1885e2be2e95a3fa3ad1e819e0707e57b3
+  head: 819997a61283c8562ec011b418bd1a3d267359a6
+activity_effort: medium

@@ -8,7 +8,7 @@ target: packages/devkit/src/devkit_agt/features/workflow/services/envelope/commi
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -43,3 +43,11 @@ FAILED packages/devkit/tests/integration/package/test_agent_output_contract.py::
 {'packages/devkit/src/devkit_agt/features/workflow/services/envelope/commit.py:17': 'Use a tracked SPEC-<slug> or ...'}
 1 failed, 6067 passed, 14 skipped
 ```
+
+## Disposition
+
+Resolved by `SPEC-lifecycle-feedback-fixes` (AC-01): the unsupported-anchor fix of `EnvelopeCommitInvalidError`
+in `commit.py` is now a concrete action (commit the `[TARGET]` envelope with a manual `git commit`) without a
+placeholder. Verified: the base fix matched the contract test's placeholder pattern and the head fix does not;
+`test_fixes_carry_no_placeholder`, `test_class_fixes_carry_no_placeholder` and `test_unsupported_anchor_ids_refuse`
+pass, and `packages/devkit/tests/integration/package` passes (163 tests).

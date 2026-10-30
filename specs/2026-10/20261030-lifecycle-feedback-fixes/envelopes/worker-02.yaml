@@ -1,0 +1,22 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:21:22.115468Z'
+status: completed
+summary: 'Development turn from specify through final-change-report (final-report-01). All four source items fixed; three feedback files set resolved with Dispositions; FB-worker-envelope-stage-unchecked-at-write resolved in reconcile.md only, for the Host to apply at its integration-target path. Reviews: review-01 and review-02 (two nested code-reviewer passes, the second started when the first had not reported) closed by reverify-01/02; reconcile-check-01 (nested reconcile-reviewer) fixed and self-verified in reconcile-check-02. New feedback: FB-document-reference-guide-adr-rewrite-stale, FB-sync-capability-render-stale-remedy-generic. Sync output: .devkit/installation.json (named in payload). worker-01 is an interim record of this same turn written when it was interrupted; this envelope supersedes it.'
+findings: []
+assumptions:
+- Undeclared-stage refusal reuses ENVELOPE_FLAG_INVALID with [TARGET] --stage; skipped when the definition cannot be loaded
+- main moved (now ee28c1ce) and was not merged; the FB-worker-envelope-stage file is still under docs/proposals/ on main
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected partial 3317 passed 1 skipped; test_agent_output_contract 44 passed
+  build: PASS just check devkit, devkit-dist, devkit-spec
+  lint: PASS just lint-check x3; devkit rules check --ci --base cbe8fc18 0 errors
+  sync: PASS devkit sync --check exit 0
+  baseline: PASS base cbe8fc18 commit.py fix matched the contract PLACEHOLDER regex, head does not (git show of the base file, no checkout)
+diff_scope:
+  base: ''
+  head: 5500f67b5d01711bf2e1e090362ce9688f8b12e0
+activity_effort: medium

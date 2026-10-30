@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:17:59.016169Z'
+status: completed
+summary: 'Swept this run and the diff: recorded FB-document-reference-guide-adr-rewrite-stale and FB-sync-capability-render-stale-remedy-generic (both from review findings outside the write scope); no duplicates (checked open feedback across namespaces; FB-local-render-fix-ignores-worker-write-scope is a known duplicate of a source item, left to the Host).'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

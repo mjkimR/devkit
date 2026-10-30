@@ -249,6 +249,11 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
    `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-planning`) or, as a compaction
    replacement, lists the IDs of the ADRs it retires (`ADR-immutable-decisions-editable-records`). One `devkit rules fix` then moves current documents to the new ID.
+   The current documents it rewrites include ADRs and PADRs (`ADR-immutable-decisions-editable-records`) and the
+   `feedback/` files of every spec bundle, whatever the bundle's or the feedback's status (section 3.1, rules 7 and
+   8), so a rename's write scope owns every path that references the old ID except historical files (completed spec
+   bundles outside `feedback/`, done or dropped milestones) and materials, which stay as written and resolve through
+   the alias. `uv run devkit docs refs <old-id> --direction in -n 0` lists the referencing paths, those included.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
    taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;
    wherever a command takes an ID argument that it resolves through the index (`devkit docs resolve`, `refs`,

@@ -15,7 +15,7 @@ size: M                               # S | M | L | XL (S=single fix, M=1-2 sess
 boundaries:                           # declared scope impact (owns) and excluded scope (excludes), carried to the spec
   owns:                               # existing paths (RULE-proposal-boundaries); a path to create: its nearest existing parent
     - capabilities/<area>/
-  excludes:
+  excludes:                           # a document ID rename owns, never excludes, the ADRs, PADRs and specs/**/feedback/ files citing the old ID: devkit rules fix rewrites them
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 planning_effort: medium               # low | medium | high: Planning activity-effort hint

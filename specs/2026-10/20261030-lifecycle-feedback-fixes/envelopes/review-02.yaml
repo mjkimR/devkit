@@ -1,0 +1,28 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:16:42.131385Z'
+status: completed
+summary: 'Second nested code-reviewer pass (started when the first had not reported) over cbe8fc18..3dd611fa: AC-01..AC-05 met; a probe confirmed sync --locked refreshes evidence after a receipt-digest-only change; two P3 findings.'
+findings:
+- issue: CAP-DOCS-document-model names the listing command as bare devkit docs refs, while AC-06 names the uv run devkit docs refs form.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:255; spec.md AC-06
+  failure_condition: Checking AC-06 word for word.
+  suggested_action: Write uv run devkit docs refs <old-id> --direction in -n 0 in the capability.
+  resolution: open
+  severity: P3
+- issue: CAP-DIST-sync-and-transactions still describes CONFIG_LOCAL_RENDER_STALE as (exit 1, run sync) without the locked-restore-first guidance.
+  evidence: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md:572
+  failure_condition: A reader of the sync capability reads a plain sync as the remedy.
+  suggested_action: Name devkit sync --locked first there, or waive it because the file is outside the write scope.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS targeted devkit 60 passed; devkit-dist test_local_config 39 passed; probe receipt-digest PASS
+  lint: PASS devkit rules check --ci --base cbe8fc18 errors=0
+  sync: PASS devkit sync --check exit 0
+diff_scope:
+  base: cbe8fc1885e2be2e95a3fa3ad1e819e0707e57b3
+  head: f2e233c3017bdd80a4ed126c29039a21a6063b1a
+activity_effort: medium

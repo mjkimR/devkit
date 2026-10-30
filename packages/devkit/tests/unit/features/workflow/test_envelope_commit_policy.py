@@ -26,5 +26,7 @@ def test_message_uses_only_anchor_and_record_identity(prefix: str, seq: int) -> 
 @pytest.mark.parametrize("anchor", ["custom", "SPEC-", "SPEC-two words", "SPEC-x\nmalicious", "SPEC-../escape"])
 def test_unsupported_anchor_ids_refuse(anchor: str) -> None:
     envelope = parse_envelope_text("review-01.yaml", "envelopes/review-01.yaml", "kind: review\nstatus: completed\n")
-    with pytest.raises(EnvelopeCommitInvalidError):
+    with pytest.raises(EnvelopeCommitInvalidError) as refused:
         commit_message(anchor, envelope)
+    assert refused.value.fix is not None
+    assert "git commit" in refused.value.fix and "<" not in refused.value.fix
