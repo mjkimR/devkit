@@ -1,0 +1,66 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T01:39:52.090819Z'
+status: needs_input
+summary: 'Planning turn 1 at medium: status reviewing; scout-01 and challenger-01 (2 P1, 6 P2, 3 P3) recorded; 10 findings folded into proposal.md, PADR-split-deep-research-bundle and PADR-retain-research-as-cited-materials (reverify-01); challenger finding 3 stays open as q3. Spike questions Q1-Q6 answered; boundaries add ARCH-05-2, ARCH-07, the spec skill directory and tests/e2e/smoke.sh. Questions q1-q3 go to the user; q4 (sequencing against PROP-rename-incubation-to-adaptive-dev) is for the Host. Next: answers, then plan-accept.'
+findings: []
+checks:
+  rules: PASS devkit rules check docs/proposals/PROP-deep-research-bundle
+diff_scope:
+  base: ''
+  head: 83771c6e312b7be5cfd84cfb0e2615f8fba0301c
+questions:
+- id: q1
+  title: Research role ownership
+  prompt: Which bundle owns the research roles that /incubate also uses?
+  context: The research team uses six roles; product-clarifier, incubation-researcher and usage-reviewer also serve /incubate. Bundles cannot depend on each other, and two selected bundles shipping the same role ID fail sync with BUNDLE_CONFLICT, so a role cannot be shared. This fixes the deep-research preset, the role contracts Development writes and what /incubate keeps (PADR-split-deep-research-bundle).
+  options:
+  - id: a
+    description: 'deep-research is self-contained: it moves direction-explorer, discovery-critic and discovery-planner (same IDs) and adds its own research-investigator; incubation keeps product-clarifier, incubation-researcher and usage-reviewer. Cost: one near-duplicate researcher contract.'
+    recommended: true
+  - id: b
+    description: deep-research owns the researcher (renamed neutral); /incubate delegates to it only when deep-research is selected and works inline otherwise. No duplicate, but /incubate loses its research role without the second bundle and names another bundle's role.
+    recommended: false
+  - id: c
+    description: deep-research also copies product-clarifier and usage-reviewer under new IDs. Full coverage, three duplicated contracts.
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Research entry name
+  prompt: What is the research entry called?
+  context: The entry is a consumer-facing slash command replacing /incubate-research. It must stay distinct from /spec and from /incubate (renamed separately by PROP-rename-incubation-to-adaptive-dev). The design and tests use /deep-research.
+  options:
+  - id: a
+    description: /deep-research, matching the bundle name.
+    recommended: true
+  - id: b
+    description: /research, shorter but generic; it reads like ordinary research a request might trigger implicitly.
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Committing retained research
+  prompt: Does invoking /deep-research authorize committing the material it retains?
+  context: 'A proposal can cite MAT-<slug> only after the material is committed to the base: Planning worktrees start from committed history, so an uncommitted material leaves the citation unresolved. Under SDD this repository''s Git policy requires a worktree, and a commit outside a classified task has no ordinary route. The choice sets the entry''s Git authority and its completion report (challenger-01 finding 3).'
+  options:
+  - id: a
+    description: The entry writes the files and never commits; its report says a proposal can cite the material once the user has it committed to the base through the project's Git policy (for example as a session change). Research stays free of Git and approvals.
+    recommended: true
+  - id: b
+    description: 'Invoking the entry also authorizes committing the retained material: under SDD on its own branch per Git policy, under adaptive development through the ordinary flow. Citable at once, but the research run then carries Git and integration steps, and under SDD the dev-integration approval.'
+    recommended: false
+  allow_note: true
+- id: q4
+  title: Order against the rename proposal
+  prompt: 'Which lands first in Development: this split or PROP-rename-incubation-to-adaptive-dev?'
+  context: Host decision within the approved scope; listed so this round closes it. Both edit the incubation bundle, CAP-DLV-idea-incubation, both use cases, the guides and the catalog README. deep-research text names no approach value, so the order changes only which names this split's edits to the remaining bundle use (proposal §3.6).
+  options:
+  - id: a
+    description: 'Split first: the rename then renames a smaller bundle and touches nothing in deep-research.'
+    recommended: true
+  - id: b
+    description: 'Rename first: this split''s Development starts from the renamed base and writes adaptive-dev names; the design is otherwise unchanged.'
+    recommended: false
+  allow_note: true
+activity_effort: medium
