@@ -71,4 +71,4 @@ Option A, because it meets the first two drivers at the cost of one commit step 
 
 Integration tests under `packages/devkit-spec/tests/integration/features/delivery/` cover the committed handoff
 (single parent, clean worktree, reported HEAD after a rewriting hook) and the refused commit (stopped result, dirty
-paths kept, exit `1`, no next command). Review checks the `CAP-DLV-proposal-incubation` composed handoff contract.
+paths kept, exit `1`, no next command). Review checks the `CAP-DLV-proposal-planning` composed handoff contract.

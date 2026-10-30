@@ -17,7 +17,7 @@ created_at: 2026-10-30
 ## 1. Friction / Question (friction, question)
 
 - **Context**: `devkit spec proposal accept deep-research-bundle --mode accept_and_handoff` while a sibling proposal
-  that cites it, `PROP-rename-incubation-to-adaptive-dev`, was in Planning on its own `plan-` branch.
+  that cites it, `SPEC-rename-incubation-to-adaptive-dev`, was in Planning on its own `plan-` branch.
 - **Expectation**: The handoff rewrites references inside the handed-off Unit and its promoted ADRs; a sibling draft
   owned by another Planning branch is left to that branch, or the rewrite is reported for the Host to schedule.
 - **Actual**: The rewrite also edited the sibling's `proposal.md` (its base-branch draft version) in the new
@@ -37,7 +37,7 @@ created_at: 2026-10-30
 - **Conditions**: `local-orchestrated`, `worktree = "required"`, `plan-accept = ask`.
 - **Workarounds Attempted**: Accepted version plus `devkit rules fix`; succeeded.
 - **Related Assets**: `devkit spec proposal handoff`, `devkit spec proposal accept --mode accept_and_handoff`,
-  `SPEC_PROPOSAL_REFS_REWRITTEN`, `CAP-DLV-proposal-incubation`.
+  `SPEC_PROPOSAL_REFS_REWRITTEN`, `CAP-DLV-proposal-planning`.
 
 ## Evidence
 

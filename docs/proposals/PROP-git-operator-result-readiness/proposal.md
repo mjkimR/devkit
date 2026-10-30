@@ -77,7 +77,7 @@ transaction itself.
 - **Q2 Handoff interface**: Does the selected design change the handoff or setup interface? `CAP-WT-task-worktrees`
   changes only if it does; a successful uncommitted transaction is not reclassified as a failed CLI operation.
   - **Answer**: the composed handoff gains a commit step (`PADR-composed-handoff-commits-its-own-transaction`); its
-    contract lives in `CAP-DLV-proposal-incubation`. Worktree start and setup do not change, so
+    contract lives in `CAP-DLV-proposal-planning`. Worktree start and setup do not change, so
     `CAP-WT-task-worktrees` stays as it is. The plain `handoff <slug>` stays write-only.
 
 ## 3. Proposed Design & Impact
@@ -100,7 +100,7 @@ transaction itself.
 
 - The rewrite is unchanged: a sibling draft's `depends_on` and ID references to the handed-off proposal are rewritten,
   because a skipped `depends_on` dangles once the dev branch lands and makes every later handoff refuse.
-- `CAP-DLV-proposal-incubation` and the post-handoff link check name the resolution of the conflict this causes when
+- `CAP-DLV-proposal-planning` and the post-handoff link check name the resolution of the conflict this causes when
   the sibling's Planning merges first: on a base-merge conflict in a file under `docs/proposals/PROP-<other>/`, take
   the base version and run `devkit rules fix` on it, which rewrites the citation (`PROP-<slug> was handed off`).
 
@@ -116,9 +116,9 @@ transaction itself.
 - Post-handoff link fixes: when the handoff result carries `[UNRESOLVED_LINK]` or `[REWRITTEN ...]` lines outside the
   new spec and promoted ADRs, the Host runs the post-handoff link check and commits its fixes before starting a
   worker. The `spec` skill's worktree reference and `post-handoff.md` say so in place of "the same change".
-- `CAP-DLV-delivery-workflows` §4.6.1 states the `worker_input` check. `CAP-DLV-proposal-incubation` states the
+- `CAP-DLV-delivery-workflows` §4.6.1 states the `worker_input` check. `CAP-DLV-proposal-planning` states the
   composed handoff commit, `SPEC_HANDOFF_COMMIT_REFUSED`, the sibling conflict resolution, and narrows "handoff does
-  not create a commit" to the plain form. `UC-incubate-and-hand-off-a-proposal` updates step 9 (link fixes in a Host
+  not create a commit" to the plain form. `UC-plan-and-hand-off-a-proposal` updates step 9 (link fixes in a Host
   commit after the handoff commit) and extension 7a (the refused-commit stop).
 
 Evidence stays separated: CLI exit and effects, role status, actual Git observations, host emulation and remaining
@@ -133,7 +133,7 @@ work. Host-permission denial and reauthorization are observations, not reusable 
 | GOP-02c | The git-operator contract | A `handoff` or `prepare-worktree` result is returned | `checks.worker_input` carries `head` and `dirty_paths`; dirty paths are `remaining_effects` and never `completed`; the Host compares them with its own Git observation before starting a worker. |
 | GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. |
 | GOP-07 | Mixed live integration, host-refusal recovery and untested failure cases | Reports are updated after actual observations | Live effects, null CLI result on pre-dispatch denial, isolated fixtures, replays and untested cases remain separate; unknown cost or latency is not reported as an improvement. |
-| GOP-09 | A sibling draft in its own Planning cites the handed-off proposal | The handoff rewrites references and the guidance is read | The sibling's `depends_on` is rewritten, and `CAP-DLV-proposal-incubation` and `post-handoff.md` name the take-base-then-`devkit rules fix` resolution. |
+| GOP-09 | A sibling draft in its own Planning cites the handed-off proposal | The handoff rewrites references and the guidance is read | The sibling's `depends_on` is rewritten, and `CAP-DLV-proposal-planning` and `post-handoff.md` name the take-base-then-`devkit rules fix` resolution. |
 
 GOP-02 and GOP-02b are CLI integration tests under `packages/devkit-spec/tests/integration/features/delivery/` (a
 rewriting post-commit hook and a refusing pre-commit hook in the fixture repository). GOP-02c, GOP-06, GOP-07 and
