@@ -23,6 +23,14 @@ boundaries:
     - docs/capabilities/worktree/
     - docs/capabilities/integration/
     - docs/capabilities/delivery/
+    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
+    - docs/usecases/delivery/UC-drive-development-to-integration.md
+    - docs/decisions/2026-10/20261022-local-and-pull-request-integration.md
+    - docs/decisions/2026-10/20261022-test-selection-and-ci.md
+    - docs/development/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/
+    - guides/INSTALL_GUIDE.md
+    - AGENTS.md
   excludes:
     - .devkit/managed/
     - packages/devkit-core/
@@ -72,29 +80,83 @@ conflict-free merge can still carry.
 
 ## 2. Technical Spike Questions
 
-- **Q1 Merge construction**: How does `plan_finish` build the merge commit when the target moved (merge in the object
-  store, as it does today for later target advances), and which stable code reports a real conflict?
-- **Q2 Policy values**: Does `[worktree] merge = "ff-only"` keep refusing a moved target by its own definition?
-- **Q3 Pull-request route**: Is the PR route in scope, where the remote performs the merge and
-  `integration/usecases/pull_request.py` raises the same code?
-- **Q4 Drift on the result**: How are receipt or `devkit rules fix` drift on the CLI-built merge detected and refused,
-  such as the reference rewrites the Host fixed by hand on 2026-10-30?
-- **Q5 Batch test run**: Where does the post-batch run live (spec-orchestrate Completion, a CLI helper, or both), which
-  command it runs (`just test-affected --base <batch start>` with its `mode=full` fallback, or the full suite), and
-  how its result is reported?
-- **Q6 Decision record**: Which ADR supersedes the containment rule, and which tests pin `WORKTREE_MERGE_NOT_FF`
-  (for example `packages/devkit/tests/e2e/features/integration/test_base_advance.py`)?
+Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-02.yaml` and
+`materials/options.md`.
+
+- **Q1 Merge construction**: `build_result(advance=True)` already builds a merge onto an advanced target in the
+  object store (`git merge-tree --write-tree`, then `git commit-tree`); only `plan_finish` refuses a target that moved
+  before preparation. A real conflict is `WORKTREE_MERGE_CONFLICT` with nothing changed. Preparation builds the
+  prospective merge (`PADR-moved-target-merge`, option B).
+- **Q2 Policy values**: yes. `ff-only` lands the source tip itself, so it keeps refusing a moved target with
+  `WORKTREE_MERGE_NOT_FF`.
+- **Q3 Pull-request route**: out of scope (pending `q-pr-route`): the platform builds the merge and runs required checks
+  on its merge ref; the route keeps its containment refusal.
+- **Q4 Drift on the result**: the reference fixers that `devkit rules fix` applies (`RULE-document-reference`,
+  `RULE-markdown-link`) run as blocking LINTER-phase CI rules in readiness on files the source changed, so drift on the
+  merged result refuses with `INTEGRATION_NOT_READY`; `receipts.check_merge` refuses an inconsistent merged receipt
+  (`INTEGRATION_RECEIPT_CONFLICT`). Under option B both refuse at prepare. Their fix is the conditional base merge.
+- **Q5 Batch test run**: a `spec-orchestrate` Completion step, no CLI helper; the repository's integrated-content
+  verification once on the base branch head from the batch start (here `just test-affected --base <batch start>` with
+  its `mode=full` fallback; command choice pending `q-batch-command`); reported in the conversation, a failure
+  recorded as feedback (`PADR-post-batch-test-run`).
+- **Q6 Decision record**: `PADR-moved-target-merge` supersedes only the local containment clauses of
+  `ADR-local-and-pull-request-integration` (already superseded in part by `ADR-host-cli-lifecycle-authority`; its merge
+  and readiness clauses remain in force); `PADR-post-batch-test-run` supersedes only the post-merge clause of
+  `ADR-test-selection-and-ci`. Tests: `test_base_advance.py` `test_diverged_branch_is_refused_with_a_sha_preserving_fix`
+  flips; the `ff-only`, `finish --merge`, conflict and later-advance tests stay.
 
 ## 3. Proposed Design & Impact
 
-- `devkit-agt` worktree and integration use cases merge a conflict-free moved target as a merge commit; no SHA is
-  rewritten and no rebase or force operation runs.
-- `devkit-spec` delivery readiness and acceptance reuse that behavior; the readiness disclosure and the merged target
-  SHA appear in every integration result.
-- `spec-integrate`, `spec-orchestrate` and the spec skill references drop the unconditional base merge and add the
-  post-batch test run.
-- `CAP-WT-task-worktrees`, `CAP-INT-mcp-services` and `CAP-DLV-delivery-workflows` carry the changed contract; a new ADR
-  records it.
+### devkit-agt (`worktree`, `integration`)
+
+- `plan_finish` refuses a source that does not contain the target only under `ff-only`. Under `no-ff` it plans a merge
+  build and still requires a committer identity.
+- Local preparation of a moved target builds the prospective merge unsigned with `build_result(advance=True)`, runs
+  the finish guards with `merge-base(target, source)`, the readiness provider with the prospective result, the
+  prospective policy digest from the result and `receipts.check_merge`, all before the request is returned.
+- The request digest excludes the prospective result commit (readiness `result_sha` and the provider's target-bound
+  evidence codes), so two preparations of one source and target give one digest.
+- Integrate rebuilds on the current target as today and fast-forwards the base onto the result.
+- Prepare and integrate results carry the readiness disclosure and the merged target SHA in text and JSON:
+  `[INTEGRATION_PREPARED: ...]`/`[INTEGRATION_SCOPE: ...]` name the confirmation target SHA, `[INTEGRATION: ...]`
+  adds the build target and the landed result.
+- `WORKTREE_MERGE_NOT_FF`, `WORKTREE_MERGE_CONFLICT`, `INTEGRATION_NOT_READY` and `INTEGRATION_RECEIPT_CONFLICT` fixes
+  name the conditional base merge; their codes and modes stay.
+
+### devkit-spec (`delivery`, bundle)
+
+- Composed acceptance (`accept_only`, `accept_and_handoff`) inherits the preparation change; a conflict refuses before
+  the acceptance commit. Its result adds the merged target SHA and the disclosure.
+- `_unit_advance` keeps refusing a target that changed the unit directory; its fix names the conditional base merge.
+- `spec-integrate` step 1 merges the base only to resolve a conflict or failing check the CLI reports; steps 2-4
+  re-verify only what such a merge changed. `spec-review-proposal` drops the routine base merge and `rules fix` before
+  acceptance. `spec-orchestrate` step 5 drops "the implementer first incorporates a moved base"; its Completion adds
+  the batch test run; `git-operator-operations.md` makes base incorporation conditional. `spec/references/completion.md`
+  follows.
+
+### Living Spec and repository policy
+
+- `CAP-WT-task-worktrees`, `CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `CAP-HARN-agent-guidance` and
+  `UC-drive-development-to-integration` state the changed contract; `docs/development/reference/{worktree,integration}.md`,
+  `docs/development/{ci-cd,workflow}.md`, `AGENTS.md` (Verification) and `guides/INSTALL_GUIDE.md` (Git 2.38 note)
+  follow. The two PADRs become ADRs; `ADR-local-and-pull-request-integration` and `ADR-test-selection-and-ci` get a
+  "Superseded in part by" line each.
+
+### Acceptance criteria
+
+- A conflict-free moved target integrates (`devkit integration prepare` then `integrate --route local`) and is accepted
+  (`devkit spec proposal accept --mode accept_only`) without a base merge into the task branch; the landed merge's first
+  parent is the target and its second the approved source.
+- A conflicting moved target refuses at prepare with `WORKTREE_MERGE_CONFLICT` and leaves the target, source and
+  worktree unchanged.
+- A moved target that changed an effective integration policy key or `[tool.spec]` integrates when the source did
+  not change them; CI-rule drift on the merged result refuses at prepare with `INTEGRATION_NOT_READY`.
+- Two preparations of the same source and target print the same digest.
+- `merge = "ff-only"`, `devkit worktree finish --merge` and the pull-request route still refuse a moved target with
+  their current codes.
+- Every prepare, integrate and composed acceptance result shows the readiness disclosure and the merged target SHA.
+- `spec-orchestrate` Completion names the batch test run, and `spec-integrate` step 1 is conditional (bundle asset
+  tests).
 
 ### Non-goals
 
@@ -102,6 +164,9 @@ conflict-free merge can still carry.
 - **Scope Excluded**: dropping readiness checks, or bypassing a host refusal at runtime. Changing the containment
   contract through Planning and an ADR is this proposal's intent, not a bypass.
 - **Scope Excluded**: automatic revert of a merge whose post-batch test run fails.
+- **Scope Excluded**: merging a moved target in `devkit worktree finish --merge` (no readiness provider), under
+  `merge = "ff-only"`, or on the pull-request route.
+- **Scope Excluded**: a CLI command that runs or records the batch test run.
 
 ## 4. Lifecycle & Retirement Criteria
 
