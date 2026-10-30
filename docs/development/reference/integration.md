@@ -15,7 +15,8 @@ Under `ask`, the Host presents the exact report, target and cleanup effects, rec
 
 Local `prepare` of a source that does not contain the target (a moved target) builds the prospective merge in the
 object store (Git 2.38 or later for `git merge-tree --write-tree`) and runs readiness, the finish guards on the merge
-base, the receipt check and the prospective policy on it before presenting the scope; a conflict refuses with
+base, the receipt check and the prospective policy on it before presenting the scope; a conflict no generated
+artifact settles refuses with
 `WORKTREE_MERGE_CONFLICT` and nothing changed (`ADR-moved-target-merge`). The source need not contain the target first.
 A merge whose conflicts are all in files an enabled generated artifact owns (registry committed at the build target)
 keeps each artifact's `seed` side instead, unless an artifact to regenerate reads another conflict; prepare and

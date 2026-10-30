@@ -55,8 +55,9 @@ still runs and the result names what is stale.
 - When every conflict of a local prepare or integrate build is owned by an enabled artifact of the registry committed
   at the build target, the build keeps each owned path from the artifact's `seed` side (`ours` = the target,
   `theirs` = the source) and removes it where that side deleted it. Nothing is regenerated during the build.
-- A conflict no artifact owns, or one an artifact to regenerate reads or updates (`inputs`, `updates`, or any path
-  when it declares no `inputs`), refuses with `WORKTREE_MERGE_CONFLICT`, nothing changed, one detail per such path.
+- A conflict no artifact owns refuses with `WORKTREE_MERGE_CONFLICT`, nothing changed, one detail per such path;
+  the detail names the artifacts to regenerate that read or update it (`inputs`, `updates`, or any path when an
+  artifact declares no `inputs`), the `GENERATED_INPUTS_CONFLICTED` condition of `resolve`.
 - The worktree feature takes the settler as an injected callable (`ConflictSettler`); the integration feature
   composes it from the generated registry. Without a settler, a build refuses every conflict as before: the
   pull-request route, `finish --merge` and composed proposal acceptance pass none.

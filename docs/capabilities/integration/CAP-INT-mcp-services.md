@@ -77,8 +77,8 @@ checkout, checks the result and fast-forwards the base. It performs no fetch, pu
 WHEN the source does not contain the confirmation target under `[worktree] merge = "no-ff"`, local `prepare` MUST
 build the prospective merge in the object store and run the finish guards on `merge-base(target, source)`, the
 readiness provider, the receipt check and the prospective policy digest on it before it returns a request; the
-source need not contain the target first (`ADR-moved-target-merge`). A conflict refuses with
-`WORKTREE_MERGE_CONFLICT`, a failing check with `INTEGRATION_NOT_READY` or `INTEGRATION_RECEIPT_CONFLICT`, Git
+source need not contain the target first (`ADR-moved-target-merge`). A conflict no generated artifact settles (see
+below) refuses with `WORKTREE_MERGE_CONFLICT`, a failing check with `INTEGRATION_NOT_READY` or `INTEGRATION_RECEIPT_CONFLICT`, Git
 below 2.38 with `WORKTREE_GIT_UNSUPPORTED`, a missing committer identity with `WORKTREE_COMMIT_FAILED`, each with
 nothing changed; only after a conflict or a failing check does the Host merge the target into the task branch. The prospective commit is unsigned, referenced by no ref and copies the committer line of the
 parent with the later committer date, so two preparations of one source and target yield one digest whatever the
@@ -97,7 +97,7 @@ seeded artifacts in `generated` (`{"seeded": [{"id", "paths", "seed", "kept": "t
 "uv run devkit generated regen <ids>"}`), in the `seeded=` sentinel field and with an `INTEGRATION_GENERATED_SEEDED`
 warning; integrate replaces prepare's disclosure with its own build's. Any other conflict refuses with
 `WORKTREE_MERGE_CONFLICT`, one `[DETAIL]` per such path (`<path>: owned by no generated artifact` or
-`<path>: read by <ids>`), nothing changed. Composed proposal acceptance and the pull-request route settle no conflict.
+`<path>: read by <ids>`; at most 20, then `... and <n> more`), nothing changed. Composed proposal acceptance and the pull-request route settle no conflict.
 
 ## Authority and route limits
 

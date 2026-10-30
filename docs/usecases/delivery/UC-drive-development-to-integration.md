@@ -397,7 +397,8 @@ The integration executor's coded refusals this section does not name, and their 
 
 ### Scenario 30: A conflicting moved base refuses at preparation
 - **Covers**: 7i
-- **Given**: a task branch and a base that changed the same lines of one file since the branch was cut
+- **Given**: a task branch and a base that changed the same lines of one file no generated artifact owns since the
+  branch was cut
 - **When**: the agent prepares the integration
 - **Then**: it refuses with `WORKTREE_MERGE_CONFLICT`, the base, the branch and the worktree are unchanged, and the
   agent merges the base into the branch to resolve the conflict before preparing again

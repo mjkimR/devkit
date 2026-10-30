@@ -53,8 +53,12 @@ targets:
 
 - `CAP-DLV-proposal-planning` and `CAP-DLV-delivery-workflows`: composed acceptance keeps refusing every conflict with
   `WORKTREE_MERGE_CONFLICT`, as they state; the delivery provider is unchanged.
-- `docs/development/workflow.md` names the batch test run without its preceding `devkit generated check`; it is
-  outside this unit's write scope and stays accurate as a summary of `ADR-post-batch-test-run`. Recorded as feedback `FB-workflow-batch-run-omits-generated-check`.
+- `docs/development/workflow.md` and `docs/development/ci-cd.md` name the batch test run without its preceding
+  `devkit generated check`; both are outside this unit's write scope and stay accurate as summaries of
+  `ADR-post-batch-test-run`. Recorded as feedback `FB-workflow-batch-run-omits-generated-check`.
+- `ARCH-05-2-components`: the feature graph lives in `.devkit/architecture.toml`, which now declares
+  `integration -> generated` (enforced by `RULE-architecture`), and `ADR-generated-conflicts-in-prepared-merge`
+  records the edge; the architecture prose lists no per-feature edges that this change contradicts.
 
 ## Deferred work and source feedback
 
