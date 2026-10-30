@@ -85,11 +85,19 @@ flowchart BT
 | Actor | Description | Allowed Actions | Restricted Actions |
 | :--- | :--- | :--- | :--- |
 | **Human** | Developer, project owner | Confirms intent, answers questions, approves gates. | Internal stage mechanics. |
-| **Host** | Main agent in local session | Drives Backlog, inline Planning, worktree prep, worker delegation, local integration. | Inferring approvals, forging worker envelopes. |
+| **Host** | Main agent in local session | Drives Backlog, inline Planning, scheduling, worker/result validation and lifecycle decisions; delegates exact lifecycle execution in local-orchestrated mode. | Inferring approvals, forging worker envelopes. |
+| **Git Operator** | Reusable lifecycle executor per conversation/repository | Executes exact current Host-authorized guarded CLI jobs and returns actual effects/blockers. | Production authoring, semantic conflict resolution, approval/publication grants, repository-wide locking. |
 | **Planning Worker** | One-shot proposal planner | Drafts proposals, PADRs, records worker questions and answer envelopes. | Modifying files outside the proposal Unit, pushing/merging. |
 | **Development Worker**| One-shot unit developer | Authors specs, implements code, updates Living Spec and reconcile, runs review subagents. | Broadening scope outside the Unit, weakening tests. |
 | **Subagent Roles** | `scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `ux-reviewer`, `triage`, `decomposer` | Read-only inspection, criticism, code and document verification, walkthrough review of drafted screens, Backlog feedback grouping and draft split proposals; returns structured messages. | Writing envelope files to disk, modifying production code. |
 | **Cloud Agent** | Remote runner agent | Mirrors worker execution inside cloud PR runs. | Handling local conversation prompts. |
+
+The git-operator boundary is message-level and preserves existing CLI guards
+(`ADR-reusable-lifecycle-resource-manager`). On Codex its projection is emulated: explicit paths, current-job
+authority, per-operation permission requests and Host effect verification substitute for native role/path
+enforcement. Claude Code is native; Antigravity live continuation remains unverified. The bundle projection
+checks are in `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py`; runtime compliance is
+Review only.
 
 ### Role-to-Execution Actor Mapping
 
@@ -99,7 +107,7 @@ flowchart BT
 | **Proposal Planning** | Host | Planning Worker | Cloud Agent |
 | **Development** | Host | Development Worker | Cloud Agent |
 | **Delegated Roles** (`code-reviewer`, etc.) | Host (as subagent) | Worker (as nested subagent) | Cloud Agent (as nested subagent) |
-| **Verification & Integration** | Host | Host | autohub + Human / Local Host via the `devkit integration` CLI |
+| **Verification & Integration** | Host | Host decisions/acceptance; git-operator guarded execution | autohub + Human / Local Host via the `devkit integration` CLI |
 
 ---
 

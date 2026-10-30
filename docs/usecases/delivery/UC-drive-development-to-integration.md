@@ -8,6 +8,7 @@ supporting_actors:
   - code-reviewer
   - reconcile-reviewer
   - development-worker (local-orchestrated mode only)
+  - git-operator (reusable lifecycle executor in local-orchestrated mode)
   - User (gives dev-integration under policy ask)
   - GitHub (pull request route)
 status: active
@@ -15,6 +16,8 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit/src/devkit_agt/features/integration/usecases/service.py
   - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
+
 created_at: 2026-10-21
 capabilities:
   - CAP-DLV-delivery-workflows
@@ -81,7 +84,9 @@ The integration executor's coded refusals this section does not name, and their 
 - **1b.** The user instructs `local-orchestrated` mode: a `development-worker` runs the turn in its own `dev-`
   worktree from the stage the workflow names up to the final change report, nests the reviewers and commits at every
   stage boundary; the agent validates the cumulative committed range, and a range it rejects becomes a problem in its
-  own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-workflows`); resumes at step 6.
+  own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-workflows`). The Host reuses git-operator for
+  read-only preparation and exact authorized execution, retaining source preparation and acceptance; normal
+  integration includes cleanup (`CAP-INT-mcp-services`); resumes at step 6.
 - **3a.** The effort is `low`: the author reviews the change and self-checks the reconcile, still recorded as review
   and reconcile-check envelopes (`CAP-DLV-delivery-workflows`); resumes at step 5.
 - **3b.** The effort is `high`: fresh `code-reviewer` instances review in bounded rounds, and the reconcile
@@ -317,32 +322,45 @@ The integration executor's coded refusals this section does not name, and their 
   readiness provider does not run, the target is unchanged, and the Host retries with a runtime built from the source's
   code after separately granted authority
 
+### Scenario 22: Local orchestration reuses its lifecycle executor
+- **Covers**: 1b
+- **Given**: a verified local-orchestrated Unit and an existing git-operator in this conversation/repository
+- **When**: the Host requests preparation and later delegates exact authorized integration effects
+- **Then**: the same identity handles both jobs with repeated current refs/authority; the Host retains decisions and
+  accepts observed effects, and completed integration dispatches no redundant cleanup
 
-### Scenario 22: Commit one authored record
+### Scenario 23: Zero-exit partial cleanup remains incomplete in the role result
+- **Covers**: 1b, 8b
+- **Given**: delegated integration reports exit zero with `INTEGRATION_CLEANUP_INCOMPLETE` and requested cleanup remains
+- **When**: git-operator inspects effects and finds an active writer or missing cleanup authority
+- **Then**: it preserves the resource and returns needs_input with original CLI status/exit and completed/remaining
+  effects; the Host quiesces writers and decides the supported remainder before any cleanup
+
+### Scenario 24: Commit one authored record
 - **Covers**: 5a
 - **Given**: a valid authored final-report is the sole pending file after verified work is committed
 - **When**: the agent requests its explicit commit
 - **Then**: exactly that path/blob is added on the same branch through ordinary hooks, actual final HEAD is reported and evidence SHAs stay unchanged
 
-### Scenario 23: Repeat a committed record
+### Scenario 25: Repeat a committed record
 - **Covers**: 5a
 - **Given**: the selected record has exact unchanged bytes in HEAD and the checkout is clean
 - **When**: the agent repeats explicit commit
 - **Then**: the result is already_committed with null subject and HEAD stays unchanged
 
-### Scenario 24: Refuse an ineligible record commit
+### Scenario 26: Refuse an ineligible record commit
 - **Covers**: 5b
 - **Given**: an explicit commit selects a skeleton, modified history, partially staged record, or a checkout with unrelated dirty paths
 - **When**: the agent invokes the command
 - **Then**: it reports ENVELOPE_COMMIT_INVALID or ENVELOPE_COMMIT_STATE with the exact target and changes neither index nor HEAD
 
-### Scenario 25: Retry a rejected hook
+### Scenario 27: Retry a rejected hook
 - **Covers**: 5c
 - **Given**: a hook rejected an explicit record commit and left that exact record staged with unchanged HEAD/reference
 - **When**: the agent fixes the cause and retries the same file
 - **Then**: one commit is created with no new envelope sequence and no duplicate commit on repeat
 
-### Scenario 26: Inspect uncertain effects
+### Scenario 28: Inspect uncertain effects
 - **Covers**: 5d
 - **Given**: a post-commit hook changes content or switches the symbolic branch
 - **When**: the agent requests explicit record commit

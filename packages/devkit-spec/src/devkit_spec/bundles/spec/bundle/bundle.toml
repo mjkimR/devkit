@@ -199,6 +199,11 @@ kind = "subagent"
 source = "subagents/decomposer.md"
 
 [[assets]]
+id = "git-operator"
+kind = "subagent"
+source = "subagents/git-operator.md"
+
+[[assets]]
 id = "development-worker"
 kind = "subagent"
 source = "subagents/development-worker.md.jinja"
@@ -271,6 +276,7 @@ assets = [
     "ux-reviewer",
     "triage",
     "decomposer",
+    "git-operator",
     "development-worker",
     "planning-worker",
     "brownfield-adoption",

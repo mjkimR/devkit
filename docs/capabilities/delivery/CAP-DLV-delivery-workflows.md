@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD delivery workflows define stages, gates, verification and run records, with optional deterministic single-envelope commits. Worker inspection separates turn write audits from cumulative rules; incubation preserves explicit SDD ownership."
+summary: "SDD workflows define stages, gates, verification and run records with deterministic single-envelope commits. One-shot workers deliver committed turns; reusable lean git-operator executes Host-authorized lifecycle jobs with readiness and recovery checks."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -15,6 +15,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit-spec/src/devkit_spec/features/worker/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -22,7 +23,7 @@ entrypoints:
 ## 1. Summary
 
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
-(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), nine host-neutral role contracts
+(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), ten host-neutral role contracts
 (`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset, and the
 `devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
@@ -35,7 +36,7 @@ sequence.
 
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
-  the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the nine role contracts, and the
+  the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the ten role contracts, and the
   `devkit_agt.features.integration.readiness` provider (`devkit_spec.features.delivery.usecases.integration.check`) for Unit and `session` tasks, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:
@@ -385,13 +386,16 @@ One Markdown contract per role in devkit's
 `CAP-DIST-agent-projections`:
 `role`, `title`, `description`, an optional `skill` and a `hosts` block for `claude-code`, `codex` and `antigravity`.
 Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocation` (`optional`) and
-`x-git-actions` (`[read]` for every role but the two workers, `[read, commit]`).
+`x-git-actions` (`[read]` for support roles, `[read, commit]` for the two workers and `[read, lifecycle]`
+for git-operator, whose lifecycle effects are bounded by the current job).
 
 The source scout contract selects `level: compact`; it requests Haiku, Luna or Flash with effort omitted.
+The git-operator contract selects `level: lean`: Sonnet medium, gpt-6.1-terra medium and Flash with effort omitted.
 All other shipped roles omit neutral level, model, effort and `x-model-profile` settings and inherit through
-native host defaults. Projects can override or reset scout's level in `.devkit/config.toml`.
+native host defaults. Projects can override or reset role levels in `.devkit/config.toml`.
 `CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-five-subagent-levels` defines the scout
-exception and original five presets; `ADR-lean-subagent-level` adds lean. No model level changes `activity-effort`, write scope or verification gates.
+exception and original five presets; `ADR-lean-subagent-level` adds lean. `ADR-reusable-lifecycle-resource-manager`
+supersedes only the scout-only source-level restriction for git-operator. No model level changes `activity-effort`, write scope or verification gates.
 `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` checks every shipped role.
 
 | Role | Skill | Default model level / effort | Writes | Envelope kind |
@@ -404,6 +408,7 @@ exception and original five presets; `ADR-lean-subagent-level` adds lean. No mod
 | `triage` | none: the contract cites `feedback-hygiene` Steps 1 and 2 | inherit | nothing: groups open feedback and recommends a destination per group, in Backlog | none: a message |
 | `decomposer` | none: the contract cites the `spec` skill's `references/backlog.md` | inherit | nothing: proposes a split of one draft into children with provenance, edges and an exit, in Backlog | none: a message |
 | `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | inherit | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
+| `git-operator` | none: operating reference in spec-orchestrate | lean / medium where supported; Flash effort omitted | exact guarded lifecycle effects in the current Host job; no production authoring | none: concise role message |
 | `development-worker` | none: the procedure is in the contract | inherit | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
 
 The contract body is the role's prompt and holds only what the role needs: purpose, input fields, return fields,
@@ -415,6 +420,40 @@ only the worker's own obligations (worktree, nested roles, return, write boundar
 (`ADR-orchestration-workers`). Caller guidance (per-role payload, host guarantees, the
 post-run comparison of two snapshots of the working tree, each a tree written from a temporary index, so a write
 to an already-modified file shows too, envelope recording, range validation) lives in `spec-delegate` (`SPEC-subagent-procedure-in-contract`).
+
+### 4.6.1 Reusable lifecycle execution
+
+WHEN the Host first delegates a lifecycle job in one conversation and repository, it SHOULD create one
+`git-operator` and reuse its exact identity through native continuation for later jobs. IF that identity or
+continuation is unavailable, THEN it MUST rebuild from current CLI/Git observations and current Host authority.
+The role has no persistent service, approval store or global repository lock (`ADR-reusable-lifecycle-resource-manager`).
+
+Each job carries operation, absolute repository/base/worktree paths, Unit/branch, source/target refs,
+intended_effects, authority, allowed_boundaries, writers_quiesced and expected_checks. It includes prepared_digest
+where required, route and separate publication_authority for remote effects. WHEN a job is dispatched, the Host
+MUST repeat its current authority and identity even when the operator remembers the Unit. Read-only preparation
+grants no mutation authority. The Host retains decisions, scheduling, semantic conflict resolution and result
+acceptance; source preparation remains with the implementer or Host.
+
+WHEN a mutation is requested, git-operator MUST refresh identity, refs, cleanliness and writer state before
+executing an existing guarded CLI operation. IF authority is missing, refs/scope changed, resources are dirty,
+writers are active or permission is unavailable, THEN it MUST preserve resources and return the exact blocker.
+The Host quiesces writers before cleanup. Conflicting jobs serialize within this conversation only.
+
+The role message contains status, identity, observed_refs, completed_effects, remaining_effects, checks,
+blocker_codes, cli_result and unverified_areas. Original CLI status/exit/effects remain separate. WHEN all requested
+effects and checks are verified complete, git-operator MAY return completed. IF the remainder requires Host action,
+THEN it MUST return needs_input; execution failures return failed. IF a CLI returns partial/unknown effects,
+THEN the role MUST inspect live state before attempting only a supported, currently authorized remainder.
+A zero-exit incomplete cleanup cannot be completed; normal integration already includes cleanup.
+
+`packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` checks registration, projections,
+authority and recovery wording. `MAT-git-operator-development-evidence` records four Terra medium native
+continuation jobs and isolated CLI mutation fixtures separately; selected-model mutation, other live hosts and
+net cost/latency benefit remain unverified. Codex emulation uses explicit paths, per-operation permission and
+Host effect checks without claiming native path enforcement. Flash effort is omitted without prompt emulation.
+
+### 4.6.2 One-shot activity workers
 
 The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoked per activity) and never for
 `session` depth. Each is one-shot: it runs one turn of one activity in that activity's devkit worktree, using absolute
