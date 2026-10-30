@@ -45,19 +45,23 @@ path without judgment.
 
 Option A, because it meets the first two drivers at the cost of one commit step that mirrors the composed acceptance.
 
-- After the handoff and scope registration succeed, the composed handoff stages every path the worktree changed and
-  commits once with the subject `spec: hand off <slug> to Development`, under the normal commit gate.
+- After the handoff and scope registration succeed, the composed handoff stages the delta `git status` reports (the
+  worktree was clean at the reviewed head before the handoff) and commits once with the subject
+  `spec: hand off <slug> to Development`, under the normal commit gate.
 - It verifies after the commit that HEAD's single parent is the reviewed base head and the worktree is clean, and
-  reports HEAD as read after the hooks (a metadata-rewriting post-commit hook changes the SHA).
-- On a commit-gate refusal it keeps the handoff's writes in place, uncommitted, and returns a stopped handoff
-  (`status: needs_recovery`, exit `1`) with the gate output and the exact dirty paths; it rolls nothing back.
+  reports HEAD as read after `git commit` returns (a metadata-rewriting post-commit hook changes the SHA).
+- On a refused commit (the gate or any other `git commit` failure) it keeps the handoff's writes in place,
+  uncommitted, and returns a stopped handoff (`status: needs_recovery`, exit `1`, `SPEC_HANDOFF_COMMIT_REFUSED`) with
+  the commit output, the exact dirty paths and a next action instead of a next command; it rolls nothing back.
 - The plain `devkit spec proposal handoff <slug>` stays write-only.
 
 ## 5. Consequences
 
-- The Host no longer commits the handoff; a git-operator handoff result can report clean committed worker input.
-- The post-handoff link check, when the result carries unresolved links or rewrites to reread, becomes a later
-  commit on the same branch instead of part of the handoff commit.
+- The Host no longer commits the handoff transaction; a git-operator handoff result can report clean committed
+  worker input.
+- The post-handoff link check, when the result carries unresolved links or rewrites outside the new spec and
+  promoted ADRs, becomes a later Host commit on the same branch, before a worker starts, instead of part of the
+  handoff commit.
 - A refused commit leaves a dirty worktree that the Host repairs and commits; a rerun of the composed handoff
   refuses that worktree (`SPEC_HANDOFF_WORKTREE_CONFLICT`), as it does today for any changed checkout.
 - Follow-up: if a project's commit-message policy rejects the fixed subject, the refusal path applies; add a
@@ -67,4 +71,4 @@ Option A, because it meets the first two drivers at the cost of one commit step 
 
 Integration tests under `packages/devkit-spec/tests/integration/features/delivery/` cover the committed handoff
 (single parent, clean worktree, reported HEAD after a rewriting hook) and the refused commit (stopped result, dirty
-paths kept, exit `1`). Review checks the `CAP-DLV-proposal-incubation` composed handoff contract.
+paths kept, exit `1`, no next command). Review checks the `CAP-DLV-proposal-incubation` composed handoff contract.
