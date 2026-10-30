@@ -21,7 +21,10 @@ from spec_support.scope import git, write
 from devkit_spec.features.delivery.usecases.integration import check
 
 
-def _complete_feature_spec(wt: Path, slug: str = "feat", *, date: str = "2026-10-17") -> str:
+def _complete_feature_spec(
+    wt: Path, slug: str = "feat", *, date: str = "2026-10-17", extra: dict[str, str] | None = None
+) -> str:
+    """A completed feature unit; ``extra`` files are written into its implementation commit."""
     month = date[:7]
     compact = date.replace("-", "")
     unit = f"specs/{month}/{compact}-{slug}"
@@ -51,6 +54,8 @@ def _complete_feature_spec(wt: Path, slug: str = "feat", *, date: str = "2026-10
         "docs/capabilities/delivery/CAP-DLV-sample.md",
         "---\nid: CAP-DLV-sample\ntitle: Sample\nsummary: Sample capability.\nstatus: active\narea: delivery\ncreated: 2026-10-01\nupdated: 2026-10-17\n---\n\n# [CAP-DLV-sample] Sample\n\n## 1. Overview\nSample capability updated.\n",
     )
+    for rel, text in (extra or {}).items():
+        write(wt, rel, text)
     write(
         wt,
         f"{unit}/reconcile.md",
@@ -975,3 +980,66 @@ def test_handoff_automatic_policy_revocation_preserves_git_state(accepted_handof
     assert caught.value.code == "SPEC_HANDOFF_BASE_DIRTY"
     assert git(repo, "show-ref") == before
     assert not git(repo, "branch", "--list", "dev-idea")
+
+
+def _commit_base(repo: Path, rel: str, text: str | None) -> str:
+    """Commit a change to ``rel`` on the base (``None`` deletes it) and return the moved target."""
+    if text is None:
+        git(repo, "rm", "-q", rel)
+    else:
+        write(repo, rel, text)
+        git(repo, "add", rel)
+    git(repo, "commit", "-q", "-m", f"docs: change {rel} on the base")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_moved_target_that_changed_tool_spec_integrates_through_the_spec_provider(
+    tmp_path: Path, synced_template: Path
+) -> None:
+    """``SPEC-integration-merge-moved-target``: ``SPEC_POLICY`` binds the prospective result at prepare."""
+    repo = _make_synced_repo(tmp_path, synced_template)
+    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    unit = _complete_feature_spec(wt, "feat")
+    tip = git(wt, "rev-parse", "HEAD")
+    text = (repo / ".devkit/config.toml").read_text(encoding="utf-8")
+    text = (
+        text.replace("[tool.spec]\n", '[tool.spec]\nworktree = "auto"\n', 1)
+        if "[tool.spec]\n" in text
+        else (text + '\n[tool.spec]\nworktree = "auto"\n')
+    )
+    moved = _commit_base(repo, ".devkit/config.toml", text)
+    service = IntegrationService(repo)
+    task = Task(kind="unit", id="SPEC-feat", unit=unit)
+    request = service.prepare("dev-feat", task).request
+    assert request.readiness.result_sha is not None and request.context.result_sha is None
+    completed = service.execute_cli("dev-feat", task, expected_digest=request.digest)
+    assert completed.status == "completed", completed.to_dict()
+    assert git(repo, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
+
+
+def test_reference_drift_on_the_prospective_result_refuses_at_prepare(tmp_path: Path, synced_template: Path) -> None:
+    repo = _make_synced_repo(tmp_path, synced_template)
+    cited = "docs/capabilities/delivery/CAP-DLV-cited.md"
+    _commit_base(
+        repo,
+        cited,
+        "---\nid: CAP-DLV-cited\ntitle: Cited\nsummary: Cited capability.\nstatus: active\narea: delivery\n"
+        "created: 2026-10-01\nupdated: 2026-10-01\n---\n\n# [CAP-DLV-cited] Cited\n\n## 1. Overview\nCited.\n",
+    )
+    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
+    sample = (
+        "---\nid: CAP-DLV-sample\ntitle: Sample\nsummary: Sample capability.\nstatus: active\narea: delivery\n"
+        "created: 2026-10-01\nupdated: 2026-10-17\n---\n\n# [CAP-DLV-sample] Sample\n\n## 1. Overview\n"
+        "Builds on `CAP-DLV-cited`.\n"
+    )
+    unit = _complete_feature_spec(wt, "feat", extra={"docs/capabilities/delivery/CAP-DLV-sample.md": sample})
+    task = Task(kind="unit", id="SPEC-feat", unit=unit)
+    IntegrationService(repo).prepare("dev-feat", task)  # ready while the target still has the cited document
+    moved = _commit_base(repo, cited, None)
+    with pytest.raises(ReadinessError) as raised:
+        IntegrationService(repo).prepare("dev-feat", task)
+    drift = [line for line in raised.value.details if "CAP-DLV-cited" in line]
+    assert drift and all("on the merged result" in line and "devkit rules fix" in line for line in drift), (
+        raised.value.details
+    )
+    assert git(repo, "rev-parse", "HEAD") == moved and wt.is_dir()

@@ -1,6 +1,9 @@
 """Prepare, confirm and execute an exact local request; retain partial progress only in this process.
 
-The request is immutable and binds the confirmation target. The approving call absorbs target commits that landed
+The request is immutable and binds the confirmation target. When the source does not contain that target (a moved
+target), preparation builds the prospective merge in the object store and runs the guards on the merge base, the
+readiness provider, the receipt check and the prospective policy on it before the scope is presented; the request
+keeps the approved context and no prospective commit lands (``ADR-moved-target-merge``). The approving call absorbs target commits that landed
 since the confirmation in one build: the target must descend from the confirmation target, the result commit is built
 outside the base checkout (``devkit_agt.features.worktree.services.merging``), the guards and the readiness provider run again with the
 execution context (source, build target, result), the result's effective policy must equal the prospected one and
@@ -195,17 +198,32 @@ class IntegrationService:
         config = read_worktree_config(self.root)
         position = locate(self.root)
         method = merge_method(self.root, config.merge, f"refs/heads/{branch}")
-        plan = plan_finish(position, branch, pull_request=config.pull_request, delete_branch=False, merge_method=method)
+        plan = plan_finish(
+            position, branch, pull_request=config.pull_request, delete_branch=False, merge_method=method, advance=True
+        )
         if plan.worktree_identity is not None and (
             Path(sys.executable).absolute().is_relative_to(Path(plan.path))
             or Path(sys.prefix).resolve().is_relative_to(Path(plan.path))
         ):
             raise RuntimeLocationError("the active interpreter would be removed by approved worktree cleanup")
+        # A moved target (the source does not contain it) is checked on the prospective merge the build would land.
+        result_sha = None
+        if not plan.already_merged and not is_ancestor(self.root, plan.target_sha, plan.source_sha):
+            result_sha = build_result(
+                self.root,
+                branch=plan.branch,
+                target_branch=plan.target_branch,
+                target=plan.target_sha,
+                source=plan.source_sha,
+                method=plan.merge_method,
+                advance=True,
+                prospective=True,
+            )
         if plan.already_merged:
             # A cleanup-only request builds nothing: the target's policy at prepare is what the cleanup runs under.
             post_digest, prospective = policy_digest, read_project_config(self.root)
         else:
-            post_digest, prospective = _prospective(self.root, plan.source_sha, plan.target_sha)
+            post_digest, prospective = _prospective(self.root, result_sha or plan.source_sha, plan.target_sha)
         if approval_policy == "auto" and providers.approval(prospective, approval_gate) != "auto":
             raise AuthorityError(
                 "the prospective result revokes automatic integration authority",
@@ -221,13 +239,22 @@ class IntegrationService:
             )
         plan = replace(plan, delete_branch=config.delete_branch and worktree_policy.get("delete_branch", True))
         context = IntegrationContext(plan, task)
+        # The prospective context adds the unlanded merge; cleanup is planned from the approved context.
+        checked = replace(context, result_sha=result_sha) if result_sha is not None else context
         ident, provider = providers.provider(name)
-        ready = lifecycle.preview(context) if lifecycle is not None else providers.check(provider, context)
+        ready = lifecycle.preview(checked) if lifecycle is not None else providers.check(provider, checked)
         guard_identities = providers.guards()
-        # The guard base is the merge base: the target, or the source itself for a cleanup-only request.
-        run_finish_guards(
-            self.root, branch, plan.source_sha if plan.already_merged else plan.target_sha, plan.source_sha
-        )
+        # The guard base is the merge base: the target, the source itself for a cleanup-only request, or their merge
+        # base for a moved target.
+        if plan.already_merged:
+            guard_base = plan.source_sha
+        elif result_sha is None:
+            guard_base = plan.target_sha
+        else:
+            guard_base = run_git_text(self.root, "merge-base", plan.target_sha, plan.source_sha)
+        run_finish_guards(self.root, branch, guard_base, plan.source_sha)
+        if result_sha is not None:
+            receipts.check_merge(self.root, result_sha, (plan.target_sha, plan.source_sha))
         cleanup = providers.cleanup_scopes(context, providers.cleanup_extensions())
         validate_finish(plan)
         request = IntegrationRequest(

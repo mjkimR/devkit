@@ -325,6 +325,7 @@ def test_prepare_shows_the_approval_scope(repo):
     assert "common_dir" not in json.dumps(payload) and "policy_digest" not in json.dumps(payload)
     text = CliRunner().invoke(cli, args).output.splitlines()
     assert text[0].startswith("[INTEGRATION_PREPARED: ")
+    assert f" target_sha={request['target']['sha']} " in text[0]
     assert text[1] == (
         "[INTEGRATION_SCOPE: worktree_remove=yes delete_branch=yes cleanup=- "
         'disclosure="fixture checks on the merged result only"]'
@@ -459,3 +460,27 @@ def test_missing_claims_do_not_hide_source_readiness_failure(repo, ready_provide
     advisory = json.loads(retried.output)["error"]["advisory"]
     assert advisory["details"] == ["finish the fixture checks"]
     assert "commit the final changes and prepare a new" in advisory["fix"]
+
+
+def test_moved_target_cli_merges_and_states_the_merged_target_and_disclosure(repo):
+    """``SPEC-integration-merge-moved-target``: no base merge, and the result names what it merged and checked."""
+    base, worktree = repo
+    tip = git(worktree, "rev-parse", "HEAD")
+    (base / "theirs.txt").write_text("theirs\n")
+    git(base, "add", "theirs.txt")
+    git(base, "commit", "-qm", "advance the target")
+    moved = git(base, "rev-parse", "HEAD")
+    prepared = CliRunner().invoke(
+        cli, ["prepare", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(base)]
+    )
+    assert prepared.exit_code == 0, prepared.output
+    first = prepared.output.splitlines()[0]
+    assert f" target_sha={moved} " in first
+    digest = first.split(" digest=", 1)[1].split(" ", 1)[0]
+    result = CliRunner().invoke(cli, _integrate_args(base, "--expected-digest", digest))
+    assert result.exit_code == 0, result.output
+    head = git(base, "rev-parse", "HEAD")
+    line = result.output.splitlines()[0]
+    assert f" target_sha={moved} build_target={moved} result={head} " in line
+    assert ' disclosure="fixture checks on the merged result only" effects=' in line
+    assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]

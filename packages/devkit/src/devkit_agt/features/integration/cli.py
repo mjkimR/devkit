@@ -86,7 +86,7 @@ def prepare(
     cleanup = ",".join(scope.extension for scope in request.cleanup) or "-"
     click.echo(
         f"[INTEGRATION_PREPARED: {request.id} branch={plan.branch} target={json.dumps(plan.target_branch)} "
-        f"digest={request.digest} route={route} network={request.context.network}]"
+        f"target_sha={plan.target_sha} digest={request.digest} route={route} network={request.context.network}]"
     )
     click.echo(
         f"[INTEGRATION_SCOPE: worktree_remove={yes_no(plan.worktree_identity is not None)} "
@@ -148,10 +148,13 @@ def integrate(
     else:
         plan = result.request.context.finish
         effects = ",".join(f"{step}:{state}" for step, state in result.steps.items())
+        # The merged target and what was checked on the merged result (``ADR-moved-target-merge``).
         click.echo(
             f"[INTEGRATION: status={result.status} branch={plan.branch} target={json.dumps(plan.target_branch)} "
+            f"target_sha={plan.target_sha} build_target={result.build_target or '-'} result={result.result_sha or '-'} "
             f"route={route} authority={result.authority or '-'} failed={result.failing_operation or '-'} "
-            f"codes={','.join(error.code for error in result.errors) or '-'} effects={effects}]"
+            f"codes={','.join(error.code for error in result.errors) or '-'} "
+            f"disclosure={json.dumps(result.request.readiness.disclosure, ensure_ascii=False)} effects={effects}]"
         )
         echo_notices(result.notices)
         for error in result.errors:  # errors last, so the decisive block ends the output
