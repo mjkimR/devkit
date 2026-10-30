@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:31:19.356635Z'
+status: completed
+summary: 'Development turn from specify to the final change report: spec/plan/tasks written; worker.md drops the base-checkout equality and adds the own-envelope condition and accepted residual; payload.md drops the pre-spawn base record; CAP-DLV-delivery-workflows and one ADR-orchestration-workers pointer line updated; contract test plus AC-03 base-advance inspection test; devkit sync output .devkit/installation.json (named in Task 1.1 boundary, no (sync output) entries). code-reviewer: one P3 plan wording finding, fixed and self-reverified; reconcile-reviewer: pass, no findings. Feedback FB-bundle-text-document-id-citations recorded. No before/after measurement applies. Known pre-existing failure test_fixes_carry_no_placeholder not selected by test-affected, not fixed.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=partial 1500 passed
+  lint: PASS just lint-check devkit-spec; just check devkit-spec 0 errors; just rules-check errors=0; devkit rules check --ci --base 597a8bd9 errors=0
+  sync: PASS devkit sync --check exit=0
+diff_scope:
+  base: 597a8bd933204b1138649c463c6b889b09ef1aff
+  head: 5648097b8701d13969edda4bfe87086d3e9f3330
+activity_effort: medium
