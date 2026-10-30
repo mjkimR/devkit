@@ -46,12 +46,18 @@ on another bundle, and two selected bundles that ship the same skill or subagent
   `/incubate` loses its research role without the second bundle, and its text depends on another bundle's IDs.
 - **`deep-research` copies all three shared roles under new IDs**: full coverage; three duplicates where the
   coordinator or the researcher covers clarification and usage evidence.
+- **Layer the bundles through a Python package dependency plus `auto_select`** (`CAP-DIST-content-packages`): a
+  shared role without a dependency engine, which `ADR-document-and-sdd-bundles` rules out across bundles. It works
+  only across wheels, and both bundles ship in the opt-in `devkit-catalog` wheel, so it needs a separate wheel.
+  Deferred until a real cross-bundle need appears.
 
 ## 4. Decision Outcome
 
 Chosen: a self-contained `deep-research` catalog bundle with its own researcher, because it meets every driver at
 the cost of one duplicated contract.
 
+- `deep-research` is designed without regard to adaptive development: no role is shared, and no bundle or package
+  dependency exists in either direction.
 - `deep-research:core` holds the `/deep-research` entry (`invocation = "user"`), its `orchestration`, `workspace`
   and `synthesis` references, `direction-explorer`, `discovery-critic`, `discovery-planner` (moved, same IDs) and
   a new `research-investigator` (one question per instance; optional bounded experiment in its assigned scratch).
@@ -66,6 +72,10 @@ the cost of one duplicated contract.
   entry; never suggest or start it otherwise", and its description carries no trigger phrasing.
 - The incubation bundle keeps `/incubate`, `product-clarifier`, `incubation-researcher`, `usage-reviewer`, the
   pointer and the current-context template; it loses the entry, its references and the three research roles.
+  `PROP-rename-incubation-to-adaptive-dev` later renames it `adaptive-dev` and the researcher `product-researcher`.
+- The two researchers differ in scope: `research-investigator` answers one question of a team investigation; the
+  incubation researcher gathers one product decision's evidence or runs one bounded experiment.
+- `/incubate` never invokes or suggests `/deep-research`; it only reads a retained material by its `MAT-<slug>` ID.
 - Retained from the superseded decision: content-only catalog ownership, explicit selection, installation with
   docs and catalog without devkit-spec, the invoking agent as coordinator, bounded assignments with no mandatory
   role sequence, source provenance, and plans distinct from delivery commitments.
@@ -82,7 +92,8 @@ the cost of one duplicated contract.
   (sync fails until renamed to `deep-research:<role>`), a file override under `.devkit/overrides/incubation/`
   (silently stops applying until moved to `.devkit/overrides/deep-research/`) and an edited projection left with
   `ORPHAN_LEFT` (blocks `devkit add deep-research` until moved or deleted).
-- Follow-up: if a third bundle needs the same researcher, reconsider a shared-role mechanism in distribution.
+- Follow-up: if a real cross-bundle need appears (a third bundle needs the same researcher, or a bundle must
+  require another), reconsider the deferred package-dependency layering with a separate wheel.
 
 ## 6. Confirmation
 

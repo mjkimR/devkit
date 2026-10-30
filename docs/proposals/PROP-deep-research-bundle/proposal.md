@@ -15,6 +15,7 @@ boundaries:
     - packages/devkit-catalog/tests/
     - packages/devkit-catalog/README.md
     - packages/devkit-catalog/pyproject.toml
+    - .devkit/architecture.toml
     - docs/capabilities/delivery/
     - docs/capabilities/harness/CAP-HARN-agent-guidance.md
     - docs/usecases/delivery/
@@ -74,10 +75,18 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
 - **Q1 Role ownership**: The research orchestration uses six roles: `direction-explorer`, `discovery-critic` and
   `discovery-planner` serve only the research entry; `product-clarifier`, `incubation-researcher` and
   `usage-reviewer` also serve `/incubate`. Bundles declare no dependency, and two selected bundles that ship the
-  same skill or subagent ID fail sync with `BUNDLE_CONFLICT` before any write. **Answer (recommended, open as q1)**:
-  `deep-research` moves the three research-only roles with their IDs and adds its own `research-investigator`;
-  the incubation bundle keeps its three shared roles. The research entry covers user and problem framing inline or
-  through a `direction-explorer` premise, and usage evidence through a bounded investigator experiment.
+  same skill or subagent ID fail sync with `BUNDLE_CONFLICT` before any write. **Answer (user, q1)**:
+  `deep-research` is self-contained and designed without regard to adaptive development. It moves the three
+  research-only roles with their IDs and adds its own `research-investigator`; the incubation bundle (`adaptive-dev`
+  after `PROP-rename-incubation-to-adaptive-dev`) keeps `product-clarifier`, `incubation-researcher` (renamed
+  `product-researcher` there) and `usage-reviewer`. No role is shared, and no bundle or package dependency exists in
+  either direction. The research entry covers user and problem framing inline or through a `direction-explorer`
+  premise, and usage evidence through a bounded investigator experiment.
+  - The two researchers differ in scope: `research-investigator` answers one question of a team investigation; the
+    incubation researcher gathers one product decision's evidence or runs one bounded experiment.
+  - `/incubate` never invokes or suggests `/deep-research`; it only reads a retained material by its `MAT-<slug>` ID.
+  - Deferred: layering through a Python package dependency plus `auto_select` (`CAP-DIST-content-packages`) works
+    only across wheels, and both bundles ship in the opt-in `devkit-catalog` wheel (`PADR-split-deep-research-bundle`).
 - **Q2 Retention contract**: One indexed material per investigation:
   `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/<YYYYMMDD>-<slug>.md` with `id: MAT-<slug>`, linking the run's
   other notes by relative path. Consumers cite the index ID; a note carries its own ID only when cited alone.
@@ -105,14 +114,14 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
   until then), move `.devkit/overrides/incubation/subagents/<role>.md` to `.devkit/overrides/deep-research/subagents/`
   (it silently stops applying until then), and move or delete an edited projection left with `ORPHAN_LEFT` before
   `devkit add deep-research` (the add is refused until then).
-- **Q7 Sequencing**: Host decision, stated in §3.6.
+- **Q7 Sequencing**: Host decision (q4), stated in §3.6.
 
 ## 3. Proposed Design & Impact
 
 ### 3.1 The `deep-research` bundle
 
 - New catalog bundle `devkit_catalog/deep_research/bundle/` (entry point `deep-research`), preset `core` (default),
-  never `auto_select`. Assets: skill `deep-research` (`invocation = "user"`) with `references/orchestration.md`,
+  never `auto_select`. `.devkit/architecture.toml` adds `deep_research` to the `devkit_catalog` package's `data_roots`. Assets: skill `deep-research` (`invocation = "user"`) with `references/orchestration.md`,
   `references/workspace.md` and `references/synthesis.md`; subagents `direction-explorer`, `discovery-critic`,
   `discovery-planner` (moved) and `research-investigator` (new). No guidance asset and no bundle constitution: the
   skill is self-contained (`PADR-split-deep-research-bundle`).
@@ -121,9 +130,10 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
   selective promotion (`CAP-DLV-idea-incubation` rules 18 to 26).
 - The entry drops the approach check, the `get-context incubation` read and every `.devkit/incubation.md` read or
   write. It never implements or publishes and creates no SDD Unit, approval or envelope. It writes only its
-  transient run directory and the retained material, and reports their paths. Committing the material is q3
-  (recommended: the entry does not commit; its report says a proposal can cite the material once the user has it
-  committed to the base through the project's Git policy).
+  transient run directory and the retained material, and reports their paths.
+- The entry never commits (user, q3). Its report tells the user to commit the retained material through the
+  project's Git policy, because a proposal's Planning worktree starts from committed history and resolves a
+  `MAT-<slug>` citation only once the material is on the base.
 - Under SDD, an explicit `/deep-research` invocation is not development intake: the spec entry does not classify it
   into a depth. The spec skill's intake rules, `UC-route-development-intent` (a new extension) and
   `CAP-HARN-agent-guidance`'s approach-aware SDD entry state this exemption; follow-up work the research informs
@@ -190,13 +200,14 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
   `sdd` approach, allocates the workspace example under `.devkit/transient/deep-research/`, and checks that
   remove and re-add preserve a retained material.
 
-### 3.6 Sequencing (open for the Host)
+### 3.6 Sequencing
 
 Both drafts edit the incubation bundle, `CAP-DLV-idea-incubation`, the two use cases, the guides and the catalog
-README. Recommended: land this split first. The rename then renames a bundle that no longer contains the research
-entry and roles, and `deep-research` text names no approach value, so the rename touches none of it. If the rename
-lands first, this split's edits to the remaining bundle and documents use the `adaptive-dev` names and its
-Development starts from the renamed base; the design is otherwise unchanged.
+README. This split lands first (Host, q4): `PROP-rename-incubation-to-adaptive-dev` declares
+`depends_on: [PROP-deep-research-bundle]`. This split's Development therefore uses the current `incubation` names for
+the remaining bundle and documents. The rename then renames a bundle that no longer contains the research entry and
+roles, and `deep-research` text names no approach value, so the rename touches none of it. No same-release
+constraint applies, because no consumer uses the incubation bundle yet.
 
 ### Non-Goals
 
@@ -210,11 +221,14 @@ Development starts from the renamed base; the design is otherwise unchanged.
 - User: explicit invocation only, with the suggestion wording removed; results under `docs/materials/`
   independent of approach and proposal; no approach gate and no `.devkit/incubation.md` dependency; the rename is
   a separate proposal.
+- User (`envelopes/answer-01.yaml`): q1 a self-contained `deep-research` with no shared role and no dependency in
+  either direction; q2 the entry name `/deep-research`; q3 the entry never commits and its report directs the
+  commit through the project's Git policy.
+- Host (`envelopes/answer-01.yaml`): q4 this split lands first; the rename depends on it.
 - Planning: `PADR-split-deep-research-bundle` and `PADR-retain-research-as-cited-materials` record the design and
   supersede the two discovery ADRs; the SDD intake exemption, migration steps, explicit-only body guard, carried
-  rules and collision check fold `envelopes/challenger-01.yaml`.
-- Open for the user (worker envelope): q1 role split, q2 entry name, q3 committing the retained material.
-- Open for the Host: q4 sequencing (§3.6).
+  rules and collision check fold `envelopes/challenger-01.yaml`, and its finding 3 folds q3.
+- Planning: `.devkit/architecture.toml` joins the boundaries for the new `deep_research` data root.
 
 ## 4. Lifecycle & Retirement Criteria
 

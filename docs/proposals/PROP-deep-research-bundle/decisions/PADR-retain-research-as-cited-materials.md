@@ -60,9 +60,8 @@ Chosen: one indexed material per investigation, cited by ID.
   directory is absent, and otherwise picks another slug.
 - The transient run brief holds in-flight state until a result is retained; nothing else replaces
   `.devkit/incubation.md` for research.
-- Pending user decision (worker q3), recommended: the entry writes these files and does not commit them; its report
-  states that a proposal can cite the material only once it is committed to the base, and the user directs that
-  commit through the project's Git policy.
+- The entry writes these files and never commits them. Its report tells the user to commit the material through
+  the project's Git policy, because a proposal can cite it only once it is committed to the base.
 - Retained from the superseded decision: proportionate labelled notes for brief, evidence and alternatives,
   direction and roadmap with no fixed file count; no new document kind; only the coordinator saves retained
   synthesis; recommendations, decisions, assumptions and unverified areas stay distinguishable; native document
@@ -76,9 +75,11 @@ Chosen: one indexed material per investigation, cited by ID.
 - Positive: one investigation is cited by several proposals; handoff leaves it in place.
 - Negative: a reviewer of a proposal reads the cited material separately; the proposal report does not include it.
 - Risk: a material cited only in bare text is not a reference edge; the spec guidance line asks for a code span.
+- Risk: an uncommitted material leaves a later proposal's citation unresolved; the entry's report names the commit
+  the user directs.
 
 ## 6. Confirmation
 
 `RULE-document-reference` resolves backticked MAT citations in proposals, specs and ADRs. The spec skill's
 proposal reference states the citation rule. The layout and index fields are review only, as for every material
-(`RULE-spec-format` skips `materials/`).
+(`RULE-spec-format` skips `materials/`). The entry's report line directing the commit is review only.
