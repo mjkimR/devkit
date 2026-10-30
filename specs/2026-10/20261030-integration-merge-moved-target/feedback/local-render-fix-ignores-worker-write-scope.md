@@ -8,7 +8,7 @@ target: packages/devkit-dist/src/devkit_dist/features/distribution/services/inst
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-30
 ---
 
@@ -50,3 +50,9 @@ created_at: 2026-10-30
 devkit sync --locked: [CHANGE: update .devkit/managed/spec/...] [CHANGE: update .devkit/transient/local-render.json]
 git status --short: (empty)
 ```
+
+## Disposition
+
+Dismissed as a duplicate of `FB-render-stale-fix-ignores-worker-scope`, which `SPEC-lifecycle-feedback-fixes`
+resolved: the `CONFIG_LOCAL_RENDER_STALE` fix now names `uv run devkit sync --locked` first and a plain sync only when
+that reports `RECEIPT_STALE`.

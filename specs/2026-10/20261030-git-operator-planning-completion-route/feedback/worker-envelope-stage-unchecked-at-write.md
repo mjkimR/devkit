@@ -8,7 +8,7 @@ target: devkit workflow envelope worker
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -47,3 +47,11 @@ created_at: 2026-10-30
 Scout trace (envelopes/scout-01.yaml, finding 1): compose_envelope refused "-" and "" and accepted
 "no-such-stage"; evaluate maps stage index -1 to held_from 0; commit.py checks stage membership.
 ```
+
+## Disposition
+
+Resolved by `SPEC-lifecycle-feedback-fixes` (AC-03 to AC-05): `devkit workflow envelope worker` refuses a `--stage`
+the bound workflow does not declare, and `-`, with `ENVELOPE_FLAG_INVALID` and `[TARGET] --stage` before writing, and
+names the declared stages; the envelope is still written when the definition cannot be loaded. Verified by
+`packages/devkit/tests/integration/features/workflow/test_envelope_worker_stage.py` and the batch test run on `main` at
+`02f62e0e` (6155 passed).
