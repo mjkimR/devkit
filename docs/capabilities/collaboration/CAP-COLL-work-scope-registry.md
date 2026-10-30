@@ -402,10 +402,10 @@ ambiguity. A selected base whose commit equals the tip is still a base: its comm
 registration cap's, 4.1) and the layer is observed. The base is discarded, and the layer stays `unknown-base`, only
 when `git rev-parse --symbolic-full-name <base>` (in the source's checkout, so `HEAD` names its branch) resolves to
 the candidate's own full ref or to a tracking peer of the same task (`refs/heads/<branch>` or
-`refs/remotes/<remote>/<branch>` with the candidate's branch name); a base that resolves to no ref is kept as a
-commit. A tracking peer of the same task is therefore never its integration base. Confirmed registered observations retain
-the registration-HEAD cap/intersection from 4.1; unregistered observations use a unique merge-base-to-tip diff,
-labelled `branch-relative` because stacked parent work can be included. Missing history/base evidence leaves that
+`refs/remotes/<remote>/<branch>` for a configured remote, with the candidate's whole branch name); a base that
+resolves to no ref is kept as a commit. A tracking peer of the same task is therefore never its integration base.
+Confirmed registered observations retain the registration-HEAD cap/intersection from 4.1; unregistered observations
+use a unique merge-base-to-tip diff, labelled `branch-relative` because stacked parent work can be included. Missing history/base evidence leaves that
 layer unresolved. Available declaration/dirty evidence remains usable.
 
 Each observation has its own ID, task key, scope, aliases, provenance and observed/missing layers. Commit, selected
@@ -426,7 +426,9 @@ before its first commit), a spec unit, a snapshot and an observation without a u
 so a current overlap is never hidden behind a future one. Each evidence entry carries `horizon`, each pair `current`
 and `future` entry counts (`current + future = len(docs) + len(code)`), and `summary.current_overlapping` counts
 the pairs with at least one `current` entry. The horizon only labels evidence: every overlap stays listed and counted
-in `docs`, `code` and `overlapping` (4.2), and neither horizon grants or refuses a write.
+in `docs`, `code` and `overlapping` (4.2), and neither horizon grants or refuses a write. The Host reads it for
+scheduling (`CAP-HARN-agent-guidance`): `current` overlap serializes running activities, `future`-only overlap does
+not serialize Planning runs but orders handoff and integration, and partial coverage never proves independence.
 
 JSON is one object with `mode`, `started_at`, `finished_at`, `coverage`, `inventory`, `observations`, `pairs`, `summary`
 and `notices`. Coverage carries source/fetch outcomes, bounded problem examples and total count, discovered/retained

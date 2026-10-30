@@ -231,3 +231,23 @@ def test_a_repeated_gap_merges_its_inputs_without_a_second_count(repo: Path) -> 
             inputs=["excluded-tree", "missing-tasks", "unknown-base"],
         )
     ]
+
+
+def test_tracking_peers_match_whole_branch_names_under_configured_remotes(repo: Path) -> None:
+    from devkit_spec.features.scope.models.deadline import Deadline
+    from devkit_spec.features.scope.models.observation import Candidate
+    from devkit_spec.features.scope.services.observation import discard_base
+
+    git(repo, "remote", "add", "origin", str(repo.parent / "absent"))
+    git(repo, "update-ref", "refs/remotes/origin/team/x", "main")
+    git(repo, "update-ref", "refs/remotes/origin/x", "main")
+    git(repo, "branch", "team/x", "main")
+    git(repo, "branch", "x", "main")
+    slashed = Candidate("worktree:.", ref="refs/heads/team/x", branch="team/x", worktree=str(repo))
+    plain = Candidate("worktree:.", ref="refs/heads/x", branch="x", worktree=str(repo))
+    deadline = Deadline(5)
+    assert discard_base(repo, slashed, "origin/team/x", deadline)
+    assert not discard_base(repo, plain, "origin/team/x", deadline)  # another branch with the same last segment
+    assert discard_base(repo, plain, "origin/x", deadline)
+    assert not discard_base(repo, plain, "main", deadline)
+    assert not discard_base(repo, plain, git(repo, "rev-parse", "main"), deadline)  # a commit ID stays a base

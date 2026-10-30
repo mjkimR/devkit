@@ -164,7 +164,9 @@ def discard_base(root: Path, candidate: Candidate, base_ref: str, deadline: Dead
     branch = candidate.branch
     if not branch:
         return False
-    return full == f"refs/heads/{branch}" or (full.startswith("refs/remotes/") and full.rsplit("/", 1)[-1] == branch)
+    # Whole names under each configured remote, so a slash in a branch or remote name never confuses peers.
+    remotes = optional(root, "remote", deadline=deadline).splitlines()
+    return full in {f"refs/heads/{branch}", *(f"refs/remotes/{remote}/{branch}" for remote in remotes)}
 
 
 def committed(root: Path, tip: str, base: str, cap: str, deadline: Deadline) -> tuple[list[str], list[Unresolved], str]:
