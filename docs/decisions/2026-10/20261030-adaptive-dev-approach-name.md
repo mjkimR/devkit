@@ -1,15 +1,15 @@
 ---
-id: PADR-adaptive-dev-approach-name
+id: ADR-adaptive-dev-approach-name
 title: Name the non-SDD development approach adaptive-dev
 summary: For the development approach that iterates without per-change SDD records, we rename the approach value and its catalog bundle to adaptive-dev with no compatibility for incubation, to give each development concept one unambiguous name beside sdd, accepting that the old names stop working.
-proposal: PROP-rename-incubation-to-adaptive-dev
-status: draft
+proposal: SPEC-rename-incubation-to-adaptive-dev
+status: accepted
 created_at: 2026-10-30
 ---
 
-# [PADR-adaptive-dev-approach-name] Name the non-SDD development approach adaptive-dev
+# [ADR-adaptive-dev-approach-name] Name the non-SDD development approach adaptive-dev
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 ---

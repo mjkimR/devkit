@@ -1,67 +1,25 @@
 ---
-id: PROP-rename-incubation-to-adaptive-dev
+id: SPEC-rename-incubation-to-adaptive-dev
 title: Rename incubation to adaptive-dev and disambiguate proposal terms
-summary: "Rename the incubation bundle and development approach to adaptive-dev and the SDD proposal-incubation term to proposal Planning, so each development concept has one unambiguous name. No consumer uses incubation yet, so the old value and bundle become plain invalid names with no migration path."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/delivery/
-priority: high
-size: L
-planning_effort: medium
-dev_effort: medium
-depends_on: [SPEC-deep-research-bundle]
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit_dist/features/
-    - packages/devkit-dist/tests/
-    - packages/devkit-dist/README.md
-    - packages/devkit-spec/src/devkit_spec/
-    - packages/devkit-spec/tests/
-    - packages/devkit-spec/README.md
-    - packages/devkit/src/devkit_agt/features/integration/
-    - packages/devkit/tests/
-    - packages/devkit/README.md
-    - packages/devkit-catalog/src/devkit_catalog/
-    - packages/devkit-catalog/tests/
-    - packages/devkit-catalog/README.md
-    - packages/devkit-catalog/pyproject.toml
-    - packages/devkit-docs/tests/
-    - docs/capabilities/
-    - docs/usecases/
-    - docs/architecture/
-    - docs/development/
-    - docs/README.md
-    - docs/proposals/README.md
-    - docs/decisions/
-    - docs/steering/glossary.md
-    - docs/steering/glossary.yaml
-    - guides/
-    - tests/e2e/smoke.sh
-    - AGENTS.md
-    - .devkit/installation.json
-    - .devkit/architecture.toml
-    - specs/2026-10/20261015-orchestration-mode/feedback/
-    - specs/2026-10/20261020-draft-direct-acceptance/feedback/
-    - specs/2026-10/20261020-language-setting-coverage/feedback/
-    - specs/2026-10/20261022-document-id-aliases-and-compaction/feedback/
-    - specs/2026-10/20261026-feedback-guidance-and-scope/feedback/
-    - specs/2026-10/20261026-handoff-modes-and-template-report/feedback/
-    - specs/2026-10/20261026-living-spec-consistency-sweep/feedback/
-    - specs/2026-10/20261026-merge-proposal-materials-at-handoff/feedback/
-    - specs/2026-10/20261028-incubation-development-guidance/feedback/
-    - specs/2026-10/feedback/
-  excludes:
-    - .devkit/managed/
-    - handbook/
-    - docs/materials/
-    - docs/roadmap/_archive/
-task_kind: feature
-workflow: sdd-proposal
+summary: Rename the incubation bundle and development approach to adaptive-dev and the SDD proposal-incubation term to proposal Planning, so each development concept has one unambiguous name. No consumer uses incubation yet, so the old value and bundle become plain invalid names with no migration path.
+status: planned
+created: 2026-10-30
+depends_on:
+  - SPEC-deep-research-bundle
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-rename-incubation-to-adaptive-dev] Rename incubation to adaptive-dev and disambiguate proposal terms
+# [SPEC-rename-incubation-to-adaptive-dev] Rename incubation to adaptive-dev and disambiguate proposal terms
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-rename-incubation-to-adaptive-dev on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-rename-incubation-to-adaptive-dev`
+
+### 1. Background & Hypothesis
 
 "Incubation" names two unrelated concepts in this repository:
 
@@ -74,7 +32,7 @@ workflow: sdd-proposal
 With both installed, a request to "incubate" an idea does not identify which one the user means.
 The hypothesis: one distinct name per concept removes the ambiguity at every entry, setting and document.
 
-### Settled direction
+#### Settled direction
 
 - The approach and bundle become `adaptive-dev`: `[development] approach = "adaptive-dev"` beside `"sdd"`, and the
   catalog bundle `adaptive-dev`. The name pairs with spec-driven development as "adaptive development".
@@ -84,10 +42,48 @@ The hypothesis: one distinct name per concept removes the ambiguity at every ent
 - The approach keeps its contract: a product may stay in it, and SDD adoption stays the explicit `sdd-baseline`
   procedure.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Rename incubation to adaptive-dev and disambiguate proposal terms so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### Scenario 1 [AC-01]: Carried from proposal
+- `rg --hidden -i incubat` over tracked files returns only allowlisted matches: history paths, `aliases` entries,
+  ADR IDs and titles, glossary Avoid cells, `glossary.yaml` synonyms and the split's legacy-location mentions named
+  above.
+
+### Scenario 2 [AC-02]: Carried from proposal
+- `packages/devkit-dist/tests/integration/features/project/test_development.py` accepts `"sdd"` and
+  `"adaptive-dev"` and refuses `"incubation"` with `DEVELOPMENT_CONFIG_INVALID` and the `fix` naming both valid
+  values.
+
+### Scenario 3 [AC-03]: Carried from proposal
+- The readiness and lifecycle tests in `packages/devkit-spec/tests/` and `packages/devkit/tests/` that set the
+  non-SDD approach use `"adaptive-dev"` and assert the evidence `omitted:adaptive-dev`.
+
+### Scenario 4 [AC-04]: Carried from proposal
+- `packages/devkit-catalog/tests/integration/bundles/` selects and projects the `adaptive-dev` bundle with the
+  `/adaptive-dev` entry, the `adaptive-dev-pointer` guidance and the `product-researcher` role.
+
+### Scenario 5 [AC-05]: Carried from proposal
+- `tests/e2e/smoke.sh` lists `adaptive-dev` in the catalog bundle set and asserts `.devkit/managed/adaptive-dev`.
+
+### Scenario 6 [AC-06]: Carried from proposal
+- `just rules-check` passes over the whole workspace, with no alias reference left in a current document.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 Planning answers each question below; `MAT-incubation-rename-inventory` lists every affected file,
-`envelopes/scout-01.yaml` holds the evidence and `envelopes/answer-01.yaml` records the decisions.
+historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/scout-01.yaml` holds the evidence and historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/answer-01.yaml` records the decisions.
 
 - **Q1 Approach value** (q1): no consumer uses the incubation approach or bundle, so the rename keeps no
   compatibility. `"incubation"` becomes an ordinary invalid value:
@@ -133,11 +129,11 @@ Planning answers each question below; `MAT-incubation-rename-inventory` lists ev
   - The split's proposal cites `CAP-DLV-idea-incubation`; renaming first would make that citation an alias reference
     in a file this proposal does not own.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Approach and bundle
+#### Approach and bundle
 
-- `devkit-dist` accepts `adaptive-dev` beside `sdd` (`PADR-adaptive-dev-approach-name`) and refuses `"incubation"`
+- `devkit-dist` accepts `adaptive-dev` beside `sdd` (`ADR-adaptive-dev-approach-name`) and refuses `"incubation"`
   like any unknown value (Q1). The commented config template lists `sdd or adaptive-dev`.
 - `devkit-spec` and `devkit-agt` compare the renamed value. Refusing SDD lifecycle mutation under the non-SDD
   approach is unchanged.
@@ -151,7 +147,7 @@ Planning answers each question below; `MAT-incubation-rename-inventory` lists ev
 - This repository's `AGENTS.md` managed block and `.devkit/installation.json` change only through `devkit sync`
   after the spec bundle source changes; `.devkit/managed/` stays untracked and unedited.
 
-### Documents
+#### Documents
 
 Each renamed document moves to its new path, takes the new ID and keeps the old ID in `aliases`
 (`ADR-document-id-aliases`). New IDs are written without backticks until their documents exist:
@@ -168,7 +164,7 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
 - `devkit rules fix` rewrites every alias reference in current documents to the canonical ID. Under
   `ADR-immutable-decisions-editable-records` this includes the ADRs and the feedback files under `specs/**/feedback/`
   that cite a renamed ID (15 files in 10 `feedback/` directories at `fb9b549a`, listed in `owns`).
-- The ADR promoted from `PADR-adaptive-dev-approach-name` names the statements it replaces: the value set of
+- The ADR promoted from `ADR-adaptive-dev-approach-name` names the statements it replaces: the value set of
   `ADR-own-development-approach-policy-outside-sdd` and the bundle, entry and context-file names in
   `ADR-keep-incubation-guidance-opt-in-and-current-state-based`. Each such accepted ADR gets a one-line pointer to it.
 - `ADR-extend-incubation-with-optional-discovery-teams` gets no pointer here: the ADR promoted from
@@ -185,7 +181,7 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
 - History keeps its wording: `docs/decisions/` decision text, `specs/` outside the listed `feedback/` directories,
   `docs/materials/`, `handbook/` and the done milestone `MS-idea-incubation`.
 
-### Scope after `SPEC-deep-research-bundle`
+#### Scope after `SPEC-deep-research-bundle`
 
 The split lands first (Q7), so this proposal renames the bundle as the split leaves it and excludes what the split
 moves out:
@@ -203,26 +199,11 @@ it lives in `owns`. A path or key the split's documents name only to describe it
 incubation bundle, such as `.devkit/transient/incubation-research/`, stays: it names a legacy location, not a
 current concept.
 
-## Acceptance
+### Planning decisions
 
-- `rg --hidden -i incubat` over tracked files returns only allowlisted matches: history paths, `aliases` entries,
-  ADR IDs and titles, glossary Avoid cells, `glossary.yaml` synonyms and the split's legacy-location mentions named
-  above.
-- `packages/devkit-dist/tests/integration/features/project/test_development.py` accepts `"sdd"` and
-  `"adaptive-dev"` and refuses `"incubation"` with `DEVELOPMENT_CONFIG_INVALID` and the `fix` naming both valid
-  values.
-- The readiness and lifecycle tests in `packages/devkit-spec/tests/` and `packages/devkit/tests/` that set the
-  non-SDD approach use `"adaptive-dev"` and assert the evidence `omitted:adaptive-dev`.
-- `packages/devkit-catalog/tests/integration/bundles/` selects and projects the `adaptive-dev` bundle with the
-  `/adaptive-dev` entry, the `adaptive-dev-pointer` guidance and the `product-researcher` role.
-- `tests/e2e/smoke.sh` lists `adaptive-dev` in the catalog bundle set and asserts `.devkit/managed/adaptive-dev`.
-- `just rules-check` passes over the whole workspace, with no alias reference left in a current document.
-
-## Planning decisions
-
-- `PADR-adaptive-dev-approach-name` records the user's naming decision, the rejected names and the no-compatibility
+- `ADR-adaptive-dev-approach-name` records the user's naming decision, the rejected names and the no-compatibility
   rename (q1).
-- `envelopes/answer-01.yaml` records the decisions on q1 to q4. Dropped with q1: the committed-snapshot legacy
+- historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/answer-01.yaml` records the decisions on q1 to q4. Dropped with q1: the committed-snapshot legacy
   reading, the ordered guide migration steps, the legacy context-file fallback, the integration-readiness migration
   test and the remove-then-add catalog e2e migration test.
 - The draft boundaries excluded `docs/decisions/` and `specs/`. `RULE-document-reference` reports alias references
@@ -235,9 +216,10 @@ current concept.
 - `dev_effort` is `medium`: the change is a mechanical rename across several packages and documents with no
   consumer-contract migration, because no consumer uses the incubation approach or bundle (q1).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-rename-incubation-to-adaptive-dev`; the proposal is deleted there and its decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+

@@ -37,7 +37,7 @@ created_at: 2026-10-30
 - **Expected / Actual**: Expected a decider field or a documented convention; actual neither.
 - **Versions**: worktree base `51894649`.
 - **Conditions**: SDD proposal Planning in `local-orchestrated` mode on a `plan-` worktree.
-- **Workarounds Attempted**: Attribution in the summary and decision text of `envelopes/answer-01.yaml`; accepted by
+- **Workarounds Attempted**: Attribution in the summary and decision text of historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/answer-01.yaml`; accepted by
   the command.
 - **Related Assets**: `CAP-DLV-workflow-envelopes`, `CAP-DLV-cli-and-output`,
   `packages/devkit/src/devkit_agt/features/workflow/cli/run.py`, the `spec` skill's `references/worker-records.md`.

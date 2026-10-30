@@ -62,7 +62,7 @@ The spec bundle already names this activity Planning: `planning.md`, `plan-<slug
 
 ## Names after the decisions
 
-`envelopes/answer-01.yaml` settles the targets of Concept A and Concept B:
+historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/answer-01.yaml` settles the targets of Concept A and Concept B:
 
 | Current name | New name |
 | --- | --- |
