@@ -2,7 +2,7 @@
 id: PROP-scope-activity-write-evidence
 title: Show current activity writes beside future implementation impact in scope output
 summary: "Show each current activity's actual write boundaries in scope inspection separately from declared or candidate future implementation impact, keeping every overlap and coverage gap visible and the output informational."
-status: reviewing
+status: accepted
 created_at: 2026-10-30
 target_area: capabilities/collaboration/
 priority: medium
