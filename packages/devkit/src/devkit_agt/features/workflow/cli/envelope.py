@@ -270,7 +270,10 @@ def envelope_worker_cmd(**options: Any) -> None:
 @click.option(
     "--answers-file",
     default=None,
-    help="YAML list of rewritten answers, each {question, choice, decision, constraints?} (path, or - for stdin)",
+    help=(
+        "YAML list of rewritten answers, each {question, choice, decision, constraints?, by?: user|host|policy}"
+        " (path, or - for stdin)"
+    ),
 )
 @click.option(
     "--settle",
@@ -331,7 +334,7 @@ def envelope_review_cmd(**options: Any) -> None:
 def envelope_reverify_cmd(**options: Any) -> None:
     """Write the next reverify-NN.yaml: carry the findings of the round it closes (--from latest, or a
     challenger-NN.yaml of Planning) and close them. A named round starts from its last reverify, so earlier
-    resolutions and waivers persist.
+    resolutions and waivers persist; --resolve or --waive naming a finding already closed is refused.
 
     --findings-file adds findings found while reverifying.
     """

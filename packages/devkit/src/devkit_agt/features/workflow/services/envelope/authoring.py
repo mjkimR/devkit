@@ -23,6 +23,7 @@ from devkit_agt.features.workflow.models.envelope import (
     Settle,
 )
 from devkit_agt.features.workflow.models.errors import (
+    EnvelopeFindingClosedError,
     EnvelopeFindingsError,
     EnvelopeFlagError,
     EnvelopeFormatError,
@@ -89,7 +90,7 @@ def skeleton(kind: str, stage: str, created_at: str, workflow: str = "", segment
         lines.append('diff_scope: { base: "", head: "" }')
     if kind == ANSWER:
         lines.append("answers_to: worker-NN.yaml    # the worker envelope whose questions this answers")
-        lines.append("answers: []                   # question, choice, decision, constraints")
+        lines.append("answers: []                   # question, choice, decision, constraints, by")
         lines.append("# settles: []                 # assumption (1-based position in answers_to), decision")
     if kind == RESOLUTION:
         lines.append("resolves: worker-NN.yaml      # the envelope whose problem this resolves")
@@ -254,7 +255,7 @@ def parse_questions(text: str) -> tuple[Question, ...]:
 
 
 def parse_answers(text: str) -> tuple[Answer, ...]:
-    """A YAML list of answers (``question``, ``choice``, ``decision``, ``constraints``)."""
+    """A YAML list of answers (``question``, ``choice``, ``decision``, ``constraints``, ``by``)."""
     out: list[Answer] = []
     for i, item in enumerate(_items(text, "--answers-file", ANSWER_KEYS), start=1):
         try:
@@ -264,7 +265,7 @@ def parse_answers(text: str) -> tuple[Answer, ...]:
                 f"--answers-file: {exc}",
                 target_files=["--answers-file"],
                 fix="Write a mapping with question, choice (an option id or null), decision (one sentence) and"
-                " optionally constraints",
+                " optionally constraints and by (user, host or policy: who decided it)",
             ) from exc
     return tuple(out)
 
@@ -333,17 +334,40 @@ def carried_findings(
     return (closing or env).findings, review
 
 
+def _numbered(findings: Iterable[Finding]) -> tuple[str, ...]:
+    """One ``N: <resolution> "<issue>"`` line per carried finding, the ``[DETAIL]`` of a refused number."""
+    return tuple(f"{i}: {f.resolution} {json.dumps(f.issue, ensure_ascii=False)}" for i, f in enumerate(findings, 1))
+
+
 def _finding_number(flag: str, n: int, findings: list[Finding]) -> int:
     """The 0-based index of finding ``n``; ``EnvelopeFlagError`` when it is outside the carried ``findings``."""
     count = len(findings)
     if n < 1 or n > count:
         raise EnvelopeFlagError(
             f"{flag} {n}: finding numbers are 1..{count}" if count else f"{flag} {n}: the round carries no findings",
-            *(f"{i}: {f.resolution} {json.dumps(f.issue, ensure_ascii=False)}" for i, f in enumerate(findings, 1)),
+            *_numbered(findings),
             target_files=[flag],
             fix=f"Pass {flag} the number of a carried finding in [DETAIL]" if count else f"Drop {flag}",
         )
     return n - 1
+
+
+def _refuse_closed(findings: tuple[Finding, ...], resolve: Iterable[int | None], waive: Iterable[int]) -> None:
+    """Refuse ``--resolve``/``--waive`` numbers outside the carried ``findings`` (``ENVELOPE_FLAG_INVALID``) or
+    naming one the source envelope already closed (``ENVELOPE_FINDING_CLOSED``, every such number at once)."""
+    named = [("--resolve", n) for n in resolve if n is not None] + [("--waive", n) for n in sorted(waive)]
+    for flag, n in named:
+        _finding_number(flag, n, list(findings))
+    closed = [(flag, n) for flag, n in named if findings[n - 1].resolution != "open"]
+    if closed:
+        targets = [f"{flag} {n}" for flag, n in closed]
+        raise EnvelopeFindingClosedError(
+            f"{', '.join(targets)}: the source envelope already closed "
+            f"{'this finding' if len(closed) == 1 else 'these findings'}",
+            *_numbered(findings),
+            target_files=targets,
+            fix="Drop the numbers in [TARGET]; pass --resolve or --waive only for findings still open in [DETAIL]",
+        )
 
 
 def apply_resolutions(
@@ -351,9 +375,12 @@ def apply_resolutions(
 ) -> tuple[Finding, ...]:
     """Mark copied findings resolved (by number, or every open one for ``None``) or waived with a reason.
 
-    A number outside the copied findings is ``EnvelopeFlagError`` (``ENVELOPE_FLAG_INVALID``), whose details number
-    the carried findings.
+    A number outside the copied findings is ``EnvelopeFlagError`` (``ENVELOPE_FLAG_INVALID``); a number naming a
+    finding the source already closed is ``EnvelopeFindingClosedError`` (``ENVELOPE_FINDING_CLOSED``). The details
+    of both number the carried findings.
     """
+    resolve = list(resolve)
+    _refuse_closed(findings, resolve, waive)
     out = list(findings)
     for n in resolve:
         if n is None:

@@ -32,10 +32,11 @@ Unanswered questions hold the gates from the run's stage on and the handoff unti
 
 ```bash
 devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 decided" \
-  --answers-to worker-NN.yaml --answers-file -    # - { question: q1, choice: a, decision: "...", constraints: [...] }
+  --answers-to worker-NN.yaml --answers-file -    # - { question: q1, choice: a, decision: "...", constraints: [...], by: user }
 ```
 
 - One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds.
+- Name who decided each answer in its `by`: `user` for the user's decision, `host` for the Host's own decision within approved scope, `policy` for one a policy settles. The Host's rewritten answers name `by` per answer, and the recording run copies it; there is no `--by` flag. Any other value is refused (`ENVELOPE_ITEMS_INVALID`).
 - A decision that settles one of the run's `assumptions` goes into `--settle N=<decision>` (`N` its 1-based position), not `constraints`.
 - When a rejection or return to Backlog ends the Planning, close every open question the same way (`choice: null`, the reason as the decision) in the commit that ends it.
 - An ambiguous answer becomes a new question, never a guess.

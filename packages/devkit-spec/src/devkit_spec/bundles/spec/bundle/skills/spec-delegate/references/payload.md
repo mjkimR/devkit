@@ -22,7 +22,7 @@ Read this when building a payload (`spec-delegate` step 2).
 | `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding review envelope, the docs `devkit docs refs <ID> --direction in` lists | `activity-effort` |
 | `development-worker` | `spec.md`, `plan.md`, `tasks.md` and the code starting points | Absolute worktree path; write scope (unit directory, `_Boundary:` paths, reconcile targets); checks to run; `activity-effort`; a recovery request for an open problem |
 | `git-operator` | Current CLI/Git observations and the requested operation | Absolute repository/base/worktree; Unit/branch; current source/target refs; exact intended_effects and current authority; allowed_boundaries; writers_quiesced; expected_checks; prepared_digest where required; route and separate publication_authority. Repeat every job; a preparation list of `prepare-worktree` items repeats every field per item. Use native identity continuation per the orchestration dispatch reference. |
-| `planning-worker` | The proposal bundle and starting points | Absolute worktree path; the proposal directory as write scope; `activity-effort`; the user's rewritten answers |
+| `planning-worker` | The proposal bundle and starting points | Absolute worktree path; the proposal directory as write scope; `activity-effort`; the rewritten answers, each naming who decided it (`by: user`, `host` or `policy`) |
 
 For a later reviewer round at `high`, also pass the earlier rounds' envelope files and set `diff_scope` to the fixes since the previous round (the `spec` skill's `references/review-loop.md`).
 

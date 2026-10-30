@@ -8,7 +8,7 @@ target: devkit workflow envelope answer
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -50,3 +50,11 @@ devkit workflow envelope answer options: --unit --anchor --stage --summary --ass
 devkit_agt/features/workflow/cli/run.py:76 @click.option("--by", ... "Who answered (person or host)") on workflow answer
 answer entry fields: {question, choice, decision, constraints?}
 ```
+
+- **Disposition (resolved)**: `SPEC-envelope-answer-decider` gives each `answer` envelope entry an optional `by`
+  (`user`, `host` or `policy`), read from `--answers-file`, refused before writing when unknown
+  (`ENVELOPE_ITEMS_INVALID`), malformed when loaded with another value, and included in the
+  `envelope check --details --format json` bodies; worker records §2 and the `spec-delegate` payload and worker
+  references say the rewritten answers name `by` per answer. Verified by
+  `packages/devkit/tests/integration/features/workflow/test_envelope_answer_decider.py` (AC-01 to AC-05) and
+  `packages/devkit-spec/tests/integration/bundles/spec/test_answer_decider_guidance.py` (AC-08).

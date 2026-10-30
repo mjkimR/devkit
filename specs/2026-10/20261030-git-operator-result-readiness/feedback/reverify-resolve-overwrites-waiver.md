@@ -8,7 +8,7 @@ target: devkit workflow envelope reverify
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -34,3 +34,9 @@ created_at: 2026-10-30
   resolution: resolved
   waiver: The delta comes from git status like the Host commits it replaces; ...
 ```
+
+- **Disposition (resolved)**: `SPEC-envelope-answer-decider` refuses a `devkit workflow envelope reverify` whose
+  `--resolve N` or `--waive N` names a carried finding the source envelope already closed, with
+  `ENVELOPE_FINDING_CLOSED`, `[TARGET]` the flags and numbers, `[DETAIL]` the numbered carried findings and nothing
+  written. Verified by `packages/devkit/tests/integration/features/workflow/test_envelope_answer_decider.py` (AC-06,
+  AC-07).

@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:26:03.494712Z'
+status: completed
+summary: 'Answer entries take an optional by (user, host or policy) from --answers-file, refused before writing when unknown (ENVELOPE_ITEMS_INVALID), malformed on load, shown in envelope check --details JSON; a reverify --resolve/--waive naming a carried finding already closed is refused with ENVELOPE_FINDING_CLOSED ([TARGET] the flags and numbers, nothing written). CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output, the workflow reference and spec bundle guidance updated; FB-answer-envelope-has-no-decider and FB-reverify-resolve-overwrites-waiver resolved. Limits: no --by flag and no decider on settles (non-goals).'
+findings: []
+checks:
+  tests: PASS just test-affected --base 95b8228c (mode=partial) 2190 passed
+  build: PASS just check devkit and devkit-spec 0 errors
+  lint: PASS just lint-check devkit and devkit-spec; devkit rules check --ci --base 95b8228c
+diff_scope:
+  base: 95b8228c58838b6bb633eb90932363b025419f3e
+  head: 16a588fa8d78cf0af95abb1bf7ae79c67f3767f6
