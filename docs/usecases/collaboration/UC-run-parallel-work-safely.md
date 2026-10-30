@@ -37,7 +37,9 @@ capabilities:
 4. The workers write declarations and implementation changes through their normal delivery workflow.
 5. The Host explicitly observes available snapshots, branch trees and worktrees at the chosen depth
    (CAP-COLL-work-scope-registry).
-6. The Host uses overlaps, provenance and missing coverage to choose parallelism and integration order.
+6. The Host uses overlaps, their horizon, provenance and missing coverage to choose parallelism and integration
+   order: `current` overlap serializes running activities, `future` overlap orders handoff and integration
+   (CAP-COLL-work-scope-registry).
 7. Integration removes completed worktrees and their records through post-finish cleanup (CAP-WT-task-worktrees,
    CAP-COLL-work-scope-registry).
 
@@ -56,12 +58,16 @@ capabilities:
 - **5d.** Other-machine private changes are unavailable: retain published refs or snapshot-only evidence, with its
   provenance. For frequent multi-PC work use PRs with pushed declarations/changes; resume at step 6 without claiming
   private-worktree visibility.
+- **6a.** Two Planning units overlap only in `future` evidence (declared or candidate paths) while their observed
+  writes are disjoint: run their Planning in parallel; before handing either off, treat that evidence as `current`
+  and hand off and integrate them sequentially; resume at step 7.
 - **7a.** A stale record remains after worktree removal: the Host explicitly sweeps at the read revision; a changed
   record is retained with `SPEC_SCOPE_STALE_REVISION`; the use case ends.
 
 ## 4. Postconditions
 
-- **Success guarantee**: the Host has observed-path overlaps and the coverage/freshness needed to interpret them.
+- **Success guarantee**: the Host has observed-path overlaps, their `current` or `future` horizon and the
+  coverage/freshness needed to interpret them.
   Workers have no scope update or ACK duty. Finished worktree records are cleaned after successful integration.
 - **Minimal guarantee**: evidence grants no write permission and certifies no independence. Host collection leaves
   registry records, owner tokens and journals unchanged; explicit fetch updates only requested tracking refs.
@@ -105,3 +111,13 @@ capabilities:
 - **Given** a successful task finish or an explicitly swept stale record.
 - **When** cleanup validates its read revision.
 - **Then** only the eligible record is removed; a moved revision remains with `SPEC_SCOPE_STALE_REVISION`.
+
+### Scenario 6: Tell current writes from future impact (GOP-04)
+
+- **Covers**: step 6; extension 6a.
+- **Given** two Planning units whose observed writes are only their own proposal directories, whose targets'
+  `entrypoints` overlap, and one of which declares a planned document.
+- **When** the Host collects scope for scheduling.
+- **Then** exit is 0 without `--strict`; the output lists the observed proposal paths, the `horizon=future`
+  evidence with `current=0` for the pair and the `planned-doc` input of the coverage gap; no field grants or refuses
+  a write.

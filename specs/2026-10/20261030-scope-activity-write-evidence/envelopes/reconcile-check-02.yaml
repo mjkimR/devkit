@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:40:26.592303Z'
+status: completed
+summary: 'Implementer self-verification of the reconcile-check-01 fix: CAP-COLL-work-scope-registry 4.9, the discard_base comment and spec.md assumption now name the inventoried branch name (whole under refs/heads/ for a worktree, last segment of a slash-free plan-*/dev-* ref), matching inventory.refs and discard_base; no behavior change, so the earlier verification of the other targets still holds; reconcile resolved, spec completed'
+findings: []
+checks:
+  targets: PASS 3/3 named, resolution modified
+  rules: PASS devkit rules check errors=0
+diff_scope:
+  base: 75789c4f98e7c60efcf4e08b826d237d078db924
+  head: 0b3d50f1021cb2c21320d316a9c347b9aa25e671

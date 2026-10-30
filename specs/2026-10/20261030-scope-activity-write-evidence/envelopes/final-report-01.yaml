@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:41:38.384702Z'
+status: completed
+summary: 'devkit spec scope collect labels each evidence entry horizon=current|future (Planning = proposal unit on a plan-* source; its declared/candidate paths future, observed current), adds pair current/future and summary current_overlapping, prefers a current source per path pair; coverage problems carry sorted inputs shown in the PARTIAL detail; a base at the tip stays a base and only the branch itself or its configured-remote tracking peer is discarded. spec-orchestrate, CAP-COLL 4.5/4.9, CAP-HARN and UC-run-parallel-work-safely state the Host reading. Before/after probe: details ''dev-d: unresolved-input'' and ''plan-c: unknown-base'' became ''dev-d: unresolved-input (excluded-tree, missing-reconcile)'' and ''plan-c: unresolved-input (missing-target-docs)''; overlapping=3 unchanged with current_overlapping=0. Limits: compare/query/update unchanged; ref candidates match peers by last ref segment (activity names hold no slash)'
+findings: []
+checks:
+  tests: PASS just test-affected mode=partial 1511 passed
+  build: PASS just check devkit-spec 0 errors; uv run devkit sync --check exit 0
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base main errors=0
+diff_scope:
+  base: 75789c4f98e7c60efcf4e08b826d237d078db924
+  head: 04cb316c2bd7ae64ad5d7f0e6d6dc91119f84993
