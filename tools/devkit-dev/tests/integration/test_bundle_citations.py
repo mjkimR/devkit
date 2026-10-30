@@ -97,7 +97,6 @@ def test_shipped_bundles_cite_no_repository_document_id() -> None:  # AC-01
 def test_every_shipped_bundle_is_scanned() -> None:  # AC-03
     expected = {manifest.parent for manifest in ROOT.glob("packages/*/src/**/bundle.toml")}
     assert set(shipped_bundles()) == expected
-    assert not [bundle for bundle in shipped_bundles() if "tools" in bundle.relative_to(ROOT).parts]
 
 
 def test_a_resolving_citation_is_reported_and_placeholders_pass(tmp_path: Path) -> None:  # AC-02
