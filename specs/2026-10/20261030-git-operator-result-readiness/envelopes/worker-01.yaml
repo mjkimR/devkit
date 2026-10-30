@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:54:12.384169Z'
+status: completed
+summary: 'Development turn from specify to the final change report. Composed handoff commits its own transaction (commit=, SPEC_HANDOFF_COMMIT_REFUSED, in-place repair of an unclean landed commit, accept_and_handoff handoff/handoff_commit steps); git-operator checks.worker_input, evidence separation and GOP-06 wording; post-handoff link-fix commit and sibling conflict guidance; Living Spec CAP-DLV-proposal-planning, CAP-DLV-delivery-workflows, UC-plan-and-hand-off-a-proposal, UC-drive-development-to-integration. Nested code-reviewer (review-01: P2+2xP3 fixed, reverify-01) and reconcile-reviewer (reconcile-check-01: 2xP2+P3 fixed, reconcile-check-02 self-verified). FB-handoff-rewrite-edits-sibling-draft resolved; FB-handbook-journey-misses-handoff-commit recorded (handbook outside scope). Sync output: .devkit/installation.json only. Main moved to a4d605b9 (sibling integrations) past merge base 75789c4f; not merged by the worker.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=full 6098 passed, 14 skipped, 1 known pre-existing main failure (test_fixes_carry_no_placeholder)
+  lint: PASS just lint-check devkit-spec, just check devkit-spec, devkit rules check --ci --base 02852dbc, devkit sync --check
+diff_scope:
+  base: ''
+  head: 11c60cd5f57c70a2962491276cc8f4e51cc055d3
+activity_effort: medium
