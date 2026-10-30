@@ -120,7 +120,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 | `skill` | the 15 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-overall-refactor`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `ux-reviewer`, `scout`, `triage`, `decomposer`, `planning-worker`, `development-worker` |
-| `playbook` | `brownfield-adoption`, `sdd-baseline`, `feedback-hygiene`, `adr-compaction` |
+| `playbook` | `brownfield-adoption`, `sdd-baseline`, `feedback-hygiene`, `adr-compaction`, `feedback-compaction` |
 | `document` | `templates` holds the proposal template. docs owns the shared templates and optional skeleton. |
 
 ### 4.2 Constitution
@@ -179,7 +179,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-review-proposal` | Review a committed proposal and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and present findings for approval. | `proposal report`, `proposal accept`, `proposal handoff` |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope collect --mode worktrees` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
-| `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`). | `docs list feedback`, `docs resolve`, `policy` |
+| `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`), after looking up existing feedback of every status. | `docs search`, `docs list feedback`, `docs resolve`, `policy` |
 | `spec-entrypoints` | Derive capability and use case entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `docs list capability` |
 
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
@@ -272,7 +272,8 @@ Under observed capture, direct executors and both workers record concrete observ
 commit, including runs ending on questions or problems. Capture does not depend on the sweep stage being on.
 
 Before each Planning return to the user, an enabled sweep covers that run plus committed accumulated records,
-deduplicates the full open backlog and writes fresh feedback evidence before its single worker record. A prior PASS
+looks up every candidate in the feedback of every status and writes fresh feedback evidence before its single worker
+record. A prior PASS
 does not cover later work. Requested-only writes policy-skip PASS, zero observations passes, stage-off writes no sweep
 envelope and incomplete coverage records FAIL with its gap. Explicit user sweeps write no envelope. Rejection uses
 recorded coverage/skip/gap and starts no new worker/Cloud Agent; it claims no sweep of a later conversation.
@@ -287,8 +288,19 @@ unresolved live dependency. Capture and relocation never change feedback status.
 Feedback uses `scope: repo | upstream | unknown`, determined by ownership rather than product name. An asset
 developed in this repository is `repo`, even if it is shipped to other repositories; an installed upstream copy
 is `upstream`. Uncertain ownership or cross-tool causes use `unknown` and stay eligible for recording. The
-observed `target` is separate from the eventual resolution destination. Deduplication covers the open backlog
-across all namespaces, including completed specs.
+observed `target` is separate from the eventual resolution destination.
+
+Before writing, every recording, direct or in a sweep, MUST look up existing feedback of every status with
+`devkit docs search "<symptom and asset words>" --kind feedback --history -n 5` (a sweep adds `--all-namespaces`) and
+act on the matched status (`ADR-recording-looks-up-existing-feedback-of-every-status-first`). The recorder judges a hit
+the same observation when it describes the same symptom of the same asset or behavior, whatever its `target` wording;
+no search score decides. A compact record hit is decided by its entry that matches the observation. `open` records
+nothing and names the existing ID (new evidence goes into that file inside the write scope, otherwise into the
+report); `dismissed` records nothing unless evidence contradicts the recorded reason; `resolved` records a regression
+citing the ID with `recurring: true`; `promoted` and `forwarded` record nothing while the destination is live and a new
+item citing the ID once it ended or no longer resolves. This lookup replaced the sweep's equal-`target`
+deduplication against open items; a sweep reports the matched IDs as duplicates. Source guidance checks:
+`packages/devkit-spec/tests/integration/bundles/spec/test_feedback_lookup_guidance.py`.
 
 Hygiene determines ownership and proposes local fixes or upstream report drafts; one observation may link several
 resolution destinations. External submission requires explicit authorization, and `forwarded` requires an actual
@@ -315,6 +327,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | `sdd-baseline` | Verify the user-selected retained adaptive-development product through current documents, implementation and actual checks, then activate SDD under an exact-effects user decision; package selection is preparation, not activation (`CAP-DLV-sdd-baseline-adoption`). |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision; above 5 open items, on a host that runs it natively, the read-only `triage` role groups and recommends from a clean checkout. |
 | `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, without changing any decision (`ADR-immutable-decisions-editable-records`). |
+| `feedback-compaction` | Only when the user invokes or confirms it, at `session` depth: compact terminal feedback under `specs/` into one record per capability area and status, `FB-compacted-<area>-<status>` at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` (`<namespace>-<area>` in a package namespace), whose entries carry Symptom, Response and Reason and whose `aliases` keep every retired ID resolvable; it leaves cited items, items of incomplete specs or unmerged branches, invalid files and materials in place, changes no outcome, checks status and Response fidelity, and lists ADR candidates for the user without writing them (`ADR-closed-feedback-compacts-into-per-area-records-with-aliases`; `packages/devkit-spec/tests/integration/bundles/spec/test_feedback_compaction_guidance.py`). |
 
 ### 4.6 Templates
 
