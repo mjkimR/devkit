@@ -38,7 +38,7 @@ entrypoints:
 
 - **2a.** SDD project: the explicit invocation is not development intake, so no Unit or classification starts; after the user commits the material, a later proposal, spec or decision cites it by its ID; continues at step 3.
 - **2b.** Adaptive (incubation) project: the agent reads no current-context file; after the user commits the material, the current context links it by its ID; continues at step 3.
-- **2c.** The user names an earlier run or a `partial` material of the same investigation: the agent reads it as an input source and updates that material at step 7 instead of creating a new one; continues at step 3.
+- **2c.** The user names an earlier run or material: the agent reads it as an input source; a named `partial` material of the same investigation is updated at step 7 instead of creating a new one; continues at step 3.
 - **3a.** Consequential user decision is missing: the agent reuses known facts and asks only the missing decision; dependent work waits, then resumes at step 3.
 - **4a.** Small question: the agent stays inline or uses one support role; resumes at step 5.
 - **4b.** Delegation unavailable: the agent uses a permitted equivalent context/contract or reports missing coverage and continues only independently useful authorized work; resumes at step 5.

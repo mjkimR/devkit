@@ -46,9 +46,9 @@ owns the retained material and its citation.
 3. **Explicit invocation**: The bundle MUST declare `invocation = "user"` for the entry, and its skill body MUST open
    with the explicit-only guard; native projection follows `CAP-DIST-agent-projections`. Test:
    `test_entry_projects_explicit_invocation_for_each_host`.
-4. **No suggestion**: No skill, guidance pointer, guide or role SHOULD suggest or start the entry, also on a topic
-   match; install guides list it only as a bundle the user selects. Test:
-   `test_guides_name_the_bundle_only_as_a_selection` and the incubation text check.
+4. **No suggestion**: A skill, guidance pointer, guide or role MUST NOT suggest or start the entry, also on a topic
+   match; install guides list it only as a bundle the user selects. Tests:
+   `test_guides_name_the_bundle_only_as_a_selection` and `test_no_file_names_or_suggests_the_research_entry`.
 5. **Approach neutrality**: WHEN the entry starts, the coordinator MUST NOT inspect, require or change the
    development approach, read approach-specific context or write `.devkit/incubation.md`. Test:
    `test_bundle_text_is_approach_neutral_and_self_contained`.
@@ -102,7 +102,8 @@ owns the retained material and its citation.
 23. **Citation**: WHEN a proposal, spec, decision or current-context note uses a retained material, it SHOULD cite
     the index ID in a code span and MUST NOT copy or move the material into its own directory.
 24. **Material preservation**: WHEN sync, removal or re-selection runs, sync MUST preserve retained materials. Tests:
-    `test_reselection_preserves_retained_material` and the installed-consumer test.
+    `test_reselection_preserves_retained_material` and
+    `packages/devkit-catalog/tests/e2e/bundles/deep_research/test_installed_consumer.py`.
 
 Distribution checks enforce file and metadata contracts. Evidence comparison, optionality, synthesis and the absence
 of suggestion beyond the text checks are semantic agent contracts checked by review.
@@ -134,6 +135,11 @@ retained material. A result contains status (`completed`, `needs_input` or `fail
 identity, observations with evidence and failure conditions, recommendation or draft, assumptions and unverified
 areas; an experiment also returns actual changed paths, commands and outcomes. Effective contracts live under
 `.devkit/managed/deep-research/subagents/`.
+
+The roles' policy keys are `deep-research:<role>` and their file overrides live under
+`.devkit/overrides/deep-research/subagents/`. For the three roles moved from the incubation bundle, an earlier
+`incubation:<role>` key fails sync until renamed, and an override under `.devkit/overrides/incubation/subagents/`
+stops applying until moved (`CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`).
 
 ### Workspace
 

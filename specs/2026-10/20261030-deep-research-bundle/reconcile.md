@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-deep-research-bundle
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-deep-research.md
     resolution: modified
@@ -66,8 +66,8 @@ rejected.
 
 - Not changed, outside the write scope: the superseded ADRs `ADR-extend-incubation-with-optional-discovery-teams`
   and `ADR-keep-discovery-plans-distinct-from-delivery-commitments` keep `status: accepted` without
-  `superseded_by` (the repository has superseded ADRs in both forms); the release handbook (`handbook/`) still
-  names `/incubate-research` until the release handbook procedure refreshes it.
+  `superseded_by` (the repository has superseded ADRs in both forms); the release handbook (`handbook/`) does
+  not yet describe the deep-research bundle until the release handbook procedure refreshes it.
 - `docs/materials/2026-10/20261029-incubation-discovery-teams/` and completed specs keep their historical mentions;
   migrating earlier materials is a Non-Goal.
 - No deferred work: every acceptance criterion is in this Unit. `PROP-rename-incubation-to-adaptive-dev` already

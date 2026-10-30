@@ -2,7 +2,7 @@
 id: SPEC-deep-research-bundle
 title: Split explicit deep research into an approach-neutral bundle
 summary: Move the explicitly invoked research entry and its research roles from the incubation bundle into an approach-neutral deep-research bundle. Results stay under docs/materials/ and proposals or current context reference them by ID, so one investigation can inform several proposals.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities:
   - CAP-DLV-idea-incubation
