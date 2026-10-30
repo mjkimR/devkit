@@ -1,0 +1,72 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T01:53:33.772163Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Folded q1 into proposal.md, the PADR and the inventory: incubation is an ordinary invalid value refused everywhere with DEVELOPMENT_CONFIG_INVALID, so no migration commit needs to pass integration. Finding 3 closes; the migration parts that findings 7 and 8 added are withdrawn with q1.'
+findings:
+- issue: 15 terminal feedback files under specs/**/feedback/ cite renamed IDs 31 times; RULE-document-reference treats them as current, so rules check reports them or rules fix writes into the excluded specs/.
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/repositories/index.py:239-242; docs/capabilities/governance/CAP-GOV-spec-rules.md:78; specs/2026-10/feedback/, specs/2026-10/20261026-living-spec-consistency-sweep/feedback/
+  failure_condition: A whole-workspace rules check after Development reports about 31 alias references, or the worker rewrites an excluded path.
+  suggested_action: Own each feedback/ directory that cites a renamed ID for canonical-ID rewrites only; narrow the history sentence to specs/ outside feedback/.
+  resolution: resolved
+  severity: P1
+- issue: .devkit/architecture.toml lists the devkit_catalog data root incubation and is outside owns; the inventory's rg skipped hidden paths.
+  evidence: .devkit/architecture.toml:192; tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/rule.py:129
+  failure_condition: After the package rename RULE-architecture classifies adaptive_dev/bundle/** as modules, or the worker writes outside its boundary.
+  suggested_action: Own .devkit/architecture.toml and re-run the inventory with --hidden over tracked files.
+  resolution: resolved
+  severity: P2
+- issue: 'An incubation consumer''s migration commit cannot pass devkit integration: readiness parses the committed target config (new parser refuses incubation) and the result config (old parser refuses adaptive-dev). q1 omits snapshot-only legacy acceptance and an outside-integration guide step.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/project.py:35-38; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py:400-401; packages/devkit-dist/src/devkit_dist/features/project/models/development.py:20-29
+  failure_condition: A consumer on approach = incubation upgrades and edits its config on a branch, then integrates; DEVELOPMENT_CONFIG_INVALID refuses in either version.
+  suggested_action: 'Decision needed: complete q1 with (a) refusal plus a direct-commit guide step, (b) legacy normalization in committed snapshots only, (c) refusal accepting the blocked path.'
+  resolution: resolved
+  severity: P2
+- issue: ADR-own-development-approach-policy-outside-sdd keeps deciding the values sdd and incubation; the PADR names no replaced part and no pointer is planned, as ADR-immutable-decisions-editable-records requires for a partial replacement.
+  evidence: docs/decisions/2026-10/20261028-own-development-approach-policy-outside-sdd.md:34; docs/decisions/2026-10/20261022-immutable-decisions-editable-records.md:59-66
+  failure_condition: An agent reads the accepted ADR as policy in force and writes approach = incubation, which now refuses.
+  suggested_action: Name the replaced statements in the PADR and add a one-line pointer in each accepted ADR whose outcome names the value or bundle; widen q4's owns purpose to match.
+  resolution: resolved
+  severity: P2
+- issue: No mechanical check covers 'incubation names no current concept' or the promised migration (fix text, remove then add without a providing package, ORPHAN_LEFT, OVERRIDE_RETAINED); receipt cleanup after remove is unverified.
+  evidence: PADR-adaptive-dev-approach-name §6; envelopes/scout-01.yaml unverified_areas; CAP-GOV-spec-rules §3.3
+  failure_condition: Development ends with stale names in guides or docstrings, or a receipt still naming incubation, while every check passes.
+  suggested_action: 'Add acceptance criteria: an allowlisted rg --hidden -i incubat over tracked files, a dist test of the refusal fix text, a catalog e2e migration test.'
+  resolution: resolved
+  severity: P2
+- issue: Under split-first, nobody guarantees the split's results (scratch path, research entry, researcher role) lose the old word; under rename-first, no names are chosen for them and rules fix would rewrite PROP-deep-research-bundle/proposal.md outside owns.
+  evidence: proposal.md 'Scope after PROP-deep-research-bundle'; docs/proposals/PROP-deep-research-bundle/proposal.md Settled direction, Q1, Q5
+  failure_condition: The split keeps .devkit/transient/incubation-research/ or incubation-researcher, and this proposal excludes them.
+  suggested_action: Rename whatever still carries the old word after the split, wherever it lives in owns; for rename-first, name the research entry and roles or state the split names them.
+  resolution: resolved
+  severity: P2
+- issue: The guide migration leaves out version alignment, ordering and override inner asset paths; devkit-catalog pins no devkit-dist version.
+  evidence: packages/devkit-catalog/pyproject.toml:7; packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config.py:160-172; CAP-DLV-idea-incubation rule 4
+  failure_condition: A consumer upgrades devkit-agt without devkit-catalog, or moves only the override directory; the entry stops or the override targets a missing asset.
+  suggested_action: 'Write ordered steps: upgrade all packages, edit the value, remove incubation, add adaptive-dev, move overrides with asset paths, move the context file.'
+  resolution: resolved
+  severity: P3
+- issue: The legacy context move happens 'before its first update', but the entry reads context before resuming and sdd-baseline reads it without running the entry.
+  evidence: packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/references/current-context.md:3; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md:23
+  failure_condition: A migrated consumer with only .devkit/incubation.md runs sdd-baseline or resumes read-only and misses its context.
+  suggested_action: Read the legacy file when adaptive-dev.md is absent in both the entry and sdd-baseline; move it on the first write.
+  resolution: resolved
+  severity: P3
+- issue: The dev_effort high reason (package span) is a medium reason in effort.md; the external-consumer trigger has no evidence.
+  evidence: .devkit/managed/spec/skills/spec/references/effort.md; docs/decisions/2026-10/20261022-playbook-aliases-as-identifiers.md:30
+  failure_condition: The recorded reason gives no valid trigger for high.
+  suggested_action: Cite a consumer or the integration-blocking migration, or set medium.
+  resolution: resolved
+  severity: P3
+- issue: q4 is forced by ADR-immutable-decisions-editable-records and the rules check, so it is no real choice; q5 gives no reason and omits shipping both integrations in one minor release.
+  evidence: docs/decisions/2026-10/20261022-immutable-decisions-editable-records.md:65-75; proposal.md Q7
+  failure_condition: A release between the two integrations makes consumers migrate selection and overrides twice.
+  suggested_action: 'Close q4 in Planning; Decision needed: whether split and rename ship in the same minor release, with the reason for split-first.'
+  resolution: resolved
+  severity: P3
+checks:
+  rules: PASS devkit rules check on the proposal directory (errors=0 warnings=0)
+activity_effort: medium

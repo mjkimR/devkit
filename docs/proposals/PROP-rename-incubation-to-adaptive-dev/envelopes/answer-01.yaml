@@ -1,0 +1,37 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T01:51:29.581374Z'
+status: completed
+summary: q1-q3 decided by the user; q4 decided by the Host. No compatibility for the incubation value or bundle, proposal Planning term, /adaptive-dev entry names, split first without a same-release constraint.
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: q1
+  choice: d
+  decision: The user decided that "incubation" becomes an ordinary invalid approach value refused everywhere with DEVELOPMENT_CONFIG_INVALID, whose fix names "sdd" or "adaptive-dev", because nothing uses the incubation approach or bundle.
+  constraints:
+  - No legacy reading of committed snapshots, no deprecation period and no legacy context-file fallback.
+  - The guides state no migration steps for the approach value, bundle, overrides or context file.
+  - Acceptance criteria that only verify a migration are dropped; dev_effort drops from high to medium.
+- question: q2
+  choice: a
+  decision: 'The user chose "proposal Planning": CAP-DLV-proposal-planning and UC-plan-and-hand-off-a-proposal, with the old IDs kept in aliases.'
+- question: q3
+  choice: a
+  decision: The user chose the entry /adaptive-dev, the pointer adaptive-dev-pointer and the researcher role product-researcher.
+  constraints:
+  - /adaptive-dev is the renamed /incubate and the approach's main entry, not an additional entry.
+  - The researcher stays in adaptive-dev; deep-research ships its own research-investigator and the two bundles share no role and declare no dependency in either direction.
+  - adaptive-dev never invokes deep-research and reads retained research only by its MAT ID.
+- question: q4
+  choice: b
+  decision: 'The Host decided that PROP-deep-research-bundle lands first and this proposal declares depends_on: [PROP-deep-research-bundle], with no same-release constraint.'
+  constraints:
+  - This proposal excludes what the split moves and renames any current name the split leaves that contains incubation.
+settles:
+- assumption: 1
+  decision: No consumer uses the incubation approach or bundle, so no committed-snapshot legacy reading is kept
+activity_effort: medium
