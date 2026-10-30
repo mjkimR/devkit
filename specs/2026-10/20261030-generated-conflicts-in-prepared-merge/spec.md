@@ -2,7 +2,7 @@
 id: SPEC-generated-conflicts-in-prepared-merge
 title: Settle generated-file conflicts in prepared merges
 summary: Let integration preparation and integration complete a moved-target merge whose only conflicts are in registered generated files, by taking each artifact's seed side and disclosing the artifacts to regenerate on the target, instead of refusing with WORKTREE_MERGE_CONFLICT.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities: [CAP-WT-task-worktrees, CAP-INT-mcp-services, CAP-GEN-tracked-artifacts, CAP-HARN-agent-guidance]
 related_usecases: [UC-drive-development-to-integration]

@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-generated-conflicts-in-prepared-merge
 spec: SPEC-generated-conflicts-in-prepared-merge
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
     resolution: modified
