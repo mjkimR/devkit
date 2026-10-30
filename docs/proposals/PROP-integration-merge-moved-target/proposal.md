@@ -2,7 +2,7 @@
 id: PROP-integration-merge-moved-target
 title: Integrate a conflict-free moved target without requiring the source to contain it
 summary: "Let local integration and proposal acceptance merge a moved target themselves and refuse only on a real conflict or failing checks, and run the tests once on main after a local-orchestrated batch is integrated, so lifecycle merging stays light while defects still surface."
-status: draft
+status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/worktree/
 priority: high
