@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 import yaml
 from devkit_dist.features.distribution.services.bundles.subagents import read_contract, render_projection
-from distsupport.guidance import assert_rule
+from distsupport.guidance import assert_rule, states_rule
 from spec_support.bundle_text import BUNDLE, flat, raw, text
 
 WORKERS = ("development-worker", "planning-worker")
@@ -351,7 +351,9 @@ def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
         ("range", "`<accepted>`", "`<returned>`", "passes when"),
         ("`<accepted>`", "`diff_scope.head`", "ancestors of `<returned>`"),
         ("diff --name-only <accepted> <returned>`", "write scope"),
-        ("worktree", "clean", "base checkout", "status and HEAD", "before spawning"),
+        ("`<returned>` adds this turn's `worker` envelope", "absent at `<accepted>`"),
+        ("worktree's HEAD is `<returned>`",),
+        ("the worktree is clean",),
         ("envelopes you committed", "exempt only while unchanged"),
         ("record the violation", "`worker` envelope"),
         ("never reset or amend", "pull request", "blocked"),
@@ -366,6 +368,17 @@ def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
     assert_rule(records, "`[BLOCKED: ...]`", "no `resolution`")
     assert_rule(records, "`[BLOCKED: ...]`", "handoff", "`devkit worktree finish --merge`")
     assert_rule(records, "only a `resolution`", "clears")
+
+
+def test_worker_validation_records_and_compares_no_base_checkout() -> None:
+    # ADR-drop-the-base-checkout-equality-from-worker-validation: base advances never block a worker's range.
+    results = raw(WORKER_RESULTS)
+    payload = raw(DELEGATE.parent / "references/payload.md")
+    for document in (results, payload):
+        assert not states_rule(document, "base checkout", "before spawning")
+        assert not states_rule(document, "base checkout", "status and HEAD")
+    assert_rule(results, "base advances", "never block the range", "no base merge")
+    assert_rule(results, "accepted residual", "base branch", "passes every condition")
 
 
 def test_orchestration_follows_the_committed_result_contract() -> None:

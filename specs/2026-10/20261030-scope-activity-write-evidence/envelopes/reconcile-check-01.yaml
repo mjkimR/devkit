@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:39:44.713702Z'
+status: completed
+summary: 'reconcile-reviewer (nested, medium): CAP-COLL-work-scope-registry 4.5/4.9, CAP-HARN-agent-guidance (Host scope observation) and UC-run-parallel-work-safely (step 6, 6a, success guarantee, Scenario 6) match spec.md and the code; no-impact statements hold; one P3 on the tracking-peer wording'
+findings:
+- issue: CAP-COLL 4.9 and the discard_base comment claim whole-branch-name peer matching, but ref-mode candidates take their branch from the last ref segment (inventory.refs).
+  evidence: packages/devkit-spec/src/devkit_spec/features/scope/services/inventory.py:31; observation.py discard_base; CAP-COLL-work-scope-registry.md:401-406
+  failure_condition: A hand-made slashed plan-*/dev-* ref in refs mode would match peers by its last segment; devkit worktree start forbids slashes in activity names.
+  suggested_action: Narrow the 4.9 wording and the code comment to the candidate's branch name as inventoried, or derive the whole name.
+  resolution: open
+  severity: P3
+checks:
+  targets: PASS 3/3 named, resolution modified
+  contract: PASS horizon, counts, inputs, self-base guard, Host reading
+diff_scope:
+  base: 75789c4f98e7c60efcf4e08b826d237d078db924
+  head: 91483d5883740356ce16d44bfb69acde8385992c

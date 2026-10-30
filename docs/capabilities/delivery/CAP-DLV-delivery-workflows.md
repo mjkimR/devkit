@@ -510,7 +510,10 @@ It never reverts, closes, raises the depth or narrows the scope. The `developmen
 each answer decides, what each option leads to) rather than relaying the worker's wording. The Host validates the cumulative committed range from the
 unit's last accepted head; a range it rejects is a problem in the Host's own `worker` envelope, which blocks the unit
 from review and integration without discarding anything until a resolution names it
-(`ADR-orchestration-workers`). Host statuses: Claude Code
+(`ADR-orchestration-workers`). The Host records and compares no base-checkout state: base advances by the Host,
+another session or an unknown author never block the range, and a worker commit that escapes onto the base branch
+while the rest of its turn lands on its branch is an accepted residual no check names
+(`ADR-drop-the-base-checkout-equality-from-worker-validation`). Host statuses: Claude Code
 `native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
 (`ADR-orchestration-workers`). Native Codex spawning does not enforce the worker's role/path boundary;
 Git administration remains shared. Workers declare no model, reasoning effort or approval-policy override; project model levels follow distribution policy.
@@ -539,7 +542,8 @@ When the worker record or emergency commit also cannot run, return `failed` with
 actual last SHA, dirty paths and absent/uncommitted records or commit; never invent a clean committed result or final
 HEAD containing it. The Host blocks failed dirty/uncommitted returns even without a worker record and owns a
 subsequent recovery run and its records. Successful acceptance still requires cumulative ancestry through final HEAD,
-strict allowed paths, clean worktree, unchanged base and checks. The one-shot lifecycle and stage gates remain.
+strict allowed paths, clean worktree, the turn's own `worker` envelope (absent at the last accepted head) and checks.
+The one-shot lifecycle and stage gates remain.
 
 Actual generic native Planning and Development runs are recorded in `MAT-codex-native-worker-evidence` for the observed
 runtime. Named-role loading on a fresh host, denied approvals, failed emergency commits and wider host/version
@@ -633,7 +637,7 @@ compared with changed paths as they are. `N/A`/`none` boundaries and empty recon
   task number or feedback ID. Absent optional reconciliation adds no scope; malformed present reconciliation or
   missing required anchor/tasks leave the scope check not-run. Workflow stage requirements remain unchanged.
 - Base checkout: the worktree's registered common-directory checkout; absent when run in the base itself. Its
-  HEAD and dirty paths are observations for the Host's comparison with its saved state, not checks.
+  HEAD and dirty paths are information, not checks.
 
 Checks report `pass`, `fail` or `not-run`: base ancestry, worktree HEAD equality, changed paths and outside-scope
 paths, worktree cleanliness, committed envelope validation (including unresolved problems and pending questions),

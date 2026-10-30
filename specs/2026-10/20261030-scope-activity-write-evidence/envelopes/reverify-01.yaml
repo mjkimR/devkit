@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:35:09.113923Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both P3 fixes: discard_base matches refs/heads/<branch> and refs/remotes/<remote>/<branch> for configured remotes (new test_tracking_peers_match_whole_branch_names_under_configured_remotes); CAP-COLL 4.9 states the Host scheduling reading'
+findings:
+- issue: 'discard_base matches a remote tracking peer by the last ref segment only: it misses the peer of a slash-named branch and treats another remote branch with the same last segment as a peer.'
+  evidence: packages/devkit-spec/src/devkit_spec/features/scope/services/observation.py:167; probe .devkit/transient/probe/review-01/test_peer_probe.py
+  failure_condition: A marker-bound non-activity branch team/x whose base is origin/team/x at the tip keeps the base (known-empty range) instead of unknown-base; branch x with base origin/team/x gets a false unknown-base. plan-*/dev-* names cannot contain '/'.
+  suggested_action: Match refs/remotes/<remote>/<branch> for the configured remotes.
+  resolution: resolved
+  severity: P3
+- issue: CAP-COLL-work-scope-registry 4.9 states the horizon contract but not the Host scheduling reading that AC-08 lists for it.
+  evidence: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md:419-430
+  failure_condition: A reader of only the capability does not learn how current and future evidence are used for scheduling.
+  suggested_action: Add one sentence to 4.9 naming the Host reading and pointing to CAP-HARN-agent-guidance.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test-affected mode=partial 1511 passed
+  lint: PASS just lint-check devkit-spec; just check devkit-spec 0 errors; just rules-check 0 errors
+diff_scope:
+  base: 75789c4f98e7c60efcf4e08b826d237d078db924
+  head: ba920732d36f186dc88ff1dc381434391e81c1bf

@@ -11,7 +11,7 @@ Use `local-orchestrated` instead of `direct` for an activity when units can run 
 
 - A unit is one activity of one slug on `plan-<slug>` or `dev-<slug>`, in its own worktree from `devkit worktree start <branch>` (`--existing-branch <branch> --unit <dir>` continues an existing branch). A `session`-depth task never becomes a unit.
 - You split, retain inline Planning, validate, and own user questions, problems and integration decisions. Delegate recurring lifecycle execution to `git-operator`; workers do one Planning/Development turn.
-- Split by dependency order, conflicting files and independent verification, not to create approval points. Units overlapping in `devkit spec scope collect --mode worktrees` run sequentially, independent ones in parallel; never two writers in one worktree.
+- Split by dependency order, conflicting files and independent verification, not to create approval points. Read `devkit spec scope collect --mode worktrees` by horizon: units whose `horizon=current` evidence overlaps run sequentially, others in parallel; never two writers in one worktree. A pair with only `future` evidence (a Planning unit's declared or candidate paths) does not serialize Planning runs. Before handing a unit off, treat its `future` evidence as `current`: units whose `future` evidence overlaps are handed off and integrated sequentially. Partial coverage informs both choices and never proves independence; no result grants or refuses a write.
 
 ## The loop per unit
 

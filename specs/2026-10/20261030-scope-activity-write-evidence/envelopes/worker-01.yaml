@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:41:53.757905Z'
+status: completed
+summary: 'Ran specify through final-change-report: horizon labels, pair/summary counts, coverage-problem inputs and the self-base guard in scope collect, with test_collection_horizon.py (AC-01..AC-07) and the Host reading in spec-orchestrate, CAP-COLL 4.5/4.9, CAP-HARN and UC-run-parallel-work-safely. code-reviewer review-01 PASS with 2 P3 fixed (reverify-01); reconcile-reviewer reconcile-check-01 with 1 P3 fixed, self-verified in reconcile-check-02. Sync output: .devkit/installation.json only (listed in Task 3 _Boundary); AGENTS.md unchanged. Baseline: head before the change on a synthetic probe fixture plus MAT-scope-activity-write-probe; after removes the false plan-c unknown-base and names dev-d inputs. Outside-worktree reads by nested roles: code-reviewer pytest tmp_path and just test logs; reconcile-reviewer one auto-saved tool-result file under ~/.claude/projects and a denied scratchpad git experiment. My own git-init probe under .devkit/transient/probe/refglob was denied and not rerouted. Known main failure test_agent_output_contract.py::test_fixes_carry_no_placeholder was not selected and not fixed. Next: Host integration (lint-ci-clean).'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=partial 1511 passed
+  lint: PASS just lint-check devkit-spec; just check devkit-spec 0 errors; devkit rules check --ci --base main errors=0; devkit sync --check exit 0
+diff_scope:
+  base: ''
+  head: 9c485ae9ba66e8728ed5b2e6768148a86a6f5301
+activity_effort: medium
