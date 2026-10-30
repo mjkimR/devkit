@@ -1,7 +1,7 @@
 ---
 id: UC-drive-development-to-integration
 title: Drive Development to Integration
-summary: "An AI coding agent implements an agreed task through workflow stages, completes effort-appropriate review and reconcile checks, obtains Host approval when required, then integrates locally or by pull request under dev-integration policy."
+summary: "An AI coding agent develops an agreed task through workflow stages, verifies and persists evidence including eligible single-envelope commits, then integrates locally or by pull request under Host authority and dev-integration policy."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -14,6 +14,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit/src/devkit_agt/features/integration/usecases/service.py
+  - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
 created_at: 2026-10-21
 capabilities:
   - CAP-DLV-delivery-workflows
@@ -94,6 +95,11 @@ The integration executor's coded refusals this section does not name, and their 
   cross-component impact or open interpretation remains: the agent omits the initial `reconcile-reviewer` call and
   records its self-check, omission reason and evidence in the reconcile verification (`CAP-DLV-delivery-workflows`);
   resumes at step 5.
+- **5a.** One fully authored envelope is the sole pending file: the agent requests its explicit commit, and the system commits exactly that record through ordinary hooks with deterministic identity; an exact clean already-committed record succeeds without a second commit (`CAP-DLV-workflow-envelopes`); resumes at step 6.
+- **5b.** An explicit record commit has an invalid file/identity or unsupported repository/dirty state: the system refuses with `ENVELOPE_COMMIT_INVALID` or `ENVELOPE_COMMIT_STATE` before staging. The agent corrects the cause or uses the required combined manual commit for accompanying changes (`CAP-DLV-workflow-envelopes`); resumes at step 5.
+- **5c.** Git, signing or a hook rejects an explicit commit with known retained state: the system reports `ENVELOPE_COMMIT_FAILED` and preserves the record and observed index. The agent fixes the cause and retries that same file without authoring another envelope (`CAP-DLV-workflow-envelopes`); resumes at step 5.
+- **5d.** Explicit commit effects are uncertain: the system reports `ENVELOPE_COMMIT_UNCERTAIN` and preserves every observed resource. The agent inspects HEAD, index and worktree before any further mutation (`CAP-DLV-workflow-envelopes`); the use case pauses until remaining effects are established.
+
 - **6a.** A retry cap is exceeded or a tool fails during integration: the agent returns to the `exception` stage with
   the cause and evidence, never opening a new task to bypass the cap (`CAP-DLV-delivery-workflows`); the use case ends
   and `UC-handle-delivery-problems-and-exceptions` continues.
@@ -310,3 +316,34 @@ The integration executor's coded refusals this section does not name, and their 
 - **Then**: it refuses with `INTEGRATION_RULE_RUNTIME_MISMATCH` naming the rule file and the missing import, the
   readiness provider does not run, the target is unchanged, and the Host retries with a runtime built from the source's
   code after separately granted authority
+
+
+### Scenario 22: Commit one authored record
+- **Covers**: 5a
+- **Given**: a valid authored final-report is the sole pending file after verified work is committed
+- **When**: the agent requests its explicit commit
+- **Then**: exactly that path/blob is added on the same branch through ordinary hooks, actual final HEAD is reported and evidence SHAs stay unchanged
+
+### Scenario 23: Repeat a committed record
+- **Covers**: 5a
+- **Given**: the selected record has exact unchanged bytes in HEAD and the checkout is clean
+- **When**: the agent repeats explicit commit
+- **Then**: the result is already_committed with null subject and HEAD stays unchanged
+
+### Scenario 24: Refuse an ineligible record commit
+- **Covers**: 5b
+- **Given**: an explicit commit selects a skeleton, modified history, partially staged record, or a checkout with unrelated dirty paths
+- **When**: the agent invokes the command
+- **Then**: it reports ENVELOPE_COMMIT_INVALID or ENVELOPE_COMMIT_STATE with the exact target and changes neither index nor HEAD
+
+### Scenario 25: Retry a rejected hook
+- **Covers**: 5c
+- **Given**: a hook rejected an explicit record commit and left that exact record staged with unchanged HEAD/reference
+- **When**: the agent fixes the cause and retries the same file
+- **Then**: one commit is created with no new envelope sequence and no duplicate commit on repeat
+
+### Scenario 26: Inspect uncertain effects
+- **Covers**: 5d
+- **Given**: a post-commit hook changes content or switches the symbolic branch
+- **When**: the agent requests explicit record commit
+- **Then**: it reports ENVELOPE_COMMIT_UNCERTAIN, preserves the hook's observed effects and directs inspection before further mutation

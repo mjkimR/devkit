@@ -1,9 +1,12 @@
 ---
 id: CAP-DLV-cli-and-output
 title: "Workflow CLI and Output"
-summary: "Commands, exit codes, text sentinels, and JSON payload contracts for workflows."
+summary: "Workflow commands, exit codes, sentinels and JSON contracts, including deterministic single-envelope commit results and invalid, unsupported, failed or uncertain Git effects."
 area: delivery
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
+  - packages/devkit/src/devkit_agt/features/workflow/usecases/commit_envelope.py
 created_at: 2026-10-17
 ---
 

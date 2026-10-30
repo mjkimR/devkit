@@ -1,0 +1,38 @@
+---
+reconcile_id: REC-workflow-record-auto-commit
+status: pending
+targets:
+  - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
+    resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-cli-and-output.md
+    resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
+    resolution: modified
+  - file: docs/usecases/delivery/UC-drive-development-to-integration.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261030-explicit-envelope-commits.md
+    resolution: modified
+  - file: docs/materials/2026-10/20261030-workflow-record-auto-commit/development-evidence.md
+    resolution: modified
+---
+
+# Reconcile: `SPEC-workflow-record-auto-commit`
+
+## Contract comparison
+
+- `CAP-DLV-workflow-envelopes` retains explicit single-record eligibility, tracked anchor identity, exact dirty/index scope, preconditions and post-hook verification including symbolic branch identity, same-file retry/idempotence and uncertainty preservation. Runtime and policy tests verify AC-01 through AC-04.
+- `CAP-DLV-cli-and-output` retains the command, success sentinel/JSON fields and all four exit-2 codes with recovery targets. CLI and documented-code tests verify the boundary.
+- `CAP-DLV-delivery-workflows` and `UC-drive-development-to-integration` retain optional record-only review/reverify/final-report/no-finding-feedback commits, combined manual transactions and preparation ordering. Source guidance and workflow readiness tests verify AC-05. The unchanged integration stale-source regression confirms older preparation is refused after HEAD changes.
+- `ADR-explicit-envelope-commits` repairs carried proposal references to the handed-off spec; its accepted decision is unchanged. `MAT-workflow-record-commit-development` records the same-head baseline and verification without speed/cost claims.
+
+No architecture contract changed: the CLI calls a typed BaseUseCase, workflow-owned policy/repository layers reuse foundation Git without an agt-to-spec dependency. Gate/worktree/integration engines are unchanged. No new glossary concept or graphical screen is introduced. No named open source feedback or required scope is deferred.
+
+## Review and verification
+
+Medium independent code review at 8ef6543b reported three findings. The author fixed symbolic HEAD capture, eligible final-report example and workspace-relative targets; focused runtime/guidance 45 passed and affected tests 2090 passed. `reverify-01.yaml` closes every finding against 085f5e5f. Its actual explicit command committed only that envelope at 97aa4c2e while normal repository hooks rewrote metadata. Independent reconcile verification follows this draft.
+
+The initial sync check passed. `.devkit/installation.json` is the only tracked sync output and is listed in Task 2 with `(sync output)`; managed/projected files were generated, never hand-edited.
+
+## Entrypoints
+
+Select workflow CLI and the explicit commit use case as code doorways for envelope/CLI contracts. Retain workflow source definitions for delivery guidance. Broad task boundaries, helper/model/test directories, unrelated integration engines and evidence-only materials are not new entrypoints.
