@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:17:34.062102Z'
+status: completed
+summary: 'Continued after the Host''s scope extension: declared integration -> generated in .devkit/architecture.toml (resolution-01 resolves worker-01), checked Task 3; nested code-reviewer review-01 (one P3, fixed with a lifecycle test, reverify-01); Living Spec reflection of CAP-INT, CAP-WT, CAP-GEN, CAP-HARN, UC-drive-development-to-integration (7i, 7j, Scenarios 30-32) and references integration/worktree/generated; nested reconcile-reviewer reconcile-check-01 (1 P2, 5 P3) fixed and self-verified in reconcile-check-02; reconcile resolved, spec completed; feedback-01 (3 recorded); final-report-01. Sync output: .devkit/installation.json. Not integrated.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main 2204 passed
+  lint: PASS lint-check devkit, devkit-spec; rules --ci --base ab7356f3 errors=0
+  types: PASS just check devkit 0 errors
+  sync_end: PASS devkit sync --check
+diff_scope:
+  base: ''
+  head: ea50c65022a52bb29a11445ae982aefcfaf2c080
+activity_effort: medium
