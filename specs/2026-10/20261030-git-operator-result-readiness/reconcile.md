@@ -8,6 +8,8 @@ targets:
     resolution: modified
   - file: docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md
     resolution: modified
+  - file: docs/usecases/delivery/UC-drive-development-to-integration.md
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-git-operator-result-readiness`
@@ -30,9 +32,16 @@ targets:
   field, the Host's comparison before a worker, the evidence separation and the GOP-06 operator-scope wording, as
   `git-operator.md`, `git-operator-dispatch.md` and `git-operator-operations.md` state them. Verified by AC-05..AC-07
   contract-text tests in `test_git_operator.py`.
-- `CAP-DLV-proposal-planning` and the review fix: a landed commit that is not one clean direct child of the base is
-  `SPEC_HANDOFF_STALE` whose `[FIX]` repairs `dev-<slug>` in place, and every stopped outcome after the handoff
-  writes clears the nested next command (`test_a_landed_commit_that_leaves_files_is_repaired_in_place`).
+- `CAP-DLV-proposal-planning` states the review fix in the composed-handoff paragraph and the `SPEC_HANDOFF_STALE`
+  row: a landed commit that is not one clean direct child of the base is `SPEC_HANDOFF_STALE` with no next command
+  and a next action whose `[FIX]` repairs `dev-<slug>` in place and never reruns, and every stopped outcome after
+  the handoff writes clears the nested next command (`test_a_landed_commit_that_leaves_files_is_repaired_in_place`).
+  `UC-plan-and-hand-off-a-proposal` extension 7a states the same outcome.
+- `CAP-DLV-delivery-workflows` §4.6.1 and `git-operator-dispatch.md` start a worker only on a clean HEAD that is
+  `checks.worker_input.head` or a descendant made only of the Host's own commits since, so the post-handoff link-fix
+  commit (AC-08) does not contradict the comparison (AC-05; pinned in `test_git_operator.py`).
+- `UC-drive-development-to-integration` extension 1b adds the Host's `checks.worker_input` comparison before it
+  starts a `development-worker` on a git-operator `prepare-worktree` or `handoff` result.
 - `UC-plan-and-hand-off-a-proposal` updates step 9 (link fixes in a later Host commit after the composed handoff, in
   the writes' commit after the plain one), extension 7a (the committed handoff, `checks.worker_input`, the refused
   commit), the new extension 8a (sibling conflict), the minimal guarantee (a refused handoff commit keeps the writes)
@@ -60,6 +69,16 @@ None: every acceptance criterion is implemented in this unit.
 Medium code review (nested `code-reviewer`) at 3142b1d7 found one P2 and two P3 findings (`envelopes/review-01.yaml`);
 the implementer fixed them at 78b9d3f1 and closed the round in `envelopes/reverify-01.yaml`. The initial
 `devkit sync --check` passed; `.devkit/installation.json` is the only tracked sync output (Task 2.2, `(sync output)`).
+
+The nested `reconcile-reviewer` at ee89eaa7 (`envelopes/reconcile-check-01.yaml`) found two P2 and one P3 findings:
+the missing landed-but-unclean recovery text, the dispatch wording that conflicted with the later link-fix commit,
+and the Development use case without the comparison. The implementer fixed all three; the dispatch fix is a
+one-sentence guidance alignment with the unchanged AC-05 contract, verified by the added `test_git_operator.py`
+assertion, so the code review was not reopened. `envelopes/reconcile-check-02.yaml` records the self-verification.
+
+Observation outside this unit's write scope: `handbook/en|ko/journeys/incubate-and-hand-off-a-proposal.md` do not
+state the composed handoff commit, `commit=`, `SPEC_HANDOFF_COMMIT_REFUSED` or the sibling resolution and still say
+"in the same change"; the Host owns that handbook update.
 
 ## Entrypoints
 

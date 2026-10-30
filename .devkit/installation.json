@@ -1051,7 +1051,7 @@
     },
     ".agents/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
-      "sha256": "357caddcdc106b83361c5da26a75c5542b44472748b92aef85243ef508be5597"
+      "sha256": "a843a8ec8f07ded51f51eabaa68bc74277f6fbd003c1cef2c871facf945e88e4"
     },
     ".agents/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
@@ -1295,7 +1295,7 @@
     },
     ".claude/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
-      "sha256": "357caddcdc106b83361c5da26a75c5542b44472748b92aef85243ef508be5597"
+      "sha256": "a843a8ec8f07ded51f51eabaa68bc74277f6fbd003c1cef2c871facf945e88e4"
     },
     ".claude/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
@@ -1983,7 +1983,7 @@
     },
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
-      "sha256": "357caddcdc106b83361c5da26a75c5542b44472748b92aef85243ef508be5597"
+      "sha256": "a843a8ec8f07ded51f51eabaa68bc74277f6fbd003c1cef2c871facf945e88e4"
     },
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,

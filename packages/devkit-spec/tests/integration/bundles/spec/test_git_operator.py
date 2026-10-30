@@ -129,6 +129,8 @@ def test_worker_input_readiness_comes_from_git_observation_not_the_exit_code() -
     ):
         assert_rule(role, *tokens)
     assert_rule(raw(DISPATCH), "Before starting a worker", "`checks.worker_input`", "your own", "exit code alone never")
+    # The Host's own post-handoff link-fix commit may follow the reported head (AC-08).
+    assert_rule(raw(DISPATCH), "clean HEAD", "`checks.worker_input.head` or a descendant", "your own commits")
     operations = raw(OPERATIONS)
     for row in ("prepare-worktree", "handoff"):
         line = next(line for line in operations.splitlines() if line.startswith(f"| `{row}` |"))

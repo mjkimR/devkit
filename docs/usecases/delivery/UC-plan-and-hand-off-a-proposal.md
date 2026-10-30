@@ -116,10 +116,15 @@ capabilities:
   `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-planning`); resumes at step 8. A completed handoff
   has committed its transaction once as a direct child of the reviewed base and reports that `commit`; a git-operator
   result carries `checks.worker_input` (`head`, `dirty_paths`), which the Host compares with its own Git observation
-  before starting a worker (`CAP-DLV-delivery-workflows`). When `git commit` refuses the handoff transaction, the
+  before starting a worker, which starts on that `head` or on the Host's own later link-fix commit
+  (`CAP-DLV-delivery-workflows`). When `git commit` refuses the handoff transaction, the
   command reports `status=needs_recovery` with `SPEC_HANDOFF_COMMIT_REFUSED`, the commit output and every dirty path,
   `commit=-` and a next action instead of a next command (exit `1`), and keeps the writes staged; the Host fixes the
-  cause in `dev-<slug>` and commits there instead of rerunning (`CAP-DLV-proposal-planning`); resumes at step 9.
+  cause in `dev-<slug>` and commits there instead of rerunning (`CAP-DLV-proposal-planning`); resumes at step 9. When
+  the commit lands but is not one clean direct child of the reviewed base (a hook left files or rewrote history), the
+  command reports `status=needs_recovery` with `SPEC_HANDOFF_STALE`, the landed `commit` and the parents or dirty
+  paths, and a next action instead of a next command; the Host repairs `dev-<slug>` in place instead of rerunning
+  (`CAP-DLV-proposal-planning`); resumes at step 9.
 - **7b.** The proposal is not `accepted`: the system refuses with `SPEC_PROPOSAL_NOT_APPROVED` and writes nothing
   (`CAP-DLV-proposal-planning`); the agent asks the user; resumes at step 5.
 - **7c.** The proposal says `accepted` without its recorded `plan-accept`: the system refuses with

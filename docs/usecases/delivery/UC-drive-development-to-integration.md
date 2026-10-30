@@ -86,7 +86,9 @@ The integration executor's coded refusals this section does not name, and their 
   stage boundary; the agent validates the cumulative committed range, and a range it rejects becomes a problem in its
   own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-workflows`). The Host reuses git-operator for
   read-only preparation and exact authorized execution, retaining source preparation and acceptance; normal
-  integration includes cleanup (`CAP-INT-mcp-services`); resumes at step 6.
+  integration includes cleanup (`CAP-INT-mcp-services`). Before starting the worker on a `prepare-worktree` or
+  `handoff` result, the Host compares its `checks.worker_input` (`head`, `dirty_paths`) with its own Git observation
+  and starts the worker only on a clean HEAD (`CAP-DLV-delivery-workflows`); resumes at step 6.
 - **3a.** The effort is `low`: the author reviews the change and self-checks the reconcile, still recorded as review
   and reconcile-check envelopes (`CAP-DLV-delivery-workflows`); resumes at step 5.
 - **3b.** The effort is `high`: fresh `code-reviewer` instances review in bounded rounds, and the reconcile

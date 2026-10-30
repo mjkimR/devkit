@@ -453,7 +453,8 @@ result has no other readiness, permission or next-actor field. IF `dirty_paths` 
 also be a `remaining_effects` entry and the role status is `needs_input`, never `completed`; a zero-exit CLI result
 with dirty paths is neither a failed CLI operation nor ready input. Every result returns to the Host, which owns the
 next action. WHEN the Host starts a worker on such a result, it MUST first compare `checks.worker_input` with its own
-Git observation; an exit code alone never stands for ready input. A host refusal before dispatch is a blocker code
+Git observation and start the worker only on a clean HEAD that is the reported `head` or a descendant made only of
+its own commits since (the post-handoff link fixes); an exit code alone never stands for ready input. A host refusal before dispatch is a blocker code
 with a null CLI status and exit code and empty effects; CLI readiness or `auto` policy is never reported as host
 permission, and live effects, Git observation, host emulation, isolated fixtures and untested cases are reported
 apart. The handoff result's
