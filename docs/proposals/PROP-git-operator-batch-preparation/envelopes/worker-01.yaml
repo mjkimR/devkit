@@ -1,0 +1,77 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:04:33.800339Z'
+status: needs_input
+summary: 'Planning turn 1: status reviewing; recorded the six-item devkit batch dispatch as MAT-git-operator-batch-dispatch-observation; drafted a contract-only prepare-worktree list design (serial items, base-ref check, stop at first non-completed item, per-item results, Host-named retries). One challenger round: 4 findings folded, 2 open (Q4 setup remainder, GOP-06 ownership across siblings). Four questions wait for the user.'
+findings: []
+assumptions:
+- PROP-git-operator-result-readiness keeps the three role statuses and original CLI result and adds host permission, worker-input readiness with dirty paths and next actor per job; this proposal wraps that per-item shape unchanged
+- PROP-git-operator-result-readiness does not change the prepare-worktree or handoff interface
+- dev_effort stays medium until the answers settle the design; with the recommended answers (contract and guidance wording plus tests, no CLI) low would suffice
+unverified_areas:
+- 'Live operator stop/continue and retry behaviour on a partial list: no refused, denied or partial item has been observed'
+- Token, cost and latency of the list form versus one job per dispatch
+- The six-item devkit dispatch is Host-reported; the worker did not see the operator transcript
+checks:
+  rules: PASS devkit rules check proposal.md and material
+diff_scope:
+  base: fdba66465456ef93bf18a7a980d16121a0131639
+  head: 85012e0c930da64de89b346e65a3bc3464ab3b25
+questions:
+- id: q1
+  title: Batch mechanism
+  prompt: How should the Host send several worktree preparations to git-operator at once?
+  context: Decides whether Development changes only the git-operator contract and guidance or also adds a devkit worktree start option in packages/devkit. Two real runs (resource-indexer, five items; devkit on 2026-10-30, six items in about 50 s) already completed through an ad hoc list with one existing CLI call per item. A multi-branch CLI option would merge several items into one exit code that the per-item result must split again, and Codex still needs one approval per sibling worktree either way. No cost or latency comparison exists.
+  options:
+  - id: a
+    description: Typed list in the role contract and dispatch guidance; each item runs the existing devkit worktree start; no CLI change
+    recommended: true
+  - id: b
+    description: New multi-branch devkit worktree start option in packages/devkit (boundary extension to packages/devkit and CAP-WT-task-worktrees)
+    recommended: false
+  - id: c
+    description: 'No change: keep one job per dispatch and leave lists unofficial; the proposal is rejected'
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Stop rule for a non-completed item
+  prompt: What should the operator do when one item in a preparation list does not complete?
+  context: Decides the list's stated policy for GOP-05. The CLI code cannot tell an item-local cause from a repository-wide one (a broken post-checkout hook is WORKTREE_ADD_FAILED, a broken setup command is WORKTREE_SETUP_FAILED for every item, each after up to 900 s), so a judgment-based continue can leave several retained, not-ready worktrees. Stopping costs one extra Host dispatch for the unattempted rest. In every option a moved base ref or a refused host approval stops the list, and uncommitted base changes do not block.
+  options:
+  - id: a
+    description: Stop at the first non-completed item; later items return as not attempted with a null CLI result
+    recommended: true
+  - id: b
+    description: Continue only past WORKTREE_BRANCH_EXISTS and WORKTREE_CONFLICT on the item's own path; stop on anything else
+    recommended: false
+  - id: c
+    description: Continue past any item-local outcome by the operator's judgment; stop only at shared blockers
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Operations allowed in a list
+  prompt: Which git-operator operations may be sent as a list?
+  context: Decides the batch scope. prepare-worktree items are independent when they share one retained base; integration and handoff each change the state the next job depends on, so they stay one per dispatch in every option. Read-only jobs mutate nothing but add wording and checks to the contract.
+  options:
+  - id: a
+    description: prepare-worktree only
+    recommended: true
+  - id: b
+    description: prepare-worktree plus read-only jobs (prepare-integration, inspect-recovery)
+    recommended: false
+  allow_note: true
+- id: q4
+  title: Setup or sync remainder after a list
+  prompt: Who repairs a worktree that was created but whose setup or sync failed?
+  context: Decides whether git-operator gains a repair effect. WORKTREE_SETUP_FAILED and WORKTREE_SYNC_FAILED are zero-exit warnings that keep the worktree. The setup [FIX] reruns only the setup command; the locked sync and registration initialization would also need a rerun, and a sync [FIX] is a rerun command only when the sync output was not an error object, so a setup-only retry can report readiness that is not there.
+  options:
+  - id: a
+    description: Return every setup or sync remainder to the Host, which repairs it directly or dispatches a supported operation
+    recommended: true
+  - id: b
+    description: A retry item may name the exact remainder (setup [FIX], then devkit sync --locked and registration initialization) for that retained worktree
+    recommended: false
+  allow_note: true
+activity_effort: medium
