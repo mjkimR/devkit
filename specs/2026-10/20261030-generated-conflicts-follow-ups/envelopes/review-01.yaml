@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:43:26.272648Z'
+status: completed
+summary: 'Self-review at activity-effort low of the change since the main merge 34e8d9b7: AC-01/AC-02 by test_git run_git_result tests, AC-03 by the unchanged worktree and integration suites plus test_merge_tree_runs_on_the_shared_git_runner, AC-04 and AC-07 by reading the edited sentences, AC-05 by test_architecture_scope_guidance (local, cloud), AC-06 by test_affected_tests; diff stays inside the task boundaries; no findings.'
+findings: []
+checks:
+  tests: 'PASS just test-affected: 6198 passed, 14 skipped; 1 failure test_mounted_commands[integration] predates this diff (integration imports generated since 596bca61 on main; no integration, generated or layering-support path changed here)'
+  lint: PASS just lint-check; Pyright devkit-core, devkit and scripts/affected_tests.py 0 errors; devkit rules check clean
+diff_scope:
+  base: 34e8d9b77727908e5c50e44e20f48365fad84842
+  head: fa8ba83a8cbad8d05b9a9141b46826b574d20c09
