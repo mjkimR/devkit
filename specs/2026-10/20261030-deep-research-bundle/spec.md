@@ -4,235 +4,224 @@ title: Split explicit deep research into an approach-neutral bundle
 summary: Move the explicitly invoked research entry and its research roles from the incubation bundle into an approach-neutral deep-research bundle. Results stay under docs/materials/ and proposals or current context reference them by ID, so one investigation can inform several proposals.
 status: planned
 created: 2026-10-30
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-DLV-idea-incubation
+  - CAP-HARN-agent-guidance
+related_usecases:
+  - UC-research-an-idea-and-shape-a-roadmap
+  - UC-incubate-an-idea
+  - UC-route-development-intent
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-deep-research-bundle] Split explicit deep research into an approach-neutral bundle
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-deep-research-bundle on 2026-10-30.
-
-### 1. Background & Hypothesis
+Handed off from proposal PROP-deep-research-bundle (accepted at historical Git
+`f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/proposal.md`). The decisions are
+`ADR-split-deep-research-bundle` and `ADR-retain-research-as-cited-materials`.
 
 `/incubate-research` runs a bounded research team that compares directions and retains initial documents and a
 conditional roadmap (`CAP-DLV-idea-incubation`, `UC-research-an-idea-and-shape-a-roadmap`). It ships in the
-`incubation` catalog bundle and stops unless the effective development approach is `incubation`:
+`incubation` catalog bundle and stops unless the effective development approach is `incubation`, and it writes
+resume facts to `.devkit/incubation.md`, which an SDD repository does not keep. A repository under SDD therefore
+cannot run a broad investigation before drafting proposals; switching `[development] approach` for one
+investigation is no workaround, because the setting is shared and installed spec extensions refuse new SDD
+lifecycle records while it is `incubation` (`CAP-DLV-project-policy`).
 
-- `incubate-research/SKILL.md` Constraints and `CAP-DLV-idea-incubation` rule 4 stop product actions under SDD.
-- The research entry writes resume facts to `.devkit/incubation.md`, which an SDD repository does not keep.
+Research implements nothing and creates no SDD Unit, so it needs no approach gate. One broad investigation can
+inform several proposals, so no single proposal should own its results.
 
-A repository under SDD therefore cannot run a broad investigation before drafting proposals. Switching
-`[development] approach` for the research is not a workaround: the setting is shared, and installed spec
-extensions refuse new SDD lifecycle records while it is `incubation` (`CAP-DLV-project-policy`).
+Settled direction (user):
 
-Research itself implements nothing and creates no SDD Unit, so it needs no approach gate. One broad
-investigation can also inform several proposals, so no single proposal should own its results.
-
-The hypothesis: an approach-neutral `deep-research` bundle with one explicit entry, its research roles and a
-retention contract under `docs/materials/` serves SDD and adaptive development alike. Proposals and current
-context reference the retained material by ID instead of copying it into a proposal's `materials/`.
-
-#### Settled direction
-
-- The entry runs only on explicit user invocation (`invocation = "user"`). No skill, pointer or guidance suggests
-  it, including on a topic match. The existing suggestion wording is removed:
-  - `CAP-DLV-idea-incubation` rule 17 ("a topic match permits a suggestion") and its §4 sentence on `/incubate`.
-  - `incubate-research/SKILL.md` ("suggest this entry and wait for that selection").
-  - `/incubate` procedure step 3 and `UC-incubate-an-idea` extension 4b.
-- Results are retained under `docs/materials/`, independent of the approach and of any single proposal.
-- Research never implements, publishes or creates SDD Units, approvals or envelopes.
-- `PROP-rename-incubation-to-adaptive-dev` renames the remaining incubation bundle and approach to `adaptive-dev`.
-  This proposal owns the split, not the rename.
+- The entry `/deep-research` runs only on explicit user invocation (`invocation = "user"`). No skill, pointer,
+  guide or role suggests it, also on a topic match; the existing suggestion wording is removed.
+- `deep-research` is self-contained: it moves `direction-explorer`, `discovery-critic` and `discovery-planner` with
+  their IDs and adds its own `research-investigator`. No role is shared and no bundle or package dependency exists
+  in either direction.
+- Results are retained as one indexed material under `docs/materials/`, cited by `MAT-<slug>`, independent of the
+  approach and of any single proposal.
+- The entry has no approach gate and never reads or writes `.devkit/incubation.md`.
+- The entry never commits; its report directs the commit through the project's Git policy.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Split explicit deep research into an approach-neutral bundle so that system capabilities are extended.
+- **US-1**: As a developer in an SDD repository, I want to run an explicitly invoked research team without
+  switching the shared development approach, so that I can investigate a direction before drafting proposals.
+- **US-2**: As a proposal author, I want each investigation retained as one indexed material that I cite by its
+  `MAT-<slug>` ID, so that several proposals or an adaptive product use one source without copying it.
+- **US-3**: As an incubation consumer, I want the incubation bundle to keep `/incubate` and its three support
+  roles, and the guides to tell me how to add the research entry and move my customizations, so that the split
+  breaks no existing work silently.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: no bundle-dependency, shared-role or moved-asset mechanism in devkit-dist; the split uses
+   existing sync behavior.
+2. **Scope Excluded**: no new document kind, relation field or materials rule; the retention layout stays a
+   convention (`ADR-retain-research-as-cited-materials`).
+3. **Scope Excluded**: no migration of old `.devkit/transient/incubation-research/` runs or of materials already
+   retained by `/incubate-research`.
+4. **Scope Excluded**: no rename of the incubation bundle, approach, `/incubate`, `incubation-researcher` or
+   `.devkit/incubation.md`; `PROP-rename-incubation-to-adaptive-dev` owns that and depends on this spec.
+5. **Scope Excluded**: no handbook edit; the release handbook procedure (`CAP-DLV-release-handbook`) refreshes it at
+   release.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] The deep-research bundle deploys only on explicit selection
 
-## 5. Carried Proposal Notes
+- **Given** devkit-catalog registers the entry point `deep-research = "devkit_catalog.deep_research"` and a project
+  selects no catalog bundle
+- **When** `devkit sync` runs, and then again after `deep-research:core` is selected
+- **Then** the first sync writes no `.devkit/managed/deep-research/`; the bundle declares `default_preset = "core"`
+  and no `auto_select`; after selection the managed directory holds exactly `bundle.toml`, the `deep-research`
+  skill with `references/orchestration.md`, `references/workspace.md` and `references/synthesis.md`, and the
+  subagent contracts `direction-explorer`, `discovery-critic`, `discovery-planner` and `research-investigator`,
+  each projected to Codex, Claude Code and Antigravity; no `docs/`, `specs/` or `.devkit/incubation.md` is seeded
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] The entry is explicit-only on every host
 
-### 2. Technical Spike Questions
+- **Given** `deep-research:core` is selected for `codex`, `claude-code` and `antigravity`
+- **When** sync projects the skill
+- **Then** the Codex `agents/openai.yaml` sets `policy.allow_implicit_invocation: false`, the Claude Code frontmatter
+  sets `disable-model-invocation: true`, the skill body's first line after the H1 is "Run only when the user
+  explicitly invokes this entry; never suggest or start it otherwise.", and the skill `description` contains none
+  of the words `use`, `when`, `suggest` or `trigger`
 
-Planning answers each question below; the evidence is historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/scout-01.yaml` and historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/challenger-01.yaml`.
+### [AC-03] Bundle text is approach-neutral and self-contained
 
-- **Q1 Role ownership**: The research orchestration uses six roles: `direction-explorer`, `discovery-critic` and
-  `discovery-planner` serve only the research entry; `product-clarifier`, `incubation-researcher` and
-  `usage-reviewer` also serve `/incubate`. Bundles declare no dependency, and two selected bundles that ship the
-  same skill or subagent ID fail sync with `BUNDLE_CONFLICT` before any write. **Answer (user, q1)**:
-  `deep-research` is self-contained and designed without regard to adaptive development. It moves the three
-  research-only roles with their IDs and adds its own `research-investigator`; the incubation bundle (`adaptive-dev`
-  after `PROP-rename-incubation-to-adaptive-dev`) keeps `product-clarifier`, `incubation-researcher` (renamed
-  `product-researcher` there) and `usage-reviewer`. No role is shared, and no bundle or package dependency exists in
-  either direction. The research entry covers user and problem framing inline or through a `direction-explorer`
-  premise, and usage evidence through a bounded investigator experiment.
-  - The two researchers differ in scope: `research-investigator` answers one question of a team investigation; the
-    incubation researcher gathers one product decision's evidence or runs one bounded experiment.
-  - `/incubate` never invokes or suggests `/deep-research`; it only reads a retained material by its `MAT-<slug>` ID.
-  - Deferred: layering through a Python package dependency plus `auto_select` (`CAP-DIST-content-packages`) works
-    only across wheels, and both bundles ship in the opt-in `devkit-catalog` wheel (`ADR-split-deep-research-bundle`).
-- **Q2 Retention contract**: One indexed material per investigation:
-  `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/<YYYYMMDD>-<slug>.md` with `id: MAT-<slug>`, linking the run's
-  other notes by relative path. Consumers cite the index ID; a note carries its own ID only when cited alone.
-  The layout and fields stay a convention: no rule checks materials (`ADR-retain-research-as-cited-materials`).
-- **Q3 Consumers**: A proposal, spec or ADR cites the index ID in a code span, which `RULE-document-reference`
-  resolves; bare text is no reference edge. Handoff moves only the proposal's own `materials/` and rewrites only IDs
-  it wrote, so the citation survives unchanged. No check changes. The spec skill's proposal reference gains one
-  line: research retained outside the proposal is cited by its MAT ID, never copied into `materials/`. Adaptive
-  current context links the same ID (`/incubate`'s `current-context` reference).
-- **Q4 Resume**: No approach-specific file. In-flight state lives in the transient run brief; once a result is
-  retained, the index carries `Status: partial`, open questions and the next investigation. A resumed run of the
-  same investigation, named by the user, updates that index; a complete material is not rewritten, and later research
-  creates a new material that cites it. Before creating a material, the coordinator checks that the MAT ID resolves
-  to nothing and the directory is absent.
-- **Q5 Workspace**: New runs use `.devkit/transient/deep-research/` with the existing verify-ignored-then-stop check.
-  Old `.devkit/transient/incubation-research/` runs are left in place, never moved or deleted; the entry reads one
-  only when the user names it as an input source.
-- **Q6 Migration**: All catalog bundles share one version. After the upgrade, sync removes the unmodified
-  projections of `incubate-research` and the three moved roles (`[CHANGE: remove <path>]`), keeps edited ones with
-  `ORPHAN_LEFT`, and announces the unselected `deep-research` once with `BUNDLE_UNSELECTED`. A consumer selecting
-  both bundles in one sync gets no conflict: the moved role paths change owner as updates. No distribution change;
-  `INSTALL_GUIDE`, `existing-repository`, `bundle-recommendations` and the catalog README tell an incubation
-  consumer that the entry now needs `uv run devkit add deep-research`, and name the manual step for each
-  customization of a moved role: rename an `incubation:<role>` role-policy key to `deep-research:<role>` (sync fails
-  until then), move `.devkit/overrides/incubation/subagents/<role>.md` to `.devkit/overrides/deep-research/subagents/`
-  (it silently stops applying until then), and move or delete an edited projection left with `ORPHAN_LEFT` before
-  `devkit add deep-research` (the add is refused until then).
-- **Q7 Sequencing**: Host decision (q4), stated in §3.6.
+- **Given** the files of `devkit_catalog/deep_research/bundle/`
+- **When** the integration test reads them
+- **Then** no file contains `configuration.development.approach`, `.devkit/incubation.md` or `incubation`; no file
+  contains a Living Spec document ID; each is at most 12288 bytes; every reference file is named by the skill on a
+  line that says `before` or `when`
 
-### 3. Proposed Design & Impact
+### [AC-04] Both catalog bundles select together without conflict
 
-#### 3.1 The `deep-research` bundle
+- **Given** both `incubation:core` and `deep-research:core` are selected
+- **When** `devkit sync` runs
+- **Then** it completes without `BUNDLE_CONFLICT`; `direction-explorer`, `discovery-critic` and `discovery-planner`
+  are managed under `.devkit/managed/deep-research/subagents/` and absent from `.devkit/managed/incubation/`; the
+  incubation preset holds exactly `incubate`, `incubation-pointer`, `product-clarifier`, `incubation-researcher`,
+  `usage-reviewer` and `current-context-template`
 
-- New catalog bundle `devkit_catalog/deep_research/bundle/` (entry point `deep-research`), preset `core` (default),
-  never `auto_select`. `.devkit/architecture.toml` adds `deep_research` to the `devkit_catalog` package's `data_roots`. Assets: skill `deep-research` (`invocation = "user"`) with `references/orchestration.md`,
-  `references/workspace.md` and `references/synthesis.md`; subagents `direction-explorer`, `discovery-critic`,
-  `discovery-planner` (moved) and `research-investigator` (new). No guidance asset and no bundle constitution: the
-  skill is self-contained (`ADR-split-deep-research-bundle`).
-- The entry keeps the coordinator model, bounded assignments, independent alternatives, source provenance,
-  optional criticism, initial synthesis, bounded partial results, useful alternatives, workspace allocation and
-  selective promotion (`CAP-DLV-idea-incubation` rules 18 to 26).
-- The entry drops the approach check, the `get-context incubation` read and every `.devkit/incubation.md` read or
-  write. It never implements or publishes and creates no SDD Unit, approval or envelope. It writes only its
-  transient run directory and the retained material, and reports their paths.
-- The entry never commits (user, q3). Its report tells the user to commit the retained material through the
-  project's Git policy, because a proposal's Planning worktree starts from committed history and resolves a
-  `MAT-<slug>` citation only once the material is on the base.
-- Under SDD, an explicit `/deep-research` invocation is not development intake: the spec entry does not classify it
-  into a depth. The spec skill's intake rules, `UC-route-development-intent` (a new extension) and
-  `CAP-HARN-agent-guidance`'s approach-aware SDD entry state this exemption; follow-up work the research informs
-  starts as ordinary intake.
-- The skill body opens with "Run only when the user explicitly invokes this entry; never suggest or start it
-  otherwise" (Antigravity has no native explicit-only setting); the description carries no trigger phrasing.
-- Role contracts replace "only the coordinator writes `.devkit/incubation.md`" with "only the coordinator writes the
-  retained material"; the effective-contract path becomes `.devkit/managed/deep-research/subagents/`.
-- Bundle text names no development approach value, so `PROP-rename-incubation-to-adaptive-dev` does not touch it.
+### [AC-05] A moved role's policy key follows the bundle
 
-#### 3.2 Explicit invocation only
+- **Given** both bundles are selected and `.devkit/config.toml` sets `[subagents.roles."incubation:<role>"]` for a
+  moved role
+- **When** `devkit sync` runs
+- **Then** it raises `ConfigError` naming `subagents.roles.incubation:<role>` and leaves the owned files unchanged;
+  the same key as `deep-research:<role>` syncs successfully
 
-- No skill, guidance pointer, guide or role suggests the entry, also on a topic match. Removed: `CAP-DLV-idea-incubation`
-  rule 17's suggestion clause and its §4 sentence on `/incubate`; `incubate-research/SKILL.md` lines 8 and 9 (gone
-  with the move); `/incubate` procedure step 3's suggestion; `/incubate`'s `references/discovery.md` step 3;
-  `UC-incubate-an-idea` extension 4b and its Scenario 8; the incubation pointer's research clause; the "for a broad
-  investigation, explicitly select" sentences in `new-repository` and `existing-repository`; the research paragraph
-  of the catalog README's incubation section.
-- Guides describe `deep-research` only as an installable bundle. Its `bundle-recommendations` row reads "the user
-  asks for an explicit research entry"; repository evidence alone never recommends it.
+### [AC-06] Role contracts keep coordinator ownership of the retained material
 
-#### 3.3 The remaining incubation bundle
+- **Given** the four deep-research role contracts
+- **When** they are read as subagent contracts of bundle `deep-research`
+- **Then** each states that only the coordinator writes the retained material, that the index and HEAD stay
+  unchanged, and that its return carries `status`, source/artifact identity and failure conditions; Codex is
+  `emulated` with `sandbox_mode: workspace-write`; `research-investigator` answers one question per instance and
+  writes an experiment only inside its assigned scratch boundary; the orchestration reference names the effective
+  contracts under `.devkit/managed/deep-research/subagents/`
 
-- Keeps `/incubate`, `product-clarifier`, `incubation-researcher`, `usage-reviewer`, the pointer and the
-  current-context template. `delegation.md` drops the research-only role line; `current-context.md` says to link a
-  retained research material by its MAT ID. `AGENTS.md` and the pointer drop `/incubate-research`.
+### [AC-07] Retention contract: one indexed material cited by ID, never committed by the entry
 
-#### 3.4 Living Spec
+- **Given** the skill and its `synthesis` and `workspace` references
+- **When** the integration test reads them
+- **Then** they state: one material per investigation at `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` with index
+  `<YYYYMMDD>-<slug>.md` carrying `id: MAT-<slug>`; a `Status` line of `complete` or `partial`; the collision check
+  that `devkit docs resolve MAT-<slug>` finds nothing and the directory is absent; a resumed run named by the user
+  updates only a `partial` index; consumers cite the ID in a code span; the run directory under
+  `.devkit/transient/deep-research/`; and that the entry never commits, its report telling the user to commit the
+  material through the project's Git policy
 
-- New CAP-DLV-deep-research (new) holds the research contract: explicit selection, independent installation with or
-  without devkit-spec, explicit invocation with no suggestion, no approach gate, the SDD intake exemption, bounded
-  evidence (7), truthful verification (9), optional support (12), role boundaries (13), preservation of retained
-  materials on sync, removal and re-selection (15), rules 18 to 23, 25 and 26, the retention, collision and
-  citation contract, the role table for its four roles and the workspace path.
-- `CAP-DLV-idea-incubation` keeps product iteration only: rules 17 to 23, 25 and 26 leave; rule 24 stays, reworded
-  to link a research material by its MAT ID; rule 13's role table keeps three roles; §1 and §4 drop the research
-  entry; `UC-research-an-idea-and-shape-a-roadmap` leaves its `usecases`.
-- `UC-research-an-idea-and-shape-a-roadmap` keeps its ID and links CAP-DLV-deep-research (new): step 2 recovers goals
-  without an approach check, extensions 2a and 2b are replaced by "2a SDD project: retained material is cited by a
-  later proposal" and "2b adaptive project: current context links the material", and scenario 2 becomes
-  "Run under either approach". Its Rules line drops approach inspection and adaptive clarification.
-- `UC-route-development-intent` gains the extension for an explicitly invoked approach-neutral research entry.
-- `UC-incubate-an-idea` drops extension 4b and Scenario 8. `CAP-HARN-agent-guidance` describes the two bundles
-  separately. `ARCH-05-2-components` and `ARCH-07-deployment` name both catalog bundles and the new e2e test. The glossary registers **Deep research** (an explicitly
-  invoked, approach-neutral investigation retained as one indexed material).
-- On promotion, `ADR-split-deep-research-bundle` supersedes `ADR-extend-incubation-with-optional-discovery-teams`
-  and `ADR-retain-research-as-cited-materials` supersedes
-  `ADR-keep-discovery-plans-distinct-from-delivery-commitments`; each carries forward the parts it keeps.
+### [AC-08] The entry runs in an installed SDD consumer without devkit-spec
 
-#### 3.5 Tests and packaging
+- **Given** built wheels of devkit-docs, devkit-catalog and their dependencies installed without devkit-spec, in a
+  Git consumer with the default approach
+- **When** the consumer runs `devkit add deep-research`, the skill's workspace example twice, writes a retained
+  material, runs `devkit rules check`, `devkit remove deep-research` and `devkit add deep-research`
+- **Then** `devkit config show` reports approach `sdd`; the skill and four roles are projected; each allocation is a
+  distinct ignored, untracked directory under `.devkit/transient/deep-research/`; `rules check` exits 0; removal
+  deletes the projected skill; the retained material is byte-identical after remove and re-add; `sync --check`
+  exits 0
 
-- `pyproject.toml` gains the `deep-research` entry point; `tests/e2e/smoke.sh` adds it to the exact bundle set;
-  the catalog README lists it.
-- A new integration test module beside `test_incubation.py` moves `test_research_entry_projects_explicit_invocation_for_each_host`,
-  checks the preset, the four roles' projections and coordinator ownership, the skill body guard, selection with
-  `incubation:core` without `BUNDLE_CONFLICT`, and an `incubation:<moved-role>` role key failing while
-  `deep-research:<role>` passes. Text checks: no incubation bundle file contains `incubate-research` or
-  `deep-research`; guides and the catalog README mention `deep-research` only on lines with `devkit add deep-research`
-  or the bundle table row; no deep-research bundle file contains `configuration.development.approach`,
-  `.devkit/incubation.md` or `incubation`; the 12 KiB and no-document-ID checks stay. `test_incubation.py` drops the
-  moved roles and the research skill.
-- The installed-consumer e2e test for deep-research (an extension of the existing module, to avoid a second wheel
-  build, is Development's choice) runs on docs and catalog without devkit-spec under the default
-  `sdd` approach, allocates the workspace example under `.devkit/transient/deep-research/`, and checks that
-  remove and re-add preserve a retained material.
+### [AC-09] Nothing suggests the entry
 
-#### 3.6 Sequencing
+- **Given** the incubation bundle, `guides/` and the catalog README
+- **When** the integration tests read them
+- **Then** no incubation bundle file contains `incubate-research` or `deep-research`; `/incubate`'s procedure and
+  `references/discovery.md` suggest no research entry; every line of `guides/**/*.md` and the catalog README that
+  contains `deep-research` contains `devkit add deep-research`, is the bundle table row starting with
+  ``| `deep-research` ``, or names a moved-role migration path (`deep-research:<role>` or
+  `.devkit/overrides/deep-research/`)
 
-Both drafts edit the incubation bundle, `CAP-DLV-idea-incubation`, the two use cases, the guides and the catalog
-README. This split lands first (Host, q4): `PROP-rename-incubation-to-adaptive-dev` declares
-`depends_on: [PROP-deep-research-bundle]`. This split's Development therefore uses the current `incubation` names for
-the remaining bundle and documents. The rename then renames a bundle that no longer contains the research entry and
-roles, and `deep-research` text names no approach value, so the rename touches none of it. No same-release
-constraint applies, because no consumer uses the incubation bundle yet.
+### [AC-10] SDD intake exempts the explicit research entry and the proposal reference cites materials by ID
 
-#### Non-Goals
+- **Given** the spec skill and its proposal reference
+- **When** an agent reads the intake definition and the `materials/` rule
+- **Then** the intake step states that an explicit `/deep-research` invocation is not intake and gets no playbook
+  discovery, classification or Unit, and that work the research later informs starts as ordinary intake; the
+  proposal reference states that research retained outside the proposal is cited by its `MAT-<slug>` ID in a code
+  span and never copied into `materials/`
 
-- No bundle-dependency, shared-role or moved-asset mechanism in devkit-dist.
-- No new document kind, relation field or materials rule.
-- No migration of old transient runs or of materials already retained by `/incubate-research`.
-- No rename of the incubation bundle, approach, `/incubate` or `.devkit/incubation.md` (`PROP-rename-incubation-to-adaptive-dev`).
+### [AC-11] Migration guidance names the add command and the three manual steps
 
-#### Planning decisions
+- **Given** `guides/INSTALL_GUIDE.md`, `guides/install/existing-repository.md`,
+  `guides/install/bundle-recommendations.md` and the catalog README
+- **When** an incubation consumer upgrades devkit-catalog
+- **Then** they name `uv run devkit add deep-research` for the research entry; `INSTALL_GUIDE`,
+  `existing-repository` and the README also name renaming an `incubation:<role>` role-policy key to
+  `deep-research:<role>`, moving `.devkit/overrides/incubation/subagents/<role>.md` to
+  `.devkit/overrides/deep-research/subagents/`, and moving or deleting an edited projection left with
+  `ORPHAN_LEFT` before `devkit add deep-research`; the recommendation row's signal is "the user asks for an explicit
+  research entry"
 
-- User: explicit invocation only, with the suggestion wording removed; results under `docs/materials/`
-  independent of approach and proposal; no approach gate and no `.devkit/incubation.md` dependency; the rename is
-  a separate proposal.
-- User (historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/answer-01.yaml`): q1 a self-contained `deep-research` with no shared role and no dependency in
-  either direction; q2 the entry name `/deep-research`; q3 the entry never commits and its report directs the
-  commit through the project's Git policy.
-- Host (historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/answer-01.yaml`): q4 this split lands first; the rename depends on it.
-- Planning: `ADR-split-deep-research-bundle` and `ADR-retain-research-as-cited-materials` record the design and
-  supersede the two discovery ADRs; the SDD intake exemption, migration steps, explicit-only body guard, carried
-  rules and collision check fold historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/challenger-01.yaml`, and its finding 3 folds q3.
-- Planning: `.devkit/architecture.toml` joins the boundaries for the new `deep_research` data root.
+### [AC-12] The consumer smoke test sees the new bundle
 
-### 4. Lifecycle & Retirement Criteria
+- **Given** `just smoke` installs the built wheels into a scratch consumer
+- **When** it lists the catalog bundles and runs the default sync
+- **Then** the catalog bundle set is exactly `response-style`, `maintenance`, `cli-tool`, `incubation` and
+  `deep-research`, and `.devkit/managed/deep-research` does not exist
 
-- On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
-  `dev-deep-research-bundle`; the proposal is deleted there and its decisions become ADRs.
-- On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
+## 5. Design
 
+The bundle and its assets follow `ADR-split-deep-research-bundle`; the retained material follows
+`ADR-retain-research-as-cited-materials`.
+
+- **Bundle**: `devkit_catalog/deep_research/bundle/`, entry point `deep-research`, preset `core` (default), version
+  equal to the catalog package. `.devkit/architecture.toml` adds `deep_research` to the catalog `data_roots`. No
+  guidance asset and no bundle constitution: the skill is self-contained.
+- **Entry**: keeps the coordinator model, bounded assignments, independent alternatives, source provenance,
+  optional criticism, initial synthesis, bounded partial results, workspace allocation and selective promotion. It
+  drops the approach check, the incubation context read and every `.devkit/incubation.md` read or write. It writes
+  only its transient run directory and the retained material and reports their paths; it never implements,
+  publishes or commits and creates no Unit, approval or envelope.
+- **Roles**: the three moved contracts replace "only the coordinator writes `.devkit/incubation.md`" with "only the
+  coordinator writes the retained material"; `research-investigator` is derived from `incubation-researcher` but
+  answers one question of a team investigation. User and problem framing stays inline or in a
+  `direction-explorer` premise; usage evidence comes from a bounded investigator experiment.
+- **Resume**: in-flight state lives in the transient run brief; a retained `partial` index carries open questions
+  and the next investigation. An earlier run directory (including an old incubation research run) is read only when
+  the user names it as an input source.
+- **Remaining incubation bundle**: keeps `/incubate`, its three roles, the pointer and the current-context
+  template; drops the research entry, its references and the three moved roles; `delegation.md` drops the
+  research-only role line; `current-context.md` links a retained research material by its MAT ID; the pointer and
+  `AGENTS.md` drop the research entry; `/incubate` step 3 and `references/discovery.md` step 3 drop the suggestion.
+- **Migration**: sync removes unmodified projections of the removed assets, keeps edited ones with `ORPHAN_LEFT`
+  and announces the unselected bundle with `BUNDLE_UNSELECTED`; guides name the add command and the three manual
+  steps of AC-11.
+- **Sequencing**: this split lands before `PROP-rename-incubation-to-adaptive-dev`, so the remaining bundle and
+  documents keep their `incubation` names.
+
+## 6. Assumptions
+
+- The installed-consumer test for deep-research is a new module `tests/e2e/bundles/deep_research/` rather than an
+  extension of the incubation module: it mirrors bundle ownership and keeps each module self-contained, at the cost
+  of one more wheel build in the e2e tier.
+- AC-09 admits the moved-role migration paths besides the two contexts the proposal named, because AC-11 requires
+  the guides to name `deep-research:<role>` and `.devkit/overrides/deep-research/` and neither suggests the entry.
+- `incubation-researcher`'s scratch clause, which named "the research run" of the removed entry, now names a task
+  scratch directory the payload assigns; its scope is otherwise unchanged.
+- The catalog package version stays `0.1.5`; a release bumps it.
