@@ -5,11 +5,13 @@ summary: Make the composed handoff commit its own transaction and make git-opera
 status: planned
 created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-DLV-proposal-planning
+  - CAP-DLV-delivery-workflows
+related_usecases:
+  - UC-plan-and-hand-off-a-proposal
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-git-operator-result-readiness] Separate effect, readiness, permission and next actor in git-operator results
 
@@ -17,13 +19,11 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-git-operator-result-readiness on 2026-10-30.
 - **Preserved Materials**: `docs/materials/2026-10/20261030-git-operator-result-readiness`
-
-### 1. Background & Hypothesis
+- **Decision**: `ADR-composed-handoff-commits-its-own-transaction`
 
 The resource-indexer consumer pilot reused one named `git-operator` for six worktree preparations and one
-Development handoff (`MAT-git-operator-consumer-pilot`, held by this proposal). All seven guarded operations returned
-exit 0 and the Host checked their effects. The operator kept operational details outside the Host context and
-returned refs, paths and remaining effects. The pilot has not established a net token, cost or latency benefit.
+Development handoff (`MAT-git-operator-consumer-pilot`). All seven guarded operations returned exit 0 and the Host
+checked their effects. The pilot has not established a net token, cost or latency benefit.
 
 A successful handoff left a known generated transaction uncommitted. CLI effect completion did not by itself mean
 clean committed worker input, and the return named no uniform owner of the next action. This repository repeated it
@@ -43,136 +43,143 @@ transaction itself.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Separate effect, readiness, permission and next actor in git-operator results so that system capabilities are extended.
+- **US-1**: As a Host starting Development through the composed handoff, I want the handoff to commit its own
+  transaction as one direct child of the reviewed base, so that a worker starts from clean committed input without a
+  Host commit step.
+- **US-2**: As a Host whose handoff commit was refused, I want a stopped result with the commit output, the exact
+  dirty paths and a next action, so that I repair and commit in the Development worktree instead of rerunning.
+- **US-3**: As a Host reading a `git-operator` result, I want worker-input readiness (`head`, `dirty_paths`) reported
+  from Git observation apart from the CLI result and the role status, so that an exit code is never read as ready
+  input.
+- **US-4**: As a Host whose Development branch conflicts with a sibling proposal's merged Planning, I want the
+  guidance to name the resolution, so that the conflict the reference rewrite causes is resolved the same way each
+  time.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: a commit in the plain `devkit spec proposal handoff <slug>`, a configurable commit subject, a
+   rollback of a refused handoff, or skipping Planning-owned siblings in the reference rewrite.
+2. **Scope Excluded**: a new top-level field in the `git-operator` result (`next_actor`, a readiness or permission
+   field); readiness lives under `checks`, and the Host is always the next actor.
+3. **Scope Excluded**: operator source authoring, semantic decisions, approval grants, force operations or arbitrary
+   remote deletion; changing policy or bypassing a host refusal to make a lifecycle operation succeed.
+4. **Scope Excluded**: new model routing, universal native-host guarantees or unmeasured token, cost or latency
+   savings.
+5. **Scope Excluded**: a change to worktree start or setup (`CAP-WT-task-worktrees` stays as it is).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] The composed handoff commits its transaction once
+- **Given** an accepted proposal on a clean retained base and a post-commit hook that rewrites the commit metadata
+- **When** the Host runs `devkit spec proposal handoff <slug> --effort low`
+- **Then** the command exits `0`, `dev-<slug>` holds exactly one new commit with subject
+  `spec: hand off <slug> to Development` whose single parent is the reviewed base head, `git status --porcelain` in
+  the worktree is empty, the JSON `commit` equals `git rev-parse HEAD` read after the hooks, and the text output is
+  `[HANDOFF: PROP-<slug> status=handed_off ... commit=<that sha>]` followed by `[NEXT_CMD: ...]`
 
-## 5. Carried Proposal Notes
+### [AC-02] A refused handoff commit stops with the dirty paths
+- **Given** an accepted proposal on a clean retained base and a pre-commit hook in the repository that exits `1`
+- **When** the Host runs `devkit spec proposal handoff <slug> --effort low`
+- **Then** the command exits `1`, stdout starts with `[HANDOFF_STOPPED: PROP-<slug> status=needs_recovery` and holds
+  `commit=-` and `[NEXT_ACTION: ...]` but no `[NEXT_CMD: ...]`, stderr carries `SPEC_HANDOFF_COMMIT_REFUSED`
+  (`INPUT_ERROR`) with the hook output as `[DETAIL]` and every dirty path as `[TARGET]`, the worktree HEAD is still the
+  reviewed base head, and the spec bundle is present uncommitted
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] The composed acceptance carries the handoff commit
+- **Given** a reviewed proposal on `plan-<slug>` under `proposal-handoff=ask`
+- **When** the Host runs `devkit spec proposal accept <slug> --by user --mode accept_and_handoff --effort low`
+- **Then** on success the result carries `commit` equal to the `dev-<slug>` HEAD and `completed_steps` includes
+  `handoff` and `handoff_commit`; when the handoff commit is refused the command exits `1` with
+  `[ACCEPTED_STOPPED: ...]`, `completed_steps` includes `handoff` but not `handoff_commit`, `commit` is null and the
+  next action is the refusal's, not a next command
 
-### Source feedback
+### [AC-04] The plain handoff stays write-only
+- **Given** an accepted proposal in a `dev-<slug>` checkout
+- **When** the Host runs `devkit spec proposal handoff <slug>` without `--effort`
+- **Then** HEAD does not move and the handoff's writes stay uncommitted
 
-- `FB-handoff-rewrite-edits-sibling-draft`: addressed directly by this proposal (§3.2); it stays open until
-  Development verifies the fix and resolves it. The handoff keeps
-  rewriting a sibling draft's references (its `depends_on` rewrite is a MUST that keeps later handoffs valid); the
-  guidance names the resolution of the later base-merge conflict instead.
+### [AC-05] git-operator reports worker-input readiness from Git observation
+- **Given** the `git-operator` contract and its dispatch and operations references
+- **When** a `handoff` or `prepare-worktree` result is returned
+- **Then** `checks.worker_input` carries `head` and `dirty_paths` from `git -C <worktree> rev-parse HEAD` and
+  `status --porcelain`, every dirty path is also a `remaining_effects` entry so the result is `needs_input` and never
+  `completed`, a CLI exit `0` with dirty paths is reported neither as a failed CLI operation nor as ready input, and
+  the Host compares `checks.worker_input` with its own Git observation before starting a worker
 
-### 2. Technical Spike Questions
+### [AC-06] The operator returns production edits and broader authority to the Host
+- **Given** a job that needs production edits, semantic conflict resolution or authority beyond the job
+- **When** the operator receives it
+- **Then** the contract's authority section has it return that work to the Host and perform no such mutation
 
-- **Q1 Result shape**: How does a return distinguish requested effect completion, verified worker readiness, known
-  dirty or generated outputs, and the next actor's work? CLI readiness stays separate from host execution
-  permission. The three role statuses and the original CLI exit and effects stay, including a null CLI result when
-  approval blocked dispatch.
-  - **Answer**: no new top-level field. For `prepare-worktree` and `handoff` the operator reports
-    `checks.worker_input` with the observed `head` and exact `dirty_paths`. A dirty path is also a
-    `remaining_effects` entry, so the result is `needs_input`, never `completed`. The next action is the Host's:
-    the operator always returns to the Host, which owns scheduling, and `remaining_effects` names the work. Host
-    permission needs no field: a denial before dispatch stays a blocker code with a null `cli_result`, and CLI
-    readiness or `auto` policy is never reported as host permission.
-- **Q2 Handoff interface**: Does the selected design change the handoff or setup interface? `CAP-WT-task-worktrees`
-  changes only if it does; a successful uncommitted transaction is not reclassified as a failed CLI operation.
-  - **Answer**: the composed handoff gains a commit step (`ADR-composed-handoff-commits-its-own-transaction`); its
-    contract lives in `CAP-DLV-proposal-planning`. Worktree start and setup do not change, so
-    `CAP-WT-task-worktrees` stays as it is. The plain `handoff <slug>` stays write-only.
+### [AC-07] Evidence kinds stay separate
+- **Given** results mixing live effects, a host refusal before dispatch and untested cases
+- **When** the operator or Host reports them
+- **Then** the contract keeps the original CLI result (null on a denial before dispatch), role status, Git
+  observation and remaining work apart, never reports CLI readiness or `auto` policy as host permission, and reports
+  no unmeasured cost or latency as an improvement
 
-### 3. Proposed Design & Impact
+### [AC-08] Post-handoff link fixes and the sibling conflict are named
+- **Given** a handoff whose result carries `[UNRESOLVED_LINK]` or `[REWRITTEN ...]` lines outside the new spec and
+  promoted ADRs, and a sibling draft in its own Planning whose `depends_on` the handoff rewrote
+- **When** the Host reads `post-handoff.md`, the `spec` skill's worktree reference and `CAP-DLV-proposal-planning`
+- **Then** after the composed handoff the link fixes are a later Host commit on `dev-<slug>` before a worker starts,
+  the sibling's `depends_on` is still rewritten by the handoff, and the guidance names the resolution of a later
+  base-merge conflict under `docs/proposals/PROP-<other>/`: take the base version, then run `devkit rules fix` on it
 
-#### 3.1 Composed handoff commit (CLI)
+## 5. Assumptions
 
-- `HandoffUseCase._execute` (`features/delivery/usecases/native_handoff.py`) commits after the handoff and scope
-  registration succeed, as `ADR-composed-handoff-commits-its-own-transaction` decides: one commit
-  `spec: hand off <slug> to Development` of the delta `git status` reports (the handoff result does not list the
-  removed proposal files), whose single parent is the reviewed base head, with HEAD read after `git commit` returns.
-- The result gains `commit` (that HEAD, or `null` when no commit landed). `[HANDOFF: ...]` adds `commit=<sha>`.
-  `accept --mode accept_and_handoff` inherits the step through the same use case, records the handoff step in
-  `completed_steps` whenever the handoff writes landed, and carries `commit`.
-- A refused commit (any `git commit` failure: the gate, a missing identity, signing) is a stopped handoff:
-  `status: needs_recovery`, exit `1`, a new `SPEC_HANDOFF_COMMIT_REFUSED` error with the commit output and the dirty
-  paths as `[TARGET]`, the writes kept. The result carries no `next_command`; its `[NEXT_ACTION]` tells the Host to
-  fix what the commit output reports in the `dev-<slug>` worktree and commit there.
+- A commit that landed but is not one clean direct child of the reviewed base (a hook added a commit or left files)
+  is reported as `status: needs_recovery` with `SPEC_HANDOFF_STALE`, the landed `commit` and the dirty paths; the
+  ADR defines only the refused case, and the existing stale code already means "the new worktree changed after the
+  check".
+- A refused commit leaves the handoff's writes staged in the worktree: the Host's later `git commit` there needs no
+  second `git add`, and nothing is rolled back.
+- `SPEC_HANDOFF_COMMIT_REFUSED` takes the `INPUT_ERROR` directive like `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED`: a rerun of
+  the same command refuses the dirty worktree, so the Host fixes the reported cause instead.
+- The composed acceptance adds `handoff_commit` to `completed_steps` when the commit landed and prints `commit=` on
+  `[ACCEPTED: ...]` only for `accept_and_handoff`, so the Host reads the same effect from either composed command.
 
-#### 3.2 Sibling drafts in the reference rewrite
+## 6. Source feedback
 
-- The rewrite is unchanged: a sibling draft's `depends_on` and ID references to the handed-off proposal are rewritten,
-  because a skipped `depends_on` dangles once the dev branch lands and makes every later handoff refuse.
-- `CAP-DLV-proposal-planning` and the post-handoff link check name the resolution of the conflict this causes when
-  the sibling's Planning merges first: on a base-merge conflict in a file under `docs/proposals/PROP-<other>/`, take
-  the base version and run `devkit rules fix` on it, which rewrites the citation (`PROP-<slug> was handed off`).
+- `FB-handoff-rewrite-edits-sibling-draft`: addressed directly (AC-08). The handoff keeps rewriting a sibling
+  draft's references (its `depends_on` rewrite keeps later handoffs valid); the guidance names the resolution of the
+  later base-merge conflict instead. It stays open until completion verifies the fix.
 
-#### 3.3 git-operator result and Host acceptance
+## 7. Carried Proposal Notes
 
-- `git-operator.md` defines `checks.worker_input: {head, dirty_paths}` for `prepare-worktree` and `handoff`, filled
-  from `git -C <worktree> status --porcelain` and `rev-parse HEAD`. Non-empty `dirty_paths` also appear in
-  `remaining_effects`; the result is then `needs_input`. A CLI exit 0 with dirty paths is never reported as a failed
-  CLI operation or as ready input.
-- `git-operator-dispatch.md` makes the Host compare `checks.worker_input` with its own Git observation before starting
-  a worker; an exit code alone never stands for ready input.
-- `git-operator-operations.md` names the handoff's `commit` and `checks.worker_input` in the `handoff` row.
-- Post-handoff link fixes: when the handoff result carries `[UNRESOLVED_LINK]` or `[REWRITTEN ...]` lines outside the
-  new spec and promoted ADRs, the Host runs the post-handoff link check and commits its fixes before starting a
-  worker. The `spec` skill's worktree reference and `post-handoff.md` say so in place of "the same change".
-- `CAP-DLV-delivery-workflows` §4.6.1 states the `worker_input` check. `CAP-DLV-proposal-planning` states the
-  composed handoff commit, `SPEC_HANDOFF_COMMIT_REFUSED`, the sibling conflict resolution, and narrows "handoff does
-  not create a commit" to the plain form. `UC-plan-and-hand-off-a-proposal` updates step 9 (link fixes in a Host
-  commit after the handoff commit) and extension 7a (the refused-commit stop).
+### Planning answers
 
-Evidence stays separated: CLI exit and effects, role status, actual Git observations, host emulation and remaining
-work. Host-permission denial and reauthorization are observations, not reusable approval credentials.
+- **Result shape**: no new top-level field. For `prepare-worktree` and `handoff` the operator reports
+  `checks.worker_input` with the observed `head` and exact `dirty_paths`. A dirty path is also a `remaining_effects`
+  entry, so the result is `needs_input`, never `completed`. The next action is the Host's: the operator always
+  returns to the Host, which owns scheduling, and `remaining_effects` names the work. Host permission needs no field:
+  a denial before dispatch stays a blocker code with a null `cli_result`, and CLI readiness or `auto` policy is never
+  reported as host permission.
+- **Handoff interface**: the composed handoff gains a commit step
+  (`ADR-composed-handoff-commits-its-own-transaction`); its contract lives in `CAP-DLV-proposal-planning`. Worktree
+  start and setup do not change. The plain `handoff <slug>` stays write-only.
 
-#### 3.4 Acceptance checks
+### Planning decisions
 
-| ID | Given | When | Then |
-| --- | --- | --- | --- |
-| GOP-02 | A composed handoff in a clean new worktree | It completes | One commit whose single parent is the reviewed base holds the whole transaction, the worktree is clean, and `commit` equals HEAD read after the hooks. |
-| GOP-02b | A composed handoff whose commit is refused | It stops | Exit `1`, `[HANDOFF_STOPPED ...]`, `SPEC_HANDOFF_COMMIT_REFUSED` with the dirty paths, the writes kept, `[NEXT_ACTION]` and no `[NEXT_CMD]`; under `accept_and_handoff` `completed_steps` includes the handoff. |
-| GOP-02c | The git-operator contract | A `handoff` or `prepare-worktree` result is returned | `checks.worker_input` carries `head` and `dirty_paths`; dirty paths are `remaining_effects` and never `completed`; the Host compares them with its own Git observation before starting a worker. |
-| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host and performs no such mutation. |
-| GOP-07 | Mixed live integration, host-refusal recovery and untested failure cases | Reports are updated after actual observations | Live effects, null CLI result on pre-dispatch denial, isolated fixtures, replays and untested cases remain separate; unknown cost or latency is not reported as an improvement. |
-| GOP-09 | A sibling draft in its own Planning cites the handed-off proposal | The handoff rewrites references and the guidance is read | The sibling's `depends_on` is rewritten, and `CAP-DLV-proposal-planning` and `post-handoff.md` name the take-base-then-`devkit rules fix` resolution. |
-
-GOP-02 and GOP-02b are CLI integration tests under `packages/devkit-spec/tests/integration/features/delivery/` (a
-rewriting post-commit hook and a refusing pre-commit hook in the fixture repository). GOP-02c, GOP-06, GOP-07 and
-GOP-09 are contract-text tests in `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` (and the
-bundle text tests for `post-handoff.md`) plus review.
-
-#### 3.5 Planning decisions
-
-- The user chose the composed handoff commit over a Host commit step or a commit in every handoff (§3.1,
-  `ADR-composed-handoff-commits-its-own-transaction`), readiness under `checks.worker_input` with no new top-level
-  field and no `next_actor` (§3.3), and an unchanged reference rewrite with guidance only over a sibling skip (§3.2).
-- The Host assigned the shared GOP-06 operator-scope wording to this proposal: an operator returns production edits,
+- The user chose the composed handoff commit over a Host commit step or a commit in every handoff, readiness under
+  `checks.worker_input` with no new top-level field and no `next_actor`, and an unchanged reference rewrite with
+  guidance only over a sibling skip.
+- The Host assigned the shared GOP-06 operator-scope wording to this unit: an operator returns production edits,
   semantic conflict resolution and broader authority to the Host. `git-operator.md` keeps that wording in its
   authority section; `PROP-git-operator-planning-completion-route` and `PROP-git-operator-batch-preparation` keep
   GOP-06 only as a regression check and do not reword it.
-- `PROP-git-operator-batch-preparation` reports each item with the §3.3 result shape (`checks.worker_input`,
-  dirty paths in `remaining_effects`) and adds no field of its own.
-- Development of this proposal and its sibling git-operator proposals integrates one at a time in dependency order,
-  so each later sibling rebuilds on the integrated `git-operator.md`, `spec-orchestrate` and delivery capability text.
+- `PROP-git-operator-batch-preparation` reports each item with this result shape (`checks.worker_input`, dirty paths
+  in `remaining_effects`) and adds no field of its own.
+- Development of this unit and its sibling git-operator units integrates one at a time in dependency order, so each
+  later sibling rebuilds on the integrated `git-operator.md`, `spec-orchestrate` and delivery capability text.
 
-#### Non-goals
+### Acceptance check map
 
-- **Scope Excluded**: operator source authoring, semantic decisions, approval grants, force operations or arbitrary
-  remote deletion.
-- **Scope Excluded**: changing policy or bypassing a host refusal to make a lifecycle operation succeed.
-- **Scope Excluded**: new model routing, universal native-host guarantees or unmeasured token, cost or latency savings.
-- **Scope Excluded**: a commit in the plain `devkit spec proposal handoff <slug>`, a configurable commit subject, a
-  rollback of a refused handoff, or skipping Planning-owned siblings in the reference rewrite.
-
-### 4. Lifecycle & Retirement Criteria
-
-- On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
-  `dev-git-operator-result-readiness`; the proposal is deleted there, its decisions become ADRs and its materials move
-  to `docs/materials/`.
-- On Rejection: `status: rejected` only, with the user's reason in the commit message. Before the proposal is
-  deleted, move `MAT-git-operator-consumer-pilot` to `docs/materials/` so the sibling proposals' citations resolve.
-
+| Proposal check | Acceptance criterion |
+| --- | --- |
+| GOP-02 | AC-01 |
+| GOP-02b | AC-02, AC-03 |
+| GOP-02c | AC-05 |
+| GOP-06 | AC-06 |
+| GOP-07 | AC-07 |
+| GOP-09 | AC-08 |
