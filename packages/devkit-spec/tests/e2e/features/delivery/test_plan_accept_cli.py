@@ -236,7 +236,7 @@ def test_accept_cli_text_names_the_merged_target_and_the_disclosure(pending):
     assert result.exit_code == 0, result.output
     line = result.stdout.splitlines()[0]
     assert line.startswith("[ACCEPTED: PROP-idea ") and f" target_sha={moved} " in line
-    assert f" landed={git(repo, 'rev-parse', 'HEAD')} " in line
+    assert f" landed_sha={git(repo, 'rev-parse', 'HEAD')} " in line
     assert 'disclosure="CI rules only on the merged result; tests and review ran on the source only"' in line
 
 

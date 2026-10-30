@@ -26,6 +26,7 @@ from devkit_agt.features.integration.models.contracts import (
 from devkit_agt.features.integration.models.errors import IntegrationConfigError, StaleRequestError
 from devkit_agt.features.worktree import (
     FinishResult,
+    MergeNotFastForwardError,
     build_result,
     fast_forward,
     finish,
@@ -40,6 +41,13 @@ from devkit_agt.features.worktree.repositories.pull_request import GitHub, PullR
 
 if TYPE_CHECKING:
     from devkit_agt.features.integration.usecases.service import IntegrationService, _Record
+
+
+PULL_REQUEST_NOT_FF_FIX = (
+    "Merge the target branch into the task branch in its worktree (git merge with a message the commit-msg gate"
+    " accepts; never rebase, which rewrites the SHAs the task's records cite), re-verify what the merge changed, then"
+    " prepare again"
+)
 
 
 def _error(
@@ -137,7 +145,13 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
     pr = matched[0] if matched else None
     if pr:
         _pr_identity(pr, branch, target)
-    plan = plan_finish(position, branch, delete_branch=False, target_sha=target_sha)
+    try:
+        plan = plan_finish(position, branch, delete_branch=False, target_sha=target_sha)
+    except MergeNotFastForwardError as exc:
+        # The pull-request route lands only a source that contains the target; no local route hint here, since a
+        # required-PR policy may forbid it (``ADR-moved-target-merge``).
+        exc.fix = PULL_REQUEST_NOT_FF_FIX
+        raise
     if plan.worktree_identity and (
         Path(sys.executable).absolute().is_relative_to(plan.path)
         or Path(sys.prefix).resolve().is_relative_to(plan.path)

@@ -23,7 +23,7 @@ plan: PLAN-integration-merge-moved-target
   - _Requirements: AC-11_
   - **Verification**: `just test devkit-spec bundles/spec`, `uv run devkit sync --check`
 
-- [x] **Task 4**: Repository verification policy and reference documents
-  - **_Boundary**: `AGENTS.md`, `docs/development/`, `guides/INSTALL_GUIDE.md`
+- [x] **Task 4**: Repository verification policy, reference documents and the superseded-in-part ADR lines
+  - **_Boundary**: `AGENTS.md`, `docs/development/`, `guides/INSTALL_GUIDE.md`, `docs/decisions/2026-10/20261022-local-and-pull-request-integration.md`, `docs/decisions/2026-10/20261022-test-selection-and-ci.md`
   - _Requirements: AC-09, AC-11_
   - **Verification**: `just rules-check`, `git diff --check`

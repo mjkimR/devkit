@@ -187,9 +187,11 @@ def test_target_advance_while_pending_refuses_a_fresh_invocation(remote_service)
     advance = git(base, "commit-tree", f"{parent}^{{tree}}", "-p", parent, "-m", "advance")
     git(base, "push", "origin", f"{advance}:refs/heads/main")
     fake.pending = False
-    with pytest.raises(MergeNotFastForwardError):
+    with pytest.raises(MergeNotFastForwardError) as raised:
         fresh(service)
     assert fake.merge_calls == 0 and worktree.exists()
+    fix = raised.value.fix or ""  # the pull-request route names only the base merge, never the local route
+    assert "Merge the target branch into the task branch" in fix and "integration prepare" not in fix
 
 
 @pytest.mark.parametrize(
