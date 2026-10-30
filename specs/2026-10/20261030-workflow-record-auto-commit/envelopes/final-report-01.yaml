@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:36:05.514692Z'
+status: completed
+summary: Implemented explicit single-envelope commits with deterministic tracked identity, exact Git scope, normal hooks/signing, same-file retry/idempotence and preserved uncertain effects. Medium independent code and reconcile reviews complete; all findings fixed and verified; six Living Spec targets resolved.
+findings: []
+assumptions:
+- One authored new envelope is eligible only as the sole dirty path; accompanying changes and multi-record transactions keep combined manual commits. One active writer per worktree is required.
+- Self-hosted explicit commits persisted reverify-01 at 97aa4c2e and feedback-01 at fe04288b through normal metadata-rewriting hooks, reporting actual final HEAD.
+checks:
+  tests: 'PASS just test-affected --base c29602db: 2091 passed, mode=partial, 116 paths; focused real-Git/guidance 45 passed; integration stale-source regression 1 passed'
+  build: PASS offline isolated wheel builds devkit-agt and devkit-spec; six changed runtime/guidance archive entries match source bytes
+  lint: PASS devkit/devkit-spec lint-format-types, committed rules check --ci --base c29602db zero violations, sync --check clean
+diff_scope:
+  base: c29602db8b804e956cef4d8fa4a58e4208cc1c7e
+  head: fe04288b6012360a79094f7b8bdfa988910bd5ec
