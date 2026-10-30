@@ -112,8 +112,8 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 
 - `plan_finish` gains an opt-in keyword (`advance`, default off) that only the local integration service (and through
   it composed acceptance) sets: with it, under `no-ff`, a source that does not contain the target plans a merge build
-  and still requires a committer identity. Without it (the pull-request route, `finish --merge`, external library
-  callers) today's refusal and error precedence stay.
+  and still requires a committer identity. Without it (the pull-request route, external library callers) today's
+  refusal and error precedence stay; `finish --merge` does not use `plan_finish` and keeps its own refusal.
 - Local preparation of a moved target builds a prospective merge with `build_result(advance=True)`: unsigned, no ref,
   UTF-8, author and committer lines copied from the committer of the parent with the later committer date, so the
   commit and the request digest do not depend on Git identity, `TZ` or commit encoding; the merged tree follows the
