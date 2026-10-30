@@ -57,6 +57,12 @@ Within this repository, application packages place bundle resource modules under
 may retain their bundle-only layouts. This source convention does not change the installed
 `devkit.bundles` resource-module contract or consumer-facing bundle names (`ARCH-05-2-components`).
 
+**Self-contained bundle text**: a consuming project has none of this repository's documents, so bundle text that a
+wheel of this repository ships MUST cite in backticks no document ID that resolves to a document of this repository,
+unless a shipped bundle seeds a document with that ID; placeholders and examples that resolve to no document are
+allowed, and the repository-only `devkit-dev` bundle is exempt
+(`tools/devkit-dev/tests/integration/test_bundle_citations.py`).
+
 ## 2. Installation and Lifecycle
 
 ```bash

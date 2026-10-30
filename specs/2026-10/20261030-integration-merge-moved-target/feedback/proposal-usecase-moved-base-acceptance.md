@@ -8,7 +8,7 @@ target: UC-plan-and-hand-off-a-proposal
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -39,3 +39,12 @@ Living Spec coverage gap left by a write scope that named only one delivery use 
 reconcile-check-01.yaml finding 1 (P2): UC-plan-and-hand-off-a-proposal is neither a reconcile target nor covered
 by a no-impact statement; CAP-DLV-proposal-planning reflects the contract and nothing contradicts it.
 ```
+
+## Disposition
+
+Resolved by `SPEC-shipped-bundle-citations-and-doc-fixes`: `UC-plan-and-hand-off-a-proposal` has extension 6a (the
+moved-base refusals `SPEC_PROPOSAL_APPROVAL_NOT_READY` and `WORKTREE_MERGE_CONFLICT` before the acceptance commit,
+with the recovery), extension 7g (conflict-free landing without a merge into `plan-<slug>`, with `target_sha`,
+`landed_sha` and `disclosure`) and scenarios 24 and 25. Verified against `CAP-DLV-proposal-planning` and
+`packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py`; `devkit rules check --ci --base main`
+passes.

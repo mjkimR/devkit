@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -35,3 +35,13 @@ rg "`ADR-" packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills -> on
   (the placeholder `ADR-<slug>`)
 review-01.yaml finding (P3): plan.md said "citing the ADR"; worker.md cites none
 ```
+
+## Disposition
+
+Resolved by `SPEC-shipped-bundle-citations-and-doc-fixes`: the convention is that shipped bundle text cites none of
+the authoring repository's document IDs except documents a bundle seeds. It is stated once in the `authoring`
+bundle's `agent-asset-writing` instruction (Self-Containment) and in `CAP-DIST-content-packages`, and
+`tools/devkit-dev/tests/integration/test_bundle_citations.py` pins it over every bundle under `packages/*/src/`
+(the repository-only `devkit-dev` bundle exempt). Verified: the test failed on the advisory `unique_code` guide's
+`CAP-GOV-rule-authoring` citation, passes after its rewording, and `just test-affected` selects it for a bundle
+change in each shipping package.
