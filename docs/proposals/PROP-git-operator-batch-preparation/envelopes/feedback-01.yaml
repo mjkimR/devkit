@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:04:23.681973Z'
+status: completed
+summary: Swept this Planning run (proposal edits, material, challenger round); no new tool or contract friction to record. Recorded none; duplicates none.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
