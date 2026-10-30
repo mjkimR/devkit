@@ -2,7 +2,7 @@
 id: PROP-git-operator-result-readiness
 title: Separate effect, readiness, permission and next actor in git-operator results
 summary: "Make git-operator results keep the original CLI result and effects, host permission, worker-input readiness with exact dirty paths, and the next actor distinct, so an uncommitted handoff transaction is never read as clean committed worker input."
-status: draft
+status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/delivery/
 priority: high
