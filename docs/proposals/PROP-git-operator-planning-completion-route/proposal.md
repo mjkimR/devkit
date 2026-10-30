@@ -61,11 +61,65 @@ Planning without widening the operator's role.
   records a boundary extension in Planning. No acceptance is inferred from policy readiness.
 - **Q3 Dry run**: Should a composed acceptance offer a read-only check, given that `--mode` refuses `--check`?
 
+### Spike findings
+
+Evidence: `MAT-planning-acceptance-route-comparison` (route comparison and code trace), `MAT-git-operator-consumer-pilot`
+(in `PROP-git-operator-result-readiness`), and the scout and challenger envelopes of this Planning.
+
+- **Q1**: The composed `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff` already records and
+  commits the acceptance on `plan-<slug>`, merges it through the guarded integration service, cleans up, and with
+  `accept_and_handoff` hands off. A rerun after a partial result whose acceptance commit landed continues from that
+  commit. The split route (Host `accept` in the Planning worktree, commit, then operator `prepare-integration` and
+  `execute-integration`) costs about four Host actions where the composed command costs one, and adds no capability
+  the composed command lacks. The gap is only that the git-operator operating table lists `handoff` (itself one
+  composed command) but no acceptance.
+- **Q2**: Under `plan-accept=auto` the `direction-handoff` gate passes by policy and its exit
+  (`status reviewing|accepted`) holds for a `reviewing` proposal; `handoff` has no exit, so `next` prints
+  `[STAGE: - complete=yes]` before any acceptance (under `ask` the gate record arrives with `status: accepted`, so a
+  `reviewing` proposal never reaches this state). The composed acceptance treats that state as ready, which is
+  correct. `worker-records.md` §1 ("`--stage` is the stage `devkit workflow next` names") has no answer for it: the
+  envelope contract refuses `-`, and any other text is accepted at write time, where an unknown stage holds every gate.
+  A question recorded at `direction-handoff` holds `plan-accept` for both the composed and the basic acceptance; one
+  recorded at `handoff` would leave the basic acceptance under `ask` unblocked (inferred from code). The stage to
+  name is therefore `direction-handoff`, not the last stage.
+- **Q3**: Every readiness refusal of the composed command, including today's `WORKTREE_MERGE_NOT_FF`, is raised in the
+  preparation before the acceptance write (`plan_finish` and `_Acceptance.preview` run inside
+  `IntegrationService._prepare`), so a refused run leaves nothing written. A refusal after the acceptance commit
+  needs the base to move between that preparation and the re-preparation after the commit; a dry run could not
+  detect that race either. A rerun then either continues from the landed acceptance commit or, when the base
+  diverged, refuses in the preparation until the base is brought into `plan-<slug>`. A separate dry run would
+  repeat the preparation for no additional protection. No test covers the `--mode` with `--check` usage error.
+
 ## 3. Proposed Design & Impact
 
-- The git-operator contract, spec-orchestrate dispatch and spec-review-proposal document the selected acceptance route.
-- Planning worker guidance names the valid stage for a final return under policy-derived readiness.
-- `PROP-integration-merge-moved-target` lands first, so this route documents no base-merge step that proposal removes.
+Recommended design, pending the user's answers to this Planning's questions:
+
+- **Acceptance route (Q1)**: the git-operator operating table gains one operation, `accept-proposal`, that runs only the
+  existing composed command from the retained base:
+  `uv run devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff [--effort <level>]`.
+  The job carries the Host's current `plan-accept` authority (`by`), the `mode` and, for `accept_and_handoff`, the
+  current `proposal-handoff` authority and effort. The operator returns completed and remaining effects; after
+  `needs_recovery` it inspects state and reruns the same command only within current authority. The Host keeps
+  presenting the proposal and obtaining the user's acceptance under `ask`; in `direct` mode the Host runs the same
+  command itself. The split route is not documented as a route. `git-operator.md`, `git-operator-dispatch.md`,
+  `git-operator-operations.md`, `spec-orchestrate` (step 4) and `spec-review-proposal` (step 4) name this route.
+- **Return stage (Q2)**: guidance only, no engine change. `worker-records.md` §1 and `planning.md` step 6 state that a
+  Planning run whose `next` prints `[STAGE: - complete=yes]` while `proposal.md` is still `reviewing` records its
+  `worker` envelope at `direction-handoff`, the stage whose gate the acceptance passes, never at `handoff`; open
+  questions recorded there hold `plan-accept`. The run records no acceptance or handoff effect. A test of the
+  bundle's guidance text pins the mapping.
+- **Dry run (Q3)**: no `--check` for the composed form. The usage error and the operating reference state that the
+  composed command refuses before its first write, and name `devkit spec proposal report <slug>` and
+  `devkit workflow envelope check --unit <dir>` for the read-only material the Host presents under `ask`. One CLI test
+  pins the usage error.
+
+### Assumption on PROP-integration-merge-moved-target
+
+This design assumes that proposal's settled direction lands first: the composed acceptance merges a conflict-free moved
+target itself and refuses only on a real conflict or failing readiness, and that refusal stays in the preparation
+(`plan_finish`), before the acceptance write. If a conflict were instead detected after the acceptance commit, the
+operator returns `needs_input` with the accepted but unmerged `plan-<slug>`, and the Host resolves the conflict on that
+branch before the same command is rerun; the route itself is unchanged. This route documents no base-merge step.
 
 Acceptance checks (from the parent's verification candidates):
 
@@ -82,6 +136,7 @@ Acceptance checks (from the parent's verification candidates):
   remote deletion.
 - **Scope Excluded**: changing policy or bypassing a host refusal to make a lifecycle operation succeed.
 - **Scope Excluded**: unmeasured token, cost or latency savings.
+- **Scope Excluded**: a change to the workflow engine's evaluation or `next` output (`packages/devkit/`).
 
 ## 4. Lifecycle & Retirement Criteria
 
