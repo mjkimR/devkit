@@ -1,7 +1,7 @@
 ---
 id: PROP-git-operator-planning-completion-route
 title: Planning completion and acceptance execution route for git-operator
-summary: "Define how a Planning run records its return when workflow next shows no current stage, and document the Host-record then operator-integration acceptance route, adding a composed acceptance job only if it measurably lowers Host burden."
+summary: "Name the stage a Planning run records its final return at when workflow next shows no current stage, and make the composed accept --mode the single documented Planning acceptance route, with the Host or a git-operator job running it as the user decides."
 status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/delivery/
@@ -17,8 +17,6 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
-    - packages/devkit-spec/src/devkit_spec/features/proposals/
     - packages/devkit-spec/src/devkit_spec/features/delivery/
     - packages/devkit-spec/tests/
     - docs/capabilities/delivery/
@@ -82,52 +80,65 @@ Evidence: `MAT-planning-acceptance-route-comparison` (route comparison and code 
   A question recorded at `direction-handoff` holds `plan-accept` for both the composed and the basic acceptance; one
   recorded at `handoff` would leave the basic acceptance under `ask` unblocked (inferred from code). The stage to
   name is therefore `direction-handoff`, not the last stage.
-- **Q3**: Every readiness refusal of the composed command, including today's `WORKTREE_MERGE_NOT_FF`, is raised in the
-  preparation before the acceptance write (`plan_finish` and `_Acceptance.preview` run inside
-  `IntegrationService._prepare`), so a refused run leaves nothing written. A refusal after the acceptance commit
-  needs the base to move between that preparation and the re-preparation after the commit; a dry run could not
-  detect that race either. A rerun then either continues from the landed acceptance commit or, when the base
-  diverged, refuses in the preparation until the base is brought into `plan-<slug>`. A separate dry run would
-  repeat the preparation for no additional protection. No test covers the `--mode` with `--check` usage error.
+- **Q3**: Every readiness refusal the preparation raises, including today's `WORKTREE_MERGE_NOT_FF`, comes before the
+  acceptance write (`plan_finish` and `_Acceptance.preview` run inside `IntegrationService._prepare`), so such a refusal
+  leaves nothing written. Checks on the built merge (finish guards, CI rules on the landing tree, receipts) run in
+  `_land`, after the acceptance commit; today the landing tree equals the source tree, but with a moved target merged
+  by the command (`PROP-integration-merge-moved-target`) they can newly refuse there. A dry run repeats only the first
+  preparation, so it would not catch those refusals or a base move between the two preparations. A rerun after a
+  later refusal continues from the landed acceptance commit, or refuses in preparation once the base diverged. No test
+  covers the `--mode` with `--check` usage error.
 
 ## 3. Proposed Design & Impact
 
-Recommended design, pending the user's answers to this Planning's questions:
+The single documented Planning acceptance route is the existing composed command, run from the retained base:
+`uv run devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff [--effort <level>]`.
+The split route (Host `accept` in the Planning worktree, commit, then operator integration) is not documented as a
+route. Who runs the composed command is this Planning's open decision (q1); the recommended design follows, with the
+alternative's differences.
 
-- **Acceptance route (Q1)**: the git-operator operating table gains one operation, `accept-proposal`, that runs only the
-  existing composed command from the retained base:
-  `uv run devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff [--effort <level>]`.
-  The job carries the Host's current `plan-accept` authority (`by`), the `mode` and, for `accept_and_handoff`, the
-  current `proposal-handoff` authority and effort. The operator returns completed and remaining effects; after
-  `needs_recovery` it inspects state and reruns the same command only within current authority. The Host keeps
-  presenting the proposal and obtaining the user's acceptance under `ask`; in `direct` mode the Host runs the same
-  command itself. The split route is not documented as a route. `git-operator.md`, `git-operator-dispatch.md`,
-  `git-operator-operations.md`, `spec-orchestrate` (step 4) and `spec-review-proposal` (step 4) name this route.
-- **Return stage (Q2)**: guidance only, no engine change. `worker-records.md` §1 and `planning.md` step 6 state that a
+- **Acceptance route (Q1), recommended: the Host runs it.** `git-operator-operations.md` and `git-operator-dispatch.md`
+  state in one line that Planning acceptance is the Host's composed `accept --mode`, which already includes
+  integration and cleanup, so no operator integration job follows it. `spec-orchestrate` step 4 and
+  `spec-review-proposal` step 4 name the same command. The operator's effects and `ADR-reusable-lifecycle-resource-manager`
+  are unchanged.
+- **Alternative: an operator job.** The operating table gains `accept-proposal`, limited to `--mode accept_only`;
+  Development keeps the existing `handoff` job, so only one handoff path carries the result semantics that
+  `PROP-git-operator-result-readiness` defines. The job carries the Host's current `plan-accept` authority (`by`).
+  Because the operator then writes the `gate:plan-accept` record, beyond the effects that ADR lists, a PADR records the
+  widened operator effect and `CAP-DLV-delivery-workflows` §4.6.1 names it.
+- **Refusal after the acceptance commit (either route).** A refusal raised in preparation leaves nothing written and
+  returns the required source preparation. A refusal after the acceptance commit (a conflict, CI rules or receipts on
+  the built merge, or a base move between the preparations) returns `needs_recovery` with `completed_steps`; the
+  accepted, unmerged `plan-<slug>` goes back to the Host with the reported code, the source is prepared on that branch
+  (base merge and `devkit rules fix` when the code calls for it), and only then is the same command rerun. A rerun that
+  would repeat a deterministic refusal is not made.
+- **Return stage (Q2): guidance only, no engine change.** `worker-records.md` §1 and `planning.md` step 6 state that a
   Planning run whose `next` prints `[STAGE: - complete=yes]` while `proposal.md` is still `reviewing` records its
   `worker` envelope at `direction-handoff`, the stage whose gate the acceptance passes, never at `handoff`; open
-  questions recorded there hold `plan-accept`. The run records no acceptance or handoff effect. A test of the
-  bundle's guidance text pins the mapping.
-- **Dry run (Q3)**: no `--check` for the composed form. The usage error and the operating reference state that the
-  composed command refuses before its first write, and name `devkit spec proposal report <slug>` and
-  `devkit workflow envelope check --unit <dir>` for the read-only material the Host presents under `ask`. One CLI test
-  pins the usage error.
+  questions recorded there hold `plan-accept`. The run records no acceptance or handoff effect.
+- **Dry run (Q3): no `--check` for the composed form.** The usage error says that readiness refusals in preparation
+  precede the first write and a later failure returns `needs_recovery` with `completed_steps`, and names
+  `devkit spec proposal report <slug>` and `devkit workflow envelope check --unit <dir>` for the read-only material the
+  Host presents under `ask`.
 
 ### Assumption on PROP-integration-merge-moved-target
 
 This design assumes that proposal's settled direction lands first: the composed acceptance merges a conflict-free moved
-target itself and refuses only on a real conflict or failing readiness, and that refusal stays in the preparation
-(`plan_finish`), before the acceptance write. If a conflict were instead detected after the acceptance commit, the
-operator returns `needs_input` with the accepted but unmerged `plan-<slug>`, and the Host resolves the conflict on that
-branch before the same command is rerun; the route itself is unchanged. This route documents no base-merge step.
+target itself and refuses only on a real conflict or failing readiness. The route needs no base-merge step before the
+command. Whether that proposal checks the built merge in preparation (its Q4) changes only how often the post-commit
+recovery above occurs, not the route. `depends_on` stays because both proposals change `spec-orchestrate` and the
+spec references, and this guidance must not describe the containment step that proposal removes.
 
 Acceptance checks (from the parent's verification candidates):
 
-| ID | Given | When | Then |
-| --- | --- | --- | --- |
-| GOP-01 | A verified committed Planning source and exact current Host authority | The operator executes Planning acceptance | Only named existing CLI effects run; source drift or missing authority preserves resources and returns the required Host action. |
-| GOP-03 | Auto-policy Planning readiness with no current stage and a reviewing proposal | A worker authors its final return | The record uses an explicit valid workflow stage; no acceptance or handoff effect is invented. |
-| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. |
+| ID | Given | When | Then | Check |
+| --- | --- | --- | --- | --- |
+| GOP-01 | A verified committed Planning source and exact current Host authority | Planning acceptance runs by the chosen route | Only the composed command's existing effects run; source drift or missing authority preserves resources and returns the required Host action; a post-commit refusal returns the accepted, unmerged branch to the Host. | Existing stale and authority tests of the composed acceptance (`packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py`) plus the operating-reference wording check in `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` |
+| GOP-03 | Auto-policy Planning readiness with no current stage and a reviewing proposal | A worker authors its final return | The record uses `direction-handoff`; an open question there makes `accept --mode` refuse; no acceptance or handoff effect is invented. | A new behavior test in `packages/devkit-spec/tests/` |
+| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. | Existing operator contract wording; this proposal adds no check |
+
+Development also adds one CLI test that pins the composed `--mode` with `--check` usage error and its wording.
 
 ### Non-goals
 

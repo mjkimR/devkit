@@ -40,7 +40,9 @@ latency.
 
 Route C costs about four Host actions where A and B cost one, and its intermediate state (accepted but not
 integrated) is the same partial result the composed command already recovers by a rerun. Route C therefore adds
-no capability beyond A or B.
+no capability beyond A or B. Between A and B the count is equal; B moves merge and cleanup output and recovery
+inspection out of the Host context but has not been exercised, and it widens the operator's effects to writing the
+`gate:plan-accept` record (`envelopes/challenger-01.yaml`, findings 2 and 3).
 
 ## Terminal readiness under `plan-accept=auto`
 
