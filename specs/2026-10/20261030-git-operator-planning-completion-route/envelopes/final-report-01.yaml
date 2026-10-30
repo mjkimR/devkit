@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:21:48.787588Z'
+status: completed
+summary: 'The git-operator references, spec-orchestrate and spec-review-proposal name the Host-run composed devkit spec proposal accept --by user|policy --mode as the single Planning acceptance route with no operator job and the post-commit recovery; worker-records.md and planning.md name direction-handoff for the final Planning return under [STAGE: - complete=yes] while reviewing; accept --mode --check is a usage error naming proposal report and workflow envelope check, --mode --direct keeps its own error. Living Spec: CAP-DLV-proposal-planning, CAP-DLV-delivery-workflows. Limits: no engine change and no composed dry run (Non-Goals); git-operator.md unchanged; the known main failure test_agent_output_contract.py::test_fixes_carry_no_placeholder was not in the affected selection and was not run or fixed here.'
+findings: []
+checks:
+  tests: PASS just test-affected mode=partial base=main 1610 passed
+  build: PASS just check devkit-spec 0 errors; uv run devkit sync --check exit 0
+  lint: PASS just lint-check devkit-spec; just rules-check 0 errors; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: ee28c1cefd9adaf435d05ff14cf3e1173a1cc6bf
+  head: 81198f550fef6db6edd0b3c8c085456e70642a17
