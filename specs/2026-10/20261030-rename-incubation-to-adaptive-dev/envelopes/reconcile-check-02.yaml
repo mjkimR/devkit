@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T03:08:37.799588Z'
+status: completed
+summary: 'Implementer verified the reconcile-check-01 fix: the Decisions section now gives each pointer''s reason (two named by ADR-adaptive-dev-approach-name, three by the not-superseded outcome criterion); targets unchanged at 47; reconcile.md resolved.'
+findings: []
+assumptions:
+- 'Self-verified: the fix changed only reconcile.md wording, no Living Spec target'
+checks:
+  rules: PASS devkit rules check --ci --base 0debf74f
+  targets: PASS 47 docs files == 47 targets, unchanged since reconcile-check-01
+diff_scope:
+  base: 27f13e5260e03bb2d57848f10ea5742be87565b1
+  head: 706747179eb85f04408519257d60a41864db3a0c

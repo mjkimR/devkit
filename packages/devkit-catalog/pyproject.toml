@@ -11,7 +11,7 @@ dependencies = []
 response-style = "devkit_catalog.response_style"
 maintenance = "devkit_catalog.maintenance"
 cli-tool = "devkit_catalog.cli_tool"
-incubation = "devkit_catalog.incubation"
+adaptive-dev = "devkit_catalog.adaptive_dev"
 deep-research = "devkit_catalog.deep_research"
 
 [dependency-groups]

@@ -97,5 +97,5 @@ expected.
   link at or above a planned path), carried extras against pre-existing files, junk on both sides, `EXDEV` and a
   failure injected mid-move keeping every pre-existing path byte-identical, and a preflight refusal leaving source
   and destination unchanged with no spec or ADR created.
-- `CAP-DLV-proposal-incubation` states the merge rules, the residual window and the result fields; review checks it
+- `CAP-DLV-proposal-planning` states the merge rules, the residual window and the result fields; review checks it
   against the tests.

@@ -35,6 +35,6 @@ created_at: 2026-10-22
 ## Disposition
 
 - **Disposition (resolved)**: `SPEC-feedback-guidance-fixes` states in the `spec` skill's `references/planning.md` step 2 and in
-  `CAP-DLV-proposal-incubation` 4.4 that a PADR withdrawn before `plan-accept` is deleted in the fold commit and named
+  `CAP-DLV-proposal-planning` 4.4 that a PADR withdrawn before `plan-accept` is deleted in the fold commit and named
   with its reason in the proposal's Planning decisions; no withdrawn status exists. Verified by the spec's review and
   reconcile self-check.

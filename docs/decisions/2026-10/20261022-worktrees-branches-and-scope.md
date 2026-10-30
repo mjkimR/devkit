@@ -19,7 +19,7 @@ aliases:
 - **Date**: 2026-10-22
 - **Deciders**: @mjkimR
 - **Involved Components/Capabilities**: `CAP-DLV-project-policy`, `CAP-DLV-spec-bundles`,
-  `CAP-DLV-proposal-incubation`, `CAP-COLL-work-scope-registry`, `CAP-HARN-agent-guidance`, `ARCH-06-runtime-view`,
+  `CAP-DLV-proposal-planning`, `CAP-COLL-work-scope-registry`, `CAP-HARN-agent-guidance`, `ARCH-06-runtime-view`,
   `ARCH-08-cross-cutting`
 
 ---

@@ -590,7 +590,7 @@ is the canonical shared-only variant. Local file copying and independent worktre
 For response-style, `auto` follows the current user request. For devkit-owned approval copy, `auto` deterministically
 uses English; `ko` and `en` select static domain-owned copy. Unsupported strings select English for both inherited
 consumers. Only bundle declarations opting into `default_from = "presentation.language"` inherit this preference.
-Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation` for approval boundaries.
+Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-planning` for approval boundaries.
 
 ### Shared artifact adapter configuration
 
@@ -602,14 +602,17 @@ this key only when the artifact service selects its adapter. It grants no filesy
 
 ## Shared development approach
 
-`[development] approach = "sdd" | "incubation"` is shared project policy owned by devkit-dist's project feature.
+`[development] approach = "sdd" | "adaptive-dev"` is shared project policy owned by devkit-dist's project feature.
 The absent table/key resolves to `sdd`. Selecting packages/assets or invoking skills does not change it.
 `devkit config show` reports `configuration.development.approach` and `sources["development.approach"]`, whose source
 is `default` or `.devkit/config.toml`. No environment override exists; local configuration rejects the table with
 `CONFIG_LOCAL_KEY_FORBIDDEN`.
 
 IF the development table has an unknown key, wrong shape, type or value, THEN policy-dependent operations MUST
-refuse with `DEVELOPMENT_CONFIG_INVALID` (exit 2) before writing. The commented config template shows its default.
+refuse with `DEVELOPMENT_CONFIG_INVALID` (exit 2) before writing; its fix is
+`Use [development] approach = "sdd" or "adaptive-dev" in .devkit/config.toml`. A committed snapshot is parsed the same
+way, and a value outside the two gets no compatibility reading (`ADR-adaptive-dev-approach-name`). The commented
+config template shows its default.
 `packages/devkit-dist/tests/integration/features/project/test_development.py` and the dist-only suite enforce this.
 
 Libraries import `DevelopmentApproach`, `read_development_approach(root)` and `development_approach(config)` from

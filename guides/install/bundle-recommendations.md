@@ -31,7 +31,7 @@ recommend comes from it.
 | `authoring` (built in, `devkit-agt`) | Both of the above. | Default `all` |
 | `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (run by `devkit-agt`). |
 | `cli-tool` (`devkit-catalog`) | The repository builds, or the user plans, a Python command-line tool that agents run. | Default `all`: the `cli-tool-structure` instruction (click, `devkit-cli`, the required feature layout, import budget) and five structure rules run by `devkit-agt`; `guide`: the instruction only (the preset to take with `devkit-dist` alone). |
-| `incubation` (`devkit-catalog`) | The user wants to discover and build an idea without per-change SDD records, with resumable current product context. | Explicit `core`: `/incubate`, three optional support roles and current-context template. Install devkit-docs plus devkit-catalog, choose shared incubation policy, then `uv run devkit add incubation`. No devkit-spec dependency. |
+| `adaptive-dev` (`devkit-catalog`) | The user wants to discover and build an idea without per-change SDD records, with resumable current product context. | Explicit `core`: `/adaptive-dev`, three optional support roles and current-context template. Install devkit-docs plus devkit-catalog, choose shared adaptive-development policy, then `uv run devkit add adaptive-dev`. No devkit-spec dependency. |
 | `deep-research` (`devkit-catalog`) | The user asks for an explicit research entry. Repository evidence alone never recommends it. | Explicit `core`: a user-invoked research entry, four optional research roles and one indexed material per investigation under `docs/materials/`. Install devkit-docs plus devkit-catalog, then `uv run devkit add deep-research`; it works under either development approach and needs no devkit-spec. |
 | `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line; `[presentation] language = "ko"` supplies an inherited Korean default; an explicit `[bundles.response-style.variables] language` value wins. Run sync after edits. |
 | `maintenance` (`devkit-catalog`) | The user wants bounded drift review, evidence-based weekly reports with separately authorized publication, review and refactoring passes that reduce accumulated code, guidance and CLI surface, or measured performance passes over slow commands. | `upkeep`: drift-reconciliation and review-refactor; `reporting`: weekly-report; `refactoring`: review-refactor alone; `performance`: performance-pass with review-refactor; default `all`: the four playbooks. Selection never executes them; unavailable evidence remains explicit gaps. |
@@ -67,13 +67,13 @@ uv run devkit add --dry-run <bundle>          # preview the files first when uns
   `.devkit/overrides/` for editing.
 
 
-### Incubation policy
+### Adaptive development policy
 
 For development without SDD lifecycle records, install the document system and choose shared policy explicitly:
 
 ```toml
 [development]
-approach = "incubation"
+approach = "adaptive-dev"
 
 [integration]
 provider = "project"
@@ -81,9 +81,9 @@ provider = "project"
 
 Inspect `uv run devkit config show`; the absent approach defaults to `sdd`. Local/environment overrides are not
 supported. Document checks and the project's run/build/lint/test commands remain active. Package or bundle selection
-does not activate either approach. Installed spec extensions reject new SDD lifecycle records in incubation while
+does not activate either approach. Installed spec extensions reject new SDD lifecycle records in adaptive development while
 retaining existing SDD artifact checks. Independent project integration uses explicit passing review/tests/lint
-claims and the ordinary approval/route/cleanup checks. Select `incubation:core` from devkit-catalog for `/incubate`;
+claims and the ordinary approval/route/cleanup checks. Select `adaptive-dev:core` from devkit-catalog for `/adaptive-dev`;
 all three support roles are optional. The coordinator maintains project-owned
-`.devkit/incubation.md`; sync and re-selection preserve it. Baseline adoption is a separate explicit procedure;
+`.devkit/adaptive-dev.md`; sync and re-selection preserve it. Baseline adoption is a separate explicit procedure;
 installing assets or changing this setting does not establish a verified SDD baseline.

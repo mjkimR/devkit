@@ -1,4 +1,4 @@
-"""``devkit spec proposal new|padr|accept|handoff|prune|check``: incubate a proposal, record its preliminary decisions,
+"""``devkit spec proposal new|padr|accept|handoff|prune|check``: plan a proposal, record its preliminary decisions,
 record the user's acceptance, hand it off, and guard Backlog changes.
 
 Text output (paths are relative to the workspace root):
@@ -161,7 +161,7 @@ def _echo_composed(kind: str, slug: str, result: dict[str, Any], effects: bool, 
 
 @click.group(name="proposal")
 def proposal_group() -> None:
-    """Incubate proposals in docs/proposals/ and hand approved ones off to spec bundles."""
+    """Plan proposals in docs/proposals/ and hand approved ones off to spec bundles."""
 
 
 @proposal_group.command(name="new")

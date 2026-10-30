@@ -17,7 +17,7 @@ aliases:
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: not recorded in the members
-- **Involved Components/Capabilities**: `CAP-DLV-proposal-incubation`, `CAP-DLV-delivery-workflows`,
+- **Involved Components/Capabilities**: `CAP-DLV-proposal-planning`, `CAP-DLV-delivery-workflows`,
   `CAP-GOV-spec-rules`, `CAP-GOV-rule-authoring`
 
 ---
@@ -327,7 +327,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
     authority until accepted, implemented and reconciled.
     (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
   - devkit-spec: the rule, its guide and tests, its registration, the proposal template comment (the accepted forms),
-    `CAP-DLV-proposal-incubation` (proposal frontmatter), `CAP-GOV-spec-rules` (the rule catalog with its warning
+    `CAP-DLV-proposal-planning` (proposal frontmatter), `CAP-GOV-spec-rules` (the rule catalog with its warning
     severity) and the `plan-accept` rule of `workflows/sdd-proposal.md`. (ADR-proposal-boundaries-name-existing-paths)
   - Feedback discovery/deduplication includes live proposal-local feedback, including rejected proposals awaiting
     cleanup. Path validation and relevant guides expand; no new document kind, status, general storage root or

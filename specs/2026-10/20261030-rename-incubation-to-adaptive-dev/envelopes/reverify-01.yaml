@@ -1,0 +1,41 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T03:04:14.869214Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the review-01 fixes at b5b41dab: AC-07 now tested (help first line, constitution, pointer, spec skill), split ADR pointer no longer names the researcher, AC-01 text and classifier agree, prose uses adaptive development.'
+findings:
+- issue: 'AC-07 has no automated test: neither the proposal help first line nor the spec constitution, pointer or spec skill naming adaptive-dev and /adaptive-dev is asserted'
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:164; packages/devkit-spec/tests/integration/package/test_help_and_notices.py:15-19
+  failure_condition: A regression to 'Incubate proposals' or the old approach or entry name in the constitution, pointer or spec skill passes every test
+  suggested_action: Assert the help first line and add assert_rule checks on the spec constitution, pointer and spec skill
+  resolution: resolved
+  severity: P2
+- issue: The pointer in ADR-split-deep-research-bundle attributes the product-researcher rename to ADR-adaptive-dev-approach-name, whose outcome does not record it
+  evidence: docs/decisions/2026-10/20261030-split-deep-research-bundle.md:84; docs/decisions/2026-10/20261030-adaptive-dev-approach-name.md section 4
+  failure_condition: A reader following the pointer finds no decision about the role name in the target ADR
+  suggested_action: Remove the researcher name from the pointer or record it in the ADR outcome
+  resolution: resolved
+  severity: P3
+- issue: AC-01's new feedback observation class says fenced evidence and past file paths, while allowlist.py accepts any feedback line without an old ID, prose included
+  evidence: spec.md AC-01; .devkit/transient/probe/allowlist.py classify(); specs/2026-10/20261028-incubation-development-guidance/feedback/usecase-parser-affected-selection.md:21
+  failure_condition: The AC text and the check disagree on what the class covers
+  suggested_action: Make the AC text and the classifier name the same class (observation prose, fenced evidence and past file paths)
+  resolution: resolved
+  severity: P3
+- issue: Some current prose uses the identifier adaptive-dev as an adjective, against the ADR rule that documents say adaptive development
+  evidence: guides/install/adaptive-dev-sdd-adoption.md:1; guides/install/bundle-recommendations.md:70; CAP-DLV-delivery-workflows.md:660; CAP-INT-mcp-services.md:161; UC-advance-an-idea.md:24,30; UC-research-an-idea-and-shape-a-roadmap.md:40,77
+  failure_condition: Readers meet three forms for one concept
+  suggested_action: Use adaptive development in prose and headings; keep adaptive-dev for the value, bundle and entry
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec tests/integration/bundles/spec tests/integration/package 579; just test devkit-catalog 104
+  lint: PASS just lint-check devkit-spec; just check devkit-spec; just rules-check errors=0
+  ac01: PASS allowlist.py unclassified 0
+diff_scope:
+  base: 0b36a202786a6368b6dc66488131871e26f40272
+  head: b5b41dab136d0606f60dbebda20601f925855e6d
+activity_effort: medium

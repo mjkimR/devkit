@@ -33,6 +33,7 @@ Adopt the focused playbook to keep retained-product readiness separate from lega
 
 1. Ship it in spec:core and invoke only for explicitly requested or confirmed graduation. Package/asset installation is a prerequisite, not activation.
 2. Prepare an ordinary material report and needed current-state documents while incubation policy remains effective. Require evidence coverage of the user-selected retained product, with no unresolved retained-scope mismatch or required missing check evidence.
+   Superseded in part by `ADR-adaptive-dev-approach-name`: the approach value is `adaptive-dev`.
 3. Present the exact ready source/scope/effects for the user's activation decision, reusing a decision already bound to them. Change the authoritative approach through the accepted policy contract, include necessary missing-provider configuration or a project-to-spec integration provider switch among the explicitly authorized effects, then sync and verify consistency.
 4. Start ordinary SDD for later changes. Create no historical Units/approvals or discarded-experiment ADRs and preserve existing SDD history.
 

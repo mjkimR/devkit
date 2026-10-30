@@ -51,14 +51,14 @@ default = "direct-delivery"           # workflow id used by `new` when --workflo
 A workflow definition may override any of `work_dir`, `unit_path` and `anchor` in its frontmatter `layout` mapping, so the units of different workflows (proposal bundles under `docs/proposals/`, spec bundles under `specs/`) live in different places and are identified by different anchor files:
 
 ```yaml
-# .devkit/workflows/incubate.md
+# .devkit/workflows/plan-proposal.md
 layout:
   work_dir: docs/proposals
   unit_path: "{slug}"
   anchor: proposal.md
 ```
 
-- `new --workflow incubate` creates the unit under the definition's layout and writes its anchor; `[UNIT: ...]` names the anchor.
+- `new --workflow plan-proposal` creates the unit under the definition's layout and writes its anchor; `[UNIT: ...]` names the anchor.
 - `list` discovers units under every distinct layout in use (the project default plus each discovered definition's) and prints the anchor per row.
 - `next`, `bind`, `handoff`, `requests`, `answer`, `return`, `show --unit` and `envelope` take a unit directory. With `--workflow` (`next`, `bind`), that definition's anchor must exist there. Without it, the engine looks for the project anchor and then every anchor a discovered definition declares: exactly one must be present. None is `UNIT_NOT_FOUND`; more than one is `ANCHOR_AMBIGUOUS`, resolved by passing `--anchor FILE` (every command above except `envelope check`, which only needs some anchor to be present). The binding (or the configured default) then selects the workflow, whose anchor must be the file that was found; otherwise `ANCHOR_MISMATCH` names both, and its fix is renaming the anchor or `bind --workflow <id>` with a workflow whose anchor is the found file.
 - Aliases such as `anchor-exists` resolve against the definition's own anchor, in validation and in evaluation. Layout changes apply on the next evaluation.

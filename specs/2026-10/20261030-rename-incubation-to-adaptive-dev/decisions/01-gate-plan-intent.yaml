@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-rename-incubation-to-adaptive-dev: user confirmed the draft and started
+  local-orchestrated Planning'
+by: user
+at: '2026-10-30T02:34:57.065761Z'
