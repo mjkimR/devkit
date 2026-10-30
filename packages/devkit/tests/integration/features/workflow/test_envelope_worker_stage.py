@@ -45,6 +45,7 @@ def test_an_undeclared_stage_is_refused_before_writing(root: Path, authoring: tu
     assert "[TARGET] --stage" in result.stderr
     assert f"uv run devkit workflow next --unit {SIMPLE_UNIT}" in result.stderr
     assert "declares: s, recover" in result.stderr
+    assert "complete=yes" in result.stderr
     assert _written(root) == []
 
 

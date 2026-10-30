@@ -100,7 +100,8 @@ def _require_declared_stage(ws: Workspace, scope: UnitScope, stage: str) -> None
     raise EnvelopeFlagError(
         f"--stage {stage!r} is not a stage of workflow {doc.id}",
         target_files=["--stage"],
-        fix=f"Pass --stage the stage `{next_command}` names; workflow {doc.id} declares: {', '.join(declared)}",
+        fix=f"Pass --stage the stage `{next_command}` names; when it names none (complete=yes), pass the declared stage"
+        f" the run worked in. Workflow {doc.id} declares: {', '.join(declared)}",
     )
 
 
