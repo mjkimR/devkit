@@ -8,7 +8,7 @@ target: spec-orchestrate skill (development-worker dispatch write scope)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -28,3 +28,10 @@ Dispatch write-scope gap.
   resumed.
 - **Suggestion**: When a dispatch delegates a cross-feature design choice, name `.devkit/architecture.toml` (limited to
   `feature_dependencies` entries) in the write scope, or state that a new feature edge is out of scope.
+
+- **Disposition (resolved)**: `SPEC-generated-conflicts-follow-ups` adds a Workers rule to the `spec-delegate`
+  payload reference: a payload delegating a cross-feature design choice names the architecture declaration in the
+  write scope, limited to its feature edge entries, or states that a new feature edge is out of scope. The shipped
+  rule names no repository path (bundle self-containment); the root `AGENTS.md` names devkit's `feature_dependencies`
+  entries of `.devkit/architecture.toml`. Verified by
+  `packages/devkit-spec/tests/integration/bundles/spec/test_architecture_scope_guidance.py` (AC-05).

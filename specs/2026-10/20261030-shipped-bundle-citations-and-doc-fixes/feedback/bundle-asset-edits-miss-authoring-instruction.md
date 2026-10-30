@@ -8,7 +8,7 @@ target: AGENTS.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -34,3 +34,7 @@ created_at: 2026-10-30
 uv run devkit get-context authoring -> instructions: agent-asset-writing ("... bundle self-containment")
 FB-bundle-text-document-id-citations: "Neither living-spec-writing, document-writing nor the bundle guidance tests state it"
 ```
+
+- **Disposition (resolved)**: `SPEC-generated-conflicts-follow-ups` adds to the root `AGENTS.md` Documentation
+  section: before editing any bundle's skill, playbook, instruction or guide, also run `uv run devkit get-context
+  authoring` and apply its `agent-asset-writing` instruction (AC-07, verified by review; `devkit sync --check` clean).

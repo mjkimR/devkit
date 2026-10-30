@@ -8,7 +8,7 @@ target: scripts/affected_tests.py
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -34,3 +34,8 @@ Affected test selection gap for a test that reads repository data.
 scripts/affected_tests.py DATA "docs/" -> test_documented_codes.py (three packages), test_docs.py, test_library.py
 select() on a bundle file of each shipping package -> partial selection including test_bundle_citations.py
 ```
+
+- **Disposition (resolved)**: `SPEC-generated-conflicts-follow-ups` maps `docs/` and `specs/` to
+  `tools/devkit-dev/tests/integration/test_bundle_citations.py` in the `DATA` table of `scripts/affected_tests.py`
+  (`specs/` leaves the untested prefixes) and updates the selection list in `docs/development/ci-cd.md`. Verified by
+  `packages/devkit/tests/e2e/package/test_affected_tests.py` (AC-06).

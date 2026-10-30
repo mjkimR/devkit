@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 import json
 from collections.abc import Mapping
 from pathlib import Path
@@ -14,6 +16,7 @@ from devkit_agt.features.worktree import (
     CommitFailedError,
     GitUnsupportedError,
     MergeConflictError,
+    MergeFailedError,
     MergeNotFastForwardError,
     WorktreeConfigError,
     build_result,
@@ -24,6 +27,7 @@ from devkit_agt.features.worktree import (
     read_worktree_config,
     start,
 )
+from devkit_core.base.errors import GitError
 from devkit_core.core.locks import file_lock
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
@@ -321,3 +325,30 @@ def test_prospective_build_is_deterministic_unsigned_and_unreferenced(
     assert git(repo, "show", "-s", "--format=%an <%ae> %at|%cn <%ce> %ct", first) == f"{later}|{later}"
     assert git(repo, "rev-parse", f"{first}^1", f"{first}^2").split() == [moved, tip]
     assert git(repo, "log", "-1", "--format=%s", first) == "chore(merge): integrate dev-demo into main"
+
+
+# AC-03 (SPEC-generated-conflicts-follow-ups)
+def test_merge_tree_runs_on_the_shared_git_runner(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    imported = {
+        alias.name
+        for node in ast.walk(ast.parse(inspect.getsource(merging)))
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    assert "subprocess" not in imported
+
+    calls: list[tuple[tuple[str, ...], dict[str, object]]] = []
+
+    def failing(cwd: Path, *args: str, **kwargs: object) -> object:
+        calls.append((args, kwargs))
+        raise GitError("git merge-tree failed", returncode=128, stderr="fatal: bad revision")
+
+    monkeypatch.setattr(merging, "run_git_result", failing)
+    with pytest.raises(MergeFailedError, match="nothing was changed on the target: fatal: bad revision"):
+        merging._merge_tree_output(repo, "main", "topic")
+    assert calls == [
+        (
+            ("merge-tree", "--write-tree", "-z", "--no-messages", "main", "topic"),
+            {"ok_returncodes": (0, 1), "timeout": merging.MERGE_TREE_TIMEOUT},
+        )
+    ]

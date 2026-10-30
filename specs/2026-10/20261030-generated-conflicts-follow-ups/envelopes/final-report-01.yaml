@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:45:36.980033Z'
+status: completed
+summary: 'run_git_result(ok_returncodes) on the shared Git runner (run_git unchanged) and merge-tree on it with no subprocess in merging.py; the generated check before the batch test run in workflow.md, ci-cd.md and AGENTS.md; a spec-delegate payload rule settling the architecture declaration for delegated cross-feature choices (generic in the shipped bundle, devkit''s .devkit/architecture.toml feature_dependencies named in AGENTS.md); docs/ and specs/ select test_bundle_citations.py; AGENTS.md names agent-asset-writing for bundle asset edits. Five source feedback items resolved. Limits: the timeout message of merge-tree gains the runner''s '' in <cwd>''; test_mounted_commands[integration] fails on main independently (FB-integration-help-loads-generated-area).'
+findings: []
+checks:
+  tests: 'PASS just test-affected: 6198 passed, 14 skipped, 1 failure predating this diff (test_mounted_commands[integration], FB-integration-help-loads-generated-area); test_bundle_citations.py 3 passed after the records'
+  build: PASS uv build devkit-core, devkit-agt, devkit-spec; devkit sync --check clean
+  lint: PASS just lint-check; pyright devkit-core, devkit, scripts/affected_tests.py 0 errors; devkit rules check --ci --base 34e8d9b7 clean
+diff_scope:
+  base: 34e8d9b77727908e5c50e44e20f48365fad84842
+  head: 808713e829a0d790a3d38e9c1de4eb39ce0f52cc

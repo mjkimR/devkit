@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:44:31.581334Z'
+status: completed
+summary: 'Self-verification at activity-effort low: reconcile.md targets core.md, workflow.md and ci-cd.md, each matching the diff; CAP-WT-task-worktrees and CAP-DLV-delivery-workflows need no change (no-impact reasons recorded); all five source feedback items resolved with SPEC ID and test evidence.'
+findings: []
+checks:
+  rules: 'PASS devkit rules check: 0 errors'
+  entrypoints: 'PASS devkit spec entrypoints derive: 0 candidates'
+diff_scope:
+  base: 34e8d9b77727908e5c50e44e20f48365fad84842
+  head: 9c8ec63f013c7ee709ea459b671346ee3c00d58e
+activity_effort: low

@@ -16,6 +16,7 @@ from devkit.advisory import AdvisoryError
 ROOT = Path(__file__).resolve().parents[5]
 TESTS = "packages/devkit/tests"
 DIST_TESTS = "packages/devkit-dist/tests"
+CITATIONS = "tools/devkit-dev/tests/integration/test_bundle_citations.py"
 
 
 @pytest.fixture(scope="module")
@@ -114,9 +115,7 @@ def test_an_unmapped_path_selects_the_full_suite(affected: ModuleType) -> None:
     assert (selection.mode, selection.reason) == ("full", "new-directory/tool.py")
 
 
-@pytest.mark.parametrize(
-    "path", ["specs/2026-10/x/spec.md", ".claude/skills/x/SKILL.md", ".agents/skills/x.md", "guides/install.md"]
-)
+@pytest.mark.parametrize("path", [".claude/skills/x/SKILL.md", ".agents/skills/x.md", "guides/install.md"])
 def test_files_no_test_reads_select_nothing(affected: ModuleType, path: str) -> None:
     selection = affected.select(ROOT, [path, "README.md", "packages/devkit-spec/README.md"])
     assert (selection.mode, selection.paths, selection.reason) == ("none", (), "untested")
@@ -133,9 +132,18 @@ def test_docs_select_the_tests_that_read_them(affected: ModuleType, path: str) -
                 f"{TESTS}/integration/features/rules/test_docs.py",
                 f"{TESTS}/integration/package/test_documented_codes.py",
                 f"{TESTS}/integration/features/workflow/test_library.py",
+                CITATIONS,
             )
         )
     )
+
+
+# AC-06 (SPEC-generated-conflicts-follow-ups)
+@pytest.mark.parametrize("path", ["specs/2026-10/x/spec.md", "specs/2026-10/x/envelopes/worker-01.yaml"])
+def test_spec_records_select_the_bundle_citation_test(affected: ModuleType, path: str) -> None:
+    selection = affected.select(ROOT, [path, "README.md"])
+    assert (selection.mode, selection.paths, selection.reason) == ("partial", (CITATIONS,), "specs/")
+    assert (ROOT / CITATIONS).is_file()
 
 
 @pytest.mark.parametrize(
@@ -276,7 +284,7 @@ def test_list_prints_the_selection_without_running(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
     lines = invoke(affected, monkeypatch, ["docs/x.md"], "--list", "--base", "dev")
-    assert lines[0] == "[TEST_SELECTION: mode=partial base=dev changed=1 paths=5 reason=docs/]"
+    assert lines[0] == "[TEST_SELECTION: mode=partial base=dev changed=1 paths=6 reason=docs/]"
     assert lines[1:] == [f"[TEST_PATH: {path}]" for path in affected.select(ROOT, ["docs/x.md"]).paths]
     assert command == []
 
@@ -303,7 +311,7 @@ def test_a_full_selection_runs_the_whole_suite(
 def test_an_empty_selection_runs_nothing(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
-    lines = invoke(affected, monkeypatch, ["specs/x.md"])
+    lines = invoke(affected, monkeypatch, ["guides/x.md"])
     assert lines == ["[TEST_SELECTION: mode=none base=main changed=1 paths=0 reason=untested]"]
     assert command == []
 
