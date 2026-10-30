@@ -19,7 +19,9 @@ children, not declarations of delivered behavior.
 ## 1. Owning contracts
 
 - CAP-DLV-delivery-workflows: exact Planning acceptance execution, effect/readiness reporting, valid Planning
-  return-stage guidance and bounded per-item batch outcomes. Retain Host decisions and the three role statuses.
+  return-stage guidance and bounded per-item batch outcomes. Distinguish original worker audit baseline from
+  known Host target advances and retain latest-base integration preparation. Retain Host decisions and the
+  three role statuses; CLI readiness is separate from host permission.
 - CAP-COLL-work-scope-registry: distinguish current activity write evidence from future implementation candidates
   while preserving informational semantics, provenance, partial coverage and all actual overlap reports.
 - CAP-WT-task-worktrees: document generated handoff state and setup evidence only if the selected design changes
@@ -31,7 +33,7 @@ Changes belong in source bundle role/dispatch/operating guidance and the owning 
 contract, CLI and partial-recovery tests. Managed files and projections change through ordinary sync after source
 changes; they are not edited directly. No implementation or sync is part of this Backlog intake.
 
-GOP-01–07 are proposed acceptance checks. Decomposition assigns only the relevant checks to each selected child.
+GOP-01–08 are proposed acceptance checks. Decomposition assigns only the relevant checks to each selected child.
 An independently selected behavior or lasting authority decision receives its own PADR/ADR when required by the
 existing lifecycle; this draft does not revise accepted decisions. Existing engine and host checks remain in force.
 
@@ -40,4 +42,6 @@ existing lifecycle; this draft does not revise accepted decisions. Existing engi
 MAT-git-operator-consumer-pilot holds the bounded resource-indexer observations and untested rows.
 MAT-git-operator-development-evidence remains the separate development/projection/fixture baseline.
 Keep CLI exit/effects, role status, actual Git observations, host emulation and remaining work distinct.
+The successful split acceptance/integration route is a baseline for evaluating any extra operator job.
+Host-permission denial and later successful reauthorization are observations, not reusable approval credentials.
 Do not replace unknown timing, tokens, pricing or cross-host behavior with estimates or inferred guarantees.
