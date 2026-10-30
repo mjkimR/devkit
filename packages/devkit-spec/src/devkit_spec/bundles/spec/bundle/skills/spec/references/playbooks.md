@@ -8,7 +8,8 @@ skip cases, search and selection rule stay in the skill.
 - Name the candidate as `<bundle>/<playbook>` with what it does, in one line next to the classification statement:
   "Playbook `spec/adr-compaction` consolidates ADRs; confirm to use it, or decline to continue as ordinary work."
 - The confirmation grants what an explicit invocation grants, no more: workflow gates, permissions and user
-  constraints still apply; confirming `spec/adr-compaction` authorizes its deletions at `session` depth.
+  constraints still apply; confirming `spec/adr-compaction` or `spec/feedback-compaction` authorizes its deletions at
+  `session` depth.
 
 ## 2. Classification and records
 

@@ -2,7 +2,7 @@
 id: SPEC-feedback-dedup-and-compaction
 title: Feedback lookup before recording and compaction of closed feedback
 summary: Search existing feedback of every status before recording a new item, and compact closed feedback into short symptom, response and reason records that keep the retired IDs as aliases, so the ledger stays searchable without hundreds of full files.
-status: planned
+status: in-progress
 created: 2026-10-30
 related_capabilities: [CAP-HARN-agent-guidance, CAP-DLV-delivery-workflows]
 related_usecases: []

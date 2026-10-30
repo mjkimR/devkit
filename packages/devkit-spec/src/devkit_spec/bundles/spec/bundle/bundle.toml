@@ -235,6 +235,11 @@ kind = "playbook"
 source = "playbooks/adr-compaction"
 
 [[assets]]
+id = "feedback-compaction"
+kind = "playbook"
+source = "playbooks/feedback-compaction"
+
+[[assets]]
 id = "templates"
 kind = "document"
 source = "templates"
@@ -283,4 +288,5 @@ assets = [
     "sdd-baseline",
     "feedback-hygiene",
     "adr-compaction",
+    "feedback-compaction",
 ]
