@@ -255,8 +255,9 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    bundles outside `feedback/`, done or dropped milestones) and materials, which stay as written and resolve through
    the alias. `uv run devkit docs refs <old-id> --direction in -n 0` lists the referencing paths, those included.
    The same fix rewrites the old ID where an unindexed quick reference (`docs/development/`, `guides/`, package and
-   tool READMEs by default; `CAP-GOV-spec-rules`) cites it in a code span, so only plain-text mentions, feedback
-   `target` fields included, need a manual sweep (`rg <old-id>`). Because the fix rewrites every code-span alias, a
+   tool READMEs by default; `CAP-GOV-spec-rules`) cites it in a code span. A manual sweep (`rg <old-id>`) still
+   covers plain-text mentions, feedback `target` fields included, and every ID-free file outside the configured quick
+   references, such as the root `README.md` and agent guides. Because the fix rewrites every code-span alias, a
    rename spec writes the old IDs as plain text, never in a code span, in its mapping tables and prose, so its record
    keeps which IDs were renamed.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a

@@ -22,8 +22,8 @@ carries the same contract with the Configuration table.
 ## Renaming step
 
 `CAP-DOCS-document-model` section 3.5 item 5 states that the rename's `devkit rules fix` also rewrites code-span
-citations in the configured quick references, so only plain-text mentions (feedback `target` fields included) need a
-manual sweep, and that a rename spec writes the old IDs as plain text in its mapping tables and prose. Only the
+citations in the configured quick references, that a manual sweep still covers plain-text mentions (feedback
+`target` fields included) and ID-free files outside the configured set (the root `README.md`, agent guides), and that a rename spec writes the old IDs as plain text in its mapping tables and prose. Only the
 renaming step changed, by the agreed write scope; the section 1 sentence that `RULE-document-reference` "also reads
 root glossary Owner cells and the IDs cited in steering files" is left as written and does not yet name the quick
 references (a sibling unit owns other parts of this capability).
@@ -46,8 +46,8 @@ setting name is a code identifier of the rule.
 ## Source feedback
 
 - `FB-alias-references-outside-index-unreported`: resolved. The rule checks and fixes cited IDs in the configured
-  quick references; the base's four alias citations are rewritten; plain-text IDs and feedback `target` fields stay a
-  manual sweep that the renaming step names (out of scope by the user's decision). Evidence: the rule tests, a clean
+  quick references; the base's four alias citations are rewritten; plain-text IDs, feedback `target` fields and
+  ID-free files outside the configured set stay a manual sweep that the renaming step names (out of scope by the user's decision). Evidence: the rule tests, a clean
   whole-workspace `devkit rules check`, `review-01` and `reverify-01`.
 - `FB-rules-fix-rewrites-rename-mapping-tables`: resolved with the guidance option (no rule change): the renaming step,
   `spec-specify` and the rule guide say rename specs write old IDs as plain text. Evidence: `test_rename_guidance.py`

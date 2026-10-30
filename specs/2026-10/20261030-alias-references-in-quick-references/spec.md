@@ -109,8 +109,8 @@ says the autofix never rewrites an alias reference in an ADR or PADR, which cont
 - **When** an agent plans a document rename
 - **Then** both state that a rename spec writes the old IDs as plain text, never in a code span, in its mapping tables
   and prose, because `devkit rules fix` rewrites code-span alias references; and the renaming step states that the
-  fix also covers code-span citations in the configured quick references, leaving only plain-text IDs (feedback
-  `target` fields included) to a manual sweep. A bundle guidance test pins the `spec-specify` sentence.
+  fix also covers code-span citations in the configured quick references, leaving plain-text IDs (feedback `target`
+  fields included) and ID-free files outside the configured set to a manual sweep. A bundle guidance test pins the `spec-specify` sentence.
 
 ## 5. Source feedback
 
