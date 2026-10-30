@@ -3,12 +3,22 @@ id: TASKS-scope-activity-write-evidence
 spec: SPEC-scope-activity-write-evidence
 plan: PLAN-scope-activity-write-evidence
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-scope-activity-write-evidence` Show current activity writes beside future implementation impact in scope output
+# Task Breakdown: `SPEC-scope-activity-write-evidence`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/scope/, packages/devkit-spec/tests/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/, docs/capabilities/collaboration/, docs/capabilities/harness/CAP-HARN-agent-guidance.md, docs/usecases/collaboration/UC-run-parallel-work-safely.md
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+## Implementation
+
+- [ ] **Task 1**: Horizon labels, pair and summary counts in `collect` JSON and text, with integration tests
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/scope/services/collection.py`, `packages/devkit-spec/src/devkit_spec/features/scope/services/observation.py`, `packages/devkit-spec/src/devkit_spec/features/scope/cli/collection_output.py`, `packages/devkit-spec/tests/integration/features/scope/`
+  - _Requirements: AC-01, AC-02, AC-03, AC-04_
+  - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/scope/`
+
+- [ ] **Task 2**: Coverage problem `inputs` and the self-base guard, with integration tests
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/scope/services/collection.py`, `packages/devkit-spec/src/devkit_spec/features/scope/services/observation.py`, `packages/devkit-spec/tests/integration/features/scope/`
+  - _Requirements: AC-05, AC-06, AC-07_
+  - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/scope/`
+
+- [ ] **Task 3**: Host scheduling text and the Living Spec contract
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/SKILL.md.jinja`, `docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md`, `docs/capabilities/harness/CAP-HARN-agent-guidance.md`, `docs/usecases/collaboration/UC-run-parallel-work-safely.md`, `.devkit/installation.json` (sync output), `AGENTS.md` (sync output)
+  - _Requirements: AC-08_
+  - **Verification**: `uv run devkit sync --check`, `just rules-check`
