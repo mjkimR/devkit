@@ -8,7 +8,7 @@ target: the "[cgate] Commit rewritten" commit amendment
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-30
 ---
 
@@ -39,3 +39,8 @@ git reflog: 650f6133 HEAD@{12:37:59 +0900}: commit
 date during the run: 12:27 KST
 git config --show-origin --get-regexp 'hook|cgate': no entry
 ```
+
+## Disposition
+
+Dismissed by the user: the `[cgate]` commit rewrite is outside this repository, no devkit behavior relies on commit
+times, and the time-bounded design that exposed it was dropped.

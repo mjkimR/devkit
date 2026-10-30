@@ -8,7 +8,7 @@ target: .devkit/managed/spec/skills/spec/references/source-feedback.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-30
 ---
 
@@ -35,3 +35,8 @@ templates/proposal.md: "Promotion closes the feedback by handing it to follow-up
 verified direct fix without promotion."
 source-feedback.md: "Handoff, planning, document checks or integration alone do not verify a fix."
 ```
+
+## Disposition
+
+Dismissed by the user: `source-feedback.md` already answers it. A direct-fix source stays `open` through Planning and
+handoff, because they do not verify a fix, and completion sets it to `resolved`. This item's own source was handled that way.

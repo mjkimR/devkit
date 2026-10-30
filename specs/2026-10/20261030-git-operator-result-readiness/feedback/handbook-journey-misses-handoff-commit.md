@@ -8,7 +8,7 @@ target: handbook/en/journeys/incubate-and-hand-off-a-proposal.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-30
 ---
 
@@ -49,3 +49,8 @@ created_at: 2026-10-30
 handbook/en/journeys/incubate-and-hand-off-a-proposal.md: "fixes any unresolved link in the same change"
 error table: no SPEC_HANDOFF_COMMIT_REFUSED row (the same in handbook/ko/)
 ```
+
+## Disposition
+
+Dismissed by the user: the release handbook is refreshed only when a release requests it, and that refresh finds
+stale pages itself (`just handbook status`, `HANDBOOK_STALE`). Development does not track handbook drift.

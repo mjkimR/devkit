@@ -8,7 +8,7 @@ target: collaboration.followup_task
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-29
 ---
 
@@ -39,3 +39,8 @@ created_at: 2026-10-29
 ```text
 This agent's turn failed. If you still need this agent, use the available collaboration tools to give it another task.
 ```
+
+## Disposition
+
+Dismissed by the user: the failure is in the agent host's continuation tool, outside this repository's tools and
+assets. It was a single occurrence without a reproduction, so nothing here can act on it.
