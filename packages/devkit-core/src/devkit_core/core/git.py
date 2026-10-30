@@ -2,7 +2,8 @@
 
 ``run_git`` returns bytes: Git paths are arbitrary bytes, so they are decoded with
 ``data.decode("utf-8", errors="surrogateescape")``, which keeps every name
-round-trippable. ``run_git_text`` applies that rule for callers that want text, and
+round-trippable. ``run_git_text`` applies that rule for callers that want text,
+``run_git_result`` serves commands whose nonzero exit is an answer, and
 ``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. These generic
 primitives live here; queries that encode one package's policy live in that package
 and are built on them. ``repository_facts`` scopes a memo of where a repository is.
@@ -12,10 +13,11 @@ from __future__ import annotations
 
 import os
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
+from typing import NamedTuple
 
 from devkit_core.base.errors import GitError
 from devkit_core.core.deadline import Deadline
@@ -59,6 +61,13 @@ def repository_facts() -> Iterator[None]:
         _memo.reset(token)
 
 
+class GitResult(NamedTuple):
+    """The exit status and standard output of a Git command that ``run_git_result`` accepted."""
+
+    returncode: int
+    stdout: bytes
+
+
 def run_git(
     cwd: Path,
     *args: str,
@@ -99,6 +108,28 @@ def run_git(
             key = (where, args, *(os.environ.get(name) for name in _ENVIRONMENT))
             if key in memo:
                 return memo[key]
+    stdout = run_git_result(cwd, *args, input=input, timeout=timeout, index=index, deadline=deadline).stdout
+    if memo is not None:
+        memo[key] = stdout
+    return stdout
+
+
+def run_git_result(
+    cwd: Path,
+    *args: str,
+    ok_returncodes: Collection[int] = (0,),
+    input: bytes | None = None,
+    timeout: float | None = DEFAULT_TIMEOUT,
+    index: str | None = None,
+    deadline: Deadline | None = None,
+) -> GitResult:
+    """Run Git as ``run_git`` does and return its exit status and standard output when the status is accepted.
+
+    For a command whose nonzero exit is an answer, such as ``merge-tree --write-tree``, whose exit ``1`` reports
+    conflicts on standard output: ``ok_returncodes`` names the accepted exit statuses (``0`` alone by default). Any
+    other status raises ``GitError`` exactly as ``run_git`` does, as do a Git that cannot start or does not finish.
+    Takes ``run_git``'s other options and environment; nothing is memoized.
+    """
     command = ("git", "-C", str(cwd), *args)
     label = f"git {args[0]}" if args else "git"
     if deadline is not None:
@@ -121,7 +152,7 @@ def run_git(
         raise GitError(f"{label} timed out after {timeout}s in {cwd}", command=command, stderr=stderr) from exc
     except OSError as exc:
         raise GitError(f"git is not available: {exc}", command=command) from exc
-    if completed.returncode != 0:
+    if completed.returncode not in ok_returncodes:
         stderr = completed.stderr.decode("utf-8", errors="replace").strip()
         raise GitError(
             f"{label} failed in {cwd}: {stderr or f'exit status {completed.returncode}'}",
@@ -129,9 +160,7 @@ def run_git(
             returncode=completed.returncode,
             stderr=stderr,
         )
-    if memo is not None:
-        memo[key] = completed.stdout
-    return completed.stdout
+    return GitResult(completed.returncode, completed.stdout)
 
 
 def run_git_text(

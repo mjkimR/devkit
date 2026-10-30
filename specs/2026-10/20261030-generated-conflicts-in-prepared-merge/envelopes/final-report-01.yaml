@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:17:23.798842Z'
+status: completed
+summary: 'Local integration prepare and integrate of a moved target keep conflicts confined to registered generated files at each artifact''s seed side (registry committed at the build target), refuse any other conflict with per-path details, disclose generated/seeded=/INTEGRATION_GENERATED_SEEDED and land the prepared tree; composed acceptance and the PR route settle nothing; batch completion regenerates stale artifacts before its test run. Limits: the landed artifact stays stale until regenerated; docs/development/{workflow,ci-cd}.md drift recorded as feedback; commit 596bca61 bypassed hooks (Host-accepted), and CI rules from ab7356f3 pass over it.'
+findings: []
+checks:
+  tests: PASS just test-affected --base main mode=partial 2204 passed on 8de7c4eb
+  build: PASS just check devkit 0 errors; devkit sync --check matches the selection
+  lint: PASS just lint-check devkit and devkit-spec; devkit rules check --ci --base ab7356f3 errors=0
+diff_scope:
+  base: ab7356f3fe53e27388ce60b0db6a17229b641c81
+  head: 8de7c4eb1cf95568ef183a125575b53d6715ed11

@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:29:33.778232Z'
+status: completed
+summary: 'code-reviewer (nested, medium initial pass): AC-01 to AC-04 by the rule tests, AC-05 by rules check --ci --base 95b8228c (0 errors), AC-06 by the guide test and rules explain, AC-07 by test_rename_guidance.py; offset rewrite probed on CRLF, blockquotes, tables, masked spans, non-BMP text and repeated citations; staged snapshot, exclude and targets probed; quick-reference scan 0.18 s of a 4.9 s check. One P3 test-coverage finding, no defects.'
+findings:
+- issue: AC-03 says a quick reference removed by [rules] exclude is neither reported nor rewritten, but the rule tests cover only the not-reported half; the fix run uses targets, never exclude.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/tests/test_rule.py:314-324; probe scratch/review-01/test_probe_exclude.py passes today
+  failure_condition: A later change applying exclude to check but not to the quick-reference loop in fix() would rewrite an excluded quick reference with no failing test.
+  suggested_action: Add a fix run with exclude=['guides/a.md'] asserting guides/a.md stays unchanged and guides/b.md is rewritten.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test devkit-docs document_reference rule dir 36 passed; test_rename_guidance.py 1 passed; just test-affected 2084 passed mode=partial
+  lint: PASS uv run devkit rules check --ci --base 95b8228c errors=0 warnings=0
+diff_scope:
+  base: 95b8228c58838b6bb633eb90932363b025419f3e
+  head: ad4c39e84624c8395f8c40126729331d9a37bae0

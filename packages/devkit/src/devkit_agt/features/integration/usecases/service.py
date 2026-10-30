@@ -52,6 +52,7 @@ from devkit_agt.features.integration.models.errors import (
     StaleRequestError,
     TargetMovedError,
 )
+from devkit_agt.features.integration.services.seeding import GeneratedSeeding, seeded_warning
 from devkit_agt.features.worktree import (
     FinishResult,
     MergeFailedError,
@@ -107,6 +108,9 @@ class _Record:
     result: IntegrationResult
     approved: bool = False
     finalized: bool = False
+    # Local builds settle conflicts confined to generated files (``ADR-generated-conflicts-in-prepared-merge``);
+    # composed acceptance does not.
+    seeds: bool = True
     lock: threading.Lock = field(default_factory=threading.Lock)
 
 
@@ -131,6 +135,7 @@ class IntegrationService:
         *,
         lifecycle: AcceptanceLifecycle | None = None,
         approval_gate: str = "dev-integration",
+        settle_generated: bool = True,
     ) -> IntegrationResult:
         guard_execution()
         if (
@@ -208,6 +213,8 @@ class IntegrationService:
             raise RuntimeLocationError("the active interpreter would be removed by approved worktree cleanup")
         # A moved target (the source does not contain it) is checked on the prospective merge the build would land.
         result_sha = None
+        seeds = lifecycle is None and settle_generated
+        seeding = GeneratedSeeding(self.root, plan.target_sha) if seeds else None
         if not plan.already_merged and not is_ancestor(self.root, plan.target_sha, plan.source_sha):
             result_sha = build_result(
                 self.root,
@@ -218,6 +225,7 @@ class IntegrationService:
                 method=plan.merge_method,
                 advance=True,
                 prospective=True,
+                settle=seeding,
             )
         if plan.already_merged:
             # A cleanup-only request builds nothing: the target's policy at prepare is what the cleanup runs under.
@@ -277,7 +285,10 @@ class IntegrationService:
         if plan.already_merged:
             result.steps["merge"] = "skipped"
         result.cleanup_steps = {scope.extension: "not_run" for scope in cleanup}
-        self._records[request.id] = _Record(result)
+        if seeding is not None and seeding.seeded:
+            result.seeded = seeding.seeded
+            result.notices.append(seeded_warning(seeding.seeded))
+        self._records[request.id] = _Record(result, seeds=seeds)
         return result
 
     def _record(self, request_id: str) -> _Record:
@@ -346,7 +357,9 @@ class IntegrationService:
                 and run_git_text(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
             ):
                 raise StaleRequestError("acceptance must produce the exact direct child of the displayed source")
-            fresh = self._prepare(before.branch, request.context.task, approval_gate=request.approval_gate)
+            fresh = self._prepare(
+                before.branch, request.context.task, approval_gate=request.approval_gate, settle_generated=False
+            )
             after = fresh.request.context.finish
             if after.source_sha != accepted:
                 raise StaleRequestError("the source differs from the service-created acceptance commit")
@@ -526,7 +539,7 @@ class IntegrationService:
             cleanup_done = {name for name, state in result.cleanup_steps.items() if state == "completed"}
             if not merged:
                 operation = "merge"
-                self._land(result, head, approving, removed=removed, cleanup_done=cleanup_done)
+                self._land(result, head, approving, removed=removed, cleanup_done=cleanup_done, seeds=record.seeds)
                 merged = True
             else:
                 self._validate(
@@ -629,9 +642,20 @@ class IntegrationService:
         return result
 
     def _land(
-        self, result: IntegrationResult, head: str | None, approving: bool, *, removed: bool, cleanup_done: set[str]
+        self,
+        result: IntegrationResult,
+        head: str | None,
+        approving: bool,
+        *,
+        removed: bool,
+        cleanup_done: set[str],
+        seeds: bool = True,
     ) -> None:
-        """Build the result commit on the current target, check it and fast-forward the base onto it."""
+        """Build the result commit on the current target, check it and fast-forward the base onto it.
+
+        With ``seeds`` the build settles conflicts confined to generated files as preparation did, and the result
+        discloses them in place of an earlier build's disclosure.
+        """
         request = result.request
         plan = request.context.finish
         if not approving:
@@ -646,6 +670,9 @@ class IntegrationService:
         self._validate(request, merged=False, removed=removed, finalized=False, cleanup_done=cleanup_done, target=head)
         result.steps["merge"] = "running"
         result.build_target, result.result_sha = head, None
+        result.seeded = ()
+        result.notices[:] = [notice for notice in result.notices if notice.code != "INTEGRATION_GENERATED_SEEDED"]
+        seeding = GeneratedSeeding(self.root, head) if seeds else None
         result.result_sha = build_result(
             self.root,
             branch=plan.branch,
@@ -654,7 +681,11 @@ class IntegrationService:
             source=plan.source_sha,
             method=plan.merge_method,
             advance=True,
+            settle=seeding,
         )
+        if seeding is not None and seeding.seeded:
+            result.seeded = seeding.seeded
+            result.notices.append(seeded_warning(seeding.seeded))
         context = self._context(result)
         merge_base = run_git_text(self.root, "merge-base", head, plan.source_sha)
         run_finish_guards(self.root, plan.branch, merge_base, plan.source_sha)

@@ -8,7 +8,7 @@ target: CAP-DIST-sync-and-transactions
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -34,3 +34,10 @@ docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md (Personal rende
   "Missing or stale evidence or changed variables/presentation preferences raise CONFIG_LOCAL_RENDER_STALE (exit 1, run sync)."
 local_render.py LocalRenderStaleError.fix: "Run `uv run devkit sync --locked` ... Only if it reports RECEIPT_STALE run a plain `uv run devkit sync` ..."
 ```
+
+## Disposition
+
+Resolved by `SPEC-shipped-bundle-citations-and-doc-fixes`: the personal rendering paragraph of
+`CAP-DIST-sync-and-transactions` now reads "(exit 1; `devkit sync --locked`, a plain sync only when it reports
+`RECEIPT_STALE`)". Verified against the `LocalRenderStaleError` fix, `CAP-DIST-context-and-playbooks` and the
+distribution reference; `devkit rules check --ci --base main` passes.

@@ -11,13 +11,15 @@ deterministic prospective commit that never lands (``ADR-moved-target-merge``).
 
 from __future__ import annotations
 
+import os
 import re
+import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import is_ancestor, run_git, run_git_text
+from devkit_core.core.git import is_ancestor, run_git, run_git_result, run_git_text
 from devkit_core.core.locks import file_lock
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import commit_config
@@ -29,6 +31,7 @@ from devkit_agt.features.worktree.models.errors import (
     MergeFailedError,
     MergeNotFastForwardError,
 )
+from devkit_agt.features.worktree.models.merging import SIDES, ConflictSettler
 from devkit_agt.features.worktree.repositories.config import MERGE_METHODS
 
 COMMIT_TIMEOUT = 30.0  # seconds for `git commit-tree`, a signing program included
@@ -92,24 +95,81 @@ def git_version(base: Path) -> tuple[int, int]:
     return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
 
-def _merge_tree(base: Path, target: str, source: str) -> str:
+def _merge_tree_output(base: Path, target: str, source: str) -> tuple[int, bytes]:
+    """Run ``git merge-tree --write-tree -z --no-messages``; its exit status (``0`` clean, ``1`` conflicted) and output.
+
+    Exit ``1`` is an answer whose standard output carries the conflicted entries, so the shared runner accepts it; any
+    other failure is ``MergeFailedError``.
+    """
+    try:
+        return run_git_result(
+            base,
+            *("merge-tree", "--write-tree", "-z", "--no-messages", target, source),
+            ok_returncodes=(0, 1),
+            timeout=MERGE_TREE_TIMEOUT,
+        )
+    except GitError as exc:
+        if exc.returncode is None:  # Git did not start or did not finish
+            raise MergeFailedError(f"{exc.message}; nothing was changed on the target") from exc
+        raise MergeFailedError(
+            f"git merge-tree failed; nothing was changed on the target: {exc.stderr or f'exit status {exc.returncode}'}"
+        ) from exc
+
+
+def _conflicts(records: list[bytes]) -> dict[str, dict[int, tuple[str, str]]]:
+    """The conflicted paths of ``merge-tree -z`` output and, per path, each stage's ``(mode, object id)``."""
+    found: dict[str, dict[int, tuple[str, str]]] = {}
+    for record in records:
+        if not record:
+            continue
+        meta, _, raw = record.partition(b"\t")
+        mode, oid, stage = meta.decode().split(" ")
+        found.setdefault(os.fsdecode(raw), {})[int(stage)] = (mode, oid)
+    return found
+
+
+def _seeded_tree(base: Path, tree: str, sides: dict[str, tuple[str, str] | None]) -> str:
+    """``tree`` with each path of ``sides`` set to its ``(mode, object id)``, or removed for ``None``.
+
+    Uses a temporary index outside the repository, so no index, ref or checkout of the repository changes.
+    """
+    lines = b"".join(
+        (f"{entry[0]} {entry[1]}" if entry else f"0 {'0' * len(tree)}").encode() + b"\t" + os.fsencode(path) + b"\0"
+        for path, entry in sorted(sides.items())
+    )
+    with tempfile.TemporaryDirectory(prefix="devkit-merge-") as scratch:
+        index = str(Path(scratch) / "index")
+        run_git(base, "read-tree", tree, index=index)
+        run_git(base, "update-index", "-z", "--index-info", input=lines, index=index)
+        return run_git_text(base, "write-tree", index=index)
+
+
+def _merge_tree(base: Path, target: str, source: str, settle: ConflictSettler | None = None) -> str:
     if git_version(base) < MERGE_TREE_VERSION:
         raise GitUnsupportedError(
             "merging an advanced target needs git merge-tree --write-tree (Git 2.38 or later); nothing was changed"
         )
-    try:
-        output = run_git_text(
-            base, "merge-tree", "--write-tree", "--no-messages", target, source, timeout=MERGE_TREE_TIMEOUT
+    returncode, output = _merge_tree_output(base, target, source)
+    records = output.split(b"\0")
+    tree = records[0].decode().strip()
+    if returncode == 0:
+        return tree
+    conflicts = _conflicts(records[1:])
+    if settle is None or not conflicts:
+        raise MergeConflictError(
+            "the target's later commits conflict with the task branch; nothing was changed on the target"
         )
-    except GitError as exc:
-        if exc.returncode == 1:
-            raise MergeConflictError(
-                "the target's later commits conflict with the task branch; nothing was changed on the target"
-            ) from exc
-        raise MergeFailedError(
-            f"git merge-tree failed; nothing was changed on the target: {exc.stderr or exc.message}"
-        ) from exc
-    return output.splitlines()[0].strip()
+    sides = settle(tuple(sorted(conflicts)))
+    unsettled = [path for path in sorted(conflicts) if sides.get(path) not in SIDES]
+    if unsettled:
+        raise MergeConflictError(
+            f"the target's later commits conflict with the task branch in {len(unsettled)} file(s) left unsettled;"
+            " nothing was changed on the target",
+            *unsettled,
+        )
+    return _seeded_tree(
+        base, tree, {path: stages.get(2 if sides[path] == "ours" else 3) for path, stages in conflicts.items()}
+    )
 
 
 def _committer(base: Path, commit: str) -> tuple[int, bytes]:
@@ -161,6 +221,7 @@ def build_result(
     method: str,
     advance: bool = False,
     prospective: bool = False,
+    settle: ConflictSettler | None = None,
 ) -> str:
     """Build the commit that lands ``source`` onto ``target`` and return its id; no ref or checkout changes.
 
@@ -168,7 +229,8 @@ def build_result(
     the source tree with parents ``target`` and ``source`` when the source contains the target; otherwise, only with
     ``advance`` (an approved integration absorbing later target commits), it merges the trees with
     ``git merge-tree --write-tree`` (``WORKTREE_GIT_UNSUPPORTED`` below Git 2.38, ``WORKTREE_MERGE_CONFLICT`` on a
-    conflict) and commits that. ``git commit-tree`` uses the configured identity, signs (``-S``, with
+    conflict) and commits that. With ``settle`` a conflicted merge asks it which side each conflicted path keeps
+    (``ConflictSettler``) and commits that tree instead of refusing; without one, every conflict refuses. ``git commit-tree`` uses the configured identity, signs (``-S``, with
     ``user.signingKey`` and ``gpg.*``) when ``commit.gpgSign`` is on, since the plumbing command ignores that setting
     itself, and is bounded by ``COMMIT_TIMEOUT`` (``WORKTREE_COMMIT_FAILED``). With ``prospective`` (local
     preparation, which checks a result before the confirmation) a ``"no-ff"`` build writes the deterministic unsigned
@@ -188,7 +250,7 @@ def build_result(
     if contained:
         tree = run_git_text(base, "rev-parse", "--verify", f"{source}^{{tree}}")
     elif advance:
-        tree = _merge_tree(base, target, source)
+        tree = _merge_tree(base, target, source, settle)
     else:
         raise MergeNotFastForwardError(
             f"{branch} does not contain {target_branch} at {target[:12]}; nothing was changed"

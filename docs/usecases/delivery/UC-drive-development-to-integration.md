@@ -92,8 +92,9 @@ The integration executor's coded refusals this section does not name, and their 
   `handoff` result, the Host compares its `checks.worker_input` (`head`, `dirty_paths`) with its own Git observation
   and starts the worker only on a clean HEAD (`CAP-DLV-delivery-workflows`). Once every unit of the run is finished
   (integrated, blocked with its problem recorded, waiting for a user decision or continued in `direct`) and no worker
-  turn is running, the Host runs the repository's integrated-content tests once on the base branch HEAD from the
-  batch start and reports the tested head, command and result; a failure becomes feedback and nothing is reverted
+  turn is running, the Host runs `devkit generated check` on the base branch HEAD, regenerates and commits any stale
+  artifact (`devkit generated regen <ids>`), then runs the repository's integrated-content tests once on that head
+  from the batch start and reports the tested head, command and result; a failure becomes feedback and nothing is reverted
   (`CAP-HARN-agent-guidance`); resumes at step 6.
 - **3a.** The effort is `low`: the author reviews the change and self-checks the reconcile, still recorded as review
   and reconcile-check envelopes (`CAP-DLV-delivery-workflows`); resumes at step 5.
@@ -143,12 +144,19 @@ The integration executor's coded refusals this section does not name, and their 
   `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness (after 7f and 7g) and changes nothing; the source needs no change, and the agent,
   with separately granted authority, runs integration from the base checkout with a runtime built from the source's
   code outside the worktree (`CAP-INT-mcp-services`); resumes at step 7.
-- **7i.** Preparation of a moved base refuses: its merge conflicts with the branch (`WORKTREE_MERGE_CONFLICT`), the
+- **7i.** Preparation of a moved base refuses: its merge conflicts with the branch in a file no generated artifact
+  settles (`WORKTREE_MERGE_CONFLICT`, one detail per such file), the
   merged result fails a CI rule, or the base changed the unit directory since the merge base
   (`INTEGRATION_NOT_READY`), or the merge leaves a receipt record inconsistent (`INTEGRATION_RECEIPT_CONFLICT`), and
   nothing changes. The agent merges the base into the branch, then resolves the conflict, runs `devkit rules fix`
   after a CI-rule reason or `devkit sync` after a receipt conflict, commits and re-verifies what the merge changed
   (`CAP-INT-mcp-services`); resumes at step 6.
+- **7j.** Every conflict of the merge with a moved base is in a file a generated artifact owns, such as
+  `.devkit/installation.json`, and no artifact to regenerate reads another conflict: preparation keeps each file at
+  its artifact's seed side, runs the checks on that result and discloses the artifacts (`generated`,
+  `INTEGRATION_GENERATED_SEEDED`); the agent presents them with the scope, and after landing runs the disclosed
+  `devkit generated regen <ids>` on the base and commits, or leaves it to the batch completion of a
+  `local-orchestrated` run (`CAP-INT-mcp-services`, `CAP-GEN-tracked-artifacts`); resumes at step 7.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with
   `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target; the agent prepares again on
   the current base without merging it into the branch (`CAP-INT-mcp-services`); resumes at step 7.
@@ -389,7 +397,8 @@ The integration executor's coded refusals this section does not name, and their 
 
 ### Scenario 30: A conflicting moved base refuses at preparation
 - **Covers**: 7i
-- **Given**: a task branch and a base that changed the same lines of one file since the branch was cut
+- **Given**: a task branch and a base that changed the same lines of one file no generated artifact owns since the
+  branch was cut
 - **When**: the agent prepares the integration
 - **Then**: it refuses with `WORKTREE_MERGE_CONFLICT`, the base, the branch and the worktree are unchanged, and the
   agent merges the base into the branch to resolve the conflict before preparing again
@@ -398,5 +407,14 @@ The integration executor's coded refusals this section does not name, and their 
 - **Covers**: 1b
 - **Given**: a `local-orchestrated` run that integrated two units and holds a third waiting for a user decision
 - **When**: no worker turn of the run is still running
-- **Then**: the Host runs `just test-affected --base <batch start>` (this repository's selector) once on the base
-  branch HEAD and reports the head, the command and the result; a failure is recorded as feedback
+- **Then**: the Host runs `devkit generated check` on the base branch HEAD and commits `devkit generated regen <ids>`
+  for any stale artifact, then runs `just test-affected --base <batch start>` (this repository's selector) once on
+  that head and reports the head, the command and the result; a failure is recorded as feedback
+
+### Scenario 32: A conflict only in the installation receipt is seeded and disclosed
+- **Covers**: 7j
+- **Given**: a task branch and a moved base that both changed `.devkit/installation.json` and nothing else in conflict
+- **When**: the agent prepares and, after the user's approval, integrates on the local route
+- **Then**: preparation and integration complete with `seeded=devkit-receipt` and an `INTEGRATION_GENERATED_SEEDED`
+  warning naming `uv run devkit generated regen devkit-receipt`, the landed tree keeps the base's receipt and equals
+  the prepared result, and the branch received no base merge

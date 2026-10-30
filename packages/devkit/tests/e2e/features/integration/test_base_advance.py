@@ -475,3 +475,157 @@ def test_post_merge_metadata_rewrite_then_a_fresh_call_completes_cleanup(repo, m
     commit(base, "later.txt")
     monkeypatch.setattr(lifecycle, "_remove", original)
     assert integrate(IntegrationService(base)).status == "completed" and not worktree.exists()
+
+
+def _projection(side: str) -> str:
+    """A receipt whose only record is an untracked projection's, so ``check_merge`` has nothing tracked to compare."""
+    return _receipt({".agents/skill.md": side.encode()})
+
+
+def _diverge(base: Path, worktree: Path, files: dict[str, tuple[str, str, str]]) -> tuple[str, str]:
+    """Commit each file's base text on the target and merge it into the branch, then the source and target texts."""
+    for side, root in ((0, base), (1, worktree), (2, base)):
+        if side == 1:
+            git(worktree, "merge", "-q", "main")
+        for rel, texts in files.items():
+            write(root, rel, texts[side])
+        git(root, "add", ".")
+        git(root, "commit", "-qm", f"side {side}")
+    return git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
+
+
+def test_receipt_only_conflict_is_seeded_from_the_target_and_disclosed(repo, ready_provider):
+    """``ADR-generated-conflicts-in-prepared-merge``: prepare and integrate land one seeded tree and disclose it."""
+    base, worktree = repo
+    receipt = ".devkit/installation.json"
+    tip, moved = _diverge(
+        base, worktree, {receipt: (_projection("base"), _projection("source"), _projection("target"))}
+    )
+    service = IntegrationService(base)
+    prepared = service.prepare("dev-demo", TASK)
+    prospective = ready_provider.calls[-1].result_sha
+    assert prospective is not None
+    assert git(base, "show", f"{prospective}:{receipt}") == _projection("target").rstrip("\n")
+    assert [(item.id, item.paths, item.seed, item.kept) for item in prepared.seeded] == [
+        ("devkit-receipt", (receipt,), "ours", "target")
+    ]
+    generated = prepared.compact_dict()["generated"]
+    assert generated["regenerate"].endswith("devkit generated regen devkit-receipt")
+    (notice,) = prepared.notices
+    assert notice.code == "INTEGRATION_GENERATED_SEEDED" and notice.target_files == (receipt,)
+    assert "devkit generated regen devkit-receipt" in (notice.fix or "") and "commit" in (notice.fix or "")
+    result = integrate(service)
+    assert result.status == "completed", result.errors
+    assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
+    assert git(base, "rev-parse", "HEAD^{tree}") == git(base, "rev-parse", f"{prospective}^{{tree}}")
+    assert result.compact_dict()["generated"] == generated
+    assert [item.code for item in result.notices] == ["INTEGRATION_GENERATED_SEEDED"]
+
+
+def test_project_artifact_seeded_from_the_source(repo):
+    base, worktree = repo
+    write(base, ".devkit/generated.toml", "[artifacts.lock]\npaths = ['uv.lock']\ncommand = 'true'\nseed = 'theirs'\n")
+    git(base, "add", ".")
+    git(base, "commit", "-qm", "register the lock")
+    _diverge(base, worktree, {"uv.lock": ("base\n", "source\n", "target\n")})
+    result = integrate(IntegrationService(base))
+    assert result.status == "completed", result.errors
+    assert git(base, "show", "HEAD:uv.lock") == "source"
+    assert result.compact_dict()["generated"]["seeded"] == [
+        {"id": "lock", "paths": ["uv.lock"], "seed": "theirs", "kept": "source"}
+    ]
+
+
+@pytest.mark.parametrize(
+    ("other", "detail"),
+    [
+        ("README.md", "README.md: owned by no generated artifact"),
+        ("AGENTS.md", "AGENTS.md: read by devkit-receipt"),
+    ],
+)
+def test_receipt_conflict_beside_another_conflict_refuses_with_nothing_changed(repo, other, detail):
+    base, worktree = repo
+    tip, moved = _diverge(
+        base,
+        worktree,
+        {
+            ".devkit/installation.json": (_projection("base"), _projection("source"), _projection("target")),
+            other: ("base\n", "source\n", "target\n"),
+        },
+    )
+    before = git(base, "show-ref")
+    with pytest.raises(MergeConflictError) as raised:
+        IntegrationService(base).prepare("dev-demo", TASK)
+    assert raised.value.details == (detail,) and "Merge the target branch" in (raised.value.fix or "")
+    assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
+    assert git(base, "rev-parse", "dev-demo") == tip and worktree.exists()
+    assert git(worktree, "status", "--porcelain") == "" and git(base, "status", "--porcelain") == ""
+
+
+def test_seeded_receipt_that_leaves_a_record_inconsistent_refuses(repo, ready_provider):
+    base, worktree = repo
+    lines = b"one\ntwo\n"
+    ours = b"ONE\ntwo\n"
+    receipt = _receipt({"managed.md": lines})
+    tip, moved = _diverge(
+        base,
+        worktree,
+        {
+            "managed.md": (lines.decode(), ours.decode(), lines.decode()),
+            ".devkit/installation.json": (
+                receipt,
+                _receipt({"managed.md": ours}),
+                receipt.replace('"mode": 420', '"mode": 493'),
+            ),
+        },
+    )
+    with pytest.raises(ReceiptConflictError) as raised:
+        IntegrationService(base).prepare("dev-demo", TASK)
+    assert list(raised.value.target_files) == ["managed.md"]
+    prospective = ready_provider.calls[-1].result_sha
+    assert git(base, "show", f"{prospective}:.devkit/installation.json") == git(
+        base, "show", f"{moved}:.devkit/installation.json"
+    )
+    assert git(base, "rev-parse", "HEAD") == moved and git(base, "rev-parse", "dev-demo") == tip
+
+
+def test_registry_committed_at_the_target_decides(repo):
+    base, worktree = repo
+    write(base, ".devkit/generated.toml", "[artifacts.devkit-receipt]\nenabled = false\n")
+    git(base, "add", ".")
+    git(base, "commit", "-qm", "disable the receipt artifact")
+    _diverge(
+        base,
+        worktree,
+        {".devkit/installation.json": (_projection("base"), _projection("source"), _projection("target"))},
+    )
+    with pytest.raises(MergeConflictError) as raised:
+        IntegrationService(base).prepare("dev-demo", TASK)
+    assert raised.value.details == (".devkit/installation.json: owned by no generated artifact",)
+
+
+class _Lifecycle:
+    """The part of an acceptance lifecycle a preparation reads before the build refuses."""
+
+    approval_gate = "dev-integration"
+
+
+@pytest.mark.parametrize("composed", ["lifecycle", "fresh preparation"])
+def test_composed_acceptance_preparation_settles_no_conflict(repo, composed):
+    """Composed acceptance prepares with its lifecycle (and re-prepares with ``settle_generated=False``) without a
+    settler, so a receipt-only conflict still refuses with nothing changed."""
+    base, worktree = repo
+    tip, moved = _diverge(
+        base,
+        worktree,
+        {".devkit/installation.json": (_projection("base"), _projection("source"), _projection("target"))},
+    )
+    before = git(base, "show-ref")
+    service = IntegrationService(base)
+    with pytest.raises(MergeConflictError):
+        if composed == "lifecycle":
+            service._prepare("dev-demo", TASK, lifecycle=_Lifecycle())  # type: ignore[arg-type]
+        else:
+            service._prepare("dev-demo", TASK, settle_generated=False)
+    assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
+    assert git(base, "rev-parse", "dev-demo") == tip and git(base, "status", "--porcelain") == ""

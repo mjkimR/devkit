@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:45:46.118143Z'
+status: completed
+summary: 'Development from specify to the final change report, including the Host scope extension (main merged at 34e8d9b7; FB-citation-test-not-selected-by-docs-changes, FB-bundle-asset-edits-miss-authoring-instruction). Five source feedback items resolved. Sync output: .devkit/installation.json (listed in Task 4''s _Boundary). Choice recorded in spec assumption 2: the shipped payload rule names no repository path (agent-asset-writing self-containment), and AGENTS.md names .devkit/architecture.toml feature_dependencies. Pre-existing failure test_mounted_commands[integration] left to the Host as FB-integration-help-loads-generated-area.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 6198 passed, 1 pre-existing failure outside this diff
+  lint: PASS just lint-check; pyright; devkit rules check --ci
+diff_scope:
+  base: ''
+  head: d569bfb965a903984c600994924733a35acb5e23
+activity_effort: low

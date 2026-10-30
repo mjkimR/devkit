@@ -103,6 +103,13 @@ capabilities:
 - **5c.** The owning base and the prospective source both set `plan-accept` to `auto`: the agent records the
   acceptance by policy, reported as policy, never as the user's consent (`CAP-DLV-proposal-planning`); resumes at
   step 6.
+- **6a.** The base moved since Planning (`plan-<slug>` lacks the base HEAD) when the agent runs the composed
+  acceptance (`devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff`): the system builds the
+  prospective merge and runs the delivery provider's result checks on it before the acceptance commit. A failing CI
+  rule on the prospective result, or a base change to the proposal directory since the merge base, refuses with
+  `SPEC_PROPOSAL_APPROVAL_NOT_READY`; a conflict refuses with `WORKTREE_MERGE_CONFLICT`; neither writes an
+  acceptance (`CAP-DLV-proposal-planning`). The agent merges the base into `plan-<slug>`, resolving any conflict,
+  runs `devkit rules fix` on the proposal, commits and reruns; resumes at step 6.
 - **7a.** The Host starts Development from the retained base checkout: under `proposal-handoff=ask` it presents the
   accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
   only after the user's conversational approval invokes or delegates `devkit spec proposal handoff <slug> --effort <level>`; under
@@ -138,6 +145,10 @@ capabilities:
   resumes at step 8.
 - **7f.** A write fails during the handoff: the system rolls back what it wrote and moved, keeps the proposal and
   reports `SPEC_PROPOSAL_HANDOFF_FAILED` (`CAP-DLV-proposal-planning`); resumes at step 7.
+- **7g.** The base moved since Planning and the prospective merge passes its result checks: the composed acceptance
+  lands it with no merge into `plan-<slug>`, the landed merge having the moved base as first and the acceptance commit
+  as second parent, and its result carries `target_sha` (the merged base), `landed_sha` and `disclosure` (the
+  delivery provider's disclosure) (`CAP-DLV-proposal-planning`); resumes at step 8.
 - **8a.** A sibling draft in its own Planning cites the handed-off proposal: the handoff rewrites its `depends_on` and
   references; when the sibling's Planning merges first and merging the base into `dev-<slug>` conflicts in
   `docs/proposals/PROP-<other>/`, the Host takes the base version and runs `devkit rules fix` on it
@@ -329,3 +340,20 @@ capabilities:
 - **Given**: a sibling draft whose `depends_on` the handoff rewrote, and its Planning merged into the base first
 - **When**: merging the base into `dev-<slug>` conflicts in `docs/proposals/PROP-<other>/`
 - **Then**: the Host takes the base version and `devkit rules fix` rewrites its citations to `SPEC-<slug>`
+
+### Scenario 24: A moved base is accepted without a base merge
+- **Covers**: 7g
+- **Given**: a proposal in review on `plan-<slug>` with Planning complete, and a base that moved with an unrelated
+  change since `plan-<slug>` branched
+- **When**: the agent runs `devkit spec proposal accept <slug> --by user --mode accept_only`
+- **Then**: the command exits `0` with `[ACCEPTED: PROP-<slug> status=accepted ...]` naming `target_sha` (the moved
+  base), `landed_sha` (the new base HEAD) and `disclosure`; the acceptance commit's only parent is the reviewed
+  `plan-<slug>` HEAD, and the landed merge has the moved base as first and the acceptance commit as second parent
+
+### Scenario 25: A moved base that fails the result checks is refused before acceptance
+- **Covers**: 6a
+- **Given**: a proposal in review on `plan-<slug>` and a base that since changed the proposal directory, or whose
+  prospective merge fails a CI rule
+- **When**: the agent runs `devkit spec proposal accept <slug> --by user --mode accept_only`
+- **Then**: the command exits `2` with `SPEC_PROPOSAL_APPROVAL_NOT_READY`, whose `[FIX]` merges the base into
+  `plan-<slug>` and runs `devkit rules fix`; `plan-<slug>` keeps its HEAD and the proposal stays in review

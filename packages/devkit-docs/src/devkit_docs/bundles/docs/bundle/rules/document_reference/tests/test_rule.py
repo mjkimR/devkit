@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_agt.features.rules import Violation
+import pytest
+from devkit_agt.features.rules import RulesRunError, Violation
 from devkit_agt.features.rules.services.testing import check, load_rule
 
 RULE = load_rule(__file__)
@@ -481,3 +482,93 @@ def test_ids_cited_in_steering_files_resolve_without_fixes_or_edges(tmp_path: Pa
     index = DocumentIndex.load(tmp_path)
     assert all(not d.path.startswith("docs/steering/") for d in index.documents)
     assert check(RULE, tmp_path, targets=["docs/a.md"]) == []
+
+
+_QUICK = ("docs/development/x.md", "guides/install/y.md", "packages/p/README.md", "tools/t/README.md")
+
+
+def test_an_alias_cited_in_a_quick_reference_is_fixed(tmp_path: Path) -> None:
+    files: dict[str, str] = {"docs/a.md": _aliased("ADR-new", "ADR-old")}
+    files.update({path: "# Notes\n\nSee `ADR-old` and `ADR-new`; ADR-old in prose stays.\n" for path in _QUICK})
+    violations = check(RULE, tmp_path, files)
+    assert sorted((v.file, v.line, v.column, v.message, v.fixable) for v in violations) == [
+        (path, 3, 5, "ADR-old is an alias of ADR-new; reference `ADR-new`", True) for path in sorted(_QUICK)
+    ]
+    fixed = check(RULE, tmp_path, fix=True)
+    assert all(v.fixed for v in fixed)
+    for path in _QUICK:
+        assert (tmp_path / path).read_text() == "# Notes\n\nSee `ADR-new` and `ADR-new`; ADR-old in prose stays.\n"
+    assert check(RULE, tmp_path) == []
+
+
+def test_an_unresolved_id_cited_in_a_quick_reference_is_an_error(tmp_path: Path) -> None:
+    quick = "guides/y.md"
+    text = "`UC-none` `UC-dup` `UC-shared`\n"
+    files = {
+        "docs/a.md": _aliased("UC-a", "UC-shared"),
+        "docs/b.md": _aliased("UC-b", "UC-shared"),
+        "docs/c.md": _doc("UC-dup"),
+        "docs/d.md": _doc("UC-dup"),
+        quick: text,
+    }
+    found = [v for v in check(RULE, tmp_path, files) if v.file == quick]
+    assert [(v.line, v.column, v.message, v.fixable) for v in found] == [
+        (1, 1, "no document has the ID UC-none", False),
+        (1, 11, "UC-dup is declared by 2 documents: docs/c.md, docs/d.md", False),
+        (1, 20, "UC-shared is an alias declared by 2 documents: docs/a.md, docs/b.md", False),
+    ]
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / quick).read_text() == text
+
+
+def test_only_visible_citations_of_unindexed_quick_references_are_checked(tmp_path: Path) -> None:
+    masked = (
+        "UC-plain in prose, `see UC-span` with more text, ~~`UC-struck`~~, \\`UC-escaped\\`.\n\n"
+        "<!-- `UC-comment` -->\n\n```\n`UC-fenced`\n```\n\n    `UC-indented`\n"
+    )
+    files = {
+        "docs/development/masked.md": masked,
+        "README.md": "`UC-root`\n",
+        "packages/p/docs/README.md": "`UC-nested`\n",
+        "examples/README.md": "`UC-example`\n",
+        "docs/development/indexed.md": _doc("CAP-A-indexed", "`UC-indexed`\n"),
+    }
+    # The ID-bearing file is checked once, as an indexed document.
+    assert _found(check(RULE, tmp_path, files)) == [
+        ("docs/development/indexed.md", 5, "no document has the ID UC-indexed")
+    ]
+
+
+def test_quick_references_follow_targets_and_exclusions(tmp_path: Path) -> None:
+    files = {
+        "docs/a.md": _aliased("UC-new", "UC-old"),
+        "guides/a.md": "`UC-old`\n",
+        "guides/b.md": "`UC-old`\n",
+    }
+    assert [v.file for v in check(RULE, tmp_path, files, targets=["guides/b.md"])] == ["guides/b.md"]
+    assert [v.file for v in check(RULE, tmp_path, exclude=["guides/a.md"])] == ["guides/b.md"]
+    check(RULE, tmp_path, targets=["guides/b.md"], fix=True)
+    assert (tmp_path / "guides/a.md").read_text() == "`UC-old`\n"
+    assert (tmp_path / "guides/b.md").read_text() == "`UC-new`\n"
+    (tmp_path / "guides/b.md").write_text("`UC-old`\n")
+    check(RULE, tmp_path, exclude=["guides/a.md"], fix=True)
+    assert (tmp_path / "guides/a.md").read_text() == "`UC-old`\n"
+    assert (tmp_path / "guides/b.md").read_text() == "`UC-new`\n"
+
+
+def test_the_quick_reference_set_is_a_setting(tmp_path: Path) -> None:
+    files = {"notes/n.md": "`UC-none`\n", "guides/y.md": "`UC-none`\n"}
+    custom = check(RULE, tmp_path, files, settings={"quick_references": ["notes/**/*.md"]})
+    assert [v.file for v in custom] == ["notes/n.md"]
+    assert check(RULE, tmp_path, settings={"quick_references": []}) == []
+    with pytest.raises(RulesRunError) as raised:
+        check(RULE, tmp_path, settings={"quick_references": ["../x"]})
+    assert [problem.code for problem in raised.value.problems] == ["RULES_SETTINGS_INVALID"]
+
+
+def test_the_guide_documents_the_quick_references_and_the_decision_record_fix() -> None:
+    guide = (Path(__file__).parents[1] / "guide.md").read_text()
+    assert "never rewrites an alias reference in an ADR or PADR" not in guide
+    assert "`quick_references`" in guide
+    for default in ("docs/development/**/*.md", "guides/**/*.md", "packages/*/README.md", "tools/*/README.md"):
+        assert f"`{default}`" in guide, default

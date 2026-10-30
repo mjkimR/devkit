@@ -49,11 +49,17 @@ already knows, and cut every line that does not change its next action.
 ## Self-Containment
 
 A bundle ships to repositories that have none of the authoring repository's documents. Link only the bundle's own
-assets, and write a rule with its reason instead of citing the authoring repository's ADR, capability, spec or path.
-Name consumer documents and example IDs only as placeholders (`docs/decisions/`, `ADR-example`, `CAP-<AREA>-<slug>`).
+assets, and write a rule with its reason instead of citing the authoring repository's documents or paths.
+
+- Cite none of the authoring repository's document IDs, of any kind (`ADR-`, `CAP-`, `UC-`, `UX-`, `ARCH-`, `SPEC-`,
+  `PROP-`, `MS-`, `MAT-`, `FB-` and the others), even when the rule comes from one.
+- Cite a document ID only when a bundle seeds that document into the consuming project.
+- Name consumer documents and example IDs only as placeholders or examples that name no real document
+  (`docs/decisions/`, `ADR-example`, `CAP-<AREA>-<slug>`).
 
 ## Completion
 
-- `rg -n '\b(ADR|CAP|US|ARCH|SPEC|MS)-[a-z]' <bundle directory>` reports only placeholders.
+- `rg -n '\b(ADR|PADR|CAP|UC|UX|ARCH|SPEC|PROP|MS|MAT|FB)-[A-Za-z0-9]' <bundle directory>` reports only
+  placeholders, examples and the IDs of seeded documents.
 - `uv run devkit rules check --phase hygiene <asset>` reports no `RULE-agent-asset-wording` warning.
 - Every line of the asset meets the directives above.

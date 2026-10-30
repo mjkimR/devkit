@@ -24,8 +24,7 @@ Proposals under Planning come from their `plan-<slug>` worktree, local branch or
 after the checkout's cards render, and show a source badge; the Proposals tab reads their bundle files from the same
 source. Nothing is fetched.
 
-Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-distribution-and-frontend-build`,
-`ADR-viewer-working-tree` supersedes `ADR-read-only-local-server-over-git-refs`, and
+Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-working-tree` supersedes `ADR-viewer`,
 `ADR-viewer-planning-proposal-overlay` adds the Planning overlay, and `ADR-handbook-first-book-on-request` with
 `ADR-handbook-staleness-from-version` shapes the reading tab. Command reference:
 [viewer](../../docs/development/reference/viewer.md).

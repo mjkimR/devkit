@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 import json
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import devkit_agt.features.worktree.services.merging as merging
 import pytest
@@ -12,6 +16,7 @@ from devkit_agt.features.worktree import (
     CommitFailedError,
     GitUnsupportedError,
     MergeConflictError,
+    MergeFailedError,
     MergeNotFastForwardError,
     WorktreeConfigError,
     build_result,
@@ -22,6 +27,7 @@ from devkit_agt.features.worktree import (
     read_worktree_config,
     start,
 )
+from devkit_core.base.errors import GitError
 from devkit_core.core.locks import file_lock
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
@@ -103,6 +109,97 @@ def test_conflicting_advance_is_refused_without_changing_anything(repo: Path) ->
     fix = raised.value.fix or ""
     assert raised.value.code == "WORKTREE_MERGE_CONFLICT" and "Merge the target branch into the task branch" in fix
     assert "devkit generated resolve" in fix
+    assert refs(repo) == before and git(repo, "status", "--porcelain") == ""
+
+
+def _conflicting(repo: Path, edits: Mapping[str, tuple[str | None, str | None]]) -> tuple[str, str]:
+    """A task tip and a moved target that changed each path of ``edits`` (source text, target text; ``None`` deletes)."""
+    for rel in edits:
+        write(repo, rel, "base\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "base files")
+    path, _ = task(repo)
+    for rel, (ours, _) in edits.items():
+        if ours is None:
+            git(path, "rm", "-q", rel)
+        else:
+            write(path, rel, ours)
+    git(path, "add", ".")
+    git(path, "commit", "-q", "-m", "source edits")
+    for rel, (_, theirs) in edits.items():
+        if theirs is None:
+            git(repo, "rm", "-q", rel)
+        else:
+            write(repo, rel, theirs)
+    git(repo, "add", ".")
+    git(repo, "commit", "-q", "-m", "target edits")
+    return git(path, "rev-parse", "HEAD"), git(repo, "rev-parse", "HEAD")
+
+
+def _advance(repo: Path, tip: str, moved: str, settle=None, *, prospective: bool = False) -> str:
+    return build_result(
+        repo,
+        branch="dev-demo",
+        target_branch="main",
+        target=moved,
+        source=tip,
+        method="no-ff",
+        advance=True,
+        prospective=prospective,
+        settle=settle,
+    )
+
+
+def test_settler_keeps_the_side_it_names_for_each_conflict(repo: Path) -> None:
+    """``ADR-generated-conflicts-in-prepared-merge``: ``ours`` is the target, ``theirs`` the source."""
+    edits = {"gen/a.json": ("source a\n", "target a\n"), "gen/b.json": ("source b\n", "target b\n")}
+    tip, moved = _conflicting(repo, edits)
+    asked: list[tuple[str, ...]] = []
+
+    def settle(paths: tuple[str, ...]) -> dict[str, str]:
+        asked.append(paths)
+        return {"gen/a.json": "ours", "gen/b.json": "theirs"}
+
+    before = refs(repo)
+    result = _advance(repo, tip, moved, settle)
+    assert asked == [("gen/a.json", "gen/b.json")]
+    assert git(repo, "show", f"{result}:gen/a.json") == "target a"
+    assert git(repo, "show", f"{result}:gen/b.json") == "source b"
+    assert git(repo, "rev-parse", f"{result}^1", f"{result}^2").split() == [moved, tip]
+    assert refs(repo) == before and git(repo, "status", "--porcelain") == ""
+
+
+def test_seeded_path_is_removed_where_the_seed_side_deleted_it(repo: Path) -> None:
+    tip, moved = _conflicting(repo, {"gen/a.json": ("source a\n", None), "gen/b.json": (None, "target b\n")})
+    result = _advance(repo, tip, moved, lambda paths: dict.fromkeys(paths, "ours"))
+    names = git(repo, "ls-tree", "-r", "--name-only", result).split()
+    assert "gen/a.json" not in names and git(repo, "show", f"{result}:gen/b.json") == "target b"
+
+
+def test_prospective_and_real_seeded_builds_share_one_tree(repo: Path) -> None:
+    tip, moved = _conflicting(repo, {"gen/a.json": ("source a\n", "target a\n")})
+    prospective = _advance(repo, tip, moved, lambda paths: dict.fromkeys(paths, "ours"), prospective=True)
+    real = _advance(repo, tip, moved, lambda paths: dict.fromkeys(paths, "ours"))
+    assert git(repo, "rev-parse", f"{prospective}^{{tree}}") == git(repo, "rev-parse", f"{real}^{{tree}}")
+
+
+def test_unsettled_conflicts_refuse_without_changing_anything(repo: Path) -> None:
+    tip, moved = _conflicting(repo, {"gen/a.json": ("source a\n", "target a\n"), "README.md": ("ours\n", "theirs\n")})
+    before = refs(repo)
+    with pytest.raises(MergeConflictError) as raised:
+        _advance(repo, tip, moved, lambda paths: {"gen/a.json": "ours"})
+    assert raised.value.details == ("README.md",) and "Merge the target branch" in (raised.value.fix or "")
+    for settle in (None, lambda paths: dict.fromkeys(paths, "both")):
+        with pytest.raises(MergeConflictError):
+            _advance(repo, tip, moved, settle)
+    refused = MergeConflictError("cannot settle", "gen/a.json: owned by nothing")
+
+    def refuse(paths: tuple[str, ...]) -> dict[str, str]:
+        raise refused
+
+    with pytest.raises(MergeConflictError) as raised:
+        _advance(repo, tip, moved, refuse)
+    assert raised.value is refused
     assert refs(repo) == before and git(repo, "status", "--porcelain") == ""
 
 
@@ -206,7 +303,13 @@ def test_prospective_build_is_deterministic_unsigned_and_unreferenced(
     _, tip = task(repo)
     moved = commit(repo, "theirs.txt")
     before = refs(repo)
-    args = {"branch": "dev-demo", "target_branch": "main", "target": moved, "source": tip, "method": "no-ff"}
+    args: dict[str, Any] = {
+        "branch": "dev-demo",
+        "target_branch": "main",
+        "target": moved,
+        "source": tip,
+        "method": "no-ff",
+    }
     first = build_result(repo, **args, advance=True, prospective=True)
     git(repo, "config", "commit.gpgSign", "true")
     git(repo, "config", "gpg.program", "false")  # a signing build would fail
@@ -222,3 +325,30 @@ def test_prospective_build_is_deterministic_unsigned_and_unreferenced(
     assert git(repo, "show", "-s", "--format=%an <%ae> %at|%cn <%ce> %ct", first) == f"{later}|{later}"
     assert git(repo, "rev-parse", f"{first}^1", f"{first}^2").split() == [moved, tip]
     assert git(repo, "log", "-1", "--format=%s", first) == "chore(merge): integrate dev-demo into main"
+
+
+# AC-03 (SPEC-generated-conflicts-follow-ups)
+def test_merge_tree_runs_on_the_shared_git_runner(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    imported = {
+        alias.name
+        for node in ast.walk(ast.parse(inspect.getsource(merging)))
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    }
+    assert "subprocess" not in imported
+
+    calls: list[tuple[tuple[str, ...], dict[str, object]]] = []
+
+    def failing(cwd: Path, *args: str, **kwargs: object) -> object:
+        calls.append((args, kwargs))
+        raise GitError("git merge-tree failed", returncode=128, stderr="fatal: bad revision")
+
+    monkeypatch.setattr(merging, "run_git_result", failing)
+    with pytest.raises(MergeFailedError, match="nothing was changed on the target: fatal: bad revision"):
+        merging._merge_tree_output(repo, "main", "topic")
+    assert calls == [
+        (
+            ("merge-tree", "--write-tree", "-z", "--no-messages", "main", "topic"),
+            {"ok_returncodes": (0, 1), "timeout": merging.MERGE_TREE_TIMEOUT},
+        )
+    ]

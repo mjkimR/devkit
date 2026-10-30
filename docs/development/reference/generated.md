@@ -42,7 +42,7 @@ JSON:
 
 ## Configuration
 
-`.devkit/generated.toml` (optional, Git-tracked) holds one `[artifacts.<id>]` table per artifact, with `paths`, `command`, `inputs`, `updates`, `after`, `seed`, `optional` and `enabled`. A table with a built-in id (`devkit-receipt`) changes only the keys it sets. See `CAP-GEN-tracked-artifacts`.
+`.devkit/generated.toml` (optional, Git-tracked) holds one `[artifacts.<id>]` table per artifact, with `paths`, `command`, `inputs`, `updates`, `after`, `seed`, `optional` and `enabled`. A table with a built-in id (`devkit-receipt`) changes only the keys it sets. See `CAP-GEN-tracked-artifacts`. Local integration of a moved target reads the registry committed at the build target (`load_registry_at`) and keeps each owned conflict at its `seed` side, `ours` the target and `theirs` the source, sharing `resolve`'s classification (`classify`); it regenerates nothing and discloses `devkit generated regen <ids>` (`CAP-INT-mcp-services`).
 
 ## Error codes
 

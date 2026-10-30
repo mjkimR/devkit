@@ -1,0 +1,46 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T06:18:57.462619Z'
+status: completed
+summary: A compact record can be a feedback document with an FB- ID and FB- aliases at a dated specs/<YYYY-MM>/feedback/ path; a single terminal status per record keeps the vocabulary unchanged. resolve and exact-ID search reach it through aliases; rules fix rewrites alias references in current documents and leaves work history alone. The weekly report is playbook-only and needs no code change.
+findings:
+- issue: Any ID-bearing document, feedback included, may declare aliases with no count limit; each alias must carry the declaring document's prefix (FB-), differ from its ID and not repeat.
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/parse.py:139-180; docs/capabilities/documents/CAP-DOCS-document-model.md:233-235
+  suggested_action: Make the compact record a feedback document with an FB- ID; a non-ID file cannot declare aliases (CAP-DOCS-document-model rule 3).
+  resolution: open
+- issue: The feedback kind has terminal statuses resolved/promoted/dismissed/forwarded and default open; terminal documents are hidden from default list and search but stay resolvable and rule-checked. A new status value would need the kind table and devkit-spec STATUSES (proposal handoff refuses unknown values).
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/kinds.py:256-267; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/feedback.py:15,55-63; packages/devkit-docs/src/devkit_docs/features/documents/repositories/index.py:155-161,244-250
+  suggested_action: 'Keep the vocabulary: give each compact record one truthful terminal status (group by area and outcome) or decide a vocabulary change explicitly.'
+  resolution: open
+- issue: Accepted FB paths are bundle feedback/, specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md (date matches the month) and proposal feedback/; feedback in a completed bundle stays current, other bundle files are history.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/id_convention.py:223-255,355-370; packages/devkit-docs/src/devkit_docs/features/documents/repositories/index.py:164-168,225-229
+  suggested_action: Place compact records at specs/<YYYY-MM>/feedback/<YYYYMMDD>-<name>.md; no rule change is needed.
+  resolution: open
+- issue: RULE-document-reference's fix rewrites alias and handed-off PROP references in current documents (ADRs and terminal feedback included) and skips materials and work history; in history an alias reference is accepted silently.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/document_reference.py:213-224,398-425; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/tests/test_rule.py:263-311
+  suggested_action: Rely on devkit rules fix as adr-compaction does; reconcile.md of completed specs keeps the retired IDs and stays valid.
+  resolution: open
+- issue: 'Aliases are not ranking text: they pin an exact-ID query among candidates; a compact record is found by wording only through its title, summary and body, and only with --history.'
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/usecases/search.py:117-172; docs/capabilities/documents/CAP-DOCS-document-search.md:56-60
+  suggested_action: Keep each entry's symptom in the original title's words and search with --history.
+  resolution: open
+- issue: 'The weekly report has no code path: an LLM playbook reading committed content at the captured SHA, documents with --history, matching by feedback ID; compaction breaks nothing mechanically, but entries carry no dates.'
+  evidence: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md:27-31,49-52; docs/capabilities/delivery/CAP-DLV-weekly-report.md:55-59
+  suggested_action: No weekly-report change; earlier revisions keep the originals.
+  resolution: open
+- issue: A Source feedback ID resolves to exactly one committed file for worker scope derivation; a retired ID not rewritten fails derivation, but only terminal sources are ever compacted and rules fix rewrites them.
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py:156-175
+  suggested_action: Exclude feedback held by a live proposal or an active spec bundle from compaction, and run rules fix in the run.
+  resolution: open
+- issue: 'Doc drift outside this scope: ADR-feedback-lifecycle §6 says RULE-reconcile-contract checks source-feedback resolution (it does not); the document_reference guide says rules fix never rewrites ADR alias references (code and tests do).'
+  evidence: docs/decisions/2026-10/20261022-feedback-lifecycle.md:89; packages/devkit-spec/src/devkit_spec/features/governance/usecases/reconcile_contract.py:1-17; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md:78-81
+  suggested_action: Record both as feedback; out of this proposal's scope.
+  resolution: open
+assumptions:
+- Read-only scout; live devkit queries ran in this worktree at base 95b8228c.
+unverified_areas:
+- Number of current documents citing FB IDs that rules fix would rewrite (rg count only).
+- Search ranking of a compact record with a summary field.
+checks: {}

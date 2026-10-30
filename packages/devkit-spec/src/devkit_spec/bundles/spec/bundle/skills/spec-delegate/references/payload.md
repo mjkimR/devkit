@@ -22,7 +22,7 @@ Read this when building a payload (`spec-delegate` step 2).
 | `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding review envelope, the docs `devkit docs refs <ID> --direction in` lists | `activity-effort` |
 | `development-worker` | `spec.md`, `plan.md`, `tasks.md` and the code starting points | Absolute worktree path; write scope (unit directory, `_Boundary:` paths, reconcile targets); checks to run; `activity-effort`; a recovery request for an open problem |
 | `git-operator` | Current CLI/Git observations and the requested operation | Absolute repository/base/worktree; Unit/branch; current source/target refs; exact intended_effects and current authority; allowed_boundaries; writers_quiesced; expected_checks; prepared_digest where required; route and separate publication_authority. Repeat every job; a preparation list of `prepare-worktree` items repeats every field per item. Use native identity continuation per the orchestration dispatch reference. |
-| `planning-worker` | The proposal bundle and starting points | Absolute worktree path; the proposal directory as write scope; `activity-effort`; the user's rewritten answers |
+| `planning-worker` | The proposal bundle and starting points | Absolute worktree path; the proposal directory as write scope; `activity-effort`; the rewritten answers, each naming who decided it (`by: user`, `host` or `policy`) |
 
 For a later reviewer round at `high`, also pass the earlier rounds' envelope files and set `diff_scope` to the fixes since the previous round (the `spec` skill's `references/review-loop.md`).
 
@@ -31,6 +31,7 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 - Set the `diff_scope` base to the unit's [last accepted head](worker.md#the-last-accepted-head).
 - Name absolute paths for nested-role reads (the worktree's own startup skills and instructions and the effective role contract): a host skill catalog can list another checkout's copies. A generic native call also gets the absolute effective contract path and the emulation assumption.
 - If a `_Boundary:` includes a bundle source the project selects, the write scope admits, as a class, every tracked path `devkit sync` writes in the worktree after the change (seeded files, projected files, `.devkit/installation.json` and the managed `AGENTS.md` block), not only what `devkit sync --check` lists before the change: the worker runs the sync the change implies and records each output. `.devkit/managed/` is ignored and never a write path.
+- A payload that delegates a cross-feature design choice either names in the write scope the architecture declaration the project's dependency check reads, limited to its feature edge entries, or states that a new feature edge is out of scope: any option may need a new edge, and the check refuses an undeclared one at commit.
 - Never ask a worker to delete a scratch file or fixture it created: authored scratch files stay in the ignored path inside the worktree, and removing the worktree (`devkit worktree finish` or integration cleanup) cleans them.
 - Add linked open source feedback to the write scope, by its actual path, only when the worker fixes it directly; otherwise update it yourself at completion.
 - Before delegating a move or deletion, add each document linking to the target as an exact link-repair-only write path.

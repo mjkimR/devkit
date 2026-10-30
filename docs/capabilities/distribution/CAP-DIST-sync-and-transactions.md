@@ -569,7 +569,7 @@ Existing template-kind validation can reject an executable template earlier duri
 `.devkit/transient/local-render.json` records only differing file signatures, bound to the canonical receipt digest
 and a digest of effective bundle variables, presentation preferences and the selected in-memory render environment. Context validates this digest using the canonical receipt mode rather than persisted runtime settings. Canonical hash-validated bytes remain readable with unrecorded provenance; personal evidence requiring that mode is stale until sync. The deployed ledger records actual output and personal destination provenance, so loss of render evidence cannot bypass ownership checks during restoration. Unknown provenance falls back conservatively to deployed signatures differing from canonical records. Context and status use a validated runtime
 receipt view; core receipt loading, rule/workflow/gate engines and snapshot checks retain canonical authority.
-Missing or stale evidence or changed variables/presentation preferences raise `CONFIG_LOCAL_RENDER_STALE` (exit 1, run sync). Missing outputs
+Missing or stale evidence or changed variables/presentation preferences raise `CONFIG_LOCAL_RENDER_STALE` (exit 1; `devkit sync --locked`, a plain sync only when it reports `RECEIPT_STALE`). Missing outputs
 use normal sync repair and hand edits retain conflict checks. Removing preferences restores canonical bytes and
 removes obsolete local evidence. The personal language fixture is `[bundles.response-style.variables] language = "ko"`.
 

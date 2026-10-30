@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:26:28.737549Z'
+status: completed
+summary: 'Self-review at activity-effort low: AC-01..AC-03 by tools/devkit-dev/tests/integration/test_bundle_citations.py (red on CAP-GOV-rule-authoring before the guide rewording, green after; affected selection lists it for a bundle change in each shipping package), AC-04 by the hygiene rules check on agent-asset-writing.md, AC-05..AC-08 by reading the diff against CAP-DLV-proposal-planning, CAP-DIST-context-and-playbooks and test_plan_accept_cli.py; one self-found tautological assertion fixed in 111b6bac'
+findings: []
+checks:
+  tests: PASS just test-affected 189 passed (partial selection incl. test_bundle_citations.py)
+  lint: PASS devkit rules check --ci --base main; just lint-check; pyright 0 errors on the new test
+diff_scope:
+  base: b7205b590d3e626b3c0444ac8d7d5b148df4931f
+  head: 111b6bac03498abdf7d63ebe3537c289417d73f6

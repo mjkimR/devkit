@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:15:12.771681Z'
+status: completed
+summary: 'Implementer self-verification of the six reconcile-check-01 findings at be0d9a530866b3ad392789176a1853e44fc722aa: ci-cd.md drift added to FB-workflow-batch-run-omits-generated-check and named in reconcile.md (P2); CAP-INT and reference/integration.md qualify the refusal; worktree reference and CAP-INT state the settler-only details and the 20-path cap; ADR bullet 2 wording repaired; UC Scenario 30 Given excludes generated files; reconcile.md records the ARCH-05-2 no-impact. No new scope, so no second reviewer call.'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base ab7356f3 errors=0
+  findings: PASS 6/6 fixed, verified by the implementer against the reviewer's evidence
+diff_scope:
+  base: ab7356f3fe53e27388ce60b0db6a17229b641c81
+  head: be0d9a530866b3ad392789176a1853e44fc722aa

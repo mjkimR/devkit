@@ -210,8 +210,11 @@ tracked receipt/projection updates, then verifies the final content before reque
 incorporates the base and synchronizes again only after preparation reports `WORKTREE_MERGE_CONFLICT`,
 `INTEGRATION_RECEIPT_CONFLICT`, `INTEGRATION_NOT_READY`, or `WORKTREE_MERGE_NOT_FF` under `merge = "ff-only"` or on
 the pull-request route; on the local `no-ff` route the receipt check and the CI rules on the merged result guard a
-conflict-free moved base (`ADR-moved-target-merge`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
-base-checkout projections and reports failures or unexpected tracked changes for inspection.
+conflict-free moved base (`ADR-moved-target-merge`); a conflict confined to registered generated files is kept at
+each artifact's seed side and disclosed (`INTEGRATION_GENERATED_SEEDED`), not refused
+(`ADR-generated-conflicts-in-prepared-merge`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
+base-checkout projections, runs and commits the disclosed `devkit generated regen <ids>` in direct mode, and reports
+failures or unexpected tracked changes for inspection.
 
 ### Host scope observation
 
@@ -237,8 +240,9 @@ full suite only when the repository or selector calls for it. Delegated reviewer
 only missing or stale checks. Local `no-ff` integration merges a conflict-free moved base itself and runs only the CI
 rules on the merged result (`ff-only` and the pull-request route still need the base merged into the branch); the Host merges the base and re-verifies what that changed only after a reported conflict or
 failing check. Once every unit of a `local-orchestrated` run is finished (integrated, blocked with its problem
-recorded, waiting for a user decision or continued in `direct`), `spec-orchestrate` runs the repository's
-integrated-content verification once on the base branch HEAD from the batch start; outside such a run, a later batch
+recorded, waiting for a user decision or continued in `direct`), `spec-orchestrate` first runs `devkit generated check` on the base
+branch HEAD, regenerates and commits any stale artifact (`devkit generated regen <ids>`), then runs the repository's
+integrated-content verification once on that head from the batch start; outside such a run, a later batch
 run or the repository's scheduled CI tests the combined head (`ADR-post-batch-test-run`). Lint, type and cumulative
 governance checks remain required. Nightly/release coverage is a repository choice, not a bundle-wide schedule.
 

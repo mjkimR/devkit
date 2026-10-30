@@ -63,6 +63,7 @@ from devkit_agt.features.worktree.models.lifecycle import (
     WorktreeStatus,
     slug_of,
 )
+from devkit_agt.features.worktree.models.merging import ConflictSettler
 from devkit_agt.features.worktree.models.planning import FinishPlan
 from devkit_agt.features.worktree.repositories.config import read_worktree_config
 from devkit_agt.features.worktree.repositories.markers import BASE_KEY, MARKER, UNIT_KEY, branch_marker, marker_key
@@ -112,6 +113,7 @@ __all__ = [
     "BranchUnpushedError",
     "CommitFailedError",
     "ConflictError",
+    "ConflictSettler",
     "DirtyError",
     "FinishPlan",
     "FinishResult",

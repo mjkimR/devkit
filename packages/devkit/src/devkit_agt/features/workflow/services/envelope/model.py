@@ -19,6 +19,7 @@ import yaml
 from devkit_core.core.yaml import safe_load
 
 from devkit_agt.features.workflow.models.envelope import (
+    DECIDERS,
     WORKER_REF,
     Answer,
     Envelope,
@@ -43,7 +44,7 @@ EFFORTS = ("low", "medium", "high")
 FINDING_KEYS = ("issue", "evidence", "failure_condition", "suggested_action", "resolution", "waiver", "severity")
 QUESTION_KEYS = ("id", "title", "prompt", "context", "options", "allow_note")
 OPTION_KEYS = ("id", "description", "recommended")
-ANSWER_KEYS = ("question", "choice", "decision", "constraints")
+ANSWER_KEYS = ("question", "choice", "decision", "constraints", "by")
 SETTLE_KEYS = ("assumption", "decision")
 PROBLEM_KEYS = ("cause", "attempts", "recovery")
 TITLE_LIMIT = 40  # a question's title, like a request's
@@ -232,11 +233,15 @@ def parse_answer(item: Any, where: str) -> Answer:
     choice = item.get("choice")
     if choice is not None and not is_ident(choice):
         raise EnvelopeFormatError(f"{where}.choice {choice!r} must be an option id or null")
+    by = item.get("by")
+    if by is not None and by not in DECIDERS:
+        raise EnvelopeFormatError(f"{where}.by {by!r} must be one of {', '.join(DECIDERS)}, or absent")
     return Answer(
         question,
         _required_text(item, "decision", where),
         choice,
         _text_list(item.get("constraints"), f"{where}.constraints"),
+        by or "",
     )
 
 

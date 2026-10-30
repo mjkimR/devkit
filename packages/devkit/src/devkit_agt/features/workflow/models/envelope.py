@@ -13,6 +13,9 @@ WORKER, ANSWER, RESOLUTION = "worker", "answer", "resolution"
 
 CLOSABLE = ("review", "challenger")
 
+# Who decided an answer: the user, the Host within approved scope, or a policy.
+DECIDERS = ("user", "host", "policy")
+
 
 WORKER_REF = re.compile(r"worker-\d{2,}\.ya?ml")
 
@@ -75,17 +78,21 @@ class Question:
 
 @dataclass(frozen=True)
 class Answer:
-    """The rewritten answer to one question: the chosen option (``None`` outside the options) and the decision."""
+    """The rewritten answer to one question: the chosen option (``None`` outside the options), the decision and,
+    optionally, who decided it (one of ``DECIDERS``; empty when unstated)."""
 
     question: str
     decision: str
     choice: str | None = None
     constraints: tuple[str, ...] = ()
+    by: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {"question": self.question, "choice": self.choice, "decision": self.decision}
         if self.constraints:
             out["constraints"] = list(self.constraints)
+        if self.by:
+            out["by"] = self.by
         return out
 
 

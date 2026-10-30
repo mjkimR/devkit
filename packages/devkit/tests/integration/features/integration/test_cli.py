@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tomllib
 from dataclasses import replace
@@ -327,7 +328,7 @@ def test_prepare_shows_the_approval_scope(repo):
     assert text[0].startswith("[INTEGRATION_PREPARED: ")
     assert f" target_sha={request['target']['sha']} " in text[0]
     assert text[1] == (
-        "[INTEGRATION_SCOPE: worktree_remove=yes delete_branch=yes cleanup=- "
+        "[INTEGRATION_SCOPE: worktree_remove=yes delete_branch=yes cleanup=- seeded=- "
         'disclosure="fixture checks on the merged result only"]'
     )
 
@@ -484,3 +485,41 @@ def test_moved_target_cli_merges_and_states_the_merged_target_and_disclosure(rep
     assert f" target_sha={moved} build_target={moved} result={head} " in line
     assert ' disclosure="fixture checks on the merged result only" effects=' in line
     assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
+
+
+def test_receipt_only_conflict_cli_states_the_seeded_artifact(repo):
+    """``SPEC-generated-conflicts-in-prepared-merge``: prepare and integrate name the artifact kept from one side."""
+    base, worktree = repo
+
+    def receipt(root, side):
+        # An untracked projection's record: the merged receipt parses and leaves no tracked record inconsistent.
+        record = {".agents/skill.md": {"sha256": hashlib.sha256(side.encode()).hexdigest(), "mode": 420}}
+        data = {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": [], "files": record}
+        (root / ".devkit").mkdir(exist_ok=True)
+        (root / ".devkit/installation.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        git(root, "add", ".devkit/installation.json")
+        git(root, "commit", "-qm", f"receipt {side}")
+        return (root / ".devkit/installation.json").read_text()
+
+    receipt(base, "base")
+    git(worktree, "merge", "-q", "main")
+    receipt(worktree, "source")
+    target = receipt(base, "target")
+    args = ["prepare", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(base)]
+    prepared = CliRunner().invoke(cli, args)
+    assert prepared.exit_code == 0, prepared.output
+    lines = prepared.output.splitlines()
+    assert " seeded=devkit-receipt disclosure=" in lines[1]
+    assert "(INTEGRATION_GENERATED_SEEDED)" in prepared.output
+    assert "devkit generated regen devkit-receipt" in prepared.output
+    payload = json.loads(CliRunner().invoke(cli, [*args, "--format", "json"]).output)
+    assert payload["generated"]["seeded"] == [
+        {"id": "devkit-receipt", "paths": [".devkit/installation.json"], "seed": "ours", "kept": "target"}
+    ]
+    assert payload["generated"]["regenerate"].endswith("devkit generated regen devkit-receipt")
+    assert [notice["code"] for notice in payload["notices"]] == ["INTEGRATION_GENERATED_SEEDED"]
+    digest = lines[0].split(" digest=", 1)[1].split(" ", 1)[0]
+    result = CliRunner().invoke(cli, _integrate_args(base, "--expected-digest", digest))
+    assert result.exit_code == 0, result.output
+    assert " seeded=devkit-receipt disclosure=" in result.output.splitlines()[0]
+    assert git(base, "show", "HEAD:.devkit/installation.json") == target.rstrip("\n")
