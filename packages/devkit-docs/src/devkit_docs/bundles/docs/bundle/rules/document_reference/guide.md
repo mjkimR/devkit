@@ -30,7 +30,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   free-form and not checked.
 - **Completed specs**: files of a spec bundle whose `spec.md` is `completed` (and `done` or `dropped` milestones) are
   history: checked only when named as explicit targets, without the `[ID]`, handoff and alias findings, and never
-  rewritten.
+  rewritten. A handed-off `PROP-<slug>` there, in prose or in `depends_on`, resolves silently through its spec: the
+  reference was valid when written. A `PROP-<slug>` with no matching spec is still reported.
 - **Aliases**: a document may declare previous or alternate IDs in `aliases`. A
   reference resolves through one canonical mapping: a declared ID always wins, and an alias resolves only when exactly
   one document declares it and no document has it as its ID. A reference written with another document's alias is
@@ -51,8 +52,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - A `depends_on` chain that returns to a milestone, reported on each targeted milestone in the cycle: `milestone
   dependency cycle includes <ID>`.
 - `[ID]` in prose (fixable): `` prose reference <ID> must be written `<ID>`, not [<ID>] ``.
-- A `PROP-<slug>` reference that no longer resolves while exactly one `SPEC-<slug>` exists (fixable), typically added
-  on another branch after the handoff: `` <ID> was handed off; reference `SPEC-<slug>` ``.
+- A `PROP-<slug>` reference in a current document that no longer resolves while exactly one `SPEC-<slug>` exists
+  (fixable), typically added on another branch after the handoff: `` <ID> was handed off; reference `SPEC-<slug>` ``.
 - A reference to an ID no document declares: `no document has the ID <ID>`; or that several declare: `<ID> is declared
   by <n> documents: <paths>`; or an alias that several documents declare: `<ID> is an alias declared by <n>
   documents: <paths>`.

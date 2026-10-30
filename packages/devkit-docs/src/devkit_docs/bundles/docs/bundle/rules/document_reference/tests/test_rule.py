@@ -387,6 +387,43 @@ def test_late_proposal_reference_is_fixed_to_the_canonical_spec(tmp_path: Path) 
     assert check(RULE, tmp_path) == []
 
 
+def test_handed_off_proposal_in_targeted_history_is_accepted(tmp_path: Path) -> None:
+    # Handoff rewrites live references only; history cited the proposal while it existed and is never rewritten.
+    done = "specs/2026-10/20261001-done/spec.md"
+    files = {
+        "specs/2026-10/20261002-x/spec.md": _doc("SPEC-x", "", "proposal: PROP-x\n"),
+        done: _doc("SPEC-done", "Integrates before `PROP-x`.\n", "depends_on: [PROP-x]\n", status="completed"),
+        "docs/roadmap/MS-done.md": _doc("MS-done", "`PROP-x`\n", status="done"),
+    }
+    targets = [done, "docs/roadmap/MS-done.md"]
+    assert check(RULE, tmp_path, files, targets=targets) == []
+    check(RULE, tmp_path, targets=targets, fix=True)
+    for name, text in files.items():
+        assert (tmp_path / name).read_text() == text
+
+
+def test_handed_off_proposal_in_a_current_document_stays_fixable(tmp_path: Path) -> None:
+    files = {
+        "specs/2026-10/20261002-x/spec.md": _doc("SPEC-x"),
+        "docs/a.md": _doc("CAP-A-a", "`PROP-x`\n"),
+        "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`PROP-x`\n", status="completed"),
+    }
+    violations = check(RULE, tmp_path, files)
+    assert [(v.file, v.message, v.fixable) for v in violations] == [
+        ("docs/a.md", "PROP-x was handed off; reference `SPEC-x`", True)
+    ]
+
+
+def test_unknown_proposal_in_targeted_history_stays_an_error(tmp_path: Path) -> None:
+    done = "specs/2026-10/20261001-done/spec.md"
+    files = {done: _doc("SPEC-done", "`PROP-gone`\n", "depends_on: [PROP-gone]\n", status="completed")}
+    violations = check(RULE, tmp_path, files, targets=[done])
+    assert sorted((v.message, v.fixable) for v in violations) == [
+        ("depends_on target PROP-gone resolves to 0 documents; expected one anchor", False),
+        ("no document has the ID PROP-gone", False),
+    ]
+
+
 def test_proposal_beside_a_spec_alias_shares_its_slug(tmp_path: Path) -> None:
     files = {
         "specs/2026-10/20261001-new/spec.md": _aliased("SPEC-new", "SPEC-old"),

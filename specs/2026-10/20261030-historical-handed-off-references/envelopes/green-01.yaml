@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-30T05:43:49.210228Z'
+status: completed
+summary: Handed-off proposals in targeted history are accepted; live documents keep the fixable error and unknown proposals stay errors
+findings: []
+checks:
+  resolved: PASS test_handed_off_proposal_in_targeted_history_is_accepted passes (0 violations, files unchanged after fix); uv run devkit rules check specs/2026-10/20261030-integration-merge-moved-target reports errors=0
+  preserved: PASS test_handed_off_proposal_in_a_current_document_stays_fixable, test_unknown_proposal_in_targeted_history_stays_an_error and the existing handoff, alias-history and history-targeting tests pass (30 in test_rule.py); just test-affected mode=partial 2077 passed; just lint/check devkit-docs clean; uv run devkit rules check errors=0; devkit sync --check OK
+diff_scope:
+  base: 030909fde76958abb17d35d8a1ac15237be4b65f
+  head: 6ecf2dec5876d2a68a0064f7c2c5db9d786f14d9
