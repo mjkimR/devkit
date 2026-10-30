@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:03:29.060824Z'
+status: completed
+summary: Host decision extended the write scope to .devkit/architecture.toml for this one edge; declared devkit_agt.features.generated in feature_dependencies.integration (no cycle, no public_modules entry needed); devkit rules check reports no violation, so Task 3 is checked.
+findings: []
+checks: {}
+resolves: worker-01.yaml
