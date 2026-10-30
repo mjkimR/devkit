@@ -1,0 +1,33 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:42:32.101891Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the review-01 fixes at 78b9d3f1 (medium: no repeat reviewer call; scope did not expand): landed-but-unclean commit names the in-place repair and clears the nested next command (new integration test), dedicated AC-03 success and text refusal tests, one no-CLI result shape and corrected docstring'
+findings:
+- issue: A handoff commit that lands but is not one clean direct child of the base raises HandoffStaleError whose default fix says to rerun; a rerun refuses (SPEC_HANDOFF_WORKTREE_CONFLICT); the result has no next_action and the nested handoff.next_command still names workflow next; no test covers the path
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py:118-128, :336-341; packages/devkit-spec/src/devkit_spec/base/errors.py:692; probe .devkit/transient/probe/review-01/test_probe_handoff.py
+  failure_condition: A consumer commit hook leaves files or adds or rewrites commits so HEAD's parent is not the base; the agent follows the fix, reruns and is refused
+  suggested_action: Give the landed-but-unclean error a fix that repairs dev-<slug> in place; null handoff.next_command and set next_action for every stopped outcome after the handoff writes; add an integration test with a post-commit hook leaving an untracked file
+  resolution: resolved
+  severity: P2
+- issue: The e2e AC-03 success assertions run only when the payload says handed_off; the test also accepts needs_recovery, so a regressed handoff commit under accept_and_handoff stays green; the refusal's text form is checked only through JSON
+  evidence: packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py:89-107
+  failure_condition: A change that makes the composed acceptance's handoff stop after its writes leaves every AC-03 test passing
+  suggested_action: Add a dedicated AC-03 success test requiring handed_off, exit 0, commit equal to dev-idea HEAD and handoff_commit; optionally assert the refusal text output
+  resolution: resolved
+  severity: P3
+- issue: git-operator.md gives two shapes for a result without a CLI run (null status/exit code fields vs a null cli_result); the _commit_handoff docstring names a timeout as a landed-failure case although the commit runs with timeout=None and git ignores a failing post-commit hook
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md:91 vs :101; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py:97, :104
+  failure_condition: An operator returning a denial before dispatch must choose between two result shapes; maintainers misread when the landed-after-error branch runs
+  suggested_action: Use one shape in both sentences; reword the docstring to the cases that apply (a hook that commits or amends and then fails, any failure after which HEAD moved)
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS 657 (tests/integration/features/delivery, tests/integration/bundles/spec, e2e test_plan_accept_cli)
+  lint: PASS just lint devkit-spec, just check devkit-spec
+diff_scope:
+  base: 02852dbc6a29e97b8703c18ddf7fd4002a6f1854
+  head: 78b9d3f18fadd025329c6ee7e9492e36ac45128a

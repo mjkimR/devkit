@@ -16,7 +16,8 @@ Text output (paths are relative to the workspace root):
   ``SPEC_PROPOSAL_POLICY_NOT_AUTO``. The composed ``--mode`` form and ``handoff --effort`` print through
   ``_echo_composed``: the success kind, ``<KIND>_STOPPED`` after partial effects (exit ``1``), or the refusal itself
   (exit ``2``). A composed acceptance that integrated adds ``target_sha=`` (the merged target), ``landed_sha=`` and the
-  delivery provider's ``disclosure=``.
+  delivery provider's ``disclosure=``. ``handoff --effort`` and ``accept --mode accept_and_handoff`` add ``commit=``:
+  the handoff's own commit, ``-`` when none landed (``SPEC_HANDOFF_COMMIT_REFUSED``).
 - ``check``: ``[PROPOSAL: <id> path= status=draft editable=yes]`` when Backlog may edit, split or delete the proposal;
   ``SPEC_PROPOSAL_IN_PLANNING`` (exit ``1``) while its ``plan-<slug>`` exists or once it left ``draft``.
 - ``handoff``: ``[HANDOFF: <proposal id> spec= dir= workflow=]`` (with ``dev_effort=`` when the proposal declared it),
@@ -145,7 +146,8 @@ def _echo_composed(kind: str, slug: str, result: dict[str, Any], effects: bool, 
         name = kind if code == 0 else f"{kind}_STOPPED"
         click.echo(sentinel(name, f"PROP-{slug}", status=result.get("status", "-"), **fields))
         handoff = result.get("handoff") or {}
-        command = result.get("next_command") or handoff.get("next_command")
+        # A nested handoff's next command holds only for a completed outcome; a stopped one names its own next step.
+        command = result.get("next_command") or (handoff.get("next_command") if code == 0 else None)
         if command:
             click.echo(f"[NEXT_CMD: {command}]")
         elif code and result.get("next_action"):
@@ -372,6 +374,7 @@ def accept_cmd(
             authority=result.get("acceptance_authority", "-"),
             completed=",".join(result.get("completed_steps", [])) or "-",
             **merged,
+            **({"commit": result.get("commit") or "-"} if mode == "accept_and_handoff" else {}),
         )
         return
     if effort is not None:
@@ -438,6 +441,7 @@ def handoff_cmd(slug: str, effort: str | None, workspace_root: str | None, outpu
             worktree=f"dev-{slug}" if worktree.get("path") else "-",
             effort=effort,
             authority=result.get("authority", "-"),
+            commit=result.get("commit") or "-",
         )
         return
     completed = HandoffProposalUseCase().execute(root, slug)

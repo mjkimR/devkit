@@ -444,7 +444,8 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   bytes at HEAD equal the file about to be deleted. A Markdown link becomes its label followed by the historical
   citation; an existing query or fragment is retained separately as a selector. Rewrites retain `kind=link` or
   `kind=path`. Without Git history, with an untracked record, or when the record differs from HEAD, the citation
-  remains unchanged and is reported as `unmapped`; handoff does not create a commit or archive the record.
+  remains unchanged and is reported as `unmapped`; no handoff archives the record, and the plain handoff creates no
+  commit (the composed handoff commits afterwards, Host-authorized proposal lifecycle CLI).
 
 | Unresolved reason | Meaning |
 | --- | --- |
@@ -453,6 +454,13 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
 | `unreadable`, `unwritable` | The file could not be read, parsed or written (line `0`); the link rewrites of a file that could not be written are not reported as rewritten. |
 
 The `spec-next` skill's post-handoff check follows up the reported lines.
+
+The rewrite also covers a sibling draft that is in its own Planning on `plan-<other>`: its `depends_on` and ID
+references to the handed-off proposal are rewritten, because a skipped `depends_on` dangles once `dev-<slug>` lands
+and every later handoff that projects the graph refuses. WHEN the sibling's Planning merges into the base first and
+merging the base into `dev-<slug>` conflicts in a file under `docs/proposals/PROP-<other>/`, the Host SHOULD take the
+base version of that file and run `devkit rules fix` on it, which rewrites each citation `RULE-document-reference`
+reports as `PROP-<slug> was handed off` to `SPEC-<slug>` (`FB-handoff-rewrite-edits-sibling-draft`).
 
 ### 4.8 Prune
 
@@ -594,7 +602,8 @@ Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Ev
 | `SPEC_HANDOFF_NOT_READY` | `ERROR` (`INTERACTION`) | `HandoffNotReadyError` | The composed `proposal handoff --effort` finds no committed `proposal.md`, a proposal that is not accepted or needs decomposition, or no completed `sdd-proposal` Planning with its own `plan-intent` and `plan-accept`; `[DETAIL]` names the condition, `[TARGET]` the proposal. |
 | `SPEC_HANDOFF_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `HandoffBaseDirtyError` | The composed handoff: the retained base checkout has uncommitted changes, listed in `[TARGET]`. |
 | `SPEC_HANDOFF_WORKTREE_CONFLICT` | `ERROR` (`INTERACTION`) | `HandoffWorktreeConflictError` | The composed handoff: a `dev-<slug>` worktree (`[TARGET]`) exists that devkit did not create for this accepted base, or holds changes or another commit; `[DETAIL]` says which. It is never reused or removed. |
-| `SPEC_HANDOFF_STALE` | `ERROR` (`INTERACTION`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. |
+| `SPEC_HANDOFF_STALE` | `ERROR` (`INTERACTION`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed, or whose handoff commit landed but is not one clean direct child of the reviewed base: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. For a landed but unclean commit `[FIX]` repairs `dev-<slug>` in place and never reruns. |
+| `SPEC_HANDOFF_COMMIT_REFUSED` | `ERROR` (`INPUT_ERROR`) | `HandoffCommitRefusedError` | The composed handoff: `git commit` refused the handoff transaction in `dev-<slug>`; nothing landed, the writes stay staged there, `[DETAIL]` carries the commit output and `[TARGET]` every dirty path. The result is `status=needs_recovery` with `[HANDOFF_STOPPED: ...]` (or `[ACCEPTED_STOPPED: ...]`), `commit=-` and `[NEXT_ACTION: ...]`, exit `1`; `[FIX]` commits in that worktree after the cause is fixed, never a rerun. |
 | `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high` (an automatic handoff the proposal's `dev_effort`); the caller corrects the effort and reruns. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`BLOCKED`) | `ProposalInPlanningError` | `check` (exit `1`, its negative answer): Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr` and `new --decomposed-from` (exit `2`): `plan-<slug>` exists and the checkout is not on it, or the parent left `draft`. |
@@ -644,11 +653,28 @@ and scope registration. An automatic handoff uses the proposal's declared `dev_e
 worktree, spec bundle, selected effort, notices and completed effects. Setup or handoff failures preserve the
 proposal and any created worktree for inspection; the command never rolls those effects back automatically.
 
+WHEN the handoff and scope registration succeed, the composed handoff MUST stage the whole delta `git status` reports
+in `dev-<slug>` (the worktree was clean at the reviewed base head before the handoff) and commit it once with the
+subject `spec: hand off <slug> to Development` under the normal commit gate
+(`ADR-composed-handoff-commits-its-own-transaction`). It reports `commit`, the HEAD read after `git commit` returns
+(a metadata-rewriting post-commit hook changes the SHA), and checks that HEAD's single parent is the reviewed base
+head and the worktree is clean; a landed commit that fails either check is `status: needs_recovery` with
+`SPEC_HANDOFF_STALE`, the landed `commit` and the parents or dirty paths, no next command and a next action whose
+`[FIX]` repairs `dev-<slug>` in place (commit or remove the dirty paths, make HEAD one commit on the reviewed base),
+never a rerun, which refuses that worktree. Every stopped outcome after the handoff writes clears the nested
+handoff's next command. IF `git commit` refuses (the gate, a missing
+identity, signing), THEN nothing landed: the result is `status: needs_recovery` with `commit: null`,
+`SPEC_HANDOFF_COMMIT_REFUSED`, no next command and a next action, exit `1`, and the handoff's writes stay staged and
+uncommitted in `dev-<slug>`; nothing is rolled back. The Host fixes the cause there and commits; a rerun refuses the
+dirty worktree (`SPEC_HANDOFF_WORKTREE_CONFLICT`). The plain `devkit spec proposal handoff <slug>` stays write-only:
+it commits nothing, and its writes are committed with the post-handoff link fixes.
+
 Both composed commands print one outcome (`ARCH-08-1-agent-output`). A completed one is `[ACCEPTED: PROP-<slug>
 status=accepted|handed_off mode= authority= completed= target_sha= landed_sha= disclosure=]` (`target_sha=`, the merged
 target, and `disclosure=`, the delivery provider's disclosure, once the integration ran; `landed_sha=` once its
-result landed; also in JSON as `target_sha`, `disclosure` and `landed_sha`) or `[HANDOFF: PROP-<slug> status=handed_off spec= dir=
-worktree=dev-<slug> effort= authority=]`, followed by `[NEXT_CMD: ...]` when a next command exists, and exits `0`
+result landed; also in JSON as `target_sha`, `disclosure` and `landed_sha`) or `[HANDOFF: PROP-<slug> status=handed_off
+spec= dir= worktree=dev-<slug> effort= authority= commit=]` (`accept_and_handoff` adds `commit=` to `[ACCEPTED: ...]`
+after those fields; `-` when no handoff commit landed), followed by `[NEXT_CMD: ...]` when a next command exists, and exits `0`
 (`1` under `--strict` with a warning). One that stopped after some effects prints `[ACCEPTED_STOPPED: ...]` or
 `[HANDOFF_STOPPED: ...]` with the same fields, then `[NEXT_CMD: ...]` or `[NEXT_ACTION: "..."]`, renders its errors
 (the handoff's included, each once, with every advisory field) after the warnings and notices, and exits `1`; JSON
@@ -676,7 +702,9 @@ planning effort/support, open decisions/waivers and unverified areas.
 Proposal reports are not stored as shared artifacts; acceptance operates directly on the committed proposal files and git HEAD.
 
 `devkit spec proposal accept` requires the Host to present the findings and effects before an `ask` invocation.
-Its result includes acceptance, integration and optional handoff progress. `--by user` records decision provenance;
+Its result includes acceptance, integration and optional handoff progress: `accept_and_handoff` records `handoff`
+in `completed_steps` whenever the handoff writes landed and `handoff_commit` when its commit landed, carries `commit`,
+and on a refused handoff commit takes the handoff's next action. `--by user` records decision provenance;
 it is not an authenticated credential. Required-PR refuses this local combined route.
 
 The invocation binds exact source/base commits, Git and extension identities, effective configuration, environment,

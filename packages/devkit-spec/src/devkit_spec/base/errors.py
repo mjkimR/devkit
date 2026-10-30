@@ -692,6 +692,16 @@ class HandoffStaleError(SpecError):
     fix = "After the user has reviewed the change, rerun the same command for the remaining effects"
 
 
+class HandoffCommitRefusedError(SpecError):
+    """The composed handoff: ``git commit`` refused the handoff transaction in the new ``dev-<slug>`` worktree (the
+    commit gate, a missing identity, signing) (``INPUT_ERROR``); nothing landed, the writes stay staged there,
+    [DETAIL] carries the commit output and [TARGET] every dirty path. A rerun refuses the dirty worktree, so the fix
+    is a commit in that worktree."""
+
+    code = "SPEC_HANDOFF_COMMIT_REFUSED"
+    input_error = True
+
+
 class ProposalApprovalStaleError(SpecError):
     """The composed acceptance: the reviewed source, base, environment or exact acceptance delta changed
     (``INTERACTION``); completed effects are kept and the remaining ones need fresh approval."""

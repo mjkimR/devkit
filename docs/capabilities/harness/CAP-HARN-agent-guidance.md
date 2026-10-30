@@ -218,8 +218,11 @@ base-checkout projections and reports failures or unexpected tracked changes for
 Task writing, reconciliation and worker acceptance carry no scope publication, registration or ACK obligation.
 Creation retains best-effort automatic linked-worktree registration. Before scheduling or reconstructing parallel
 work, the Host uses `devkit spec scope collect --mode worktrees`; `snapshot` and `refs` select less live evidence.
-Fetch is explicit and separate from observation depth. Partial coverage and unknown attribution inform scheduling
-without granting or refusing writes. Other-PC dirty/unpushed work is invisible; PRs improve published-change
+Fetch is explicit and separate from observation depth. The Host reads evidence by horizon: units whose `current`
+evidence overlaps run sequentially, while a pair with only `future` evidence (a Planning unit's declared or candidate
+paths) does not serialize Planning runs. Before a handoff the Host treats a unit's `future` evidence as `current`,
+so units whose `future` evidence overlaps are handed off and integrated sequentially. Partial coverage and unknown
+attribution inform both choices, never prove independence, and grant or refuse no write. Other-PC dirty/unpushed work is invisible; PRs improve published-change
 visibility. Future cloud snapshot sharing is a direction only. `workflow next` has no collection side effect.
 The hidden maintenance `update` is directly callable by an operator but is not a worker step.
 

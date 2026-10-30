@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-scope-activity-write-evidence
+by: user
+at: '2026-10-30T04:14:34.606278Z'

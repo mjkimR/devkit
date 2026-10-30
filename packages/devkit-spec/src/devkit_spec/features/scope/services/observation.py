@@ -133,6 +133,43 @@ def select_base(
     return next(iter(resolved.values())), "integration-hint"
 
 
+def planning(observation: Observation) -> bool:
+    """Whether ``observation`` is a Planning activity: a proposal unit on a ``plan-*`` ref or worktree.
+
+    The unit kind comes from ``provenance.unit``, never from ``task_key``, which snapshots and duplicate anchors leave
+    empty. A proposal on a ``dev-*`` source (a handoff before its first commit), a spec unit, a snapshot and an
+    observation without a unit are not Planning (``CAP-COLL-work-scope-registry`` 4.9).
+    """
+    provenance = observation.provenance
+    unit = provenance.get("unit") or ""
+    ref = provenance.get("ref") or ""
+    return (
+        provenance.get("source") in {"ref", "worktree"}
+        and unit.startswith(f"{PROPOSALS}/")
+        and ref.rsplit("/", 1)[-1].startswith("plan-")
+    )
+
+
+def discard_base(root: Path, candidate: Candidate, base_ref: str, deadline: Deadline) -> bool:
+    """Whether ``base_ref`` names the candidate itself: its own full ref or a tracking peer of the same branch.
+
+    A base whose commit merely equals the tip is still a base (an empty range); one that does not resolve to a ref
+    (a commit ID, an ambiguous name) is kept as a commit.
+    """
+    full = optional(root, "rev-parse", "--symbolic-full-name", base_ref, deadline=deadline)
+    if not full:
+        return False
+    if full == candidate.ref:
+        return True
+    branch = candidate.branch
+    if not branch:
+        return False
+    # Exact names under each configured remote, so a slash in a worktree branch or a remote name never confuses
+    # peers; a ref candidate's branch is its last segment, which is whole for slash-free plan-*/dev-* names.
+    remotes = optional(root, "remote", deadline=deadline).splitlines()
+    return full in {f"refs/heads/{branch}", *(f"refs/remotes/{remote}/{branch}" for remote in remotes)}
+
+
 def committed(root: Path, tip: str, base: str, cap: str, deadline: Deadline) -> tuple[list[str], list[Unresolved], str]:
     issues: list[Unresolved] = []
     fork = ""
