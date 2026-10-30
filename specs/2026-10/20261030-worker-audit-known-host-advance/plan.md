@@ -22,7 +22,8 @@ Documents and tests only; no code, dependency or CLI change.
   - `worker.md`, Validate: the clean-worktree condition drops "and the base checkout's status and HEAD match what you
     recorded before spawning"; a new condition requires `<returned>` to add this turn's `worker` envelope, absent at
     `<accepted>`; one sentence states that base advances (Host, other session or unknown) never block the range, that
-    no base merge is required first and that a partial committed escape is the accepted residual, citing the ADR.
+    no base merge is required first and that a partial committed escape is the accepted residual. Bundle text cites
+    no ADR ID, because consuming projects lack this repository's decision records; the capability sentence cites it.
   - `payload.md`, Workers: the first bullet drops "record the base checkout's `git status --short` and HEAD before
     spawning".
   - `spec` is a selected bundle, so `devkit sync` reprojects these into `.devkit/managed/` (ignored) and may update
