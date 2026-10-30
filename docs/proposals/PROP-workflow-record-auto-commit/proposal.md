@@ -2,7 +2,7 @@
 id: PROP-workflow-record-auto-commit
 title: Automatic commits for workflow records
 summary: "Adds explicit automatic commits for authored workflow envelopes, using deterministic messages derived from the Unit slug and record identity. Preserves existing source-change, approval and integration boundaries."
-status: draft
+status: reviewing
 created_at: 2026-10-30
 target_area: delivery/
 priority: medium
