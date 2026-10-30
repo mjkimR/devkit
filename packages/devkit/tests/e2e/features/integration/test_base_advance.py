@@ -604,13 +604,28 @@ def test_registry_committed_at_the_target_decides(repo):
     assert raised.value.details == (".devkit/installation.json: owned by no generated artifact",)
 
 
-def test_composed_acceptance_preparation_settles_no_conflict(repo):
-    """Composed acceptance prepares without a settler (``settle_generated=False``) and keeps refusing every conflict."""
+class _Lifecycle:
+    """The part of an acceptance lifecycle a preparation reads before the build refuses."""
+
+    approval_gate = "dev-integration"
+
+
+@pytest.mark.parametrize("composed", ["lifecycle", "fresh preparation"])
+def test_composed_acceptance_preparation_settles_no_conflict(repo, composed):
+    """Composed acceptance prepares with its lifecycle (and re-prepares with ``settle_generated=False``) without a
+    settler, so a receipt-only conflict still refuses with nothing changed."""
     base, worktree = repo
-    _diverge(
+    tip, moved = _diverge(
         base,
         worktree,
         {".devkit/installation.json": (_projection("base"), _projection("source"), _projection("target"))},
     )
+    before = git(base, "show-ref")
+    service = IntegrationService(base)
     with pytest.raises(MergeConflictError):
-        IntegrationService(base)._prepare("dev-demo", TASK, settle_generated=False)
+        if composed == "lifecycle":
+            service._prepare("dev-demo", TASK, lifecycle=_Lifecycle())  # type: ignore[arg-type]
+        else:
+            service._prepare("dev-demo", TASK, settle_generated=False)
+    assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
+    assert git(base, "rev-parse", "dev-demo") == tip and git(base, "status", "--porcelain") == ""
