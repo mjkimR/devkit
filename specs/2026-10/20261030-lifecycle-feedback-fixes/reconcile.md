@@ -49,8 +49,8 @@ The duplicate FB-local-render-fix-ignores-worker-write-scope is outside this uni
 ## Deferred work
 
 - `CAP-DIST-sync-and-transactions` (personal rendering paragraph) says "run sync" for `CONFIG_LOCAL_RENDER_STALE`;
-  naming `devkit sync --locked` first there is outside this unit's write scope. Destination: the Host, in the same
-  follow-up that closes the duplicate feedback above.
+  naming `devkit sync --locked` first there is outside this unit's write scope. Captured as
+  `FB-sync-capability-render-stale-remedy-generic` for the Host.
 - The bundled `RULE-document-reference` guide
   (`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md`) says `rules fix`
   never rewrites an alias reference in an ADR or PADR, which contradicts the code,
