@@ -2,7 +2,7 @@
 id: PROP-worker-audit-known-host-advance
 title: Stop requiring an unchanged base checkout in worker validation
 summary: "Drop the base-checkout HEAD and status equality from worker validation and require each returned turn to add its own worker envelope, so integrations and other sessions need not wait for a running worker; a partial committed escape into the base is an accepted residual."
-status: reviewing
+status: accepted
 created_at: 2026-10-30
 target_area: capabilities/delivery/
 priority: medium
