@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T03:12:57.018068Z'
+status: completed
+summary: 'Renamed the incubation approach, catalog bundle, entry, pointer, researcher and context file to adaptive-dev and the SDD term to proposal Planning; six documents renamed with aliases, five ADR pointers, guides, glossary, tests, smoke and sync outputs updated. Review-01 (4 findings) and reconcile-check-01 (1 finding) fixed and closed. Remaining: the pre-existing failure test_fixes_carry_no_placeholder on main.'
+findings: []
+assumptions:
+- The pre-existing test_fixes_carry_no_placeholder failure is reported, not fixed, per the Host payload
+checks:
+  tests: 'PASS just test-affected mode=full: 6081 passed, 14 skipped; the 1 failure test_fixes_carry_no_placeholder is pre-existing on main (FB-envelope-commit-fix-placeholder-fails-output-contract), outside scope; just smoke passed'
+  build: PASS just check (pyright 0 errors) for devkit-dist, devkit-spec, devkit, devkit-catalog, devkit-docs; uv run devkit sync --check exit 0; uv lock --check unchanged
+  lint: PASS just lint-check for the five packages; just rules-check and devkit rules check --ci --base 0debf74f errors=0; AC-01 allowlist unclassified 0
+diff_scope:
+  base: 0debf74fa75713bc2620cd0c9d174da1a72445e1
+  head: b5e224685c943ed1c9334223e0ebe50e12478ee4

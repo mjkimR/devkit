@@ -36,7 +36,7 @@ created_at: 2026-10-26
 - **Versions**: worktree head of `dev-living-spec-consistency-sweep`.
 - **Conditions**: not applicable.
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `CAP-DLV-proposal-incubation`, `ARCH-05-1-containers`.
+- **Related Assets**: `CAP-DLV-proposal-planning`, `ARCH-05-1-containers`.
 
 ## Evidence
 

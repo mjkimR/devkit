@@ -1,4 +1,4 @@
-"""The composed acceptance's refusals render the directive their table rows document (``CAP-DLV-proposal-incubation``).
+"""The composed acceptance's refusals render the directive their table rows document (``CAP-DLV-proposal-planning``).
 
 Planning that is not ready for plan-accept and a changed source, base or acceptance delta are the user's to review
 (``INTERACTION``); a mode or effort the caller corrects, a checkout off the retained base and a refused acceptance

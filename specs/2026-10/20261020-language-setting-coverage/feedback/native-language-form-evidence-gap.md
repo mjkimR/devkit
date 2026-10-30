@@ -38,7 +38,7 @@ created_at: 2026-10-20
 - **Conditions**: Isolated Development worktree with emulated scope confinement, no observed native form surface.
 - **Workarounds Attempted**: Retained per-host unverified status in `MAT-language-development-evidence` and canonical
   contracts. This allowed evidence gap does not defer an implementation requirement.
-- **Related Assets**: `SPEC-language-setting-coverage`, `CAP-INT-mcp-services`, `CAP-DLV-proposal-incubation`.
+- **Related Assets**: `SPEC-language-setting-coverage`, `CAP-INT-mcp-services`, `CAP-DLV-proposal-planning`.
 
 ## Evidence
 

@@ -34,6 +34,7 @@ Existing SDD consumers must retain their defaults, while incubation omits per-ch
 Use the devkit-dist option. The shared values are `sdd` and `incubation`,
 with `sdd` when absent. `devkit config show` reports the effective approach and source. No local or environment
 override is supported. SDD remains default; incubation is an explicit project choice.
+Superseded in part by `ADR-adaptive-dev-approach-name`: the shared values are `sdd` and `adaptive-dev`.
 
 SDD-specific consumers apply lifecycle knowledge, while generic rules reporting exposes omissions and devkit-agt
 provides independent project readiness. Explicitly bound historical SDD artifacts retain their checks. The retained

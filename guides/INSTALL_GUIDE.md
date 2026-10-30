@@ -120,31 +120,31 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   `devkit-agt` that predates `devkit-dist` follows
   [Upgrading across the package split](install/existing-repository.md#upgrading-across-the-package-split).
 
-### Idea incubation
+### Adaptive development
 
-For a user-approved incubation path, declare devkit-docs and devkit-catalog using the package commands above;
+For a user-approved adaptive development path, declare devkit-docs and devkit-catalog using the package commands above;
 no devkit-spec requirement is needed. Set shared `.devkit/config.toml` policy explicitly:
 
 ```toml
 [development]
-approach = "incubation"
+approach = "adaptive-dev"
 
 [integration]
 provider = "project"
 ```
 
-Select `uv run devkit add incubation`, then inspect `uv run devkit config show` and
-`uv run devkit get-context incubation`. `/incubate` handles adaptive discovery, research, implementation and
+Select `uv run devkit add adaptive-dev`, then inspect `uv run devkit config show` and
+`uv run devkit get-context adaptive-dev`. `/adaptive-dev` handles adaptive discovery, research, implementation and
 actual-usage verification. Optional support roles are not mandatory phases. The coordinator creates mutable
-`.devkit/incubation.md` when useful. Leave that project-owned file available to normal version control and preserve
+`.devkit/adaptive-dev.md` when useful. Leave that project-owned file available to normal version control and preserve
 its bytes during installation. No complete backlog or SDD Unit is needed before the first useful action.
 
 The absent approach defaults to `sdd`; selecting the catalog bundle never changes that value. Do not implicitly
 remove existing SDD assets or reopen its history. Retain project checks and use a separately requested verified
-[baseline procedure](install/incubation-sdd-adoption.md) for voluntary SDD adoption.
+[baseline procedure](install/adaptive-dev-sdd-adoption.md) for voluntary SDD adoption.
 
-An incubation installation from before the research split loses its explicit research entry and the
-`direction-explorer`, `discovery-critic` and `discovery-planner` roles on upgrade: sync removes their unmodified
+An installation of the former `incubation` bundle from before the research split loses its explicit research
+entry and the `direction-explorer`, `discovery-critic` and `discovery-planner` roles on upgrade: sync removes their unmodified
 projections and announces the separate research bundle once with `BUNDLE_UNSELECTED`. Select it with
 `uv run devkit add deep-research` only when the user asks for that entry. Move each customization of a moved role first:
 

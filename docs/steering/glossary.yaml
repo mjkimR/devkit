@@ -22,3 +22,7 @@ terms:
     synonyms: ["컴팩트", "devkit run", "bounded output", "실행 요약"]
   - primary: steering document
     synonyms: ["steering", "foundation document", "background document"]
+  - primary: adaptive development
+    synonyms: ["adaptive-dev", "incubation", "idea incubation", "적응형 개발"]
+  - primary: proposal Planning
+    synonyms: ["incubation", "proposal incubation", "plan-accept", "제안 계획"]

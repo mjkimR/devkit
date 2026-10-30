@@ -83,6 +83,7 @@ shipped tests beside each rule. Installed-wheel CLI and MCP end-to-end scenarios
 
 
 Development approach is shared project policy: inspect `uv run devkit config show`. `[development] approach`
-accepts `sdd` (the absent default) or explicit `incubation`; bundle/package selection does not change it. Incubation
-keeps document and project checks without implicit SDD records. The common reader belongs to devkit-dist; the
-`project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to devkit-spec.
+accepts `sdd` (the absent default) or explicit `adaptive-dev`; bundle/package selection does not change it.
+Adaptive development keeps document and project checks without implicit SDD records. The common reader belongs to
+devkit-dist; the `project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to
+devkit-spec.

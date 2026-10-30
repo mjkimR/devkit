@@ -64,7 +64,7 @@ flowchart TD
     classDef store fill:#f5f5f4,stroke:#78716c,color:#111
 ```
 
-- **Branch naming**: Always `plan-<slug>` for proposal incubation and `dev-<slug>` for development. Reusing existing branches without explicit `--existing-branch` is rejected.
+- **Branch naming**: Always `plan-<slug>` for proposal Planning and `dev-<slug>` for development. Reusing existing branches without explicit `--existing-branch` is rejected.
 - **Dedicated worktrees**: Managed exclusively via `devkit worktree start <branch>` to ensure synchronized hook environments and unified tracking.
 
 ---
