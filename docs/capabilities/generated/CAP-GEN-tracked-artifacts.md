@@ -4,6 +4,8 @@ title: "Tracked Generated Artifacts"
 summary: "Deterministic regeneration and conflict resolution for machine-generated files."
 area: generated
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/generated/
 created_at: 2026-10-17
 ---
 
@@ -111,6 +113,7 @@ Git offers no hook that runs at the right moment to regenerate inside a merge, s
 | --- | --- | --- |
 | Detection | `devkit generated check` in CI | Built in |
 | Command | `devkit generated resolve` when an operation stops on conflicts | Built in |
+| Local integration | `devkit integration prepare` and `integrate` of a moved target settle a merge whose conflicts are all owned by artifacts at each artifact's `seed` side in the in-memory merge, without regenerating (the classification of `resolve` steps 1 and 2, read from the registry committed at the build target); the result discloses the artifacts with `devkit generated regen <ids>` to run on the target after landing (`CAP-INT-mcp-services`, `ADR-generated-conflicts-in-prepared-merge`) | Built in |
 | Local merge driver | `.gitattributes` `merge=<driver>` that takes one side so Git does not stop, plus a commit gate that refuses stale generated files with `[FIX] devkit generated regen` | Not built: a merge driver runs per file before the tree is merged, so it cannot regenerate. It does not run for modify/delete or rename conflicts, and lives in Git configuration that is not versioned. |
 | CI bot | On a push to the base branch, merge the base into each conflicting pull request, run `resolve`, and push when no conflict remains | Left to each repository: it needs a token that triggers workflows, it cannot push to forks, and it must run the base branch's configuration, never the pull request's |
 

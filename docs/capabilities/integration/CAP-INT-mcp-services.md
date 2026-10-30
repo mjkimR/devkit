@@ -47,17 +47,18 @@ remain in force (`packages/devkit/tests/integration/features/integration/test_cl
 
 Text `prepare` prints `[INTEGRATION_PREPARED: <id> branch=... target="..." target_sha=<confirmation target> digest=...
 route=... network=...]` and
-`[INTEGRATION_SCOPE: worktree_remove=yes|no delete_branch=yes|no cleanup=<extensions>|- disclosure="<text>"]`;
+`[INTEGRATION_SCOPE: worktree_remove=yes|no delete_branch=yes|no cleanup=<extensions>|- seeded=<ids>|- disclosure="<text>"]`
+and its notices on stderr;
 `--format json` prints the approval scope (`request`: digest, approval, task, source, target, worktree, cleanup,
-route, `pull_request` (`null` on the local route, `create` before the PR exists), `readiness.disclosure`) and the
-planned `steps`, never internal identities, policy digests or Git directories. `integrate` prints
+route, `pull_request` (`null` on the local route, `create` before the PR exists), `readiness.disclosure`), the
+planned `steps` and, when the build seeded generated files, `generated`, never internal identities, policy digests or Git directories. `integrate` prints
 `[INTEGRATION: status=... ... target_sha=<confirmation target> build_target=<sha>|- result=<sha>|- ...
-disclosure="<text>" effects=<step>:<state>,...]` or one JSON object, whose `build` names the confirmation target,
+seeded=<ids>|- disclosure="<text>" effects=<step>:<state>,...]` or one JSON object, whose `build` names the confirmation target,
 the build target and the landed result. Every result that carries a request thus states the merged target and what
 was checked on the merged result (`ADR-moved-target-merge`); a cleanup-only result names only the prepared target. Warnings and notices use the Agent
 Advisory Protocol on stderr, then the errors, last. A refusal before any effect exits `2`; an execution stopped by an
 error after an effect exits `1`; a successful result exits `0`, also a `partial` one whose only advisory is the
-`INTEGRATION_CLEANUP_INCOMPLETE` warning (Git integration done, scoped cleanup remains), unless `--strict` raises a
+`INTEGRATION_CLEANUP_INCOMPLETE` or `INTEGRATION_GENERATED_SEEDED` warning, unless `--strict` raises a
 warning to `1`. `--strict` never lowers `2`.
 
 WHEN `ask` integration is invoked without a digest or with one that differs from the current scope, the refusal
@@ -85,6 +86,18 @@ Git identity or `TZ`. Cleanup is planned from the approved context, and `build` 
 `devkit worktree finish --merge` and the pull-request route keep refusing a moved target with
 `WORKTREE_MERGE_NOT_FF`. Covered by `packages/devkit/tests/e2e/features/integration/test_base_advance.py` and
 `packages/devkit/tests/integration/features/integration/test_cli.py`.
+
+WHEN every conflict of a local prepare or integrate build is in a path an enabled generated artifact owns
+(`CAP-GEN-tracked-artifacts`; the built-in artifacts plus the `.devkit/generated.toml` committed at the build target)
+and no artifact to regenerate reads or updates another conflict, the build MUST keep each owned path from the
+artifact's `seed` side (`ours` the target, `theirs` the source; removed where that side deleted it) instead of
+refusing, and run every check above on that result (`ADR-generated-conflicts-in-prepared-merge`). Nothing is
+regenerated. The prospective and the real build of one source and target produce one tree. The result discloses the
+seeded artifacts in `generated` (`{"seeded": [{"id", "paths", "seed", "kept": "target"|"source"}], "regenerate":
+"uv run devkit generated regen <ids>"}`), in the `seeded=` sentinel field and with an `INTEGRATION_GENERATED_SEEDED`
+warning; integrate replaces prepare's disclosure with its own build's. Any other conflict refuses with
+`WORKTREE_MERGE_CONFLICT`, one `[DETAIL]` per such path (`<path>: owned by no generated artifact` or
+`<path>: read by <ids>`), nothing changed. Composed proposal acceptance and the pull-request route settle no conflict.
 
 ## Authority and route limits
 
@@ -168,6 +181,7 @@ registered.
 | `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: run `[FIX]` to present the scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |
 | `INTEGRATION_REQUEST_STALE` | For a digest that differs from the current scope, `INTERACTION`: run `[FIX]` to present the current scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise inspect completed effects and revalidate the remaining scope before fresh Host authority. |
 | `INTEGRATION_TARGET_MOVED` | Nothing changed on the target. Prepare again on the current target (the local route builds the merge itself; the pull-request route needs the target merged into the source), then obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |
+| `INTEGRATION_GENERATED_SEEDED` | `WARNING`: the merge kept the named generated files from one side without regenerating them. After the integration lands, run the `[FIX]` command (`devkit generated regen <ids>`) on the target branch and commit the regenerated files; a `local-orchestrated` run does it once before its batch test run. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git and worktree state; run guarded already-merged finish for a marked remaining worktree, or the owning extension command for a remaining scoped post-finish target. |
 | `INTEGRATION_LANDED_UNCHECKED` | Run the provider's landed-target check and do not report checked integration until it passes. |
 
