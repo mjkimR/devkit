@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:31:06.636925Z'
+status: completed
+summary: 'Worker validation no longer records or compares the base checkout: worker.md requires the returned head to add this turn''s worker envelope and states the accepted partial committed escape; payload.md drops the pre-spawn record; CAP-DLV-delivery-workflows and an ADR-orchestration-workers pointer line reflect it; contract test and a base-advance inspection test pin it; no code change. Remaining limit: a partial committed escape stays unnamed by any check (accepted).'
+findings: []
+assumptions:
+- AC-03 characterization test added beside the one agreed contract test, as evidence for GOP-08; tests only
+checks:
+  tests: PASS just test-affected mode=partial 1500 passed; test_role_contracts.py and test_worker_inspect.py 114 passed
+  build: PASS just check devkit-spec 0 errors; uv run devkit sync --check exit 0
+  lint: PASS just lint-check devkit-spec; just rules-check errors=0; devkit rules check --ci --base 597a8bd9 errors=0
+diff_scope:
+  base: 597a8bd933204b1138649c463c6b889b09ef1aff
+  head: 34546aaa774a2170217c78abeb7f2d8e4b8b5325

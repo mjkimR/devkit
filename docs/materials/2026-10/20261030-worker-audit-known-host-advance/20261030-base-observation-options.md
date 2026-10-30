@@ -10,7 +10,7 @@ created_at: 2026-10-30
 ## Evidence boundary
 
 Read-only analysis of the `plan-worker-audit-known-host-advance` worktree at base `fdba6646`, by the Planning worker
-and one `scout` (`envelopes/scout-01.yaml`). Nothing was executed against a live base checkout; the traces below are
+and one `scout` (historical Git `59d3667aed222058c0a0e8ff6f0ddfeedd989915:docs/proposals/PROP-worker-audit-known-host-advance/envelopes/scout-01.yaml`). Nothing was executed against a live base checkout; the traces below are
 derived from code reading. The 2026-10-30 foreign-session advance comes from the Host's report: another session
 committed to `main` while a Development worker ran, and `devkit spec worker inspect --base <accepted>` passed.
 
@@ -79,7 +79,7 @@ C first used a first-parent window with a committer-time filter, then a non-merg
   does not exist in the base checkout, so a Development escape lands on code paths.
 
 Planning therefore recommended A and kept C as the alternative for the user. The user chose A and filed no
-follow-up (`envelopes/answer-01.yaml`). A preventive follow-up, if an escape is ever observed, is a commit-gate check
+follow-up (historical Git `59d3667aed222058c0a0e8ff6f0ddfeedd989915:docs/proposals/PROP-worker-audit-known-host-advance/envelopes/answer-01.yaml`). A preventive follow-up, if an escape is ever observed, is a commit-gate check
 refusing a base-checkout commit that touches a path an active task worktree's unit owns
 (`CAP-COLL-work-scope-registry`).
 

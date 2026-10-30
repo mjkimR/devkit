@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-worker-audit-known-host-advance
+by: user
+at: '2026-10-30T04:14:18.408256Z'
