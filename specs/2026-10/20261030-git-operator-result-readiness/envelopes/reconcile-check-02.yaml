@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:49:55.845152Z'
+status: completed
+summary: 'Implementer self-verified the reconcile-check-01 fixes at 07ba1f8c9d0a6f93693d5163c253b0a84de7d669 (medium: one guidance sentence and doc text, no new cross-component scope): CAP-DLV-proposal-planning and UC 7a state the landed-but-unclean in-place repair matching native_handoff; dispatch and CAP-DLV-delivery-workflows 4.6.1 allow the Host''s own link-fix descendant; UC-drive-development-to-integration 1b adds the comparison; reconcile.md lists four targets and the FB resolution'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base 02852dbc
+  tests: PASS 580 tests/integration/bundles/spec
+diff_scope:
+  base: 02852dbc6a29e97b8703c18ddf7fd4002a6f1854
+  head: 07ba1f8c9d0a6f93693d5163c253b0a84de7d669

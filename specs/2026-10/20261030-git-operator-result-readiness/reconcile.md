@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-git-operator-result-readiness
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-planning.md
     resolution: modified
