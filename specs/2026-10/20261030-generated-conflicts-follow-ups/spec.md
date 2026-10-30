@@ -2,7 +2,7 @@
 id: SPEC-generated-conflicts-follow-ups
 title: Follow-ups of the generated conflict settling
 summary: Run merge-tree on the shared Git runner through accepted exit statuses, and close four guidance and test-selection gaps the generated conflict and bundle citation work left as feedback.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities: []
 related_usecases: []
