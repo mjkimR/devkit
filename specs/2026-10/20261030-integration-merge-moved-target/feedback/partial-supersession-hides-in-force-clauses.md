@@ -8,7 +8,7 @@ target: docs/decisions/ (decision kind in devkit-docs) and devkit spec proposal 
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -54,3 +54,11 @@ packages/devkit-docs/src/devkit_docs/features/documents/models/parse.py:68-69: s
 docs/decisions/README.md:25-28: superseded_by is a single value.
 Scout envelope envelopes/scout-01.yaml (decision mechanics finding).
 ```
+
+- **Disposition**: `SPEC-partial-adr-supersession`: an ADR is `superseded` only when wholly replaced; a partly replaced
+  ADR stays `accepted` without `superseded_by` and carries a "Superseded in part by" line (`CAP-DOCS-document-model`,
+  `decision-writing`, the decision template); the PADR scaffold offers a commented `supersedes` that handoff carries;
+  `ADR-local-and-pull-request-integration` and three other misclassified ADRs are `accepted` again, and missing
+  pointers were added. The suggested structured field was not adopted by the agreed scope. Verified:
+  `devkit docs search "Local and Pull Request Integration"` returns the ADR first (`status=accepted`), the scaffold,
+  handoff, rule and guidance tests pass, and `just test-affected` passed 2081.
