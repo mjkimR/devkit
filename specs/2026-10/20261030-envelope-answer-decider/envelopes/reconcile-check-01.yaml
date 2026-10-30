@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:24:51.754564Z'
+status: completed
+summary: 'self-checked reconcile at low: CAP-DLV-workflow-envelopes (answer example and row, --answers-file and --resolve rows) and CAP-DLV-cli-and-output (ENVELOPE_FINDING_CLOSED row, ENVELOPE_ITEMS_INVALID by) match the code and tests; reference and guidance updated; both source feedback resolved; no use case, architecture or glossary impact'
+findings: []
+checks:
+  reconcile: PASS every reconcile.md target reflected; devkit rules check on the unit and feedback files clean
+diff_scope:
+  base: 95b8228c58838b6bb633eb90932363b025419f3e
+  head: be755c6c4e79709eb5539cab2ba29bff0661f897
+activity_effort: low

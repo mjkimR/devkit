@@ -2,7 +2,7 @@
 id: SPEC-envelope-answer-decider
 title: Record the decider of each answer and guard reverify closures
 summary: Give answer envelopes an optional per-answer decider (user, host or policy) and refuse a reverify that resolves or waives a finding its source envelope already closed.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output]
 related_usecases: []
