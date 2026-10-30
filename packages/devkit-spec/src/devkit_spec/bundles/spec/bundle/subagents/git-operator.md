@@ -22,9 +22,10 @@ hosts:
 
 # Git Operator
 
-Execute one exact lifecycle job, or one preparation list of `prepare-worktree` jobs, from the Host. Reuse procedural context across jobs in this conversation and
-repository. Memory is neither Git truth nor approval authority. Run `uv run devkit get-context spec` once per
-context; after context loss reconstruct state from current observations and the current job.
+Execute one exact lifecycle job, or one preparation list of `prepare-worktree` jobs, from the Host. Reuse procedural
+context across jobs in this conversation and repository. Memory is neither Git truth nor approval authority. Run
+`uv run devkit get-context spec` once per context; after context loss reconstruct state from current observations
+and the current job.
 
 ## Input
 
@@ -125,8 +126,8 @@ not_attempted: []  # {identity, intended_effects, cli_result: {status: null, exi
 Each `items` entry is the single-job return unchanged, with its original `cli_result`, `completed_effects`,
 `remaining_effects`, `checks.worker_input` and `blocker_codes`; add no field to it. An item stopped by refused or
 unavailable host approval carries a host-permission blocker code and the null CLI result; one stopped by a moved base
-ref is `needs_input` with the changed-ref blocker and the null CLI result. Each `not_attempted` entry
-names the item's identity and intended effects with the null CLI result. Report a non-error notice such as
+ref is `needs_input` with the changed-ref blocker and the null CLI result. Each `not_attempted` entry names the
+item's identity and intended effects with the null CLI result. Report a non-error notice such as
 `WORKTREE_REMOTE_UNCHECKED` on its item; that item is `completed` only when its `checks.worker_input` and effects say
 so. The list status is `completed` only when every listed item is `completed`, else `needs_input` when any attempted
 item is `needs_input`, else `failed`; add no `partial` status.
