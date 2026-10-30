@@ -176,8 +176,9 @@ both choices, never a proof of independence. The Host keeps the decision; no res
 - Code evidence keeps one entry per path pair. When a Planning side holds the same path as a candidate and as an
   observed write, the entry takes the `current` source, so a current overlap is never hidden behind a future one;
   `code=` counts are unchanged.
-- A tracking peer is a ref with the candidate's whole branch name under `refs/heads/` or `refs/remotes/<remote>/` of a
-  configured remote; the
+- A tracking peer is a ref with the candidate's inventoried branch name (the whole name under `refs/heads/` for a
+  worktree, the last segment of a slash-free `plan-*`/`dev-*` ref) under `refs/heads/` or `refs/remotes/<remote>/` of
+  a configured remote; the
   `plan-`/`dev-` prefix is part of the name, so `plan-x` and `dev-x` are not peers.
 - A base that `git rev-parse --symbolic-full-name` cannot resolve to a ref (a commit ID, an ambiguous name) is kept
   as a commit, never discarded.

@@ -19,8 +19,8 @@ targets:
 - `CAP-COLL-work-scope-registry` 4.9: the horizon rule (Planning activity = proposal unit on a `plan-*` source; entry
   `current` only when both sides are), the current-first evidence choice per path pair, the pair and summary counts,
   the Host reading, problem `inputs` with merged repeats and the detail format, the self-base guard (a base at the
-  tip is a base; only the candidate's own full ref or a configured remote's whole-name tracking peer is discarded),
-  the text field list and the new check file `test_collection_horizon.py`.
+  tip is a base; only the candidate's own full ref or a configured remote's tracking peer of its inventoried branch
+  name is discarded), the text field list and the new check file `test_collection_horizon.py`.
 - `CAP-HARN-agent-guidance` (Host scope observation): current overlap serializes runs, future-only overlap does not
   serialize Planning runs but orders handoff and integration, partial coverage never proves independence.
 - `UC-run-parallel-work-safely`: step 6 reads the horizon, extension 6a, the success guarantee names the horizon and
@@ -42,4 +42,5 @@ targets:
 
 ## Deferred work
 
-None. Both review findings (P3) were fixed in this unit.
+None. Both code-review findings (P3) were fixed in this unit, and the reconcile-check-01 finding (P3, the
+tracking-peer wording) was fixed by narrowing the 4.9 wording and the code comment to the inventoried branch name.

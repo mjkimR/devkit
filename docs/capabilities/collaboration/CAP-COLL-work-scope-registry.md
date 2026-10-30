@@ -402,8 +402,9 @@ ambiguity. A selected base whose commit equals the tip is still a base: its comm
 registration cap's, 4.1) and the layer is observed. The base is discarded, and the layer stays `unknown-base`, only
 when `git rev-parse --symbolic-full-name <base>` (in the source's checkout, so `HEAD` names its branch) resolves to
 the candidate's own full ref or to a tracking peer of the same task (`refs/heads/<branch>` or
-`refs/remotes/<remote>/<branch>` for a configured remote, with the candidate's whole branch name); a base that
-resolves to no ref is kept as a commit. A tracking peer of the same task is therefore never its integration base.
+`refs/remotes/<remote>/<branch>` for a configured remote, where `<branch>` is the candidate's inventoried branch
+name: the whole name under `refs/heads/` for a worktree, the last segment for a ref, since `plan-*`/`dev-*` names hold
+no slash); a base that resolves to no ref is kept as a commit. A tracking peer of the same task is therefore never its integration base.
 Confirmed registered observations retain the registration-HEAD cap/intersection from 4.1; unregistered observations
 use a unique merge-base-to-tip diff, labelled `branch-relative` because stacked parent work can be included. Missing history/base evidence leaves that
 layer unresolved. Available declaration/dirty evidence remains usable.

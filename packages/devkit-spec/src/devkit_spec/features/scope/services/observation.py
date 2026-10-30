@@ -164,7 +164,8 @@ def discard_base(root: Path, candidate: Candidate, base_ref: str, deadline: Dead
     branch = candidate.branch
     if not branch:
         return False
-    # Whole names under each configured remote, so a slash in a branch or remote name never confuses peers.
+    # Exact names under each configured remote, so a slash in a worktree branch or a remote name never confuses
+    # peers; a ref candidate's branch is its last segment, which is whole for slash-free plan-*/dev-* names.
     remotes = optional(root, "remote", deadline=deadline).splitlines()
     return full in {f"refs/heads/{branch}", *(f"refs/remotes/{remote}/{branch}" for remote in remotes)}
 
