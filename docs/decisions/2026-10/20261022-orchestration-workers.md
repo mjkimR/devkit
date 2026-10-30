@@ -20,7 +20,7 @@ aliases:
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: @mjkimR
-- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-incubation`,
+- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`,
   `CAP-DLV-project-policy`, `CAP-HARN-agent-guidance`, the `worker` role contract, `spec-delegate`,
   `spec-orchestrate`, `spec-tasks`
 

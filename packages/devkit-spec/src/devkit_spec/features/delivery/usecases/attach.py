@@ -63,7 +63,7 @@ def _bound(meta: dict[str, object] | None, unit: str, name: str, tip: str) -> tu
 
 def attach_check(root: Path, branch: str, unit: str, tip: str) -> list[str]:
     """The reasons ``unit`` at ``tip`` is not the unit of the activity branch ``branch``; empty when it is."""
-    if read_development_approach(root).approach == "incubation":
+    if read_development_approach(root).approach == "adaptive-dev":
         bindings = committed_anchors(root, tip)
         if not any(
             PurePosixPath(path).parent == PurePosixPath(unit.strip("/") or ".")

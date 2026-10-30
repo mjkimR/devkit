@@ -37,7 +37,7 @@ entrypoints:
 ## 3. Extensions
 
 - **2a.** SDD project: the explicit invocation is not development intake, so no Unit or classification starts; after the user commits the material, a later proposal, spec or decision cites it by its ID; continues at step 3.
-- **2b.** Adaptive (incubation) project: the agent reads no current-context file; after the user commits the material, the current context links it by its ID; continues at step 3.
+- **2b.** Adaptive-development project: the agent reads no current-context file; after the user commits the material, the current context links it by its ID; continues at step 3.
 - **2c.** The user names an earlier run or material: the agent reads it as an input source; a named `partial` material of the same investigation is updated at step 7 instead of creating a new one; continues at step 3.
 - **3a.** Consequential user decision is missing: the agent reuses known facts and asks only the missing decision; dependent work waits, then resumes at step 3.
 - **4a.** Small question: the agent stays inline or uses one support role; resumes at step 5.
@@ -74,9 +74,9 @@ investigation; collision check; resume; citation; bounded partial result; resear
 ### Scenario 2: Run under either approach
 
 - **Covers**: 2a, 2b
-- **Given**: an SDD project, or an adaptive project with a current-context file.
+- **Given**: an SDD project, or an adaptive-development project with a current-context file.
 - **When**: the user invokes the research entry.
-- **Then**: no approach check, Unit or classification runs, `.devkit/incubation.md` is neither read nor written, and the retained material is cited or linked later by its ID.
+- **Then**: no approach check, Unit or classification runs, `.devkit/adaptive-dev.md` is neither read nor written, and the retained material is cited or linked later by its ID.
 
 ### Scenario 3: Ask only the missing consequential decision
 

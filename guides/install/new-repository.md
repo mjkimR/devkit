@@ -99,13 +99,14 @@ For document formats without SDD lifecycle obligations, choose devkit-docs inste
 It auto-selects docs:core. For SDD, devkit-spec additionally selects spec:core. The document skeleton is opt-in
 through `uv run devkit add docs:docs-skeleton`; existing seeded files remain project-owned.
 
-### Idea incubation entry
+### Adaptive development entry
 
-When the approved installation is for idea incubation, use devkit-docs plus devkit-catalog and explicitly select
-`uv run devkit add incubation`. Configure shared `[development] approach = "incubation"` and inspect
+When the approved installation is for adaptive development, use devkit-docs plus devkit-catalog and explicitly select
+`uv run devkit add adaptive-dev`. Configure shared `[development] approach = "adaptive-dev"` and inspect
 `uv run devkit config show`; the optional independent integration provider is `project`. Follow
-[the incubation setup](../INSTALL_GUIDE.md#idea-incubation) for the complete configuration.
+[the adaptive development setup](../INSTALL_GUIDE.md#adaptive-development) for the complete configuration.
 
-Start or resume with `/incubate`. Product iteration and optional roles impose no mandatory team sequence. The
-coordinator keeps current facts in project-owned `.devkit/incubation.md`, which sync preserves. Asset selection alone
-changes no approach, and incubation does not require eventual graduation or reconstructed delivery history.
+Start or resume with `/adaptive-dev`. Product iteration and optional roles impose no mandatory team sequence. The
+coordinator keeps current facts in project-owned `.devkit/adaptive-dev.md`, which sync preserves. Asset selection
+alone changes no approach, and adaptive development does not require eventual graduation or reconstructed delivery
+history.

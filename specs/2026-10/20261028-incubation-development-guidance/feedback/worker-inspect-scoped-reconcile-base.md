@@ -25,7 +25,7 @@ created_at: 2026-10-28
 ## Diagnostic Details
 
 - **Reproduction**: Inspect the guidance final head62bf1887 against accepted43a12db6.
-- **Expected / Actual**: Expected cumulative target evidence; actual SPEC_WORKER_RULES_FAILED because CAP-DLV-idea-incubation was unchanged in the final turn.
+- **Expected / Actual**: Expected cumulative target evidence; actual SPEC_WORKER_RULES_FAILED because CAP-DLV-adaptive-development was unchanged in the final turn.
 - **Versions**: devkit-spec0.1.4.
 - **Conditions**: Multiple committed, accepted Development turns; earlier capability creation remains in the branch's full feature diff.
 - **Workarounds Attempted**: Cumulative rules against main2ee13ec1 passed with errors0/warnings0; scoped writes stayed authorized and affected44 passed on the returned head.

@@ -36,7 +36,7 @@ created_at: 2026-10-15
 - **Conditions**: proposal `status: draft`, handoff inside the slug's worktree.
 - **Workarounds Attempted**: none beyond re-answering the spec gates.
 - **Related Assets**: `src/devkit_spec/proposals/handoff.py`, `workflows/incubated-delivery.md`,
-  `CAP-DLV-proposal-incubation`.
+  `CAP-DLV-proposal-planning`.
 
 ## Evidence
 

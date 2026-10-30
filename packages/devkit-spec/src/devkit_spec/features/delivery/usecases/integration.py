@@ -398,7 +398,7 @@ def check(context: IntegrationContext) -> Readiness:
     from devkit_dist.features.project import development_approach
 
     target_config = commit_config(Path(context.finish.base), context.finish.target_sha) or {}
-    if development_approach(target_config).approach == "incubation" and context.task.kind == "session":
+    if development_approach(target_config).approach == "adaptive-dev" and context.task.kind == "session":
         # The independent provider refuses touched retained Units; callers use their Unit validator explicitly.
         return project_check(context)
     base = Path(context.finish.base).resolve()

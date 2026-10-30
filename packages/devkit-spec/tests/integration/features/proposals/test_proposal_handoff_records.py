@@ -8,7 +8,17 @@ import pytest
 import yaml
 from devkit_agt.features.workflow import Workspace, load_decisions
 from devkit_core.core import run_git
-from spec_support.proposals import CHARACTERIZE, GATED, INCUBATED, MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
+from spec_support.proposals import (
+    CHARACTERIZE,
+    GATED,
+    MONTH,
+    PROPOSAL_WORKFLOW,
+    STAMP,
+    TODAY,
+    accept,
+    spec_dir,
+    write_workflow,
+)
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalAcceptanceUnrecordedError
@@ -22,7 +32,7 @@ UNIT = "docs/proposals/PROP-{slug}"
 def _proposal(root: Path, slug: str) -> Path:
     """A bundle bound to ``sdd-proposal`` whose spec follows the gated ``sdd-spec-feature``; returns its
     proposal.md."""
-    write_workflow(root, "sdd-proposal", INCUBATED)
+    write_workflow(root, "sdd-proposal", PROPOSAL_WORKFLOW)
     write_workflow(root, "sdd-spec-feature", GATED.format(id="sdd-spec-feature", middle=""))
     write_workflow(root, "sdd-spec-bugfix", GATED.format(id="sdd-spec-bugfix", middle=CHARACTERIZE))
     created = create_proposal(root, slug, today=TODAY)
@@ -181,7 +191,7 @@ def test_an_unbound_or_single_file_proposal_hands_off_on_its_status(workspace: P
 
 def test_a_proposal_bound_to_another_workflow_hands_off_on_its_status(workspace: Path) -> None:
     proposal = _proposal(workspace, "custom")
-    write_workflow(workspace, "custom-proposal", INCUBATED.replace("id: sdd-proposal", "id: custom-proposal"))
+    write_workflow(workspace, "custom-proposal", PROPOSAL_WORKFLOW.replace("id: sdd-proposal", "id: custom-proposal"))
     text = proposal.read_text(encoding="utf-8").replace("workflow: sdd-proposal", "workflow: custom-proposal")
     proposal.write_text(text, encoding="utf-8")
     accept(proposal)
@@ -211,7 +221,7 @@ def test_a_cancel_after_the_users_accept_changes_nothing(workspace: Path) -> Non
 
 
 def test_records_nothing_for_an_unbound_spec(workspace: Path) -> None:
-    write_workflow(workspace, "sdd-proposal", INCUBATED)
+    write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
     accept(workspace / create_proposal(workspace, "loose", today=TODAY).path)
     _answered(workspace, "loose")
     result = handoff_proposal(workspace, "loose", today=TODAY)

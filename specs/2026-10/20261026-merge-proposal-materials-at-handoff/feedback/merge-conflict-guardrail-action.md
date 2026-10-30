@@ -35,7 +35,7 @@ created_at: 2026-10-26
 - **Versions**: worktree head of the spec bundle.
 - **Conditions**: any merge conflict.
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `ProposalTargetExistsError`, `_refuse_merge` in the handoff use case, `CAP-DLV-proposal-incubation`.
+- **Related Assets**: `ProposalTargetExistsError`, `_refuse_merge` in the handoff use case, `CAP-DLV-proposal-planning`.
 
 ## Evidence
 
@@ -46,4 +46,4 @@ created_at: 2026-10-26
 
 ## Disposition
 
-Resolved by `SPEC-feedback-guidance-and-scope` (decision 2): `_refuse_merge` raises `SPEC_PROPOSAL_TARGET_EXISTS` without the guardrail and with actor `USER`, so a materials merge conflict renders `INTERACTION` (ask the user; `[FIX]` is the reconciliation once they agree); an existing spec bundle or ADR target stays `BLOCKED`. Code and class are unchanged. `CAP-DLV-proposal-incubation` 4.5 and 4.12 document both modes. Verified by `test_refuses_a_conflict_before_writing_anything` (12 kinds), `test_an_existing_spec_bundle_stays_a_guardrail` and the ADR-overwrite test.
+Resolved by `SPEC-feedback-guidance-and-scope` (decision 2): `_refuse_merge` raises `SPEC_PROPOSAL_TARGET_EXISTS` without the guardrail and with actor `USER`, so a materials merge conflict renders `INTERACTION` (ask the user; `[FIX]` is the reconciliation once they agree); an existing spec bundle or ADR target stays `BLOCKED`. Code and class are unchanged. `CAP-DLV-proposal-planning` 4.5 and 4.12 document both modes. Verified by `test_refuses_a_conflict_before_writing_anything` (12 kinds), `test_an_existing_spec_bundle_stays_a_guardrail` and the ADR-overwrite test.

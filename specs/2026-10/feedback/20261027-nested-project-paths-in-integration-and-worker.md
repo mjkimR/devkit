@@ -43,7 +43,7 @@ created_at: 2026-10-27
 - **Versions**: branch `dev-bug-polish` after commit `2f8c9217`.
 - **Conditions**: `.devkit/` in a subdirectory of the Git working tree.
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-incubation`,
+- **Related Assets**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`,
   `packages/devkit-spec/tests/integration/features/delivery/test_plan_accept_nested.py`.
 
 ## Evidence

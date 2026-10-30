@@ -60,11 +60,11 @@ class LifecycleRule(BaseRule):
             for anchor in sdd_anchors(ctx)
         ):
             return None
-        return RuleOmission(self.id, "SDD_LIFECYCLE_INACTIVE", "incubation: no targeted retained SDD unit")
+        return RuleOmission(self.id, "SDD_LIFECYCLE_INACTIVE", "adaptive-dev: no targeted retained SDD unit")
 
 
 def binding_violations(ctx: RuleContext, rule_id: str) -> list[Violation]:
-    if ctx.snapshot is None or read_development_approach(ctx.workspace_root).approach != "incubation":
+    if ctx.snapshot is None or read_development_approach(ctx.workspace_root).approach != "adaptive-dev":
         return []
     prior = committed_anchors(ctx.snapshot.root, ctx.snapshot.base)
     changed = ctx.snapshot.changed + ctx.snapshot.deleted
@@ -85,7 +85,7 @@ def binding_violations(ctx: RuleContext, rule_id: str) -> list[Violation]:
                     rule_id,
                     anchor,
                     1,
-                    "Retained SDD anchor or binding was removed; incubation does not convert retained lifecycle artifacts",
+                    "Retained SDD anchor or binding was removed; adaptive-dev does not convert retained lifecycle artifacts",
                     remediation="Preserve the retained anchor and lifecycle binding; settle its existing Unit through SDD",
                 )
             )

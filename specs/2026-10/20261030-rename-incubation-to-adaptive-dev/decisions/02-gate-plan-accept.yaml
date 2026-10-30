@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-rename-incubation-to-adaptive-dev
+by: user
+at: '2026-10-30T02:34:57.067438Z'
