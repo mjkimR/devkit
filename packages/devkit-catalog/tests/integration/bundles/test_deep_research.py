@@ -96,7 +96,7 @@ def test_bundle_text_is_approach_neutral_and_self_contained() -> None:  # AC-03
         content = path.read_text()
         for word in ("configuration.development.approach", ".devkit/incubation.md", "incubation"):
             assert word not in content, (path, word)
-        assert not re.search(r"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB)-[a-z]", content), path
+        assert not re.search(r"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB|RULE|PLAN|TASKS)-[A-Za-z0-9]", content), path
         assert len(path.read_bytes()) <= 12288, path
 
 
