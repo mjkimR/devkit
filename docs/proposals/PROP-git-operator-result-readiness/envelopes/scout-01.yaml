@@ -1,0 +1,47 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:06:35.984467Z'
+status: completed
+summary: The handoff rewrite scans every docs/ and specs/ Markdown file with no Planning-branch exclusion (planning_branches exists but is unused there). A stale PROP citation in an untouched sibling passes the snapshot-scoped commit gate and readiness, fails a whole-workspace rules check as a fixable error that rules fix repairs. The handoff never commits; its delta must come from git status.
+findings:
+- issue: Handoff reference rewrite scans every .md under docs/ and specs/ except the handed-off proposal and completed bundles; sibling drafts are not excluded.
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/services/rewrite.py:129-155; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:530-535
+  suggested_action: Fact only.
+  resolution: open
+- issue: No Planning-branch exclusion in handoff; reusable helpers planning_branches(root) and planning_branch_elsewhere(root, slug) exist and are used by padr, check and accept.
+  evidence: packages/devkit-spec/src/devkit_spec/features/policy/repositories/branches.py:139-176; scaffold.py:693-698; backlog.py:66-77; accept.py:171-173
+  suggested_action: Reuse planning_branches for the sibling skip.
+  resolution: open
+- issue: An untouched sibling citing PROP-<slug> passes the staged pre-commit rules-check and the snapshot-scoped integration readiness, but a whole-workspace devkit rules check reports a fixable ERROR ('PROP-<slug> was handed off; reference SPEC-<slug>'); landed_check after landing runs the whole check.
+  evidence: packages/devkit/src/devkit_agt/features/rules/models/contracts.py:141; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py:71-85,445; packages/devkit-docs/src/devkit_docs/features/governance/usecases/document_reference.py:51-58,271-286; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:453
+  suggested_action: Fact only.
+  resolution: open
+- issue: devkit rules fix rewrites a stale PROP-<slug> citation to SPEC-<slug> in targeted current documents; the SPEC does not carry PROP-<slug> as an alias.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/document_reference.py:393-419; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:413,448-460
+  suggested_action: Name rules fix as the repair of a pending rewrite.
+  resolution: open
+- issue: The handoff never commits; HandoffResult does not list the removed proposal files, so a commit must take its delta from git status.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py:204-280; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:208-245,540
+  suggested_action: Fact only.
+  resolution: open
+- issue: 'Precedents: native_plan_accept stages the exact delta, checks cached names, commits with a fixed subject and checks parent, names, blobs and clean status; envelope commit reads HEAD after git commit returns and treats a rewrite changing parent or tree as uncertain.'
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:263-299; packages/devkit/src/devkit_agt/features/workflow/repositories/envelope_commit.py:141-214
+  suggested_action: Reuse both patterns for the handoff commit.
+  resolution: open
+- issue: The '[cgate] Commit rewritten' post-commit hook is a local script, not devkit code; it keeps tree and message and changes dates.
+  evidence: specs/2026-10/20261015-commit-gate-rules-default/feedback/post-commit-rewrite-stales-the-printed-hash.md:17-27
+  suggested_action: Fact only.
+  resolution: open
+assumptions:
+- Read-only; no handoff, tests or hooks executed
+- Shared hook scripts under the base checkout's common git dir were not read
+unverified_areas:
+- Contents of pre-commit.d and post-commit.d (10-cgate) in the common git dir
+- Whether a real handoff's files pass the staged rules-check gate
+- Runtime rules check on a sibling with a stale PROP citation (derived from code)
+checks: {}
+diff_scope:
+  base: ''
+  head: 630d52dcb21e0510f9af3eced3e2d17a35c8c92d
