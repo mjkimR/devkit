@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-local-orch-resource-manager
-status: pending
+status: resolved
 targets:
   - file: docs/materials/2026-10/20261030-local-orch-resource-manager/20261030-development-evidence.md
     resolution: modified
