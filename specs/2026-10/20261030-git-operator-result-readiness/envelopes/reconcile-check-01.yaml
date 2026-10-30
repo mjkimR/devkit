@@ -1,0 +1,32 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:48:17.008280Z'
+status: completed
+summary: 'reconcile-reviewer (medium, nested) at ee89eaa7: targets match the code for the committed and refused handoff, worker_input and the sibling resolution; FB resolution meets source-feedback; not ready: landed-but-unclean recovery missing from the docs, dispatch ''only on that HEAD'' conflicts with the later link-fix commit, Development use case lacks the worker_input comparison'
+findings:
+- issue: The Living Spec leaves out the in-place recovery of a landed but unclean handoff commit (next action, no next command, [FIX] repairs dev-<slug>, never a rerun); reconcile.md claims CAP-DLV-proposal-planning states it
+  evidence: native_handoff.py:120-132, :340-346; docs/capabilities/delivery/CAP-DLV-proposal-planning.md:651-662, :605; docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md:111-122; reconcile.md Contract comparison bullet 3
+  failure_condition: A commit hook leaves files or rewrites commits; a reader following the SPEC_HANDOFF_STALE row and UC 7a reruns and is refused with SPEC_HANDOFF_WORKTREE_CONFLICT
+  suggested_action: State the landed-but-unclean outcome and its in-place repair in the composed-handoff paragraph, the SPEC_HANDOFF_STALE row and UC extension 7a; correct reconcile.md
+  resolution: open
+  severity: P2
+- issue: git-operator-dispatch.md says to start the worker only on checks.worker_input.head, which conflicts with the later Host commit of post-handoff link fixes that AC-08 requires
+  evidence: skills/spec-orchestrate/references/git-operator-dispatch.md:22-25; skills/spec-next/references/post-handoff.md:3-8; worktree.md.jinja:16; CAP-DLV-delivery-workflows.md:455-456
+  failure_condition: A composed handoff reports rewrites outside the spec; the Host commits the fixes and then either does not start the worker or starts it without them
+  suggested_action: 'Start the worker on the Host''s observed clean HEAD: checks.worker_input.head or a descendant made only of the Host''s own post-handoff commits; pin it in test_git_operator.py'
+  resolution: open
+  severity: P2
+- issue: UC-drive-development-to-integration extension 1b (git-operator prepare-worktree then worker) omits the worker_input comparison before the worker starts
+  evidence: docs/usecases/delivery/UC-drive-development-to-integration.md:84-89; CAP-DLV-delivery-workflows.md:450-456
+  failure_condition: A reader of the Development use case for a prepare-worktree job finds no step requiring the comparison
+  suggested_action: Add one clause to extension 1b citing CAP-DLV-delivery-workflows and add the use case as a reconcile target
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check --ci --base 02852dbc
+  tests: PASS 53 targeted
+diff_scope:
+  base: 02852dbc6a29e97b8703c18ddf7fd4002a6f1854
+  head: ee89eaa78318d1754f77c36752088e17c8aebf74
