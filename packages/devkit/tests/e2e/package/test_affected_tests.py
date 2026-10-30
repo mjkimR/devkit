@@ -140,7 +140,7 @@ def test_docs_select_the_tests_that_read_them(affected: ModuleType, path: str) -
 
 @pytest.mark.parametrize(
     "path",
-    ["docs/usecases/delivery/UC-incubate-an-idea.md", "docs/usecases/delivery/UC-deleted.md"],
+    ["docs/usecases/delivery/UC-advance-an-idea.md", "docs/usecases/delivery/UC-deleted.md"],
 )
 def test_usecase_changes_select_the_repository_parser_only_in_addition_to_doc_tests(
     affected: ModuleType, path: str

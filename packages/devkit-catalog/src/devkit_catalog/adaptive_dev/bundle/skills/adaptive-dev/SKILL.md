@@ -1,19 +1,19 @@
 ---
-name: incubate
-description: Develop or resume an incomplete product idea through adaptive clarification, research, implementation and usage verification without SDD delivery records. Use only when the effective project approach is incubation.
+name: adaptive-dev
+description: Develop or resume an incomplete product idea through adaptive clarification, research, implementation and usage verification without SDD delivery records. Use only when the effective project approach is adaptive-dev.
 ---
 
-# Incubate
+# Adaptive development
 
 Take the next useful action toward the user's product goal, keeping enough current evidence to resume in another session.
 
 ## Constraints
 
-- Before product actions, check the effective `configuration.development.approach` from `uv run devkit config show`, not bundle selection or installed packages. When it is not `incubation`, explain the shared `.devkit/config.toml` setting `[development] approach = "incubation"`; change it only on the user's direction.
+- Before product actions, check the effective `configuration.development.approach` from `uv run devkit config show`, not bundle selection or installed packages. When it is not `adaptive-dev`, explain the shared `.devkit/config.toml` setting `[development] approach = "adaptive-dev"`; change it only on the user's direction.
 
 ## Procedure
 
-1. Once per agent context, read `uv run devkit get-context incubation` (its rules apply throughout), existing `.devkit/incubation.md` and the repository's relevant run instructions.
+1. Once per agent context, read `uv run devkit get-context adaptive-dev` (its rules apply throughout), existing `.devkit/adaptive-dev.md` and the repository's relevant run instructions.
 2. Reuse known facts; read `references/discovery.md` when the next action needs product clarification or comparison.
 3. Choose the next action from the missing evidence; research or implementation may start before discovery finishes. Keep ordinary small questions inline.
 4. Read `references/evidence-and-iteration.md` before research, an experiment, implementation or usage verification; then run the action and verify its retained result.
@@ -25,4 +25,4 @@ Take the next useful action toward the user's product goal, keeping enough curre
 ## Completion of an action
 
 - State the observed result, source/artifact identity, checks actually run, limitations and next useful action.
-- Continue authorized work while a useful next action remains; incubation never requires eventual SDD adoption.
+- Continue authorized work while a useful next action remains; adaptive development never requires eventual SDD adoption.

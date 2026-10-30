@@ -56,7 +56,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    main decision boundaries, followed in policy output by `plan-intent` and configured custom gates. Each boundary
    and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
    declared by no workflow stage: `devkit spec proposal accept --mode accept_and_handoff` and
-   `devkit spec proposal handoff --effort` read it (`CAP-DLV-proposal-incubation`). The plain
+   `devkit spec proposal handoff --effort` read it (`CAP-DLV-proposal-planning`). The plain
    `devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff`
    decision and reads no policy itself.
    `plan-intent` records an already instructed task without another confirmation. An uninstructed Backlog item does
@@ -224,11 +224,11 @@ permission.
 ## Development approach inspection
 
 `devkit spec policy` consumes the common `CAP-DIST-sync-and-transactions` development approach; it owns no second
-setting. Text begins with `[DEVELOPMENT_APPROACH: approach=sdd source=default]` (or explicit incubation/shared source).
+setting. Text begins with `[DEVELOPMENT_APPROACH: approach=sdd source=default]` (or explicit adaptive-dev/shared source).
 JSON adds `development: {approach, source}`. Existing approval, stage, Git, routing and feedback defaults remain.
 
-WHILE the effective approach is incubation, ordinary work MUST NOT acquire implicit SDD Units, stages, approvals
+WHILE the effective approach is adaptive-dev, ordinary work MUST NOT acquire implicit SDD Units, stages, approvals
 or envelopes. Document-format and independent project checks remain active. The spec router and pointer inspect
 `devkit config show` before applying SDD routing. Existing deliberately bound SDD artifacts keep their applicable
 checks, and inspecting older artifacts remains available.
-`packages/devkit-spec/tests/integration/features/policy/test_incubation.py` checks the runtime boundary.
+`packages/devkit-spec/tests/integration/features/policy/test_adaptive_dev.py` checks the runtime boundary.

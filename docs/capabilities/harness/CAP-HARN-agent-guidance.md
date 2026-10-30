@@ -1,21 +1,21 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Approach-aware SDD, opt-in incubation and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
+summary: "Approach-aware SDD, opt-in adaptive-dev and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
 area: harness
 status: active
 created_at: 2026-10-13
 usecases:
   - UC-route-development-intent
-  - UC-incubate-an-idea
+  - UC-advance-an-idea
   - UC-research-an-idea-and-shape-a-roadmap
   - UC-adopt-in-an-existing-repository
-  - UC-adopt-sdd-from-incubation
+  - UC-adopt-sdd-from-adaptive-development
   - UC-handle-delivery-problems-and-exceptions
   - UC-resolve-stale-activity-branches
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
   - packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/skills/deep-research/SKILL.md
 ---
 
@@ -263,7 +263,7 @@ envelope and incomplete coverage records FAIL with its gap. Explicit user sweeps
 recorded coverage/skip/gap and starts no new worker/Cloud Agent; it claims no sweep of a later conversation.
 
 Handoff carries only `status: open` files into the spec and settled files into materials
-(`CAP-DLV-proposal-incubation`). Rejected/decomposition-return feedback stays with the proposal until deletion.
+(`CAP-DLV-proposal-planning`). Rejected/decomposition-return feedback stays with the proposal until deletion.
 The Host then preserves open files in the month-level backlog in the deletion commit, updates links and historical
 references with Git context, validates current references, and keeps the proposal on invalid input, collision or an
 unresolved live dependency. Capture and relocation never change feedback status. The procedure is
@@ -297,7 +297,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | Playbook | Procedure |
 | --- | --- |
 | `brownfield-adoption` | Adopt spec-driven delivery in a repository that already has code and docs: install, take the baseline, contain legacy Markdown under `docs/materials/_legacy/` and record any deferral as a commented `.devkit/config.toml` entry the user decided, then migrate legacy content through normal work. |
-| `sdd-baseline` | Verify the user-selected retained incubation product through current documents, implementation and actual checks, then activate SDD under an exact-effects user decision; package selection is preparation, not activation (`CAP-DLV-incubation-sdd-baseline`). |
+| `sdd-baseline` | Verify the user-selected retained adaptive-development product through current documents, implementation and actual checks, then activate SDD under an exact-effects user decision; package selection is preparation, not activation (`CAP-DLV-sdd-baseline-adoption`). |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision; above 5 open items, on a host that runs it natively, the read-only `triage` role groups and recommends from a clean checkout. |
 | `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, without changing any decision (`ADR-immutable-decisions-editable-records`). |
 
@@ -306,7 +306,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md` and
 `.devkit/managed/spec/templates/proposal.md`: frontmatter with a required English
 `summary`, the H1 `# [<ID>] <Title>` convention and the section skeleton of each document kind (`devkit spec proposal
-new` and `padr` write the proposal and PADR shapes themselves; `CAP-DLV-proposal-incubation`).
+new` and `padr` write the proposal and PADR shapes themselves; `CAP-DLV-proposal-planning`).
 
 ### 4.7 Docs Skeleton
 
@@ -346,7 +346,7 @@ the observed state. Approval is never inferred from a successful prepare or a pr
 
 ### Repository Backlog and next work
 
-The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-and-milestones`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-proposal-acceptance`); this ends the interim rule of `ADR-roadmap-and-milestones` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-delivery-classification`). Backlog may delegate a split to the read-only `decomposer` role, only for a merged `needs_decompose` return, the user's request or an `XL` draft; `size: XL` means the work would need two or more specs or a different `task_kind`, and such a draft cannot pass `plan-intent` (`CAP-DLV-proposal-incubation`): the agent decomposes it (split or promote to a milestone) and never edits the size to pass. The Host judges `size` against that definition and shows it in the plan-intent request. Before and after a Backlog role run the checkout is clean; the Host resolves every cited ID, requires proposed slugs to be unused, applies only what the user decides and names the role in the Backlog commit body, with no envelope. Session reclassification also requires no `size: XL`. No issue field, tracker intake/closing or autohub dependency applies.
+The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-and-milestones`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-proposal-acceptance`); this ends the interim rule of `ADR-roadmap-and-milestones` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-delivery-classification`). Backlog may delegate a split to the read-only `decomposer` role, only for a merged `needs_decompose` return, the user's request or an `XL` draft; `size: XL` means the work would need two or more specs or a different `task_kind`, and such a draft cannot pass `plan-intent` (`CAP-DLV-proposal-planning`): the agent decomposes it (split or promote to a milestone) and never edits the size to pass. The Host judges `size` against that definition and shows it in the plan-intent request. Before and after a Backlog role run the checkout is clean; the Host resolves every cited ID, requires proposed slugs to be unused, applies only what the user decides and names the role in the Backlog commit body, with no envelope. Session reclassification also requires no `size: XL`. No issue field, tracker intake/closing or autohub dependency applies.
 
 Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. User and agent jointly review the theme and decompose it into direct PROP members. Only proposal anchors declare membership; handoff omits milestone metadata and historical SPEC metadata is ignored. Milestones are loosely managed themes that bind nothing: proposal Planning concretizes and settles scope and requirements, and guidance never uses a milestone's goal, exit condition or non-goals as constraints on design options. Prefer a multi-unit phase, release or architectural theme advancing `ARCH-01-introduction-and-goals`, with observable phase-level outcomes and capability boundaries, over a milestone that only sequences one proposal; a theme may begin with one proposal while broader intended scope is not authored. CLI flags, branch names, file layouts and scenario tests belong in proposals/specs. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close planned/active milestones through one current Backlog candidate: sufficient decomposition, direct proposal work delivered or explicitly excluded/moved, and the exit condition met for the resulting agreed scope. Inspect all direct PROP members across namespaces, the selected local base (report its commit without claiming remote freshness) and relevant known Planning/Development activity; focused code/Git inspection resolves missing proposals without reconstructing delivery lineage. Handoff, deletion, rejection, reassignment and empty membership alone never prove delivery. Outstanding in-scope work, an unmet exit condition or inconclusive required evidence keeps the milestone open with the remaining check named; missing confirmation is a separate gap. The user confirms both plain body assertions and status done together in one Backlog commit, without a third approval. Recheck scope, membership and relevant evidence immediately before writing; unchanged authorization survives interruption or compaction, while material changes or an unestablishable approved candidate/evidence require reconfirmation. Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) reset both assertions to pending in the authorized scope edit. Normal handoff/mechanical identity relocation does not change scope/decomposition and requires no milestone review, reset or reconfirmation. No pre-handoff or integration hook is added; relevant completion evidence is checked at close. Pure wording/format corrections preserving meaning do not invalidate. Extending done scope requires user-owned reopen to active with pending assertions or another milestone. Unchanged done writes nothing, dropped is not a close candidate, and existing done assertions remain unchanged during approved content-preserving relocation. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-roadmap-and-milestones`) unless merged: on the user's Backlog decision, small milestones of any status MAY merge into a broader theme milestone that lists their IDs in `aliases` with both assertions pending, in one commit that deletes the merged files, runs `devkit rules fix` and removes `depends_on` edges between them; remaining scope moves to draft proposals in the theme, which stays planned or active while scope remains and closes only through both confirmations. A merge is not an in-place extension (`ADR-milestone-merging`).
 
@@ -368,7 +368,7 @@ Proposal acceptance and handoff run through Host-authorized CLI operations (`ADR
 The Host reviews the proposal, every PADR and the envelopes at the final committed `plan-<slug>` source, presents
 the findings and effects, and invokes `devkit spec proposal accept` only after the user's decision under `ask`.
 `devkit spec proposal report` renders an optional briefing; acceptance requires no published report, while shared
-proposal-review artifacts remain available for publication (`CAP-DLV-proposal-incubation`,
+proposal-review artifacts remain available for publication (`CAP-DLV-proposal-planning`,
 `CAP-COLL-shared-artifacts`). A report never carries approval or permissions. Refinement requires exclusive
 Planning ownership, committed changes and a fresh review of the committed source; accepted plans use follow-up
 workflows.
@@ -400,10 +400,10 @@ proposal disappearance is not completion evidence.
 ## Approach-aware SDD entry
 
 The installed spec pointer, constitution and router inspect `devkit config show` before selecting SDD routing.
-For `sdd`, existing intake/classification/stage/Git/approval rules apply. For `incubation`, they direct ordinary work
-to the project's incubation guidance and independent checks without implicit SDD Units, per-change envelopes or
+For `sdd`, existing intake/classification/stage/Git/approval rules apply. For `adaptive-dev`, they direct ordinary work
+to the project's adaptive-dev guidance and independent checks without implicit SDD Units, per-change envelopes or
 immutable iteration history. Existing explicitly bound SDD artifacts keep their checks. Installing or selecting spec
-assets never switches the approach. Incubation entry/roles/context are separately delivered; this policy supplies no
+assets never switches the approach. The adaptive-dev entry, roles and context are separately delivered; this policy supplies no
 product discovery coordinator.
 
 An explicit `/deep-research` invocation is not development intake: the spec router runs no playbook discovery,
@@ -411,20 +411,20 @@ classifies it into no depth and creates no Unit for it, and work the research la
 intake. A proposal, spec or ADR cites research retained outside it by its `MAT-<slug>` ID in a code span and never
 copies it into a proposal's `materials/` (`ADR-retain-research-as-cited-materials`).
 
-## Incubation entry and current context
+## Adaptive-dev entry and current context
 
-The opt-in `incubation:core` catalog bundle supplies `/incubate`, conditional references, the incubation pointer, three
-optional support contracts and a current-context template (`CAP-DLV-idea-incubation`). Install devkit-docs
-and devkit-catalog and select incubation explicitly; devkit-spec is not required. The entry inspects common
+The opt-in `adaptive-dev:core` catalog bundle supplies `/adaptive-dev`, conditional references, the adaptive-dev pointer, three
+optional support contracts and a current-context template (`CAP-DLV-adaptive-development`). Install devkit-docs
+and devkit-catalog and select adaptive-dev explicitly; devkit-spec is not required. The entry inspects common
 `configuration.development.approach` before product work and stops on SDD or invalid policy rather than switching
 approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action with optional product-clarifier, incubation-researcher and usage-reviewer assignments; no action requires all
+action with optional product-clarifier, product-researcher and usage-reviewer assignments; no action requires all
 roles. Their role contracts preserve source/index/HEAD authority and distinguish emulated boundaries from native
-confinement. `/incubate` neither invokes nor suggests a research entry and links a retained research material by its
+confinement. `/adaptive-dev` neither invokes nor suggests a research entry and links a retained research material by its
 `MAT-<slug>` ID. The coordinator owns mutable project context at
-`.devkit/incubation.md`, including current goal/choices, source-specific run/check evidence, uncertainty and next
+`.devkit/adaptive-dev.md`, including current goal/choices, source-specific run/check evidence, uncertainty and next
 action. Sync owns its pristine template and preserves the project-owned file. Explicit adoption requests route to
 the separately available baseline procedure; this entry does not activate SDD or reconstruct experiment history.
 

@@ -189,7 +189,7 @@ data_roots = ["bundle"]
 namespace = "devkit_catalog"
 root = "packages/devkit-catalog/src/devkit_catalog"
 kind = "content"
-data_roots = ["response_style", "host_observer", "maintenance", "cli_tool", "incubation", "deep_research"]
+data_roots = ["response_style", "host_observer", "maintenance", "cli_tool", "adaptive_dev", "deep_research"]
 
 [[import_exceptions]]
 source = "devkit_agt.features.rules.models.contracts"

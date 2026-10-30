@@ -1,6 +1,8 @@
 ---
-id: UC-incubate-and-hand-off-a-proposal
-title: Incubate a Proposal and Hand It Off to a Spec
+id: UC-plan-and-hand-off-a-proposal
+aliases:
+  - UC-incubate-and-hand-off-a-proposal
+title: Plan a Proposal and Hand It Off to a Spec
 summary: "An AI coding agent develops a proposal, reviews its committed Planning source before acceptance under project policy, obtains Host approval against those findings, then accepts or hands it off while preserving materials, approvals and references."
 area: delivery
 primary_actor: AI coding agent (Host)
@@ -20,12 +22,12 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
 created_at: 2026-10-13
 capabilities:
-  - CAP-DLV-proposal-incubation
+  - CAP-DLV-proposal-planning
   - CAP-DLV-spec-bundles
   - CAP-DLV-delivery-workflows
 ---
 
-# [UC-incubate-and-hand-off-a-proposal] Incubate a Proposal and Hand It Off to a Spec
+# [UC-plan-and-hand-off-a-proposal] Plan a Proposal and Hand It Off to a Spec
 
 ## 1. Goal
 
@@ -44,27 +46,27 @@ capabilities:
 ## 2. Main Success Scenario
 
 1. The agent creates a draft proposal bound to `sdd-proposal` in Backlog, and records the user's confirmation of the
-   draft, with its proposed Planning effort, as `plan-intent` (`CAP-DLV-proposal-incubation`,
+   draft, with its proposed Planning effort, as `plan-intent` (`CAP-DLV-proposal-planning`,
    `CAP-DLV-delivery-workflows`).
 2. The agent starts Planning on `plan-<slug>` and sets the proposal in review (`CAP-DLV-delivery-workflows`).
 3. The agent gathers evidence through `scout` and criticism through `challenger` as the Planning effort requires,
    records their returns, and records preliminary decisions as PADRs (`CAP-DLV-delivery-workflows`,
-   `CAP-DLV-proposal-incubation`).
+   `CAP-DLV-proposal-planning`).
 4. The agent puts every open question to the user in one round, folds the answers into the proposal and its PADRs,
    refines the Development effort hint, and records fresh feedback-sweep coverage before each return to the user
    (`CAP-DLV-delivery-workflows`).
 5. After the final Planning commit, the agent reviews the proposal, PADRs and envelopes, and presents findings to the user
-   (`CAP-DLV-proposal-incubation`).
+   (`CAP-DLV-proposal-planning`).
 6. The user accepts the direction; the agent records the acceptance and the accepted status in one step
-   (`CAP-DLV-proposal-incubation`).
+   (`CAP-DLV-proposal-planning`).
 7. The agent integrates the Planning branch under `plan-accept`'s authority; the workflow reports the proposal unit
    complete (`CAP-DLV-delivery-workflows`).
 8. With `proposal-handoff` authority, the agent starts `dev-<slug>` and hands the proposal off: the system creates the
    spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs, moves materials and open
    feedback, carries the `plan-intent` and `plan-accept` records by name, rewrites what pointed into the proposal and
-   removes it (`CAP-DLV-proposal-incubation`, `CAP-DLV-spec-bundles`).
+   removes it (`CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`).
 9. The agent rereads the rewritten references, fixes unresolved links in the same change and follows the spec
-   workflow's next stage (`CAP-DLV-proposal-incubation`).
+   workflow's next stage (`CAP-DLV-proposal-planning`).
 
 ---
 
@@ -73,32 +75,32 @@ capabilities:
 - **1a.** The draft's `size` is not absent or exactly `S`, `M` or `L` (an `XL` draft, whose work would need two or
   more specs or a different `task_kind`): the workflow shows the `intent-proposal` size check unmet
   (`detail="size=XL"`) and opens no `plan-intent` request, and recording it is refused with `REQUEST_UNKNOWN`
-  (`CAP-DLV-proposal-incubation`); the agent decomposes the draft in Backlog, splitting it with `--decomposed-from` or
+  (`CAP-DLV-proposal-planning`); the agent decomposes the draft in Backlog, splitting it with `--decomposed-from` or
   promoting it to a milestone on the user's decision, optionally through the read-only `decomposer` role
   (`CAP-DLV-delivery-workflows`), and never edits the size to pass; the use case ends for the parent.
 - **2a.** The draft's direction is settled and nothing needs Planning: on the user's explicit acceptance the agent
   checks eligibility read-only on the base checkout, sweeps the acceptance session and records a direct acceptance,
-  with no Planning branch, run, effort or `worker` envelope (`CAP-DLV-proposal-incubation`); resumes at step 7.
+  with no Planning branch, run, effort or `worker` envelope (`CAP-DLV-proposal-planning`); resumes at step 7.
 - **2b.** A direct acceptance fails a condition (no `plan-intent`, `needs_decompose`, a `size` such as `XL`, `supersedes`, a
   Planning branch, an envelope hold, a checkout other than the base): the system refuses with `SPEC_PROPOSAL_NOT_ELIGIBLE`,
-  listing every failed condition, and writes nothing (`CAP-DLV-proposal-incubation`); resumes at step 2 or the use
+  listing every failed condition, and writes nothing (`CAP-DLV-proposal-planning`); resumes at step 2 or the use
   case ends.
 - **2c.** At pickup the user decides that a queued draft without PADRs is `session` work: the agent deletes the
   draft in one base commit that preserves its open feedback, and does the work as a session under a new slug
-  (`CAP-DLV-proposal-incubation`); the use case ends.
+  (`CAP-DLV-proposal-planning`); the use case ends.
 - **2d.** Planning finds that the proposal must be split: the run returns it as a draft marked for decomposition and
   closes its open questions; the agent integrates the return, removes the Planning branch, and Backlog creates the
-  child drafts once the proposal check passes on the base (`CAP-DLV-proposal-incubation`); while the Planning branch
+  child drafts once the proposal check passes on the base (`CAP-DLV-proposal-planning`); while the Planning branch
   exists, Backlog changes are refused with `SPEC_PROPOSAL_IN_PLANNING`; the use case ends.
 - **5a.** The user rejects the direction: the agent sets `status: rejected` with the user's reason in the commit
   message, closes the open questions and merges the Planning branch per policy; a later hygiene pass, warned by
   `SPEC_PROPOSAL_REJECTED_PENDING`, writes the rejection ADR, preserves open feedback and deletes the proposal
-  (`CAP-DLV-proposal-incubation`); the use case ends.
+  (`CAP-DLV-proposal-planning`); the use case ends.
 - **5b.** The workflow does not open `plan-accept` (a missing feedback sweep, an envelope hold): the system refuses
-  with `SPEC_PROPOSAL_GATE_NOT_OPEN`, restores the status and lists the unmet checks (`CAP-DLV-proposal-incubation`);
+  with `SPEC_PROPOSAL_GATE_NOT_OPEN`, restores the status and lists the unmet checks (`CAP-DLV-proposal-planning`);
   resumes at step 4.
 - **5c.** The owning base and the prospective source both set `plan-accept` to `auto`: the agent records the
-  acceptance by policy, reported as policy, never as the user's consent (`CAP-DLV-proposal-incubation`); resumes at
+  acceptance by policy, reported as policy, never as the user's consent (`CAP-DLV-proposal-planning`); resumes at
   step 6.
 - **7a.** The Host starts Development from the retained base checkout: under `proposal-handoff=ask` it presents the
   accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
@@ -110,20 +112,20 @@ capabilities:
   Planning incomplete), `SPEC_HANDOFF_BASE_DIRTY`, `SPEC_HANDOFF_WORKTREE_CONFLICT` or `SPEC_PROPOSAL_WRONG_WORKTREE`
   (off the retained base checkout); a base, plan or policy change since its check is `SPEC_HANDOFF_STALE`. When the new worktree no longer holds the reviewed base
   commit or setup changed its files, the command keeps the worktree and reports `status=needs_recovery` with
-  `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-incubation`); resumes at step 8.
+  `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-planning`); resumes at step 8.
 - **7b.** The proposal is not `accepted`: the system refuses with `SPEC_PROPOSAL_NOT_APPROVED` and writes nothing
-  (`CAP-DLV-proposal-incubation`); the agent asks the user; resumes at step 5.
+  (`CAP-DLV-proposal-planning`); the agent asks the user; resumes at step 5.
 - **7c.** The proposal says `accepted` without its recorded `plan-accept`: the system refuses with
   `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` and writes nothing; without a `worker` envelope the user's acceptance is
   repaired with a direct acceptance on the base, with one the user decides on reverting the Planning merge
-  (`CAP-DLV-proposal-incubation`); the use case ends.
+  (`CAP-DLV-proposal-planning`); the use case ends.
 - **7d.** The checkout is not on `dev-<slug>`: the system refuses with `SPEC_PROPOSAL_WRONG_WORKTREE` before reading or
-  writing (`CAP-DLV-proposal-incubation`); the agent starts or continues `dev-<slug>`; resumes at step 7.
+  writing (`CAP-DLV-proposal-planning`); the agent starts or continues `dev-<slug>`; resumes at step 7.
 - **7e.** The proposal's `task_kind` is `bugfix`: the spec bundle holds only `spec.md`, bound to `sdd-spec-bugfix`,
-  with the target area and boundaries in its carried notes (`CAP-DLV-proposal-incubation`, `CAP-DLV-spec-bundles`);
+  with the target area and boundaries in its carried notes (`CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`);
   resumes at step 8.
 - **7f.** A write fails during the handoff: the system rolls back what it wrote and moved, keeps the proposal and
-  reports `SPEC_PROPOSAL_HANDOFF_FAILED` (`CAP-DLV-proposal-incubation`); resumes at step 7.
+  reports `SPEC_PROPOSAL_HANDOFF_FAILED` (`CAP-DLV-proposal-planning`); resumes at step 7.
 
 ## 4. Postconditions
 

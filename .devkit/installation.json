@@ -1107,7 +1107,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "3a38b24ddfab181d28dff80ec9ea247481ed72ed4f78e89c78bbe0bab1716830"
+      "sha256": "ba528874021f0fe2982500a7aec4b8b78809f8178bc9f0a340cf6bb91f70e2d8"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1351,7 +1351,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "3a38b24ddfab181d28dff80ec9ea247481ed72ed4f78e89c78bbe0bab1716830"
+      "sha256": "ba528874021f0fe2982500a7aec4b8b78809f8178bc9f0a340cf6bb91f70e2d8"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1827,7 +1827,7 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "1d97af6ff16348692646cc2bcb66ee5be40398975023a941c8611ede0ba03dc4"
+      "sha256": "9f7cf985e0acd4128466e8249ed145ca8688b761851c12f3bbfa7ab5e4527622"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
@@ -1835,7 +1835,7 @@
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
-      "sha256": "fefe53b9eb2375dc7fac123711933123e598d9d318e5e31649169dfa94649825"
+      "sha256": "d471d021462996616d0a13bb46a223ef0b69ea81babc75ea7889d2aa2e990357"
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
@@ -1855,7 +1855,7 @@
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
       "mode": 420,
-      "sha256": "e91909b46e9c47cda266241a3d1241b588e05f7c7c4927846b576a1a9417c73f"
+      "sha256": "cedfded54254f5ad6980e564513e2afe2db149a01c96cee274b11d2b7b668919"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
       "mode": 420,
@@ -2039,7 +2039,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "3a38b24ddfab181d28dff80ec9ea247481ed72ed4f78e89c78bbe0bab1716830"
+      "sha256": "ba528874021f0fe2982500a7aec4b8b78809f8178bc9f0a340cf6bb91f70e2d8"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -2182,7 +2182,7 @@
       "sha256": "8db37cd52112ae7ca819427e1dc799718b8a96ceddb980ae075640e21c5f880a"
     }
   },
-  "guidance_block": "408a5fbfd17a478e0ce467dc7db8f4c8e55be621ed55af4f3340526808eb684c",
+  "guidance_block": "7ebc1f0c91474a51e1b0986010bfa00ead054a879872a9225768a3cb26bada0f",
   "packages": [
     {
       "bundle": "advisory",

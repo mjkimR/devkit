@@ -1,25 +1,28 @@
 ---
-id: CAP-DLV-incubation-sdd-baseline
-title: Incubation SDD baseline adoption
-summary: "An explicitly invoked spec playbook verifies the retained incubation product through implementation, current documents and actual checks before an exact-effects SDD activation decision."
+id: CAP-DLV-sdd-baseline-adoption
+aliases:
+  - CAP-DLV-incubation-sdd-baseline
+title: SDD baseline adoption
+summary: "An explicitly invoked spec playbook verifies the retained adaptive-development product through implementation, current documents and actual checks before an exact-effects SDD activation decision."
 area: delivery
 status: active
 created_at: 2026-10-28
 usecases:
-  - UC-adopt-sdd-from-incubation
+  - UC-adopt-sdd-from-adaptive-development
   - UC-adopt-in-an-existing-repository
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md
 ---
 
-# [CAP-DLV-incubation-sdd-baseline] Incubation SDD baseline adoption
+# [CAP-DLV-sdd-baseline-adoption] SDD baseline adoption
 
 ## 1. Summary
 
 The `spec:core` bundle supplies the explicit `spec/sdd-baseline` playbook and its ordinary material report template.
-It establishes an evidenced baseline for the user-selected retained incubation product before subsequent changes
-use SDD. `ADR-adopt-sdd-through-an-evidenced-baseline-playbook` selects this guidance procedure instead of a new
-runtime, CLI or retrospective feature Unit. Baseline preparation can remain incomplete while development continues in incubation.
+It establishes an evidenced baseline for the user-selected retained adaptive-development product before subsequent
+changes use SDD. `ADR-adopt-sdd-through-an-evidenced-baseline-playbook` selects this guidance procedure instead of a
+new runtime, CLI or retrospective feature Unit. Baseline preparation can remain incomplete while the product stays in
+adaptive development.
 
 ## 2. Scope & Boundary
 
@@ -35,7 +38,7 @@ runtime, CLI or retrospective feature Unit. Baseline preparation can remain inco
 
 1. **Explicit entry**: WHEN the user invokes or confirms `sdd-baseline`, the coordinating agent MUST begin bounded
    preparation without changing the effective approach. Size, time and experiment count do not invoke it.
-2. **Preparation state**: WHILE preparing the baseline, the agent MUST keep the approach incubation, including when
+2. **Preparation state**: WHILE preparing the baseline, the agent MUST keep the approach adaptive-dev, including when
    installing the spec package or selecting SDD assets. Installed assets alone do not establish readiness.
 3. **Retained coverage**: WHEN comparing retained product items, the agent MUST map behavior, important structure,
    current choices and verification methods to implementation, current documents and source-specific evidence.
@@ -71,7 +74,7 @@ ordinary evidence location. It has no workflow binding, Unit anchor or lifecycle
 
 The report records repository/HEAD and relevant dirty identity, selected scope and exclusions, retained-item
 implementation/document/evidence links, actual commands/interactions and environments, outcomes/limits,
-gaps/dispositions, ready effects, actual final state or recovery. Incubation context is optional semantic input;
+gaps/dispositions, ready effects, actual final state or recovery. Adaptive-dev current context is optional semantic input;
 no filename or schema parser is required. Synthetic exercises identify simulated decisions separately from terminal observations.
 
 Approach inspection uses `uv run devkit config show`: `configuration.development.approach` and

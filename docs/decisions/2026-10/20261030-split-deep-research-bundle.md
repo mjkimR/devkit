@@ -81,6 +81,7 @@ the cost of one duplicated contract.
   role sequence, source provenance, and plans distinct from delivery commitments.
 - Retained for `/incubate`: the shared approach check before product work and the coordinator-owned, mutable
   `.devkit/incubation.md`.
+  Superseded in part by `ADR-adaptive-dev-approach-name`: the bundle is `adaptive-dev`, its entry `/adaptive-dev`, its researcher `product-researcher` and its context file `.devkit/adaptive-dev.md`.
 
 ## 5. Consequences
 

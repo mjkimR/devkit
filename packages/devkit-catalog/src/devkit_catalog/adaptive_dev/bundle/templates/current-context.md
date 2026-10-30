@@ -1,6 +1,6 @@
-# Incubation current context
+# Adaptive-dev current context
 
-Keep current facts; remove template prompts that do not apply. This file is project-owned `.devkit/incubation.md`, not a Unit or immutable history.
+Keep current facts; remove template prompts that do not apply. This file is project-owned `.devkit/adaptive-dev.md`, not a Unit or immutable history.
 
 ## Goal and intended usage
 

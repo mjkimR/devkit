@@ -1,36 +1,38 @@
 ---
-id: UC-incubate-an-idea
+id: UC-advance-an-idea
+aliases:
+  - UC-incubate-an-idea
 title: Advance an idea and leave resumable current context
-summary: "An AI coding agent advances one useful product action through incubation guidance and leaves current facts, executable instructions and honest evidence for the next action or session."
+summary: "An AI coding agent advances one useful product action through adaptive-dev guidance and leaves current facts, executable instructions and honest evidence for the next action or session."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional product clarification/research/usage subagents]
 status: active
 capabilities:
-  - CAP-DLV-idea-incubation
+  - CAP-DLV-adaptive-development
   - CAP-HARN-agent-guidance
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
 ---
 
-# [UC-incubate-an-idea] Advance an idea and leave resumable current context
+# [UC-advance-an-idea] Advance an idea and leave resumable current context
 
 ## 1. Goal
 
 - **Goal**: advance the next useful product action and retain enough current facts to resume it without delivery history.
-- **Scope**: incubation agent guidance; one discovery, research, implementation or verification action in one sitting.
-- **Trigger**: the product owner invokes incubation work or asks the agent to resume an idea.
-- **Preconditions**: the incubation bundle and the repository's ordinary execution environment are available.
+- **Scope**: adaptive-dev agent guidance; one discovery, research, implementation or verification action in one sitting.
+- **Trigger**: the product owner invokes adaptive-dev work or asks the agent to resume an idea.
+- **Preconditions**: the adaptive-dev bundle and the repository's ordinary execution environment are available.
 
 ## 2. Main Success Scenario
 
-1. The agent invokes incubation guidance for the requested product action (`CAP-DLV-idea-incubation`, `CAP-HARN-agent-guidance`).
-2. The agent verifies that the effective development approach permits incubation work (`CAP-DLV-idea-incubation`).
-3. The agent recovers current goals, choices and execution evidence from available context and implementation (`CAP-DLV-idea-incubation`).
-4. The agent selects the next useful action from the remaining decision or evidence need (`CAP-DLV-idea-incubation`).
-5. The agent performs that bounded product action inside the agreed goal and constraints (`CAP-DLV-idea-incubation`).
-6. The agent verifies the retained result against intended usage and applicable project checks (`CAP-DLV-idea-incubation`).
-7. The agent updates current resume facts and reports observed outcomes, limitations and the next action (`CAP-DLV-idea-incubation`).
+1. The agent invokes adaptive-dev guidance for the requested product action (`CAP-DLV-adaptive-development`, `CAP-HARN-agent-guidance`).
+2. The agent verifies that the effective development approach permits adaptive-dev work (`CAP-DLV-adaptive-development`).
+3. The agent recovers current goals, choices and execution evidence from available context and implementation (`CAP-DLV-adaptive-development`).
+4. The agent selects the next useful action from the remaining decision or evidence need (`CAP-DLV-adaptive-development`).
+5. The agent performs that bounded product action inside the agreed goal and constraints (`CAP-DLV-adaptive-development`).
+6. The agent verifies the retained result against intended usage and applicable project checks (`CAP-DLV-adaptive-development`).
+7. The agent updates current resume facts and reports observed outcomes, limitations and the next action (`CAP-DLV-adaptive-development`).
 
 ## 3. Extensions
 
@@ -44,7 +46,7 @@ entrypoints:
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
 - **6a.** Failed retained behavior: the agent repairs the implementation within the agreed goal and repeats affected verification; resumes at step 6.
 - **6b.** Missing verification evidence: the agent reports the check as unverified and records the gap/next action without claiming successful retained behavior; proceeds to step 7 with that limitation.
-- **7a.** Explicit SDD adoption request: the agent explains preparing SDD assets while incubation remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
+- **7a.** Explicit SDD adoption request: the agent explains preparing SDD assets while adaptive development remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
 
 ## 4. Postconditions
 
@@ -59,7 +61,7 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 ### Scenario 1: Advance a representative flow
 
 - **Covers**: main success scenario
-- **Given**: a partial product goal, known local-use constraints and effective incubation.
+- **Given**: a partial product goal, known local-use constraints and effective adaptive development.
 - **When**: the agent advances a representative implementation action.
 - **Then**: the flow is actually exercised, current context records source-specific evidence and no per-change SDD Unit is created.
 
@@ -67,7 +69,7 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 
 - **Covers**: 2a, 2b
 - **Given**: effective SDD or an invalid shared approach.
-- **When**: incubation entry inspects policy.
+- **When**: the adaptive-dev entry inspects policy.
 - **Then**: product files and current context remain unchanged, and the actual configuration action/error is reported.
 
 ### Scenario 3: Recover and clarify only missing facts
@@ -101,7 +103,7 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 ### Scenario 7: Keep adoption voluntary
 
 - **Covers**: 7a
-- **Given**: an explicit request to adopt SDD after incubation.
+- **Given**: an explicit request to adopt SDD after adaptive development.
 - **When**: the agent presents the transition doorway.
 - **Then**: package/asset preparation is distinguished from baseline readiness and activation; this use case changes no approach.
 

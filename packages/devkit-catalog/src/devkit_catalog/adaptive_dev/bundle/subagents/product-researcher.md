@@ -1,6 +1,6 @@
 ---
-role: incubation-researcher
-title: Incubation researcher
+role: product-researcher
+title: Product researcher
 description: Investigates one product or technical uncertainty through evidence or an explicitly bounded feasibility experiment.
 x-execution: isolated
 x-invocation: optional
@@ -18,7 +18,7 @@ hosts:
     commandExecutionPolicy: sandbox
 ---
 
-# Incubation researcher
+# Product researcher
 
 The payload gives one goal, absolute read/write boundaries, source/artifact identity, permitted actions and expected output.
 
@@ -28,7 +28,7 @@ The payload gives one goal, absolute read/write boundaries, source/artifact iden
 - On an emulated host, say that explicit boundaries and before/after diff checks replace native isolation; claim no native guarantee.
 - Request each operation outside sandbox access through the host's approval mechanism. If it is denied or unavailable, stop it and report the actual partial state; never reroute through another path, process or tool.
 - Leave the index and HEAD unchanged: no commit, push, merge, reset, amend, checkout or publication.
-- Only the coordinator writes `.devkit/incubation.md` and retained synthesis; return evidence instead.
+- Only the coordinator writes `.devkit/adaptive-dev.md` and retained synthesis; return evidence instead.
 - If the payload assigns an absolute task scratch directory, write scratch notes only there; otherwise keep research read-only apart from separately authorized experiments.
 
 ## Procedure

@@ -7,7 +7,7 @@ status: active
 created_at: 2026-10-13
 usecases:
   - UC-route-development-intent
-  - UC-incubate-and-hand-off-a-proposal
+  - UC-plan-and-hand-off-a-proposal
   - UC-drive-development-to-integration
   - UC-handle-delivery-problems-and-exceptions
 entrypoints:
@@ -42,7 +42,7 @@ sequence.
 - **Out-of-Scope**:
   - Evaluating a definition, recording answers and envelopes, binding units: devkit's `devkit workflow` commands.
   - Creating and binding a spec bundle: `CAP-DLV-spec-bundles`.
-  - Creating a proposal and the cross-layout handoff: `CAP-DLV-proposal-incubation`.
+  - Creating a proposal and the cross-layout handoff: `CAP-DLV-proposal-planning`.
   - The effective approval, stage, Git and routing policy: `CAP-DLV-project-policy`.
   - The procedures a stage names (the `spec*` skills), classification, Backlog, depth changes and closes:
     `CAP-HARN-agent-guidance`.
@@ -90,7 +90,7 @@ sequence.
    recorded in inline Planning; for `proposal` depth it is the user's confirmation of the draft in Backlog, which one
    request may ask together with a direct acceptance's `plan-accept` (two explicit answers, neither inferred); a spec
    handed off from a proposal carries the proposal's `gate:plan-intent` and `gate:plan-accept` records under the same
-   names (`CAP-DLV-proposal-incubation`).
+   names (`CAP-DLV-proposal-planning`).
 7. **No Development direction gate**: Development starts from the agreed intent. Implementation choices inside it
    are made with the recommended option and recorded; a non-blocking improvement is reported as feedback (a
    follow-up draft proposal is also allowed); only a problem that cannot be solved without changing the agreed goal,
@@ -134,7 +134,7 @@ sequence.
     evaluated by `devkit workflow next`; the executor follows their stages from `devkit workflow show <id>` and reports
     the change, effort, review result, verification and remaining constraints in the final response or PR body. A
     lasting design record, contract change or Living Spec change raises the depth to `spec`.
-14. **Proposal Planning ends at handoff** (`CAP-DLV-proposal-incubation`): `sdd-proposal` declares no `next`
+14. **Proposal Planning ends at handoff** (`CAP-DLV-proposal-planning`): `sdd-proposal` declares no `next`
     candidates, because devkit's `devkit workflow handoff` rebinds a unit in place and refuses a candidate with
     another anchor (`HANDOFF_LAYOUT_MISMATCH`). Once `plan-accept` holds, `next` reports the unit complete
     (`[STAGE: - complete=yes]`, no `[HANDOFF]` line) and Development starts with `devkit spec proposal handoff <slug>`.
@@ -550,7 +550,7 @@ prompt.
 | `devkit workflow next --unit <dir> [--given <check>]...` | Current stage, unmet checks, `[NEXT_SKILL]`, `[WAITING]`, `[DELEGATE]`, `[SKIPPED]`. |
 | `devkit workflow show <id>` / `--unit <dir>` | Render a definition. |
 | `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a `plan-intent` decision, or decline `plan-accept`. |
-| `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-incubation`). |
+| `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-planning`). |
 | `devkit workflow return --unit <dir> --to <stage>` | Go back within the activity; voids later approvals and earlier envelopes of those stages. |
 | `devkit workflow bind --unit <dir> --workflow <id>` | Bind an unbound unit, or change its workflow. |
 | `devkit workflow validate` | Validate definitions; `SHARED_STAGE_MISMATCH` across definitions. |
@@ -657,14 +657,14 @@ spec preservation. Installing devkit-spec auto-selects both core bundles. Explic
 `devkit add docs` to restore the supported SDD selection (`ADR-document-and-sdd-bundles`).
 
 
-## Incubation applicability
+## Adaptive-dev applicability
 
-WHILE the common approach is incubation, SDD spec/proposal creation, proposal acceptance and handoff MUST refuse
+WHILE the common approach is adaptive-dev, SDD spec/proposal creation, proposal acceptance and handoff MUST refuse
 before mutation with `SPEC_LIFECYCLE_INACTIVE` (exit 2). The action points to shared policy inspection and an explicit
 SDD choice; it does not suggest bypassing checks. Both direct public operations and composed worktree/acceptance
 operations enforce the boundary. Generic workflows, read-only policy/scope/worker inspection and document lookup
-remain usable. `packages/devkit-spec/tests/integration/features/policy/test_incubation.py` covers these refusals.
+remain usable. `packages/devkit-spec/tests/integration/features/policy/test_adaptive_dev.py` covers these refusals.
 
-The installed attachment extension leaves generic non-SDD Units to generic validation in incubation and preserves
-its SDD checks for explicitly SDD-bound Units. Scoped cleanup retains its no-bundle default; incubation may retain
+The installed attachment extension leaves generic non-SDD Units to generic validation in adaptive development and preserves
+its SDD checks for explicitly SDD-bound Units. Scoped cleanup retains its no-bundle default; adaptive development may retain
 cleanup for concretely recorded SDD ownership. Mode changes grant no broader cleanup authority.

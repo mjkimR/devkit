@@ -1,7 +1,7 @@
-# Adopt SDD from an incubation app
+# Adopt SDD from an adaptive-dev app
 
 Use the `sdd-baseline` playbook when the user chooses to maintain the implemented product through SDD.
-A small app can remain in incubation. Neither elapsed time nor package installation forces adoption.
+A small app can remain in adaptive development. Neither elapsed time nor package installation forces adoption.
 Legacy Markdown debt containment is the separate `brownfield-adoption` playbook.
 
 ## Prepare without activation
@@ -10,7 +10,7 @@ Inspect `uv run devkit config show` and keep the shared `.devkit/config.toml` ex
 
 ```toml
 [development]
-approach = "incubation"
+approach = "adaptive-dev"
 ```
 
 Reuse an existing table rather than add a duplicate. Preserve the project's other settings.
@@ -33,7 +33,7 @@ uv run devkit playbook get spec/sdd-baseline
 ```
 
 The document package brings its existing dependencies; docs and spec core assets are selected for SDD preparation.
-Verify `configuration.development.approach` remains `incubation`. Retrieval alone authorizes no playbook execution;
+Verify `configuration.development.approach` remains `adaptive-dev`. Retrieval alone authorizes no playbook execution;
 run the procedure only on explicit invocation or confirmation. Existing live product context is optional semantic input.
 
 ## Establish retained evidence
@@ -45,7 +45,7 @@ The ordinary report defaults to `docs/materials/<YYYY-MM>/<YYYYMMDD>-sdd-baselin
 For each retained item, connect implementation, current document and actual check/usage evidence at the recorded
 source identity. Failed, skipped or unavailable required evidence remains a gap. A passing format check does not
 prove that the selected product works. Correct authorized mismatches, obtain the user's scope decision, or stay
-in incubation; required retained-scope gaps cannot be waived into readiness.
+in adaptive development; required retained-scope gaps cannot be waived into readiness.
 
 ## Apply only the ready effects
 
@@ -83,4 +83,4 @@ If source changes before activation, revalidate affected observations. If instal
 actual partial state and the supported recovery; claim neither successful adoption nor automatic rollback. Resume
 from the existing report after rechecking its evidence. Preserve unrelated edits and existing SDD history.
 
-The current contract is `CAP-DLV-incubation-sdd-baseline`; the actor flow is `UC-adopt-sdd-from-incubation`.
+The current contract is `CAP-DLV-sdd-baseline-adoption`; the actor flow is `UC-adopt-sdd-from-adaptive-development`.

@@ -16,7 +16,7 @@ spec: SPEC-rename-incubation-to-adaptive-dev
   alias reference in a current document, which `devkit rules fix` rewrites.
 - `ARCH-05-2-components`: `devkit_catalog.adaptive_dev` is a content-only regular package beside the other catalog
   bundles; `.devkit/architecture.toml` lists its data root. No layer or dependency changes.
-- `CAP-DLV-idea-incubation` and `CAP-DIST-sync-and-transactions` keep their rules; only names change.
+- `CAP-DLV-adaptive-development` and `CAP-DIST-sync-and-transactions` keep their rules; only names change.
 
 ## 2. Architecture Overview & Impact
 

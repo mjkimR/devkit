@@ -1,12 +1,14 @@
 ---
-id: CAP-DLV-proposal-incubation
-title: Proposal Incubation and Handoff
-summary: "Proposal creation validates live and archived milestone membership with nonblocking terminal notices. Incubation and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
+id: CAP-DLV-proposal-planning
+aliases:
+  - CAP-DLV-proposal-incubation
+title: Proposal Planning and Handoff
+summary: "Proposal creation validates live and archived milestone membership with nonblocking terminal notices. Planning and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
 area: delivery
 status: active
 created_at: 2026-10-13
 usecases:
-  - UC-incubate-and-hand-off-a-proposal
+  - UC-plan-and-hand-off-a-proposal
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
@@ -16,11 +18,11 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
 ---
 
-# [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
+# [CAP-DLV-proposal-planning] Proposal Planning and Handoff
 
 ## 1. Summary
 
-A proposal incubates an idea (a feature, a technical spike, an architectural change) before it becomes a feature
+Proposal Planning settles an idea (a feature, a technical spike, an architectural change) before it becomes a feature
 spec: `proposal`-depth work, whose direction must be decided first, shapes it in a proposal bundle bound to workflow
 `sdd-proposal`. `devkit_spec.features.proposals`
 implements the lifecycle and `devkit spec proposal new|padr|accept|handoff|prune|check` exposes it. `accept` is the
@@ -720,7 +722,7 @@ retries and fixes inside the approved scope are delegated to the Host, rather th
 
 ## Approach precondition
 
-Proposal creation, acceptance and handoff are SDD lifecycle mutations. WHILE the common approach is incubation,
+Proposal creation, acceptance and handoff are SDD lifecycle mutations. WHILE the common approach is adaptive-dev,
 these operations MUST refuse before changing files, branches or records with `SPEC_LIFECYCLE_INACTIVE`.
 Read-only existing proposal inspection remains available. `CAP-DLV-delivery-workflows` owns the shared applicability
 boundary; the direct and composed operations use the same check.

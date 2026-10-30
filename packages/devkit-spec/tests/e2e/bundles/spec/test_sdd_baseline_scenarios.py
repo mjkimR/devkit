@@ -80,22 +80,22 @@ class Exercise:
         self.run("git", "config", "user.name", "Synthetic baseline exercise")
         self.run("git", "config", "user.email", "synthetic@example.invalid")
         (root / ".devkit").mkdir()
-        self.configure("incubation", provider)
+        self.configure("adaptive-dev", provider)
         (root / "app.py").write_text(APP)
         (root / "checks").mkdir()
         (root / "checks/check_notes.py").write_text(CHECK)
         doc = root / "docs/capabilities/app/CAP-APP-notes.md"
         doc.parent.mkdir(parents=True)
         doc.write_text(DOC)
-        (root / ".devkit/incubation.md").write_text(
+        (root / ".devkit/adaptive-dev.md").write_text(
             "# Current product\nGoal: local notes. Retained choice: JSON file.\n"
             "Run: python app.py <store> add <text>; list. Next: verify baseline.\n"
         )
         self.cli("sync")
-        self.cli("add", "incubation")
+        self.cli("add", "adaptive-dev")
         self.cli("playbook", "get", "spec/sdd-baseline")
-        self.cli("get-context", "incubation")
-        self.run("git", "add", "app.py", "checks", "docs", ".devkit/config.toml", ".devkit/incubation.md")
+        self.cli("get-context", "adaptive-dev")
+        self.run("git", "add", "app.py", "checks", "docs", ".devkit/config.toml", ".devkit/adaptive-dev.md")
         self.run("git", "commit", "-qm", "retain synthetic note product")
         self.revision = self.run("git", "rev-parse", "HEAD").stdout.strip()
         self.source = self.source_identity()
@@ -156,7 +156,7 @@ def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(
     if initial_provider is None:
         assert "[integration]" not in (exercise.root / ".devkit/config.toml").read_text()
         assert exercise.config().get("integration", {}).get("provider") is None
-    assert exercise.config()["development"]["approach"] == "incubation"
+    assert exercise.config()["development"]["approach"] == "adaptive-dev"
     inactive = exercise.cli("spec", "new", "next-change", expected=2)
     assert "SPEC_LIFECYCLE_INACTIVE" in inactive.stderr
     exercise.verify_product()
@@ -187,12 +187,12 @@ def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(
     exercise.report("verified", "Activation succeeded; next requested change uses ordinary SDD plan-intent.", decision)
 
 
-def test_missing_required_usage_evidence_keeps_incubation_despite_format_pass(tmp_path: Path) -> None:
+def test_missing_required_usage_evidence_keeps_adaptive_dev_despite_format_pass(tmp_path: Path) -> None:
     exercise = Exercise(tmp_path / "consumer")
     exercise.cli("rules", "check")
     report = exercise.report("gap", "Usage was intentionally not executed; format pass alone is insufficient.")
     assert "status: gap" in report.read_text()
-    assert exercise.config()["development"]["approach"] == "incubation"
+    assert exercise.config()["development"]["approach"] == "adaptive-dev"
     assert not (exercise.root / "specs").exists()
 
 
@@ -209,7 +209,7 @@ def test_changed_source_invalidates_observation_until_rechecked(tmp_path: Path) 
         "gap", "Relevant source changed; recheck failed the retained behavior, so activation is blocked."
     )
     assert "status: gap" in report.read_text()
-    assert exercise.config()["development"]["approach"] == "incubation"
+    assert exercise.config()["development"]["approach"] == "adaptive-dev"
 
 
 def test_actual_sync_failure_reports_partial_state_and_supported_recovery(tmp_path: Path) -> None:

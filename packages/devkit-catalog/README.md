@@ -6,7 +6,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `incubation` | `core` | Adaptive product iteration, optional support and mutable current context without SDD delivery records |
+| `adaptive-dev` | `core` | Adaptive product iteration, optional support and mutable current context without SDD delivery records |
 | `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
@@ -18,20 +18,20 @@ uv run devkit list                                   # catalog bundles are liste
 uv run devkit add response-style                    # an opt-in catalog bundle
 ```
 
-## Incubation
+## Adaptive development
 
-`uv run devkit add incubation` explicitly selects the incubation bundle. Install devkit-docs alongside catalog for
-shared document formats; devkit-spec is not required. `/incubate` checks the effective development approach through
+`uv run devkit add adaptive-dev` explicitly selects the adaptive-dev bundle. Install devkit-docs alongside catalog for
+shared document formats; devkit-spec is not required. `/adaptive-dev` checks the effective development approach through
 `uv run devkit config show` before product actions. Selection changes assets, not project policy.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action, with optional product-clarifier, incubation-researcher and usage-reviewer assignments and no required team
+action, with optional product-clarifier, product-researcher and usage-reviewer assignments and no required team
 size or role sequence. A small question can stay inline.
 
 The coordinator keeps mutable current facts, retained note links and useful alternative reopening conditions in
-project-owned `.devkit/incubation.md`; sync never seeds or overwrites it.
+project-owned `.devkit/adaptive-dev.md`; sync never seeds or overwrites it.
 No per-change SDD Unit, envelope or immutable experiment history is required. Independent project checks still run.
-An explicit adoption request prepares spec assets while keeping incubation active, then uses the separately
+An explicit adoption request prepares spec assets while keeping adaptive development active, then uses the separately
 delivered `sdd-baseline` playbook for readiness and activation.
 
 ## Deep research
@@ -45,9 +45,9 @@ indexed material under `docs/materials/`, which proposals, specs, decisions and 
 `MAT-<slug>` ID. The entry never commits; its report tells the user to commit the material through the project's
 Git policy. It creates no work unit, approval or envelope.
 
-An incubation installation from before the research split loses the research entry and the three moved roles on
-upgrade; sync removes their unmodified projections and announces the bundle once with `BUNDLE_UNSELECTED`. Before
-selecting it, move each customization of a moved role:
+An installation of the former `incubation` bundle from before the research split loses the research entry and the
+three moved roles on upgrade; sync removes their unmodified projections and announces the bundle once with
+`BUNDLE_UNSELECTED`. Before selecting it, move each customization of a moved role:
 
 - Rename an `incubation:<role>` key under `[subagents.roles]` to `deep-research:<role>`; sync fails until then.
 - Move `.devkit/overrides/incubation/subagents/<role>.md` to `.devkit/overrides/deep-research/subagents/`; the

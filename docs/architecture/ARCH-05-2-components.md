@@ -79,10 +79,10 @@ shared errors and SDK-free MCP contracts, and `devkit_core.core` holds generic i
 A package may explicitly declare shared transport adapters: dist owns `adapters/cli.py` for
 its common CLI boundary, and docs and spec each own `adapters/cli.py` for the sentinel output their commands share. These adapters remain above application layers. Application-owned bundles live under
 `bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
-may retain their existing bundle-only layouts. The content-only catalog owns the opt-in incubation and deep-research
-bundles under `devkit_catalog/incubation/bundle/` and `devkit_catalog/deep_research/bundle/`; their entries, optional
+may retain their existing bundle-only layouts. The content-only catalog owns the opt-in adaptive-dev and deep-research
+bundles under `devkit_catalog/adaptive_dev/bundle/` and `devkit_catalog/deep_research/bundle/`; their entries, optional
 role contracts and context template add no runtime module or dependency, and neither bundle depends on or shares an
-asset with the other. `CAP-DLV-idea-incubation` and `CAP-DLV-deep-research` own the agent behavior. `tools/devkit-dev` owns the repository's
+asset with the other. `CAP-DLV-adaptive-development` and `CAP-DLV-deep-research` own the agent behavior. `tools/devkit-dev` owns the repository's
 structure and layering rules and the release handbook playbook (`CAP-DLV-release-handbook`) in a development bundle;
 its initial layout is bundle-only.
 
@@ -208,6 +208,6 @@ lifecycle assets. No asset has two owners (`ADR-document-and-sdd-bundles`).
 
 
 The project feature owns typed shared development approach inspection in devkit-dist. Integration in devkit-agt
-reuses the rule engine for independent incubation readiness; SDD rule applicability and mutation judgments remain
+reuses the rule engine for independent adaptive-dev readiness; SDD rule applicability and mutation judgments remain
 in devkit-spec. The common committed-ownership repository reads workflow anchor frontmatter without importing the
 workflow engine or optional SDD tooling. `RULE-architecture` enforces these dependency edges.

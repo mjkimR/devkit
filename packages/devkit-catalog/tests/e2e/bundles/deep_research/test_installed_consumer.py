@@ -63,9 +63,9 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".devkit/managed/deep-research").exists()
     cli("add", "deep-research")
     assert json.loads(cli("config", "show"))["configuration"]["development"]["approach"] == "sdd"
-    assert not (consumer / ".devkit/incubation.md").exists()
+    assert not (consumer / ".devkit/adaptive-dev.md").exists()
     assert not (consumer / ".devkit/managed/spec").exists()
-    assert not (consumer / ".devkit/managed/incubation").exists()
+    assert not (consumer / ".devkit/managed/adaptive-dev").exists()
     research = consumer / ".agents/skills/deep-research"
     assert (research / "SKILL.md").is_file()
     assert yaml.safe_load((research / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False

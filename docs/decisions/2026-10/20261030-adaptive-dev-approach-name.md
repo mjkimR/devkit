@@ -17,8 +17,8 @@ created_at: 2026-10-30
 ## 1. Context & Problem Statement
 
 "Incubation" names two concepts: the non-SDD development approach with its catalog bundle
-(`[development] approach = "incubation"`, `CAP-DLV-idea-incubation`) and the SDD proposal lifecycle
-(`CAP-DLV-proposal-incubation`). With both installed, a request to "incubate" an idea does not identify which one
+(`[development] approach = "incubation"`, `CAP-DLV-adaptive-development`) and the SDD proposal lifecycle
+(`CAP-DLV-proposal-planning`). With both installed, a request to "incubate" an idea does not identify which one
 the user means. The approach value and the bundle name are consumer-facing: a consumer writes them in
 `.devkit/config.toml`. No consumer uses the incubation approach or bundle yet.
 
@@ -27,7 +27,7 @@ the user means. The approach value and the bundle name are consumer-facing: a co
 - One name per concept, so no current setting, bundle, entry or document uses "incubation".
 - The name pairs with spec-driven development (`sdd`) as the other development approach.
 - The name holds for a product that stays in the approach indefinitely; SDD adoption is optional
-  (`CAP-DLV-incubation-sdd-baseline`).
+  (`CAP-DLV-sdd-baseline-adoption`).
 - The name does not read as adapting devkit to a project.
 - The rename adds no compatibility code that no consumer needs.
 

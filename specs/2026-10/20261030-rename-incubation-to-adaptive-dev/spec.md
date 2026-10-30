@@ -2,20 +2,20 @@
 id: SPEC-rename-incubation-to-adaptive-dev
 title: Rename incubation to adaptive-dev and disambiguate proposal terms
 summary: Rename the incubation bundle and development approach to adaptive-dev and the SDD proposal-incubation term to proposal Planning, so each development concept has one unambiguous name. No consumer uses incubation yet, so the old value and bundle become plain invalid names with no migration path.
-status: planned
+status: in-progress
 created: 2026-10-30
 depends_on:
   - SPEC-deep-research-bundle
 related_capabilities:
-  - CAP-DLV-idea-incubation
-  - CAP-DLV-incubation-sdd-baseline
-  - CAP-DLV-proposal-incubation
+  - CAP-DLV-adaptive-development
+  - CAP-DLV-sdd-baseline-adoption
+  - CAP-DLV-proposal-planning
   - CAP-DIST-sync-and-transactions
   - CAP-DLV-project-policy
 related_usecases:
-  - UC-incubate-an-idea
-  - UC-adopt-sdd-from-incubation
-  - UC-incubate-and-hand-off-a-proposal
+  - UC-advance-an-idea
+  - UC-adopt-sdd-from-adaptive-development
+  - UC-plan-and-hand-off-a-proposal
 workflow: sdd-spec-feature
 ---
 
@@ -30,11 +30,11 @@ decision is `ADR-adaptive-dev-approach-name`; the inventory is `MAT-incubation-r
 
 "Incubation" names two unrelated concepts in this repository:
 
-- The SDD proposal lifecycle: `CAP-DLV-proposal-incubation` and `UC-incubate-and-hand-off-a-proposal` (draft,
+- The SDD proposal lifecycle: CAP-DLV-proposal-incubation and UC-incubate-and-hand-off-a-proposal (draft,
   Planning, acceptance and handoff of a proposal).
 - The development approach that iterates without per-change SDD records: `[development] approach = "incubation"`,
   the `incubation` catalog bundle, `/incubate`, `get-context incubation` and `.devkit/incubation.md`
-  (`CAP-DLV-idea-incubation`, `CAP-DLV-incubation-sdd-baseline`).
+  (CAP-DLV-idea-incubation, CAP-DLV-incubation-sdd-baseline).
 
 With both installed, a request to "incubate" an idea does not identify which one the user means. One distinct name
 per concept removes the ambiguity at every entry, setting and document.
@@ -74,7 +74,7 @@ The proposal was planned before `SPEC-deep-research-bundle` landed (b2711684). C
 - **US-2**: As a consumer configuring a project, I want `[development] approach` to accept `"sdd"` or
   `"adaptive-dev"` and to name both when it refuses a value, so that I set the approach without reading history.
 - **US-3**: As a reader of the Living Spec, I want the renamed documents to resolve by their old IDs, so that
-  history that cites `CAP-DLV-idea-incubation` or `CAP-DLV-proposal-incubation` still finds the current contract.
+  history that cites CAP-DLV-idea-incubation or CAP-DLV-proposal-incubation still finds the current contract.
 
 ## 3. Non-Goals
 
@@ -100,8 +100,9 @@ The proposal was planned before `SPEC-deep-research-bundle` landed (b2711684). C
 - **Then** every matching line falls in one allowlisted class: a history path (`docs/decisions/` decision text,
   `specs/` outside the listed `feedback/` directories, `docs/materials/`, `handbook/`, `docs/roadmap/_archive/`); an
   `aliases` entry; an ADR ID or title; a glossary Avoid cell or `glossary.yaml` synonym; a legacy-location mention
-  of the deep-research split; or a test line that asserts the old name is refused or absent; the check reports zero
-  lines outside these classes
+  of the deep-research split; a test line that asserts the old name is refused or absent; or observation text of the
+  listed `feedback/` files, which this change owns only for canonical-ID rewrites (fenced evidence and past file
+  paths); the check reports zero lines outside these classes
 
 ### [AC-02] The approach accepts sdd and adaptive-dev and refuses incubation
 
@@ -187,12 +188,12 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
 
 | Old ID | New ID | New title |
 | --- | --- | --- |
-| `CAP-DLV-idea-incubation` | CAP-DLV-adaptive-development | Adaptive Development |
-| `CAP-DLV-incubation-sdd-baseline` | CAP-DLV-sdd-baseline-adoption | SDD baseline adoption |
-| `UC-incubate-an-idea` | UC-advance-an-idea | Advance an idea and leave resumable current context |
-| `UC-adopt-sdd-from-incubation` | UC-adopt-sdd-from-adaptive-development | Adopt SDD from an adaptive-development product |
-| `CAP-DLV-proposal-incubation` | CAP-DLV-proposal-planning | Proposal Planning and Handoff |
-| `UC-incubate-and-hand-off-a-proposal` | UC-plan-and-hand-off-a-proposal | Plan a Proposal and Hand It Off to a Spec |
+| CAP-DLV-idea-incubation | `CAP-DLV-adaptive-development` | Adaptive Development |
+| CAP-DLV-incubation-sdd-baseline | `CAP-DLV-sdd-baseline-adoption` | SDD baseline adoption |
+| UC-incubate-an-idea | `UC-advance-an-idea` | Advance an idea and leave resumable current context |
+| UC-adopt-sdd-from-incubation | `UC-adopt-sdd-from-adaptive-development` | Adopt SDD from an adaptive-development product |
+| CAP-DLV-proposal-incubation | `CAP-DLV-proposal-planning` | Proposal Planning and Handoff |
+| UC-incubate-and-hand-off-a-proposal | `UC-plan-and-hand-off-a-proposal` | Plan a Proposal and Hand It Off to a Spec |
 
 - `ADR-own-development-approach-policy-outside-sdd`, `ADR-keep-incubation-guidance-opt-in-and-current-state-based`
   and every other accepted, not superseded ADR whose outcome names the value, bundle or entry as current get a
@@ -211,6 +212,9 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
   development".
 - Test lines that assert an old name is refused (`"incubation"` in AC-02, `incubation:core` in AC-04) or absent
   from a projection are an AC-01 allowlist class: they are the evidence that the old name is no current concept.
+- The listed `feedback/` files are observation records: plain-text old IDs in their prose and frontmatter `target`
+  are rewritten to the canonical ID like the references `devkit rules fix` rewrites, while fenced evidence and past
+  file paths keep their recorded wording.
 - The split's migration sections in the guides and the catalog README keep their legacy keys and paths; their lead
   sentence names "the former `incubation` bundle" so it reads as a legacy location.
 - The catalog bundle version stays `0.1.5`; a release bumps it.

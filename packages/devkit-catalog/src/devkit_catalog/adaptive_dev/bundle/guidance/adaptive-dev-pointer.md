@@ -1,0 +1,1 @@
+- For adaptive-dev, inspect `uv run devkit config show`; require `approach=adaptive-dev`. Use `/adaptive-dev` for product work. Read `get-context adaptive-dev` and current `.devkit/adaptive-dev.md`; selection changes no policy.
