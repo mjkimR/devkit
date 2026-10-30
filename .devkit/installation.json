@@ -943,7 +943,7 @@
     },
     ".agents/agents/git-operator.md": {
       "mode": 420,
-      "sha256": "5c2b8600bfa9e44f7a4e8edeb02866cdb22ff7c3f6689200cb764fc78df34216"
+      "sha256": "1013314fe3e8ed8065d85763c4778b90316bfdf1a5cf9aae62200c67a8c5b0ed"
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
@@ -1199,7 +1199,7 @@
     },
     ".claude/agents/git-operator.md": {
       "mode": 420,
-      "sha256": "0032660dbeb97b41bdea967e0e717e50201efc19d3de543df0164b2210f06fb8"
+      "sha256": "f7f5fc01589a8b1fb453a76fd2fc14368c288325bf51ca961873ee150b35dd04"
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
@@ -1443,7 +1443,7 @@
     },
     ".codex/agents/git-operator.toml": {
       "mode": 420,
-      "sha256": "05cf67de2a9ee342a615d1069d6588bcb21f1b5d3491a36b3e60a314a56591ef"
+      "sha256": "203eb7c70a43df2cf77468ace2e22cf261ade557fae05a737133b5453ff521ab"
     },
     ".codex/agents/planning-worker.toml": {
       "mode": 420,
@@ -2131,7 +2131,7 @@
     },
     ".devkit/managed/spec/subagents/git-operator.md": {
       "mode": 420,
-      "sha256": "ddd654ab9728ee3e5b2c34a47d2b1dbf43d0cdc4f11000dcf3613aaea0ec5f47"
+      "sha256": "bfae5b2c8e735c5b74e9c4a5c57a07d989d673274e30cc7974acae602a9cb149"
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,

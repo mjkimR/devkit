@@ -143,6 +143,24 @@ def test_a_refused_commit_result_has_no_next_command(base: Path, tmp_path: Path)
     assert set(error["advisory"]["target_files"]) == set(staged)
 
 
+# AC-01 (spec.md assumption 1): a landed commit that is not clean input is repaired in place, never rerun
+def test_a_landed_commit_that_leaves_files_is_repaired_in_place(base: Path, tmp_path: Path) -> None:
+    reviewed = git(base, "rev-parse", "HEAD")
+    _hook(base, tmp_path, "post-commit", "#!/bin/sh\necho left > left-behind.txt\n")
+
+    result = HandoffUseCase(base).execute("idea", "low")
+
+    worktree = _worktree(base)
+    assert result["status"] == "needs_recovery"
+    assert result["commit"] == git(worktree, "rev-parse", "HEAD") != reviewed
+    assert "next_command" not in result and result["handoff"]["next_command"] is None
+    error = result["errors"][0]
+    assert error["code"] == "SPEC_HANDOFF_STALE"
+    assert "dirty: left-behind.txt" in error["advisory"]["details"]
+    assert result["next_action"] == error["advisory"]["fix"]
+    assert "do not rerun" in result["next_action"] and str(worktree) in result["next_action"]
+
+
 # AC-04
 def test_the_plain_handoff_stays_write_only(base: Path) -> None:
     worktree = _start_worktree(base, "dev-idea", base.parent / "plain-dev-idea")

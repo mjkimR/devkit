@@ -94,7 +94,8 @@ def _commit_handoff(root: Path, slug: str, base: str) -> str:
 
     The worktree was clean at ``base`` before the handoff, so the delta ``git status`` reports is the handoff's own.
     Raises ``HandoffCommitRefusedError`` when nothing landed; the writes stay staged and nothing is rolled back. A
-    failure after which HEAD moved (a timeout, a failing post-commit step) returns the landed HEAD for verification.
+    ``git commit`` failure after which HEAD moved anyway (a hook that commits or amends, then fails) returns the landed
+    HEAD for verification.
     """
     dirty = _dirty_paths(root)
     run_git_text(root, "add", "-A")
@@ -125,6 +126,9 @@ def _verify_handoff_commit(root: Path, slug: str, base: str, head: str) -> None:
             f"parents: {' '.join(parents) or '-'}",
             *(f"dirty: {path}" for path in left),
             target_files=[f"dev-{slug}"],
+            fix=f"Once the user agrees, repair the dev-{slug} worktree ({root}) in place: commit or remove the dirty "
+            f"paths in [DETAIL] and make HEAD one commit on {base}; do not rerun the handoff, which refuses that "
+            "worktree",
         )
 
 
@@ -333,10 +337,11 @@ class HandoffUseCase(BaseUseCase):
             result["commit"] = _commit_handoff(root, preview.slug, preview.head)
             _verify_handoff_commit(root, preview.slug, preview.head, result["commit"])
             result.update(status="handed_off", next_command=devkit_command(f"workflow next --unit {handed.dir}"))
-        except HandoffCommitRefusedError as exc:
-            # The writes landed uncommitted: the next step is the Host's commit there, not the spec workflow.
-            result["handoff"]["next_command"] = None
-            result.update(errors=[exc.to_dict()], next_action=exc.fix)
         except AdvisoryError as exc:
             result["errors"] = [exc.to_dict()]
+            if "handoff" in result:
+                # The writes landed but the transaction is not clean committed input: the next step is the Host's
+                # repair in that worktree, never the spec workflow's next command nor a rerun.
+                result["handoff"]["next_command"] = None
+                result["next_action"] = exc.fix
         return result

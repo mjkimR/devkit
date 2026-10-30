@@ -88,7 +88,7 @@ Keep original CLI status, exit code and effects separate from role status, inclu
 Use `completed` only after all requested effects and expected checks are verified complete. Use `needs_input`
 when remaining effects require a Host decision or action; use `failed` for an execution failure. Never add a fourth
 role status named partial. A zero-exit CLI result with remaining requested effects cannot be `completed`.
-When no CLI ran, report null CLI status/exit code and empty effects. Prefer a short paragraph plus parallel
+When no CLI ran, a host refusal before dispatch included, report null CLI status/exit code and empty effects. Prefer a short paragraph plus parallel
 checks/effects; include necessary evidence for a material Host decision.
 
 For `prepare-worktree` and `handoff`, fill `checks.worker_input` after the CLI returns from
@@ -98,7 +98,7 @@ expected checks. Each dirty path is also a `remaining_effects` entry, so the res
 returns to the Host, which owns the next action that `remaining_effects` names.
 
 Keep evidence kinds apart: the original CLI result, the role status, your Git observations, host emulation and
-remaining work. A host refusal before dispatch is a blocker code with a null `cli_result`; CLI readiness or `auto`
+remaining work. A host refusal before dispatch is a blocker code with that null CLI result; CLI readiness or `auto`
 policy is never host permission, and a denial or later reauthorization is an observation, not a reusable credential.
 Report isolated fixtures, replays and untested cases as such, and never report unmeasured cost or latency as an
 improvement.

@@ -154,7 +154,7 @@ def test_evidence_kinds_and_host_permission_stay_separate() -> None:
     role = raw(ROLE)
     for tokens in (
         ("original CLI result", "role status", "Git observations", "host emulation", "remaining work"),
-        ("host refusal before dispatch", "blocker code", "null `cli_result`"),
+        ("host refusal before dispatch", "blocker code", "null CLI result"),
         ("CLI readiness or `auto`", "never host permission"),
         ("isolated fixtures, replays and untested cases",),
         ("never report unmeasured cost or latency as an", "improvement"),
