@@ -28,7 +28,7 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 
 ## Workers
 
-- Set the `diff_scope` base to the unit's [last accepted head](worker.md#the-last-accepted-head); record the base checkout's `git status --short` and HEAD before spawning.
+- Set the `diff_scope` base to the unit's [last accepted head](worker.md#the-last-accepted-head).
 - Name absolute paths for nested-role reads (the worktree's own startup skills and instructions and the effective role contract): a host skill catalog can list another checkout's copies. A generic native call also gets the absolute effective contract path and the emulation assumption.
 - If a `_Boundary:` includes a bundle source the project selects, the write scope admits, as a class, every tracked path `devkit sync` writes in the worktree after the change (seeded files, projected files, `.devkit/installation.json` and the managed `AGENTS.md` block), not only what `devkit sync --check` lists before the change: the worker runs the sync the change implies and records each output. `.devkit/managed/` is ignored and never a write path.
 - Never ask a worker to delete a scratch file or fixture it created: authored scratch files stay in the ignored path inside the worktree, and removing the worktree (`devkit worktree finish` or integration cleanup) cleans them.

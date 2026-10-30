@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:25:51.654235Z'
+status: completed
+summary: 'code-reviewer (nested, medium): AC-01 pinned by test_role_contracts.py, AC-02 capability and ADR pointer present, AC-03 pinned by the base-advance inspection test; no production code changed, no non-goal implemented; one P3 plan wording finding'
+findings:
+- issue: plan.md says the new worker.md sentence cites the ADR, but worker.md cites no ADR ID on purpose (consumers lack the decision records) and neither plan.md nor spec.md records that choice
+  evidence: specs/2026-10/20261030-worker-audit-known-host-advance/plan.md:25; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md:33
+  failure_condition: A later reader checking worker.md against plan.md finds a promised citation missing and could add an ADR ID to consumer-facing bundle text
+  suggested_action: State in plan.md that worker.md gives the rule without an ADR ID; keep the ADR citation for the capability sentence only
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec test_role_contracts.py test_worker_inspect.py 114 passed (reviewer rerun); just test-affected mode=partial 1500 passed (implementer)
+  lint: PASS devkit rules check --ci --base 597a8bd9 errors=0 (reviewer rerun); just lint-check devkit-spec; just check devkit-spec 0 errors
+diff_scope:
+  base: 597a8bd933204b1138649c463c6b889b09ef1aff
+  head: 8e628641ded030e83269feacec499b96c0d6c7df

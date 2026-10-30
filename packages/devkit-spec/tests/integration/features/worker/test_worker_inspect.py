@@ -403,6 +403,25 @@ def test_linked_worktree_observes_base_without_checking_it(repo: Path) -> None:
     assert result["exit_code"] == 0
 
 
+def test_a_base_advance_after_spawning_never_enters_or_blocks_the_range(repo: Path) -> None:
+    # ADR-drop-the-base-checkout-equality-from-worker-validation: the audit range ignores base advances.
+    accepted = worker(repo, 1)
+    git(repo, "checkout", "-q", "main")
+    linked = repo.parent / "linked"
+    git(repo, "worktree", "add", "-q", str(linked), "dev-example")
+    write(repo, "docs/advanced.md", "an integration on the base branch\n")
+    advanced = commit(repo)
+    write(linked, "src/turn.py", "pass\n")
+    returned = worker(linked, 2)
+    result = inspect(linked, runner=passed)
+    assert (result["base"], result["head"]) == (accepted, returned)
+    assert "docs/advanced.md" not in result["changed_paths"]
+    assert "src/turn.py" in result["changed_paths"]
+    assert result["outside_scope"] == []
+    assert result["base_checkout"]["head"] == advanced
+    assert result["exit_code"] == 0
+
+
 def test_missing_problem_base_is_unresolved(repo: Path) -> None:
     worker(repo, 1, problem_base="")
     worker(repo, 2)

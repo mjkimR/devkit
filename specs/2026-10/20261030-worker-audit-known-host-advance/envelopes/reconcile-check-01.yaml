@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:29:15.463760Z'
+status: completed
+summary: 'reconcile-reviewer (nested, medium): verified CAP-DLV-delivery-workflows (Host validation, acceptance requirements, base-checkout input) and the ADR-orchestration-workers pointer line; promoted ADR correctly waived; AC-02 met; no-impact review confirmed; no findings'
+findings: []
+assumptions:
+- The pointer line names both superseded clauses by location, and the promoted ADR quotes them
+unverified_areas:
+- Refs listings beyond page 1; covered by a repository search for the equality wording
+checks:
+  lint: PASS devkit rules check --ci --base 597a8bd9 errors=0
+  ac02: PASS capability, pointer line and promoted ADR agree with worker.md, payload.md and unchanged inspection code
+diff_scope:
+  base: 597a8bd933204b1138649c463c6b889b09ef1aff
+  head: 8b5f1cbede4e835e975f22a21628a2f9fd1186fc

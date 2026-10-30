@@ -1,0 +1,20 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:26:26.916099Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the P3 fix at medium: plan.md now states that bundle text cites no ADR ID and only the capability sentence cites it; the ADR pointer line also names the Decision Outcome''s Range inspection; docs-only fix, no reviewer recall needed'
+findings:
+- issue: plan.md says the new worker.md sentence cites the ADR, but worker.md cites no ADR ID on purpose (consumers lack the decision records) and neither plan.md nor spec.md records that choice
+  evidence: specs/2026-10/20261030-worker-audit-known-host-advance/plan.md:25; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md:33
+  failure_condition: A later reader checking worker.md against plan.md finds a promised citation missing and could add an ADR ID to consumer-facing bundle text
+  suggested_action: State in plan.md that worker.md gives the rule without an ADR ID; keep the ADR citation for the capability sentence only
+  resolution: resolved
+  severity: P3
+checks:
+  lint: PASS devkit rules check on the unit and ADR errors=0
+diff_scope:
+  base: 8e628641ded030e83269feacec499b96c0d6c7df
+  head: cdd4a0782cd3f18788296961d40248c824a6c943
