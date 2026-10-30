@@ -50,19 +50,32 @@ aliases.
 - Recording picks no topic; a feedback file stays where it was observed until a compaction run.
 - The `feedback-compaction` playbook runs only when the user invokes or confirms it, at `session` depth from a clean
   tree; the invocation authorizes its deletions. It never changes an outcome or reopens an item.
-- It compacts every terminal item whose holder is no live proposal and no spec bundle whose `spec.md` is not
-  `completed`. A file that fails `devkit rules check` or has an unknown status stays and is reported.
-- It groups items by the capability area (`docs/capabilities/<area>/`) that covers their target, judged by the run;
-  an item no area covers goes to `other`. A misgrouped entry is accepted and may move at a later run. Lookup never
-  depends on the grouping.
-- Each group is one `feedback` record, `FB-compacted-<area>-<status>`, at
-  `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` on its first run, with the group's terminal status
-  and `aliases:` listing every retired ID and every alias a member declared. A later run appends its entries to the
-  existing record of the same area and status in place.
+- It compacts every terminal item under `specs/` except, each left in place and reported with the reason:
+  - an item of a spec bundle whose `spec.md` is not `completed`, or of a live proposal;
+  - an item a current document outside the run's own deletions references (`devkit docs refs <ID> --direction in`,
+    work history excluded), so an ADR, a capability or a live `Source feedback` keeps citing the observation itself;
+  - an item an unmerged local branch references or changes in its diff from its merge base, so the branch still
+    merges and resolves its sources;
+  - an item that fails `devkit rules check` or has an unknown status.
+  Feedback under `docs/materials/` stays as written, like every material.
+- It groups items by the capability area (`docs/capabilities/<area>/`, or a package namespace's
+  `capabilities/<area>/`) that covers their target, judged by the run; an item no area covers goes to `other`. A
+  misgrouped entry is accepted and may move at a later run. Lookup never depends on the grouping.
+- Each group is one `feedback` record, `FB-compacted-<area>-<status>` (`FB-compacted-<namespace>-<area>-<status>` in a
+  package namespace), at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` on its first run. A later
+  run appends its entries to the existing record of the same area and status in place.
+- The record's frontmatter holds only `id`, `title`, `summary` (the area's recurring symptoms, which the search ranks),
+  `target` (the area directory), the group's terminal `status`, `created_at` of the first run and `aliases:` listing
+  every retired ID and every alias a member declared. It carries no observation fields (`scope`, `kind`, `category`,
+  `origin`, `severity`, `recurring`), so `--where` filters never match a record by a member's values.
 - Each entry is keyed by its retired ID and carries three short lines: **Symptom** (the original title's words),
   **Response** (the outcome with its spec, proposal, rule, ADR or report destination) and **Reason**.
-- The run deletes the originals, then runs `devkit rules fix` so current documents reference the record; completed
-  spec history keeps the retired IDs, which resolve through the aliases. Git history keeps the full originals.
+- The run deletes the originals, then runs `devkit rules fix`; completed spec history keeps the retired IDs, which
+  resolve through the aliases. Git history keeps the full originals. A branch that merges a compacted base runs
+  `devkit rules fix` as after any base merge.
+- Fidelity: for every deleted ID, its `status` at the base equals the `status` of the record that aliases it (a
+  mechanical check), and a review compares each Response with the original's disposition or the resolving
+  `reconcile.md`, as `adr-compaction` reviews its replacements.
 - The run lists entries whose reason reads as lasting policy (a reason repeated across entries, or a general rule of
   behavior) that no accepted ADR states, for the user's decision only; it writes no ADR and no feedback for them.
 - Terminal feedback stays traceability (`ADR-feedback-lifecycle`) through the record, its aliases and Git history.
@@ -72,12 +85,13 @@ aliases.
 - **Positive**: the ledger shrinks to a few records per area; retired IDs still resolve; the recording lookup finds
   compacted observations.
 - **Negative / Risks**: entries carry no dates or evidence, so a past week's dispositions are rebuilt from Git
-  history; a record of a busy area grows with every run.
+  history; a record of a busy area grows with every run; cited items and items of unmerged branches wait for a later
+  run.
 - **Follow-ups**: if one area's record becomes too long to read, a later decision may split it.
 
 ## 6. Confirmation
 
 - Guidance tests under `packages/devkit-spec/tests/integration/bundles/spec/` pin the playbook's invocation, scope,
   record shape and completion conditions.
-- The run's own completion check: `devkit rules check` exits `0` and `devkit docs resolve <ID>` prints the record with
-  `alias=<ID>` for every deleted feedback ID.
+- The run's own completion check: `devkit rules check` exits `0`; `devkit docs resolve <ID>` prints the record with
+  `alias=<ID>` for every deleted feedback ID; the base status of every deleted ID equals its record's status.

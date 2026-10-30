@@ -44,13 +44,16 @@ Chosen: search every status with the existing document search, then judge the hi
 - Before writing, the recorder (a direct recording and every sweep) runs `devkit docs search "<symptom and asset
   words>" --kind feedback --history -n 5`, adding `--all-namespaces` where the sweep covers all namespaces, and reads
   the hits. A hit is the same observation when it describes the same symptom of the same asset or behavior, whatever
-  its `target` wording; for a compact record, the matching entry decides.
+  its `target` wording. For a compact record hit, the recorder reads only the entries that match the observation's
+  words, and the matching entry decides.
 - By the matched status:
   - `open`: record nothing; name the existing ID. New evidence goes into that file when it is inside the recorder's
     write scope, otherwise into the report that names the ID.
   - `dismissed`: record nothing unless there is evidence against the recorded reason; then record and cite the ID.
   - `resolved`: record a regression that cites the resolved ID, with `recurring: true`.
-  - `promoted` or `forwarded`: record nothing; name the destination.
+  - `promoted` or `forwarded`: record nothing while the destination is live (an open proposal, a spec not yet
+    `completed`, an upstream report still open); name it. When the destination is completed, rejected, closed or no
+    longer resolves, record a new item that cites the ID, as for `resolved`.
 - This lookup replaces the sweep's equal-`target` deduplication. A sweep reports duplicate IDs as before.
 
 ## 5. Consequences

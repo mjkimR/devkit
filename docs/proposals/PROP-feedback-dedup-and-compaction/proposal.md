@@ -55,20 +55,28 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
   never through the partition) and per outcome, `FB-compacted-<area>-<status>`, so the record's own terminal status
   stays true without a status vocabulary change (pending the user's confirmation, question `q1`). It lives at
   `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`, a path the ID convention already accepts and
-  that is no spec bundle's work history; later runs append to it in place. Its `aliases:` lists every retired ID. Each
-  entry is keyed by the retired ID with **Symptom**, **Response** and **Reason**, one short line each.
+  that is no spec bundle's work history; later runs append to it in place. Its frontmatter holds only `id`, `title`,
+  `summary`, `target` (the area directory), `status`, `created_at` and `aliases:` (every retired ID), no observation
+  fields. Each entry is keyed by the retired ID with **Symptom** (the original title's words), **Response** and
+  **Reason**, one short line each. In a package namespace the ID adds the namespace.
 - **Q2**: Which statuses compact and when. **Answer**: all four terminal statuses at once. `promoted` is terminal when
   the destination receives the item and `forwarded` after the submission (`ADR-feedback-lifecycle`), so neither waits;
-  the Response names the destination. Excluded: `open` items, any feedback of a live proposal or of a spec bundle whose
-  `spec.md` is not `completed`, and a file that fails `devkit rules check` or has an unknown status.
-- **Q3**: Lookup. **Answer**: the existing `devkit docs search --kind feedback --history -n 5` suffices; after a
-  simulated compaction the records ranked in the top five in hybrid and lexical modes, and an exact retired ID pins its
-  record. No new command. No score decides sameness (hybrid scores are rank fusions); the recorder reads the hits and
-  judges same symptom of the same asset or behavior, whatever the `target` wording.
+  the Response names the destination. Left in place and reported: `open` items; feedback of a live proposal or of a
+  spec bundle whose `spec.md` is not `completed`; an item a current document outside the run's deletions cites (an
+  ADR, a capability or a live `Source feedback` keeps citing the observation itself); an item an unmerged local branch
+  references or changes; a file that fails `devkit rules check` or has an unknown status. Feedback under
+  `docs/materials/` stays as written, like every material.
+- **Q3**: Lookup. **Answer**: the existing `devkit docs search --kind feedback --history -n 5` suffices. In a
+  worst-case simulation (all 225 terminal items in one record per status, up to 125 entries) the record holding the
+  related original ranked in the top three for 7 of 8 related pairs in both modes, the eighth being missed before
+  compaction too; an exact retired ID pins its record. No new command and no record-size limit now. On a record hit
+  the recorder reads only the entries matching its words. No score decides sameness (hybrid scores are rank fusions); the recorder reads the hits and
+  judges same symptom of the same asset or behavior, whatever the `target` wording. A `promoted` or `forwarded` match
+  suppresses recording only while its destination is live.
 - **Q4**: Traceability. **Answer**: `devkit docs resolve <retired ID>` returns the record with `alias=`; `devkit rules
-  fix` rewrites alias references in current documents, ADRs and capabilities included, and leaves completed spec
-  history, where alias references are accepted. A `Source feedback` naming a retired ID is always a terminal source
-  and is rewritten. The weekly report is a playbook that matches feedback by ID with `--history` and reads committed
+  fix` would rewrite alias references in current documents, so items those documents cite are left for a later run
+  (Q2) and current citations keep naming the observation; completed spec history keeps the retired IDs, where alias
+  references are accepted. A branch that merges a compacted base runs `devkit rules fix` as after any base merge. The weekly report is a playbook that matches feedback by ID with `--history` and reads committed
   content at its captured revision, so it needs no change; entries carry no dates, and Git history keeps the
   originals.
 - **Q5**: ADR candidates. **Answer**: the run's report lists entries whose reason reads as lasting policy (a reason
@@ -84,22 +92,25 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
      write scope, otherwise into the report that names the ID.
    - `dismissed`: record nothing unless there is evidence against the recorded reason; then record and cite it.
    - `resolved`: record a regression that cites the resolved ID, with `recurring: true`.
-   - `promoted` or `forwarded`: record nothing; name the destination.
+   - `promoted` or `forwarded`: record nothing while the destination is live; name it. When it is completed,
+     rejected, closed or unresolvable, record a new item that cites the ID.
    This replaces the sweep's equal-`target` deduplication.
 2. **Compaction playbook** (`PADR-closed-feedback-compacts-into-per-area-records-with-aliases`). A new
    `feedback-compaction` playbook of the `spec` bundle, modelled on `adr-compaction`: user-invoked or confirmed only,
    `session` depth, clean tree, base commit recorded. Steps: collect the eligible terminal items (Q2); group them by
    capability area and outcome (an item no area covers goes to `other`; misgrouping is accepted and may move at a
    later run); show the group map; write or extend each record (Q1); delete the originals and run `devkit rules fix`;
-   verify. It changes no outcome and reopens nothing.
+   check fidelity: each deleted ID's base status equals its record's status, and a review compares each Response
+   with the original disposition or the resolving `reconcile.md`. It changes no outcome and reopens nothing.
 3. **ADR candidates** (Q5): listed in the run's report for the user's decision only.
 4. **Completion conditions of a run**: `devkit rules check` exits `0`; `devkit docs resolve <ID>` prints a record with
-   `alias=<ID>` for every deleted feedback ID; one commit holds the records, deletions and rewrites; its body and the
+   `alias=<ID>` for every deleted feedback ID; the status check and the fidelity review pass; one commit holds the records, deletions and rewrites; its body and the
    report carry the group map, items left out with the reason and the ADR candidates.
 5. **Impact**: `spec-feedback` `SKILL.md` and `references/sweep.md` (the lookup); `skills/spec/references/source-feedback.md`
    (a terminal source may resolve to a compact record through its alias); `skills/spec/references/playbooks.md` and
    `feedback-hygiene` (point to the new playbook); the new `playbooks/feedback-compaction/SKILL.md` registered in
-   `bundle.toml`; the playbook tables of `CAP-HARN-agent-guidance`; the feedback lifecycle of
+   `bundle.toml`; the playbook tables and the sweep deduplication clauses of `CAP-HARN-agent-guidance`; the feedback
+   lifecycle of
    `CAP-DLV-delivery-workflows`; guidance tests under `packages/devkit-spec/tests/`; `.devkit/installation.json` from
    the repository's own sync. No change to the document model, the feedback statuses, the weekly report or any
    command.

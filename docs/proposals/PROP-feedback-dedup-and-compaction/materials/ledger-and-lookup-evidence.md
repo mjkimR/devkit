@@ -54,3 +54,27 @@ entry kept the original title as its symptom; the records had no `summary`.
 The existing search finds a compacted observation in the top five in both modes, so recording needs no new lookup
 command. The dense part of hybrid ranks on ID and summary only, so a record `summary` that names the area's recurring
 symptoms can only help.
+
+## Probe: worst-case record size (after `challenger-01`)
+
+A second copy (`.probe/sim-full/`) removed eight items that cite a related earlier item (the "query" items, as if not
+yet recorded) and compacted every other terminal item into one record per status: `resolved` 125 entries (33 KB),
+`promoted` 60, `dismissed` 38, `forwarded` 2. This is larger than any per-area record the playbook writes. Each query
+is the removed item's title; the table gives the rank of the record holding the related item (`-` = not in the top
+five), against the rank of the related item's own file before compaction (query item excluded).
+
+| Related item (status) | hybrid before | hybrid after | lexical before | lexical after |
+| --- | --- | --- | --- | --- |
+| `FB-render-stale-fix-ignores-worker-scope` (resolved) | 1 | 2 | 1 | 2 |
+| `FB-handoff-refusals-emit-maintenance` (resolved) | 1 | 2 | 1 | 1 |
+| `FB-config-template-rewrites-crlf-line-endings` (resolved) | 1 | 3 | 1 | 1 |
+| `FB-challenger-round-diff-without-shell` (resolved) | 1 | 1 | 1 | 1 |
+| `FB-reverify-fix-omits-reconcile-check` (resolved) | 1 | 2 | 1 | 1 |
+| `FB-fixture-removal-denied` (resolved) | - | 1 | 2 | 1 |
+| `FB-post-commit-rewrite-stales-the-printed-hash` (forwarded) | - | - | - | - |
+| `FB-mcp-registration-pending-ignores-runtime` (promoted) | - | 2 | - | 1 |
+
+Caveat: with only four records the compacted search has few competitors, so a top-three rank is easier than in a
+per-area ledger; the result shows that record length does not push the matching record out of `-n 5`, not that
+per-area ranking is better. Reading cost is the remaining limit: the recorder reads only the entries that match its
+words rather than a whole record. No size limit is set now.
