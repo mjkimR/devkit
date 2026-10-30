@@ -16,7 +16,7 @@ created_at: 2026-10-30
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning of `PROP-feedback-dedup-and-compaction` traced how terminal feedback references are checked
+- **Context**: Planning of `SPEC-feedback-dedup-and-compaction` traced how terminal feedback references are checked
   before deciding that compaction may retire FB IDs.
 - **Expectation**: `ADR-feedback-lifecycle` §6 says `RULE-reconcile-contract` and its tests check source-feedback
   resolution at completion, so a reader expects a mechanical check of FB outcomes in `reconcile.md`.

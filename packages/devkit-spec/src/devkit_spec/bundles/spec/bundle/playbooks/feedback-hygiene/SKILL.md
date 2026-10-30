@@ -9,6 +9,8 @@ Run this playbook only in a hygiene session the user invoked or confirmed, from 
 propose and draft; destinations beyond existing authorization are the user's decisions. A direct fix resolves its
 feedback through the `spec` skill's
 [source feedback resolution](../../skills/spec/references/source-feedback.md) instead.
+Terminal feedback is out of scope here: the separate `feedback-compaction` playbook compacts it when the user
+invokes or confirms that playbook.
 
 ## Step 1: Collect and group
 

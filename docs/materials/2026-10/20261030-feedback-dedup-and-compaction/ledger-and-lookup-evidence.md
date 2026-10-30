@@ -1,7 +1,7 @@
 # Ledger and lookup evidence for feedback compaction
 
-Planning material for `PROP-feedback-dedup-and-compaction`, measured at base `95b8228c` in the plan worktree. Code
-citations are in `envelopes/scout-01.yaml`.
+Planning material for `SPEC-feedback-dedup-and-compaction`, measured at base `95b8228c` in the plan worktree. Code
+citations are in historical Git `eb4f48cb13e75d89d212baa4433f9feed721602d:docs/proposals/PROP-feedback-dedup-and-compaction/envelopes/scout-01.yaml`.
 
 ## Ledger
 

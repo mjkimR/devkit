@@ -623,6 +623,15 @@ Task entry preserves source FB IDs and scope through handoff and drafting. Termi
 disposition or re-verification and do not implicitly authorize source writes. Completion of follow-up work never
 converts promoted sources to resolved.
 
+Terminal feedback is also the memory recording consults: before writing, a recording searches existing feedback of
+every status and acts on the matched status, so a reworded duplicate, a regression of a resolved item, a declined point
+or routed work is not recorded again as new (`ADR-recording-looks-up-existing-feedback-of-every-status-first`).
+Closed feedback keeps its traceability in a compact form: the user-invoked `feedback-compaction` playbook replaces
+terminal items under `specs/` with one record per capability area and status whose `aliases` keep every retired ID
+resolvable, never changing an outcome; Git history keeps the originals
+(`ADR-closed-feedback-compacts-into-per-area-records-with-aliases`, `CAP-HARN-agent-guidance`). A terminal source
+reference may therefore resolve to such a record through its alias.
+
 At `living-spec-draft`, review only explicit open direct-fix sources against implementation and verification and
 record outcomes in `reconcile.md`. At `report-session`, do the same before committing and report outcomes without
 a new artifact. Record outcome and evidence for resolutions; incomplete or unverified direct fixes stay open.

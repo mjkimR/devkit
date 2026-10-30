@@ -19,6 +19,7 @@ PLAYBOOKS = [
     BUNDLE / "playbooks/brownfield-adoption/SKILL.md",
     BUNDLE / "playbooks/feedback-hygiene/SKILL.md",
     BUNDLE / "playbooks/adr-compaction/SKILL.md",
+    BUNDLE / "playbooks/feedback-compaction/SKILL.md",
     CATALOG / "drift-reconciliation.md",
     CATALOG / "weekly-report.md",
 ]

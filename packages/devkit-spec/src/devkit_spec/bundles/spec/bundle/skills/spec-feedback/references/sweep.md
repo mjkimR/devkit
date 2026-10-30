@@ -14,9 +14,10 @@ Read this for a workflow stage sweep, a Planning run's return or a user-requeste
 ## Procedure
 
 1. **Collect** unrecorded observations from this session and `git diff`.
-2. **Deduplicate** against `devkit docs list feedback --status open --all-namespaces -n 0`: skip a candidate with a
-   listed file's `target` and the same nature, keeping the listed ID.
-3. **Record** the rest by the skill's recording procedure.
+2. **Look up** each candidate by step 2 of the skill's recording procedure, adding `--all-namespaces` to the search:
+   `devkit docs search "<symptom and asset words>" --kind feedback --history --all-namespaces -n 5`. A candidate the
+   matched status says not to record is a duplicate; keep the existing ID for the report.
+3. **Record** the rest by the skill's recording procedure from its step 3.
 4. **Report by entry**:
    - **User request**: recorded IDs, duplicate IDs, open and critical counts (`--where severity=critical`). With
      critical items, recommend a `feedback-hygiene` session; never run it unasked.

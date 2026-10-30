@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:55:34.579663Z'
+status: completed
+summary: 'reconcile-reviewer (nested, medium): verified CAP-HARN-agent-guidance and CAP-DLV-delivery-workflows against the bundle text and both ADRs; no-impact claims confirmed; one P3 on the ADR path wording destination'
+findings:
+- issue: reconcile.md's no-impact note for docs/decisions records no destination for the wording repair of the ADR's record path, which omits the package-namespace segment the playbook and CAP-HARN put in the file name
+  evidence: docs/decisions/2026-10/20261030-closed-feedback-compacts-into-per-area-records-with-aliases.md (Decision Outcome, record bullet); specs/2026-10/20261030-feedback-dedup-and-compaction/reconcile.md No impact
+  failure_condition: A reader taking the ADR's literal path for a package-namespace area derives the global record ID and collides with the global record
+  suggested_action: Name a follow-up destination in reconcile.md, e.g. a feedback item targeting the ADR, or repair the ADR wording
+  resolution: open
+  severity: P3
+checks:
+  lint: 'PASS devkit rules check --ci --base a0e1034e: errors=0 warnings=0'
+  head: PASS HEAD 5bc54069 matches diff_scope
+diff_scope:
+  base: a0e1034e5560591ad3febd25d904a45f7d0aff79
+  head: 5bc54069381d307de85a80234345172511c6f3ad
