@@ -2,7 +2,7 @@
 id: SPEC-scope-activity-write-evidence
 title: Show current activity writes beside future implementation impact in scope output
 summary: Show each current activity's actual write boundaries in scope inspection separately from declared or candidate future implementation impact, keeping every overlap and coverage gap visible and the output informational.
-status: planned
+status: in-progress
 created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
 related_capabilities: [CAP-COLL-work-scope-registry, CAP-HARN-agent-guidance]
@@ -173,6 +173,9 @@ both choices, never a proof of independence. The Host keeps the decision; no res
 - `inputs` is present on every problem entry (empty for gaps that come from no unresolved input) so the JSON shape
   is stable; reasons are sorted for deterministic output. The proposal named the field without fixing these details.
 - A problem repeated for one source and reason merges its inputs into the first entry; the problem count is unchanged.
+- Code evidence keeps one entry per path pair. When a Planning side holds the same path as a candidate and as an
+  observed write, the entry takes the `current` source, so a current overlap is never hidden behind a future one;
+  `code=` counts are unchanged.
 - A tracking peer is a ref with the candidate's branch name under `refs/heads/` or any `refs/remotes/<remote>/`; the
   `plan-`/`dev-` prefix is part of the name, so `plan-x` and `dev-x` are not peers.
 - A base that `git rev-parse --symbolic-full-name` cannot resolve to a ref (a commit ID, an ambiguous name) is kept

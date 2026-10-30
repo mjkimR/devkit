@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import socket
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,7 @@ from devkit_spec.base.errors import ScopeCollectionFailedError, ScopeCollectionP
 from devkit_spec.features.entrypoints import covers
 from devkit_spec.features.policy.services.config import read_spec_config
 from devkit_spec.features.scope.models.deadline import Deadline
-from devkit_spec.features.scope.models.model import Record, ScopeSet, now
+from devkit_spec.features.scope.models.model import Record, ScopeSet, Source, now
 from devkit_spec.features.scope.models.observation import Candidate, CollectionOptions, CollectionReport, Observation
 from devkit_spec.features.scope.repositories.collection_git import InputLimitError, git, optional, text
 from devkit_spec.features.scope.repositories.collection_registry import CollectionRegistry
@@ -26,8 +27,10 @@ from devkit_spec.features.scope.services.observation import (
     committed,
     declarations,
     dirty,
+    discard_base,
     fingerprint,
     identify,
+    planning,
     select_base,
     semantic_key,
     task_key,
@@ -43,6 +46,17 @@ def encoded(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8", errors="backslashreplace")
 
 
+def horizon(observation: Observation, source: str) -> str:
+    """``future`` for a Planning activity's declared or candidate path, else ``current`` (observed paths included)."""
+    return "future" if planning(observation) and source != str(Source.OBSERVED) else "current"
+
+
+def detail(problem: dict[str, Any]) -> str:
+    """``<source>: <reason>``, with the unresolved input reasons behind it in parentheses."""
+    inputs = problem.get("inputs") or []
+    return f"{problem['source_id']}: {problem['reason']}" + (f" ({', '.join(inputs)})" if inputs else "")
+
+
 class Collector:
     def __init__(self, root: Path, options: CollectionOptions) -> None:
         self.root, self.options = root, options
@@ -54,7 +68,7 @@ class Collector:
         self.records: list[Record] = []
         self.candidates: list[Candidate] = []
         self.observations: list[Observation] = []
-        self.problems: list[dict[str, str]] = []
+        self.problems: list[dict[str, Any]] = []
         self.problem_count = 0
         self.bytes_left = MAX_REPORT_BYTES - RESERVED_BYTES
         self.layers: dict[str, Any] = {}
@@ -71,12 +85,16 @@ class Collector:
         self.compute.check("scope collection")
         return Deadline(max(0.001, min(self.options.source_timeout, self.compute.remaining())))
 
-    def problem(self, source: str, reason: str) -> None:
-        if dict(source_id=source[:512], reason=reason) in self.problems:
-            return  # one gap per source and reason, however many stages meet it
+    def problem(self, source: str, reason: str, inputs: Iterable[str] = ()) -> None:
+        """Record one coverage gap; ``inputs`` are the unresolved input reasons behind it (sorted, distinct)."""
+        for known in self.problems:
+            if known["source_id"] == source[:512] and known["reason"] == reason:
+                # One gap per source and reason, however many stages meet it; its inputs accumulate.
+                known["inputs"] = sorted({*known["inputs"], *inputs})
+                return
         self.problem_count += 1
         if len(self.problems) < 32:
-            self.problems.append(dict(source_id=source[:512], reason=reason))
+            self.problems.append(dict(source_id=source[:512], reason=reason, inputs=sorted(set(inputs))))
 
     def retain(self, value: Any) -> bool:
         rendered = encoded(value)
@@ -173,7 +191,7 @@ class Collector:
             failed = [problem["source_id"] for problem in self.problems]
             raise ScopeCollectionFailedError(
                 "No selected inventory source could be read",
-                *(f"{problem['source_id']}: {problem['reason']}" for problem in self.problems),
+                *(detail(problem) for problem in self.problems),
                 target_files=failed or ["--mode"],
             )
 
@@ -288,7 +306,8 @@ class Collector:
         base_sha = (
             optional(root, "rev-parse", "--verify", f"{base_ref}^{{commit}}", deadline=deadline) if base_ref else ""
         )
-        if base_sha == candidate.sha or base_ref == candidate.ref:
+        # A base at the tip is still a base (an empty range); only one naming the branch itself is discarded.
+        if base_ref and discard_base(root, candidate, base_ref, deadline):
             base_sha = ""
         cap = record.base_revision if record else ""
         paths, unresolved, start = committed(root, candidate.sha, base_sha, cap, deadline)
@@ -303,7 +322,11 @@ class Collector:
             ):
                 self.problem(candidate.source_id, "observation-changed")
         if scope.unresolved:
-            self.problem(candidate.source_id, "unknown-base" if unresolved else "unresolved-input")
+            self.problem(
+                candidate.source_id,
+                "unknown-base" if unresolved else "unresolved-input",
+                (item.reason for item in scope.unresolved),
+            )
         provenance = dict(
             source="worktree" if candidate.worktree else "ref",
             sha=candidate.sha,
@@ -450,6 +473,11 @@ class Collector:
         evidence_docs: list[dict[str, Any]] = []
         evidence_code: list[dict[str, Any]] = []
         docs = {path.path: path for path in b.docs}
+
+        def entry_horizon(source: str, other_source: str) -> str:
+            both = (horizon(first, source), horizon(second, other_source))
+            return "current" if both == ("current", "current") else "future"
+
         for path in a.docs:
             self.compute.check("scope comparison")
             if path.path in docs:
@@ -461,13 +489,18 @@ class Collector:
                         other=path.path,
                         source=str(path.source),
                         other_source=str(docs[path.path].source),
+                        horizon=entry_horizon(str(path.source), str(docs[path.path].source)),
                     )
                 )
                 if len(evidence_docs) > self.evidence_left:
                     raise InputLimitError("result-limit")
         seen: set[tuple[str, str]] = set()
-        for mine in [*a.code, *a.observed]:
-            for theirs in [*b.code, *b.observed]:
+        # One entry per path pair: list current paths first, so a Planning path that is both a candidate and an
+        # observed write reports the current overlap rather than hiding it behind the future one.
+        ours = sorted([*a.code, *a.observed], key=lambda item: horizon(first, str(item.source)) != "current")
+        others = sorted([*b.code, *b.observed], key=lambda item: horizon(second, str(item.source)) != "current")
+        for mine in ours:
+            for theirs in others:
                 self.compute.check("scope comparison")
                 key = (mine.path, theirs.path)
                 if key in seen or not (covers(mine.path, theirs.path) or covers(theirs.path, mine.path)):
@@ -481,16 +514,20 @@ class Collector:
                         other=theirs.path,
                         source=str(mine.source),
                         other_source=str(theirs.source),
+                        horizon=entry_horizon(str(mine.source), str(theirs.source)),
                     )
                 )
                 if len(evidence_docs) + len(evidence_code) > self.evidence_left:
                     raise InputLimitError("result-limit")
+        current = sum(item["horizon"] == "current" for item in [*evidence_docs, *evidence_code])
         return dict(
             a=first.observation_id,
             b=second.observation_id,
             docs=evidence_docs,
             code=evidence_code,
             unresolved=len(a.unresolved) + len(b.unresolved),
+            current=current,
+            future=len(evidence_docs) + len(evidence_code) - current,
         )
 
     def comparisons(self) -> list[dict[str, Any]]:
@@ -539,7 +576,7 @@ class Collector:
             notices.append(
                 ScopeCollectionPartialWarning(
                     f"Scope observation has {self.problem_count} coverage gap(s)",
-                    *(f"{p['source_id']}: {p['reason']}" for p in self.problems),
+                    *(detail(p) for p in self.problems),
                     target_files=list(dict.fromkeys(p["source_id"] for p in self.problems)),
                 )
             )
@@ -567,6 +604,7 @@ class Collector:
                 observations=len(observations),
                 pairs=len(pairs),
                 overlapping=sum(bool(p["docs"] or p["code"]) for p in pairs),
+                current_overlapping=sum(bool(p["current"]) for p in pairs),
             ),
             notices=[n.to_dict() for n in notices],
         )

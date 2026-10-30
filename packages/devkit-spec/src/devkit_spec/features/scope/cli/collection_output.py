@@ -48,6 +48,8 @@ def render(data: dict[str, Any]) -> None:
                 docs=len(pair["docs"]),
                 code=len(pair["code"]),
                 unresolved=pair["unresolved"],
+                current=pair["current"],
+                future=pair["future"],
             )
         )
         for evidence in [*pair["docs"], *pair["code"]]:
@@ -62,6 +64,7 @@ def render(data: dict[str, Any]) -> None:
                     source=evidence["source"],
                     other_source=evidence["other_source"],
                     granularity=evidence["granularity"],
+                    horizon=evidence["horizon"],
                 )
             )
     click.echo(

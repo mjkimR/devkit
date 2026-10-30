@@ -276,6 +276,8 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 
 - `[PAIR]` lines are followed by their `[EVIDENCE: <path> ...]` lines (the path positional everywhere, `collect`
   too); `[DIFF]` carries `in=target-docs|reconcile`.
+- `collect` adds `horizon=current|future` to each `[EVIDENCE]`, `current=<n> future=<n>` to each `[PAIR]` and
+  `current_overlapping=<n>` after `overlapping=` in its `[SUMMARY]` (4.9); `compare`, `query` and `update` do not.
 - Paths are relative to the workspace root: `shared_path=`, `[RECORD]`/`[EVENT]` `worktree=` (`.` is this checkout)
   and the `[TARGET]` of registry advisories.
 - `query --history` pages like `docs list`: `[PAGE: total= limit= count= next=<cursor>]`, then `[NEXT_CMD: ...]`
@@ -396,7 +398,12 @@ atomic snapshot across worktrees.
 
 Base selection uses explicit `--base`, a validated local `devkitBase`, a confirmed record base, then a uniquely
 resolvable integration hint. Hints use remote symbolic HEAD or the non-activity main checkout branch and expose
-ambiguity. A tracking peer of the same task is not its integration base. Confirmed registered observations retain
+ambiguity. A selected base whose commit equals the tip is still a base: its committed range is empty (or the
+registration cap's, 4.1) and the layer is observed. The base is discarded, and the layer stays `unknown-base`, only
+when `git rev-parse --symbolic-full-name <base>` (in the source's checkout, so `HEAD` names its branch) resolves to
+the candidate's own full ref or to a tracking peer of the same task (`refs/heads/<branch>` or
+`refs/remotes/<remote>/<branch>` with the candidate's branch name); a base that resolves to no ref is kept as a
+commit. A tracking peer of the same task is therefore never its integration base. Confirmed registered observations retain
 the registration-HEAD cap/intersection from 4.1; unregistered observations use a unique merge-base-to-tip diff,
 labelled `branch-relative` because stacked parent work can be included. Missing history/base evidence leaves that
 layer unresolved. Available declaration/dirty evidence remains usable.
@@ -409,20 +416,37 @@ separate; a successful current observation or verified terminal-clean lifecycle 
 for comparison unless dirty/unknown live evidence contradicts that lifecycle. Pairs name observation
 IDs and skip only confirmed same-task observations. Counts are observation-pair counts, never a proof of independence.
 
+Every path of an observation has a horizon. A Planning activity is an observation whose `provenance.unit` is a
+proposal unit and whose source is a `plan-*` ref or worktree (the last segment of `provenance.ref`); its `observed`
+paths (committed, staged, unstaged, untracked) are `current` and its `declared-doc`, `declared-code` and `candidate`
+paths are `future`. Every path of any other observation is `current`: a proposal on a `dev-*` source (a handoff
+before its first commit), a spec unit, a snapshot and an observation without a unit. The unit kind comes from
+`provenance.unit`, never from `task_key`. An evidence entry is `current` when both sides are `current`, otherwise
+`future`. Code evidence keeps one entry per path pair, taking a `current` source when a side holds the path as both,
+so a current overlap is never hidden behind a future one. Each evidence entry carries `horizon`, each pair `current`
+and `future` entry counts (`current + future = len(docs) + len(code)`), and `summary.current_overlapping` counts
+the pairs with at least one `current` entry. The horizon only labels evidence: every overlap stays listed and counted
+in `docs`, `code` and `overlapping` (4.2), and neither horizon grants or refuses a write.
+
 JSON is one object with `mode`, `started_at`, `finished_at`, `coverage`, `inventory`, `observations`, `pairs`, `summary`
 and `notices`. Coverage carries source/fetch outcomes, bounded problem examples and total count, discovered/retained
-source counts, `comparisons_complete`, total/completed pair counts and the last completed pair key. Complete means
+source counts, `comparisons_complete`, total/completed pair counts and the last completed pair key. Each problem
+is `{source_id, reason, inputs}`: `inputs` lists the sorted distinct reasons of the source's unresolved inputs
+(4.1), whatever the problem's own reason (`unresolved-input` or `unknown-base`), and is empty for a gap with no
+unresolved input; a repeated source and reason merges its inputs into one problem. Lifecycle-normal inputs
+(`missing-target-docs`, `missing-reconcile`) still count as gaps. Complete means
 requested observable layers for discovered candidates, not global/private visibility. Missing inputs, unknown bases,
 ambiguous identity, inaccessible/unstable sources and exhausted budgets produce `SPEC_SCOPE_COLLECTION_PARTIAL`.
 Usable results exit 0, warning-bearing results exit 1 only under `--strict`, and inability to read any inventory
 source raises `SPEC_SCOPE_COLLECTION_FAILED` with exit 2. Invalid arguments remain `ARGUMENT_INVALID`.
 
 Text renders `[SCOPE_CANDIDATE: source= activity= reason=]`, `[SCOPE_OBSERVATION: id= task=<id>|- unit=<dir>|-
-source= sha= missing=]`, `[PAIR: ...]`, `[EVIDENCE: <path> ...]` and a `[SUMMARY: ...
-coverage=complete|partial comparisons_complete=yes|no]`. A worktree source is named `worktree:<path relative to the
+source= sha= missing=]`, `[PAIR: ... unresolved= current= future=]`, `[EVIDENCE: <path> ... horizon=current|future]`
+and a `[SUMMARY: ... overlapping= current_overlapping= coverage=complete|partial comparisons_complete=yes|no]`. A worktree source is named `worktree:<path relative to the
 workspace>` (`worktree:.` is this checkout). The base checkout (the main worktree off any activity branch) is an
 inactive `base-checkout` candidate, never a coverage gap, dirty or not. `SPEC_SCOPE_COLLECTION_PARTIAL` lists each
-source and reason once in `[DETAIL]`, the sources in `[TARGET]`. It emits no worker ACK. The CLI uses the existing advisory
+source and reason once in `[DETAIL]`, with its inputs in parentheses when it has any
+(`refs/heads/dev-x: unresolved-input (excluded-tree, missing-reconcile)`), the sources in `[TARGET]`. It emits no worker ACK. The CLI uses the existing advisory
 boundary for errors, notices and strict behavior.
 
 Total `--timeout` defaults to 30 seconds and `--source-timeout` to 5 seconds, each an integer 1–300. A source receives
@@ -435,5 +459,6 @@ entries and bounded coverage/summary diagnostics; `input-limit` and `result-limi
 `source-timeout`; other reasons include `unknown-base`, `identity-ambiguous`, `fetch-failed`, `source-unreadable`,
 `unresolved-input` and `observation-changed`. Uncomputed pairs never count as zero overlap.
 
-Checks: `packages/devkit-spec/tests/integration/features/scope/test_collection.py` and creation tests under
+Checks: `packages/devkit-spec/tests/integration/features/scope/test_collection.py`,
+`packages/devkit-spec/tests/integration/features/scope/test_collection_horizon.py` and creation tests under
 `packages/devkit-spec/tests/integration/features/delivery/`.
