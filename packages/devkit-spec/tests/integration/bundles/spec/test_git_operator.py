@@ -162,3 +162,37 @@ def test_evidence_kinds_and_host_permission_stay_separate() -> None:
         ("never report unmeasured cost or latency as an", "improvement"),
     ):
         assert_rule(role, *tokens)
+
+
+COMPOSED_ACCEPT = "spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff"
+
+
+# SPEC-git-operator-planning-completion-route AC-01 (GOP-01)
+def test_planning_acceptance_is_the_hosts_composed_command_and_no_operator_job() -> None:
+    operations = raw(OPERATIONS)
+    assert_rule(operations, "Planning acceptance is no operator job", "the Host runs", COMPOSED_ACCEPT, "cleanup")
+    rows = [line.split("|")[1].strip() for line in operations.splitlines() if line.startswith("| `")]
+    assert rows == [
+        "`prepare-worktree`",
+        "`handoff`",
+        "`prepare-integration`",
+        "`execute-integration`",
+        "`cleanup`",
+        "`inspect-recovery`",
+    ]
+    assert_rule(raw(DISPATCH), "Dispatch no Planning acceptance", "the Host runs", COMPOSED_ACCEPT, "cleanup")
+
+
+# SPEC-git-operator-planning-completion-route AC-02
+def test_acceptance_skills_name_the_host_run_command_and_the_post_commit_recovery() -> None:
+    orchestrate = raw("skills/spec-orchestrate/SKILL.md")
+    assert_rule(orchestrate, "4. **Accept** Planning", "yourself", COMPOSED_ACCEPT, "no `git-operator` job")
+    review = raw("skills/spec-review-proposal/SKILL.md")
+    for tokens in (
+        ("4. When readiness holds", "the Host runs", COMPOSED_ACCEPT, "itself"),
+        ("refusal in preparation leaves nothing written",),
+        ("refusal after the acceptance commit", "`needs_recovery`", "`completed_steps`", "accepted, unmerged"),
+        ("prepare the source on that branch", "only then rerun the same command"),
+        ("Never make a rerun that would repeat a deterministic refusal",),
+    ):
+        assert_rule(review, *tokens)

@@ -26,7 +26,9 @@ your own commits since (the post-handoff link fixes); an exit code alone never s
 effects is `needs_input` or `failed`, never completed. Inspect unknown/partial state before dispatching a supported,
 already-authorized remainder. Return changed scope/refs, dirty resources, active writers, source preparation,
 semantic conflicts or denied permission to the Host. Normal integration already includes cleanup; dispatch no
-redundant cleanup job.
+redundant cleanup job. Dispatch no Planning acceptance either: the Host runs the composed
+`devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` itself, which already
+includes integration and cleanup.
 
 The source contract selects `level: lean`: Sonnet medium, gpt-6.1-terra medium and Flash with effort omitted.
 Existing project overrides remain available; no prompt-based effort emulation applies. Projection checks do not

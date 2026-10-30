@@ -14,6 +14,7 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
 ```
 
 - `--stage` is the stage `devkit workflow next` names after the run's other records; `--effort` is the only record of the applied effort.
+- **Final Planning return**: when `next` prints `[STAGE: - complete=yes]` while `proposal.md` is still `reviewing` (under `plan-accept = "auto"` before any acceptance ran), record the `worker` envelope at `direction-handoff`, never `handoff` or `-`: open questions recorded there hold `plan-accept`. The run records no acceptance or handoff effect; `devkit spec proposal accept` does.
 - `--head` is `git -C <worktree> rev-parse HEAD` after the last work commit; the commit that adds the envelope is the run's final HEAD.
 - **Questions**: add `--questions-file -`, a YAML list of `id`, `title` (at most 40 characters), `prompt`, `context` (what the answer decides and why it matters now, for a reader who has not seen the work), `options` (`{id, description, recommended}`, one recommended) and `allow_note`. An option that depends on a condition also states what holds when it does not.
 - **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; `--status needs_input` when only the user can decide. A problem breaks the agreed goal, scope or contract or cannot be solved; a choice you can make, or waiting for answers, is not one.

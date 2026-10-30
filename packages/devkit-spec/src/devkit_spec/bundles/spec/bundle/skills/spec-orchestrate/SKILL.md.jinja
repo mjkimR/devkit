@@ -18,7 +18,7 @@ Use `local-orchestrated` instead of `direct` for an activity when units can run 
 1. **Prepare** through the reusable `git-operator` using [dispatch](references/git-operator-dispatch.md); keep the returned absolute path and prepare the unit's input.
 2. **Run a turn** through `spec-delegate` with `planning-worker` or `development-worker`.
 3. **Validate** the committed range through `spec-delegate`'s worker reference. A failing range is blocked, never discarded.
-4. **Accept** Planning through `spec-review-proposal`, first naming any support role the effort required but no envelope shows.
+4. **Accept** Planning through `spec-review-proposal`, first naming any support role the effort required but no envelope shows. You run its composed `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` yourself: it already integrates and cleans up, so no `git-operator` job follows it.
 5. **Integrate** Development through `spec-integrate`, one unit at a time in overlap order. Delegate only guarded execution after Host authority.
 
 After context loss, rebuild state from `devkit worktree status`, `devkit spec scope collect --mode worktrees` and per-unit `devkit workflow next --unit <dir>`. Keep one conversation line per unit: slug, activity, stage, worker state. To return to `direct`, stop starting workers, validate running ones' results and continue the remaining units one at a time.
