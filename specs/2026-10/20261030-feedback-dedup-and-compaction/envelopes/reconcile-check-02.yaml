@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:56:16.934499Z'
+status: completed
+summary: 'Implementer self-verified the reconcile-check-01 P3 fix: reconcile.md names FB-compaction-adr-path-omits-namespace as the destination of the ADR path wording repair; targets unchanged and resolved; spec completed'
+findings: []
+checks:
+  lint: PASS devkit rules check errors=0
+diff_scope:
+  base: 5bc54069381d307de85a80234345172511c6f3ad
+  head: d9e1e05917325553e54acfa515a56b40f77dbc04
