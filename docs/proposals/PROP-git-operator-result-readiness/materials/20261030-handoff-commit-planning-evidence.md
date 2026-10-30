@@ -34,7 +34,7 @@ The Host commit added no judgment: it staged every path the handoff changed. Its
 - The composed acceptance (`native_plan_accept.py`) already commits its exact service-created delta
   (`spec: accept proposal <slug>`), checks the parent and changed paths after the commit, and on a commit-gate
   refusal withdraws its own writes and reports `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED`.
-- `CAP-DLV-proposal-incubation` states that the plain handoff does not create a commit; the composed handoff
+- `CAP-DLV-proposal-planning` states that the plain handoff does not create a commit; the composed handoff
   contract names its effects without one.
 - `spec-delegate`'s worker reference starts a worker's range at "the worktree's HEAD when you spawn the worker,
   after your own commits": the Host commit step is implied, not named.

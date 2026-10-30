@@ -43,7 +43,8 @@ path without judgment.
 
 ## 4. Decision Outcome
 
-Option A, because it meets the first two drivers at the cost of one commit step that mirrors the composed acceptance.
+Option A, chosen by the user at Planning, because it meets the first two drivers at the cost of one commit step that
+mirrors the composed acceptance.
 
 - After the handoff and scope registration succeed, the composed handoff stages the delta `git status` reports (the
   worktree was clean at the reviewed head before the handoff) and commits once with the subject

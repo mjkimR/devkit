@@ -58,9 +58,9 @@ transaction itself.
 
 ## Source feedback
 
-- `FB-handoff-rewrite-edits-sibling-draft`: received whole. The handoff keeps rewriting a sibling draft's references
-  (its `depends_on` rewrite is a MUST that keeps later handoffs valid); the guidance names the resolution of the later
-  base-merge conflict instead.
+- `FB-handoff-rewrite-edits-sibling-draft`: received whole and promoted to this proposal (§3.2). The handoff keeps
+  rewriting a sibling draft's references (its `depends_on` rewrite is a MUST that keeps later handoffs valid); the
+  guidance names the resolution of the later base-merge conflict instead.
 
 ## 2. Technical Spike Questions
 
@@ -131,7 +131,7 @@ work. Host-permission denial and reauthorization are observations, not reusable 
 | GOP-02 | A composed handoff in a clean new worktree | It completes | One commit whose single parent is the reviewed base holds the whole transaction, the worktree is clean, and `commit` equals HEAD read after the hooks. |
 | GOP-02b | A composed handoff whose commit is refused | It stops | Exit `1`, `[HANDOFF_STOPPED ...]`, `SPEC_HANDOFF_COMMIT_REFUSED` with the dirty paths, the writes kept, `[NEXT_ACTION]` and no `[NEXT_CMD]`; under `accept_and_handoff` `completed_steps` includes the handoff. |
 | GOP-02c | The git-operator contract | A `handoff` or `prepare-worktree` result is returned | `checks.worker_input` carries `head` and `dirty_paths`; dirty paths are `remaining_effects` and never `completed`; the Host compares them with its own Git observation before starting a worker. |
-| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. |
+| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host and performs no such mutation. |
 | GOP-07 | Mixed live integration, host-refusal recovery and untested failure cases | Reports are updated after actual observations | Live effects, null CLI result on pre-dispatch denial, isolated fixtures, replays and untested cases remain separate; unknown cost or latency is not reported as an improvement. |
 | GOP-09 | A sibling draft in its own Planning cites the handed-off proposal | The handoff rewrites references and the guidance is read | The sibling's `depends_on` is rewritten, and `CAP-DLV-proposal-planning` and `post-handoff.md` name the take-base-then-`devkit rules fix` resolution. |
 
@@ -139,6 +139,20 @@ GOP-02 and GOP-02b are CLI integration tests under `packages/devkit-spec/tests/i
 rewriting post-commit hook and a refusing pre-commit hook in the fixture repository). GOP-02c, GOP-06, GOP-07 and
 GOP-09 are contract-text tests in `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` (and the
 bundle text tests for `post-handoff.md`) plus review.
+
+### 3.5 Planning decisions
+
+- The user chose the composed handoff commit over a Host commit step or a commit in every handoff (§3.1,
+  `PADR-composed-handoff-commits-its-own-transaction`), readiness under `checks.worker_input` with no new top-level
+  field and no `next_actor` (§3.3), and an unchanged reference rewrite with guidance only over a sibling skip (§3.2).
+- The Host assigned the shared GOP-06 operator-scope wording to this proposal: an operator returns production edits,
+  semantic conflict resolution and broader authority to the Host. `git-operator.md` keeps that wording in its
+  authority section; `PROP-git-operator-planning-completion-route` and `PROP-git-operator-batch-preparation` keep
+  GOP-06 only as a regression check and do not reword it.
+- `PROP-git-operator-batch-preparation` reports each item with the §3.3 result shape (`checks.worker_input`,
+  dirty paths in `remaining_effects`) and adds no field of its own.
+- Development of this proposal and its sibling git-operator proposals integrates one at a time in dependency order,
+  so each later sibling rebuilds on the integrated `git-operator.md`, `spec-orchestrate` and delivery capability text.
 
 ### Non-goals
 
