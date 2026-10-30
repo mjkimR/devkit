@@ -22,10 +22,10 @@ docs/decisions/
 id: ADR-<slug>
 title: <Decision Title>
 summary: "For <context>, we <decision>, to <achieved quality>, accepting <downside>." # required, English Y-statement
-status: accepted # proposed | accepted | superseded | rejected | deprecated
+status: accepted # proposed | accepted | superseded | rejected | deprecated; superseded only when wholly replaced
 created_at: <YYYY-MM-DD>
-supersedes: [] # optional
-superseded_by: null # optional
+supersedes: [] # optional: the ADRs this one replaces, wholly or in part
+superseded_by: null # optional: only on a superseded ADR; one replaced in part stays accepted with a "Superseded in part by" line
 ---
 
 # [ADR-<slug>] <Decision Title>

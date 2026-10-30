@@ -10,6 +10,9 @@ created_at: 2026-10-29
 
 # [ADR-extend-incubation-with-optional-discovery-teams] Extend incubation with optional discovery teams
 
+Superseded in part by `ADR-split-deep-research-bundle`: its placement of the research entry and the three
+discovery roles in `incubation:core`.
+
 ## 1. Context & Problem Statement
 
 `ADR-keep-incubation-guidance-opt-in-and-current-state-based` places one iterative entry, three optional

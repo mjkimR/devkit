@@ -31,8 +31,9 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
 
 - Frontmatter: `status: accepted`, `created_at` today, `aliases:` every member ID and every alias a member declared;
   no `supersedes` or `proposal`.
-- Section 4 lists only statements in effect, each ending with its source ID in parentheses. Considered options keep
-  each option a member rejected, labelled by that member. No History section.
+- Section 4 lists only statements in effect, each ending with its source ID in parentheses; a clause a "Superseded
+  in part by" line names is not in effect. Considered options keep each option a member rejected, labelled by that
+  member. No History section.
 - Add, drop or change the meaning of no driver, option, scope or consequence.
 
 ## Step 3: Apply and verify

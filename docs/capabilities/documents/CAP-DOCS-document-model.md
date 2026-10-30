@@ -134,6 +134,18 @@ sources directly addressed and verified, with outcome and evidence in their Disp
 direct fixes stay open. Terminal references require no completion update. Generic list/status filters discover
 all states; use `--status open` for the actionable backlog. Spec completion never closes feedback automatically.
 
+### Decision supersession
+
+Decision status is `proposed`, `accepted`, `superseded`, `rejected` or `deprecated`. An ADR MUST get
+`status: superseded` and `superseded_by` only when a later ADR replaces all of its in-force decisions; it is then
+historical by rule 8. A later ADR that replaces only part of an earlier one names it in `supersedes` and states the
+replaced clauses in its outcome; the earlier ADR MUST stay `accepted`, so browsing and search still return its
+in-force clauses, MUST NOT carry `superseded_by`, and gains one body line per partial superseder, below its heading
+or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."
+(`ADR-immutable-decisions-editable-records`). On a decision, `supersedes` and `superseded_by` are metadata the index
+does not read (section 3.3 rule 6 covers Unit anchors), so no check requires a named ADR to be `superseded`. Checks:
+review only; `RULE-document-reference` resolves the ID an in-part line cites.
+
 ### 3.2 IDs and Kinds
 
 An ID is `<PREFIX>-<slug>`: one of the prefixes below, a dash, then a letter or digit followed by letters, digits,

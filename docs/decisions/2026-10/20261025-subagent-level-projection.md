@@ -4,12 +4,15 @@ title: Resolve subagent levels at distribution time with inherited defaults
 summary: "For reusable roles across three hosts, we resolve opt-in model levels during distribution and inherit by default, to keep role prompts portable, accepting maintained host mappings and native inheritance limits."
 spec: SPEC-subagent-model-levels
 supersedes: ADR-role-effort-presets
-status: superseded
-superseded_by: ADR-five-subagent-levels
+status: accepted
 created_at: 2026-10-25
 ---
 
 # [ADR-subagent-level-projection] Resolve subagent levels at distribution time with inherited defaults
+
+Superseded in part by `ADR-five-subagent-levels`: its level names (`light`, `standard`, `deep`) and the clause
+that every shipped spec role inherits model and effort. Distribution-time resolution, shared-only overrides,
+source/native conflict rules, verbatim native variants and runtime inheritance limitations remain in force.
 
 ## 1. Context & Problem Statement
 

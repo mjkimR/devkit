@@ -9,6 +9,9 @@ created_at: 2026-10-28
 
 # [ADR-keep-incubation-guidance-opt-in-and-current-state-based] Keep incubation guidance opt-in and current-state based
 
+Superseded in part by `ADR-extend-incubation-with-optional-discovery-teams`: its entry and role set, which that
+decision extends with a research entry and three discovery roles.
+
 ## 1. Context & Problem Statement
 
 Document formats are independently available under `ADR-document-and-sdd-bundles`. Incubation also needs agent

@@ -1647,7 +1647,7 @@
     },
     ".devkit/managed/docs/instructions/decision-writing.md": {
       "mode": 420,
-      "sha256": "feb2c0709689785066e2f5446eb4961173d4bd041bf906183a7df3c409a27436"
+      "sha256": "f3c75bd3530d42b7d92ac6e70934524c66f1e74bb099ea67550b19ade53d8116"
     },
     ".devkit/managed/docs/instructions/document-writing.md": {
       "mode": 420,
@@ -1687,7 +1687,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "e42fe197fbb91005eefcb371edae9dab7376e564b462cda9b47925620c98cbd5"
+      "sha256": "6af6c333ab80627d2ed4a5f651e55d0151ea308cfbfd773a08655cda6b3b9a70"
     },
     ".devkit/managed/docs/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1779,7 +1779,7 @@
     },
     ".devkit/managed/docs/templates/decision.md": {
       "mode": 420,
-      "sha256": "c38d084c5010f3a8a1f5ba71263e1f54735efcebb0075e6871889e733793165f"
+      "sha256": "b8649076bed010131a8ca6d1ac522a8e4b9d0e4e0ab53b5d607886f07e354396"
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,
@@ -1839,7 +1839,7 @@
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
-      "sha256": "b5b8c6b586a6f4dca8cd08290841e38bbca219fc75660dde1d6be4a4c3467c71"
+      "sha256": "e77173632739b467b12fefc3c8b8a1663f9b82154d2479ed50d449e6a76d96f3"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,

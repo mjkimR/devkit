@@ -9,6 +9,10 @@ created_at: 2026-10-29
 
 # [ADR-keep-discovery-plans-distinct-from-delivery-commitments] Keep discovery plans distinct from delivery commitments
 
+Superseded in part by `ADR-retain-research-as-cited-materials`: its retention of research notes in reused
+destinations with new notes defaulting to `docs/materials/`, material identity only when needed, and the
+coordinator's research updates to `.devkit/incubation.md`.
+
 ## 1. Context & Problem Statement
 
 Early discovery needs initial documents and a roadmap before implementation. Existing capability, decision,

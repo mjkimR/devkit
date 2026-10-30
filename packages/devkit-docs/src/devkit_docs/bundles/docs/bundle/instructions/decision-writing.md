@@ -1,6 +1,6 @@
 ---
 name: decision-writing
-description: Read before writing or editing an ADR (docs/decisions/) or a proposal's PADR. Defines the Y-statement summary, context, options, outcome, consequences and the Confirmation section.
+description: Read before writing or editing an ADR (docs/decisions/) or a proposal's PADR. Defines the Y-statement summary, context, options, outcome, consequences, the Confirmation section and whole or partial supersession.
 ---
 
 # Decision Writing
@@ -25,3 +25,12 @@ An ADR records one decision and its reasons. Start from the `decision` template;
 - **Consequences**: positive, negative or risks, and follow-ups; a follow-up names what triggers it.
 - **Confirmation**: how compliance is checked: a rule ID, a test path or a review step. Write "Review only" when no
   check exists, so the gap stays visible.
+
+## Supersession
+
+- A decision that replaces an earlier ADR names it in `supersedes` and says in Decision Outcome which clauses it
+  replaces.
+- Set the earlier ADR to `status: superseded` with `superseded_by` only when the new decision replaces all of its
+  in-force decisions; a superseded ADR leaves browsing and search.
+- Otherwise the earlier ADR stays `accepted`, without `superseded_by`, and gains one line per partial superseder,
+  below its heading or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."

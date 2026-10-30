@@ -2,13 +2,14 @@
 id: ADR-<slug>
 title: Decision Title
 summary: "For <context>, we <decision>, to <achieved quality>, accepting <downside>."   # required, English Y-statement (decision-writing); quote it, it may contain ": "
-status: proposed          # proposed | accepted | deprecated | superseded
+status: proposed          # proposed | accepted | deprecated | superseded (only when a later ADR replaces all of its decisions; decision-writing)
 created_at: YYYY-MM-DD
 ---
 
 # [ADR-<slug>] Decision Title (e.g., Select PostgreSQL as Main RDBMS)
 
 <!-- File path is docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md and id is ADR-<slug>. -->
+<!-- Replaced only in part: stay Accepted and add one line per later ADR here: Superseded in part by `ADR-<new>`: <the replaced clauses>. -->
 
 - **Status**: Proposed | Accepted | Deprecated | Superseded by `ADR-<slug>`
 - **Date**: YYYY-MM-DD

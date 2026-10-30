@@ -280,7 +280,9 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   `--slug` (a leading `PADR-` dropped, normalized as in 4.2) or else the title's slug; the title stays free text, so
   `padr plans "2024 roadmap" --slug roadmap-2024` works where the title alone is refused. The file has `id`, `title`, `summary` (or
   the commented placeholder `# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>`), `proposal:
-  PROP-<slug>`, `status: draft`, `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
+  PROP-<slug>`, the commented line `# supersedes: [ADR-<slug>]` (uncommented, it names the ADRs the decision replaces,
+  wholly or in part, and Decision Outcome names the replaced clauses; `CAP-DOCS-document-model`), `status: draft`,
+  `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
   `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
   Consequences, Confirmation). PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
 - A PADR has no withdrawn status: one withdrawn before `plan-accept` is deleted from `decisions/` in the Planning fold
@@ -334,7 +336,8 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    rest of the frontmatter, `summary` included, is kept, except that each item of the PADR's `aliases` has `PADR-`
    replaced by `ADR-`, so the own-prefix rule holds after the rename. Only the IDs of the PADRs this handoff promotes
    change, and never inside a file name (`PADR-<slug>.md` in a link is left to step 6). Other files under
-   `decisions/` are not promoted.
+   `decisions/` are not promoted. A `supersedes` reaches the ADR unchanged; handoff edits no ADR it names, whose
+   `status: superseded` or "Superseded in part by" line is written in Development.
 5. **Feedback and materials**: open `feedback/*.md` files move into the new spec's feedback directory;
    settled feedback follows the generic extras route. `materials/` moves to `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` when it holds a file other
    than operating-system junk (`.DS_Store`, `Thumbs.db`, `desktop.ini`) or a symbolic link. Every other bundle file the

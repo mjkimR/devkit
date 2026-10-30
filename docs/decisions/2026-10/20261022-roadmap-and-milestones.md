@@ -13,6 +13,8 @@ aliases:
 
 # [ADR-roadmap-and-milestones] Repository-owned roadmap, milestone documents and unit prerequisites
 
+Superseded in part by `ADR-archive-terminal-milestones-in-roadmap`: its root-only milestone storage convention.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Involved Components/Capabilities**: `ARCH-01-introduction-and-goals`, `CAP-DOCS-document-model`,
