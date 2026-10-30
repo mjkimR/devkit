@@ -24,7 +24,7 @@ capabilities:
   documents move over through normal work instead of a big-bang rewrite
 - **Scope**: the devkit-spec package: its `spec` bundle deployed by `devkit sync`, its `devkit spec` commands mounted
   in devkit's executable, its spec rules and its `brownfield-adoption` playbook
-- **Path distinction**: This path contains legacy rule debt and permits gradual migration. An explicit adaptive-dev
+- **Path distinction**: This path contains legacy rule debt and permits gradual migration. An explicit adaptive-development
   baseline request instead follows `UC-adopt-sdd-from-adaptive-development`, which verifies retained product evidence before
   activating SDD and does not automatically contain or move legacy documents.
 - **Trigger**: the developer decides to adopt spec-driven delivery in a repository with existing code, docs and agent
@@ -57,7 +57,7 @@ capabilities:
 
 ## 3. Extensions
 
-- **1a.** The developer explicitly requests an adaptive-dev baseline before activation: the agent follows
+- **1a.** The developer explicitly requests an adaptive-development baseline before activation: the agent follows
   `UC-adopt-sdd-from-adaptive-development` (`CAP-DLV-sdd-baseline-adoption`); this legacy-containment use case ends without
   automatic moves or a claim that asset installation establishes baseline readiness.
 
@@ -123,7 +123,7 @@ capabilities:
 - **When**: it sets `[presets] spec = false` in `.devkit/config.toml` and runs `devkit sync`
 - **Then**: the `spec` bundle's managed files and projections are not deployed
 
-### Scenario 7: Separates verified adaptive-dev adoption from legacy containment
+### Scenario 7: Separates verified adaptive-development adoption from legacy containment
 - **Covers**: 1a
 - **Given**: the developer asks to adopt SDD from the retained adaptive-development product
 - **When**: the agent selects the adoption path

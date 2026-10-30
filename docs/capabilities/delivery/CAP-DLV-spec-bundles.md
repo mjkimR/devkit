@@ -184,6 +184,6 @@ before anything is written; `DEFAULT_WORKFLOW` is `sdd-spec-feature`, `BUGFIX_WO
 
 ## Approach precondition
 
-WHILE the common approach is adaptive-dev, `devkit spec new` and its public creation operation MUST refuse before
+WHILE the common approach is `adaptive-dev`, `devkit spec new` and its public creation operation MUST refuse before
 writing with `SPEC_LIFECYCLE_INACTIVE`. Existing document lookup is unaffected. The common configuration owner is
 `CAP-DIST-sync-and-transactions`; lifecycle applicability is `CAP-DLV-delivery-workflows`.

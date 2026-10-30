@@ -100,9 +100,10 @@ The proposal was planned before `SPEC-deep-research-bundle` landed (b2711684). C
 - **Then** every matching line falls in one allowlisted class: a history path (`docs/decisions/` decision text,
   `specs/` outside the listed `feedback/` directories, `docs/materials/`, `handbook/`, `docs/roadmap/_archive/`); an
   `aliases` entry; an ADR ID or title; a glossary Avoid cell or `glossary.yaml` synonym; a legacy-location mention
-  of the deep-research split; a test line that asserts the old name is refused or absent; or observation text of the
-  listed `feedback/` files, which this change owns only for canonical-ID rewrites (fenced evidence and past file
-  paths); the check reports zero lines outside these classes
+  of the deep-research split; a test line that asserts the old name is refused or absent; or a line of the listed
+  `feedback/` files that names no renamed ID outside fenced evidence and past file paths (their observation prose,
+  fenced evidence and past file paths, which this change owns only for canonical-ID rewrites); the check reports zero
+  lines outside these classes
 
 ### [AC-02] The approach accepts sdd and adaptive-dev and refuses incubation
 
@@ -213,8 +214,9 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
 - Test lines that assert an old name is refused (`"incubation"` in AC-02, `incubation:core` in AC-04) or absent
   from a projection are an AC-01 allowlist class: they are the evidence that the old name is no current concept.
 - The listed `feedback/` files are observation records: plain-text old IDs in their prose and frontmatter `target`
-  are rewritten to the canonical ID like the references `devkit rules fix` rewrites, while fenced evidence and past
-  file paths keep their recorded wording.
+  are rewritten to the canonical ID like the references `devkit rules fix` rewrites, while their other observation
+  prose, fenced evidence and past file paths keep their recorded wording. This AC-01 class follows from Non-Goal 3
+  and the proposal's ownership of those directories for ID rewrites only.
 - The split's migration sections in the guides and the catalog README keep their legacy keys and paths; their lead
   sentence names "the former `incubation` bundle" so it reads as a legacy location.
 - The catalog bundle version stays `0.1.5`; a release bumps it.

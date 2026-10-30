@@ -45,7 +45,7 @@ owns the approach, bundle, entry and context-file names.
    Test: `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
 3. **Approach inspection**: WHEN the entry starts product work, the coordinator MUST inspect the effective common
    development approach rather than infer it from bundle selection.
-4. **Inactive entry**: IF the approach is not adaptive-dev, THEN the entry MUST stop product actions and report the
+4. **Inactive entry**: IF the approach is not `adaptive-dev`, THEN the entry MUST stop product actions and report the
    shared configuration action before any user-directed approach change.
 5. **Unreadable policy**: IF policy inspection fails, THEN the coordinator MUST report the actual error and next
    configuration action without performing product work.
@@ -84,11 +84,11 @@ agent contracts; keyword assertions alone do not establish them.
 ### Distribution and entry
 
 Install devkit-docs and devkit-catalog, then select `uv run devkit add adaptive-dev` (`adaptive-dev:core`).
-The skill and three common role contracts use existing projection mechanisms. No adaptive-dev runtime or CLI is
+The skill and three common role contracts use existing projection mechanisms. No adaptive-development runtime or CLI is
 added.
 
 `uv run devkit config show` exposes `configuration.development.approach` and its source.
-The entry requires adaptive-dev; invalid policy propagates `DEVELOPMENT_CONFIG_INVALID`, exit 2.
+The entry requires `adaptive-dev`; invalid policy propagates `DEVELOPMENT_CONFIG_INVALID`, exit 2.
 A valid SDD result produces a guidance-level stop with the shared `[development] approach = "adaptive-dev"` action,
 not a new error code. Selection/invocation changes no approach. Read `get-context adaptive-dev` once and the docs
 context/instructions before relevant document work.

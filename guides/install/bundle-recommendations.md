@@ -31,7 +31,7 @@ recommend comes from it.
 | `authoring` (built in, `devkit-agt`) | Both of the above. | Default `all` |
 | `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (run by `devkit-agt`). |
 | `cli-tool` (`devkit-catalog`) | The repository builds, or the user plans, a Python command-line tool that agents run. | Default `all`: the `cli-tool-structure` instruction (click, `devkit-cli`, the required feature layout, import budget) and five structure rules run by `devkit-agt`; `guide`: the instruction only (the preset to take with `devkit-dist` alone). |
-| `adaptive-dev` (`devkit-catalog`) | The user wants to discover and build an idea without per-change SDD records, with resumable current product context. | Explicit `core`: `/adaptive-dev`, three optional support roles and current-context template. Install devkit-docs plus devkit-catalog, choose the shared adaptive-dev policy, then `uv run devkit add adaptive-dev`. No devkit-spec dependency. |
+| `adaptive-dev` (`devkit-catalog`) | The user wants to discover and build an idea without per-change SDD records, with resumable current product context. | Explicit `core`: `/adaptive-dev`, three optional support roles and current-context template. Install devkit-docs plus devkit-catalog, choose shared adaptive-development policy, then `uv run devkit add adaptive-dev`. No devkit-spec dependency. |
 | `deep-research` (`devkit-catalog`) | The user asks for an explicit research entry. Repository evidence alone never recommends it. | Explicit `core`: a user-invoked research entry, four optional research roles and one indexed material per investigation under `docs/materials/`. Install devkit-docs plus devkit-catalog, then `uv run devkit add deep-research`; it works under either development approach and needs no devkit-spec. |
 | `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line; `[presentation] language = "ko"` supplies an inherited Korean default; an explicit `[bundles.response-style.variables] language` value wins. Run sync after edits. |
 | `maintenance` (`devkit-catalog`) | The user wants bounded drift review, evidence-based weekly reports with separately authorized publication, review and refactoring passes that reduce accumulated code, guidance and CLI surface, or measured performance passes over slow commands. | `upkeep`: drift-reconciliation and review-refactor; `reporting`: weekly-report; `refactoring`: review-refactor alone; `performance`: performance-pass with review-refactor; default `all`: the four playbooks. Selection never executes them; unavailable evidence remains explicit gaps. |
@@ -67,7 +67,7 @@ uv run devkit add --dry-run <bundle>          # preview the files first when uns
   `.devkit/overrides/` for editing.
 
 
-### Adaptive-dev policy
+### Adaptive development policy
 
 For development without SDD lifecycle records, install the document system and choose shared policy explicitly:
 

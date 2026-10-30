@@ -38,7 +38,7 @@ adaptive development.
 
 1. **Explicit entry**: WHEN the user invokes or confirms `sdd-baseline`, the coordinating agent MUST begin bounded
    preparation without changing the effective approach. Size, time and experiment count do not invoke it.
-2. **Preparation state**: WHILE preparing the baseline, the agent MUST keep the approach adaptive-dev, including when
+2. **Preparation state**: WHILE preparing the baseline, the agent MUST keep the approach `adaptive-dev`, including when
    installing the spec package or selecting SDD assets. Installed assets alone do not establish readiness.
 3. **Retained coverage**: WHEN comparing retained product items, the agent MUST map behavior, important structure,
    current choices and verification methods to implementation, current documents and source-specific evidence.

@@ -1,4 +1,4 @@
-# Adopt SDD from an adaptive-dev app
+# Adopt SDD from an adaptive-development app
 
 Use the `sdd-baseline` playbook when the user chooses to maintain the implemented product through SDD.
 A small app can remain in adaptive development. Neither elapsed time nor package installation forces adoption.

@@ -657,9 +657,9 @@ spec preservation. Installing devkit-spec auto-selects both core bundles. Explic
 `devkit add docs` to restore the supported SDD selection (`ADR-document-and-sdd-bundles`).
 
 
-## Adaptive-dev applicability
+## Adaptive development applicability
 
-WHILE the common approach is adaptive-dev, SDD spec/proposal creation, proposal acceptance and handoff MUST refuse
+WHILE the common approach is `adaptive-dev`, SDD spec/proposal creation, proposal acceptance and handoff MUST refuse
 before mutation with `SPEC_LIFECYCLE_INACTIVE` (exit 2). The action points to shared policy inspection and an explicit
 SDD choice; it does not suggest bypassing checks. Both direct public operations and composed worktree/acceptance
 operations enforce the boundary. Generic workflows, read-only policy/scope/worker inspection and document lookup

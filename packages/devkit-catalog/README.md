@@ -20,7 +20,7 @@ uv run devkit add response-style                    # an opt-in catalog bundle
 
 ## Adaptive development
 
-`uv run devkit add adaptive-dev` explicitly selects the adaptive-dev bundle. Install devkit-docs alongside catalog for
+`uv run devkit add adaptive-dev` explicitly selects the `adaptive-dev` bundle. Install devkit-docs alongside catalog for
 shared document formats; devkit-spec is not required. `/adaptive-dev` checks the effective development approach through
 `uv run devkit config show` before product actions. Selection changes assets, not project policy.
 

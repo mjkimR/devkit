@@ -224,10 +224,10 @@ permission.
 ## Development approach inspection
 
 `devkit spec policy` consumes the common `CAP-DIST-sync-and-transactions` development approach; it owns no second
-setting. Text begins with `[DEVELOPMENT_APPROACH: approach=sdd source=default]` (or explicit adaptive-dev/shared source).
+setting. Text begins with `[DEVELOPMENT_APPROACH: approach=sdd source=default]` (or explicit `adaptive-dev`/shared source).
 JSON adds `development: {approach, source}`. Existing approval, stage, Git, routing and feedback defaults remain.
 
-WHILE the effective approach is adaptive-dev, ordinary work MUST NOT acquire implicit SDD Units, stages, approvals
+WHILE the effective approach is `adaptive-dev`, ordinary work MUST NOT acquire implicit SDD Units, stages, approvals
 or envelopes. Document-format and independent project checks remain active. The spec router and pointer inspect
 `devkit config show` before applying SDD routing. Existing deliberately bound SDD artifacts keep their applicable
 checks, and inspecting older artifacts remains available.

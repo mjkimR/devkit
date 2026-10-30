@@ -158,10 +158,10 @@ Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Tas
 `CleanupResult`, `ScopedCleanup` and typed errors. `devkit_agt.features.worktree` owns merge and finish primitives.
 
 
-## Independent adaptive-dev project readiness
+## Independent adaptive-development project readiness
 
 The installed `project` provider in devkit-agt supports `session` integration when the retained committed target
-approach is adaptive-dev. Its explicit claims require passing `review`, `tests` and `lint` results, accepting `true`,
+approach is `adaptive-dev`. Its explicit claims require passing `review`, `tests` and `lint` results, accepting `true`,
 `PASS`, `PASSED` or a `PASS ...` string. Missing/failed claims produce `SESSION_CLAIMS_INVALID` evidence and existing
 `INTEGRATION_NOT_READY` recovery. No SDD depth, effort, Unit or lifecycle envelope is manufactured.
 
@@ -173,7 +173,7 @@ request freshness, worktree and exact cleanup checks remain in the common execut
 
 IF a project provider sees a committed SDD target, THEN it MUST refuse with `INTEGRATION_APPROACH_MISMATCH`.
 The common policy digest includes the validated development approach. A proposed source-only switch cannot select
-weaker target readiness. The installed spec provider delegates ordinary adaptive-dev sessions to project readiness.
+weaker target readiness. The installed spec provider delegates ordinary adaptive-development sessions to project readiness.
 
 Before treating a diff as an ordinary session, ownership discovery examines parsed bindings/history in both prior
 and proposed committed trees. IF changed/deleted anchors or companions belong to a retained workflow Unit, THEN

@@ -75,7 +75,7 @@ freshness; partial-state recovery; subsequent SDD routing (`CAP-DLV-sdd-baseline
 
 - **Given** no live context or missing spec assets,
 - **When** the agent discovers facts and performs authorized asset preparation,
-- **Then** implementation and user input supply current facts while the effective approach remains adaptive-dev.
+- **Then** implementation and user input supply current facts while the effective approach remains `adaptive-dev`.
 - **Covers**: 2b.
 
 ### Required evidence gap

@@ -722,7 +722,7 @@ retries and fixes inside the approved scope are delegated to the Host, rather th
 
 ## Approach precondition
 
-Proposal creation, acceptance and handoff are SDD lifecycle mutations. WHILE the common approach is adaptive-dev,
+Proposal creation, acceptance and handoff are SDD lifecycle mutations. WHILE the common approach is `adaptive-dev`,
 these operations MUST refuse before changing files, branches or records with `SPEC_LIFECYCLE_INACTIVE`.
 Read-only existing proposal inspection remains available. `CAP-DLV-delivery-workflows` owns the shared applicability
 boundary; the direct and composed operations use the same check.

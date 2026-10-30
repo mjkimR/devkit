@@ -42,7 +42,7 @@ activation. Keep `[development] approach = "adaptive-dev"` while installing/sele
 current documents and actual check/usage evidence. Retrieve it with `uv run devkit playbook get spec/sdd-baseline`.
 Package selection alone does not activate SDD; the ready source, scope and policy effects require matching user
 authority. Configuring a missing spec provider or a necessary project-to-spec integration provider change is an explicit effect rather than an implicit
-settings profile. See the [adaptive-dev adoption guide](../../guides/install/adaptive-dev-sdd-adoption.md) and
+settings profile. See the [adaptive-development adoption guide](../../guides/install/adaptive-dev-sdd-adoption.md) and
 `CAP-DLV-sdd-baseline-adoption`. Legacy rule containment remains the separate `brownfield-adoption` path.
 
 ## Development

@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Approach-aware SDD, opt-in adaptive-dev and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
+summary: "Approach-aware SDD, opt-in adaptive-development and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -401,9 +401,9 @@ proposal disappearance is not completion evidence.
 
 The installed spec pointer, constitution and router inspect `devkit config show` before selecting SDD routing.
 For `sdd`, existing intake/classification/stage/Git/approval rules apply. For `adaptive-dev`, they direct ordinary work
-to the project's adaptive-dev guidance and independent checks without implicit SDD Units, per-change envelopes or
+to the project's adaptive-development guidance and independent checks without implicit SDD Units, per-change envelopes or
 immutable iteration history. Existing explicitly bound SDD artifacts keep their checks. Installing or selecting spec
-assets never switches the approach. The adaptive-dev entry, roles and context are separately delivered; this policy supplies no
+assets never switches the approach. The `adaptive-dev` bundle's entry, roles and context are separately delivered; this policy supplies no
 product discovery coordinator.
 
 An explicit `/deep-research` invocation is not development intake: the spec router runs no playbook discovery,
@@ -411,11 +411,11 @@ classifies it into no depth and creates no Unit for it, and work the research la
 intake. A proposal, spec or ADR cites research retained outside it by its `MAT-<slug>` ID in a code span and never
 copies it into a proposal's `materials/` (`ADR-retain-research-as-cited-materials`).
 
-## Adaptive-dev entry and current context
+## Adaptive development entry and current context
 
 The opt-in `adaptive-dev:core` catalog bundle supplies `/adaptive-dev`, conditional references, the adaptive-dev pointer, three
 optional support contracts and a current-context template (`CAP-DLV-adaptive-development`). Install devkit-docs
-and devkit-catalog and select adaptive-dev explicitly; devkit-spec is not required. The entry inspects common
+and devkit-catalog and select `adaptive-dev` explicitly; devkit-spec is not required. The entry inspects common
 `configuration.development.approach` before product work and stops on SDD or invalid policy rather than switching
 approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
 
