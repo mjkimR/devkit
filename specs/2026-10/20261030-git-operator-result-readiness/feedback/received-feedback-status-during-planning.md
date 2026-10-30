@@ -24,7 +24,7 @@ created_at: 2026-10-30
   `source-feedback.md` keeps a direct-fix source `open` until completion verifies it, and says Planning alone does not
   verify a fix.
 - **Workaround (or Interpretation Chosen)**: The worker set `status: promoted` with a disposition naming
-  `PROP-git-operator-result-readiness`, reading the proposal as the follow-up work that received the item.
+  `SPEC-git-operator-result-readiness`, reading the proposal as the follow-up work that received the item.
 - **Suggestion**: State in `source-feedback.md` whether a proposal that receives feedback promotes it at Planning or
   keeps it `open` for resolution at completion.
 

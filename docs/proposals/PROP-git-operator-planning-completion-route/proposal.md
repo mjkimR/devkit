@@ -61,7 +61,7 @@ Planning without widening the operator's role.
 ### Spike findings
 
 Evidence: `MAT-planning-acceptance-route-comparison` (route comparison and code trace), `MAT-git-operator-consumer-pilot`
-(in `PROP-git-operator-result-readiness`), and the scout and challenger envelopes of this Planning.
+(in `SPEC-git-operator-result-readiness`), and the scout and challenger envelopes of this Planning.
 
 - **Q1**: The composed `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff` already records and
   commits the acceptance on `plan-<slug>`, merges it through the guarded integration service, cleans up, and with
@@ -146,7 +146,7 @@ Acceptance checks (from the parent's verification candidates):
 | --- | --- | --- | --- | --- |
 | GOP-01 | A verified committed Planning source and exact current Host authority | The Host runs the composed acceptance | Only the composed command's existing effects run; source drift or missing authority preserves resources and returns the required Host action; a post-commit refusal returns the accepted, unmerged branch to the Host. | Existing stale and authority tests of the composed acceptance (`packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py`) plus the operating-reference wording check in `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` |
 | GOP-03 | Auto-policy Planning readiness with no current stage and a reviewing proposal | A worker authors its final return | The record uses `direction-handoff`; an open question there makes `accept --mode` refuse; no acceptance or handoff effect is invented. | A new behavior test in `packages/devkit-spec/tests/` |
-| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. | Regression check only: the existing operator contract wording, whose shared operator-scope text `PROP-git-operator-result-readiness` owns; this proposal changes none of it |
+| GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. | Regression check only: the existing operator contract wording, whose shared operator-scope text `SPEC-git-operator-result-readiness` owns; this proposal changes none of it |
 
 Development also adds one CLI test that pins the composed `--mode` with `--check` usage error and its wording.
 

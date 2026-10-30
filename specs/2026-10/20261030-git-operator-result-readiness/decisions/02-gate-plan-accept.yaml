@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-git-operator-result-readiness
+by: user
+at: '2026-10-30T04:14:02.086520Z'
