@@ -13,7 +13,16 @@ from spec_support.bundle_text import BUNDLE, flat, raw, text
 
 WORKERS = ("development-worker", "planning-worker")
 BACKLOG_ROLES = ("triage", "decomposer")
-ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "ux-reviewer", "scout", *BACKLOG_ROLES, *WORKERS)
+ROLES = (
+    "challenger",
+    "reconcile-reviewer",
+    "code-reviewer",
+    "ux-reviewer",
+    "scout",
+    *BACKLOG_ROLES,
+    *WORKERS,
+    "git-operator",
+)
 DELEGATE = BUNDLE / "skills/spec-delegate/SKILL.md"
 WORKER_RESULTS = BUNDLE / "skills/spec-delegate/references/worker.md"
 ORCHESTRATE = BUNDLE / "skills/spec-orchestrate/SKILL.md"
@@ -27,11 +36,13 @@ def _contract(role: str) -> tuple[dict[str, Any], str]:
 
 
 @pytest.mark.parametrize("role", ROLES)
-def test_scout_is_compact_and_other_roles_inherit(role: str) -> None:
+def test_explicit_role_levels_and_other_roles_inherit(role: str) -> None:
     metadata, _ = _contract(role)
     assert "x-model-profile" not in metadata
     if role == "scout":
         assert metadata["level"] == "compact"
+    elif role == "git-operator":
+        assert metadata["level"] == "lean"
     else:
         assert "level" not in metadata
     for host in metadata["hosts"].values():
@@ -296,7 +307,7 @@ def test_the_planning_worker_keeps_its_worker_obligations() -> None:
         assert_rule(body, *tokens)
 
 
-@pytest.mark.parametrize("role", [r for r in ROLES if r not in WORKERS])
+@pytest.mark.parametrize("role", [r for r in ROLES if r not in (*WORKERS, "git-operator")])
 def test_every_other_role_stays_read_only(role: str) -> None:
     assert _contract(role)[0]["x-git-actions"] == ["read"]
 

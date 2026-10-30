@@ -16,6 +16,12 @@ name: spec-integrate
 - Change only what integration needs: conflict resolution, the fixes it requires and the docs reflection the change requires. No new features, refactors, lowered AC or new policy; no `--no-verify`, `git add .` or force operations.
 - Do not restart code review; re-verify only what conflict resolution and docs reflection changed.
 
+In `local-orchestrated`, retain source preparation, checks, approval and result acceptance in the Host/implementer.
+Dispatch read-only preparation and already-authorized step 5 execution through the reusable `git-operator`
+([dispatch](../spec-orchestrate/references/git-operator-dispatch.md)). The operator reads
+[operating procedures](../spec-orchestrate/references/git-operator-operations.md); normal integration includes
+cleanup, so dispatch no redundant cleanup. Direct mode follows the procedure below.
+
 ## Procedure
 
 Steps 1 to 4 run in the task worktree.

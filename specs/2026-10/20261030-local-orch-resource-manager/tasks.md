@@ -6,8 +6,8 @@ plan: PLAN-local-orch-resource-manager
 
 # Task Breakdown: `SPEC-local-orch-resource-manager`
 
-- [ ] **Task 1**: Register git-operator, its operating procedure and Host dispatch, with contract/projection checks
-  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/`, `packages/devkit-spec/tests/integration/bundles/spec/`
+- [x] **Task 1**: Register git-operator, its operating procedure and Host dispatch, with contract/projection checks
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/`, `packages/devkit-spec/tests/integration/bundles/spec/`, `.devkit/installation.json` (sync output)
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
   - **Verification**: focused bundle tests, lint/type checks, `just test-affected --base main`, `devkit sync --check`
 - [ ] **Task 2**: Exercise repeated jobs and record matched same-head role-disabled evidence and limits

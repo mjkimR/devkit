@@ -10,16 +10,16 @@ Use `local-orchestrated` instead of `direct` for an activity when units can run 
 ## Units
 
 - A unit is one activity of one slug on `plan-<slug>` or `dev-<slug>`, in its own worktree from `devkit worktree start <branch>` (`--existing-branch <branch> --unit <dir>` continues an existing branch). A `session`-depth task never becomes a unit.
-- You split, prepare (worktree and handoff or inline Planning), validate, and own user questions, problems and integration; workers do the rest.
+- You split, retain inline Planning, validate, and own user questions, problems and integration decisions. Delegate recurring lifecycle execution to `git-operator`; workers do one Planning/Development turn.
 - Split by dependency order, conflicting files and independent verification, not to create approval points. Units overlapping in `devkit spec scope collect --mode worktrees` run sequentially, independent ones in parallel; never two writers in one worktree.
 
 ## The loop per unit
 
-1. **Prepare** the worktree (the `spec` skill's `references/worktree.md` §1) and the unit's input; keep its absolute path.
+1. **Prepare** through the reusable `git-operator` using [dispatch](references/git-operator-dispatch.md); keep the returned absolute path and prepare the unit's input.
 2. **Run a turn** through `spec-delegate` with `planning-worker` or `development-worker`.
 3. **Validate** the committed range through `spec-delegate`'s worker reference. A failing range is blocked, never discarded.
 4. **Accept** Planning through `spec-review-proposal`, first naming any support role the effort required but no envelope shows.
-5. **Integrate** Development through `spec-integrate`, one unit at a time in overlap order; a later unit first merges the base.
+5. **Integrate** Development through `spec-integrate`, one unit at a time in overlap order; the implementer first incorporates a moved base. Delegate only guarded execution after Host authority.
 
 After context loss, rebuild state from `devkit worktree status`, `devkit spec scope collect --mode worktrees` and per-unit `devkit workflow next --unit <dir>`. Keep one conversation line per unit: slug, activity, stage, worker state. To return to `direct`, stop starting workers, validate running ones' results and continue the remaining units one at a time.
 

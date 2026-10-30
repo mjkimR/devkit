@@ -7,6 +7,11 @@ description: Delegate to Scout, Challenger, Code Reviewer, Reconcile Reviewer, U
 
 Hand one isolated task to a support role (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `ux-reviewer`, `triage`, `decomposer`) or, in `local-orchestrated` mode, a worker (`planning-worker`, `development-worker`). A role's result is an opinion with evidence; completion rests on the agreed AC, checks, final diff and reconciliation.
 
+For recurring lifecycle execution in `local-orchestrated`, use `git-operator` through
+[dispatch](../spec-orchestrate/references/git-operator-dispatch.md), with its per-job authority and effect checks.
+It returns a message rather than a support-role envelope; the read-only support-role snapshot procedure below does
+not prohibit its expressly authorized guarded lifecycle effects.
+
 ## Constraints
 
 - Read the contract frontmatter first: `x-git-actions` and `hosts.<host>.status` decide how you call the role. The contract is the `contract=` path of `[DELEGATE: ...]`, else `.devkit/managed/spec/subagents/<role>.md`.

@@ -5,6 +5,10 @@ Read this before work in a task worktree: every `spec` and `proposal` activity i
 - `<base>` is the checkout the request arrived in; `<branch>` is `plan-<slug>` or `dev-<slug>` ([branches](branches.md)).
 - Policy is read from the checkout a command runs in: a running branch sees a base policy change only after merging the base.
 
+In `local-orchestrated`, the Host delegates guarded preparation, handoff and exact remaining cleanup through
+`git-operator` ([dispatch](../../spec-orchestrate/references/git-operator-dispatch.md)). The Host retains authority,
+writer coordination and result acceptance; direct mode follows this procedure.
+
 ## 1. Start (in `<base>`, before any bundle or edit)
 
 - `proposal` Planning: `devkit worktree start plan-<slug>` and the printed `cd`; the proposal bundle is the unit.
