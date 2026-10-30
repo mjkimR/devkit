@@ -1,34 +1,24 @@
 ---
-id: PROP-scope-activity-write-evidence
+id: SPEC-scope-activity-write-evidence
 title: Show current activity writes beside future implementation impact in scope output
-summary: "Show each current activity's actual write boundaries in scope inspection separately from declared or candidate future implementation impact, keeping every overlap and coverage gap visible and the output informational."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/collaboration/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-milestone: MS-git-operator-lifecycle-refinement
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/scope/
-    - packages/devkit-spec/tests/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
-    - docs/capabilities/collaboration/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/usecases/collaboration/UC-run-parallel-work-safely.md
-  excludes:
-    - .devkit/managed/
-    - packages/devkit-core/
-task_kind: feature
+summary: Show each current activity's actual write boundaries in scope inspection separately from declared or candidate future implementation impact, keeping every overlap and coverage gap visible and the output informational.
+status: planned
+created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-scope-activity-write-evidence] Show current activity writes beside future implementation impact in scope output
+# [SPEC-scope-activity-write-evidence] Show current activity writes beside future implementation impact in scope output
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-scope-activity-write-evidence on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-scope-activity-write-evidence`
+
+### 1. Background & Hypothesis
 
 In the resource-indexer consumer pilot (`MAT-git-operator-consumer-pilot`), scope observations exposed future
 implementation candidates while current Planning writers owned distinct proposal directories. The Host had to explain
@@ -38,18 +28,37 @@ The hypothesis: scope output that shows each current activity's actual write bou
 its proposal directory) beside declared or candidate future impact lets the Host schedule without re-deriving it.
 `CAP-COLL-work-scope-registry` owns this informational evidence.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Show current activity writes beside future implementation impact in scope output so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 Presentation**: Can scope output show current activity write boundaries beside declared and candidate
   implementation impact without hiding unresolved inputs, suppressing overlaps or becoming write authority?
 - **Q2 Provenance**: How do candidate and observed provenance and the partial-coverage signal stay visible?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Evidence: `MAT-scope-activity-write-probe` (this proposal's `materials/`) and `MAT-git-operator-consumer-pilot`
 (row "Future-impact overlap").
 
-### 3.1 Horizon of each path and overlap
+#### 3.1 Horizon of each path and overlap
 
 Every path of an observation gets a `horizon`, derived from the activity `collect` already identifies; no input or
 path is added.
@@ -73,7 +82,7 @@ path is added.
 - `docs=`, `code=`, `unresolved=`, `overlapping=` and the overlap definition (`CAP-COLL-work-scope-registry` 4.2) do
   not change: every overlap stays listed and counted.
 
-### 3.2 Coverage gaps name their inputs
+#### 3.2 Coverage gaps name their inputs
 
 - A source's coverage problem carries the distinct reasons of its unresolved inputs, whatever the problem's own
   reason (`unresolved-input` or `unknown-base`): JSON `coverage.problems[].inputs`, and the
@@ -86,7 +95,7 @@ path is added.
   ref or to a tracking peer of the same task. This removes the false gap of a freshly prepared branch (finding 2 of
   `MAT-scope-activity-write-probe`).
 
-### 3.3 Host scheduling text
+#### 3.3 Host scheduling text
 
 - `spec-orchestrate`: units whose `current` evidence overlaps run sequentially. A pair with only `future` evidence
   does not serialize their Planning runs.
@@ -109,7 +118,7 @@ Acceptance check (from the parent's verification candidates):
 | SAW-05 | A `plan-*` branch at the same commit as its base, the proposal file present at that commit | Scope is collected | The source is observed, its layers include `committed` with no committed paths, and no `unknown-base` problem names it. |
 | SAW-06 | `--base` or `branch.<b>.devkitBase` names the branch itself (short name or `HEAD`) | Scope is collected | The source reports `unknown-base`, never an empty range. |
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: claiming that informational scope observations authorize writes, or that unresolved coverage
   means no conflict.
@@ -119,7 +128,7 @@ Acceptance check (from the parent's verification candidates):
 - **Scope Excluded**: treating `_Boundary` entries under `docs/` as document declarations (`CAP-TRACE-code-entrypoints`
   keeps them `excluded-tree`).
 
-## Planning decisions
+### Planning decisions
 
 - The user chose horizon output in `collect` and the scheduling text (3.1, 3.3) over a skill-only reading of the
   existing `unit=` and `source=` fields, because the Host would otherwise join every evidence line to its observation.
@@ -132,9 +141,10 @@ Acceptance check (from the parent's verification candidates):
   serializes handoff and integration (3.3); the self-base guard compares resolved refs (3.2); gap inputs travel with
   every problem reason (3.2); the acceptance checks state mechanical assertions.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-scope-activity-write-evidence`; the proposal is deleted there and its decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+
