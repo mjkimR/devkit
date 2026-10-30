@@ -1,0 +1,15 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:48:10.250624Z'
+status: completed
+summary: round 4; no findings. The opt-in advance keyword keeps the PR route and external plan_finish callers as today and reaches composed acceptance through IntegrationService._prepare; the narrowed determinism claim matches the acceptance criterion.
+findings: []
+unverified_areas:
+- merge-tree determinism across different global gitconfig or Git binaries (shows as INTEGRATION_REQUEST_STALE, fixed by a fresh prepare)
+- Committer with an empty name under strict identity
+checks: {}
+diff_scope:
+  base: 5d136f75840072f6381f26beb1ded001b97206b8
+  head: 2e32fa571c3603c7c7df73ba5a0a25f1d3ef2ea1

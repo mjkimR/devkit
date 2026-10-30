@@ -1,0 +1,33 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T04:04:34.813886Z'
+status: completed
+summary: 'round 5; fresh round after the answer fold (named by answer-01.yaml): three P2 findings in the batch-test rule (stale integrated trigger in summaries, a unit waiting for a user decision not counted as finished, an overstated later-test claim); no P1; the main merge (adaptive-dev rename) invalidates no cited ID, anchor or fact.'
+findings:
+- issue: The fold changed the trigger from "integrated" to "finished", but the PADR summary still says "after every unit a local-orchestrated run started is integrated" (the option the PADR lists as rejected by the user); the proposal summary and the Settled direction bullet carry the old wording with no note that q-blocked-unit refined them.
+  evidence: docs/proposals/PROP-integration-merge-moved-target/decisions/PADR-post-batch-test-run.md:4,49,58,62; docs/proposals/PROP-integration-merge-moved-target/proposal.md:4,75-77,88-90
+  failure_condition: An agent following the promoted ADR summary waits for a blocked unit to integrate and leaves the integrated units untested on main until nightly CI, the outcome the user rejected.
+  suggested_action: Change the PADR summary and the proposal summary to "finished (integrated, blocked with its problem recorded, or continued in direct)"; add "(refined by q-blocked-unit)" to the Settled direction bullet.
+  resolution: open
+  severity: P2
+- issue: The finished-unit set (integrated, blocked with its problem recorded, continued in direct) leaves out a unit waiting for a user decision (a Planning unit at plan-accept with open questions); "no Development work of the run remains" is unclear for a unit continued in direct, which still has Development work.
+  evidence: docs/proposals/PROP-integration-merge-moved-target/decisions/PADR-post-batch-test-run.md:58-64; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/SKILL.md.jinja:12,21,24,34; docs/proposals/PROP-integration-merge-moved-target/envelopes/worker-01.yaml:6,44
+  failure_condition: A run with integrated Development units and a Planning unit whose worker returned needs_input waits for the user's answers, possibly for days, leaving the integrated units untested on main until nightly CI; a Host reading direct work as remaining Development work delays the run against q-blocked-unit.
+  suggested_action: Add "waits for a user decision" to the finished states; drop "and no Development work of the run remains" or define it as no worker turn still running; extend the bundle asset test for the finished-unit rule.
+  resolution: open
+  severity: P2
+- issue: The fold claims a unit the batch did not integrate "is tested when it integrates later, by the repository's normal checks", but the PADR supersedes the clause that verified integration content after incorporating a moved base; outside a batch a conflict-free CLI-built merge runs only CI rules on the result, and the PADR states no replacement rule for the verification texts its follow-ups rewrite.
+  evidence: docs/proposals/PROP-integration-merge-moved-target/decisions/PADR-post-batch-test-run.md:17-20,62-64,78-79; docs/proposals/PROP-integration-merge-moved-target/proposal.md:88-90; docs/decisions/2026-10/20261022-test-selection-and-ci.md:63-64; docs/capabilities/harness/CAP-HARN-agent-guidance.md:230-231; AGENTS.md:82-84; docs/development/ci-cd.md:64-67; docs/development/workflow.md:31-33; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-integrate/SKILL.md.jinja:29-30
+  failure_condition: A unit continued in direct integrates conflict-free onto a moved main after the batch run; nothing re-tests the combined head, yet the record says it is tested, and Development must choose the rewritten verification policy for such integrations without a stated rule.
+  suggested_action: State in PADR section 4 that outside a batch a conflict-free CLI-built merge is covered by its source verification plus CI rules on the result, and the combined head by a later batch run or nightly CI; reword proposal.md and the PADR claim to match; optionally tell the user about the corrected premise at plan-accept.
+  resolution: open
+  severity: P2
+unverified_areas:
+- Bundle asset tests were not built or run; their ability to check the finished-unit rule is inferred from the skill text
+checks: {}
+diff_scope:
+  base: bde913caca8e4f647aeb10dc3df7a9b8ea934483
+  head: 8bdeca848e7f887e8a21347ca7543dd801446b34
+activity_effort: high
