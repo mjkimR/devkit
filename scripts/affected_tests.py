@@ -51,6 +51,8 @@ FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 
 # The handbook script tests also read release.sh (and .devkit/config.toml, which selects no test: nightly CI covers it).
 HANDBOOK_TESTS = "tools/devkit-dev/tests/integration/test_handbook_script.py"
+# Reads every document ID of docs/ and specs/: a new document can collide with an ID shipped bundle text cites.
+CITATION_TESTS = "tools/devkit-dev/tests/integration/test_bundle_citations.py"
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
@@ -76,8 +78,10 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
             "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
             f"{DEVKIT}/tests/integration/features/rules/test_docs.py",
             f"{DEVKIT}/tests/integration/features/workflow/test_library.py",
+            CITATION_TESTS,
         ),
     ),
+    ("specs/", (CITATION_TESTS,)),
     (
         "docs/usecases/",
         ("packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py",),
@@ -112,9 +116,8 @@ FRONTEND_CHECK = (
     " && just viewer build"
 )
 
-# Paths no test reads: planning records, agent projections, guides, the handbook snapshot, CI and smoke scripts.
+# Paths no test reads: agent projections, guides, the handbook snapshot, CI and smoke scripts.
 UNTESTED_PREFIXES = (
-    "specs/",
     "guides/",
     ".claude/",
     ".agents/",

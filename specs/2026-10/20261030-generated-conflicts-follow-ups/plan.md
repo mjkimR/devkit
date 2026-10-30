@@ -26,7 +26,10 @@ changes.
 - `spec-delegate` `references/payload.md`: one Workers bullet. The `spec` bundle is a selected bundle source, so
   `devkit sync` runs and its outputs are committed.
 - `scripts/affected_tests.py`: the `docs/` entry of `DATA` gains the citation test and a `specs/` entry maps to it;
-  `specs/` leaves `UNTESTED_PREFIXES`.
+  `specs/` leaves `UNTESTED_PREFIXES`; the selection list in `docs/development/ci-cd.md` follows.
+- Root `AGENTS.md` Architecture and Boundaries: one sentence naming `.devkit/architecture.toml`'s
+  `feature_dependencies` entries for a delegated cross-feature choice, since the shipped payload rule cannot name a
+  path of this repository (spec assumption 2).
 - Root `AGENTS.md` Documentation section: one bullet naming `agent-asset-writing`.
 
 No new dependency. `devkit_core.core.__init__` is outside the write scope, so `run_git_result` is imported from
@@ -79,7 +82,7 @@ clause are kept, and no test or document pins that message text.
 - `just test devkit features/worktree` and `just test devkit features/integration` unchanged (AC-03); a structural
   assertion that `merging` does not import `subprocess`.
 - `just test devkit-spec bundles/spec` (payload guidance test: AC-05; budgets) and the citation test.
-- `just test devkit package/test_affected_tests.py` (AC-06).
+- `uv run pytest packages/devkit/tests/e2e/package/test_affected_tests.py` (AC-06).
 - AC-04 and AC-07: read the sentences; `git diff --check`; `uv run devkit rules check`.
 - `just lint-check`, `just check devkit-core`, `just check devkit`, `just test-affected` (keeping its `mode=full`
   fallback), `uv run devkit sync --check`.

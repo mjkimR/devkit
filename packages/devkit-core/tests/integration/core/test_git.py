@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from devkit_core.base.errors import DevkitCoreError
 from devkit_core.core import GitError, is_ancestor, run_git, run_git_text
-from devkit_core.core.git import repository_facts
+from devkit_core.core.git import GitResult, repository_facts, run_git_result
 
 
 def test_returns_stdout_bytes(repo: Path) -> None:
@@ -137,6 +137,31 @@ def test_is_ancestor_answers_and_raises_when_git_cannot(repo: Path, tmp_path: Pa
     assert info.value.returncode not in (None, 1)
     with pytest.raises(GitError):
         is_ancestor(tmp_path, first, second)
+
+
+# AC-01 (SPEC-generated-conflicts-follow-ups)
+def test_an_accepted_nonzero_exit_returns_its_status_and_output(repo: Path) -> None:
+    (repo / "a.txt").write_text("one\n")
+    (repo / "b.txt").write_text("two\n")
+    result = run_git_result(repo, "diff", "--no-index", "--", "a.txt", "b.txt", ok_returncodes=(0, 1))
+    assert isinstance(result, GitResult)
+    assert result.returncode == 1
+    assert b"-one\n+two\n" in result.stdout
+    assert run_git_result(repo, "diff", "--no-index", "--", "a.txt", "a.txt", ok_returncodes=(0, 1)) == (0, b"")
+
+
+# AC-02 (SPEC-generated-conflicts-follow-ups)
+def test_an_exit_outside_the_accepted_statuses_raises_as_run_git_does(repo: Path) -> None:
+    with pytest.raises(GitError) as info:
+        run_git_result(repo, "rev-parse", "--verify", "no-such-ref", ok_returncodes=(0, 1))
+    assert info.value.returncode == 128
+    assert "git rev-parse failed" in str(info.value)
+    assert info.value.stderr
+    (repo / "a.txt").write_text("one\n")
+    (repo / "b.txt").write_text("two\n")
+    with pytest.raises(GitError, match="exit status 1") as default:
+        run_git_result(repo, "diff", "--no-index", "--quiet", "--", "a.txt", "b.txt")
+    assert default.value.returncode == 1
 
 
 def _count_git(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, ...]]:

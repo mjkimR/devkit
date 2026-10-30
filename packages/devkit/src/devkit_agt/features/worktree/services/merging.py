@@ -13,14 +13,13 @@ from __future__ import annotations
 
 import os
 import re
-import subprocess
 import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import is_ancestor, run_git, run_git_text
+from devkit_core.core.git import is_ancestor, run_git, run_git_result, run_git_text
 from devkit_core.core.locks import file_lock
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import commit_config
@@ -96,25 +95,25 @@ def git_version(base: Path) -> tuple[int, int]:
     return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
 
-def _merge_tree_output(base: Path, target: str, source: str) -> tuple[int, bytes, str]:
-    """Run ``git merge-tree --write-tree -z --no-messages``; its exit status, standard output and standard error.
+def _merge_tree_output(base: Path, target: str, source: str) -> tuple[int, bytes]:
+    """Run ``git merge-tree --write-tree -z --no-messages``; its exit status (``0`` clean, ``1`` conflicted) and output.
 
-    ``run_git`` drops the output of a nonzero exit, which carries the conflicted entries here (exit ``1``), so this one
-    command runs with ``run_git``'s environment and timeout itself.
+    Exit ``1`` is an answer whose standard output carries the conflicted entries, so the shared runner accepts it; any
+    other failure is ``MergeFailedError``.
     """
-    command = ("git", "-C", str(base), "merge-tree", "--write-tree", "-z", "--no-messages", target, source)
-    env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}
     try:
-        completed = subprocess.run(
-            command, stdin=subprocess.DEVNULL, capture_output=True, check=False, timeout=MERGE_TREE_TIMEOUT, env=env
+        return run_git_result(
+            base,
+            *("merge-tree", "--write-tree", "-z", "--no-messages", target, source),
+            ok_returncodes=(0, 1),
+            timeout=MERGE_TREE_TIMEOUT,
         )
-    except subprocess.TimeoutExpired as exc:
+    except GitError as exc:
+        if exc.returncode is None:  # Git did not start or did not finish
+            raise MergeFailedError(f"{exc.message}; nothing was changed on the target") from exc
         raise MergeFailedError(
-            f"git merge-tree timed out after {MERGE_TREE_TIMEOUT}s; nothing was changed on the target"
+            f"git merge-tree failed; nothing was changed on the target: {exc.stderr or f'exit status {exc.returncode}'}"
         ) from exc
-    except OSError as exc:
-        raise MergeFailedError(f"git is not available: {exc}; nothing was changed on the target") from exc
-    return completed.returncode, completed.stdout, completed.stderr.decode("utf-8", errors="replace").strip()
 
 
 def _conflicts(records: list[bytes]) -> dict[str, dict[int, tuple[str, str]]]:
@@ -150,11 +149,7 @@ def _merge_tree(base: Path, target: str, source: str, settle: ConflictSettler | 
         raise GitUnsupportedError(
             "merging an advanced target needs git merge-tree --write-tree (Git 2.38 or later); nothing was changed"
         )
-    returncode, output, stderr = _merge_tree_output(base, target, source)
-    if returncode not in (0, 1):
-        raise MergeFailedError(
-            f"git merge-tree failed; nothing was changed on the target: {stderr or f'exit status {returncode}'}"
-        )
+    returncode, output = _merge_tree_output(base, target, source)
     records = output.split(b"\0")
     tree = records[0].decode().strip()
     if returncode == 0:

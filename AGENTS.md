@@ -27,6 +27,8 @@ package, feature, layer or test tier. The rules agents most often need:
   `src/devkit/__init__.py`). No installed path belongs to two wheels.
 - Behavior lives under `features/<feature>/` with only the layers it needs (`cli`, `mcp`, `usecases`, `services`,
   `repositories`, `models`); no package-level `core`. Business logic stays out of `__init__.py`.
+  Feature edges are declared in the `feature_dependencies` entries of `.devkit/architecture.toml`: a payload that
+  delegates a cross-feature choice names them in the write scope or states that a new feature edge is out of scope.
 - CLI/MCP/HTTP-exposed operations implement `devkit_core.base.usecase.BaseUseCase` with a typed `execute`.
   Adapters call use cases; services and repositories never import use cases or adapters.
 - `devkit_core.base` never imports `devkit_core.core`; `devkit-core` imports no application package.
@@ -41,6 +43,8 @@ package, feature, layer or test tier. The rules agents most often need:
   recommendations in step with `docs/` and the packages.
 - Write documentation in English. The one exception is the release handbook's `handbook/<lang>/` for a language
   other than `en` (`ADR-localized-handbook-language-exception`).
+- Before editing any bundle's skill, playbook, instruction or guide, also run `uv run devkit get-context authoring`
+  and apply its `agent-asset-writing` instruction (writing and bundle self-containment rules).
 - Do not commit `.env` or log secrets/PII.
 
 ## Agent-First Design
@@ -82,7 +86,8 @@ Run lint, type checks and relevant tests before completing code changes. Use `ju
 development, review and the final integration content (keep its `mode=full` fallback); no separate local
 full-suite run is required. Integration merges a conflict-free moved base itself and runs only CI rules on the
 merged result, so merge the base and rerun tests only after a reported conflict or failing check. After a
-local-orchestrated run, run `just test-affected --base <batch start>` once on `main`; otherwise a later batch run or
+local-orchestrated run, run `devkit generated check` on `main` (regenerate stale artifacts with `devkit generated
+regen <ids>` and commit them), then `just test-affected --base <batch start>` once on `main`; otherwise a later batch run or
 nightly CI tests the combined head. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
 viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names.
 

@@ -30,7 +30,9 @@ Before committing changes, ensure that:
    ownership by default. Complete nightly/manual/release checks cover runtime dependencies static analysis misses.
    Before integration, `just test-affected --base <base-ref>` verifies the task branch; a conflict-free moved base
    needs no merge or rerun, because integration checks the CI rules on the merged result. Keep its full-suite
-   fallback and frontend checks. After a local-orchestrated run, `just test-affected --base <batch start>` runs once
-   on `main`; otherwise a later batch run or nightly CI tests the combined head (`ADR-post-batch-test-run`). Complete
+   fallback and frontend checks. After a local-orchestrated run, `devkit generated check` runs on `main` (stale
+   artifacts are regenerated with `devkit generated regen <ids>` and committed), then `just test-affected --base
+   <batch start>` runs once on `main`; otherwise a later batch run or nightly CI tests the combined head
+   (`ADR-post-batch-test-run`). Complete
    CI runs overnight for unverified default-branch heads and before release (`ADR-nightly-ci-verification`).
 4. `just rules-check --staged` reports 0 governance violations.

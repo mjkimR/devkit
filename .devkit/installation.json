@@ -995,7 +995,7 @@
     },
     ".agents/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "f2a4ed47c0655ef568eef686365302709986bf8d4f31fea75ac13aa7b621ce33"
+      "sha256": "2f6fce44a88d6a9b8c7efc1d5eef677fd9dbd0f68017ee0b68e3d28baa4e886a"
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1243,7 +1243,7 @@
     },
     ".claude/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "f2a4ed47c0655ef568eef686365302709986bf8d4f31fea75ac13aa7b621ce33"
+      "sha256": "2f6fce44a88d6a9b8c7efc1d5eef677fd9dbd0f68017ee0b68e3d28baa4e886a"
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1931,7 +1931,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "f2a4ed47c0655ef568eef686365302709986bf8d4f31fea75ac13aa7b621ce33"
+      "sha256": "2f6fce44a88d6a9b8c7efc1d5eef677fd9dbd0f68017ee0b68e3d28baa4e886a"
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,

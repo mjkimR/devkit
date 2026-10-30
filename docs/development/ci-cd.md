@@ -65,8 +65,9 @@ Development, review and integration use affected tests without a separate mandat
 Before integration, run `just test-affected --base <base-ref>` on the task branch. Local integration merges a
 conflict-free moved base itself and runs only the CI rules on the merged result (`ADR-moved-target-merge`); merge the
 base into the task branch, resolve conflicts and refresh the affected tests only after it reports a conflict or a
-failing check. Once every unit of a local-orchestrated run is finished, run `just test-affected --base <batch start>`
-once on `main`, keeping its `mode=full` fallback; outside such a run, a later batch run or nightly CI tests the
+failing check. Once every unit of a local-orchestrated run is finished, run `devkit generated check` on `main`,
+regenerate stale artifacts with `devkit generated regen <ids>` and commit them, then run `just test-affected --base
+<batch start>` once on `main`, keeping its `mode=full` fallback; outside such a run, a later batch run or nightly CI tests the
 combined head (`ADR-post-batch-test-run`). If the content changes before merging, refresh affected tests and the
 checks that cover the new content. Reviewers reuse valid check results and rerun only missing or stale checks. Lint,
 types and governance remain required:
@@ -83,8 +84,9 @@ types and governance remain required:
   sides of a rename) and selects tests from them:
   - Shared foundations (`devkit-core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
     `conftest.py`, `uv.lock`, the shared helpers in `tests/support/`) select the full suite.
-  - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
-    those tests from a fixed table.
+  - Repository files that tests read (`docs/`, `specs/`, `examples/`, `models/`, the recipe scripts and `justfile`)
+    select those tests from a fixed table; `docs/` and `specs/` select the shipped-bundle citation test, which reads
+    their document IDs.
   - A package source change selects individual `test_*.py` files, including embedded rule tests, through
     transitive static imports. Production nodes remain feature areas and coarse workspace packages by default;
     `devkit_spec` uses module nodes, including package initializers. Fine tests keep their specific dependencies;
@@ -99,7 +101,7 @@ types and governance remain required:
   - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) selects no pytest test:
     pytest never exercises it. The result names the frontend checks instead (below); the page they rebuild under
     `src/devkit_viewer/static/` is package source and selects the viewer's tests.
-  - Planning records and agent projections (`specs/`, `.claude/`, `.agents/`, `.codex/`, `.devkit/`), `guides/`,
+  - Agent projections (`.claude/`, `.agents/`, `.codex/`, `.devkit/`), `guides/`,
     `.github/`, the smoke and release scripts, `.gitignore`, `.python-version` and Markdown at the repository or a
     package root select nothing.
   - Any other path selects the full suite.

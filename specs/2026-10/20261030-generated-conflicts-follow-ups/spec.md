@@ -2,7 +2,7 @@
 id: SPEC-generated-conflicts-follow-ups
 title: Follow-ups of the generated conflict settling
 summary: Run merge-tree on the shared Git runner through accepted exit statuses, and close four guidance and test-selection gaps the generated conflict and bundle citation work left as feedback.
-status: planned
+status: in-progress
 created: 2026-10-30
 related_capabilities: []
 related_usecases: []
@@ -39,9 +39,11 @@ open feedback:
    the accepted statuses are an explicit parameter of a sibling function on the same runner that returns both;
    `run_git` is that function with only `0` accepted. Attaching standard output to `GitError` is not chosen: it would
    make an answer travel as an error.
-2. The spec bundle is shipped to other projects, so the payload guidance names the dependency declaration a project's
-   checks enforce generically and gives devkit's `.devkit/architecture.toml` `feature_dependencies` entries as the
-   example, instead of stating a devkit-only path as a rule for every project.
+2. The spec bundle is shipped to projects without this repository's paths, and the `authoring` bundle's
+   `agent-asset-writing` instruction (Self-Containment) forbids citing the authoring repository's paths in bundle text.
+   So the payload rule names the architecture declaration a project's dependency check reads generically, with its
+   reason, and the root `AGENTS.md` Architecture and Boundaries section names devkit's declaration: the
+   `feature_dependencies` entries of `.devkit/architecture.toml`.
 3. The capability `CAP-DLV-delivery-workflows` lists only the payload rules with a cross-role contract (sync outputs,
    probe paths, scratch files); this payload rule changes no role contract and stays in the bundle guidance.
 4. `specs/` stops being a path no test reads: every `specs/` change selects the citation test (about a second), since
@@ -106,9 +108,10 @@ open feedback:
 
 - **Given** the `spec-delegate` payload reference in both rendered environments (`local`, `cloud`)
 - **When** a payload delegates a cross-feature design choice
-- **Then** one rule states that it either names the dependency declaration the project's checks enforce (limited to
-  its edge entries, such as `feature_dependencies` in `.devkit/architecture.toml`) in the write scope or states that a
-  new feature edge is out of scope, and a guidance test pins it
+- **Then** one rule states that it either names in the write scope the architecture declaration the project's
+  dependency check reads, limited to its feature edge entries, or states that a new feature edge is out of scope, and
+  a guidance test pins it; the root `AGENTS.md` names devkit's declaration, the `feature_dependencies` entries of
+  `.devkit/architecture.toml`, for the same choice
 
 ### [AC-06] Document changes select the bundle citation test
 
