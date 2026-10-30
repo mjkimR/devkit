@@ -2,7 +2,7 @@
 id: SPEC-alias-references-in-quick-references
 title: Check document IDs in quick references and keep rename tables intact
 summary: Extend RULE-document-reference's cited-ID check to docs/development, guides and package READMEs so renamed IDs are fixed there too, state that rename specs write old IDs as plain text, and correct the rule guide on ADR alias rewrites.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities:
   - CAP-GOV-spec-rules

@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-alias-references-in-quick-references
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
     resolution: modified
