@@ -6,7 +6,7 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 from devkit_dist.cli import cli as devkit_cli
-from spec_support.proposals import GATED, INCUBATED, accept, write_workflow
+from spec_support.proposals import GATED, PROPOSAL_WORKFLOW, accept, write_workflow
 from spec_support.types import Write
 
 
@@ -73,7 +73,7 @@ def test_new_json(workspace: Path) -> None:
 
 
 def test_new_binds_the_proposal_and_workflow_next_runs(workspace: Path) -> None:
-    write_workflow(workspace, "sdd-proposal", INCUBATED)
+    write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
     result = _proposal(workspace, "new", "bound", "--task-kind", "bugfix")
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
@@ -211,7 +211,7 @@ def test_handoff_refuses_a_merge_conflict(workspace: Path, write: Write) -> None
 
 
 def test_handoff_reports_dropped_records_and_carried_gates(workspace: Path) -> None:
-    write_workflow(workspace, "sdd-proposal", INCUBATED)
+    write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
     write_workflow(workspace, "sdd-spec-feature", GATED.format(id="sdd-spec-feature", middle=""))
     _proposal(workspace, "new", "gated")
     unit = "docs/proposals/PROP-gated"

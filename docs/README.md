@@ -14,7 +14,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 | **`usecases/`** | Use Cases | How each actor reaches a goal: main success scenario, extensions, postconditions, acceptance criteria (`UC-<slug>`) |
 | **`ux/`** | UX Documents | What a person sees and operates: one screen, modal or panel per document, linked from the use case steps it serves (`UX-<slug>`) |
 | **`materials/`** | Reference & Spikes | Technical spikes, benchmarks, external libraries, competitor analysis reports |
-| **`proposals/`** | Proposals | Pre-spec proposals incubating uncertain work (`PROP-<slug>`) |
+| **`proposals/`** | Proposals | Pre-spec proposals that plan uncertain work (`PROP-<slug>`) |
 | **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines, and CLI/API quick references in `development/reference/` |
 | **`steering/`** | Steering Documents | Project-wide background read on demand, one ID-free file per topic with `title` and `summary` frontmatter: `glossary.md` (ubiquitous terminology) and `glossary.yaml` (search synonyms); `devkit get-context spec` lists them in every agent context |
 

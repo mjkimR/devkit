@@ -38,6 +38,7 @@ must serve other development approaches, while spec assets intentionally impose 
 Use `incubation:core` in devkit-catalog, one `/incubate` coordinator, three optional support contracts and a
 project-owned mutable `.devkit/incubation.md`. The skill reads the common effective approach before acting; bundle
 selection itself grants no runtime approach change. Shared document instructions remain in docs.
+Superseded in part by `ADR-adaptive-dev-approach-name`: the bundle is `adaptive-dev:core`, its entry `/adaptive-dev` and its context file `.devkit/adaptive-dev.md`.
 
 Context records current goal, retained choices versus assumptions, run and verification evidence, unresolved questions
 and next useful action. Only the coordinator updates it. Retention follows current usefulness rather than immutable

@@ -38,7 +38,7 @@ capabilities:
 - **Scope**: the Development stages of the `sdd-spec-*` and `sdd-session-*` workflows, workflow envelopes, the
   `devkit integration` CLI and `devkit worktree finish`.
 - **Trigger**: A spec Unit's `plan-intent` is recorded (`UC-route-development-intent`), or a proposal is handed off
-  (`UC-incubate-and-hand-off-a-proposal`).
+  (`UC-plan-and-hand-off-a-proposal`).
 - **Preconditions**: The Unit is on its `dev-<slug>` activity branch, in a task worktree or the current checkout.
 
 ---

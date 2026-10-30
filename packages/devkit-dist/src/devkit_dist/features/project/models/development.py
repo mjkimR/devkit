@@ -8,12 +8,12 @@ from devkit_dist.base.errors import ConfigError
 
 class DevelopmentConfigError(ConfigError):
     code = "DEVELOPMENT_CONFIG_INVALID"
-    fix = 'Use [development] approach = "sdd" or "incubation" in .devkit/config.toml'
+    fix = 'Use [development] approach = "sdd" or "adaptive-dev" in .devkit/config.toml'
 
 
 @dataclass(frozen=True)
 class DevelopmentApproach:
-    approach: Literal["sdd", "incubation"] = "sdd"
+    approach: Literal["sdd", "adaptive-dev"] = "sdd"
     source: str = "default"
 
 
@@ -22,12 +22,12 @@ def development_approach(config: dict[str, Any]) -> DevelopmentApproach:
     if (
         not isinstance(table, dict)
         or set(table) - {"approach"}
-        or table.get("approach", "sdd") not in ("sdd", "incubation")
+        or table.get("approach", "sdd") not in ("sdd", "adaptive-dev")
     ):
         raise DevelopmentConfigError(
-            "development requires only approach = sdd|incubation", target_files=[".devkit/config.toml"]
+            "development requires only approach = sdd|adaptive-dev", target_files=[".devkit/config.toml"]
         )
     return DevelopmentApproach(
-        cast(Literal["sdd", "incubation"], table.get("approach", "sdd")),
+        cast(Literal["sdd", "adaptive-dev"], table.get("approach", "sdd")),
         ".devkit/config.toml" if "approach" in table else "default",
     )

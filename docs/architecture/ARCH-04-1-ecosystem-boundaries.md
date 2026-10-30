@@ -63,7 +63,7 @@ flowchart BT
 | **`devkit-agt`** | Workflow engine (`devkit workflow`), worktree lifecycle, commit gates, rules engine, integration services (`CAP-INT-mcp-services`). | Methodology semantics (spec vs proposal, task classification, roadmap authoring). |
 | **`devkit-mcp`** | Optional MCP transport, retained-runtime registration provider, host tool endpoint exposition. | Domain business logic, repository state mutations, direct CLI handlers. |
 | **`devkit-docs`** | Document model (kinds, IDs, references, namespaces), document index, `devkit docs` lookup and search, document rule implementations, the `devkit.docs.status_overlay` extension point. | Delivery process: proposals, spec lifecycle, workflows, bundles. |
-| **`devkit-spec`** | SDD workflows (`sdd-*`), planning and development skills, subagent roles, proposal incubation, roadmap & backlog procedures, lifecycle rules, extension hooks (`attach_check`, `hygiene`, the `spec` status overlay), the `spec` bundle with every rule asset. | Agent host execution, slot management, remote runner dispatch. |
+| **`devkit-spec`** | SDD workflows (`sdd-*`), planning and development skills, subagent roles, proposal Planning, roadmap & backlog procedures, lifecycle rules, extension hooks (`attach_check`, `hygiene`, the `spec` status overlay), the `spec` bundle with every rule asset. | Agent host execution, slot management, remote runner dispatch. |
 | **`autohub`** | Cloud PR runner dispatch, conversational UI for questions and approvals, quota and admission control, PR merging. | File modifications requiring subjective judgement, workflow stage re-derivation. |
 
 ---

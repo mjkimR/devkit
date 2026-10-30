@@ -144,7 +144,7 @@ changes an argument, output, code or exit status.
    declared status. Without a registered overlay, `list` shows the declared status.
 8. **devkit-spec's overlay**: devkit-spec registers `spec =
    devkit_spec.features.proposals.services.planning:planning_overlay`: a `draft` proposal whose `plan-<slug>` branch
-   exists, locally or fetched, is shown with `status=reviewing` and `planning_branch` (`CAP-DLV-proposal-incubation`
+   exists, locally or fetched, is shown with `status=reviewing` and `planning_branch` (`CAP-DLV-proposal-planning`
    rule 10, `ADR-document-package`).
 
 ## 4. Interfaces & Data Contracts

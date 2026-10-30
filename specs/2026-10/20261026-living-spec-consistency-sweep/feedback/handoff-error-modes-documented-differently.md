@@ -4,7 +4,7 @@ title: Handoff error modes in the proposal code table differ from the emitted on
 scope: repo
 kind: question
 category: docs-mismatch
-target: CAP-DLV-proposal-incubation (4.12 Codes), packages/devkit-spec/src/devkit_spec/base/errors.py
+target: CAP-DLV-proposal-planning (4.12 Codes), packages/devkit-spec/src/devkit_spec/base/errors.py
 origin: agent
 severity: noise
 recurring: false
@@ -16,7 +16,7 @@ created_at: 2026-10-26
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: adding the `SPEC_HANDOFF_STALE` row to `CAP-DLV-proposal-incubation` §4.12 in
+- **Context**: adding the `SPEC_HANDOFF_STALE` row to `CAP-DLV-proposal-planning` §4.12 in
   `SPEC-living-spec-consistency-sweep`.
 - **Expectation**: each row's level and mode match the advisory the class emits.
 - **Actual**: `HandoffNotReadyError`, `HandoffReplyError` and `HandoffStaleError` inherit `SpecError` and emit mode
@@ -34,7 +34,7 @@ created_at: 2026-10-26
 - **Versions**: worktree head of `dev-living-spec-consistency-sweep`.
 - **Conditions**: not applicable.
 - **Workarounds Attempted**: not applicable.
-- **Related Assets**: `CAP-DLV-proposal-incubation`.
+- **Related Assets**: `CAP-DLV-proposal-planning`.
 
 ## Evidence
 
@@ -45,4 +45,4 @@ CAP-DLV-proposal-incubation 4.12: SPEC_HANDOFF_NOT_READY ERROR (BLOCKED); SPEC_H
 
 ## Disposition
 
-Resolved by `SPEC-feedback-guidance-and-scope` (item 4): the shipped `MAINTENANCE` of `HandoffNotReadyError` and `HandoffReplyError` is a defect, because both refuse on prerequisites and input the caller controls, so the `CAP-DLV-proposal-incubation` 4.12 rows keep the documented `BLOCKED` and `INPUT_ERROR` and the code change is tracked as `FB-handoff-refusals-emit-maintenance`; the `SPEC_HANDOFF_STALE` row already documents its shipped mode. Verified by reproducing the three modes.
+Resolved by `SPEC-feedback-guidance-and-scope` (item 4): the shipped `MAINTENANCE` of `HandoffNotReadyError` and `HandoffReplyError` is a defect, because both refuse on prerequisites and input the caller controls, so the `CAP-DLV-proposal-planning` 4.12 rows keep the documented `BLOCKED` and `INPUT_ERROR` and the code change is tracked as `FB-handoff-refusals-emit-maintenance`; the `SPEC_HANDOFF_STALE` row already documents its shipped mode. Verified by reproducing the three modes.

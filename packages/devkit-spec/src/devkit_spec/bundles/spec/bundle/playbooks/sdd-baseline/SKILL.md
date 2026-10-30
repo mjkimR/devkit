@@ -1,12 +1,12 @@
 ---
 name: sdd-baseline
-description: "Adopt SDD from an implemented incubation product: verify the user-selected retained behavior, structure, choices and project checks, prepare current documents and an evidence report, then activate SDD on the user's decision without reconstructing experiment history."
+description: "Adopt SDD from an implemented adaptive-development product: verify the user-selected retained behavior, structure, choices and project checks, prepare current documents and an evidence report, then activate SDD on the user's decision without reconstructing experiment history."
 ---
 
 # SDD baseline adoption
 
-Use only when the user invokes or confirms this playbook to adopt SDD from incubation.
-A working app can remain in incubation; elapsed time, code size and experiment count never start this procedure.
+Use only when the user invokes or confirms this playbook to adopt SDD from adaptive development.
+A working app can remain in adaptive development; elapsed time, code size and experiment count never start this procedure.
 Preparation and package selection do not activate SDD.
 
 ## Constraints
@@ -18,9 +18,9 @@ Preparation and package selection do not activate SDD.
 - Use applicable independent build, lint, tests and actual usage checks; skipped or unavailable required evidence is a gap.
 - Leave product corrections, document deletion and legacy containment outside this playbook unless separately authorized.
 
-## 1. Establish scope and keep incubation active
+## 1. Establish scope and keep adaptive development active
 
-1. Read relevant run instructions, current documents, implementation and any available incubation context.
+1. Read relevant run instructions, current documents, implementation and any available adaptive-dev current context.
    Consume current goal, constraints, retained choices, assumptions and run evidence without requiring a context filename or parser.
 2. Record repository identity, exact HEAD, relevant dirty paths, effective approach and selected assets.
    Run `uv run devkit config show` to inspect JSON `configuration.development.approach` and `sources["development.approach"]`.
@@ -28,7 +28,7 @@ Preparation and package selection do not activate SDD.
 3. Identify the user-selected retained behavior and representative flows, important structure/interfaces, current choices and exclusions.
    Reuse decisions already supplied; present remaining scope uncertainty before rewriting documents.
 4. If the spec package or assets are absent, present their installation/selection effects and follow the repository's supported installation instructions.
-   Keep the effective approach incubation during package and asset preparation.
+   Keep the effective approach adaptive-dev during package and asset preparation.
    Package installation and `uv run devkit add spec` alone never establish readiness or authorize activation.
 5. Run `uv run devkit get-context docs` before document authoring.
    Read the baseline report template [when opening or resuming the report](references/report-template.md).
@@ -47,7 +47,7 @@ Preparation and package selection do not activate SDD.
    Record exact commands/interactions, revision or dirty source identity, environment, observed outcome and limitations.
    A passing document-format check proves its checked conditions; it does not prove semantic product readiness.
 4. Present mismatches together for disposition: correct the document, separately authorize a behavior correction,
-   narrow the retained scope on the user's decision, or defer adoption and remain in incubation.
+   narrow the retained scope on the user's decision, or defer adoption and remain in adaptive development.
    Never waive a required retained behavior or missing required evidence into readiness.
 5. Re-run affected checks and compare the corrected documents to implementation until retained coverage has no unresolved mismatch or required evidence gap.
    Stop before activation while a retained item is `gap`, an applicable required check failed/skipped, or usage evidence is missing.
