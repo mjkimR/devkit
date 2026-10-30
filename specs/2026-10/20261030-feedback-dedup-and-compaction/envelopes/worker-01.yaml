@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:57:32.152127Z'
+status: completed
+summary: 'Development from specify to the final change report: spec/plan/tasks written; spec-feedback recording step 2 every-status lookup and status table, sweep reuses it with --all-namespaces; new spec/feedback-compaction playbook registered in bundle.toml core preset; source-feedback, playbooks and feedback-hygiene references point to it; guidance tests added; CAP-HARN-agent-guidance and CAP-DLV-delivery-workflows reflected. review-01 (nested code-reviewer: 2 P2, 2 P3) fixed and self-reverified; reconcile-check-01 (nested reconcile-reviewer: 1 P3) fixed by deferring the ADR path wording repair to open FB-compaction-adr-path-omits-namespace (docs/decisions excluded); reconcile-check-02 self-verified. Sync output: .devkit/installation.json only (AGENTS.md block unchanged). Not integrated.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=partial 1568 passed
+  lint: PASS lint-check, pyright 0, devkit rules check --ci --base a0e1034e 0
+  build: PASS uv build --package devkit-spec
+diff_scope:
+  base: ''
+  head: de5f1fac11b46dc4d3e101639c0a2308be107c53
+activity_effort: medium
