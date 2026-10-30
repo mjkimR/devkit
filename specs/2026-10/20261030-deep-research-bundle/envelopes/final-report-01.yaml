@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T02:32:11.832922Z'
+status: completed
+summary: 'deep-research catalog bundle (/deep-research, invocation=user, body guard, orchestration/workspace/synthesis references, direction-explorer, discovery-critic, discovery-planner moved, research-investigator new) registered and approach-neutral; incubation bundle keeps /incubate and three roles with suggestion wording removed; spec intake exemption and MAT citation line synced; guides/README migration steps; smoke and tests updated; Living Spec adds CAP-DLV-deep-research and reflects the split. Limits: base fails test_fixes_carry_no_placeholder (unrelated, FB recorded); handbook not refreshed (denied scope); superseded ADRs keep status accepted.'
+findings: []
+assumptions:
+- 'One-off exception within scope: AC-09 admits the capability ID and the moved-role migration paths AC-11 requires; task boundaries name the dead-entrypoint repair (review-01 finding 2, waived in reverify-01)'
+- 'No before/after measurement applies: the spec names no timing or count outcome'
+checks:
+  tests: PASS just test-affected mode=full 6067 passed, 14 skipped; 1 pre-existing failure outside the diff (packages/devkit test_fixes_carry_no_placeholder on commit.py:17, unchanged since 8ef6543b on the base); catalog e2e 2 passed; just smoke passed
+  build: PASS just smoke builds and installs the wheels; uv sync left uv.lock unchanged; devkit sync --check OK
+  lint: PASS devkit rules check --ci --base a6927bf9 errors=0; just lint-check devkit-catalog and devkit-spec clean; just check devkit-catalog 0 errors
+diff_scope:
+  base: a6927bf9446b56a95c1849a0d61db1fb1d75843c
+  head: 7bf006e7394a810a7386add7111321eb6ef0be97
