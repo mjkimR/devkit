@@ -2,7 +2,7 @@
 id: PROP-git-operator-planning-completion-route
 title: Planning completion and acceptance execution route for git-operator
 summary: "Name the stage a Planning run records its final return at when workflow next shows no current stage, and make the Host-run composed accept --mode the single documented Planning acceptance route, with no git-operator acceptance job."
-status: reviewing
+status: accepted
 created_at: 2026-10-30
 target_area: capabilities/delivery/
 priority: high
