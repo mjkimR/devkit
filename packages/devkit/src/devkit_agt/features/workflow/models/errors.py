@@ -447,3 +447,29 @@ class EnvelopeReferenceError(AuthoringError):
     answered questions and options, or no worker envelope with a problem."""
 
     code = "ENVELOPE_REFERENCE_INVALID"
+
+
+class EnvelopeCommitInvalidError(WorkflowError):
+    """The selected Unit or envelope is not eligible for explicit commit."""
+
+    code = "ENVELOPE_COMMIT_INVALID"
+    input_error = True
+
+
+class EnvelopeCommitStateError(WorkflowError):
+    """Repository state prevents a single-envelope commit before mutation."""
+
+    code = "ENVELOPE_COMMIT_STATE"
+    input_error = True
+
+
+class EnvelopeCommitFailedError(WorkflowError):
+    """Git rejected the attempt; retained state permits a same-file retry after fixing the cause."""
+
+    code = "ENVELOPE_COMMIT_FAILED"
+
+
+class EnvelopeCommitUncertainError(WorkflowError):
+    """Observed effects do not establish the requested exact commit; inspect before any further mutation."""
+
+    code = "ENVELOPE_COMMIT_UNCERTAIN"

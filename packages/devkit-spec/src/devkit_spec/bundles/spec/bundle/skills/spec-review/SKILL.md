@@ -57,6 +57,7 @@ devkit workflow envelope review --unit <dir> --stage review-refine \
 EOF
 ```
 
+- When the authored review/reverify envelope is the only pending path, commit it with `devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml`. With source fixes or multiple records, keep the required combined manual commit. After a failed hook, fix the cause and retry that same file; inspect uncertain HEAD/index/worktree effects before retry.
 - For a pass, omit `--findings-file`. After fixes, close the round with
   `devkit workflow envelope reverify --unit <dir> --stage review-refine --from latest --resolve <N|all> --waive <N>=<reason>`.
 - A `session`-depth task gives the same content in the final response or PR body.

@@ -14,6 +14,7 @@ from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, exit_on
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit_agt.features.workflow.cli.render import render_hold
 from devkit_agt.features.workflow.models.errors import EnvelopeFlagError, workflow_command
+from devkit_agt.features.workflow.usecases.commit_envelope import CommitEnvelopeUseCase
 from devkit_agt.features.workflow.usecases.envelopes import CheckEnvelopesUseCase, WriteEnvelopeUseCase
 
 # Kinds whose fields need options of their own; ``envelope new`` refuses them.
@@ -365,3 +366,25 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, details: bool, out
         if not errors:
             click.echo(f"[OK: {len(loaded)} envelopes]")
     exit_on_problems(errors)
+
+
+@envelope_group.command(name="commit")
+@WORKSPACE
+@UNIT
+@click.option("--file", required=True, help="One existing authored envelopes/<kind>-<NN>.yaml, relative to the Unit")
+@FORMAT_OPTION
+@boundary
+def envelope_commit_cmd(workspace_root: str | None, unit: str, file: str, output_format: str) -> None:
+    """Commit exactly one authored new envelope using normal Git hooks and a deterministic message.
+
+    Other dirty paths require a manual combined commit. Retry the same file after a failed hook;
+    an exact already-committed file is a no-op. Inspect uncertain effects before any retry.
+    """
+    result = CommitEnvelopeUseCase().execute(workspace(workspace_root), unit, file)
+    if is_json(output_format):
+        echo_json(result)
+    else:
+        click.echo(
+            f"[ENVELOPE_COMMIT: unit={result['unit']} file={result['file']}"
+            f" outcome={result['outcome']} head={result['head']}]"
+        )
