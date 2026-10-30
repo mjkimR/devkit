@@ -1,0 +1,21 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:35:17.297102Z'
+status: completed
+summary: 'Development from specify through the final change report: quick_references setting and cited-ID check/fix in RULE-document-reference, guide and spec-specify guidance, four quick-reference alias citations fixed, CAP-GOV-spec-rules and the CAP-DOCS renaming step reflected, three source feedback resolved, two feedback recorded. Not integrated. Sync outputs: .devkit/installation.json only (sync output).'
+findings: []
+assumptions:
+- Steering citations stay report-only (Non-Goal 2); FB-steering-citations-not-fixable records the inconsistency.
+- CAP-DOCS-document-model section 1 left unchanged by the write scope; handed off to FB-document-model-summary-omits-quick-references.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=partial 2084 passed
+  lint: PASS devkit rules check --ci --base 95b8228c; lint-check and pyright clean
+  review: PASS review-01 P3 resolved in reverify-01
+  reconcile: PASS reconcile-check-01 P1 fixed, reconcile-check-02 self-verified
+diff_scope:
+  base: ''
+  head: 07407d0a4a7995e4e059e2980829f77e67fdc1ea
+activity_effort: medium
