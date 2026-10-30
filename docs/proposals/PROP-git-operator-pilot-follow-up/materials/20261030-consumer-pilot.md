@@ -32,21 +32,22 @@ establish behavior on another host.
 | Split acceptance/integration route | Host recorded/committed five policy acceptances; operator read-only preparation accepted the first source and target. | Existing guarded integration supports this route; a new acceptance job has not been shown necessary. |
 | Automatic approval-review denial | First integration request was denied before CLI dispatch; original CLI status/exit were null, refs stayed clean and resources remained present. | Role returned needs_input with AUTO_REVIEW_REJECTED. Policy readiness did not grant host execution permission. |
 | Same-route permitted retry | After explicit authorization of named merge/cleanup effects, current main and source were freshly prepared, with no old digest reuse. | No alternate tool, force operation, policy change or approval-file workaround was used. |
-| Five operator Planning integrations | Each accepted branch merged locally; its exact worktree, merged branch and included CLI cleanup were removed. Host verified selected-proposal-only diffs, clean main and resource absence. | Final main is `5e6794ba4423ee0c5eaf07efeb1b61f75bde5077`; the connector Development worktree remains at `37d8c04a6f4316ac7bd22a10220c6728479acbb0` with its live-fixture hold. |
+| Five operator Planning integrations | Each accepted branch merged locally; its exact worktree, merged branch and included CLI cleanup were removed. Host verified selected-proposal-only diffs, clean main and resource absence. | Main after these five jobs was `5e6794ba4423ee0c5eaf07efeb1b61f75bde5077`; connector Development was separately held for its missing live fixture. |
+| Operator Development integration | After explicit one-off user acceptance of pre-live delivery, Host prepared the source against current main and verified the revised acceptance, scope, reviews, reconciliation and cumulative checks. The same guarded operator route merged source `03ac81a7fc8146c4a894d08d3b44cfdf31be930a` into main `135366de6a0a69f9bb4fd1d4eec8b0406048db44`, with CLI exit 0 and exact worktree, merged branch, proposal and scope cleanup. | Host independently confirmed the landed tree equals the verified source, clean main and absent task resources. Actual ComfyUI execution remains not_run in the focused follow-up; this is integration evidence, not live model compatibility evidence. |
 | Exact-base observation serialization | Host initially deferred independent Planning convergence to keep another worker's pre-spawn base observation equal. | A declared known-Host-advance alternative was discussed, but no main advance occurred while that worker was active because approval was pending. Its practical replacement remains unverified. |
 | Terminal auto-policy readiness | Several reviewing proposals produced no current stage and `complete=yes` before an acceptance command. | Host named `direction-handoff` for final worker records. This is a guidance gap, not an acceptance effect. |
 
-Six preparation operations, one handoff and five Planning integration/cleanup jobs succeeded through the
-reused operator. The denied integration request ran no CLI and is separate from those completed jobs.
+Six worktree preparations, one handoff, five Planning integration/cleanup jobs and one Development
+integration/cleanup job succeeded through the reused operator. The denied integration request ran no CLI and is separate from those completed jobs.
 No matched role-disabled baseline,
 total token accounting, cost measurement or reliable latency comparison was collected. Reused identity and
 structured results support continued evaluation, not a claim that the role is cheaper or faster.
 
-## Untested or pending observations
+## Evidence coverage and remaining checks
 
 | Case | Evidence state |
 | --- | --- |
-| Operator-driven consumer Development integration | Not exercised: actual ComfyUI fixture acceptance remains open. Five Planning integrations/cleanup are observed separately. |
+| Operator-driven consumer Development integration | Observed with exact normal cleanup after user-authorized pre-live acceptance. Full source checks passed with 810 tests; actual ComfyUI fixture execution remains not_run and grants no future execution authority. |
 | Actual zero-exit partial cleanup and inspected narrow retry | Not yet exercised; earlier development fixtures and replay evidence remain separate. |
 | Stale source/target after preparation | Known Host advancement caused fresh source preparation/digest; old digest was not reused. Actual stale-ref refusal was not induced. |
 | Host approval denial and permitted recovery | Observed pre-dispatch automatic-review denial, then same-route success after explicit current authorization and fresh preparation. Native filesystem-denial recovery remains untested. |
