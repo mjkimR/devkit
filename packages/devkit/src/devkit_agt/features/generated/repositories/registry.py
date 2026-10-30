@@ -33,6 +33,8 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
+from devkit_core.core.git import run_git
+from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import config_table, read_toml
 
 from devkit_agt.features.generated.models.errors import GeneratedConfigError
@@ -224,13 +226,9 @@ def _ordered(artifacts: dict[str, Artifact]) -> tuple[Artifact, ...]:
     return tuple(ordered)
 
 
-def load_registry(root: Path) -> Registry:
-    """The enabled artifacts of the project at ``root``: the built-in ones, then ``.devkit/generated.toml``.
-
-    An unreadable file is the core ``ConfigError`` (``CONFIG_INVALID``); a malformed one ``GeneratedConfigError``.
-    """
+def _registry(data: dict[str, Any]) -> Registry:
+    """The enabled artifacts: the built-in ones changed by ``data``, the parsed ``.devkit/generated.toml``."""
     builtin = builtin_artifacts()
-    data = read_toml(root / PROJECT_FILE, PROJECT_FILE) or {}
     unknown = sorted(set(data) - {"artifacts"})
     if unknown:
         raise GeneratedConfigError(f"{PROJECT_FILE}: unknown fields: {unknown}")
@@ -245,3 +243,29 @@ def load_registry(root: Path) -> Registry:
             raise GeneratedConfigError(f"{PROJECT_FILE} artifacts.{artifact_id}: missing {' and '.join(missing)}")
         artifacts[artifact_id] = Artifact(id=artifact_id, builtin=artifact_id in builtin, **fields)
     return Registry(_ordered(artifacts))
+
+
+def load_registry(root: Path) -> Registry:
+    """The enabled artifacts of the project at ``root``: the built-in ones, then ``.devkit/generated.toml``.
+
+    An unreadable file is the core ``ConfigError`` (``CONFIG_INVALID``); a malformed one ``GeneratedConfigError``.
+    """
+    return _registry(read_toml(root / PROJECT_FILE, PROJECT_FILE) or {})
+
+
+def load_registry_at(root: Path, commit: str) -> Registry:
+    """The enabled artifacts with the ``.devkit/generated.toml`` committed at ``commit`` in the repository at ``root``.
+
+    The built-in artifacts come from the running devkit; a commit that does not track the file has only those. The
+    working tree is never read, so every caller reading one commit gets one registry. A committed file that is not
+    UTF-8 or not TOML is ``ConfigError`` (``CONFIG_INVALID``); a malformed one ``GeneratedConfigError``; a commit Git
+    cannot read ``GitError``.
+    """
+    if not run_git(root, "ls-tree", "--name-only", commit, "--", PROJECT_FILE).strip():
+        return _registry({})
+    try:
+        data = tomllib.loads(run_git(root, "show", f"{commit}:{PROJECT_FILE}").decode("utf-8"))
+    except (UnicodeError, tomllib.TOMLDecodeError) as exc:
+        name = f"{PROJECT_FILE} at commit {commit[:12]}"
+        raise ConfigError(f"invalid config {name}: {exc}", target_files=[PROJECT_FILE]) from exc
+    return _registry(data)

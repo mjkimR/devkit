@@ -5,8 +5,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit_agt.features.generated import GeneratedConfigError, builtin_artifacts, load_registry, matches
-from testsupport.rules import write
+from devkit_agt.features.generated import (
+    GeneratedConfigError,
+    builtin_artifacts,
+    classify,
+    load_registry,
+    load_registry_at,
+    matches,
+)
+from testsupport.rules import git, init_repo, write
 
 
 def configure(root: Path, table: str) -> None:
@@ -107,3 +114,44 @@ def test_a_path_two_artifacts_own_is_refused(tmp_path: Path) -> None:
     assert registry.owner("gen/x.bin") is not None
     with pytest.raises(GeneratedConfigError, match="owned by more than one artifact: a, b"):
         registry.owner("gen/x.txt")
+
+
+def test_registry_at_a_commit_reads_only_that_commit(tmp_path: Path) -> None:
+    """``load_registry_at``: the committed ``.devkit/generated.toml``, never the working tree."""
+    root = init_repo(tmp_path / "repo")
+    bare = git(root, "rev-parse", "HEAD")
+    configure(
+        root,
+        "[artifacts.devkit-receipt]\nenabled = false\n[artifacts.lock]\npaths = ['uv.lock']\ncommand = 'uv lock'\n",
+    )
+    git(root, "add", ".")
+    git(root, "commit", "-qm", "registry")
+    committed = git(root, "rev-parse", "HEAD")
+    configure(root, "[artifacts.other]\npaths = ['x']\ncommand = 'true'\n")
+    assert [item.id for item in load_registry_at(root, bare).artifacts] == ["devkit-receipt"]
+    assert [item.id for item in load_registry_at(root, committed).artifacts] == ["lock"]
+    write(root, ".devkit/generated.toml", "[artifacts.bad]\nseed = 'both'\n")
+    git(root, "add", ".")
+    git(root, "commit", "-qm", "broken registry")
+    with pytest.raises(GeneratedConfigError):
+        load_registry_at(root, git(root, "rev-parse", "HEAD"))
+
+
+def test_conflicts_are_classified_by_owner_seed_and_readers(tmp_path: Path) -> None:
+    configure(
+        tmp_path,
+        "[artifacts.lock]\npaths = ['uv.lock']\ncommand = 'uv lock'\ninputs = ['pyproject.toml']\nseed = 'theirs'\n"
+        "[artifacts.client]\npaths = ['gen/**']\ncommand = 'make gen'\nafter = ['lock']\n",
+    )
+    registry = load_registry(tmp_path)
+    plan = classify(registry, [".devkit/installation.json", "uv.lock"])
+    assert plan.owned == {"devkit-receipt": (".devkit/installation.json",), "lock": ("uv.lock",)}
+    assert plan.sides() == {".devkit/installation.json": "ours", "uv.lock": "theirs"}
+    assert [item.id for item in plan.owners] == ["devkit-receipt", "lock"]
+    assert "client" in [item.id for item in plan.plan] and not plan.unowned and not plan.readers
+    mixed = classify(registry, [".devkit/installation.json", "AGENTS.md", "README.md", "pyproject.toml"])
+    assert mixed.unowned == ("AGENTS.md", "README.md", "pyproject.toml")
+    assert mixed.readers == {"AGENTS.md": ("devkit-receipt",)}
+    with_lock = classify(registry, ["uv.lock", "pyproject.toml", "README.md"])
+    # ``client`` runs after ``lock`` and declares no inputs, so it may read any conflict.
+    assert with_lock.readers == {"README.md": ("client",), "pyproject.toml": ("lock", "client")}
