@@ -2,7 +2,7 @@
 id: PROP-rename-incubation-to-adaptive-dev
 title: Rename incubation to adaptive-dev and disambiguate proposal terms
 summary: "Rename the incubation bundle and development approach to adaptive-dev and rename the SDD proposal-incubation term, so each development concept has one unambiguous name. The approach value and bundle name are consumer-facing contracts, so the change settles their migration path."
-status: draft
+status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/delivery/
 priority: high
