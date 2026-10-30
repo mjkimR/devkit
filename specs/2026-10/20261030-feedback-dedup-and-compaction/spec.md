@@ -1,34 +1,23 @@
 ---
-id: PROP-feedback-dedup-and-compaction
+id: SPEC-feedback-dedup-and-compaction
 title: Feedback lookup before recording and compaction of closed feedback
 summary: Search existing feedback of every status before recording a new item, and compact closed feedback into short symptom, response and reason records that keep the retired IDs as aliases, so the ledger stays searchable without hundreds of full files.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-30
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-feedback/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/
-    - packages/devkit-spec/tests/
-    - .devkit/installation.json
-    - specs/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-10-30
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-feedback-dedup-and-compaction] Feedback lookup before recording and compaction of closed feedback
+# [SPEC-feedback-dedup-and-compaction] Feedback lookup before recording and compaction of closed feedback
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-feedback-dedup-and-compaction on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-feedback-dedup-and-compaction`
+
+### 1. Background & Hypothesis
 
 The feedback ledger holds 242 files, 233 of them closed (130 `resolved`, 60 `promoted`, 41 `dismissed`, 2
 `forwarded`). `ADR-feedback-lifecycle` and `CAP-DLV-weekly-report` keep terminal feedback as traceability, so nothing
@@ -46,9 +35,28 @@ records that keep the retired IDs as aliases, the ledger stays a useful memory o
 at a fraction of its size. Compaction mirrors the `adr-compaction` playbook: it never changes an outcome, only its
 form.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and `envelopes/scout-01.yaml`.
+- **US-1**: As a developer/agent, I want to implement Feedback lookup before recording and compaction of closed feedback so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Answered in Planning; evidence in `docs/materials/2026-10/20261030-feedback-dedup-and-compaction/ledger-and-lookup-evidence.md` and historical Git `eb4f48cb13e75d89d212baa4433f9feed721602d:docs/proposals/PROP-feedback-dedup-and-compaction/envelopes/scout-01.yaml`.
 
 - **Q1**: Compact record shape and location. **Answer**: a `feedback` document per capability area
   (`docs/capabilities/<area>/`, the user's decision: no topic chosen at recording, grouping only at compaction, lookup
@@ -84,9 +92,9 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
   repeated across entries, or a general rule of behavior) that no accepted ADR states, each with its entry IDs and a
   one-line candidate decision, for the user's decision only; the run writes no ADR and no feedback for them.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-1. **Search before recording** (`PADR-recording-looks-up-existing-feedback-of-every-status-first`). The direct
+1. **Search before recording** (`ADR-recording-looks-up-existing-feedback-of-every-status-first`). The direct
    recording procedure and every sweep run `devkit docs search "<symptom and asset words>" --kind feedback --history
    -n 5` before writing and act on the matched status:
    - `open`: record nothing; name the existing ID. New evidence goes into that file when it is inside the recorder's
@@ -96,7 +104,7 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
    - `promoted` or `forwarded`: record nothing while the destination is live; name it. When it is completed,
      rejected, closed or unresolvable, record a new item that cites the ID.
    This replaces the sweep's equal-`target` deduplication.
-2. **Compaction playbook** (`PADR-closed-feedback-compacts-into-per-area-records-with-aliases`). A new
+2. **Compaction playbook** (`ADR-closed-feedback-compacts-into-per-area-records-with-aliases`). A new
    `feedback-compaction` playbook of the `spec` bundle, modelled on `adr-compaction`: user-invoked or confirmed only,
    `session` depth, clean tree, base commit recorded. Steps: collect the eligible terminal items (Q2); group them by
    capability area and outcome (an item no area covers goes to `other`; misgrouping is accepted and may move at a
@@ -116,7 +124,7 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
    the repository's own sync. No change to the document model, the feedback statuses, the weekly report or any
    command.
 
-### Planning decisions
+#### Planning decisions
 
 - The user settled: compaction over deletion; each entry carries only symptom, response and reason; recording searches
   every status first; compaction is a user-invoked playbook that never changes an outcome, and ADR candidates go to the
@@ -130,7 +138,7 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
 Out of scope: changing feedback statuses or the hygiene triage itself, automatic compaction, and the first compaction
 run over the existing ledger.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-feedback-dedup-and-compaction`; the proposal is deleted there and its decisions become ADRs. The first
@@ -138,3 +146,4 @@ run over the existing ledger.
   integration.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes the
   rejection ADR and deletes the proposal.
+

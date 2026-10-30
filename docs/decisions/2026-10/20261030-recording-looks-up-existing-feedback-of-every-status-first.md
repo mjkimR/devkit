@@ -1,15 +1,15 @@
 ---
-id: PADR-recording-looks-up-existing-feedback-of-every-status-first
+id: ADR-recording-looks-up-existing-feedback-of-every-status-first
 title: Recording looks up existing feedback of every status first
 summary: For feedback recording, we search existing feedback of every status with the observation's own words before writing a new item and act on the matched status, to stop duplicates that differently worded targets hide, accepting one search per observation and an agent's judgment of sameness.
-proposal: PROP-feedback-dedup-and-compaction
-status: draft
+proposal: SPEC-feedback-dedup-and-compaction
+status: accepted
 created_at: 2026-10-30
 ---
 
-# [PADR-recording-looks-up-existing-feedback-of-every-status-first] Recording looks up existing feedback of every status first
+# [ADR-recording-looks-up-existing-feedback-of-every-status-first] Recording looks up existing feedback of every status first
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 ---

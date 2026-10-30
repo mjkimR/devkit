@@ -1,15 +1,15 @@
 ---
-id: PADR-closed-feedback-compacts-into-per-area-records-with-aliases
+id: ADR-closed-feedback-compacts-into-per-area-records-with-aliases
 title: Closed feedback compacts into per-area records with aliases
 summary: For the terminal feedback ledger, we let a user-invoked playbook compact closed items into short per-area records that keep every retired ID as an alias, to keep the memory searchable without hundreds of full files, accepting that Git history alone keeps full originals.
-proposal: PROP-feedback-dedup-and-compaction
-status: draft
+proposal: SPEC-feedback-dedup-and-compaction
+status: accepted
 created_at: 2026-10-30
 ---
 
-# [PADR-closed-feedback-compacts-into-per-area-records-with-aliases] Closed feedback compacts into per-area records with aliases
+# [ADR-closed-feedback-compacts-into-per-area-records-with-aliases] Closed feedback compacts into per-area records with aliases
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 ---

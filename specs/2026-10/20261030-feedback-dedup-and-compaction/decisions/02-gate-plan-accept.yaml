@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-feedback-dedup-and-compaction
+by: user
+at: '2026-10-30T06:35:31.764022Z'
