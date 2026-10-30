@@ -2,7 +2,7 @@
 id: SPEC-workflow-record-auto-commit
 title: Automatic commits for workflow records
 summary: Adds an explicit command that commits one authored workflow envelope with a deterministic Unit-based message. Preserves write-only authoring, existing hooks and manual commits for combined changes.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output, CAP-DLV-delivery-workflows]
 related_usecases: [UC-drive-development-to-integration]

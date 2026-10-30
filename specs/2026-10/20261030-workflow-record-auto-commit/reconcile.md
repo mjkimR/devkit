@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-workflow-record-auto-commit
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
     resolution: modified
@@ -29,7 +29,7 @@ No architecture contract changed: the CLI calls a typed BaseUseCase, workflow-ow
 
 ## Review and verification
 
-Medium independent code review at 8ef6543b reported three findings. The author fixed symbolic HEAD capture, eligible final-report example and workspace-relative targets; focused runtime/guidance 45 passed and affected tests 2090 passed. `reverify-01.yaml` closes every finding against 085f5e5f. Its actual explicit command committed only that envelope at 97aa4c2e while normal repository hooks rewrote metadata. Independent reconcile verification follows this draft.
+Medium independent code review at 8ef6543b reported three findings. The author fixed symbolic HEAD capture, eligible final-report example and workspace-relative targets; focused runtime/guidance 45 passed and affected tests 2090 passed. `reverify-01.yaml` closes every finding against 085f5e5f. Its actual explicit command committed only that envelope at 97aa4c2e while normal repository hooks rewrote metadata. Independent medium reconcile review verified all six targets at 31a03130 with no findings. Before/after snapshots both equal 11957fb158bd3547153dd24ea7cd7fd4d13e4971 and HEAD/worktree were unchanged. The final affected selection on that content passed 2091 tests across 116 selected paths.
 
 The initial sync check passed. `.devkit/installation.json` is the only tracked sync output and is listed in Task 2 with `(sync output)`; managed/projected files were generated, never hand-edited.
 
