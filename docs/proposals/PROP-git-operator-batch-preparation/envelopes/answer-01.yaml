@@ -1,0 +1,24 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:57:52.088938Z'
+status: completed
+summary: 'q1-q4 decided by the user, each the recommended option: contract list of prepare-worktree items through the existing worktree start, stop at the first non-completed item, every setup or sync remainder to the Host.'
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: q1
+  choice: a
+  decision: The user chose a typed list of prepare-worktree items in the git-operator role contract and dispatch guidance, each item run through the existing devkit worktree start, with no CLI change.
+- question: q2
+  choice: a
+  decision: The user chose to stop the list at the first item that is not completed and return every later item as not attempted with a null CLI result.
+- question: q3
+  choice: a
+  decision: The user chose prepare-worktree as the only operation a list may carry; every other operation stays one job per dispatch.
+- question: q4
+  choice: a
+  decision: The user chose to return every setup or sync remainder to the Host, which repairs it directly or dispatches a supported operation; git-operator gains no repair effect.
+activity_effort: medium

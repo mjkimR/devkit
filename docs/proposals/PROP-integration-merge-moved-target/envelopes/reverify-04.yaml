@@ -1,0 +1,32 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T04:05:22.412326Z'
+status: completed
+review: challenger-05.yaml
+summary: 'Folded challenger round 5 in 2ed58463: summaries and the Settled direction say finished (refined by q-blocked-unit); a unit waiting for a user decision counts as finished and the run starts once no worker turn is running; coverage outside a batch run is stated (source verification plus CI rules, combined head by a later batch or nightly CI). Self-verified per review-loop section 2: each suggested_action applied as written in the named sections only; no user decision changed (the waiting-unit case follows the q-blocked-unit rationale, the coverage text follows the settled direction); no further round. The Host presents the waiting-unit extension and the corrected later-test premise at plan-accept.'
+findings:
+- issue: The fold changed the trigger from "integrated" to "finished", but the PADR summary still says "after every unit a local-orchestrated run started is integrated" (the option the PADR lists as rejected by the user); the proposal summary and the Settled direction bullet carry the old wording with no note that q-blocked-unit refined them.
+  evidence: docs/proposals/PROP-integration-merge-moved-target/decisions/PADR-post-batch-test-run.md:4,49,58,62; docs/proposals/PROP-integration-merge-moved-target/proposal.md:4,75-77,88-90
+  failure_condition: An agent following the promoted ADR summary waits for a blocked unit to integrate and leaves the integrated units untested on main until nightly CI, the outcome the user rejected.
+  suggested_action: Change the PADR summary and the proposal summary to "finished (integrated, blocked with its problem recorded, or continued in direct)"; add "(refined by q-blocked-unit)" to the Settled direction bullet.
+  resolution: resolved
+  severity: P2
+- issue: The finished-unit set (integrated, blocked with its problem recorded, continued in direct) leaves out a unit waiting for a user decision (a Planning unit at plan-accept with open questions); "no Development work of the run remains" is unclear for a unit continued in direct, which still has Development work.
+  evidence: docs/proposals/PROP-integration-merge-moved-target/decisions/PADR-post-batch-test-run.md:58-64; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/SKILL.md.jinja:12,21,24,34; docs/proposals/PROP-integration-merge-moved-target/envelopes/worker-01.yaml:6,44
+  failure_condition: A run with integrated Development units and a Planning unit whose worker returned needs_input waits for the user's answers, possibly for days, leaving the integrated units untested on main until nightly CI; a Host reading direct work as remaining Development work delays the run against q-blocked-unit.
+  suggested_action: Add "waits for a user decision" to the finished states; drop "and no Development work of the run remains" or define it as no worker turn still running; extend the bundle asset test for the finished-unit rule.
+  resolution: resolved
+  severity: P2
+- issue: The fold claims a unit the batch did not integrate "is tested when it integrates later, by the repository's normal checks", but the PADR supersedes the clause that verified integration content after incorporating a moved base; outside a batch a conflict-free CLI-built merge runs only CI rules on the result, and the PADR states no replacement rule for the verification texts its follow-ups rewrite.
+  evidence: docs/proposals/PROP-integration-merge-moved-target/decisions/PADR-post-batch-test-run.md:17-20,62-64,78-79; docs/proposals/PROP-integration-merge-moved-target/proposal.md:88-90; docs/decisions/2026-10/20261022-test-selection-and-ci.md:63-64; docs/capabilities/harness/CAP-HARN-agent-guidance.md:230-231; AGENTS.md:82-84; docs/development/ci-cd.md:64-67; docs/development/workflow.md:31-33; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-integrate/SKILL.md.jinja:29-30
+  failure_condition: A unit continued in direct integrates conflict-free onto a moved main after the batch run; nothing re-tests the combined head, yet the record says it is tested, and Development must choose the rewritten verification policy for such integrations without a stated rule.
+  suggested_action: State in PADR section 4 that outside a batch a conflict-free CLI-built merge is covered by its source verification plus CI rules on the result, and the combined head by a later batch run or nightly CI; reword proposal.md and the PADR claim to match; optionally tell the user about the corrected premise at plan-accept.
+  resolution: resolved
+  severity: P2
+checks: {}
+diff_scope:
+  base: 02a1850a84ff7b9c321092462e8301a2347b205d
+  head: 2ed5846324428ad44ec69f1341dc8b1125573a4f
+activity_effort: high
