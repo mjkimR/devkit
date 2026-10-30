@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: workaround
 recurring: false
-status: promoted
+status: open
 created_at: 2026-10-30
 ---
 
@@ -47,4 +47,3 @@ created_at: 2026-10-30
 CONFLICT (content): Merge conflict in docs/proposals/PROP-rename-incubation-to-adaptive-dev/proposal.md
 ```
 
-- **Disposition**: `PROP-git-operator-result-readiness`: the handoff keeps rewriting sibling drafts (a skipped `depends_on` would dangle and refuse later handoffs); `CAP-DLV-proposal-planning` and `post-handoff.md` name the base-merge resolution: take the base version, then run `devkit rules fix` on it.

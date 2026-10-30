@@ -58,7 +58,8 @@ transaction itself.
 
 ## Source feedback
 
-- `FB-handoff-rewrite-edits-sibling-draft`: received whole and promoted to this proposal (§3.2). The handoff keeps
+- `FB-handoff-rewrite-edits-sibling-draft`: addressed directly by this proposal (§3.2); it stays open until
+  Development verifies the fix and resolves it. The handoff keeps
   rewriting a sibling draft's references (its `depends_on` rewrite is a MUST that keeps later handoffs valid); the
   guidance names the resolution of the later base-merge conflict instead.
 
