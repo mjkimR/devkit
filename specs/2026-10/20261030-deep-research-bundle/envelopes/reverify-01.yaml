@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T02:23:36.304322Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the fix at d9540089: the AC-03 ID pattern now matches ADR/CAP/UC/US/ARCH/SPEC/MS/PROP/FB/RULE/PLAN/TASKS IDs with any first character; 49 catalog integration tests pass. Finding 2 waived as within scope.'
+findings:
+- issue: The AC-03 Living Spec ID check matches only IDs whose first character after the hyphen is lowercase, so CAP-<AREA>-..., ARCH-NN-... and RULE-... IDs in bundle text pass unnoticed.
+  evidence: packages/devkit-catalog/tests/integration/bundles/test_deep_research.py:99
+  failure_condition: A later edit adds CAP-DLV-idea-incubation or ARCH-05-2-components to a deep-research bundle file and AC-03 still passes.
+  suggested_action: Widen the pattern to any ID-shaped token, including RULE, keeping the MAT-<slug> placeholder allowed.
+  resolution: resolved
+  severity: P3
+- issue: The implementation commit widened AC-09 to allow lines naming CAP-DLV-deep-research and rewrote the Task 1.1 and 2.1 _Boundary entries after the fact.
+  evidence: 'git diff cfc6398f..70b126fc -- specs/: spec.md AC-09 clause, §6 Assumptions bullet 2, tasks.md Task 1.1/2.1 _Boundary; packages/devkit-catalog/README.md:58'
+  failure_condition: An AC is relaxed by the same change it verifies without the change being visible as a contract change.
+  suggested_action: Host confirms the AC-09 widening and boundary edits as within the approved scope, or the final report records them as a one-off exception.
+  resolution: waived
+  waiver: 'Within the approved scope: the AC-09 widening admits only the capability ID and the migration paths the agreed AC-11 requires, none suggests the entry; the boundary edits name the dead-entrypoint repair and drop paths the sync did not write. Reported as a one-off in the final report.'
+  severity: P3
+checks:
+  tests: PASS just test devkit-catalog tests/integration/bundles 49 passed
+diff_scope:
+  base: ''
+  head: d954008973f4eade5c3fde1316976765916ae8ba
