@@ -324,7 +324,12 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 - `plan-accept` is asked only for a proposal in review, or for a draft once a direct acceptance wrote
   `status: accepted`: the `direction-handoff` exit is `frontmatter(proposal.md status reviewing|accepted)`, so a draft
   otherwise, or a rejected proposal, gets no request. A `plan-accept` acceptance is recorded with
-  `devkit spec proposal accept`.
+  `devkit spec proposal accept`. Under `plan-accept = "auto"` the gate passes by policy and `handoff` has no exit,
+  so once feedback is swept `next` prints `[STAGE: - complete=yes]` for a `reviewing` proposal before any
+  acceptance ran. A Planning run in that state records its `worker` envelope at `direction-handoff`, never
+  `handoff` or `-` (the `spec` skill's `worker-records.md`): open questions recorded there hold `plan-accept`, so
+  the composed acceptance refuses with `SPEC_PROPOSAL_APPROVAL_NOT_READY`, and the run records no acceptance or
+  handoff effect.
 
 ### 4.4 Checks
 

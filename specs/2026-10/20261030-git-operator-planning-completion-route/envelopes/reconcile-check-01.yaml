@@ -1,0 +1,11 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:18:04.757856Z'
+status: completed
+summary: 'Self-checked reconcile at activity-effort low: CAP-DLV-proposal-planning (single Host-run composed acceptance route, post-commit recovery, the --mode --check/--direct usage errors) and the CAP-DLV-delivery-workflows plan-accept rule (direction-handoff as the final Planning return stage) match the diff and the passing tests for AC-01..AC-07; UC-plan-and-hand-off-a-proposal, the ADRs and CAP-DLV-workflow-envelopes need no change; entrypoint candidates rejected (proposals.py already declared; skill directories, tests and .devkit/installation.json are not doorways).'
+findings: []
+checks:
+  reconcile: PASS 2 targets modified, no-impact reasoning recorded
+  lint: PASS devkit rules check on the unit and docs/capabilities/delivery 0 errors; git diff --check clean

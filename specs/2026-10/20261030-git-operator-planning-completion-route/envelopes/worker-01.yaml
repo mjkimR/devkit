@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:21:59.327504Z'
+status: completed
+summary: 'Development turn from specify through the final change report: spec/plan/tasks written; guidance in git-operator-operations.md, git-operator-dispatch.md, spec-orchestrate step 4 and spec-review-proposal step 4 (Host-run composed accept --mode, no operator job, post-commit recovery), worker-records.md §1 and planning.md step 6 (direction-handoff for the final Planning return); proposals.py splits the composed --direct and --check usage errors; tests in test_git_operator.py, test_planning_return_stage_guidance.py and test_plan_accept_cli.py; Living Spec CAP-DLV-proposal-planning and CAP-DLV-delivery-workflows; self-review and self-checked reconcile at low. Sync output: .devkit/installation.json (Task 1.1 boundary); AGENTS.md unchanged by the sync. No before/after measurement applies (guidance, one usage error and tests). Known main failure test_fixes_carry_no_placeholder was outside the affected selection and not touched.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=partial 1610 passed
+  lint: PASS just lint-check devkit-spec; just check devkit-spec; just rules-check; devkit sync --check exit 0
+diff_scope:
+  base: ''
+  head: f4d9f189352a272ee3b6463c2603291a2ec9860f
+activity_effort: low

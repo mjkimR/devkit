@@ -62,10 +62,12 @@ from devkit_dist.adapters.cli import (
     resolve_root,
     workspace_option,
 )
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_spec.adapters.cli import sentinel
 from devkit_spec.base.axes import EFFORTS
 from devkit_spec.base.errors import SpecError
+from devkit_spec.base.units import proposal_unit
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
 from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
@@ -80,6 +82,17 @@ WORKSPACE = workspace_option()
 
 
 SUCCESS = frozenset({"accepted", "handed_off"})
+
+
+def _composed_check_refusal(slug: str) -> str:
+    """Why ``accept --mode`` has no dry run and which read-only commands give the Host its material instead."""
+    report = devkit_command(f"spec proposal report {slug}")
+    records = devkit_command(f"workflow envelope check --unit {proposal_unit(slug)}")
+    return (
+        "composed acceptance has no --check: its readiness refusals in preparation come before the first write, and "
+        f"a later failure returns needs_recovery with completed_steps; for read-only material run `{report}` and "
+        f"`{records}`"
+    )
 
 
 def _advisory(item: dict[str, Any]) -> AdvisoryError:
@@ -357,8 +370,10 @@ def accept_cmd(
     policy authority is available only when the retained base declares automatic plan-acceptance.
     """
     if mode is not None:
-        if direct or check_only:
-            raise click.UsageError("composed acceptance cannot use --direct or --check")
+        if direct:
+            raise click.UsageError("composed acceptance cannot use --direct")
+        if check_only:
+            raise click.UsageError(_composed_check_refusal(slug))
         result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
         merged = {
             key: result[name]

@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-git-operator-planning-completion-route
+by: user
+at: '2026-10-30T05:08:44.633264Z'

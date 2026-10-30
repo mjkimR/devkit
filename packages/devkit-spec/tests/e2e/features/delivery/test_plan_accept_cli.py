@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit_dist.cli import cli as devkit_cli
 from spec_support.delivery import _cli, _make_synced_repo, _start_worktree
 from spec_support.scope import git
 
@@ -342,3 +343,74 @@ def test_a_combined_acceptance_commits_the_handoff_transaction(pending):
     assert git(development, "rev-list", "--parents", "-n", "1", head).split() == [head, git(repo, "rev-parse", "HEAD")]
     assert {"handoff", "handoff_commit"} <= set(payload["completed_steps"])
     assert git(development, "status", "--porcelain") == ""
+
+
+QUESTION = """\
+- id: q1
+  title: Storage format
+  prompt: Which storage format?
+  context: The format decides the migration.
+  options:
+    - {id: a, description: Keep YAML, recommended: true}
+    - {id: b, description: Move to JSON, recommended: false}
+  allow_note: true
+"""
+
+
+# SPEC-git-operator-planning-completion-route AC-05 (GOP-03)
+def test_a_question_recorded_at_direction_handoff_holds_the_composed_acceptance(pending):
+    repo, planning = pending
+    unit = "docs/proposals/PROP-idea"
+    config = repo / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[workflow.approvals]\nplan-accept = "auto"\n')
+    git(repo, "add", ".devkit/config.toml")
+    git(repo, "commit", "-m", "Delegate proposal acceptance to policy")
+    git(planning, "merge", "--no-edit", "main")
+    # Under plan-accept=auto a reviewing proposal reads as complete before any acceptance ran.
+    shown = CliRunner().invoke(devkit_cli, ["workflow", "next", "--unit", unit, "-w", str(planning)])
+    assert shown.exit_code == 0, shown.output
+    assert "[STAGE: - complete=yes]" in shown.stdout
+    head = git(planning, "rev-parse", "HEAD")
+    recorded = CliRunner().invoke(
+        devkit_cli,
+        [
+            *("workflow", "envelope", "worker", "--unit", unit, "--stage", "direction-handoff"),
+            *("--summary", "Planning ends with one open question.", "--effort", "low", "--head", head),
+            *("--questions-file", "-", "-w", str(planning)),
+        ],
+        input=QUESTION,
+    )
+    assert recorded.exit_code == 0, recorded.output
+    git(planning, "add", "-A")
+    git(planning, "commit", "-m", "Record the Planning return")
+    before = git(repo, "show-ref")
+
+    error = _accept_json(repo, "--by", "policy", "--mode", "accept_only")
+
+    assert error["code"] == "SPEC_PROPOSAL_APPROVAL_NOT_READY", json.dumps(error, indent=2)
+    assert any(line.startswith("hold: ") for line in error["advisory"]["details"]), error["advisory"]["details"]
+    assert git(repo, "show-ref") == before
+    assert "status: reviewing" in (planning / unit / "proposal.md").read_text()
+    assert not list((planning / unit / "decisions").glob("*gate-plan-accept*"))
+    assert git(repo, "branch", "--list", "dev-idea") == ""
+
+
+# SPEC-git-operator-planning-completion-route AC-06
+def test_the_composed_form_refuses_check_and_names_the_read_only_material(pending):
+    repo, planning = pending
+    before = git(repo, "show-ref")
+    args = ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
+
+    result = CliRunner().invoke(proposal_group, [*args, "--check"])
+
+    assert result.exit_code == 2 and result.stdout == "", result.output
+    message = " ".join(result.stderr.split())
+    assert "composed acceptance has no --check" in message
+    assert "readiness refusals in preparation come before the first write" in message
+    assert "needs_recovery with completed_steps" in message
+    assert "devkit spec proposal report idea`" in message
+    assert "devkit workflow envelope check --unit docs/proposals/PROP-idea`" in message
+    direct = CliRunner().invoke(proposal_group, [*args, "--direct"])
+    assert direct.exit_code == 2 and "composed acceptance cannot use --direct" in direct.stderr
+    assert git(repo, "show-ref") == before
+    assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()

@@ -509,7 +509,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 | `--by` | `accept` | Required: `user` for explicit acceptance or `policy` under owning `plan-accept=auto`; other values are usage errors (exit `2`). |
 | `--note` | `accept` | The decision note; with `--direct` the eligibility reason, required (blank: `ARGUMENT_INVALID`, `[TARGET] --note`, before the proposal is read). |
 | `--direct` | `accept` | Accept an eligible draft on the base checkout, or repair an accepted proposal without its record and without a `worker` envelope (rule 14). |
-| `--check` | `accept` | Run every check of the form and write nothing. |
+| `--check` | `accept` | Run every check of the form and write nothing. The composed `--mode` form has no dry run: with `--mode`, `--check` is a usage error (exit `2`) saying that the composed acceptance's readiness refusals in preparation come before its first write and a later failure returns `needs_recovery` with `completed_steps`, and naming `devkit spec proposal report <slug>` and `devkit workflow envelope check --unit docs/proposals/PROP-<slug>` for the read-only material the Host presents; `--direct` with `--mode` is the usage error `composed acceptance cannot use --direct`. |
 
 ### 4.10 Output
 
@@ -688,6 +688,16 @@ decision and reads no policy itself.
 These operations do not dispatch a worker, create a pull request or authorize final Development integration. A
 partial result requires Git/worktree inspection; after an already-landed operation, recovery runs only a guarded
 remaining cleanup. `ADR-host-cli-lifecycle-authority` defines Host authorization and recovery boundaries.
+
+The composed `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` is the
+single Planning acceptance route, and the Host runs it itself: it already includes the integration and cleanup, so
+no git-operator job precedes or follows it, and git-operator has no acceptance operation. A refusal raised in
+preparation leaves nothing written. WHEN a refusal comes after the acceptance commit (a conflict, the CI rules or
+receipts on the built merge, or a target that moved between the preparations), THEN the result is
+`needs_recovery` with `completed_steps` and the accepted, unmerged `plan-<slug>` returns to the Host with the
+reported code; the Host prepares the source on that branch (a base merge and `devkit rules fix` when the code
+calls for them) and only then reruns the same command, which continues from the acceptance commit. A rerun that
+would repeat a deterministic refusal is not made.
 
 
 ## Proposal review briefings and combined acceptance
