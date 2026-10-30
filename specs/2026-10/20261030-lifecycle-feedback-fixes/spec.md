@@ -2,7 +2,7 @@
 id: SPEC-lifecycle-feedback-fixes
 title: Fix four lifecycle feedback items
 summary: Fix the envelope commit fix placeholder, point the stale local render fix at a locked restore, refuse unknown worker envelope stages and state the reference writes a document rename implies, closing four open feedback items.
-status: planned
+status: in-progress
 created: 2026-10-30
 related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DIST-context-and-playbooks, CAP-DOCS-document-model]
 related_usecases: []

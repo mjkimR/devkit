@@ -44,7 +44,11 @@ class LocalRenderStaleError(ConfigError):
     input_error = False
     actor = Actor.TOOL
     exit_code = ExitCode.FINDINGS
-    fix = f"Run `{AGENT_INVOCATION} sync` in this workspace to refresh personal rendering evidence"
+    fix = (
+        f"Run `{AGENT_INVOCATION} sync --locked` in this workspace to refresh personal rendering evidence; it changes"
+        f" no committed file. Only if it reports RECEIPT_STALE run a plain `{AGENT_INVOCATION} sync`, which also"
+        " rewrites committed files, and commit what it changes"
+    )
 
 
 class LocalChangedError(ConfigError):

@@ -90,8 +90,16 @@ def test_personal_render_locked_restore_stale_and_removal(fixture) -> None:
     with pytest.raises(LocalRenderStaleError) as stale:
         GetContext().execute(root, "style")
     assert stale.value.mode is ActionMode.AUTO
+    fix = stale.value.fix or ""
+    assert fix.index("devkit sync --locked") < fix.index("RECEIPT_STALE") < fix.index("plain `uv run devkit sync`")
     with pytest.raises(LocalRenderStaleError):
         get_project_status(root, [item])
+    sync.sync_project(root, [item], locked=True)  # the fix's first step restores without a committed change
+    assert GetContext().execute(root, "style").instructions
+    assert tracked_state(root) == canonical
+    local(root, '[bundles.style.variables]\nlanguage="es"\n')
+    with pytest.raises(LocalRenderStaleError):
+        GetContext().execute(root, "style")
     sync.sync_project(root, [item])
     output.write_text("hand edit")
     with pytest.raises(ConflictError):

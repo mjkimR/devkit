@@ -14,7 +14,8 @@ def commit_message(anchor_id: str, envelope: Envelope) -> tuple[str, str]:
     if match is None:
         raise EnvelopeCommitInvalidError(
             f"unsupported anchor id {anchor_id!r}",
-            fix="Use a tracked SPEC-<slug> or PROP-<slug> anchor, or commit this record manually",
+            fix="Commit the [TARGET] envelope with a manual git commit: explicit envelope commit supports only SPEC"
+            " and PROP anchor ids",
         )
     subject = f"chore(workflow): record {match[1]} {envelope.kind}-{envelope.seq:02d}"
     body = f"workflow: {envelope.workflow}\nsegment: {envelope.segment}\nstage: {envelope.stage}"
