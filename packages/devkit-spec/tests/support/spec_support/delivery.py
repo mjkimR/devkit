@@ -75,3 +75,39 @@ def _start_worktree(repo: Path, branch: str, path: Path) -> Path:
     git(repo, "config", f"branch.{branch}.devkitBase", "main")
     shutil.copytree(repo / ".devkit/managed", path / ".devkit/managed", dirs_exist_ok=True)
     return path
+
+
+def _complete_proposal(wt: Path, slug: str = "idea") -> str:
+    """Create, accept and commit proposal ``slug`` with its completed Planning records in the Planning worktree."""
+    unit = f"docs/proposals/PROP-{slug}"
+    _cli(wt, "spec", "proposal", "new", slug, "--title", "Idea", "--summary", "Proposal summary.")
+    _cli(
+        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user"
+    )
+    _cli(
+        wt,
+        "workflow",
+        "envelope",
+        "new",
+        "--unit",
+        unit,
+        "--kind",
+        "feedback",
+        "--stage",
+        "collect-feedback",
+        "--summary",
+        "Sweep complete.",
+        "--check",
+        "swept=PASS 0 items",
+    )
+    prop_file = wt / unit / "proposal.md"
+    prop_file.write_text(
+        prop_file.read_text(encoding="utf-8").replace("status: draft", "status: accepted"),
+        encoding="utf-8",
+    )
+    _cli(
+        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-accept", "--action", "accept", "--by", "user"
+    )
+    git(wt, "add", "-A")
+    git(wt, "commit", "-q", "-m", "docs(proposal): accept proposal")
+    return unit

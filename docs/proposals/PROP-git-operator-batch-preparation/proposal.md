@@ -10,7 +10,7 @@ size: M
 planning_effort: medium
 dev_effort: low
 milestone: MS-git-operator-lifecycle-refinement
-depends_on: [PROP-git-operator-result-readiness]
+depends_on: [SPEC-git-operator-result-readiness]
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
@@ -85,7 +85,7 @@ checks.
   or host approval refused or unavailable), it stops and returns every later item as not attempted, with a null
   `cli_result`.
 - **Return**: one role message whose `items` list holds, per attempted item, the single-job return
-  `PROP-git-operator-result-readiness` defines, unchanged: role status, identity, the original `cli_result` (status,
+  `SPEC-git-operator-result-readiness` defines, unchanged: role status, identity, the original `cli_result` (status,
   exit and effects), `completed_effects`, `remaining_effects` with any exact dirty paths, `checks.worker_input` with
   `{head, dirty_paths}` and `blocker_codes`; the next actor for a remainder is the Host. An item stopped by refused or
   unavailable host approval carries the host-permission blocker code and a null `cli_result`. A separate
@@ -106,7 +106,7 @@ checks.
   §4.6.1 (EARS rules for the list) and `test_git_operator.py` (wording checks). `CAP-WT-task-worktrees` and
   `packages/devkit` do not change.
 
-Dependency on `PROP-git-operator-result-readiness` (`depends_on`), as its Planning settled it:
+Dependency on `SPEC-git-operator-result-readiness` (`depends_on`), as its Planning settled it:
 
 1. Its per-job return adds no top-level field: worker-input readiness is `checks.worker_input` with
    `{head, dirty_paths}`, dirty paths are listed in `remaining_effects`, the Host is the next actor, and a
@@ -127,7 +127,7 @@ per-item `cli_result`, not-attempted items, retry of named remainders only) and 
 each outcome class's code and exit. The operator's live stop and retry behaviour stays reported as unverified until a
 real partial batch is observed, separately from those checks (`MAT-git-operator-batch-dispatch-observation`).
 
-GOP-06 is already met by the git-operator contract's Authority and boundaries. `PROP-git-operator-result-readiness`
+GOP-06 is already met by the git-operator contract's Authority and boundaries. `SPEC-git-operator-result-readiness`
 owns the shared GOP-06 operator-scope wording (Host decision). This proposal keeps GOP-06 as a regression check and
 adds only the sentence that a list's authority covers only its listed `prepare-worktree` items, with its wording
 check.
@@ -136,7 +136,7 @@ check.
 
 - The user chose every recommended option in `answer-01`: the contract list with no CLI change (q1), stop at the
   first non-completed item (q2), `prepare-worktree` only (q3) and every setup or sync remainder to the Host (q4).
-- The Host decided that `PROP-git-operator-result-readiness` owns the shared GOP-06 operator-scope wording
+- The Host decided that `SPEC-git-operator-result-readiness` owns the shared GOP-06 operator-scope wording
   (`challenger-01` finding 6).
 - No PADR is written: the list form, stop rule and retry rule are capability rules that `CAP-DLV-delivery-workflows`
   §4.6.1 records at handoff, and no architecture or interface choice remains.

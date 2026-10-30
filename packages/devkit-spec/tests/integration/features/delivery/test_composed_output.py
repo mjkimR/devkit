@@ -51,6 +51,7 @@ def test_a_completed_handoff_prints_its_next_command(tmp_path: Path, monkeypatch
             "handoff": {"spec": "SPEC-idea", "dir": "specs/x", "errors": [], "notices": []},
             "next_command": "uv run devkit workflow next --unit specs/x",
             "authority": "host-conversation",
+            "commit": "a" * 40,
             "errors": [],
             "notices": [WARNING],
         },
@@ -59,7 +60,7 @@ def test_a_completed_handoff_prints_its_next_command(tmp_path: Path, monkeypatch
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
         "[HANDOFF: PROP-idea status=handed_off spec=SPEC-idea dir=specs/x worktree=dev-idea effort=low"
-        " authority=host-conversation]",
+        f" authority=host-conversation commit={'a' * 40}]",
         "[NEXT_CMD: uv run devkit workflow next --unit specs/x]",
     ]
     strict = CliRunner().invoke(
@@ -121,7 +122,7 @@ def test_a_stopped_acceptance_reads_the_handoff_errors(tmp_path: Path, monkeypat
     assert result.exit_code == 1, result.output
     assert result.stdout.splitlines() == [
         "[ACCEPTED_STOPPED: PROP-idea status=needs_recovery mode=accept_and_handoff authority=user"
-        " completed=acceptance_commit,merge]",
+        " completed=acceptance_commit,merge commit=-]",
         '[NEXT_ACTION: "Inspect preserved handoff effects"]',
     ]
     assert "SPEC_HANDOFF_STALE" in result.stderr
@@ -141,3 +142,56 @@ def test_a_refusal_renders_every_error_and_always_exits_2(tmp_path: Path, monkey
     document = json.loads(data.stdout)
     assert document["error"]["code"] == "SPEC_HANDOFF_STALE"
     assert [error["code"] for error in document["errors"]] == ["SPEC_PROPOSAL_IN_PLANNING"]
+
+
+# SPEC-git-operator-result-readiness AC-02
+def test_a_refused_handoff_commit_names_its_next_action_not_the_nested_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from devkit_spec.base.errors import HandoffCommitRefusedError
+
+    refused = HandoffCommitRefusedError("refused", "hook output", target_files=["specs/x/spec.md"], fix="Commit there")
+    _handoff(
+        monkeypatch,
+        {
+            "status": "needs_recovery",
+            "worktree": {"path": "/abs/dev-idea", "created": True},
+            # The plain handoff's own next command stays in its nested result; the stopped outcome must not print it.
+            "handoff": {"spec": "SPEC-idea", "dir": "specs/x", "next_command": "uv run devkit workflow next --unit x"},
+            "commit": None,
+            "next_action": "Commit there",
+            "authority": "host-conversation",
+            "errors": [refused.to_dict()],
+            "notices": [],
+        },
+    )
+    result = _run(tmp_path, "handoff", "idea", "--effort", "low")
+    assert result.exit_code == 1, result.output
+    assert result.stdout.splitlines() == [
+        "[HANDOFF_STOPPED: PROP-idea status=needs_recovery spec=SPEC-idea dir=specs/x worktree=dev-idea effort=low"
+        " authority=host-conversation commit=-]",
+        '[NEXT_ACTION: "Commit there"]',
+    ]
+    assert "(SPEC_HANDOFF_COMMIT_REFUSED)" in result.stderr and "[TARGET] specs/x/spec.md" in result.stderr
+
+
+# SPEC-git-operator-result-readiness AC-03
+def test_a_combined_acceptance_prints_the_handoff_commit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _accept(
+        monkeypatch,
+        {
+            "status": "handed_off",
+            "completed_steps": ["acceptance_commit", "merge", "worktree_setup", "handoff", "handoff_commit"],
+            "commit": "b" * 40,
+            "handoff": {"next_command": "uv run devkit workflow next --unit specs/x", "errors": [], "notices": []},
+            "acceptance_authority": "user",
+            "errors": [],
+        },
+    )
+    result = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low")
+    assert result.exit_code == 0, result.output
+    assert result.stdout.splitlines() == [
+        "[ACCEPTED: PROP-idea status=handed_off mode=accept_and_handoff authority=user"
+        f" completed=acceptance_commit,merge,worktree_setup,handoff,handoff_commit commit={'b' * 40}]",
+        "[NEXT_CMD: uv run devkit workflow next --unit specs/x]",
+    ]

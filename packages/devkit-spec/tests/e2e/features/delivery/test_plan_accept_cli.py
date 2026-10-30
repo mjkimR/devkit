@@ -193,3 +193,70 @@ def test_a_policy_acceptance_is_never_redirected_to_the_user(pending):
     assert error["code"] == "SPEC_PROPOSAL_WRONG_WORKTREE"
     assert "uv run devkit spec proposal accept idea --by policy --mode accept_only" in error["advisory"]["fix"]
     assert "--by user" not in json.dumps(error) and "<" not in error["advisory"]["fix"]
+
+
+def _refuse_handoff_commit(repo: Path, tmp_path: Path) -> None:
+    """Only the handoff commit on dev-idea is refused; the acceptance commit on plan-idea passes."""
+    hooks = tmp_path / "hooks"
+    hooks.mkdir()
+    (hooks / "pre-commit").write_text(
+        '#!/bin/sh\n[ "$(git rev-parse --abbrev-ref HEAD)" = dev-idea ] || exit 0\n'
+        "echo 'RULE-example refused the handoff' >&2\nexit 1\n"
+    )
+    (hooks / "pre-commit").chmod(0o755)
+    git(repo, "config", "core.hooksPath", str(hooks))
+
+
+# SPEC-git-operator-result-readiness AC-03
+def test_a_refused_handoff_commit_prints_the_stopped_acceptance_and_its_next_action(pending, tmp_path):
+    repo, _planning = pending
+    _refuse_handoff_commit(repo, tmp_path)
+
+    result = CliRunner().invoke(
+        proposal_group,
+        ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)],
+    )
+
+    assert result.exit_code == 1, result.output
+    lines = result.stdout.splitlines()
+    assert lines[0].startswith("[ACCEPTED_STOPPED: PROP-idea status=needs_recovery mode=accept_and_handoff")
+    assert ",handoff" in lines[0] and "handoff_commit" not in lines[0] and lines[0].endswith(" commit=-]")
+    assert lines[1].startswith("[NEXT_ACTION: ") and "[NEXT_CMD:" not in result.stdout
+    assert "(SPEC_HANDOFF_COMMIT_REFUSED)" in result.stderr
+
+
+# SPEC-git-operator-result-readiness AC-03
+def test_a_refused_handoff_commit_stops_the_combined_acceptance_after_the_handoff(pending, tmp_path):
+    repo, _planning = pending
+    _refuse_handoff_commit(repo, tmp_path)
+    args = ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)]
+
+    result = CliRunner().invoke(proposal_group, [*args, "--format", "json"])
+
+    assert result.exit_code == 1, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "needs_recovery" and payload["commit"] is None
+    assert "handoff" in payload["completed_steps"] and "handoff_commit" not in payload["completed_steps"]
+    assert [error["code"] for error in payload["errors"]] == ["SPEC_HANDOFF_COMMIT_REFUSED"]
+    assert payload["next_action"] == payload["errors"][0]["advisory"]["fix"]
+    development = repo.parent / "repo-wt-dev-idea"
+    assert git(development, "rev-parse", "HEAD") == git(repo, "rev-parse", "HEAD")
+    assert git(development, "status", "--porcelain") != ""
+
+
+# SPEC-git-operator-result-readiness AC-03
+def test_a_combined_acceptance_commits_the_handoff_transaction(pending):
+    repo, _planning = pending
+    args = ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)]
+
+    result = CliRunner().invoke(proposal_group, [*args, "--format", "json"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "handed_off", json.dumps(payload, indent=2)
+    development = repo.parent / "repo-wt-dev-idea"
+    head = git(development, "rev-parse", "HEAD")
+    assert payload["commit"] == head
+    assert git(development, "rev-list", "--parents", "-n", "1", head).split() == [head, git(repo, "rev-parse", "HEAD")]
+    assert {"handoff", "handoff_commit"} <= set(payload["completed_steps"])
+    assert git(development, "status", "--porcelain") == ""

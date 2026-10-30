@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -47,3 +47,16 @@ created_at: 2026-10-30
 CONFLICT (content): Merge conflict in docs/proposals/PROP-rename-incubation-to-adaptive-dev/proposal.md
 ```
 
+## Resolution
+
+- **Disposition**: Resolved directly by `SPEC-git-operator-result-readiness` with the Planning decision kept: the
+  handoff still rewrites a sibling draft's `depends_on` and ID references (a skipped `depends_on` dangles once the
+  dev branch lands), and the guidance names the resolution of the later base-merge conflict. The `spec-next`
+  post-handoff reference (section "Sibling drafts"), `CAP-DLV-proposal-planning` section 4.7 and
+  `UC-plan-and-hand-off-a-proposal` extension 8a tell the Host to take the base version of the conflicting file under
+  `docs/proposals/PROP-<other>/` and run `devkit rules fix` on it, which rewrites the citation to `SPEC-<slug>`.
+- **Verification**: `packages/devkit-spec/tests/integration/bundles/spec/test_post_handoff_guidance.py` checks the
+  guidance; `tests/integration/features/proposals/test_unit_dependencies.py::test_carry_rewrite_namespaced_and_preserve_history`
+  keeps the sibling `depends_on` rewrite; `RULE-document-reference` reports and fixes `PROP-<slug> was handed off`
+  (`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/tests/test_rule.py`). Medium
+  code review (`envelopes/review-01.yaml`, closed by `envelopes/reverify-01.yaml`) confirmed AC-08.

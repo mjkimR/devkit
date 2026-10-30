@@ -15,7 +15,7 @@ from devkit_agt.features.integration.services import providers
 from devkit_agt.features.worktree import PullRequestPolicyError, locate, plan_finish
 from devkit_core.core import git as core_git
 from devkit_dist.cli import cli as devkit_cli
-from spec_support.delivery import _cli, _make_synced_repo, _start_worktree
+from spec_support.delivery import _cli, _complete_proposal, _make_synced_repo, _start_worktree
 from spec_support.scope import git, write
 
 from devkit_spec.features.delivery.usecases.integration import check
@@ -269,41 +269,6 @@ def _complete_bugfix_spec(wt: Path, slug: str = "fix", *, date: str = "2026-10-1
     )
     git(wt, "add", "-A")
     git(wt, "commit", "-q", "-m", "chore: record bugfix envelopes")
-    return unit
-
-
-def _complete_proposal(wt: Path, slug: str = "idea") -> str:
-    unit = f"docs/proposals/PROP-{slug}"
-    _cli(wt, "spec", "proposal", "new", slug, "--title", "Idea", "--summary", "Proposal summary.")
-    _cli(
-        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user"
-    )
-    _cli(
-        wt,
-        "workflow",
-        "envelope",
-        "new",
-        "--unit",
-        unit,
-        "--kind",
-        "feedback",
-        "--stage",
-        "collect-feedback",
-        "--summary",
-        "Sweep complete.",
-        "--check",
-        "swept=PASS 0 items",
-    )
-    prop_file = wt / unit / "proposal.md"
-    prop_file.write_text(
-        prop_file.read_text(encoding="utf-8").replace("status: draft", "status: accepted"),
-        encoding="utf-8",
-    )
-    _cli(
-        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-accept", "--action", "accept", "--by", "user"
-    )
-    git(wt, "add", "-A")
-    git(wt, "commit", "-q", "-m", "docs(proposal): accept proposal")
     return unit
 
 

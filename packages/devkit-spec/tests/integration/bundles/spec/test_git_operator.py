@@ -115,3 +115,50 @@ def test_partial_result_mapping_requires_observed_complete_effects_not_zero_exit
 )
 def test_each_operation_has_a_guarded_existing_cli_procedure(operation) -> None:
     assert f"| `{operation}` |" in raw(OPERATIONS)
+
+
+# SPEC-git-operator-result-readiness AC-05
+def test_worker_input_readiness_comes_from_git_observation_not_the_exit_code() -> None:
+    role = raw(ROLE)
+    assert "checks: {worker_input: {head: sha, dirty_paths: []}}" in role
+    for tokens in (
+        ("`prepare-worktree` and `handoff`", "`checks.worker_input`", "rev-parse HEAD", "status --porcelain"),
+        ("Each dirty path is also a `remaining_effects` entry", "`needs_input`", "never", "`completed`"),
+        ("zero-exit CLI result with dirty paths", "neither a failed CLI operation nor ready input"),
+        ("Every result", "returns to the Host", "next action", "`remaining_effects`"),
+    ):
+        assert_rule(role, *tokens)
+    assert_rule(raw(DISPATCH), "Before starting a worker", "`checks.worker_input`", "your own", "exit code alone never")
+    # The Host's own post-handoff link-fix commit may follow the reported head (AC-08).
+    assert_rule(raw(DISPATCH), "clean HEAD", "`checks.worker_input.head` or a descendant", "your own commits")
+    operations = raw(OPERATIONS)
+    for row in ("prepare-worktree", "handoff"):
+        line = next(line for line in operations.splitlines() if line.startswith(f"| `{row}` |"))
+        assert "`checks.worker_input`" in line
+    handoff = next(line for line in operations.splitlines() if line.startswith("| `handoff` |"))
+    assert "the handoff `commit`" in handoff
+    assert_rule(handoff, "SPEC_HANDOFF_COMMIT_REFUSED", "to the Host", "never commit or rerun")
+
+
+# SPEC-git-operator-result-readiness AC-06 (GOP-06: this unit owns the wording; siblings only regress on it)
+def test_operator_returns_production_edits_and_broader_authority_to_the_host() -> None:
+    authority = raw(ROLE).split("## Authority and boundaries", 1)[1].split("## Return", 1)[0]
+    assert_rule(
+        authority,
+        "Return production",
+        "edits, semantic conflict resolution and authority beyond the job to the Host",
+        "perform no such mutation",
+    )
+
+
+# SPEC-git-operator-result-readiness AC-07
+def test_evidence_kinds_and_host_permission_stay_separate() -> None:
+    role = raw(ROLE)
+    for tokens in (
+        ("original CLI result", "role status", "Git observations", "host emulation", "remaining work"),
+        ("host refusal before dispatch", "blocker code", "null CLI result"),
+        ("CLI readiness or `auto`", "never host permission"),
+        ("isolated fixtures, replays and untested cases",),
+        ("never report unmeasured cost or latency as an", "improvement"),
+    ):
+        assert_rule(role, *tokens)

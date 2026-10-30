@@ -389,12 +389,17 @@ class PlanAcceptUseCase(BaseUseCase):
             payload.update(
                 status=handed["status"],
                 handoff=handed,
-                next_action=handed.get("next_command", "Inspect preserved handoff effects"),
+                commit=handed.get("commit"),
+                next_action=handed.get("next_command")
+                or handed.get("next_action")
+                or "Inspect preserved handoff effects",
             )
-            if handed["status"] == "handed_off":
+            if handed.get("handoff"):  # the handoff writes landed, committed or not
                 payload["completed_steps"] += ["worktree_setup", "handoff"]
                 if handed.get("scope_token"):
                     payload["completed_steps"].append("scope_registration")
+                if handed.get("commit"):
+                    payload["completed_steps"].append("handoff_commit")
             elif handed.get("worktree", {}).get("created"):
                 payload["completed_steps"].append("worktree_setup")
             payload["errors"] = handed.get("errors", [])

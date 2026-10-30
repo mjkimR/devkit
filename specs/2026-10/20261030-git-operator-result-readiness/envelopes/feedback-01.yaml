@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:50:56.975352Z'
+status: completed
+summary: 'Swept this Development turn and its diff: recorded FB-handbook-journey-misses-handoff-commit (handbook outside the write scope); no duplicates; the cgate commit rewrite is already tracked on main'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

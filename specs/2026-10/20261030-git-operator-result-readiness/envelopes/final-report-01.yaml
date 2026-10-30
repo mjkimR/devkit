@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:53:57.257005Z'
+status: completed
+summary: 'The composed handoff (handoff --effort, accept --mode accept_and_handoff) commits its transaction once as a direct child of the reviewed base and reports commit=; a refused commit stops with SPEC_HANDOFF_COMMIT_REFUSED, the dirty paths, a next action and the writes staged; a landed but unclean commit is repaired in place. git-operator reports checks.worker_input {head, dirty_paths} from Git observation, keeps evidence kinds apart and owns the GOP-06 scope wording; post-handoff guidance names the later link-fix commit and the sibling conflict resolution. Limits: handbook journeys not updated (FB-handbook-journey-misses-handoff-commit, outside the write scope); live behaviour under this repository''s own commit gate is covered by fixture hooks only; main moved past the merge base (894c1374, a4d605b9) and is not merged here.'
+findings: []
+assumptions:
+- 'Baseline is the recorded Planning measurement MAT-git-operator-handoff-commit-evidence (four composed handoffs left the transaction uncommitted, each needing a Host commit); after: test_handoff_commit.py and the e2e accept test show one clean single-parent commit and commit equal to HEAD after a rewriting hook'
+checks:
+  tests: PASS just test-affected (mode=full) 6098 passed, 14 skipped; the 1 failure is the known pre-existing main failure packages/devkit/tests/integration/package/test_agent_output_contract.py::test_fixes_carry_no_placeholder (packages/devkit envelope/commit.py), not touched by this change
+  build: PASS just check devkit-spec (pyright 0 errors); no packaging or CLI wiring change, smoke not required; devkit sync --check PASS
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base 02852dbc errors=0 warnings=0
+diff_scope:
+  base: 02852dbc6a29e97b8703c18ddf7fd4002a6f1854
+  head: 7f1afa5ef2e9adc797e4da9a01f11dd54e3bd7e1

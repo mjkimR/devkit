@@ -1,15 +1,15 @@
 ---
-id: PADR-composed-handoff-commits-its-own-transaction
+id: ADR-composed-handoff-commits-its-own-transaction
 title: Composed handoff commits its own transaction
 summary: "For the composed proposal handoff, we commit the CLI-generated handoff transaction in the fresh dev worktree as one direct child of the reviewed base, to give workers clean committed input without a Host commit step, accepting a commit-gate refusal as a stopped handoff."
-proposal: PROP-git-operator-result-readiness
-status: draft
+proposal: SPEC-git-operator-result-readiness
+status: accepted
 created_at: 2026-10-30
 ---
 
-# [PADR-composed-handoff-commits-its-own-transaction] Composed handoff commits its own transaction
+# [ADR-composed-handoff-commits-its-own-transaction] Composed handoff commits its own transaction
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 ---

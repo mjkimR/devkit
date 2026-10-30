@@ -65,8 +65,9 @@ capabilities:
    spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs, moves materials and open
    feedback, carries the `plan-intent` and `plan-accept` records by name, rewrites what pointed into the proposal and
    removes it (`CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`).
-9. The agent rereads the rewritten references, fixes unresolved links in the same change and follows the spec
-   workflow's next stage (`CAP-DLV-proposal-planning`).
+9. The agent rereads the rewritten references and fixes unresolved links: after the composed handoff, which committed
+   its own transaction, in a later Host commit on `dev-<slug>` before a worker starts; after the plain handoff, in
+   the commit of its writes. It then follows the spec workflow's next stage (`CAP-DLV-proposal-planning`).
 
 ---
 
@@ -112,7 +113,18 @@ capabilities:
   Planning incomplete), `SPEC_HANDOFF_BASE_DIRTY`, `SPEC_HANDOFF_WORKTREE_CONFLICT` or `SPEC_PROPOSAL_WRONG_WORKTREE`
   (off the retained base checkout); a base, plan or policy change since its check is `SPEC_HANDOFF_STALE`. When the new worktree no longer holds the reviewed base
   commit or setup changed its files, the command keeps the worktree and reports `status=needs_recovery` with
-  `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-planning`); resumes at step 8.
+  `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-planning`); resumes at step 8. A completed handoff
+  has committed its transaction once as a direct child of the reviewed base and reports that `commit`; a git-operator
+  result carries `checks.worker_input` (`head`, `dirty_paths`), which the Host compares with its own Git observation
+  before starting a worker, which starts on that `head` or on the Host's own later link-fix commit
+  (`CAP-DLV-delivery-workflows`). When `git commit` refuses the handoff transaction, the
+  command reports `status=needs_recovery` with `SPEC_HANDOFF_COMMIT_REFUSED`, the commit output and every dirty path,
+  `commit=-` and a next action instead of a next command (exit `1`), and keeps the writes staged; the Host fixes the
+  cause in `dev-<slug>` and commits there instead of rerunning (`CAP-DLV-proposal-planning`); resumes at step 9. When
+  the commit lands but is not one clean direct child of the reviewed base (a hook left files or rewrote history), the
+  command reports `status=needs_recovery` with `SPEC_HANDOFF_STALE`, the landed `commit` and the parents or dirty
+  paths, and a next action instead of a next command; the Host repairs `dev-<slug>` in place instead of rerunning
+  (`CAP-DLV-proposal-planning`); resumes at step 9.
 - **7b.** The proposal is not `accepted`: the system refuses with `SPEC_PROPOSAL_NOT_APPROVED` and writes nothing
   (`CAP-DLV-proposal-planning`); the agent asks the user; resumes at step 5.
 - **7c.** The proposal says `accepted` without its recorded `plan-accept`: the system refuses with
@@ -126,6 +138,10 @@ capabilities:
   resumes at step 8.
 - **7f.** A write fails during the handoff: the system rolls back what it wrote and moved, keeps the proposal and
   reports `SPEC_PROPOSAL_HANDOFF_FAILED` (`CAP-DLV-proposal-planning`); resumes at step 7.
+- **8a.** A sibling draft in its own Planning cites the handed-off proposal: the handoff rewrites its `depends_on` and
+  references; when the sibling's Planning merges first and merging the base into `dev-<slug>` conflicts in
+  `docs/proposals/PROP-<other>/`, the Host takes the base version and runs `devkit rules fix` on it
+  (`CAP-DLV-proposal-planning`); resumes at step 9.
 
 ## 4. Postconditions
 
@@ -134,8 +150,9 @@ capabilities:
   sits in the spec with unchanged IDs, statuses and observation dates, and its `plan-intent` and `plan-accept` records
   are carried by name. Live references name the spec and the ADRs. After a direct acceptance the same holds without a
   Planning run.
-- **Minimal guarantee**: Approval is never inferred. A refused acceptance or handoff writes nothing, and a failed
-  handoff write rolls back and keeps the proposal for a rerun. A rejected or deleted proposal keeps its open feedback
+- **Minimal guarantee**: Approval is never inferred. A refused acceptance or handoff prerequisite writes nothing, a
+  failed handoff write rolls back and keeps the proposal for a rerun, and a refused handoff commit keeps the
+  handoff's writes staged and uncommitted in `dev-<slug>`. A rejected or deleted proposal keeps its open feedback
   until it is preserved in the month-level backlog.
 
 ---
@@ -232,8 +249,9 @@ capabilities:
 - **Given**: an accepted proposal on a clean base checkout under `proposal-handoff=ask`
 - **When**: the Host presents the findings and setup/worktree effects, receives the user's conversational approval, then
   runs `devkit spec proposal handoff <slug> --effort high`
-- **Then**: `dev-<slug>` and its worktree exist, the handoff ran there, and the result returns `status=handed_off`
-  with effort `high`; without the user's decision, the Host does not invoke the command
+- **Then**: `dev-<slug>` and its worktree exist, the handoff ran there and committed its transaction once as a direct
+  child of the reviewed base, the worktree is clean, and the result returns `status=handed_off` with effort `high`
+  and `commit` equal to the worktree HEAD; without the user's decision, the Host does not invoke the command
 
 ### Scenario 13: Approval is never inferred
 - **Covers**: 7b
@@ -290,3 +308,24 @@ capabilities:
 - **When**: the Host starts a fresh operator
 - **Then**: it reconstructs current CLI/Git state and requires current job authority before mutation; missing
   authority preserves resources and returns needs_input to the Host
+
+### Scenario 21: A refused handoff commit keeps the writes for the Host
+- **Covers**: 7a
+- **Given**: an accepted proposal on a clean base checkout and a commit gate that refuses the handoff commit
+- **When**: the Host runs `devkit spec proposal handoff <slug> --effort low`
+- **Then**: the command exits `1` with `[HANDOFF_STOPPED: ... commit=-]`, `[NEXT_ACTION: ...]` and no `[NEXT_CMD: ...]`,
+  `SPEC_HANDOFF_COMMIT_REFUSED` carries the gate output and every dirty path, and `dev-<slug>` keeps the writes
+  staged on the reviewed base head
+
+### Scenario 22: git-operator reports worker input from Git
+- **Covers**: 7a
+- **Given**: a `handoff` or `prepare-worktree` job whose worktree has dirty paths after a zero-exit CLI result
+- **When**: git-operator returns
+- **Then**: `checks.worker_input` lists them with the observed `head`, each is a `remaining_effects` entry, the role
+  status is `needs_input`, and the Host compares them with its own Git observation before starting a worker
+
+### Scenario 23: A sibling conflict takes the base version
+- **Covers**: 8a
+- **Given**: a sibling draft whose `depends_on` the handoff rewrote, and its Planning merged into the base first
+- **When**: merging the base into `dev-<slug>` conflicts in `docs/proposals/PROP-<other>/`
+- **Then**: the Host takes the base version and `devkit rules fix` rewrites its citations to `SPEC-<slug>`

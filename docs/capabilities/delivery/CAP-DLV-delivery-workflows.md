@@ -447,8 +447,23 @@ THEN it MUST return needs_input; execution failures return failed. IF a CLI retu
 THEN the role MUST inspect live state before attempting only a supported, currently authorized remainder.
 A zero-exit incomplete cleanup cannot be completed; normal integration already includes cleanup.
 
+WHEN a `prepare-worktree` or `handoff` job returns, git-operator MUST report worker-input readiness under
+`checks.worker_input: {head, dirty_paths}` from `git -C <worktree> rev-parse HEAD` and `status --porcelain`; the
+result has no other readiness, permission or next-actor field. IF `dirty_paths` is not empty, THEN each path MUST
+also be a `remaining_effects` entry and the role status is `needs_input`, never `completed`; a zero-exit CLI result
+with dirty paths is neither a failed CLI operation nor ready input. Every result returns to the Host, which owns the
+next action. WHEN the Host starts a worker on such a result, it MUST first compare `checks.worker_input` with its own
+Git observation and start the worker only on a clean HEAD that is the reported `head` or a descendant made only of
+its own commits since (the post-handoff link fixes); an exit code alone never stands for ready input. A host refusal before dispatch is a blocker code
+with a null CLI status and exit code and empty effects; CLI readiness or `auto` policy is never reported as host
+permission, and live effects, Git observation, host emulation, isolated fixtures and untested cases are reported
+apart. The handoff result's
+`commit` names the transaction the composed handoff committed itself
+(`ADR-composed-handoff-commits-its-own-transaction`). The operator returns production edits, semantic conflict
+resolution and authority beyond the job to the Host and performs no such mutation.
+
 `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` checks registration, projections,
-authority and recovery wording. `MAT-git-operator-development-evidence` records four Terra medium native
+authority, recovery, worker-input readiness and evidence-separation wording. `MAT-git-operator-development-evidence` records four Terra medium native
 continuation jobs and isolated CLI mutation fixtures separately; selected-model mutation, other live hosts and
 net cost/latency benefit remain unverified. Codex emulation uses explicit paths, per-operation permission and
 Host effect checks without claiming native path enforcement. Flash effort is omitted without prompt emulation.
