@@ -2,7 +2,7 @@
 id: SPEC-scope-activity-write-evidence
 title: Show current activity writes beside future implementation impact in scope output
 summary: Show each current activity's actual write boundaries in scope inspection separately from declared or candidate future implementation impact, keeping every overlap and coverage gap visible and the output informational.
-status: in-progress
+status: completed
 created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
 related_capabilities: [CAP-COLL-work-scope-registry, CAP-HARN-agent-guidance]

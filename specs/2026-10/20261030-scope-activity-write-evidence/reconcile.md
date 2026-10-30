@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-scope-activity-write-evidence
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
     resolution: modified
