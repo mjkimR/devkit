@@ -2,7 +2,7 @@
 id: PROP-worker-audit-known-host-advance
 title: Keep the worker audit baseline across known Host-owned target advances
 summary: "Let worker inspection keep the original source-audit baseline while accounting separately for target advances the Host declared as its own, so independent integrations need not wait for a running worker; unknown or dirty base changes still stop."
-status: draft
+status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/delivery/
 priority: medium
