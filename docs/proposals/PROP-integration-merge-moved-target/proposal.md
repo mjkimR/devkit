@@ -1,7 +1,7 @@
 ---
 id: PROP-integration-merge-moved-target
 title: Integrate a conflict-free moved target without requiring the source to contain it
-summary: "Let local integration and proposal acceptance merge a moved target themselves and refuse only on a real conflict or failing checks, and run the tests once on main after a local-orchestrated batch is integrated, so lifecycle merging stays light while defects still surface."
+summary: "Let local integration and proposal acceptance merge a moved target themselves and refuse only on a real conflict or failing checks, and run the tests once on main after the units of a local-orchestrated run are finished, so lifecycle merging stays light while defects still surface."
 status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/worktree/
@@ -72,8 +72,8 @@ conflict-free merge can still carry.
   `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). A semantic conflict that
   surfaces later in CI, nightly CI or hygiene is acceptable; a defect that stays hidden is not. The integration
   result therefore always records the disclosure and the target SHA the command merged.
-- Once every unit a local-orchestrated run started is integrated and no Development work remains, the Host runs the
-  project's tests once on `main` (one run on the integrated head, not an aggregation of earlier results). A failure
+- Once every unit a local-orchestrated run started is integrated and no Development work remains (refined by
+  `q-blocked-unit` below), the Host runs the project's tests once on `main` (one run on the integrated head, not an aggregation of earlier results). A failure
   is reported with its evidence and becomes follow-up work; nothing is reverted automatically.
 - The `spec-integrate` step 1 base merge becomes conditional: the Host merges the base into the task branch only to
   resolve a conflict or a failing check the CLI reports.
@@ -86,8 +86,11 @@ conflict-free merge can still carry.
   `just test-affected --base <batch start>` once on `main` with its `mode=full` fallback; nightly CI still runs the
   full suite (`q-batch-command`).
 - A unit of the run that ends blocked with its problem recorded, or continues in `direct` mode, counts as finished for
-  the batch run: the Host tests what the run integrated, and that unit is tested when it integrates later by the
-  repository's normal checks (`q-blocked-unit`).
+  the batch run: the Host tests what the run integrated (`q-blocked-unit`). Planning applies the same rule to a unit
+  waiting for a user decision, and the run starts once no worker turn of the run is still running.
+- Outside a batch run, a conflict-free CLI-built merge is covered by its source verification plus the CI rules on the
+  merged result; the combined head is tested by a later batch run or by nightly CI, which the settled direction
+  accepts.
 
 ## 2. Technical Spike Questions
 
@@ -109,9 +112,9 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   acceptance commit (its preview runs the CI rules on the prospective result). Their fix is the conditional base merge.
 - **Q5 Batch test run**: a `spec-orchestrate` Completion step, no CLI helper; the repository's integrated-content
   verification once on the base branch head from the batch start (here `just test-affected --base <batch start>` with
-  its `mode=full` fallback, user decision `q-batch-command`); a unit that ends blocked or continues in `direct` counts as
-  finished (`q-blocked-unit`); reported in the conversation, a failure recorded as feedback
-  (`PADR-post-batch-test-run`).
+  its `mode=full` fallback, user decision `q-batch-command`); a unit that ends blocked, waits for a user decision or
+  continues in `direct` counts as finished (`q-blocked-unit`); reported in the conversation, a failure recorded as
+  feedback (`PADR-post-batch-test-run`).
 - **Q6 Decision record**: `PADR-moved-target-merge` supersedes only the local containment clauses of
   `ADR-local-and-pull-request-integration` (already superseded in part by `ADR-host-cli-lifecycle-authority`; its merge
   and readiness clauses remain in force); `PADR-post-batch-test-run` supersedes only the post-merge clause of
@@ -163,9 +166,10 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   acceptance. Bundle-source integration (`CAP-HARN-agent-guidance`, "For changed bundle sources") incorporates the
   base and runs `devkit sync` on the branch only after `WORKTREE_MERGE_CONFLICT`, `INTEGRATION_RECEIPT_CONFLICT` or
   `INTEGRATION_NOT_READY`; the receipt check and CI rules on the result guard the rest, and the post-landing
-  `devkit sync` stays. `spec-orchestrate` step 5 drops "the implementer first incorporates a moved base"; its Completion adds
-  the batch test run once the run's units are integrated, blocked or continued in `direct`; `git-operator-operations.md` makes base incorporation conditional. `spec/references/completion.md`
-  follows.
+  `devkit sync` stays. `spec-orchestrate` step 5 drops "the implementer first incorporates a moved base"; its
+  Completion adds the batch test run once the run's units are integrated, blocked, awaiting a user decision or
+  continued in `direct`; `git-operator-operations.md` makes base incorporation conditional.
+  `spec/references/completion.md` follows.
 
 ### Living Spec and repository policy
 
@@ -195,8 +199,8 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - Every prepare, integrate and composed acceptance result that carries a request shows, in text and JSON, the
   readiness disclosure and the merged target SHA (prepare: confirmation target; integrate and composed acceptance: build
   target and landed result; cleanup-only and `ff-only`: the prepared target).
-- `spec-orchestrate` Completion names the batch test run, including that a unit ending blocked or continuing in
-  `direct` counts as finished for it, and `spec-integrate` step 1 is conditional (bundle asset tests).
+- `spec-orchestrate` Completion names the batch test run, including that a unit ending blocked, waiting for a user
+  decision or continuing in `direct` counts as finished for it, and `spec-integrate` step 1 is conditional (bundle asset tests).
 
 ### Non-goals
 

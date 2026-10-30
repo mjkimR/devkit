@@ -1,7 +1,7 @@
 ---
 id: PADR-post-batch-test-run
 title: One test run on main after a local-orchestrated batch
-summary: For semantic conflicts a conflict-free CLI-built merge can carry, we run the repository's integrated-content tests once on main after every unit a local-orchestrated run started is integrated, to surface them before nightly CI, accepting one extra run per batch.
+summary: For semantic conflicts a conflict-free merge can carry, we run the integrated-content tests once on main after every unit of a local-orchestrated run is finished (integrated, blocked, awaiting the user or continued in direct), to surface them before nightly CI, accepting one extra run per batch.
 proposal: PROP-integration-merge-moved-target
 status: draft
 created_at: 2026-10-30
@@ -55,13 +55,16 @@ Chosen option: one run after the batch in `spec-orchestrate` Completion, because
 skill change only.
 
 - When a local-orchestrated run starts its first unit, the Host notes the base branch HEAD as the batch start.
-- Once every unit the run started is finished and no Development work of the run remains, the Host runs the
+- Once every unit the run started is finished and no worker turn of the run is still running, the Host runs the
   repository's verification for integrated content once on the base branch HEAD, scoped from the batch start when the
   repository's selector supports a base. In this repository that is `just test-affected --base <batch start>`,
   keeping its `mode=full` fallback; nightly CI still runs the full suite.
-- A unit counts as finished when it is integrated, ends blocked with its problem recorded, or continues in `direct`
-  mode. The run thus tests what it integrated; a unit it did not integrate is tested when it integrates later, by the
-  repository's normal checks.
+- A unit counts as finished when it is integrated, ends blocked with its problem recorded, waits for a user decision
+  (its last `worker` envelope is `needs_input`), or continues in `direct` mode. The run thus tests what it integrated.
+- Outside a batch run (a unit continued in `direct`, or any `direct`-mode integration), a conflict-free CLI-built
+  merge is covered by its source verification plus the CI rules on the merged result; the combined head is tested by
+  a later batch run or by nightly CI. The repository's verification policy states this in place of incorporating a
+  moved base before integration.
 - After a context loss the Host recovers the batch start as the first parent of the run's earliest
   `chore(merge): integrate <branch> into <base branch>` commit on the first-parent history; only when that fails it
   runs the selector's full fallback.
@@ -75,8 +78,9 @@ skill change only.
   batch.
 - **Negative / Risks**: one extra test run per batch; a selection miss the affected selector does not cover still
   waits for nightly CI.
-- **Follow-ups**: Development states this repository's command in `AGENTS.md`, `docs/development/ci-cd.md` and
-  `docs/development/workflow.md`, and replaces "Integration incorporates a moved base" in `CAP-HARN-agent-guidance`.
+- **Follow-ups**: Development states this repository's command and the coverage outside a batch run in `AGENTS.md`,
+  `docs/development/ci-cd.md` and `docs/development/workflow.md`, and replaces "Integration incorporates a moved base"
+  in `CAP-HARN-agent-guidance`.
 
 ## 6. Confirmation
 
