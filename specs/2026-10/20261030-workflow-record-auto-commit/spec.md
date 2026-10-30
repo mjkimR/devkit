@@ -43,7 +43,7 @@ provides enough identity for a record-only commit. Source changes still need a m
 No reduction in latency, tokens or total cost has been measured.
 
 `CAP-DLV-workflow-envelopes`, `CAP-DLV-workflow-orchestration` and `CAP-GATE-commit-gates` are the current contracts.
-`PROP-local-orch-resource-manager` delegates existing Git/lifecycle operations to a reusable agent; this proposal
+`SPEC-local-orch-resource-manager` delegates existing Git/lifecycle operations to a reusable agent; this proposal
 adds a deterministic CLI operation and does not require that role. `PROP-maintenance-history` publishes maintenance
 records on a separate remote branch and does not cover local Unit envelope commits.
 
@@ -230,4 +230,3 @@ Development; Planning checks document rules, links, envelopes and the affected e
 **Scope Excluded:** LLM-generated source commit messages, automatic commits for all file-writing commands,
 decision/acceptance transactions, automatic production changes, hook bypass, new approval policy, push or merge
 automation, changes to the existing integration template, and a persistent Git service or general recovery framework.
-
