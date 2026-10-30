@@ -8,7 +8,6 @@ related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-local-orch-resource-manager] Reusable git-operator subagent for local orchestration
 
@@ -31,20 +30,65 @@ conversation-latency improvements remain unmeasured.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Reusable git-operator subagent for local orchestration so that system capabilities are extended.
+- **US-1**: As the Host, I delegate recurring lifecycle operations to one reusable git-operator while retaining
+  decisions, scheduling and result acceptance.
+- **US-2**: As the repository owner, I receive verified effects and exact blockers without losing approval scope
+  or having the Host reconstruct routine CLI commands.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+**Scope Excluded**: A persistent service, custom async scheduler, durable approval/recovery store, global lock,
+general Git repair, arbitrary branch deletion, production-source fixes and lifecycle CLI engine changes.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Reuse and context recovery
 
-## 5. Carried Proposal Notes
+- **Given** sequential lifecycle jobs in one Host conversation and repository
+- **When** the Host dispatches them in local-orchestrated mode
+- **Then** it reuses the exact git-operator identity through native continuation; after missing identity or context
+  loss it starts a fresh instance from current CLI/Git observations and repeats current per-job authority.
+
+### [AC-02] Routine guarded execution
+
+- **Given** a ready job with exact repository, base, worktree, Unit, refs, intended effects and current authority
+- **When** git-operator executes the job
+- **Then** it uses existing guarded CLI operations with exact arguments and returns identity, observed refs,
+  completed_effects, remaining_effects, checks, stable blocker codes and original CLI status/exit/effects separately.
+  Its role status is exactly completed, needs_input or failed. Completed requires every requested effect and check.
+
+### [AC-03] Preserve scope and authority
+
+- **Given** missing authority, changed scope/refs, dirty resources, active writers or denied host permission
+- **When** git-operator refreshes the pre-mutation state
+- **Then** it preserves resources and returns the exact blocker to the Host; it grants no approval/publication,
+  authors no production fixes, resolves no semantic conflict and makes no user/business decision.
+
+### [AC-04] Partial and unknown recovery
+
+- **Given** partial or unknown CLI effects, including a zero-exit partial cleanup
+- **When** git-operator handles the result
+- **Then** it inspects live state before attempting only a verified supported remainder within current authority,
+  preserves recovery identity and completed effects, and never returns completed while requested effects remain.
+  Normal integration includes cleanup and dispatches no redundant cleanup job.
+
+### [AC-05] Selected configuration and bounded evidence
+
+- **Given** git-operator with source level lean and existing project overrides
+- **When** bundle contracts and host projections are verified
+- **Then** Claude Code maps to Sonnet medium, Codex to gpt-6.1-terra medium and Antigravity to Flash with effort
+  omitted, without changes to distribution presets. Development records repeated-job evidence, exercised hosts,
+  missing metrics and a matched same-head role-disabled Host-burden comparison. Replay and mutation evidence are
+  labeled separately; earlier Luna/Sol results are not validation of Terra.
+
+## 5. Assumptions and Current-base Check
+
+The accepted proposal premises match this worktree's accepted head and current CLI contracts. Existing integration
+already owns cleanup, and existing lean projections supply the selected mappings. The implementation uses role
+messages rather than a new persisted schema. Activity-effort is medium because this changes an accepted agent
+contract with reversible local assets. No product screen changes apply.
+
+## 6. Preserved Planning Evidence
 
 Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
 
@@ -135,9 +179,8 @@ changes. A concrete missing CLI boundary discovered later is a scope problem, no
 
 ### 4. Lifecycle & Retirement Criteria
 
-Planning recommends adoption with `dev_effort: medium`. The role contract, ownership boundary and selected
-model default are ready for `plan-accept`; acceptance and Development handoff remain Host/user decisions.
-No production agent assets or lifecycle behavior changed in Planning.
+The accepted direction and Development handoff retain `dev_effort: medium`. Historical Planning evidence does
+not establish selected-model mutation reliability.
 
 Validate the selected lean configuration during Development without rerunning the historical probe as part of
 this Planning revision. Terra medium execution, total cost and latency remain unmeasured; Sol evidence does not
