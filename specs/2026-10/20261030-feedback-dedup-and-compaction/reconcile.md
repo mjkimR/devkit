@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-feedback-dedup-and-compaction
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
@@ -29,7 +29,8 @@ targets:
 - `docs/decisions/`: the two ADRs are fixed by the handoff. In a package namespace the record's file name carries the
   namespace (`<YYYYMMDD>-compacted-<namespace>-<area>-<status>.md`) so `RULE-id-convention` derives the namespaced ID
   `ADR-closed-feedback-compacts-into-per-area-records-with-aliases` names; that ADR's path states the global case and
-  its decision is unchanged, so no ADR edit is required here.
+  its decision is unchanged. The wording repair of that path is deferred to the open feedback
+  `FB-compaction-adr-path-omits-namespace` (`docs/decisions/` is outside this spec's write scope).
 
 ## Source feedback
 
