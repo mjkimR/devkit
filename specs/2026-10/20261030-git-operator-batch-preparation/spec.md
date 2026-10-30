@@ -1,35 +1,26 @@
 ---
-id: PROP-git-operator-batch-preparation
+id: SPEC-git-operator-batch-preparation
 title: Bounded batch preparation for git-operator
-summary: "Let the Host dispatch an exact finite list of independent worktree preparations with per-item identity, authority, effects, checks and outcome, keeping original CLI results for partial or denied items and retrying only inspected authorized remainders."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: low
-milestone: MS-git-operator-lifecycle-refinement
-depends_on: [SPEC-git-operator-result-readiness]
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md
-    - packages/devkit-spec/tests/
-    - docs/capabilities/delivery/
-  excludes:
-    - .devkit/managed/
-    - packages/devkit-core/
-    - packages/devkit/
-task_kind: feature
+summary: Let the Host dispatch an exact finite list of independent worktree preparations with per-item identity, authority, effects, checks and outcome, keeping original CLI results for partial or denied items and retrying only inspected authorized remainders.
+status: planned
+created: 2026-10-30
+depends_on:
+  - SPEC-git-operator-result-readiness
 decomposed_from: PROP-git-operator-pilot-follow-up
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-git-operator-batch-preparation] Bounded batch preparation for git-operator
+# [SPEC-git-operator-batch-preparation] Bounded batch preparation for git-operator
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-git-operator-batch-preparation on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-git-operator-batch-preparation`
+
+### 1. Background & Hypothesis
 
 In the resource-indexer consumer pilot (`MAT-git-operator-consumer-pilot`), preparing five exact worktrees required an
 ad hoc multi-job payload and an aggregate return under a role contract written for one job. The operations
@@ -43,7 +34,26 @@ item was refused, denied or partial in either run, and no cost or latency compar
 The hypothesis: making the observed list form explicit, with a per-item result and a stated stop rule, keeps
 per-item identity, authority and recovery when an item does not complete, without a new command.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Bounded batch preparation for git-operator so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 Mechanism**: Is a typed list of existing independent jobs in the role contract enough, or is a new CLI
   operation worth it? Compare dispatch and result size, permission overhead and failure recovery. CLI support may
@@ -67,7 +77,7 @@ per-item identity, authority and recovery when an item does not complete, withou
     item as not attempted; the Host retries only the items it names from the returned state. Every setup or sync
     remainder returns to the Host (`answer-01` q4 option a).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 The design below folds the user's answers in `answer-01` and the Planning decisions listed after the acceptance
 checks.
@@ -132,7 +142,7 @@ owns the shared GOP-06 operator-scope wording (Host decision). This proposal kee
 adds only the sentence that a list's authority covers only its listed `prepare-worktree` items, with its wording
 check.
 
-### Planning decisions
+#### Planning decisions
 
 - The user chose every recommended option in `answer-01`: the contract list with no CLI change (q1), stop at the
   first non-completed item (q2), `prepare-worktree` only (q3) and every setup or sync remainder to the Host (q4).
@@ -143,15 +153,16 @@ check.
 - `dev_effort` is `low`: Development changes only contract and guidance wording and its wording tests, with no CLI or
   `packages/devkit` change.
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: a daemon, global repository lock or autonomous scheduler.
 - **Scope Excluded**: operator source authoring, approval grants, force operations or arbitrary remote deletion.
 - **Scope Excluded**: unmeasured token, cost or latency savings.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-git-operator-batch-preparation`; the proposal is deleted there and its decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+
