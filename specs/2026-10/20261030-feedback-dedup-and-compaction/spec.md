@@ -90,12 +90,12 @@ read the bundle source as an installed environment renders it.
 ### [AC-06] Eligible items and exclusions
 - **Given** the playbook's collection step
 - **When** it selects items
-- **Then** it compacts terminal feedback (`resolved`, `promoted`, `dismissed`, `forwarded`) under `specs/` and leaves in place, reported with the reason: `open` items; an item of a spec bundle whose `spec.md` is not `completed` or of a live proposal; an item a current document outside the run's own deletions references (`devkit docs refs <ID> --direction in`, work history excluded); an item an unmerged local branch references or changes in its diff from its merge base; a file that fails `devkit rules check` or has an unknown status; and feedback under `docs/materials/`
+- **Then** it compacts terminal feedback (`resolved`, `promoted`, `dismissed`, `forwarded`) under `specs/` other than existing `FB-compacted-...` records, and leaves in place, reported with the reason: `open` items; an item of a spec bundle whose `spec.md` is not `completed` or of a live proposal; an item a current document outside the run's own deletions references (`devkit docs refs <ID> --direction in`, work history excluded); an item an unmerged local branch references or changes in its diff from its merge base; a file that fails `devkit rules check` or has an unknown status; and feedback under `docs/materials/`
 
 ### [AC-07] Grouping and record shape
 - **Given** the eligible items
 - **When** the playbook groups them and writes records
-- **Then** it groups by the capability area that covers each target (an item no area covers goes to `other`, misgrouping accepted), shows the group map, and writes one `feedback` record per area and status, `FB-compacted-<area>-<status>` (`FB-compacted-<namespace>-<area>-<status>` in a package namespace) at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` on its first run, a later run appending to the existing record in place; the record's frontmatter holds only `id`, `title`, `summary`, `target`, `status`, `created_at` and `aliases` (every retired ID and every alias a member declared), and each entry is keyed by its retired ID with one-line **Symptom**, **Response** and **Reason**
+- **Then** it groups by the capability area that covers each target (an item no area covers goes to `other`, misgrouping accepted), shows the group map, and writes one `feedback` record per area and status, `FB-compacted-<area>-<status>` at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` on its first run (in a package namespace `<area>` reads `<namespace>-<area>` in the ID and the file name alike, `FB-compacted-<namespace>-<area>-<status>`), a later run appending to the existing record in place and moving a misgrouped entry with its alias between records without deleting a file; the record's frontmatter holds only `id`, `title`, `summary`, `target`, `status`, `created_at` and `aliases` (every retired ID and every alias a member declared), and each entry is keyed by its retired ID with one-line **Symptom**, **Response** and **Reason**
 
 ### [AC-08] The playbook's record template is a valid feedback document whose aliases resolve
 - **Given** the record template in the playbook, filled with example values and written at a record path, with a completed spec bundle that cites a retired ID
@@ -137,5 +137,9 @@ feedback in its feedback lifecycle, citing both ADRs. `reconcile.md` records and
   the current namespace view, as `ADR-recording-looks-up-existing-feedback-of-every-status-first` states.
 - The record template lives in the playbook body itself while the playbook stays within the 12288-byte budget; a
   `references/` file is added only if it does not.
+- In a package namespace the record's file name carries the namespace (`<YYYYMMDD>-compacted-<namespace>-<area>-<status>.md`):
+  `RULE-id-convention` derives a month-level feedback ID from its file name, so the namespaced ID that
+  `ADR-closed-feedback-compacts-into-per-area-records-with-aliases` names needs it (found in `review-01`). The ADR's
+  path names the global case; its decision is unchanged.
 - The carried open feedback `FB-feedback-lifecycle-confirmation-names-wrong-rule` targets `ADR-feedback-lifecycle`,
   which this spec's write scope excludes (`docs/decisions/`); it is not a source of this spec and stays open.

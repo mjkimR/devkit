@@ -14,8 +14,9 @@ disposition. Git history keeps the full originals.
 ## Step 1: Collect
 
 List terminal feedback with `uv run devkit docs list feedback --history --all-namespaces -n 0`. Eligible: an item
-under `specs/` whose `status` is `resolved`, `promoted`, `dismissed` or `forwarded`. Leave each of these in place and
-record it with the reason for the report:
+under `specs/` whose `status` is `resolved`, `promoted`, `dismissed` or `forwarded`, except an existing
+`FB-compacted-...` record, which Step 3 extends and never deletes. Leave each of these in place and record it with the
+reason for the report:
 
 - an `open` item;
 - an item of a spec bundle whose `spec.md` is not `completed`, or of a proposal that still exists under
@@ -33,16 +34,18 @@ Feedback under `docs/materials/` stays as written, like every material.
 
 - Group each eligible item by the capability area that covers its `target`: a `docs/capabilities/<area>/` directory,
   or `capabilities/<area>/` of a package namespace. Judge from the target, title and evidence; an item no area covers
-  goes to `other`. A misgrouped entry is accepted and may move at a later run.
+  goes to `other`. A misgrouped entry is accepted and may move at a later run: move the entry and its alias to the
+  record of the right area and the same status, and delete no file.
 - Split each area by status: one group per area and status.
 - Show the user the group map (record ID, member IDs, one-line topic) before writing, unless the request named the
   groups.
 
 ## Step 3: Write or extend each record
 
-The record of a group is `FB-compacted-<area>-<status>` (`FB-compacted-<namespace>-<area>-<status>` in a package
-namespace). If `uv run devkit docs resolve FB-compacted-<area>-<status>` finds it, append the new entries and aliases
-to that file in place and update its `summary`. Otherwise create
+The record of a group is `FB-compacted-<area>-<status>`. For an area of a package namespace, `<area>` below stands
+for `<namespace>-<area>` in the ID, title and file name alike (`FB-compacted-<namespace>-<area>-<status>`), because the
+file name sets the ID. If `uv run devkit docs resolve FB-compacted-<area>-<status>` finds the record, append the new
+entries and aliases to that file in place and update its `summary`. Otherwise create
 `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` with today's date from this template:
 
 ```markdown
@@ -66,7 +69,9 @@ aliases:
 - **Reason**: <one line: why this outcome>
 ```
 
-- Frontmatter holds only these seven fields. `aliases` lists every retired ID and every alias a member declared.
+- Frontmatter holds only these seven fields. `target` is the area directory
+  (`docs/packages/<namespace>/capabilities/<area>/` in a package namespace, `other` for the `other` group). `aliases`
+  lists every retired ID and every alias a member declared.
   Write no observation field (`scope`, `kind`, `category`, `origin`, `severity`, `recurring`), so a `--where` filter
   never matches a record by a member's values.
 - Write one entry per retired ID, keyed by an H2 of that ID, with exactly the three lines. Take the Symptom from the

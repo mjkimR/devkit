@@ -47,7 +47,7 @@ def test_the_matched_status_decides_the_action() -> None:
         ),
     ):
         assert_rule(procedure, *row)
-    assert_rule(raw(SKILL), "`> Feedback exists: <ID> (<status>)`")
+    assert_rule(raw(SKILL), "step 2 says not to record", "`> Feedback exists: <ID> (<status>)`")
 
 
 # AC-03

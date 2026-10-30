@@ -63,4 +63,4 @@ If a sweep has no findings and its authored feedback envelope is the only pendin
 - `uv run devkit rules check <file>` exits `0` for each recorded file (`devkit rules fix <file>` aligns the ID and H1
   with the path).
 - One conversation line per observation: `> Feedback recorded: <path> (<scope>/<kind>, <severity>)`.
-  An observation step 2 matched gets `> Feedback exists: <ID> (<status>)` instead.
+  An observation step 2 says not to record gets `> Feedback exists: <ID> (<status>)` instead.

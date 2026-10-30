@@ -12,6 +12,7 @@ import tomllib
 from pathlib import Path
 
 import devkit_docs
+import pytest
 from devkit_agt.features.rules.services.testing import check, load_rule
 from devkit_docs.features.documents import DocumentIndex
 from distsupport.guidance import assert_rule
@@ -79,6 +80,7 @@ def test_collection_selects_terminal_feedback_under_specs_and_reports_exclusions
     ):
         assert_rule(step, *item)
     assert_rule(step, "`docs/materials/`", "stays as written")
+    assert_rule(step, "except an existing `fb-compacted-...` record", "step 3 extends", "never deletes")
 
 
 # AC-07
@@ -88,8 +90,14 @@ def test_grouping_and_the_record_shape() -> None:
     assert_rule(group, "one group per area and status")
     assert_rule(group, "group map", "before writing")
     write = _section("## Step 3: Write or extend")
+    assert_rule(group, "misgrouped entry", "move the entry and its alias", "delete no file")
     assert_rule(
-        write, "`fb-compacted-<area>-<status>`", "`fb-compacted-<namespace>-<area>-<status>`", "package namespace"
+        write,
+        "`fb-compacted-<area>-<status>`",
+        "package namespace",
+        "`<namespace>-<area>`",
+        "id, title and file name alike",
+        "`fb-compacted-<namespace>-<area>-<status>`",
     )
     assert_rule(write, "append the new entries and aliases", "in place")
     assert "`specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`" in text(PLAYBOOK)
@@ -110,10 +118,13 @@ def test_grouping_and_the_record_shape() -> None:
 
 
 # AC-08
-def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(workspace: Path, write: Write) -> None:
+@pytest.mark.parametrize("area", ["delivery", "pkg-delivery"], ids=["global", "package-namespace"])
+def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
+    workspace: Path, write: Write, area: str
+) -> None:
     record = (
         _template()
-        .replace("<area>", "delivery")
+        .replace("<area>", area)
         .replace("<Area>", "Delivery")
         .replace("<status>", "resolved")
         .replace("<One English sentence naming the area's recurring symptoms; the search ranks it.>", "Sweeps.")
@@ -124,17 +135,20 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(workspac
         .replace("<one line: why this outcome>", "The lookup now searches every status")
     )
     assert "<" not in record
-    write("specs/2026-10/feedback/20261030-compacted-delivery-resolved.md", record)
+    write(f"specs/2026-10/feedback/20261030-compacted-{area}-resolved.md", record)
+    history = "specs/2026-09/20260901-sweep/spec.md"
     write(
-        "specs/2026-09/20260901-sweep/spec.md",
+        history,
         "---\nid: SPEC-sweep\ntitle: Sweep\nsummary: Sweep.\nstatus: completed\ncreated: 2026-09-01\n---\n"
         "# [SPEC-sweep] Sweep\n\n## Source feedback\n\n- `FB-retired-sweep-miss`\n",
     )
     index = DocumentIndex.load(workspace)
     found = index.resolve("FB-retired-sweep-miss")
-    assert (found.id, found.kind.value, found.status) == ("FB-compacted-delivery-resolved", "feedback", "resolved")
+    assert (found.id, found.kind.value, found.status) == (f"FB-compacted-{area}-resolved", "feedback", "resolved")
     for rule in ("id_convention", "spec_format", "document_reference"):
         assert check(load_rule(RULES / rule / "rule.py"), workspace) == [], rule
+    # Completed spec history is checked only as an explicit target: its retired ID must resolve through the alias.
+    assert check(load_rule(RULES / "document_reference" / "rule.py"), workspace, targets=[history]) == []
 
 
 # AC-09
