@@ -6,20 +6,27 @@ status: planned
 created: 2026-10-30
 depends_on:
   - SPEC-deep-research-bundle
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-DLV-idea-incubation
+  - CAP-DLV-incubation-sdd-baseline
+  - CAP-DLV-proposal-incubation
+  - CAP-DIST-sync-and-transactions
+  - CAP-DLV-project-policy
+related_usecases:
+  - UC-incubate-an-idea
+  - UC-adopt-sdd-from-incubation
+  - UC-incubate-and-hand-off-a-proposal
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-rename-incubation-to-adaptive-dev] Rename incubation to adaptive-dev and disambiguate proposal terms
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-rename-incubation-to-adaptive-dev on 2026-10-30.
-- **Preserved Materials**: `docs/materials/2026-10/20261030-rename-incubation-to-adaptive-dev`
-
-### 1. Background & Hypothesis
+Handed off from proposal PROP-rename-incubation-to-adaptive-dev (accepted at historical Git
+`b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/proposal.md`). The
+decision is `ADR-adaptive-dev-approach-name`; the inventory is `MAT-incubation-rename-inventory`, measured at
+`fb9b549a` before `SPEC-deep-research-bundle` landed.
 
 "Incubation" names two unrelated concepts in this repository:
 
@@ -29,128 +36,154 @@ Handed off from proposal PROP-rename-incubation-to-adaptive-dev on 2026-10-30.
   the `incubation` catalog bundle, `/incubate`, `get-context incubation` and `.devkit/incubation.md`
   (`CAP-DLV-idea-incubation`, `CAP-DLV-incubation-sdd-baseline`).
 
-With both installed, a request to "incubate" an idea does not identify which one the user means.
-The hypothesis: one distinct name per concept removes the ambiguity at every entry, setting and document.
+With both installed, a request to "incubate" an idea does not identify which one the user means. One distinct name
+per concept removes the ambiguity at every entry, setting and document.
 
-#### Settled direction
+Settled direction (user, `ADR-adaptive-dev-approach-name`):
 
-- The approach and bundle become `adaptive-dev`: `[development] approach = "adaptive-dev"` beside `"sdd"`, and the
-  catalog bundle `adaptive-dev`. The name pairs with spec-driven development as "adaptive development".
-- Rejected names: `incubation` and `project-incubation` keep the ambiguous word; `project-bootstrap` reads as a
-  temporary phase, while the approach may remain a project's approach indefinitely (`CAP-DLV-idea-incubation`).
-- The SDD proposal term is renamed as well, so "incubation" names no current concept.
-- The approach keeps its contract: a product may stay in it, and SDD adoption stays the explicit `sdd-baseline`
-  procedure.
+- The approach and bundle become `adaptive-dev`; documents call the approach "adaptive development". Rejected:
+  `incubation`, `project-incubation`, `project-bootstrap`, `project-adaptive`, `adaptive`.
+- No consumer uses the incubation approach or bundle, so no compatibility is kept: `"incubation"` is an ordinary
+  invalid approach value, the `incubation` bundle name gets no alias and `.devkit/incubation.md` gets no fallback
+  read. The guides state no migration steps.
+- The SDD proposal term becomes "proposal Planning", the name the spec bundle already uses for that activity.
+- The approach contract is unchanged: a product may stay in adaptive development, and SDD adoption stays the
+  explicit `sdd-baseline` procedure.
+
+### Premises checked against the current base
+
+The proposal was planned before `SPEC-deep-research-bundle` landed (b2711684). Checked on this branch:
+
+- The split moved `incubate-research`, its references and the roles `direction-explorer`, `discovery-critic` and
+  `discovery-planner` into the `deep-research` bundle, and added `CAP-DLV-deep-research`. The remaining incubation
+  bundle holds exactly `incubate`, `incubation-pointer`, `product-clarifier`, `incubation-researcher`,
+  `usage-reviewer` and `current-context-template`, as the proposal's "Scope after" section expects.
+- The split added current text that names the incubation bundle: `CAP-DLV-deep-research`,
+  `UC-research-an-idea-and-shape-a-roadmap`, `ADR-split-deep-research-bundle`,
+  `ADR-retain-research-as-cited-materials`, the deep-research tests, the catalog README and three guides. Mentions
+  that describe the split's own move away from the old bundle (`.devkit/transient/incubation-research/`,
+  `incubation:<role>`, `.devkit/overrides/incubation/subagents/`) name a legacy location and stay; mentions of the
+  bundle as a current concept are renamed. Both readings are inside the proposal's scope.
+- `ADR-extend-incubation-with-optional-discovery-teams` is superseded by `ADR-split-deep-research-bundle`, as Q7
+  assumed.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Rename incubation to adaptive-dev and disambiguate proposal terms so that system capabilities are extended.
+- **US-1**: As a user with both the spec and the adaptive-dev bundles installed, I want each development concept to
+  have its own name, so that asking for adaptive development or for proposal Planning identifies one procedure.
+- **US-2**: As a consumer configuring a project, I want `[development] approach` to accept `"sdd"` or
+  `"adaptive-dev"` and to name both when it refuses a value, so that I set the approach without reading history.
+- **US-3**: As a reader of the Living Spec, I want the renamed documents to resolve by their old IDs, so that
+  history that cites `CAP-DLV-idea-incubation` or `CAP-DLV-proposal-incubation` still finds the current contract.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: no compatibility for the old names: no legacy reading of `"incubation"` in the working
+   configuration or a committed snapshot, no deprecation period or rename hint, no `incubation` bundle alias, no
+   `.devkit/incubation.md` fallback read and no migration steps in the guides.
+2. **Scope Excluded**: no behavior change of the approach, the bundle, the readiness checks or the SDD lifecycle
+   refusal; the codes `DEVELOPMENT_CONFIG_INVALID`, `SDD_LIFECYCLE_INACTIVE`, `SPEC_LIFECYCLE_INACTIVE` and
+   `SELECTION_INVALID` keep their names.
+3. **Scope Excluded**: no rewording of history: decision text in `docs/decisions/` (only canonical-ID rewrites and
+   the one-line pointers), `specs/` outside the listed `feedback/` directories, `docs/materials/`, `handbook/` and
+   the done milestone `MS-idea-incubation` keep their wording.
+4. **Scope Excluded**: no change to the split's legacy-location mentions or to the deep-research bundle text.
+5. **Scope Excluded**: no rename of the playbook ID `sdd-baseline` or of the ADR IDs and titles that contain
+   incubation.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### Scenario 1 [AC-01]: Carried from proposal
-- `rg --hidden -i incubat` over tracked files returns only allowlisted matches: history paths, `aliases` entries,
-  ADR IDs and titles, glossary Avoid cells, `glossary.yaml` synonyms and the split's legacy-location mentions named
-  above.
+### [AC-01] "incubation" names no current concept
 
-### Scenario 2 [AC-02]: Carried from proposal
-- `packages/devkit-dist/tests/integration/features/project/test_development.py` accepts `"sdd"` and
-  `"adaptive-dev"` and refuses `"incubation"` with `DEVELOPMENT_CONFIG_INVALID` and the `fix` naming both valid
-  values.
+- **Given** the committed head of this branch
+- **When** `git ls-files -z | xargs -0 rg --hidden -i -n incubat` runs from the repository root
+- **Then** every matching line falls in one allowlisted class: a history path (`docs/decisions/` decision text,
+  `specs/` outside the listed `feedback/` directories, `docs/materials/`, `handbook/`, `docs/roadmap/_archive/`); an
+  `aliases` entry; an ADR ID or title; a glossary Avoid cell or `glossary.yaml` synonym; a legacy-location mention
+  of the deep-research split; or a test line that asserts the old name is refused or absent; the check reports zero
+  lines outside these classes
 
-### Scenario 3 [AC-03]: Carried from proposal
-- The readiness and lifecycle tests in `packages/devkit-spec/tests/` and `packages/devkit/tests/` that set the
-  non-SDD approach use `"adaptive-dev"` and assert the evidence `omitted:adaptive-dev`.
+### [AC-02] The approach accepts sdd and adaptive-dev and refuses incubation
 
-### Scenario 4 [AC-04]: Carried from proposal
-- `packages/devkit-catalog/tests/integration/bundles/` selects and projects the `adaptive-dev` bundle with the
-  `/adaptive-dev` entry, the `adaptive-dev-pointer` guidance and the `product-researcher` role.
+- **Given** `.devkit/config.toml` with `[development] approach` set to `"sdd"`, `"adaptive-dev"` or `"incubation"`
+- **When** `development_approach` parses the working configuration or a committed snapshot
+- **Then** `"sdd"` and `"adaptive-dev"` parse to that value; `"incubation"` raises `DEVELOPMENT_CONFIG_INVALID`
+  (exit 2) whose `fix` is exactly `Use [development] approach = "sdd" or "adaptive-dev" in .devkit/config.toml`, as
+  `packages/devkit-dist/tests/integration/features/project/test_development.py` asserts
 
-### Scenario 5 [AC-05]: Carried from proposal
-- `tests/e2e/smoke.sh` lists `adaptive-dev` in the catalog bundle set and asserts `.devkit/managed/adaptive-dev`.
+### [AC-03] Readers of the approach compare the renamed value
 
-### Scenario 6 [AC-06]: Carried from proposal
-- `just rules-check` passes over the whole workspace, with no alias reference left in a current document.
+- **Given** a project whose committed and working configuration set `approach = "adaptive-dev"`
+- **When** the readiness, attach, integration, cleanup, hygiene, rule-applicability and lifecycle tests in
+  `packages/devkit-spec/tests/` and `packages/devkit/tests/` run
+- **Then** they pass with the behavior of the old value: project readiness records the evidence
+  `LIFECYCLE omitted:adaptive-dev`, the rule omission reason reads `adaptive-dev: no targeted retained SDD unit`
+  and SDD lifecycle mutation is refused with `SPEC_LIFECYCLE_INACTIVE` naming the adaptive-dev development approach
 
-## 5. Carried Proposal Notes
+### [AC-04] The catalog ships the adaptive-dev bundle
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+- **Given** devkit-catalog registers the entry point `adaptive-dev = "devkit_catalog.adaptive_dev"` and no
+  `incubation` entry point
+- **When** `packages/devkit-catalog/tests/integration/bundles/` selects `adaptive-dev:core` and syncs
+- **Then** the preset holds exactly `adaptive-dev`, `adaptive-dev-pointer`, `product-clarifier`,
+  `product-researcher`, `usage-reviewer` and `current-context-template`; the `/adaptive-dev` skill, the pointer
+  guidance and the three roles are projected; no file of the bundle contains `incubat`; the entry and its references
+  name `.devkit/adaptive-dev.md`, `get-context adaptive-dev` and `approach = "adaptive-dev"`; sync seeds no
+  `.devkit/adaptive-dev.md`; selecting `incubation:core` fails with `SELECTION_INVALID`
 
-### 2. Technical Spike Questions
+### [AC-05] The consumer smoke test sees the renamed bundle
 
-Planning answers each question below; `MAT-incubation-rename-inventory` lists every affected file,
-historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/scout-01.yaml` holds the evidence and historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/answer-01.yaml` records the decisions.
+- **Given** `just smoke` installs the built wheels into a scratch consumer
+- **When** it lists the catalog bundles and runs the default sync
+- **Then** the catalog bundle set is exactly `response-style`, `maintenance`, `cli-tool`, `adaptive-dev` and
+  `deep-research`, and `.devkit/managed/adaptive-dev` does not exist
 
-- **Q1 Approach value** (q1): no consumer uses the incubation approach or bundle, so the rename keeps no
-  compatibility. `"incubation"` becomes an ordinary invalid value:
-  - Every parse of `[development] approach`, of the working configuration and of a committed snapshot alike,
-    refuses it with `DEVELOPMENT_CONFIG_INVALID` (exit 2), as it refuses any unknown value
-    (`CAP-DIST-sync-and-transactions`).
-  - The `fix` names the valid values: `Use [development] approach = "sdd" or "adaptive-dev" in .devkit/config.toml`.
-  - No deprecation period, legacy normalization or targeted rename hint is added.
-- **Q2 Bundle** (q1): the `incubation` bundle name is removed with no alias or shim. A configuration that still
-  selects it gets the existing `SELECTION_INVALID` refusal of a bundle no package provides. The guides describe only
-  the `adaptive-dev` bundle and state no migration steps for the selection, overrides or role-policy keys.
-- **Q3 Context file**: the file becomes `.devkit/adaptive-dev.md`. Only guidance reads or writes it, and sync never
-  touches it. The entry and the `sdd-baseline` playbook read no legacy `.devkit/incubation.md` (q1). The file stays
-  project-owned and never seeded (`CAP-DLV-idea-incubation` rules 14 and 15 keep their meaning).
-- **Q4 Entry and role names** (q3): the entry `/incubate` becomes `/adaptive-dev`, the approach's main entry as
-  `/spec` is SDD's; it is renamed, not added beside `/incubate`. The pointer guidance becomes `adaptive-dev-pointer`,
-  and `incubation-researcher` becomes `product-researcher` beside `product-clarifier`. The researcher stays in
-  adaptive-dev: `SPEC-deep-research-bundle` ships its own `research-investigator`, and the two bundles share no role
-  and declare no bundle or package dependency in either direction. adaptive-dev never invokes deep-research; it reads
-  retained research only by its `MAT-<slug>` ID.
-- **Q5 SDD term** (q2): the spec bundle already calls this activity Planning (`planning.md`, `plan-<slug>`,
-  `plan-intent`, `plan-accept`, `planning-worker`, `planning_effort`). The term is "proposal Planning":
-  `CAP-DLV-proposal-incubation` becomes CAP-DLV-proposal-planning ("Proposal Planning and Handoff"), and
-  `UC-incubate-and-hand-off-a-proposal` becomes UC-plan-and-hand-off-a-proposal. The `devkit spec proposal` help
-  text ("Incubate proposals ...") and prose in `ARCH-04-1-ecosystem-boundaries`, `ARCH-04-2-delivery-policy`,
-  `docs/development/workflow.md`, `docs/README.md` and `docs/proposals/README.md` use the same term.
-- **Q6 Code identifiers**: `development_approach` in `devkit_dist.features.project` is the only parser; its
-  `Literal`, check, message and `fix` change. Readers that compare the literal change from `"incubation"` to
-  `"adaptive-dev"`: `devkit_spec.features.delivery.usecases.{attach,integration,cleanup}`,
-  `devkit_spec.features.governance.services.applicability`, `devkit_spec.features.governance.usecases.hygiene`,
-  `devkit_spec.features.policy.services.lifecycle` and `devkit_agt.features.integration.usecases.project`. Output
-  text that names the approach changes with it: the readiness evidence `omitted:incubation` becomes
-  `omitted:adaptive-dev`, plus the omission reason and refusal messages. The codes `DEVELOPMENT_CONFIG_INVALID` and
-  `SDD_LIFECYCLE_INACTIVE` keep their names. The package `devkit_catalog.incubation` becomes
-  `devkit_catalog.adaptive_dev`, and its tests move to `tests/{integration,e2e}/bundles/` names using
-  `adaptive_dev`. Test fixtures named after the SDD term (`INCUBATED`, the `incubate` workflow fixture ID) are
-  renamed.
-- **Q7 Sequencing** (q4, decided by the Host): `SPEC-deep-research-bundle` lands first, and this proposal declares
-  `depends_on: [PROP-deep-research-bundle]`. Both Plannings may run in parallel; no same-release constraint applies.
-  Reasons:
-  - The split moves the research entry, its references and roles; renaming them first would rename text the split
-    then moves and rewrites.
-  - The split's proposal cites `CAP-DLV-idea-incubation`; renaming first would make that citation an alias reference
-    in a file this proposal does not own.
+### [AC-06] The renamed documents resolve and no current document cites an alias
 
-### 3. Proposed Design & Impact
+- **Given** the six renamed documents of section 5
+- **When** `devkit docs resolve <old ID>` runs for each old ID and `just rules-check` runs over the workspace
+- **Then** each old ID resolves to the new document, which keeps the old ID in `aliases`; `just rules-check` exits 0
+  with no alias reference left in a current document
 
-#### Approach and bundle
+### [AC-07] The spec bundle and its CLI use the new names
 
-- `devkit-dist` accepts `adaptive-dev` beside `sdd` (`ADR-adaptive-dev-approach-name`) and refuses `"incubation"`
-  like any unknown value (Q1). The commented config template lists `sdd or adaptive-dev`.
-- `devkit-spec` and `devkit-agt` compare the renamed value. Refusing SDD lifecycle mutation under the non-SDD
-  approach is unchanged.
-- The `incubation` catalog bundle becomes `adaptive-dev` (Q4): entry `/adaptive-dev`, pointer
-  `adaptive-dev-pointer`, context file `.devkit/adaptive-dev.md`, the current-context template and the roles
-  `product-clarifier`, `product-researcher` (renamed from `incubation-researcher`) and `usage-reviewer`.
-- The package moves to `devkit_catalog.adaptive_dev`, and `.devkit/architecture.toml` lists `adaptive_dev` among the
-  `devkit_catalog` data roots.
-- The spec bundle's constitution, pointer, `spec` skill and `sdd-baseline` playbook name `adaptive-dev`; the
-  playbook ID `sdd-baseline` stays.
-- This repository's `AGENTS.md` managed block and `.devkit/installation.json` change only through `devkit sync`
-  after the spec bundle source changes; `.devkit/managed/` stays untracked and unedited.
+- **Given** the spec bundle source and `devkit spec proposal --help`
+- **When** this repository runs `devkit sync` and an agent reads the constitution, pointer, `spec` skill and
+  `sdd-baseline` playbook
+- **Then** they name `adaptive-dev` for the approach and `/adaptive-dev` for its entry; the help's first line reads
+  "Plan proposals in docs/proposals/ and hand approved ones off to spec bundles."; the `AGENTS.md` managed block and
+  `.devkit/installation.json` change only through that sync, and `devkit sync --check` exits 0 afterwards
 
-#### Documents
+## 5. Design
+
+### Approach value
+
+`devkit_dist.features.project.models.development` is the only parser: its `Literal`, check, message and `fix` name
+`"sdd"` and `"adaptive-dev"`. The commented config template lists `sdd or adaptive-dev`. Readers that compare the
+literal change from `"incubation"` to `"adaptive-dev"`, with the output text that names the approach:
+`devkit_spec.features.delivery.usecases.attach`, `.integration` and `.cleanup`,
+`devkit_spec.features.governance.services.applicability`, `devkit_spec.features.governance.usecases.hygiene`,
+`devkit_spec.features.policy.services.lifecycle` and `devkit_agt.features.integration.usecases.project`.
+
+### Catalog bundle
+
+| Old | New |
+| --- | --- |
+| package `devkit_catalog.incubation`, entry point `incubation` | `devkit_catalog.adaptive_dev`, entry point `adaptive-dev` |
+| skill `incubate` (`/incubate`) | `adaptive-dev` (`/adaptive-dev`), with its `current-context`, `delegation`, `discovery` and `evidence-and-iteration` references |
+| guidance `incubation-pointer` | `adaptive-dev-pointer` |
+| role `incubation-researcher` | `product-researcher` |
+| context file `.devkit/incubation.md` | `.devkit/adaptive-dev.md` |
+
+`product-clarifier`, `usage-reviewer` and `current-context-template` keep their IDs. `.devkit/architecture.toml`
+lists `adaptive_dev` among the `devkit_catalog` data roots. Tests move to
+`tests/integration/bundles/test_adaptive_dev.py` and `tests/e2e/bundles/adaptive_dev/`.
+
+### Documents
 
 Each renamed document moves to its new path, takes the new ID and keeps the old ID in `aliases`
-(`ADR-document-id-aliases`). New IDs are written without backticks until their documents exist:
+(`ADR-document-id-aliases`); `devkit rules fix` rewrites alias references in current documents, ADRs and the listed
+`feedback/` files:
 
 | Old ID | New ID | New title |
 | --- | --- | --- |
@@ -158,68 +191,26 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
 | `CAP-DLV-incubation-sdd-baseline` | CAP-DLV-sdd-baseline-adoption | SDD baseline adoption |
 | `UC-incubate-an-idea` | UC-advance-an-idea | Advance an idea and leave resumable current context |
 | `UC-adopt-sdd-from-incubation` | UC-adopt-sdd-from-adaptive-development | Adopt SDD from an adaptive-development product |
-| `CAP-DLV-proposal-incubation` | CAP-DLV-proposal-planning (q2) | Proposal Planning and Handoff |
-| `UC-incubate-and-hand-off-a-proposal` | UC-plan-and-hand-off-a-proposal (q2) | Plan a Proposal and Hand It Off to a Spec |
+| `CAP-DLV-proposal-incubation` | CAP-DLV-proposal-planning | Proposal Planning and Handoff |
+| `UC-incubate-and-hand-off-a-proposal` | UC-plan-and-hand-off-a-proposal | Plan a Proposal and Hand It Off to a Spec |
 
-- `devkit rules fix` rewrites every alias reference in current documents to the canonical ID. Under
-  `ADR-immutable-decisions-editable-records` this includes the ADRs and the feedback files under `specs/**/feedback/`
-  that cite a renamed ID (15 files in 10 `feedback/` directories at `fb9b549a`, listed in `owns`).
-- The ADR promoted from `ADR-adaptive-dev-approach-name` names the statements it replaces: the value set of
-  `ADR-own-development-approach-policy-outside-sdd` and the bundle, entry and context-file names in
-  `ADR-keep-incubation-guidance-opt-in-and-current-state-based`. Each such accepted ADR gets a one-line pointer to it.
-- `ADR-extend-incubation-with-optional-discovery-teams` gets no pointer here: the ADR promoted from
-  PADR-split-deep-research-bundle (on the split's Planning branch) supersedes it before this proposal starts (Q7).
-- Development checks every other accepted, not superseded ADR, including those the split promotes, for an outcome
-  that names the value, bundle or entry, and adds the same pointer. ADR IDs, titles and other decision text stay as
-  history.
-- `guides/install/incubation-sdd-adoption.md` becomes `guides/install/adaptive-dev-sdd-adoption.md`, and the
-  `#idea-incubation` anchors are renamed. The guides gain no migration steps (Q1, Q2).
-- Glossary: **Development approach** names `sdd` or `adaptive-dev`. A new **Adaptive development** row lists
-  "incubation" under Avoid. **Incubation current context** becomes **Adaptive-dev current context**
-  (`.devkit/adaptive-dev.md`). The proposal Planning row lists "proposal incubation" under Avoid.
-  `glossary.yaml` maps "incubation" as a search synonym to both terms, so a search for the old word finds them.
-- History keeps its wording: `docs/decisions/` decision text, `specs/` outside the listed `feedback/` directories,
-  `docs/materials/`, `handbook/` and the done milestone `MS-idea-incubation`.
+- `ADR-own-development-approach-policy-outside-sdd`, `ADR-keep-incubation-guidance-opt-in-and-current-state-based`
+  and every other accepted, not superseded ADR whose outcome names the value, bundle or entry as current get a
+  one-line pointer to `ADR-adaptive-dev-approach-name`.
+- `guides/install/incubation-sdd-adoption.md` becomes `guides/install/adaptive-dev-sdd-adoption.md`; the
+  `#idea-incubation` anchors become `#adaptive-development`.
+- Glossary: **Development approach** names `sdd` or `adaptive-dev`; a new **Adaptive development** row lists
+  "incubation" under Avoid; **Incubation current context** becomes **Adaptive-dev current context**; a new
+  **Proposal Planning** row lists "proposal incubation" under Avoid. `glossary.yaml` maps "incubation" as a search
+  synonym to both terms.
 
-#### Scope after `SPEC-deep-research-bundle`
+## 6. Assumptions
 
-The split lands first (Q7), so this proposal renames the bundle as the split leaves it and excludes what the split
-moves out:
-
-- the `incubate-research` skill and its `orchestration`, `workspace` and `synthesis` references;
-- the research-only roles `direction-explorer`, `discovery-critic` and `discovery-planner`, and the split's own
-  `research-investigator`;
-- `CAP-DLV-idea-incubation` rules 17 to 23, 25 and 26 and `UC-research-an-idea-and-shape-a-roadmap`, which move to
-  the split's research capability.
-
-The rename covers `/incubate` with its `current-context`, `delegation`, `discovery` and `evidence-and-iteration`
-references, the three product roles, the pointer and template, and the product-iteration part of
-`CAP-DLV-idea-incubation`. Any current name the split leaves that still contains incubation is renamed here wherever
-it lives in `owns`. A path or key the split's documents name only to describe its own move away from the
-incubation bundle, such as `.devkit/transient/incubation-research/`, stays: it names a legacy location, not a
-current concept.
-
-### Planning decisions
-
-- `ADR-adaptive-dev-approach-name` records the user's naming decision, the rejected names and the no-compatibility
-  rename (q1).
-- historical Git `b27116846db71a45feacbaa7e60b05ac4d2c4d5e:docs/proposals/PROP-rename-incubation-to-adaptive-dev/envelopes/answer-01.yaml` records the decisions on q1 to q4. Dropped with q1: the committed-snapshot legacy
-  reading, the ordered guide migration steps, the legacy context-file fallback, the integration-readiness migration
-  test and the remove-then-add catalog e2e migration test.
-- The draft boundaries excluded `docs/decisions/` and `specs/`. `RULE-document-reference` reports alias references
-  in ADRs and in feedback files under `specs/`, and `ADR-immutable-decisions-editable-records` makes canonical-ID
-  rewrites and one-line pointers editorial ADR edits. Planning therefore owns `docs/decisions/` and the ten
-  `feedback/` directories for those edits only.
-- Planning also adds the package READMEs, `docs/development/`, `docs/README.md`, `docs/proposals/README.md`,
-  `glossary.yaml`, `tests/e2e/smoke.sh`, `AGENTS.md`, `.devkit/installation.json` and `.devkit/architecture.toml`,
-  which state the old names.
-- `dev_effort` is `medium`: the change is a mechanical rename across several packages and documents with no
-  consumer-contract migration, because no consumer uses the incubation approach or bundle (q1).
-
-### 4. Lifecycle & Retirement Criteria
-
-- On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
-  `dev-rename-incubation-to-adaptive-dev`; the proposal is deleted there and its decisions become ADRs.
-- On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
-
+- The CLI help sentence of AC-07 replaces "Incubate" with "Plan", the verb of the term the proposal chose.
+- The guide anchor `#idea-incubation` becomes `#adaptive-development`, from the renamed heading "Adaptive
+  development".
+- Test lines that assert an old name is refused (`"incubation"` in AC-02, `incubation:core` in AC-04) or absent
+  from a projection are an AC-01 allowlist class: they are the evidence that the old name is no current concept.
+- The split's migration sections in the guides and the catalog README keep their legacy keys and paths; their lead
+  sentence names "the former `incubation` bundle" so it reads as a legacy location.
+- The catalog bundle version stays `0.1.5`; a release bumps it.
