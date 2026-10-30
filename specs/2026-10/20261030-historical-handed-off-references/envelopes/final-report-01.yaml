@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-30T05:45:42.857323Z'
+status: completed
+summary: RULE-document-reference accepts a handed-off PROP-<slug> in explicitly targeted work history (prose and unit depends_on) when its SPEC-<slug> resolves; live documents keep the fixable error and an unknown PROP stays an error. CAP-GOV-spec-rules 3.3 and the rule guide state it; the reproduction command reports errors=0
+findings: []
+checks:
+  tests: PASS just test-affected partial 2077 passed (on 6ecf2dec, later commits are spec records only); document_reference rule tests 30 passed
+  build: PASS just check devkit-docs (pyright) 0 errors; devkit sync --check exit 0
+  lint: PASS just lint-check devkit-docs; devkit rules check --ci --base 030909fd 0 errors; rules check of specs/2026-10/20261030-integration-merge-moved-target errors=0
+diff_scope:
+  base: 030909fde76958abb17d35d8a1ac15237be4b65f
+  head: 0c55a060e3fddbd7041412c5e797dce52cf479bc
