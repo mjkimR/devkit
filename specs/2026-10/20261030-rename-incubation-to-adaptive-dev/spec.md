@@ -2,7 +2,7 @@
 id: SPEC-rename-incubation-to-adaptive-dev
 title: Rename incubation to adaptive-dev and disambiguate proposal terms
 summary: Rename the incubation bundle and development approach to adaptive-dev and the SDD proposal-incubation term to proposal Planning, so each development concept has one unambiguous name. No consumer uses incubation yet, so the old value and bundle become plain invalid names with no migration path.
-status: in-progress
+status: completed
 created: 2026-10-30
 depends_on:
   - SPEC-deep-research-bundle

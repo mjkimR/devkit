@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-rename-incubation-to-adaptive-dev
-status: pending
+status: resolved
 targets:
   - file: docs/README.md
     resolution: modified
@@ -133,10 +133,12 @@ legacy-location mentions in `CAP-DLV-deep-research` stay. `CAP-DOCS-document-mod
 `ADR-own-development-approach-policy-outside-sdd`, `ADR-keep-incubation-guidance-opt-in-and-current-state-based`,
 `ADR-adopt-sdd-through-an-evidenced-baseline-playbook`, `ADR-retain-research-as-cited-materials` and
 `ADR-split-deep-research-bundle` each gained one "Superseded in part by `ADR-adaptive-dev-approach-name`" line after
-the statement whose name it replaces. They are the accepted ADRs whose outcome names the value, bundle, entry or
-context file; `ADR-keep-discovery-plans-distinct-from-delivery-commitments` and
-`ADR-extend-incubation-with-optional-discovery-teams` are superseded and get none, and `ADR-document-package` and
-`ADR-document-and-sdd-bundles` mention the old name outside their outcome. The other changed ADRs, including
+the statement whose name it replaces. The first two get it because `ADR-adaptive-dev-approach-name` names them in its
+outcome, although `ADR-keep-incubation-guidance-opt-in-and-current-state-based` is itself superseded by
+`ADR-extend-incubation-with-optional-discovery-teams`. The other three are accepted, not superseded ADRs whose outcome
+names the value, bundle, entry or context file. `ADR-keep-discovery-plans-distinct-from-delivery-commitments` and
+`ADR-extend-incubation-with-optional-discovery-teams` are superseded and named by no outcome, so they get none, and
+`ADR-document-package` and `ADR-document-and-sdd-bundles` mention the old name outside their outcome. The other changed ADRs, including
 `ADR-adaptive-dev-approach-name`, changed only by canonical-ID rewrites. Decision text is otherwise unchanged.
 
 ## Glossary
