@@ -2,6 +2,8 @@
 reconcile_id: REC-local-orch-resource-manager
 status: pending
 targets:
+  - file: docs/materials/2026-10/20261030-local-orch-resource-manager/20261030-development-evidence.md
+    resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
@@ -20,7 +22,7 @@ targets:
 
 # Reconciliation: `SPEC-local-orch-resource-manager`
 
-All six blueprint targets and the accepted ADR wording/evidence update are reflected. Delivery owns role lifetime,
+All six blueprint targets, the accepted ADR wording/evidence update and the Development evidence material are reflected. Delivery owns role lifetime,
 lean defaults, per-job interface, Host decisions and worker separation. Integration preserves CLI guards and maps
 partial effects independently of role status. Both use cases cover reuse, current authority and incomplete effects.
 Architecture and glossary separate Host supervision from bounded execution. The ADR's decision is unchanged;
@@ -35,3 +37,6 @@ was introduced. Lifecycle and distribution engines are unchanged.
 Entrypoint derivation added the git-operator contract doorway to the two capabilities and two use cases.
 Rejected candidates: the installation receipt, broad bundle directory and test directory are not behavioral
 doorways. Existing engine entrypoints remain applicable; no new CLI/API entrypoint exists.
+
+The independent reconcile reviewer found one inventory omission (Development evidence material), corrected above.
+The implementer verifies this bounded record correction; the reviewed contracts and implementation are unchanged.
