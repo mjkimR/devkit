@@ -336,7 +336,8 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    rest of the frontmatter, `summary` included, is kept, except that each item of the PADR's `aliases` has `PADR-`
    replaced by `ADR-`, so the own-prefix rule holds after the rename. Only the IDs of the PADRs this handoff promotes
    change, and never inside a file name (`PADR-<slug>.md` in a link is left to step 6). Other files under
-   `decisions/` are not promoted. A `supersedes` reaches the ADR unchanged; handoff edits no ADR it names, whose
+   `decisions/` are not promoted. A `supersedes` reaches the ADR unchanged, and the scaffold's commented
+   `# supersedes:` line, left unchanged, is dropped; handoff edits no ADR a `supersedes` names, whose
    `status: superseded` or "Superseded in part by" line is written in Development.
 5. **Feedback and materials**: open `feedback/*.md` files move into the new spec's feedback directory;
    settled feedback follows the generic extras route. `materials/` moves to `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` when it holds a file other

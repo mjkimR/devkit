@@ -531,6 +531,18 @@ def test_a_padr_supersedes_reaches_the_adr_and_leaves_the_named_adr_alone(worksp
     assert (workspace / old).read_text(encoding="utf-8") == old_text
 
 
+def test_an_unused_supersedes_placeholder_does_not_reach_the_adr(workspace: Path) -> None:
+    proposal = _new(workspace, "plain")
+    CreateProposalDecisionUseCase().execute(workspace, "plain", "Pick A")
+    assert "# supersedes:" in (proposal.parent / "decisions/PADR-pick-a.md").read_text(encoding="utf-8")
+    accept(proposal)
+
+    handoff_proposal(workspace, "plain", today=TODAY)
+
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
+    assert "supersedes" not in adr and "proposal: SPEC-plain\nstatus: accepted\n" in adr
+
+
 def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
     proposal = _new(workspace, "span-paths")
     CreateProposalDecisionUseCase().execute(workspace, "span-paths", "Pick A")

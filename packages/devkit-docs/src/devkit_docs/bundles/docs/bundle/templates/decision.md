@@ -4,6 +4,7 @@ title: Decision Title
 summary: "For <context>, we <decision>, to <achieved quality>, accepting <downside>."   # required, English Y-statement (decision-writing); quote it, it may contain ": "
 status: proposed          # proposed | accepted | deprecated | superseded (only when a later ADR replaces all of its decisions; decision-writing)
 created_at: YYYY-MM-DD
+# supersedes: [ADR-<slug>]   # optional: ADRs this one replaces, wholly or in part; name the replaced clauses in Decision Outcome
 ---
 
 # [ADR-<slug>] Decision Title (e.g., Select PostgreSQL as Main RDBMS)

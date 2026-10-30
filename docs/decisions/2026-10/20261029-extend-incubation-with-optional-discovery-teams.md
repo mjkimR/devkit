@@ -10,8 +10,8 @@ created_at: 2026-10-29
 
 # [ADR-extend-incubation-with-optional-discovery-teams] Extend incubation with optional discovery teams
 
-Superseded in part by `ADR-split-deep-research-bundle`: its placement of the research entry and the three
-discovery roles in `incubation:core`.
+Superseded in part by `ADR-split-deep-research-bundle`: its research entry and three discovery roles in
+`incubation:core`, including that entry's shared approach check and its use of `.devkit/incubation.md`.
 
 ## 1. Context & Problem Statement
 

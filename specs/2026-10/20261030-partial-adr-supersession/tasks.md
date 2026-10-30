@@ -14,7 +14,7 @@ plan: PLAN-partial-adr-supersession
   - **Verification**: `just test devkit-spec bundles/spec`, `just test devkit-docs bundles/docs`, `uv run devkit sync --check`
 
 - [x] **Task 2**: Offer `supersedes` in the PADR scaffold and document it, with scaffold and handoff tests
-  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py`, `packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py`, `packages/devkit-spec/tests/integration/features/proposals/test_proposal_handoff.py`, `docs/capabilities/delivery/CAP-DLV-proposal-planning.md`
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py`, `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py` (review-01: drop the unchanged placeholder), `packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py`, `packages/devkit-spec/tests/integration/features/proposals/test_proposal_handoff.py`, `docs/capabilities/delivery/CAP-DLV-proposal-planning.md`
   - _Requirements: AC-03_
   - **Verification**: `just test devkit-spec features/proposals`, `just lint-check devkit-spec`, `just check devkit-spec`
 

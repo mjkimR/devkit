@@ -56,6 +56,7 @@ def test_the_decision_guide_and_template_keep_a_partly_replaced_adr_accepted() -
     assert_rule(guide, "names it in `supersedes`", "which clauses it")
     template = raw("templates/decision.md")
     assert_rule(template, "superseded (only when a later adr replaces all")
+    assert_rule(template, "# supersedes: [adr-<slug>]", "wholly or in part", "replaced clauses in decision outcome")
     assert_rule(template, "stay accepted", "superseded in part by `adr-<new>`")
 
 

@@ -482,11 +482,12 @@ class CreatedDecision:
         return {"id": self.id, "path": self.path, "proposal": self.proposal}
 
 
-_SUPERSEDES_PLACEHOLDER = (
+SUPERSEDES_PLACEHOLDER = (
     "# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in"
     " Decision Outcome"
 )
-"""The PADR's commented ``supersedes`` key: handoff keeps the frontmatter, so an uncommented value reaches the ADR. The
+"""The PADR's commented ``supersedes`` key: handoff keeps the frontmatter, so an uncommented value reaches the ADR, and
+drops this exact line when it is left unchanged. The
 earlier ADR becomes ``superseded`` only when every decision of it is replaced; one replaced in part stays ``accepted``
 with a "Superseded in part by" line (``CAP-DOCS-document-model``)."""
 
@@ -501,7 +502,7 @@ def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str
 id: {padr_id}
 title: {scalar(title)}
 {summary_line}proposal: PROP-{slug}
-{_SUPERSEDES_PLACEHOLDER}
+{SUPERSEDES_PLACEHOLDER}
 status: draft
 created_at: {created}
 ---

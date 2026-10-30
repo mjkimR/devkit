@@ -27,7 +27,7 @@ rules. The docs bundle stays approach-neutral (`ADR-document-and-sdd-bundles`): 
   "Superseded in part by" lines as not in effect when it groups and writes a replacement.
 - **PADR scaffold** (`features/proposals/usecases/scaffold.py`, `_padr`): one commented frontmatter line after
   `proposal:`. Handoff (`handoff.py`) already keeps the rest of the frontmatter, so an uncommented `supersedes` reaches
-  the ADR unchanged; it never opens another ADR.
+  the ADR unchanged; it drops the exact placeholder line when left unchanged (review-01), and never opens another ADR.
 - **Delivery contract** (`CAP-DLV-proposal-planning` 4.4 and handoff step 4): the commented key and that handoff
   edits no superseded ADR; Development writes its status or in-part line.
 - **Ledger** (`docs/decisions/`): the corrections in section 4.
@@ -38,7 +38,7 @@ scaffold's `accepted` check (`_check_superseded`) concerns proposals. Nothing to
 
 ## 3. Component & Interface Design
 
-PADR frontmatter after this change (the commented line is new):
+PADR frontmatter after this change (the commented line is new; the decision template carries the same optional key):
 
 ```yaml
 ---
@@ -78,13 +78,14 @@ replaces named clauses and leaves the rest in the earlier ADR ("supersedes only"
 | `ADR-dist-foundation-ownership` | superseded | `ADR-foundation-and-mcp-package-ownership` | whole ("as a whole", carried over) | none |
 | `ADR-worktrees-branches-and-scope` | accepted + `superseded_by` | `ADR-host-owned-scope-observation` | partial ("replaces only") | drop `superseded_by`, add line |
 | `ADR-host-cli-lifecycle-authority` | accepted | `ADR-reusable-lifecycle-resource-manager` | partial ("supersedes only") | add line |
-| `ADR-orchestration-workers` | accepted | `ADR-subagent-level-projection`, `ADR-reusable-lifecycle-resource-manager` | partial | normalize pointer, add line |
+| `ADR-orchestration-workers` | accepted | `ADR-subagent-level-projection`, `ADR-drop-the-base-checkout-equality-from-worker-validation`, `ADR-reusable-lifecycle-resource-manager` | partial | normalize two pointers, add line |
 | `ADR-five-subagent-levels` | accepted | `ADR-lean-subagent-level`, `ADR-reusable-lifecycle-resource-manager` | partial ("supersedes only") | add two lines |
 | `ADR-package-split-and-namespaces` | accepted | `ADR-single-release-version` | partial ("supersedes only") | add line |
 | `ADR-roadmap-and-milestones` | accepted | `ADR-archive-terminal-milestones-in-roadmap` | partial ("partially supersedes only") | add line |
 | `ADR-keep-incubation-guidance-opt-in-and-current-state-based` | accepted | `ADR-extend-incubation-with-optional-discovery-teams` | partial ("preserve") | add line |
 | `ADR-extend-incubation-with-optional-discovery-teams` | accepted | `ADR-split-deep-research-bundle` | partial ("retained from") | add line |
 | `ADR-keep-discovery-plans-distinct-from-delivery-commitments` | accepted | `ADR-retain-research-as-cited-materials` | partial ("retained from") | add line |
+| `ADR-scope-only-explicit-working-tree-targets-in-the-evaluator` | accepted | `ADR-scope-snapshot-runs-to-diff-paths-including-deletions` | partial ("Supersedes: the follow-up section") | add line (review-01) |
 
 ADRs that already carry a valid "Superseded in part by" or equivalent pointer at the affected statement keep it
 (`ADR-spec-package-on-devkit`, `ADR-test-selection-and-ci`, `ADR-parse-memo-location-and-format`,
