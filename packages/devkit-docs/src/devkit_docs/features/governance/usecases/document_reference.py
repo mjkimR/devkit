@@ -7,7 +7,8 @@ Checks every current document that is not a material (``rules.is_material``):
   ``SPEC``, ``plan`` ``PLAN``);
 - a reference to an ID no document declares, or that several declare;
 - a ``[ID]`` prose reference: the canonical form is `` `ID` `` (fixable);
-- a ``PROP-<slug>`` reference after the proposal was handed off to the only ``SPEC-<slug>`` (fixable);
+- a ``PROP-<slug>`` reference after the proposal was handed off to the only ``SPEC-<slug>`` (fixable); in work history
+  (``DocumentIndex.is_historical``) such a reference was valid when written and is accepted silently;
 - a reference written with another document's alias (fixable), decision records (``ADR``, ``PADR``) included; a
   document mentioning its own alias is not reported;
 - a relative Markdown link to a document that has an ID;
@@ -236,7 +237,9 @@ class DocumentReferenceRule(BaseRule):
             problem = target_problem(index, ref.target)
             if problem is not None:
                 replacement = _handed_off(index, ref.target)
-                if replacement and not historical and target_problem(index, replacement) is None:
+                if replacement and target_problem(index, replacement) is None:
+                    if historical:
+                        return
                     add(
                         document,
                         ref.line,
@@ -273,7 +276,9 @@ class DocumentReferenceRule(BaseRule):
             self._alias(index, document, ref, historical, add)
             return
         spec = _handed_off(index, ref.target)
-        if spec is not None and not historical:
+        if spec is not None:
+            if historical:
+                return
             add(
                 document,
                 ref.line,

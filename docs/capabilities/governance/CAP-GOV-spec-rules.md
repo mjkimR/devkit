@@ -127,7 +127,8 @@ the Owner check already examined on the same line is not reported again. No auto
 - MUST report a `PROP-<slug>` reference that does not resolve when exactly one `SPEC-<slug>` exists, declared or as
   an alias, typically added on another branch after the handoff (fixable: rewritten to the canonical ID of that spec,
   so one fix pass converges). The fix never changes a spec's `proposal` provenance field and skips completed specs
-  and materials.
+  and materials. In historical files such a reference, in prose or in a unit `depends_on`, was valid when written and
+  resolves silently through that spec; a `PROP-<slug>` with no matching spec is reported there as in current documents.
 - References resolve through the canonical mapping of `CAP-DOCS-document-model` (section 3.5). MUST report a
   reference written with another document's alias in a current document (fixable: rewritten to the canonical ID in
   frontmatter and prose); relation-field prefix typing applies to the ID as written. Decision records (ADRs and PADRs) are
