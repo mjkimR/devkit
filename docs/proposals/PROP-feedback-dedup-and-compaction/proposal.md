@@ -12,11 +12,13 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - docs/capabilities/delivery/
-    - docs/capabilities/documents/
+    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-feedback/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/
     - packages/devkit-spec/tests/
+    - .devkit/installation.json
     - specs/
   excludes:
     - docs/decisions/
@@ -46,45 +48,73 @@ form.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: Compact record shape and location: one record per target area or per topic (like ADR compaction groups),
-  where it lives (a `feedback/` directory under `specs/` or `docs/`), and how each entry carries the retired ID, the
-  outcome and its destination in three short fields (symptom, response, reason).
-- **Q2**: Which statuses compact and when: `resolved` and `dismissed` at once; `promoted` only after its destination
-  completes, or at once with the destination named; `forwarded` only after an upstream answer.
-- **Q3**: Lookup: is `devkit docs search --kind feedback --history` (hybrid; lexical without the search extra) enough
-  for recording, or does it need a thin command that also reports matches inside compact records by their aliases?
-  What score or rule decides "same observation"?
-- **Q4**: Traceability after compaction: live references (a proposal's `Source feedback`) resolve through aliases;
-  history (`reconcile.md` of completed specs) is not checked; the weekly report's terminal-feedback reading
-  (`CAP-DLV-weekly-report`) must still work over compact records.
-- **Q5**: ADR candidates: how the compaction run flags an entry whose reason is a lasting policy (a repeated
-  dismissal reason, a rule of thumb) for the user to raise as an ADR, without writing ADRs on its own.
+Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and `envelopes/scout-01.yaml`.
+
+- **Q1**: Compact record shape and location. **Answer**: a `feedback` document per capability area
+  (`docs/capabilities/<area>/`, the user's decision: no topic chosen at recording, grouping only at compaction, lookup
+  never through the partition) and per outcome, `FB-compacted-<area>-<status>`, so the record's own terminal status
+  stays true without a status vocabulary change (pending the user's confirmation, question `q1`). It lives at
+  `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`, a path the ID convention already accepts and
+  that is no spec bundle's work history; later runs append to it in place. Its `aliases:` lists every retired ID. Each
+  entry is keyed by the retired ID with **Symptom**, **Response** and **Reason**, one short line each.
+- **Q2**: Which statuses compact and when. **Answer**: all four terminal statuses at once. `promoted` is terminal when
+  the destination receives the item and `forwarded` after the submission (`ADR-feedback-lifecycle`), so neither waits;
+  the Response names the destination. Excluded: `open` items, any feedback of a live proposal or of a spec bundle whose
+  `spec.md` is not `completed`, and a file that fails `devkit rules check` or has an unknown status.
+- **Q3**: Lookup. **Answer**: the existing `devkit docs search --kind feedback --history -n 5` suffices; after a
+  simulated compaction the records ranked in the top five in hybrid and lexical modes, and an exact retired ID pins its
+  record. No new command. No score decides sameness (hybrid scores are rank fusions); the recorder reads the hits and
+  judges same symptom of the same asset or behavior, whatever the `target` wording.
+- **Q4**: Traceability. **Answer**: `devkit docs resolve <retired ID>` returns the record with `alias=`; `devkit rules
+  fix` rewrites alias references in current documents, ADRs and capabilities included, and leaves completed spec
+  history, where alias references are accepted. A `Source feedback` naming a retired ID is always a terminal source
+  and is rewritten. The weekly report is a playbook that matches feedback by ID with `--history` and reads committed
+  content at its captured revision, so it needs no change; entries carry no dates, and Git history keeps the
+  originals.
+- **Q5**: ADR candidates. **Answer**: the run's report lists entries whose reason reads as lasting policy (a reason
+  repeated across entries, or a general rule of behavior) that no accepted ADR states, each with its entry IDs and a
+  one-line candidate decision, for the user's decision only; the run writes no ADR and no feedback for them.
 
 ## 3. Proposed Design & Impact
 
-1. **Search before recording.** Both the direct recording procedure and the sweep search existing feedback of every
-   status with the observation's own words before writing. By the matched status:
-   - `open`: do not record; name the existing ID (and add new evidence to it when the observation adds some).
-   - `dismissed`: do not record unless there is new evidence against the recorded reason; then record and cite it.
-   - `resolved`: record as a regression that cites the resolved ID.
-   - `promoted` or `forwarded`: do not record; name the destination.
-   The equal-`target` deduplication of the sweep is replaced by this lookup.
-2. **Compaction playbook.** A user-invoked playbook (never automatic, like `adr-compaction`) groups closed feedback,
-   writes one compact record per group with `aliases:` listing every retired ID, and per entry only:
-   - **Symptom**: what was observed, one line.
-   - **Response**: the outcome (`resolved` by `SPEC-...`, `promoted` to `PROP-...`, `dismissed`, `forwarded` to ...).
-   - **Reason**: why, one line.
-   It then deletes the originals and runs `devkit rules fix` so live references move to the record. It changes no
-   outcome and reopens nothing. Git history keeps the full originals.
-3. **ADR candidates.** The run lists entries whose reason reads as lasting policy for the user's decision; only the
-   user raises one as an ADR, through the normal decision procedure.
-4. **Contract.** A new ADR refines `ADR-feedback-lifecycle`: terminal feedback stays traceable through compact
-   records, aliases and Git history rather than as full files. Impact: `spec-feedback` skill and its sweep reference,
-   `source-feedback.md`, the `feedback-hygiene` playbook, the new playbook, `CAP-DLV-delivery-workflows` (feedback
-   lifecycle), `CAP-DLV-weekly-report` if Q4 needs it, and `CAP-DOCS-document-model` only if the record needs a
-   document-model change.
+1. **Search before recording** (`PADR-recording-looks-up-existing-feedback-of-every-status-first`). The direct
+   recording procedure and every sweep run `devkit docs search "<symptom and asset words>" --kind feedback --history
+   -n 5` before writing and act on the matched status:
+   - `open`: record nothing; name the existing ID. New evidence goes into that file when it is inside the recorder's
+     write scope, otherwise into the report that names the ID.
+   - `dismissed`: record nothing unless there is evidence against the recorded reason; then record and cite it.
+   - `resolved`: record a regression that cites the resolved ID, with `recurring: true`.
+   - `promoted` or `forwarded`: record nothing; name the destination.
+   This replaces the sweep's equal-`target` deduplication.
+2. **Compaction playbook** (`PADR-closed-feedback-compacts-into-per-area-records-with-aliases`). A new
+   `feedback-compaction` playbook of the `spec` bundle, modelled on `adr-compaction`: user-invoked or confirmed only,
+   `session` depth, clean tree, base commit recorded. Steps: collect the eligible terminal items (Q2); group them by
+   capability area and outcome (an item no area covers goes to `other`; misgrouping is accepted and may move at a
+   later run); show the group map; write or extend each record (Q1); delete the originals and run `devkit rules fix`;
+   verify. It changes no outcome and reopens nothing.
+3. **ADR candidates** (Q5): listed in the run's report for the user's decision only.
+4. **Completion conditions of a run**: `devkit rules check` exits `0`; `devkit docs resolve <ID>` prints a record with
+   `alias=<ID>` for every deleted feedback ID; one commit holds the records, deletions and rewrites; its body and the
+   report carry the group map, items left out with the reason and the ADR candidates.
+5. **Impact**: `spec-feedback` `SKILL.md` and `references/sweep.md` (the lookup); `skills/spec/references/source-feedback.md`
+   (a terminal source may resolve to a compact record through its alias); `skills/spec/references/playbooks.md` and
+   `feedback-hygiene` (point to the new playbook); the new `playbooks/feedback-compaction/SKILL.md` registered in
+   `bundle.toml`; the playbook tables of `CAP-HARN-agent-guidance`; the feedback lifecycle of
+   `CAP-DLV-delivery-workflows`; guidance tests under `packages/devkit-spec/tests/`; `.devkit/installation.json` from
+   the repository's own sync. No change to the document model, the feedback statuses, the weekly report or any
+   command.
 
-Out of scope: changing feedback statuses or the hygiene triage itself, and automatic compaction.
+### Planning decisions
+
+- The user settled: compaction over deletion; each entry carries only symptom, response and reason; recording searches
+  every status first; compaction is a user-invoked playbook that never changes an outcome, and ADR candidates go to the
+  user. Grouping is by existing capability area at compaction time only, with misgrouping accepted.
+- `CAP-DLV-weekly-report` and `CAP-DOCS-document-model` need no change (Q4, scout evidence), so they left the impact
+  list and `docs/capabilities/documents/` left the boundaries.
+- The two PADRs refine `ADR-feedback-lifecycle` without superseding it: statuses and their meanings are unchanged.
+
+Out of scope: changing feedback statuses or the hygiene triage itself, automatic compaction, and the first compaction
+run over the existing ledger.
 
 ## 4. Lifecycle & Retirement Criteria
 
