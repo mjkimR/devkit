@@ -48,6 +48,10 @@ Option 6, decided by the user.
 - Documents call the approach "adaptive development"; identifiers and commands use `adaptive-dev`.
 - The approach contract is unchanged: a product may stay in adaptive development, and SDD adoption stays the
   explicit `sdd-baseline` procedure.
+- This decision replaces the value set `sdd` and `incubation` in `ADR-own-development-approach-policy-outside-sdd`
+  and the bundle, entry and context-file names in `ADR-keep-incubation-guidance-opt-in-and-current-state-based` and
+  `ADR-extend-incubation-with-optional-discovery-teams`.
+  Each of those ADRs carries a one-line pointer to this decision; their other statements stay in force.
 
 ## 5. Consequences
 
@@ -56,9 +60,12 @@ Option 6, decided by the user.
   separate decision of this proposal.
 - Follow-up: decision records and completed specs that use the old name stay as history and resolve through
   document aliases.
+- Risk: a reader of an accepted ADR without the pointer would write the old value, which the working configuration
+  refuses.
 
 ## 6. Confirmation
 
 - `packages/devkit-dist/tests/integration/features/project/test_development.py` accepts `adaptive-dev` and `sdd`.
 - `packages/devkit-catalog/tests/integration/bundles/` selects and projects the `adaptive-dev` bundle.
 - `tests/e2e/smoke.sh` lists `adaptive-dev` in the catalog bundle set.
+- Review: each replaced ADR carries the pointer.

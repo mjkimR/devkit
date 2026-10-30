@@ -12,6 +12,8 @@ created_at: 2026-10-30
 Measured on `plan-rename-incubation-to-adaptive-dev` at base `fb9b549a` with
 `rg -l -i incubat`, excluding `specs/`, `docs/materials/` and `handbook/`.
 111 files match; 14 of them are ADRs, 3 are proposals and 1 is the archived milestone `MS-idea-incubation`.
+A rerun over tracked files including hidden paths (`git ls-files | xargs rg -l -i incubat`) adds one file,
+`.devkit/architecture.toml`. 15 feedback files in 10 `specs/**/feedback/` directories cite a renamed document ID.
 
 ## Concept A: the non-SDD development approach and its bundle
 
@@ -54,6 +56,8 @@ The spec bundle already names this activity Planning: `planning.md`, `plan-<slug
 | `docs/README.md`, `docs/proposals/README.md`, `docs/development/workflow.md`, `docs/development/reference/integration.md` | Concept B prose and references. |
 | `tests/e2e/smoke.sh` | Asserts the catalog bundle set and `.devkit/managed/incubation`. |
 | `docs/decisions/` (7 ADRs cite a renamed document ID) | `ADR-immutable-decisions-editable-records`: `RULE-document-reference` reports an alias reference in an ADR and `devkit rules fix` rewrites it. |
+| `.devkit/architecture.toml` | The `devkit_catalog` entry lists `incubation` among its `data_roots`. |
+| `specs/**/feedback/` (15 files in 10 directories) | `RULE-document-reference` treats feedback files as current at any status, so alias references are reported. |
 | `docs/proposals/PROP-deep-research-bundle/proposal.md` | Cites `CAP-DLV-idea-incubation`; a current document, so an alias reference is reported. |
 
 ## History that keeps its wording
@@ -62,4 +66,4 @@ The spec bundle already names this activity Planning: `planning.md`, `plan-<slug
   `ADR-extend-incubation-with-optional-discovery-teams` and others) stay: they record decisions taken under the old
   name.
 - `MS-idea-incubation` is `done` in `docs/roadmap/_archive/`.
-- `specs/`, `docs/materials/` and `handbook/` stay as written.
+- `specs/` outside its `feedback/` directories, `docs/materials/` and `handbook/` stay as written.
