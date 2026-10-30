@@ -1,0 +1,63 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:28:01.739448Z'
+status: completed
+summary: 'round 1; Option B works mechanically (re-prepare digest compare, _land comparable, _compose_execute, unsigned build), no P1. Three P2: composed acceptance finds CI-rule drift only after its acceptance commit, the prepare-time context contract change is unstated, CAP-HARN bundle-source base incorporation unaddressed; five P3 on digest scope, absorption wording, fix-text scope, AC precision and batch-start recovery.'
+findings:
+- issue: 'Composed acceptance does not refuse CI-rule drift on the merged result before the acceptance commit: lifecycle.preview replaces the provider at the first prepare, and the delivery provider first runs after lifecycle.accept, while the proposal drops spec-review-proposal''s routine base merge and rules fix.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/service.py:225,315-322; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:133-192,245-300,347-356; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja:16
+  failure_condition: 'A Planning branch cites a proposal handed off on main after the branch started (PROP-git-operator-planning-completion-route depends_on this one): accept commits, the fresh prepare refuses INTEGRATION_NOT_READY, result needs_recovery.'
+  suggested_action: Run the CI-rule check on the prospective result in the acceptance preview before lifecycle.accept; add an acceptance criterion; align Q4 and the PADR.
+  resolution: open
+  severity: P2
+- issue: 'The prepare-time context contract change is not stated: providers would receive a prospective unlanded result_sha at prepare, contradicting the IntegrationContext docstring, the spec provider docstring, CAP-DLV and the ADR execution-context clause; lifecycle.preview, cleanup scopes and IntegrationResult build fields are unspecified.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/models/contracts.py:59-71,236-250; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py:3-13; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/cleanup.py:174-181; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:567; docs/decisions/2026-10/20261022-local-and-pull-request-integration.md:153-156,175-177
+  failure_condition: An external provider treats a non-None result_sha as an approving build, or cleanup or recovery reads the prospective commit as the latest result.
+  suggested_action: State the prospective context in the PADR, give cleanup the approved context, keep the prospective commit out of IntegrationResult build fields, list the changed docstrings and CAP-DLV section, widen the supersession sentence.
+  resolution: open
+  severity: P2
+- issue: CAP-HARN's bundle-source rule (Host incorporates the latest base and runs devkit sync before requesting integration approval) is not addressed.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:207-210,230
+  failure_condition: 'A dev branch that changes bundle sources while main moved: the Living Spec requires both an unconditional and a conditional base merge.'
+  suggested_action: Make bundle-source incorporation and sync conditional on WORKTREE_MERGE_CONFLICT, INTEGRATION_RECEIPT_CONFLICT or INTEGRATION_NOT_READY; name CAP-HARN line 207.
+  resolution: open
+  severity: P2
+- issue: 'Simpler alternative to the digest exclusion: a deterministic unsigned prospective commit (dates fixed from the inputs) keeps the digest contract unchanged for every route and provider.'
+  evidence: packages/devkit/src/devkit_agt/features/worktree/services/merging.py:152-165; packages/devkit/src/devkit_agt/features/integration/models/contracts.py:84-88,166-170; docs/capabilities/integration/CAP-INT-mcp-services.md:36-37
+  failure_condition: 'Scope cost only: excluding all target-bound codes changes the digest contract for every route and provider.'
+  suggested_action: Use a deterministic unsigned prospective commit, or narrow the exclusion to the result-bound values.
+  resolution: open
+  severity: P3
+- issue: 'The PADR overstates absorption: integrate absorbs only commits landing inside its own call; a target that moves between the shown prepare and integrate --expected-digest is INTEGRATION_REQUEST_STALE under ask, which B keeps.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/service.py:262-287; docs/capabilities/integration/CAP-INT-mcp-services.md:134
+  failure_condition: Under ask, unit Y lands while unit X's scope waits for the user's answer; X refuses stale though no base merge is needed.
+  suggested_action: Correct the PADR context; state that such a target is re-presented with a fresh prepare and decision, without a base merge.
+  resolution: open
+  severity: P3
+- issue: 'Fix-text changes are mis-scoped: INTEGRATION_NOT_READY''s fix covers all readiness reasons; INTEGRATION_TARGET_MOVED and CAP-INT line 134 still require a base merge.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/models/errors.py:18-24,83-90; docs/capabilities/integration/CAP-INT-mcp-services.md:134,152
+  failure_condition: A dev branch with an incomplete stage is told to merge the base; after INTEGRATION_TARGET_MOVED the docs still demand a base merge.
+  suggested_action: Attach the conditional base merge only to CI-rule reasons on a built merge; add INTEGRATION_TARGET_MOVED and CAP-INT line 134.
+  resolution: open
+  severity: P3
+- issue: 'Acceptance criteria imprecise: AC3 fails for ff-only and pull_request=required targets; AC6 undefined for refusals, cleanup-only, ff-only and which disclosure composed acceptance shows; AC4 passes without the change for a contained target.'
+  evidence: packages/devkit/src/devkit_agt/features/worktree/services/merging.py:63-65; packages/devkit/src/devkit_agt/features/worktree/usecases/planning.py:85-88; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:187-192
+  failure_condition: Tests written to AC3 fail by design; AC6 is not mechanically checkable; AC4 is green before implementation.
+  suggested_action: Restrict AC3 to dev-integration, delete_branch and [tool.spec]; scope AC6 to results carrying a request and name the delivery DISCLOSURE; qualify AC4 with a moved target.
+  resolution: open
+  severity: P3
+- issue: The batch run falls back to a full local suite when the batch start is unknown, though the batch start is recoverable from first-parent integration merge commits.
+  evidence: packages/devkit/src/devkit_agt/features/worktree/services/merging.py:40-42; docs/decisions/2026-10/20261022-test-selection-and-ci.md:58-60
+  failure_condition: Host context loss mid-batch triggers an avoidable full local suite.
+  suggested_action: Derive the batch start from the run's chore(merge) commits before falling back.
+  resolution: open
+  severity: P3
+unverified_areas:
+- Prepare-time CI cost not measured
+- Host sandbox behavior for Git object writes at prepare
+checks: {}
+diff_scope:
+  base: fdba66465456ef93bf18a7a980d16121a0131639
+  head: 95bd18c4284f429edae34a713ea58655115951fa

@@ -1,0 +1,63 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:13:47.910366Z'
+status: needs_input
+summary: 'Planning turn 1 at medium: set reviewing; designed the composed handoff commit (PADR-composed-handoff-commits-its-own-transaction), worker-input readiness under checks, Host-owned post-handoff link fixes and the sibling-draft conflict resolution; added MAT-git-operator-handoff-commit-evidence; one scout and one challenger pass folded (reverify-01: 5 resolved, 1 waived, 2 open for decision); feedback sweep recorded. Three questions for the user; plan-accept pending.'
+findings: []
+assumptions:
+- Development overlaps PROP-integration-merge-moved-target, PROP-git-operator-planning-completion-route and PROP-git-operator-batch-preparation on git-operator.md, spec-orchestrate, features/delivery and CAP-DLV; the Host sequences them
+- The cgate post-commit rewrite keeps parent and tree (FB-post-commit-rewrite-stales-the-printed-hash); not read directly
+checks:
+  rules: PASS proposal dir
+diff_scope:
+  base: ''
+  head: 36980b41c7ab764a3996b6bd1bfd3f1ae6e57ebf
+questions:
+- id: q1
+  title: Who commits the handoff transaction
+  prompt: Should the composed handoff commit its own transaction, removing the Host commit step?
+  context: Every composed handoff (handoff --effort and accept --mode accept_and_handoff) exits 0 but leaves the spec bundle, promoted ADRs, moved materials and the removed proposal uncommitted; the Host committed all four on 2026-10-30 without judgment. This decides whether the CLI changes or only the operator result reports it, and whether PADR-composed-handoff-commits-its-own-transaction stays. Challenger finding 8.
+  options:
+  - id: a
+    description: 'The composed handoff commits once (''spec: hand off <slug> to Development''), single parent = reviewed base, HEAD read after hooks; a refused commit keeps the writes and stops with SPEC_HANDOFF_COMMIT_REFUSED (exit 1). Plain handoff stays write-only. Mirrors the composed acceptance commit.'
+    recommended: true
+  - id: b
+    description: Keep the handoff write-only; the operator result reports the dirty paths and the Host keeps committing each handoff. Contract text only; the PADR is withdrawn.
+    recommended: false
+  - id: c
+    description: Commit in every handoff, the plain form in a dev-<slug> checkout included; that checkout may hold other work, so it commits unrelated changes or refuses.
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Shape of readiness in operator results
+  prompt: How should a git-operator result show worker-input readiness and the next actor?
+  context: The approved intent names effect, readiness, permission and next actor. With q1=a a handoff is committed and clean, so new top-level fields mostly repeat status, remaining_effects and blocker_codes, and the Host already owns scheduling. PROP-git-operator-batch-preparation reuses whatever shape is chosen per item. Challenger finding 3.
+  options:
+  - id: a
+    description: 'No new top-level field: checks.worker_input {head, dirty_paths} for prepare-worktree and handoff; dirty paths are remaining_effects, so never completed; the next actor is always the Host. Host permission stays a blocker code with a null cli_result.'
+    recommended: true
+  - id: b
+    description: Add worker_input {state, head, dirty_paths} and next_actor {who, action} as top-level fields of the return.
+    recommended: false
+  - id: c
+    description: Add worker_input only, without next_actor.
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Sibling-draft rewrite feedback
+  prompt: How should this proposal settle FB-handoff-rewrite-edits-sibling-draft?
+  context: The handoff rewrite also edits a sibling draft that is in its own Planning, which later conflicts on base merge. Skipping such siblings leaves their depends_on dangling once the dev branch lands, which makes every later handoff refuse (challenger P1), so a skip needs extra rules. This decides whether the CLI rewrite changes.
+  options:
+  - id: a
+    description: Keep the rewrite unchanged; CAP-DLV-proposal-incubation and post-handoff.md name the conflict resolution (take the base version, then devkit rules fix on it). Guidance only.
+    recommended: true
+  - id: b
+    description: Skip Planning-owned siblings for prose IDs and links only (keep the depends_on rewrite), report them as pending, exempt them from the post-handoff check and require whichever branch integrates second to run devkit rules fix. Code plus guidance.
+    recommended: false
+  - id: c
+    description: Move the feedback to a separate follow-up proposal and leave it out of this one.
+    recommended: false
+  allow_note: true
+activity_effort: medium

@@ -1,0 +1,53 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:48:57.572536Z'
+status: needs_input
+summary: 'Planning turn 1 at high: status reviewing; two scouts; options compared (keep, A defer checks, B prospective build at prepare, B2 tree-only, C auto branch merge) in materials/options.md; B selected in PADR-moved-target-merge (supersedes only the local containment clauses of ADR-local-and-pull-request-integration) and the batch run in PADR-post-batch-test-run (supersedes only the post-merge clause of ADR-test-selection-and-ci); four challenger rounds (round 4 no findings, all rounds closed); boundaries extended to CAP-HARN, UC-drive-development-to-integration, development docs, spec-review-proposal, INSTALL_GUIDE and AGENTS.md; dev_effort stays medium; three questions open for plan-accept.'
+findings: []
+assumptions:
+- Settled direction folded unchanged; PR route, finish --merge and ff-only keep refusing pending q-pr-route
+- Sibling proposals owning spec-orchestrate/ and docs/capabilities/delivery/ are ordered by depends_on (PROP-git-operator-planning-completion-route after this one)
+checks: {}
+diff_scope:
+  base: ''
+  head: 071d35dd938e92277bb4115bcc9f5f30e5c50754
+questions:
+- id: q-pr-route
+  title: Pull-request route scope
+  prompt: Should the pull-request integration route also accept a source that does not contain a moved target, or keep refusing it with WORKTREE_MERGE_NOT_FF?
+  context: The settled direction covers the integrating command's own merge. On the pull-request route GitHub builds the merge and runs required checks on its merge ref; devkit already builds a prospective merge there before the merge call. Including it widens this proposal into the remote route (prepare digest from the result, guard base, a flipped test, a published behavior change for repositories using PRs); excluding it keeps the route as today, and the Host still merges the base into the branch before a PR integration of a moved target. This repository integrates locally.
+  options:
+  - id: a
+    description: 'Keep the PR route out of scope: it refuses a moved target as today (non-goal).'
+    recommended: true
+  - id: b
+    description: 'Include the PR route: its prepare builds and checks the prospective merge the same way; Development flips test_pull_request.py:182-193 and updates CAP-INT.'
+    recommended: false
+  allow_note: true
+- id: q-batch-command
+  title: Command of the post-batch test run
+  prompt: Which test run should the Host perform once on main after a local-orchestrated batch is integrated?
+  context: The settled direction requires one run on the integrated head, not an aggregation. Shipped skills follow each repository's verification policy, so the bundle text stays generic and this repository's AGENTS.md, ci-cd.md and workflow.md name the command. ADR-test-selection-and-ci rejected a mandatory full suite per integration and runs full CI nightly. The affected selector from the batch start covers the files every unit of the batch changed, keeping its mode=full fallback; the full suite also catches selection misses but costs a full local run per batch.
+  options:
+  - id: a
+    description: The repository's affected selector from the batch start (here `just test-affected --base <batch start>`, with its mode=full fallback); nightly CI still runs the full suite.
+    recommended: true
+  - id: b
+    description: The full suite (here `just test`) once per batch.
+    recommended: false
+  allow_note: true
+- id: q-blocked-unit
+  title: Batch run when a unit ends blocked
+  prompt: When a unit of a local-orchestrated run ends blocked with its problem recorded, or continues in direct mode, does the Host still run the batch tests on what was integrated?
+  context: The settled direction says the run happens once every unit the run started is integrated and no Development work remains. A blocked unit can stay open for a long time; read strictly, the batch's integrated units then stay untested on main until nightly CI. Read as 'the run's own work is finished', the Host tests what it integrated and the blocked unit is tested when it integrates later (in a later run or in direct mode, by the repository's normal checks).
+  options:
+  - id: a
+    description: A unit that ends blocked or continues in direct counts as finished for the batch run; the Host tests what the run integrated.
+    recommended: true
+  - id: b
+    description: Wait until every unit the run started is integrated; until then no batch run happens.
+    recommended: false
+  allow_note: true
+activity_effort: high
