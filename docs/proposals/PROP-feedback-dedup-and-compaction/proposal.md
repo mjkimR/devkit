@@ -53,7 +53,8 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
 - **Q1**: Compact record shape and location. **Answer**: a `feedback` document per capability area
   (`docs/capabilities/<area>/`, the user's decision: no topic chosen at recording, grouping only at compaction, lookup
   never through the partition) and per outcome, `FB-compacted-<area>-<status>`, so the record's own terminal status
-  stays true without a status vocabulary change (pending the user's confirmation, question `q1`). It lives at
+  stays true without a status vocabulary change (the user's decision over one record per area with a new `compacted`
+  status). It lives at
   `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`, a path the ID convention already accepts and
   that is no spec bundle's work history; later runs append to it in place. Its frontmatter holds only `id`, `title`,
   `summary`, `target` (the area directory), `status`, `created_at` and `aliases:` (every retired ID), no observation
@@ -119,7 +120,9 @@ Answered in Planning; evidence in `materials/ledger-and-lookup-evidence.md` and 
 
 - The user settled: compaction over deletion; each entry carries only symptom, response and reason; recording searches
   every status first; compaction is a user-invoked playbook that never changes an outcome, and ADR candidates go to the
-  user. Grouping is by existing capability area at compaction time only, with misgrouping accepted.
+  user. Grouping is by existing capability area at compaction time only, with misgrouping accepted. Each area has one
+  record per outcome, `FB-compacted-<area>-<status>`, with the existing statuses unchanged; one record per area with
+  a new terminal status `compacted` was declined, because it would change the `feedback` kind in `devkit-docs`.
 - `CAP-DLV-weekly-report` and `CAP-DOCS-document-model` need no change (Q4, scout evidence), so they left the impact
   list and `docs/capabilities/documents/` left the boundaries.
 - The two PADRs refine `ADR-feedback-lifecycle` without superseding it: statuses and their meanings are unchanged.
