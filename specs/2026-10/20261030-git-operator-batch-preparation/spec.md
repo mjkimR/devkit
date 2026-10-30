@@ -2,7 +2,7 @@
 id: SPEC-git-operator-batch-preparation
 title: Bounded batch preparation for git-operator
 summary: Let the Host dispatch an exact finite list of independent worktree preparations with per-item identity, authority, effects, checks and outcome, keeping original CLI results for partial or denied items and retrying only inspected authorized remainders.
-status: planned
+status: in-progress
 created: 2026-10-30
 depends_on:
   - SPEC-git-operator-result-readiness
