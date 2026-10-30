@@ -53,7 +53,9 @@ skill change only.
 - When a local-orchestrated run starts its first unit, the Host notes the base branch HEAD as the batch start.
 - Once every unit the run started is integrated and no Development work of the run remains, the Host runs the repository's verification for integrated content once on the base branch HEAD, scoped from
   the batch start when the repository's selector supports a base (this repository: `just test-affected --base
-  <batch start>`, keeping its `mode=full` fallback). Without a known batch start it runs the selector's full fallback.
+  <batch start>`, keeping its `mode=full` fallback). After a context loss the Host recovers the batch start as the first
+  parent of the run's earliest `chore(merge): integrate <branch> into <base branch>` commit on the first-parent
+  history; only when that fails it runs the selector's full fallback.
 - The Host reports the result in the conversation with the tested head and the command. A failure is reported with
   its evidence and recorded as feedback for follow-up work; nothing is reverted automatically.
 - A run that integrated no unit runs nothing. Whether a unit that ends blocked with its problem recorded, or continues
