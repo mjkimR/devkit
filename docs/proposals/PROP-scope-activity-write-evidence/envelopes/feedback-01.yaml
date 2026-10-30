@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:07:20.780061Z'
+status: completed
+summary: 'Swept this Planning run: the false unkn-base gap and the fresh dev-* horizon case are folded into the proposal scope; no other observation to record; no duplicates.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
