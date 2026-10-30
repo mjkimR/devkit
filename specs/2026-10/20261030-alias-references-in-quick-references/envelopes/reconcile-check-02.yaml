@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:33:29.818520Z'
+status: completed
+summary: 'Implementer self-verified the reconcile-check-01 P1 fix (no expanded scope): the CAP-DOCS-document-model renaming step, AC-07, the FB-alias-references-outside-index-unreported Disposition and reconcile.md now name plain-text mentions, feedback target fields and ID-free files outside the configured quick references (root README.md, agent guides) as the manual sweep, matching QUICK_REFERENCES and Non-Goal 5. Targets CAP-GOV-spec-rules and CAP-DOCS-document-model reflected; reconcile resolved.'
+findings: []
+checks:
+  rules: PASS uv run devkit rules check on docs/capabilities, the unit and the feedback files errors=0
+diff_scope:
+  base: 95b8228c58838b6bb633eb90932363b025419f3e
+  head: 704c197aacb105dfff7c9b6337788d624c557622

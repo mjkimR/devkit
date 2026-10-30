@@ -12,7 +12,7 @@ CI job. No previous success runs CI. Failures and cancellations do not advance t
 is retried on the next schedule even without new commits. API failures fail the gate. A skipped heavy job can only
 reuse the same previously verified head. Manual nightly dispatch (`gh workflow run nightly`), direct manual CI and
 release calls always run the complete CI. Scheduled starts can be delayed or dropped by GitHub; 04:17 is not a
-completion deadline. See `ADR-nightly-ci-verification`.
+completion deadline. See `ADR-test-selection-and-ci`.
 
 Workspace checks run on Linux and macOS;
 consumer smoke and the viewer job run on Linux. The workflow executes:

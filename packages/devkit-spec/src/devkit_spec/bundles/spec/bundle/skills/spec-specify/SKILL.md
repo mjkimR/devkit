@@ -34,7 +34,8 @@ for `sdd-spec-bugfix`.
   Given/When/Then lines with verifiable bounds (exit code, status code, exact output line, count); other prose goes
   in paragraphs. Add new IDs instead of renumbering: tasks link to them.
 - **References**: cite documents by full ID in backticks; write example or fixture IDs as plain text (backticked IDs
-  must resolve).
+  must resolve). A rename spec writes the old IDs as plain text in its mapping tables and prose, because
+  `devkit rules fix` rewrites a backticked alias to the new ID.
 - **Non-goals**: state **Scope Excluded**; add **Rationale** or **When to Reconsider** only when they help a later
   reader.
 - **Invariants**: if a `MUST` in `docs/architecture/` or an affected capability has to change, state that an ADR is

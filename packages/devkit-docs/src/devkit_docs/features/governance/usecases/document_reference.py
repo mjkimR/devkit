@@ -18,20 +18,24 @@ Checks every current document that is not a material (``rules.is_material``):
   field, and an alias that another document declares as its ID or that several documents declare;
 - in the ID-free steering files (the Markdown files directly in ``docs/steering/`` other than ``README.md``), every
   backtick-quoted ID must resolve and must not be an alias, and the Owner cells of the five-column tables of
-  ``docs/steering/glossary.md`` likewise; neither is fixed or added to the reference graph.
+  ``docs/steering/glossary.md`` likewise; neither is fixed or added to the reference graph;
+- in the quick references (the ID-free Markdown files the ``quick_references`` setting matches, by default
+  ``docs/development/``, ``guides/`` and the package and tool READMEs), every backtick-quoted ID must resolve, and one
+  written with an alias is fixable; they are not added to the reference graph either.
 
 References resolve through ``DocumentIndex.canonical``: a declared ID always wins, an alias only when exactly one
 document declares it. The fix converts ``[ID]`` to `` `ID` ``, rewrites handed-off proposal references to the
 canonical spec and alias references to the canonical ID, never the ``proposal`` provenance field, in current
-documents only (within the targets, when the run names any).
+documents and quick references only (within the targets, when the run names any).
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
 
-from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
+from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
 from devkit_agt.features.rules.services.builtins import BaseRule
 
 from devkit_docs.features.documents import Document, DocumentIndex, Reference, is_id, relation_prefixes
@@ -46,7 +50,14 @@ RULE_ID = "RULE-document-reference"
 STEERING = "docs/steering"
 GLOSSARY = f"{STEERING}/glossary.md"
 _CITED = re.compile(rf"(?<!`)`({ID_SOURCE})`(?!`)")
+# The repository's ID-free quick references: developer references, installation guides and package READMEs.
+QUICK_REFERENCES = ("docs/development/**/*.md", "guides/**/*.md", "packages/*/README.md", "tools/*/README.md")
 type Add = Callable[..., None]
+
+
+@dataclass(frozen=True)
+class DocumentReferenceSettings:
+    quick_references: list[str] = field(default_factory=lambda: list(QUICK_REFERENCES))
 
 
 def _handed_off(index: DocumentIndex, target: str) -> str | None:
@@ -87,9 +98,14 @@ class DocumentReferenceRule(BaseRule):
             description="Documents reference each other by exact, resolvable full IDs, written as `ID` in prose.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
+            settings=DocumentReferenceSettings(),
             guide="guide.md",
             related=("docs:living-spec-writing",),
         )
+
+    def validate_settings(self, settings: DocumentReferenceSettings) -> None:
+        for pattern in settings.quick_references:
+            validate_pattern(pattern)
 
     def check(self, ctx: RuleContext) -> list[Violation]:
         index = document_index(ctx)
@@ -188,6 +204,7 @@ class DocumentReferenceRule(BaseRule):
         owners, examined = self._glossary(ctx, index)
         found.extend(owners)
         found.extend(self._steering(ctx, index, examined))
+        found.extend(self._quick(ctx, index))
         return found
 
     def _identity(self, ctx: RuleContext, index: DocumentIndex, add: Add) -> None:
@@ -367,32 +384,77 @@ class DocumentReferenceRule(BaseRule):
         found: list[Violation] = []
         for file in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",)):
             path = ctx.relative_path(file)
-            if path is None or path.rsplit("/", 1)[0] != STEERING or path.endswith("/README.md"):
-                continue
-            if not ctx.is_file_targeted(path):
+            if path is None or not _is_steering(path) or not ctx.is_file_targeted(path):
                 continue
             text = ctx.cache.read_text_strict(path)
             if text is None:
                 continue
-            for line in visible_lines(text):
-                for match in _CITED.finditer(line.text):
-                    target = match.group(1)
-                    if (line.number, target) in examined:
-                        continue
-                    problem = _resolve_problem(index, target)
-                    if problem is None and (canonical := index.canonical_id(target)) != target:
-                        problem = f"{target} is an alias of {canonical}; name `{canonical}`"
-                    if problem:
-                        found.append(
-                            Violation(
-                                rule_id=self.id,
-                                file=path,
-                                line=line.number,
-                                column=match.start() + 1,
-                                message=problem,
-                                remediation="Correct the cited ID or give its intended document a unique ID",
-                            )
+            for number, column, target in _citations(text):
+                if (number, target) in examined:
+                    continue
+                problem = _resolve_problem(index, target)
+                if problem is None and (canonical := index.canonical_id(target)) != target:
+                    problem = f"{target} is an alias of {canonical}; name `{canonical}`"
+                if problem:
+                    found.append(
+                        Violation(
+                            rule_id=self.id,
+                            file=path,
+                            line=number,
+                            column=column + 1,
+                            message=problem,
+                            remediation="Correct the cited ID or give its intended document a unique ID",
                         )
+                    )
+        return found
+
+    def _quick_references(self, ctx: RuleContext, index: DocumentIndex) -> list[str]:
+        """The targeted quick references: Markdown files matching ``quick_references`` that are neither indexed
+        documents (checked as documents) nor steering files (checked by ``_steering``)."""
+        indexed = {document.path for document in index.documents}
+        paths: list[str] = []
+        for file in ctx.cache.find_files(ctx.workspace_root, extensions=(".md",)):
+            path = ctx.relative_path(file)
+            if path is None or path in indexed or _is_steering(path) or not ctx.is_file_targeted(path):
+                continue
+            settings: DocumentReferenceSettings = ctx.settings(self, path)
+            if any(match_path(pattern, path) for pattern in settings.quick_references):
+                paths.append(path)
+        return paths
+
+    def _quick(self, ctx: RuleContext, index: DocumentIndex) -> list[Violation]:
+        """Resolve the backtick-quoted IDs of the quick references; an alias is fixable, without graph edges."""
+        found: list[Violation] = []
+        for path in self._quick_references(ctx, index):
+            text = ctx.cache.read_text_strict(path)
+            if text is None:
+                continue
+            for number, column, target in _citations(text):
+                problem = _resolve_problem(index, target)
+                canonical = index.canonical_id(target) if problem is None else None
+                if canonical is not None and canonical != target:
+                    found.append(
+                        Violation(
+                            rule_id=self.id,
+                            file=path,
+                            line=number,
+                            column=column + 1,
+                            message=f"{target} is an alias of {canonical}; reference `{canonical}`",
+                            remediation=f"Run `{FIX_COMMAND}` to replace it with {canonical}",
+                            fixable=True,
+                        )
+                    )
+                elif problem:
+                    found.append(
+                        Violation(
+                            rule_id=self.id,
+                            file=path,
+                            line=number,
+                            column=column + 1,
+                            message=problem,
+                            remediation="Correct the cited ID or give its intended document a unique ID",
+                        )
+                    )
         return found
 
     def fix(self, ctx: RuleContext) -> list[str]:
@@ -421,7 +483,44 @@ class DocumentReferenceRule(BaseRule):
             if updated != text:
                 ctx.cache.write_text(document.path, updated, dry_run=ctx.dry_run)
                 changed.append(document.path)
+        for path in self._quick_references(ctx, index):
+            text = ctx.cache.read_text_strict(path)
+            if text is None:
+                continue
+            updated = _rewrite_citations(text, index)
+            if updated != text:
+                ctx.cache.write_text(path, updated, dry_run=ctx.dry_run)
+                changed.append(path)
         return changed
+
+
+def _is_steering(path: str) -> bool:
+    """Whether ``path`` is a steering file: Markdown directly in ``docs/steering/``, other than ``README.md``."""
+    return path.rsplit("/", 1)[0] == STEERING and path.endswith(".md") and not path.endswith("/README.md")
+
+
+def _citations(text: str) -> Iterator[tuple[int, int, str]]:
+    """``(line, column, ID)`` of each backtick-quoted ID in the visible text, the column 0-based on its line."""
+    for line in visible_lines(text):
+        for match in _CITED.finditer(line.text):
+            yield line.number, match.start(), match.group(1)
+
+
+def _rewrite_citations(text: str, index: DocumentIndex) -> str:
+    """``text`` with each backtick-quoted alias that resolves to one document replaced by its canonical ID; masking
+    keeps offsets, so a visible line's ``offset`` plus the match position locates the span in ``text``."""
+    edits: list[tuple[int, int, str]] = []
+    for line in visible_lines(text):
+        for match in _CITED.finditer(line.text):
+            target = match.group(1)
+            if _resolve_problem(index, target) is not None or (canonical := index.canonical_id(target)) == target:
+                continue
+            start = line.offset + match.start(1)
+            if text[start : start + len(target)] == target:
+                edits.append((start, start + len(target), canonical))
+    for start, end, replacement in sorted(edits, reverse=True):
+        text = text[:start] + replacement + text[end:]
+    return text
 
 
 def _normalize(path: str) -> str | None:

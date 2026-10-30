@@ -1,0 +1,20 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:29:53.534810Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the P3 fix: test_quick_references_follow_targets_and_exclusions now runs fix with exclude and asserts the excluded file is unchanged; 36 rule tests pass.'
+findings:
+- issue: AC-03 says a quick reference removed by [rules] exclude is neither reported nor rewritten, but the rule tests cover only the not-reported half; the fix run uses targets, never exclude.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/tests/test_rule.py:314-324; probe scratch/review-01/test_probe_exclude.py passes today
+  failure_condition: A later change applying exclude to check but not to the quick-reference loop in fix() would rewrite an excluded quick reference with no failing test.
+  suggested_action: Add a fix run with exclude=['guides/a.md'] asserting guides/a.md stays unchanged and guides/b.md is rewritten.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit-docs document_reference rule dir 36 passed
+diff_scope:
+  base: ''
+  head: 9eba7cb73da1dfa6b2567fa4931593800a3bc436

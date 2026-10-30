@@ -22,7 +22,12 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - **Steering files**: every backtick-quoted full ID in the visible text of the Markdown files directly in
   `docs/steering/` (other than `README.md`), the glossary included, must resolve uniquely and must not be an alias.
   These files have no ID and stay out of the index: no autofix and no reference-graph edges. An ID already checked
-  as a glossary Owner on the same line is reported once. Other ID-free files are outside this extension.
+  as a glossary Owner on the same line is reported once.
+- **Quick references**: every backtick-quoted full ID in the visible text of the ID-free Markdown files the
+  `quick_references` setting matches (by default developer references, installation guides and package and tool
+  READMEs) must resolve uniquely; one written with an alias is reported and fixable. A matching file that declares an
+  ID under `docs/` or `specs/` is checked once, as a document, and steering files keep their own check. These files
+  stay out of the index: no reference-graph edges. Other ID-free files are outside both extensions.
 - **What is not**: reference extraction skips code fences, indented code, inline code other than a single ID, HTML
   comments, escapes, link labels, `~~strikethrough~~` (a historical mention of a removed document stays allowed
   there) and a heading's own ID. External URLs, images, code files, documents without IDs, links with a fragment or
@@ -59,7 +64,9 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   documents: <paths>`.
 - A reference written with an alias (fixable): `` <alias> is an alias of <ID>; reference `<ID>` ``. A root glossary
   Owner naming an alias (not fixed): `` Owner <alias> is an alias of <ID>; name `<ID>` ``; another ID cited in a
-  steering file (not fixed): `` <alias> is an alias of <ID>; name `<ID>` ``.
+  steering file (not fixed): `` <alias> is an alias of <ID>; name `<ID>` ``. An alias cited in a quick reference
+  (fixable) reads like one in a document. An unresolved ID cited in a steering file or a quick reference reads like
+  one in a document.
 - A malformed `aliases` field, reported at the item: `aliases must be a list of IDs`, `aliases must contain string
   IDs`, `aliases must contain full document IDs, got '<value>'`, `alias <ID> must have the document's own prefix
   <PREFIX>-`, `alias <ID> is the document's own ID`, `alias <ID> is repeated`, or `alias <ID> has a date- or
@@ -77,9 +84,11 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 
 - **Autofix**: `devkit rules fix` converts `[ID]` to `` `ID` ``, replaces a handed-off `PROP-<slug>` with the
   canonical ID of `SPEC-<slug>` and an alias reference with the canonical ID, keeping a quoted frontmatter value's
-  quote style. It never changes a spec's `proposal:` provenance field or an `aliases` entry, never rewrites an alias
-  reference in an ADR or PADR, skips completed specs, materials and files that are not valid UTF-8, and writes only the
-  targets when the run names any.
+  quote style; decision records (ADRs and PADRs) are rewritten like any current document, and so are the code-span
+  alias citations of the quick references. It never changes a spec's `proposal:` provenance field, an `aliases` entry,
+  a plain-text ID or a steering file, skips completed specs, materials and files that are not valid UTF-8, and writes
+  only the targets when the run names any. A rename spec writes the old IDs as plain text, so the fix leaves its
+  mapping table intact.
 - **By hand**: a missing or duplicated ID is fixed by hand; the rule never guesses which document was meant. Find a
   document's path with `devkit docs resolve <ID>` and what references it with `devkit docs refs <ID> --direction in`.
   Create the intended document or correct the exact ID; give each document its own ID, then update the references to
@@ -91,12 +100,17 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 
 ## 4. Configuration
 
-No settings.
+`[rules.settings.RULE-document-reference]`:
+
+| Setting | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `quick_references` | list of path patterns | `docs/development/**/*.md`, `guides/**/*.md`, `packages/*/README.md`, `tools/*/README.md` | The ID-free Markdown files whose cited IDs are checked, in the `**` grammar of `[rules] exclude`; `[]` turns the check off. An invalid pattern fails the run with `RULES_SETTINGS_INVALID`. |
 
 ## 5. Exceptions
 
 No inline suppression. Mention a removed document in `~~strikethrough~~`, or keep free-form notes under a
-`materials/` directory; `[rules] exclude` removes a file from every rule.
+`materials/` directory; `[rules] exclude` removes a file from every rule. Write an example or placeholder ID in a
+quick reference as plain text or in a code block.
 
 ## 6. Example
 

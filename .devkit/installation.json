@@ -1083,7 +1083,7 @@
     },
     ".agents/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "6d0cb10ce4a43dc6b3d12f8f146cd5836b54f0d4f018561e3e18f398c344024b"
+      "sha256": "859f23e60fae27e02d52e9f4d548749a568c5de127f269144030f4fae2654db4"
     },
     ".agents/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -1327,7 +1327,7 @@
     },
     ".claude/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "6d0cb10ce4a43dc6b3d12f8f146cd5836b54f0d4f018561e3e18f398c344024b"
+      "sha256": "859f23e60fae27e02d52e9f4d548749a568c5de127f269144030f4fae2654db4"
     },
     ".claude/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -1679,7 +1679,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "eeb1a77f2351876b58a2aa85199e10d00c5b32a4dd3dbd304ef7bdba2b30400c"
+      "sha256": "bcdcb87fc31c859610978ddf7bb8a336c221274fa064eaa67ab974f4024b4572"
     },
     ".devkit/managed/docs/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1687,7 +1687,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "e42fe197fbb91005eefcb371edae9dab7376e564b462cda9b47925620c98cbd5"
+      "sha256": "7718e125e878e209062603e2e09f9cdd8accd3a491694a0c613605d47aaa5612"
     },
     ".devkit/managed/docs/rules/document_summary/guide.md": {
       "mode": 420,
@@ -2015,7 +2015,7 @@
     },
     ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "6d0cb10ce4a43dc6b3d12f8f146cd5836b54f0d4f018561e3e18f398c344024b"
+      "sha256": "859f23e60fae27e02d52e9f4d548749a568c5de127f269144030f4fae2654db4"
     },
     ".devkit/managed/spec/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
