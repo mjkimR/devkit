@@ -2,7 +2,7 @@
 id: SPEC-historical-handed-off-references
 title: Accept handed-off proposal IDs in work history
 summary: Stop RULE-document-reference from reporting a handed-off PROP-<slug> as an unresolved ID in explicitly targeted work history, where handoff never rewrites references, when its SPEC-<slug> exists.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities:
   - CAP-GOV-spec-rules

@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-30T05:44:52.759908Z'
+status: completed
+summary: 'Self-checked reconcile at activity-effort low: the CAP-GOV-spec-rules 3.3 sentence and the rule guide match document_reference.py (historical handed-off PROP silent in prose and unit depends_on; unknown PROP reported; live documents fixable); no-impact claims for CAP-DOCS-document-model, the two use cases, architecture, glossary and references hold'
+findings: []
+assumptions:
+- 'activity-effort low: self-verification by the implementer, no reconcile-reviewer subagent (effort.md)'
+checks:
+  head: PASS reconcile.md committed at HEAD
+  targets: PASS CAP-GOV-spec-rules.md matches the code and tests
+  no_impact: PASS rg found no other statement of handed-off resolution in history
+  template_sync: PASS devkit sync --check clean; .devkit/installation.json is the only tracked sync output
+diff_scope:
+  base: 030909fde76958abb17d35d8a1ac15237be4b65f
+  head: 41cb133fc091ce50abcbf4da7dffb903dd1f9fb1
