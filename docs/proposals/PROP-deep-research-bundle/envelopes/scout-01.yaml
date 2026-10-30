@@ -1,0 +1,42 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T01:27:23.637012Z'
+status: completed
+summary: Retained MAT documents need only an id; a backticked MAT ID in a proposal is a reference edge that handoff leaves unchanged. Two selected bundles shipping one skill or subagent id fail with BUNDLE_CONFLICT; a preset that drops an asset removes unmodified files (ORPHAN_LEFT for edited ones) with no moved-asset notice; adding a catalog bundle breaks the exact bundle set in tests/e2e/smoke.sh.
+findings:
+- issue: Indexed material identity is frontmatter id MAT-<slug> on any .md under docs/materials/; the <YYYY-MM>/<YYYYMMDD>-<slug>/ layout is a convention no rule checks. Notes without frontmatter are not documents; each note may carry its own MAT ID.
+  evidence: docs/materials/README.md:7-11; packages/devkit-docs/src/devkit_docs/features/documents/models/kinds.py:270-284; docs/capabilities/documents/CAP-DOCS-document-model.md:59-66,154; docs/materials/2026-10/20261030-workflow-record-auto-commit/planning-evidence.md:2
+  suggested_action: Make the citeable unit of retained research an indexed MAT document with an id; cite it in backticks.
+  resolution: open
+- issue: A proposal or PADR cites a MAT ID in a prose code span (reference edge resolved by RULE-document-reference); bare text is not an edge; MAT is no relation field. Handoff moves only the proposal's own materials/ and rewrites only IDs it wrote, so a cited MAT ID survives unchanged into spec.md and ADRs.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md:5-9; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:390-412,508-535; packages/devkit-spec/src/devkit_spec/features/proposals/services/rewrite.py:218-240; docs/decisions/2026-10/20261030-reusable-lifecycle-resource-manager.md:87
+  suggested_action: No spec check changes; spec guidance (proposals-catalog.md:8,19,26) describes materials/ as the home of research and needs one citation line.
+  resolution: open
+- issue: 'Spec guidance and worker scope assume a proposal''s own materials/: report.py reads no materials, worker inputs derive only the unit''s own materials path, backlog copies inherited materials.'
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py:84-90; packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py:149-150; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/backlog.md.jinja:30
+  suggested_action: Extend boundaries to the spec skill references for the citation line; workers read a cited MAT through ordinary read scope.
+  resolution: open
+- issue: The bundle manifest has no dependency field (strict schema), and two selected bundles shipping the same skill or subagent id fail with BUNDLE_CONFLICT before any write, even with identical bytes.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/manifest.py:162-167,324,443-457; packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/inventory.py:106-119,326,348-349
+  suggested_action: Roles used by both /incubate and the research entry cannot ship in both bundles under one id.
+  resolution: open
+- issue: 'A preset that drops an asset: sync removes the unmodified projected file ([CHANGE: remove <path>]) and leaves an edited one with ORPHAN_LEFT; a newly installed unselected bundle is announced once with BUNDLE_UNSELECTED. No moved-asset or migration mechanism exists for skills or subagents; all catalog bundles share one version.'
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py:296-339,891-900; packages/devkit-dist/src/devkit_dist/features/distribution/models/errors.py:215-220; packages/devkit-catalog/tests/integration/bundles/test_bundles.py:20-36
+  suggested_action: Migration is guide text plus the existing BUNDLE_UNSELECTED notice; no devkit-dist change.
+  resolution: open
+- issue: .devkit/transient/ is ignored by the seeded .devkit/.gitignore only when sync first creates it; the research workspace reference keeps its verify-then-stop check. The incubation-research path also appears in guides/install/existing-repository.md:245, new-repository.md:111, INSTALL_GUIDE.md:139 and the catalog README:41.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/workspace.py:38-45; packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py:586-600
+  suggested_action: Move the path in every listed guide; keep the ignore verification.
+  resolution: open
+- issue: tests/e2e/smoke.sh asserts the exact catalog bundle set, and ARCH-05-2-components describes the catalog incubation bundle; both fall outside the proposal's boundaries.
+  evidence: tests/e2e/smoke.sh:228; docs/architecture/ARCH-05-2-components.md:82-84
+  suggested_action: Add both paths to boundaries.owns.
+  resolution: open
+assumptions:
+- Sync, handoff and rewrite behavior read from source; nothing executed beyond read-only devkit docs queries
+unverified_areas:
+- No live sync, handoff or test run; same-path asset handover in one sync is inferred from sync.py:317-338
+- Codex and Antigravity projection details beyond SUBAGENT_DIRS
+checks: {}
