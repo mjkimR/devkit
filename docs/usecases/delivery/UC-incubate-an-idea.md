@@ -37,9 +37,9 @@ entrypoints:
 - **2a.** SDD approach: the agent stops product work and explains the shared configuration action; the use case ends without changing approach.
 - **2b.** Unreadable policy: inspection reports its actual error, including `DEVELOPMENT_CONFIG_INVALID` for an invalid approach; the agent reports the configuration action and the use case ends.
 - **3a.** Missing or stale context: the agent recovers current facts from source/run instructions and missing product answers without reconstructing discarded history; resumes at step 4.
+- **3b.** A retained research material exists: the agent reads it by the `MAT-<slug>` ID the user supplies or the current context links, never starting or suggesting a research entry; resumes at step 4.
 - **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
 - **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
-- **4b.** Broad direction investigation: the agent suggests the explicit research entry; on user selection it transfers current facts to `UC-research-an-idea-and-shape-a-roadmap`; otherwise it continues bounded ordinary work at step 4.
 - **5b.** Optional support: the agent delegates a separable question or usage scope with explicit boundaries, verifies the returned evidence and folds it into current choices; resumes at step 6.
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
 - **6a.** Failed retained behavior: the agent repairs the implementation within the agreed goal and repeats affected verification; resumes at step 6.
@@ -54,7 +54,7 @@ entrypoints:
 ## 5. Acceptance Criteria (Given / When / Then)
 
 Rules: approach-gated entry; adaptive next action; bounded evidence; goal-bound iteration; optional role boundaries;
-truthful verification; mutable coordinator-owned resume facts; voluntary adoption.
+truthful verification; mutable coordinator-owned resume facts; useful alternatives; voluntary adoption.
 
 ### Scenario 1: Advance a representative flow
 
@@ -98,16 +98,16 @@ truthful verification; mutable coordinator-owned resume facts; voluntary adoptio
 - **When**: the agent verifies the action.
 - **Then**: it repairs and reruns affected checks where possible, while missing evidence remains an explicit limitation.
 
-### Scenario 8: Select broad research explicitly
-
-- **Covers**: 4b
-- **Given**: an ordinary incubation question that suggests a broader direction investigation.
-- **When**: the agent proposes the research doorway.
-- **Then**: it starts that team activity only on user selection; small work can continue without a team or SDD records.
-
 ### Scenario 7: Keep adoption voluntary
 
 - **Covers**: 7a
 - **Given**: an explicit request to adopt SDD after incubation.
 - **When**: the agent presents the transition doorway.
 - **Then**: package/asset preparation is distinguished from baseline readiness and activation; this use case changes no approach.
+
+### Scenario 8: Read retained research by its ID
+
+- **Covers**: 3b
+- **Given**: current context links a committed research material by its ID.
+- **When**: the agent recovers current facts.
+- **Then**: it reads that material as evidence and neither invokes nor suggests a research entry.

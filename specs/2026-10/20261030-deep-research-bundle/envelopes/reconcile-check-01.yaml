@@ -1,0 +1,46 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T02:28:32.837312Z'
+status: completed
+summary: 'reconcile-reviewer (nested, medium): all 11 reconcile.md targets verified against the diff, both ADRs and proposal §3.4; links two-way, cited tests exist, rules pass; 1 P2 (rule 4 SHOULD weakens the no-suggestion constraint) and 4 P3 precision items'
+findings:
+- issue: CAP-DLV-deep-research rule 4 states the no-suggestion constraint as SHOULD, weaker than the user decision, ADR-split-deep-research-bundle and AC-09.
+  evidence: docs/capabilities/delivery/CAP-DLV-deep-research.md:49-51
+  failure_condition: A later bundle, guide or role adds a topic-match suggestion citing the SHOULD as permission.
+  suggested_action: Reword as MUST NOT suggest or start the entry, also on a topic match.
+  resolution: open
+  severity: P2
+- issue: reconcile.md says the release handbook still names /incubate-research; it does not, it only lacks the deep-research bundle.
+  evidence: specs/2026-10/20261030-deep-research-bundle/reconcile.md:69-70
+  failure_condition: A later handbook refresh looks for a stale mention instead of adding the new bundle.
+  suggested_action: Restate that the handbook does not yet describe the deep-research bundle.
+  resolution: open
+  severity: P3
+- issue: CAP-DLV-deep-research §4 does not state that moved roles' policy keys and overrides are now deep-research:<role> and .devkit/overrides/deep-research/, nor the migration consequence.
+  evidence: docs/capabilities/delivery/CAP-DLV-deep-research.md Optional roles; guides/INSTALL_GUIDE.md:149-155
+  failure_condition: A reader of the capability configures incubation:<role> and meets a ConfigError only the guides explain.
+  suggested_action: Add one sentence under Optional roles citing CAP-DIST-sync-and-transactions and CAP-DIST-workspace-ownership.
+  resolution: open
+  severity: P3
+- issue: UC-research extension 2c implies an in-place update when the user names only an earlier run directory, which is no material.
+  evidence: docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md:41
+  failure_condition: Only a run directory is named and the extension implies updating a non-existent material.
+  suggested_action: 'Split: a named run or material is an input; only a named partial material is updated in place.'
+  resolution: open
+  severity: P3
+- issue: Rule 4 cites 'the incubation text check' and rule 24 'the installed-consumer test', both ambiguous.
+  evidence: docs/capabilities/delivery/CAP-DLV-deep-research.md:51,105
+  failure_condition: A reader cannot resolve the cited check to one test.
+  suggested_action: Cite test_no_file_names_or_suggests_the_research_entry and the deep_research installed-consumer test path.
+  resolution: open
+  severity: P3
+unverified_areas:
+- e2e tier and smoke not rerun by the reviewer
+checks:
+  rules: PASS devkit rules check --ci --base a6927bf9 errors=0
+  tests: PASS 20/20 test_deep_research.py and test_incubation.py
+diff_scope:
+  base: a6927bf9446b56a95c1849a0d61db1fb1d75843c
+  head: 4a65e09800eb8436e73b2548a349b1fc131a2c32

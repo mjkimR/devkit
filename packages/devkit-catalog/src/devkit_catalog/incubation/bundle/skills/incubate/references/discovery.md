@@ -2,7 +2,7 @@
 
 1. Identify what the next useful action lacks: intended users, problem, constraints, representative usage or signs that the first version helps.
 2. Reuse known answers; ask only the missing decision in plain language, with a recommended option when evidence supports one.
-3. If the direction is open, compare a few candidates by the user's goal, trade-offs and assumptions worth testing. For a broad research-team investigation, suggest the explicit `/incubate-research` entry; do not start it automatically.
+3. If the direction is open, compare a few candidates by the user's goal, trade-offs and assumptions worth testing.
 4. Label user decisions, agent recommendations and unverified assumptions separately; never infer approval from the absence of a reply.
 5. Choose the narrowest first version that exercises a representative flow; no complete backlog or architecture is required first.
 6. If a concrete uncertainty blocks that version, start bounded research or implementation evidence instead of extending a fixed questionnaire.

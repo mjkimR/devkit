@@ -68,6 +68,10 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   a host that runs it natively) and the use case ends; on a decline it never offers that candidate again in the conversation
   (`CAP-HARN-agent-guidance`, `CAP-DIST-context-and-playbooks`); resumes at step 2.
 - **1d.** The effective approach is incubation: the agent uses the project's incubation guidance and independent document/project checks without creating an implicit SDD Unit or classifying this change into SDD depths. Existing bound history retains its checks; this routing use case ends.
+- **1e.** The user explicitly invokes the approach-neutral research entry (`/deep-research`): the invocation is not
+  development intake, so the agent runs no playbook search, classifies nothing and creates no Unit; the research
+  entry's own skill takes over and work the research later informs starts as ordinary intake
+  (`CAP-HARN-agent-guidance`); this routing use case ends.
 - **2a.** The effective policy is invalid (a `[tool.spec]` key outside the table, or a `plan-intent` or main
   boundary policy other than `ask` or `auto`): the system refuses with `SPEC_CONFIG_INVALID`
   (`CAP-DLV-project-policy`); the agent stops policy-dependent work; the use case ends.
@@ -156,6 +160,13 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **When**: the agent takes in the request
 - **Then**: it names `feedback-hygiene` in one line with its classification statement, runs nothing before the user
   confirms, and offers no candidate the user declined earlier in the conversation
+
+### Scenario 2c: An explicit research invocation is not intake
+- **Covers**: 1e
+- **Given**: an SDD repository with `spec:core` and `deep-research:core` selected
+- **When**: the user invokes `/deep-research compare directions for X`
+- **Then**: the agent runs no `devkit playbook search`, states no classification, and creates no proposal, spec bundle,
+  gate record or envelope
 
 ### Scenario 3: An invalid intent policy stops routing
 - **Covers**: 2a

@@ -1,8 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: user confirmed the draft and started local-orchestrated Planning
-by: user
-at: '2026-10-30T01:16:37.432792Z'

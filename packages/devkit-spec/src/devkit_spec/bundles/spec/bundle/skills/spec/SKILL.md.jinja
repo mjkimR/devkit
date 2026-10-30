@@ -20,7 +20,7 @@ guess or switch it. The rest of this skill applies to SDD.
 
 ## Route the intent
 
-1. **Playbook discovery at intake**, before classification and before any Unit, so a selected playbook's depth and scope inform the classification. Intake is a `/spec <intent>` or a user's own message requesting a change or operation outside the agreed scope of the current task; no message from another agent (Host payload, worker turn, nested role), no hook and no stage `devkit workflow next` names is intake. Task kind and planning depth never exempt a task. Skip discovery for:
+1. **Playbook discovery at intake**, before classification and before any Unit, so a selected playbook's depth and scope inform the classification. Intake is a `/spec <intent>` or a user's own message requesting a change or operation outside the agreed scope of the current task; no message from another agent (Host payload, worker turn, nested role), no hook and no stage `devkit workflow next` names is intake. An explicit `/deep-research` invocation is not intake either: it gets no playbook discovery, classification or Unit and follows its own skill; work the research later informs starts as ordinary intake. Task kind and planning depth never exempt a task. Skip discovery for:
 
    | Skip case |
    | :--- |

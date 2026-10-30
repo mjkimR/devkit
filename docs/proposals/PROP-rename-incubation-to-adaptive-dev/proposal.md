@@ -9,7 +9,7 @@ priority: high
 size: L
 planning_effort: medium
 dev_effort: medium
-depends_on: [PROP-deep-research-bundle]
+depends_on: [SPEC-deep-research-bundle]
 boundaries:
   owns:
     - packages/devkit-dist/src/devkit_dist/features/
@@ -105,7 +105,7 @@ Planning answers each question below; `MAT-incubation-rename-inventory` lists ev
 - **Q4 Entry and role names** (q3): the entry `/incubate` becomes `/adaptive-dev`, the approach's main entry as
   `/spec` is SDD's; it is renamed, not added beside `/incubate`. The pointer guidance becomes `adaptive-dev-pointer`,
   and `incubation-researcher` becomes `product-researcher` beside `product-clarifier`. The researcher stays in
-  adaptive-dev: `PROP-deep-research-bundle` ships its own `research-investigator`, and the two bundles share no role
+  adaptive-dev: `SPEC-deep-research-bundle` ships its own `research-investigator`, and the two bundles share no role
   and declare no bundle or package dependency in either direction. adaptive-dev never invokes deep-research; it reads
   retained research only by its `MAT-<slug>` ID.
 - **Q5 SDD term** (q2): the spec bundle already calls this activity Planning (`planning.md`, `plan-<slug>`,
@@ -125,7 +125,7 @@ Planning answers each question below; `MAT-incubation-rename-inventory` lists ev
   `devkit_catalog.adaptive_dev`, and its tests move to `tests/{integration,e2e}/bundles/` names using
   `adaptive_dev`. Test fixtures named after the SDD term (`INCUBATED`, the `incubate` workflow fixture ID) are
   renamed.
-- **Q7 Sequencing** (q4, decided by the Host): `PROP-deep-research-bundle` lands first, and this proposal declares
+- **Q7 Sequencing** (q4, decided by the Host): `SPEC-deep-research-bundle` lands first, and this proposal declares
   `depends_on: [PROP-deep-research-bundle]`. Both Plannings may run in parallel; no same-release constraint applies.
   Reasons:
   - The split moves the research entry, its references and roles; renaming them first would rename text the split
@@ -185,7 +185,7 @@ Each renamed document moves to its new path, takes the new ID and keeps the old 
 - History keeps its wording: `docs/decisions/` decision text, `specs/` outside the listed `feedback/` directories,
   `docs/materials/`, `handbook/` and the done milestone `MS-idea-incubation`.
 
-### Scope after `PROP-deep-research-bundle`
+### Scope after `SPEC-deep-research-bundle`
 
 The split lands first (Q7), so this proposal renames the bundle as the split leaves it and excludes what the split
 moves out:

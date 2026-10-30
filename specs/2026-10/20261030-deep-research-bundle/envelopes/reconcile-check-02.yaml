@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T02:29:08.814681Z'
+status: completed
+summary: 'Implementer self-verified the reconcile-check-01 fixes at 96b7a72a: rule 4 is MUST NOT with both test names, rule 24 cites the deep_research installed-consumer test, CAP-DLV-deep-research names the deep-research:<role> keys and override path with the migration consequence, UC-research 2c separates input runs from partial-material resume, reconcile.md states the handbook gap; reconcile resolved and spec completed. Findings 1-5 of reconcile-check-01 resolved.'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base a6927bf9 errors=0
+diff_scope:
+  base: a6927bf9446b56a95c1849a0d61db1fb1d75843c
+  head: 96b7a72a15573799df5071a6d509169468c533ea

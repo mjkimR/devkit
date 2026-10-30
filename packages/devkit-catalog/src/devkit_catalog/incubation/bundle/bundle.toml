@@ -9,27 +9,6 @@ kind = "skill"
 source = "skills/incubate"
 
 [[assets]]
-id = "incubate-research"
-kind = "skill"
-source = "skills/incubate-research"
-invocation = "user"
-
-[[assets]]
-id = "direction-explorer"
-kind = "subagent"
-source = "subagents/direction-explorer.md"
-
-[[assets]]
-id = "discovery-critic"
-kind = "subagent"
-source = "subagents/discovery-critic.md"
-
-[[assets]]
-id = "discovery-planner"
-kind = "subagent"
-source = "subagents/discovery-planner.md"
-
-[[assets]]
 id = "incubation-pointer"
 kind = "guidance"
 source = "guidance/incubation-pointer.md"
@@ -55,4 +34,4 @@ kind = "document"
 source = "templates/current-context.md"
 
 [presets.core]
-assets = ["incubate", "incubate-research", "incubation-pointer", "product-clarifier", "incubation-researcher", "usage-reviewer", "direction-explorer", "discovery-critic", "discovery-planner", "current-context-template"]
+assets = ["incubate", "incubation-pointer", "product-clarifier", "incubation-researcher", "usage-reviewer", "current-context-template"]
