@@ -1,7 +1,7 @@
 ---
 id: PROP-worker-audit-known-host-advance
 title: Keep the worker audit baseline across known Host-owned target advances
-summary: "Replace the base-checkout HEAD equality in worker validation with a derived notice naming base commits and dirty paths that touch the worker's write scope, so integrations and other sessions need not wait for a running worker while worker escapes stay visible."
+summary: "Replace the base-checkout HEAD equality in worker validation with a derived warning naming base commits and dirty paths that touch the worker's write scope, so integrations and other sessions need not wait for a running worker while worker escapes stay visible."
 status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/delivery/
@@ -16,6 +16,7 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
     - packages/devkit-spec/src/devkit_spec/features/worker/
     - packages/devkit-spec/src/devkit_spec/base/errors.py
+    - docs/decisions/2026-10/20261022-orchestration-workers.md
     - packages/devkit-spec/tests/
     - docs/capabilities/delivery/
   excludes:
@@ -64,41 +65,51 @@ or serialized integrations.
 
 ## 3. Proposed Design & Impact
 
-`PADR-replace-the-base-head-equality-with-a-scope-overlap-notice` records the decision.
+`PADR-replace-the-base-head-equality-with-a-scope-overlap-warning` records the decision; this section is its
+contract. The user's choice between this design and dropping the equality outright is pending.
 
-- **Window**: `devkit spec worker inspect` takes the first-parent commits of the base checkout's HEAD after its merge
-  base with the returned head and keeps those committed after the audit base `<accepted>` (committer time). Each
-  commit contributes its first-parent changed paths, so a merge commit contributes everything it brought in. The
-  time filter keeps every worker commit, including an escape, and drops advances the Host saw before spawning.
-- **Overlap**: window commits and base-checkout dirty paths inside the inspection's write scope (derived, or the
-  `--scope` override) go into `base_checkout.overlap` (`commit` with its paths, or `dirty` paths) and raise the
-  `NOTICE` `SPEC_WORKER_BASE_OVERLAP`. Its `[ACTION]`: confirm each entry is the Host's own or another session's write,
-  otherwise block the range as a write outside the worktree. `base_checkout` also reports the window's commit count.
-  The notice fails no check, so the exit code changes only under `--strict`. With the scope check `not-run`, no
-  overlap is computed and the existing `SPEC_WORKER_CHECK_NOT_RUN` notice names the cause. Without a base checkout
-  (inspection run in the base itself), nothing changes.
+- **Window**: `devkit spec worker inspect` lists the non-merge commits reachable from the base checkout's HEAD and not
+  from the returned head (`git rev-list --no-merges <base HEAD> --not <returned>`) whose committer time is at or after
+  the committer time of the audit base `<accepted>`. Each commit contributes its own changed paths (renames as both
+  names), so an escape is named by itself whatever merge carried it onto the base branch. No merge base is needed.
+  The time filter keeps every commit made after `<accepted>`, including an escape, and drops advances the Host saw
+  before spawning.
+- **Overlap**: a window commit or a base-checkout dirty path inside the inspection's write scope (derived, or the
+  `--scope` override) is an entry of `base_checkout.overlap` and raises the `WARNING` `SPEC_WORKER_BASE_OVERLAP`. A
+  commit entry carries `commit`, `subject`, `committer_time` and its in-scope `paths`; a dirty entry carries `dirty`
+  and its in-scope `paths`. `base_checkout.window_commits` counts every window commit. The warning fails no check:
+  the exit code is `0`, and `1` only under `--strict`. Its `[ACTION]` states the accounting rule below.
+- **Not computed**: when the scope check is `not-run` or the window cannot be derived (a Git error), `overlap` is
+  absent (never `[]`) and a `SPEC_WORKER_CHECK_NOT_RUN` notice names the cause; inspection never exits `2` for it.
+  Without a base checkout (inspection run in the base itself), nothing changes.
+- **Text output**: one `[BASE_OVERLAP: <commit or dirty> paths=...]` line per entry after `[BASE_CHECKOUT: ...]`, and
+  the warning rendered on stderr with its own code and level. `commands.py` stops rebuilding every result notice as
+  `WorkerCheckNotRunNotice`.
 - **Host procedure** (`spec-delegate/references/worker.md`, `payload.md`): drop the pre-spawn record of the base
-  checkout and the "status and HEAD match" requirement; accept a range only after accounting for every
-  `SPEC_WORKER_BASE_OVERLAP` entry. Host integrations and other sessions' commits proceed while a worker runs.
-- **Contract**: `CAP-DLV-delivery-workflows` replaces "unchanged base" among the acceptance requirements, describes the
-  window, the `overlap` field and the code row in Worker result inspection. A new ADR supersedes the base-checkout
-  clauses of `ADR-orchestration-workers` (committed results and their validation; informational range
-  inspection); `ADR-reusable-lifecycle-resource-manager` keeps the write audit with the Host
-  unchanged.
-- **Unchanged**: the worker audit range `<accepted>..<returned>`, its checks and exit codes; Host commits never enter
-  `changed_paths`; completed specs and earlier materials that restate the equality stay as history.
+  checkout and the "status and HEAD match" requirement. Account for each overlap entry before accepting: a commit
+  entry only when the Host made the commit or integrated a source that contains it
+  (`git merge-base --is-ancestor <commit> <integrated source head>`), a dirty entry only when the Host wrote the path.
+  Any other entry blocks the range unless the user confirms it as another session's write. Host integrations and
+  other sessions' commits proceed while a worker runs.
+- **Contract**: `CAP-DLV-delivery-workflows` replaces "unchanged base" among the acceptance requirements and describes
+  the window, the fields, the sentinel and the code row in Worker result inspection. A new ADR supersedes the
+  base-checkout clauses of `ADR-orchestration-workers` (committed results and their validation; informational range
+  inspection), and that ADR gains a one-line pointer to it. `ADR-reusable-lifecycle-resource-manager` keeps the
+  write audit with the Host unchanged.
+- **Unchanged**: the worker audit range `<accepted>..<returned>`, its checks and exit codes; Host and foreign commits
+  never enter `changed_paths`; completed specs and earlier materials that restate the equality stay as history.
 
 ### Acceptance
 
 | ID | Given | When | Then |
 | --- | --- | --- | --- |
-| GOP-08 | An audit base A, a Host or foreign base commit B made after A outside the write scope, and a returned head C | `devkit spec worker inspect` runs in the worktree | A..C is the audited range with its existing checks; B is counted in `base_checkout` and raises no notice; B's paths never appear in `changed_paths` or `outside_scope`. |
-| WAH-01 | A base commit after A that changes a path inside the write scope | inspect runs | `base_checkout.overlap` names the commit and its in-scope paths, `SPEC_WORKER_BASE_OVERLAP` is a notice with an `[ACTION]`, exit `0` (`1` under `--strict`). |
-| WAH-02 | A base commit committed before A (seen before spawning), in scope | inspect runs | No overlap entry. |
+| GOP-08 | An audit base A, a Host or foreign base commit B made after A outside the write scope, and a returned head C | `devkit spec worker inspect` runs in the worktree | A..C is the audited range with its existing checks; B is counted in `base_checkout.window_commits` and raises no warning; B's paths never appear in `changed_paths` or `outside_scope`. |
+| WAH-01 | A base commit after A that changes a path inside the write scope | inspect runs, in JSON and in text | `base_checkout.overlap` names the commit, subject, committer time and in-scope paths; `SPEC_WORKER_BASE_OVERLAP` is a `WARNING` with an `[ACTION]` in JSON `notices` and on text stderr; text prints its `[BASE_OVERLAP: ...]` line; exit `0`, and `1` under `--strict`. |
+| WAH-02 | A base commit committed before A, in scope | inspect runs | No overlap entry. |
 | WAH-03 | A base dirty path inside, and another outside, the write scope | inspect runs | Only the inside path is an overlap entry; `dirty_paths` still lists both. |
-| WAH-04 | A merge commit on the base whose merged branch changed an in-scope path | inspect runs | The merge commit is an overlap entry with that path. |
-| WAH-05 | The scope check is `not-run` | inspect runs | No overlap is computed; the `SPEC_WORKER_CHECK_NOT_RUN` notice names the scope cause. |
-| WAH-06 | The bundle's worker and payload references | `test_role_contracts.py` runs | `worker.md` requires accounting for every overlap entry and neither file requires a pre-spawn base record or equal base HEAD. |
+| WAH-04 | An in-scope commit made on the base after A, then carried by a merge commit (another unit's integration under `ff-only`) | inspect runs | The non-merge commit itself is the overlap entry; the merge commit is not. |
+| WAH-05 | The scope check is `not-run`, or the window's Git query fails (the base checkout's HEAD is unborn) | inspect runs | `overlap` is absent, a `SPEC_WORKER_CHECK_NOT_RUN` notice names the cause, and the exit code is the one the other checks give. |
+| WAH-06 | The bundle's worker and payload references | `test_role_contracts.py` runs | `worker.md` states the accounting rule for overlap entries; neither file requires a pre-spawn base record or an unchanged base HEAD. |
 
 ### Non-goals
 
@@ -111,13 +122,15 @@ or serialized integrations.
 
 ## Planning decisions
 
-- Planning compared dropping the equality, a declared-Host-advance list and the derived overlap notice
-  (`MAT-base-observation-options`) and recommends the notice; the user's choice is pending.
-- GOP-08 is restated: the parent's "unknown or dirty target changes stop" would stop on every foreign commit and on
-  the user's own uncommitted base edits; the restated row and WAH-01 to WAH-06 keep detection to the worker's write
-  scope.
-- The notice level (not a failing check) keeps the exit-code model of `ADR-orchestration-workers`' informational range
-  inspection; the user's choice is pending.
+- Planning compared dropping the equality, a declared-Host-advance list and the derived overlap warning
+  (`MAT-base-observation-options`) and recommends the warning; the user's choice is pending (`challenger-01` finding 4).
+- The level is `WARNING`, not `NOTICE`: a condition the Host must act on is a warning under
+  `CAP-ADV-agent-advisory-protocol`, and `--strict` counts only warnings (`ARCH-08-1-agent-output`). It still fails no
+  check, which keeps the exit-code model of `ADR-orchestration-workers`' informational range inspection.
+- The window uses non-merge commits so a merge cannot carry an escape under the Host's own name.
+- GOP-08 is restated, pending the same user choice: the parent's "unknown or dirty target changes stop" would stop on
+  every foreign commit and on the user's own uncommitted base edits; the restated row and WAH-01 to WAH-06 limit
+  detection to the worker's write scope.
 
 ## 4. Lifecycle & Retirement Criteria
 

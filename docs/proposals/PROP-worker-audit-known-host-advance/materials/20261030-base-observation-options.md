@@ -1,7 +1,7 @@
 ---
 id: MAT-base-observation-options
 title: Worker base-checkout observation options
-summary: "Compare dropping the base-checkout HEAD equality, a declared-Host-advance list and a derived scope-overlap notice for detecting worker writes that escape into the base checkout, with failure traces and the change inventory."
+summary: "Compare dropping the base-checkout HEAD equality, a declared-Host-advance list and a derived scope-overlap warning for detecting worker writes that escape into the base checkout, with failure traces and the change inventory."
 created_at: 2026-10-30
 ---
 
@@ -42,41 +42,51 @@ A committed escape is the case that would stay hidden; a dirty escape always sur
 | --- | --- | --- | --- | --- |
 | A: drop the HEAD equality and the pre-spawn record; audit only `<accepted>..<returned>`, the worktree and the base's dirty paths | No; after the sibling it lands unaudited | Passes | None | Documents and two tests; no code |
 | B: the Host declares its own advances; inspect requires the base to move from the recorded pre-spawn HEAD only through declared commits | Yes | Stops validation, because the commit is undeclared | A durable pre-spawn record plus a declaration per Host integration | New record or flags, walk, codes, documents, tests |
-| C: derived scope-overlap notice; inspect lists base commits made after the audit base that touch the worker's write scope, and in-scope base dirty paths, as a `NOTICE` | Yes, when the escape touches the write scope | Passes; a notice only when the commit touches this worker's scope | None in the common case; accounting only for a notice | One window derivation, one notice code, documents, tests; no record |
+| C: derived scope-overlap warning; inspect lists base commits made after the audit base that touch the worker's write scope, and in-scope base dirty paths, as a `WARNING` | Yes, when the escape touches the write scope | Passes; a warning only when the commit touches this worker's scope (the user then confirms it) | None in the common case; accounting only for a warning | One window derivation, one warning code, a sentinel, documents, tests; no record |
 
 ## Failure traces
 
 - **T1 dirty escape** (a relative-path write lands in the base working tree): A, B and C all surface it no later than
   integration (`WORKTREE_BASE_DIRTY`). C names it at validation when the path is in the write scope.
-- **T2 committed escape** (the worker commits on the base branch): A accepts it, and after the sibling the advance is
-  never audited. B stops on it. C names it at validation when it touches the write scope; an escape commit that
-  touches only paths outside the write scope stays unnamed. A worker stages only scope paths, so such a commit needs
-  two mistakes (an out-of-scope `git add` and a commit in the wrong cwd).
+- **T2 committed escape** (the worker commits on the base branch): existing checks catch a full escape, because a
+  worker whose final commit (the worker envelope) landed on the base leaves its branch without that envelope, so
+  inspection's head or ancestry fails. A partial escape (some commits on the base, the rest on the branch) passes
+  the range audit. Today the Host's equality or integration's `WORKTREE_MERGE_NOT_FF` catches it; after the sibling,
+  A lets it land unreviewed (CI still runs on its content). B stops on it. C names it at validation when it touches
+  the write scope; an escape commit that touches only paths outside the write scope stays unnamed. A worker stages
+  only scope paths, so such a commit needs two mistakes (an out-of-scope `git add` and a commit in the wrong cwd).
+  No committed escape has been observed in this repository.
 - **T3 foreign advance** (another session commits to `main`): A and C accept it without ceremony unless it touches
-  the worker's scope (C then names a real collision). B stops validation.
+  the worker's scope (C then names a real collision for the user to confirm). B stops validation.
 
 ## Derivable window for C
 
-The pre-spawn HEAD is not recorded durably; a design that needs it adds a record. C derives its window instead:
+The pre-spawn HEAD is not recorded durably; a design that needs it adds a record. C derives its window instead
+(revised after `challenger-01`):
 
-- Commits on the first-parent chain of the base checkout's HEAD after its merge base with the returned head.
-- Only commits whose committer time is later than the audit base `<accepted>`'s committer time. Every worker commit,
-  including an escape, is made after `<accepted>`, so the filter excludes advances the Host saw before spawning and
-  keeps every escape. Earlier advances the Host has not merged would otherwise repeat in every later turn.
-- Each commit's paths are its first-parent changes; a merge commit contributes everything it brought in.
-- The write scope is the derived or overridden scope of the same inspection; when the scope check is `not-run`, no
-  overlap is computed and the existing `SPEC_WORKER_CHECK_NOT_RUN` notice names the cause.
+- The non-merge commits reachable from the base checkout's HEAD and not from the returned head
+  (`git rev-list --no-merges <base HEAD> --not <returned>`), so no merge base is needed.
+- Only commits whose committer time is at or after the audit base `<accepted>`'s committer time. Every worker commit,
+  including an escape, is made after `<accepted>`, so the filter keeps every escape and drops advances the Host saw
+  before spawning; otherwise earlier unmerged advances would repeat in every later turn.
+- Each commit contributes its own changed paths. A first-parent walk would credit an escape to the Host's merge
+  commit when another unit is fast-forwarded under `merge = "ff-only"` (`CAP-WT-task-worktrees`), so merges are
+  skipped and the escape is named by itself.
+- The write scope is the derived or overridden scope of the same inspection. When the scope check is `not-run` or the
+  window's Git query fails, no overlap is computed and `SPEC_WORKER_CHECK_NOT_RUN` names the cause.
+- Accounting is deterministic: the Host's own commit, a commit contained in a source the Host integrated, or a dirty
+  path the Host wrote. Git cannot tell another session's commit from a worker escape, so the user confirms those.
 
 ## Change inventory
 
 - `spec-delegate/references/worker.md` (Validate) and `payload.md` (Workers): replace the equality and the pre-spawn
-  record with the notice rule.
-- `features/worker/usecases/inspect.py`, `inputs.py`, `cli/commands.py`, the worker notice class beside
+  record with the accounting rule.
+- `features/worker/usecases/inspect.py`, `inputs.py`, `cli/commands.py`, the worker warning class beside
   `WorkerCheckNotRunNotice`.
 - `CAP-DLV-delivery-workflows`: the acceptance requirement "unchanged base" and the Worker result inspection section,
   its JSON fields and code table.
-- A new ADR superseding the base-checkout clauses of `ADR-orchestration-workers`
-  (`ADR-worker-delivers-committed-result`, `ADR-informational-range-inspection-reuses-existing-checks`).
+- A new ADR superseding the base-checkout clauses of `ADR-orchestration-workers` (committed results and their
+  validation; informational range inspection), with a pointer line in that ADR.
 - Tests: `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` (worker.md tokens) and
   `packages/devkit-spec/tests/integration/features/worker/test_worker_inspect.py`.
 - Completed specs and earlier materials that restate the rule stay unedited as history.
