@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:39:05.615961Z'
+status: completed
+summary: 'Host integration verification: preserve incoming git-operator and envelope-commit contracts across document-only conflicts; all six retained reflection targets agree, no runtime changes or decision changes'
+findings: []
+assumptions:
+- Integration-only self-verification reuses prior independent medium reviews for unchanged code; conflicts limited to summary, entrypoints and scenario numbering
+checks:
+  tests: PASS base-incorporation affected selection 1491; prior unchanged source selection 2091
+  rules: 'PASS committed cumulative check against current main eb4d4f37: zero violations'
+  reflection: PASS all six targets retained; both feature outcomes preserved and no contract mismatch waived
+  sync: PASS current selection clean
+diff_scope:
+  base: 73156ffd786a42ee18d57cbab532a08086182bdd
+  head: 082978a4e087b0a47a8381fc0dce23a29cb69938

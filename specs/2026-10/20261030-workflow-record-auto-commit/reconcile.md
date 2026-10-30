@@ -36,3 +36,20 @@ The initial sync check passed. `.devkit/installation.json` is the only tracked s
 ## Entrypoints
 
 Select workflow CLI and the explicit commit use case as code doorways for envelope/CLI contracts. Retain workflow source definitions for delivery guidance. Broad task boundaries, helper/model/test directories, unrelated integration engines and evidence-only materials are not new entrypoints.
+
+## Integration verification
+
+The Host incorporated main at eb4d4f37 in merge 082978a4. Conflicts were limited to the delivery capability summary,
+use-case entrypoints and example scenario numbering. Both the git-operator lifecycle behavior and explicit envelope
+commit behavior are retained; envelope scenarios were renumbered 24 through 28 after the incoming 22 and 23.
+No runtime code or accepted decision changed during resolution. The existing independent code/reconcile evidence
+remains valid for unchanged implementation. The Host rechecked all six reflection targets against the merged tree.
+
+The base-incorporation affected selection passed 1491 tests; the prior 2091-test source selection remains valid for
+unchanged implementation. The cumulative committed rules check against current main passed with zero violations.
+Sync is clean and the main-relative diff has no whitespace errors. The only tracked sync output remains the receipt.
+
+The merge exposed a carried reference to the consumed resource-manager proposal. The Host changed it to the
+retained SPEC ID in 928fdde5 and reran committed cumulative rules successfully. The earlier
+reconcile-check-02 prematurely reported that CI check as passed; reconcile-check-03 corrects and supersedes its
+verification claim with the actual successful result. Both records remain immutable history.
