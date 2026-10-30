@@ -1,0 +1,28 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:11:00.200080Z'
+status: completed
+summary: 'Nested code-reviewer: AC-01..AC-06 implemented and tested over cbe8fc18..3dd611fa; two P3 guidance findings (undeclared-stage fix gives no step when next reports complete; CAP-DOCS rename scope includes completed spec bundles the rule fix never rewrites).'
+findings:
+- issue: 'The undeclared-stage [FIX] gives no usable step when the workflow is complete: workflow next prints [STAGE: - complete=yes], and passing - is refused again.'
+  evidence: packages/devkit/src/devkit_agt/features/workflow/usecases/envelopes.py:103; packages/devkit/src/devkit_agt/features/workflow/cli/render.py:53
+  failure_condition: A worker records a run on a unit whose bound workflow evaluates as complete (sdd-proposal Planning under plan-accept=auto).
+  suggested_action: Say in the fix which declared stage to pass when next reports complete=yes, or record a known limitation.
+  resolution: open
+  severity: P3
+- issue: CAP-DOCS 3.5 item 5 says the rename write scope owns every path docs refs lists, but that list includes completed spec bundle files that devkit rules fix never rewrites.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:252-255; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md
+  failure_condition: A Planning agent widens boundaries.owns into historical spec bundles the rename never writes.
+  suggested_action: Exclude files of completed spec bundles outside feedback/ from the owned scope.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected partial 3317 passed 1 skipped; targeted devkit 60 passed; devkit-dist test_local_config 39 passed
+  lint: PASS devkit rules check --ci --base cbe8fc18 errors=0
+  sync: PASS devkit sync --check exit 0
+diff_scope:
+  base: cbe8fc1885e2be2e95a3fa3ad1e819e0707e57b3
+  head: 3dd611fa5052d1406cd42993f24d0f3abb2a5fb3
+activity_effort: medium
