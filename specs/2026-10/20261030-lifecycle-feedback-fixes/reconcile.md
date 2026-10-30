@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-lifecycle-feedback-fixes
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
     resolution: modified

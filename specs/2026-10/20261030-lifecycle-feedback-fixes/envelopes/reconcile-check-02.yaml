@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:17:41.248749Z'
+status: completed
+summary: 'Implementer re-verified the reconcile-check-01 fixes (no expanded scope, so no second reviewer call): the FB-worker-envelope-stage-unchecked-at-write record now states the docs/proposals/ location on base and main and leaves the disposition to the Host at whichever path the target holds; CAP-DOCS 3.5 item 5 excepts historical files and materials, matching document_reference.py fix (is_material, is_historical); docs/development/reference/distribution.md is a modified target; the guide contradiction is captured as FB-document-reference-guide-adr-rewrite-stale and listed as deferred work. reconcile.md resolved; spec completed.'
+findings: []
+checks:
+  targets: PASS 4 modified targets match the diff
+  source_feedback: PASS 3 dispositions in files, 1 recorded for the Host
+  lint: PASS devkit rules check unit 0 errors
+diff_scope:
+  base: cbe8fc1885e2be2e95a3fa3ad1e819e0707e57b3
+  head: b1d530bf316971ba38e87a535b31434c27fe9261
+activity_effort: medium
