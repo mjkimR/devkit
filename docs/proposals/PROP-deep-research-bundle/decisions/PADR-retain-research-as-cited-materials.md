@@ -5,18 +5,22 @@ summary: For research that may inform several proposals or an adaptive product, 
 proposal: PROP-deep-research-bundle
 status: draft
 created_at: 2026-10-30
+supersedes: ADR-keep-discovery-plans-distinct-from-delivery-commitments
 ---
 
 # [PADR-retain-research-as-cited-materials] Retain research as indexed materials cited by ID
 
 - **Status**: Draft
 - **Date**: 2026-10-30
+- **Supersedes on promotion**: `ADR-keep-discovery-plans-distinct-from-delivery-commitments`
 
 ---
 
 ## 1. Context & Problem Statement
 
-One broad investigation can inform several proposals at once, or an adaptive product and a later SDD proposal.
+`ADR-keep-discovery-plans-distinct-from-delivery-commitments` retains research notes in reused destinations,
+defaults new notes to `docs/materials/`, applies material identity only when needed and has the coordinator update
+`.devkit/incubation.md`. One broad investigation can inform several proposals at once, or an adaptive product and a later SDD proposal.
 A proposal's own `materials/` moves into `docs/materials/` at its handoff, so research placed there belongs to
 one proposal. The research entry also records resume facts in `.devkit/incubation.md`, which an SDD project does
 not keep.
@@ -52,9 +56,20 @@ Chosen: one indexed material per investigation, cited by ID.
   own `materials/`. Adaptive current context links the same ID.
 - A later investigation that builds on a complete material creates a new material citing it. Only a resumed run of
   the same investigation updates a `partial` index in place.
+- Before creating a material, the coordinator checks that `devkit docs resolve MAT-<slug>` finds nothing and the
+  directory is absent, and otherwise picks another slug.
 - The transient run brief holds in-flight state until a result is retained; nothing else replaces
   `.devkit/incubation.md` for research.
-- The entry writes these files and reports their paths; committing them follows the project's ordinary Git flow.
+- Pending user decision (worker q3), recommended: the entry writes these files and does not commit them; its report
+  states that a proposal can cite the material only once it is committed to the base, and the user directs that
+  commit through the project's Git policy.
+- Retained from the superseded decision: proportionate labelled notes for brief, evidence and alternatives,
+  direction and roadmap with no fixed file count; no new document kind; only the coordinator saves retained
+  synthesis; recommendations, decisions, assumptions and unverified areas stay distinguishable; native document
+  semantics only when the subject warrants them; a roadmap is no milestone or delivery Unit; research completion
+  grants no implementation, integration, publication or SDD adoption authority.
+- `/incubate` keeps its own product notes in reused destinations linked from `.devkit/incubation.md`, and links a
+  research material by its MAT ID.
 
 ## 5. Consequences
 

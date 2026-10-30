@@ -56,14 +56,21 @@ the cost of one duplicated contract.
   and `synthesis` references, `direction-explorer`, `discovery-critic`, `discovery-planner` (moved, same IDs) and
   a new `research-investigator` (one question per instance; optional bounded experiment in its assigned scratch).
 - The entry has no approach gate, reads no approach-specific context file and writes no `.devkit/incubation.md`.
-  It never implements, publishes, commits or creates SDD Units, approvals or envelopes.
+  It never implements or publishes and creates no SDD Unit, approval or envelope.
+- Under SDD, an explicit `/deep-research` invocation is not development intake: the spec entry does not classify
+  it into a depth, and the research run writes only its transient run directory and the retained material. Spec
+  routing, `CAP-HARN-agent-guidance` and `UC-route-development-intent` state this exemption.
 - No skill, guidance pointer, guide or role suggests the entry, also on a topic match. The bundle ships no
-  guidance asset; install guides list it only as a bundle the user selects.
+  guidance asset; install guides list it only as a bundle the user selects. Because Antigravity has no native
+  explicit-only setting, the skill body opens with the guard "Run only when the user explicitly invokes this
+  entry; never suggest or start it otherwise", and its description carries no trigger phrasing.
 - The incubation bundle keeps `/incubate`, `product-clarifier`, `incubation-researcher`, `usage-reviewer`, the
   pointer and the current-context template; it loses the entry, its references and the three research roles.
 - Retained from the superseded decision: content-only catalog ownership, explicit selection, installation with
   docs and catalog without devkit-spec, the invoking agent as coordinator, bounded assignments with no mandatory
   role sequence, source provenance, and plans distinct from delivery commitments.
+- Retained for `/incubate`: the shared approach check before product work and the coordinator-owned, mutable
+  `.devkit/incubation.md`.
 
 ## 5. Consequences
 
@@ -71,12 +78,18 @@ the cost of one duplicated contract.
 - Negative: `research-investigator` and `incubation-researcher` share most constraints and drift independently.
 - Risk: a consumer with `incubation:core` loses the entry on upgrade; sync removes the unmodified projections and
   announces `deep-research` once with `BUNDLE_UNSELECTED`, and the guides name `uv run devkit add deep-research`.
+  Three customizations of a moved role need a manual step the guides name: an `incubation:<role>` role-policy key
+  (sync fails until renamed to `deep-research:<role>`), a file override under `.devkit/overrides/incubation/`
+  (silently stops applying until moved to `.devkit/overrides/deep-research/`) and an edited projection left with
+  `ORPHAN_LEFT` (blocks `devkit add deep-research` until moved or deleted).
 - Follow-up: if a third bundle needs the same researcher, reconsider a shared-role mechanism in distribution.
 
 ## 6. Confirmation
 
 `packages/devkit-catalog/tests/integration/bundles/` gains a deep-research test that checks the preset contents,
-explicit invocation projection on every host, selection with `incubation:core` without `BUNDLE_CONFLICT`, and
-that no asset of either bundle names the entry. The installed-consumer e2e test runs the entry's assets under the
-default `sdd` approach without devkit-spec. Approach-neutral behavior and the absence of suggestion beyond the text
-checks are review only.
+explicit invocation projection on every host with the body guard, selection with `incubation:core` without
+`BUNDLE_CONFLICT`, an `incubation:<moved-role>` role key failing while `deep-research:<role>` passes, no incubation
+bundle file naming `incubate-research` or `deep-research`, and no deep-research file naming
+`configuration.development.approach`, `.devkit/incubation.md` or `incubation`. The installed-consumer e2e test runs
+the entry's assets under the default `sdd` approach without devkit-spec. Approach-neutral behavior and the absence
+of suggestion beyond these text checks are review only.
