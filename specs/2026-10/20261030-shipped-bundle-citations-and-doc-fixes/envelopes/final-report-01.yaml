@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:29:11.667851Z'
+status: completed
+summary: 'Shipped bundle text may cite no document ID of this repository except IDs of documents a shipped bundle seeds: stated in agent-asset-writing and CAP-DIST-content-packages, pinned by tools/devkit-dev/tests/integration/test_bundle_citations.py; the advisory unique_code guide no longer cites CAP-GOV-rule-authoring, ARCH-01-introduction-and-goals stays as a docs-seeded ID. CAP-DIST-sync-and-transactions names devkit sync --locked first; UC-plan-and-hand-off-a-proposal gains extensions 6a/7g and scenarios 24/25. Limits: a docs/-only change does not select the citation test under test-affected (FB-citation-test-not-selected-by-docs-changes); only backticked spans are scanned.'
+findings: []
+checks:
+  tests: PASS just test-affected 189 passed (partial selection incl. test_bundle_citations.py)
+  build: PASS uv build devkit-dist, devkit-agt, devkit-dev; devkit sync --check clean
+  lint: PASS devkit rules check --ci --base main; just lint-check; pyright 0 errors on the new test
+diff_scope:
+  base: 7cfc27a8100824191e49d007dd052846bca84f37
+  head: 3d2fe649446e189cc889bc03d03855da6c756f01

@@ -1499,7 +1499,7 @@
     },
     ".devkit/managed/advisory/rules/unique_code/guide.md": {
       "mode": 420,
-      "sha256": "63251543f1e99f713bfb2a827e907353577a4b35ecd2e008fad7ec28b69263ed"
+      "sha256": "e458e5ee002c0f7e00118d93b6beffc41b0d7231b07aaebc782d2a8b83dadd28"
     },
     ".devkit/managed/advisory/rules/unique_code/index.py": {
       "mode": 420,
@@ -1519,7 +1519,7 @@
     },
     ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
       "mode": 420,
-      "sha256": "b8326d69d7c7d2c6812e64e4a0188bba1c2d1d75212bb0a56b780d85875dd845"
+      "sha256": "311f9e45c3696a89e183004971dbb3c9927b0a6d3e5bb8164c0b0d64cd698d4e"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,

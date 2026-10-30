@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:28:35.033413Z'
+status: completed
+summary: 'Swept this Development run and its diff: recorded FB-citation-test-not-selected-by-docs-changes and FB-bundle-asset-edits-miss-authoring-instruction; no duplicates among open feedback'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0
