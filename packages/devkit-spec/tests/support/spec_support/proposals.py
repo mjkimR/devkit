@@ -35,9 +35,9 @@ stages:
 Prose, not parsed.
 """
 
-INCUBATED = """---
+PROPOSAL_WORKFLOW = """---
 id: sdd-proposal
-title: Incubated delivery
+title: Proposal delivery
 status: active
 schema_version: 1
 layout:

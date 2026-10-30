@@ -1,6 +1,6 @@
 # Proposals
 
-An incubation space to propose and mature new features, technical spikes, or architectural improvements. Every proposal is managed as an isolated bundle directory (`PROP-{slug}/`).
+A Planning space to propose and mature new features, technical spikes, or architectural improvements. Every proposal is managed as an isolated bundle directory (`PROP-{slug}/`).
 
 ---
 

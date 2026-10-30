@@ -12,7 +12,7 @@ capabilities:
   - CAP-HARN-agent-guidance
   - CAP-GOV-spec-rules
   - CAP-HARN-command-mount
-  - CAP-DLV-incubation-sdd-baseline
+  - CAP-DLV-sdd-baseline-adoption
 ---
 
 # [UC-adopt-in-an-existing-repository] Adopt Spec-Driven Delivery in an Existing Repository
@@ -24,8 +24,8 @@ capabilities:
   documents move over through normal work instead of a big-bang rewrite
 - **Scope**: the devkit-spec package: its `spec` bundle deployed by `devkit sync`, its `devkit spec` commands mounted
   in devkit's executable, its spec rules and its `brownfield-adoption` playbook
-- **Path distinction**: This path contains legacy rule debt and permits gradual migration. An explicit incubation
-  baseline request instead follows `UC-adopt-sdd-from-incubation`, which verifies retained product evidence before
+- **Path distinction**: This path contains legacy rule debt and permits gradual migration. An explicit adaptive-development
+  baseline request instead follows `UC-adopt-sdd-from-adaptive-development`, which verifies retained product evidence before
   activating SDD and does not automatically contain or move legacy documents.
 - **Trigger**: the developer decides to adopt spec-driven delivery in a repository with existing code, docs and agent
   instructions
@@ -57,8 +57,8 @@ capabilities:
 
 ## 3. Extensions
 
-- **1a.** The developer explicitly requests an incubation baseline before activation: the agent follows
-  `UC-adopt-sdd-from-incubation` (`CAP-DLV-incubation-sdd-baseline`); this legacy-containment use case ends without
+- **1a.** The developer explicitly requests an adaptive-development baseline before activation: the agent follows
+  `UC-adopt-sdd-from-adaptive-development` (`CAP-DLV-sdd-baseline-adoption`); this legacy-containment use case ends without
   automatic moves or a claim that asset installation establishes baseline readiness.
 
 - **2a.** The project opts out of the bundle in its preset selection: the system deploys none of the `spec` bundle's
@@ -123,8 +123,8 @@ capabilities:
 - **When**: it sets `[presets] spec = false` in `.devkit/config.toml` and runs `devkit sync`
 - **Then**: the `spec` bundle's managed files and projections are not deployed
 
-### Scenario 7: Separates verified incubation adoption from legacy containment
+### Scenario 7: Separates verified adaptive-development adoption from legacy containment
 - **Covers**: 1a
-- **Given**: the developer asks to adopt SDD from the retained incubation product
+- **Given**: the developer asks to adopt SDD from the retained adaptive-development product
 - **When**: the agent selects the adoption path
-- **Then**: it uses the explicit baseline procedure, keeps incubation during preparation and performs no automatic legacy containment
+- **Then**: it uses the explicit baseline procedure, keeps adaptive development during preparation and performs no automatic legacy containment

@@ -23,7 +23,7 @@ from devkit_agt.features.workflow.services.envelope import compose_envelope, loa
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
 PROPOSAL = """---
-id: incubate
+id: plan-proposal
 schema_version: 1
 layout:
   work_dir: docs/proposals
@@ -45,7 +45,7 @@ def _run(*args: str) -> Result:
 
 @pytest.fixture
 def two_layouts(workspace: Path) -> Path:
-    (workspace / ".devkit/workflows/incubate.md").write_text(PROPOSAL, encoding="utf-8")
+    (workspace / ".devkit/workflows/plan-proposal.md").write_text(PROPOSAL, encoding="utf-8")
     write_config(
         workspace,
         """[workflow]
@@ -86,7 +86,7 @@ def test_definition_layout_is_parsed_and_validated() -> None:
     assert doc.anchor("task.md") == "proposal.md" and parse_definition(WORKFLOW).anchor("task.md") == "task.md"
     assert doc.to_dict()["layout"] == {"work_dir": "docs/proposals", "unit_path": "{slug}", "anchor": "proposal.md"}
     # aliases resolve against the declared anchor, so anchor-exists is valid without the project anchor
-    assert validate_definition(doc, "task.md", known_ids={"incubate", "direct-delivery"}) == []
+    assert validate_definition(doc, "task.md", known_ids={"plan-proposal", "direct-delivery"}) == []
     same = parse_definition(PROPOSAL.replace("anchor: proposal.md", "anchor: other.md"))
     assert same.anchor("task.md") == "other.md"
     with pytest.raises(DefinitionError, match=r"layout\.unit_path"):
@@ -107,29 +107,31 @@ def test_new_list_next_bind_across_layouts(two_layouts: Path) -> None:
     root = two_layouts
     spec = _run("new", "-w", str(root), "login", "--date", "2026-10-12")
     assert spec.output.strip() == "[UNIT: specs/2026-10/20261012-login workflow=direct-delivery anchor=spec.md]"
-    prop = _run("new", "-w", str(root), "search", "--workflow", "incubate")
-    assert prop.output.strip() == "[UNIT: docs/proposals/search workflow=incubate anchor=proposal.md]"
+    prop = _run("new", "-w", str(root), "search", "--workflow", "plan-proposal")
+    assert prop.output.strip() == "[UNIT: docs/proposals/search workflow=plan-proposal anchor=proposal.md]"
     assert (root / "docs/proposals/search/proposal.md").is_file()
 
     listed = json.loads(_run("list", "-w", str(root), "--format", "json").stdout)["units"]
     assert [(r["unit"], r["anchor"], r["workflow"]) for r in listed] == [
-        ("docs/proposals/search", "proposal.md", "incubate"),
+        ("docs/proposals/search", "proposal.md", "plan-proposal"),
         ("specs/2026-10/20261012-login", "spec.md", "direct-delivery"),
     ]
     text = _run("list", "-w", str(root)).output
-    assert "[UNIT: docs/proposals/search status=planned workflow=incubate anchor=proposal.md]" in text
+    assert "[UNIT: docs/proposals/search status=planned workflow=plan-proposal anchor=proposal.md]" in text
 
     nxt = _run("next", "-w", str(root), "--unit", "docs/proposals/search", "--no-lint")
     assert nxt.exit_code == 0, nxt.output
-    assert "[WORKFLOW: incubate unit=docs/proposals/search status=planned bound=yes]" in nxt.output
+    assert "[WORKFLOW: plan-proposal unit=docs/proposals/search status=planned bound=yes]" in nxt.output
     assert "[STAGE: draft" in nxt.output and "frontmatter(proposal.md status accepted)" in nxt.output
 
     bound = _run("bind", "-w", str(root), "--unit", "docs/proposals/search")
-    assert bound.exit_code == 0 and bound.output.startswith("[BOUND: incubate]")
+    assert bound.exit_code == 0 and bound.output.startswith("[BOUND: plan-proposal]")
 
-    show = _run("show", "-w", str(root), "incubate")
+    show = _run("show", "-w", str(root), "plan-proposal")
     assert "[LAYOUT: work_dir=docs/proposals unit_path={slug} anchor=proposal.md]" in show.output
-    assert json.loads(_run("show", "-w", str(root), "incubate", "--format", "json").stdout)["anchor"] == "proposal.md"
+    assert (
+        json.loads(_run("show", "-w", str(root), "plan-proposal", "--format", "json").stdout)["anchor"] == "proposal.md"
+    )
 
     empty = _run("list", "-w", str(root / ".devkit"))
     assert "[OK: no units dirs=" in empty.output
@@ -137,31 +139,31 @@ def test_new_list_next_bind_across_layouts(two_layouts: Path) -> None:
 
 def test_anchor_ambiguous_and_mismatch(two_layouts: Path) -> None:
     root = two_layouts
-    unit = write_unit(root, "docs/proposals/dup", anchor="proposal.md", extra="workflow: incubate\n")
+    unit = write_unit(root, "docs/proposals/dup", anchor="proposal.md", extra="workflow: plan-proposal\n")
     (unit / "spec.md").write_text("---\nid: dup\nstatus: planned\n---\n")
     ambiguous = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint")
     assert ambiguous.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in ambiguous.stderr and "--anchor" in ambiguous.stderr
-    explicit = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--workflow", "incubate")
-    assert explicit.exit_code == 0 and "[WORKFLOW: incubate" in explicit.output
+    explicit = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--workflow", "plan-proposal")
+    assert explicit.exit_code == 0 and "[WORKFLOW: plan-proposal" in explicit.output
 
     # bound to a workflow whose anchor is not the file that identifies the unit
-    write_unit(root, "specs/2026-10/20261012-x", anchor="spec.md", extra="workflow: incubate\n")
+    write_unit(root, "specs/2026-10/20261012-x", anchor="spec.md", extra="workflow: plan-proposal\n")
     mismatch = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--no-lint")
     assert mismatch.exit_code == 2 and "(ANCHOR_MISMATCH)" in mismatch.stderr and "proposal.md" in mismatch.stderr
-    missing = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--workflow", "incubate")
+    missing = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--workflow", "plan-proposal")
     assert missing.exit_code == 2 and "(UNIT_NOT_FOUND) proposal.md not found" in missing.stderr
 
 
 def test_handoff_refuses_a_candidate_with_another_anchor(two_layouts: Path) -> None:
     root = two_layouts
-    _run("new", "-w", str(root), "search", "--workflow", "incubate")
+    _run("new", "-w", str(root), "search", "--workflow", "plan-proposal")
     unit = root / "docs/proposals/search"
     (unit / "proposal.md").write_text((unit / "proposal.md").read_text().replace("status: planned", "status: accepted"))
     result = _run(
         "handoff", "-w", str(root), "--unit", "docs/proposals/search", "--no-lint", "--workflow", "direct-delivery"
     )
     assert result.exit_code == 2 and "(HANDOFF_LAYOUT_MISMATCH)" in result.stderr and "spec.md" in result.stderr
-    assert "workflow: incubate" in (unit / "proposal.md").read_text()
+    assert "workflow: plan-proposal" in (unit / "proposal.md").read_text()
 
 
 # --- [workflow.stages] -------------------------------------------------------------------

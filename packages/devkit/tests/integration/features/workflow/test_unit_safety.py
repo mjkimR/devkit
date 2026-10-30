@@ -40,7 +40,7 @@ from testsupport.workflow import (
 )
 
 PROPOSAL = """---
-id: incubate
+id: plan-proposal
 schema_version: 1
 layout:
   work_dir: docs/proposals
@@ -118,9 +118,9 @@ def test_new_refuses_a_unit_directory_linked_outside_work_dir(workspace: Path, t
 
 @pytest.fixture
 def ambiguous(workspace: Path) -> Path:
-    (workspace / ".devkit/workflows/incubate.md").write_text(PROPOSAL, encoding="utf-8")
+    (workspace / ".devkit/workflows/plan-proposal.md").write_text(PROPOSAL, encoding="utf-8")
     write_config(workspace, '[workflow]\nwork_dir = "specs"\nanchor = "spec.md"\ndefault = "direct-delivery"\n')
-    unit = write_unit(workspace, "docs/proposals/dup", anchor="proposal.md", extra="workflow: incubate\n")
+    unit = write_unit(workspace, "docs/proposals/dup", anchor="proposal.md", extra="workflow: plan-proposal\n")
     (unit / "spec.md").write_text("---\nid: dup\nstatus: planned\n---\n")
     return workspace
 
@@ -159,7 +159,7 @@ def test_handoff_resolves_an_ambiguous_unit_with_anchor(ambiguous: Path) -> None
     assert "(ANCHOR_AMBIGUOUS)" in _run(*base).stderr
     done = _run(*base, "--anchor", "proposal.md")
     assert done.exit_code == 0, done.stderr
-    assert done.output.startswith("[HANDED_OFF: from=incubate to=direct-delivery")
+    assert done.output.startswith("[HANDED_OFF: from=plan-proposal to=direct-delivery")
 
 
 def test_anchor_must_be_a_present_candidate_and_agree_with_workflow(ambiguous: Path) -> None:
@@ -167,11 +167,11 @@ def test_anchor_must_be_a_present_candidate_and_agree_with_workflow(ambiguous: P
     unknown = _run("next", *unit, "--anchor", "other.md")
     assert unknown.exit_code == 2 and "(UNIT_NOT_FOUND)" in unknown.stderr
     assert "Pass --anchor one of: spec.md, proposal.md" in unknown.stderr
-    conflict = _run("next", *unit, "--workflow", "incubate", "--anchor", "spec.md")
+    conflict = _run("next", *unit, "--workflow", "plan-proposal", "--anchor", "spec.md")
     assert conflict.exit_code == 2 and "(ANCHOR_MISMATCH)" in conflict.stderr
-    agreed = _run("next", *unit, "--workflow", "incubate", "--anchor", "proposal.md")
-    assert agreed.exit_code == 0 and "[WORKFLOW: incubate" in agreed.output
-    show = _run("show", "incubate", "-w", str(ambiguous), "--anchor", "proposal.md")
+    agreed = _run("next", *unit, "--workflow", "plan-proposal", "--anchor", "proposal.md")
+    assert agreed.exit_code == 0 and "[WORKFLOW: plan-proposal" in agreed.output
+    show = _run("show", "plan-proposal", "-w", str(ambiguous), "--anchor", "proposal.md")
     assert show.exit_code == 2 and "(ARGUMENT_INVALID)" in show.stderr
 
 
@@ -200,7 +200,7 @@ def test_envelope_check_needs_only_some_anchor_and_new_resolves_the_unit(ambiguo
 
 
 def test_anchor_mismatch_fix_names_a_command_every_caller_has(ambiguous: Path) -> None:
-    write_unit(ambiguous, "specs/x", anchor="spec.md", extra="workflow: incubate\n")
+    write_unit(ambiguous, "specs/x", anchor="spec.md", extra="workflow: plan-proposal\n")
     for command in (
         ("next", "--view", "requests"),
         ("next",),

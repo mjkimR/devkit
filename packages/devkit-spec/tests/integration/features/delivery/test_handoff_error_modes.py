@@ -1,4 +1,4 @@
-"""The composed handoff's refusals render the directive their table rows document (``CAP-DLV-proposal-incubation``).
+"""The composed handoff's refusals render the directive their table rows document (``CAP-DLV-proposal-planning``).
 
 Each condition has its own code: a proposal that is not ready, a dirty base, a Development worktree devkit cannot
 reuse and a changed base or worktree are the user's to decide (``INTERACTION``); an effort the caller corrects is

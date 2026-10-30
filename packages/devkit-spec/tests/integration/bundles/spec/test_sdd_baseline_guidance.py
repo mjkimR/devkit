@@ -49,7 +49,7 @@ def test_synced_consumer_discovers_entry_and_report_without_creating_a_unit(tmp_
     deployed = Path(entry["source"]["path"])
     assert deployed == tmp_path / ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md"
     assert (deployed.parent / "references/report-template.md").is_file()
-    found = json.loads(invoke("playbook", "search", "adopt SDD from incubation baseline", "--mode", "lexical"))
+    found = json.loads(invoke("playbook", "search", "adopt SDD from adaptive-dev baseline", "--mode", "lexical"))
     assert any(item["bundle"] == "spec" and item["id"] == "sdd-baseline" for item in found["results"])
     assert not (tmp_path / "specs").exists()
     assert not (tmp_path / "docs/materials").exists()
@@ -60,7 +60,7 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
     body = raw(ENTRY)
     assert body.index("## 2. Compare") < body.index("## 3. Activate")
     assert_rule(body, "use only when", "invokes or confirms", "adopt SDD")
-    assert_rule(body, "keep", "effective approach", "incubation", "preparation")
+    assert_rule(body, "keep", "effective approach", "adaptive-dev", "preparation")
     assert_rule(body, "never waive", "required retained behavior", "required evidence", "readiness")
     assert_rule(body, "recheck", "source", "dirty paths", "invalidate")
     assert_rule(body, "reuse", "explicit user decision", "same source and effects")

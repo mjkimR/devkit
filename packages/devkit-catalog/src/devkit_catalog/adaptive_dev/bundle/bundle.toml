@@ -1,0 +1,37 @@
+schema = 1
+name = "adaptive-dev"
+version = "0.1.5"
+default_preset = "core"
+
+[[assets]]
+id = "adaptive-dev"
+kind = "skill"
+source = "skills/adaptive-dev"
+
+[[assets]]
+id = "adaptive-dev-pointer"
+kind = "guidance"
+source = "guidance/adaptive-dev-pointer.md"
+
+[[assets]]
+id = "product-clarifier"
+kind = "subagent"
+source = "subagents/product-clarifier.md"
+
+[[assets]]
+id = "product-researcher"
+kind = "subagent"
+source = "subagents/product-researcher.md"
+
+[[assets]]
+id = "usage-reviewer"
+kind = "subagent"
+source = "subagents/usage-reviewer.md"
+
+[[assets]]
+id = "current-context-template"
+kind = "document"
+source = "templates/current-context.md"
+
+[presets.core]
+assets = ["adaptive-dev", "adaptive-dev-pointer", "product-clarifier", "product-researcher", "usage-reviewer", "current-context-template"]

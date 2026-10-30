@@ -72,7 +72,7 @@ the cost of one duplicated contract.
   entry; never suggest or start it otherwise", and its description carries no trigger phrasing.
 - The incubation bundle keeps `/incubate`, `product-clarifier`, `incubation-researcher`, `usage-reviewer`, the
   pointer and the current-context template; it loses the entry, its references and the three research roles.
-  `PROP-rename-incubation-to-adaptive-dev` later renames it `adaptive-dev` and the researcher `product-researcher`.
+  `SPEC-rename-incubation-to-adaptive-dev` later renames it `adaptive-dev` and the researcher `product-researcher`.
 - The two researchers differ in scope: `research-investigator` answers one question of a team investigation; the
   incubation researcher gathers one product decision's evidence or runs one bounded experiment.
 - `/incubate` never invokes or suggests `/deep-research`; it only reads a retained material by its `MAT-<slug>` ID.
@@ -81,6 +81,7 @@ the cost of one duplicated contract.
   role sequence, source provenance, and plans distinct from delivery commitments.
 - Retained for `/incubate`: the shared approach check before product work and the coordinator-owned, mutable
   `.devkit/incubation.md`.
+  Superseded in part by `ADR-adaptive-dev-approach-name`: the bundle is `adaptive-dev`, its entry `/adaptive-dev` and its context file `.devkit/adaptive-dev.md`.
 
 ## 5. Consequences
 

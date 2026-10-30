@@ -225,7 +225,7 @@ with discover_bundles() as bundles:
         'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
         'authoring': 'devkit-agt', 'harness': 'devkit-agt',
     }
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'response-style', 'maintenance', 'cli-tool', 'incubation', 'deep-research'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'response-style', 'maintenance', 'cli-tool', 'adaptive-dev', 'deep-research'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
@@ -236,7 +236,7 @@ with discover_bundles() as bundles:
     test -f .devkit/managed/harness/instructions/devkit-run.md
     test ! -e .devkit/managed/response-style
     test ! -e .devkit/managed/cli-tool
-    test ! -e .devkit/managed/incubation
+    test ! -e .devkit/managed/adaptive-dev
     test ! -e .devkit/managed/deep-research
     echo "--- response templates: lazy imports, configured language and final output"
     uv run python -c '

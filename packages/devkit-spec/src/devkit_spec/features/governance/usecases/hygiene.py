@@ -1,4 +1,4 @@
-"""``devkit.hygiene`` extension: rejected proposals waiting for their cleanup (01 §6.2, ``CAP-DLV-proposal-incubation``).
+"""``devkit.hygiene`` extension: rejected proposals waiting for their cleanup (01 §6.2, ``CAP-DLV-proposal-planning``).
 
 A rejection only sets ``status: rejected`` (the user's reason is in the commit message) and merges the Planning
 branch. The later cleanup is the Host's: a rejection ADR outside the proposal directory, referencing the proposal
@@ -33,14 +33,14 @@ def _anchors(root: Path) -> list[Path]:
 
 def rejected_proposals(root: Path) -> list[AdvisoryError] | None:
     """One ``SPEC_PROPOSAL_REJECTED_PENDING`` warning per rejected proposal of the base; ``None`` without the bundle."""
-    incubation = read_development_approach(root).approach == "incubation"
-    if not incubation and not (root / ".devkit" / "managed" / "spec").is_dir():
+    adaptive = read_development_approach(root).approach == "adaptive-dev"
+    if not adaptive and not (root / ".devkit" / "managed" / "spec").is_dir():
         return None
     found: list[AdvisoryError] = []
     for anchor in _anchors(root):
         try:
             data = parse(anchor.read_text("utf-8")).data or {}
-            if incubation and not any(w.startswith("sdd-") for w in workflow_ids(data)):
+            if adaptive and not any(w.startswith("sdd-") for w in workflow_ids(data)):
                 continue
             status = data.get("status")
         except (FrontmatterError, OSError, UnicodeError):
@@ -78,7 +78,7 @@ def milestone_members(root: Path) -> list[AdvisoryError]:
             d
             for d in index.documents
             if (
-                read_development_approach(root).approach != "incubation"
+                read_development_approach(root).approach != "adaptive-dev"
                 or any(w.startswith("sdd-") for w in workflow_ids(d.frontmatter))
             )
             and is_unit_anchor(d)
