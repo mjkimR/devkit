@@ -8,7 +8,7 @@ target: CONFIG_LOCAL_RENDER_STALE advisory of devkit get-context
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -38,3 +38,13 @@ get-context spec: CONFIG_LOCAL_RENDER_STALE "<worktree>/.devkit/transient/local-
 sync --locked: [CHANGE: update .devkit/managed/...] and .devkit/transient/local-render.json only
 git status --short afterwards: empty
 ```
+
+## Disposition
+
+Resolved by `SPEC-lifecycle-feedback-fixes` (AC-02, AC-05) through the suggestion's second option: the
+`CONFIG_LOCAL_RENDER_STALE` fix names `uv run devkit sync --locked` first, which changes no committed file, and a
+plain `uv run devkit sync` only when that reports `RECEIPT_STALE`. `CAP-DIST-context-and-playbooks` and the
+distribution reference state the same. Verified by `test_personal_render_locked_restore_stale_and_removal`: the fix
+order is asserted, and a locked sync clears the stale evidence with `.devkit/config.toml`,
+`.devkit/installation.json` and `AGENTS.md` byte-identical; the independent review confirmed that a receipt-only
+change is restored by a locked sync. The first option (a Host refresh in the `spec-delegate` payload) was not taken.
