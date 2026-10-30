@@ -442,6 +442,12 @@ class EnvelopeItemsError(AuthoringError):
     code = "ENVELOPE_ITEMS_INVALID"
 
 
+class EnvelopeFindingClosedError(AuthoringError):
+    """``--resolve`` or ``--waive`` names a carried finding the source envelope already closed (resolved or waived)."""
+
+    code = "ENVELOPE_FINDING_CLOSED"
+
+
 class EnvelopeReferenceError(AuthoringError):
     """``--answers-to`` or ``--resolves`` names no fitting envelope of the unit: no worker envelope with the
     answered questions and options, or no worker envelope with a problem."""

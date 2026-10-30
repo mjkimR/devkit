@@ -47,4 +47,4 @@ Base advances (yours, another session's or an unknown author's) never block the 
 
 ## Questions
 
-Restate the questions for the user in one round (what each decides, why now, where each option leads), then hand the rewritten answers to a new worker.
+Restate the questions for the user in one round (what each decides, why now, where each option leads), then hand the rewritten answers to a new worker, each naming who decided it (`by: user`, `host` or `policy`, the `spec` skill's `references/worker-records.md` §2).
