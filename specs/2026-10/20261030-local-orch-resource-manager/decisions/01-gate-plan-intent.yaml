@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-local-orch-resource-manager: Plan the reusable lifecycle resource manager
+  and compare lightweight versus mid-tier models; brief adoption and model-selection
+  conclusions.'
+by: user
+at: '2026-10-29T23:07:58.055354Z'

@@ -1,9 +1,9 @@
 ---
-id: PADR-reusable-lifecycle-resource-manager
+id: ADR-reusable-lifecycle-resource-manager
 title: Reusable git-operator lifecycle execution with lean
-summary: "For local orchestration, we reuse git-operator with the user-selected lean preset, to reduce Host operational context while preserving decisions, accepting untested Terra execution and unproven total-cost benefits."
-proposal: PROP-local-orch-resource-manager
-status: draft
+summary: "For local orchestration, we reuse git-operator with the user-selected lean preset, to reduce Host operational context while preserving decisions, accepting limited live coverage and unproven total-cost benefits."
+proposal: SPEC-local-orch-resource-manager
+status: accepted
 created_at: 2026-10-29
 supersedes:
   - ADR-host-cli-lifecycle-authority
@@ -11,9 +11,9 @@ supersedes:
   - ADR-five-subagent-levels
 ---
 
-# [PADR-reusable-lifecycle-resource-manager] Reusable git-operator lifecycle execution with lean
+# [ADR-reusable-lifecycle-resource-manager] Reusable git-operator lifecycle execution with lean
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-29
 
 ## 1. Context & Problem Statement
@@ -70,7 +70,7 @@ The original Luna/Sol probe does not validate Terra medium or establish a cost a
   with effort omitted because the supported native per-role schema cannot express it. Lean guarantees neither
   Flash high effort nor cross-provider quality equivalence; use no prompt-based effort emulation.
 
-On promotion, supersede only Host-only lifecycle invocation clauses in `ADR-host-cli-lifecycle-authority` and
+This decision supersedes only Host-only lifecycle invocation clauses in `ADR-host-cli-lifecycle-authority` and
 `ADR-orchestration-workers`; keep their unrelated authority, worker and recovery decisions. Supersede the
 scout-only source-preset/default-inheritance clause of `ADR-five-subagent-levels` for this manager; preserve
 its preset mappings and unrelated distribution policy.
@@ -84,9 +84,10 @@ The role may increase total tokens. Reuse grows its own context and one Luna fol
 a diagnostic before a changed-input retry completed. No reliability or cost ranking follows from that event.
 Only the Codex read-only invocation path was live exercised; other host and mutation coverage stays explicit.
 
-The selected Terra medium configuration remains untested. Preserve the earlier experiment outputs as historical
-evidence; do not transfer Sol results to Terra. Development verifies the selected role contract and applicable
-execution paths. Require no new model router or automatic escalation to use lean.
+`MAT-git-operator-development-evidence` records selected Terra medium native read-only continuation and
+separately labels partial-result replay and isolated CLI mutation fixtures. Terra-driven lifecycle mutation and
+other live hosts remain unexercised. Preserve the earlier Luna/Sol outputs as historical evidence; do not transfer
+Sol results to Terra. Require no new model router or automatic escalation to use lean.
 
 ## 6. Confirmation
 

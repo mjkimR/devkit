@@ -8,12 +8,14 @@ supporting_actors:
   - code-reviewer
   - reconcile-reviewer
   - development-worker (local-orchestrated mode only)
+  - git-operator (reusable lifecycle executor in local-orchestrated mode)
   - User (gives dev-integration under policy ask)
   - GitHub (pull request route)
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit/src/devkit_agt/features/integration/usecases/service.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
 created_at: 2026-10-21
 capabilities:
   - CAP-DLV-delivery-workflows
@@ -80,7 +82,9 @@ The integration executor's coded refusals this section does not name, and their 
 - **1b.** The user instructs `local-orchestrated` mode: a `development-worker` runs the turn in its own `dev-`
   worktree from the stage the workflow names up to the final change report, nests the reviewers and commits at every
   stage boundary; the agent validates the cumulative committed range, and a range it rejects becomes a problem in its
-  own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-workflows`); resumes at step 6.
+  own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-workflows`). The Host reuses git-operator for
+  read-only preparation and exact authorized execution, retaining source preparation and acceptance; normal
+  integration includes cleanup (`CAP-INT-mcp-services`); resumes at step 6.
 - **3a.** The effort is `low`: the author reviews the change and self-checks the reconcile, still recorded as review
   and reconcile-check envelopes (`CAP-DLV-delivery-workflows`); resumes at step 5.
 - **3b.** The effort is `high`: fresh `code-reviewer` instances review in bounded rounds, and the reconcile
@@ -310,3 +314,17 @@ The integration executor's coded refusals this section does not name, and their 
 - **Then**: it refuses with `INTEGRATION_RULE_RUNTIME_MISMATCH` naming the rule file and the missing import, the
   readiness provider does not run, the target is unchanged, and the Host retries with a runtime built from the source's
   code after separately granted authority
+
+### Scenario 22: Local orchestration reuses its lifecycle executor
+- **Covers**: 1b
+- **Given**: a verified local-orchestrated Unit and an existing git-operator in this conversation/repository
+- **When**: the Host requests preparation and later delegates exact authorized integration effects
+- **Then**: the same identity handles both jobs with repeated current refs/authority; the Host retains decisions and
+  accepts observed effects, and completed integration dispatches no redundant cleanup
+
+### Scenario 23: Zero-exit partial cleanup remains incomplete in the role result
+- **Covers**: 1b, 8b
+- **Given**: delegated integration reports exit zero with `INTEGRATION_CLEANUP_INCOMPLETE` and requested cleanup remains
+- **When**: git-operator inspects effects and finds an active writer or missing cleanup authority
+- **Then**: it preserves the resource and returns needs_input with original CLI status/exit and completed/remaining
+  effects; the Host quiesces writers and decides the supported remainder before any cleanup

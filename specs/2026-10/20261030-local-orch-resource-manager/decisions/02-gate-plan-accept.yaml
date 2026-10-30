@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-local-orch-resource-manager
+by: user
+at: '2026-10-29T23:07:58.056924Z'

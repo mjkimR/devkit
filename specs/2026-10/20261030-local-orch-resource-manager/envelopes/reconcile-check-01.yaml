@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:17:27.367354Z'
+status: completed
+summary: Independent reconcile-reviewer found contracts and seven targets semantically consistent; Development evidence material missing from target inventory
+findings:
+- issue: Development evidence document missing from reconcile targets
+  evidence: specs/2026-10/20261030-local-orch-resource-manager/reconcile.md:4-18 omits docs/materials/2026-10/20261030-local-orch-resource-manager/20261030-development-evidence.md
+  failure_condition: Finalizing current target inventory leaves a changed evidence document outside recorded reconciliation coverage
+  suggested_action: Add the Development evidence material as a modified target
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated; explicit absolute cwd, no-write contract and caller snapshots substitute for native path enforcement
+unverified_areas:
+- Selected-model mutation and other live host/denial/context-loss coverage remain as stated in Development evidence
+checks:
+  reflection: PASS behavior authority projections recovery entrypoints and limits agree
+  scope: PASS same pre/post tree b4e1db592750debf0da44da912ff9b8a05d66443; no outside reads or writes
+diff_scope:
+  base: a65f0a5d00bf397970bce2b2f1dcb3dff4e369db
+  head: 216d0be2d7842aaa5ca65627d06bd4ee679649a7
