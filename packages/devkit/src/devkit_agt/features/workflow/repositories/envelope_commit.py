@@ -20,6 +20,7 @@ class EnvelopeCommitRepository:
 
     def __init__(self, root: Path) -> None:
         self.root = root
+        self.branch: str | None = None
 
     def git(self, *args: str, input: bytes | None = None) -> bytes:
         return run_git(self.root, "--literal-pathspecs", *args, input=input)
@@ -35,7 +36,9 @@ class EnvelopeCommitRepository:
             root = Path(self.git("rev-parse", "--show-toplevel").decode().strip()).resolve()
             if root != self.root:
                 raise EnvelopeCommitStateError("Git repository identity differs from the requested workspace")
-            self.git("symbolic-ref", "--quiet", "HEAD")
+            branch = self.git("symbolic-ref", "--quiet", "HEAD").decode("utf-8", "surrogateescape").strip()
+            if self.branch is not None and branch != self.branch:
+                raise EnvelopeCommitStateError(f"symbolic HEAD changed: before={self.branch} after={branch}")
             head = self.head()
             git_dir = Path(self.git("rev-parse", "--absolute-git-dir").decode().strip())
             markers = (
@@ -50,6 +53,7 @@ class EnvelopeCommitRepository:
             present = [name for name in markers if (git_dir / name).exists()]
             if present or self.git("ls-files", "--unmerged", "-z"):
                 raise EnvelopeCommitStateError(f"in-progress operation or locked/unmerged index: {present}")
+            self.branch = branch
             return head
         except GitError as exc:
             raise EnvelopeCommitStateError(str(exc)) from exc
@@ -182,15 +186,22 @@ class EnvelopeCommitRepository:
         ) as exc:
             try:
                 after = self.head()
+                after_ref = self.git("symbolic-ref", "--quiet", "HEAD").decode("utf-8", "surrogateescape").strip()
                 dirty = self.dirty()
                 retained = target.read_bytes() == content
                 index = self.index_blob(path)
-                known = after == before and retained and set(dirty) <= {path} and (index is None or index == content)
+                known = (
+                    after == before
+                    and after_ref == self.branch
+                    and retained
+                    and set(dirty) <= {path}
+                    and (index is None or index == content)
+                )
             except (GitError, OSError, EnvelopeCommitInvalidError):
-                after, dirty, known = "unknown", {}, False
-            detail = f"staging={'yes' if staging else 'attempted'} before={before} after={after} retained={path} dirty={dirty}"
+                after, after_ref, dirty, known = "unknown", "unknown", {}, False
+            detail = f"staging={'yes' if staging else 'attempted'} before={before} after={after} before_ref={self.branch} after_ref={after_ref} retained={path} dirty={dirty}"
             uncertain = (
-                isinstance(exc, (EnvelopeCommitUncertainError, KeyboardInterrupt))
+                isinstance(exc, (EnvelopeCommitUncertainError, EnvelopeCommitStateError, KeyboardInterrupt))
                 or not known
                 or (isinstance(exc, GitError) and exc.returncode is None)
             )

@@ -40,3 +40,10 @@ def test_skills_keep_authoring_and_commit_separate() -> None:
         assert term in envelopes
     assert "envelope commit" in raw("skills/spec-review/SKILL.md")
     assert "combined manual commit" in raw("skills/spec-feedback/SKILL.md")
+
+
+def test_final_report_authoring_example_is_eligible_for_commit() -> None:
+    text = raw("workflows/sdd-spec-feature.md")
+    example = next(line for line in text.splitlines() if "**Final change report.**" in line)
+    assert "--stage final-change-report" in example
+    assert '--summary "<verified change and remaining limits>"' in example

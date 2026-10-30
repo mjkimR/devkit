@@ -182,7 +182,8 @@ def test_skeleton_and_invalid_records_refuse(repo: Path, change: str) -> None:
     else:
         old, new = replacements[change]
         p.write_text(text.replace(old, new))
-        refusal(repo, "ENVELOPE_COMMIT_INVALID")
+        error = refusal(repo, "ENVELOPE_COMMIT_INVALID")
+        assert error.target_files == (f"{UNIT}/{FILE}",)
 
 
 @pytest.mark.parametrize(
@@ -361,3 +362,14 @@ def test_unknown_git_outcome_keeps_staging(repo: Path, monkeypatch: pytest.Monke
         commit(repo)
     assert caught.value.code == "ENVELOPE_COMMIT_UNCERTAIN"
     assert git(repo, "status", "--porcelain") == f"A  {UNIT}/{FILE}"
+
+
+def test_hook_branch_switch_is_uncertain_and_preserved(repo: Path) -> None:
+    hook(repo, "post-commit", "git switch -c unexpected")
+    with pytest.raises(WorkflowError) as caught:
+        commit(repo)
+    assert caught.value.code == "ENVELOPE_COMMIT_UNCERTAIN"
+    assert git(repo, "symbolic-ref", "HEAD") == "refs/heads/unexpected"
+    assert not git(repo, "status", "--porcelain")
+    assert "before_ref=refs/heads/different-branch-name" in str(caught.value.details)
+    assert "after_ref=refs/heads/unexpected" in str(caught.value.details)

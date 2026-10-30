@@ -26,7 +26,7 @@ flowchart LR
 
 ## 4. Storage & State Management
 
-Capture HEAD, selected bytes/blob and clean-except-selected state. Require tracked regular bound anchor and a new regular immediate envelope. Accept identical staged additions. Recheck preconditions before Git add; verify the index and HEAD again before commit. Postconditions require one parent equal to captured HEAD, exactly one added path/blob and clean worktree/index. Read final HEAD after hooks. Failures retain index/files/refs; unknown effects require inspection. Already committed exact content is a no-op. One active writer is required; no global locking service is introduced.
+Capture HEAD and its symbolic branch reference, selected bytes/blob and clean-except-selected state. Require tracked regular bound anchor and a new regular immediate envelope. Accept identical staged additions. Recheck preconditions before Git add; verify the index and HEAD again before commit. Postconditions require one parent equal to captured HEAD, exactly one added path/blob and clean worktree/index. Read final HEAD after hooks. Failures retain index/files/refs; unknown effects require inspection. Already committed exact content is a no-op. One active writer is required; no global locking service is introduced.
 
 ## 5. Error Handling & Edge Cases
 

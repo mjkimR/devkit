@@ -76,7 +76,7 @@ class CommitEnvelopeUseCase(BaseUseCase):
         except EnvelopeCommitUncertainError:
             raise
         except (EnvelopeCommitInvalidError, EnvelopeCommitStateError) as exc:
-            if not exc.target_files:
+            if not exc.target_files or exc.target_files == (file,):
                 exc.target_files = (target,)
             if not exc.fix:
                 exc.fix = f"Correct the reported precondition, then run `{retry}`; combined changes use a manual commit"

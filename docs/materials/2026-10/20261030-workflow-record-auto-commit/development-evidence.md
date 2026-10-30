@@ -22,3 +22,8 @@ The unchanged integration engine's `test_integrate_cli_refuses_source_changed_af
 ## Deployment
 
 The worker's initial sync check passed (exit 0). Spec bundle source guidance sync updated only `.devkit/installation.json` among tracked deployment outputs; Task 2 lists it as `(sync output)`. Managed and host-projected copies remain generated/ignored.
+
+
+## Independent review fixes
+
+The medium code-reviewer found three issues: uncaptured symbolic HEAD identity, ineligible final-report authoring guidance, and Unit-relative advisory targets. The implementation captures and rechecks the branch reference before staging, after hooks and on failure; the real post-commit branch-switch regression returns UNCERTAIN while preserving the new branch and clean committed content. The final-report example now supplies stage and summary. Invalid-identity tests verify workspace-relative selected targets. The author verified all fixes: runtime plus guidance 45 passed; affected selection 2090 passed in 19.07s; both package lint/types and governance checks passed. The reviewer's denied throwaway probe remained stopped; the regression was added through the ordinary approved tracked test scope.
