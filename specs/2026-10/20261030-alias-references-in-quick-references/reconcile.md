@@ -55,4 +55,7 @@ setting name is a code identifier of the rule.
 - `FB-document-reference-guide-adr-rewrite-stale`: resolved. The guide's Remediation states that ADRs and PADRs are
   rewritten. Evidence: the guide assertion in the rule tests, `devkit rules explain` and `review-01`.
 
-No work is deferred.
+## Deferred work
+
+Naming the quick references in section 1 of `CAP-DOCS-document-model`, outside this unit's write scope, is handed
+off to `FB-document-model-summary-omits-quick-references`.
