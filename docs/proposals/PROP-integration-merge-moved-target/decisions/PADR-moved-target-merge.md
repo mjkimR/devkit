@@ -57,6 +57,9 @@ changed. A move before preparation is refused.
   `merge-tree` and CI rules over the result at prepare. A deterministic prospective commit keeps the request digest
   contract unchanged; excluding result-bound readiness from the digest instead (considered in round 1) would change it
   for every route and provider.
+- **B including the pull-request route** (rejected by the user): its prepare would build and check the prospective
+  merge the same way, but the platform already builds the merge and runs required checks on its merge ref, and the
+  change would widen this decision into a published remote-route behavior change.
 - **C: merge the target into the task branch automatically** (rejected): rewrites the approved source, needs a checkout
   mid-merge and leaves conflicts in the worktree.
 

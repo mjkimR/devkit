@@ -78,6 +78,17 @@ conflict-free merge can still carry.
 - The `spec-integrate` step 1 base merge becomes conditional: the Host merges the base into the task branch only to
   resolve a conflict or a failing check the CLI reports.
 
+### Planning decisions (user)
+
+- The pull-request route stays out of scope: it keeps refusing a moved target with `WORKTREE_MERGE_NOT_FF`
+  (`q-pr-route`).
+- The batch test run is the repository's affected selector from the batch start, in this repository
+  `just test-affected --base <batch start>` once on `main` with its `mode=full` fallback; nightly CI still runs the
+  full suite (`q-batch-command`).
+- A unit of the run that ends blocked with its problem recorded, or continues in `direct` mode, counts as finished for
+  the batch run: the Host tests what the run integrated, and that unit is tested when it integrates later by the
+  repository's normal checks (`q-blocked-unit`).
+
 ## 2. Technical Spike Questions
 
 Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-02.yaml` and
@@ -89,7 +100,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   prospective merge (`PADR-moved-target-merge`, option B).
 - **Q2 Policy values**: yes. `ff-only` lands the source tip itself, so it keeps refusing a moved target with
   `WORKTREE_MERGE_NOT_FF`.
-- **Q3 Pull-request route**: out of scope (pending `q-pr-route`): the platform builds the merge and runs required checks
+- **Q3 Pull-request route**: out of scope (user, `q-pr-route`): the platform builds the merge and runs required checks
   on its merge ref; the route keeps its containment refusal.
 - **Q4 Drift on the result**: the reference fixers that `devkit rules fix` applies (`RULE-document-reference`,
   `RULE-markdown-link`) run as blocking LINTER-phase CI rules in readiness on files the source changed, so drift on the
@@ -98,8 +109,9 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   acceptance commit (its preview runs the CI rules on the prospective result). Their fix is the conditional base merge.
 - **Q5 Batch test run**: a `spec-orchestrate` Completion step, no CLI helper; the repository's integrated-content
   verification once on the base branch head from the batch start (here `just test-affected --base <batch start>` with
-  its `mode=full` fallback; command choice pending `q-batch-command`); reported in the conversation, a failure
-  recorded as feedback (`PADR-post-batch-test-run`).
+  its `mode=full` fallback, user decision `q-batch-command`); a unit that ends blocked or continues in `direct` counts as
+  finished (`q-blocked-unit`); reported in the conversation, a failure recorded as feedback
+  (`PADR-post-batch-test-run`).
 - **Q6 Decision record**: `PADR-moved-target-merge` supersedes only the local containment clauses of
   `ADR-local-and-pull-request-integration` (already superseded in part by `ADR-host-cli-lifecycle-authority`; its merge
   and readiness clauses remain in force); `PADR-post-batch-test-run` supersedes only the post-merge clause of
@@ -152,7 +164,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   base and runs `devkit sync` on the branch only after `WORKTREE_MERGE_CONFLICT`, `INTEGRATION_RECEIPT_CONFLICT` or
   `INTEGRATION_NOT_READY`; the receipt check and CI rules on the result guard the rest, and the post-landing
   `devkit sync` stays. `spec-orchestrate` step 5 drops "the implementer first incorporates a moved base"; its Completion adds
-  the batch test run; `git-operator-operations.md` makes base incorporation conditional. `spec/references/completion.md`
+  the batch test run once the run's units are integrated, blocked or continued in `direct`; `git-operator-operations.md` makes base incorporation conditional. `spec/references/completion.md`
   follows.
 
 ### Living Spec and repository policy
@@ -183,8 +195,8 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - Every prepare, integrate and composed acceptance result that carries a request shows, in text and JSON, the
   readiness disclosure and the merged target SHA (prepare: confirmation target; integrate and composed acceptance: build
   target and landed result; cleanup-only and `ff-only`: the prepared target).
-- `spec-orchestrate` Completion names the batch test run, and `spec-integrate` step 1 is conditional (bundle asset
-  tests).
+- `spec-orchestrate` Completion names the batch test run, including that a unit ending blocked or continuing in
+  `direct` counts as finished for it, and `spec-integrate` step 1 is conditional (bundle asset tests).
 
 ### Non-goals
 
@@ -202,5 +214,8 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-integration-merge-moved-target`; the proposal is deleted there and its decisions become ADRs.
+- Integration order: every child of `MS-git-operator-lifecycle-refinement` owns `spec-orchestrate/`, so Development
+  integrates them one at a time in dependency order; this proposal integrates before
+  `PROP-git-operator-planning-completion-route`.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.

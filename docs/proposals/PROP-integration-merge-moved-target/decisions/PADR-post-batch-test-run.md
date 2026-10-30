@@ -44,6 +44,10 @@ local-orchestrated run integrates several units in a row, so its end is the poin
   integrated-content verification once on `main`, with no new CLI command.
 - **A CLI helper that runs and records the batch tests** (rejected): devkit would need to own the test command, which
   is repository policy, and the result is a conversation report, not a record.
+- **The full suite once per batch** (rejected by the user): also catches selection misses, but costs a full local run
+  per batch that `ADR-test-selection-and-ci` leaves to nightly CI.
+- **Wait until every unit the run started is integrated** (rejected by the user): a blocked unit can stay open for
+  long, leaving the integrated units untested on `main` until nightly CI.
 
 ## 4. Decision Outcome
 
@@ -51,16 +55,19 @@ Chosen option: one run after the batch in `spec-orchestrate` Completion, because
 skill change only.
 
 - When a local-orchestrated run starts its first unit, the Host notes the base branch HEAD as the batch start.
-- Once every unit the run started is integrated and no Development work of the run remains, the Host runs the repository's verification for integrated content once on the base branch HEAD, scoped from
-  the batch start when the repository's selector supports a base (this repository: `just test-affected --base
-  <batch start>`, keeping its `mode=full` fallback). After a context loss the Host recovers the batch start as the first
-  parent of the run's earliest `chore(merge): integrate <branch> into <base branch>` commit on the first-parent
-  history; only when that fails it runs the selector's full fallback.
+- Once every unit the run started is finished and no Development work of the run remains, the Host runs the
+  repository's verification for integrated content once on the base branch HEAD, scoped from the batch start when the
+  repository's selector supports a base. In this repository that is `just test-affected --base <batch start>`,
+  keeping its `mode=full` fallback; nightly CI still runs the full suite.
+- A unit counts as finished when it is integrated, ends blocked with its problem recorded, or continues in `direct`
+  mode. The run thus tests what it integrated; a unit it did not integrate is tested when it integrates later, by the
+  repository's normal checks.
+- After a context loss the Host recovers the batch start as the first parent of the run's earliest
+  `chore(merge): integrate <branch> into <base branch>` commit on the first-parent history; only when that fails it
+  runs the selector's full fallback.
 - The Host reports the result in the conversation with the tested head and the command. A failure is reported with
   its evidence and recorded as feedback for follow-up work; nothing is reverted automatically.
-- A run that integrated no unit runs nothing. Whether a unit that ends blocked with its problem recorded, or continues
-  in `direct`, counts as no remaining Development work of the run is open (`q-blocked-unit` in the Planning worker
-  envelope; recommended: it counts, so the run tests what it integrated).
+- A run that integrated no unit runs nothing.
 
 ## 5. Consequences
 
@@ -73,6 +80,6 @@ skill change only.
 
 ## 6. Confirmation
 
-- Bundle asset tests check that `spec-orchestrate` Completion names the batch run and that `spec-integrate` step 1 is
-  conditional (`packages/devkit-spec/tests/integration/bundles/spec/`).
+- Bundle asset tests check that `spec-orchestrate` Completion names the batch run and its finished-unit rule, and that
+  `spec-integrate` step 1 is conditional (`packages/devkit-spec/tests/integration/bundles/spec/`).
 - Review only for the Host's conversation report.
