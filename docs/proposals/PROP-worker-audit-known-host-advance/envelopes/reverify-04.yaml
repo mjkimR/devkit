@@ -1,0 +1,19 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:41:31.843808Z'
+status: completed
+review: challenger-04.yaml
+summary: 'Folded round 4''s P3 as its suggested_action: WAH-02, PADR confirmation and the materials inventory now name the CAP-DLV envelope requirement and the reworded observation. Self-verified (review-loop section 2): wording only at the named locations, no decision changed, the edited text agrees with the finding; the loop ends.'
+findings:
+- issue: Proposal, materials and checks disagree on how much of CAP-DLV-delivery-workflows changes; nothing checks that CAP-DLV gains the envelope requirement or rewords the Host-comparison sentence
+  evidence: proposal.md section 3 Contract bullet and WAH-02; PADR section 6 bullet 2; materials Change inventory (option A) bullet 2; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:526-527,620-621
+  failure_condition: Development deletes 'unchanged base' only; the reconcile review passes WAH-02 while CAP-DLV omits the envelope condition and still implies a Host comparison.
+  suggested_action: 'WAH-02''s Then: CAP-DLV''s acceptance requirements name the turn''s own worker envelope instead of an unchanged base and its base-checkout observation names no Host comparison; mirror in PADR section 6; materials inventory ''replace with the turn''s own worker envelope''.'
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: 6073f6c04c4c31de04f97eb6c5acdf220946cbc8
+  head: 27ab44801fcc3ef2ae6f8e64b347bbd879c1e18e

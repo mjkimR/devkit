@@ -1,0 +1,23 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:41:17.979505Z'
+status: completed
+summary: 'round 4; No P1 or P2: the turn''s-own-envelope condition holds for every return kind traced and is checkable with one diff of the unit''s envelopes. One P3: WAH-02, the PADR confirmation and the materials inventory understate the CAP-DLV change.'
+findings:
+- issue: Proposal, materials and checks disagree on how much of CAP-DLV-delivery-workflows changes; nothing checks that CAP-DLV gains the envelope requirement or rewords the Host-comparison sentence
+  evidence: proposal.md section 3 Contract bullet and WAH-02; PADR section 6 bullet 2; materials Change inventory (option A) bullet 2; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:526-527,620-621
+  failure_condition: Development deletes 'unchanged base' only; the reconcile review passes WAH-02 while CAP-DLV omits the envelope condition and still implies a Host comparison.
+  suggested_action: 'WAH-02''s Then: CAP-DLV''s acceptance requirements name the turn''s own worker envelope instead of an unchanged base and its base-checkout observation names no Host comparison; mirror in PADR section 6; materials inventory ''replace with the turn''s own worker envelope''.'
+  resolution: open
+  severity: P3
+assumptions:
+- Absent at <accepted> is judged by worker-NN.yaml file names
+unverified_areas:
+- Dirty base found first by a foreign session
+- No tests or devkit commands run
+checks: {}
+diff_scope:
+  base: 391639caa87e779bd48019c14f3c272ee4e604e8
+  head: 7d6c1185371efe1fb4641741bb270efa25909c62

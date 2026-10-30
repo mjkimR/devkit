@@ -1,0 +1,59 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:08:24.110838Z'
+status: completed
+summary: The base-checkout HEAD equality is prose only and guards against a worker write escaping into the base checkout. After the sibling lands, a committed escape is no longer stopped at integration, so one validation-time detector must stay. Recommends a scope-overlap notice over dropping the rule or a declared-advance list.
+findings:
+- issue: The base-checkout equality guards against a worker's relative-path write escaping into the base checkout, not against foreign advances
+  evidence: specs/2026-10/20261015-orchestration-mode/envelopes/review-01.yaml:14-18 and reverify-01.yaml:15-19 (origin of the pre-spawn record and comparison); docs/decisions/2026-10/20261022-orchestration-workers.md:255 (default cwd may be the base checkout); development-worker.md.jinja:31
+  failure_condition: Without any base observation a worker escape (dirty file or a commit on the base branch) is outside the audited range <accepted>..<returned>.
+  suggested_action: Keep the escape-detection purpose; the HEAD equality itself is not the protected asset.
+  resolution: open
+- issue: Enforcement is a manual Host step only; inspect reports base HEAD and dirty paths as information and never fails on them
+  evidence: spec-delegate/references/worker.md:25; payload.md:31; features/worker/usecases/inspect.py:213-230; cli/commands.py:104-105; CAP-DLV-delivery-workflows.md:620-621; orchestration-workers.md:356-359; test_worker_inspect.py:394-404 (dirty base, exit 0)
+  failure_condition: A Host that skips the comparison accepts a range with a dirty or advanced base and inspect still exits 0.
+  suggested_action: Baseline; no action.
+  resolution: open
+- issue: The living contract states both a Host validation ('base checkout unchanged') and an information-only observation
+  evidence: worker.md:25; orchestration-workers.md:195-197 (ADR-worker-delivers-committed-result); CAP-DLV-delivery-workflows.md:527 versus :620-621 and orchestration-workers.md:356-359
+  failure_condition: Readers get two in-force readings of whether a moved base fails validation.
+  suggested_action: Rewrite worker.md:25, payload.md:31, CAP-DLV:527 and :620-621 together; supersede the ADR clauses by a new ADR.
+  resolution: open
+- issue: No durable pre-spawn record of the base checkout HEAD exists
+  evidence: worker-records.md:13-17 (worker envelope records only its range); inputs.py:183 and :224-227 derive base_checkout at inspection time; branch markers are the existing durable pattern (CAP-WT-task-worktrees.md:30, :37; inputs.py:122 devkitBase)
+  failure_condition: An option that compares against the pre-spawn HEAD has no reference after Host context loss.
+  suggested_action: Either add a durable record or flag, or choose a design whose window is derivable from committed state.
+  resolution: open
+- issue: The Host's exact-base serialization in the consumer pilot has no written rule beyond worker.md:25
+  evidence: MAT-git-operator-consumer-pilot (PROP-git-operator-result-readiness/materials/20261030-consumer-pilot.md:37); spec-orchestrate/SKILL.md.jinja:14 and :22 (overlap sequencing); git-operator-dispatch.md:12-13; subagents/git-operator.md:60-61
+  failure_condition: Changing worker.md:25 removes the only basis for deferring independent integrations while a worker runs.
+  suggested_action: Scope-overlap sequencing remains the scheduling rule; no other text needs to change for serialization.
+  resolution: open
+- issue: 'Other detectors of a base escape: integration refuses a dirty base; today it also refuses a committed base advance the source does not contain; the commit gate has no branch check'
+  evidence: packages/devkit/src/devkit_agt/features/worktree/usecases/planning.py:91-92, :105-108, :153-164; features/integration/usecases/service.py:643; features/delivery/usecases/native_handoff.py:100; features/gate/usecases/gates (message.py, rules.py only)
+  failure_condition: After PROP-integration-merge-moved-target lands, a conflict-free committed advance no longer refuses at integration, so a committed escape is no longer stopped anywhere.
+  suggested_action: Keep one detector for committed escapes at validation time.
+  resolution: open
+- issue: Tests pin the current wording and the information-only behavior
+  evidence: packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py:354; packages/devkit-spec/tests/integration/features/worker/test_worker_inspect.py:394-404
+  failure_condition: Any reword of worker.md:25 breaks test_role_contracts.py:354.
+  suggested_action: Update both tests with the change.
+  resolution: open
+- issue: Option comparison and failure traces (dirty escape, committed escape, the 2026-10-30 foreign-session advance)
+  evidence: Scout options table recorded in materials/20261030-base-observation-options.md
+  failure_condition: Option A leaves a committed escape hidden once the sibling lands; option B stops on every foreign-session advance; option C needs a window and a stable NOTICE code with an ACTION (ARCH-08-1, CAP-ADV-agent-advisory-protocol).
+  suggested_action: Recommend C; choose A only if no committed-escape detection is wanted, B only if no unaudited advance may land.
+  resolution: open
+assumptions:
+- Read-only code and document reading; no live inspection or tests ran
+- The 2026-10-30 foreign-session advance comes from the Host's report, not repository records
+unverified_areas:
+- Whether hygiene or rules check base cleanliness or committed scope
+- ADR-target-advance-readiness alignment (located, not read)
+- Codex and Antigravity runtime behavior of the worker cwd default
+checks: {}
+diff_scope:
+  base: fdba66465456ef93bf18a7a980d16121a0131639
+  head: 650b0fb9f5cdca9f8615ce9e8793539d4cf6d557
