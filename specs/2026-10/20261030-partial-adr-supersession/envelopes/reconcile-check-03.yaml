@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:50:24.189318Z'
+status: completed
+summary: 'Implementer self-verification (medium) at 07a143c1 after the Host''s scope extension and the main merge: the open P1 (CAP-INT-mcp-services) and P3 (ARCH-05-1-containers, CAP-VIEW-repository-viewer) of reconcile-check-02 are reflected with the reviewer''s proposed wording and listed as targets; all 30 targets change on the branch; the merged ledger (incl. ADR-generated-conflicts-in-prepared-merge) passes the frontmatter scan; reconcile.md resolved'
+findings: []
+checks:
+  rules_check_ci: PASS devkit rules check --ci --base main
+  tests: PASS just test-affected 2099 passed
+diff_scope:
+  base: 257b5d98232827c458fc45ed5c7aaf3263fa3eff
+  head: 07a143c10094d633e7e3c5888cdf173eb4a3c28d
