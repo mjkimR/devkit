@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-30T05:45:51.652957Z'
+status: completed
+summary: 'Characterized, reproduced (red-01) and fixed (green-01) the unfixable RULE-document-reference error on handed-off PROP IDs in explicitly targeted history; self-review (review-01) and self-checked reconcile (reconcile-check-01) at low; feedback swept (0 new, 1 duplicate); final report recorded. Changed document_reference.py, its rule guide and tests, CAP-GOV-spec-rules 3.3; sync output .devkit/installation.json (named in Task 1.2 boundary). Next: integration by the Host.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected partial 2077 passed; rule tests 30 passed
+  reproduction: PASS uv run devkit rules check specs/2026-10/20261030-integration-merge-moved-target errors=0 (was 2)
+diff_scope:
+  base: ''
+  head: f7faf0f1b9748075e5a1c88d818008897632181f
+activity_effort: low
