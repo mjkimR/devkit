@@ -31,16 +31,18 @@ committed to `main` while a Development worker ran, and `devkit spec worker insp
 
 | Escape | Today | After the sibling lands |
 | --- | --- | --- |
-| Uncommitted file in the base checkout | Host comparison; integration refuses a dirty base (`WORKTREE_BASE_DIRTY`) | Unchanged: integration still refuses a dirty base |
-| Commit on the base branch | Host comparison; integration refuses with `WORKTREE_MERGE_NOT_FF` until the Host merges the base; a full escape also fails inspection's head or ancestry | A full escape still fails head or ancestry; a partial escape is merged without audit |
+| Uncommitted file in the base checkout | Host comparison; handoff (`SPEC_HANDOFF_BASE_DIRTY`) and integration (`WORKTREE_BASE_DIRTY`) refuse a dirty base | Unchanged |
+| Commit on the base branch | Host comparison only; `WORKTREE_MERGE_NOT_FF` refuses any base advance and its fix merges the base without naming a commit | Unchanged: nothing names it |
 
-A partial committed escape is the case that would stay hidden; a dirty escape always surfaces at integration.
+Without the Host comparison, a committed escape is named only when the Host requires the turn's own `worker` envelope
+(a full escape); a partial committed escape stays unnamed with or without the sibling. A dirty escape always
+surfaces at handoff or integration.
 
 ## Options
 
 | Option | Detects a committed escape | Foreign-session advance (2026-10-30) | Host ceremony | Contract and code cost |
 | --- | --- | --- | --- | --- |
-| A: drop the HEAD equality and the pre-spawn record; audit only `<accepted>..<returned>` and the worktree | A full escape fails head or ancestry; a partial escape lands unreviewed after the sibling (CI still runs) | Passes | None | Documents and two tests; no code |
+| A: drop the HEAD equality and the pre-spawn record; audit `<accepted>..<returned>`, the worktree and the turn's own envelope | A full escape fails the envelope condition; a partial escape whose content passes CI stays hidden | Passes | None | Documents and one contract test; no code |
 | B: the Host declares its own advances; inspect requires the base to move from the recorded pre-spawn HEAD only through declared commits | Yes | Stops validation, because the commit is undeclared | A durable pre-spawn record plus a declaration per Host integration | New record or flags, walk, codes, documents, tests |
 | C: derived scope-overlap warning; inspect lists base commits made after the audit base that touch the worker's write scope, and in-scope base dirty paths, as a `WARNING` | Yes, when the escape touches the write scope | Passes; a warning only when the commit touches this worker's scope (the user then confirms it) | None in the common case; accounting only for a warning | One window derivation, one warning code, a sentinel, documents, tests; no record |
 
@@ -48,14 +50,14 @@ A partial committed escape is the case that would stay hidden; a dirty escape al
 
 - **T1 dirty escape** (a relative-path write lands in the base working tree): A, B and C all surface it no later than
   integration (`WORKTREE_BASE_DIRTY`). C names it at validation when the path is in the write scope.
-- **T2 committed escape** (the worker commits on the base branch): existing checks catch a full escape, because a
-  worker whose final commit (the worker envelope) landed on the base leaves its branch without that envelope, so
-  inspection's head or ancestry fails. A partial escape (some commits on the base, the rest on the branch) passes
-  the range audit. Today the Host's equality or integration's `WORKTREE_MERGE_NOT_FF` catches it; after the sibling,
-  A lets it land unreviewed (CI still runs on its content). B stops on it. C names it at validation when it touches
-  the write scope; an escape commit that touches only paths outside the write scope stays unnamed. A worker stages
-  only scope paths, so such a commit needs two mistakes (an out-of-scope `git add` and a commit in the wrong cwd).
-  No committed escape has been observed in this repository.
+- **T2 committed escape** (the worker commits on the base branch): a full escape (the whole turn, its `worker`
+  envelope included) fails the condition that `<returned>` adds this turn's envelope. Inspection alone misses it on a
+  later turn: it derives `head` from the latest envelope on the branch and re-audits the previous turn
+  (`challenger-03`). A partial escape (some commits on the base, the rest on the branch) passes the range audit. Only
+  the Host's equality names it today; `WORKTREE_MERGE_NOT_FF` and its base-merge fix never name a commit. Under A it
+  stays hidden if its content passes CI, with or without the sibling. B stops on it. C names it when it touches the
+  write scope. A worker stages only scope paths, so a partial escape needs several commands of one turn to miss the
+  worktree cwd. No committed escape has been observed in this repository.
 - **T3 foreign advance** (another session commits to `main`): A and C accept it without ceremony unless it touches
   the worker's scope (C then names a real collision for the user to confirm). B stops validation.
 
@@ -83,7 +85,7 @@ unit owns (`CAP-COLL-work-scope-registry`).
 ## Change inventory (option A)
 
 - `spec-delegate/references/worker.md` (Validate) and `payload.md` (Workers): drop the equality and the pre-spawn
-  record.
+  record; add the condition that `<returned>` adds this turn's `worker` envelope.
 - `CAP-DLV-delivery-workflows`: drop "unchanged base" from the acceptance requirements; word the base-checkout
   observation without a Host comparison.
 - A new ADR naming the superseded base-checkout clauses of `ADR-orchestration-workers`, with a pointer line in that

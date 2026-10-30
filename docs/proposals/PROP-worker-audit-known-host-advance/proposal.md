@@ -1,7 +1,7 @@
 ---
 id: PROP-worker-audit-known-host-advance
-title: Keep the worker audit baseline across known Host-owned target advances
-summary: "Drop the base-checkout HEAD and status equality from worker validation, so integrations and other sessions need not wait for a running worker; the worker's own range audit stays, and a base escape surfaces through existing head, ancestry and dirty-base checks."
+title: Stop requiring an unchanged base checkout in worker validation
+summary: "Drop the base-checkout HEAD and status equality from worker validation and require each returned turn to add its own worker envelope, so integrations and other sessions need not wait for a running worker; a partial committed escape into the base is an accepted residual."
 status: reviewing
 created_at: 2026-10-30
 target_area: capabilities/delivery/
@@ -13,7 +13,6 @@ milestone: MS-git-operator-lifecycle-refinement
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
     - docs/decisions/2026-10/20261022-orchestration-workers.md
     - packages/devkit-spec/tests/
     - docs/capabilities/delivery/
@@ -25,7 +24,7 @@ decomposed_from: PROP-git-operator-pilot-follow-up
 workflow: sdd-proposal
 ---
 
-# [PROP-worker-audit-known-host-advance] Keep the worker audit baseline across known Host-owned target advances
+# [PROP-worker-audit-known-host-advance] Stop requiring an unchanged base checkout in worker validation
 
 ## 1. Background & Hypothesis
 
@@ -40,8 +39,9 @@ be the base checkout (`MAT-base-observation-options`). In this repository on 202
 to `main` while a Development worker ran; the Host validated the range with `devkit spec worker inspect --base
 <accepted>` without issue.
 
-The hypothesis: the worker's own range audit plus the checks that already exist keep worker escapes from staying
-hidden, so the equality can go without a replacement mechanism.
+The hypothesis: the worker's own range audit, one explicit envelope condition and the existing dirty-base refusals
+name every worker escape except a partial committed one, so the equality can go without a replacement mechanism if
+the user accepts that residual.
 
 ## 2. Technical Spike Questions
 
@@ -49,14 +49,20 @@ hidden, so the equality can go without a replacement mechanism.
   Answer: no declaration. The rule protects against a worker write escaping into the base checkout, not against
   advances. A declaration list costs one record per integration plus a durable pre-spawn HEAD, and it still stops on
   another session's commit (`MAT-base-observation-options`, option B).
-- **Q2 Boundary**: Which changes still stop the worker? Answer: everything the worker audit checks today: ancestry,
-  head, changed paths outside scope, dirty worktree, envelopes, rules and workflow. Base advances never stop
-  validation. Escapes surface through existing checks:
-  - A worker whose final commit (its `worker` envelope) landed in the base leaves its branch without that envelope,
-    so inspection's head or ancestry check fails.
-  - An uncommitted write in the base checkout refuses handoff and integration (`WORKTREE_BASE_DIRTY`).
-  - A partial committed escape (some worker commits on the base branch, the rest on its branch) is the one case no
-    check names; its content still reaches CI on the base branch. No such escape has been observed.
+- **Q2 Boundary**: Which changes still stop the worker? Answer: everything the worker audit checks today (ancestry,
+  head, changed paths outside scope, dirty worktree, envelopes, rules and workflow), plus one explicit condition.
+  Base advances never stop validation. Escapes surface as follows:
+  - A full escape (the whole turn, its `worker` envelope included, committed in the base checkout): the new condition
+    "`<returned>` adds this turn's `worker` envelope, absent at `<accepted>`" fails. Inspection alone does not catch it
+    on a later turn, because it derives `head` from the latest envelope on the branch and re-audits the previous turn
+    (`challenger-03` finding 1).
+  - An uncommitted write in the base checkout: handoff refuses (`SPEC_HANDOFF_BASE_DIRTY`) and integration refuses
+    (`WORKTREE_BASE_DIRTY`).
+  - A partial committed escape (some worker commits on the base branch, the rest on its branch): no check names it,
+    with or without `PROP-integration-merge-moved-target`, because today's `WORKTREE_MERGE_NOT_FF` fix merges the base
+    without naming any commit. If its content passes CI, it stays hidden: nobody reviews or attributes it. This is an
+    exception to "a defect must not stay hidden" that the user accepts or rejects with option A. It needs several
+    commands in one turn to miss the worktree cwd; none has been observed.
 - **Q3 Interaction with light merging**: no base merge is required before validation or acceptance; nothing in this
   proposal reads the base checkout's HEAD.
 
@@ -66,12 +72,13 @@ hidden, so the equality can go without a replacement mechanism.
 options is pending (`MAT-base-observation-options`).
 
 - **Host procedure** (`spec-delegate/references/worker.md`, `payload.md`): drop the pre-spawn record of the base
-  checkout's status and HEAD and the requirement that both match. The range passes on the existing conditions:
+  checkout's status and HEAD and the requirement that both match. Add the condition that `<returned>` adds this
+  turn's `worker` envelope, absent at `<accepted>`. The range passes on that condition and the existing ones:
   ancestry, worktree HEAD, changed paths in the write scope, a clean worktree and the unit's checks. Host
   integrations and other sessions' commits proceed while a worker runs.
 - **Inspection**: `devkit spec worker inspect` is unchanged; `base_checkout` stays an observation.
-- **Contract**: `CAP-DLV-delivery-workflows` drops "unchanged base" from the acceptance requirements and words the
-  base checkout observation as information with no Host comparison. A new ADR supersedes the base-checkout clauses of
+- **Contract**: `CAP-DLV-delivery-workflows` replaces "unchanged base" among the acceptance requirements with the
+  turn's own `worker` envelope and words the base checkout observation as information with no Host comparison. A new ADR supersedes the base-checkout clauses of
   `ADR-orchestration-workers` (committed results and their validation; informational range inspection), and that ADR
   gains a one-line pointer to it. `ADR-reusable-lifecycle-resource-manager` keeps the write audit with the Host
   unchanged.
@@ -88,8 +95,8 @@ options is pending (`MAT-base-observation-options`).
 | ID | Given | When | Then |
 | --- | --- | --- | --- |
 | GOP-08 | An audit base A, base commits B made after spawning (Host, foreign or unknown), and a returned head C | The Host validates the worker's result with `devkit spec worker inspect` | A..C is the audited range with its existing checks; B never enters `changed_paths` or `outside_scope` and never blocks the range; a dirty base checkout and real conflicts stop at handoff or integration through their existing refusals. |
-| WAH-01 | The bundle's worker and payload references | `test_role_contracts.py` runs | Neither `worker.md` nor `payload.md` requires a pre-spawn base record or an unchanged base status or HEAD; `worker.md` keeps the ancestry, HEAD, write-scope and clean-worktree conditions. |
-| WAH-02 | `CAP-DLV-delivery-workflows` and the new ADR | `devkit rules check` runs on them | No acceptance requirement names an unchanged base; the new ADR supersedes the base-checkout clauses and `ADR-orchestration-workers` points to it. |
+| WAH-01 | The bundle's worker and payload references | `test_role_contracts.py` runs | Neither `worker.md` nor `payload.md` requires a pre-spawn base record or an unchanged base status or HEAD; `worker.md` requires `<returned>` to add this turn's `worker` envelope, absent at `<accepted>`, and keeps the ancestry, HEAD, write-scope and clean-worktree conditions. |
+| WAH-02 | `CAP-DLV-delivery-workflows`, the promoted ADR and `ADR-orchestration-workers` | The reconcile review of the Development unit checks them | No acceptance requirement names an unchanged base; the promoted ADR names the two superseded clauses; `ADR-orchestration-workers` carries a pointer line to it. |
 
 ### Non-goals
 
@@ -115,6 +122,9 @@ options is pending (`MAT-base-observation-options`).
   no `supersedes` field, because superseding the alias of the committed-results decision in `ADR-orchestration-workers`
   would also retire the worker's Git actions and the rest of that decision.
 - `size` is `S`: the change is the bundle references, one capability, one ADR and its pointer, and one contract test.
+- `challenger-03` showed that inspection does not catch a full escape on a later turn and that the remaining residual
+  can stay hidden; the envelope condition and the stated exception answer them.
+- `spec-orchestrate/` left `owns`: its sequencing rule never relied on the base equality.
 
 ## 4. Lifecycle & Retirement Criteria
 
