@@ -168,6 +168,10 @@ A defect against an agreed contract whose fix needs a spec bundle: contract impa
 
 All other rules of the `sdd-spec-feature` body apply, except that the bundle starts with `spec.md` only and its stages map: `specify` is `characterize` then `plan-tasks` here, `build-verify` is `reproduce` then `fix-verify`, and the stages after the fix are the same.
 
+## Record-only commits
+
+After authoring review/reverify or final-report evidence, use `devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml` only when the envelope is the sole pending file. Keep a combined manual commit for accompanying source/document changes or multiple records. Preserve evidence SHAs and prepare integration after the record commit; a changed HEAD invalidates older preparation. Retry the same file after fixing a failed hook/signing cause; inspect HEAD/index/worktree first on `ENVELOPE_COMMIT_UNCERTAIN`. Authoring remains write-only and this grants no approval, push or merge authority.
+
 ## Evidence contract
 
 - **Red before Green.** A recorded reproduction precedes the fix. A compile, environment or test-setup failure unrelated to the defect is not reproduction evidence; a build failure that is the defect is.

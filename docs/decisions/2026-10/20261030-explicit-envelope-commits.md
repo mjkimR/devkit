@@ -1,15 +1,15 @@
 ---
-id: PADR-explicit-envelope-commits
+id: ADR-explicit-envelope-commits
 title: Explicit commits for individual workflow envelopes
 summary: "For record-only workflow steps, we commit one named envelope through a separate explicit command with a deterministic subject, to simplify retry and preserve authoring compatibility, accepting one extra command and manual combined commits."
-proposal: PROP-workflow-record-auto-commit
-status: draft
+proposal: SPEC-workflow-record-auto-commit
+status: accepted
 created_at: 2026-10-30
 ---
 
-# [PADR-explicit-envelope-commits] Explicit commits for individual workflow envelopes
+# [ADR-explicit-envelope-commits] Explicit commits for individual workflow envelopes
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 ---
@@ -55,7 +55,7 @@ local precondition/postcondition checks address accidental mistakes without addi
 Opt in at record-only final-report and review/reverify call sites. Keep combined commits for source fixes, document
 reflection, multiple envelopes, feedback with files, and worker/problem records requiring accompanying work.
 No approval, integration or publication authority changes. This adds an optional operation and does not supersede
-an accepted decision. The proposal specifies result/error behavior and acceptance scenarios.
+an accepted decision. `SPEC-workflow-record-auto-commit` specifies result/error behavior and acceptance scenarios.
 
 ## 5. Consequences
 
@@ -73,5 +73,5 @@ Development adds integration coverage under packages/devkit/tests/integration/fe
 paths, dirty-state refusal, rejected hooks, staged-file retry, idempotent repeat, metadata-rewriting hooks and
 uncertain outcomes. Unit coverage tests deterministic identity and result/error fields. Bundle integration checks
 under packages/devkit-spec/tests/integration/bundles/spec/ cover eligible and combined-commit guidance in feature
-and bugfix flows. AC1 through AC5 in PROP-workflow-record-auto-commit define acceptance. Review checks the semantic
+and bugfix flows. AC-01 through AC-05 in `SPEC-workflow-record-auto-commit` define acceptance. Review checks the semantic
 co-commit boundaries; no runtime check can infer them from envelope YAML alone.

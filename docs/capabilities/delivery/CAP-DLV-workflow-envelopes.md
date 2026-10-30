@@ -1,14 +1,13 @@
 ---
 id: CAP-DLV-workflow-envelopes
 title: "Workflow Envelopes"
-summary: "Stage envelopes recording findings with optional severity, questions, answers with settled assumptions, problems, and verification evidence; reverify closes review and challenger rounds, and CLI scope revisions are verified in Git workspaces."
+summary: "Workflow envelopes retain immutable stage evidence and review rounds. Authoring stays write-only; an explicit command commits one authored new record with deterministic identity, ordinary hooks, bounded Git checks and same-file recovery."
 area: delivery
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
   - packages/devkit/src/devkit_agt/features/workflow/services/envelope/authoring.py
-  - packages/devkit/src/devkit_agt/features/workflow/services/envelope/model.py
-  - packages/devkit-core/src/devkit_core/core/yaml.py
+  - packages/devkit/src/devkit_agt/features/workflow/usecases/commit_envelope.py
 created_at: 2026-10-17
 usecases:
   - UC-drive-development-to-integration
@@ -183,3 +182,19 @@ While a unit is held:
 - **No handoff.** A complete unit asks no handoff choice, and `devkit workflow handoff` refuses with `HANDOFF_HELD`.
 - **Unanswered questions are requests.** Each becomes a `choose` request `question:<worker-NN>.<id>` answered by an answer envelope (`answer: envelope`), not by `devkit workflow answer` (`CAP-DLV-human-interaction`), and the unit waits for them (`[WAITING: human ...]`).
 - **Integration is refused.** `devkit worktree finish --merge` calls the `devkit.finish_guard` extensions before its first change; devkit-agt registers one (`devkit_agt.features.workflow.usecases.integration:finish_guard`) that reads every unit whose `envelopes/` files the branch changed (between the merge base and the branch tip), at the committed tip, and refuses the merge with `WORKTREE_BLOCKED` listing one line per unresolved problem, unanswered question and malformed worker envelope (`CAP-WT-task-worktrees`). Uncommitted envelopes neither block nor clear it. Envelope files are never removed one by one, so a file the branch deleted from a unit it kept still counts, read at the merge base; a unit the branch removed whole (a handoff, a close) holds nothing. A Git failure while reading propagates, and the merge is refused (`WORKTREE_GUARD_FAILED`). Other integrators (a pull request service) apply the same rule by reading the envelopes at the head they merge: `envelope check --format json` reports `blocked`, `problems` and `pending_questions`.
+
+
+## 5. Explicit Single-Envelope Commit
+
+`devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml` commits one existing new authored envelope. `ADR-explicit-envelope-commits` records the decision. `CAP-DLV-cli-and-output` owns output fields and error codes. Tests: `packages/devkit/tests/integration/features/workflow/test_envelope_commit.py` and `packages/devkit/tests/unit/features/workflow/test_envelope_commit_policy.py`.
+
+1. **Opt-in boundary**: WHEN explicit commit is invoked, the operation MUST avoid rewriting authored envelope bytes, sequence and `diff_scope`. Authoring and its library operation remain write-only, including outside Git; `next`, `check` and `show` remain read-only.
+2. **Tracked identity**: WHERE explicit commit is used, the Unit MUST have a tracked regular bound anchor inside the current Git worktree and an existing HEAD. Its tracked ID is `SPEC-<slug>` or `PROP-<slug>`, with slug matching `[a-z0-9][a-z0-9-]*`. The command derives `chore(workflow): record <slug> <kind>-<NN>` from that anchor and the selected record, with workflow, segment and stage in the body; branch names do not determine the message.
+3. **Authored file**: IF the literal Unit-relative file is not an immediate valid envelope under its real `envelopes/` directory, is ignored, crosses a symlink or escapes the worktree, THEN the command MUST refuse before mutation. A valid record has a nonempty summary, a declared stage and exactly the bound workflow/current segment. Authored `completed`, `failed` and `needs_input` records are eligible; committing a record does not make it pass a gate.
+4. **Index and dirty scope**: IF another Git-visible staged, unstaged or untracked path is dirty, or the selected path is modified tracked history or partially staged, THEN the command MUST refuse before staging. A new selected file may already be staged only when index bytes equal worktree bytes. One active writer per worktree is required; no global lock service is provided.
+5. **Supported Git state**: IF Git is unavailable, HEAD is unborn/detached, an operation is in progress, the index is locked/unmerged, or `GIT_INDEX_FILE` is supplied, THEN the command MUST refuse before mutation. The operation rechecks repository identity, HEAD including its symbolic branch, selected bytes and scope before mutation.
+6. **Ordinary commit**: WHEN an eligible new record is committed, Git MUST stage only its literal path and run ordinary commit hooks, identity and configured signing without bypass flags. A successful result requires one commit parented by captured HEAD, exactly that added path with expected blob, the same symbolic branch and clean index/worktree. Metadata-rewriting hooks are eligible; the reported SHA is final HEAD observed after hooks.
+7. **Failure recovery**: WHEN Git/hook/signing rejects and unchanged HEAD/reference plus retained record/index can be established, the operation MUST report `ENVELOPE_COMMIT_FAILED` with staging state, before/after HEAD, exact retained path and a retry command for the same file. Retry allocates no envelope. Unknown completion, unexpected content/reference effects or failed postconditions report `ENVELOPE_COMMIT_UNCERTAIN` and require HEAD/index/worktree inspection before further mutation. Neither outcome resets, amends, deletes or automatically retries observed resources.
+8. **Idempotent repeat**: WHEN selected bytes already exist unchanged in HEAD and the checkout is clean, the command MUST return `already_committed` without making a commit and with null subject. It makes no claim about the existing commit message.
+
+This operation adds no gate, approval, push or merge authority. Combined source/document changes, multiple records, decision/acceptance transactions and emergency commits retain their manual commit procedures (`CAP-DLV-delivery-workflows`). Integration preparation follows the final record commit because its source HEAD changes.

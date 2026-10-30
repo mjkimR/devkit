@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Delivery workflows define SDD stages, gates, checks and records. One-shot workers deliver committed turns; reusable lean git-operator executes exact Host-authorized lifecycle jobs while preserving decisions, readiness and partial-effect recovery."
+summary: "SDD workflows define stages, gates, verification and run records with deterministic single-envelope commits. One-shot workers deliver committed turns; reusable lean git-operator executes Host-authorized lifecycle jobs with readiness and recovery checks."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -216,6 +216,8 @@ sequence.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
     reset or amend (`ADR-orchestration-workers`).
+
+17. **Stage commits and record-only opt-in**: WHEN a stage boundary is reached, the executor MUST persist its changes with ordinary Git hooks. For one fully authored envelope as the sole pending file, it MAY use `devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml` (`CAP-DLV-workflow-envelopes`). Review/reverify, final-report and feedback with no findings are eligible after their associated work is committed. Accompanying source/document changes, multiple records, Planning returns, acceptance/decision transactions and problem/emergency work keep their required combined manual commits. Evidence SHAs remain unchanged. Integration preparation follows record commit; changed HEAD invalidates older preparation. A known Git/hook/signing failure uses same-file retry after fixing the cause, while uncertain effects require inspection. This adds no approval, push or merge authority. Source guidance checks: `packages/devkit-spec/tests/integration/bundles/spec/test_envelope_commit_guidance.py`.
 
 ## 4. Interfaces & Data Contracts
 

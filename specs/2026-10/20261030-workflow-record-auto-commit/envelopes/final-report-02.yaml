@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:40:32.511107Z'
+status: completed
+summary: 'Explicit single-envelope commit implementation and integration content verified: main incorporated, document conflicts preserve both features, consumed proposal reference repaired, all review findings closed and retained contracts resolved'
+findings: []
+assumptions:
+- Local integration selected under pull_request=auto because no platform review or CI is needed; dev-integration authority is retained-base auto policy
+- Prior independent medium reviews remain valid for unchanged runtime; Host verified document-only integration conflicts and reference repair
+unverified_areas:
+- No speed, cost or token improvement claim; automatic mode supports one selected authored envelope and one active writer per worktree
+checks:
+  tests: PASS source affected selection 2091; main-incorporation affected selection 1491; focused runtime/guidance 45
+  build: PASS final merged devkit-agt and devkit-spec wheels built offline in normal isolated environments
+  lint: PASS affected package lint and type checks; merged committed governance zero violations; sync clean
+diff_scope:
+  base: eb4d4f37335844919805082e141a33f4f7cffc7c
+  head: 53e2f4d6d8a1d9d2134e27c7e9e6f99a6d189f96

@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-workflow-record-auto-commit: Accept explicit single-envelope commit command,
+  deterministic Unit-based messages, exact Git scope and same-file recovery; proceed
+  with medium-effort Development'
+by: user
+at: '2026-10-29T23:20:40.113708Z'

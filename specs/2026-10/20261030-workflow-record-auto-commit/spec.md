@@ -1,35 +1,22 @@
 ---
-id: PROP-workflow-record-auto-commit
+id: SPEC-workflow-record-auto-commit
 title: Automatic commits for workflow records
-summary: "Adds an explicit command that commits one authored workflow envelope with a deterministic Unit-based message. Preserves write-only authoring, existing hooks and manual commits for combined changes."
-status: accepted
-created_at: 2026-10-30
-target_area: delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/workflow/
-    - packages/devkit/tests/unit/features/workflow/
-    - packages/devkit/tests/integration/features/workflow/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - docs/capabilities/delivery/
-    - docs/usecases/delivery/
-    - docs/decisions/
-  excludes:
-    - packages/devkit/src/devkit_agt/features/gate/
-    - packages/devkit/src/devkit_agt/features/worktree/
-    - packages/devkit/src/devkit_agt/features/integration/
-task_kind: feature
-workflow: sdd-proposal
+summary: Adds an explicit command that commits one authored workflow envelope with a deterministic Unit-based message. Preserves write-only authoring, existing hooks and manual commits for combined changes.
+status: completed
+created: 2026-10-30
+related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output, CAP-DLV-delivery-workflows]
+related_usecases: [UC-drive-development-to-integration]
+workflow: sdd-spec-feature
 ---
 
-# [PROP-workflow-record-auto-commit] Automatic commits for workflow records
+# [SPEC-workflow-record-auto-commit] Automatic commits for workflow records
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-workflow-record-auto-commit on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-workflow-record-auto-commit`
+
+### 1. Background & Hypothesis
 
 Workflow record commands know which Unit and record they write, but the executor still stages those files,
 invents a commit message and runs Git. For stages that only persist an envelope, message authoring adds a
@@ -56,15 +43,58 @@ provides enough identity for a record-only commit. Source changes still need a m
 No reduction in latency, tokens or total cost has been measured.
 
 `CAP-DLV-workflow-envelopes`, `CAP-DLV-workflow-orchestration` and `CAP-GATE-commit-gates` are the current contracts.
-`PROP-local-orch-resource-manager` delegates existing Git/lifecycle operations to a reusable agent; this proposal
+`SPEC-local-orch-resource-manager` delegates existing Git/lifecycle operations to a reusable agent; this proposal
 adds a deterministic CLI operation and does not require that role. `PROP-maintenance-history` publishes maintenance
 records on a separate remote branch and does not cover local Unit envelope commits.
 
-## 2. Planning Findings
+## 2. User Stories
+
+- **US-1**: As a delivery agent, I want to commit one authored envelope without composing a message, and retry the same file after a hook failure. This extends `UC-drive-development-to-integration`.
+
+## 3. Non-Goals
+
+**Scope Excluded:** Source-message generation, implicit commits, multi-record and decision/acceptance transactions, hook bypass, new authority, push/merge automation, and a persistent Git or recovery service.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Deterministic identity and output
+- **Given** a tracked bound SPEC/PROP anchor and an authored envelope in its current segment and a declared stage
+- **When** the explicit commit command is invoked on differently named branches
+- **Then** it generates `chore(workflow): record <slug> <kind>-<NN>` with workflow, segment and stage in the body, and returns the specified text sentinel or JSON fields with actual final HEAD.
+
+### [AC-02] Exact scope before mutation
+- **Given** a new envelope or an identical staged addition
+- **When** committing with unrelated staged, unstaged or untracked paths, partial staging, path escapes, symlinks, ignored paths, unsupported anchors or modified history
+- **Then** it refuses with exit 2 and `ENVELOPE_COMMIT_INVALID` or `ENVELOPE_COMMIT_STATE` before mutation; an eligible call adds exactly the selected path with unchanged bytes. Failed and needs_input authored records remain eligible without passing gates.
+
+### [AC-03] Hooks, retry and uncertain outcomes
+- **Given** ordinary hooks/signing and one active writer
+- **When** a hook rejects, a same-file staged retry succeeds, metadata is rewritten, or hooks change content/refs
+- **Then** failure preserves resources and reports staging and before/after HEAD; retry allocates no record; metadata rewrite reports actual HEAD; unexpected effects return `ENVELOPE_COMMIT_UNCERTAIN` with inspection guidance and no reset/retry. A clean exact existing record returns `already_committed` with null subject and no commit.
+
+### [AC-04] Compatibility and unsupported state
+- **Given** write-only authoring, read-only queries, a skeleton/invalid scope, or non-Git, detached, in-progress, locked or alternate-index state
+- **When** those existing commands or explicit commit are invoked
+- **Then** existing commands retain their behavior, while commit refuses unsupported state with exit 2 and the specified actionable stable code before staging.
+
+### [AC-05] Workflow continuity and guidance
+- **Given** authored review/reverify and final-report records with existing evidence SHAs
+- **When** they are committed explicitly and readiness is evaluated
+- **Then** evidence SHAs remain unchanged and workflow checks still pass. Guidance in feature/bugfix workflows and skills uses explicit commit only for one pending envelope, keeps combined manual commits for accompanying changes/multiple records, and requires integration preparation after the record commit; older preparation remains invalid after HEAD changes.
+
+## 5. Accepted design and assumptions
+
+The carried premises still match the current base: authoring is write-only, stage commits are manual and post-commit hooks may rewrite HEAD. The implementation reuses feature-owned envelope parsing and foundation Git execution without an agt-to-spec dependency. Activity effort is medium for real Git failure behavior and cross-package guidance. The CLI is agent-facing and adds no graphical screen.
+
+
+
+The selected interface, result/error contract and boundaries below are normative.
+
+### 2. Planning Findings
 
 - **Invocation:** Select a separate command, `devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml`.
   It commits one existing record and never allocates an envelope sequence. Existing authoring commands and library
-  calls remain write-only. `PADR-explicit-envelope-commits` compares the alternatives.
+  calls remain write-only. `ADR-explicit-envelope-commits` compares the alternatives.
 - **Commit boundary:** Limit the first implementation to one new, authored envelope. Multiple pending envelopes or
   accompanying code, feedback or document changes use an ordinary combined commit. Automatic mode is an explicit
   call selected by the executor, not an inferred property of a stage or a new workflow exit requirement.
@@ -83,9 +113,9 @@ records on a separate remote branch and does not cover local Unit envelope commi
 cost benchmark is required for this feature; acceptance concerns avoided manual message authoring and correct Git
 scope. Development runs its acceptance checks at the same head with explicit commit mode omitted as the baseline.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Candidate assessment
+#### Candidate assessment
 
 | Operation | Automatic-commit suitability | Boundary |
 | :--- | :--- | :--- |
@@ -97,7 +127,7 @@ scope. Development runs its acceptance checks at the same head with explicit com
 | Implementation, Living Spec edits, rejection or reclassification | Keep existing message authoring | Describe actual changes and preserve required user reasons; emergency commits retain their separate procedure. |
 | Merge/integration | Already automated | Keep the existing merge template and guarded integration route. |
 
-### Selected interface and behavior
+#### Selected interface and behavior
 
 The command takes one `--file`, relative to the resolved Unit, naming an immediate file under `envelopes/`.
 There is no implicit latest selection, glob, multi-file option, `--message`, or authoring `--commit` flag.
@@ -135,7 +165,7 @@ uv run devkit workflow envelope commit --unit specs/2026-10/20261030-example --f
    only after the reported cause is fixed. When the result is uncertain, inspect HEAD/index/worktree first. A refusal
    or unavailable host permission stops that operation; it never changes tools or skips hooks to continue.
 
-### Result and error contract
+#### Result and error contract
 
 Text success is one `[ENVELOPE_COMMIT: unit=... file=... outcome=committed|already_committed head=...]` line.
 JSON success is one object with `unit`, `file`, `outcome`, `head`, `subject` and `notices`; `subject` is the generated
@@ -155,7 +185,7 @@ Diagnostic logs stay on stderr through the existing CLI boundary. Exact underlyi
 available without claiming that their messages are stable codes. An unchanged already-committed record returns 0.
 The `next`, `check` and `show` commands stay read-only. No new gate, stage pass, push or merge authority is inferred.
 
-### Call sites, architecture and delivery
+#### Call sites, architecture and delivery
 
 Use the command after final-report authoring when it is the only pending file, and after review/reverify authoring
 when it is the only pending file. Cover both feature and bugfix workflow references. Feedback with no findings is
@@ -172,7 +202,7 @@ Only source assets under the spec bundle change; deployment outputs follow norma
 receive the retained contract. The `docs/decisions/` boundary permits promotion of the new PADR, not edits to existing
 accepted decisions. Gate, worktree and integration engines remain outside implementation scope.
 
-### Expected acceptance checks
+#### Expected acceptance checks
 
 - **AC1 — Deterministic identity:** The same anchor slug, workflow, segment, stage and record identity yield the same
   message on differently named branches. Different Unit slugs remain distinguishable; unsupported anchor IDs refuse.
@@ -195,19 +225,8 @@ Runtime acceptance needs new unit and integration tests under the declared workf
 checks live under the declared spec-bundle integration tests. Run lint, type checks and `just test-affected` in
 Development; Planning checks document rules, links, envelopes and the affected existing tests only.
 
-### Non-goals
+#### Non-goals
 
 **Scope Excluded:** LLM-generated source commit messages, automatic commits for all file-writing commands,
 decision/acceptance transactions, automatic production changes, hook bypass, new approval policy, push or merge
 automation, changes to the existing integration template, and a persistent Git service or general recovery framework.
-
-## 4. Lifecycle & Retirement Criteria
-
-Planning selects the explicit single-envelope commit command in PADR-explicit-envelope-commits. Size remains M,
-with medium Development effort for Git failure behavior and cross-package agent guidance. The independent challenger
-review, its disposition and the current run records accompany the direction-acceptance request. No production code,
-direction acceptance or Development handoff occurs in this Planning run.
-
-On acceptance, hand off to one feature spec with the selected interface and eligible call sites. Completion requires
-the acceptance checks and delivery-contract reconciliation. On rejection, retain `status: rejected` and the user's
-reason through the existing proposal retirement procedure.

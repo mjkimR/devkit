@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:39:58.692311Z'
+status: completed
+summary: 'Corrects reconcile-check-02 premature CI pass: after repairing consumed proposal reference, committed cumulative rules actually pass; merged reflection targets verified without runtime or decision changes'
+findings: []
+assumptions:
+- Integration-only self-check preserves both incoming lifecycle and envelope contracts and reuses independent reviews for unchanged runtime
+checks:
+  tests: PASS merged-base affected selection 1491; unchanged implementation prior source selection 2091
+  rules: 'PASS actual committed cumulative check at 928fdde5 against main eb4d4f37: zero violations'
+  reflection: PASS six retained targets; exact consumed reference repaired, no mismatch waived
+  diff: PASS main-relative whitespace check
+diff_scope:
+  base: 73156ffd786a42ee18d57cbab532a08086182bdd
+  head: 928fdde5842f183d691e2eedc56109e2e72f1cfd

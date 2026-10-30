@@ -1,9 +1,12 @@
 ---
 id: CAP-DLV-cli-and-output
 title: "Workflow CLI and Output"
-summary: "Commands, exit codes, text sentinels, and JSON payload contracts for workflows."
+summary: "Workflow commands, exit codes, sentinels and JSON contracts, including deterministic single-envelope commit results and invalid, unsupported, failed or uncertain Git effects."
 area: delivery
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
+  - packages/devkit/src/devkit_agt/features/workflow/usecases/commit_envelope.py
 created_at: 2026-10-17
 ---
 
@@ -40,6 +43,7 @@ devkit workflow envelope answer COMMON [--answers-to FILE] [--answers-file PATH|
 devkit workflow envelope resolution COMMON [--resolves FILE]
 devkit workflow envelope review COMMON VERIFY [--findings-file PATH|-]
 devkit workflow envelope reverify COMMON VERIFY [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]... [--findings-file PATH|-]
+devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml [--format text|json]  # explicitly commit one authored record
 devkit workflow envelope check --unit DIR [--details] [--format text|json]   # every envelope file, contract violations and the hold
 ```
 
@@ -97,6 +101,10 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | `HANDOFF_HELD` | `HandoffHeldError` | `INTERACTION` | `1` | `handoff` of a complete unit its envelopes hold: an unresolved problem, an unanswered question or a malformed worker envelope (one detail each); the answers and recovery decisions come from the user, so the agent stops and asks; `[FIX]` is `envelope check --unit DIR` (`CAP-DLV-workflow-envelopes`) |
 | `ENVELOPE_STATUS_INVALID`, `ENVELOPE_FLAG_INVALID`, `ENVELOPE_FROM_INVALID`, `ENVELOPE_FINDINGS_INVALID`, `ENVELOPE_ITEMS_INVALID`, `ENVELOPE_REFERENCE_INVALID` | `EnvelopeStatusError`, `EnvelopeFlagError`, `EnvelopeFromError`, `EnvelopeFindingsError`, `EnvelopeItemsError`, `EnvelopeReferenceError` (base `AuthoringError`) | `INPUT_ERROR` | `2` | authoring flags (`envelope new` and the kind commands) that cannot produce a valid envelope, or `envelope new` given a kind that has its own command; a `--resolve`/`--waive` number outside the carried findings, a malformed or repeated `--settle`, a `challenger` or `review` finding recorded as not `open`, and fields or a status the kind does not allow, are `ENVELOPE_FLAG_INVALID`; a malformed `--questions-file` or `--answers-file` is `ENVELOPE_ITEMS_INVALID`; an `--answers-to` or `--resolves` that names no fitting envelope of the unit, or a `--settle` position beyond its `assumptions`, is `ENVELOPE_REFERENCE_INVALID` |
 | `ENVELOPE_KIND_INVALID` | `EnvelopeKindError` | `INPUT_ERROR` | `2` | an envelope kind does not match `[a-z][a-z0-9-]*` (`write_envelope`) |
+| `ENVELOPE_COMMIT_INVALID` | `EnvelopeCommitInvalidError` | `INPUT_ERROR` | `2` | unsupported Unit/file, skeleton or invalid identity, modified history or partial staging; no staging or commit |
+| `ENVELOPE_COMMIT_STATE` | `EnvelopeCommitStateError` | `INPUT_ERROR` | `2` | non-Git, detached/unborn/in-progress/locked/unmerged repository, alternate index, unrelated dirty paths or changed preconditions; no staging or commit |
+| `ENVELOPE_COMMIT_FAILED` | `EnvelopeCommitFailedError` | `MAINTENANCE` | `2` | Git/hook/signing rejection with established unchanged HEAD and retained record/index; reports staging and before/after HEAD, exact retained file and same-file retry command |
+| `ENVELOPE_COMMIT_UNCERTAIN` | `EnvelopeCommitUncertainError` | `MAINTENANCE` | `2` | unexpected postconditions or unknown process outcome; preserves resources and names HEAD/index/worktree inspection before further mutation |
 | `ENVELOPE_INVALID` | `EnvelopeFormatError` | `INPUT_ERROR` | `1` | collected with the unit-relative `file` by `load_envelopes`: a malformed envelope file, or an answer or resolution whose `answers_to` or `resolves` names no fitting envelope; `next` and `envelope check` set its `[TARGET]` to the workspace-relative file and its `[FIX]` to fixing or removing it, then `envelope check --unit DIR` |
 | `RECEIPT_INVALID` | `devkit_dist.base.errors` `ReceiptError` | `MAINTENANCE` | `2` | `.devkit/installation.json` exists but does not match its schema; restore it from version control, then run `devkit sync` |
 | `GIT_FAILED` | `devkit_core.base.errors` `GitError` | `MAINTENANCE` | `2` | `is_ancestor` cannot answer, or is given a non-hexadecimal revision (`INPUT_ERROR`) |
@@ -248,3 +256,14 @@ The JSON forms:
 - `handoff --format json`: `{"unit", "from", "to", "policy", "decision", "history"}`.
 - `next --view requests --format json`: `{"requests": [...], "errors": [...]}`, where `errors` holds the error that stopped `lint-clean`, if any; the command exits with its exit code as `next` does. `answer` and `return` emit the written record with its `file`.
 - `envelope new`, `worker`, `answer`, `resolution`, `review`, `reverify` and `check`: see `CAP-DLV-workflow-envelopes`.
+
+
+## Explicit envelope commit output
+
+A successful explicit commit prints exactly one line:
+
+```text
+[ENVELOPE_COMMIT: unit=DIR file=envelopes/NAME.yaml outcome=committed|already_committed head=SHA]
+```
+
+JSON success contains `unit`, `file`, `outcome`, `head`, `subject` and `notices`. `head` is the actual final HEAD after hooks. For `committed`, `subject` is `chore(workflow): record <slug> <kind>-<NN>`; the body names workflow, segment and stage. For a clean exact existing record, `outcome` is `already_committed` and `subject` is null; it does not claim the existing commit's message. Failures follow the advisory boundary above, with no success sentinel. Eligibility and Git postconditions belong to `CAP-DLV-workflow-envelopes`.

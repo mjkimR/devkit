@@ -42,6 +42,8 @@ One observation, one file, committed with the work. Capture writes `status: open
 For a `collect-feedback` or `report-session` stage, a Planning run's return or an explicit user-requested session
 sweep, read the [sweep procedure](references/sweep.md).
 
+If a sweep has no findings and its authored feedback envelope is the only pending file, commit it with `devkit workflow envelope commit --unit <dir> --file envelopes/feedback-NN.yaml`. When feedback files or other records accompany it, keep a combined manual commit.
+
 ## Completion
 
 - `uv run devkit rules check <file>` exits `0` for each recorded file (`devkit rules fix <file>` aligns the ID and H1

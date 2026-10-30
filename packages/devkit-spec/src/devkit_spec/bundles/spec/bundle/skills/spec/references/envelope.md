@@ -36,6 +36,8 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
   --check lint="PASS devkit rules check --staged" --base <ref> --head $(git rev-parse HEAD)
 ```
 
+- If the final-report is the only pending file, run `devkit workflow envelope commit --unit <dir> --file envelopes/final-report-NN.yaml` after authoring. Prepare integration after that commit, because HEAD changes invalidate older preparation. Keep its evidence SHAs unchanged. Accompanying source/document changes and multiple records require a combined manual commit.
+- After a Git/hook/signing failure, fix the cause and retry the same file; do not rerun authoring. `ENVELOPE_COMMIT_UNCERTAIN` requires inspecting HEAD/index/worktree before any further mutation.
 - Omit what Git, `reconcile.md` and the latest review envelope already hold; record assumptions the user should see with `--assume`.
 - Add each item `devkit docs list feedback --status open --where severity=critical` lists to the report presented to the user, one line each: `FB-<slug> → <target>`.
 
@@ -60,3 +62,10 @@ docs/proposals/PROP-<slug>/envelopes/<kind>-<NN>.yaml
 - `review-NN` and `challenger-NN` record a round as found (every finding `open`); a `reverify-NN` closes it with `resolution: resolved | waived` per finding (a waiver states its reason). The latest round of each kind, or the reverify closing it, decides; a `challenger` reverify never counts for the review state.
 - Write envelopes with `devkit workflow envelope new --unit <dir> --kind <kind> [--stage <id>]` or `devkit workflow envelope <kind>`, never by editing YAML (`--help` lists the flags); `--head` must be a real commit. Check them with `devkit workflow envelope check --unit <dir>`.
 - In the conversation, cite an envelope by its summary and path, never its whole content.
+
+
+## 5. Explicit single-envelope commit
+
+Authoring remains write-only; `next`, `check` and `show` stay read-only. For one existing, fully authored envelope as the sole pending file, `devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml` stages that literal path and runs ordinary Git hooks/signing. The deterministic subject uses the tracked SPEC/PROP anchor slug and envelope identity. A clean exact record already in HEAD returns `already_committed` without a second commit. Modified history, skeletons, unrelated dirty paths, partial staging and unsupported Git state refuse before mutation. The command grants no approval, push or merge authority.
+
+Review/reverify and final-report are eligible after their associated work is committed. Feedback with no findings is eligible only when its envelope is the sole pending file. Keep source fixes, Living Spec reflection, multi-record Planning returns, acceptance/decision transactions and problem/emergency commits in their existing combined manual commits. Never detach a record from work it must accompany.

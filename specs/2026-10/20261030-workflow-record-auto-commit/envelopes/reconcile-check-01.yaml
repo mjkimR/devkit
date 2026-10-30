@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:35:01.725198Z'
+status: completed
+summary: 'Independent medium reconcile verification: all three delivery capabilities, development use case, promoted ADR and Development evidence agree with runtime/guidance; all six targets present and no findings.'
+findings: []
+assumptions:
+- Codex emulated isolation with absolute scoped cwd/paths and read-only commands, no native guarantee; before/after snapshots both 11957fb158bd3547153dd24ea7cd7fd4d13e4971; HEAD unchanged and worktree clean. No explicit outside-worktree reads; Git implicitly accesses shared metadata.
+unverified_areas:
+- Reviewer did not rerun checks under the no-write boundary; independently inspected implementation and assertions, using caller-run fresh checks.
+checks:
+  reflection: PASS runtime/output/recovery/guidance reflected with no required mismatch waived
+  tests: PASS caller final-content affected suite 2091; focused runtime/guidance 45
+  governance: PASS caller committed rules and sync; reviewer git diff --check and final state clean
+diff_scope:
+  base: c29602db8b804e956cef4d8fa4a58e4208cc1c7e
+  head: 31a03130ceba9c25371a27ad10d717bd0d1f74c0

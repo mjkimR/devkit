@@ -1,0 +1,36 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:30:31.412243Z'
+status: completed
+summary: 'Independent medium review: three findings on symbolic HEAD identity, eligible final-report example and advisory targets; scope and supplied checks verified.'
+findings:
+- issue: Hook-driven branch changes can be reported as a successful commit.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/repositories/envelope_commit.py:38 discards symbolic-ref identity; postconditions compare only commit IDs, content and cleanliness.
+  failure_condition: A post-commit hook switches to a new branch at the created commit; parent/blob/clean checks still pass, contrary to AC-03.
+  suggested_action: Capture and compare symbolic HEAD before mutation, after hooks and during failure classification; add real Git regression.
+  resolution: open
+  severity: P2
+- issue: The final-report example creates an envelope ineligible for explicit commit.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-spec-feature.md:164 omits --stage and --summary; commit eligibility requires both.
+  failure_condition: Following the adjacent authoring and commit examples returns ENVELOPE_COMMIT_INVALID; bugfix inherits the example.
+  suggested_action: Add --stage final-change-report and a meaningful --summary, with a source guidance assertion.
+  resolution: open
+  severity: P2
+- issue: Authored-identity refusals identify a Unit-relative advisory target.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/services/envelope/commit.py:34 supplies envelope.file and usecases/commit_envelope.py preserves it.
+  failure_condition: Empty summary or invalid stage/workflow/segment points at envelopes/review-01.yaml rather than the workspace-relative selected path.
+  suggested_action: Normalize the target at the use-case boundary and add an advisory-target regression.
+  resolution: open
+  severity: P3
+assumptions:
+- Codex emulated isolation; explicit absolute worktree scope and before/after temporary-index snapshots both 11f0c821468363b2bcaaf86e07ab12c61a00f9f1, HEAD unchanged and tree clean; no native guarantee or explicit outside-worktree read.
+unverified_areas:
+- 'Branch-switch probe was not run: sandbox refused the allowed probe write; operation stopped without retry/rerouting. Finding has static evidence. Living Spec reconciliation follows separately.'
+checks:
+  tests: PASS supplied affected suite 2088, real Git 40, guidance 3 and integration-preparation regression 1
+  lint: PASS supplied package lint/types, committed rules and sync check
+diff_scope:
+  base: c29602db8b804e956cef4d8fa4a58e4208cc1c7e
+  head: 8ef6543bf98ef66dc182763990dd2a76cc5d7462
