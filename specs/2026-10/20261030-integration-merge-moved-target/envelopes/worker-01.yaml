@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:01:29.100517Z'
+status: completed
+summary: 'Development from specify to the final change report: moved-target merge at local prepare and composed acceptance, result fields, conditional base merge and batch test run in the spec bundle, Living Spec and repository policy. Reviews: code-reviewer review-01 (3 P3, fixed, reverify-01); reconcile-reviewer reconcile-check-01 (2 P2, 4 P3; fixed or waived, reconcile-check-02). Sync output: .devkit/installation.json (listed in Task 3). Baseline: at cf991c47 prepare of a moved target refused WORKTREE_MERGE_NOT_FF; now it lands the merge. For the Host: main moved to 894c1374 and merging it conflicts (modify/delete) on docs/proposals/PROP-worker-audit-known-host-advance/proposal.md, a link the handoff commit a3ae4c3b rewrote; main''s runtime still enforces containment, so integrating this branch needs a base merge resolving that file (take main''s deletion).'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 2011 passed; just smoke passed
+  lint: PASS lint-check/check devkit, devkit-spec; rules-check and rules check --ci errors=0
+  sync_end: PASS devkit sync --check exit=0
+diff_scope:
+  base: ''
+  head: dca39e392b77ffd5993d5a37ba0a49dc58580a80
+activity_effort: medium

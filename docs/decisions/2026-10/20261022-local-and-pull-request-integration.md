@@ -18,6 +18,8 @@ aliases:
 
 `ADR-host-cli-lifecycle-authority` supersedes this decision's process-local lifecycle request, native confirmation and resume interface. The merge construction, readiness, policy binding, pull-request route limits, landing validation, integration locking and exact cleanup guards remain in force.
 
+Superseded in part by `ADR-moved-target-merge`: its local containment clauses (`prepare` requiring the source to contain the target, the not-fast-forward fix and the execution context reaching the provider only at a build). The other clauses remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: not recorded in the members (user decisions and Host approval are cited where the members record them)

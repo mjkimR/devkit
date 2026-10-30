@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:57:19.857465Z'
+status: completed
+summary: 'Implementer re-checked the six reconcile-check-01 findings at 706d4c28 (medium; no repeat reviewer call, scope unchanged): five fixed in CAP-HARN, UC-drive-development-to-integration, CAP-DLV-proposal-planning, CAP-INT and reconcile.md; UC-plan-and-hand-off-a-proposal waived as outside the write scope with FB-proposal-usecase-moved-base-acceptance.'
+findings: []
+checks:
+  rules: PASS devkit rules check docs and unit errors=0
+  diff_check: PASS git diff --check
+diff_scope:
+  base: 48f56acc53a01cf33866b55267f595e50db57bc7
+  head: 706d4c28ff734f18d9a1ddc2b37ce67ac6f09263

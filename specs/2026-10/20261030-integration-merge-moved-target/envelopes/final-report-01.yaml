@@ -1,0 +1,12 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:00:57.531730Z'
+status: completed
+summary: 'Local prepare and composed acceptance merge a conflict-free moved target themselves (deterministic prospective merge checked by guards, readiness, receipt and policy before confirmation); results name target_sha/build_target/result/landed_sha and the disclosure; ff-only, finish --merge and the PR route keep WORKTREE_MERGE_NOT_FF; spec-integrate base merge is conditional and spec-orchestrate adds the batch test run. Limits: UC-plan-and-hand-off-a-proposal waived to FB-proposal-usecase-moved-base-acceptance; known main failure test_fixes_carry_no_placeholder not selected and unchanged.'
+findings: []
+checks:
+  tests: PASS just test-affected (mode=partial, base=main) 2011 passed; just smoke passed
+  build: PASS just smoke builds and installs the wheels; uv run devkit sync --check exit 0
+  lint: PASS just lint-check/check devkit and devkit-spec 0 errors; just rules-check and devkit rules check --ci --base cf991c47 errors=0

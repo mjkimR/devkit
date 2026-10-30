@@ -195,6 +195,88 @@ def test_a_policy_acceptance_is_never_redirected_to_the_user(pending):
     assert "--by user" not in json.dumps(error) and "<" not in error["advisory"]["fix"]
 
 
+def _advance(repo: Path, rel: str, text: str | None, *gate: str) -> str:
+    """Commit a change to ``rel`` on the base (``None`` deletes it) and return the moved target; ``gate`` passes
+    ``--no-verify`` for a commit another writer made without this repository's gate."""
+    if text is None:
+        git(repo, "rm", "-q", rel)
+    else:
+        (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+        (repo / rel).write_text(text)
+        git(repo, "add", rel)
+    git(repo, "commit", *gate, "-m", f"Change {rel} on the base")
+    return git(repo, "rev-parse", "HEAD")
+
+
+def test_accept_cli_integrates_a_moved_target_without_a_base_merge(pending):
+    """``SPEC-integration-merge-moved-target``: the landed merge has the moved target and the acceptance commit."""
+    repo, planning = pending
+    source = git(planning, "rev-parse", "HEAD")
+    moved = _advance(repo, "docs/unrelated.md", "Unrelated base change.\n")
+    result = CliRunner().invoke(
+        proposal_group,
+        ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "accepted", json.dumps(payload, indent=2)
+    acceptance = payload["acceptance_sha"]
+    assert git(repo, "rev-parse", f"{acceptance}^") == source  # the acceptance commit's only parent: no base merge
+    assert git(repo, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, acceptance]
+    assert payload["landed_sha"] == git(repo, "rev-parse", "HEAD") and payload["target_sha"] == moved
+    assert payload["disclosure"] == "CI rules only on the merged result; tests and review ran on the source only"
+
+
+def test_accept_cli_text_names_the_merged_target_and_the_disclosure(pending):
+    repo, _ = pending
+    moved = _advance(repo, "docs/unrelated.md", "Unrelated base change.\n")
+    result = CliRunner().invoke(
+        proposal_group, ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
+    )
+    assert result.exit_code == 0, result.output
+    line = result.stdout.splitlines()[0]
+    assert line.startswith("[ACCEPTED: PROP-idea ") and f" target_sha={moved} " in line
+    assert f" landed_sha={git(repo, 'rev-parse', 'HEAD')} " in line
+    assert 'disclosure="CI rules only on the merged result; tests and review ran on the source only"' in line
+
+
+def test_accept_cli_refuses_a_target_change_to_the_proposal_before_the_acceptance_commit(pending):
+    repo, planning = pending
+    source = git(planning, "rev-parse", "HEAD")
+    _advance(repo, "docs/proposals/PROP-idea/note.md", "A base note.\n", "--no-verify")
+    error = _accept_json(repo, "--by", "user", "--mode", "accept_only")
+    assert error["code"] == "SPEC_PROPOSAL_APPROVAL_NOT_READY", json.dumps(error, indent=2)
+    details = error["advisory"]["details"]
+    assert any("the target changed docs/proposals/PROP-idea" in line for line in details), details
+    assert "Merge the target into plan-idea" in error["advisory"]["fix"]
+    assert git(planning, "rev-parse", "HEAD") == source
+    assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
+
+
+def test_accept_cli_refuses_reference_drift_on_the_prospective_result(pending):
+    repo, planning = pending
+    cited = "docs/capabilities/delivery/CAP-DLV-cited.md"
+    _advance(
+        repo,
+        cited,
+        '---\nid: CAP-DLV-cited\ntitle: Cited\nsummary: "A capability the proposal cites."\nstatus: active\n'
+        "area: delivery\ncreated: 2026-10-01\nupdated: 2026-10-01\n---\n\n# [CAP-DLV-cited] Cited\n\n"
+        "## 1. Overview\nCited capability.\n",
+    )
+    git(planning, "merge", "--no-edit", "main")
+    anchor = planning / "docs/proposals/PROP-idea/proposal.md"
+    anchor.write_text(anchor.read_text() + "\nThis builds on `CAP-DLV-cited`.\n")
+    git(planning, "commit", "-am", "Cite the capability")
+    source = git(planning, "rev-parse", "HEAD")
+    _advance(repo, cited, None)
+    error = _accept_json(repo, "--by", "user", "--mode", "accept_only")
+    assert error["code"] == "SPEC_PROPOSAL_APPROVAL_NOT_READY", json.dumps(error, indent=2)
+    details = error["advisory"]["details"]
+    assert any("CAP-DLV-cited" in line and "devkit rules fix" in line for line in details), details
+    assert git(planning, "rev-parse", "HEAD") == source
+    assert "status: reviewing" in anchor.read_text()
+
+
 def _refuse_handoff_commit(repo: Path, tmp_path: Path) -> None:
     """Only the handoff commit on dev-idea is refused; the acceptance commit on plan-idea passes."""
     hooks = tmp_path / "hooks"

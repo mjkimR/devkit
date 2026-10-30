@@ -45,12 +45,16 @@ Session claims remain explicit on both `prepare` and `integrate`; neither comman
 Correcting invocation input alone requires no source change. Ordinary source-readiness, digest and authority checks
 remain in force (`packages/devkit/tests/integration/features/integration/test_cli.py`).
 
-Text `prepare` prints `[INTEGRATION_PREPARED: <id> branch=... target="..." digest=... route=... network=...]` and
+Text `prepare` prints `[INTEGRATION_PREPARED: <id> branch=... target="..." target_sha=<confirmation target> digest=...
+route=... network=...]` and
 `[INTEGRATION_SCOPE: worktree_remove=yes|no delete_branch=yes|no cleanup=<extensions>|- disclosure="<text>"]`;
 `--format json` prints the approval scope (`request`: digest, approval, task, source, target, worktree, cleanup,
 route, `pull_request` (`null` on the local route, `create` before the PR exists), `readiness.disclosure`) and the
 planned `steps`, never internal identities, policy digests or Git directories. `integrate` prints
-`[INTEGRATION: status=... ... effects=<step>:<state>,...]` or one JSON object. Warnings and notices use the Agent
+`[INTEGRATION: status=... ... target_sha=<confirmation target> build_target=<sha>|- result=<sha>|- ...
+disclosure="<text>" effects=<step>:<state>,...]` or one JSON object, whose `build` names the confirmation target,
+the build target and the landed result. Every result that carries a request thus states the merged target and what
+was checked on the merged result (`ADR-moved-target-merge`); a cleanup-only result names only the prepared target. Warnings and notices use the Agent
 Advisory Protocol on stderr, then the errors, last. A refusal before any effect exits `2`; an execution stopped by an
 error after an effect exits `1`; a successful result exits `0`, also a `partial` one whose only advisory is the
 `INTEGRATION_CLEANUP_INCOMPLETE` warning (Git integration done, scoped cleanup remains), unless `--strict` raises a
@@ -68,6 +72,19 @@ The `IntegrateUseCase` runs through the same request validator, provider, finish
 cleanup engine as other trusted in-process callers. Local integration builds a merge commit outside the base
 checkout, checks the result and fast-forwards the base. It performs no fetch, push or remote branch deletion. The
 `ff-only` project strategy remains supported.
+
+WHEN the source does not contain the confirmation target under `[worktree] merge = "no-ff"`, local `prepare` MUST
+build the prospective merge in the object store and run the finish guards on `merge-base(target, source)`, the
+readiness provider, the receipt check and the prospective policy digest on it before it returns a request; the
+source need not contain the target first (`ADR-moved-target-merge`). A conflict refuses with
+`WORKTREE_MERGE_CONFLICT`, a failing check with `INTEGRATION_NOT_READY` or `INTEGRATION_RECEIPT_CONFLICT`, Git
+below 2.38 with `WORKTREE_GIT_UNSUPPORTED`, a missing committer identity with `WORKTREE_COMMIT_FAILED`, each with
+nothing changed; only after a conflict or a failing check does the Host merge the target into the task branch. The prospective commit is unsigned, referenced by no ref and copies the committer line of the
+parent with the later committer date, so two preparations of one source and target yield one digest whatever the
+Git identity or `TZ`. Cleanup is planned from the approved context, and `build` names only real builds. `ff-only`,
+`devkit worktree finish --merge` and the pull-request route keep refusing a moved target with
+`WORKTREE_MERGE_NOT_FF`. Covered by `packages/devkit/tests/e2e/features/integration/test_base_advance.py` and
+`packages/devkit/tests/integration/features/integration/test_cli.py`.
 
 ## Authority and route limits
 
@@ -131,8 +148,9 @@ approval or recovery journal survives the invocation.
   `packages/devkit/tests/integration/features/integration/test_pull_request.py`.
 - If the result is unknown, inspect Git or the pull request before another mutation. Never replay an unknown remote
   write or remove a worktree whose identity is ambiguous.
-- A changed target requires the source to incorporate that target, fresh readiness and a fresh Host decision under
-  `ask`.
+- A changed target requires a fresh preparation, which checks the new prospective merge, and a fresh Host decision
+  under `ask`. The local route needs no base merge unless that preparation reports a conflict or failing check; the
+  pull-request route still requires the source to contain the target.
 
 The optional `devkit-mcp` runtime remains available for shared proposal-review artifacts (`CAP-COLL-shared-artifacts`),
 which acceptance does not require. The
@@ -144,12 +162,12 @@ registered.
 | Code | Next action |
 | --- | --- |
 | `INTEGRATION_CONFIG_INVALID` | Configure or install the named readiness provider and use a supported route. |
-| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: missing or invalid session claims are identified by provider evidence `SESSION_CLAIMS_INVALID`; `[TARGET]` names `--claims` and `[FIX]` directs correction and retry of the same prepare or integrate command with explicit claims. Other readiness failures direct source-worktree fixes, commit and preparation again. |
+| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: missing or invalid session claims are identified by provider evidence `SESSION_CLAIMS_INVALID`; `[TARGET]` names `--claims` and `[FIX]` directs correction and retry of the same prepare or integrate command with explicit claims. Other readiness failures direct source-worktree fixes, commit and preparation again; a CI-rule or unit-directory reason found on a prospective or built result names the conditional base merge (merge the target into the task branch, `devkit rules fix`, re-verify what the merge changed, prepare again). |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
 | `INTEGRATION_RULE_RUNTIME_MISMATCH` | The source needs no change. With separately granted authority, build a runtime from the source's code outside the worktree being removed and run `devkit integration integrate <branch>` from the base checkout with it; never edit the rules, skip readiness or use the worktree's own runtime. |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: run `[FIX]` to present the scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |
 | `INTEGRATION_REQUEST_STALE` | For a digest that differs from the current scope, `INTERACTION`: run `[FIX]` to present the current scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise inspect completed effects and revalidate the remaining scope before fresh Host authority. |
-| `INTEGRATION_TARGET_MOVED` | Merge the current base into the source, rerun required checks and obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |
+| `INTEGRATION_TARGET_MOVED` | Nothing changed on the target. Prepare again on the current target (the local route builds the merge itself; the pull-request route needs the target merged into the source), then obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git and worktree state; run guarded already-merged finish for a marked remaining worktree, or the owning extension command for a remaining scoped post-finish target. |
 | `INTEGRATION_LANDED_UNCHECKED` | Run the provider's landed-target check and do not report checked integration until it passes. |
 

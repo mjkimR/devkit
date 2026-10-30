@@ -244,29 +244,33 @@ class BaseDirtyError(_Interaction):
     fix = "Commit or stash the base checkout's changes, then rerun"
 
 
-_MERGE_TARGET_FIX = (
+_MERGE_TARGET = (
     "Merge the target branch into the task branch in its worktree (git merge with a message the commit-msg gate"
-    " accepts; never rebase, which rewrites the SHAs the task's records cite), re-verify, then rerun or prepare again"
+    " accepts; never rebase, which rewrites the SHAs the task's records cite)"
 )
 
 
 class MergeNotFastForwardError(WorktreeError):
-    """The base moved on since the branch was created and the merge may not absorb it (``AUTO``).
+    """The base moved on since the branch was created and this operation may not absorb it (``AUTO``).
 
-    ``finish --merge`` lands only a branch that contains the base HEAD; the integration service absorbs later target
-    commits only under ``merge = "no-ff"`` and only after its approval.
+    ``finish --merge``, ``merge = "ff-only"`` and the pull-request route land only a branch that contains the base
+    HEAD; local ``devkit integration`` under ``merge = "no-ff"`` builds and checks that merge itself
+    (``ADR-moved-target-merge``).
     """
 
     code = "WORKTREE_MERGE_NOT_FF"
     actor = Actor.TOOL
-    fix = _MERGE_TARGET_FIX
+    fix = (
+        f"{_MERGE_TARGET}, re-verify what the merge changed, then rerun or prepare again; under"
+        ' merge = "no-ff", local `uv run devkit integration prepare` merges a conflict-free moved target itself'
+    )
 
 
 class MergeConflictError(_Interaction):
-    """Merging the advanced target with the task branch conflicts (``INTERACTION``); nothing changed on the target."""
+    """Merging the moved target with the task branch conflicts (``INTERACTION``); nothing changed on the target."""
 
     code = "WORKTREE_MERGE_CONFLICT"
-    fix = _MERGE_TARGET_FIX
+    fix = f"{_MERGE_TARGET} to resolve the conflict there, re-verify what the merge changed, then prepare again"
 
 
 class GitUnsupportedError(_Interaction):

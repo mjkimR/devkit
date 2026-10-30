@@ -100,9 +100,9 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   cover a project that does not).
 - `--no-build-package pyyaml` prevents a new source build; after installation, check the runtime binding because uv
   can reuse a cached wheel. Compatible binary wheels do not require local LibYAML headers.
-- An approved local integration whose target advanced during its confirmation (`devkit-agt`) merges with
-  `git merge-tree --write-tree`, which needs Git 2.38 or newer; older Git refuses only that case
-  (`WORKTREE_GIT_UNSUPPORTED`).
+- A local integration or composed proposal acceptance whose target moved since the branch was cut (`devkit-agt`)
+  builds its merge with `git merge-tree --write-tree` at preparation and again at integration, which needs Git 2.38
+  or newer; older Git refuses only that case (`WORKTREE_GIT_UNSUPPORTED`).
 - Release wheels are an alternative only when `gh release view --repo mjkimR/devkit` lists `devkit_dist-*.whl` and
   `devkit_agt-*.whl` (and `devkit_catalog-*.whl` when needed); a `devkit-agt` wheel installation also names the
   `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.

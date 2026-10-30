@@ -23,6 +23,7 @@ capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-DLV-project-policy
   - CAP-DLV-workflow-envelopes
+  - CAP-HARN-agent-guidance
   - CAP-INT-mcp-services
   - CAP-MCP-runtime-registration
   - CAP-WT-task-worktrees
@@ -60,9 +61,10 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
    (`CAP-DLV-delivery-workflows`).
 5. The agent sweeps feedback and records the final change report with its test, build and lint results
    (`CAP-DLV-delivery-workflows`, `CAP-DLV-workflow-envelopes`).
-6. The agent merges the base into the branch, re-verifies only what conflict resolution and docs reflection changed,
-   rechecks the reconcile targets and runs the cumulative check (`CAP-DLV-delivery-workflows`).
-7. The agent reads the effective policy, presents the verified report and exact merge/cleanup effects, receives the
+6. The agent re-verifies only what docs reflection changed and runs the cumulative check; a base that moved since the
+   branch was cut needs no merge into the branch (`CAP-DLV-delivery-workflows`, `CAP-INT-mcp-services`).
+7. The agent reads the effective policy, prepares the scope, which checks the merge with a moved base, presents the
+   verified report, the merged target SHA, the readiness disclosure and the exact merge/cleanup effects, receives the
    user's conversational approval under `ask`, then requests integration pinned to the prepared scope (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`).
 8. The system builds the result commit outside the base checkout, fast-forwards the base onto it without network
    operations, removes the task worktree, deletes the local branch as the policy selects and runs the scoped
@@ -88,7 +90,11 @@ The integration executor's coded refusals this section does not name, and their 
   read-only preparation and exact authorized execution, retaining source preparation and acceptance; normal
   integration includes cleanup (`CAP-INT-mcp-services`). Before starting the worker on a `prepare-worktree` or
   `handoff` result, the Host compares its `checks.worker_input` (`head`, `dirty_paths`) with its own Git observation
-  and starts the worker only on a clean HEAD (`CAP-DLV-delivery-workflows`); resumes at step 6.
+  and starts the worker only on a clean HEAD (`CAP-DLV-delivery-workflows`). Once every unit of the run is finished
+  (integrated, blocked with its problem recorded, waiting for a user decision or continued in `direct`) and no worker
+  turn is running, the Host runs the repository's integrated-content tests once on the base branch HEAD from the
+  batch start and reports the tested head, command and result; a failure becomes feedback and nothing is reverted
+  (`CAP-HARN-agent-guidance`); resumes at step 6.
 - **3a.** The effort is `low`: the author reviews the change and self-checks the reconcile, still recorded as review
   and reconcile-check envelopes (`CAP-DLV-delivery-workflows`); resumes at step 5.
 - **3b.** The effort is `high`: fresh `code-reviewer` instances review in bounded rounds, and the reconcile
@@ -132,14 +138,20 @@ The integration executor's coded refusals this section does not name, and their 
 - **7g.** The CLI runtime is inside the worktree that integration would remove: the system refuses with
   `INTEGRATION_RUNTIME_IN_WORKTREE`; the agent uses a retained runtime outside that worktree, prepares the scope and
   obtains any required conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
-- **7h.** A synchronized rule of the source, or of the result at a build, imports a module or name the running runtime
+- **7h.** A synchronized rule of the source, or of the prospective or built result, imports a module or name the running runtime
   does not provide, such as the implementation module of a rule the branch adds: the system refuses with
   `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness (after 7f and 7g) and changes nothing; the source needs no change, and the agent,
   with separately granted authority, runs integration from the base checkout with a runtime built from the source's
   code outside the worktree (`CAP-INT-mcp-services`); resumes at step 7.
+- **7i.** Preparation of a moved base refuses: its merge conflicts with the branch (`WORKTREE_MERGE_CONFLICT`), the
+  merged result fails a CI rule, or the base changed the unit directory since the merge base
+  (`INTEGRATION_NOT_READY`), or the merge leaves a receipt record inconsistent (`INTEGRATION_RECEIPT_CONFLICT`), and
+  nothing changes. The agent merges the base into the branch, then resolves the conflict, runs `devkit rules fix`
+  after a CI-rule reason or `devkit sync` after a receipt conflict, commits and re-verifies what the merge changed
+  (`CAP-INT-mcp-services`); resumes at step 6.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with
-  `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target (`CAP-INT-mcp-services`); resumes
-  at step 6.
+  `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target; the agent prepares again on
+  the current base without merging it into the branch (`CAP-INT-mcp-services`); resumes at step 7.
 - **8b.** A cleanup step stays incomplete after the merge: the partial result reports the failing operation and
   completed effects. The agent inspects Git and PR state, uses guarded finish while the marked local branch remains,
   or runs the owning extension command when Git cleanup already completed. A blocked PR remote deletion preserves
@@ -276,7 +288,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: an approved local integration whose base branch receives another commit after the result commit is built
 - **When**: the approving call reaches the fast-forward
 - **Then**: it refuses with `INTEGRATION_TARGET_MOVED`, the merge step is `not_run`, the target is unchanged, and the
-  agent merges the base into the branch and requests a new integration
+  agent prepares a new integration on the current base
 
 ### Scenario 16: An incomplete cleanup recovers from observed state
 - **Covers**: 8b
@@ -367,3 +379,24 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: a post-commit hook changes content or switches the symbolic branch
 - **When**: the agent requests explicit record commit
 - **Then**: it reports ENVELOPE_COMMIT_UNCERTAIN, preserves the hook's observed effects and directs inspection before further mutation
+
+### Scenario 29: A conflict-free moved base integrates without a base merge
+- **Covers**: 6, 7, 8
+- **Given**: a verified task branch whose base gained an unrelated commit after the branch was cut
+- **When**: the agent prepares and, after the user's approval, integrates it on the local route
+- **Then**: preparation names the moved base as `target_sha`, integration completes, and the landed merge has the
+  moved base as first and the approved source as second parent; the branch received no base merge
+
+### Scenario 30: A conflicting moved base refuses at preparation
+- **Covers**: 7i
+- **Given**: a task branch and a base that changed the same lines of one file since the branch was cut
+- **When**: the agent prepares the integration
+- **Then**: it refuses with `WORKTREE_MERGE_CONFLICT`, the base, the branch and the worktree are unchanged, and the
+  agent merges the base into the branch to resolve the conflict before preparing again
+
+### Scenario 31: A local-orchestrated batch ends with one test run
+- **Covers**: 1b
+- **Given**: a `local-orchestrated` run that integrated two units and holds a third waiting for a user decision
+- **When**: no worker turn of the run is still running
+- **Then**: the Host runs `just test-affected --base <batch start>` (this repository's selector) once on the base
+  branch HEAD and reports the head, the command and the result; a failure is recorded as feedback

@@ -62,10 +62,14 @@ the owning package is an application, library or content wheel.
 Extra pytest arguments follow these defaults, so `just test all -n0` runs serially.
 
 Development, review and integration use affected tests without a separate mandatory local `just test`.
-Before integration, incorporate any moved base, resolve conflicts and run `just test-affected --base <base-ref>`
-against the actual target branch. A merge of the same verified content needs no additional test run. If the base
-or content changes before merging, refresh affected tests and the checks that cover the new content. Reviewers
-reuse valid check results and rerun only missing or stale checks. Lint, types and governance remain required:
+Before integration, run `just test-affected --base <base-ref>` on the task branch. Local integration merges a
+conflict-free moved base itself and runs only the CI rules on the merged result (`ADR-moved-target-merge`); merge the
+base into the task branch, resolve conflicts and refresh the affected tests only after it reports a conflict or a
+failing check. Once every unit of a local-orchestrated run is finished, run `just test-affected --base <batch start>`
+once on `main`, keeping its `mode=full` fallback; outside such a run, a later batch run or nightly CI tests the
+combined head (`ADR-post-batch-test-run`). If the content changes before merging, refresh affected tests and the
+checks that cover the new content. Reviewers reuse valid check results and rerun only missing or stale checks. Lint,
+types and governance remain required:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the
   module's default paths. A feature name selects its tests across the available tiers together with its

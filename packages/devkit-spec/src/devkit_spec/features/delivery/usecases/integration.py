@@ -1,8 +1,10 @@
 """``devkit_agt.features.integration.readiness`` provider (``spec``): SDD completion readiness at ``source_sha``.
 
-``devkit_agt.features.integration`` calls ``check(context)`` during ``prepare(branch, task)`` (no result commit yet) and again at
-each build of an approved ``IntegrationRequest`` with the execution context: ``context.finish.target_sha`` is then the
-build target and ``context.result_sha`` the commit that would land. The build's evidence must equal the approved
+``devkit_agt.features.integration`` calls ``check(context)`` during ``prepare(branch, task)`` and again at each build of
+an approved ``IntegrationRequest`` with the execution context: ``context.finish.target_sha`` is then the build target
+and ``context.result_sha`` the commit that would land. At ``prepare`` ``result_sha`` is ``None`` when the source
+contains the target, or an unsigned prospective merge commit that never lands when the target moved
+(``ADR-moved-target-merge``). The build's evidence must equal the approved
 evidence except the codes declared target-bound (``TARGET_SHA``, ``RESULT_SHA``), so verification reads only
 committed Git trees (never uncommitted working-tree files or wall-clock timestamps) and always returns a non-empty
 tuple of deterministic ``Evidence`` items, with any unmet conditions listed in ``Readiness.reasons``.
@@ -51,6 +53,11 @@ SESSION_KINDS = frozenset({*TASK_KINDS, "overall-refactor"})
 SESSION_EFFORTS = frozenset(EFFORTS)
 TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
 DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
+# A failing check on a merged result is fixed on the task branch: the conditional base merge (``ADR-moved-target-merge``).
+BASE_MERGE_FIX = (
+    "merge the target into the task branch in its worktree, fix what the rules report (`devkit rules fix`), re-verify"
+    " what the merge changed and prepare again"
+)
 
 
 def _check_project_policies(base: Path, workspace: Path) -> list[str]:
@@ -68,7 +75,9 @@ def _check_project_policies(base: Path, workspace: Path) -> list[str]:
     return reasons
 
 
-def _check_ci_rules(snapshot: Snapshot) -> tuple[str, list[str]]:
+def _check_ci_rules(snapshot: Snapshot, *, merged: bool = False) -> tuple[str, list[str]]:
+    """The CI rules on ``snapshot``; ``merged`` (a prospective or built result) words each reason with the
+    conditional base merge."""
     reasons: list[str] = []
     try:
         run = run_project_rules(snapshot.root, snapshot=snapshot, phase=Phase.LINTER)
@@ -80,6 +89,8 @@ def _check_ci_rules(snapshot: Snapshot) -> tuple[str, list[str]]:
         reasons.append(
             f"CI rule violation {violation.rule_id} at {violation.file}:{violation.line}: {violation.message}"
         )
+    if merged:
+        reasons = [f"{reason} (on the merged result: {BASE_MERGE_FIX})" for reason in reasons]
     if reasons:
         return f"fail:errors={len(run.errors)},violations={len(run.blocking_violations)}", reasons
     return "pass", []
@@ -388,8 +399,32 @@ def _unit_advance(root: Path, context: IntegrationContext) -> list[str]:
     if prior == plan.target_sha:
         return []
     if run_git(root, "diff", "--name-only", prior, plan.target_sha, "--", unit).strip():
-        return [f"the target changed {unit} since the task branch's merge base; merge the target into the branch"]
+        return [
+            f"the target changed {unit} since the task branch's merge base; merge the target into the task branch in"
+            " its worktree, re-verify what the merge changed and prepare again"
+        ]
     return []
+
+
+def _landing(context: IntegrationContext) -> tuple[Path, Snapshot | None]:
+    """The snapshot root and, with a result commit, the result tree with its diff from the target."""
+    plan = context.finish
+    root = _snapshot_root(Path(plan.base).resolve(), Path(plan.path))
+    if not context.result_sha:
+        return root, None
+    return root, _build_snapshot(root, plan.source_sha, plan.target_sha, context.result_sha)
+
+
+def result_reasons(context: IntegrationContext) -> list[str]:
+    """The result-dependent readiness reasons (the unit-advance check and the CI rules on the result tree); none
+    without ``context.result_sha``.
+
+    The composed proposal acceptance runs them on the prospective result before its acceptance commit.
+    """
+    root, landing = _landing(context)
+    if landing is None:
+        return []
+    return [*_unit_advance(root, context), *_check_ci_rules(landing, merged=True)[1]]
 
 
 def check(context: IntegrationContext) -> Readiness:
@@ -427,7 +462,7 @@ def check(context: IntegrationContext) -> Readiness:
         reasons.extend(task_reasons)
 
     reasons.extend(_unit_advance(snap_root, context))
-    ci_status, ci_reasons = _check_ci_rules(landing)
+    ci_status, ci_reasons = _check_ci_rules(landing, merged=context.result_sha is not None)
     evidence.append(Evidence("CI_RULES", ci_status))
     reasons.extend(ci_reasons)
     evidence.append(_policy_evidence(snap_root, context))

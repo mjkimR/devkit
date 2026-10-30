@@ -1,0 +1,50 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:55:43.654022Z'
+status: completed
+summary: 'Independent reconcile-reviewer (nested, medium): all 8 targets match the code and both ADRs; no P1; 2 P2 and 4 P3 coverage and wording findings.'
+findings:
+- issue: UC-plan-and-hand-off-a-proposal is neither a target nor covered by a no-impact statement although composed acceptance changed (moved base, result-check refusal before the acceptance commit, result fields).
+  evidence: docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md:16-22,60-63; spec.md AC-02, AC-06, AC-09
+  failure_condition: An agent following the use case meets SPEC_PROPOSAL_APPROVAL_NOT_READY or WORKTREE_MERGE_CONFLICT on a moved base with no named recovery.
+  suggested_action: Add it as a target with an extension, or record a substantive reason in reconcile.md.
+  resolution: open
+  severity: P2
+- issue: CAP-HARN-agent-guidance's exclusive 'only after' trigger list and unqualified 'Integration merges a conflict-free moved base itself' leave out WORKTREE_MERGE_NOT_FF under ff-only and the pull-request route.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:208-212,233-235; spec-integrate/SKILL.md.jinja:29
+  failure_condition: A bundle-source branch on ff-only or the PR route is forbidden the base merge and re-sync the skill and ADR require.
+  suggested_action: Add WORKTREE_MERGE_NOT_FF to the trigger list and qualify the sentence as local no-ff integration.
+  resolution: open
+  severity: P2
+- issue: UC 7h omits the prospective result at prepare; 7i omits the devkit sync re-sync after a receipt conflict and the unit-advance reason.
+  evidence: docs/usecases/delivery/UC-drive-development-to-integration.md:139-148
+  failure_condition: After INTEGRATION_RECEIPT_CONFLICT an agent skips devkit sync and preparation refuses again.
+  suggested_action: Name the prospective result in 7h; add the re-sync and the unit-directory case to 7i.
+  resolution: open
+  severity: P3
+- issue: CAP-DLV-proposal-planning says target_sha and disclosure appear once the integration landed; the code prints them whenever the integration ran.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-planning.md:647-650; native_plan_accept.py:374-394
+  failure_condition: An agent takes target_sha= on ACCEPTED_STOPPED as proof of landing.
+  suggested_action: Say target_sha and disclosure appear once the integration ran, landed_sha once it landed.
+  resolution: open
+  severity: P3
+- issue: reconcile.md attributes the ADR-test-selection-and-ci line to ADR-post-batch-test-run's follow-ups, which name other documents.
+  evidence: reconcile.md:52-56; docs/decisions/2026-10/20261030-post-batch-test-run.md section 5
+  failure_condition: The record misattributes the reason for the edit.
+  suggested_action: Call it a consistency repair and name the actual follow-ups as done.
+  resolution: open
+  severity: P3
+- issue: CAP-INT moved-target refusal list omits WORKTREE_COMMIT_FAILED; its INTEGRATION_NOT_READY row lacks the conditional base merge for reasons on the merged result.
+  evidence: docs/capabilities/integration/CAP-INT-mcp-services.md:76-86,165
+  failure_condition: A reader of the code table does not learn that a CI-rule reason on a merged result is fixed by a base merge.
+  suggested_action: Add WORKTREE_COMMIT_FAILED and extend the INTEGRATION_NOT_READY row.
+  resolution: open
+  severity: P3
+checks:
+  docs_refs: PASS inbound refs of both superseded ADRs are targets
+  head: PASS 48f56acc matches diff_scope
+diff_scope:
+  base: cf991c476d6fbc9651ad81199564d476ddc42504
+  head: 48f56acc53a01cf33866b55267f595e50db57bc7

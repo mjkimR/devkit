@@ -182,3 +182,43 @@ def test_cli_finish_merge_takes_the_integration_lock(repo: Path) -> None:
     )
     assert done.exit_code == 0, done.output
     assert json.loads(done.stdout)["merged"] is True and git(repo, "rev-parse", "HEAD^2") == tip
+
+
+def test_plan_finish_plans_a_moved_target_only_with_advance_under_no_ff(repo: Path) -> None:
+    """``ADR-moved-target-merge``: only local integration opts in; other callers keep the containment refusal."""
+    _, tip = task(repo)
+    moved = commit(repo, "theirs.txt")
+    with pytest.raises(MergeNotFastForwardError) as raised:
+        plan_finish(locate(repo), "dev-demo")  # the pull-request route and library callers
+    assert 'merge = "no-ff"' in (raised.value.fix or "") and "never rebase" in (raised.value.fix or "")
+    with pytest.raises(MergeNotFastForwardError):
+        plan_finish(locate(repo), "dev-demo", merge_method="ff-only", advance=True)
+    plan = plan_finish(locate(repo), "dev-demo", advance=True)
+    assert (plan.source_sha, plan.target_sha, plan.already_merged) == (tip, moved, False)
+    git(repo, "config", "user.name", "")
+    with pytest.raises(CommitFailedError):
+        plan_finish(locate(repo), "dev-demo", advance=True)
+
+
+def test_prospective_build_is_deterministic_unsigned_and_unreferenced(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, tip = task(repo)
+    moved = commit(repo, "theirs.txt")
+    before = refs(repo)
+    args = {"branch": "dev-demo", "target_branch": "main", "target": moved, "source": tip, "method": "no-ff"}
+    first = build_result(repo, **args, advance=True, prospective=True)
+    git(repo, "config", "commit.gpgSign", "true")
+    git(repo, "config", "gpg.program", "false")  # a signing build would fail
+    git(repo, "config", "i18n.commitEncoding", "ISO-8859-1")
+    monkeypatch.setenv("TZ", "Pacific/Kiritimati")
+    monkeypatch.setenv("GIT_COMMITTER_NAME", "Someone Else")
+    monkeypatch.setenv("GIT_COMMITTER_EMAIL", "else@example.invalid")
+    assert build_result(repo, **args, advance=True, prospective=True) == first
+    assert refs(repo) == before
+    raw = git(repo, "cat-file", "commit", first)
+    later = git(repo, "show", "-s", "--format=%cn <%ce> %ct", moved)
+    assert "gpgsig" not in raw and "\nencoding " not in raw
+    assert git(repo, "show", "-s", "--format=%an <%ae> %at|%cn <%ce> %ct", first) == f"{later}|{later}"
+    assert git(repo, "rev-parse", f"{first}^1", f"{first}^2").split() == [moved, tip]
+    assert git(repo, "log", "-1", "--format=%s", first) == "chore(merge): integrate dev-demo into main"
