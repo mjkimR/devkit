@@ -1,11 +1,12 @@
 ---
 id: CAP-INT-mcp-services
 title: Scoped CLI Integration
-summary: "Host-authorized integration revalidates retained policy, readiness and cleanup. Independent incubation project readiness preserves explicit verification claims and refuses unvalidated retained workflow Units."
+summary: "Host-authorized integration revalidates policy, readiness and cleanup. A reusable git-operator may execute exact delegated effects while the Host retains decisions; role completion preserves CLI partial effects and never follows exit zero alone."
 area: integration
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
 usecases:
   - UC-drive-development-to-integration
 ---
@@ -14,7 +15,8 @@ usecases:
 
 `devkit_agt.features.integration` prepares an immutable in-process request and executes it through the local or
 pull-request route. The `devkit integration` CLI exposes the operation. Under `ask`, the Host presents the exact
-source, target, report and cleanup effects, receives the user's conversational decision, then invokes the command.
+source, target, report and cleanup effects, receives the user's conversational decision, then invokes the command
+directly or delegates its exact effects to git-operator.
 The CLI revalidates the operation but does not authenticate that conversation. Under `auto`, it derives authority
 from the retained base policy. `ADR-host-cli-lifecycle-authority` supersedes the former lifecycle MCP execution
 interface and `ADR-local-and-pull-request-integration`; the merge construction and route guards below are this
@@ -29,7 +31,7 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
 
 `prepare` validates the committed source, target, project policy, readiness provider and exact cleanup scope. It
 performs no integration mutation. The Host presents its result and obtains the business decision before invoking
-`integrate --expected-digest <digest>` under `ask`, using the `request.digest` from that preparation.
+or delegating `integrate --expected-digest <digest>` under `ask`, using the `request.digest` from that preparation.
 WHEN the owning policy is `ask`, the CLI MUST require the prepared digest and refuse a changed digest with
 `INTEGRATION_REQUEST_STALE` before integration effects. The digest excludes the transient request ID and binds the
 source, target, policy, readiness and cleanup scope. It is a concurrency precondition, not an approval credential.
@@ -78,6 +80,19 @@ checkout, checks the result and fast-forwards the base. It performs no fetch, pu
 - Pull-request execution validates and discloses remote writes through the existing GitHub adapter. It preserves
   repository binding, head pinning, required checks, landing verification and leased branch cleanup.
 - Neither route changes host tool permission, filesystem permission, trust or publication policy.
+
+In `local-orchestrated`, git-operator may prepare and execute the exact currently authorized CLI job
+(`ADR-reusable-lifecycle-resource-manager`, `CAP-DLV-delivery-workflows`). The Host keeps approval, publication
+authority, source preparation, semantic decisions and result acceptance. WHEN execution is delegated, the operator
+MUST revalidate job identity/refs and preserve CLI readiness, digest, route and cleanup checks.
+
+WHEN a delegated CLI result is partial or unknown, git-operator MUST inspect the actual completed effects and exact
+remaining cleanup identity before a supported retry. Its role result carries completed_effects and remaining_effects,
+plus original CLI status, exit code and effects separately. IF requested effects remain after a zero-exit
+`INTEGRATION_CLEANUP_INCOMPLETE`, THEN the role MUST return needs_input or failed rather than completed.
+Normal integration includes cleanup; no redundant cleanup job follows a completed integration. The asset boundary
+is checked by `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py`; real CLI effects are
+checked by `packages/devkit/tests/integration/features/integration/test_cli.py`.
 
 The result binds the repository, source and target SHAs, worktree identity, merge strategy, policy digests, readiness
 provider identity, finish guards and scoped cleanup targets. A changed source, target, policy, provider, readiness

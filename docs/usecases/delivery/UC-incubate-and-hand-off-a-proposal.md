@@ -9,6 +9,7 @@ supporting_actors:
   - scout
   - challenger
   - planning-worker (local-orchestrated mode only)
+  - git-operator (reusable lifecycle executor in local-orchestrated mode)
 status: active
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
@@ -16,6 +17,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
 created_at: 2026-10-13
 capabilities:
   - CAP-DLV-proposal-incubation
@@ -100,8 +102,10 @@ capabilities:
   step 6.
 - **7a.** The Host starts Development from the retained base checkout: under `proposal-handoff=ask` it presents the
   accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
-  only after the user's conversational approval runs `devkit spec proposal handoff <slug> --effort <level>`; under
-  `auto` it runs the same command with `--effort` equal to `dev_effort`. A prerequisite that does not hold refuses
+  only after the user's conversational approval invokes or delegates `devkit spec proposal handoff <slug> --effort <level>`; under
+  `auto` it uses the same command with `--effort` equal to `dev_effort`. In local-orchestrated mode it reuses
+  git-operator with exact job identity/current authority, retains handoff acceptance and returns source link repairs
+  to the implementer (`CAP-DLV-delivery-workflows`). A prerequisite that does not hold refuses
   with its own code before any effect (exit `2`): `SPEC_HANDOFF_NOT_READY` (not accepted, needs decomposition or
   Planning incomplete), `SPEC_HANDOFF_BASE_DIRTY`, `SPEC_HANDOFF_WORKTREE_CONFLICT` or `SPEC_PROPOSAL_WRONG_WORKTREE`
   (off the retained base checkout); a base, plan or policy change since its check is `SPEC_HANDOFF_STALE`. When the new worktree no longer holds the reviewed base
@@ -270,3 +274,17 @@ capabilities:
 - **Given**: a Planning proposal ready for `plan-accept`
 - **When**: the agent or user runs `devkit spec proposal report <slug>`
 - **Then**: the briefing template is rendered for that source SHA without requiring shared artifact publication
+
+### Scenario 19: Local orchestration reuses git-operator for handoff
+- **Covers**: 7a
+- **Given**: an accepted proposal and a git-operator already used for preparation in this conversation/repository
+- **When**: the Host supplies exact current handoff authority, refs and effects
+- **Then**: that identity executes the guarded handoff and reports the observed Unit/worktree and checks, while the
+  Host retains the decision and validates the result
+
+### Scenario 20: Lost operator identity grants no remembered authority
+- **Covers**: 7a
+- **Given**: a later handoff job whose previous git-operator identity is unavailable
+- **When**: the Host starts a fresh operator
+- **Then**: it reconstructs current CLI/Git state and requires current job authority before mutation; missing
+  authority preserves resources and returns needs_input to the Host
