@@ -1,7 +1,7 @@
 # Options for merging a moved target at integration
 
-Planning evidence for `PROP-integration-merge-moved-target`; sources are `envelopes/scout-01.yaml` and
-`envelopes/scout-02.yaml` (paths relative to the repository root at plan base `fdba6646`).
+Planning evidence for `SPEC-integration-merge-moved-target`; sources are historical Git `6ea3d048d8ca95fea51c6b1e9e98e2e1f613f06b:docs/proposals/PROP-integration-merge-moved-target/envelopes/scout-01.yaml` and
+historical Git `6ea3d048d8ca95fea51c6b1e9e98e2e1f613f06b:docs/proposals/PROP-integration-merge-moved-target/envelopes/scout-02.yaml` (paths relative to the repository root at plan base `fdba6646`).
 
 ## Where a moved target is refused today
 

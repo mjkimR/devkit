@@ -47,7 +47,7 @@ target advances the Host declared, without turning them into worker authorship o
   observation), and how does inspection verify it against Git?
 - **Q2 Boundary**: Which changes still stop the worker: unknown or dirty base changes, real conflicts, and anything
   else Planning finds?
-- **Q3 Interaction with light merging**: If `PROP-integration-merge-moved-target` lands, the integrating command
+- **Q3 Interaction with light merging**: If `SPEC-integration-merge-moved-target` lands, the integrating command
   merges a moved target itself. This proposal adds no manual base-merge requirement back.
 
 ## 3. Proposed Design & Impact

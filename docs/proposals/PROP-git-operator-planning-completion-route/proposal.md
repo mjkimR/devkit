@@ -10,7 +10,7 @@ size: M
 planning_effort: medium
 dev_effort: low
 milestone: MS-git-operator-lifecycle-refinement
-depends_on: [PROP-integration-merge-moved-target]
+depends_on: [SPEC-integration-merge-moved-target]
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
@@ -83,7 +83,7 @@ Evidence: `MAT-planning-acceptance-route-comparison` (route comparison and code 
   acceptance write (`plan_finish` and `_Acceptance.preview` run inside `IntegrationService._prepare`), so such a refusal
   leaves nothing written. Checks on the built merge (finish guards, CI rules on the landing tree, receipts) run in
   `_land`, after the acceptance commit; today the landing tree equals the source tree, but with a moved target merged
-  by the command (`PROP-integration-merge-moved-target`) they can newly refuse there. That proposal's settled Q4 runs
+  by the command (`SPEC-integration-merge-moved-target`) they can newly refuse there. That proposal's settled Q4 runs
   the CI rules and the unit-advance check on the prospective merge in the preview, before the acceptance commit, so
   what still refuses after the commit is mainly a target that moves between the preview and landing. A dry run repeats only the first
   preparation, so it would not catch those refusals or a base move between the two preparations. A rerun after a

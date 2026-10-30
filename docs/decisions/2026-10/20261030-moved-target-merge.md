@@ -1,17 +1,17 @@
 ---
-id: PADR-moved-target-merge
+id: ADR-moved-target-merge
 title: Integrating command merges a conflict-free moved target
 summary: For integrating a source that does not contain a moved target, we let the integrating command build and check the merge itself and refuse only on a real conflict or failing readiness, to drop the manual base merge, accepting that only CI rules run on the merged result.
-proposal: PROP-integration-merge-moved-target
-status: draft
+proposal: SPEC-integration-merge-moved-target
+status: accepted
 created_at: 2026-10-30
 supersedes:
   - ADR-local-and-pull-request-integration
 ---
 
-# [PADR-moved-target-merge] Integrating command merges a conflict-free moved target
+# [ADR-moved-target-merge] Integrating command merges a conflict-free moved target
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 This decision supersedes only the containment clauses of `ADR-local-and-pull-request-integration` for the local
@@ -117,7 +117,7 @@ changes before the confirmation.
     before the confirmation instead of after it, and before the acceptance commit in composed acceptance.
 - **Negative / Risks**:
   - A semantic conflict no CI rule catches can land after a conflict-free merge; tests and review ran on the source
-    only, as the disclosure states. `PADR-post-batch-test-run` adds the batch run that surfaces it.
+    only, as the disclosure states. `ADR-post-batch-test-run` adds the batch run that surfaces it.
   - Preparation of a moved target needs Git 2.38 or later (`WORKTREE_GIT_UNSUPPORTED` otherwise) and costs a
     `merge-tree` and CI rules over the result.
   - A provider outside devkit-spec that assumed `result_sha` is `None` at prepare now sees a prospective commit; the

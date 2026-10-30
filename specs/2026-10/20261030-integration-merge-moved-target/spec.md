@@ -1,47 +1,24 @@
 ---
-id: PROP-integration-merge-moved-target
+id: SPEC-integration-merge-moved-target
 title: Integrate a conflict-free moved target without requiring the source to contain it
-summary: "Let local integration and proposal acceptance merge a moved target themselves and refuse only on a real conflict or failing checks, and run the tests once on main after the units of a local-orchestrated run are finished, so lifecycle merging stays light while defects still surface."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/worktree/
-priority: high
-size: L
-planning_effort: high
-dev_effort: medium
-milestone: MS-git-operator-lifecycle-refinement
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/worktree/
-    - packages/devkit/src/devkit_agt/features/integration/
-    - packages/devkit/tests/
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-integrate/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/worktree/
-    - docs/capabilities/integration/
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/usecases/delivery/UC-drive-development-to-integration.md
-    - docs/decisions/2026-10/20261022-local-and-pull-request-integration.md
-    - docs/decisions/2026-10/20261022-test-selection-and-ci.md
-    - docs/development/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/
-    - guides/INSTALL_GUIDE.md
-    - AGENTS.md
-  excludes:
-    - .devkit/managed/
-    - packages/devkit-core/
-task_kind: feature
+summary: Let local integration and proposal acceptance merge a moved target themselves and refuse only on a real conflict or failing checks, and run the tests once on main after the units of a local-orchestrated run are finished, so lifecycle merging stays light while defects still surface.
+status: planned
+created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-integration-merge-moved-target] Integrate a conflict-free moved target without requiring the source to contain it
+# [SPEC-integration-merge-moved-target] Integrate a conflict-free moved target without requiring the source to contain it
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-integration-merge-moved-target on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-integration-merge-moved-target`
+
+### 1. Background & Hypothesis
 
 Local integration requires the source branch to contain the target's HEAD before it merges.
 `CAP-WT-task-worktrees` states the rule and its `WORKTREE_MERGE_NOT_FF` refusal, whose fix merges the base into the
@@ -63,7 +40,7 @@ The hypothesis: the CLI can build the merge of a moved target itself and refuse 
 failing readiness, while one test run on `main` after a local-orchestrated batch catches semantic conflicts that a
 conflict-free merge can still carry.
 
-### Settled direction (user)
+#### Settled direction (user)
 
 - A conflict-free moved target is merged by the integrating command itself; the source need not contain it first.
   Real conflicts and failing readiness still refuse.
@@ -78,7 +55,7 @@ conflict-free merge can still carry.
 - The `spec-integrate` step 1 base merge becomes conditional: the Host merges the base into the task branch only to
   resolve a conflict or a failing check the CLI reports.
 
-### Planning decisions (user)
+#### Planning decisions (user)
 
 - The pull-request route stays out of scope: it keeps refusing a moved target with `WORKTREE_MERGE_NOT_FF`
   (`q-pr-route`).
@@ -92,15 +69,34 @@ conflict-free merge can still carry.
   merged result; the combined head is tested by a later batch run or by nightly CI, which the settled direction
   accepts.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-02.yaml` and
-`materials/options.md`.
+- **US-1**: As a developer/agent, I want to implement Integrate a conflict-free moved target without requiring the source to contain it so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Answers from Planning; evidence in historical Git `6ea3d048d8ca95fea51c6b1e9e98e2e1f613f06b:docs/proposals/PROP-integration-merge-moved-target/envelopes/scout-01.yaml`, historical Git `6ea3d048d8ca95fea51c6b1e9e98e2e1f613f06b:docs/proposals/PROP-integration-merge-moved-target/envelopes/scout-02.yaml` and
+`docs/materials/2026-10/20261030-integration-merge-moved-target/options.md`.
 
 - **Q1 Merge construction**: `build_result(advance=True)` already builds a merge onto an advanced target in the
   object store (`git merge-tree --write-tree`, then `git commit-tree`); only `plan_finish` refuses a target that moved
   before preparation. A real conflict is `WORKTREE_MERGE_CONFLICT` with nothing changed. Preparation builds the
-  prospective merge (`PADR-moved-target-merge`, option B).
+  prospective merge (`ADR-moved-target-merge`, option B).
 - **Q2 Policy values**: yes. `ff-only` lands the source tip itself, so it keeps refusing a moved target with
   `WORKTREE_MERGE_NOT_FF`.
 - **Q3 Pull-request route**: out of scope (user, `q-pr-route`): the platform builds the merge and runs required checks
@@ -114,16 +110,16 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   verification once on the base branch head from the batch start (here `just test-affected --base <batch start>` with
   its `mode=full` fallback, user decision `q-batch-command`); a unit that ends blocked, waits for a user decision or
   continues in `direct` counts as finished (`q-blocked-unit`); reported in the conversation, a failure recorded as
-  feedback (`PADR-post-batch-test-run`).
-- **Q6 Decision record**: `PADR-moved-target-merge` supersedes only the local containment clauses of
+  feedback (`ADR-post-batch-test-run`).
+- **Q6 Decision record**: `ADR-moved-target-merge` supersedes only the local containment clauses of
   `ADR-local-and-pull-request-integration` (already superseded in part by `ADR-host-cli-lifecycle-authority`; its merge
-  and readiness clauses remain in force); `PADR-post-batch-test-run` supersedes only the post-merge clause of
+  and readiness clauses remain in force); `ADR-post-batch-test-run` supersedes only the post-merge clause of
   `ADR-test-selection-and-ci`. Tests: `test_base_advance.py` `test_diverged_branch_is_refused_with_a_sha_preserving_fix`
   flips; the `ff-only`, `finish --merge`, conflict and later-advance tests stay.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### devkit-agt (`worktree`, `integration`)
+#### devkit-agt (`worktree`, `integration`)
 
 - `plan_finish` gains an opt-in keyword (`advance`, default off) that only the local integration service (and through
   it composed acceptance) sets: with it, under `no-ff`, a source that does not contain the target plans a merge build
@@ -149,7 +145,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - The pull-request route does not set `advance`, so it refuses a moved target with `WORKTREE_MERGE_NOT_FF` as today,
   merged-PR cleanup included.
 
-### devkit-spec (`delivery`, bundle)
+#### devkit-spec (`delivery`, bundle)
 
 - Composed acceptance (`accept_only`, `accept_and_handoff`) inherits the preparation change. Its preview receives the
   prospective context and runs the provider's result-dependent checks (CI rules and the unit-advance check) on it, so
@@ -171,7 +167,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   continued in `direct`; `git-operator-operations.md` makes base incorporation conditional.
   `spec/references/completion.md` follows.
 
-### Living Spec and repository policy
+#### Living Spec and repository policy
 
 - `CAP-WT-task-worktrees`, `CAP-INT-mcp-services` (including its changed-target statement and the
   `INTEGRATION_TARGET_MOVED` row, which drop the base merge), `CAP-DLV-delivery-workflows`, `CAP-HARN-agent-guidance`
@@ -181,7 +177,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   follow. The two PADRs become ADRs; `ADR-local-and-pull-request-integration` and `ADR-test-selection-and-ci` get a
   "Superseded in part by" line each.
 
-### Acceptance criteria
+#### Acceptance criteria
 
 - A conflict-free moved target integrates (`devkit integration prepare` then `integrate --route local`) and is accepted
   (`devkit spec proposal accept --mode accept_only`) without a base merge into the task branch; the landed merge's first
@@ -202,7 +198,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - `spec-orchestrate` Completion names the batch test run, including that a unit ending blocked, waiting for a user
   decision or continuing in `direct` counts as finished for it, and `spec-integrate` step 1 is conditional (bundle asset tests).
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: rebase, force operations or automatic conflict resolution.
 - **Scope Excluded**: dropping readiness checks, or bypassing a host refusal at runtime. Changing the containment
@@ -214,7 +210,7 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - **Scope Excluded**: tolerating, under `ask`, a target that moves between the presented prepare and `integrate`
   without a fresh decision; it needs a new preparation, not a base merge.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-integration-merge-moved-target`; the proposal is deleted there and its decisions become ADRs.
@@ -223,3 +219,4 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   `PROP-git-operator-planning-completion-route`.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+
