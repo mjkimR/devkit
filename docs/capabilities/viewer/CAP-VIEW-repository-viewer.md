@@ -17,7 +17,7 @@ The `devkit-viewer` distribution gives people a screen for what agents read thro
 proposals, specs and milestones (`ADR-roadmap-and-milestones`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
 consumes its component library as a vendored tarball (`ADR-viewer`). The server's
-choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`, `ADR-viewer-planning-proposal-overlay` for
+choices are `ADR-viewer` as superseded in part by `ADR-viewer-working-tree`, `ADR-viewer-planning-proposal-overlay` for
 proposals under Planning, and `ADR-handbook-first-book-on-request` with `ADR-handbook-staleness-from-version` for the
 reading tab. Command quick reference:
 [reference](../../development/reference/viewer.md).

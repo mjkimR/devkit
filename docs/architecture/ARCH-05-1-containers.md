@@ -152,7 +152,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Dependencies**: `devkit-agt`, `devkit-core` and `click`. It consumes foundation primitives,
   distribution project support and `devkit.advisory`; it has no dependency on `devkit-docs` or `devkit-spec` code,
   since the page parses the documents itself.
-- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer` as superseded by
+- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer` as superseded in part by
   `ADR-viewer-working-tree`.
 
 ### 2.7 Opt-in and Example Content Packages

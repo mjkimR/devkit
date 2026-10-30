@@ -128,6 +128,21 @@ def test_self_cycle_and_wrong_provenance_shape(tmp_path: Path) -> None:
     assert any("supersedes takes PROP- IDs" in message for message in messages)
 
 
+def test_decision_supersedes_names_an_accepted_adr_without_a_violation(tmp_path: Path) -> None:
+    # SPEC-partial-adr-supersession: on a decision, supersedes is metadata; a partly replaced ADR stays accepted.
+    files = {
+        "docs/decisions/2026-10/20261001-old.md": _doc(
+            "ADR-old", "Superseded in part by `ADR-new`: its storage clause.\n", status="accepted"
+        ),
+        "docs/decisions/2026-10/20261002-new.md": _doc("ADR-new", header="supersedes: [ADR-old]\n", status="accepted"),
+        "docs/proposals/PROP-x/proposal.md": _doc("PROP-x", status="draft"),
+        "docs/proposals/PROP-x/decisions/PADR-next.md": _doc(
+            "PADR-next", header="proposal: PROP-x\nsupersedes: ADR-old\n", status="draft"
+        ),
+    }
+    assert _found(check(RULE, tmp_path, files)) == []
+
+
 _GLOSSARY_HEADER = "| Term | Definition | Owner | Avoid | Code identifiers |\n| :--- | :--- | :--- | :--- | :--- |\n"
 
 

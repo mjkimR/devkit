@@ -3,6 +3,8 @@ id: ADR-drop-the-base-checkout-equality-from-worker-validation
 title: Drop the base-checkout equality from worker validation
 summary: For worker validation, we drop the base-checkout status and HEAD equality and its pre-spawn record and require each turn to add its own worker envelope, so integrations need not wait for a worker, accepting that a partial committed escape can stay hidden.
 proposal: SPEC-worker-audit-known-host-advance
+supersedes:
+  - ADR-orchestration-workers
 status: accepted
 created_at: 2026-10-30
 ---

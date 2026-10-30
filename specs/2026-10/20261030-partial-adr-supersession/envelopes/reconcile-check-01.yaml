@@ -1,0 +1,38 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:45:30.538035Z'
+status: completed
+summary: 'reconcile-reviewer (medium, first check) at 9f6d113c: 17 targets verified against scaffold/handoff, unchanged parse and rule code, ADR-immutable-decisions-editable-records and the ledger; 1 P1 (CAP-INT-mcp-services not a target), 3 P3'
+findings:
+- issue: 'Missing target: CAP-INT-mcp-services still says ADR-host-cli-lifecycle-authority supersedes ADR-local-and-pull-request-integration, written when that ADR was status superseded; reconcile.md misdescribes the capability as citing the ADR as the current merge contract.'
+  evidence: docs/capabilities/integration/CAP-INT-mcp-services.md:21-22; specs/2026-10/20261030-partial-adr-supersession/reconcile.md:75-76
+  failure_condition: A reader of CAP-INT-mcp-services treats the ADR as wholly replaced while the ledger presents it as accepted and in force for merge construction and readiness.
+  suggested_action: Add CAP-INT-mcp-services as a target and reword it as a partial supersession; correct the reconcile claim; coordinate with the moved-target-merge sibling.
+  resolution: open
+  severity: P1
+- issue: ARCH-05-1-containers and CAP-VIEW-repository-viewer describe ADR-viewer as superseded by ADR-viewer-working-tree; the no-impact reason given is write scope, not content.
+  evidence: docs/architecture/ARCH-05-1-containers.md:155-156; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:20
+  failure_condition: A reader applying the whole/partial rule concludes ADR-viewer's distribution, server and proposal-review clauses are no longer in force.
+  suggested_action: Write 'as superseded in part by' in both and add them as targets, or record a content-based reason.
+  resolution: open
+  severity: P3
+- issue: Six superseders with in-part lines carry no supersedes metadata although CAP-DOCS says the later ADR names the earlier one in supersedes; reconcile.md does not disclose it and the adr-compaction closure misses these pairs.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:139-140; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/adr-compaction/SKILL.md:19
+  failure_condition: The compaction closure misses these pairs and a reader takes the ledger as conforming.
+  suggested_action: Add supersedes metadata or record the residue with a destination.
+  resolution: open
+  severity: P3
+- issue: reconcile.md says every in-part line quotes the superseder; two lines are derived from its outcome.
+  evidence: specs/2026-10/20261030-partial-adr-supersession/reconcile.md:66-69
+  failure_condition: An auditor treats derived lines as verbatim superseder text.
+  suggested_action: Reword the criterion as quotes or directly derives.
+  resolution: open
+  severity: P3
+checks:
+  rules_check_ci: PASS devkit rules check --ci --base 257b5d98
+  docs_search: PASS ADR-local-and-pull-request-integration first, accepted
+diff_scope:
+  base: 257b5d98232827c458fc45ed5c7aaf3263fa3eff
+  head: 9f6d113c91cff94522893d269d8fd23ab60aded3

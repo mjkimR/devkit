@@ -9,6 +9,11 @@ supersedes: ADR-subagent-level-projection
 
 # [ADR-five-subagent-levels] Five neutral model presets with a compact scout and native capability fallback
 
+Superseded in part by `ADR-lean-subagent-level`: its closed five-preset registry and compact-only Flash mapping.
+
+Superseded in part by `ADR-reusable-lifecycle-resource-manager`: its scout-only source-preset and
+default-inheritance clause, for the `git-operator` resource manager.
+
 ## 1. Context & Problem Statement
 
 `ADR-subagent-level-projection` defines deterministic distribution-time model policy, inherited defaults and a

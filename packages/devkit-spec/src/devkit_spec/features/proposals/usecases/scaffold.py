@@ -11,7 +11,7 @@ after handoff. ``supersedes`` names the accepted proposal a close by supersede r
 marks a draft Backlog splits before Planning starts. ``namespace`` names the document namespace (``devkit_docs.features.documents.services.namespaces``) the bundle
 belongs to; without it the bundle is global, and handoff carries it to ``spec.md``. ``summary`` is the one or two
 English sentences ``RULE-document-summary`` requires of ``proposal.md``; handoff carries it to ``spec.md``, and a
-PADR's ``summary`` stays in its promoted ADR.
+PADR's ``summary`` stays in its promoted ADR. A PADR offers a commented ``supersedes`` for the ADRs it replaces.
 """
 
 from __future__ import annotations
@@ -482,6 +482,16 @@ class CreatedDecision:
         return {"id": self.id, "path": self.path, "proposal": self.proposal}
 
 
+SUPERSEDES_PLACEHOLDER = (
+    "# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in"
+    " Decision Outcome"
+)
+"""The PADR's commented ``supersedes`` key: handoff keeps the frontmatter, so an uncommented value reaches the ADR, and
+drops this exact line when it is left unchanged. The
+earlier ADR becomes ``superseded`` only when every decision of it is replaced; one replaced in part stays ``accepted``
+with a "Superseded in part by" line (``CAP-DOCS-document-model``)."""
+
+
 def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str) -> str:
     summary_line = (
         f"summary: {scalar(summary)}\n"
@@ -492,6 +502,7 @@ def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str
 id: {padr_id}
 title: {scalar(title)}
 {summary_line}proposal: PROP-{slug}
+{SUPERSEDES_PLACEHOLDER}
 status: draft
 created_at: {created}
 ---

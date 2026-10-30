@@ -3,6 +3,8 @@ id: ADR-scope-snapshot-runs-to-diff-paths-including-deletions
 title: Scope snapshot runs to diff paths including deletions
 summary: For evaluating rules on Git snapshots, we match declared rule inputs against diff paths including deletions in scope_rules, to cut commit gate latency without missing deletion-induced violations, accepting that snapshot runs no longer catch latent violations outside touched paths.
 proposal: SPEC-snapshot-scoped-rules
+supersedes:
+  - ADR-scope-only-explicit-working-tree-targets-in-the-evaluator
 status: accepted
 created_at: 2026-10-22
 ---

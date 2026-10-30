@@ -2,6 +2,8 @@
 id: ADR-viewer-planning-proposal-overlay
 title: Overlay Planning proposals from local plan branches
 summary: "For proposals under Planning, we overlay each PROP-<slug> from its plan-<slug> worktree, local branch or remote-tracking ref after the checkout loads, to show current proposals without switching checkouts, accepting one batched local Git scan per load and stale remote copies until a fetch."
+supersedes:
+  - ADR-viewer-working-tree
 status: accepted
 created_at: 2026-10-26
 ---

@@ -12,6 +12,8 @@ supersedes:
 
 # [ADR-host-cli-lifecycle-authority] Conversational Host authorization for CLI lifecycle execution
 
+Superseded in part by `ADR-reusable-lifecycle-resource-manager`: its Host-only lifecycle invocation clauses.
+
 - **Status**: Accepted
 - **Date**: 2026-10-23
 

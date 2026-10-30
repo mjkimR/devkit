@@ -2,6 +2,8 @@
 id: ADR-milestone-merging
 title: Loosely managed milestone themes and milestone merging
 summary: "For loosely managed milestone themes, we recommend rather than require coarse granularity and let the user merge small milestones of any status into a broader theme that keeps their IDs as aliases, to keep every old ID resolvable, accepting that merged done or dropped files leave the tree."
+supersedes:
+  - ADR-roadmap-and-milestones
 status: accepted
 created_at: 2026-10-22
 ---

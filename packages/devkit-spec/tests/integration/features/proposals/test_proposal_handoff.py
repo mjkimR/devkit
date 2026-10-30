@@ -510,6 +510,39 @@ def test_promoted_adrs_keep_working_links(workspace: Path, write: Write) -> None
     assert result.unresolved == []
 
 
+def test_a_padr_supersedes_reaches_the_adr_and_leaves_the_named_adr_alone(workspace: Path, write: Write) -> None:
+    # SPEC-partial-adr-supersession: handoff carries supersedes; a partly replaced ADR keeps its status and text.
+    old = "docs/decisions/2026-09/20260901-old.md"
+    old_text = "---\nid: ADR-old\nstatus: accepted\ncreated_at: 2026-09-01\n---\n\n# [ADR-old] Old\n"
+    write(old, old_text)
+    proposal = _new(workspace, "partial")
+    CreateProposalDecisionUseCase().execute(workspace, "partial", "Pick A")
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    scaffolded = padr.read_text(encoding="utf-8")
+    placeholder = next(line for line in scaffolded.splitlines() if line.startswith("# supersedes:"))
+    padr.write_text(scaffolded.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
+    accept(proposal)
+
+    handoff_proposal(workspace, "partial", today=TODAY)
+
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
+    meta = parse(adr).data
+    assert meta is not None and meta["supersedes"] == ["ADR-old"]
+    assert (workspace / old).read_text(encoding="utf-8") == old_text
+
+
+def test_an_unused_supersedes_placeholder_does_not_reach_the_adr(workspace: Path) -> None:
+    proposal = _new(workspace, "plain")
+    CreateProposalDecisionUseCase().execute(workspace, "plain", "Pick A")
+    assert "# supersedes:" in (proposal.parent / "decisions/PADR-pick-a.md").read_text(encoding="utf-8")
+    accept(proposal)
+
+    handoff_proposal(workspace, "plain", today=TODAY)
+
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
+    assert "supersedes" not in adr and "proposal: SPEC-plain\nstatus: accepted\n" in adr
+
+
 def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
     proposal = _new(workspace, "span-paths")
     CreateProposalDecisionUseCase().execute(workspace, "span-paths", "Pick A")

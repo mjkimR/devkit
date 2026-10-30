@@ -1,0 +1,26 @@
+kind: worker
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:47:54.147913Z'
+status: failed
+summary: 'Specified, built and reviewed SPEC-partial-adr-supersession: the whole/partial supersession rule in CAP-DOCS-document-model, decision-writing, the decision template and the decisions READMEs; a commented supersedes in the PADR scaffold and decision template, carried by handoff (unchanged placeholder dropped); ledger corrected (4 ADRs back to accepted, superseded_by dropped from ADR-worktrees-branches-and-scope, in-part lines added or normalized in 15 ADRs, supersedes metadata on 10 superseders; 5 stay superseded); FB-partial-supersession-hides-in-force-clauses resolved. review-01 (1 P2, 4 P3) fixed and reverified. Stopped at living-spec-draft: reconcile.md stays pending on Living Spec targets outside the write scope. Sync outputs: .devkit/installation.json only.'
+findings: []
+assumptions:
+- 'No new ADR: the rule is the Decision changes outcome of ADR-immutable-decisions-editable-records; naming a partly replaced ADR in supersedes is metadata it does not forbid'
+- 'Extensions beyond the listed scope, all inside the write scope: docs/decisions/README.md wording, the adr-compaction playbook, handoff.py (review-01 P2), the document_reference rule test, supersedes metadata on 10 superseders'
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 2081 passed (mode=partial)
+  lint: PASS just lint-check devkit-spec|devkit-docs; just check devkit-spec|devkit-docs 0 errors
+  rules: PASS devkit rules check --ci --base 257b5d98
+  search: 'PASS devkit docs search ''Local and Pull Request Integration'' lists ADR-local-and-pull-request-integration first (baseline at 257b5d98: absent); superseded decisions 9 -> 5'
+diff_scope:
+  base: ''
+  head: 07567bba3a0f2f227e9707e41051c3fabcc9584a
+problem:
+  cause: 'reconcile-check-01 P1: CAP-INT-mcp-services (docs/capabilities/integration/, outside the write scope) still says ADR-host-cli-lifecycle-authority supersedes ADR-local-and-pull-request-integration, which now contradicts the accepted ADR and the new rule; ARCH-05-1-containers and CAP-VIEW-repository-viewer (P3) say ADR-viewer is superseded by ADR-viewer-working-tree. A required mismatch cannot be waived, so reconcile.md cannot be resolved inside the write scope.'
+  attempts:
+  - 'Fixed every in-scope finding of review-01 and reconcile-check-01; recorded the out-of-scope statements with proposed text in reconcile.md (Open: outside the write scope) and as open findings of reconcile-check-02'
+  recovery: Host extends the write scope to docs/capabilities/integration/CAP-INT-mcp-services.md (and optionally docs/capabilities/viewer/CAP-VIEW-repository-viewer.md, docs/architecture/ARCH-05-1-containers.md), applies the proposed wording (coordinating with the moved-target-merge sibling on the same CAP-INT paragraph), adds them as reconcile targets, sets reconcile.md resolved, runs devkit rules fix on spec.md, records a reconcile-check and a resolution naming this worker envelope, then continues with collect-feedback and the final change report.
+activity_effort: medium

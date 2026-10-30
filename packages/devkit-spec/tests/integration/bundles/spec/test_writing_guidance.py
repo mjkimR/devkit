@@ -49,6 +49,17 @@ def test_the_decision_template_and_guide_carry_the_y_statement_and_confirmation(
     assert "Y-statement" in guide and "**Confirmation**" in guide
 
 
+def test_the_decision_guide_and_template_keep_a_partly_replaced_adr_accepted() -> None:
+    guide = raw("instructions/decision-writing.md")
+    assert_rule(guide, "`status: superseded`", "`superseded_by`", "only when", "replaces all")
+    assert_rule(guide, "stays `accepted`", "without `superseded_by`", "superseded in part by `adr-<new>`")
+    assert_rule(guide, "names it in `supersedes`", "which clauses it")
+    template = raw("templates/decision.md")
+    assert_rule(template, "superseded (only when a later adr replaces all")
+    assert_rule(template, "# supersedes: [adr-<slug>]", "wholly or in part", "replaced clauses in decision outcome")
+    assert_rule(template, "stay accepted", "superseded in part by `adr-<new>`")
+
+
 def test_the_capability_guide_gives_every_ears_template_and_the_template_points_to_it() -> None:
     guide = text("instructions/capability-writing.md")
     for clause in (

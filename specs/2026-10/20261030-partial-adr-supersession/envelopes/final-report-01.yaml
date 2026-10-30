@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:51:28.991577Z'
+status: completed
+summary: 'Partial ADR supersession: whole vs partial rule stated in CAP-DOCS-document-model, decision-writing, the decision template and the decisions READMEs; PADR scaffold and decision template offer supersedes, handoff carries it and drops the unused placeholder; ledger corrected (4 ADRs back to accepted, in-part lines and supersedes metadata made consistent; 5 stay superseded); CAP-INT-mcp-services, ARCH-05-1-containers and CAP-VIEW-repository-viewer name the partial replacements. Main merged once at 450dbfb9. Remaining limit: no rule enforces ledger consistency (FB-decision-supersession-consistency-unchecked).'
+findings: []
+assumptions:
+- 'No new ADR: the rule is the Decision changes outcome of ADR-immutable-decisions-editable-records'
+checks:
+  tests: PASS just test-affected 2099 passed (mode=partial, merged content)
+  build: PASS just check devkit-spec|devkit-docs 0 errors; devkit sync --check OK
+  lint: PASS just lint-check devkit-spec|devkit-docs; devkit rules check --ci --base main clean
+diff_scope:
+  base: 257b5d98232827c458fc45ed5c7aaf3263fa3eff
+  head: a19bb0448482ba28f2d0da5aef758cf1c47ebd57

@@ -1,0 +1,44 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:36:25.616519Z'
+status: completed
+summary: 'code-reviewer (medium, round 1) on 257b5d98..bcddc869: AC-01..AC-03 met; AC-04 met for the 13 touched ADRs and the 5 left superseded; 1 P2 and 4 P3 findings'
+findings:
+- issue: Handoff copies the PADR's unused commented supersedes placeholder verbatim into every promoted ADR, so template text accumulates in the ledger.
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py:504; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:666
+  failure_condition: A PADR that replaces no ADR is handed off with the scaffolded line still commented; the promoted ADR keeps the placeholder comment in its frontmatter.
+  suggested_action: Have handoff drop the exact unchanged placeholder line when it promotes a PADR and assert it in the handoff test.
+  resolution: open
+  severity: P2
+- issue: ADR-scope-only-explicit-working-tree-targets-in-the-evaluator is partly superseded by ADR-scope-snapshot-runs-to-diff-paths-including-deletions but has no pointer.
+  evidence: docs/decisions/2026-10/20261022-scope-snapshot-runs-to-diff-paths-including-deletions.md:59; docs/decisions/2026-10/20261022-scope-only-explicit-working-tree-targets-in-the-evaluator.md:49
+  failure_condition: A reader of the earlier ADR takes unscoped snapshot runs as in force.
+  suggested_action: Add a Superseded in part by line in the superseder's words, or list it in reconcile.md as deferred.
+  resolution: open
+  severity: P3
+- issue: ADR-orchestration-workers keeps the old wording of its ADR-drop-the-base-checkout-equality-from-worker-validation pointer, against spec Assumption 2; plan section 4 omits that superseder.
+  evidence: docs/decisions/2026-10/20261022-orchestration-workers.md:190
+  failure_condition: A reader looking for the Superseded in part by form in that ADR misses the third pointer.
+  suggested_action: Normalize line 190 and add the superseder to the plan row and reconcile.md.
+  resolution: open
+  severity: P3
+- issue: The in-part line on ADR-extend-incubation-with-optional-discovery-teams names only the placement of the research entry and roles; the superseder also renames the entry, drops its approach gate and incubation context use, and adds research-investigator.
+  evidence: docs/decisions/2026-10/20261029-extend-incubation-with-optional-discovery-teams.md:13; docs/decisions/2026-10/20261030-split-deep-research-bundle.md:61
+  failure_condition: A reader concludes the research entry's shared approach check still applies.
+  suggested_action: Widen the clause list in the superseder's own terms.
+  resolution: open
+  severity: P3
+- issue: The decision template states the whole and in-part rules but not the superseder side (name the earlier ADR in supersedes and the replaced clauses).
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md:5
+  failure_condition: A writer starting a replacing ADR from the template gets no prompt to add supersedes or name the replaced clauses.
+  suggested_action: Add an optional commented supersedes key and assert it in the guidance test.
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check --ci --base 257b5d98 (reviewer rerun)
+  tests: 'PASS implementer: bundles/spec 700, bundles/docs 198, features/proposals 379, test-affected 2080'
+diff_scope:
+  base: 257b5d98232827c458fc45ed5c7aaf3263fa3eff
+  head: bcddc869a2de80fec588038a7ce5b25a8f6a69da

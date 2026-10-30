@@ -14,6 +14,8 @@ aliases:
 
 # [ADR-package-split-and-namespaces] Package split between devkit-dist and devkit-agt, and independent package namespaces
 
+Superseded in part by `ADR-single-release-version`: its independent-version clause.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: @minjae

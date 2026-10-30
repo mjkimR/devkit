@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:47:28.873852Z'
+status: completed
+summary: 'Implementer self-verification (medium) at 5b3daeb0 after reconcile-check-01: P3 supersedes metadata and P3 criterion wording fixed (10 superseders list their earlier ADRs, two pointers normalized, reconcile and spec claims about CAP-INT-mcp-services corrected); the P1 (CAP-INT-mcp-services) and the P3 viewer wording stay open because their documents are outside the write scope; reconcile.md stays pending'
+findings:
+- issue: CAP-INT-mcp-services says ADR-host-cli-lifecycle-authority supersedes ADR-local-and-pull-request-integration, which reads as a whole replacement now that the ADR is accepted again; the document is outside this worker's write scope.
+  evidence: 'docs/capabilities/integration/CAP-INT-mcp-services.md:21-22; specs/2026-10/20261030-partial-adr-supersession/reconcile.md (Open: outside the write scope)'
+  failure_condition: A reader of CAP-INT-mcp-services treats ADR-local-and-pull-request-integration as wholly replaced.
+  suggested_action: Host edits the sentence as proposed in reconcile.md (coordinate with the moved-target-merge sibling), adds it as a target and resolves reconcile.md.
+  resolution: open
+  severity: P1
+- issue: ARCH-05-1-containers and CAP-VIEW-repository-viewer describe ADR-viewer as superseded by ADR-viewer-working-tree; outside the write scope.
+  evidence: docs/architecture/ARCH-05-1-containers.md:155-156; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:20
+  failure_condition: A reader concludes ADR-viewer's distribution, server and proposal-review clauses are no longer in force.
+  suggested_action: Host writes 'as superseded in part by' in both and adds them as targets.
+  resolution: open
+  severity: P3
+checks:
+  rules_check_ci: PASS devkit rules check --ci --base 257b5d98
+  tests: PASS just test-affected 2081 passed
+diff_scope:
+  base: 257b5d98232827c458fc45ed5c7aaf3263fa3eff
+  head: 5b3daeb0a26bc617af6280b8029d608f33f81912

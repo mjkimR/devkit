@@ -10,7 +10,8 @@ path it would create), then:
    gets ``spec.md`` only, with the proposal's target area and boundaries in its carried notes;
 2. copies ``target-docs.md`` into the spec bundle;
 3. promotes each ``decisions/PADR-<slug>.md`` to ``docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`` as an accepted
-   ``ADR-<slug>`` (its frontmatter, ``summary`` included, is kept);
+   ``ADR-<slug>`` (its frontmatter, ``summary`` included, is kept, except the scaffold's unchanged commented
+   ``supersedes`` line);
 4. moves open proposal ``feedback/*.md`` into the spec feedback directory; settled feedback follows generic extras.
    Moves ``materials/`` to ``docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/`` when it holds a file other than
    operating-system junk (``JUNK_FILES``), together with every other file of the bundle that steps 1 to 3 do not
@@ -119,6 +120,7 @@ from devkit_spec.features.proposals.usecases.scaffold import (
     DECISIONS,
     MATERIALS,
     PROPOSAL_FILE,
+    SUPERSEDES_PLACEHOLDER,
     TARGET_DOCS,
     bundle_dir,
     check_spec_conflict,
@@ -664,7 +666,7 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
     planned = []
     for padr, adr_slug, original, rel, padr_id in sources:
         promoted = _PADR.sub(promote_id, original)
-        promoted = _accept_status(promoted)
+        promoted = _drop_supersedes_placeholder(_accept_status(promoted))
         try:
             new = parse_document(rel, promoted)
         except FrontmatterError as exc:
@@ -681,6 +683,17 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
             )
         )
     return planned
+
+
+def _drop_supersedes_placeholder(text: str) -> str:
+    """``text`` without the scaffold's unchanged commented ``supersedes`` line in its frontmatter: a PADR that replaces no
+    ADR leaves no template residue in the ledger. An edited or uncommented line stays."""
+    block = locate(text)
+    if block is None:
+        return text
+    end = block.end
+    head = re.sub(rf"^{re.escape(SUPERSEDES_PLACEHOLDER)}[ \t]*\r?\n", "", text[:end], count=1, flags=re.MULTILINE)
+    return head + text[end:]
 
 
 def _accept_status(text: str) -> str:

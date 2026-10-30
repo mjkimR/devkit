@@ -71,7 +71,7 @@ We adopt **Option 1**.
   the considered options. A contradiction or a statement that no longer matches the code or the Living Spec is not
   resolved by compaction; it goes to feedback or a proposal. A group is closed under supersession. A compaction runs
   when the user explicitly invokes the `adr-compaction` playbook, which authorizes its deletions, at `session` depth.
-  (Partly replaced by `ADR-spec-intake-playbook-discovery`: confirming a discovered candidate is that invocation.)
+  Superseded in part by `ADR-spec-intake-playbook-discovery`: confirming a discovered candidate is that invocation.
 - **References in decision records**: `RULE-document-reference` reports an alias reference in an ADR or PADR like one
   in any current document, and `devkit rules fix` rewrites it to the canonical ID. This replaces the decision-record
   exemption of `ADR-document-id-aliases` (its "References" outcome). Historical files (completed spec bundles, done or

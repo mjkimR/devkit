@@ -9,6 +9,9 @@ created_at: 2026-10-22
 
 # [ADR-scope-only-explicit-working-tree-targets-in-the-evaluator] Scope only explicit working-tree targets in the evaluator
 
+Superseded in part by `ADR-scope-snapshot-runs-to-diff-paths-including-deletions`: its follow-up section and the
+clause that every snapshot run evaluates every active rule.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 

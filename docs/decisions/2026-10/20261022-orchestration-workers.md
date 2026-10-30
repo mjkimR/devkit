@@ -17,6 +17,8 @@ aliases:
 
 # [ADR-orchestration-workers] Orchestration workers deliver committed, recorded and inspectable runs
 
+Superseded in part by `ADR-reusable-lifecycle-resource-manager`: its Host-only lifecycle invocation clauses.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: @mjkimR
@@ -185,7 +187,8 @@ Further gaps followed on the same runs:
 
 ### Committed results and their validation
 
-`ADR-drop-the-base-checkout-equality-from-worker-validation` supersedes the base-checkout clauses below and in the Decision Outcome's Range inspection; the rest stays in force.
+Superseded in part by `ADR-drop-the-base-checkout-equality-from-worker-validation`: the base-checkout clauses below
+and in the Decision Outcome's Range inspection; the rest stays in force.
 
 - The `worker` role's Git actions are `[read, commit]`: stage write-scope paths, commit on its unit branch through the
   commit gate, leave the worktree clean. It never pushes, merges, rebases, resets, amends, stashes or checks out;
@@ -304,8 +307,9 @@ Further gaps followed on the same runs:
 
 ### Role reasoning effort presets
 
-This decision alone is superseded by `ADR-subagent-level-projection`; the other decisions in this consolidated
-ADR remain in force. The preset-specific consequences and confirmation below are historical for this decision.
+Superseded in part by `ADR-subagent-level-projection`: this decision alone; the other decisions in this
+consolidated ADR remain in force. The preset-specific consequences and confirmation below are historical for this
+decision.
 
 - Reviewer presets: `scout` and `reconcile-reviewer` `medium`; `code-reviewer` and `challenger` `high`. The
   `claude-code` block sets `effort` and the `codex` block sets `model_reasoning_effort` to the role's value; a `codex`

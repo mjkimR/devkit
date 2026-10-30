@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:50:16.269976Z'
+status: completed
+summary: Host extended the write scope to the supersession sentences of CAP-INT-mcp-services, ARCH-05-1-containers and CAP-VIEW-repository-viewer; the worker applied the proposed partial-supersession wording, added the three targets and set reconcile.md resolved, after merging main once
+findings: []
+checks: {}
+resolves: worker-01.yaml
