@@ -55,7 +55,8 @@ and passes. A partial committed escape (some worker commits on the base branch) 
 
 Chosen: drop the equality and its pre-spawn record and require the turn's own envelope, because the remaining
 checks name every escape except a partial committed one, and each mechanism that also names that case adds recurring
-Host or user work. The partial committed escape is an accepted exception to the first driver.
+Host or user work. The user chose this option and accepted the partial committed escape as an exception to the
+first driver.
 
 - The Host no longer records the base checkout before spawning and no longer requires its status or HEAD unchanged
   at validation.
@@ -76,7 +77,8 @@ Host or user work. The partial committed escape is an accepted exception to the 
   named by no check. If its content passes CI, nobody reviews or attributes it, so it stays hidden. It needs several
   commands of one turn to miss the worktree cwd; none has been observed.
 - Follow-up trigger: if such an escape is observed, add a commit-gate check that refuses a commit in the base checkout
-  touching a path an active task worktree's unit owns (`CAP-COLL-work-scope-registry`), or revisit the overlap warning.
+  touching a path an active task worktree's unit owns (`CAP-COLL-work-scope-registry`). No follow-up is filed before
+  that observation.
 
 ## 6. Confirmation
 

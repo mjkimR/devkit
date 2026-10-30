@@ -40,8 +40,8 @@ to `main` while a Development worker ran; the Host validated the range with `dev
 <accepted>` without issue.
 
 The hypothesis: the worker's own range audit, one explicit envelope condition and the existing dirty-base refusals
-name every worker escape except a partial committed one, so the equality can go without a replacement mechanism if
-the user accepts that residual.
+name every worker escape except a partial committed one, so the equality can go without a replacement mechanism. The
+user accepted that residual (`answer-01`).
 
 ## 2. Technical Spike Questions
 
@@ -59,17 +59,18 @@ the user accepts that residual.
   - An uncommitted write in the base checkout: handoff refuses (`SPEC_HANDOFF_BASE_DIRTY`) and integration refuses
     (`WORKTREE_BASE_DIRTY`).
   - A partial committed escape (some worker commits on the base branch, the rest on its branch): no check names it,
-    with or without `PROP-integration-merge-moved-target`, because today's `WORKTREE_MERGE_NOT_FF` fix merges the base
-    without naming any commit. If its content passes CI, it stays hidden: nobody reviews or attributes it. This is an
-    exception to "a defect must not stay hidden" that the user accepts or rejects with option A. It needs several
-    commands in one turn to miss the worktree cwd; none has been observed.
+    with or without `PROP-integration-merge-moved-target`. Today's `WORKTREE_MERGE_NOT_FF` fix merges the base without
+    naming any commit, and after the sibling the integrating command merges a conflict-free moved target the same way.
+    If its content passes CI, it stays hidden: nobody reviews or attributes it. The user accepted it as an exception to
+    "a defect must not stay hidden". It needs several commands in one turn to miss the worktree cwd; none has been
+    observed.
 - **Q3 Interaction with light merging**: no base merge is required before validation or acceptance; nothing in this
   proposal reads the base checkout's HEAD.
 
 ## 3. Proposed Design & Impact
 
-`PADR-drop-the-base-checkout-equality-from-worker-validation` records the decision; the user's choice among the
-options is pending (`MAT-base-observation-options`).
+`PADR-drop-the-base-checkout-equality-from-worker-validation` records the decision: the user chose dropping the
+equality (option A in `MAT-base-observation-options`).
 
 - **Host procedure** (`spec-delegate/references/worker.md`, `payload.md`): drop the pre-spawn record of the base
   checkout's status and HEAD and the requirement that both match. Add the condition that `<returned>` adds this
@@ -85,10 +86,9 @@ options is pending (`MAT-base-observation-options`).
 - **Unchanged**: the worker audit range `<accepted>..<returned>`, its checks and exit codes; Host and foreign commits
   never enter `changed_paths`; integration's dirty-base refusal; completed specs and earlier materials that restate
   the equality stay as history.
-- **Alternative held for the user**: the derived scope-overlap warning (option C in `MAT-base-observation-options`)
-  names base commits and dirty paths that touch the worker's write scope. Two review rounds found that every window
-  variant either drops an escape (committer times do not follow ancestry here) or credits it to a Host merge, unless
-  it adds recurring accounting or user confirmation.
+- **Follow-up trigger**: if a partial committed escape is ever observed, the follow-up is a commit-gate check that
+  refuses a base-checkout commit touching a path an active task worktree's unit owns. No follow-up draft is filed
+  before that.
 
 ### Acceptance
 
@@ -112,10 +112,10 @@ options is pending (`MAT-base-observation-options`).
 
 - Planning compared dropping the equality (A), a declared-Host-advance list (B) and a derived scope-overlap warning
   (C) (`MAT-base-observation-options`). It first recommended C; `challenger-01` and `challenger-02` showed that C's
-  window either loses escapes or needs per-entry accounting, so Planning now recommends A. The user's choice is
-  pending.
-- GOP-08 is restated, pending the same choice: the parent's "unknown or dirty target changes stop" would stop on every
-  foreign commit; under A a dirty base and real conflicts stop at their existing refusals instead.
+  window either loses escapes or needs per-entry accounting, so Planning recommended A. The user chose A, accepted
+  the partial committed escape as a stated exception and filed no follow-up draft (`answer-01`).
+- GOP-08 is restated under A: the parent's "unknown or dirty target changes stop" would stop on every foreign commit;
+  a dirty base and real conflicts stop at their existing refusals instead.
 - The earlier scope-overlap-warning PADR was withdrawn with the switch to A and replaced by
   `PADR-drop-the-base-checkout-equality-from-worker-validation`.
 - The new ADR names the superseded clauses in its text and `ADR-orchestration-workers` gets a pointer line; it carries

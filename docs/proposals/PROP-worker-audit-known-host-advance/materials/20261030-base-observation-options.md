@@ -78,9 +78,10 @@ C first used a first-parent window with a committer-time filter, then a non-merg
 - Narrowing the overlap to the unit directory removes the noise but names little for Development: the spec directory
   does not exist in the base checkout, so a Development escape lands on code paths.
 
-Planning therefore recommends A and keeps C as the alternative for the user. A preventive follow-up, if an escape is
-ever observed, is a commit-gate check refusing a base-checkout commit that touches a path an active task worktree's
-unit owns (`CAP-COLL-work-scope-registry`).
+Planning therefore recommended A and kept C as the alternative for the user. The user chose A and filed no
+follow-up (`envelopes/answer-01.yaml`). A preventive follow-up, if an escape is ever observed, is a commit-gate check
+refusing a base-checkout commit that touches a path an active task worktree's unit owns
+(`CAP-COLL-work-scope-registry`).
 
 ## Change inventory (option A)
 
