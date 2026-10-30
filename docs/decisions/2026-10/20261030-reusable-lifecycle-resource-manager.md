@@ -1,9 +1,9 @@
 ---
-id: PADR-reusable-lifecycle-resource-manager
+id: ADR-reusable-lifecycle-resource-manager
 title: Reusable git-operator lifecycle execution with lean
 summary: "For local orchestration, we reuse git-operator with the user-selected lean preset, to reduce Host operational context while preserving decisions, accepting untested Terra execution and unproven total-cost benefits."
-proposal: PROP-local-orch-resource-manager
-status: draft
+proposal: SPEC-local-orch-resource-manager
+status: accepted
 created_at: 2026-10-29
 supersedes:
   - ADR-host-cli-lifecycle-authority
@@ -11,9 +11,9 @@ supersedes:
   - ADR-five-subagent-levels
 ---
 
-# [PADR-reusable-lifecycle-resource-manager] Reusable git-operator lifecycle execution with lean
+# [ADR-reusable-lifecycle-resource-manager] Reusable git-operator lifecycle execution with lean
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-29
 
 ## 1. Context & Problem Statement

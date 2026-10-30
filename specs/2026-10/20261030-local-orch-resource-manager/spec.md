@@ -1,34 +1,24 @@
 ---
-id: PROP-local-orch-resource-manager
+id: SPEC-local-orch-resource-manager
 title: Reusable git-operator subagent for local orchestration
-summary: "Delegates lifecycle operations to one reusable git-operator per Host conversation and repository to reduce main-agent intervention and context load. Uses the user-selected lean preset without transferring prior Sol evidence to Terra."
-status: accepted
-created_at: 2026-10-29
-target_area: delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - docs/capabilities/delivery/
-    - docs/capabilities/integration/
-    - docs/usecases/delivery/
-    - docs/architecture/ARCH-04-1-ecosystem-boundaries.md
-    - docs/steering/glossary.md
-    - docs/decisions/
-  excludes:
-    - packages/devkit/src/devkit_agt/features/
-    - packages/devkit-dist/src/
-task_kind: feature
-workflow: sdd-proposal
+summary: Delegates lifecycle operations to one reusable git-operator per Host conversation and repository to reduce main-agent intervention and context load. Uses the user-selected lean preset without transferring prior Sol evidence to Terra.
+status: planned
+created: 2026-10-30
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-local-orch-resource-manager] Reusable git-operator subagent for local orchestration
+# [SPEC-local-orch-resource-manager] Reusable git-operator subagent for local orchestration
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-local-orch-resource-manager on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-local-orch-resource-manager`
+- Target Docs Blueprint: `PROP-local-orch-resource-manager-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Local orchestration delegates Planning and Development turns but leaves worktree preparation, handoff, integration
 execution and cleanup in the Host. Their operating references and intermediate output compete with discussion
@@ -39,7 +29,26 @@ and reuse it for later jobs. Use native subagent execution/continuation, without
 The intended benefit is less Host operational context and intervention across multiple units. Total-cost and
 conversation-latency improvements remain unmeasured.
 
-## 2. Planning Findings
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Reusable git-operator subagent for local orchestration so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Findings
 
 `MAT-resource-manager-planning-evidence` preserves the method, inputs, returned JSON and limits.
 
@@ -59,7 +68,7 @@ conversation-latency improvements remain unmeasured.
   and follow-up were exercised; Claude and Antigravity live execution was not.
 
 The user selected the role name `git-operator` and default `level: lean`, replacing the earlier provisional
-standard recommendation in `PADR-reusable-lifecycle-resource-manager`. Existing project overrides remain available.
+standard recommendation in `ADR-reusable-lifecycle-resource-manager`. Existing project overrides remain available.
 `ADR-lean-subagent-level` already defines lean: Claude Code Sonnet with medium effort, Codex `gpt-6.1-terra` with
 medium effort, and Antigravity Flash with effort omitted because its supported per-role schema cannot express it.
 Lean makes no Flash high-effort guarantee and adds no prompt-based effort emulation.
@@ -68,9 +77,9 @@ The prior probe compared requested Luna and Sol configurations; it did not test 
 historical evidence, not validation of the selected model. The choice is explicit user direction, not a measured
 Terra reliability or cost conclusion. No model router, fallback controller or distribution engine change is needed.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Delegated execution
+#### Delegated execution
 
 - Add a `git-operator` role with `level: lean` as the normal helper for recurring `local-orchestrated` lifecycle jobs.
   Preserve one-shot Planning/Development workers.
@@ -84,7 +93,7 @@ Terra reliability or cost conclusion. No model router, fallback controller or di
   It quiesces writers before cleanup. The manager serializes conflicting jobs within the conversation, without
   claiming repository-wide mutual exclusion.
 
-### Job and result boundary
+#### Job and result boundary
 
 Each job supplies operation, repository/base/worktree identity, Unit/branch, current relevant refs and exact
 Host-carried authority for its effects. Include the prepared digest where required and separate publication
@@ -98,13 +107,13 @@ separately from the role status. Use completed only after all requested effects 
 needs_input means the remainder requires Host decision/action; failed means an execution failure. A zero-exit
 partial cleanup is never completed until its requested cleanup effects are verified complete.
 
-Update affected Host-only invocation clauses through `PADR-reusable-lifecycle-resource-manager`; retain unrelated
+Update affected Host-only invocation clauses through `ADR-reusable-lifecycle-resource-manager`; retain unrelated
 authority and worker decisions in `ADR-host-cli-lifecycle-authority` and `ADR-orchestration-workers`. Also supersede
 the scout-only source-preset/default-inheritance clause of `ADR-five-subagent-levels` for this role, preserving
 preset mappings and unrelated distribution policy. Caller
 guidance keeps approval/coordination boundaries while operation-specific references move to the role.
 
-### Acceptance evidence
+#### Acceptance evidence
 
 - **AC1 — Reuse:** Sequential jobs in one conversation/repository reuse the same manager identity; a missing
   identity rebuilds current state without reusing prior effect authority.
@@ -118,13 +127,13 @@ guidance keeps approval/coordination boundaries while operation-specific referen
 - **AC5 — Evidence:** Check role/projection contracts and repeated jobs; record exercised hosts and missing
   metrics; distinguish replay from mutation evidence. Compare Host burden at the same head with the role disabled.
 
-### Non-goals
+#### Non-goals
 
 **Scope Excluded:** A persistent service, custom async scheduler, durable approval/recovery store, global lock
 service, general Git repair agent, arbitrary branch deletion, production-source fixes and lifecycle CLI engine
 changes. A concrete missing CLI boundary discovered later is a scope problem, not permission to bypass a guard.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning recommends adoption with `dev_effort: medium`. The role contract, ownership boundary and selected
 model default are ready for `plan-accept`; acceptance and Development handoff remain Host/user decisions.
@@ -134,3 +143,4 @@ Validate the selected lean configuration during Development without rerunning th
 this Planning revision. Terra medium execution, total cost and latency remain unmeasured; Sol evidence does not
 transfer to Terra. No total-cost, mutation-reliability or latency superiority is claimed.
 On acceptance, hand off to one feature spec; on rejection, retain the draft until normal hygiene retires it.
+

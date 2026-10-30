@@ -3,7 +3,7 @@ id: PROP-local-orch-resource-manager-target
 title: Target Living Spec for reusable git-operator
 summary: "Maps git-operator delegation, execution authority and the user-selected lean preset to the existing Host and CLI contracts, preserving the limits of prior Luna/Sol evidence."
 status: draft
-proposal: PROP-local-orch-resource-manager
+proposal: SPEC-local-orch-resource-manager
 created_at: 2026-10-29
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
