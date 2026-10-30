@@ -32,15 +32,15 @@ committed to `main` while a Development worker ran, and `devkit spec worker insp
 | Escape | Today | After the sibling lands |
 | --- | --- | --- |
 | Uncommitted file in the base checkout | Host comparison; integration refuses a dirty base (`WORKTREE_BASE_DIRTY`) | Unchanged: integration still refuses a dirty base |
-| Commit on the base branch | Host comparison; integration refuses with `WORKTREE_MERGE_NOT_FF` until the Host merges the base | The integrating command merges a conflict-free advance itself; nothing audits it |
+| Commit on the base branch | Host comparison; integration refuses with `WORKTREE_MERGE_NOT_FF` until the Host merges the base; a full escape also fails inspection's head or ancestry | A full escape still fails head or ancestry; a partial escape is merged without audit |
 
-A committed escape is the case that would stay hidden; a dirty escape always surfaces at integration.
+A partial committed escape is the case that would stay hidden; a dirty escape always surfaces at integration.
 
 ## Options
 
 | Option | Detects a committed escape | Foreign-session advance (2026-10-30) | Host ceremony | Contract and code cost |
 | --- | --- | --- | --- | --- |
-| A: drop the HEAD equality and the pre-spawn record; audit only `<accepted>..<returned>`, the worktree and the base's dirty paths | No; after the sibling it lands unaudited | Passes | None | Documents and two tests; no code |
+| A: drop the HEAD equality and the pre-spawn record; audit only `<accepted>..<returned>` and the worktree | A full escape fails head or ancestry; a partial escape lands unreviewed after the sibling (CI still runs) | Passes | None | Documents and two tests; no code |
 | B: the Host declares its own advances; inspect requires the base to move from the recorded pre-spawn HEAD only through declared commits | Yes | Stops validation, because the commit is undeclared | A durable pre-spawn record plus a declaration per Host integration | New record or flags, walk, codes, documents, tests |
 | C: derived scope-overlap warning; inspect lists base commits made after the audit base that touch the worker's write scope, and in-scope base dirty paths, as a `WARNING` | Yes, when the escape touches the write scope | Passes; a warning only when the commit touches this worker's scope (the user then confirms it) | None in the common case; accounting only for a warning | One window derivation, one warning code, a sentinel, documents, tests; no record |
 
@@ -59,34 +59,34 @@ A committed escape is the case that would stay hidden; a dirty escape always sur
 - **T3 foreign advance** (another session commits to `main`): A and C accept it without ceremony unless it touches
   the worker's scope (C then names a real collision for the user to confirm). B stops validation.
 
-## Derivable window for C
+## Review of C
 
-The pre-spawn HEAD is not recorded durably; a design that needs it adds a record. C derives its window instead
-(revised after `challenger-01`):
+C first used a first-parent window with a committer-time filter, then a non-merge window. The review rounds found:
 
-- The non-merge commits reachable from the base checkout's HEAD and not from the returned head
-  (`git rev-list --no-merges <base HEAD> --not <returned>`), so no merge base is needed.
-- Only commits whose committer time is at or after the audit base `<accepted>`'s committer time. Every worker commit,
-  including an escape, is made after `<accepted>`, so the filter keeps every escape and drops advances the Host saw
-  before spawning; otherwise earlier unmerged advances would repeat in every later turn.
-- Each commit contributes its own changed paths. A first-parent walk would credit an escape to the Host's merge
-  commit when another unit is fast-forwarded under `merge = "ff-only"` (`CAP-WT-task-worktrees`), so merges are
-  skipped and the escape is named by itself.
-- The write scope is the derived or overridden scope of the same inspection. When the scope check is `not-run` or the
-  window's Git query fails, no overlap is computed and `SPEC_WORKER_CHECK_NOT_RUN` names the cause.
-- Accounting is deterministic: the Host's own commit, a commit contained in a source the Host integrated, or a dirty
-  path the Host wrote. Git cannot tell another session's commit from a worker escape, so the user confirms those.
+- `challenger-01`: a first-parent walk credits an escape to the Host's merge commit under `merge = "ff-only"`
+  (`CAP-WT-task-worktrees`); a notice cannot be counted by `--strict` (`ARCH-08-1-agent-output`), so the level must be
+  `WARNING`; "another session's write" cannot be told from an escape in Git.
+- `challenger-02`: committer times in this repository do not follow ancestry. The audit base `fdba6646` is dated
+  18:05:25 +0900 while its descendants on this Planning branch are dated 17:37-17:43 (the commit gate rewrites
+  commits), so a time-bounded window drops escapes. Accounting by "a source the Host integrated contains it" credits
+  an escape that a base merge carried into another unit's branch.
+- Without a time bound, a topology-only window lists every in-scope base commit not yet in the worker branch. Once
+  the sibling makes base merges conditional, that includes other units' integrated commits on shared boundaries
+  (for example `docs/capabilities/delivery/`) in every turn, each needing Host accounting or user confirmation.
+- Narrowing the overlap to the unit directory removes the noise but names little for Development: the spec directory
+  does not exist in the base checkout, so a Development escape lands on code paths.
 
-## Change inventory
+Planning therefore recommends A and keeps C as the alternative for the user. A preventive follow-up, if an escape is
+ever observed, is a commit-gate check refusing a base-checkout commit that touches a path an active task worktree's
+unit owns (`CAP-COLL-work-scope-registry`).
 
-- `spec-delegate/references/worker.md` (Validate) and `payload.md` (Workers): replace the equality and the pre-spawn
-  record with the accounting rule.
-- `features/worker/usecases/inspect.py`, `inputs.py`, `cli/commands.py`, the worker warning class beside
-  `WorkerCheckNotRunNotice`.
-- `CAP-DLV-delivery-workflows`: the acceptance requirement "unchanged base" and the Worker result inspection section,
-  its JSON fields and code table.
-- A new ADR superseding the base-checkout clauses of `ADR-orchestration-workers` (committed results and their
-  validation; informational range inspection), with a pointer line in that ADR.
-- Tests: `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` (worker.md tokens) and
-  `packages/devkit-spec/tests/integration/features/worker/test_worker_inspect.py`.
+## Change inventory (option A)
+
+- `spec-delegate/references/worker.md` (Validate) and `payload.md` (Workers): drop the equality and the pre-spawn
+  record.
+- `CAP-DLV-delivery-workflows`: drop "unchanged base" from the acceptance requirements; word the base-checkout
+  observation without a Host comparison.
+- A new ADR naming the superseded base-checkout clauses of `ADR-orchestration-workers`, with a pointer line in that
+  ADR.
+- Tests: `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` (worker.md tokens).
 - Completed specs and earlier materials that restate the rule stay unedited as history.
