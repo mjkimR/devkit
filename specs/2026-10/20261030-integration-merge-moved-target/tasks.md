@@ -18,8 +18,8 @@ plan: PLAN-integration-merge-moved-target
   - _Requirements: AC-02, AC-04, AC-05, AC-06, AC-09_
   - **Verification**: `just test devkit-spec features/delivery`, `just lint-check devkit-spec`, `just check devkit-spec`
 
-- [ ] **Task 3**: Bundle guidance for the conditional base merge and the batch test run, with asset tests and sync outputs
-  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-integrate/`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/`, `packages/devkit-spec/tests/integration/bundles/spec/`, `.devkit/installation.json` (sync output), `AGENTS.md` (sync output)
+- [x] **Task 3**: Bundle guidance for the conditional base merge and the batch test run, with asset tests and sync outputs
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-integrate/`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/`, `packages/devkit-spec/tests/integration/bundles/spec/`, `.devkit/installation.json` (sync output)
   - _Requirements: AC-11_
   - **Verification**: `just test devkit-spec bundles/spec`, `uv run devkit sync --check`
 

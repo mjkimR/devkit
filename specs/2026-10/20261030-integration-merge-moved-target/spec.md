@@ -2,7 +2,7 @@
 id: SPEC-integration-merge-moved-target
 title: Integrate a conflict-free moved target without requiring the source to contain it
 summary: "Let local integration and proposal acceptance merge a moved target themselves and refuse only on a real conflict or failing checks, and run the tests once on main after the units of a local-orchestrated run are finished, so lifecycle merging stays light while defects still surface."
-status: planned
+status: in-progress
 created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
 related_capabilities: [CAP-WT-task-worktrees, CAP-INT-mcp-services, CAP-DLV-delivery-workflows, CAP-HARN-agent-guidance]
