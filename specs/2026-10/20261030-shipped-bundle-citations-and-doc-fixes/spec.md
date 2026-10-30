@@ -2,7 +2,7 @@
 id: SPEC-shipped-bundle-citations-and-doc-fixes
 title: Forbid repository document IDs in shipped bundle text and fix two contract gaps
 summary: State and test that shipped bundle text cites no repository document ID, name the locked restore as the stale local render remedy in the sync capability, and add the moved-base composed acceptance extensions to UC-plan-and-hand-off-a-proposal.
-status: planned
+status: in-progress
 created: 2026-10-30
 related_capabilities:
   - CAP-DIST-content-packages
