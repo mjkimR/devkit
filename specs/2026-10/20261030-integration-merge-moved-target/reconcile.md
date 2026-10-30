@@ -97,3 +97,13 @@ Added `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integrati
 (the §4.8 provider doorway) and `packages/devkit/src/devkit_agt/features/worktree/usecases/planning.py` to
 `CAP-WT-task-worktrees` (`plan_finish`). Rejected: the receipt, `AGENTS.md`, `guides/INSTALL_GUIDE.md`, test
 directories and whole feature directories, which are hubs or already covered by existing entrypoints.
+
+## Integration merge
+
+The merge of `main` 133819ed (with `SPEC-git-operator-result-readiness`) combined both contracts in two existing
+targets: `CAP-DLV-proposal-planning` lists `target_sha=`, `landed_sha=` and `disclosure=` before the handoff's
+`commit=` on `[ACCEPTED: ...]`, as the CLI prints them, and `UC-drive-development-to-integration` extension 1b keeps
+the `checks.worker_input` comparison before the batch test run. No new target: no other contract changed, and the
+waiver of `UC-plan-and-hand-off-a-proposal` still holds after `main`'s edits to it. The full fallback of
+`just test-affected --base 158894ec` passed 6135 tests; the one failure is the known `main` failure
+`test_fixes_carry_no_placeholder`.
