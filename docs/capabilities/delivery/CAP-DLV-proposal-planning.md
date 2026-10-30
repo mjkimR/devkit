@@ -631,7 +631,12 @@ authority comes only from the retained base policy.
 Development effort of `accept_and_handoff`) validates
 the reviewed `plan-<slug>`, records `status: accepted` and `gate:plan-accept`, commits the exact acceptance delta,
 and executes the checked local Planning integration. `accept_only` stops after acceptance. The combined mode also
-starts Development using the selected `--effort low|medium|high`.
+starts Development using the selected `--effort low|medium|high`. WHEN `plan-<slug>` does not contain the base
+HEAD, the preparation builds the prospective merge and the preview MUST run the delivery provider's result checks
+on it (the CI rules on the merged result and a base change to the proposal directory since the merge base) before
+the acceptance commit, refusing with `SPEC_PROPOSAL_APPROVAL_NOT_READY`; a conflict refuses with
+`WORKTREE_MERGE_CONFLICT`. A conflict-free moved base needs no merge into `plan-<slug>`: the landed merge has the
+moved base as first and the acceptance commit as second parent (`ADR-moved-target-merge`).
 
 `devkit spec proposal handoff <slug> --effort low|medium|high` validates an already accepted
 proposal on the retained base, creates or validates `dev-<slug>`, runs setup and sync, then performs proposal handoff
@@ -640,7 +645,9 @@ worktree, spec bundle, selected effort, notices and completed effects. Setup or 
 proposal and any created worktree for inspection; the command never rolls those effects back automatically.
 
 Both composed commands print one outcome (`ARCH-08-1-agent-output`). A completed one is `[ACCEPTED: PROP-<slug>
-status=accepted|handed_off mode= authority= completed=]` or `[HANDOFF: PROP-<slug> status=handed_off spec= dir=
+status=accepted|handed_off mode= authority= completed= target_sha= landed_sha= disclosure=]` (the last three once
+the integration landed: the merged target, the landed result and the delivery provider's disclosure, also in JSON
+as `target_sha`, `landed_sha` and `disclosure`) or `[HANDOFF: PROP-<slug> status=handed_off spec= dir=
 worktree=dev-<slug> effort= authority=]`, followed by `[NEXT_CMD: ...]` when a next command exists, and exits `0`
 (`1` under `--strict` with a warning). One that stopped after some effects prints `[ACCEPTED_STOPPED: ...]` or
 `[HANDOFF_STOPPED: ...]` with the same fields, then `[NEXT_CMD: ...]` or `[NEXT_ACTION: "..."]`, renders its errors
@@ -675,7 +682,8 @@ it is not an authenticated credential. Required-PR refuses this local combined r
 The invocation binds exact source/base commits, Git and extension identities, effective configuration, environment,
 and cleanup targets. The common-directory integration lock covers acceptance and
 integration. Only the service-created acceptance record/status delta and its direct-child commit are permitted;
-normal commit gates and the complete integration readiness provider still run. The base cannot advance. Cleanup
+normal commit gates and the complete integration readiness provider still run. The base cannot advance during the
+invocation; a base that moved before it is merged by the integration itself. Cleanup
 revisions equal to the source SHA may follow only that exact verified acceptance child with identical targets.
 `accept_only` stops after accepted merge/cleanup; combined pins the landed result before setup/handoff. No final
 Development merge is authorized. If the Host conversation is declined, canceled or unavailable, the Host does not
@@ -701,7 +709,7 @@ reported as a dirty tree.
 | `SPEC_REPORT_WRONG_CHECKOUT` | `INPUT_ERROR` | `report`: neither `plan-<slug>` with a proposal in review or accepted, nor the retained base with an accepted proposal. | Run it in the `plan-<slug>` worktree. |
 | `SPEC_REPORT_SOURCE_INVALID` | `INPUT_ERROR` | `report`: a committed record (`[TARGET]`) is not a regular file, a PADR's ID differs from its file name, an envelope is not a mapping, the proposal declares another ID, or an effort is not `low`, `medium` or `high`. | Correct and commit the record. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `INPUT_ERROR` | `report`: the proposal is not in the source commit. | Pass the slug of a committed proposal. |
-| `SPEC_PROPOSAL_APPROVAL_NOT_READY` | `INTERACTION` | The composed acceptance: Planning on `plan-<slug>` has unmet checks, problems, open questions or holds, needs decomposition, is not in review at `direction-handoff`, or `plan-<slug>` does not exist; `[DETAIL]` lists each condition and `[TARGET]` the proposal or branch. | After the user agrees, finish Planning there and rerun. |
+| `SPEC_PROPOSAL_APPROVAL_NOT_READY` | `INTERACTION` | The composed acceptance: Planning on `plan-<slug>` has unmet checks, problems, open questions or holds, needs decomposition, is not in review at `direction-handoff`, or `plan-<slug>` does not exist; or the prospective merge with a moved base fails its result checks; `[DETAIL]` lists each condition and `[TARGET]` the proposal or branch. | After the user agrees, finish Planning there and rerun; for a failing result check, merge the base into `plan-<slug>`, run `devkit rules fix` on the proposal, commit and rerun. |
 | `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` | `INPUT_ERROR` | The composed acceptance: the commit gate refused the acceptance commit on `plan-<slug>` (`[TARGET]`); the writes were withdrawn and `[DETAIL]` carries the gate's output. | Run `uv run devkit rules check` there, fix and commit, then rerun. |
 | `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` | `INPUT_ERROR` | The requested or confirmed mode is not `accept_only` or `accept_and_handoff`, `accept_and_handoff` has no `low`, `medium` or `high` effort, or a reply widens `accept_only`; `[TARGET]` is `--mode` and `--effort`. | The caller corrects the mode or effort and reruns. |
 | `SPEC_PROPOSAL_APPROVAL_STALE` | `INTERACTION` | Reviewed scope or exact acceptance delta changed. | Report what changed and the completed effects; after the user approves again, rerun for the remaining scope. |

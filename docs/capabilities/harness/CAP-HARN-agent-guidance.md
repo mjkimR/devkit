@@ -13,6 +13,7 @@ usecases:
   - UC-adopt-sdd-from-adaptive-development
   - UC-handle-delivery-problems-and-exceptions
   - UC-resolve-stale-activity-branches
+  - UC-drive-development-to-integration
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
   - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
@@ -204,9 +205,11 @@ For intended moves or deletions, the Host checks ID references and path links be
 link-repair-only document paths. Unexpected repair targets require narrow boundary expansion before editing.
 Workers retain their strict write boundaries.
 
-For changed bundle sources, the Host incorporates the latest base, runs official `devkit sync` in the integration
-worktree, inspects and commits tracked receipt/projection updates, then verifies the final content before requesting
-integration approval. Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
+For changed bundle sources, the Host runs official `devkit sync` in the integration worktree, inspects and commits
+tracked receipt/projection updates, then verifies the final content before requesting integration approval. It
+incorporates the base and synchronizes again only after preparation reports `WORKTREE_MERGE_CONFLICT`,
+`INTEGRATION_RECEIPT_CONFLICT` or `INTEGRATION_NOT_READY`; the receipt check and the CI rules on the merged result
+guard a conflict-free moved base (`ADR-moved-target-merge`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
 base-checkout projections and reports failures or unexpected tracked changes for inspection.
 
 ### Host scope observation
@@ -227,8 +230,12 @@ The contract is CAP-COLL-work-scope-registry; the rationale is ADR-host-owned-sc
 `spec-plan`, `spec-review` and `spec-integrate` follow the consuming repository's verification policy. They plan and
 run affected tests when supported, preserve selector full-suite fallbacks and frontend checks, and require a local
 full suite only when the repository or selector calls for it. Delegated reviewers reuse valid results and run
-only missing or stale checks. Integration incorporates a moved base and resolves conflicts before checking the
-final content; merging unchanged verified content does not require post-merge tests. Lint, type and cumulative
+only missing or stale checks. Integration merges a conflict-free moved base itself and runs only the CI rules on
+the merged result; the Host merges the base and re-verifies what that changed only after a reported conflict or
+failing check. Once every unit of a `local-orchestrated` run is finished (integrated, blocked with its problem
+recorded, waiting for a user decision or continued in `direct`), `spec-orchestrate` runs the repository's
+integrated-content verification once on the base branch HEAD from the batch start; outside such a run, a later batch
+run or the repository's scheduled CI tests the combined head (`ADR-post-batch-test-run`). Lint, type and cumulative
 governance checks remain required. Nightly/release coverage is a repository choice, not a bundle-wide schedule.
 
 ### Feedback capture policy
