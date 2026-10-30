@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:09:20.875817Z'
+status: completed
+summary: 'Nested code-reviewer, initial medium pass on ab7356f3..e51b3e66: AC-01 to AC-09 implemented and tested, no scope drift or non-goal; one P3 test gap for the composed-acceptance guard.'
+findings:
+- issue: 'The rule that composed proposal acceptance seeds nothing depends on `lifecycle is None` in IntegrationService._prepare, and no test covers it: the composed-acceptance test only passes settle_generated=False without a lifecycle.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/service.py:216; packages/devkit/tests/e2e/features/integration/test_base_advance.py test_composed_acceptance_preparation_settles_no_conflict; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:343
+  failure_condition: Dropping or inverting the `lifecycle is None` term would let composed acceptance settle a receipt-only conflict (Non-Goal 2, AC-08) with no failing test.
+  suggested_action: Add a test preparing a receipt-only conflict with a minimal AcceptanceLifecycle and the default settle_generated, asserting WORKTREE_MERGE_CONFLICT with nothing changed.
+  resolution: open
+  severity: P3
+assumptions:
+- Uncommitted Living Spec drafts, reconcile.md and feedback files of the next stage were outside the reviewed range.
+checks:
+  tests: PASS 145 targeted on e51b3e66; just test-affected --base main 2120 passed
+  lint: PASS devkit rules check --ci --base ab7356f3 errors=0; ruff and format clean
+  types: PASS pyright on 18 touched files 0 errors
+diff_scope:
+  base: ab7356f3fe53e27388ce60b0db6a17229b641c81
+  head: e51b3e660cbe5c9c9322397920be09480ab8e58b
