@@ -1,0 +1,39 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:52:06.183177Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the review-01 fixes (medium: no repeat reviewer call; fixes stay in scope and are pinned by tests): namespaced record file name, compact records excluded from collection, entry move rule, targeted completed-spec check, exists-line wording'
+findings:
+- issue: In a package namespace the prescribed record ID FB-compacted-<namespace>-<area>-<status> does not match the prescribed path <YYYYMMDD>-compacted-<area>-<status>.md; RULE-id-convention derives month-level feedback IDs from the file name
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/feedback-compaction/SKILL.md:43-46; probe tmp/review-01/test_probe_compaction.py::test_namespace_record_at_the_playbook_path
+  failure_condition: A compaction run in a repository with a package namespace writes a namespaced record; devkit rules check fails and rules fix rewrites the ID to the global form, which can collide with the global record
+  suggested_action: In a package namespace name the file <YYYYMMDD>-compacted-<namespace>-<area>-<status>.md, resolve the namespaced ID in Step 3, amend AC-07 and pin it in a guidance test
+  resolution: resolved
+  severity: P2
+- issue: Step 1 does not exclude existing FB-compacted-* records, and moving a misgrouped entry has no procedure
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/feedback-compaction/SKILL.md:16-17, :36, :44-45, :79
+  failure_condition: On a later run an agent groups an existing record as a member and deletes it or folds its entries into one, losing each entry's Symptom, Response and Reason
+  suggested_action: Exclude FB-compacted-* records from eligible items (Step 3 extends them); add a line for moving an entry with its alias between records, deleting no file
+  resolution: resolved
+  severity: P2
+- issue: In the AC-08 test the completed spec citing the retired ID does not affect the rule results, because document_reference skips completed specs unless they are explicit targets
+  evidence: packages/devkit-spec/tests/integration/bundles/spec/test_feedback_compaction_guidance.py:128-137; probe tmp/review-01/test_probe_compaction.py::test_completed_spec_citation_without_any_record
+  failure_condition: A regression where a completed spec's citation of a retired ID stops resolving through the alias would not fail the test
+  suggested_action: Pass the completed spec.md as an explicit target, or also assert a current document citing the retired ID gets the fixable alias finding
+  resolution: resolved
+  severity: P3
+- issue: The completion line gives '> Feedback exists' to every observation step 2 matched, though resolved, dismissed-with-counter-evidence and ended promoted/forwarded matches record a new file
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-feedback/SKILL.md:66
+  failure_condition: An agent recording a regression of a resolved item prints 'Feedback exists' and omits the recorded path
+  suggested_action: 'Reword: an observation step 2 says not to record gets ''> Feedback exists: <ID> (<status>)'' instead'
+  resolution: resolved
+  severity: P3
+checks:
+  tests: 'PASS just test-affected partial: 1568 passed; feedback guidance tests 13 passed'
+  lint: PASS devkit rules check errors=0; just lint devkit-spec; pyright 0 errors
+diff_scope:
+  base: 44d41795d90522c3f6d318aa969d773db2836aae
+  head: 3cafc8db0858ec9df7e3dce9d905fd7017778efa
