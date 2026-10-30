@@ -6,7 +6,7 @@ import pytest
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core.frontmatter import parse
-from spec_support.proposals import INCUBATED, TODAY, accept, write_workflow
+from spec_support.proposals import PROPOSAL_WORKFLOW, TODAY, accept, write_workflow
 from spec_support.types import Write
 
 from devkit_spec.base.errors import (
@@ -133,7 +133,7 @@ def test_create_proposal_refuses_values_outside_the_contract(
 
 
 def test_create_proposal_binds_sdd_proposal(workspace: Path) -> None:
-    write_workflow(workspace, "sdd-proposal", INCUBATED)
+    write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
     created = create_proposal(workspace, "bound")
     meta = parse((workspace / created.path).read_text(encoding="utf-8")).data
     assert meta is not None and meta["workflow"] == "sdd-proposal"

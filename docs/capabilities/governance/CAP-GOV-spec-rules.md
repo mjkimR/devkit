@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: "Document and SDD lifecycle governance, milestone status/location validation, snapshot targeting and safe fixes, with explicit lifecycle omissions during incubation and retained workflow ownership checks."
+summary: "Document and SDD lifecycle governance, milestone status/location validation, snapshot targeting and safe fixes, with explicit lifecycle omissions during adaptive development and retained workflow ownership checks."
 area: governance
 status: active
 usecases:
@@ -434,17 +434,17 @@ Milestones use global docs/roadmap/MS-<slug>.md for planned/active and docs/road
 Milestone membership is a scalar existing MS ID on proposal anchors only; legacy SPEC metadata yields no membership edge. Depends_on is an MS-ID list on milestones and a PROP/SPEC-anchor-ID list on proposal/spec anchors. Wrong field locations/shapes/kinds, auxiliary targets, unresolved or duplicate targets and cycles (including self-cycles) are errors. A targeted run checks each typed graph through the complete index and reports participating targeted anchors even when other cycle members are untargeted. Completed SPEC anchors resolve as terminal targets and do not contribute outgoing cycle edges. Exact same-slug handoff fixes also rewrite live incoming depends_on references; they do not infer completion or successors. Decomposed_from/supersedes on anchors are scalar PROP provenance; deleted sources are valid. Done/dropped milestone history follows explicit targeting and is never rewritten automatically.
 
 
-## Lifecycle applicability during incubation
+## Lifecycle applicability during adaptive development
 
-The nine docs rules keep their existing judgments under both approaches. In incubation, the five spec lifecycle
+The nine docs rules keep their existing judgments under both approaches. In adaptive development, the five spec lifecycle
 rules (`task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `proposal-boundaries`) apply to explicitly
 SDD workflow-bound ownership, including prior snapshot anchors for changed/deleted bindings and companions.
-Unbound current incubation documents acquire no SDD lifecycle obligation. A rule with no applicable retained Unit
+Unbound current adaptive-development documents acquire no SDD lifecycle obligation. A rule with no applicable retained Unit
 reports `SDD_LIFECYCLE_INACTIVE` omission evidence rather than a successful check.
 
-WHEN a targeted retained SDD anchor or its binding is removed in incubation, `RULE-spec-lifecycle` MUST report that
+WHEN a targeted retained SDD anchor or its binding is removed in adaptive development, `RULE-spec-lifecycle` MUST report that
 its existing lifecycle ownership was not preserved. Root-level Units own their companions; valid quoted YAML binding
 keys have the same meaning as plain keys. Current rules use run-scoped cached ownership; committed snapshots read
 prior ownership through the generic rule repository, without requiring installed workflow definitions.
-`packages/devkit-spec/tests/integration/features/policy/test_incubation.py` and
+`packages/devkit-spec/tests/integration/features/policy/test_adaptive_dev.py` and
 `packages/devkit/tests/integration/features/rules/test_ownership.py` cover applicability and normal binding spellings.

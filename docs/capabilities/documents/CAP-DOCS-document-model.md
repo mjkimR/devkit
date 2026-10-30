@@ -99,7 +99,7 @@ workspace cache; these files stay ID-free and unindexed, and their references do
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
-(`CAP-DLV-proposal-incubation`). Existing discovery, resolution and namespace rules apply before and after moves.
+(`CAP-DLV-proposal-planning`). Existing discovery, resolution and namespace rules apply before and after moves.
 
 ### Milestone placement
 
@@ -247,7 +247,7 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 5. **Renaming**: a document whose ID derives from its path (`CAP`, `UC`, `UX`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
    `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
-   `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-incubation`) or, as a compaction
+   `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-planning`) or, as a compaction
    replacement, lists the IDs of the ADRs it retires (`ADR-immutable-decisions-editable-records`). One `devkit rules fix` then moves current documents to the new ID.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
    taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;

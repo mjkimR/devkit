@@ -14,6 +14,6 @@ class LifecycleInactiveError(ConfigError):
 def require_sdd(root: Path) -> None:
     if read_development_approach(root).approach != "sdd":
         raise LifecycleInactiveError(
-            "SDD lifecycle mutation is inactive for the incubation development approach",
+            "SDD lifecycle mutation is inactive for the adaptive-dev development approach",
             target_files=[".devkit/config.toml"],
         )

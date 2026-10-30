@@ -16,7 +16,7 @@ aliases:
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Involved Components/Capabilities**: `ARCH-01-introduction-and-goals`, `CAP-DOCS-document-model`,
-  `CAP-DOCS-document-lookup`, `CAP-GOV-spec-rules`, `CAP-DLV-proposal-incubation`, `CAP-DLV-spec-bundles`,
+  `CAP-DOCS-document-lookup`, `CAP-GOV-spec-rules`, `CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`,
   `CAP-HARN-agent-guidance`
 
 ---
@@ -37,7 +37,7 @@ Unit joins one, how the next work is chosen, and how the record stays true as wo
 progress live on `plan-` and `dev-` branches while the base shows only merged state (01 §4.7).
 
 Restricting dependency edges to milestones then encouraged milestones that duplicate a single delivery unit for
-fine-grained sequencing; `CAP-DOCS-document-model` and `CAP-DLV-proposal-incubation` already provide anchor identity
+fine-grained sequencing; `CAP-DOCS-document-model` and `CAP-DLV-proposal-planning` already provide anchor identity
 and handoff rewriting. Finally, closure must fit direct PROP-only membership without retaining delivery lineage after
 handoff, and proposal disappearance cannot certify completion.
 

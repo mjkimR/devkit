@@ -65,7 +65,7 @@ def _has_spec_bundle(base: Path) -> bool:
     from devkit_agt.features.rules import committed_anchors
     from devkit_dist.features.project import read_development_approach
 
-    if read_development_approach(base).approach != "incubation":
+    if read_development_approach(base).approach != "adaptive-dev":
         return False
     return any(w.startswith("sdd-") for ids in committed_anchors(base, "HEAD").values() for w in ids)
 

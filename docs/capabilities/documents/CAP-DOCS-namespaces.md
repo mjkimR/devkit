@@ -31,7 +31,7 @@ reference rules stay repository-wide. devkit-docs owns the registry (`ADR-docume
     cross packages freely. Rationale: a namespace prefix would change every reference when code moves between
     packages.
   - Writing the `namespace` field: `devkit spec new --namespace` (`CAP-DLV-spec-bundles`) and
-    `devkit spec proposal new --namespace` (`CAP-DLV-proposal-incubation`); handoff carries it.
+    `devkit spec proposal new --namespace` (`CAP-DLV-proposal-planning`); handoff carries it.
   - `[tool.spec]` (`worktree`, `depth_escalation`, `scope`, `feedback`) and `devkit spec policy`: `CAP-DLV-project-policy`.
 
 ## 3. Business Rules & Policies
@@ -100,7 +100,7 @@ path = "services/api"   # the package's source directory
 | --- | --- | --- |
 | `--namespace NAME` | `devkit docs list`, `devkit docs search` | `NAME` plus global documents; `global` for the global documents only. |
 | `--all-namespaces` | `devkit docs list`, `devkit docs search` | Every namespace. |
-| `--namespace NAME` | `devkit spec new`, `devkit spec proposal new` | Writes the bundle's `namespace` field (`CAP-DLV-spec-bundles`, `CAP-DLV-proposal-incubation`). Omitted, the field is the namespace the current directory selects (section 3.3, rule 3), and none outside every package. |
+| `--namespace NAME` | `devkit spec new`, `devkit spec proposal new` | Writes the bundle's `namespace` field (`CAP-DLV-spec-bundles`, `CAP-DLV-proposal-planning`). Omitted, the field is the namespace the current directory selects (section 3.3, rule 3), and none outside every package. |
 
 ### 4.3 Output
 

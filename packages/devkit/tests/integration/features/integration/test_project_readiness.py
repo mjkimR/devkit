@@ -1,4 +1,4 @@
-"""Real project provider accepts independent incubation work and preserves Unit ownership."""
+"""Real project provider accepts independent adaptive-dev work and preserves Unit ownership."""
 
 from pathlib import Path
 
@@ -15,7 +15,7 @@ from testsupport.rules import git, init_repo, write
 CLAIMS = '{"review":"PASS source review","tests":"PASS project tests","lint":"PASS lint"}'
 
 
-def project(tmp_path: Path, approach="incubation", retained=False):
+def project(tmp_path: Path, approach="adaptive-dev", retained=False):
     base = init_repo(tmp_path / "base")
     write(base, ".devkit/config.toml", f'[development]\napproach="{approach}"\n[integration]\nprovider="project"\n')
     if retained:
@@ -34,7 +34,7 @@ def test_real_project_readiness_without_sdd_records(tmp_path):
     base, _ = project(tmp_path, retained=True)
     result = IntegrationService(base).prepare("dev-demo", Task("session", "demo", claims_json=CLAIMS))
     evidence = {e.code: e.value for e in result.request.readiness.evidence}
-    assert evidence["LIFECYCLE"] == "omitted:incubation"
+    assert evidence["LIFECYCLE"] == "omitted:adaptive-dev"
     assert evidence["CI_RULES"] == "pass"
     assert "VERIFICATION_CLAIMS" in evidence
     landed = IntegrationService(base).execute_cli(
@@ -51,7 +51,9 @@ def test_missing_claims_refuse(tmp_path):
 
 def test_sdd_target_cannot_use_project_provider(tmp_path):
     base, worktree = project(tmp_path, approach="sdd")
-    write(worktree, ".devkit/config.toml", '[development]\napproach="incubation"\n[integration]\nprovider="project"\n')
+    write(
+        worktree, ".devkit/config.toml", '[development]\napproach="adaptive-dev"\n[integration]\nprovider="project"\n'
+    )
     git(worktree, "add", ".")
     git(worktree, "commit", "-qm", "propose approach")
     with pytest.raises(ApproachMismatchError):

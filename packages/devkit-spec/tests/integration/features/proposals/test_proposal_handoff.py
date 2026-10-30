@@ -11,8 +11,8 @@ import pytest
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 from spec_support.proposals import (
-    INCUBATED,
     MONTH,
+    PROPOSAL_WORKFLOW,
     STAMP,
     TODAY,
     WORKFLOW,
@@ -640,7 +640,7 @@ def test_an_unbindable_proposal_workflow_writes_nothing(workspace: Path, definit
 
 def test_the_proposal_units_own_binding_is_not_carried(workspace: Path) -> None:
     write_workflow(workspace, "sdd-spec-feature")
-    write_workflow(workspace, "sdd-proposal", INCUBATED)
+    write_workflow(workspace, "sdd-proposal", PROPOSAL_WORKFLOW)
     proposal = _new(workspace, "unit")
     assert "workflow: sdd-proposal" in proposal.read_text(encoding="utf-8")
     accept(proposal)

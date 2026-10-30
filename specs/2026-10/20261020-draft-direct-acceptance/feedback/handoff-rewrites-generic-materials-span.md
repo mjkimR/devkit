@@ -20,7 +20,7 @@ created_at: 2026-10-20
   the ID rewrite left.
 - **Expectation**: a code span that names `materials/` as a generic part of any draft (here: what a session
   reclassification deletes) keeps its meaning after the promotion.
-- **Actual**: the handoff's code-span path rewrite (`CAP-DLV-proposal-incubation` 4.7) turned `` `materials/` `` in
+- **Actual**: the handoff's code-span path rewrite (`CAP-DLV-proposal-planning` 4.7) turned `` `materials/` `` in
   `ADR-delivery-classification` into this proposal's own preserved materials directory, so the
   decision read as if every reclassification deleted that one directory.
 - **Workaround (or Interpretation Chosen)**: restored the generic wording ("its `materials/`") by hand and listed the
@@ -37,7 +37,7 @@ created_at: 2026-10-20
 - **Versions**: handoff commit b8c3a77 of this unit.
 - **Conditions**: a proposal with a non-empty `materials/`.
 - **Workarounds Attempted**: manual wording fix, recorded in `reconcile.md`.
-- **Related Assets**: `CAP-DLV-proposal-incubation` 4.7, `packages/devkit-spec/src/devkit_spec/proposals/rewrite.py`.
+- **Related Assets**: `CAP-DLV-proposal-planning` 4.7, `packages/devkit-spec/src/devkit_spec/proposals/rewrite.py`.
 
 ## Evidence
 

@@ -1,4 +1,4 @@
-"""Independent project readiness for incubation session integration."""
+"""Independent project readiness for adaptive-dev session integration."""
 
 from __future__ import annotations
 
@@ -34,15 +34,15 @@ def check(context: IntegrationContext) -> Readiness:
     root = Path(context.finish.base)
     target = development_approach(commit_config(root, context.finish.target_sha) or {}).approach
     proposed = development_approach(commit_config(root, context.result_sha or context.finish.source_sha) or {}).approach
-    if target != "incubation":
-        raise ApproachMismatchError("project readiness requires committed incubation target policy")
+    if target != "adaptive-dev":
+        raise ApproachMismatchError("project readiness requires committed adaptive-dev target policy")
     units = touched_workflow_units(context)
     if context.task.kind != "session" or units:
         raise LifecycleValidationRequiredError("project readiness cannot validate retained workflow Units", *units)
     reasons: list[str] = []
     evidence = [
         Evidence("DEVELOPMENT_APPROACH", json.dumps({"target": target, "proposed": proposed}, sort_keys=True)),
-        Evidence("LIFECYCLE", "omitted:incubation"),
+        Evidence("LIFECYCLE", "omitted:adaptive-dev"),
     ]
     try:
         claims = json.loads(context.task.claims_json)
