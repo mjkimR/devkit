@@ -51,19 +51,23 @@ Evidence: `MAT-scope-activity-write-probe` (this proposal's `materials/`) and `M
 
 ### 3.1 Horizon of each path and overlap
 
-Every path of an observation gets a `horizon`, derived from the unit kind `collect` already identifies; no input or
+Every path of an observation gets a `horizon`, derived from the activity `collect` already identifies; no input or
 path is added.
 
-| Path | Planning activity (proposal unit) | Development activity (spec unit, or a snapshot record) |
+| Path | Planning activity | Any other observation |
 | --- | --- | --- |
 | `observed` (committed, staged, unstaged, untracked) | `current` | `current` |
 | `declared-doc`, `declared-code`, `candidate` | `future` | `current` |
 
-An observation without a task identity (`identity-ambiguous` dirty paths) has only observed paths, so they are
-`current`. An evidence entry is `current` when both of its sides are `current`, otherwise `future`.
-
-- JSON: each evidence entry gains `horizon`; each pair gains `current` and `future` entry counts; `summary` gains
-  `current_overlapping` (pairs with at least one `current` entry).
+- A Planning activity is an observation whose `provenance.unit` is a proposal unit and whose source is a `plan-*`
+  ref or worktree. A proposal unit observed on a `dev-*` ref or worktree (a handoff before its first commit), a spec
+  unit, a snapshot record and an observation without a unit (`identity-ambiguous` dirty paths) are all `current`.
+- The unit kind comes from `provenance.unit`, never from `task_key`, which snapshots and duplicate anchors leave
+  empty.
+- An evidence entry is `current` when both of its sides are `current`, otherwise `future`.
+- JSON: each evidence entry gains `horizon`; each pair gains `current` and `future` entry counts
+  (`current + future = len(docs) + len(code)`); `summary` gains `current_overlapping` (pairs with at least one
+  `current` entry).
 - Text: `[EVIDENCE: ... horizon=current|future]`, `[PAIR: ... current=<n> future=<n>]` and
   `[SUMMARY: ... current_overlapping=<n>]`.
 - `docs=`, `code=`, `unresolved=`, `overlapping=` and the overlap definition (`CAP-COLL-work-scope-registry` 4.2) do
@@ -71,20 +75,24 @@ An observation without a task identity (`identity-ambiguous` dirty paths) has on
 
 ### 3.2 Coverage gaps name their inputs
 
-- A source's `unresolved-input` problem carries the distinct reasons of its unresolved inputs: JSON
-  `coverage.problems[].inputs`, and the `SPEC_SCOPE_COLLECTION_PARTIAL` detail
-  `refs/heads/dev-x: unresolved-input (excluded-tree, missing-reconcile)`.
+- A source's coverage problem carries the distinct reasons of its unresolved inputs, whatever the problem's own
+  reason (`unresolved-input` or `unknown-base`): JSON `coverage.problems[].inputs`, and the
+  `SPEC_SCOPE_COLLECTION_PARTIAL` detail `refs/heads/dev-x: unresolved-input (excluded-tree, missing-reconcile)`.
 - Every reason still counts as a gap; lifecycle-normal ones (`missing-target-docs`, `missing-reconcile`) are not
   reclassified as covered.
-- A branch whose commit equals its selected base, and whose ref is not the base ref itself, has an empty committed
-  range: `committed` is an observed layer with no paths, not `unknown-base` (finding 2 of
+- A selected base whose commit equals the branch tip is still a base: `collect` stops clearing it, and `committed()`
+  computes the range by `CAP-COLL-work-scope-registry` 4.1 (empty without a registration cap). A base is discarded,
+  and stays `unknown-base`, only when it resolves (`git rev-parse --symbolic-full-name`) to the candidate's own full
+  ref or to a tracking peer of the same task. This removes the false gap of a freshly prepared branch (finding 2 of
   `MAT-scope-activity-write-probe`).
 
 ### 3.3 Host scheduling text
 
 - `spec-orchestrate`: units whose `current` evidence overlaps run sequentially. A pair with only `future` evidence
-  does not serialize their Planning runs; it informs handoff and integration order. Partial coverage stays an input
-  to both choices, never a proof of independence.
+  does not serialize their Planning runs.
+- Before handing a unit off, the Host treats its `future` evidence as `current`: units whose `future` evidence
+  overlaps are handed off or integrated sequentially.
+- Partial coverage stays an input to both choices, never a proof of independence.
 - `CAP-HARN-agent-guidance` (Host scope observation) and `UC-run-parallel-work-safely` (step 6 and a GOP-04
   scenario) state the same reading. `CAP-COLL-work-scope-registry` 4.5 and 4.9 carry the output contract.
 - The Host keeps the scheduling decision; no result grants or refuses a write.
@@ -93,11 +101,13 @@ Acceptance check (from the parent's verification candidates):
 
 | ID | Given | When | Then |
 | --- | --- | --- | --- |
-| GOP-04 | Disjoint proposal-only Planning writes and overlapping future implementation candidates | Scope is inspected for scheduling | Both facts and unresolved coverage remain visible; the result grants or refuses no write and the Host retains the decision. |
-| SAW-01 | Two Planning units whose targets' `entrypoints` overlap and whose observed paths are their own proposal directories | `devkit spec scope collect` runs | The pair lists the candidate overlap with `horizon=future`, `current=0`, unchanged `code=`, and `current_overlapping` excludes it. |
-| SAW-02 | A Planning unit's candidate overlaps a Development unit's declared or observed code | Scope is collected | The entry is `future`; the Development unit's own paths stay `current`. |
-| SAW-03 | A Development unit with `_Boundary` entries under `docs/` and no `reconcile.md` | Scope is collected | The partial-coverage detail and `coverage.problems[].inputs` name `excluded-tree` and `missing-reconcile`; coverage stays `partial`. |
-| SAW-04 | A `plan-*` branch at the same commit as its base | Scope is collected | `committed` is observed with no paths and the source reports no `unknown-base`. |
+| GOP-04 | Disjoint proposal-only Planning writes and overlapping future implementation candidates | Scope is inspected for scheduling | Exit is 0 without `--strict`; the observed proposal paths, the `future` evidence and the unresolved inputs are all in the output; no field grants or refuses a write. |
+| SAW-01 | Two `plan-*` units whose targets' `entrypoints` overlap and whose observed paths are their own proposal directories | `devkit spec scope collect` runs | Each candidate entry has `horizon=future`; the pair has `current=0`, `code=` equal to its code evidence entries and `current+future = docs+code`; `current_overlapping` excludes the pair and `overlapping` includes it. |
+| SAW-02 | A `plan-*` unit's candidate overlaps a Development unit's declared or observed code | Scope is collected | The entry is `future`; the Development unit's own paths stay `current`. |
+| SAW-03 | A `dev-*` ref at its base commit whose pinned tree holds only the accepted proposal | Scope is collected | Its declared and candidate paths are `current`. |
+| SAW-04 | A Development unit with `_Boundary` entries under `docs/` and no `reconcile.md` | Scope is collected | The partial-coverage detail and `coverage.problems[].inputs` name `excluded-tree` and `missing-reconcile`; coverage stays `partial`. |
+| SAW-05 | A `plan-*` branch at the same commit as its base, the proposal file present at that commit | Scope is collected | The source is observed, its layers include `committed` with no committed paths, and no `unknown-base` problem names it. |
+| SAW-06 | `--base` or `branch.<b>.devkitBase` names the branch itself (short name or `HEAD`) | Scope is collected | The source reports `unknown-base`, never an empty range. |
 
 ### Non-goals
 
@@ -111,8 +121,12 @@ Acceptance check (from the parent's verification candidates):
 
 ## Planning decisions
 
-- Settled in this Planning run, pending the user's answers recorded in the `worker` envelope: horizon tags over
-  separate lists (3.1), naming gap inputs and the empty-range fix (3.2).
+- Proposed in this Planning run, pending the user's answers recorded in the `worker` envelope: horizon output in
+  `collect` rather than a skill-only reading over existing `unit=` and `source=` fields (3.1), and including the gap
+  inputs and the self-base fix (3.2).
+- Folded from `challenger-01`: the Planning horizon applies only on `plan-*` sources (3.1); future-only overlap
+  serializes handoff and integration (3.3); the self-base guard compares resolved refs (3.2); gap inputs travel with
+  every problem reason (3.2); the acceptance checks state mechanical assertions.
 
 ## 4. Lifecycle & Retirement Criteria
 
