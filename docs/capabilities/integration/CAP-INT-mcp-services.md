@@ -19,8 +19,9 @@ source, target, report and cleanup effects, receives the user's conversational d
 directly or delegates its exact effects to git-operator.
 The CLI revalidates the operation but does not authenticate that conversation. Under `auto`, it derives authority
 from the retained base policy. `ADR-host-cli-lifecycle-authority` supersedes the former lifecycle MCP execution
-interface and `ADR-local-and-pull-request-integration`; the merge construction and route guards below are this
-capability's current contract.
+interface and, in part, the lifecycle request, native confirmation and resume interface of
+`ADR-local-and-pull-request-integration`, which remains authoritative for the merge construction and route guards
+below, this capability's current contract.
 
 ## CLI contract
 

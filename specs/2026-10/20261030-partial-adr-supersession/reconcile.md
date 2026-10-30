@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-partial-adr-supersession
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
@@ -56,6 +56,12 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md
     resolution: modified
+  - file: docs/capabilities/integration/CAP-INT-mcp-services.md
+    resolution: modified
+  - file: docs/architecture/ARCH-05-1-containers.md
+    resolution: modified
+  - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-partial-adr-supersession`
@@ -94,7 +100,8 @@ Changed:
 - `ADR-local-and-pull-request-integration`: `superseded` to `accepted`, `superseded_by` dropped; its existing
   `ADR-host-cli-lifecycle-authority` pointer rewritten as "Superseded in part by". Its merge construction, readiness,
   policy binding and the other clauses that pointer names stay in force; `CAP-INT-mcp-services` keeps that merge
-  construction as its current contract (see "Open: outside the write scope"). The `ADR-moved-target-merge` line is unchanged.
+  construction as its current contract, and its sentence now names the replacement as partial (see "Statements outside
+  the decision ledger"). The `ADR-moved-target-merge` line is unchanged.
 - `ADR-delivery-decision-boundaries`: `superseded` to `accepted`, `superseded_by` dropped; its pointer ("supersedes
   only ... native MCP lifecycle execution and confirmation clauses"; gates, `auto` authority and Host autonomy remain)
   rewritten as "Superseded in part by".
@@ -165,20 +172,27 @@ Reviewed, unchanged:
   `ADR-package-split-and-namespaces` the whole-host move is only a considered option already marked superseded by its
   own member, and no server-version clause is stated, so no pointer was added rather than guessing a target.
 
-## Open: outside the write scope
+## Statements outside the decision ledger
 
-These Living Spec statements now contradict the ledger and need an edit outside this worker's write scope
-(`docs/capabilities/integration/`, `docs/capabilities/viewer/`, `docs/architecture/`); they are the problem of
-`worker-01.yaml`, and `reconcile.md` stays `pending` until they are reflected:
+`worker-01.yaml` stopped on these; the Host extended the write scope to the sentences alone, and they now match the
+ledger:
 
-- `CAP-INT-mcp-services` (reconcile-check-01, P1): "`ADR-host-cli-lifecycle-authority` supersedes the former lifecycle
-  MCP execution interface and `ADR-local-and-pull-request-integration`" reads as a whole replacement. Proposed text:
-  "`ADR-host-cli-lifecycle-authority` supersedes the former lifecycle MCP execution interface and, in part, the
-  lifecycle request, native confirmation and resume interface of `ADR-local-and-pull-request-integration`, which
-  remains authoritative for the merge construction and route guards below, this capability's current contract." The
-  `ADR-moved-target-merge` sibling may edit the same paragraph.
-- `ARCH-05-1-containers` and `CAP-VIEW-repository-viewer` (P3): "`ADR-viewer` as superseded by
-  `ADR-viewer-working-tree`" should read "as superseded in part by", since `ADR-viewer` is `accepted` again.
+- `CAP-INT-mcp-services` (reconcile-check-01, P1): `ADR-host-cli-lifecycle-authority` supersedes the former lifecycle
+  MCP execution interface and, in part, the lifecycle request, native confirmation and resume interface of
+  `ADR-local-and-pull-request-integration`, which remains authoritative for the merge construction and route guards,
+  the capability's current contract.
+- `ARCH-05-1-containers` and `CAP-VIEW-repository-viewer` (P3): "`ADR-viewer` as superseded in part by
+  `ADR-viewer-working-tree`".
+
+## Base merge
+
+Main was merged once (450dbfb9); `devkit generated resolve` settled the only conflict, `.devkit/installation.json`.
+Main brought `ADR-generated-conflicts-in-prepared-merge`, which names `ADR-moved-target-merge` in `supersedes`, and
+`ADR-moved-target-merge` already carries its "Superseded in part by" line and stays `accepted`, so the merged ledger
+follows the rule unchanged. A frontmatter scan of `docs/decisions/` after the merge finds no `superseded_by` outside
+the five `superseded` ADRs, an in-part line on every partly replaced target, and a `supersedes` entry on every
+superseder an in-part line names. On the merged content `just test-affected --base main` passed 2099 and
+`devkit rules check --ci --base main` is clean.
 
 ## Entrypoints
 

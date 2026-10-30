@@ -2,7 +2,7 @@
 id: SPEC-partial-adr-supersession
 title: Keep partially superseded ADRs accepted and searchable
 summary: An ADR becomes superseded only when wholly replaced; a partial replacement keeps it accepted with a superseded-in-part line, the PADR scaffold offers supersedes, and misclassified ADRs are corrected.
-status: in-progress
+status: completed
 created: 2026-10-30
 related_capabilities: [CAP-DOCS-document-model, CAP-DLV-proposal-planning]
 related_usecases: []
