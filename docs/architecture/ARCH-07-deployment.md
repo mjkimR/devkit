@@ -126,3 +126,9 @@ The catalog owns the entry, pointer, role contracts and managed current-context 
 `.devkit/incubation.md` remains project-owned and is never a seeded or overwritten deployment output. Built-wheel
 isolation, common policy inspection and context preservation are exercised by
 `packages/devkit-catalog/tests/e2e/bundles/incubation/test_installed_consumer.py`.
+
+The same wheel registers `deep-research = "devkit_catalog.deep_research"`; it deploys only after explicit
+`deep-research:core` selection and needs no devkit-spec under either approach. The catalog owns its entry, references
+and four role contracts; retained materials under `docs/materials/` are project-owned and never a deployment output.
+Built-wheel isolation under the default `sdd` approach, the transient workspace example and material preservation are
+exercised by `packages/devkit-catalog/tests/e2e/bundles/deep_research/test_installed_consumer.py`.

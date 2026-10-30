@@ -1,13 +1,13 @@
 ---
 id: UC-research-an-idea-and-shape-a-roadmap
 title: Research an idea and shape an initial roadmap
-summary: "An AI coding agent coordinates an explicitly selected bounded investigation, compares early product directions and retains supported initial documents, a conditional roadmap and resumable unknowns."
+summary: "An AI coding agent coordinates an explicitly invoked bounded investigation under either development approach, compares early product or architecture directions and retains one indexed research material with supported findings, a conditional roadmap and resumable unknowns."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional research and discovery subagents]
 status: active
 capabilities:
-  - CAP-DLV-idea-incubation
+  - CAP-DLV-deep-research
   - CAP-HARN-agent-guidance
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/skills/deep-research/SKILL.md
@@ -19,25 +19,26 @@ entrypoints:
 
 - **Goal**: investigate an early product or architecture decision and retain useful evidence, directions,
   initial documents and a conditional roadmap before development.
-- **Scope**: one bounded research action and its current/resume facts.
-- **Trigger**: the product owner explicitly selects the research entry.
-- **Preconditions**: the incubation bundle and ordinary project environment are available.
+- **Scope**: one bounded research action and its retained material.
+- **Trigger**: the product owner explicitly invokes the research entry.
+- **Preconditions**: the deep-research bundle and ordinary project environment are available.
 
 ## 2. Main Success Scenario
 
-1. The agent accepts the explicitly selected research activity (`CAP-DLV-idea-incubation`, `CAP-HARN-agent-guidance`).
-2. The agent checks approach and recovers current goals, constraints, decisions and supplied evidence (`CAP-DLV-idea-incubation`).
-3. The agent frames the decision, comparison criteria and research bound (`CAP-DLV-idea-incubation`).
-4. The agent allocates needed run/task scratch and commissions useful independent investigations inside assigned authority (`CAP-DLV-idea-incubation`).
-5. The agent validates returned sources, actions and candidate assumptions under common criteria (`CAP-DLV-idea-incubation`).
-6. The agent drafts a supported provisional recommendation and unresolved decisions (`CAP-DLV-idea-incubation`).
-7. The agent promotes selected documents and evidence, a conditional roadmap and current resume facts (`CAP-DLV-idea-incubation`).
-8. The agent reports the actual outcome, evidence limits, retained paths and next useful action (`CAP-DLV-idea-incubation`).
+1. The agent accepts the explicitly invoked research activity (`CAP-DLV-deep-research`, `CAP-HARN-agent-guidance`).
+2. The agent recovers current goals, constraints, decisions and supplied evidence without an approach check (`CAP-DLV-deep-research`).
+3. The agent frames the decision, comparison criteria and research bound (`CAP-DLV-deep-research`).
+4. The agent allocates needed run/task scratch and commissions useful independent investigations inside assigned authority (`CAP-DLV-deep-research`).
+5. The agent validates returned sources, actions and candidate assumptions under common criteria (`CAP-DLV-deep-research`).
+6. The agent drafts a supported provisional recommendation and unresolved decisions (`CAP-DLV-deep-research`).
+7. The agent retains selected documents, evidence and a conditional roadmap as one indexed material with its status (`CAP-DLV-deep-research`).
+8. The agent reports the actual outcome, evidence limits, the material's path and ID, the commit the user directs and the next useful action (`CAP-DLV-deep-research`).
 
 ## 3. Extensions
 
-- **2a.** SDD approach: the agent stops product actions and reports the shared configuration action; the use case ends without switching approach.
-- **2b.** Invalid/unreadable policy: the agent reports the actual policy error and next configuration action; the use case ends without product writes.
+- **2a.** SDD project: the explicit invocation is not development intake, so no Unit or classification starts; after the user commits the material, a later proposal, spec or decision cites it by its ID; continues at step 3.
+- **2b.** Adaptive (incubation) project: the agent reads no current-context file; after the user commits the material, the current context links it by its ID; continues at step 3.
+- **2c.** The user names an earlier run or a `partial` material of the same investigation: the agent reads it as an input source and updates that material at step 7 instead of creating a new one; continues at step 3.
 - **3a.** Consequential user decision is missing: the agent reuses known facts and asks only the missing decision; dependent work waits, then resumes at step 3.
 - **4a.** Small question: the agent stays inline or uses one support role; resumes at step 5.
 - **4b.** Delegation unavailable: the agent uses a permitted equivalent context/contract or reports missing coverage and continues only independently useful authorized work; resumes at step 5.
@@ -45,35 +46,37 @@ entrypoints:
 - **5a.** Unsupported/out-of-scope return: the agent rejects it as evidence, preserves the actual state and reports the affected coverage; resumes at step 3 for a permitted remedy.
 - **5b.** Evidence insufficient or bound exhausted: the agent retains partial evidence and missing questions; proceeds to step 6 with no fabricated winner.
 - **5c.** Candidate directions share one premise: the agent reframes a useful independent investigation or explains the constraints leaving one viable candidate; resumes at step 3 or proceeds to step 6.
-- **8a.** User authorizes implementation: the agent passes retained facts to the authorized product action; this research action ends without automatic SDD adoption or publication.
-
 - **7a.** Retained content depends on scratch-only references: the coordinator retains needed supporting evidence or replaces links with stable sources before finishing; resumes at step 7.
+- **7b.** The chosen material ID resolves or its directory exists: the coordinator chooses another slug without overwriting the existing material; resumes at step 7.
+- **8a.** User authorizes implementation: later work cites the retained material by its ID as ordinary intake; this research action ends without implementation, a commit or publication.
 
 ## 4. Postconditions
 
-- **Success guarantee**: retained notes/current facts distinguish evidence, assumptions, recommendations and actual
-  decisions; the roadmap is conditional and a later context can recover the next useful decision.
-- **Minimal guarantee**: no implicit approach change, user approval, role execution or unavailable evidence is
-  claimed; any boundary failure and affected state remain visible.
+- **Success guarantee**: one retained material distinguishes evidence, assumptions, recommendations and actual
+  decisions; its roadmap is conditional, its `Status` and open questions let a later run or consumer recover the next
+  useful decision, and it is left uncommitted for the user's Git policy.
+- **Minimal guarantee**: no approach inspection or change, Unit, commit, user approval, role execution or unavailable
+  evidence is claimed; no existing material is overwritten; any boundary failure and affected state remain visible.
 
 ## 5. Acceptance Criteria
 
-Rules: explicit research entry; approach inspection; adaptive clarification; optional support; bounded evidence;
-role boundaries; provenance; research workspace; selective promotion; initial synthesis; useful alternatives; bounded partial result; research completion.
+Rules: explicit invocation; approach neutrality; SDD intake exemption; research authority; optional support; bounded
+evidence; role boundaries; provenance; research workspace; selective promotion; initial synthesis; one material per
+investigation; collision check; resume; citation; bounded partial result; research completion.
 
 ### Scenario 1: Compare an initial idea and retain the result
 
 - **Covers**: main success scenario
-- **Given**: an incomplete product goal, permitted incubation and supplied sources.
+- **Given**: an incomplete product goal and supplied sources.
 - **When**: the agent completes the bounded investigation.
-- **Then**: retained notes cover supported alternatives, a provisional direction, conditional roadmap and explicit unknowns without claiming implemented behavior.
+- **Then**: one indexed material covers supported alternatives, a provisional direction, conditional roadmap and explicit unknowns without claiming implemented behavior, and the report names its path, ID and the commit the user directs.
 
-### Scenario 2: Refuse incompatible or invalid policy
+### Scenario 2: Run under either approach
 
 - **Covers**: 2a, 2b
-- **Given**: effective SDD or an invalid approach.
-- **When**: the research entry checks policy.
-- **Then**: the actual configuration action/error is reported and product files remain unchanged.
+- **Given**: an SDD project, or an adaptive project with a current-context file.
+- **When**: the user invokes the research entry.
+- **Then**: no approach check, Unit or classification runs, `.devkit/incubation.md` is neither read nor written, and the retained material is cited or linked later by its ID.
 
 ### Scenario 3: Ask only the missing consequential decision
 
@@ -117,12 +120,12 @@ role boundaries; provenance; research workspace; selective promotion; initial sy
 - **When**: the coordinator compares them.
 - **Then**: it investigates a distinct premise or records why constraints leave one candidate; consensus does not establish correctness.
 
-### Scenario 9: Hand facts to an authorized next action
+### Scenario 9: Hand the material to later work
 
 - **Covers**: 8a
-- **Given**: research output and subsequent user implementation authority.
-- **When**: the next product action begins.
-- **Then**: it consumes the retained current facts without treating research completion as SDD activation or publication approval.
+- **Given**: a committed research material and a later user request for implementation.
+- **When**: the later work starts.
+- **Then**: it starts as ordinary intake and cites the material by its ID, without treating research completion as approval, a commit or publication.
 
 ### Scenario 10: Keep task scratch ignored and separate
 
@@ -137,3 +140,17 @@ role boundaries; provenance; research workspace; selective promotion; initial sy
 - **Given**: an investigation has intermediate task notes and useful supporting evidence.
 - **When**: the coordinator retains the synthesis.
 - **Then**: selected results and evidence are preserved with resolving durable references, the whole scratch tree is not copied by default, and scratch is not automatically deleted.
+
+### Scenario 12: Resume a partial investigation
+
+- **Covers**: 2c
+- **Given**: a `partial` material the user names as the same investigation.
+- **When**: the agent retains the resumed result.
+- **Then**: it updates that index in place and a `complete` material is never rewritten.
+
+### Scenario 13: Avoid an existing material ID
+
+- **Covers**: 7b
+- **Given**: the chosen slug's material ID already resolves.
+- **When**: the coordinator creates the material.
+- **Then**: it chooses another slug and the existing material is unchanged.

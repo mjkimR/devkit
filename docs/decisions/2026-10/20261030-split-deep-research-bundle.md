@@ -12,7 +12,7 @@ supersedes: ADR-extend-incubation-with-optional-discovery-teams
 
 - **Status**: Accepted
 - **Date**: 2026-10-30
-- **Supersedes on promotion**: `ADR-extend-incubation-with-optional-discovery-teams`
+- **Supersedes**: `ADR-extend-incubation-with-optional-discovery-teams`
 
 ---
 

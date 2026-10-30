@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Approach-aware SDD and opt-in incubation entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
+summary: "Approach-aware SDD, opt-in incubation and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -406,21 +406,35 @@ immutable iteration history. Existing explicitly bound SDD artifacts keep their 
 assets never switches the approach. Incubation entry/roles/context are separately delivered; this policy supplies no
 product discovery coordinator.
 
+An explicit `/deep-research` invocation is not development intake: the spec router runs no playbook discovery,
+classifies it into no depth and creates no Unit for it, and work the research later informs starts as ordinary
+intake. A proposal, spec or ADR cites research retained outside it by its `MAT-<slug>` ID in a code span and never
+copies it into a proposal's `materials/` (`ADR-retain-research-as-cited-materials`).
+
 ## Incubation entry and current context
 
-The opt-in `incubation:core` catalog bundle supplies `/incubate`, explicit `/incubate-research`, conditional references,
-the incubation pointer, six optional support contracts and a current-context template (`CAP-DLV-idea-incubation`). Install devkit-docs
+The opt-in `incubation:core` catalog bundle supplies `/incubate`, conditional references, the incubation pointer, three
+optional support contracts and a current-context template (`CAP-DLV-idea-incubation`). Install devkit-docs
 and devkit-catalog and select incubation explicitly; devkit-spec is not required. The entry inspects common
 `configuration.development.approach` before product work and stops on SDD or invalid policy rather than switching
 approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action. Explicit research adds direction-explorer, discovery-critic and discovery-planner assignments to the
-product-clarifier, incubation-researcher and usage-reviewer roles. The coordinator allocates ignored transient
-run/task scratch when writing is needed, validates member evidence and promotes selected initial documents and
-a conditional roadmap without transient-only dependencies. No action requires all roles or starts implementation
-merely because research completed. Their role contracts preserve source/index/HEAD authority and distinguish
-emulated boundaries from native confinement. The coordinator owns mutable project context at
+action with optional product-clarifier, incubation-researcher and usage-reviewer assignments; no action requires all
+roles. Their role contracts preserve source/index/HEAD authority and distinguish emulated boundaries from native
+confinement. `/incubate` neither invokes nor suggests a research entry and links a retained research material by its
+`MAT-<slug>` ID. The coordinator owns mutable project context at
 `.devkit/incubation.md`, including current goal/choices, source-specific run/check evidence, uncertainty and next
 action. Sync owns its pristine template and preserves the project-owned file. Explicit adoption requests route to
 the separately available baseline procedure; this entry does not activate SDD or reconstruct experiment history.
+
+## Deep research entry
+
+The opt-in `deep-research:core` catalog bundle supplies `/deep-research` with conditional orchestration, workspace
+and synthesis references and four optional role contracts (direction-explorer, discovery-critic, discovery-planner,
+research-investigator), with no guidance asset (`CAP-DLV-deep-research`). It installs with devkit-docs and
+devkit-catalog under either approach without devkit-spec, and shares no role with and depends on no other bundle.
+The entry runs only on explicit user invocation: native projection disables implicit invocation and the skill body
+opens with the explicit-only guard; no skill, pointer, guide or role suggests it. It inspects no approach, writes only
+its transient run directory and one indexed material under `docs/materials/`, and never commits: its report directs
+the commit through the project's Git policy.

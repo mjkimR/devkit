@@ -12,7 +12,7 @@ supersedes: ADR-keep-discovery-plans-distinct-from-delivery-commitments
 
 - **Status**: Accepted
 - **Date**: 2026-10-30
-- **Supersedes on promotion**: `ADR-keep-discovery-plans-distinct-from-delivery-commitments`
+- **Supersedes**: `ADR-keep-discovery-plans-distinct-from-delivery-commitments`
 
 ---
 
