@@ -943,7 +943,7 @@
     },
     ".agents/agents/git-operator.md": {
       "mode": 420,
-      "sha256": "1013314fe3e8ed8065d85763c4778b90316bfdf1a5cf9aae62200c67a8c5b0ed"
+      "sha256": "2b4553fc02bcd8c91806146e0e82d279d25709b42dd15445e781fd29c3694d4c"
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
@@ -995,7 +995,7 @@
     },
     ".agents/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "b95af44f673d8391eb04beb3890d7fb9d27855ed5e16db1c2e4cf5d423b552e9"
+      "sha256": "ddfd9128b2e7aff6fbb9bb06d055ff7e433c4f035634bebe9e3a3ed04a399ffb"
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1051,11 +1051,11 @@
     },
     ".agents/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
-      "sha256": "a843a8ec8f07ded51f51eabaa68bc74277f6fbd003c1cef2c871facf945e88e4"
+      "sha256": "c1db4c8db1d2e1a01b0c790bcfaf437034f035cb94ce5feea13cc3f025275291"
     },
     ".agents/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
-      "sha256": "2aa74bee598479fa9fa3211987e2afa1e80526d365c7fc4774cf96c9fab6f806"
+      "sha256": "2c65fe221b8e9bfddc63860dfcab6760c461b2165e6704d669be18a30010892e"
     },
     ".agents/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1199,7 +1199,7 @@
     },
     ".claude/agents/git-operator.md": {
       "mode": 420,
-      "sha256": "f7f5fc01589a8b1fb453a76fd2fc14368c288325bf51ca961873ee150b35dd04"
+      "sha256": "033943896f402c3fcb12d86981cb94ee294c55d852a901205f1c9d6dd270b319"
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
@@ -1243,7 +1243,7 @@
     },
     ".claude/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "b95af44f673d8391eb04beb3890d7fb9d27855ed5e16db1c2e4cf5d423b552e9"
+      "sha256": "ddfd9128b2e7aff6fbb9bb06d055ff7e433c4f035634bebe9e3a3ed04a399ffb"
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1295,11 +1295,11 @@
     },
     ".claude/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
-      "sha256": "a843a8ec8f07ded51f51eabaa68bc74277f6fbd003c1cef2c871facf945e88e4"
+      "sha256": "c1db4c8db1d2e1a01b0c790bcfaf437034f035cb94ce5feea13cc3f025275291"
     },
     ".claude/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
-      "sha256": "2aa74bee598479fa9fa3211987e2afa1e80526d365c7fc4774cf96c9fab6f806"
+      "sha256": "2c65fe221b8e9bfddc63860dfcab6760c461b2165e6704d669be18a30010892e"
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1443,7 +1443,7 @@
     },
     ".codex/agents/git-operator.toml": {
       "mode": 420,
-      "sha256": "203eb7c70a43df2cf77468ace2e22cf261ade557fae05a737133b5453ff521ab"
+      "sha256": "2ac7ef63ecb44335863ac21ef976c4d979e88fcd18184bd4fa93cabf534b6883"
     },
     ".codex/agents/planning-worker.toml": {
       "mode": 420,
@@ -1931,7 +1931,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "b95af44f673d8391eb04beb3890d7fb9d27855ed5e16db1c2e4cf5d423b552e9"
+      "sha256": "ddfd9128b2e7aff6fbb9bb06d055ff7e433c4f035634bebe9e3a3ed04a399ffb"
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1983,11 +1983,11 @@
     },
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
-      "sha256": "a843a8ec8f07ded51f51eabaa68bc74277f6fbd003c1cef2c871facf945e88e4"
+      "sha256": "c1db4c8db1d2e1a01b0c790bcfaf437034f035cb94ce5feea13cc3f025275291"
     },
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
-      "sha256": "2aa74bee598479fa9fa3211987e2afa1e80526d365c7fc4774cf96c9fab6f806"
+      "sha256": "2c65fe221b8e9bfddc63860dfcab6760c461b2165e6704d669be18a30010892e"
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -2131,7 +2131,7 @@
     },
     ".devkit/managed/spec/subagents/git-operator.md": {
       "mode": 420,
-      "sha256": "bfae5b2c8e735c5b74e9c4a5c57a07d989d673274e30cc7974acae602a9cb149"
+      "sha256": "c3341ae99dbfb43ed08d623f34c924355b7e2f3b10c47077bf2262b1cc8741e1"
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,

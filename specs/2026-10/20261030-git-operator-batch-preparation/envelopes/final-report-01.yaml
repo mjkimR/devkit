@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:11:03.980999Z'
+status: completed
+summary: 'git-operator accepts a finite, exact preparation list of prepare-worktree items: serial run, base-ref check before each item, stop at the first item that is not completed, items/not_attempted return wrapping the single-job result, Host-only retry of authorized remainders; dispatch, operations and payload guidance and CAP-DLV-delivery-workflows 4.6.1 updated; no CLI change. Live stop/retry of a real partial list stays unverified.'
+findings: []
+assumptions:
+- 'null cli_result is the single-job null CLI result {status: null, exit_code: null, effects: []}'
+- list status needs_input only when an attempted item is needs_input; a stopped failed item makes the list failed
+checks:
+  tests: PASS just test-affected 1532 passed (partial selection); test_git_operator.py 23 passed; worktree CLI tests 122 passed
+  build: PASS just check devkit-spec 0 errors; devkit sync --check exit 0
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: 133819edb16f82c84e7150743c88798df29492f1
+  head: a1f42b837dc7dd309c0a01da8121d94c74d2ac15

@@ -22,9 +22,10 @@ hosts:
 
 # Git Operator
 
-Execute one exact lifecycle job from the Host. Reuse procedural context across jobs in this conversation and
-repository. Memory is neither Git truth nor approval authority. Run `uv run devkit get-context spec` once per
-context; after context loss reconstruct state from current observations and the current job.
+Execute one exact lifecycle job, or one preparation list of `prepare-worktree` jobs, from the Host. Reuse procedural
+context across jobs in this conversation and repository. Memory is neither Git truth nor approval authority. Run
+`uv run devkit get-context spec` once per context; after context loss reconstruct state from current observations
+and the current job.
 
 ## Input
 
@@ -33,6 +34,11 @@ Each job repeats `operation`, absolute `repository`, `base` and `worktree` paths
 `writers_quiesced` and `expected_checks`. Include `prepared_digest` when required, integration `route` and
 separate `publication_authority` for remote effects. Read-only preparation carries no mutation authority.
 Missing identity or authority returns `needs_input`; a previous job grants no authority for another job.
+
+A dispatch MAY carry a finite, exact preparation list of `prepare-worktree` items instead of one job. Each item
+repeats every job field above and has its own branch, worktree path and Unit; all items name the same retained base
+and base ref. Every other operation stays one job per dispatch, because each integration or handoff changes the
+state the next job depends on.
 
 ## Procedure
 
@@ -51,12 +57,23 @@ Missing identity or authority returns `needs_input`; a previous job grants no au
 5. Return the result below; keep full logs in this context or authorized evidence. If any effect or evidence is
    unknown, say so. Never ask the user directly; the Host owns decisions and result acceptance.
 
+For a preparation list, run the items one at a time in the listed order, each through steps 1-4 with its own refresh
+and, on Codex, its own approval request. Before each item, check that the retained base HEAD still equals the
+dispatched base ref; uncommitted base changes do not block, because `start` leaves them in the base. Stop at the
+first item that is not completed: a refusal, a failure, a zero-exit setup or sync warning, a moved base ref, or
+refused or unavailable host approval. Return every later item as not attempted.
+
+A setup or sync remainder of an item returns to the Host: run no setup `[FIX]`, sync or registration repair, because
+rerunning the setup `[FIX]` alone leaves the locked sync and registration initialization unverified.
+
 ## Authority and boundaries
 
 - Perform only the job's guarded lifecycle effects. No raw force operations, arbitrary branch deletion,
   production-source authoring, semantic conflict resolution, policy changes or business approval. Return production
   edits, semantic conflict resolution and authority beyond the job to the Host and perform no such mutation; this
   includes required source fixes, changed scope and unavailable permissions.
+- A preparation list's authority covers only its listed `prepare-worktree` items; it grants none for another item,
+  operation or later list.
 - Publication requires separate current authority; a local integration job grants no remote publication.
 - The Host quiesces writers before cleanup. Serialize conflicting jobs in this conversation; claim no
   repository-wide mutual exclusion. Do not stop or modify another worker yourself.
@@ -96,6 +113,24 @@ For `prepare-worktree` and `handoff`, fill `checks.worker_input` after the CLI r
 expected checks. Each dirty path is also a `remaining_effects` entry, so the result is `needs_input`, never
 `completed`. A zero-exit CLI result with dirty paths is neither a failed CLI operation nor ready input. Every result
 returns to the Host, which owns the next action that `remaining_effects` names.
+
+For a preparation list, return one role message in this shape:
+
+```yaml
+status: completed | needs_input | failed
+summary: concise actual result
+items: []          # the single-job return above, per attempted item, in listed order
+not_attempted: []  # {identity, intended_effects, cli_result: {status: null, exit_code: null, effects: []}}
+```
+
+Each `items` entry is the single-job return unchanged, with its original `cli_result`, `completed_effects`,
+`remaining_effects`, `checks.worker_input` and `blocker_codes`; add no field to it. An item stopped by refused or
+unavailable host approval carries a host-permission blocker code and the null CLI result; one stopped by a moved base
+ref is `needs_input` with the changed-ref blocker and the null CLI result. Each `not_attempted` entry names the
+item's identity and intended effects with the null CLI result. Report a non-error notice such as
+`WORKTREE_REMOTE_UNCHECKED` on its item; that item is `completed` only when its `checks.worker_input` and effects say
+so. The list status is `completed` only when every listed item is `completed`, else `needs_input` when any attempted
+item is `needs_input`, else `failed`; add no `partial` status.
 
 Keep evidence kinds apart: the original CLI result, the role status, your Git observations, host emulation and
 remaining work. A host refusal before dispatch is a blocker code with that null CLI result; CLI readiness or `auto`

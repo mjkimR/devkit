@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:11:14.988322Z'
+status: completed
+summary: 'Development turn from specify to the final change report: spec/plan/tasks written; git-operator.md gains the prepare-worktree preparation list (Input, Procedure stop rule, list-authority sentence, items/not_attempted Return); git-operator-dispatch.md, git-operator-operations.md and spec-delegate payload.md carry the list and Host retry; six AC-tagged contract-text tests added; CAP-DLV-delivery-workflows 4.6.1 reflected; reconcile resolved; spec completed. Sync output committed: .devkit/installation.json (named in the task boundaries). No packages/devkit change. Known pre-existing failure test_agent_output_contract.py::test_fixes_carry_no_placeholder was not selected by test-affected and was not touched. Live stop/retry of a real partial list stays unverified.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 1532 passed; test_git_operator.py 23 passed; worktree CLI tests 122 passed
+  lint: PASS just lint-check devkit-spec; just check devkit-spec 0 errors; devkit rules check --ci --base main 0 errors
+  sync_end: PASS devkit sync --check exit 0
+diff_scope:
+  base: ''
+  head: db0e54a478e20f7efdee1d89bc109727ad340416
+activity_effort: low
