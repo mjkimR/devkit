@@ -1,0 +1,20 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:29:25.366106Z'
+status: completed
+summary: 'Development from specify through the final change report: citation convention stated (agent-asset-writing, CAP-DIST-content-packages) and pinned by tools/devkit-dev/tests/integration/test_bundle_citations.py; advisory unique_code guide reworded; CAP-DIST-sync-and-transactions remedy and UC-plan-and-hand-off-a-proposal 6a/7g + scenarios 24/25; three source feedback resolved, two new feedback recorded. Sync output: .devkit/installation.json (named in the payload); AGENTS.md unchanged. Ready for integration; not integrated.'
+findings: []
+assumptions:
+- Only backticked spans are citations; seeded IDs of any shipped bundle are allowed (ARCH-01-introduction-and-goals in the spec bundle roadmap reference is seeded by the auto-selected docs bundle)
+- Test placed in tools/devkit-dev/tests/integration beside the other repository-wide scans; affected selection reaches it through static imports of the shipping modules
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 189 passed
+  lint: PASS devkit rules check --ci --base main; just lint-check; pyright 0 errors
+  build: PASS uv build devkit-dist, devkit-agt, devkit-dev
+diff_scope:
+  base: a74163ce41fa29eb3877c3548e35601d64b967d6
+  head: 52c208425c1bd88a70208a7a208d0bf1b2d971c8
+activity_effort: low
