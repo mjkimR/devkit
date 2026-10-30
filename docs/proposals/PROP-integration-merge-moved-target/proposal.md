@@ -110,12 +110,15 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 
 ### devkit-agt (`worktree`, `integration`)
 
-- `plan_finish` refuses a source that does not contain the target only under `ff-only`. Under `no-ff` it plans a merge
-  build and still requires a committer identity.
+- `plan_finish` gains an opt-in keyword (`advance`, default off) that only the local integration service (and through
+  it composed acceptance) sets: with it, under `no-ff`, a source that does not contain the target plans a merge build
+  and still requires a committer identity. Without it (the pull-request route, `finish --merge`, external library
+  callers) today's refusal and error precedence stay.
 - Local preparation of a moved target builds a prospective merge with `build_result(advance=True)`: unsigned, no ref,
-  UTF-8, author and committer lines copied from the committer of the parent with the later committer date, so one
-  source and target yield one commit and one request digest in any environment; the digest contract is unchanged. A prospective context (approved context plus that commit) goes
-  to the finish guards (with `merge-base(target, source)`), the readiness provider, `receipts.check_merge` and the
+  UTF-8, author and committer lines copied from the committer of the parent with the later committer date, so the
+  commit and the request digest do not depend on Git identity, `TZ` or commit encoding; the merged tree follows the
+  repository's Git merge configuration, as the integrate build does. The digest contract is unchanged. A prospective
+  context (approved context plus that commit) goes to the finish guards (with `merge-base(target, source)`), the readiness provider, `receipts.check_merge` and the
   prospective policy digest before the request is returned.
 - Cleanup scopes are planned from the approved context; the prospective commit never enters
   `IntegrationResult.build_target` or `result_sha`. The `IntegrationContext` docstring states that a provider can
@@ -128,8 +131,8 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   adds the build target and the landed result.
 - `WORKTREE_MERGE_NOT_FF` (`ff-only`), `WORKTREE_MERGE_CONFLICT` and `INTEGRATION_RECEIPT_CONFLICT` fixes name the
   conditional base merge. `INTEGRATION_NOT_READY` keeps its core fix; codes and modes stay.
-- The pull-request route checks its containment refusal before the finish plan's committer-identity check, so a moved
-  target still gives `WORKTREE_MERGE_NOT_FF` there.
+- The pull-request route does not set `advance`, so it refuses a moved target with `WORKTREE_MERGE_NOT_FF` as today,
+  merged-PR cleanup included.
 
 ### devkit-spec (`delivery`, bundle)
 

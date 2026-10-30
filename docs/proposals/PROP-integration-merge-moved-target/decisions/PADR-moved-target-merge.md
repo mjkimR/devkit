@@ -66,10 +66,12 @@ Chosen option B, because it removes the manual base merge while refusing conflic
 changes before the confirmation.
 
 - Under `[worktree] merge = "no-ff"`, local preparation accepts a source that neither contains nor is contained by the
-  target. It builds a prospective merge commit with `build_result(advance=True)`: unsigned, referenced by no ref, UTF-8,
+  target, through an opt-in `plan_finish` keyword (`advance`, default off) that only the local integration service
+  sets; other callers keep today's refusal and error precedence. It builds a prospective merge commit with `build_result(advance=True)`: unsigned, referenced by no ref, UTF-8,
   with author and committer lines (name, email, raw date and offset) copied from the committer of whichever parent
-  has the later committer date. One source and target thus yield one commit in any environment, and the request
-  digest stays as defined today.
+  has the later committer date. The commit thus does not depend on Git identity, `TZ` or commit encoding, and the
+  request digest stays as defined today; the merged tree follows the repository's Git merge configuration, as the
+  integrate build does.
 - Preparation passes a prospective context (the approved context plus that commit as `result_sha`) to the finish
   guards (with `merge-base(target, source)`), the readiness provider, `receipts.check_merge` and the prospective policy
   digest. A provider can thus receive at prepare a result that never lands; the `IntegrationContext` and the
@@ -101,9 +103,8 @@ changes before the confirmation.
   it; its fix names merging the target into the branch or the `no-ff` policy.
 - `devkit worktree finish --merge` keeps refusing a moved target: it runs no readiness provider, so a merge it built
   would land an unchecked tree.
-- The pull-request route keeps its containment refusal (`WORKTREE_MERGE_NOT_FF`), checked before the finish plan's
-  committer-identity check: the platform builds its own merge, and its required checks run on the platform's merge
-  ref.
+- The pull-request route keeps its containment refusal (`WORKTREE_MERGE_NOT_FF`, unchanged precedence; it does not
+  set `advance`): the platform builds its own merge, and its required checks run on the platform's merge ref.
 
 ## 5. Consequences
 
