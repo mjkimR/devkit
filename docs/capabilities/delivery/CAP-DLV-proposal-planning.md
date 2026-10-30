@@ -645,9 +645,9 @@ worktree, spec bundle, selected effort, notices and completed effects. Setup or 
 proposal and any created worktree for inspection; the command never rolls those effects back automatically.
 
 Both composed commands print one outcome (`ARCH-08-1-agent-output`). A completed one is `[ACCEPTED: PROP-<slug>
-status=accepted|handed_off mode= authority= completed= target_sha= landed_sha= disclosure=]` (the last three once
-the integration landed: the merged target, the landed result and the delivery provider's disclosure, also in JSON
-as `target_sha`, `landed_sha` and `disclosure`) or `[HANDOFF: PROP-<slug> status=handed_off spec= dir=
+status=accepted|handed_off mode= authority= completed= target_sha= landed_sha= disclosure=]` (`target_sha=`, the merged
+target, and `disclosure=`, the delivery provider's disclosure, once the integration ran; `landed_sha=` once its
+result landed; also in JSON as `target_sha`, `disclosure` and `landed_sha`) or `[HANDOFF: PROP-<slug> status=handed_off spec= dir=
 worktree=dev-<slug> effort= authority=]`, followed by `[NEXT_CMD: ...]` when a next command exists, and exits `0`
 (`1` under `--strict` with a warning). One that stopped after some effects prints `[ACCEPTED_STOPPED: ...]` or
 `[HANDOFF_STOPPED: ...]` with the same fields, then `[NEXT_CMD: ...]` or `[NEXT_ACTION: "..."]`, renders its errors

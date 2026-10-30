@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-integration-merge-moved-target
 spec: SPEC-integration-merge-moved-target
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
     resolution: modified
@@ -19,6 +19,13 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261022-test-selection-and-ci.md
     resolution: modified
+  - file: docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md
+    resolution: waived
+    rationale: >-
+      Outside the write scope the accepted proposal grants (its boundaries own only UC-drive-development-to-integration
+      among use cases). Nothing in it contradicts the change: its composed-acceptance steps defer to
+      CAP-DLV-proposal-planning, which states the moved-base merge, the refusal before the acceptance commit and the
+      result fields. The missing extension is tracked as feedback FB-proposal-usecase-moved-base-acceptance.
 ---
 
 # Reconcile: `SPEC-integration-merge-moved-target`
@@ -51,9 +58,11 @@ targets:
 - `UC-drive-development-to-integration` drops the routine base merge from step 6, presents the merged target and
   disclosure at step 7, adds extension 7i (a refused preparation of a moved base), returns 8a to a fresh preparation,
   adds the batch test run to 1b and scenarios 29 to 31.
-- `ADR-local-and-pull-request-integration` and `ADR-test-selection-and-ci` each gain a "Superseded in part by" line
-  naming `ADR-moved-target-merge` and `ADR-post-batch-test-run`; their status and `superseded_by` are unchanged, as
-  both ADRs' follow-ups require.
+- `ADR-local-and-pull-request-integration` gains the "Superseded in part by" line naming `ADR-moved-target-merge`
+  that its follow-ups require; `ADR-test-selection-and-ci` gains the same line naming `ADR-post-batch-test-run` as a
+  consistency repair. Status and `superseded_by` are unchanged. `ADR-post-batch-test-run`'s own follow-ups
+  (`AGENTS.md`, `docs/development/ci-cd.md`, `docs/development/workflow.md`, `CAP-HARN-agent-guidance`) are done.
+- `UC-plan-and-hand-off-a-proposal` is waived below: it lies outside this change's write scope.
 
 Reference documents follow the same contract without being Living Spec targets: `docs/development/ci-cd.md`,
 `docs/development/workflow.md`, `docs/development/reference/{worktree,integration}.md`, `AGENTS.md` (Verification,
@@ -65,14 +74,18 @@ already use. No screen changed.
 
 ## Source feedback and deferred work
 
-The spec names no source feedback. `FB-local-render-fix-ignores-worker-write-scope` and
+The spec names no source feedback. `FB-proposal-usecase-moved-base-acceptance` tracks the waived
+`UC-plan-and-hand-off-a-proposal` extension. `FB-local-render-fix-ignores-worker-write-scope` and
 `FB-partial-supersession-hides-in-force-clauses` stay open for their own owners. Nothing in scope is deferred; the
 acceptance route that follows this change is `PROP-git-operator-planning-completion-route`, already planned.
 
 ## Review and verification
 
 The initial medium `code-reviewer` reviewed 83286f89 and reported three P3 findings (`review-01.yaml`); the
-implementer fixed them at e7510cd6 and closed them in `reverify-01.yaml`. Sync outputs: `devkit sync --check` passed at
+implementer fixed them at e7510cd6 and closed them in `reverify-01.yaml`. The independent medium `reconcile-reviewer` checked 48f56acc with no P1 and two P2 and four P3
+findings (`reconcile-check-01.yaml`); the implementer fixed the CAP-HARN trigger list and route qualifier, UC 7h and
+7i, the CAP-DLV-proposal-planning field timing, the CAP-INT refusal list and `INTEGRATION_NOT_READY` row and this
+record's ADR attribution, and waived the out-of-scope use case with feedback (`reconcile-check-02.yaml`). Sync outputs: `devkit sync --check` passed at
 the start; `.devkit/installation.json` is the only tracked output and is listed in Task 3 as `(sync output)`.
 Baseline: at cf991c47 `test_diverged_branch_is_refused_with_a_sha_preserving_fix` passed (prepare of a moved target
 refused with `WORKTREE_MERGE_NOT_FF`); after the change, prepare and integrate of the same setup land the merge

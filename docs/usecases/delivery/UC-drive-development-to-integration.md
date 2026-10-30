@@ -136,16 +136,17 @@ The integration executor's coded refusals this section does not name, and their 
 - **7g.** The CLI runtime is inside the worktree that integration would remove: the system refuses with
   `INTEGRATION_RUNTIME_IN_WORKTREE`; the agent uses a retained runtime outside that worktree, prepares the scope and
   obtains any required conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
-- **7h.** A synchronized rule of the source, or of the result at a build, imports a module or name the running runtime
+- **7h.** A synchronized rule of the source, or of the prospective or built result, imports a module or name the running runtime
   does not provide, such as the implementation module of a rule the branch adds: the system refuses with
   `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness (after 7f and 7g) and changes nothing; the source needs no change, and the agent,
   with separately granted authority, runs integration from the base checkout with a runtime built from the source's
   code outside the worktree (`CAP-INT-mcp-services`); resumes at step 7.
 - **7i.** Preparation of a moved base refuses: its merge conflicts with the branch (`WORKTREE_MERGE_CONFLICT`), the
-  merged result fails a CI rule (`INTEGRATION_NOT_READY`) or leaves a receipt record inconsistent
-  (`INTEGRATION_RECEIPT_CONFLICT`), and nothing changes. The agent merges the base into the branch, resolves the
-  conflict or runs `devkit rules fix`, and re-verifies what the merge changed (`CAP-INT-mcp-services`); resumes at
-  step 6.
+  merged result fails a CI rule, or the base changed the unit directory since the merge base
+  (`INTEGRATION_NOT_READY`), or the merge leaves a receipt record inconsistent (`INTEGRATION_RECEIPT_CONFLICT`), and
+  nothing changes. The agent merges the base into the branch, then resolves the conflict, runs `devkit rules fix`
+  after a CI-rule reason or `devkit sync` after a receipt conflict, commits and re-verifies what the merge changed
+  (`CAP-INT-mcp-services`); resumes at step 6.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with
   `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target; the agent prepares again on
   the current base without merging it into the branch (`CAP-INT-mcp-services`); resumes at step 7.

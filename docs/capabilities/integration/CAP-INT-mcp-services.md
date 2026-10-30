@@ -78,8 +78,8 @@ build the prospective merge in the object store and run the finish guards on `me
 readiness provider, the receipt check and the prospective policy digest on it before it returns a request; the
 source need not contain the target first (`ADR-moved-target-merge`). A conflict refuses with
 `WORKTREE_MERGE_CONFLICT`, a failing check with `INTEGRATION_NOT_READY` or `INTEGRATION_RECEIPT_CONFLICT`, Git
-below 2.38 with `WORKTREE_GIT_UNSUPPORTED`, each with nothing changed; only then does the Host merge the target into
-the task branch. The prospective commit is unsigned, referenced by no ref and copies the committer line of the
+below 2.38 with `WORKTREE_GIT_UNSUPPORTED`, a missing committer identity with `WORKTREE_COMMIT_FAILED`, each with
+nothing changed; only after a conflict or a failing check does the Host merge the target into the task branch. The prospective commit is unsigned, referenced by no ref and copies the committer line of the
 parent with the later committer date, so two preparations of one source and target yield one digest whatever the
 Git identity or `TZ`. Cleanup is planned from the approved context, and `build` names only real builds. `ff-only`,
 `devkit worktree finish --merge` and the pull-request route keep refusing a moved target with
@@ -162,7 +162,7 @@ registered.
 | Code | Next action |
 | --- | --- |
 | `INTEGRATION_CONFIG_INVALID` | Configure or install the named readiness provider and use a supported route. |
-| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: missing or invalid session claims are identified by provider evidence `SESSION_CLAIMS_INVALID`; `[TARGET]` names `--claims` and `[FIX]` directs correction and retry of the same prepare or integrate command with explicit claims. Other readiness failures direct source-worktree fixes, commit and preparation again. |
+| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: missing or invalid session claims are identified by provider evidence `SESSION_CLAIMS_INVALID`; `[TARGET]` names `--claims` and `[FIX]` directs correction and retry of the same prepare or integrate command with explicit claims. Other readiness failures direct source-worktree fixes, commit and preparation again; a CI-rule or unit-directory reason found on a prospective or built result names the conditional base merge (merge the target into the task branch, `devkit rules fix`, re-verify what the merge changed, prepare again). |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
 | `INTEGRATION_RULE_RUNTIME_MISMATCH` | The source needs no change. With separately granted authority, build a runtime from the source's code outside the worktree being removed and run `devkit integration integrate <branch>` from the base checkout with it; never edit the rules, skip readiness or use the worktree's own runtime. |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: run `[FIX]` to present the scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |

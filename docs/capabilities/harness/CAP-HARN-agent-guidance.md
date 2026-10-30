@@ -208,8 +208,9 @@ Workers retain their strict write boundaries.
 For changed bundle sources, the Host runs official `devkit sync` in the integration worktree, inspects and commits
 tracked receipt/projection updates, then verifies the final content before requesting integration approval. It
 incorporates the base and synchronizes again only after preparation reports `WORKTREE_MERGE_CONFLICT`,
-`INTEGRATION_RECEIPT_CONFLICT` or `INTEGRATION_NOT_READY`; the receipt check and the CI rules on the merged result
-guard a conflict-free moved base (`ADR-moved-target-merge`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
+`INTEGRATION_RECEIPT_CONFLICT`, `INTEGRATION_NOT_READY`, or `WORKTREE_MERGE_NOT_FF` under `merge = "ff-only"` or on
+the pull-request route; on the local `no-ff` route the receipt check and the CI rules on the merged result guard a
+conflict-free moved base (`ADR-moved-target-merge`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
 base-checkout projections and reports failures or unexpected tracked changes for inspection.
 
 ### Host scope observation
@@ -230,8 +231,8 @@ The contract is CAP-COLL-work-scope-registry; the rationale is ADR-host-owned-sc
 `spec-plan`, `spec-review` and `spec-integrate` follow the consuming repository's verification policy. They plan and
 run affected tests when supported, preserve selector full-suite fallbacks and frontend checks, and require a local
 full suite only when the repository or selector calls for it. Delegated reviewers reuse valid results and run
-only missing or stale checks. Integration merges a conflict-free moved base itself and runs only the CI rules on
-the merged result; the Host merges the base and re-verifies what that changed only after a reported conflict or
+only missing or stale checks. Local `no-ff` integration merges a conflict-free moved base itself and runs only the CI
+rules on the merged result (`ff-only` and the pull-request route still need the base merged into the branch); the Host merges the base and re-verifies what that changed only after a reported conflict or
 failing check. Once every unit of a `local-orchestrated` run is finished (integrated, blocked with its problem
 recorded, waiting for a user decision or continued in `direct`), `spec-orchestrate` runs the repository's
 integrated-content verification once on the base branch HEAD from the batch start; outside such a run, a later batch
