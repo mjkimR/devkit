@@ -1,32 +1,24 @@
 ---
-id: PROP-worker-audit-known-host-advance
+id: SPEC-worker-audit-known-host-advance
 title: Stop requiring an unchanged base checkout in worker validation
-summary: "Drop the base-checkout HEAD and status equality from worker validation and require each returned turn to add its own worker envelope, so integrations and other sessions need not wait for a running worker; a partial committed escape into the base is an accepted residual."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/delivery/
-priority: medium
-size: S
-planning_effort: high
-dev_effort: medium
-milestone: MS-git-operator-lifecycle-refinement
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/
-    - docs/decisions/2026-10/20261022-orchestration-workers.md
-    - packages/devkit-spec/tests/
-    - docs/capabilities/delivery/
-  excludes:
-    - .devkit/managed/
-    - packages/devkit-core/
-task_kind: feature
+summary: Drop the base-checkout HEAD and status equality from worker validation and require each returned turn to add its own worker envelope, so integrations and other sessions need not wait for a running worker; a partial committed escape into the base is an accepted residual.
+status: planned
+created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-worker-audit-known-host-advance] Stop requiring an unchanged base checkout in worker validation
+# [SPEC-worker-audit-known-host-advance] Stop requiring an unchanged base checkout in worker validation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-worker-audit-known-host-advance on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-worker-audit-known-host-advance`
+
+### 1. Background & Hypothesis
 
 The exact-base observation rule caused unnecessary serialization in the resource-indexer consumer pilot
 (`MAT-git-operator-consumer-pilot`): the Host held independent Planning integrations while a Development worker ran,
@@ -43,7 +35,26 @@ The hypothesis: the worker's own range audit, one explicit envelope condition an
 name every worker escape except a partial committed one, so the equality can go without a replacement mechanism. The
 user accepted that residual (`answer-01`).
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Stop requiring an unchanged base checkout in worker validation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 Declaration**: How does the Host declare a target advance as its own, and how does inspection verify it?
   Answer: no declaration. The rule protects against a worker write escaping into the base checkout, not against
@@ -67,9 +78,9 @@ user accepted that residual (`answer-01`).
 - **Q3 Interaction with light merging**: no base merge is required before validation or acceptance; nothing in this
   proposal reads the base checkout's HEAD.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-`PADR-drop-the-base-checkout-equality-from-worker-validation` records the decision: the user chose dropping the
+`ADR-drop-the-base-checkout-equality-from-worker-validation` records the decision: the user chose dropping the
 equality (option A in `MAT-base-observation-options`).
 
 - **Host procedure** (`spec-delegate/references/worker.md`, `payload.md`): drop the pre-spawn record of the base
@@ -90,7 +101,7 @@ equality (option A in `MAT-base-observation-options`).
   refuses a base-checkout commit touching a path an active task worktree's unit owns. No follow-up draft is filed
   before that.
 
-### Acceptance
+#### Acceptance
 
 | ID | Given | When | Then |
 | --- | --- | --- | --- |
@@ -98,7 +109,7 @@ equality (option A in `MAT-base-observation-options`).
 | WAH-01 | The bundle's worker and payload references | `test_role_contracts.py` runs | Neither `worker.md` nor `payload.md` requires a pre-spawn base record or an unchanged base status or HEAD; `worker.md` requires `<returned>` to add this turn's `worker` envelope, absent at `<accepted>`, and keeps the ancestry, HEAD, write-scope and clean-worktree conditions. |
 | WAH-02 | `CAP-DLV-delivery-workflows`, the promoted ADR and `ADR-orchestration-workers` | The reconcile review of the Development unit checks them | `CAP-DLV-delivery-workflows`' acceptance requirements name the turn's own `worker` envelope instead of an unchanged base, and its base-checkout observation names no Host comparison; the promoted ADR names the two superseded clauses; `ADR-orchestration-workers` carries a pointer line to it. |
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: a global repository lock or autonomous scheduler.
 - **Scope Excluded**: treating a base advance as worker authorship, write permission or a skip of the final
@@ -108,7 +119,7 @@ equality (option A in `MAT-base-observation-options`).
 - **Scope Excluded**: changing integration's dirty-base refusal or its handling of moved targets
   (`PROP-integration-merge-moved-target`).
 
-## Planning decisions
+### Planning decisions
 
 - Planning compared dropping the equality (A), a declared-Host-advance list (B) and a derived scope-overlap warning
   (C) (`MAT-base-observation-options`). It first recommended C; `challenger-01` and `challenger-02` showed that C's
@@ -117,7 +128,7 @@ equality (option A in `MAT-base-observation-options`).
 - GOP-08 is restated under A: the parent's "unknown or dirty target changes stop" would stop on every foreign commit;
   a dirty base and real conflicts stop at their existing refusals instead.
 - The earlier scope-overlap-warning PADR was withdrawn with the switch to A and replaced by
-  `PADR-drop-the-base-checkout-equality-from-worker-validation`.
+  `ADR-drop-the-base-checkout-equality-from-worker-validation`.
 - The new ADR names the superseded clauses in its text and `ADR-orchestration-workers` gets a pointer line; it carries
   no `supersedes` field, because superseding the alias of the committed-results decision in `ADR-orchestration-workers`
   would also retire the worker's Git actions and the rest of that decision.
@@ -126,9 +137,10 @@ equality (option A in `MAT-base-observation-options`).
   can stay hidden; the envelope condition and the stated exception answer them.
 - `spec-orchestrate/` left `owns`: its sequencing rule never relied on the base equality.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-worker-audit-known-host-advance`; the proposal is deleted there and its decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+
