@@ -80,6 +80,15 @@ class CleanupIncompleteWarning(IntegrationError):
     fix = "Inspect the approved cleanup targets and actual Git or PR state, resolve the reported condition, then rerun `uv run devkit integration integrate` only when the source and remaining cleanup scope can be revalidated"
 
 
+class GeneratedSeededWarning(IntegrationError):
+    """The merge kept generated files from one side without regenerating them (``WARNING``,
+    ``ADR-generated-conflicts-in-prepared-merge``): they are stale on the target until regenerated. The raiser sets
+    one detail per artifact and the fix with the exact ``devkit generated regen`` command."""
+
+    code = "INTEGRATION_GENERATED_SEEDED"
+    level = Level.WARNING
+
+
 class TargetMovedError(IntegrationError):
     code = "INTEGRATION_TARGET_MOVED"
     guardrail = True

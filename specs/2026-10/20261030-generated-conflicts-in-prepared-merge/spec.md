@@ -2,7 +2,7 @@
 id: SPEC-generated-conflicts-in-prepared-merge
 title: Settle generated-file conflicts in prepared merges
 summary: Let integration preparation and integration complete a moved-target merge whose only conflicts are in registered generated files, by taking each artifact's seed side and disclosing the artifacts to regenerate on the target, instead of refusing with WORKTREE_MERGE_CONFLICT.
-status: planned
+status: in-progress
 created: 2026-10-30
 related_capabilities: [CAP-WT-task-worktrees, CAP-INT-mcp-services, CAP-GEN-tracked-artifacts, CAP-HARN-agent-guidance]
 related_usecases: [UC-drive-development-to-integration]
@@ -124,11 +124,11 @@ change keeps it and removes the manual merge when every conflict is in a generat
   seeded prospective result as `result_sha`.
 
 ### [AC-07] The registry comes from the build target
-- **Given** a target whose committed `.devkit/generated.toml` disables `devkit-receipt` (`enabled = false`), while the
-  base checkout's working tree does not
+- **Given** a target whose committed `.devkit/generated.toml` disables `devkit-receipt` (`enabled = false`)
 - **When** a receipt-only conflict is prepared
 - **Then** it refuses with `WORKTREE_MERGE_CONFLICT`, naming `.devkit/installation.json` as owned by no generated
-  artifact.
+  artifact; the registry of a build is read from the committed file at the build target, never from the working
+  tree.
 
 ### [AC-08] Other merge paths keep refusing every conflict
 - **Given** a receipt-only conflict
