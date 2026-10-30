@@ -66,22 +66,27 @@ Chosen option B, because it removes the manual base merge while refusing conflic
 changes before the confirmation.
 
 - Under `[worktree] merge = "no-ff"`, local preparation accepts a source that neither contains nor is contained by the
-  target. It builds a prospective merge commit with `build_result(advance=True)`: unsigned, referenced by no ref, with
-  author and committer dates fixed to the later of the target's and the source's committer dates, so one source,
-  target and identity yield one commit and the request digest stays as defined today.
+  target. It builds a prospective merge commit with `build_result(advance=True)`: unsigned, referenced by no ref, UTF-8,
+  with author and committer lines (name, email, raw date and offset) copied from the committer of whichever parent
+  has the later committer date. One source and target thus yield one commit in any environment, and the request
+  digest stays as defined today.
 - Preparation passes a prospective context (the approved context plus that commit as `result_sha`) to the finish
   guards (with `merge-base(target, source)`), the readiness provider, `receipts.check_merge` and the prospective policy
   digest. A provider can thus receive at prepare a result that never lands; the `IntegrationContext` and the
   devkit-spec provider docstrings and `CAP-DLV-delivery-workflows` state it. Cleanup scopes are planned from the
   approved context (`result_sha` `None`); the prospective commit never enters `IntegrationResult.build_target` or
   `result_sha`, which keep naming only real builds for recovery.
-- Composed acceptance passes the same prospective context to its preview, which runs the delivery CI rules on the
-  prospective result before the acceptance commit and refuses with `SPEC_PROPOSAL_APPROVAL_NOT_READY` and the rule
-  reasons, so reference drift from main (a cited proposal handed off meanwhile) refuses before anything is committed.
+- Composed acceptance passes the same prospective context to its preview, which runs the delivery provider's
+  result-dependent checks (the CI rules on the prospective result and the unit-advance check: the target changed the
+  proposal directory since the merge base) before the acceptance commit and refuses with
+  `SPEC_PROPOSAL_APPROVAL_NOT_READY` and their reasons. Reference drift from main (a cited proposal handed off
+  meanwhile) and a target edit to the proposal directory, the only way the acceptance delta can conflict, refuse
+  before anything is committed.
 - A conflict refuses at prepare with `WORKTREE_MERGE_CONFLICT` and nothing changed. Failing readiness refuses with
-  `INTEGRATION_NOT_READY`; when a CI-rule reason comes from a built merge, the refusal adds a detail naming the
-  conditional base merge: merge the target into the task branch, fix what the rules report (`devkit rules fix`),
-  re-verify what the merge changed, prepare again. Other readiness reasons keep today's fix. `INTEGRATION_RECEIPT_CONFLICT`
+  `INTEGRATION_NOT_READY` and the provider's reasons; core keeps that code's fix. The devkit-spec provider (and the
+  acceptance preview's refusal) words each CI-rule reason found on a prospective or built result (`result_sha` set)
+  with the conditional base merge: merge the target into the task branch, fix what the rules report
+  (`devkit rules fix`), re-verify what the merge changed, prepare again. Other readiness reasons keep today's wording. `INTEGRATION_RECEIPT_CONFLICT`
   names the same conditional base merge for its own cause. After `INTEGRATION_TARGET_MOVED`, or any target change
   between prepare and integrate, a fresh preparation rebuilds on the current target; no base merge is required.
 - Integrate keeps today's build: it rebuilds on the current target (which must descend from the confirmation target),
@@ -96,8 +101,9 @@ changes before the confirmation.
   it; its fix names merging the target into the branch or the `no-ff` policy.
 - `devkit worktree finish --merge` keeps refusing a moved target: it runs no readiness provider, so a merge it built
   would land an unchecked tree.
-- The pull-request route keeps its containment refusal: the platform builds its own merge, and its required checks run
-  on the platform's merge ref.
+- The pull-request route keeps its containment refusal (`WORKTREE_MERGE_NOT_FF`), checked before the finish plan's
+  committer-identity check: the platform builds its own merge, and its required checks run on the platform's merge
+  ref.
 
 ## 5. Consequences
 
@@ -120,8 +126,9 @@ changes before the confirmation.
 
 - Tests: a conflict-free moved target integrates and accepts without a base merge; a conflict refuses at prepare with
   nothing changed; a moved target that changed `dev-integration`, `delete_branch` or `[tool.spec]` integrates;
-  CI-rule drift on the result refuses at prepare and, in composed acceptance, before the acceptance commit; two
-  preparations of a moved target yield one digest; `ff-only` and `finish --merge` still refuse
+  CI-rule drift on the result refuses at prepare and, in composed acceptance, before the acceptance commit, as does
+  a target change to the proposal directory; two preparations in environments with different Git identity and `TZ`
+  yield one digest; `ff-only`, `finish --merge` and the pull-request route still refuse
   (`packages/devkit/tests/e2e/features/integration/test_base_advance.py`,
   `packages/devkit/tests/integration/features/worktree/test_merging.py`,
   `packages/devkit-spec/tests/e2e/features/delivery/test_integration.py`, the plan-accept CLI tests).

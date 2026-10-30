@@ -113,8 +113,8 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - `plan_finish` refuses a source that does not contain the target only under `ff-only`. Under `no-ff` it plans a merge
   build and still requires a committer identity.
 - Local preparation of a moved target builds a prospective merge with `build_result(advance=True)`: unsigned, no ref,
-  dates fixed to the later of the two parents' committer dates, so the commit and the request digest are
-  deterministic and the digest contract is unchanged. A prospective context (approved context plus that commit) goes
+  UTF-8, author and committer lines copied from the committer of the parent with the later committer date, so one
+  source and target yield one commit and one request digest in any environment; the digest contract is unchanged. A prospective context (approved context plus that commit) goes
   to the finish guards (with `merge-base(target, source)`), the readiness provider, `receipts.check_merge` and the
   prospective policy digest before the request is returned.
 - Cleanup scopes are planned from the approved context; the prospective commit never enters
@@ -127,14 +127,18 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
   `[INTEGRATION_PREPARED: ...]`/`[INTEGRATION_SCOPE: ...]` name the confirmation target SHA, `[INTEGRATION: ...]`
   adds the build target and the landed result.
 - `WORKTREE_MERGE_NOT_FF` (`ff-only`), `WORKTREE_MERGE_CONFLICT` and `INTEGRATION_RECEIPT_CONFLICT` fixes name the
-  conditional base merge. `INTEGRATION_NOT_READY` keeps its fix and adds a detail naming the conditional base merge
-  and `devkit rules fix` only when a CI-rule reason comes from a built merge. Codes and modes stay.
+  conditional base merge. `INTEGRATION_NOT_READY` keeps its core fix; codes and modes stay.
+- The pull-request route checks its containment refusal before the finish plan's committer-identity check, so a moved
+  target still gives `WORKTREE_MERGE_NOT_FF` there.
 
 ### devkit-spec (`delivery`, bundle)
 
 - Composed acceptance (`accept_only`, `accept_and_handoff`) inherits the preparation change. Its preview receives the
-  prospective context and runs the delivery CI rules on the prospective result, so a conflict or CI-rule drift refuses
-  (`WORKTREE_MERGE_CONFLICT`, `SPEC_PROPOSAL_APPROVAL_NOT_READY`) before the acceptance commit. Its result adds the
+  prospective context and runs the provider's result-dependent checks (CI rules and the unit-advance check) on it, so
+  a conflict, CI-rule drift or a target change to the proposal directory refuses (`WORKTREE_MERGE_CONFLICT`,
+  `SPEC_PROPOSAL_APPROVAL_NOT_READY`) before the acceptance commit.
+- The devkit-spec CI-rule reasons on a prospective or built result (`result_sha` set), and the preview's refusal, name
+  the conditional base merge and `devkit rules fix`. Its result adds the
   delivery provider's disclosure and the merged target SHA.
 - The devkit-spec provider docstring and `CAP-DLV-delivery-workflows` readiness section state that prepare may check a
   prospective result.
@@ -166,9 +170,11 @@ Answers from Planning; evidence in `envelopes/scout-01.yaml`, `envelopes/scout-0
 - A conflicting moved target refuses at prepare with `WORKTREE_MERGE_CONFLICT` and leaves the target, source and
   worktree unchanged.
 - A moved target that changed `dev-integration`, `delete_branch` or `[tool.spec]` integrates when the source did not
-  change them. CI-rule drift on the merged result refuses at prepare with `INTEGRATION_NOT_READY`, and in composed
-  acceptance with `SPEC_PROPOSAL_APPROVAL_NOT_READY` and no acceptance commit.
-- Two preparations of the same source and moved target print the same digest.
+  change them. CI-rule drift on the merged result refuses at prepare with `INTEGRATION_NOT_READY`; in composed
+  acceptance it, and a target change to the proposal directory, refuse with `SPEC_PROPOSAL_APPROVAL_NOT_READY` and
+  no acceptance commit.
+- Two preparations of the same source and moved target print the same digest, also when the second runs with a
+  different Git identity and `TZ`.
 - `merge = "ff-only"`, `devkit worktree finish --merge` and the pull-request route still refuse a moved target with
   their current codes.
 - Every prepare, integrate and composed acceptance result that carries a request shows, in text and JSON, the
