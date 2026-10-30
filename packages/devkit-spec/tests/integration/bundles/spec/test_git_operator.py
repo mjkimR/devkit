@@ -196,3 +196,103 @@ def test_acceptance_skills_name_the_host_run_command_and_the_post_commit_recover
         ("Never make a rerun that would repeat a deterministic refusal",),
     ):
         assert_rule(review, *tokens)
+
+
+PAYLOAD = "skills/spec-delegate/references/payload.md"
+
+
+def _section(markdown: str, heading: str) -> str:
+    return markdown.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
+
+
+# SPEC-git-operator-batch-preparation AC-01
+def test_only_prepare_worktree_forms_a_finite_list_with_full_fields_per_item() -> None:
+    contract_input = _section(raw(ROLE), "Input")
+    for tokens in (
+        ("MAY carry a finite, exact preparation list of `prepare-worktree` items",),
+        ("Each item", "repeats every job field", "own branch, worktree path and Unit"),
+        ("same retained base", "base ref"),
+        ("Every other operation stays one job per dispatch",),
+    ):
+        assert_rule(contract_input, *tokens)
+
+
+# SPEC-git-operator-batch-preparation AC-02
+def test_list_items_run_serially_and_stop_at_the_first_incomplete_item() -> None:
+    procedure = _section(raw(ROLE), "Procedure")
+    for tokens in (
+        ("For a preparation list", "one at a time in the listed order", "own refresh", "own approval request"),
+        ("Before each item", "retained base HEAD", "dispatched base ref"),
+        (
+            "Stop at the",
+            "first item that is not completed",
+            "a refusal, a failure, a zero-exit setup or sync warning, a moved base ref",
+            "refused or unavailable host approval",
+            "later item as not attempted",
+        ),
+    ):
+        assert_rule(procedure, *tokens)
+
+
+# SPEC-git-operator-batch-preparation AC-03
+def test_list_return_wraps_the_single_job_return_per_item() -> None:
+    contract_return = _section(raw(ROLE), "Return")
+    assert "items: []" in contract_return
+    assert "not_attempted: []" in contract_return
+    assert "cli_result: {status: null, exit_code: null, effects: []}" in contract_return
+    for tokens in (
+        (
+            "Each `items` entry is the single-job return unchanged",
+            "original `cli_result`",
+            "`completed_effects`",
+            "`remaining_effects`",
+            "`checks.worker_input`",
+            "`blocker_codes`",
+            "add no field",
+        ),
+        ("refused or", "unavailable host approval", "host-permission blocker code", "null CLI result"),
+        ("moved base", "ref is `needs_input`", "changed-ref blocker", "null CLI result"),
+        ("Each `not_attempted` entry", "identity and intended effects", "null CLI result"),
+        (
+            "list status is `completed` only when every listed item is `completed`",
+            "`needs_input` when any attempted",
+            "else `failed`",
+            "no `partial` status",
+        ),
+        ("non-error notice", "`WORKTREE_REMOTE_UNCHECKED`", "only when its `checks.worker_input` and effects"),
+    ):
+        assert_rule(contract_return, *tokens)
+
+
+# SPEC-git-operator-batch-preparation AC-04
+def test_host_retries_only_inspected_authorized_remainders_and_owns_setup_repair() -> None:
+    dispatch = raw(DISPATCH)
+    for tokens in (
+        ("stops a preparation list", "first item that is not completed", "`not_attempted`"),
+        ("Verify each `items` entry", "your own CLI/Git observation", "`inspect-recovery`"),
+        ("new list naming only the remaining items you still", "authorize", "current refs"),
+        ("never repeat a completed item",),
+        ("setup or sync remainder is", "yours", "supported operation", "runs no setup `[FIX]`, sync or"),
+    ):
+        assert_rule(dispatch, *tokens)
+    procedure = _section(raw(ROLE), "Procedure")
+    assert_rule(
+        procedure, "setup or sync remainder", "returns to the Host", "no setup `[FIX]`, sync or registration repair"
+    )
+
+
+# SPEC-git-operator-batch-preparation AC-05 (GOP-06 stays the regression test above)
+def test_list_authority_covers_only_its_listed_items() -> None:
+    authority = _section(raw(ROLE), "Authority and boundaries")
+    assert_rule(authority, "preparation list's authority covers only its listed `prepare-worktree` items")
+    assert_rule(raw(DISPATCH), "list's authority covers only its listed items", "every other operation")
+
+
+# SPEC-git-operator-batch-preparation AC-06
+def test_operations_and_payload_carry_the_list_form() -> None:
+    operations = raw(OPERATIONS)
+    row = next(line for line in operations.splitlines() if line.startswith("| `prepare-worktree` |"))
+    for token in ("preparation list", "listed order", "dispatched base ref", "first item that is not completed"):
+        assert token in row
+    payload = next(line for line in raw(PAYLOAD).splitlines() if line.startswith("| `git-operator` |"))
+    assert "preparation list of `prepare-worktree` items repeats every field per item" in payload

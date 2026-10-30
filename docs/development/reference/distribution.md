@@ -368,7 +368,7 @@ guidance and seeds. Details and persistence behavior: `CAP-DIST-sync-and-transac
 | `CONFIG_LOCAL_KEY_FORBIDDEN` | 2 | Remove the local governance/selection/unknown key. |
 | `CONFIG_LOCAL_NOT_IGNORED` | 2 | Untrack the named personal path and correct its effective ignore rule. |
 | `CONFIG_LOCAL_RENDER_FORBIDDEN` | 2 | Remove the local variable or separate its shared template use. |
-| `CONFIG_LOCAL_RENDER_STALE` | 1 | Run sync to refresh local evidence and output. |
+| `CONFIG_LOCAL_RENDER_STALE` | 1 | Run `devkit sync --locked` to refresh local evidence and output without changing committed files; run a plain sync and commit its changes only when it reports `RECEIPT_STALE`. |
 | `CONFIG_LOCAL_CHANGED` | 1 | Finish concurrent configuration edits and rerun sync. |
 
 For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)

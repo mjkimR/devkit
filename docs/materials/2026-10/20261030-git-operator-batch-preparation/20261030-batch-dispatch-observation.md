@@ -11,7 +11,7 @@ created_at: 2026-10-30
 
 Repository: devkit, base `main` at `fdba6646` (the six `MS-git-operator-lifecycle-refinement` children after their
 plan-intent records). The Host reported this observation to the Planning worker of
-`PROP-git-operator-batch-preparation`. The worker did not see the operator's transcript; it checked the resulting
+`SPEC-git-operator-batch-preparation`. The worker did not see the operator's transcript; it checked the resulting
 worktree it runs in (`plan-git-operator-batch-preparation`, created from `fdba6646`, with its environment and managed
 files present).
 

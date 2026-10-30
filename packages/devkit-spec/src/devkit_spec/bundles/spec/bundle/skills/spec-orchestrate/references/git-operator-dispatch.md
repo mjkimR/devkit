@@ -17,6 +17,10 @@ current source/target refs, exact intended_effects, current authority, allowed_b
 expected_checks, prepared_digest where required, route and separate publication_authority. Repeat these for
 every job even when the same operator remembers the Unit. A read-only job has no mutation authority.
 
+A preparation list is the only multi-job dispatch: a finite, exact list of `prepare-worktree` items with distinct
+branches, worktree paths and Units, all naming the same retained base and base ref. Repeat every field per item; the
+list's authority covers only its listed items. Send every other operation as one job per dispatch.
+
 Accept only a result with identity and observed refs matching the job, completed_effects and remaining_effects,
 checks, blocker_codes and the original cli_result separately from role status. Verify effects with current CLI/Git
 observations. Before starting a worker on a `prepare-worktree` or `handoff` result, compare its
@@ -29,6 +33,13 @@ semantic conflicts or denied permission to the Host. Normal integration already 
 redundant cleanup job. Dispatch no Planning acceptance either: the Host runs the composed
 `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` itself, which already
 includes integration and cleanup.
+
+The operator stops a preparation list at the first item that is not completed and returns later items under
+`not_attempted`. Verify each `items` entry as a single-job result against your own CLI/Git observation, or dispatch
+`inspect-recovery`, before you act on it. To retry, dispatch a new list naming only the remaining items you still
+authorize, with current refs; never repeat a completed item. A retained worktree with a setup or sync remainder is
+yours: repair it directly or dispatch a supported operation, because the operator runs no setup `[FIX]`, sync or
+registration repair.
 
 The source contract selects `level: lean`: Sonnet medium, gpt-6.1-terra medium and Flash with effort omitted.
 Existing project overrides remain available; no prompt-based effort emulation applies. Projection checks do not

@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T05:11:43.546610Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both P3 fixes: the undeclared-stage fix now says to pass the declared stage the run worked in when next names none (complete=yes), asserted in test_envelope_worker_stage; CAP-DOCS 3.5 item 5 excludes completed spec bundle files outside feedback/ from the rename write scope. No expanded scope.'
+findings:
+- issue: 'The undeclared-stage [FIX] gives no usable step when the workflow is complete: workflow next prints [STAGE: - complete=yes], and passing - is refused again.'
+  evidence: packages/devkit/src/devkit_agt/features/workflow/usecases/envelopes.py:103; packages/devkit/src/devkit_agt/features/workflow/cli/render.py:53
+  failure_condition: A worker records a run on a unit whose bound workflow evaluates as complete (sdd-proposal Planning under plan-accept=auto).
+  suggested_action: Say in the fix which declared stage to pass when next reports complete=yes, or record a known limitation.
+  resolution: resolved
+  severity: P3
+- issue: CAP-DOCS 3.5 item 5 says the rename write scope owns every path docs refs lists, but that list includes completed spec bundle files that devkit rules fix never rewrites.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:252-255; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md
+  failure_condition: A Planning agent widens boundaries.owns into historical spec bundles the rename never writes.
+  suggested_action: Exclude files of completed spec bundles outside feedback/ from the owned scope.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS test_envelope_worker_stage + test_agent_output_contract 51 passed
+  lint: PASS just lint-check devkit; just check devkit; just rules-check 0 errors
+diff_scope:
+  base: cbe8fc1885e2be2e95a3fa3ad1e819e0707e57b3
+  head: 31de99a7ab27d51660390ff0a2a83dbc1a225933
+activity_effort: medium
