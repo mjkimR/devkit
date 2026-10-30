@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_agt.features.generated import classify, load_registry_at
 from devkit_agt.features.integration.models.contracts import SeededArtifact, regenerate_command
 from devkit_agt.features.integration.models.errors import GeneratedSeededWarning
 from devkit_agt.features.worktree import MergeConflictError
@@ -28,6 +27,9 @@ class GeneratedSeeding:
         self.seeded: tuple[SeededArtifact, ...] = ()
 
     def __call__(self, paths: tuple[str, ...], /) -> dict[str, str]:
+        # Imported here so `devkit integration --help` loads no generated area.
+        from devkit_agt.features.generated import classify, load_registry_at
+
         plan = classify(load_registry_at(self.root, self.target), paths)
         if plan.unowned:
             lines = [

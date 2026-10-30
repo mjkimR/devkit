@@ -8,7 +8,7 @@ target: packages/devkit/tests/support/testsupport/layering.py LAZY_IMPORT_AREAS,
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -42,3 +42,10 @@ just test-affected: 1 failed, 6198 passed, 14 skipped
 git diff --name-only <main merge> HEAD -- packages/devkit/src/devkit_agt/features/integration packages/devkit/src/devkit_agt/features/generated packages/devkit/tests/support -> (empty)
 seeding.py:14  from devkit_agt.features.generated import classify, load_registry_at   (since 596bca61)
 ```
+
+## Disposition
+
+Resolved by a session fix on `main`: `integration/services/seeding.py` imports `devkit_agt.features.generated`
+inside `GeneratedSeeding.__call__`, so `devkit integration --help` loads only the integration and worktree areas
+again, as `LAZY_IMPORT_AREAS` expects. Verified by
+`packages/devkit/tests/integration/package/test_mounted_commands.py` and the integration tests.
