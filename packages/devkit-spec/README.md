@@ -35,15 +35,15 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 template` writes the supported keys as commented defaults, including this extension's `[tool.spec]` tables
 (worktree, depth escalation, scope and feedback) and devkit-docs' `[tool.docs]` namespaces.
 
-## Adopt SDD from incubation
+## Adopt SDD from adaptive development
 
 Use the explicitly invoked or confirmed `sdd-baseline` playbook for a verified retained-product baseline before SDD
-activation. Keep `[development] approach = "incubation"` while installing/selecting spec assets and preparing
+activation. Keep `[development] approach = "adaptive-dev"` while installing/selecting spec assets and preparing
 current documents and actual check/usage evidence. Retrieve it with `uv run devkit playbook get spec/sdd-baseline`.
 Package selection alone does not activate SDD; the ready source, scope and policy effects require matching user
 authority. Configuring a missing spec provider or a necessary project-to-spec integration provider change is an explicit effect rather than an implicit
-settings profile. See the [incubation adoption guide](../../guides/install/incubation-sdd-adoption.md) and
-`CAP-DLV-incubation-sdd-baseline`. Legacy rule containment remains the separate `brownfield-adoption` path.
+settings profile. See the [adaptive-development adoption guide](../../guides/install/adaptive-dev-sdd-adoption.md) and
+`CAP-DLV-sdd-baseline-adoption`. Legacy rule containment remains the separate `brownfield-adoption` path.
 
 ## Development
 
@@ -69,7 +69,7 @@ Direct specs have no milestone creation option;
 `proposal new --decomposed-from PROP-<parent>` preserves the original draft's identity. The Backlog and spec-next
 skills own lifecycle decisions and next-work ordering. `devkit spec proposal accept <slug> --by user` records the
 user's acceptance in one step, after Planning or, with `--direct`, for an eligible draft on the base checkout without
-Planning. See `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation` and `CAP-HARN-agent-guidance`; GitHub issue
+Planning. See `CAP-DOCS-document-model`, `CAP-DLV-proposal-planning` and `CAP-HARN-agent-guidance`; GitHub issue
 integration is excluded.
 
 ### Worker result inspection
@@ -116,6 +116,7 @@ does not uninstall its command extensions or disable its runtime policies.
 
 
 Development approach is shared project policy: inspect `uv run devkit config show`. `[development] approach`
-accepts `sdd` (the absent default) or explicit `incubation`; bundle/package selection does not change it. Incubation
-keeps document and project checks without implicit SDD records. The common reader belongs to devkit-dist; the
-`project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to devkit-spec.
+accepts `sdd` (the absent default) or explicit `adaptive-dev`; bundle/package selection does not change it.
+Adaptive development keeps document and project checks without implicit SDD records. The common reader belongs to
+devkit-dist; the `project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to
+devkit-spec.

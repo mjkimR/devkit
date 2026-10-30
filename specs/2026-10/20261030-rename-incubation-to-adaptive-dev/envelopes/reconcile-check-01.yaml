@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T03:08:20.326694Z'
+status: completed
+summary: 'reconcile-reviewer: 47 targets match the 47 changed docs/ files; docs agree with the implementation and ADR-adaptive-dev-approach-name; aliases resolve; ADR edits are ID rewrites plus five pointers. One P3 in the reconcile.md Decisions wording.'
+findings:
+- issue: 'reconcile.md Decisions justifies the pointer set with the wrong criterion: ADR-keep-incubation-guidance-opt-in-and-current-state-based is superseded yet gets a pointer because ADR-adaptive-dev-approach-name names it'
+  evidence: specs/2026-10/20261030-rename-incubation-to-adaptive-dev/reconcile.md Decisions; docs/decisions/2026-10/20261029-extend-incubation-with-optional-discovery-teams.md:7
+  failure_condition: A reader re-deriving the pointer set from the stated rule would drop the required pointer
+  suggested_action: State that the two ADRs ADR-adaptive-dev-approach-name names get pointers by that ADR, and the other three by the not-superseded outcome criterion
+  resolution: open
+  severity: P3
+assumptions:
+- Supersession is read from another ADR's supersedes field
+unverified_areas:
+- Tests, smoke and sync --check not rerun by the reconcile reviewer; relies on review-01 and reverify-01
+checks:
+  rules: PASS devkit rules check --ci --base 0debf74f
+  ac01: PASS allowlist.py unclassified 0
+  targets: PASS 47 == 47
+diff_scope:
+  base: 0debf74fa75713bc2620cd0c9d174da1a72445e1
+  head: 27f13e5260e03bb2d57848f10ea5742be87565b1

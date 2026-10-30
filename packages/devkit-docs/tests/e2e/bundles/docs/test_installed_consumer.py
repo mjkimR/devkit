@@ -62,24 +62,24 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
     assert json.loads(cli("config", "show"))["configuration"]["development"]["approach"] == "sdd"
     config = consumer / ".devkit/config.toml"
     config.write_text(
-        config.read_text() + '\n[development]\napproach = "incubation"\n[integration]\nprovider = "project"\n'
+        config.read_text() + '\n[development]\napproach = "adaptive-dev"\n[integration]\nprovider = "project"\n'
     )
     inspected = json.loads(cli("config", "show"))
-    assert inspected["configuration"]["development"]["approach"] == "incubation"
+    assert inspected["configuration"]["development"]["approach"] == "adaptive-dev"
     assert inspected["sources"]["development.approach"] == ".devkit/config.toml"
     cli("rules", "check")
     run("git", "config", "user.email", "test@example.com", cwd=consumer)
     run("git", "config", "user.name", "Test", cwd=consumer)
     run("git", "branch", "-M", "main", cwd=consumer)
     run("git", "add", ".", cwd=consumer)
-    run("git", "commit", "-qm", "configure document-only incubation", cwd=consumer)
+    run("git", "commit", "-qm", "configure document-only adaptive-dev", cwd=consumer)
     started = json.loads(cli("worktree", "start", "dev-demo", "--format", "json"))
     # The retained CLI's result exposes the worktree path; it is a real installed project provider consumer.
     worktree = consumer.parent / "consumer-wt-dev-demo"
     assert worktree.is_dir(), started
     (worktree / "app.py").write_text("value = 1\n")
     run("git", "add", "app.py", cwd=worktree)
-    run("git", "commit", "-qm", "implement incubation flow", cwd=worktree)
+    run("git", "commit", "-qm", "implement adaptive-dev flow", cwd=worktree)
     prepared = json.loads(
         cli(
             "integration",

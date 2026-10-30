@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T03:13:08.236360Z'
+status: completed
+summary: 'Development turn from specify to final change report: incubation approach/bundle renamed to adaptive-dev and proposal incubation to proposal Planning; review-01 and reconcile-check-01 findings fixed and closed; feedback recorded (2). Sync outputs AGENTS.md and .devkit/installation.json committed (Task 1.3, sync output). No before/after outcome applies to a rename and the spec names no baseline; evidence is the AC tests and the AC-01 allowlist. Pre-existing failure test_fixes_carry_no_placeholder reported, not fixed.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS test-affected mode=full 6081 passed, 1 pre-existing failure outside scope; smoke passed
+  lint: PASS lint-check, check, rules-check, rules check --ci --base 0debf74f
+  sync: PASS devkit sync --check exit 0
+diff_scope:
+  base: ''
+  head: ccb54447e5538821e05ae281c7d46edfa6cc029d
+activity_effort: medium

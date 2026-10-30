@@ -16,7 +16,7 @@ aliases:
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: @mjkimR
-- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-incubation`,
+- **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`,
   `CAP-DLV-spec-bundles`, `CAP-DLV-project-policy`, `CAP-HARN-agent-guidance`
 
 ---
@@ -214,7 +214,7 @@ to allow it on their explicit decision (`answer-01.yaml`, question `session-recl
   - Completed specs bound to the retired workflow ids keep their binding as history. (ADR-task-kind-and-planning-depth)
   - The lowering rule gains one stated exception in 01 §2.2 and Q19, the bundle `AGENTS.md`,
     `CAP-HARN-agent-guidance` and the `CAP-DLV-delivery-workflows` non-goal on depth changes; `backlog.md` grants the
-    deletion, and `feedback-retirement.md`, `CAP-DLV-proposal-incubation` §3.1, the `sdd-proposal` feedback paragraph
+    deletion, and `feedback-retirement.md`, `CAP-DLV-proposal-planning` §3.1, the `sdd-proposal` feedback paragraph
     and 01 §6.2 list it among the deletions that preserve open feedback.
     (ADR-session-reclassification-of-a-queued-draft)
 

@@ -29,7 +29,7 @@ created_at: 2026-10-22
 - **Versions**: main at dd008f2b.
 - **Conditions**: not applicable.
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `ADR-roadmap-and-milestones`, `CAP-DLV-proposal-incubation`.
+- **Related Assets**: `ADR-roadmap-and-milestones`, `CAP-DLV-proposal-planning`.
 
 ## Evidence
 

@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T03:09:15.905540Z'
+status: completed
+summary: 'Swept this Development turn and its diff: recorded FB-rules-fix-rewrites-rename-mapping-tables and FB-alias-references-outside-index-unreported; FB-rename-write-scope-unstated (Planning) is related but distinct; no duplicates.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

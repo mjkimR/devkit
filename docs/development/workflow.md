@@ -6,7 +6,7 @@ Guidelines and conventions for branching, development cycles, and commit quality
 
 - Feature and maintenance activities should run on isolated activity branches:
   - `dev-<slug>`: Code changes and feature implementations.
-  - `plan-<slug>`: Architectural proposals and design incubation.
+  - `plan-<slug>`: Architectural proposals and their Planning.
 - Activities can use task worktrees allocated via `devkit worktree start <branch>`.
 
 ## 2. Commit Message Standards

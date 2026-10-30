@@ -1,7 +1,7 @@
 ---
 id: UC-route-development-intent
 title: Route a Development Request to the Right Workflow
-summary: "Routes SDD development requests by task-kind, planning-depth and activity-effort after shared approach inspection; incubation follows its own guidance without implicit SDD Units."
+summary: "Routes SDD development requests by task-kind, planning-depth and activity-effort after shared approach inspection; adaptive development follows its own guidance without implicit SDD Units."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -67,7 +67,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   follows the playbook (`feedback-hygiene` delegates its grouping to the read-only `triage` role above 5 open items on
   a host that runs it natively) and the use case ends; on a decline it never offers that candidate again in the conversation
   (`CAP-HARN-agent-guidance`, `CAP-DIST-context-and-playbooks`); resumes at step 2.
-- **1d.** The effective approach is incubation: the agent uses the project's incubation guidance and independent document/project checks without creating an implicit SDD Unit or classifying this change into SDD depths. Existing bound history retains its checks; this routing use case ends.
+- **1d.** The effective approach is `adaptive-dev`: the agent uses the project's adaptive-development guidance and independent document/project checks without creating an implicit SDD Unit or classifying this change into SDD depths. Existing bound history retains its checks; this routing use case ends.
 - **1e.** The user explicitly invokes the approach-neutral research entry (`/deep-research`): the invocation is not
   development intake, so the agent runs no playbook search, classifies nothing and creates no Unit; the research
   entry's own skill takes over and work the research later informs starts as ordinary intake
@@ -80,7 +80,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   file or reconcile document (`CAP-DLV-delivery-workflows`); the use case ends.
 - **3b.** The direction must be decided first (`proposal` depth): the agent creates a draft proposal bound to
   `sdd-proposal` and records `plan-intent` as the user's confirmation of the draft in Backlog
-  (`CAP-DLV-delivery-workflows`); the use case ends and `UC-incubate-and-hand-off-a-proposal` continues.
+  (`CAP-DLV-delivery-workflows`); the use case ends and `UC-plan-and-hand-off-a-proposal` continues.
 - **3c.** The request will not start now, or must be decomposed (it would need two or more specs or a different
   `task_kind`, `size: XL`): the agent keeps it as one or more draft proposals in
   Backlog, a rough `XL` draft only until it is decomposed before `plan-intent`, optionally assigns an existing global milestone, and preserves the origin in `decomposed_from` or

@@ -29,7 +29,7 @@ owns the retained material and its citation.
 - **In-Scope**: explicit research-team coordination, independent alternatives, source provenance, optional
   criticism, initial document and roadmap synthesis, bounded partial results, the transient research workspace and
   the retained material with its collision, resume and citation conventions.
-- **Out-of-Scope**: product iteration and its current context (`CAP-DLV-idea-incubation`), shared approach policy
+- **Out-of-Scope**: product iteration and its current context (`CAP-DLV-adaptive-development`), shared approach policy
   (`CAP-DLV-project-policy`), SDD routing (`CAP-HARN-agent-guidance`), generic projection
   (`CAP-DIST-agent-projections`) and document formats (`CAP-DOCS-document-model`).
 - **Scope Excluded**: an approach gate, a research runtime, CLI or scheduler, a bundle or package dependency, a
@@ -50,7 +50,7 @@ owns the retained material and its citation.
    match; install guides list it only as a bundle the user selects. Tests:
    `test_guides_name_the_bundle_only_as_a_selection` and `test_no_file_names_or_suggests_the_research_entry`.
 5. **Approach neutrality**: WHEN the entry starts, the coordinator MUST NOT inspect, require or change the
-   development approach, read approach-specific context or write `.devkit/incubation.md`. Test:
+   development approach, read approach-specific context or write `.devkit/adaptive-dev.md`. Test:
    `test_bundle_text_is_approach_neutral_and_self_contained`.
 6. **SDD intake exemption**: WHILE the effective approach is SDD, an explicit `/deep-research` invocation MUST NOT be
    classified into a planning depth or create a Unit; work the research informs starts as ordinary intake
@@ -137,7 +137,7 @@ areas; an experiment also returns actual changed paths, commands and outcomes. E
 `.devkit/managed/deep-research/subagents/`.
 
 The roles' policy keys are `deep-research:<role>` and their file overrides live under
-`.devkit/overrides/deep-research/subagents/`. For the three roles moved from the incubation bundle, an earlier
+`.devkit/overrides/deep-research/subagents/`. For the three roles moved from the former `incubation` bundle, an earlier
 `incubation:<role>` key fails sync until renamed, and an override under `.devkit/overrides/incubation/subagents/`
 stops applying until moved (`CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`).
 

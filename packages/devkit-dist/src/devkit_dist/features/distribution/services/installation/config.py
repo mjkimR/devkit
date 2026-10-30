@@ -650,7 +650,7 @@ def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryE
                         TemplateKey(
                             "approach",
                             "sdd",
-                            "Shared development approach: sdd or incubation; no local/environment override",
+                            "Shared development approach: sdd or adaptive-dev; no local/environment override",
                         ),
                     )
                 ),

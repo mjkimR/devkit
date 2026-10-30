@@ -69,6 +69,7 @@ Chosen: one indexed material per investigation, cited by ID.
   grants no implementation, integration, publication or SDD adoption authority.
 - `/incubate` keeps its own product notes in reused destinations linked from `.devkit/incubation.md`, and links a
   research material by its MAT ID.
+  Superseded in part by `ADR-adaptive-dev-approach-name`: the entry is `/adaptive-dev` and its context file `.devkit/adaptive-dev.md`.
 
 ## 5. Consequences
 

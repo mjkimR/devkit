@@ -19,7 +19,7 @@ from distsupport.guidance import assert_rule
 PACKAGE = Path(__file__).parents[3]
 REPOSITORY = PACKAGE.parents[1]
 BUNDLE = PACKAGE / "src/devkit_catalog/deep_research/bundle"
-INCUBATION = PACKAGE / "src/devkit_catalog/incubation/bundle"
+ADAPTIVE_DEV = PACKAGE / "src/devkit_catalog/adaptive_dev/bundle"
 SKILL = BUNDLE / "skills/deep-research/SKILL.md"
 MOVED = ("direction-explorer", "discovery-critic", "discovery-planner")
 ROLES = {*MOVED, "research-investigator"}
@@ -60,7 +60,7 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
         assert projected["sandbox_mode"] == "workspace-write"
         assert (tmp_path / f".claude/agents/{role}.md").is_file()
         assert (tmp_path / f".agents/agents/{role}.md").is_file()
-    for absent in ("docs", "specs", ".devkit/incubation.md", ".devkit/managed/incubation", ".devkit/managed/spec"):
+    for absent in ("docs", "specs", ".devkit/adaptive-dev.md", ".devkit/managed/adaptive-dev", ".devkit/managed/spec"):
         assert not (tmp_path / absent).exists(), absent
 
 
@@ -94,28 +94,28 @@ def test_bundle_text_is_approach_neutral_and_self_contained() -> None:  # AC-03
         if not path.is_file():
             continue
         content = path.read_text()
-        for word in ("configuration.development.approach", ".devkit/incubation.md", "incubation"):
+        for word in ("configuration.development.approach", ".devkit/adaptive-dev.md", "adaptive-dev", "incubation"):
             assert word not in content, (path, word)
         assert not re.search(r"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB|RULE|PLAN|TASKS)-[A-Za-z0-9]", content), path
         assert len(path.read_bytes()) <= 12288, path
 
 
-def test_selection_beside_incubation_has_one_owner_per_role(tmp_path: Path) -> None:  # AC-04
-    update_config(tmp_path, agents=["codex"], presets={"incubation": ["core"], "deep-research": ["core"]})
-    sync_project(tmp_path, _installed(INCUBATION, BUNDLE))
+def test_selection_beside_adaptive_dev_has_one_owner_per_role(tmp_path: Path) -> None:  # AC-04
+    update_config(tmp_path, agents=["codex"], presets={"adaptive-dev": ["core"], "deep-research": ["core"]})
+    sync_project(tmp_path, _installed(ADAPTIVE_DEV, BUNDLE))
     for role in MOVED:
         assert (tmp_path / f".devkit/managed/deep-research/subagents/{role}.md").is_file()
-        assert not (tmp_path / f".devkit/managed/incubation/subagents/{role}.md").exists()
+        assert not (tmp_path / f".devkit/managed/adaptive-dev/subagents/{role}.md").exists()
         assert (tmp_path / f".codex/agents/{role}.toml").is_file()
-    assert not (tmp_path / ".devkit/managed/incubation/skills/incubate-research").exists()
-    assert (tmp_path / ".agents/skills/incubate/SKILL.md").is_file()
+    assert not (tmp_path / ".devkit/managed/adaptive-dev/skills/deep-research").exists()
+    assert (tmp_path / ".agents/skills/adaptive-dev/SKILL.md").is_file()
     assert (tmp_path / ".agents/skills/deep-research/SKILL.md").is_file()
 
 
 @pytest.mark.parametrize("role", MOVED)
 def test_moved_role_policy_key_follows_the_bundle(tmp_path: Path, role: str) -> None:  # AC-05
-    installed = _installed(INCUBATION, BUNDLE)
-    update_config(tmp_path, agents=["codex"], presets={"incubation": ["core"], "deep-research": ["core"]})
+    installed = _installed(ADAPTIVE_DEV, BUNDLE)
+    update_config(tmp_path, agents=["codex"], presets={"adaptive-dev": ["core"], "deep-research": ["core"]})
     sync_project(tmp_path, installed)
     config = tmp_path / ".devkit/config.toml"
     base = config.read_text()

@@ -4,7 +4,7 @@
 has it), ``CreateProposalDecisionUseCase`` (``usecases.scaffold``) a preliminary decision inside it, ``accept_proposal`` records the user's acceptance (also a
 direct acceptance of an eligible draft), and ``handoff_proposal`` turns an approved proposal into
 ``specs/<YYYY-MM>/<YYYYMMDD>-<slug>/``, promoting PADRs to ADRs, moving materials and rewriting what pointed into
-the proposal. ``create_spec`` creates a spec bundle without a proposal. Contracts: ``CAP-DLV-proposal-incubation`` and ``CAP-DLV-spec-bundles`` (``docs/capabilities/delivery/``).
+the proposal. ``create_spec`` creates a spec bundle without a proposal. Contracts: ``CAP-DLV-proposal-planning`` and ``CAP-DLV-spec-bundles`` (``docs/capabilities/delivery/``).
 """
 
 from devkit_spec.base.axes import (
