@@ -535,6 +535,10 @@ def test_quick_references_follow_targets_and_exclusions(tmp_path: Path) -> None:
     check(RULE, tmp_path, targets=["guides/b.md"], fix=True)
     assert (tmp_path / "guides/a.md").read_text() == "`UC-old`\n"
     assert (tmp_path / "guides/b.md").read_text() == "`UC-new`\n"
+    (tmp_path / "guides/b.md").write_text("`UC-old`\n")
+    check(RULE, tmp_path, exclude=["guides/a.md"], fix=True)
+    assert (tmp_path / "guides/a.md").read_text() == "`UC-old`\n"
+    assert (tmp_path / "guides/b.md").read_text() == "`UC-new`\n"
 
 
 def test_the_quick_reference_set_is_a_setting(tmp_path: Path) -> None:
