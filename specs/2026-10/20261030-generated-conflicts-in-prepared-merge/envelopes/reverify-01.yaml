@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:10:47.280085Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the P3 fix (b21f546c): the parametrized test prepares a receipt-only conflict with a minimal acceptance lifecycle and with settle_generated=False, asserting WORKTREE_MERGE_CONFLICT and nothing changed; inverting the lifecycle guard makes the lifecycle case fail.'
+findings:
+- issue: 'The rule that composed proposal acceptance seeds nothing depends on `lifecycle is None` in IntegrationService._prepare, and no test covers it: the composed-acceptance test only passes settle_generated=False without a lifecycle.'
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/service.py:216; packages/devkit/tests/e2e/features/integration/test_base_advance.py test_composed_acceptance_preparation_settles_no_conflict; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:343
+  failure_condition: Dropping or inverting the `lifecycle is None` term would let composed acceptance settle a receipt-only conflict (Non-Goal 2, AC-08) with no failing test.
+  suggested_action: Add a test preparing a receipt-only conflict with a minimal AcceptanceLifecycle and the default settle_generated, asserting WORKTREE_MERGE_CONFLICT with nothing changed.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS test_base_advance.py 45 passed; guard inversion probe fails as expected
+  lint: PASS ruff and pyright on the test file
+diff_scope:
+  base: ab7356f3fe53e27388ce60b0db6a17229b641c81
+  head: b21f546c149946c6ccd943c3b896177c599b7984
+activity_effort: medium

@@ -18,7 +18,12 @@ from devkit_dist.adapters.cli import (
     yes_no,
 )
 
-from devkit_agt.features.integration.models.contracts import Task, integrate_command, prepare_command
+from devkit_agt.features.integration.models.contracts import (
+    SeededArtifact,
+    Task,
+    integrate_command,
+    prepare_command,
+)
 from devkit_agt.features.integration.usecases.operations import IntegrateUseCase, PrepareIntegrationUseCase
 from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.worktree import RunFromBaseError
@@ -34,6 +39,11 @@ def _rerun_on_base(root: Path, command: Callable[[str], str]) -> Iterator[None]:
         if error.base is not None and error.checkout is not None and root.is_relative_to(error.checkout):
             error.fix = command(str(error.base / root.relative_to(error.checkout)))
         raise
+
+
+def _seeded(seeded: tuple[SeededArtifact, ...]) -> str:
+    """The ids of the generated artifacts a build kept from one side (``ADR-generated-conflicts-in-prepared-merge``)."""
+    return ",".join(item.id for item in seeded) or "-"
 
 
 @click.group()
@@ -80,6 +90,7 @@ def prepare(
         result = PrepareIntegrationUseCase(IntegrationService(root)).execute(branch, task, route)
     if is_json(output_format):
         echo_json(result.compact_dict())
+        exit_on_warnings(result.notices)
         return
     request = result.request
     plan = request.context.finish
@@ -90,9 +101,11 @@ def prepare(
     )
     click.echo(
         f"[INTEGRATION_SCOPE: worktree_remove={yes_no(plan.worktree_identity is not None)} "
-        f"delete_branch={yes_no(plan.delete_branch)} cleanup={cleanup} "
+        f"delete_branch={yes_no(plan.delete_branch)} cleanup={cleanup} seeded={_seeded(result.seeded)} "
         f"disclosure={json.dumps(request.readiness.disclosure, ensure_ascii=False)}]"
     )
+    echo_notices(result.notices)
+    exit_on_warnings(result.notices)
 
 
 @cli.command()
@@ -153,7 +166,7 @@ def integrate(
             f"[INTEGRATION: status={result.status} branch={plan.branch} target={json.dumps(plan.target_branch)} "
             f"target_sha={plan.target_sha} build_target={result.build_target or '-'} result={result.result_sha or '-'} "
             f"route={route} authority={result.authority or '-'} failed={result.failing_operation or '-'} "
-            f"codes={','.join(error.code for error in result.errors) or '-'} "
+            f"codes={','.join(error.code for error in result.errors) or '-'} seeded={_seeded(result.seeded)} "
             f"disclosure={json.dumps(result.request.readiness.disclosure, ensure_ascii=False)} effects={effects}]"
         )
         echo_notices(result.notices)

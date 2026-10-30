@@ -1,0 +1,52 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:14:35.363782Z'
+status: completed
+summary: 'Nested reconcile-reviewer (first medium check) on ab7356f3..6a934f16: every named target matches the implementation and the contract; CAP-DLV no-impact confirmed; one P2 (docs/development/ci-cd.md batch run drift unrecorded) and five P3 wording findings open.'
+findings:
+- issue: docs/development/ci-cd.md describes the batch completion without devkit generated check / regen first; reconcile.md neither targets it nor records it.
+  evidence: docs/development/ci-cd.md:66-70; reconcile.md No impact; feedback/workflow-batch-run-omits-generated-check.md
+  failure_condition: A maintainer following ci-cd.md tests a head with stale generated artifacts.
+  suggested_action: 'Outside the write scope: extend the feedback to ci-cd.md and name it in reconcile.md.'
+  resolution: open
+  severity: P2
+- issue: The moved-target MUST paragraph of CAP-INT-mcp-services and reference/integration.md still say unqualified that a conflict refuses.
+  evidence: docs/capabilities/integration/CAP-INT-mcp-services.md:80-82; docs/development/reference/integration.md:18-19
+  failure_condition: A reader stopping at that paragraph concludes a generated-only conflict refuses.
+  suggested_action: 'Qualify: a conflict no generated artifact settles refuses.'
+  resolution: open
+  severity: P3
+- issue: WORKTREE_MERGE_CONFLICT details exist only from a local build's settler and list at most 20 paths; the docs say one detail per path.
+  evidence: docs/development/reference/worktree.md:81; docs/capabilities/integration/CAP-INT-mcp-services.md:99; integration/services/seeding.py:19
+  failure_condition: An agent expects per-path details on composed acceptance or a full list beyond 20.
+  suggested_action: State the source of the details and the 20-path cap.
+  resolution: open
+  severity: P3
+- issue: ADR-generated-conflicts-in-prepared-merge Decision Outcome bullet 2 can be read as refusing owned conflicts an artifact rewrites.
+  evidence: docs/decisions/2026-10/20261030-generated-conflicts-in-prepared-merge.md:66-67
+  failure_condition: Read literally, a receipt-only conflict would refuse.
+  suggested_action: 'Wording repair: a conflict no artifact owns refuses; its detail names the artifacts that read or update it.'
+  resolution: open
+  severity: P3
+- issue: UC Scenario 30's Given does not exclude generated files.
+  evidence: docs/usecases/delivery/UC-drive-development-to-integration.md:399-403
+  failure_condition: A scenario test using a generated file expects a refusal no longer given.
+  suggested_action: Qualify the Given with a file no generated artifact owns.
+  resolution: open
+  severity: P3
+- issue: reconcile.md says nothing about the new integration -> generated feature edge and ARCH-05-2-components.
+  evidence: .devkit/architecture.toml:71; docs/architecture/ARCH-05-2-components.md:209-213
+  failure_condition: ARCH-05-2 readers do not learn of the edge (RULE-architecture still enforces it).
+  suggested_action: Add a no-impact line or one clause to ARCH-05-2.
+  resolution: open
+  severity: P3
+unverified_areas:
+- Tests not run by the reviewer; materials and older ADRs treated as history.
+checks:
+  rules: PASS devkit rules check --ci --base ab7356f3
+  head: PASS 6a934f16 not stale
+diff_scope:
+  base: ab7356f3fe53e27388ce60b0db6a17229b641c81
+  head: 6a934f1654e31681191d1a55dae34be6293a1e9e

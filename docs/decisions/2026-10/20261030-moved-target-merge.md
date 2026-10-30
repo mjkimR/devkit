@@ -11,6 +11,10 @@ supersedes:
 
 # [ADR-moved-target-merge] Integrating command merges a conflict-free moved target
 
+Superseded in part by `ADR-generated-conflicts-in-prepared-merge`: a local prepare or integrate build whose conflicts
+are all in registered generated files keeps each artifact's seed side and discloses it instead of refusing. The other
+clauses remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-10-30
 

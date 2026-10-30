@@ -21,7 +21,7 @@ import shlex
 import shutil
 import stat
 import tempfile
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -41,6 +41,7 @@ from devkit_agt.features.generated.models.errors import (
     UnmergedError,
 )
 from devkit_agt.features.generated.repositories.registry import PROJECT_FILE, Artifact, Registry, load_registry
+from devkit_agt.features.generated.services.conflicts import classify
 
 # The command that continues each operation once no unmerged path is left.
 CONTINUE = {
@@ -277,21 +278,11 @@ class ResolveArtifacts(BaseUseCase):
         registry = load_registry(checkout)
         result = ResolveResult(operation(checkout), dry_run=dry_run)
         conflicts = unmerged(checkout)
-        owned: dict[str, list[str]] = {}
-        unowned: list[str] = []
-        for path in sorted(conflicts):
-            owner = registry.owner(path)
-            if owner is None:
-                unowned.append(path)
-            else:
-                owned.setdefault(owner.id, []).append(path)
-        plan = registry.closure(owned)
-        readers: dict[str, list[str]] = {}
-        for path in unowned:
-            for artifact in plan:
-                # A file the artifact updates is read too: its command rewrites it in place, conflict markers included.
-                if not artifact.inputs or artifact.may_read(path) or artifact.may_write(path):
-                    readers.setdefault(path, []).append(artifact.id)
+        classified = classify(registry, conflicts)
+        owned = classified.owned
+        unowned = list(classified.unowned)
+        plan = classified.plan
+        readers = classified.readers
         if readers:
             paths = list(readers)[:LISTED]
             raise InputsConflictedError(
@@ -334,7 +325,10 @@ class ResolveArtifacts(BaseUseCase):
 
 
 def _seed(
-    checkout: Path, plan: Sequence[Artifact], owned: dict[str, list[str]], conflicts: dict[str, frozenset[int]]
+    checkout: Path,
+    plan: Sequence[Artifact],
+    owned: Mapping[str, Sequence[str]],
+    conflicts: dict[str, frozenset[int]],
 ) -> None:
     """Leave each owned conflict at its artifact's ``seed`` side: that side's file, or none where it deleted it."""
     for artifact in plan:

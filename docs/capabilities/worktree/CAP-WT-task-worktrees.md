@@ -181,7 +181,11 @@ The package is laid out by layer under `features/worktree/`:
   `devkit.attach_check` (`run_attach_checks`); `merging.py`, the result commit (`build_result`, `merge_message`,
   `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`): with
   `advance=True` (the integration service only) it merges a moved target with `git merge-tree --write-tree` (Git
-  2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`), and with `prospective=True`
+  2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`, unless the caller passes a
+  `settle` callable, the `ConflictSettler` of `models/merging.py`, which names for every conflicted path the side to
+  keep, `"ours"` the target or `"theirs"` the source, and the build commits that tree, removing a path the kept side
+  deleted; a path it leaves unsettled refuses with the path as a detail; the worktree feature never reads the
+  generated registry, `ADR-generated-conflicts-in-prepared-merge`), and with `prospective=True`
   (local preparation) it writes that merge as an unsigned, unreferenced commit whose author and committer copy the
   committer line of the parent with the later committer date, so its id depends only on the tree, the parents and
   the message.

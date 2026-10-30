@@ -222,6 +222,28 @@ class IntegrationRequest:
 STEPS = ("merge", "worktree_remove", "branch_delete", "marker_clear", "post_finish")
 
 
+@dataclass(frozen=True)
+class SeededArtifact:
+    """A generated artifact whose conflicted ``paths`` a build kept from its ``seed`` side without regenerating them
+    (``ADR-generated-conflicts-in-prepared-merge``): ``"ours"`` keeps the target's files, ``"theirs"`` the source's."""
+
+    id: str
+    paths: tuple[str, ...]
+    seed: str
+
+    @property
+    def kept(self) -> str:
+        return "target" if self.seed == "ours" else "source"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"id": self.id, "paths": list(self.paths), "seed": self.seed, "kept": self.kept}
+
+
+def regenerate_command(seeded: tuple[SeededArtifact, ...]) -> str:
+    """The exact command that regenerates ``seeded`` (and the artifacts after them) in the target's checkout."""
+    return devkit_command(f"generated regen {' '.join(shlex.quote(item.id) for item in seeded)}")
+
+
 @dataclass
 class IntegrationResult:
     request: IntegrationRequest
@@ -241,6 +263,8 @@ class IntegrationResult:
     build_checked: bool = False
     pull_request: dict[str, Any] = field(default_factory=dict)
     landing: dict[str, Any] = field(default_factory=dict)
+    # The generated artifacts the latest build (prospective at prepare, real at integrate) kept from one side.
+    seeded: tuple[SeededArtifact, ...] = ()
 
     def build(self) -> dict[str, Any] | None:
         if self.build_target is None:
@@ -250,6 +274,12 @@ class IntegrationResult:
             "build_target": self.build_target,
             "result": self.result_sha,
         }
+
+    def generated(self) -> dict[str, Any] | None:
+        """The seeded generated artifacts and the command that regenerates them; ``None`` when nothing was seeded."""
+        if not self.seeded:
+            return None
+        return {"seeded": [item.to_dict() for item in self.seeded], "regenerate": regenerate_command(self.seeded)}
 
     def compact_dict(self) -> dict[str, Any]:
         """Bounded default MCP result; detailed inspection uses the full serializer."""
@@ -273,6 +303,8 @@ class IntegrationResult:
             result["observed"] = dict(self.observed)
         if self.build_target is not None:
             result["build"] = self.build()
+        if self.seeded:
+            result["generated"] = self.generated()
         return result
 
     def to_dict(self) -> dict[str, Any]:
@@ -289,6 +321,7 @@ class IntegrationResult:
             "observed": self.observed,
             "failing_operation": self.failing_operation,
             "build": self.build(),
+            "generated": self.generated(),
             "network_operations": "excluded" if self.request.route == "local" else "approved-pull-request",
             "errors": [error.to_dict() for error in self.errors],
             "notices": [notice.to_dict() for notice in self.notices],

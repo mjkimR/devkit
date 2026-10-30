@@ -21,8 +21,10 @@ from devkit_agt.features.generated.repositories.registry import (
     Registry,
     builtin_artifacts,
     load_registry,
+    load_registry_at,
     matches,
 )
+from devkit_agt.features.generated.services.conflicts import ConflictPlan, classify
 from devkit_agt.features.generated.usecases.engine import (
     ArtifactRun,
     CheckArtifacts,
@@ -39,6 +41,7 @@ __all__ = [
     "ArtifactRun",
     "CheckArtifacts",
     "CommandFailedError",
+    "ConflictPlan",
     "ConflictsRemainWarning",
     "GeneratedConfigError",
     "InputsConflictedError",
@@ -51,7 +54,9 @@ __all__ = [
     "StaleError",
     "UnmergedError",
     "builtin_artifacts",
+    "classify",
     "load_registry",
+    "load_registry_at",
     "matches",
     "operation",
     "unmerged",

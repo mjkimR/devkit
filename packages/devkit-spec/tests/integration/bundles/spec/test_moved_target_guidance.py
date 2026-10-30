@@ -66,3 +66,35 @@ def test_completion_reference_makes_the_base_merge_conditional() -> None:
     completion = raw("skills/spec/references/completion.md")
     assert_rule(completion, "CI rules on the merged result", "only to resolve a conflict or failing check")
     assert "prepare the task branch against the base" not in completion
+
+
+@pytest.mark.parametrize("environment", ["local", "cloud"])
+def test_seeded_generated_artifacts_are_presented_and_regenerated_on_the_base(environment: str) -> None:
+    """``ADR-generated-conflicts-in-prepared-merge``: the disclosure is acted on after landing or at batch end."""
+    integrate = raw("skills/spec-integrate/SKILL.md", environment)
+    assert_rule(integrate, "A conflict confined to registered generated files does not refuse", "`generated`")
+    assert_rule(
+        integrate,
+        "6. After bundle changes land",
+        "`generated.regenerate` command in the base checkout",
+        "commit the regenerated files",
+        "batch completion step",
+    )
+    if environment == "local":
+        assert_rule(integrate, "5. Run `devkit integration prepare", "generated artifacts it keeps from one side")
+
+
+def test_batch_test_run_regenerates_stale_generated_artifacts_first() -> None:
+    completion = raw("skills/spec-orchestrate/SKILL.md").split("## Completion", 1)[1]
+    assert_rule(
+        completion,
+        "**Batch test run**",
+        "first run `devkit generated check` on the base branch HEAD",
+        "`INTEGRATION_GENERATED_SEEDED`",
+        "`devkit generated regen <ids>`",
+        "commit the regenerated files",
+        "Then run the repository's verification",
+    )
+    operations = raw("skills/spec-orchestrate/references/git-operator-operations.md")
+    assert_rule(operations, "`prepare-integration`", "any `generated` artifacts kept from one side")
+    assert_rule(operations, "`execute-integration`", "return the `generated` disclosure when present")
