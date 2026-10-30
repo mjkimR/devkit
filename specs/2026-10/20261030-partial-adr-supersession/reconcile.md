@@ -36,6 +36,26 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261022-scope-only-explicit-working-tree-targets-in-the-evaluator.md
     resolution: modified
+  - file: docs/decisions/2026-10/20261022-immutable-decisions-editable-records.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261024-viewer-working-tree.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261030-adaptive-dev-approach-name.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261028-archive-terminal-milestones-in-roadmap.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261028-document-package.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261030-drop-the-base-checkout-equality-from-worker-validation.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261022-milestone-merging.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261022-scope-snapshot-runs-to-diff-paths-including-deletions.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261026-spec-intake-playbook-discovery.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-partial-adr-supersession`
@@ -65,15 +85,16 @@ targets:
 
 Criterion: an ADR is wholly replaced when its superseder replaces or restates every clause; partly replaced when the
 superseder replaces named clauses and leaves the rest in the earlier ADR ("supersedes only", "remain in force",
-"preserve" or "retained from the superseded decision"). Every in-part line quotes the superseder's own description of
-what it replaces. No decision changed.
+"preserve" or "retained from the superseded decision"). Every in-part line quotes or directly derives from the superseder's statement
+of what it replaces or from its outcome (the `ADR-scope-only-explicit-working-tree-targets-in-the-evaluator` and
+`ADR-keep-incubation-guidance-opt-in-and-current-state-based` lines are derived). No decision changed.
 
 Changed:
 
 - `ADR-local-and-pull-request-integration`: `superseded` to `accepted`, `superseded_by` dropped; its existing
   `ADR-host-cli-lifecycle-authority` pointer rewritten as "Superseded in part by". Its merge construction, readiness,
-  policy binding and the other clauses that pointer names stay in force, and `CAP-INT-mcp-services` cites it as the
-  current merge contract. The `ADR-moved-target-merge` line is unchanged.
+  policy binding and the other clauses that pointer names stay in force; `CAP-INT-mcp-services` keeps that merge
+  construction as its current contract (see "Open: outside the write scope"). The `ADR-moved-target-merge` line is unchanged.
 - `ADR-delivery-decision-boundaries`: `superseded` to `accepted`, `superseded_by` dropped; its pointer ("supersedes
   only ... native MCP lifecycle execution and confirmation clauses"; gates, `auto` authority and Host autonomy remain)
   rewritten as "Superseded in part by".
@@ -114,6 +135,17 @@ Changed:
   `ADR-scope-snapshot-runs-to-diff-paths-including-deletions` ("Supersedes: the follow-up section"; its outcome scopes
   the snapshot runs the earlier ADR left unscoped). Found by review-01.
 
+- Pointer wording (reconcile-check-01): `ADR-immutable-decisions-editable-records` ("Partly replaced by
+  `ADR-spec-intake-playbook-discovery`") and `ADR-viewer-working-tree` ("`ADR-viewer-planning-proposal-overlay` replaces
+  this statement") now use the "Superseded in part by" form with the same clauses.
+- `supersedes` metadata (reconcile-check-01): each superseder an in-part line names now lists the earlier ADR, so the
+  ledger follows the `CAP-DOCS-document-model` rule and the `adr-compaction` closure reaches every pair:
+  `ADR-adaptive-dev-approach-name` (five ADRs), `ADR-archive-terminal-milestones-in-roadmap`, `ADR-document-package`
+  (three ADRs), `ADR-drop-the-base-checkout-equality-from-worker-validation`, `ADR-milestone-merging`,
+  `ADR-scope-snapshot-runs-to-diff-paths-including-deletions`, `ADR-spec-intake-playbook-discovery` and
+  `ADR-viewer-planning-proposal-overlay`. `ADR-subagent-level-projection` already names an alias of
+  `ADR-orchestration-workers` (its effort-preset member).
+
 Reviewed, unchanged:
 
 - Stay `superseded` (wholly replaced): `ADR-adr-compaction` (`ADR-immutable-decisions-editable-records` reverses its
@@ -132,8 +164,21 @@ Reviewed, unchanged:
   only the package split's whole-host MCP placement and its MCP server-version owner" without naming an ADR ID; in
   `ADR-package-split-and-namespaces` the whole-host move is only a considered option already marked superseded by its
   own member, and no server-version clause is stated, so no pointer was added rather than guessing a target.
-- `ARCH-05-1-containers` and `CAP-VIEW-repository-viewer` describe "`ADR-viewer` as superseded by
-  `ADR-viewer-working-tree`", which still reads correctly for a partial replacement; outside the write scope, left as is.
+
+## Open: outside the write scope
+
+These Living Spec statements now contradict the ledger and need an edit outside this worker's write scope
+(`docs/capabilities/integration/`, `docs/capabilities/viewer/`, `docs/architecture/`); they are the problem of
+`worker-01.yaml`, and `reconcile.md` stays `pending` until they are reflected:
+
+- `CAP-INT-mcp-services` (reconcile-check-01, P1): "`ADR-host-cli-lifecycle-authority` supersedes the former lifecycle
+  MCP execution interface and `ADR-local-and-pull-request-integration`" reads as a whole replacement. Proposed text:
+  "`ADR-host-cli-lifecycle-authority` supersedes the former lifecycle MCP execution interface and, in part, the
+  lifecycle request, native confirmation and resume interface of `ADR-local-and-pull-request-integration`, which
+  remains authoritative for the merge construction and route guards below, this capability's current contract." The
+  `ADR-moved-target-merge` sibling may edit the same paragraph.
+- `ARCH-05-1-containers` and `CAP-VIEW-repository-viewer` (P3): "`ADR-viewer` as superseded by
+  `ADR-viewer-working-tree`" should read "as superseded in part by", since `ADR-viewer` is `accepted` again.
 
 ## Entrypoints
 

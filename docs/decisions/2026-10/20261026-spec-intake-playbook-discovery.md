@@ -3,6 +3,8 @@ id: ADR-spec-intake-playbook-discovery
 title: Discover playbooks at spec intake with confirm-first invocation
 summary: For procedures nobody invokes explicitly, we let spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user's confirmation invokes, to surface procedures without granting authority, accepting one search per intake.
 proposal: SPEC-spec-playbook-discovery
+supersedes:
+  - ADR-immutable-decisions-editable-records
 status: accepted
 created_at: 2026-10-26
 ---

@@ -3,6 +3,12 @@ id: ADR-adaptive-dev-approach-name
 title: Name the non-SDD development approach adaptive-dev
 summary: For the development approach that iterates without per-change SDD records, we rename the approach value and its catalog bundle to adaptive-dev with no compatibility for incubation, to give each development concept one unambiguous name beside sdd, accepting that the old names stop working.
 proposal: SPEC-rename-incubation-to-adaptive-dev
+supersedes:
+  - ADR-adopt-sdd-through-an-evidenced-baseline-playbook
+  - ADR-keep-incubation-guidance-opt-in-and-current-state-based
+  - ADR-own-development-approach-policy-outside-sdd
+  - ADR-retain-research-as-cited-materials
+  - ADR-split-deep-research-bundle
 status: accepted
 created_at: 2026-10-30
 ---

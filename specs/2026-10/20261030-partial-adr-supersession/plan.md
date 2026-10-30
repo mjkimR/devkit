@@ -87,6 +87,15 @@ replaces named clauses and leaves the rest in the earlier ADR ("supersedes only"
 | `ADR-keep-discovery-plans-distinct-from-delivery-commitments` | accepted | `ADR-retain-research-as-cited-materials` | partial ("retained from") | add line |
 | `ADR-scope-only-explicit-working-tree-targets-in-the-evaluator` | accepted | `ADR-scope-snapshot-runs-to-diff-paths-including-deletions` | partial ("Supersedes: the follow-up section") | add line (review-01) |
 
+After reconcile-check-01: the pointers in `ADR-immutable-decisions-editable-records` ("Partly replaced by") and
+`ADR-viewer-working-tree` ("replaces this statement") take the "Superseded in part by" form, and every superseder an
+in-part line names lists the earlier ADR in `supersedes` (`ADR-adaptive-dev-approach-name`,
+`ADR-archive-terminal-milestones-in-roadmap`, `ADR-document-package`,
+`ADR-drop-the-base-checkout-equality-from-worker-validation`, `ADR-milestone-merging`,
+`ADR-scope-snapshot-runs-to-diff-paths-including-deletions`, `ADR-spec-intake-playbook-discovery`,
+`ADR-viewer-planning-proposal-overlay`), so the `adr-compaction` closure reaches each pair. `ADR-moved-target-merge`
+already names `ADR-local-and-pull-request-integration`.
+
 ADRs that already carry a valid "Superseded in part by" or equivalent pointer at the affected statement keep it
 (`ADR-spec-package-on-devkit`, `ADR-test-selection-and-ci`, `ADR-parse-memo-location-and-format`,
 `ADR-parse-memo-failure-and-write-policy`, `ADR-adopt-sdd-through-an-evidenced-baseline-playbook`,

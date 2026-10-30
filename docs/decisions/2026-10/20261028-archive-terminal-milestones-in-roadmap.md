@@ -3,6 +3,8 @@ id: ADR-archive-terminal-milestones-in-roadmap
 title: Archive terminal milestones in a flat roadmap directory
 summary: "For a roadmap that separates live themes from history, we keep done and dropped milestones in one flat archive, to preserve identity and browsing while clearing the root, accepting coordinated reader and guidance updates."
 proposal: SPEC-milestone-archive
+supersedes:
+  - ADR-roadmap-and-milestones
 status: accepted
 created_at: 2026-10-28
 ---

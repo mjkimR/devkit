@@ -2,6 +2,10 @@
 id: ADR-document-package
 title: Separate the document system into devkit-docs
 summary: "For delivery processes beyond SDD, we move the document model, lookup, namespaces and document rules into a devkit-docs wheel that devkit-spec depends on, to keep the document system free of any delivery process, accepting renamed commands, codes and config."
+supersedes:
+  - ADR-parse-memo-failure-and-write-policy
+  - ADR-parse-memo-location-and-format
+  - ADR-spec-package-on-devkit
 status: accepted
 created_at: 2026-10-28
 ---

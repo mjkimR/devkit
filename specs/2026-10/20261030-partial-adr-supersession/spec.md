@@ -17,8 +17,8 @@ workflow: sdd-spec-feature
 (`CAP-DOCS-document-model`, rule 8). Several ADRs carry that status although their superseder replaced only some of
 their clauses, so the clauses still in force disappear from search. `ADR-local-and-pull-request-integration` is the
 reported case: `ADR-host-cli-lifecycle-authority` replaced only its lifecycle request, native confirmation and resume
-clauses, yet `devkit docs search "Local and Pull Request Integration"` does not return it while
-`CAP-INT-mcp-services` cites it as the current merge contract.
+clauses, yet `devkit docs search "Local and Pull Request Integration"` does not return it although its merge
+construction is the current contract of `CAP-INT-mcp-services`.
 
 `ADR-immutable-decisions-editable-records` already separates whole replacement (`status: superseded`,
 `superseded_by`) from partial replacement (a one-line pointer at the earlier ADR), but no document a writer reads
@@ -40,8 +40,8 @@ back to `superseded_by` for partial replacements and to ad-hoc prose pointers.
 1. **Scope Excluded**: a structured partial-supersession field (`superseded_in_part_by`, `status: amended`) or a
    parsed decision `supersedes` reference graph. **Rationale**: the agreed scope keeps the status and a body line;
    `supersedes` and `superseded_by` on a decision stay unparsed metadata.
-2. **Scope Excluded**: changing any decision. The ledger correction changes only `status`, `superseded_by`, the body
-   status line and "Superseded in part by" lines.
+2. **Scope Excluded**: changing any decision. The ledger correction changes only `status`, `superseded_by`,
+   `supersedes`, the body status line and "Superseded in part by" lines.
 3. **Scope Excluded**: `ADR-moved-target-merge` (a sibling worker supersedes it in part on another branch).
 4. **Scope Excluded**: the spec constitution's sentence on changed decisions; it already reads "a new ADR with
    `supersedes`", which holds for whole and partial replacements, so it needs no "in part".
