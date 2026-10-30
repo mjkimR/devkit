@@ -16,7 +16,7 @@ Setup/run/check commands and required environment. For each observed result, nam
 
 ## Open questions and limitations
 
-Unresolved product or technical decisions and missing evidence that still affect work. When research notes exist, link their current evidence, surviving alternatives and conditions that would reopen a choice.
+Unresolved product or technical decisions and missing evidence that still affect work. When research notes exist, link their current evidence, surviving alternatives and conditions that would reopen a choice; link a retained research material by its `MAT-<slug>` ID.
 
 ## Next useful action
 

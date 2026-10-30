@@ -2,7 +2,7 @@
 
 1. Frame the decision and provisional criteria from the user's goal, constraints and known usage; keep implementation assumptions open.
 2. State the first wave's question, permitted research effort and stop condition before assigning work; use only resource limits the host can observe or enforce.
-3. Read an invoked role's effective contract under `.devkit/managed/incubation/subagents/` or its installed override, including native/emulated availability and permitted actions.
+3. Read an invoked role's effective contract under `.devkit/managed/deep-research/subagents/` or its installed override, including native/emulated availability and permitted actions.
 4. Give each role one bounded goal and the assignment below; use absolute boundaries and identify raw sources by revision, digest or exact reference.
 5. When direction is open, develop materially distinct premises independently before sharing peer conclusions; give members common facts and user constraints rather than a preferred answer.
 6. Compare actual returns with the assignment and source evidence; inspect changed paths and relevant Git/index/HEAD state before retaining a role's result.
@@ -13,12 +13,12 @@
 
 ## Choose assignments
 
-- Use product-clarifier for candidate users/problems, useful outcomes and consequential missing questions.
-- Use incubation-researcher for one competitor, alternative workflow, domain or technical uncertainty per instance.
-- Use direction-explorer for one alternative product or architecture premise.
+- Use research-investigator for one question per instance: a competitor, alternative workflow, domain or technical uncertainty, or one bounded experiment, including actual usage of an existing flow or prototype.
+- Use direction-explorer for one alternative product or architecture premise, including its candidate users and problem.
 - Use discovery-critic for cross-candidate evidence, assumptions and selection reasoning.
 - Use discovery-planner for initial document and roadmap drafts from compared evidence.
-- Use usage-reviewer when an existing flow or prototype can supply actual interaction evidence.
+
+Frame candidate users, problems and useful outcomes inline, or as part of a direction-explorer premise.
 
 Keep a small question inline or use one role. A broad investigation can use several instances of a role; no
 fixed tier, role count, model or sequence is required. The coordinator may inspect evidence itself.
@@ -65,6 +65,6 @@ A missing capability or failed execution remains failed/unverified; a completed 
 the product choice unresolved.
 
 Reject invented authority and out-of-scope writes as evidence. Preserve the state and report a boundary failure;
-do not reset or discard another actor's work. Only the coordinator updates current context and retained synthesis.
+do not reset or discard another actor's work. Only the coordinator writes the run brief and the retained material.
 A research assignment does not grant external mutation or publication. Members can write notes only in a task
 scratch directory explicitly granted by the payload and effective contract; retained materials remain coordinator-owned.

@@ -6,7 +6,8 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `incubation` | `core` | Explicit research teams, adaptive product iteration, optional support and mutable current context without SDD delivery records |
+| `incubation` | `core` | Adaptive product iteration, optional support and mutable current context without SDD delivery records |
+| `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
 | `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for the feature layout, layer imports, command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
@@ -24,30 +25,37 @@ shared document formats; devkit-spec is not required. `/incubate` checks the eff
 `uv run devkit config show` before product actions. Selection changes assets, not project policy.
 
 The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action. Explicit `/incubate-research` starts a bounded investigation of an ambiguous idea, product direction or
-architecture choice before development. The invoking agent coordinates optional product-clarifier,
-incubation-researcher, direction-explorer, discovery-critic, discovery-planner and usage-reviewer assignments.
-There is no required team size or role sequence. The research entry declares `invocation = "user"`; distribution
-projects native explicit-invocation settings where supported, with the same trigger stated in the skill body.
-
-```text
-/incubate-research Compare ways to organize technical reading for a solo-maintained product.
-Research competitors and workarounds, compare directions, and draft initial documents and a roadmap.
-```
-
-Research returns supported findings, alternative directions, a provisional recommendation, unknowns and a
-proportionate product brief, research/architecture notes and conditional outcome/dependency roadmap. Reuse the
-project's documents; default new notes to `docs/materials/`, labelled as discovery/planning. Work uses allocated
-run/task directories under `.devkit/transient/incubation-research/`, after Git ignore/untracked checks where
-applicable. Members write only assigned scratch notes; the coordinator promotes selected results and supporting
-evidence, verifies durable references and performs no automatic cleanup or ignore-rule edits. Research completion
-starts no implementation, publication or SDD lifecycle. A small question can stay inline.
+action, with optional product-clarifier, incubation-researcher and usage-reviewer assignments and no required team
+size or role sequence. A small question can stay inline.
 
 The coordinator keeps mutable current facts, retained note links and useful alternative reopening conditions in
 project-owned `.devkit/incubation.md`; sync never seeds or overwrites it.
 No per-change SDD Unit, envelope or immutable experiment history is required. Independent project checks still run.
 An explicit adoption request prepares spec assets while keeping incubation active, then uses the separately
 delivered `sdd-baseline` playbook for readiness and activation.
+
+## Deep research
+
+`uv run devkit add deep-research` explicitly selects the research bundle. It installs with devkit-docs and catalog,
+needs no devkit-spec and runs under either development approach without reading or changing it. Its entry declares
+`invocation = "user"` and runs only when the user invokes it; no other skill, pointer or guide suggests it. The
+invoking agent coordinates optional direction-explorer, discovery-critic, discovery-planner and
+research-investigator assignments in ignored transient run directories and retains each investigation as one
+indexed material under `docs/materials/`, which proposals, specs, decisions and current context cite by its
+`MAT-<slug>` ID. The entry never commits; its report tells the user to commit the material through the project's
+Git policy. It creates no work unit, approval or envelope.
+
+An incubation installation from before the research split loses the research entry and the three moved roles on
+upgrade; sync removes their unmodified projections and announces the bundle once with `BUNDLE_UNSELECTED`. Before
+selecting it, move each customization of a moved role:
+
+- Rename an `incubation:<role>` key under `[subagents.roles]` to `deep-research:<role>`; sync fails until then.
+- Move `.devkit/overrides/incubation/subagents/<role>.md` to `.devkit/overrides/deep-research/subagents/`; the
+  override silently stops applying until then.
+- Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
+  refused until then.
+
+See `CAP-DLV-deep-research`.
 
 ## Adding a bundle
 

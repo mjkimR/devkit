@@ -2,7 +2,7 @@
 id: SPEC-deep-research-bundle
 title: Split explicit deep research into an approach-neutral bundle
 summary: Move the explicitly invoked research entry and its research roles from the incubation bundle into an approach-neutral deep-research bundle. Results stay under docs/materials/ and proposals or current context reference them by ID, so one investigation can inform several proposals.
-status: planned
+status: in-progress
 created: 2026-10-30
 related_capabilities:
   - CAP-DLV-idea-incubation
@@ -155,7 +155,7 @@ Settled direction (user):
   `references/discovery.md` suggest no research entry; every line of `guides/**/*.md` and the catalog README that
   contains `deep-research` contains `devkit add deep-research`, is the bundle table row starting with
   ``| `deep-research` ``, or names a moved-role migration path (`deep-research:<role>` or
-  `.devkit/overrides/deep-research/`)
+  `.devkit/overrides/deep-research/`) or the capability ID CAP-DLV-deep-research
 
 ### [AC-10] SDD intake exempts the explicit research entry and the proposal reference cites materials by ID
 
@@ -220,8 +220,9 @@ The bundle and its assets follow `ADR-split-deep-research-bundle`; the retained 
 - The installed-consumer test for deep-research is a new module `tests/e2e/bundles/deep_research/` rather than an
   extension of the incubation module: it mirrors bundle ownership and keeps each module self-contained, at the cost
   of one more wheel build in the e2e tier.
-- AC-09 admits the moved-role migration paths besides the two contexts the proposal named, because AC-11 requires
-  the guides to name `deep-research:<role>` and `.devkit/overrides/deep-research/` and neither suggests the entry.
+- AC-09 admits the moved-role migration paths and the capability ID besides the two contexts the proposal named,
+  because AC-11 requires the guides to name `deep-research:<role>` and `.devkit/overrides/deep-research/`, the README
+  cites capabilities by ID, and none of them suggests the entry.
 - `incubation-researcher`'s scratch clause, which named "the research run" of the removed entry, now names a task
   scratch directory the payload assigns; its scope is otherwise unchanged.
 - The catalog package version stays `0.1.5`; a release bumps it.

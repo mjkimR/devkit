@@ -29,7 +29,7 @@ The payload gives one goal, absolute read/write boundaries, source/artifact iden
 - Request each operation outside sandbox access through the host's approval mechanism. If it is denied or unavailable, stop it and report the actual partial state; never reroute through another path, process or tool.
 - Leave the index and HEAD unchanged: no commit, push, merge, reset, amend, checkout or publication.
 - Only the coordinator writes `.devkit/incubation.md` and retained synthesis; return evidence instead.
-- If the payload assigns an absolute task directory under the research run, write scratch notes only there; otherwise keep research read-only apart from separately authorized experiments.
+- If the payload assigns an absolute task scratch directory, write scratch notes only there; otherwise keep research read-only apart from separately authorized experiments.
 
 ## Procedure
 

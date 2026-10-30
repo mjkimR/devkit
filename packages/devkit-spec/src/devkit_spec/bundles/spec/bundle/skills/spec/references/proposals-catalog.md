@@ -23,7 +23,7 @@ docs/proposals/PROP-{slug}/
   (`.devkit/managed/spec/templates/proposal.md`) annotates the fields. `planning_effort` / `dev_effort` are
   non-authoritative hints ([effort](effort.md)); `handoff` returns `dev_effort`, and the applied effort is recorded only
   on `worker-NN.yaml` envelopes, never copied to `spec.md`.
-- **`materials/` Markdown**: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`; recommended, not checked (`RULE-spec-format` skips `materials/`). Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`.
+- **`materials/` Markdown**: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`; recommended, not checked (`RULE-spec-format` skips `materials/`). Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`. Research retained outside the proposal (an indexed material under `docs/materials/`) is cited by its `MAT-<slug>` ID in a code span and never copied into `materials/`.
 - **`target-docs.md`**: what `docs/` will look like once accepted (`proposal.md` holds the why): capability ledger, use cases, architecture and decisions, conventions and governance, before/after comparisons. Recommended for `size: M/L` or expected Living Spec structural changes.
 - **`size: XL`**: decompose it before `plan-intent` ([XL size gate](backlog.md#the-xl-size-gate)).
 

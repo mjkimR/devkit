@@ -9,7 +9,6 @@ usecases:
   - UC-research-an-idea-and-shape-a-roadmap
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate/SKILL.md
-  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate-research/SKILL.md
 ---
 
 # [CAP-DLV-idea-incubation] Idea Incubation

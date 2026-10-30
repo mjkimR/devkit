@@ -7,8 +7,6 @@ import os
 import subprocess
 from pathlib import Path
 
-import yaml
-
 ROOT = Path(__file__).resolve().parents[6]
 
 
@@ -65,30 +63,10 @@ def test_installed_incubation_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".devkit/managed/spec").exists()
     assert not (consumer / ".agents/skills/spec").exists()
     assert (consumer / ".agents/skills/incubate/SKILL.md").is_file()
-    research = consumer / ".agents/skills/incubate-research"
-    assert (research / "SKILL.md").is_file()
-    assert yaml.safe_load((research / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
-    for role in (
-        "product-clarifier",
-        "incubation-researcher",
-        "usage-reviewer",
-        "direction-explorer",
-        "discovery-critic",
-        "discovery-planner",
-    ):
+    assert not (consumer / ".agents/skills/incubate-research").exists()
+    for role in ("product-clarifier", "incubation-researcher", "usage-reviewer"):
         assert (consumer / f".codex/agents/{role}.toml").is_file()
-
-    workspace_example = (research / "references/workspace.md").read_text().split("```sh\n", 1)[1].split("```", 1)[0]
-    workspace_script = tmp_path / "research-workspace.sh"
-    workspace_script.write_text(workspace_example + '\nprintf \'%s\\n\' "$research_run" "$research_task"\n')
-    run("bash", "-n", str(workspace_script), cwd=consumer)
-    allocations = [run("bash", "-eu", str(workspace_script), cwd=consumer).splitlines() for _ in range(2)]
-    assert allocations[0][0] != allocations[1][0]
-    for run_path, task_path in allocations:
-        assert (consumer / run_path).is_dir()
-        assert (consumer / task_path).resolve().is_relative_to((consumer / run_path).resolve())
-        assert run("git", "check-ignore", "--", run_path, task_path, cwd=consumer).splitlines() == [run_path, task_path]
-        assert not run("git", "ls-files", "--", run_path, task_path, cwd=consumer).strip()
+    assert not (consumer / ".codex/agents/direction-explorer.toml").exists()
     current = consumer / ".devkit/incubation.md"
     current.write_bytes(b"# Current facts\nGoal: household list\nUnverified: offline merge\n")
     expected_context = current.read_bytes()
@@ -99,13 +77,12 @@ def test_installed_incubation_without_spec(tmp_path: Path) -> None:
     cli("rules", "check")
     cli("remove", "incubation")
     assert not (consumer / ".agents/skills/incubate/SKILL.md").exists()
-    assert not research.exists()
     assert current.read_bytes() == expected_context
     assert roadmap.read_bytes() == expected_roadmap
     cli("add", "incubation")
     assert current.read_bytes() == expected_context
     assert roadmap.read_bytes() == expected_roadmap
-    assert (research / "SKILL.md").is_file()
+    assert (consumer / ".agents/skills/incubate/SKILL.md").is_file()
     cli("sync", "--check")
     config.write_text(config.read_text().replace('approach = "incubation"', 'approach = "invalid"'))
     error = json.loads(cli("config", "show", "--format", "json", expected=2))

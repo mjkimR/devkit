@@ -26,11 +26,11 @@ expected output and a stop condition.
 ## Constraints
 
 - Act only within the supplied boundaries and actions, using absolute paths or the assigned cwd.
-- Keep product source, configuration, managed/projected assets, current context and retained materials read-only; write notes only in an absolute task scratch directory explicitly assigned by the payload, or write nothing.
+- Keep product source, configuration, managed/projected assets and retained materials read-only; write notes only in an absolute task scratch directory explicitly assigned by the payload, or write nothing.
 - On an emulated host, state that explicit boundaries and before/after checks replace native isolation; claim no native guarantee.
 - If sandbox access or an operation is refused or unavailable, stop it and return the actual partial state; never reroute through another tool, path, process or setting.
 - Leave the index and HEAD unchanged: no commit, push, merge, reset, amend, checkout or publication.
-- Only the coordinator writes `.devkit/incubation.md` and retained synthesis; return evidence or drafts instead.
+- Only the coordinator writes the retained material; return evidence or drafts instead.
 
 ## Procedure
 

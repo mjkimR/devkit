@@ -1107,7 +1107,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "5b7410e036d99cf9368587a0daf1dec7eec8c1874c1b4f1316d698f6b8e00fdb"
+      "sha256": "3a38b24ddfab181d28dff80ec9ea247481ed72ed4f78e89c78bbe0bab1716830"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1159,7 +1159,7 @@
     },
     ".agents/skills/spec/references/proposals-catalog.md": {
       "mode": 420,
-      "sha256": "4a2d6146f58ee44a4bb98879a721b8e5b196a1d49d1d83ce89041de63a996aec"
+      "sha256": "11a94a9d3ab813117c7bef166d8a27689f8937975982186fe442555f7446eac8"
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1351,7 +1351,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "5b7410e036d99cf9368587a0daf1dec7eec8c1874c1b4f1316d698f6b8e00fdb"
+      "sha256": "3a38b24ddfab181d28dff80ec9ea247481ed72ed4f78e89c78bbe0bab1716830"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1403,7 +1403,7 @@
     },
     ".claude/skills/spec/references/proposals-catalog.md": {
       "mode": 420,
-      "sha256": "4a2d6146f58ee44a4bb98879a721b8e5b196a1d49d1d83ce89041de63a996aec"
+      "sha256": "11a94a9d3ab813117c7bef166d8a27689f8937975982186fe442555f7446eac8"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -2039,7 +2039,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "5b7410e036d99cf9368587a0daf1dec7eec8c1874c1b4f1316d698f6b8e00fdb"
+      "sha256": "3a38b24ddfab181d28dff80ec9ea247481ed72ed4f78e89c78bbe0bab1716830"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -2091,7 +2091,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/proposals-catalog.md": {
       "mode": 420,
-      "sha256": "4a2d6146f58ee44a4bb98879a721b8e5b196a1d49d1d83ce89041de63a996aec"
+      "sha256": "11a94a9d3ab813117c7bef166d8a27689f8937975982186fe442555f7446eac8"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,

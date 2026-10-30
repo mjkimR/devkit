@@ -1,1 +1,1 @@
-- For incubation, inspect `uv run devkit config show`; require `approach=incubation`. Use `/incubate` for product work or explicitly select `/incubate-research` for research teams. Read `get-context incubation` and current `.devkit/incubation.md`; selection changes no policy.
+- For incubation, inspect `uv run devkit config show`; require `approach=incubation`. Use `/incubate` for product work. Read `get-context incubation` and current `.devkit/incubation.md`; selection changes no policy.

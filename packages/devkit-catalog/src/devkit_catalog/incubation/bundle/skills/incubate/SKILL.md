@@ -15,7 +15,7 @@ Take the next useful action toward the user's product goal, keeping enough curre
 
 1. Once per agent context, read `uv run devkit get-context incubation` (its rules apply throughout), existing `.devkit/incubation.md` and the repository's relevant run instructions.
 2. Reuse known facts; read `references/discovery.md` when the next action needs product clarification or comparison.
-3. Choose the next action from the missing evidence; research or implementation may start before discovery finishes. If broad direction research would help, suggest `/incubate-research` and wait for the user to select that entry; keep ordinary small questions inline.
+3. Choose the next action from the missing evidence; research or implementation may start before discovery finishes. Keep ordinary small questions inline.
 4. Read `references/evidence-and-iteration.md` before research, an experiment, implementation or usage verification; then run the action and verify its retained result.
 5. Read `references/delegation.md` before assigning a separable question or verification scope to an optional role; inline work needs no role.
 6. Read `references/current-context.md` before writing current context, pausing, resuming in another session or answering an explicit SDD adoption request.

@@ -10,7 +10,7 @@ capabilities:
   - CAP-DLV-idea-incubation
   - CAP-HARN-agent-guidance
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/incubation/bundle/skills/incubate-research/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/skills/deep-research/SKILL.md
 ---
 
 # [UC-research-an-idea-and-shape-a-roadmap] Research an idea and shape an initial roadmap

@@ -135,15 +135,24 @@ provider = "project"
 
 Select `uv run devkit add incubation`, then inspect `uv run devkit config show` and
 `uv run devkit get-context incubation`. `/incubate` handles adaptive discovery, research, implementation and
-actual-usage verification. Explicit `/incubate-research` coordinates early direction research and initial documents/roadmap;
-allocated `.devkit/transient/incubation-research/` task notes are selectively promoted to durable materials.
-Optional support roles are not mandatory phases. The coordinator creates mutable
+actual-usage verification. Optional support roles are not mandatory phases. The coordinator creates mutable
 `.devkit/incubation.md` when useful. Leave that project-owned file available to normal version control and preserve
 its bytes during installation. No complete backlog or SDD Unit is needed before the first useful action.
 
 The absent approach defaults to `sdd`; selecting the catalog bundle never changes that value. Do not implicitly
 remove existing SDD assets or reopen its history. Retain project checks and use a separately requested verified
 [baseline procedure](install/incubation-sdd-adoption.md) for voluntary SDD adoption.
+
+An incubation installation from before the research split loses its explicit research entry and the
+`direction-explorer`, `discovery-critic` and `discovery-planner` roles on upgrade: sync removes their unmodified
+projections and announces the separate research bundle once with `BUNDLE_UNSELECTED`. Select it with
+`uv run devkit add deep-research` only when the user asks for that entry. Move each customization of a moved role first:
+
+- Rename an `incubation:<role>` key under `[subagents.roles]` to `deep-research:<role>`; sync fails until then.
+- Move `.devkit/overrides/incubation/subagents/<role>.md` to `.devkit/overrides/deep-research/subagents/`; the
+  override silently stops applying until then.
+- Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
+  refused until then.
 
 ## Step 4: Recommend bundles
 
