@@ -1,0 +1,12 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:57:20.904624Z'
+status: completed
+summary: 'Recording (direct and sweep) now looks up feedback of every status with devkit docs search --kind feedback --history -n 5 and acts on the matched status, replacing equal-target dedup; new user-invoked spec/feedback-compaction playbook (registered, synced) compacts terminal feedback into FB-compacted-<area>-<status> records with aliases; CAP-HARN-agent-guidance and CAP-DLV-delivery-workflows reflected. Limits: first compaction of the existing ledger not run (later user-invoked run); ADR path wording for package namespaces deferred to open FB-compaction-adr-path-omits-namespace.'
+findings: []
+checks:
+  tests: 'PASS just test-affected mode=partial: 1568 passed'
+  build: PASS uv build --package devkit-spec (sdist + wheel, wheel contains playbooks/feedback-compaction/SKILL.md)
+  lint: PASS just lint-check devkit-spec, just check devkit-spec (pyright 0), devkit rules check --ci --base a0e1034e 0 violations, devkit sync --check exit 0
