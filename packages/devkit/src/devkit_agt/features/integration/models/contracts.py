@@ -61,7 +61,9 @@ class IntegrationContext:
     """What a provider, guard or cleanup extension checks.
 
     At ``prepare`` this is the approved context: ``finish.target_sha`` is the confirmation target and ``result_sha``
-    is ``None`` (nothing is built). At each build the service passes an execution context: ``finish.target_sha`` is
+    is ``None`` (nothing is built). When the source does not contain the confirmation target, a provider receives at
+    ``prepare`` a prospective context instead: ``result_sha`` is an unsigned prospective merge commit that never lands
+    (``ADR-moved-target-merge``). At each build the service passes an execution context: ``finish.target_sha`` is
     the build target (the confirmation target or a descendant) and ``result_sha`` the commit that would land.
     """
 

@@ -10,7 +10,7 @@ created_at: 2026-10-30
 ## Evidence boundary
 
 Read at `fdba6646` in the `plan-git-operator-planning-completion-route` worktree. Code paths are cited as they stand
-there; `PROP-integration-merge-moved-target` is in Planning in parallel, so its settled direction (a conflict-free moved
+there; `SPEC-integration-merge-moved-target` is in Planning in parallel, so its settled direction (a conflict-free moved
 target merged by the integrating command itself, refusal only on a real conflict or failing readiness) is treated as an
 assumption, not as current behavior. No route was timed; the comparison counts Host actions, not tokens, cost or
 latency.

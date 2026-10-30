@@ -15,8 +15,9 @@ Text output (paths are relative to the workspace root):
   ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``, ``SPEC_PROPOSAL_GATE_NOT_OPEN``,
   ``SPEC_PROPOSAL_POLICY_NOT_AUTO``. The composed ``--mode`` form and ``handoff --effort`` print through
   ``_echo_composed``: the success kind, ``<KIND>_STOPPED`` after partial effects (exit ``1``), or the refusal itself
-  (exit ``2``). ``handoff --effort`` and ``accept --mode accept_and_handoff`` add ``commit=``: the handoff's own
-  commit, ``-`` when none landed (``SPEC_HANDOFF_COMMIT_REFUSED``).
+  (exit ``2``). A composed acceptance that integrated adds ``target_sha=`` (the merged target), ``landed_sha=`` and the
+  delivery provider's ``disclosure=``. ``handoff --effort`` and ``accept --mode accept_and_handoff`` add ``commit=``:
+  the handoff's own commit, ``-`` when none landed (``SPEC_HANDOFF_COMMIT_REFUSED``).
 - ``check``: ``[PROPOSAL: <id> path= status=draft editable=yes]`` when Backlog may edit, split or delete the proposal;
   ``SPEC_PROPOSAL_IN_PLANNING`` (exit ``1``) while its ``plan-<slug>`` exists or once it left ``draft``.
 - ``handoff``: ``[HANDOFF: <proposal id> spec= dir= workflow=]`` (with ``dev_effort=`` when the proposal declared it),
@@ -359,6 +360,11 @@ def accept_cmd(
         if direct or check_only:
             raise click.UsageError("composed acceptance cannot use --direct or --check")
         result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
+        merged = {
+            key: result[name]
+            for key, name in (("target_sha", "target_sha"), ("landed_sha", "landed_sha"), ("disclosure", "disclosure"))
+            if result.get(name)
+        }
         _echo_composed(
             "ACCEPTED",
             slug,
@@ -367,6 +373,7 @@ def accept_cmd(
             mode=mode,
             authority=result.get("acceptance_authority", "-"),
             completed=",".join(result.get("completed_steps", [])) or "-",
+            **merged,
             **({"commit": result.get("commit") or "-"} if mode == "accept_and_handoff" else {}),
         )
         return

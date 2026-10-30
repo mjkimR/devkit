@@ -1,0 +1,33 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:46:14.212691Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the three P3 fixes of review-01 (medium: no repeat reviewer call; scope did not expand): ADR partial-supersession lines added, ACCEPTED line prints landed_sha=, pull-request NOT_FF fix names only the base merge.'
+findings:
+- issue: ADR follow-up 'Superseded in part by' lines are missing from ADR-local-and-pull-request-integration and ADR-test-selection-and-ci.
+  evidence: specs/2026-10/20261030-integration-merge-moved-target/plan.md:12; docs/decisions/2026-10/20261030-moved-target-merge.md section 5
+  failure_condition: A reader of either superseded ADR sees the replaced clause as fully in force.
+  suggested_action: Add the two lines without changing status or superseded_by and record it in tasks.md.
+  resolution: resolved
+  severity: P3
+- issue: 'The composed [ACCEPTED: ...] line prints landed= while AC-09 names landed_sha and the line uses target_sha=.'
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:361-365; spec.md AC-09
+  failure_condition: An agent following AC-09 looks for landed_sha= on the ACCEPTED line and finds nothing.
+  suggested_action: Print landed_sha= to match JSON and target_sha=, and update the test.
+  resolution: resolved
+  severity: P3
+- issue: WORKTREE_MERGE_NOT_FF [FIX] names the local no-ff route also when raised by the pull-request route.
+  evidence: packages/devkit/src/devkit_agt/features/worktree/models/errors.py:263-266; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:140
+  failure_condition: A PR-route preparation (possibly under pull_request = required) points the agent at the local route instead of the base merge.
+  suggested_action: Give the PR-route refusal only the base-merge fix at its raise site.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit test_pull_request.py + e2e/features/integration 65 passed; devkit-spec test_plan_accept_cli.py 10 passed
+  lint: PASS just lint devkit, devkit-spec; devkit rules check docs/decisions and unit errors=0
+diff_scope:
+  base: 83286f89b6a8ec343147abc40e5784d02298cf58
+  head: e7510cd65a5d6fc731f857e5291b5de59c349783

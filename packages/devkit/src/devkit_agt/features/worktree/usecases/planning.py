@@ -66,13 +66,16 @@ def plan_finish(
     delete_branch: bool = True,
     merge_method: str = "no-ff",
     target_sha: str | None = None,
+    advance: bool = False,
 ) -> FinishPlan:
     """Preflight local integration and exact cleanup without fetching, pushing or changing Git state.
 
-    The source must contain the target (only later target advances are merged in), or the target must already
-    contain the source, which plans a cleanup-only finish (``already_merged``); any other pair is
-    ``WORKTREE_MERGE_NOT_FF``. Under ``merge_method="no-ff"`` a plan that builds a merge commit refuses without a
-    committer identity (``WORKTREE_COMMIT_FAILED``).
+    The source must contain the target, or the target must already contain the source, which plans a cleanup-only
+    finish (``already_merged``); any other pair is ``WORKTREE_MERGE_NOT_FF``. Only with ``advance`` (local
+    integration, which builds and checks the merge itself; ``ADR-moved-target-merge``) and under
+    ``merge_method="no-ff"`` does a source that neither contains nor is contained by the target plan a merge build.
+    Under ``"no-ff"`` a plan that builds a merge commit refuses without a committer identity
+    (``WORKTREE_COMMIT_FAILED``).
     """
     check_branch(branch)
     if position.linked:
@@ -102,7 +105,7 @@ def plan_finish(
     source = run_git_text(position.base, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
     target = target_sha or run_git_text(position.base, "rev-parse", "--verify", "HEAD^{commit}")
     already = _merged(position.base, source, target)
-    if not already and not _merged(position.base, target, source):
+    if not already and not (advance and merge_method == "no-ff") and not _merged(position.base, target, source):
         raise MergeNotFastForwardError(
             f"{branch} neither contains the target {position.branch} at {target[:12]} nor is contained in it"
         )

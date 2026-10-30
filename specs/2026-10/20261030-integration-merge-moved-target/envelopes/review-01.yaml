@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T04:43:53.121163Z'
+status: completed
+summary: 'Initial code-reviewer (nested, medium): AC-01..AC-11 each covered by passing tests; digest determinism, error precedence for non-advance callers, composed-acceptance comparison and non-goals verified; three P3 wording/follow-up findings.'
+findings:
+- issue: ADR follow-up 'Superseded in part by' lines are missing from ADR-local-and-pull-request-integration and ADR-test-selection-and-ci.
+  evidence: specs/2026-10/20261030-integration-merge-moved-target/plan.md:12; docs/decisions/2026-10/20261030-moved-target-merge.md section 5
+  failure_condition: A reader of either superseded ADR sees the replaced clause as fully in force.
+  suggested_action: Add the two lines without changing status or superseded_by and record it in tasks.md.
+  resolution: open
+  severity: P3
+- issue: 'The composed [ACCEPTED: ...] line prints landed= while AC-09 names landed_sha and the line uses target_sha=.'
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:361-365; spec.md AC-09
+  failure_condition: An agent following AC-09 looks for landed_sha= on the ACCEPTED line and finds nothing.
+  suggested_action: Print landed_sha= to match JSON and target_sha=, and update the test.
+  resolution: open
+  severity: P3
+- issue: WORKTREE_MERGE_NOT_FF [FIX] names the local no-ff route also when raised by the pull-request route.
+  evidence: packages/devkit/src/devkit_agt/features/worktree/models/errors.py:263-266; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:140
+  failure_condition: A PR-route preparation (possibly under pull_request = required) points the agent at the local route instead of the base merge.
+  suggested_action: Give the PR-route refusal only the base-merge fix at its raise site.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected 2010 passed on 83286f89
+  lint: PASS just lint-check/check devkit, devkit-spec; devkit rules check --ci --base cf991c47 errors=0
+diff_scope:
+  base: cf991c476d6fbc9651ad81199564d476ddc42504
+  head: 83286f89b6a8ec343147abc40e5784d02298cf58

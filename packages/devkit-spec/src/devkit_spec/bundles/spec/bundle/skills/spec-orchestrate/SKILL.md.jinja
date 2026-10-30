@@ -19,7 +19,7 @@ Use `local-orchestrated` instead of `direct` for an activity when units can run 
 2. **Run a turn** through `spec-delegate` with `planning-worker` or `development-worker`.
 3. **Validate** the committed range through `spec-delegate`'s worker reference. A failing range is blocked, never discarded.
 4. **Accept** Planning through `spec-review-proposal`, first naming any support role the effort required but no envelope shows.
-5. **Integrate** Development through `spec-integrate`, one unit at a time in overlap order; the implementer first incorporates a moved base. Delegate only guarded execution after Host authority.
+5. **Integrate** Development through `spec-integrate`, one unit at a time in overlap order. Delegate only guarded execution after Host authority.
 
 After context loss, rebuild state from `devkit worktree status`, `devkit spec scope collect --mode worktrees` and per-unit `devkit workflow next --unit <dir>`. Keep one conversation line per unit: slug, activity, stage, worker state. To return to `direct`, stop starting workers, validate running ones' results and continue the remaining units one at a time.
 
@@ -31,4 +31,5 @@ After context loss, rebuild state from `devkit worktree status`, `devkit spec sc
 {% endif %}
 ## Completion
 
-- Every unit is integrated, blocked with its problem recorded, or continued in `direct`.
+- Every unit is finished: integrated, blocked with its problem recorded, waiting for a user decision (its last `worker` envelope is `needs_input`), or continued in `direct`.
+- **Batch test run**: note the base branch HEAD as the batch start when the run starts its first unit. Once every unit is finished and no worker turn of the run is still running, run the repository's verification for integrated content once on the base branch HEAD, scoped from the batch start when its selector takes a base (e.g. `just test-affected --base <batch start>`). After a context loss, the batch start is the first parent of the run's earliest `chore(merge): integrate <branch> into <base branch>` commit on the first-parent history; when that is unclear, run the selector's full fallback. Report the tested head, the command and the result in the conversation; record a failure as feedback with its evidence and revert nothing. A run that integrated no unit runs nothing.

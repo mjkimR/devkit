@@ -1,4 +1,6 @@
-"""The approving call absorbs target commits that land after its own preparation (``SPEC-integration-follow-ups``)."""
+"""The approving call absorbs target commits that land after its own preparation (``SPEC-integration-follow-ups``),
+and preparation checks the prospective merge of a target that moved before it (``SPEC-integration-merge-moved-target``).
+"""
 
 from __future__ import annotations
 
@@ -12,8 +14,14 @@ import devkit_agt.features.integration.usecases.service as service_module
 import pytest
 from devkit.advisory import ActionMode, Actor
 from devkit_agt.features.integration import IntegrationService, ProviderError, Task
+from devkit_agt.features.integration.models.errors import ReceiptConflictError
 from devkit_agt.features.integration.repositories.receipts import check_merge
-from devkit_agt.features.worktree import CommitFailedError, MergeNotFastForwardError
+from devkit_agt.features.worktree import (
+    CommitFailedError,
+    GitUnsupportedError,
+    MergeConflictError,
+    MergeNotFastForwardError,
+)
 from devkit_core.core.locks import file_lock
 from testsupport.rules import git, write
 
@@ -240,15 +248,120 @@ def test_already_merged_branch_is_a_cleanup_only_request(repo):
     assert "refs/heads/dev-demo" not in git(base, "show-ref")
 
 
-def test_diverged_branch_is_refused_with_a_sha_preserving_fix(repo):
-    base, _ = repo
+def test_moved_target_before_preparation_lands_a_merge_without_a_base_merge(repo, ready_provider, monkeypatch):
+    """``ADR-moved-target-merge``: the source need not contain a conflict-free moved target."""
+    base, worktree = repo
+    tip, cut = git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
+    moved = commit(base, "theirs.txt")
+    guards = []
+    original = service_module.run_finish_guards
+    monkeypatch.setattr(service_module, "run_finish_guards", lambda *args: guards.append(args[2:]) or original(*args))
+    service = IntegrationService(base)
+    request = service.prepare("dev-demo", TASK).request
+    prepared = ready_provider.calls[-1]
+    assert request.context.result_sha is None and request.context.finish.target_sha == moved
+    assert prepared.result_sha is not None and prepared.finish.target_sha == moved
+    assert git(base, "rev-parse", f"{prepared.result_sha}^1", f"{prepared.result_sha}^2").split() == [moved, tip]
+    assert guards[-1] == (cut, tip)  # merge-base(target, source) and the source tip
+    assert prepared.result_sha not in git(base, "for-each-ref", "--format=%(objectname)")
+    result = integrate(service)
+    assert result.status == "completed", result.errors
+    head = git(base, "rev-parse", "HEAD")
+    assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
+    assert result.build() == {"confirmation_target": moved, "build_target": moved, "result": head}
+    assert result.request.context.finish.source_sha == tip and not worktree.exists()
+
+
+def test_moved_target_conflict_refuses_at_prepare_with_nothing_changed(repo):
+    base, worktree = repo
+    tip = commit(worktree, "README.md", "ours\n")
+    moved = commit(base, "README.md", "theirs\n")
+    before = git(base, "show-ref")
+    with pytest.raises(MergeConflictError) as raised:
+        IntegrationService(base).prepare("dev-demo", TASK)
+    assert "resolve the conflict" in (raised.value.fix or "") and "never rebase" in (raised.value.fix or "")
+    assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
+    assert git(base, "rev-parse", "dev-demo") == tip and worktree.exists()
+    assert git(worktree, "status", "--porcelain") == "" and git(base, "status", "--porcelain") == ""
+
+
+@pytest.mark.parametrize(
+    ("config", "branch_kept"),
+    [
+        ('[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n', False),
+        ('[integration]\nprovider = "fixture"\n[worktree]\ndelete_branch = false\n', True),
+    ],
+)
+def test_moved_target_that_changed_integration_policy_integrates(repo, config, branch_kept):
+    base, worktree = repo
+    commit(base, ".devkit/config.toml", config)
+    result = integrate(IntegrationService(base))
+    assert result.status == "completed", result.errors
+    assert ("refs/heads/dev-demo" in git(base, "show-ref")) is branch_kept and not worktree.exists()
+    assert result.authority == ("policy" if "auto" in config else "host-conversation")
+
+
+def test_moved_target_that_leaves_a_receipt_record_inconsistent_refuses_at_prepare(repo):
+    base, worktree = repo
+    lines = b"one\ntwo\nthree\nfour\nfive\n"
+    write(base, "managed.md", lines)
+    write(base, ".devkit/installation.json", _receipt({"managed.md": lines}))
+    git(base, "add", ".")
+    git(base, "commit", "-qm", "receipt")
+    git(worktree, "merge", "-q", "main")
+    ours = lines.replace(b"one", b"ONE")
+    write(worktree, "managed.md", ours)
+    write(worktree, ".devkit/installation.json", _receipt({"managed.md": ours}))
+    git(worktree, "add", ".")
+    git(worktree, "commit", "-qm", "re-sync")
+    moved = commit(base, "managed.md", lines.replace(b"five", b"FIVE").decode())
+    with pytest.raises(ReceiptConflictError) as raised:
+        IntegrationService(base).prepare("dev-demo", TASK)
+    assert list(raised.value.target_files) == ["managed.md"] and "prepare again" in (raised.value.fix or "")
+    assert git(base, "rev-parse", "HEAD") == moved and worktree.exists()
+
+
+def test_moved_target_digest_does_not_depend_on_identity_or_time_zone(repo, monkeypatch):
+    base, worktree = repo
     commit(base, "theirs.txt")
+    digest = IntegrationService(base).prepare("dev-demo", TASK).request.digest
+    monkeypatch.setenv("TZ", "Pacific/Kiritimati")
+    monkeypatch.setenv("GIT_COMMITTER_NAME", "Someone Else")
+    monkeypatch.setenv("GIT_COMMITTER_EMAIL", "else@example.invalid")
+    assert IntegrationService(base).prepare("dev-demo", TASK).request.digest == digest
+    result = IntegrationService(base).execute_cli("dev-demo", TASK, expected_digest=digest)
+    assert result.status == "completed", result.errors
+    assert not worktree.exists()
+
+
+def test_moved_target_under_ff_only_still_refuses_at_prepare(repo):
+    base, worktree = repo
+    commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
+    moved = commit(base, "theirs.txt")
     with pytest.raises(MergeNotFastForwardError) as raised:
         IntegrationService(base).prepare("dev-demo", TASK)
-    assert raised.value.actor is Actor.TOOL
-    assert raised.value.mode is ActionMode.AUTO
+    assert raised.value.actor is Actor.TOOL and raised.value.mode is ActionMode.AUTO
     fix = raised.value.fix or ""
     assert "never rebase" in fix and "rebase or merge" not in fix
+    assert git(base, "rev-parse", "HEAD") == moved and worktree.exists()
+
+
+def test_moved_target_needs_merge_tree_support(repo, monkeypatch):
+    import devkit_agt.features.worktree.services.merging as merging
+
+    base, _ = repo
+    commit(base, "theirs.txt")
+    monkeypatch.setattr(merging, "git_version", lambda _base: (2, 37))
+    with pytest.raises(GitUnsupportedError):
+        IntegrationService(base).prepare("dev-demo", TASK)
+
+
+def test_moved_target_without_identity_is_refused_before_the_confirmation(repo):
+    base, _ = repo
+    commit(base, "theirs.txt")
+    git(base, "config", "user.name", "")
+    with pytest.raises(CommitFailedError):
+        IntegrationService(base).prepare("dev-demo", TASK)
 
 
 def test_missing_identity_is_refused_before_the_confirmation(repo):

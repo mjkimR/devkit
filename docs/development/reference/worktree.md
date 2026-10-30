@@ -77,9 +77,9 @@ A `finish` that a refusal stopped after it changed something prints its progress
 | `WORKTREE_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `BaseDirtyError` | `--merge` with uncommitted changes in the base. |
 | `WORKTREE_BASE_BEHIND` | `ERROR` (`INTERACTION`) | `BaseBehindError` | `--merge`: the fetched upstream of the base branch has commits the base lacks; `[FIX]` is `git pull --ff-only`. Nothing changed. |
 | `WORKTREE_BRANCH_UNPUSHED` | `ERROR` (`INTERACTION`) | `BranchUnpushedError` | The branch's upstream lacks its commits, so `git branch -d` would refuse it; `[FIX]` pushes it. Nothing changed. |
-| `WORKTREE_MERGE_NOT_FF` | `ERROR` (`AUTO`) | `MergeNotFastForwardError` | The branch does not contain the base HEAD (`finish --merge`, `ff-only`, a prepared integration); `[FIX]` merges the target into the branch, never a rebase. Nothing changed. |
-| `WORKTREE_MERGE_CONFLICT` | `ERROR` (`INTERACTION`) | `MergeConflictError` | An approved integration's merge of an advanced target conflicts with the branch; `[FIX]` merges the target into the branch. Nothing changed. |
-| `WORKTREE_GIT_UNSUPPORTED` | `ERROR` (`INTERACTION`) | `GitUnsupportedError` | Merging an advanced target needs `git merge-tree --write-tree` (Git 2.38 or later). Nothing changed. |
+| `WORKTREE_MERGE_NOT_FF` | `ERROR` (`AUTO`) | `MergeNotFastForwardError` | The branch does not contain the base HEAD where the merge cannot absorb it (`finish --merge`, `ff-only`, the pull-request route); `[FIX]` merges the target into the branch, never a rebase, or names local `no-ff` integration. Nothing changed. |
+| `WORKTREE_MERGE_CONFLICT` | `ERROR` (`INTERACTION`) | `MergeConflictError` | A local integration's merge of a moved target conflicts with the branch, at prepare or at the build; `[FIX]` merges the target into the branch to resolve it. Nothing changed. |
+| `WORKTREE_GIT_UNSUPPORTED` | `ERROR` (`INTERACTION`) | `GitUnsupportedError` | Merging a moved target needs `git merge-tree --write-tree` (Git 2.38 or later). Nothing changed. |
 | `WORKTREE_COMMIT_FAILED` | `ERROR` (`INTERACTION`) | `CommitFailedError` | No committer identity, or `git commit-tree` of the merge commit failed or exceeded 30 seconds (a signing program). Nothing changed. |
 | `WORKTREE_UNMERGED` | `ERROR` (`INTERACTION`) | `UnmergedError` | Without `--merge`, the branch (with a worktree, or a marked one without) is not merged into the base HEAD. |
 | `WORKTREE_DIRTY` | `ERROR` (`INTERACTION`) | `DirtyError` | The worktree has uncommitted or untracked changes; `finish` and `--discard` check it before any change, so nothing was merged or removed. `[TARGET]` is the worktree; Git's own lines, without its `--force` hint, are details. |
@@ -133,7 +133,7 @@ to `CAP-INT-mcp-services`; these low-level APIs retain their caller-owned author
 
 An eligible local merge that fails reports `WORKTREE_MERGE_FAILED`: inspect Git state and host filesystem access,
 then resume the remaining approved scope. It is separate from `WORKTREE_MERGE_NOT_FF`, which requires reconciling
-the task branch with the base before preparing fresh approval.
+the task branch with the base (or the local `no-ff` integration route) before preparing fresh approval.
 
 Host-approved GitHub integration uses `devkit integration integrate --route pull-request`; its pinned merge and
 leased remote cleanup are defined by `CAP-INT-mcp-services`. `devkit worktree finish --merge` does not implement this route.

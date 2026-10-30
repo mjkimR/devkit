@@ -33,7 +33,7 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 - Set `reconcile.md` to `resolved` only when every target is reflected in the comparison diff or has a waiver of at least 20 non-whitespace characters. A required contract mismatch cannot be waived.
 - The rules require each `modified` target to change on the branch (commits since the merge base count) but do not prove semantic impact; compare it yourself.
 - Verify the reconciliation with a `reconcile-check` envelope at `living-spec-draft` at every effort ([effort](effort.md), [review loop](review-loop.md)). After review fixes or changed inputs, recheck the impact and return `reconcile.md` to `pending` for new targets.
-- An intermediate commit is never completion evidence: the final cumulative check runs on the integrated head. Before {% if execution.environment == "local" %}the native approval{% else %}integration approval{% endif %}, prepare the task branch against the base, re-verify changed paths and run the cumulative check.
+- An intermediate commit is never completion evidence: the final cumulative check runs on the integrated head, and preparation runs the CI rules on the merged result. Before {% if execution.environment == "local" %}the native approval{% else %}integration approval{% endif %}, run the cumulative check; merge the base and re-verify the changed paths only to resolve a conflict or failing check that preparation reports (`spec-integrate` step 1).
 
 A `session` task follows its workflow's completion conditions; never abandon remaining authorized work for a session time limit. For a task addressing named feedback, follow [source feedback](source-feedback.md).
 

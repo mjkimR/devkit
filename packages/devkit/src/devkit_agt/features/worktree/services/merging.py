@@ -5,7 +5,8 @@ target and whose second parent is the approved branch tip, so every commit of th
 and ``git log --first-parent`` shows one line per task; ``"ff-only"`` lands the tip itself. ``build_result`` builds
 the commit (``git commit-tree``; with an advanced target ``git merge-tree --write-tree``, Git 2.38 or later) and
 changes no ref; ``fast_forward`` then moves the base checkout onto it, so the base checkout never stops mid-merge.
-See ``ADR-merge-commit-outside-checkout``.
+See ``ADR-merge-commit-outside-checkout``. Local preparation of a moved target builds the same merge as a
+deterministic prospective commit that never lands (``ADR-moved-target-merge``).
 """
 
 from __future__ import annotations
@@ -111,6 +112,45 @@ def _merge_tree(base: Path, target: str, source: str) -> str:
     return output.splitlines()[0].strip()
 
 
+def _committer(base: Path, commit: str) -> tuple[int, bytes]:
+    """The committer timestamp and the verbatim committer identity (name, email, raw date and offset) of ``commit``."""
+    header = run_git(base, "cat-file", "commit", commit).split(b"\n\n", 1)[0]
+    for line in header.split(b"\n"):
+        if line.startswith(b"committer "):
+            ident = line.removeprefix(b"committer ")
+            parts = ident.rsplit(b" ", 2)
+            try:
+                return int(parts[-2]), ident
+            except (IndexError, ValueError):
+                break
+    raise MergeFailedError(f"commit {commit[:12]} has no readable committer line; nothing was changed on the target")
+
+
+def _prospective_commit(base: Path, tree: str, target: str, source: str, message: str) -> str:
+    """Write an unsigned, UTF-8 merge commit object that depends only on its tree, parents and message.
+
+    Author and committer copy the committer line of the parent with the later committer date (the target on a tie), so
+    neither Git identity, ``TZ`` nor ``i18n.commitEncoding`` changes its id.
+    """
+    _, ident = max(_committer(base, target), _committer(base, source), key=lambda item: item[0])
+    raw = (
+        f"tree {tree}\nparent {target}\nparent {source}\n".encode()
+        + b"author "
+        + ident
+        + b"\ncommitter "
+        + ident
+        + b"\n\n"
+        + message.encode()
+        + b"\n"
+    )
+    try:
+        return run_git_text(base, "hash-object", "-t", "commit", "-w", "--stdin", input=raw)
+    except GitError as exc:
+        raise MergeFailedError(
+            f"writing the prospective merge commit failed; nothing was changed on the target: {exc.stderr or exc.message}"
+        ) from exc
+
+
 def build_result(
     base: Path,
     *,
@@ -120,6 +160,7 @@ def build_result(
     source: str,
     method: str,
     advance: bool = False,
+    prospective: bool = False,
 ) -> str:
     """Build the commit that lands ``source`` onto ``target`` and return its id; no ref or checkout changes.
 
@@ -129,7 +170,10 @@ def build_result(
     ``git merge-tree --write-tree`` (``WORKTREE_GIT_UNSUPPORTED`` below Git 2.38, ``WORKTREE_MERGE_CONFLICT`` on a
     conflict) and commits that. ``git commit-tree`` uses the configured identity, signs (``-S``, with
     ``user.signingKey`` and ``gpg.*``) when ``commit.gpgSign`` is on, since the plumbing command ignores that setting
-    itself, and is bounded by ``COMMIT_TIMEOUT`` (``WORKTREE_COMMIT_FAILED``). A refused or failed build leaves at most an unreferenced object.
+    itself, and is bounded by ``COMMIT_TIMEOUT`` (``WORKTREE_COMMIT_FAILED``). With ``prospective`` (local
+    preparation, which checks a result before the confirmation) a ``"no-ff"`` build writes the deterministic unsigned
+    commit of ``_prospective_commit`` instead, so two preparations of one source and target build one commit. A refused
+    or failed build leaves at most an unreferenced object.
     """
     if method not in MERGE_METHODS:
         raise ValueError(f"unknown merge method {method!r}")
@@ -149,6 +193,8 @@ def build_result(
         raise MergeNotFastForwardError(
             f"{branch} does not contain {target_branch} at {target[:12]}; nothing was changed"
         )
+    if prospective:
+        return _prospective_commit(base, tree, target, source, merge_message(branch, target_branch))
     try:
         return run_git_text(
             base,

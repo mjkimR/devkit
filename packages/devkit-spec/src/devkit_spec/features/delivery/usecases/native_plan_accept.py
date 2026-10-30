@@ -182,6 +182,7 @@ class _Acceptance:
                 target_files=[anchor],
                 fix=f"Set dev_effort to low, medium or high in {anchor} on plan-{self.slug}, commit it, then rerun",
             )
+        self._check_result(context, anchor)
         self.meta = meta
         self.snapshot = self._snapshot()
         return Readiness(
@@ -190,6 +191,22 @@ class _Acceptance:
             (Evidence("PROPOSAL", plan.source_sha),),
             disclosure="Validate completed acceptance and all integration readiness before merge",
         )
+
+    def _check_result(self, context: IntegrationContext, anchor: str) -> None:
+        """Refuse before the acceptance commit when the prospective merge with a moved target fails the delivery
+        provider's result-dependent checks (``ADR-moved-target-merge``); nothing to check without one."""
+        from devkit_spec.features.delivery.usecases.integration import result_reasons
+
+        reasons = result_reasons(context)
+        if reasons:
+            raise ProposalApprovalNotReadyError(
+                f"the merge of plan-{self.slug} with the moved target {context.finish.target_sha[:12]} fails its checks",
+                *reasons,
+                target_files=[anchor],
+                fix=f"Merge the target into plan-{self.slug} in its worktree, run "
+                f"`{devkit_command(f'rules fix {self.unit}')}` and commit its repairs, re-verify what the merge changed, "
+                "then rerun the same command",
+            )
 
     def _snapshot(self) -> tuple:
         assert self.source is not None
@@ -361,6 +378,9 @@ class PlanAcceptUseCase(BaseUseCase):
             "completed_steps": completed,
             "source_sha": request.context.finish.source_sha,
             "acceptance_sha": lifecycle.acceptance_sha,
+            # The merged target and what was checked on the merged result (``ADR-moved-target-merge``).
+            "target_sha": result.build_target or result.request.context.finish.target_sha,
+            "disclosure": result.request.readiness.disclosure,
             "integration": result.compact_dict(),
             "errors": [_proposal_error(error).to_dict() for error in result.errors],
             "activity_effort": lifecycle.effort,

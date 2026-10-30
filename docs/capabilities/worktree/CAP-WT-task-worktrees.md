@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py
   - packages/devkit/src/devkit_agt/features/integration/cli.py
+  - packages/devkit/src/devkit_agt/features/worktree/usecases/planning.py
 created_at: 2026-10-17
 usecases:
   - UC-drive-development-to-integration
@@ -83,8 +84,11 @@ Then, in order: the base checkout is switched back to its `devkitBase` when it w
 `--local-only` excludes fetch and push, including with `--merge`; local guards and safe cleanup remain active.
 The library equivalent is `finish(..., network="forbid")` (`"allow"` preserves existing behavior). Successful local
 merging reports `push=excluded`. Public `plan_finish` and `validate_finish` bind exact repository, ref and cleanup
-identities (`plan_finish` records the merge method and whether the target already contains the branch; after the
-merge `validate_finish` accepts a base that contains the result, so later commits on the base are allowed), and `before_step` validates each mutation boundary for the
+identities (`plan_finish` records the merge method and whether the target already contains the branch; only with
+`advance=True`, which local integration alone sets, and under `merge = "no-ff"` does it plan a branch that does
+not contain the target, which `finish --merge`, `ff-only` and the pull-request route still refuse with
+`WORKTREE_MERGE_NOT_FF` (`ADR-moved-target-merge`); after the merge `validate_finish` accepts a base that contains
+the result, so later commits on the base are allowed), and `before_step` validates each mutation boundary for the
 `CAP-INT-mcp-services`. These APIs do not supply business approval.
 Installed callbacks and native Git hooks must obey the local-only contract; this API is not a process sandbox.
 
@@ -176,8 +180,11 @@ The package is laid out by layer under `features/worktree/`:
   `devkit_core.core.extensions` and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and
   `devkit.attach_check` (`run_attach_checks`); `merging.py`, the result commit (`build_result`, `merge_message`,
   `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`): with
-  `advance=True` (the integration service only) it merges an advanced target with `git merge-tree --write-tree` (Git
-  2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`).
+  `advance=True` (the integration service only) it merges a moved target with `git merge-tree --write-tree` (Git
+  2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`), and with `prospective=True`
+  (local preparation) it writes that merge as an unsigned, unreferenced commit whose author and committer copy the
+  committer line of the parent with the later committer date, so its id depends only on the tree, the parents and
+  the message.
 - `usecases/`: `lifecycle.py` (`locate`, `check_branch`, `path_for`, `start`, `StartBranch`, `attach`, `find`,
   `finish`, `discard` and `WorktreeStatusQuery`), `configured.py` (project policy and extension guards applied to
   them), `planning.py` (`plan_finish`, `validate_finish`) and `stale.py` (`stale_branches` and the `devkit.hygiene`

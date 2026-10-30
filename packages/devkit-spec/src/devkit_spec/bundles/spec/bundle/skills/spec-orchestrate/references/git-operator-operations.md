@@ -16,8 +16,9 @@ Under ask policy the Host first presents source, target, report and effects and 
 The digest is a concurrency guard, not an approval credential. Separate publication authority is required for a PR
 or remote effect. Never write the user's integration OK to a file.
 
-For integration source preparation (base incorporation, conflict decisions, required checks and Living Spec),
-return the exact work to the Host/implementer using `spec-integrate` steps 1–4. Do not edit production sources.
+Local preparation merges a conflict-free moved target itself. For integration source preparation (a base merge after
+a reported conflict or failing check, conflict decisions, required checks and Living Spec), return the exact work to
+the Host/implementer using `spec-integrate` steps 1–4. Do not edit production sources.
 If source code must run readiness, report `INTEGRATION_RULE_RUNTIME_MISMATCH` and the need for an authorized retained
 runtime outside the removed worktree. No tool, path or runtime change may evade a refusal.
 

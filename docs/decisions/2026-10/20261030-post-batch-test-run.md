@@ -1,17 +1,17 @@
 ---
-id: PADR-post-batch-test-run
+id: ADR-post-batch-test-run
 title: One test run on main after a local-orchestrated batch
 summary: For semantic conflicts a conflict-free merge can carry, we run the integrated-content tests once on main after every unit of a local-orchestrated run is finished (integrated, blocked, awaiting the user or continued in direct), to surface them before nightly CI, accepting one extra run per batch.
-proposal: PROP-integration-merge-moved-target
-status: draft
+proposal: SPEC-integration-merge-moved-target
+status: accepted
 created_at: 2026-10-30
 supersedes:
   - ADR-test-selection-and-ci
 ---
 
-# [PADR-post-batch-test-run] One test run on main after a local-orchestrated batch
+# [ADR-post-batch-test-run] One test run on main after a local-orchestrated batch
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 This decision supersedes only one clause of `ADR-test-selection-and-ci`: "The final integration content is verified
@@ -23,7 +23,7 @@ force.
 
 ## 1. Context & Problem Statement
 
-With `PADR-moved-target-merge`, the integrating command merges a conflict-free moved target itself and runs only CI
+With `ADR-moved-target-merge`, the integrating command merges a conflict-free moved target itself and runs only CI
 rules on the merged result; tests and review ran on the source. Two units integrated one after the other can each pass
 their own tests and still break together, and nothing runs the tests on the combined head until nightly CI. A
 local-orchestrated run integrates several units in a row, so its end is the point where the combined head is known.

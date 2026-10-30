@@ -94,8 +94,9 @@ class ReceiptConflictError(IntegrationError):
     code = "INTEGRATION_RECEIPT_CONFLICT"
     guardrail = True
     fix = (
-        "Merge the target into the task branch in its worktree, run `uv run devkit sync` there so the receipt matches the"
-        " merged files, commit, re-verify and rerun `uv run devkit integration integrate` for this branch after Host approval"
+        "Merge the target into the task branch in its worktree to resolve the receipt conflict, run `uv run devkit sync`"
+        " there so the receipt matches the merged files, commit, re-verify what the merge changed and prepare again;"
+        " run `uv run devkit integration integrate` for this branch only after Host approval of the new scope"
     )
 
 

@@ -11,6 +11,10 @@ aliases:
 
 # [ADR-test-selection-and-ci] Affected-Test Selection Locally and Complete CI Overnight and at Release
 
+Superseded in part by `ADR-post-batch-test-run`: the clause that the final integration content is verified after
+incorporating a moved base and that merging the same verified content triggers no further test run. Affected-test
+selection, the full-suite fallback and the nightly and release CI remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: not recorded in the members
