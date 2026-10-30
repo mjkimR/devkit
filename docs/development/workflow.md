@@ -33,6 +33,6 @@ Before committing changes, ensure that:
    fallback and frontend checks. After a local-orchestrated run, `devkit generated check` runs on `main` (stale
    artifacts are regenerated with `devkit generated regen <ids>` and committed), then `just test-affected --base
    <batch start>` runs once on `main`; otherwise a later batch run or nightly CI tests the combined head
-   (`ADR-post-batch-test-run`). Complete
-   CI runs overnight for unverified default-branch heads and before release (`ADR-nightly-ci-verification`).
+   (`ADR-post-batch-test-run`). Complete CI runs overnight for unverified default-branch heads and before release
+   (`ADR-test-selection-and-ci`).
 4. `just rules-check --staged` reports 0 governance violations.

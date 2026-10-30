@@ -50,7 +50,7 @@ commit.
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
-| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files and glossary Owners resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference to the canonical ID. |
+| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, or an alias cited in a quick reference, to the canonical ID. |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
 | `RULE-traceability-link` | A use case's `capabilities` and a capability's `usecases` link both ways. | Appends the missing reverse ID. |
@@ -117,6 +117,17 @@ The steering files (the Markdown files directly in `docs/steering/` other than `
 are a second ID-free input: every backticked full ID in their visible text MUST resolve to exactly one indexed
 document, and one naming an alias is reported (not fixed) as `` <alias> is an alias of <ID>; name `<ID>` ``. An ID
 the Owner check already examined on the same line is not reported again. No autofix, indexing or graph edges.
+
+The quick references are a third ID-free input: the Markdown files the rule setting `quick_references` matches
+(workspace path patterns in the `**` grammar of `[rules] exclude`; default `docs/development/**/*.md`,
+`guides/**/*.md`, `packages/*/README.md` and `tools/*/README.md`; `[]` turns the check off; an invalid pattern is
+`RULES_SETTINGS_INVALID`), read per file so path overrides apply. Every backticked full ID in their visible text MUST
+resolve to exactly one indexed document, reported with the messages of indexed documents; one naming another
+document's alias is reported as `` <alias> is an alias of <ID>; reference `<ID>` `` and is fixable: `devkit rules
+fix` rewrites the code span to the canonical ID and nothing else in the file. A matching file that is an indexed
+document is checked once, as a document; a steering file keeps the steering check. Only targeted files are reported
+or rewritten (`[rules] exclude` applies); the rule keeps `inputs` unset, so a run targeting a quick reference
+evaluates it. No indexing or graph edges; plain-text IDs and feedback `target` fields are not checked.
 
 - MUST report: a relation field of the wrong shape, a value that is not a full ID, or an ID of the wrong kind
   (`usecases`, `related_usecases` take `UC`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;

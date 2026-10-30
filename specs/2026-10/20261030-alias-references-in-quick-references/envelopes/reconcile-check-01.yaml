@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:33:02.866659Z'
+status: completed
+summary: 'reconcile-reviewer (nested, medium): CAP-GOV-spec-rules catalog row and 3.3, the rule guide, spec-specify and the three feedback Dispositions match the code and ACs; the CAP-DOCS section 1 residual is acceptable; one P1: the renaming step overclaims that only plain-text mentions need a manual sweep.'
+findings:
+- issue: CAP-DOCS-document-model 3.5 item 5 says only plain-text mentions need a manual sweep after the fix, but code-span IDs in ID-free files outside quick_references (root README.md, AGENTS.md, nested READMEs, seed files, examples, handbook) stay unchecked by design (Non-Goal 5, AC-03).
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:257-259; document_reference.py QUICK_REFERENCES; spec.md Non-Goal 5, AC-03; AGENTS.md and README.md cite IDs in code spans
+  failure_condition: A rename of a document AGENTS.md or README.md cites leaves a stale code-span ID that the sweep the step describes skips.
+  suggested_action: Reword the step so the manual sweep covers plain-text mentions and every ID-free file outside the configured quick references; align AC-07 and the Disposition.
+  resolution: open
+  severity: P1
+assumptions:
+- The CAP-DOCS section 1 'also reads' sentence stays true without naming quick references; a follow-up once the sibling unit lands.
+unverified_areas:
+- Rule pytest suite not rerun by the reviewer (relied on review-01, reverify-01)
+checks:
+  rules: PASS uv run devkit rules check errors=0
+  explain: PASS devkit rules explain shows quick_references and no ADR/PADR exemption
+diff_scope:
+  base: 95b8228c58838b6bb633eb90932363b025419f3e
+  head: a3a20c0b369bf0b32c4974336b590e95616d28e3

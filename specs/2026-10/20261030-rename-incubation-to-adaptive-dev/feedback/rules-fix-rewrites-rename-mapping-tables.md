@@ -8,7 +8,7 @@ target: RULE-document-reference
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -35,3 +35,11 @@ rules fix: fixed=132 (included specs/<unit>/spec.md and plan.md)
 spec.md after fix: | `CAP-DLV-adaptive-development` | CAP-DLV-adaptive-development | Adaptive Development |
 spec.md before fix: | `CAP-DLV-idea-incubation` | CAP-DLV-adaptive-development | Adaptive Development |
 ```
+
+## Disposition
+
+Resolved by `SPEC-alias-references-in-quick-references` with the guidance option, no rule change: the renaming step of
+`CAP-DOCS-document-model` and the `spec-specify` skill state that a rename spec writes the old IDs as plain text in
+its mapping tables and prose, because `devkit rules fix` rewrites a code-span alias; the rule guide repeats it under
+Remediation. Verified by the bundle guidance test `test_rename_guidance.py` and the `code-reviewer` pass
+(`review-01`).
