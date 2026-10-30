@@ -34,7 +34,7 @@ created_at: 2026-10-30
 - **Expected / Actual**: Expected a refusal for an undefined stage; the contract check rejects only `""` and `-`.
 - **Versions**: devkit at `fdba6646`.
 - **Conditions**: Any unit; most likely in a Planning run under `plan-accept=auto`, where `next` names no stage.
-- **Workarounds Attempted**: `PROP-git-operator-planning-completion-route` names `direction-handoff` in worker
+- **Workarounds Attempted**: `SPEC-git-operator-planning-completion-route` names `direction-handoff` in worker
   guidance for that case.
 - **Related Assets**: `packages/devkit/src/devkit_agt/features/workflow/services/envelope/authoring.py`
   (`_check_contract`), `packages/devkit/src/devkit_agt/features/workflow/services/envelope/commit.py`,

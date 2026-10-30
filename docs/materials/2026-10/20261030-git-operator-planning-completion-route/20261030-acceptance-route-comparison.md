@@ -42,7 +42,7 @@ Route C costs about four Host actions where A and B cost one, and its intermedia
 integrated) is the same partial result the composed command already recovers by a rerun. Route C therefore adds
 no capability beyond A or B. Between A and B the count is equal; B moves merge and cleanup output and recovery
 inspection out of the Host context but has not been exercised, and it widens the operator's effects to writing the
-`gate:plan-accept` record (`envelopes/challenger-01.yaml`, findings 2 and 3).
+`gate:plan-accept` record (historical Git `4b5f5b93375e8c5173c700bafe26f2824c03cd3a:docs/proposals/PROP-git-operator-planning-completion-route/envelopes/challenger-01.yaml`, findings 2 and 3).
 
 ## Terminal readiness under `plan-accept=auto`
 
@@ -54,7 +54,7 @@ command ran. `worker-records.md` §1 tells a worker to record `--stage` as the s
 The composed acceptance accepts this state as ready (`not evaluation.complete and ... stage != direction-handoff` is
 false when complete), so the readiness is correct for the CLI and only the worker's stage choice lacks guidance.
 
-Which stage a worker names matters (scout trace, `envelopes/scout-01.yaml`):
+Which stage a worker names matters (scout trace, historical Git `4b5f5b93375e8c5173c700bafe26f2824c03cd3a:docs/proposals/PROP-git-operator-planning-completion-route/envelopes/scout-01.yaml`):
 
 | Recorded `--stage` | Effect |
 | --- | --- |

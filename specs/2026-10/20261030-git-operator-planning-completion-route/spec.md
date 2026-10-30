@@ -1,35 +1,26 @@
 ---
-id: PROP-git-operator-planning-completion-route
+id: SPEC-git-operator-planning-completion-route
 title: Planning completion and acceptance execution route for git-operator
-summary: "Name the stage a Planning run records its final return at when workflow next shows no current stage, and make the Host-run composed accept --mode the single documented Planning acceptance route, with no git-operator acceptance job."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: low
-milestone: MS-git-operator-lifecycle-refinement
-depends_on: [SPEC-integration-merge-moved-target]
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/delivery/
-  excludes:
-    - .devkit/managed/
-    - packages/devkit-core/
-task_kind: feature
+summary: Name the stage a Planning run records its final return at when workflow next shows no current stage, and make the Host-run composed accept --mode the single documented Planning acceptance route, with no git-operator acceptance job.
+status: planned
+created: 2026-10-30
+depends_on:
+  - SPEC-integration-merge-moved-target
 decomposed_from: PROP-git-operator-pilot-follow-up
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-git-operator-planning-completion-route] Planning completion and acceptance execution route for git-operator
+# [SPEC-git-operator-planning-completion-route] Planning completion and acceptance execution route for git-operator
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-git-operator-planning-completion-route on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-git-operator-planning-completion-route`
+
+### 1. Background & Hypothesis
 
 In the resource-indexer consumer pilot (`MAT-git-operator-consumer-pilot`), the Host accepted and integrated a
 verified Planning result with `accept --mode accept_only` itself, because the git-operator operating reference lists
@@ -47,7 +38,26 @@ cannot be dry-run.
 The hypothesis: explicit route guidance and an explicit return stage remove the Host's interpretation at the end of
 Planning without widening the operator's role.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Planning completion and acceptance execution route for git-operator so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 Acceptance route**: Is explicit guidance for Host acceptance record/commit followed by operator integration
   enough, or does a composed acceptance job reduce measured burden? Either route keeps exact refs, current authority
@@ -58,7 +68,7 @@ Planning without widening the operator's role.
   records a boundary extension in Planning. No acceptance is inferred from policy readiness.
 - **Q3 Dry run**: Should a composed acceptance offer a read-only check, given that `--mode` refuses `--check`?
 
-### Spike findings
+#### Spike findings
 
 Evidence: `MAT-planning-acceptance-route-comparison` (route comparison and code trace), `MAT-git-operator-consumer-pilot`
 (in `SPEC-git-operator-result-readiness`), and the scout and challenger envelopes of this Planning.
@@ -90,7 +100,7 @@ Evidence: `MAT-planning-acceptance-route-comparison` (route comparison and code 
   later refusal continues from the landed acceptance commit, or refuses in preparation once the base diverged. No test
   covers the `--mode` with `--check` usage error.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 The single documented Planning acceptance route is the existing composed command, run from the retained base:
 `uv run devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff [--effort <level>]`.
@@ -118,7 +128,7 @@ documented as a route.
   `completed_steps`, and names `devkit spec proposal report <slug>` and `devkit workflow envelope check --unit <dir>`
   for the read-only material the Host presents under `ask`. The `--direct` refusal keeps its meaning.
 
-### Planning decisions
+#### Planning decisions
 
 The user decided q1-q3 of this Planning (`answer-01`), each with the recommended option:
 
@@ -129,7 +139,7 @@ The user decided q1-q3 of this Planning (`answer-01`), each with the recommended
   not taken and stays a Non-goal.
 - **q3 (a)**: no `--check` for the composed form; the reworded usage error is pinned by one CLI test.
 
-### Prerequisite PROP-integration-merge-moved-target
+#### Prerequisite PROP-integration-merge-moved-target
 
 That proposal settled its questions with its recommendations: composed acceptance merges a conflict-free moved target
 itself, and its preview runs the CI rules and the unit-advance check on the prospective merge, so a conflict or
@@ -150,7 +160,7 @@ Acceptance checks (from the parent's verification candidates):
 
 Development also adds one CLI test that pins the composed `--mode` with `--check` usage error and its wording.
 
-### Non-goals
+#### Non-goals
 
 - **Scope Excluded**: a daemon, persistent approval store, global repository lock or autonomous scheduler.
 - **Scope Excluded**: operator source authoring, semantic decisions, approval grants, force operations or arbitrary
@@ -159,9 +169,10 @@ Development also adds one CLI test that pins the composed `--mode` with `--check
 - **Scope Excluded**: unmeasured token, cost or latency savings.
 - **Scope Excluded**: a change to the workflow engine's evaluation or `next` output (`packages/devkit/`).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-git-operator-planning-completion-route`; the proposal is deleted there and its decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+
