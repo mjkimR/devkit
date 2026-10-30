@@ -88,7 +88,7 @@ remaining_effects: [<each dirty path, with what it needs>]
 | AC-03 | `packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py` (refused handoff commit under `accept_and_handoff`; success carries `commit`) |
 | AC-02 error | `packages/devkit-spec/tests/integration/features/delivery/test_handoff_error_modes.py` (`INPUT_ERROR`, no placeholder in the fix) |
 | AC-05, AC-06, AC-07 | `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` |
-| AC-08 | `packages/devkit-spec/tests/integration/bundles/spec/test_handoff_language.py` (guidance) and the existing `tests/integration/features/proposals/test_unit_dependencies.py::test_carry_rewrite_namespaced_and_preserve_history` (incoming sibling `depends_on` rewrite) |
+| AC-08 | `packages/devkit-spec/tests/integration/bundles/spec/test_post_handoff_guidance.py` (guidance) and the existing `tests/integration/features/proposals/test_unit_dependencies.py::test_carry_rewrite_namespaced_and_preserve_history` (incoming sibling `depends_on` rewrite) |
 
 Commands: `just lint-check devkit-spec`, `just check devkit-spec`, `just test-affected` (with its `mode=full`
 fallback), `just rules-check`, `uv run devkit sync --check`; `just smoke` only if packaging or CLI wiring changes

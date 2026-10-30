@@ -72,3 +72,25 @@ def test_fixes_name_no_placeholder_choices() -> None:
         _handoff_command("idea", None) == "`uv run devkit spec proposal handoff idea --effort` with low, medium or high"
     )
     assert _handoff_command("idea", "high") == "`uv run devkit spec proposal handoff idea --effort high`"
+
+
+# SPEC-git-operator-result-readiness AC-02
+def test_a_refused_handoff_commit_is_an_input_error_whose_fix_commits_in_the_worktree(tmp_path, monkeypatch) -> None:
+    from devkit_spec.base.errors import HandoffCommitRefusedError
+    from devkit_spec.features.delivery.usecases import native_handoff
+
+    def refuse(root, *args, **kwargs):
+        if args[:1] == ("commit",):
+            raise native_handoff.GitError("git commit failed", stderr="hook said no\n")
+        return {"rev-parse": "f" * 40}.get(args[0], "")
+
+    monkeypatch.setattr(native_handoff, "run_git_text", refuse)
+    monkeypatch.setattr(native_handoff, "_dirty_paths", lambda root: ["specs/x/spec.md"])
+    monkeypatch.setattr(native_handoff, "guard_execution", lambda: None)
+    with pytest.raises(HandoffCommitRefusedError) as caught:
+        native_handoff._commit_handoff(tmp_path, "idea", "f" * 40)
+    advisory = caught.value.to_dict()["advisory"]
+    assert advisory["code"] == "SPEC_HANDOFF_COMMIT_REFUSED" and advisory["mode"] == "INPUT_ERROR"
+    assert advisory["details"] == ["hook said no"] and advisory["target_files"] == ["specs/x/spec.md"]
+    assert f"git -C {tmp_path} commit" in advisory["fix"] and "do not rerun" in advisory["fix"]
+    assert "<" not in advisory["fix"] and "report" not in advisory["fix"]

@@ -11,7 +11,7 @@ from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import StartResult, branch_marker, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import run_git, run_git_text
+from devkit_core.core import GitError, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.invocation import guard_execution
@@ -27,6 +27,7 @@ from devkit_spec.base.axes import (
 )
 from devkit_spec.base.errors import (
     HandoffBaseDirtyError,
+    HandoffCommitRefusedError,
     HandoffNotReadyError,
     HandoffReplyError,
     HandoffStaleError,
@@ -69,6 +70,62 @@ def _existing(root: Path, slug: str, head: str) -> bool:
             target_files=[f"dev-{slug}"],
         )
     return True
+
+
+HANDOFF_SUBJECT = "spec: hand off {slug} to Development"
+"""The subject of the composed handoff's one commit (``ADR-composed-handoff-commits-its-own-transaction``)."""
+
+
+def _dirty_paths(root: Path) -> list[str]:
+    """Every path ``git status`` reports in ``root``, untracked files one by one, in Git's order."""
+    entries = run_git(root, "status", "--porcelain", "-z", "--untracked-files=all").decode(errors="surrogateescape")
+    paths, fields = [], iter(entries.split("\0"))
+    for entry in fields:
+        if not entry:
+            continue
+        paths.append(entry[3:])
+        if entry[0] in "RC":  # a staged rename or copy names its source in the next field
+            paths.append(next(fields, ""))
+    return [path for path in paths if path]
+
+
+def _commit_handoff(root: Path, slug: str, base: str) -> str:
+    """Commit the whole handoff delta once in ``root`` and return HEAD read after ``git commit`` returns.
+
+    The worktree was clean at ``base`` before the handoff, so the delta ``git status`` reports is the handoff's own.
+    Raises ``HandoffCommitRefusedError`` when nothing landed; the writes stay staged and nothing is rolled back. A
+    failure after which HEAD moved (a timeout, a failing post-commit step) returns the landed HEAD for verification.
+    """
+    dirty = _dirty_paths(root)
+    run_git_text(root, "add", "-A")
+    guard_execution()
+    subject = HANDOFF_SUBJECT.format(slug=slug)
+    try:
+        run_git_text(root, "commit", "-q", "-m", subject, timeout=None)
+    except GitError as exc:
+        if run_git_text(root, "rev-parse", "HEAD") == base:
+            output = [line for line in exc.stderr.splitlines() if line.strip()][-20:]
+            raise HandoffCommitRefusedError(
+                f"git commit refused the handoff transaction of PROP-{slug} in dev-{slug}; its writes are kept staged",
+                *(output or [exc.message]),
+                target_files=dirty,
+                fix=f"In the dev-{slug} worktree ({root}) fix the cause [DETAIL] shows, then commit the staged handoff "
+                f"there with `git -C {root} commit -m '{subject}'`; do not rerun the handoff",
+            ) from exc
+    return run_git_text(root, "rev-parse", "HEAD")
+
+
+def _verify_handoff_commit(root: Path, slug: str, base: str, head: str) -> None:
+    """Raise ``HandoffStaleError`` unless ``head`` is one direct child of ``base`` and ``root`` is clean."""
+    parents = run_git_text(root, "rev-list", "--parents", "-n", "1", head).split()[1:]
+    left = _dirty_paths(root)
+    if parents != [base] or left:
+        raise HandoffStaleError(
+            f"the handoff commit {head} of PROP-{slug} is not one clean direct child of the reviewed base {base}",
+            f"parents: {' '.join(parents) or '-'}",
+            *(f"dirty: {path}" for path in left),
+            target_files=[f"dev-{slug}"],
+        )
 
 
 def _handoff_command(slug: str, effort: str | None) -> str:
@@ -244,6 +301,7 @@ class HandoffUseCase(BaseUseCase):
                 "status": "needs_recovery" if Path(preview.worktree).exists() else "blocked",
                 "worktree": {"path": preview.worktree, "created": Path(preview.worktree).exists()},
                 "activity_effort": effort,
+                "commit": None,
                 "errors": [exc.to_dict()],
                 "notices": [],
             }
@@ -251,6 +309,7 @@ class HandoffUseCase(BaseUseCase):
             "status": "needs_recovery",
             "worktree": started.to_dict(),
             "activity_effort": effort,
+            "commit": None,
             "errors": [],
             "notices": [item.to_dict() for item in started.notices],
         }
@@ -267,14 +326,17 @@ class HandoffUseCase(BaseUseCase):
             guard_execution()
             completed = handoff_and_register(root, preview.slug, before_registration=guard_execution)
             handed, registered = completed.handoff, completed.registered
-            result.update(
-                status="handed_off",
-                handoff=handed.to_dict(),
-                next_command=devkit_command(f"workflow next --unit {handed.dir}"),
-            )
+            result["handoff"] = handed.to_dict()
             result["notices"] += [item.to_dict() for item in completed.notices]
             if registered is not None:
                 result["scope_token"] = registered.token
+            result["commit"] = _commit_handoff(root, preview.slug, preview.head)
+            _verify_handoff_commit(root, preview.slug, preview.head, result["commit"])
+            result.update(status="handed_off", next_command=devkit_command(f"workflow next --unit {handed.dir}"))
+        except HandoffCommitRefusedError as exc:
+            # The writes landed uncommitted: the next step is the Host's commit there, not the spec workflow.
+            result["handoff"]["next_command"] = None
+            result.update(errors=[exc.to_dict()], next_action=exc.fix)
         except AdvisoryError as exc:
             result["errors"] = [exc.to_dict()]
         return result

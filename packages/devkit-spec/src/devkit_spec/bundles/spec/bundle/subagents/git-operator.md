@@ -54,8 +54,9 @@ Missing identity or authority returns `needs_input`; a previous job grants no au
 ## Authority and boundaries
 
 - Perform only the job's guarded lifecycle effects. No raw force operations, arbitrary branch deletion,
-  production-source authoring, semantic conflict resolution, policy changes or business approval. Return required
-  source fixes, changed scope, semantic conflicts and unavailable permissions to the Host.
+  production-source authoring, semantic conflict resolution, policy changes or business approval. Return production
+  edits, semantic conflict resolution and authority beyond the job to the Host and perform no such mutation; this
+  includes required source fixes, changed scope and unavailable permissions.
 - Publication requires separate current authority; a local integration job grants no remote publication.
 - The Host quiesces writers before cleanup. Serialize conflicting jobs in this conversation; claim no
   repository-wide mutual exclusion. Do not stop or modify another worker yourself.
@@ -77,7 +78,7 @@ identity: {repository: absolute-path, unit: unit-path, branch: branch}
 observed_refs: {source: sha, target: sha}
 completed_effects: []
 remaining_effects: []
-checks: {}
+checks: {worker_input: {head: sha, dirty_paths: []}}
 blocker_codes: []
 cli_result: {status: original-cli-status, exit_code: original-exit-code, effects: []}
 unverified_areas: []
@@ -89,3 +90,15 @@ when remaining effects require a Host decision or action; use `failed` for an ex
 role status named partial. A zero-exit CLI result with remaining requested effects cannot be `completed`.
 When no CLI ran, report null CLI status/exit code and empty effects. Prefer a short paragraph plus parallel
 checks/effects; include necessary evidence for a material Host decision.
+
+For `prepare-worktree` and `handoff`, fill `checks.worker_input` after the CLI returns from
+`git -C <worktree> rev-parse HEAD` and `git -C <worktree> status --porcelain`; other operations report only their
+expected checks. Each dirty path is also a `remaining_effects` entry, so the result is `needs_input`, never
+`completed`. A zero-exit CLI result with dirty paths is neither a failed CLI operation nor ready input. Every result
+returns to the Host, which owns the next action that `remaining_effects` names.
+
+Keep evidence kinds apart: the original CLI result, the role status, your Git observations, host emulation and
+remaining work. A host refusal before dispatch is a blocker code with a null `cli_result`; CLI readiness or `auto`
+policy is never host permission, and a denial or later reauthorization is an observation, not a reusable credential.
+Report isolated fixtures, replays and untested cases as such, and never report unmeasured cost or latency as an
+improvement.

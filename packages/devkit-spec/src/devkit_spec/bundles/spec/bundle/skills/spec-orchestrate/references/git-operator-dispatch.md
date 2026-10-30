@@ -19,7 +19,10 @@ every job even when the same operator remembers the Unit. A read-only job has no
 
 Accept only a result with identity and observed refs matching the job, completed_effects and remaining_effects,
 checks, blocker_codes and the original cli_result separately from role status. Verify effects with current CLI/Git
-observations. `completed` requires every requested effect and check. A zero-exit partial cleanup with remaining
+observations. Before starting a worker on a `prepare-worktree` or `handoff` result, compare its
+`checks.worker_input` (`head`, `dirty_paths`) with your own `git -C <worktree> rev-parse HEAD` and
+`status --porcelain`, and start it only on that HEAD with no dirty path; an exit code alone never stands for ready
+input. `completed` requires every requested effect and check. A zero-exit partial cleanup with remaining
 effects is `needs_input` or `failed`, never completed. Inspect unknown/partial state before dispatching a supported,
 already-authorized remainder. Return changed scope/refs, dirty resources, active writers, source preparation,
 semantic conflicts or denied permission to the Host. Normal integration already includes cleanup; dispatch no
