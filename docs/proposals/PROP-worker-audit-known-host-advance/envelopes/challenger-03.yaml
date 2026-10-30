@@ -1,0 +1,40 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:37:01.647688Z'
+status: completed
+summary: 'round 3; Three P2s and one P3: a later-turn full escape passes inspection unless the Host checks for this turn''s envelope; the residual can stay hidden and does not depend on the sibling; the PADR names no superseded clause; WAH-02''s check does not test its Then.'
+findings:
+- issue: 'Inspection does not catch a full escape on a later turn: its head derivation re-audits the previous turn and passes'
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py:110-121,187-194; inspect.py:165-166; spec-delegate/references/worker.md:15,21-23; proposal.md Q2 bullet 1; PADR sections 1 and 4; materials T2
+  failure_condition: Turn N>=2 commits entirely in the base checkout; the worker reports final_head = <accepted>; with --base <accepted> the range is empty and every check passes.
+  suggested_action: Add a Validate condition that <returned> adds this turn's worker envelope, absent at <accepted>, with a WAH-01 token; name that Host check as the detector in Q2, the PADR and the materials.
+  resolution: open
+  severity: P2
+- issue: 'The residual is not stated honestly: a partial committed escape whose content passes CI stays hidden, and the hole opens under A at once, not only after the sibling'
+  evidence: PADR sections 1, 2 (driver 1), 5; materials detectors table and T2; docs/capabilities/worktree/CAP-WT-task-worktrees.md:105; PROP-integration-merge-moved-target section 1
+  failure_condition: The user accepts A believing the remaining case surfaces later through CI and only after the sibling lands.
+  suggested_action: State plainly that A accepts one case that can stay hidden, as an explicit exception to driver 1 for the user to accept; drop the sibling dependency and the MERGE_NOT_FF claim.
+  resolution: open
+  severity: P2
+- issue: The PADR names no superseded clause although the proposal and WAH-02 require it, and the promoted ADR is outside owns
+  evidence: decisions/PADR-drop-the-base-checkout-equality-from-worker-validation.md; proposal.md section 3 Contract, Planning decisions, WAH-02; features/proposals/usecases/handoff.py; docs/decisions/2026-10/20261022-orchestration-workers.md:197,356-359
+  failure_condition: The promoted ADR has no supersession statement and Development cannot add one, so WAH-02 fails or the pointer points at an ADR that supersedes nothing.
+  suggested_action: Name both superseded clauses in PADR section 4.
+  resolution: open
+  severity: P2
+- issue: WAH-02's When (devkit rules check) cannot check its Then
+  evidence: proposal.md WAH-02; PADR section 6
+  failure_condition: The rules check passes while CAP-DLV still says unchanged base.
+  suggested_action: Optional. Check WAH-02 with contract-text assertions or name the reconcile review as its check.
+  resolution: open
+  severity: P3
+assumptions:
+- An escape comes from one command missing its cwd while the final rev-parse follows the worktree instruction
+unverified_areas:
+- No live reproduction of the full-escape trace
+checks: {}
+diff_scope:
+  base: 3882b39fe3811644b649107db9f77172b87c05d4
+  head: 8bf5a6104712b8acc1aafe72bf637c9795eae2b1
