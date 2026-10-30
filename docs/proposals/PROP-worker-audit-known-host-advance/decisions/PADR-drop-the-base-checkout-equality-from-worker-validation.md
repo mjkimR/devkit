@@ -83,5 +83,6 @@ Host or user work. The partial committed escape is an accepted exception to the 
 - `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py`: `spec-delegate/references/worker.md`
   and `payload.md` carry no pre-spawn base record and no unchanged-base requirement; `worker.md` requires the turn's
   own envelope and keeps the remaining range conditions.
-- The reconcile review checks that `CAP-DLV-delivery-workflows` names no unchanged base, the promoted ADR names the two
-  superseded clauses and `ADR-orchestration-workers` points to it.
+- The reconcile review checks that `CAP-DLV-delivery-workflows`' acceptance requirements name the turn's own `worker`
+  envelope instead of an unchanged base and its base-checkout observation names no Host comparison, that the promoted
+  ADR names the two superseded clauses and that `ADR-orchestration-workers` points to it.

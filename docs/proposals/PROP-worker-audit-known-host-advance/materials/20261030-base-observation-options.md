@@ -86,8 +86,8 @@ unit owns (`CAP-COLL-work-scope-registry`).
 
 - `spec-delegate/references/worker.md` (Validate) and `payload.md` (Workers): drop the equality and the pre-spawn
   record; add the condition that `<returned>` adds this turn's `worker` envelope.
-- `CAP-DLV-delivery-workflows`: drop "unchanged base" from the acceptance requirements; word the base-checkout
-  observation without a Host comparison.
+- `CAP-DLV-delivery-workflows`: replace "unchanged base" among the acceptance requirements with the turn's own
+  `worker` envelope; word the base-checkout observation without a Host comparison.
 - A new ADR naming the superseded base-checkout clauses of `ADR-orchestration-workers`, with a pointer line in that
   ADR.
 - Tests: `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` (worker.md tokens).

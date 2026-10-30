@@ -96,7 +96,7 @@ options is pending (`MAT-base-observation-options`).
 | --- | --- | --- | --- |
 | GOP-08 | An audit base A, base commits B made after spawning (Host, foreign or unknown), and a returned head C | The Host validates the worker's result with `devkit spec worker inspect` | A..C is the audited range with its existing checks; B never enters `changed_paths` or `outside_scope` and never blocks the range; a dirty base checkout and real conflicts stop at handoff or integration through their existing refusals. |
 | WAH-01 | The bundle's worker and payload references | `test_role_contracts.py` runs | Neither `worker.md` nor `payload.md` requires a pre-spawn base record or an unchanged base status or HEAD; `worker.md` requires `<returned>` to add this turn's `worker` envelope, absent at `<accepted>`, and keeps the ancestry, HEAD, write-scope and clean-worktree conditions. |
-| WAH-02 | `CAP-DLV-delivery-workflows`, the promoted ADR and `ADR-orchestration-workers` | The reconcile review of the Development unit checks them | No acceptance requirement names an unchanged base; the promoted ADR names the two superseded clauses; `ADR-orchestration-workers` carries a pointer line to it. |
+| WAH-02 | `CAP-DLV-delivery-workflows`, the promoted ADR and `ADR-orchestration-workers` | The reconcile review of the Development unit checks them | `CAP-DLV-delivery-workflows`' acceptance requirements name the turn's own `worker` envelope instead of an unchanged base, and its base-checkout observation names no Host comparison; the promoted ADR names the two superseded clauses; `ADR-orchestration-workers` carries a pointer line to it. |
 
 ### Non-goals
 
