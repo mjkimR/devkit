@@ -11,7 +11,7 @@ spec: SPEC-worker-audit-known-host-advance
 `ADR-orchestration-workers`: "and the base checkout unchanged" in committed results and their validation, and
 "comparing them with what the Host recorded before spawning stays the Host's step" in informational range inspection.
 It carries no `supersedes` field (`SPEC-worker-audit-known-host-advance` §5), so `ADR-orchestration-workers` stays
-accepted and gets one pointer line per clause. `ADR-reusable-lifecycle-resource-manager` keeps the write audit with the
+accepted and gets one pointer line. `ADR-reusable-lifecycle-resource-manager` keeps the write audit with the
 Host unchanged. No `docs/architecture/` invariant changes; no new ADR is needed.
 
 ## 2. Architecture Overview & Impact
@@ -35,7 +35,8 @@ Documents and tests only; no code, dependency or CLI change.
     residual, citing the ADR.
   - Worker inspection, Base checkout input: "observations for the Host's comparison with its saved state, not checks"
     becomes information with no Host comparison.
-- **ADR pointer** `ADR-orchestration-workers`: one pointer line under each superseded clause, naming the promoted ADR.
+- **ADR pointer** `ADR-orchestration-workers`: one pointer line under "Committed results and their validation" naming
+  the promoted ADR and both superseded clauses.
 - **Tests** `packages/devkit-spec/tests/`:
   - `integration/bundles/spec/test_role_contracts.py`: the range-validation test replaces the base-checkout token tuple
     with the own-envelope condition and keeps the other conditions; a new test asserts that neither `worker.md` nor

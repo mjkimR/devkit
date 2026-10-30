@@ -185,6 +185,8 @@ Further gaps followed on the same runs:
 
 ### Committed results and their validation
 
+`ADR-drop-the-base-checkout-equality-from-worker-validation` supersedes the base-checkout clauses below and in Range inspection; the rest stays in force.
+
 - The `worker` role's Git actions are `[read, commit]`: stage write-scope paths, commit on its unit branch through the
   commit gate, leave the worktree clean. It never pushes, merges, rebases, resets, amends, stashes or checks out;
   publishing a branch or pull request belongs to the execution environment. Every other role stays `[read]`.

@@ -2,7 +2,7 @@
 id: SPEC-worker-audit-known-host-advance
 title: Stop requiring an unchanged base checkout in worker validation
 summary: Drop the base-checkout HEAD and status equality from worker validation and require each returned turn to add its own worker envelope, so integrations and other sessions need not wait for a running worker; a partial committed escape into the base is an accepted residual.
-status: planned
+status: in-progress
 created: 2026-10-30
 decomposed_from: PROP-git-operator-pilot-follow-up
 related_capabilities: [CAP-DLV-delivery-workflows]
@@ -84,8 +84,8 @@ escape except a partial committed one, so the equality goes without a replacemen
 - **When** the reconcile review of this unit checks them
 - **Then** the capability's acceptance requirements name the turn's own `worker` envelope instead of an unchanged
   base, its base-checkout observation names no Host comparison with a saved state, the promoted ADR names the two
-  superseded clauses of `ADR-orchestration-workers`, and `ADR-orchestration-workers` carries a pointer line to the
-  promoted ADR beside each superseded clause, its decision text otherwise unchanged.
+  superseded clauses of `ADR-orchestration-workers`, and `ADR-orchestration-workers` carries one pointer line to the
+  promoted ADR naming both superseded clauses, its decision text otherwise unchanged.
 
 ### [AC-03] A base advance after spawning never enters or blocks the audited range
 
@@ -104,6 +104,6 @@ escape except a partial committed one, so the equality goes without a replacemen
   integration through their existing refusals, which this unit leaves unchanged; AC-03 pins only the inspection side
   with one characterization test beside the existing linked-worktree test, because no current test advances the base
   HEAD under a worker range. No code changes.
-- The pointer lines in `ADR-orchestration-workers` are a reference repair (constitution §2), so that ADR's decision
+- The pointer line in `ADR-orchestration-workers` is a reference repair (constitution §2), so that ADR's decision
   text and frontmatter stay as they are; the promoted ADR carries no `supersedes` field, because superseding the alias
   of the committed-results decision would also retire the worker's Git actions and the rest of that decision.
