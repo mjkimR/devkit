@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-deep-research-bundle: user confirmed the draft and started local-orchestrated
+  Planning'
+by: user
+at: '2026-10-30T01:59:41.036697Z'

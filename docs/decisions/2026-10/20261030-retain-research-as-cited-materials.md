@@ -1,16 +1,16 @@
 ---
-id: PADR-retain-research-as-cited-materials
+id: ADR-retain-research-as-cited-materials
 title: Retain research as indexed materials cited by ID
 summary: For research that may inform several proposals or an adaptive product, we retain each investigation as an indexed material under docs/materials/ owned by no proposal and cited by its MAT ID, accepting that consumers follow a citation instead of a copy.
-proposal: PROP-deep-research-bundle
-status: draft
+proposal: SPEC-deep-research-bundle
+status: accepted
 created_at: 2026-10-30
 supersedes: ADR-keep-discovery-plans-distinct-from-delivery-commitments
 ---
 
-# [PADR-retain-research-as-cited-materials] Retain research as indexed materials cited by ID
+# [ADR-retain-research-as-cited-materials] Retain research as indexed materials cited by ID
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 - **Supersedes on promotion**: `ADR-keep-discovery-plans-distinct-from-delivery-commitments`
 

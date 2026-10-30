@@ -1,16 +1,16 @@
 ---
-id: PADR-split-deep-research-bundle
+id: ADR-split-deep-research-bundle
 title: Split explicit research into an approach-neutral deep-research bundle
 summary: For explicit research that SDD and adaptive projects both need, we move the research entry and its research roles into a self-contained deep-research bundle without an approach gate, accepting one near-duplicate researcher contract.
-proposal: PROP-deep-research-bundle
-status: draft
+proposal: SPEC-deep-research-bundle
+status: accepted
 created_at: 2026-10-30
 supersedes: ADR-extend-incubation-with-optional-discovery-teams
 ---
 
-# [PADR-split-deep-research-bundle] Split explicit research into an approach-neutral deep-research bundle
+# [ADR-split-deep-research-bundle] Split explicit research into an approach-neutral deep-research bundle
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 - **Supersedes on promotion**: `ADR-extend-incubation-with-optional-discovery-teams`
 

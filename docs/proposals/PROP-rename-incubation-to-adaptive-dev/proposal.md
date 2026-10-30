@@ -80,7 +80,7 @@ The hypothesis: one distinct name per concept removes the ambiguity at every ent
 - **Q6 Code identifiers**: Which code reads the approach value (`devkit-dist` project models and config,
   `devkit-spec` policy, delivery and governance, `devkit-agt` integration), and which identifiers and codes
   rename with it?
-- **Q7 Sequencing**: `PROP-deep-research-bundle` also edits the incubation bundle and `CAP-DLV-idea-incubation`.
+- **Q7 Sequencing**: `SPEC-deep-research-bundle` also edits the incubation bundle and `CAP-DLV-idea-incubation`.
   Which lands first in Development?
 
 ## 3. Proposed Design & Impact

@@ -1,42 +1,22 @@
 ---
-id: PROP-deep-research-bundle
+id: SPEC-deep-research-bundle
 title: Split explicit deep research into an approach-neutral bundle
-summary: "Move the explicitly invoked research entry and its research roles from the incubation bundle into an approach-neutral deep-research bundle. Results stay under docs/materials/ and proposals or current context reference them by ID, so one investigation can inform several proposals."
-status: accepted
-created_at: 2026-10-30
-target_area: capabilities/delivery/
-priority: high
-size: L
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/
-    - packages/devkit-catalog/tests/
-    - packages/devkit-catalog/README.md
-    - packages/devkit-catalog/pyproject.toml
-    - .devkit/architecture.toml
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/usecases/delivery/
-    - docs/steering/glossary.md
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/architecture/ARCH-07-deployment.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/
-    - tests/e2e/smoke.sh
-    - guides/
-  excludes:
-    - .devkit/managed/
-    - handbook/
-    - specs/
-    - docs/decisions/
-task_kind: feature
-workflow: sdd-proposal
+summary: Move the explicitly invoked research entry and its research roles from the incubation bundle into an approach-neutral deep-research bundle. Results stay under docs/materials/ and proposals or current context reference them by ID, so one investigation can inform several proposals.
+status: planned
+created: 2026-10-30
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-deep-research-bundle] Split explicit deep research into an approach-neutral bundle
+# [SPEC-deep-research-bundle] Split explicit deep research into an approach-neutral bundle
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-deep-research-bundle on 2026-10-30.
+
+### 1. Background & Hypothesis
 
 `/incubate-research` runs a bounded research team that compares directions and retains initial documents and a
 conditional roadmap (`CAP-DLV-idea-incubation`, `UC-research-an-idea-and-shape-a-roadmap`). It ships in the
@@ -56,7 +36,7 @@ The hypothesis: an approach-neutral `deep-research` bundle with one explicit ent
 retention contract under `docs/materials/` serves SDD and adaptive development alike. Proposals and current
 context reference the retained material by ID instead of copying it into a proposal's `materials/`.
 
-### Settled direction
+#### Settled direction
 
 - The entry runs only on explicit user invocation (`invocation = "user"`). No skill, pointer or guidance suggests
   it, including on a topic match. The existing suggestion wording is removed:
@@ -68,9 +48,28 @@ context reference the retained material by ID instead of copying it into a propo
 - `PROP-rename-incubation-to-adaptive-dev` renames the remaining incubation bundle and approach to `adaptive-dev`.
   This proposal owns the split, not the rename.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Planning answers each question below; the evidence is `envelopes/scout-01.yaml` and `envelopes/challenger-01.yaml`.
+- **US-1**: As a developer/agent, I want to implement Split explicit deep research into an approach-neutral bundle so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Planning answers each question below; the evidence is historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/scout-01.yaml` and historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/challenger-01.yaml`.
 
 - **Q1 Role ownership**: The research orchestration uses six roles: `direction-explorer`, `discovery-critic` and
   `discovery-planner` serve only the research entry; `product-clarifier`, `incubation-researcher` and
@@ -86,11 +85,11 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
     incubation researcher gathers one product decision's evidence or runs one bounded experiment.
   - `/incubate` never invokes or suggests `/deep-research`; it only reads a retained material by its `MAT-<slug>` ID.
   - Deferred: layering through a Python package dependency plus `auto_select` (`CAP-DIST-content-packages`) works
-    only across wheels, and both bundles ship in the opt-in `devkit-catalog` wheel (`PADR-split-deep-research-bundle`).
+    only across wheels, and both bundles ship in the opt-in `devkit-catalog` wheel (`ADR-split-deep-research-bundle`).
 - **Q2 Retention contract**: One indexed material per investigation:
   `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/<YYYYMMDD>-<slug>.md` with `id: MAT-<slug>`, linking the run's
   other notes by relative path. Consumers cite the index ID; a note carries its own ID only when cited alone.
-  The layout and fields stay a convention: no rule checks materials (`PADR-retain-research-as-cited-materials`).
+  The layout and fields stay a convention: no rule checks materials (`ADR-retain-research-as-cited-materials`).
 - **Q3 Consumers**: A proposal, spec or ADR cites the index ID in a code span, which `RULE-document-reference`
   resolves; bare text is no reference edge. Handoff moves only the proposal's own `materials/` and rewrites only IDs
   it wrote, so the citation survives unchanged. No check changes. The spec skill's proposal reference gains one
@@ -116,15 +115,15 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
   `devkit add deep-research` (the add is refused until then).
 - **Q7 Sequencing**: Host decision (q4), stated in §3.6.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 The `deep-research` bundle
+#### 3.1 The `deep-research` bundle
 
 - New catalog bundle `devkit_catalog/deep_research/bundle/` (entry point `deep-research`), preset `core` (default),
   never `auto_select`. `.devkit/architecture.toml` adds `deep_research` to the `devkit_catalog` package's `data_roots`. Assets: skill `deep-research` (`invocation = "user"`) with `references/orchestration.md`,
   `references/workspace.md` and `references/synthesis.md`; subagents `direction-explorer`, `discovery-critic`,
   `discovery-planner` (moved) and `research-investigator` (new). No guidance asset and no bundle constitution: the
-  skill is self-contained (`PADR-split-deep-research-bundle`).
+  skill is self-contained (`ADR-split-deep-research-bundle`).
 - The entry keeps the coordinator model, bounded assignments, independent alternatives, source provenance,
   optional criticism, initial synthesis, bounded partial results, useful alternatives, workspace allocation and
   selective promotion (`CAP-DLV-idea-incubation` rules 18 to 26).
@@ -144,7 +143,7 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
   retained material"; the effective-contract path becomes `.devkit/managed/deep-research/subagents/`.
 - Bundle text names no development approach value, so `PROP-rename-incubation-to-adaptive-dev` does not touch it.
 
-### 3.2 Explicit invocation only
+#### 3.2 Explicit invocation only
 
 - No skill, guidance pointer, guide or role suggests the entry, also on a topic match. Removed: `CAP-DLV-idea-incubation`
   rule 17's suggestion clause and its §4 sentence on `/incubate`; `incubate-research/SKILL.md` lines 8 and 9 (gone
@@ -155,13 +154,13 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
 - Guides describe `deep-research` only as an installable bundle. Its `bundle-recommendations` row reads "the user
   asks for an explicit research entry"; repository evidence alone never recommends it.
 
-### 3.3 The remaining incubation bundle
+#### 3.3 The remaining incubation bundle
 
 - Keeps `/incubate`, `product-clarifier`, `incubation-researcher`, `usage-reviewer`, the pointer and the
   current-context template. `delegation.md` drops the research-only role line; `current-context.md` says to link a
   retained research material by its MAT ID. `AGENTS.md` and the pointer drop `/incubate-research`.
 
-### 3.4 Living Spec
+#### 3.4 Living Spec
 
 - New CAP-DLV-deep-research (new) holds the research contract: explicit selection, independent installation with or
   without devkit-spec, explicit invocation with no suggestion, no approach gate, the SDD intake exemption, bounded
@@ -179,11 +178,11 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
 - `UC-incubate-an-idea` drops extension 4b and Scenario 8. `CAP-HARN-agent-guidance` describes the two bundles
   separately. `ARCH-05-2-components` and `ARCH-07-deployment` name both catalog bundles and the new e2e test. The glossary registers **Deep research** (an explicitly
   invoked, approach-neutral investigation retained as one indexed material).
-- On promotion, `PADR-split-deep-research-bundle` supersedes `ADR-extend-incubation-with-optional-discovery-teams`
-  and `PADR-retain-research-as-cited-materials` supersedes
+- On promotion, `ADR-split-deep-research-bundle` supersedes `ADR-extend-incubation-with-optional-discovery-teams`
+  and `ADR-retain-research-as-cited-materials` supersedes
   `ADR-keep-discovery-plans-distinct-from-delivery-commitments`; each carries forward the parts it keeps.
 
-### 3.5 Tests and packaging
+#### 3.5 Tests and packaging
 
 - `pyproject.toml` gains the `deep-research` entry point; `tests/e2e/smoke.sh` adds it to the exact bundle set;
   the catalog README lists it.
@@ -200,7 +199,7 @@ Planning answers each question below; the evidence is `envelopes/scout-01.yaml` 
   `sdd` approach, allocates the workspace example under `.devkit/transient/deep-research/`, and checks that
   remove and re-add preserve a retained material.
 
-### 3.6 Sequencing
+#### 3.6 Sequencing
 
 Both drafts edit the incubation bundle, `CAP-DLV-idea-incubation`, the two use cases, the guides and the catalog
 README. This split lands first (Host, q4): `PROP-rename-incubation-to-adaptive-dev` declares
@@ -209,30 +208,31 @@ the remaining bundle and documents. The rename then renames a bundle that no lon
 roles, and `deep-research` text names no approach value, so the rename touches none of it. No same-release
 constraint applies, because no consumer uses the incubation bundle yet.
 
-### Non-Goals
+#### Non-Goals
 
 - No bundle-dependency, shared-role or moved-asset mechanism in devkit-dist.
 - No new document kind, relation field or materials rule.
 - No migration of old transient runs or of materials already retained by `/incubate-research`.
 - No rename of the incubation bundle, approach, `/incubate` or `.devkit/incubation.md` (`PROP-rename-incubation-to-adaptive-dev`).
 
-### Planning decisions
+#### Planning decisions
 
 - User: explicit invocation only, with the suggestion wording removed; results under `docs/materials/`
   independent of approach and proposal; no approach gate and no `.devkit/incubation.md` dependency; the rename is
   a separate proposal.
-- User (`envelopes/answer-01.yaml`): q1 a self-contained `deep-research` with no shared role and no dependency in
+- User (historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/answer-01.yaml`): q1 a self-contained `deep-research` with no shared role and no dependency in
   either direction; q2 the entry name `/deep-research`; q3 the entry never commits and its report directs the
   commit through the project's Git policy.
-- Host (`envelopes/answer-01.yaml`): q4 this split lands first; the rename depends on it.
-- Planning: `PADR-split-deep-research-bundle` and `PADR-retain-research-as-cited-materials` record the design and
+- Host (historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/answer-01.yaml`): q4 this split lands first; the rename depends on it.
+- Planning: `ADR-split-deep-research-bundle` and `ADR-retain-research-as-cited-materials` record the design and
   supersede the two discovery ADRs; the SDD intake exemption, migration steps, explicit-only body guard, carried
-  rules and collision check fold `envelopes/challenger-01.yaml`, and its finding 3 folds q3.
+  rules and collision check fold historical Git `f3aeae93339e0a72011811c087bf9c04bc5049fa:docs/proposals/PROP-deep-research-bundle/envelopes/challenger-01.yaml`, and its finding 3 folds q3.
 - Planning: `.devkit/architecture.toml` joins the boundaries for the new `deep_research` data root.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` after Planning; handed off to a spec bundle on
   `dev-deep-research-bundle`; the proposal is deleted there and its decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+

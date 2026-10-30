@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-deep-research-bundle
+by: user
+at: '2026-10-30T01:59:41.038286Z'
