@@ -1,0 +1,24 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:36:31.765388Z'
+status: completed
+summary: 'Completed SPEC-workflow-record-auto-commit through final report with committed stage boundaries, independent medium reviews and all findings fixed. Only tracked sync output: .devkit/installation.json (sync output), listed in Task 2. Ready for Host integration; ignored build/probe paths retained.'
+findings: []
+assumptions:
+- 'Codex host projection is emulated, not a native isolation guarantee. Substitute measures: explicit absolute worktree cwd/read scopes, scoped intended edits/Git operations with per-operation approval and independent-role before/after temporary-index snapshots.'
+- One active writer per worktree; one fully authored new envelope as sole pending path. Combined source/document/multi-record transactions retain manual commits; no approval/publication authority is added.
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS just test-affected --base c29602db8b804e956cef4d8fa4a58e4208cc1c7e: 2091 passed in 14.69s; mode=partial paths=116; full fallback retained; focused runtime/guidance 45 passed and stale-source integration regression 1 passed'
+  build: PASS uv build --offline --package devkit-agt --wheel and devkit-spec --wheel in normal isolated build environments; six changed archive entries byte-identical to source
+  lint: PASS just lint-check/check devkit and devkit-spec; disk/committed governance zero violations; sync --check clean
+  review: 'PASS independent medium code review: three findings fixed and author-verified in reverify-01; independent medium reconcile review: no findings, all six targets verified'
+  baseline: PASS same-head authoring and queries leave HEAD unchanged; explicit commit changes HEAD and preserves authored bytes/evidence; no speed or cost claim
+  self_hosted: 'PASS normal metadata-rewriting hooks: reverify-01 commit 97aa4c2e, feedback-01 fe04288b, final-report-01 b4c99706; command reported each actual final HEAD'
+  boundaries: PASS allowed source/test/unit/Living Spec paths only; .devkit/installation.json is the sole tracked sync output; support role before/after snapshots and HEADs unchanged
+diff_scope:
+  base: c29602db8b804e956cef4d8fa4a58e4208cc1c7e
+  head: b4c9970645ca102c3b812d2dd9545a354e50cf0a
+activity_effort: medium
