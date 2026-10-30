@@ -8,7 +8,7 @@ target: RULE-document-reference
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -36,3 +36,14 @@ base 0debf74f docs/development/reference/integration.md:91 ... See `CAP-DLV-prop
 devkit rules check after rules fix: errors=0 warnings=0 (integration.md line unchanged)
 guides/install/<adoption guide>:86 The current contract is `CAP-DLV-incubation-sdd-baseline` ... (unchanged by rules fix)
 ```
+
+## Disposition
+
+Resolved by `SPEC-alias-references-in-quick-references`: `RULE-document-reference` resolves the backtick-quoted IDs of
+the quick references its `quick_references` setting matches (default `docs/development/**/*.md`, `guides/**/*.md`,
+`packages/*/README.md`, `tools/*/README.md`); an unresolved ID is an error and an alias citation is fixable, so
+`devkit rules fix` rewrites it. The four alias citations left in `docs/development/` and the viewer README were
+rewritten, and the renaming step of `CAP-DOCS-document-model` names plain-text IDs and feedback `target` fields as
+the remaining manual sweep (out of scope by the user's decision). Verified by the rule tests (check, fix and clean
+recheck in all four default locations; unresolved IDs; masking, targets, exclusions and settings), a whole-workspace
+`devkit rules check` with no finding and the `code-reviewer` pass (`review-01`, `reverify-01`).

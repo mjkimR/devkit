@@ -254,6 +254,11 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    8), so a rename's write scope owns every path that references the old ID except historical files (completed spec
    bundles outside `feedback/`, done or dropped milestones) and materials, which stay as written and resolve through
    the alias. `uv run devkit docs refs <old-id> --direction in -n 0` lists the referencing paths, those included.
+   The same fix rewrites the old ID where an unindexed quick reference (`docs/development/`, `guides/`, package and
+   tool READMEs by default; `CAP-GOV-spec-rules`) cites it in a code span, so only plain-text mentions, feedback
+   `target` fields included, need a manual sweep (`rg <old-id>`). Because the fix rewrites every code-span alias, a
+   rename spec writes the old IDs as plain text, never in a code span, in its mapping tables and prose, so its record
+   keeps which IDs were renamed.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
    taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;
    wherever a command takes an ID argument that it resolves through the index (`devkit docs resolve`, `refs`,

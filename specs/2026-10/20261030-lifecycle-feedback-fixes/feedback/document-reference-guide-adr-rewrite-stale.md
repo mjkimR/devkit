@@ -8,7 +8,7 @@ target: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -35,3 +35,10 @@ ADR-immutable-decisions-editable-records: RULE-document-reference reports an ali
   one in any current document, and devkit rules fix rewrites it to the canonical ID.
 Found by the reconcile-reviewer check of SPEC-lifecycle-feedback-fixes.
 ```
+
+## Disposition
+
+Resolved by `SPEC-alias-references-in-quick-references`: the rule guide's Remediation no longer says the autofix
+never rewrites an alias reference in an ADR or PADR; it states that decision records are rewritten like any current
+document, as the code and `ADR-immutable-decisions-editable-records` say. Verified by the rule test that the guide no
+longer holds the clause, `devkit rules explain RULE-document-reference` and the `code-reviewer` pass (`review-01`).
