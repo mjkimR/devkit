@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-29T23:18:37.241541Z'
+status: completed
+summary: Implemented reusable lean git-operator and Host dispatch; AC-01 through AC-05 verified with contract/projection tests, bounded native continuation and guarded CLI fixtures. Review passed and all eight Living Spec targets reconciled; ready for Host base incorporation and integration validation.
+findings: []
+assumptions:
+- Main moved to d85ce8c168bc7465c87a2167a59ee34388417061 with an independent proposal; Host will merge and reverify after worker return; worker did not merge
+- Same-head role-disabled reading boundary 9488 to 2956 bytes is a proxy; no net token/cost/latency improvement is claimed
+unverified_areas:
+- Terra-driven lifecycle mutation, missing-identity recovery and live denial paths; named-role fresh-session loading; live Claude/Antigravity and cross-host continuation; total cost/tokens/latency/conversation availability
+checks:
+  tests: PASS just test-affected --base main partial mode 1487; isolated existing CLI mutation fixtures 5
+  build: PASS offline devkit-spec sdist and wheel; wheel contains role and both references
+  lint: PASS just lint-check spec; just check spec zero errors; cumulative rules 21 zero errors/warnings; sync --check clean
+  review: PASS review-01 no findings; reconcile-check-01 P2 target omission corrected and verified by reconcile-check-02
+diff_scope:
+  base: a65f0a5d00bf397970bce2b2f1dcb3dff4e369db
+  head: 70d5623cc7f7f50b6b3bcf59271ffde1e9d9528b
