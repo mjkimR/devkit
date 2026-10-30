@@ -58,9 +58,10 @@ per-item identity, authority and recovery when an item does not complete, withou
   - Finding: one `devkit worktree start` item ends in one of five classes
     (`MAT-git-operator-batch-dispatch-observation`): refused before creation, creation rolled back, created then failed
     before setup, created with a zero-exit setup or sync warning, or not dispatched because host approval was denied.
-    Items are independent only while they share an unchanged retained base; a moved or dirty base, a host permission
-    refusal or a CLI that cannot run at all affects every later item. Recommended: continue past an item-local outcome,
-    stop at a shared blocker, and retry only the items the Host names from the returned state.
+    The CLI code does not tell an item-local cause from a repository-wide one: a broken `post-checkout` hook is
+    `WORKTREE_ADD_FAILED` and an offline or broken setup command is `WORKTREE_SETUP_FAILED` for every item, each after up
+    to 900 seconds (`challenger-01` finding 1). Recommended: stop at the first item that is not completed, return every
+    later item as not attempted, and let the Host retry only the items it names from the returned state.
 
 ## 3. Proposed Design & Impact
 
@@ -73,22 +74,25 @@ The recommended design below is pending the user's answers to this Planning roun
   per dispatch, because each integration or handoff changes the state the next job depends on.
 - **Execution**: the operator runs items one at a time in the listed order, each through the existing guarded
   `prepare-worktree` procedure, with its own refresh before mutation and, on Codex, its own approval request.
-- **Stop rule**: after an item-local outcome (a refusal or failure of that item's branch, path or setup), the
-  operator records it and continues with the next item. After a shared blocker (the retained base ref moved or the
-  base is dirty, host approval refused or unavailable, or the CLI cannot run for a reason no item owns) it stops and
-  returns every later item as not attempted, with a null `cli_result`.
+- **Stop rule**: before each item the operator checks that the retained base HEAD still equals the dispatched base
+  ref; uncommitted base changes do not block, because `start` leaves them in the base (`CAP-WT-task-worktrees` §2).
+  At the first item that is not completed (a refusal, a failure, a zero-exit setup or sync warning, a moved base ref,
+  or host approval refused or unavailable), it stops and returns every later item as not attempted, with a null
+  `cli_result` (pending Q2).
 - **Return**: one role message whose `items` list holds, per item, the single-job result
   `PROP-git-operator-result-readiness` defines (original CLI status, exit and effects; host permission; worker-input
   readiness with exact dirty paths; next actor), plus the `not_attempted` items. The batch status uses the same three
   role statuses: `completed` only when every item is completed; otherwise `needs_input` when any remainder needs a
-  Host decision, else `failed`. No `partial` status is added.
+  Host decision, else `failed`. No `partial` status is added. A non-error notice (for example
+  `WORKTREE_REMOTE_UNCHECKED` or a registration advisory) is reported on its item, and the item is completed only when
+  its readiness fields say so.
 - **Retry**: the Host verifies the returned per-item state against current CLI/Git observations (or dispatches
   `inspect-recovery`) and dispatches a new list naming only the remaining items it still authorizes, with current
-  refs. A completed item is never repeated. For a retained worktree with `WORKTREE_SETUP_FAILED` or a rerunnable
-  `WORKTREE_SYNC_FAILED`, a retry item MAY name the warning's exact `[FIX]` in that worktree as its intended effect
-  (pending Q4); other remainders return to the Host.
+  refs. A completed item is never repeated. A retained worktree with a setup or sync remainder returns to the Host,
+  which repairs it directly or dispatches a supported operation (pending Q4): rerunning the setup `[FIX]` alone leaves
+  the locked sync and registration initialization unverified (`challenger-01` finding 3).
 - **Documents**: the git-operator contract (Input, Procedure, Return), `git-operator-dispatch.md` (list form, stop rule,
-  acceptance and retry), `git-operator-operations.md` (`prepare-worktree` list and setup remainder),
+  acceptance and retry), `git-operator-operations.md` (`prepare-worktree` list),
   `spec-delegate/references/payload.md` (the git-operator row: repeat fields per item), `CAP-DLV-delivery-workflows`
   §4.6.1 (EARS rules for the list) and `test_git_operator.py` (wording checks). `CAP-WT-task-worktrees` and
   `packages/devkit` do not change.
@@ -108,9 +112,14 @@ Acceptance checks (from the parent's verification candidates):
 | GOP-05 | An authorized finite preparation list with one denied or partial item | A batch stops or continues within its stated policy | Each item's original CLI result and completed and remaining effects are retained; retries target only inspected authorized remainders. |
 | GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host or implementer and performs no such mutation. |
 
-GOP-05 is checked by contract wording tests and an isolated fixture or replay of a list with one refused item and one
-setup-warning item, reported apart from live runs (`MAT-git-operator-batch-dispatch-observation`); no live partial
-batch is required.
+GOP-05 is checked mechanically by wording tests in `test_git_operator.py` (list form, base-ref check, stop rule,
+per-item `cli_result`, not-attempted items, retry of named remainders only) and by the existing worktree CLI tests of
+each outcome class's code and exit. The operator's live stop and retry behaviour stays reported as unverified until a
+real partial batch is observed, separately from those checks (`MAT-git-operator-batch-dispatch-observation`).
+
+GOP-06 is already met by the git-operator contract's Authority and boundaries. This proposal adds only the sentence
+that a list's authority covers only its listed `prepare-worktree` items, and its wording check; which sibling owns the
+shared GOP-06 wording is a Host decision.
 
 ### Non-goals
 

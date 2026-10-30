@@ -1,0 +1,45 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:03:19.423064Z'
+status: completed
+summary: List form fits; no CLI change justified. Stop rule, dirty-base blocker, setup retry and GOP-05 verification need changes; GOP-06 ownership is a Host decision.
+findings:
+- issue: Item-local vs shared blocker cannot be determined from the CLI result
+  evidence: proposal.md:76-79 stop rule; CAP-WT-task-worktrees §2 step 4 (post-checkout hook, LFS, timeout all surface as WORKTREE_ADD_FAILED); lifecycle.py:343-357 setup failure is a per-item WORKTREE_SETUP_FAILED warning with a 900 s timeout; ADR-reusable-lifecycle-resource-manager §5 lean-model mutation parity unmeasured
+  failure_condition: A repository-wide cause (broken hook, network outage during setup, bad setup command) reports item-local codes, so the operator continues and leaves up to six retained, not-ready worktrees after up to 900 s each
+  suggested_action: Stop at the first non-completed item and return later items as not attempted, or continue only on an item-local code allowlist (WORKTREE_BRANCH_EXISTS, own-path WORKTREE_CONFLICT); present with Q2
+  resolution: open
+  severity: P2
+- issue: Dirty base as a shared blocker contradicts start's contract
+  evidence: proposal.md:78; CAP-WT-task-worktrees §2 step 4 (uncommitted changes in the base stay in the base); git-operator-operations.md prepare-worktree row has no clean-base precondition; lifecycle.py:322-327
+  failure_condition: An unrelated uncommitted base edit stops the batch at item 1 though the same single prepare-worktree job would succeed
+  suggested_action: 'Define the shared base blocker as base HEAD differing from the dispatched base ref; drop dirty. Decision needed: whether a dirty retained base blocks preparation at all (single-job text is ambiguous)'
+  resolution: open
+  severity: P2
+- issue: Setup-remainder retry does not restore readiness and has no mechanical rerunnable criterion
+  evidence: proposal.md:86-89; lifecycle.py:343-371 (sync and registrations run after a failed setup, the setup [FIX] reruns only the setup command); CAP-WT-task-worktrees §2 step 5 (only a non-error sync output gets a rerun [FIX]); CAP-DLV-delivery-workflows §4.6.1 existing guarded CLI operations only
+  failure_condition: A retry runs only the setup [FIX]; managed copies came from a fallback-interpreter or failed sync and registrations were not initialized, yet the item reports completed
+  suggested_action: 'Decision needed: Q4. Smaller alternative: always return setup and sync remainders to the Host; if operator retries stay, the retry must name setup, devkit sync --locked and registration initialization, and only the rerun [FIX] sync case'
+  resolution: open
+  severity: P2
+- issue: GOP-05 has no mechanical check of operator stop/continue and retry selection
+  evidence: proposal.md:108-113; test_git_operator.py checks phrase presence only; replay undefined
+  failure_condition: Development passes GOP-05 on wording tests and CLI fixtures while operator stop/continue behaviour stays unobserved and is reported as met
+  suggested_action: Narrow the mechanical part to wording checks and a CLI fixture of each outcome class's code and exit; state live operator stop/continue as unverified until observed
+  resolution: open
+  severity: P2
+- issue: Outcome-class table omits zero-exit notices that matter for a list
+  evidence: materials/20261030-batch-dispatch-observation.md outcome table; CAP-WT-task-worktrees §2 step 3 WORKTREE_REMOTE_UNCHECKED; §2 step 5 registration advisories; lifecycle.py:369-371
+  failure_condition: A network outage makes every item zero-exit with REMOTE_UNCHECKED, or a registration warning leaves an item neither completed nor in a class
+  suggested_action: 'Add one line: any non-error notice is reported per item and leaves the item completed only if the readiness fields say so'
+  resolution: open
+  severity: P3
+- issue: GOP-06 is owned by three sibling proposals that edit the same files
+  evidence: GOP-06 in PROP-git-operator-batch-preparation, PROP-git-operator-result-readiness and PROP-git-operator-planning-completion-route; git-operator.md Authority and boundaries already covers it
+  failure_condition: Several Developments add duplicate GOP-06 wording and tests to git-operator.md, CAP-DLV §4.6.1 and test_git_operator.py, causing conflicts or divergent phrasing
+  suggested_action: 'Decision needed: which child owns GOP-06; this proposal adds only the list-scoped authority sentence and its wording check'
+  resolution: open
+  severity: P3
+checks: {}

@@ -38,6 +38,11 @@ item can end in five classes a batch result must keep apart:
 | Not dispatched | host approval denied or unavailable | null | none | Host decision; never rerouted. |
 
 The setup-warning class is the zero-exit partial item: the CLI succeeded, but worker input is not ready.
+Other zero-exit notices (`WORKTREE_REMOTE_UNCHECKED` after a 30-second unreachable remote, registration advisories)
+leave the worktree in place; whether the item is ready depends on its readiness fields, not on the exit code.
+One CLI code covers both item-specific and repository-wide causes (a failing `post-checkout` hook is
+`WORKTREE_ADD_FAILED`; a broken setup command is `WORKTREE_SETUP_FAILED` for every item), so the code alone does not
+show whether later items would fail too.
 
 ## Not measured
 
