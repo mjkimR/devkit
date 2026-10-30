@@ -1567,7 +1567,7 @@
     },
     ".devkit/managed/devkit-dev/playbooks/handbook.md": {
       "mode": 420,
-      "sha256": "4c04f1ac71e3fa45f86e857d2c2d97c08279af60f80b229dd099ddd572aac16b"
+      "sha256": "c7ce16faea670a133dd9916b6dc4ce6186336b9f6f07c3f461a6a23b24a6aa09"
     },
     ".devkit/managed/devkit-dev/rules/architecture/facts.py": {
       "mode": 420,

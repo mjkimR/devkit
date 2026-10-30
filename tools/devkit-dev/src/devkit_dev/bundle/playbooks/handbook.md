@@ -10,6 +10,9 @@ Run only when the user explicitly requests a handbook refresh (`devkit-playbook`
 handbook. The contract is `CAP-DLV-release-handbook`; the handbook is a derived view, never a source of truth, and
 no Living Spec document changes for it.
 
+The root `.ignore` keeps `handbook/` out of default `rg` searches so development never reads it; search it
+here with `rg --no-ignore-dot <pattern> handbook/`.
+
 ## 1. Preconditions
 
 1. The release is in preparation: `VERSION` already names the upcoming release, and the `just version-sync` metadata

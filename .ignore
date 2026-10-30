@@ -1,0 +1,3 @@
+# Default rg searches (and agent search tools built on rg) skip the release handbook; it is refreshed only on
+# request through the devkit-dev handbook playbook, which searches it with `rg --no-ignore-dot`.
+handbook/

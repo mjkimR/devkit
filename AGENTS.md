@@ -41,9 +41,6 @@ package, feature, layer or test tier. The rules agents most often need:
   recommendations in step with `docs/` and the packages.
 - Write documentation in English. The one exception is the release handbook's `handbook/<lang>/` for a language
   other than `en` (`ADR-localized-handbook-language-exception`).
-- `handbook/` is a release-time derived view (`CAP-DLV-release-handbook`), refreshed only when the user requests
-  it through the `handbook` playbook, which finds stale pages itself (`just handbook status`). Development work
-  never updates it and never reports its drift in feedback, reconcile records or reports.
 - Do not commit `.env` or log secrets/PII.
 
 ## Agent-First Design
