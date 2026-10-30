@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-30T06:27:51.305332Z'
+status: completed
+summary: 'Self-checked reconcile at activity-effort low: the three targets (CAP-DIST-content-packages, CAP-DIST-sync-and-transactions, UC-plan-and-hand-off-a-proposal) match the diff, the citation test, the LocalRenderStaleError fix and CAP-DLV-proposal-planning with test_plan_accept_cli.py; no other Living Spec impact; three source feedback items resolved with evidence; entrypoint candidates rejected (wording-only targets)'
+findings: []
+checks:
+  reconcile: PASS 3/3 targets reflected, 0 waived
+  rules: PASS devkit rules check
+diff_scope:
+  base: 7cfc27a8100824191e49d007dd052846bca84f37
+  head: 71d8033c43e44a0b4f509408aed9e415b6a82b1f
+activity_effort: low
