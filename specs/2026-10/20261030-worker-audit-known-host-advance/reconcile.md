@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-worker-audit-known-host-advance
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
