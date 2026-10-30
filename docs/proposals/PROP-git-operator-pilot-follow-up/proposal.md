@@ -1,7 +1,7 @@
 ---
 id: PROP-git-operator-pilot-follow-up
 title: Refine git-operator lifecycle contracts from a consumer pilot
-summary: "Separate lifecycle effects from worker readiness, close the Planning acceptance execution gap, and distinguish activity write boundaries from future implementation overlap. Evaluate bounded batch dispatch using observed consumer pilot evidence."
+summary: "Use consumer pilot evidence to clarify lifecycle readiness, host permission and activity scope while retaining original worker audits across known Host target advances. Compare existing split acceptance and bounded batch dispatch before expanding git-operator authority."
 status: draft
 created_at: 2026-10-30
 target_area: capabilities/delivery/
@@ -15,6 +15,7 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
     - packages/devkit-spec/src/devkit_spec/features/proposals/
     - packages/devkit-spec/src/devkit_spec/features/delivery/
@@ -43,7 +44,9 @@ The pilot has not established a net token, cost or latency benefit.
 Four gaps appeared at the boundary between Host decisions, guarded execution and worker input:
 
 1. The Host accepted and integrated a verified Planning result with `accept --mode accept_only` itself because the
-   operating reference lists handoff and integration, but no Planning-acceptance execution job.
+   operating reference lists handoff and integration, but no composed Planning-acceptance job. A later
+   supported split route succeeded: Host acceptance record/commit followed by operator integration.
+   A new job is therefore an option to compare against clearer existing-route guidance, not a prerequisite.
 2. A successful handoff left a known generated transaction uncommitted. CLI effect completion did not by itself
    mean clean committed worker input, and the return did not give a uniform next-action owner.
 3. Scope observations exposed future implementation candidates while current Planning writers owned distinct
@@ -55,6 +58,17 @@ A related readiness ambiguity appeared when `workflow next` returned no current 
 `plan-accept=auto`, although proposals remained `reviewing` and no acceptance command had run. Planning workers
 needed Host guidance to record their return at `direction-handoff` rather than use the printed `-` sentinel.
 
+The exact-base observation rule also caused unnecessary serialization: the Host initially held independent
+Planning integrations while a Development worker ran, solely to preserve its recorded base HEAD. The worker
+reference requires the base status/HEAD to match the pre-spawn observation. Keeping the original source-audit
+baseline need not mean forbidding all known Host-owned target advances. A bounded alternative needs explicit
+design and tests; it was announced but not exercised during an active worker in this pilot.
+
+The first actual integration request was denied by automatic approval review before CLI execution. The Host
+preserved resources and obtained explicit authorization for the named merge and cleanup effects. The same
+guarded route, freshly prepared against current refs, then completed five Planning merges and their cleanup.
+This is observed host-permission recovery, not evidence that policy-derived readiness grants host permission.
+
 The hypothesis is that a small set of explicit lifecycle jobs and clearer result semantics will preserve the
 role's narrow remit while reducing Host interpretation. This is a Backlog hypothesis, not an implemented contract.
 CAP-DLV-delivery-workflows owns the role boundary; CAP-COLL-work-scope-registry owns informational overlap evidence;
@@ -63,14 +77,18 @@ MAT-git-operator-development-evidence.
 
 ## 2. Technical Spike Questions
 
-- Can a Host-authorized Planning acceptance job invoke the existing composed CLI without adding an approval grant,
-  another gate or arbitrary Git execution? Which exact source/target refs and effects must it receive?
+- Is explicit guidance for Host acceptance record/commit followed by existing operator integration enough, or
+  does a composed acceptance job reduce measured burden? Either route must retain exact refs, current authority
+  and all readiness/permission checks without another approval grant or arbitrary Git execution.
 - How should a return distinguish requested effect completion, verified worker readiness, known dirty outputs,
-  and the next actor's work? Preserve the existing three role statuses and original CLI exit/effects.
+  and the next actor's work? Distinguish CLI readiness from host execution permission. Preserve the existing
+  three role statuses and original CLI exit/effects, including null CLI result when approval blocked dispatch.
 - Should `workflow next` expose a record/return stage when policy-derived readiness has no current stage, or is an
   explicit worker-guidance mapping sufficient? Do not infer executed acceptance from policy readiness.
 - Can scope output show current activity write boundaries beside declared/candidate implementation impact,
   without hiding unresolved inputs, suppressing overlaps or becoming write authority?
+- Can worker inspection retain the original source-audit baseline while separately checking explicitly known
+  Host target advances? Unknown/dirty changes still stop; actual integration still incorporates the latest base.
 - Is bounded batch preparation worth a new CLI operation, or does a typed list of existing independent jobs in
   the role contract suffice? Compare dispatch/result size, permission overhead and failure recovery.
 - Which parts can ship independently, and what evidence is needed before claiming lower Host burden or total cost?
@@ -88,8 +106,8 @@ arbitrary branch-deletion, force-operation or global-lock authority.
 
 | Workstream | Bounded candidate | Evidence and decision still needed |
 | --- | --- | --- |
-| Planning acceptance execution | Add an explicitly named job for the already authorized `accept_only` path; combined handoff remains an explicit effect list. | Pin source/target identity and current Host authority; retain policy, readiness and publication checks. |
-| Lifecycle and worker readiness | Return CLI effects separately from worker-input readiness, known generated dirty paths and next-action ownership; define the terminal Planning return stage. | Settle minimal field/guidance changes; a successful effect is not a clean-input claim, and unknown checks stay unknown. |
+| Planning acceptance execution | First document the observed split Host-record/operator-integration route; compare a scoped composed job only if justified. | Pin refs/effects/current authority and measure Host burden; retain policy, readiness and host permission checks. |
+| Lifecycle and worker readiness | Separate CLI readiness/effects, host permission, worker-input readiness and next actor; define the terminal Planning return stage and source-baseline versus known-target-advance checks. | Preserve original audit baseline and unknown/dirty-change detection; neither policy readiness nor a known Host advance grants writes or skips final source preparation. |
 | Activity-aware scope explanation | Present actual activity writes and future declared/candidate impact as distinct evidence. | Preserve current candidate/observed provenance, partial coverage and Host scheduling authority; do not redefine overlap to hide it. |
 | Bounded batch preparation | Accept an exact finite job list with per-item identity, authority, effects, checks and outcome. | Choose role-only composition versus CLI support; validate partial completion and narrow remainder retry. |
 
@@ -107,7 +125,8 @@ No child is created or selected by this draft.
 | GOP-04 | Disjoint proposal-only Planning writes and overlapping future implementation candidates | Scope is inspected for scheduling | Both facts and unresolved coverage remain visible; the result grants or refuses no write and the Host retains the decision. |
 | GOP-05 | An authorized finite preparation list with one denied or partial item | A batch stops or continues within its stated policy | Each item's original CLI result and completed/remaining effects are retained; retries target only inspected authorized remainders. |
 | GOP-06 | A request for production edits, semantic conflict resolution or broader authority | The operator receives the job | It returns that work to the Host/implementer and performs no such mutation. |
-| GOP-07 | Integration, cleanup or permission-recovery evidence not yet exercised by this consumer pilot | Reports are updated after actual observations | Live effects, isolated engine fixtures, instructed replays and untested cases remain separate; unknown cost/latency is not reported as an improvement. |
+| GOP-07 | Mixed live integration, host-refusal recovery and untested failure cases | Reports are updated after actual observations | Live effects, null CLI result on pre-dispatch denial, isolated fixtures, replays and untested cases remain separate; unknown cost/latency is not reported as an improvement. |
+| GOP-08 | Original worker audit baseline A, a known Host-only target advance B and returned source C | Worker results and integration readiness are inspected | Audit A..C for worker changes, account separately for authorized B changes and require latest-base preparation before integration. Unknown/dirty target changes or actual conflicts stop; Host changes do not become worker authorship or permission. |
 
 Tests should exercise deterministic result mapping, partial effects and stale identity with isolated repositories.
 Selected-host mutation and recovery observations should be added when those operations occur; do not induce
@@ -124,7 +143,7 @@ destructive failures in a person's repository merely to fill an evidence row.
 
 ## 4. Lifecycle & Retirement Criteria
 
-This feature / proposal intake records a consumer pilot at Backlog depth. Size is XL with `needs_decompose: true`
+This feature / proposal intake records a consumer pilot as a Backlog draft. Size is XL with `needs_decompose: true`
 because the candidate outcomes can require separate specs. Planning and Development hints are medium; choose them
 again for each selected child. There is no direct prerequisite Unit and no matching milestone is assigned.
 
