@@ -100,9 +100,9 @@ def test_conflicting_advance_is_refused_without_changing_anything(repo: Path) ->
         build_result(
             repo, branch="dev-demo", target_branch="main", target=moved, source=tip, method="no-ff", advance=True
         )
-    assert raised.value.code == "WORKTREE_MERGE_CONFLICT" and "Merge the target branch into the task branch" in (
-        raised.value.fix or ""
-    )
+    fix = raised.value.fix or ""
+    assert raised.value.code == "WORKTREE_MERGE_CONFLICT" and "Merge the target branch into the task branch" in fix
+    assert "devkit generated resolve" in fix
     assert refs(repo) == before and git(repo, "status", "--porcelain") == ""
 
 

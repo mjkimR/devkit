@@ -16,6 +16,7 @@ def test_integrate_step_one_merges_the_base_only_after_a_reported_refusal(enviro
         "`INTEGRATION_RECEIPT_CONFLICT`",
         "`INTEGRATION_NOT_READY`",
         "never rebase",
+        "`devkit generated resolve` first",
         "`devkit rules fix`",
     )
     assert_rule(integrate, "2. After such a merge", "reuse the source's verification")

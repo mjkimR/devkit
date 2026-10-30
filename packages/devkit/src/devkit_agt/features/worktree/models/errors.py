@@ -270,7 +270,11 @@ class MergeConflictError(_Interaction):
     """Merging the moved target with the task branch conflicts (``INTERACTION``); nothing changed on the target."""
 
     code = "WORKTREE_MERGE_CONFLICT"
-    fix = f"{_MERGE_TARGET} to resolve the conflict there, re-verify what the merge changed, then prepare again"
+    fix = (
+        f"{_MERGE_TARGET} to resolve the conflict there (run `uv run devkit generated resolve` first, which"
+        " regenerates conflicted generated files such as .devkit/installation.json), re-verify what the merge changed,"
+        " then prepare again"
+    )
 
 
 class GitUnsupportedError(_Interaction):
