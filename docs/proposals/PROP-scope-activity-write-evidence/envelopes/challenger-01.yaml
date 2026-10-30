@@ -1,0 +1,59 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:06:40.877073Z'
+status: completed
+summary: 'Design holds (empty-range change safe in committed(), reading agrees with CAP-COLL rule 1); two P2 defects: horizon mislabels fresh dev-* refs, handoff ordering for future-only overlap unstated; self-base guard, gap inputs and AC wording need tightening; skill-only alternative is a user decision.'
+findings:
+- issue: Horizon derived from unit kind labels a just-handed-off dev-* ref (at base commit, spec bundle uncommitted, resolved to the accepted proposal unit) as future; with the 3.2 empty-range change it also loses its unknown-base gap.
+  evidence: packages/devkit-spec/src/devkit_spec/features/scope/services/observation.py:71-94; services/collection.py:287-306; proposal.md 3.1 and 3.2
+  failure_condition: 'collect between handoff and the first dev-<slug> commit while another Development unit overlaps its candidates: current_overlapping excludes the pair.'
+  suggested_action: future only for declared/candidate paths of a proposal unit observed on a plan-* ref or worktree; a proposal unit on dev-*, a spec unit and a snapshot stay current; add a scenario.
+  resolution: open
+  severity: P2
+- issue: 3.3 says future-only overlap informs handoff order but does not state what the Host does at handoff, so current_overlapping=0 can be read as permission to hand off two overlapping proposals into parallel Development.
+  evidence: proposal.md 3.3; spec-orchestrate/SKILL.md.jinja:14; CAP-COLL-work-scope-registry rule 1
+  failure_condition: Host hands off PROP-a and PROP-b whose targets share entrypoints using current_overlapping as the parallelism test.
+  suggested_action: 'Rule: before handing a unit off, treat its future evidence as current; units whose future evidence overlaps are handed off or integrated sequentially.'
+  resolution: open
+  severity: P2
+- issue: The 3.2 self-base guard maps onto a string comparison base_ref == candidate.ref; a short or symbolic base (--base dev-a, devkitBase HEAD) naming the branch itself would yield an empty range and hide its own changes; with a registration cap the range need not be empty.
+  evidence: services/collection.py:287-294; services/observation.py:107-166; tests/integration/features/scope/test_collection.py:126
+  failure_condition: collect --base <own branch short name>, devkitBase naming the branch or HEAD, a tracking peer selected as base, or a registered branch reset to its base.
+  suggested_action: Compare resolved full ref names and exclude the same task's tracking peer; stop clearing base_sha when it equals the tip so committed() applies 4.1 (empty without a cap).
+  resolution: open
+  severity: P2
+- issue: 'Hidden decision: a skill-only change over existing unit= and source= fields may meet GOP-04 without new output fields.'
+  evidence: cli/collection_output.py:30-66; services/collection.py:448-494; MAT-scope-activity-write-probe finding 4
+  failure_condition: Development spends an M change on fields the Host could derive, or (skill-only) the Host keeps joining observation IDs to units per evidence line.
+  suggested_action: 'Decision needed: (a) horizon/current_overlapping output, or (b) skill/CAP-HARN/UC reading over existing fields plus 3.2.'
+  resolution: open
+  severity: P3
+- issue: 3.1 claims identity-less observations have only observed paths; snapshot-only and duplicate-anchor observations keep declarations with task_key None.
+  evidence: services/collection.py:184-205, 403-419
+  failure_condition: Horizon computed from task_key labels duplicate-anchor proposal units current.
+  suggested_action: Derive the unit kind from provenance.unit; only observations without a unit default to current.
+  resolution: open
+  severity: P3
+- issue: Input reasons attach only to unresolved-input problems; a source with a genuine unknown-base still hides its declaration gaps.
+  evidence: services/collection.py:305-306, 335-338
+  failure_condition: 'dev-* branch with unresolvable base ref and no reconcile.md: detail reads unknown-base without inputs.'
+  suggested_action: Carry the distinct unresolved input reasons on the source's problem whatever its reason.
+  resolution: open
+  severity: P3
+- issue: SAW-01 'unchanged code=' has no reference value; SAW-04 needs the proposal at the base commit or passes vacuously; GOP-04 'Host retains the decision' has no observable assertion.
+  evidence: proposal.md acceptance table; services/observation.py:76-85; services/collection.py:355-357
+  failure_condition: An implementation dropping future entries from code=, or a SAW-04 fixture without the proposal on base, still passes.
+  suggested_action: Make SAW-01, SAW-04 and GOP-04 assertions mechanical.
+  resolution: open
+  severity: P3
+assumptions:
+- Handoff does not commit the spec bundle on dev-<slug>
+unverified_areas:
+- Challenger did not run collect or tests; dev-* proposal-unit and self-base behaviour reasoned from code
+checks: {}
+diff_scope:
+  base: fdba66465456ef93bf18a7a980d16121a0131639
+  head: 741c2214f5cbb4b14faaa2a1e68ac6cde26b519e
+activity_effort: medium

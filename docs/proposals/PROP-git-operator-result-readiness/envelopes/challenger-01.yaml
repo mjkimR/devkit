@@ -1,0 +1,68 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-30T03:12:05.342856Z'
+status: completed
+summary: 'Option A (composed handoff commits its transaction) holds; HEAD read after hooks and the rerun refusal already exist. One P1: the sibling-draft skip breaks the depends_on rewrite MUST and can leave a dangling edge that blocks later handoffs. Four P2s and two P3s, two of them user decisions.'
+findings:
+- issue: The sibling-draft skip leaves a Planning-owned sibling's depends_on and ID references to the handed-off PROP unrewritten, against the CAP-DLV-proposal-incubation section 4.5 MUST; after dev-<slug> lands, the dangling depends_on makes every later handoff refuse, and post-handoff step 4 fails until the sibling is edited on the dev branch, which reintroduces the conflict.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:305-307; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:1150-1199; packages/devkit-docs/src/devkit_docs/features/documents/services/dependencies.py:10-24; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/references/post-handoff.md:12
+  failure_condition: A draft with an open plan- branch depends on PROP-x; x hands off and dev-x integrates before rules fix runs on the draft.
+  suggested_action: Keep the depends_on rewrite and limit the skip with a named repair, or drop the skip and document the FB workaround (take the base version, then devkit rules fix) as the base-merge resolution.
+  resolution: open
+  severity: P1
+- issue: 'On a commit refusal the composed output would still print [NEXT_CMD: workflow next ...] because next_command is set before the commit step; accept_and_handoff omits the landed handoff writes from completed_steps.'
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py:270-274; packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:146-151; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:387-398
+  failure_condition: The gate refuses the handoff commit and the agent follows NEXT_CMD into Development on a dirty worktree.
+  suggested_action: Clear next_command on refusal, set next_action ('fix what the commit output reports, then commit'), record the handoff step and carry commit in accept_and_handoff; GOP-02b asserts no NEXT_CMD.
+  resolution: open
+  severity: P2
+- issue: With Option A, worker_input and next_actor repeat what status, remaining_effects, checks and blocker_codes already carry; next_actor values implementer/worker would have the operator name a scheduling target the Host owns.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md (Return); skills/spec-orchestrate/references/git-operator-dispatch.md:20-26; docs/decisions/2026-10/20261030-reusable-lifecycle-resource-manager.md section 4
+  failure_condition: Two sources of the same fact disagree with role status and every result is checked twice.
+  suggested_action: 'Decision needed: drop next_actor and put head and dirty_paths under checks, dirty paths in remaining_effects and never completed; or keep the drafted fields.'
+  resolution: open
+  severity: P2
+- issue: UC-incubate-and-hand-off-a-proposal step 9 ('in the same change') and extension 7a (failure modes) change, and CAP-DLV-proposal-incubation:445 needs narrowing, but docs/usecases/delivery/ is outside boundaries.owns.
+  evidence: docs/usecases/delivery/UC-incubate-and-hand-off-a-proposal.md:69-70,103-113; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:445
+  failure_condition: Development leaves the UC contradicting the implementation or edits outside its boundary.
+  suggested_action: Own docs/usecases/delivery/ and list the step 9, 7a and line 445 edits.
+  resolution: open
+  severity: P2
+- issue: No owner is named for the post-handoff link fixes that become a later commit; a worker's boundary excludes most of them.
+  evidence: PADR-composed-handoff-commits-its-own-transaction sections 1 and 5; post-handoff.md:3; UC-incubate-and-hand-off-a-proposal.md:105-107
+  failure_condition: A handoff reports UNRESOLVED_LINK or REWRITTEN outside the spec and the fixes are skipped or land as out-of-scope worker edits.
+  suggested_action: Name the Host as the owner of that commit before spawning a worker, only when the result carries those sentinels; reword the hypothesis to no Host commit of the handoff transaction.
+  resolution: open
+  severity: P2
+- issue: GOP-02 and GOP-02b assign operator return values to feature integration tests, which cannot check an LLM role; GOP-03 collides with PROP-git-operator-planning-completion-route.
+  evidence: docs/proposals/PROP-git-operator-result-readiness/proposal.md section 3.4; docs/proposals/PROP-git-operator-planning-completion-route/proposal.md:75
+  failure_condition: The operator half has no mechanical evidence at review; GOP-03 has two meanings.
+  suggested_action: Split CLI integration checks from contract-text checks in test_git_operator.py; renumber the sibling check GOP-09.
+  resolution: open
+  severity: P2
+- issue: (optional) Staging every changed path does not verify the commit holds only the handoff's writes; a force-added ignored material could be dropped silently.
+  evidence: PADR section 4; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:270-300; .gitignore:46
+  failure_condition: A proposal holds a force-added file matching an ignore pattern.
+  suggested_action: Compare the committed name-status with the handoff's reported writes.
+  resolution: open
+  severity: P3
+- issue: Option A changes the published composed handoff contract beyond the plan-intent wording; the PADR presents it as selected.
+  evidence: docs/proposals/PROP-git-operator-result-readiness/decisions/01-gate-plan-intent.yaml; PADR-composed-handoff-commits-its-own-transaction section 4
+  failure_condition: Commit behavior changes at plan-accept without the user choosing A over B or C.
+  suggested_action: 'Decision needed: ratify Option A (recommended) or Option B.'
+  resolution: open
+  severity: P3
+assumptions:
+- cgate post-commit rewrite runs synchronously and keeps parent and tree
+- The four Host handoff commits passed the staged rules gate
+unverified_areas:
+- cgate hook script content (base common git dir, not read)
+- Whether dev-integration CI rules evaluate an unchanged sibling file
+- Development overlap with PROP-integration-merge-moved-target (Host scheduling)
+checks: {}
+diff_scope:
+  base: ''
+  head: 630d52dcb21e0510f9af3eced3e2d17a35c8c92d
+activity_effort: medium
