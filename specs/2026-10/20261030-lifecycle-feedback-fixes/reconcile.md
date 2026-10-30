@@ -8,6 +8,8 @@ targets:
     resolution: modified
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
+  - file: docs/development/reference/distribution.md
+    resolution: modified
 ---
 
 # Lifecycle feedback fixes reconciliation
@@ -32,15 +34,28 @@ generic wording stays true and the file is outside this unit's write scope.
 - `FB-render-stale-fix-ignores-worker-scope`: resolved (AC-02, AC-05); the fix order and a locked restore that keeps
   tracked files byte-identical are asserted in `test_local_config.py`.
 - `FB-worker-envelope-stage-unchecked-at-write`: resolved (AC-03, AC-04, AC-05); `test_envelope_worker_stage.py`
-  covers refusal on authoring and skeleton, `-`, declared and exception stages and the lenient path. On the base
-  the handoff of `PROP-git-operator-planning-completion-route` moved this file to
-  `specs/2026-10/20261030-git-operator-planning-completion-route/feedback/`, which another unit owns; this unit
-  does not edit it, and the Host applies `status: resolved` and the Disposition there at integration.
+  covers refusal on authoring and skeleton, `-`, declared and exception stages and the lenient path. This unit does
+  not edit the file: on this unit's base and on main it is still under
+  `docs/proposals/PROP-git-operator-planning-completion-route/feedback/`, and the handoff of that proposal moves it
+  to `specs/2026-10/20261030-git-operator-planning-completion-route/feedback/`, a directory another unit owns. The
+  Host applies `status: resolved` and a Disposition naming `SPEC-lifecycle-feedback-fixes`, AC-03 to AC-05 and
+  `test_envelope_worker_stage.py` at whichever path the integration target holds.
 - `FB-rename-write-scope-unstated`: resolved (AC-06), the optional template comment included; verified by review
   against `RULE-document-reference` and `ADR-immutable-decisions-editable-records`, `devkit sync --check` and
   `just rules-check`.
 
 The duplicate FB-local-render-fix-ignores-worker-write-scope is outside this unit and left to the Host.
+
+## Deferred work
+
+- `CAP-DIST-sync-and-transactions` (personal rendering paragraph) says "run sync" for `CONFIG_LOCAL_RENDER_STALE`;
+  naming `devkit sync --locked` first there is outside this unit's write scope. Destination: the Host, in the same
+  follow-up that closes the duplicate feedback above.
+- The bundled `RULE-document-reference` guide
+  (`packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/guide.md`) says `rules fix`
+  never rewrites an alias reference in an ADR or PADR, which contradicts the code,
+  `ADR-immutable-decisions-editable-records` and section 3.5 item 5. It predates this unit and is outside its write
+  scope; captured as `FB-document-reference-guide-adr-rewrite-stale` for the Host.
 
 ## Verification
 
