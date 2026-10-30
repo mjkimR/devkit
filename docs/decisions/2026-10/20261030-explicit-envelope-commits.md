@@ -1,15 +1,15 @@
 ---
-id: PADR-explicit-envelope-commits
+id: ADR-explicit-envelope-commits
 title: Explicit commits for individual workflow envelopes
 summary: "For record-only workflow steps, we commit one named envelope through a separate explicit command with a deterministic subject, to simplify retry and preserve authoring compatibility, accepting one extra command and manual combined commits."
-proposal: PROP-workflow-record-auto-commit
-status: draft
+proposal: SPEC-workflow-record-auto-commit
+status: accepted
 created_at: 2026-10-30
 ---
 
-# [PADR-explicit-envelope-commits] Explicit commits for individual workflow envelopes
+# [ADR-explicit-envelope-commits] Explicit commits for individual workflow envelopes
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-30
 
 ---

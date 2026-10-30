@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Queue a draft assessing automatic commits for envelope-only steps and slug-derived
-  messages; implementation and direction acceptance remain out of scope
-by: user
-at: '2026-10-29T23:13:42.448476Z'

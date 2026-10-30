@@ -1,35 +1,23 @@
 ---
-id: PROP-workflow-record-auto-commit
+id: SPEC-workflow-record-auto-commit
 title: Automatic commits for workflow records
-summary: "Adds an explicit command that commits one authored workflow envelope with a deterministic Unit-based message. Preserves write-only authoring, existing hooks and manual commits for combined changes."
-status: accepted
-created_at: 2026-10-30
-target_area: delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/workflow/
-    - packages/devkit/tests/unit/features/workflow/
-    - packages/devkit/tests/integration/features/workflow/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - docs/capabilities/delivery/
-    - docs/usecases/delivery/
-    - docs/decisions/
-  excludes:
-    - packages/devkit/src/devkit_agt/features/gate/
-    - packages/devkit/src/devkit_agt/features/worktree/
-    - packages/devkit/src/devkit_agt/features/integration/
-task_kind: feature
-workflow: sdd-proposal
+summary: Adds an explicit command that commits one authored workflow envelope with a deterministic Unit-based message. Preserves write-only authoring, existing hooks and manual commits for combined changes.
+status: planned
+created: 2026-10-30
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-workflow-record-auto-commit] Automatic commits for workflow records
+# [SPEC-workflow-record-auto-commit] Automatic commits for workflow records
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-workflow-record-auto-commit on 2026-10-30.
+- **Preserved Materials**: `docs/materials/2026-10/20261030-workflow-record-auto-commit`
+
+### 1. Background & Hypothesis
 
 Workflow record commands know which Unit and record they write, but the executor still stages those files,
 invents a commit message and runs Git. For stages that only persist an envelope, message authoring adds a
@@ -60,11 +48,30 @@ No reduction in latency, tokens or total cost has been measured.
 adds a deterministic CLI operation and does not require that role. `PROP-maintenance-history` publishes maintenance
 records on a separate remote branch and does not cover local Unit envelope commits.
 
-## 2. Planning Findings
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Automatic commits for workflow records so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Findings
 
 - **Invocation:** Select a separate command, `devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml`.
   It commits one existing record and never allocates an envelope sequence. Existing authoring commands and library
-  calls remain write-only. `PADR-explicit-envelope-commits` compares the alternatives.
+  calls remain write-only. `ADR-explicit-envelope-commits` compares the alternatives.
 - **Commit boundary:** Limit the first implementation to one new, authored envelope. Multiple pending envelopes or
   accompanying code, feedback or document changes use an ordinary combined commit. Automatic mode is an explicit
   call selected by the executor, not an inferred property of a stage or a new workflow exit requirement.
@@ -83,9 +90,9 @@ records on a separate remote branch and does not cover local Unit envelope commi
 cost benchmark is required for this feature; acceptance concerns avoided manual message authoring and correct Git
 scope. Development runs its acceptance checks at the same head with explicit commit mode omitted as the baseline.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Candidate assessment
+#### Candidate assessment
 
 | Operation | Automatic-commit suitability | Boundary |
 | :--- | :--- | :--- |
@@ -97,7 +104,7 @@ scope. Development runs its acceptance checks at the same head with explicit com
 | Implementation, Living Spec edits, rejection or reclassification | Keep existing message authoring | Describe actual changes and preserve required user reasons; emergency commits retain their separate procedure. |
 | Merge/integration | Already automated | Keep the existing merge template and guarded integration route. |
 
-### Selected interface and behavior
+#### Selected interface and behavior
 
 The command takes one `--file`, relative to the resolved Unit, naming an immediate file under `envelopes/`.
 There is no implicit latest selection, glob, multi-file option, `--message`, or authoring `--commit` flag.
@@ -135,7 +142,7 @@ uv run devkit workflow envelope commit --unit specs/2026-10/20261030-example --f
    only after the reported cause is fixed. When the result is uncertain, inspect HEAD/index/worktree first. A refusal
    or unavailable host permission stops that operation; it never changes tools or skips hooks to continue.
 
-### Result and error contract
+#### Result and error contract
 
 Text success is one `[ENVELOPE_COMMIT: unit=... file=... outcome=committed|already_committed head=...]` line.
 JSON success is one object with `unit`, `file`, `outcome`, `head`, `subject` and `notices`; `subject` is the generated
@@ -155,7 +162,7 @@ Diagnostic logs stay on stderr through the existing CLI boundary. Exact underlyi
 available without claiming that their messages are stable codes. An unchanged already-committed record returns 0.
 The `next`, `check` and `show` commands stay read-only. No new gate, stage pass, push or merge authority is inferred.
 
-### Call sites, architecture and delivery
+#### Call sites, architecture and delivery
 
 Use the command after final-report authoring when it is the only pending file, and after review/reverify authoring
 when it is the only pending file. Cover both feature and bugfix workflow references. Feedback with no findings is
@@ -172,7 +179,7 @@ Only source assets under the spec bundle change; deployment outputs follow norma
 receive the retained contract. The `docs/decisions/` boundary permits promotion of the new PADR, not edits to existing
 accepted decisions. Gate, worktree and integration engines remain outside implementation scope.
 
-### Expected acceptance checks
+#### Expected acceptance checks
 
 - **AC1 — Deterministic identity:** The same anchor slug, workflow, segment, stage and record identity yield the same
   message on differently named branches. Different Unit slugs remain distinguishable; unsupported anchor IDs refuse.
@@ -195,13 +202,13 @@ Runtime acceptance needs new unit and integration tests under the declared workf
 checks live under the declared spec-bundle integration tests. Run lint, type checks and `just test-affected` in
 Development; Planning checks document rules, links, envelopes and the affected existing tests only.
 
-### Non-goals
+#### Non-goals
 
 **Scope Excluded:** LLM-generated source commit messages, automatic commits for all file-writing commands,
 decision/acceptance transactions, automatic production changes, hook bypass, new approval policy, push or merge
 automation, changes to the existing integration template, and a persistent Git service or general recovery framework.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning selects the explicit single-envelope commit command in PADR-explicit-envelope-commits. Size remains M,
 with medium Development effort for Git failure behavior and cross-package agent guidance. The independent challenger
@@ -211,3 +218,4 @@ direction acceptance or Development handoff occurs in this Planning run.
 On acceptance, hand off to one feature spec with the selected interface and eligible call sites. Completion requires
 the acceptance checks and delivery-contract reconciliation. On rejection, retain `status: rejected` and the user's
 reason through the existing proposal retirement procedure.
+
