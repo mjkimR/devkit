@@ -462,10 +462,27 @@ apart. The handoff result's
 (`ADR-composed-handoff-commits-its-own-transaction`). The operator returns production edits, semantic conflict
 resolution and authority beyond the job to the Host and performs no such mutation.
 
+A dispatch MAY carry a finite, exact preparation list of `prepare-worktree` items; every other operation MUST stay
+one job per dispatch. Each item repeats every job field and names its own branch, worktree path and Unit, all items
+name the same retained base and base ref, and the list's authority covers only its listed items. WHEN git-operator
+runs a preparation list, it MUST run the items one at a time in the listed order, each through the guarded
+`prepare-worktree` procedure with its own refresh and, on Codex, its own approval request. WHEN an item is about to
+run, git-operator MUST first check that the retained base HEAD still equals the dispatched base ref. IF an item is not
+completed (a refusal, a failure, a zero-exit setup or sync warning, a moved base ref, or refused or unavailable host
+approval), THEN git-operator MUST stop and return every later item as not attempted. The list return holds `items`,
+one unchanged single-job return per attempted item, and `not_attempted`, each entry with the item's identity,
+intended effects and the null CLI result; the list status is completed only when every item is completed, else
+needs_input when any attempted item is needs_input, else failed, with no partial status. IF an item has a setup or
+sync remainder, THEN git-operator MUST return it to the Host and run no setup `[FIX]`, sync or registration repair.
+WHEN the Host retries a stopped list, it MUST verify each returned item against its own CLI/Git observation or
+`inspect-recovery` and dispatch a new list naming only the remaining items it still authorizes, with current refs; a
+completed item is never repeated (`SPEC-git-operator-batch-preparation`,
+`MAT-git-operator-batch-dispatch-observation`).
+
 `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py` checks registration, projections,
-authority, recovery, worker-input readiness and evidence-separation wording. `MAT-git-operator-development-evidence` records four Terra medium native
-continuation jobs and isolated CLI mutation fixtures separately; selected-model mutation, other live hosts and
-net cost/latency benefit remain unverified. Codex emulation uses explicit paths, per-operation permission and
+authority, recovery, worker-input readiness, preparation-list and evidence-separation wording. `MAT-git-operator-development-evidence` records four Terra medium native
+continuation jobs and isolated CLI mutation fixtures separately; selected-model mutation, other live hosts, a live
+partial preparation list and net cost/latency benefit remain unverified. Codex emulation uses explicit paths, per-operation permission and
 Host effect checks without claiming native path enforcement. Flash effort is omitted without prompt emulation.
 
 ### 4.6.2 One-shot activity workers
