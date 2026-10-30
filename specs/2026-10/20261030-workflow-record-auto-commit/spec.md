@@ -4,11 +4,10 @@ title: Automatic commits for workflow records
 summary: Adds an explicit command that commits one authored workflow envelope with a deterministic Unit-based message. Preserves write-only authoring, existing hooks and manual commits for combined changes.
 status: planned
 created: 2026-10-30
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-workflow-envelopes, CAP-DLV-cli-and-output, CAP-DLV-delivery-workflows]
+related_usecases: [UC-drive-development-to-integration]
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-workflow-record-auto-commit] Automatic commits for workflow records
 
@@ -50,22 +49,46 @@ records on a separate remote branch and does not cover local Unit envelope commi
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Automatic commits for workflow records so that system capabilities are extended.
+- **US-1**: As a delivery agent, I want to commit one authored envelope without composing a message, and retry the same file after a hook failure. This extends `UC-drive-development-to-integration`.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+**Scope Excluded:** Source-message generation, implicit commits, multi-record and decision/acceptance transactions, hook bypass, new authority, push/merge automation, and a persistent Git or recovery service.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Deterministic identity and output
+- **Given** a tracked bound SPEC/PROP anchor and an authored envelope in its current segment and a declared stage
+- **When** the explicit commit command is invoked on differently named branches
+- **Then** it generates `chore(workflow): record <slug> <kind>-<NN>` with workflow, segment and stage in the body, and returns the specified text sentinel or JSON fields with actual final HEAD.
 
-## 5. Carried Proposal Notes
+### [AC-02] Exact scope before mutation
+- **Given** a new envelope or an identical staged addition
+- **When** committing with unrelated staged, unstaged or untracked paths, partial staging, path escapes, symlinks, ignored paths, unsupported anchors or modified history
+- **Then** it refuses with exit 2 and `ENVELOPE_COMMIT_INVALID` or `ENVELOPE_COMMIT_STATE` before mutation; an eligible call adds exactly the selected path with unchanged bytes. Failed and needs_input authored records remain eligible without passing gates.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Hooks, retry and uncertain outcomes
+- **Given** ordinary hooks/signing and one active writer
+- **When** a hook rejects, a same-file staged retry succeeds, metadata is rewritten, or hooks change content/refs
+- **Then** failure preserves resources and reports staging and before/after HEAD; retry allocates no record; metadata rewrite reports actual HEAD; unexpected effects return `ENVELOPE_COMMIT_UNCERTAIN` with inspection guidance and no reset/retry. A clean exact existing record returns `already_committed` with null subject and no commit.
+
+### [AC-04] Compatibility and unsupported state
+- **Given** write-only authoring, read-only queries, a skeleton/invalid scope, or non-Git, detached, in-progress, locked or alternate-index state
+- **When** those existing commands or explicit commit are invoked
+- **Then** existing commands retain their behavior, while commit refuses unsupported state with exit 2 and the specified actionable stable code before staging.
+
+### [AC-05] Workflow continuity and guidance
+- **Given** authored review/reverify and final-report records with existing evidence SHAs
+- **When** they are committed explicitly and readiness is evaluated
+- **Then** evidence SHAs remain unchanged and workflow checks still pass. Guidance in feature/bugfix workflows and skills uses explicit commit only for one pending envelope, keeps combined manual commits for accompanying changes/multiple records, and requires integration preparation after the record commit; older preparation remains invalid after HEAD changes.
+
+## 5. Accepted design and assumptions
+
+The carried premises still match the current base: authoring is write-only, stage commits are manual and post-commit hooks may rewrite HEAD. The implementation reuses feature-owned envelope parsing and foundation Git execution without an agt-to-spec dependency. Activity effort is medium for real Git failure behavior and cross-package guidance. The CLI is agent-facing and adds no graphical screen.
+
+
+
+The selected interface, result/error contract and boundaries below are normative.
 
 ### 2. Planning Findings
 
@@ -207,15 +230,4 @@ Development; Planning checks document rules, links, envelopes and the affected e
 **Scope Excluded:** LLM-generated source commit messages, automatic commits for all file-writing commands,
 decision/acceptance transactions, automatic production changes, hook bypass, new approval policy, push or merge
 automation, changes to the existing integration template, and a persistent Git service or general recovery framework.
-
-### 4. Lifecycle & Retirement Criteria
-
-Planning selects the explicit single-envelope commit command in PADR-explicit-envelope-commits. Size remains M,
-with medium Development effort for Git failure behavior and cross-package agent guidance. The independent challenger
-review, its disposition and the current run records accompany the direction-acceptance request. No production code,
-direction acceptance or Development handoff occurs in this Planning run.
-
-On acceptance, hand off to one feature spec with the selected interface and eligible call sites. Completion requires
-the acceptance checks and delivery-contract reconciliation. On rejection, retain `status: rejected` and the user's
-reason through the existing proposal retirement procedure.
 
