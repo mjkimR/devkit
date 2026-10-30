@@ -23,7 +23,7 @@ plan: PLAN-integration-merge-moved-target
   - _Requirements: AC-11_
   - **Verification**: `just test devkit-spec bundles/spec`, `uv run devkit sync --check`
 
-- [ ] **Task 4**: Repository verification policy and reference documents
+- [x] **Task 4**: Repository verification policy and reference documents
   - **_Boundary**: `AGENTS.md`, `docs/development/`, `guides/INSTALL_GUIDE.md`
   - _Requirements: AC-09, AC-11_
   - **Verification**: `just rules-check`, `git diff --check`

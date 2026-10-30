@@ -80,8 +80,10 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 
 Run lint, type checks and relevant tests before completing code changes. Use `just test-affected` for
 development, review and the final integration content (keep its `mode=full` fallback); no separate local
-full-suite run is required. Incorporate a moved base before testing; merging unchanged verified content needs no
-new run. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
+full-suite run is required. Integration merges a conflict-free moved base itself and runs only CI rules on the
+merged result, so merge the base and rerun tests only after a reported conflict or failing check. After a
+local-orchestrated run, run `just test-affected --base <batch start>` once on `main`; otherwise a later batch run or
+nightly CI tests the combined head. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
 viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names.
 
 | Target | Command |
