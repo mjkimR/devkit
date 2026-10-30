@@ -121,9 +121,13 @@ Acceptance check (from the parent's verification candidates):
 
 ## Planning decisions
 
-- Proposed in this Planning run, pending the user's answers recorded in the `worker` envelope: horizon output in
-  `collect` rather than a skill-only reading over existing `unit=` and `source=` fields (3.1), and including the gap
-  inputs and the self-base fix (3.2).
+- The user chose horizon output in `collect` and the scheduling text (3.1, 3.3) over a skill-only reading of the
+  existing `unit=` and `source=` fields, because the Host would otherwise join every evidence line to its observation.
+- The user included both coverage-gap fixes (3.2): every source problem names its unresolved input reasons, and the
+  self-base guard removes the false `unknown-base` of a branch at its base commit.
+- The other children of `MS-git-operator-lifecycle-refinement` also own `spec-orchestrate/`, and Development
+  integrates them one at a time. This unit changes only the scope-reading text there and keeps a sibling's text that
+  reached the base first.
 - Folded from `challenger-01`: the Planning horizon applies only on `plan-*` sources (3.1); future-only overlap
   serializes handoff and integration (3.3); the self-base guard compares resolved refs (3.2); gap inputs travel with
   every problem reason (3.2); the acceptance checks state mechanical assertions.
