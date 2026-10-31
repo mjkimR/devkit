@@ -37,7 +37,7 @@ One observation, one file, committed with the work. Capture writes `status: open
    | :--- | :--- |
    | `open` | Record nothing; name the existing ID. Add new evidence to that file when it is inside your write scope, otherwise to the report that names the ID |
    | `dismissed` | Record nothing unless you have evidence against the recorded reason; then record and cite the ID |
-   | `resolved` | Record a regression that cites the resolved ID, with `recurring: true` |
+   | `resolved` | Record a fresh observation; when the resolved ID still exists, cite it and set `recurring: true` |
    | `promoted`, `forwarded` | While the destination is live (an open proposal, a spec not yet `completed`, an upstream report still open), record nothing and name it. Once it is completed, rejected, closed or no longer resolves, record a new item that cites the ID |
 
    If no hit is the same observation, continue with step 3.

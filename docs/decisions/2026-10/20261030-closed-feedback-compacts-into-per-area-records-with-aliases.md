@@ -9,6 +9,8 @@ created_at: 2026-10-30
 
 # [ADR-closed-feedback-compacts-into-per-area-records-with-aliases] Closed feedback compacts into per-area records with aliases
 
+Superseded in part by `ADR-resolved-feedback-retires-by-deletion`: resolved feedback compaction and alias retention.
+
 - **Status**: Accepted
 - **Date**: 2026-10-30
 

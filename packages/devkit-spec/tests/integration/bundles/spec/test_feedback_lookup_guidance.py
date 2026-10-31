@@ -37,7 +37,7 @@ def test_the_matched_status_decides_the_action() -> None:
     for row in (
         ("| `open` |", "record nothing", "name the existing id", "inside your write scope", "report that names the id"),
         ("| `dismissed` |", "record nothing unless", "evidence against the recorded reason", "cite the id"),
-        ("| `resolved` |", "regression", "cites the resolved id", "`recurring: true`"),
+        ("| `resolved` |", "fresh observation", "resolved id still exists", "`recurring: true`"),
         (
             "| `promoted`, `forwarded` |",
             "destination is live",

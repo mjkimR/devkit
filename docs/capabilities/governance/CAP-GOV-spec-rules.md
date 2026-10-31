@@ -50,7 +50,7 @@ commit.
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
-| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, or an alias cited in a quick reference, to the canonical ID. |
+| `RULE-document-reference` | Relation fields hold full IDs of the right kind; references resolve to exactly one document except missing historical feedback IDs; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, or an alias cited in a quick reference, to the canonical ID. |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
 | `RULE-traceability-link` | A use case's `capabilities` and a capability's `usecases` link both ways. | Appends the missing reverse ID. |
@@ -132,8 +132,7 @@ evaluates it. No indexing or graph edges; plain-text IDs and feedback `target` f
 - MUST report: a relation field of the wrong shape, a value that is not a full ID, or an ID of the wrong kind
   (`usecases`, `related_usecases` take `UC`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;
   `plan` takes `PLAN`; proposal `milestone` and milestone `depends_on` take `MS`; unit `depends_on` takes exact PROP/SPEC anchors).
-- MUST report a reference to an ID no document declares or several documents declare; a missing or duplicated ID is
-  fixed by hand (the rule never guesses which document was meant).
+- MUST report a reference to an ID no document declares or several documents declare, except a missing `FB-*` ID in historical documents. Ambiguous historical feedback IDs remain errors. A reported ID is fixed by hand (the rule never guesses which document was meant).
 - MUST report a bracket reference in prose (fixable: converted to the code-span form).
 - MUST report a `PROP-<slug>` reference that does not resolve when exactly one `SPEC-<slug>` exists, declared or as
   an alias, typically added on another branch after the handoff (fixable: rewritten to the canonical ID of that spec,

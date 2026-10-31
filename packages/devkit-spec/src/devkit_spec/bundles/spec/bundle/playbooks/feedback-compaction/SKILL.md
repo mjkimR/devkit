@@ -1,6 +1,6 @@
 ---
 name: feedback-compaction
-description: Compact closed feedback under specs/ into one short record per capability area and outcome that keeps every retired FB ID as an alias, deleting the originals, without changing any outcome.
+description: Delete eligible resolved feedback and compact other closed feedback under specs/ into per-area outcome records with aliases.
 ---
 
 # Feedback compaction
@@ -14,8 +14,7 @@ disposition. Git history keeps the full originals.
 ## Step 1: Collect
 
 List terminal feedback with `uv run devkit docs list feedback --history --all-namespaces -n 0`. Eligible: an item
-under `specs/` whose `status` is `resolved`, `promoted`, `dismissed` or `forwarded`, except an existing
-`FB-compacted-...` record, which Step 3 extends and never deletes. Leave each of these in place and record it with the
+under `specs/` whose `status` is `resolved`, `promoted`, `dismissed` or `forwarded`, including existing resolved `FB-compacted-...` records and their aliases. Existing compact records of other statuses stay in place for Step 3 to extend. Leave each of these in place and record it with the
 reason for the report:
 
 - an `open` item;
@@ -32,7 +31,8 @@ Feedback under `docs/materials/` stays as written, like every material.
 
 ## Step 2: Group
 
-- Group each eligible item by the capability area that covers its `target`: a `docs/capabilities/<area>/` directory,
+- Separate eligible resolved items for deletion without a record or alias. Apply the same exclusion checks to existing resolved compact records and every alias they carry.
+- Group each remaining eligible item by the capability area that covers its `target`: a `docs/capabilities/<area>/` directory,
   or `capabilities/<area>/` of a package namespace. Judge from the target, title and evidence; an item no area covers
   goes to `other`. A misgrouped entry is accepted and may move at a later run: move the entry and its alias to the
   record of the right area and the same status, and delete no file.
@@ -41,6 +41,8 @@ Feedback under `docs/materials/` stays as written, like every material.
   groups.
 
 ## Step 3: Write or extend each record
+
+Write records only for `promoted`, `dismissed` and `forwarded` groups. Never create or extend a resolved compact record.
 
 The record of a group is `FB-compacted-<area>-<status>`. For an area of a package namespace, `<area>` below stands
 for `<namespace>-<area>` in the ID, title and file name alike (`FB-compacted-<namespace>-<area>-<status>`), because the
@@ -76,13 +78,13 @@ aliases:
   never matches a record by a member's values.
 - Write one entry per retired ID, keyed by an H2 of that ID, with exactly the three lines. Take the Symptom from the
   original title. Take the Response from the original's disposition line or section, its `disposition:` field or,
-  for a resolved item without one, the resolving spec bundle's `reconcile.md`.
+  when needed, its resolving `reconcile.md`.
 - Write no dates and no evidence in an entry.
 
 ## Step 4: Apply and verify
 
-1. `git rm` the originals, then run `uv run devkit rules fix` to rewrite alias references in current documents.
-2. Status check: for every deleted ID
+1. `git rm` eligible resolved files, including existing resolved compact records, and the originals of other groups; then run `uv run devkit rules fix` to rewrite alias references in current documents.
+2. Status check: for every deleted ID in a non-resolved group
    (`git diff --no-renames --name-only --diff-filter=D <base> -- specs/`), its `status` at the base
    (`git show <base>:<path>`) equals the `status` of the record that aliases it.
 3. Fidelity review: compare each Response and Reason with the original's disposition or the resolving `reconcile.md`.
@@ -98,7 +100,7 @@ IDs and a one-line candidate decision for the user's decision. Write no ADR and 
 ## Completion conditions
 
 - `uv run devkit rules check` exits `0`.
-- `uv run devkit docs resolve <ID>` prints a record with `alias=<ID>` for every deleted feedback ID.
+- `uv run devkit docs resolve <ID>` prints a record with `alias=<ID>` for every deleted non-resolved feedback ID. Resolved IDs need no alias.
 - The status check and the fidelity review pass.
 - One commit holds the records, deletions and rewrites; its body and the report to the user carry the group map,
   every item left out with its reason and the ADR candidates.

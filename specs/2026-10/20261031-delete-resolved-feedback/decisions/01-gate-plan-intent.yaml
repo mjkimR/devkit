@@ -1,0 +1,7 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-delete-resolved-feedback
+at: '2026-10-31T03:47:47.052902Z'

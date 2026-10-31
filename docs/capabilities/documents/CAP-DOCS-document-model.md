@@ -88,7 +88,7 @@ become graph edges.
    historical for browsing and search whatever bundle holds it: feedback `resolved`, `promoted`, `dismissed` and
    `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and
    search MUST hide it unless `--history` is passed (or `list --status` names its status, `CAP-DOCS-document-lookup`);
-   its ID stays resolvable and its references queryable. Unlike rule 7, the rules keep checking it on every run.
+   its ID stays resolvable and its references queryable while the document exists. Eligible resolved feedback may be deleted during compaction (`ADR-resolved-feedback-retires-by-deletion`). Unlike rule 7, the rules keep checking it on every run.
 
 9. **Steering documents**: `docs/steering/` holds project-wide background that is neither a contract nor evidence
    (`ADR-steering-documents-directory`): one Markdown file per topic directly in the directory, with only `title` and
