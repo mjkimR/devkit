@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:54:46.547893Z'
+status: completed
+summary: Independent review found a P2 wrong-column glossary alias rewrite on masked first cells without an outer pipe.
+findings:
+- issue: Derive glossary columns from original Markdown, not stripped masked text.
+  evidence: document_reference.py _owners strips a masked first cell, causing Avoid alias rewrite in a row without leading pipe; independent in-memory probe reproduced.
+  failure_condition: A recognized glossary row omits its leading pipe and its first cell is fully masked inline code.
+  suggested_action: Determine optional outer delimiters from original source, keep masking for matches, and add Owner/Avoid regressions.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex role emulated; absolute read scope and unchanged snapshot verified; no outside reads.
+checks:
+  tests: PASS rule suite44 and affected2137
+  lint: PASS Ruff Pyright and cumulative CI rules
+diff_scope:
+  base: 7e0f153d9d7a70be0f6861e36ceee6baf205ecc4
+  head: 5276e4a91415e9b8ccad963e046209e5652ff972
