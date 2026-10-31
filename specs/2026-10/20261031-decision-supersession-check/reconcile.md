@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-decision-supersession-check
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
@@ -28,3 +28,9 @@ deferred required work. No remaining authorized scope is deferred.
 At fefc351f, bundle registration contained no decision-supersession checker. The head's seeded inconsistent ADR
 pair produces non-fixable relationship findings; valid whole/partial alias pairs produce none. This is a functional
 coverage comparison, with no performance claim. Before/after evidence is the baseline manifest and rule fixtures.
+
+## Entrypoint selection
+
+Added the dedicated rule implementation as the document-model doorway. The governance capability already names
+its owning governance directory. Rejected receipt, rule-test, bundle-wrapper directory and distribution-test
+candidates because they are deployment evidence or tests rather than reading entrypoints.
