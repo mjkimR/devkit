@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Markdown identity, references, indexing and parsing, including flat terminal milestone storage, and the independent docs bundle of shared formats, writing guidance and document rules."
+summary: "Markdown identity, references, indexing and parsing, including ADR supersession validation, flat terminal milestone storage, and the independent docs bundle of shared formats, writing guidance and document rules."
 area: documents
 status: active
 usecases:
@@ -12,6 +12,7 @@ entrypoints:
   - packages/devkit-core/src/devkit_core/core/frontmatter.py
   - packages/devkit-core/src/devkit_core/core/yaml.py
   - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml
+  - packages/devkit-docs/src/devkit_docs/features/governance/usecases/decision_supersession.py
 created_at: 2026-10-13
 ---
 
@@ -144,8 +145,14 @@ replaced clauses in its outcome; the earlier ADR MUST stay `accepted`, so browsi
 in-force clauses, MUST NOT carry `superseded_by`, and gains one body line per partial superseder, below its heading
 or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."
 (`ADR-immutable-decisions-editable-records`). On a decision, `supersedes` and `superseded_by` are metadata the index
-does not read (section 3.3 rule 6 covers Unit anchors), so no check requires a named ADR to be `superseded`. Checks:
-review only; `RULE-document-reference` resolves the ID an in-part line cites.
+does not read (section 3.3 rule 6 covers Unit anchors), so they do not add reference-graph edges.
+`RULE-decision-supersession` MUST report inconsistent status and `superseded_by`, unresolved or malformed ADR
+replacement metadata, a `supersedes` target without superseded status or a matching partial pointer, and a partial
+pointer without reciprocal `supersedes`. Whole replacements also require the successor to name the earlier ADR.
+The rule checks targeted ADRs, superseded records included, but excludes materials and PADRs. It resolves unique
+aliases without rewriting metadata. A wholly superseded ADR may retain earlier partial pointers; their reciprocal
+relationships remain checked. `RULE-document-reference` also resolves the ID an in-part line cites.
+Review determines whether the clauses are wholly or partly replaced; neither rule interprets decision meaning.
 
 ### 3.2 IDs and Kinds
 
@@ -344,7 +351,7 @@ file selection.
 ## Document asset distribution
 
 The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eight writing instructions,
-nine document rule assets, five shared templates and the docs-pointer. Only docs declares the `docs/steering`
+ten document rule assets, five shared templates and the docs-pointer. Only docs declares the `docs/steering`
 context directory. `devkit get-context docs` lists steering summaries and document instructions.
 `docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.
 The bundle introduces no SDD entry, approval, immutable ADR history or completed-artifact retention obligations.
