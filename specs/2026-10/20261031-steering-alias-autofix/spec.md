@@ -58,3 +58,6 @@ manual correction. Extend its existing deterministic alias repair to these ID-fr
 At 7e0f153d, the existing rule tests demonstrate both input kinds remain unchanged under fix. Retain those
 fixtures with updated expectations and add coverage for bracket Owners, masking, uncertainty, targeting and idempotency.
 The recommended implementation preserves bracket delimiters in Owner cells; canonical bracket formatting is unchanged.
+
+A pytest-managed before/after comparison loaded the 7e0f153d implementation in memory and used identical fixtures.
+The baseline left both steering files unchanged with two findings; the head repaired both with zero findings.

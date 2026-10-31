@@ -508,7 +508,11 @@ def _owners(text: str) -> Iterator[tuple[int, int, str]]:
         if line.number != previous + 1:
             state = ""
         previous = line.number
-        row = line.text.strip().removeprefix("|").removesuffix("|")
+        # Masking can turn the first cell into whitespace; only original source identifies an outer pipe.
+        original = text[line.offset : line.offset + len(line.text)]
+        start = len(original) - len(original.lstrip())
+        start += int(original.lstrip().startswith("|"))
+        row = line.text[start:].rstrip().removesuffix("|")
         raw = row.split("|")
         cells = [cell.strip() for cell in raw]
         if cells == ["Term", "Definition", "Owner", "Avoid", "Code identifiers"]:
@@ -522,8 +526,6 @@ def _owners(text: str) -> Iterator[tuple[int, int, str]]:
             continue
         if len(raw) < 3:
             continue
-        start = len(line.text) - len(line.text.lstrip())
-        start += int(line.text.lstrip().startswith("|"))
         start += sum(len(cell) + 1 for cell in raw[:2])
         for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", raw[2]):
             group = 1 if match.group(1) else 2

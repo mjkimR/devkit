@@ -651,3 +651,14 @@ def test_bracket_owner_alias_fixes_respect_masking_and_uncertainty(tmp_path: Pat
     }
     check(RULE, tmp_path, files, fix=True)
     assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary.replace("[CAP-A-old]", "[CAP-A-new]", 1)
+
+
+@pytest.mark.parametrize("first", ["`term`", "~~term~~", "`code with spaces`"])
+def test_masked_first_cell_without_outer_pipe_does_not_shift_owner(tmp_path: Path, first: str) -> None:
+    glossary = _GLOSSARY_HEADER + first + " | definition | [CAP-A-old] | [CAP-A-old] | code\n"
+    files = {"docs/steering/glossary.md": glossary, "docs/a.md": _aliased("CAP-A-new", "CAP-A-old")}
+    found = check(RULE, tmp_path, files)
+    assert len(found) == 1 and found[0].fixable
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary.replace("[CAP-A-old]", "[CAP-A-new]", 1)
+    assert check(RULE, tmp_path, fix=True) == []
