@@ -28,7 +28,7 @@ created_at: 2026-10-31
 - **Expected / Actual**: Expected register, update, update, sweep, sweep, sweep. Actual first event was update.
 - **Versions**: Review head 5276e4a9 plus the glossary column fix; no scope implementation or test changes.
 - **Conditions**: Affected selector used pytest-xdist with eight workers; frequency beyond this single failure is unknown.
-- **Workarounds Attempted**: Isolated pytest rerun passed, 1 test in 0.32 seconds.
+- **Workarounds Attempted**: Isolated pytest rerun passed, 1 test in 0.32 seconds; the subsequent affected selector passed all 2140 tests.
 - **Related Assets**: `packages/devkit-spec/src/devkit_spec/features/scope/repositories/localfs.py` sorts history events by their `at` value; causation has not been verified.
 
 ## Evidence
@@ -38,4 +38,5 @@ just test-affected: 1 failed, 2139 passed in 20.44s
 FAILED .../scope/test_cli.py::test_two_worktrees_register_query_update_release_and_sweep
 AssertionError: At index 0 diff: 'update' != 'register'
 isolated pytest node: 1 passed in 0.32s
+subsequent just test-affected: 2140 passed in 18.06s
 ```
