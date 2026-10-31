@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:57:12.724430Z'
+status: completed
+review: review-01.yaml
+summary: Implementer fixed P2 using original-source delimiter detection; regressions verify masked first cells preserve Owner and Avoid columns.
+findings:
+- issue: Derive glossary columns from original Markdown, not stripped masked text.
+  evidence: document_reference.py _owners strips a masked first cell, causing Avoid alias rewrite in a row without leading pipe; independent in-memory probe reproduced.
+  failure_condition: A recognized glossary row omits its leading pipe and its first cell is fully masked inline code.
+  suggested_action: Determine optional outer delimiters from original source, keep masking for matches, and add Owner/Avoid regressions.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS rule suite47 affected2140 and baseline comparison1
+  build: PASS Pyright docs
+  lint: PASS Ruff docs
+diff_scope:
+  base: 5276e4a91415e9b8ccad963e046209e5652ff972
+  head: cbe2875922e62ffb32c13de292025e9a81da79c9
