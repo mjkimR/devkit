@@ -572,3 +572,16 @@ def test_the_guide_documents_the_quick_references_and_the_decision_record_fix() 
     assert "`quick_references`" in guide
     for default in ("docs/development/**/*.md", "guides/**/*.md", "packages/*/README.md", "tools/*/README.md"):
         assert f"`{default}`" in guide, default
+
+
+def test_missing_feedback_in_history_is_allowed_but_active_reference_is_reported(tmp_path: Path) -> None:
+    done = "specs/2026-10/20261001-done/spec.md"
+    active = "docs/a.md"
+    files = {
+        done: _doc("SPEC-done", "`FB-missing`\n", status="completed"),
+        active: _doc("CAP-A-a", "`FB-missing`\n"),
+    }
+    violations = check(RULE, tmp_path, files, targets=[done, active])
+    assert len(violations) == 1
+    assert violations[0].file == active
+    assert "FB-missing" in violations[0].message

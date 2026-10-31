@@ -80,7 +80,7 @@ def test_collection_selects_terminal_feedback_under_specs_and_reports_exclusions
     ):
         assert_rule(step, *item)
     assert_rule(step, "`docs/materials/`", "stays as written")
-    assert_rule(step, "except an existing `fb-compacted-...` record", "step 3 extends", "never deletes")
+    assert_rule(step, "existing resolved `fb-compacted-...` records", "other statuses stay in place")
 
 
 # AC-07
@@ -88,6 +88,7 @@ def test_grouping_and_the_record_shape() -> None:
     group = _section("## Step 2: Group")
     assert_rule(group, "capability area", "`docs/capabilities/<area>/`", "`other`", "misgrouped entry is accepted")
     assert_rule(group, "one group per area and status")
+    assert_rule(group, "resolved items for deletion without a record or alias", "every alias")
     assert_rule(group, "group map", "before writing")
     write = _section("## Step 3: Write or extend")
     assert_rule(group, "misgrouped entry", "move the entry and its alias", "delete no file")
@@ -100,6 +101,7 @@ def test_grouping_and_the_record_shape() -> None:
         "`fb-compacted-<namespace>-<area>-<status>`",
     )
     assert_rule(write, "append the new entries and aliases", "in place")
+    assert_rule(write, "never create or extend a resolved compact record")
     assert "`specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`" in text(PLAYBOOK)
     assert_rule(write, "only these seven fields", "every retired id", "every alias a member declared")
     assert_rule(
@@ -126,7 +128,7 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
         _template()
         .replace("<area>", area)
         .replace("<Area>", "Delivery")
-        .replace("<status>", "resolved")
+        .replace("<status>", "dismissed")
         .replace("<One English sentence naming the area's recurring symptoms; the search ranks it.>", "Sweeps.")
         .replace("<YYYY-MM-DD of the first run>", "2026-10-30")
         .replace("FB-<retired-name>", "FB-retired-sweep-miss")
@@ -135,7 +137,7 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
         .replace("<one line: why this outcome>", "The lookup now searches every status")
     )
     assert "<" not in record
-    write(f"specs/2026-10/feedback/20261030-compacted-{area}-resolved.md", record)
+    write(f"specs/2026-10/feedback/20261030-compacted-{area}-dismissed.md", record)
     history = "specs/2026-09/20260901-sweep/spec.md"
     write(
         history,
@@ -144,7 +146,7 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
     )
     index = DocumentIndex.load(workspace)
     found = index.resolve("FB-retired-sweep-miss")
-    assert (found.id, found.kind.value, found.status) == (f"FB-compacted-{area}-resolved", "feedback", "resolved")
+    assert (found.id, found.kind.value, found.status) == (f"FB-compacted-{area}-dismissed", "feedback", "dismissed")
     for rule in ("id_convention", "spec_format", "document_reference"):
         assert check(load_rule(RULES / rule / "rule.py"), workspace) == [], rule
     # Completed spec history is checked only as an explicit target: its retired ID must resolve through the alias.
@@ -154,12 +156,12 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
 # AC-09
 def test_apply_verify_and_completion_conditions() -> None:
     step = _section("## Step 4: Apply and verify")
-    assert_rule(step, "`git rm` the originals", "`uv run devkit rules fix`")
+    assert_rule(step, "`git rm` eligible resolved files", "existing resolved compact records", "`uv run devkit rules fix`")
     assert_rule(step, "status check", "at the base", "equals the `status` of the record that aliases it")
     assert_rule(step, "fidelity review", "disposition", "`reconcile.md`")
     done = _section("## Completion conditions")
     assert_rule(done, "`uv run devkit rules check` exits `0`")
-    assert_rule(done, "`uv run devkit docs resolve <id>`", "`alias=<id>`", "every deleted feedback id")
+    assert_rule(done, "`uv run devkit docs resolve <id>`", "`alias=<id>`", "every deleted non-resolved feedback id", "resolved ids need no alias")
     assert_rule(done, "status check and the fidelity review pass")
     assert_rule(done, "one commit", "records, deletions and rewrites", "group map", "left out", "adr candidates")
 

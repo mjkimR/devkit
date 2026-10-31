@@ -2,7 +2,7 @@
 
 Read when the agreed work addresses named feedback (FB IDs), at entry and again before reporting completion.
 
-Only `open` feedback is actionable. `promoted`, `resolved`, `dismissed` and `forwarded` are terminal: their references stay for traceability, with no disposition, re-verification or edit. A terminal source may resolve to a compact record (`FB-compacted-...`) through its alias after a `feedback-compaction` run; the reference stays as written and the record's entry for that ID keeps its outcome.
+Only `open` feedback is actionable. `promoted`, `resolved`, `dismissed` and `forwarded` are terminal: their references stay for traceability, with no disposition, re-verification or edit. A promoted, dismissed or forwarded terminal source may resolve to a compact record (`FB-compacted-...`) through its alias after a `feedback-compaction` run; the reference stays as written and the record's entry for that ID keeps its outcome. Eligible resolved feedback may be deleted after active references no longer need it.
 
 ## At entry
 
