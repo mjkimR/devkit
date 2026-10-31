@@ -2,7 +2,7 @@
 id: SPEC-delete-resolved-feedback
 title: Retire resolved feedback by deletion
 summary: "Delete eligible resolved feedback during compaction while retaining other terminal outcomes as compact records."
-status: in-progress
+status: completed
 created: 2026-10-31
 related_capabilities: [CAP-HARN-agent-guidance, CAP-DLV-delivery-workflows]
 related_usecases: []
