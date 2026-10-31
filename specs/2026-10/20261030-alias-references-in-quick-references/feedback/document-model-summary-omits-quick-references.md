@@ -8,7 +8,7 @@ target: CAP-DOCS-document-model
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -43,3 +43,7 @@ CAP-DOCS-document-model section 1: "RULE-document-reference also reads root glos
 steering files through the rules workspace cache"
 CAP-GOV-spec-rules 3.3: "The quick references are a third ID-free input ..."
 ```
+
+## Disposition
+
+- **Disposition**: `docs/capabilities/documents/CAP-DOCS-document-model.md`: resolved as a wording repair adding configured quick references to the summary list of ID-free inputs read by `RULE-document-reference`.

@@ -8,7 +8,7 @@ target: ADR-feedback-lifecycle
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -44,3 +44,7 @@ docs/decisions/2026-10/20261022-feedback-lifecycle.md:89  - `RULE-reconcile-cont
 reconcile_contract.py:1-17  docstring: frontmatter reconcile_id/status/targets, waiver rationale, diff evidence of modified targets; no feedback
 rg -n "feedback" packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/reconcile_contract/  -> no feedback assertions
 ```
+
+## Disposition
+
+- **Disposition**: `docs/decisions/2026-10/20261022-feedback-lifecycle.md`: resolved as a wording repair correcting the Confirmation section to state that source-feedback resolution is verified by review at completion and `RULE-document-reference` verifies feedback ID resolution.

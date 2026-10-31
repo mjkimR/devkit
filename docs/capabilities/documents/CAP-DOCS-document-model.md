@@ -24,8 +24,9 @@ each other. The devkit-docs wheel owns it (`ADR-document-package`): `devkit_docs
 as a workspace index built from the files on every load, reusing a file's parse result, also between processes, only
 while its path and text are unchanged. The lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
-`RULE-document-reference` also reads root glossary Owner cells and the IDs cited in steering files through the rules
-workspace cache; these files stay ID-free and unindexed, and their references do not become graph edges.
+`RULE-document-reference` also reads root glossary Owner cells, the IDs cited in steering files and configured quick
+references through the rules workspace cache; these files stay ID-free and unindexed, and their references do not
+become graph edges.
 
 ## 2. Scope & Boundary
 

@@ -86,4 +86,4 @@ duplicates tracking and confuses feedback closure with implementation completion
 
 - `packages/devkit-spec/tests/integration/features/proposals/test_proposal_feedback.py` covers the feedback states
   (`open`, `promoted`, `resolved`, `dismissed`, `forwarded`) and that only `open` items are carried as actionable.
-- `RULE-reconcile-contract` and its tests check source-feedback resolution at completion.
+- Review only for source-feedback resolution at completion; `RULE-document-reference` checks feedback ID resolution.

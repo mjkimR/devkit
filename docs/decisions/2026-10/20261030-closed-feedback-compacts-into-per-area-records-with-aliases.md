@@ -62,8 +62,9 @@ aliases.
   `capabilities/<area>/`) that covers their target, judged by the run; an item no area covers goes to `other`. A
   misgrouped entry is accepted and may move at a later run. Lookup never depends on the grouping.
 - Each group is one `feedback` record, `FB-compacted-<area>-<status>` (`FB-compacted-<namespace>-<area>-<status>` in a
-  package namespace), at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` on its first run. A later
-  run appends its entries to the existing record of the same area and status in place.
+  package namespace), at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`
+  (`<YYYYMMDD>-compacted-<namespace>-<area>-<status>.md` in a package namespace) on its first run. A later run appends
+  its entries to the existing record of the same area and status in place.
 - The record's frontmatter holds only `id`, `title`, `summary` (the area's recurring symptoms, which the search ranks),
   `target` (the area directory), the group's terminal `status`, `created_at` of the first run and `aliases:` listing
   every retired ID and every alias a member declared. It carries no observation fields (`scope`, `kind`, `category`,

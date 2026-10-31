@@ -8,7 +8,7 @@ target: ADR-closed-feedback-compacts-into-per-area-records-with-aliases
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -48,3 +48,7 @@ created_at: 2026-10-30
 review-01 finding 1 probe: 'Frontmatter id is "FB-compacted-pkg-delivery-resolved" but the path requires "FB-compacted-delivery-resolved"'
 reconcile-check-01 finding 1 (P3): the ADR path omits the namespace segment
 ```
+
+## Disposition
+
+- **Disposition**: `docs/decisions/2026-10/20261030-closed-feedback-compacts-into-per-area-records-with-aliases.md`: resolved as a wording repair specifying the package-namespaced file name `<YYYYMMDD>-compacted-<namespace>-<area>-<status>.md`.
