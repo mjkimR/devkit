@@ -296,8 +296,7 @@ act on the matched status (`ADR-recording-looks-up-existing-feedback-of-every-st
 the same observation when it describes the same symptom of the same asset or behavior, whatever its `target` wording;
 no search score decides. A compact record hit is decided by its entry that matches the observation. `open` records
 nothing and names the existing ID (new evidence goes into that file inside the write scope, otherwise into the
-report); `dismissed` records nothing unless evidence contradicts the recorded reason; `resolved` records a regression
-citing the ID with `recurring: true`; `promoted` and `forwarded` record nothing while the destination is live and a new
+report); `dismissed` records nothing unless evidence contradicts the recorded reason; `resolved` records a fresh observation, citing an existing resolved ID with `recurring: true` when available; `promoted` and `forwarded` record nothing while the destination is live and a new
 item citing the ID once it ended or no longer resolves. This lookup replaced the sweep's equal-`target`
 deduplication against open items; a sweep reports the matched IDs as duplicates. Source guidance checks:
 `packages/devkit-spec/tests/integration/bundles/spec/test_feedback_lookup_guidance.py`.
@@ -327,7 +326,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | `sdd-baseline` | Verify the user-selected retained adaptive-development product through current documents, implementation and actual checks, then activate SDD under an exact-effects user decision; package selection is preparation, not activation (`CAP-DLV-sdd-baseline-adoption`). |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision; above 5 open items, on a host that runs it natively, the read-only `triage` role groups and recommends from a clean checkout. |
 | `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, without changing any decision (`ADR-immutable-decisions-editable-records`). |
-| `feedback-compaction` | Only when the user invokes or confirms it, at `session` depth: compact terminal feedback under `specs/` into one record per capability area and status, `FB-compacted-<area>-<status>` at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` (`<namespace>-<area>` in a package namespace), whose entries carry Symptom, Response and Reason and whose `aliases` keep every retired ID resolvable; it leaves cited items, items of incomplete specs or unmerged branches, invalid files and materials in place, changes no outcome, checks status and Response fidelity, and lists ADR candidates for the user without writing them (`ADR-closed-feedback-compacts-into-per-area-records-with-aliases`; `packages/devkit-spec/tests/integration/bundles/spec/test_feedback_compaction_guidance.py`). |
+| `feedback-compaction` | When invoked or confirmed by the user, delete eligible resolved feedback, including resolved compact records and aliases. Compact promoted, dismissed and forwarded feedback into per-area, same-status records with aliases. Protect current references, incomplete work, unmerged branches, invalid files and materials. Verify status and fidelity for compacted outcomes (`ADR-resolved-feedback-retires-by-deletion`). |
 
 ### 4.6 Templates
 

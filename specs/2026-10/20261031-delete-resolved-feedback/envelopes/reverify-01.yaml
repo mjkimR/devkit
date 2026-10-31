@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T03:51:50.432201Z'
+status: completed
+review: review-01.yaml
+summary: ''
+findings:
+- issue: Historical feedback exemption suppresses ambiguous references.
+  evidence: document_reference.py returns a problem for duplicate IDs and aliases as well as missing IDs.
+  failure_condition: A historical reference has multiple declarations and the ambiguity is silently accepted.
+  suggested_action: Limit the exemption to missing IDs and test ambiguity.
+  resolution: resolved
+  severity: P2
+- issue: Existing compact record migration lacks a protected-alias scenario.
+  evidence: The guidance tests do not exercise existing resolved records with protected aliases.
+  failure_condition: A resolved compact record referenced by active work is deleted despite protection.
+  suggested_action: Test eligibility and protection for existing records and aliases.
+  resolution: resolved
+  severity: P2
+checks: {}

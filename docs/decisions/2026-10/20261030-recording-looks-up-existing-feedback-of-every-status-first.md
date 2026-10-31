@@ -9,6 +9,8 @@ created_at: 2026-10-30
 
 # [ADR-recording-looks-up-existing-feedback-of-every-status-first] Recording looks up existing feedback of every status first
 
+Superseded in part by `ADR-resolved-feedback-retires-by-deletion`: handling of recurring resolved observations.
+
 - **Status**: Accepted
 - **Date**: 2026-10-30
 
