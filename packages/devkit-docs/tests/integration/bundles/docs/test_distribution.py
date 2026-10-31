@@ -15,6 +15,7 @@ from distsupport.guidance import assert_rule
 BUNDLE = Path(__file__).resolve().parents[4] / "src/devkit_docs/bundles/docs/bundle"
 RULES = {
     "document-reference",
+    "decision-supersession",
     "id-convention",
     "spec-format",
     "traceability-link",

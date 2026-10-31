@@ -2,7 +2,7 @@
 id: SPEC-decision-supersession-check
 title: Validate decision supersession consistency
 summary: "Report inconsistent whole and partial ADR supersession relationships without automatic edits."
-status: planned
+status: in-progress
 created: 2026-10-31
 related_capabilities: [CAP-DOCS-document-model, CAP-GOV-spec-rules]
 related_usecases: []
