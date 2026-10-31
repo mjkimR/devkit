@@ -2,7 +2,7 @@
 id: PROP-delete-resolved-feedback
 title: Retire resolved feedback by deletion
 summary: "Deletes resolved feedback outright during feedback compaction instead of preserving summarized records and aliases, accepting that pytest tests prevent regressions and git history retains evidence."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-31
 target_area: delivery/
 priority: high                        # critical | high | medium | low
