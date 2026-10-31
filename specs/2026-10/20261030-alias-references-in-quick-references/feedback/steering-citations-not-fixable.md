@@ -8,7 +8,7 @@ target: RULE-document-reference
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -45,3 +45,7 @@ Inconsistent fix coverage between two ID-free inputs of the same rule.
 test_ids_cited_in_steering_files_resolve_without_fixes_or_edges: product.md unchanged after fix=True
 test_an_alias_cited_in_a_quick_reference_is_fixed: quick references rewritten by fix=True
 ```
+
+- **Disposition**: `SPEC-steering-alias-autofix`: steering code-span and glossary Owner aliases now receive
+  deterministic fixes preserving delimiters and table columns; deployed rule suite 47 tests and affected suite
+  2140 tests pass. Independent review's masked-first-cell defect was fixed and regression-verified.
