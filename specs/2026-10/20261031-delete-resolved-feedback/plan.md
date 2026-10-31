@@ -2,22 +2,17 @@
 id: PLAN-delete-resolved-feedback
 spec: SPEC-delete-resolved-feedback
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-delete-resolved-feedback` Retire resolved feedback by deletion
+# Technical Plan: `SPEC-delete-resolved-feedback`
 
-## 1. Architecture Overview & Impact
-- Target Area: delivery/
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+The resolved-feedback portions of `ADR-closed-feedback-compacts-into-per-area-records-with-aliases` and `ADR-recording-looks-up-existing-feedback-of-every-status-first` require a superseding decision. Active references remain strict; historical unresolved feedback references are deliberately exempt.
 
-### Planned Boundaries:
-- `docs/capabilities/delivery/`
-- `packages/devkit-spec/`
-- `packages/devkit-docs/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `docs/decisions/`
+The spec bundle owns compaction and recording guidance. The docs package owns reference validation. No new feature dependencies are needed. Reconcile capability contracts and decision records after implementation.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 6. Verification & Test Plan
+
+Test guidance for both deletion and retained outcomes, and test the reference rule against historical and active documents. Run relevant tests, `just lint-check`, `just check`, `just test-affected`, and governance checks.
