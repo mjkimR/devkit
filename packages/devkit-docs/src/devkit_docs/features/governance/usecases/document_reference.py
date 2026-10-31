@@ -292,7 +292,12 @@ class DocumentReferenceRule(BaseRule):
         if problem is None:
             self._alias(index, document, ref, historical, add)
             return
-        if historical and ref.target.startswith("FB-"):
+        if (
+            historical
+            and ref.target.startswith("FB-")
+            and not index.by_id.get(ref.target)
+            and not index.by_alias.get(ref.target)
+        ):
             return
         spec = _handed_off(index, ref.target)
         if spec is not None:

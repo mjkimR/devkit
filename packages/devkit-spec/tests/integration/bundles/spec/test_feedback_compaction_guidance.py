@@ -156,12 +156,20 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
 # AC-09
 def test_apply_verify_and_completion_conditions() -> None:
     step = _section("## Step 4: Apply and verify")
-    assert_rule(step, "`git rm` eligible resolved files", "existing resolved compact records", "`uv run devkit rules fix`")
+    assert_rule(
+        step, "`git rm` eligible resolved files", "existing resolved compact records", "`uv run devkit rules fix`"
+    )
     assert_rule(step, "status check", "at the base", "equals the `status` of the record that aliases it")
     assert_rule(step, "fidelity review", "disposition", "`reconcile.md`")
     done = _section("## Completion conditions")
     assert_rule(done, "`uv run devkit rules check` exits `0`")
-    assert_rule(done, "`uv run devkit docs resolve <id>`", "`alias=<id>`", "every deleted non-resolved feedback id", "resolved ids need no alias")
+    assert_rule(
+        done,
+        "`uv run devkit docs resolve <id>`",
+        "`alias=<id>`",
+        "every deleted non-resolved feedback id",
+        "resolved ids need no alias",
+    )
     assert_rule(done, "status check and the fidelity review pass")
     assert_rule(done, "one commit", "records, deletions and rewrites", "group map", "left out", "adr candidates")
 
@@ -197,3 +205,30 @@ def test_neighbouring_guidance_points_to_the_compact_form() -> None:
 def test_the_playbook_cites_no_repository_document() -> None:
     cited = set(REPOSITORY_ID.findall(raw(PLAYBOOK)))
     assert cited == {"FB-compacted-"}, cited
+
+
+def test_existing_resolved_compact_alias_references_remain_visible(workspace: Path, write: Write) -> None:
+    record = (
+        _template()
+        .replace("<area>", "delivery")
+        .replace("<Area>", "Delivery")
+        .replace("<status>", "resolved")
+        .replace("<One English sentence naming the area's recurring symptoms; the search ranks it.>", "Sweeps.")
+        .replace("<YYYY-MM-DD of the first run>", "2026-10-30")
+        .replace("FB-<retired-name>", "FB-retired-sweep-miss")
+        .replace("<the original title's words>", "A sweep missed a duplicate")
+        .replace("<the outcome with its spec, proposal, rule, ADR or report destination>", "Fixed")
+        .replace("<one line: why this outcome>", "Fixed")
+    )
+    write("specs/2026-10/feedback/20261030-compacted-delivery-resolved.md", record)
+    write(
+        "docs/a.md",
+        "---\nid: CAP-A-a\ntitle: A\nsummary: A.\nstatus: active\n---\n# [CAP-A-a] A\n\n`FB-retired-sweep-miss`\n",
+    )
+    index = DocumentIndex.load(workspace)
+    assert "CAP-A-a" in index.incoming("FB-compacted-delivery-resolved")
+    collect = _section("## Step 1: Collect")
+    group = _section("## Step 2: Group")
+    assert_rule(collect, "current document outside this run's deletions")
+    assert_rule(collect, "unmerged local branch")
+    assert_rule(group, "same exclusion checks", "every alias")

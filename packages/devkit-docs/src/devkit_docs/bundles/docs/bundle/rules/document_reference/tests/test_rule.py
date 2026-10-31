@@ -585,3 +585,14 @@ def test_missing_feedback_in_history_is_allowed_but_active_reference_is_reported
     assert len(violations) == 1
     assert violations[0].file == active
     assert "FB-missing" in violations[0].message
+
+
+def test_ambiguous_feedback_in_targeted_history_remains_an_error(tmp_path: Path) -> None:
+    done = "specs/2026-10/20261001-done/spec.md"
+    files = {
+        done: _doc("SPEC-done", "`FB-retired`\n", status="completed"),
+        "specs/2026-10/feedback/20261001-a.md": _aliased("FB-a", "FB-retired", status="resolved"),
+        "specs/2026-10/feedback/20261001-b.md": _aliased("FB-b", "FB-retired", status="resolved"),
+    }
+    violations = check(RULE, tmp_path, files, targets=[done])
+    assert any("FB-retired is an alias declared by 2 documents" in v.message for v in violations)
