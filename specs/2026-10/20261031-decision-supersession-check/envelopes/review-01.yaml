@@ -1,0 +1,28 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:41:53.379036Z'
+status: completed
+summary: Independent code review found two P2 valid-document false positives.
+findings:
+- issue: Historical partial pointers are rejected after a later whole replacement.
+  evidence: decision_supersession.py:107-109; independent in-memory probe reproduced valid superseded ADR failure.
+  failure_condition: An ADR is partly replaced and later wholly superseded while retaining the earlier partial pointer.
+  suggested_action: Permit historical partial pointers on wholly superseded ADRs and test reciprocity.
+  resolution: open
+  severity: P2
+- issue: Material examples receive supersession authoring errors.
+  evidence: decision_supersession.py:53-55; independent probe contradicts CAP-GOV-spec-rules material exemption.
+  failure_condition: Root or nested material carries an ADR ID with illustrative incomplete metadata.
+  suggested_action: Skip is_material paths and add root and nested regression tests.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated projection; absolute-path read scope and unchanged 2e4cd0f539587f80b4120904efe0ff78c70910a1 snapshot enforce boundaries.
+checks:
+  tests: PASS 2130 affected tests and 19 deployed rule tests
+  lint: PASS lint-check docs, Pyright and cumulative CI rules
+diff_scope:
+  base: fefc351f315e1657a07ce13378cd3810bf84f279
+  head: 3e5000ec8417f03807398298cc9fce7aeb2c5ed1
