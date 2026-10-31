@@ -1,28 +1,22 @@
 ---
-id: PROP-delete-resolved-feedback
+id: SPEC-delete-resolved-feedback
 title: Retire resolved feedback by deletion
-summary: "Deletes resolved feedback outright during feedback compaction instead of preserving summarized records and aliases, accepting that pytest tests prevent regressions and git history retains evidence."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-31
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - docs/capabilities/delivery/
-    - packages/devkit-spec/
-    - packages/devkit-docs/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Deletes resolved feedback outright during feedback compaction instead of preserving summarized records and aliases, accepting that pytest tests prevent regressions and git history retains evidence.
+status: planned
+created: 2026-10-31
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-delete-resolved-feedback] Retire resolved feedback by deletion
+# [SPEC-delete-resolved-feedback] Retire resolved feedback by deletion
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-delete-resolved-feedback on 2026-10-31.
+
+### 1. Background & Hypothesis
 
 The recent feedback compaction feature (`SPEC-feedback-dedup-and-compaction`, `ADR-closed-feedback-compacts-into-per-area-records-with-aliases`) introduced the `feedback-compaction` playbook, which groups closed feedback across all terminal statuses (`resolved`, `promoted`, `dismissed`, `forwarded`) into per-area summary records (`FB-compacted-<area>-<status>`) while preserving retired IDs as aliases.
 
@@ -35,7 +29,26 @@ Retaining summarized `FB-compacted-<area>-resolved` records and aliases imposes 
 
 Core hypothesis: Eliminating `FB-compacted-<area>-resolved` records and deleting `resolved` feedback outright during `feedback-compaction` simplifies the feedback ledger and compaction playbook, eliminates unnecessary summary records, and avoids artificial alias lookups, while requiring minimal adjustments to governance reference rules.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Retire resolved feedback by deletion so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: How does `RULE-document-reference` handle deleted `FB-*` IDs cited in historical and active documents?
   - *Finding*: Completed spec bundles (`DocumentIndex.is_historical`) are already excluded from default governance checks by `reportable()`. When a historical spec is explicitly targeted (e.g. `devkit rules check specs/.../spec.md`), `document_reference.py` already exempts handed-off proposals via `if historical: return`. Adding a matching exemption for historical `FB-*` references (`if historical and ref.target.startswith("FB-"): return`) ensures reference checks stay clean without needing alias records. Active documents citing `FB-*` (only 9 current documents across the entire repository) can reference the resolving `SPEC-*` ID or use plain text.
@@ -44,7 +57,7 @@ Core hypothesis: Eliminating `FB-compacted-<area>-resolved` records and deleting
 - **Q3**: How does outright deletion affect feedback lookup before recording (`ADR-recording-looks-up-existing-feedback-of-every-status-first`)?
   - *Finding*: `spec-feedback` searches existing feedback with `devkit docs search --kind feedback --history -n 5`. Removing `resolved` records means the search will no longer return resolved hits. If an issue recurs, it is recorded as a clean new observation (or bugfix) rather than requiring the recorder to determine whether it is a `recurring: true` regression citing a retired summary entry.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - **Compaction Playbook (`feedback-compaction`) update**:
   - Step 1 (Collect): Continues to collect terminal feedback under `specs/`, but partitions `resolved` items separately from `promoted`, `dismissed`, and `forwarded`.
@@ -65,7 +78,8 @@ Core hypothesis: Eliminating `FB-compacted-<area>-resolved` records and deleting
   - Deleting feedback files belonging to uncompleted spec bundles or unmerged local branches.
   - Automatic compaction runs without explicit user invocation or confirmation.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr delete-resolved-feedback "<title>" --summary "<Y-statement>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/.
@@ -75,3 +89,4 @@ Core hypothesis: Eliminating `FB-compacted-<area>-resolved` records and deleting
 - On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
 -->
+
