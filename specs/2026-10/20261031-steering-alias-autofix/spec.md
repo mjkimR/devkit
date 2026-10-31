@@ -2,7 +2,7 @@
 id: SPEC-steering-alias-autofix
 title: Fix aliases in steering citations and glossary owners
 summary: "Rewrite uniquely resolved aliases in steering code-span citations and glossary Owner cells while preserving surrounding content."
-status: planned
+status: in-progress
 created: 2026-10-31
 related_capabilities: [CAP-GOV-spec-rules]
 related_usecases: []

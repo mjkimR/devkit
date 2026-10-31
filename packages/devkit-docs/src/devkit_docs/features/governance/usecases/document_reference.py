@@ -350,44 +350,31 @@ class DocumentReferenceRule(BaseRule):
             return [], set()
         found: list[Violation] = []
         examined: set[tuple[int, str]] = set()
-        state, previous = "", 0
-        for line in visible_lines(text):
-            if line.number != previous + 1:
-                state = ""
-            previous = line.number
-            cells = line.text.strip().removeprefix("|").removesuffix("|").split("|")
-            cells = [cell.strip() for cell in cells]
-            if cells == ["Term", "Definition", "Owner", "Avoid", "Code identifiers"]:
-                state = "header"
-                continue
-            if state == "header":
-                state = "rows" if len(cells) == 5 and all(re.fullmatch(r":?-{3,}:?", c) for c in cells) else ""
-                continue
-            if state != "rows" or "|" not in line.text:
-                state = ""
-                continue
-            # Markdown rows may omit trailing cells or include surplus ones; the header fixes Owner at column 3.
-            owner = cells[2] if len(cells) > 2 else ""
-            for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", owner):
-                target = match.group(1) or match.group(2)
-                examined.add((line.number, target))
-                problem = _resolve_problem(index, target)
-                if problem is None and (canonical := index.canonical_id(target)) != target:
-                    problem = f"Owner {target} is an alias of {canonical}; name `{canonical}`"
-                if problem:
-                    found.append(
-                        Violation(
-                            rule_id=self.id,
-                            file=path,
-                            line=line.number,
-                            message=problem,
-                            remediation="Correct the glossary Owner ID or give its intended document a unique ID",
-                        )
+        for number, _, target in _owners(text):
+            examined.add((number, target))
+            problem = _resolve_problem(index, target)
+            alias = problem is None and index.canonical_id(target) != target
+            if alias:
+                problem = (
+                    f"Owner {target} is an alias of {index.canonical_id(target)}; name `{index.canonical_id(target)}`"
+                )
+            if problem:
+                found.append(
+                    Violation(
+                        rule_id=self.id,
+                        file=path,
+                        line=number,
+                        message=problem,
+                        remediation=f"Run `{FIX_COMMAND}` to replace the alias"
+                        if alias
+                        else "Correct the glossary Owner ID or give its intended document a unique ID",
+                        fixable=alias,
                     )
+                )
         return found, examined
 
     def _steering(self, ctx: RuleContext, index: DocumentIndex, examined: set[tuple[int, str]]) -> list[Violation]:
-        """Resolve the backtick-quoted IDs of the ID-free steering files, without fixes or graph edges."""
+        """Resolve the backtick-quoted IDs of the ID-free steering files; aliases are fixable without graph edges."""
         found: list[Violation] = []
         for file in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",)):
             path = ctx.relative_path(file)
@@ -400,8 +387,11 @@ class DocumentReferenceRule(BaseRule):
                 if (number, target) in examined:
                     continue
                 problem = _resolve_problem(index, target)
-                if problem is None and (canonical := index.canonical_id(target)) != target:
-                    problem = f"{target} is an alias of {canonical}; name `{canonical}`"
+                alias = problem is None and index.canonical_id(target) != target
+                if alias:
+                    problem = (
+                        f"{target} is an alias of {index.canonical_id(target)}; name `{index.canonical_id(target)}`"
+                    )
                 if problem:
                     found.append(
                         Violation(
@@ -410,7 +400,10 @@ class DocumentReferenceRule(BaseRule):
                             line=number,
                             column=column + 1,
                             message=problem,
-                            remediation="Correct the cited ID or give its intended document a unique ID",
+                            remediation=f"Run `{FIX_COMMAND}` to replace the alias"
+                            if alias
+                            else "Correct the cited ID or give its intended document a unique ID",
+                            fixable=alias,
                         )
                     )
         return found
@@ -490,15 +483,62 @@ class DocumentReferenceRule(BaseRule):
             if updated != text:
                 ctx.cache.write_text(document.path, updated, dry_run=ctx.dry_run)
                 changed.append(document.path)
-        for path in self._quick_references(ctx, index):
+        steering = [
+            path
+            for file in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",))
+            if (path := ctx.relative_path(file)) is not None and _is_steering(path) and ctx.is_file_targeted(path)
+        ]
+        for path in [*steering, *self._quick_references(ctx, index)]:
             text = ctx.cache.read_text_strict(path)
             if text is None:
                 continue
             updated = _rewrite_citations(text, index)
+            if path == GLOSSARY:
+                updated = _rewrite_owners(updated, index)
             if updated != text:
                 ctx.cache.write_text(path, updated, dry_run=ctx.dry_run)
                 changed.append(path)
         return changed
+
+
+def _owners(text: str) -> Iterator[tuple[int, int, str]]:
+    """Line number, absolute ID offset and ID of references in recognized glossary Owner cells."""
+    state, previous = "", 0
+    for line in visible_lines(text):
+        if line.number != previous + 1:
+            state = ""
+        previous = line.number
+        row = line.text.strip().removeprefix("|").removesuffix("|")
+        raw = row.split("|")
+        cells = [cell.strip() for cell in raw]
+        if cells == ["Term", "Definition", "Owner", "Avoid", "Code identifiers"]:
+            state = "header"
+            continue
+        if state == "header":
+            state = "rows" if len(cells) == 5 and all(re.fullmatch(r":?-{3,}:?", c) for c in cells) else ""
+            continue
+        if state != "rows" or "|" not in line.text:
+            state = ""
+            continue
+        if len(raw) < 3:
+            continue
+        start = len(line.text) - len(line.text.lstrip())
+        start += int(line.text.lstrip().startswith("|"))
+        start += sum(len(cell) + 1 for cell in raw[:2])
+        for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", raw[2]):
+            group = 1 if match.group(1) else 2
+            yield line.number, line.offset + start + match.start(group), match.group(group)
+
+
+def _rewrite_owners(text: str, index: DocumentIndex) -> str:
+    for _, start, target in reversed(list(_owners(text))):
+        if (
+            _resolve_problem(index, target) is None
+            and (canonical := index.canonical_id(target)) != target
+            and text[start : start + len(target)] == target
+        ):
+            text = text[:start] + canonical + text[start + len(target) :]
+    return text
 
 
 def _is_steering(path: str) -> bool:

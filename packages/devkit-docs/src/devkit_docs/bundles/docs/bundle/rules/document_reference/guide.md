@@ -16,12 +16,12 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - **Root glossary Owners**: additionally, `docs/steering/glossary.md` is checked without adding an ID or indexing it.
   In five-column tables headed `Term | Definition | Owner | Avoid | Code identifiers`, followed by a Markdown
   separator row, full IDs in backticks or brackets in the `Owner` cell must resolve uniquely. Empty owners and
-  non-reference text are allowed. Only resolution is checked, with no glossary autofix or reference-graph edges;
+  non-reference text are allowed. Uniquely resolving aliases are fixable without changing the reference delimiters or table layout; there are no reference-graph edges;
   legacy tables are outside this extension. The header fixes the Owner column even when rows omit trailing cells or
   add surplus cells. The same prose masking, targeting, exclusions and snapshot cache apply.
 - **Steering files**: every backtick-quoted full ID in the visible text of the Markdown files directly in
   `docs/steering/` (other than `README.md`), the glossary included, must resolve uniquely and must not be an alias.
-  These files have no ID and stay out of the index: no autofix and no reference-graph edges. An ID already checked
+  These files have no ID and stay out of the index; uniquely resolving code-span aliases are fixable without reference-graph edges. An ID already checked
   as a glossary Owner on the same line is reported once.
 - **Quick references**: every backtick-quoted full ID in the visible text of the ID-free Markdown files the
   `quick_references` setting matches (by default developer references, installation guides and package and tool
@@ -63,8 +63,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   by <n> documents: <paths>`; or an alias that several documents declare: `<ID> is an alias declared by <n>
   documents: <paths>`.
 - A reference written with an alias (fixable): `` <alias> is an alias of <ID>; reference `<ID>` ``. A root glossary
-  Owner naming an alias (not fixed): `` Owner <alias> is an alias of <ID>; name `<ID>` ``; another ID cited in a
-  steering file (not fixed): `` <alias> is an alias of <ID>; name `<ID>` ``. An alias cited in a quick reference
+  Owner naming an alias (fixable): `` Owner <alias> is an alias of <ID>; name `<ID>` ``; another ID cited in a
+  steering file (fixable): `` <alias> is an alias of <ID>; name `<ID>` ``. An alias cited in a quick reference
   (fixable) reads like one in a document. An unresolved ID cited in a steering file or a quick reference reads like
   one in a document.
 - A malformed `aliases` field, reported at the item: `aliases must be a list of IDs`, `aliases must contain string
@@ -85,8 +85,9 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - **Autofix**: `devkit rules fix` converts `[ID]` to `` `ID` ``, replaces a handed-off `PROP-<slug>` with the
   canonical ID of `SPEC-<slug>` and an alias reference with the canonical ID, keeping a quoted frontmatter value's
   quote style; decision records (ADRs and PADRs) are rewritten like any current document, and so are the code-span
-  alias citations of the quick references. It never changes a spec's `proposal:` provenance field, an `aliases` entry,
-  a plain-text ID or a steering file, skips completed specs, materials and files that are not valid UTF-8, and writes
+  alias citations of steering files and quick references. It also replaces aliases in root glossary Owner cells,
+  preserving backtick or bracket delimiters and table layout. It never changes a spec's `proposal:` provenance field, an `aliases` entry,
+  a plain-text ID, skips completed specs, materials and files that are not valid UTF-8, and writes
   only the targets when the run names any. A rename spec writes the old IDs as plain text, so the fix leaves its
   mapping table intact.
 - **By hand**: a missing or duplicated ID is fixed by hand; the rule never guesses which document was meant. Find a

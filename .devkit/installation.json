@@ -1712,7 +1712,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "96b0516a0a6fe500f0143467d2c5d3f0a47877c636ee7b3ac63f31eeabed3084"
+      "sha256": "fefa369f131cbd6cfe6c16e736c9f797733e411bebd3d96f57e37ba3a9656641"
     },
     ".devkit/managed/docs/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1720,7 +1720,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "7583ad93e6449df8de95d7b1b4c6b6d02991c3692c5e465a0c95537f6556c7c4"
+      "sha256": "c1688b906f6e4a0695e79fc2a9ca086c5bc03b8b5cc9889f0f1f128f467b4551"
     },
     ".devkit/managed/docs/rules/document_summary/guide.md": {
       "mode": 420,

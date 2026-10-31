@@ -367,16 +367,16 @@ def test_reference_to_a_material_alias_is_fixed(tmp_path: Path) -> None:
     assert (tmp_path / "docs/ref.md").read_text().endswith("`MAT-m`\n")
 
 
-def test_glossary_owner_naming_an_alias_is_reported_not_fixed(tmp_path: Path) -> None:
+def test_glossary_owner_naming_an_alias_is_fixed(tmp_path: Path) -> None:
     glossary = _GLOSSARY_HEADER + "| one | definition | `CAP-A-old` | | |\n"
     files = {"docs/steering/glossary.md": glossary, "docs/a.md": _aliased("CAP-A-new", "CAP-A-old")}
     found = check(RULE, tmp_path, files, targets=["docs/steering/glossary.md"])
     assert _found(found) == [
         ("docs/steering/glossary.md", 3, "Owner CAP-A-old is an alias of CAP-A-new; name `CAP-A-new`")
     ]
-    assert not found[0].fixable
+    assert found[0].fixable
     check(RULE, tmp_path, targets=["docs/steering/glossary.md"], fix=True)
-    assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary
+    assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary.replace("CAP-A-old", "CAP-A-new")
 
 
 def test_cycles_through_aliases(tmp_path: Path) -> None:
@@ -454,7 +454,7 @@ def test_the_old_glossary_path_is_no_longer_read(tmp_path: Path) -> None:
     assert check(RULE, tmp_path, files) == []
 
 
-def test_ids_cited_in_steering_files_resolve_without_fixes_or_edges(tmp_path: Path) -> None:
+def test_ids_cited_in_steering_files_resolve_with_alias_fixes_without_edges(tmp_path: Path) -> None:
     from devkit_docs.features.documents import DocumentIndex
 
     product = (
@@ -476,9 +476,9 @@ def test_ids_cited_in_steering_files_resolve_without_fixes_or_edges(tmp_path: Pa
         ("docs/steering/product.md", 5, "CAP-A-old is an alias of CAP-A-new; name `CAP-A-new`"),
         ("docs/steering/product.md", 5, "no document has the ID CAP-A-missing"),
     ]
-    assert all(not v.fixable for v in found)
+    assert sum(v.fixable for v in found) == 1
     check(RULE, tmp_path, fix=True)
-    assert (tmp_path / "docs/steering/product.md").read_text() == product
+    assert (tmp_path / "docs/steering/product.md").read_text() == product.replace("CAP-A-old", "CAP-A-new")
     index = DocumentIndex.load(tmp_path)
     assert all(not d.path.startswith("docs/steering/") for d in index.documents)
     assert check(RULE, tmp_path, targets=["docs/a.md"]) == []
@@ -596,3 +596,58 @@ def test_ambiguous_feedback_in_targeted_history_remains_an_error(tmp_path: Path)
     }
     violations = check(RULE, tmp_path, files, targets=[done])
     assert any("FB-retired is an alias declared by 2 documents" in v.message for v in violations)
+
+
+@pytest.mark.parametrize("leading", ["|", "", "  |"])
+def test_owner_alias_fixes_preserve_table_spans_and_delimiters(tmp_path: Path, leading: str) -> None:
+    glossary = (
+        _GLOSSARY_HEADER
+        + leading
+        + " term | [CAP-A-old] in definition |  [CAP-A-old] and `CAP-A-old`  | [CAP-A-old] | value | extra |\n"
+        + leading
+        + " short | definition | [CAP-A-old]\n"
+    )
+    files = {"docs/steering/glossary.md": glossary, "docs/a.md": _aliased("CAP-A-longer", "CAP-A-old")}
+    check(RULE, tmp_path, files, fix=True)
+    expected = glossary.replace("  [CAP-A-old] and `CAP-A-old`  ", "  [CAP-A-longer] and `CAP-A-longer`  ").replace(
+        "definition | [CAP-A-old]\n", "definition | [CAP-A-longer]\n"
+    )
+    assert (tmp_path / "docs/steering/glossary.md").read_text() == expected
+    assert _found(check(RULE, tmp_path)) == []
+    assert check(RULE, tmp_path, fix=True) == []
+
+
+def test_steering_fixes_keep_masking_targeting_and_uncertain_references(tmp_path: Path) -> None:
+    body = "`CAP-A-old` [CAP-A-old] `CAP-A-missing` `CAP-A-shared`\n<!-- `CAP-A-old` -->\n```\n`CAP-A-old`\n```\n"
+    files = {
+        "docs/steering/a.md": body,
+        "docs/steering/b.md": body,
+        "docs/a.md": _aliased("CAP-A-new", "CAP-A-old, CAP-A-shared"),
+        "docs/b.md": _aliased("CAP-A-other", "CAP-A-shared"),
+    }
+    check(RULE, tmp_path, files, targets=["docs/steering/a.md"], exclude=["docs/steering/a.md"], fix=True)
+    assert (tmp_path / "docs/steering/a.md").read_text() == body
+    check(RULE, tmp_path, targets=["docs/steering/a.md"], fix=True)
+    assert (tmp_path / "docs/steering/a.md").read_text() == body.replace("`CAP-A-old`", "`CAP-A-new`", 1)
+    assert (tmp_path / "docs/steering/b.md").read_text() == body
+    assert all(not v.fixable for v in check(RULE, tmp_path, targets=["docs/steering/a.md"]))
+
+
+def test_bracket_owner_alias_fixes_respect_masking_and_uncertainty(tmp_path: Path) -> None:
+    glossary = (
+        _GLOSSARY_HEADER
+        + "| term | definition | [CAP-A-old] [CAP-A-missing] [CAP-A-shared] | | |\n"
+        + "\n<!--\n"
+        + _GLOSSARY_HEADER
+        + "| hidden | definition | [CAP-A-old] | | |\n-->\n"
+        + "\n```\n"
+        + _GLOSSARY_HEADER
+        + "| code | definition | [CAP-A-old] | | |\n```\n"
+    )
+    files = {
+        "docs/steering/glossary.md": glossary,
+        "docs/a.md": _aliased("CAP-A-new", "CAP-A-old, CAP-A-shared"),
+        "docs/b.md": _aliased("CAP-A-other", "CAP-A-shared"),
+    }
+    check(RULE, tmp_path, files, fix=True)
+    assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary.replace("[CAP-A-old]", "[CAP-A-new]", 1)
