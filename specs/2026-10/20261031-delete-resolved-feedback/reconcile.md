@@ -2,6 +2,10 @@
 reconcile_id: REC-delete-resolved-feedback
 status: pending
 targets:
+  - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
+    resolution: modified
+  - file: docs/capabilities/documents/CAP-DOCS-document-model.md
+    resolution: modified
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

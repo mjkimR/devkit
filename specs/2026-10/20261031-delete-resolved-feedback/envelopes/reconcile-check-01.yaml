@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T03:53:12.915094Z'
+status: completed
+summary: Independent review found governance and document model contracts requiring updates.
+findings:
+- issue: Governance rule capability and guide omit the historical missing feedback exception.
+  evidence: CAP-GOV-spec-rules requires all references to resolve and the rule guide omits the exception.
+  failure_condition: A historical missing feedback reference is accepted against the documented contract.
+  suggested_action: Update the capability and guide.
+  resolution: open
+  severity: P2
+- issue: Document model promises terminal feedback IDs remain resolvable after deletion.
+  evidence: CAP-DOCS-document-model states terminal IDs stay resolvable.
+  failure_condition: An eligible resolved feedback record is deleted.
+  suggested_action: Limit the promise to retained documents.
+  resolution: open
+  severity: P2
+assumptions:
+- Isolation emulated; read-only review.
+checks:
+  reconciliation: FAIL two findings

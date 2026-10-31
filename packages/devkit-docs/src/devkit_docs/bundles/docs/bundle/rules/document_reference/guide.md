@@ -36,7 +36,7 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - **Completed specs**: files of a spec bundle whose `spec.md` is `completed` (and `done` or `dropped` milestones) are
   history: checked only when named as explicit targets, without the `[ID]`, handoff and alias findings, and never
   rewritten. A handed-off `PROP-<slug>` there, in prose or in `depends_on`, resolves silently through its spec: the
-  reference was valid when written. A `PROP-<slug>` with no matching spec is still reported.
+  reference was valid when written. A `PROP-<slug>` with no matching spec is still reported. A missing `FB-*` ID is allowed in history; ambiguous feedback IDs remain errors.
 - **Aliases**: a document may declare previous or alternate IDs in `aliases`. A
   reference resolves through one canonical mapping: a declared ID always wins, and an alias resolves only when exactly
   one document declares it and no document has it as its ID. A reference written with another document's alias is
