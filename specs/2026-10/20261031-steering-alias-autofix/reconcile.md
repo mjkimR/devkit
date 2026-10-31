@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-steering-alias-autofix
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
     resolution: modified

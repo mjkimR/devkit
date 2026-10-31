@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:58:29.563178Z'
+status: completed
+summary: 'Self verification PASS: CAP-GOV-spec-rules inventory and section3.3 match steering/Owner diagnostics, exact alias span repairs and tested scope; source feedback fully resolved.'
+findings: []
+assumptions:
+- 'Medium effort self-check exception: one package and one capability area; all contract targets and code/test correspondence identified in reconcile.md, no cross-component or interpretive changes.'
+checks:
+  tests: PASS rule suite47 affected2140 baseline comparison1
+  contracts: PASS capability guide implementation and source disposition agree
+diff_scope:
+  base: 7e0f153d9d7a70be0f6861e36ceee6baf205ecc4
+  head: 0149b9fe837914d09f1e074d31212cf6cdc04019
