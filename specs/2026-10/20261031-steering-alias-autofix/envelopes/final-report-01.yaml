@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:59:15.708019Z'
+status: completed
+summary: Steering code-span and glossary Owner aliases now repair deterministically; one independent-review P2 fixed and regression verified, source feedback resolved, capability reconciled.
+findings: []
+assumptions:
+- Local integration fits pull_request=auto; Host retains policy-authorized integration. Codex route emulated with absolute paths and per-operation escalations.
+unverified_areas:
+- One unrelated intermittent scope-history failure retained as FB-scope-history-ordering-intermittent; immediate isolated and affected retries passed, cause unverified.
+checks:
+  tests: PASS just test-affected2140 rule suite47 baseline comparison1
+  build: PASS Pyright docs
+  lint: PASS Ruff docs and cumulative CI rules zero findings
+diff_scope:
+  base: 7e0f153d9d7a70be0f6861e36ceee6baf205ecc4
+  head: 5a23e68b483a7e60bb3e9565e34dcbf6d11791af

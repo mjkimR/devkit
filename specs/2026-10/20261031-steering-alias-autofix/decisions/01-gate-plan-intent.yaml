@@ -1,0 +1,11 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Implement FB-steering-citations-not-fixable: autofix uniquely resolved aliases
+  in steering code-span citations and glossary Owner cells, preserving Markdown layout
+  and existing masking and targeting. Source procedure spec/feedback-hygiene; development
+  medium effort.'
+by: user
+at: '2026-10-31T06:49:31.204241Z'

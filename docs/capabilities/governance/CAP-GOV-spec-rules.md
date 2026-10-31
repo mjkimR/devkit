@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: "Document and SDD lifecycle governance, milestone status/location validation, snapshot targeting and safe fixes, including ADR supersession consistency, lifecycle omissions during adaptive development and retained workflow ownership checks."
+summary: "Document and SDD lifecycle governance, milestone status/location validation, snapshot targeting and safe fixes, including ADR supersession consistency, steering and glossary alias repairs, lifecycle omissions during adaptive development and retained workflow ownership checks."
 area: governance
 status: active
 usecases:
@@ -50,7 +50,7 @@ commit.
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
-| `RULE-document-reference` | Relation fields hold full IDs of the right kind; references resolve to exactly one document except missing historical feedback IDs; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, or an alias cited in a quick reference, to the canonical ID. |
+| `RULE-document-reference` | Relation fields hold full IDs of the right kind; references resolve to exactly one document except missing historical feedback IDs; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, a steering or quick-reference code-span alias, or a glossary Owner alias to the canonical ID. |
 | `RULE-decision-supersession` | ADR whole and partial replacement status, metadata resolution and reciprocal partial pointers agree; historical ADRs checked, materials and PADRs excluded. | none |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
@@ -108,16 +108,21 @@ step or an Interactions Target cites in backticks are ordinary prose references.
 The root glossary `docs/steering/glossary.md` is an additional, ID-free input: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
 IDs in the Owner column MUST resolve to exactly one indexed document. Missing and ambiguous owners produce errors
-at their source line; an Owner naming an alias is reported (not fixed) with the canonical ID. Empty cells and non-reference text are allowed. The header fixes the Owner column;
-rows may omit trailing cells or have surplus cells without moving that column. This extension only validates resolution:
-no autofix, mandatory owners, glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
+at their source line. WHEN an Owner names a uniquely resolved alias, the rule MUST report it as fixable and
+`devkit rules fix` MUST replace only the alias ID, preserving backtick or bracket delimiters, whitespace and table
+layout. Empty cells and non-reference text are allowed. The header fixes the Owner column;
+rows may omit trailing cells or have surplus cells without moving that column. There are no mandatory owners,
+glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
 package glossaries and other ID-free files are outside the Owner check. Existing prose masking, file targeting,
 exclusions and snapshot cache rules apply.
 
 The steering files (the Markdown files directly in `docs/steering/` other than `README.md`, the glossary included)
 are a second ID-free input: every backticked full ID in their visible text MUST resolve to exactly one indexed
-document, and one naming an alias is reported (not fixed) as `` <alias> is an alias of <ID>; name `<ID>` ``. An ID
-the Owner check already examined on the same line is not reported again. No autofix, indexing or graph edges.
+document, and one naming an alias is reported as fixable with `` <alias> is an alias of <ID>; name `<ID>` ``.
+WHEN a steering code-span alias resolves uniquely, `devkit rules fix` MUST replace only its ID with the canonical ID.
+An ID the Owner check already examined on the same line is not reported again. No indexing or graph edges.
+The fix MUST retain existing masking, targeting and exclusion boundaries; missing or ambiguous references stay
+unchanged. A second fix MUST change no file.
 
 The quick references are a third ID-free input: the Markdown files the rule setting `quick_references` matches
 (workspace path patterns in the `**` grammar of `[rules] exclude`; default `docs/development/**/*.md`,
