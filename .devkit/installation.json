@@ -217,6 +217,16 @@
     },
     {
       "bundle": "docs",
+      "id": "decision-supersession",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/docs/rules/decision_supersession/guide.md",
+        ".devkit/managed/docs/rules/decision_supersession/rule.py",
+        ".devkit/managed/docs/rules/decision_supersession/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "docs",
       "id": "id-convention",
       "kind": "rule",
       "paths": [
@@ -1638,7 +1648,7 @@
     },
     ".devkit/managed/docs/bundle.toml": {
       "mode": 420,
-      "sha256": "b9cfcb6d5c718cf6e890387ace3bc261ccfc57bc45ed34b6b43768aa5f8884d0"
+      "sha256": "8d5151d7e3de86e1fe0b0c3be7401450d64701cf7f9ad66847cabfacf777a002"
     },
     ".devkit/managed/docs/guidance/docs-pointer.md": {
       "mode": 420,
@@ -1687,6 +1697,18 @@
     ".devkit/managed/docs/rules/code_entrypoints/tests/test_rule.py": {
       "mode": 420,
       "sha256": "fae6d7a6a33b84987ddf13d619a2576b4b397074a2868dce9ab78203514c81d8"
+    },
+    ".devkit/managed/docs/rules/decision_supersession/guide.md": {
+      "mode": 420,
+      "sha256": "568f33665761aef79a7a4117bc1abf70a26b14a75486fb10d8ffe517c81d0a45"
+    },
+    ".devkit/managed/docs/rules/decision_supersession/rule.py": {
+      "mode": 420,
+      "sha256": "14b986119ed87d2eff9ae29765ae106dc076e8aa610914f4938661f7196b3665"
+    },
+    ".devkit/managed/docs/rules/decision_supersession/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "583236c9f107007a53e5db6d105ec939d6d582112b9d733a6f6ae6bf3521e1d7"
     },
     ".devkit/managed/docs/rules/document_reference/guide.md": {
       "mode": 420,
