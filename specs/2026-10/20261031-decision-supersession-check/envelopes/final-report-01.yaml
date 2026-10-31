@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:45:54.589714Z'
+status: completed
+summary: Delivered report-only ADR supersession validation, deployed through docs:core; independent review findings fixed and reconciliation verified; source FB-decision-supersession-consistency-unchecked resolved.
+findings: []
+assumptions:
+- Medium effort; local integration appropriate under pull_request=auto because no platform review required; Host retains integration authority.
+- No metadata autofix or reference-graph change; semantic replacement coverage remains review-only.
+- Entrypoint derivation retained only the dedicated rule implementation doorway; receipt, tests and wrapper-directory candidates rejected.
+unverified_areas:
+- MCP_REGISTRATION_SHADOWED advisory exists in environment; operation succeeds and no settings change requested.
+checks:
+  tests: PASS just test-affected 2132 tests; deployed RULE-decision-supersession 21 tests
+  build: PASS just check docs (Pyright); bundle registration integration tests
+  lint: PASS just lint-check docs; cumulative rules check --ci --base fefc351f; sync --check; rules fix --dry-run fixed=0
+diff_scope:
+  base: fefc351f315e1657a07ce13378cd3810bf84f279
+  head: f66f17191a75ca8b79ecc5d7925faba681383a35

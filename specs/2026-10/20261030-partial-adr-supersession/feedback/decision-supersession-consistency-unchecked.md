@@ -8,7 +8,7 @@ target: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ (a decis
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-30
 ---
 
@@ -39,3 +39,7 @@ parse.py: supersedes is skipped on documents other than Unit anchors.
 Before SPEC-partial-adr-supersession: 4 partly replaced ADRs were status superseded, 1 accepted ADR carried
 superseded_by, 10 superseders had in-part lines without supersedes, a dozen partial targets lacked a pointer.
 ```
+
+- **Disposition**: `SPEC-decision-supersession-check`: implemented report-only `RULE-decision-supersession`
+  for whole/partial metadata consistency, canonical aliases and reciprocal pointers; verified by 21 deployed rule
+  tests, 2132 affected tests, independent review and regression re-verification. Metadata autofix remains outside scope.

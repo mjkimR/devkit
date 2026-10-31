@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-31T06:43:04.370417Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both independent P2 findings fixed by regression tests: historical pointers and root/nested material exemptions.'
+findings:
+- issue: Historical partial pointers are rejected after a later whole replacement.
+  evidence: decision_supersession.py:107-109; independent in-memory probe reproduced valid superseded ADR failure.
+  failure_condition: An ADR is partly replaced and later wholly superseded while retaining the earlier partial pointer.
+  suggested_action: Permit historical partial pointers on wholly superseded ADRs and test reciprocity.
+  resolution: resolved
+  severity: P2
+- issue: Material examples receive supersession authoring errors.
+  evidence: decision_supersession.py:53-55; independent probe contradicts CAP-GOV-spec-rules material exemption.
+  failure_condition: Root or nested material carries an ADR ID with illustrative incomplete metadata.
+  suggested_action: Skip is_material paths and add root and nested regression tests.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 2132 affected tests; 21 deployed rule tests
+  lint: PASS lint-check docs and Pyright
+diff_scope:
+  base: fefc351f315e1657a07ce13378cd3810bf84f279
+  head: 8971dd27c8d6899b92bfcb483e332516f6df10b4

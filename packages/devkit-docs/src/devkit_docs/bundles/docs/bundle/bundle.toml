@@ -60,6 +60,12 @@ source = "rules/document_reference"
 
 
 [[assets]]
+id = "decision-supersession"
+kind = "rule"
+source = "rules/decision_supersession"
+
+
+[[assets]]
 id = "id-convention"
 kind = "rule"
 source = "rules/id_convention"
@@ -137,6 +143,7 @@ assets = [
     "living-spec-writing",
     "decision-writing",
     "document-reference",
+    "decision-supersession",
     "id-convention",
     "spec-format",
     "traceability-link",

@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: "Document and SDD lifecycle governance, milestone status/location validation, snapshot targeting and safe fixes, with explicit lifecycle omissions during adaptive development and retained workflow ownership checks."
+summary: "Document and SDD lifecycle governance, milestone status/location validation, snapshot targeting and safe fixes, including ADR supersession consistency, lifecycle omissions during adaptive development and retained workflow ownership checks."
 area: governance
 status: active
 usecases:
@@ -19,7 +19,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-Fourteen deterministic rules keep the Living Spec and the feature specs consistent: the `docs` bundle ships the nine
+Fifteen deterministic rules keep the Living Spec and the feature specs consistent: the `docs` bundle ships the ten
 document rules and the `spec` bundle the five spec lifecycle rules. `devkit sync` deploys them with each bundle's `core`
 preset, and devkit's rule engine runs them beside its own rules:
 `devkit rules check` (whole workspace or named targets), `check --staged` (the commit gate), `check --ci --base <ref>`
@@ -51,6 +51,7 @@ commit.
 | Rule | Checks | Fix |
 | --- | --- | --- |
 | `RULE-document-reference` | Relation fields hold full IDs of the right kind; references resolve to exactly one document except missing historical feedback IDs; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, or an alias cited in a quick reference, to the canonical ID. |
+| `RULE-decision-supersession` | ADR whole and partial replacement status, metadata resolution and reciprocal partial pointers agree; historical ADRs checked, materials and PADRs excluded. | none |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
 | `RULE-traceability-link` | A use case's `capabilities` and a capability's `usecases` link both ways. | Appends the missing reverse ID. |
@@ -371,6 +372,25 @@ devkit gives each rule one severity, so the hint is a rule of its own, as `RULE-
   `usecases` entry), else on the use case at the step's line; each Interactions row whose Step cell is empty, on its
   UX document. A use case no UX document lists is never reported. Not fixable.
 
+### 3.17 `RULE-decision-supersession`
+
+1. **Whole replacement**: IF an ADR has `superseded_by` without `status: superseded`, or is superseded without one
+   resolving ADR in `superseded_by`, THEN the rule MUST report a non-fixable error at that field.
+2. **Reciprocity**: WHEN an ADR names a whole successor or a visible partial replacement pointer, the rule MUST
+   require that successor's scalar or list `supersedes` to name the earlier ADR.
+3. **Replacement targets**: WHEN an ADR declares `supersedes`, the rule MUST require each value to resolve uniquely
+   to an ADR whose status is superseded or whose visible partial pointer names the superseder.
+4. **Canonical identity**: The rule MUST compare these relationships through unique canonical alias resolution.
+5. **Evaluation boundaries**: The rule MUST check targeted ADRs including superseded records, exclude root and
+   nested materials and PADRs, and read through the snapshot cache. It MUST NOT rewrite files or add graph edges.
+6. **Partial history**: The rule MUST allow a wholly superseded ADR to retain earlier reciprocal partial pointers.
+   Otherwise a partial-pointer owner MUST stay accepted. Pointer scanning masks code fences, indented code,
+   comments, escapes and struck-out text, using the shared visible-prose scanner.
+
+The rule is deployed with `docs:core`, phase linter and severity error. It has no rule-specific settings.
+Review determines whether the replacement actually covers all or part of an ADR; the rule checks recorded
+relationships. Tests: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/decision_supersession/tests/`.
+
 ## 4. Interfaces & Data Contracts
 
 ### 4.1 Commands (devkit's)
@@ -399,7 +419,7 @@ max_length = 300
 ### 4.3 Packaging
 
 Each rule is a class in a package (`ADR-spec-package-on-devkit`). The document rules (`RULE-code-entrypoints`,
-`RULE-document-reference`, `RULE-document-summary`, `RULE-id-convention`, `RULE-spec-format`,
+`RULE-document-reference`, `RULE-decision-supersession`, `RULE-document-summary`, `RULE-id-convention`, `RULE-spec-format`,
 `RULE-steering-documents`, `RULE-traceability-link`, `RULE-ux-coverage`, `RULE-ux-links`) live in
 `devkit_docs.features.governance.usecases.<name>`, beside the document model they check (`ADR-document-package`);
 the lifecycle rules (`RULE-spec-lifecycle`, `RULE-spec-progress`, `RULE-task-coverage`, `RULE-reconcile-contract`,
@@ -409,7 +429,7 @@ Document rule assets ship in the `docs` bundle; lifecycle rule assets ship in `s
 `rules/<name>/guide.md`, to `.devkit/managed/<owner>/rules/<name>/`. Keeping the logic in the package means one tested
 implementation and a deployed file that never changes when the rule does. A rule whose judgment lives in a bundle
 instruction names it in `related` (`docs:living-spec-writing` for the reference, traceability, summary, steering,
-identifier and lifecycle rules, `docs:contract-authoring` for `RULE-task-coverage`, `docs:ux-writing` and
+identifier and lifecycle rules, `docs:decision-writing` for `RULE-decision-supersession`, `docs:contract-authoring` for `RULE-task-coverage`, `docs:ux-writing` and
 `docs:usecase-writing` for `RULE-ux-links` and `RULE-ux-coverage`), and `devkit rules explain` prints its deployed
 path. `devkit_docs.features.governance` exposes `document_index(ctx)`, `namespaces(ctx)` and the targeting helpers the rules share.
 
@@ -447,7 +467,7 @@ Milestone membership is a scalar existing MS ID on proposal anchors only; legacy
 
 ## Lifecycle applicability during adaptive development
 
-The nine docs rules keep their existing judgments under both approaches. In adaptive development, the five spec lifecycle
+The ten docs rules keep their existing judgments under both approaches. In adaptive development, the five spec lifecycle
 rules (`task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `proposal-boundaries`) apply to explicitly
 SDD workflow-bound ownership, including prior snapshot anchors for changed/deleted bindings and companions.
 Unbound current adaptive-development documents acquire no SDD lifecycle obligation. A rule with no applicable retained Unit
