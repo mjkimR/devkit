@@ -1,0 +1,6 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+at: '2026-10-31T03:33:44.646982Z'
