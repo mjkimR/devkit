@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Implement FB-decision-supersession-consistency-unchecked: report inconsistent
+  ADR supersession metadata and partial pointers, resolve aliases, no autofix. Source
+  procedure spec/feedback-hygiene; development medium effort.'
+by: user
+at: '2026-10-31T06:34:31.634377Z'
