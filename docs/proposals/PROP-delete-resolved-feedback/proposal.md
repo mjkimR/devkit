@@ -49,8 +49,10 @@ Core hypothesis: Eliminating `FB-compacted-<area>-resolved` records and deleting
 - **Compaction Playbook (`feedback-compaction`) update**:
   - Step 1 (Collect): Continues to collect terminal feedback under `specs/`, but partitions `resolved` items separately from `promoted`, `dismissed`, and `forwarded`.
   - Step 3 (Write or extend): Only creates or extends `FB-compacted-<area>-<status>` records for `promoted`, `dismissed`, and `forwarded`. No `FB-compacted-<area>-resolved` records or aliases are produced.
+  - Existing `FB-compacted-<area>-resolved` records are also retired by deletion, including their aliases; apply the same eligibility and reference checks as for individual resolved files. Test this migration on an already compacted ledger.
   - Step 4 (Apply and verify): `resolved` files are deleted via `git rm` outright. Alias verification and status equality checks apply only to compacted groups (`promoted`, `dismissed`, `forwarded`).
 - **Governance Rule (`RULE-document-reference`) update**:
+  - This deliberately gives up detection of misspelled or never-existing unresolved `FB-*` IDs in historical documents; active documents retain strict reference validation. Test both cases. Git history remains the evidence for retired IDs.
   - In `document_reference.py`, permit historical documents (`index.is_historical(document)`) to cite deleted `FB-*` references without reporting unresolved errors when explicitly targeted, mirroring the existing treatment of handed-off proposals.
 - **Feedback Recording Procedure (`spec-feedback`) update**:
   - In `spec-feedback/SKILL.md` and `references/sweep.md`, update the matched status action table: remove special handling for `resolved` hits, or clarify that any recurrence is recorded as a fresh feedback item.

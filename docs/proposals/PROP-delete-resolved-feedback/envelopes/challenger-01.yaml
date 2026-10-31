@@ -1,0 +1,20 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-31T03:35:07.580592Z'
+status: completed
+summary: Existing resolved compact records and historical reference validation need explicit treatment.
+findings:
+- issue: Existing resolved compact records and aliases have no retirement policy.
+  evidence: The compaction playbook extends existing compact records and never deletes them.
+  suggested_action: Define retirement and reference handling for existing compact records.
+  resolution: open
+  severity: P2
+- issue: The historical feedback reference exemption also accepts misspelled or never-existing IDs.
+  evidence: The proposed prefix exemption applies to all unresolved historical FB references.
+  suggested_action: Explicitly assess and document this validation tradeoff.
+  resolution: open
+  severity: P2
+checks:
+  review: PASS
