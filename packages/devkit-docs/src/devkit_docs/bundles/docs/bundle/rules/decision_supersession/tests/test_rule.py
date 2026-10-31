@@ -126,3 +126,24 @@ def test_declared_inputs_cover_snapshot_reads(tmp_path: Path) -> None:
     with opened_files(tmp_path) as opened:
         check(RULE, tmp_path)
     assert all(any(match_path(pattern, name) for pattern in (getattr(RULE, "inputs", None) or ())) for name in opened)
+
+
+def test_historical_partial_pointer_survives_later_whole_replacement(tmp_path: Path) -> None:
+    files = {
+        OLD: _doc(
+            "ADR-old", "superseded_by: ADR-final\n", "Superseded in part by `ADR-new`: retries.\n", status="superseded"
+        ),
+        NEW: _doc("ADR-new", "supersedes: ADR-old\n"),
+        "docs/decisions/final.md": _doc("ADR-final", "supersedes: ADR-old\n"),
+    }
+    assert check(RULE, tmp_path, files) == []
+    files[NEW] = _doc("ADR-new")
+    assert [v.file for v in check(RULE, tmp_path, files)] == [OLD]
+
+
+def test_root_and_nested_materials_are_free_form(tmp_path: Path) -> None:
+    files = {
+        "docs/materials/example.md": _doc("ADR-example", status="superseded"),
+        "specs/x/materials/example.md": _doc("ADR-nested", "supersedes: ADR-missing\n"),
+    }
+    assert check(RULE, tmp_path, files) == []

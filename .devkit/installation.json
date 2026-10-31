@@ -1700,7 +1700,7 @@
     },
     ".devkit/managed/docs/rules/decision_supersession/guide.md": {
       "mode": 420,
-      "sha256": "568f33665761aef79a7a4117bc1abf70a26b14a75486fb10d8ffe517c81d0a45"
+      "sha256": "ff78ed2a95536eb6b21f0a9b7a46fef4874a63ef89f93ab1199ba8bdc5e04eaf"
     },
     ".devkit/managed/docs/rules/decision_supersession/rule.py": {
       "mode": 420,
@@ -1708,7 +1708,7 @@
     },
     ".devkit/managed/docs/rules/decision_supersession/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "583236c9f107007a53e5db6d105ec939d6d582112b9d733a6f6ae6bf3521e1d7"
+      "sha256": "e16ad8569da443da5d68bc0eb028c7ab9b611448c9d25d3de44a314f15f6fa32"
     },
     ".devkit/managed/docs/rules/document_reference/guide.md": {
       "mode": 420,

@@ -11,7 +11,7 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_docs.features.documents import Document, DocumentIndex, is_id
 from devkit_docs.features.documents.models.ids import ID_SOURCE
 from devkit_docs.features.documents.models.markdown import visible_lines
-from devkit_docs.features.governance import document_index, field_line
+from devkit_docs.features.governance import document_index, field_line, is_material
 
 RULE_ID = "RULE-decision-supersession"
 _PARTIAL = re.compile(rf"Superseded in part by `({ID_SOURCE})`")
@@ -51,7 +51,7 @@ class DecisionSupersessionRule(BaseRule):
         index = document_index(ctx)
         found: list[Violation] = []
         for document in index.documents:
-            if not document.id.startswith("ADR-") or not ctx.is_file_targeted(document.path):
+            if is_material(document) or not document.id.startswith("ADR-") or not ctx.is_file_targeted(document.path):
                 continue
             text = ctx.cache.read_text(document.path)
 
@@ -105,8 +105,8 @@ class DecisionSupersessionRule(BaseRule):
                     line,
                 )
         for written, number in _partials(text):
-            if document.status != "accepted":
-                add("an ADR with a partial replacement pointer must stay accepted", number)
+            if document.status not in {"accepted", "superseded"}:
+                add("an ADR with a partial replacement pointer must be accepted or wholly superseded", number)
             successor = _adr(index, written)
             if successor is None:
                 add(f"partial superseder {written} must resolve to one ADR", number)

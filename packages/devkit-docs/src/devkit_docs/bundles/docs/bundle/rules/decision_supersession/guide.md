@@ -3,7 +3,7 @@
 ## Scope
 
 The linter/error rule checks every targeted ADR, including superseded records, through the run's snapshot cache.
-PADRs and other document kinds are outside its scope. Aliases resolve through the document index's unique canonical
+Materials, PADRs and other document kinds are outside its scope. Aliases resolve through the document index's unique canonical
 mapping. `supersedes` accepts one ADR ID or a list; `superseded_by` accepts one ADR ID.
 
 ## Findings and remediation
@@ -12,7 +12,8 @@ mapping. `supersedes` accepts one ADR ID or a list; `superseded_by` accepts one 
 2. In that successor's `supersedes`, name the replaced ADR.
 3. For every `supersedes` target, retain either `status: superseded` or a visible partial pointer naming the successor.
 4. For partial replacements, keep the earlier ADR accepted and write `Superseded in part by` followed by the successor's
-   backtick-quoted ADR ID. In that successor's `supersedes`, name the earlier ADR.
+   backtick-quoted ADR ID. A later whole replacement may set the earlier ADR superseded while retaining its
+   historical partial pointers. In that successor's `supersedes`, name the earlier ADR.
 5. Correct missing, ambiguous, malformed or non-ADR metadata targets by hand.
 
 Code fences, comments, indented code and struck-out text are masked for partial pointers. Checks do not interpret
