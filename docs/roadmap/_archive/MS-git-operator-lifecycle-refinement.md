@@ -2,7 +2,7 @@
 id: MS-git-operator-lifecycle-refinement
 title: Git-operator lifecycle refinement
 summary: "Lowers the Host's interpretation load and lightens merging at the boundary between Host decisions, guarded lifecycle execution and worker input, while git-operator keeps its narrow role."
-status: planned
+status: done
 created_at: 2026-10-30
 depends_on: []
 ---
@@ -30,8 +30,8 @@ conflict-free moved target no longer forces a manual merge-and-recheck cycle.
 
 ## Completion review
 
-Decomposition: pending
-Direct proposal work: pending
+Decomposition: confirmed
+Direct proposal work: confirmed
 
 Confirm both with the current Backlog close candidate; record confirmed and status done together after the user's
 confirmation. Missing assertions mean unconfirmed. Actual semantic scope changes reset both to pending; normal handoff does not.
