@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:38:19.982179Z'
+status: completed
+summary: ADR-retire-stale-integration-approval-clauses retires the pre-confirmation --auto/--admin refusal and the MCP approval-form text rules; stale native-approval wording removed from capabilities, the MCP install guide, spec bundle local text and devkit-mcp metadata; source feedback resolved or dismissed.
+findings: []
+assumptions:
+- Scope extended to agent-facing native-approval wording after review and reconcile findings
+checks:
+  tests: PASS full suite 6260 passed; the one failure is pre-existing on main (FB-docs-wheel-rule-count-stale)
+  build: PASS devkit generated check stale=0
+  lint: PASS devkit rules check --ci --base 400653a4 errors=0; ruff devkit-mcp clean
+diff_scope:
+  base: 400653a4c55b7e23645e25a83568781476166eec
+  head: 57552d574147d3b2359ebeef79674ac774765c0a
