@@ -20,6 +20,7 @@ execution-context contract. It stores regenerable reports and MUST NOT store sco
 approval authority (`ADR-mcp-runtime-and-shared-artifacts`). The initial kind is proposal-review. Inputs are a
 lowercase kebab slug (up to 120 characters), a full lowercase 40/64-hex source_sha, ko/en language and UTF-8 Markdown
 of at most 1 MiB. Consumers SHOULD verify that source_sha is their actual reviewed commit.
+Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 Content identity consists of repository namespace, kind, slug, source_sha, language and the SHA-256 body digest.
 Metadata includes those fields, a server-generated UUID generation_id, text/markdown content type, byte_count,

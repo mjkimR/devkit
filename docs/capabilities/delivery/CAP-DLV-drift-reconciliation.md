@@ -19,6 +19,7 @@ The opt-in `maintenance` catalog bundle supplies the independent `drift-reconcil
 of a `spec` intake offer loads its procedure on demand (`CAP-DIST-context-and-playbooks`). It complements per-feature `spec-sync` with accumulated drift review under
 `ADR-dual-source-of-truth-and-periodic-reconciliation`; the playbook MUST NOT treat either ledger as automatically
 deciding intended behavior.
+Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 2. Scope & Boundary
 

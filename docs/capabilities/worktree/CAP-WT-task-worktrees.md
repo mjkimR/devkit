@@ -19,7 +19,7 @@ usecases:
 
 # [CAP-WT-task-worktrees] Task Worktrees: Overview
 
-`devkit_agt.features.worktree` gives each activity of a task its own branch, and that branch its own Git worktree when the task needs one, and turns the end of the task into one deterministic command. An activity runs on the branch `plan-<slug>` (Planning) or `dev-<slug>` (Development), in `<parent of base>/<base name>-wt-<branch>`; `finish` integrates the branch into the base checkout (by default as a merge commit built outside any checkout), removes the worktree and deletes the branch. `start` MUST NOT start a new branch where its checks find one of that name, locally or on a remote (the limits of those checks are in `start` step 3): an existing branch is continued only through `start --existing-branch`. Every step MUST refuse instead of forcing. Rerunning the same command MUST resume where it stopped. Quick reference: [reference.md](../../development/reference/worktree.md).
+`devkit_agt.features.worktree` gives each activity of a task its own branch, and that branch its own Git worktree when the task needs one, and turns the end of the task into one deterministic command. An activity runs on the branch `plan-<slug>` (Planning) or `dev-<slug>` (Development), in `<parent of base>/<base name>-wt-<branch>`; `finish` integrates the branch into the base checkout (by default as a merge commit built outside any checkout), removes the worktree and deletes the branch. `start` MUST NOT start a new branch where its checks find one of that name, locally or on a remote (the limits of those checks are in `start` step 3): an existing branch is continued only through `start --existing-branch`. Every step MUST refuse instead of forcing. Rerunning the same command MUST resume where it stopped. Quick reference: [reference.md](../../development/reference/worktree.md). Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 The module is SDD-agnostic: it MUST NOT decide which tasks use a worktree or depend on a document layout. It owns the branch names, so every host and agent computes the same ones. A methodology layer (devkit-spec) decides when a task gets a worktree, adds its own cleanup through a `devkit.post_finish` extension (or the library's `before_remove` callback), verifies that a branch and a unit belong together through a `devkit.attach_check` extension, and keeps any scope registry of its own. `devkit_agt.features.workflow` MUST refuse to integrate a branch whose units are blocked through a `devkit.finish_guard` extension.
 
@@ -167,7 +167,7 @@ An activity branch nobody moves stays in progress: devkit MUST NOT expire it. `d
 
 ## 7. Module Layout
 
-`devkit_agt.features.worktree` uses `devkit_core`, distribution project support and `devkit.advisory`; Git MUST run through `devkit_core.core.git.run_git`.
+`devkit_agt.features.worktree` uses `devkit_core`, distribution project support and `devkit.advisory`; Git MUST run through `devkit_core.core.git.run_git`, except `git worktree add` and `git worktree remove`, which run in a session of their own (`start` step 4).
 
 The package is laid out by layer under `features/worktree/`:
 

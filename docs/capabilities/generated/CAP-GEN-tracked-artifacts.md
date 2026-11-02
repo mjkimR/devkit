@@ -66,7 +66,7 @@ command = "uv lock && uv sync"
 after = ["uv-lock"]
 ```
 
-A project that tracks native projections (`.claude/skills/...`) adds them to the receipt's `updates`. A project MUST NOT add them to its `paths`, which would seed project-owned skills in the same directories from one side (review only; no check enforces this).
+A project that tracks native projections (`.claude/skills/...`) adds them to the receipt's `updates`. A project MUST NOT add them to its `paths`, which would seed project-owned skills in the same directories from one side (review only).
 
 `devkit generated list` prints the registered artifacts, devkit's built-in ones and those of `.devkit/generated.toml`, in their effective order, one line each: `[GENERATED: <id> source=builtin|project seed=<side> paths=<globs> command="<command>"]`. `--format json` prints `{"artifacts": [...]}` with each artifact's registry fields plus `builtin`. It MUST NOT run a command or change anything.
 

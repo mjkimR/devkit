@@ -21,7 +21,7 @@ intake offer follows
 `CAP-DIST-context-and-playbooks`; selection/retrieval MUST NOT execute it. Generation SHOULD reuse available tools and
 artifacts. It MUST NOT automatically run checks, maintenance or fixes, or create follow-ups. No scheduler,
 detector, runtime publisher, history backend or standalone skill is included. Publication MUST have separate
-authority.
+authority. Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 2. Intake and Evidence
 

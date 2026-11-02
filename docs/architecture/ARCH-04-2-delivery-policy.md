@@ -16,7 +16,7 @@ created_at: 2026-10-21
 
 ## 1. Policy Principles
 
-1. **Minimize unnecessary interruptions**: Agents SHOULD resolve ambiguities using recommended options within agreed scope and record them. Non-blocking
+1. **Minimize unnecessary interruptions**: Agents SHOULD resolve ambiguities using recommended options within agreed scope. Non-blocking
    improvements become feedback records. Execution MUST halt when agreed constraints cannot be met (`problem`
    envelope), and SHOULD NOT halt otherwise.
 2. **Configuration models governance only**: Operational modes (`direct`, `local-orchestrated`, `cloud-pr`) are transient session choices and MUST NOT be stored in `.devkit/config.toml`.

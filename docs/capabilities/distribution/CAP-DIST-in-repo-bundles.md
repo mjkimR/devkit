@@ -16,6 +16,7 @@ version of this document is the `in-repo-bundle` instruction of the [`devkit` gu
 the two MUST be kept in step. The bundle setup is mirrored by the `devkit` bundle's `in-repo-bundle` instruction
 (shipped by `devkit-dist`); rule discovery, rule tests and Git snapshot gates by the `harness` bundle's `harness-assets`
 instruction (shipped by `devkit-agt`, which runs the rules).
+Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 1. Decision
 

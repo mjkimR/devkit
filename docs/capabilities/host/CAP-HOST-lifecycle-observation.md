@@ -26,7 +26,7 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 - `host/runner`: receipt-bound dispatch to the `devkit_dist.features.host.handlers` entry-point group.
 - `distribution`: manifest validation, selection, overrides, shared-file planning, receipt, transaction and removal.
 
-`host` MUST depend only on `core` and `advisory`. `distribution` MAY depend on `host`. No service is required to import
+Among features, `host` MUST depend only on `devkit_dist.features.project` (`RULE-architecture`). `distribution` MAY depend on `host`. No service is required to import
 distribution internals. The separate `devkit_mcp` runtime supplies optional FastMCP stdio transport for installed
 service factories (`devkit_dist.features.host.services`). `CAP-INT-mcp-services` defines the CLI
 integration approval contract, while `host/registrations` reconciles exact local project entries. Host adapters MUST NOT grant filesystem/network permission
