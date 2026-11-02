@@ -12,6 +12,8 @@ aliases:
 
 # [ADR-steering-documents] Steering documents in one directory, listed in every context
 
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the listing of steering documents through `devkit get-context spec` and its reach through the spec context.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Involved Components/Capabilities**: `docs/steering/`, `CAP-DIST-manifest-spec`, `CAP-DIST-context-and-playbooks`,
@@ -109,6 +111,8 @@ bundle-declared context document directory and their bodies are read on demand.
 
 ### Loading
 
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the `get-context spec` listing and role-contract loading in the next item, and
+  the reach through the spec context in the item after it.
 - `devkit get-context spec` lists each steering file's `title` and `summary` (its one-line scope) in every context; one
   constitution line names `docs/steering/` and tells the agent to read a body before a decision that concerns its
   scope; every spec role contract loads the context through `devkit get-context spec`; `RULE-steering-documents` caps

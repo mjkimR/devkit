@@ -14,6 +14,8 @@ aliases:
 
 # [ADR-proposal-acceptance] Proposal acceptance, review reports and proposal records
 
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause and the viewer exception clause.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: not recorded in the members
@@ -230,6 +232,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   through the shared adapter. The Host owns semantic comparison. Storage and presentation confer no approval. Publish
   after the final worker commit to avoid a report/commit cycle. TTL regeneration occurs outside a pending form and
   always requires fresh review. (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the next item.
 - **Native lifecycle approval**: a native `spec_plan_accept` form explicitly authorizes acceptance commit, checked
   local merge, disclosed cleanup and optional handoff. `accept_only` and `accept_and_handoff` have distinct effects.
   Holds are nonmutating, not rejection. Existing integration owns readiness/policy and exposes only a typed in-process
@@ -240,6 +243,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   remaining authority; fresh inspection and approval describe only remaining effects. No rollback removes user
   changes. Standalone handoff uses an exact accepted-base report and remains explicitly approved.
   (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the next item.
 - **Viewer exception**: a narrowly scoped supersession of `ADR-repository-viewer` permits only
   registered-local-adapter, exact-generation `proposal-review` artifact reads outside Git. Git-only ordinary
   endpoints, loopback/Host/no-CORS protections, sanitization, no write/approval endpoints and no server regeneration

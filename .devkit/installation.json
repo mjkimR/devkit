@@ -1872,7 +1872,7 @@
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
-      "sha256": "e77173632739b467b12fefc3c8b8a1663f9b82154d2479ed50d449e6a76d96f3"
+      "sha256": "08fcfbb6981d68e59aa8b5149686ffc820dc5d2855c9c0a671d416a057043347"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,

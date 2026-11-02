@@ -22,6 +22,8 @@ aliases:
 
 # [ADR-document-system] The document system in devkit-docs and devkit-spec as its SDD layer
 
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the spec bundle's rule-asset distribution clause and the templates and docs skeleton in the devkit-spec methodology list.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR
@@ -306,6 +308,7 @@ place per kind fact.
 
 ### Spec package on devkit
 
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: "templates, docs skeleton" in the next item.
 - devkit-spec is a Python package on devkit's public surface. It keeps only what is spec-driven: the methodology
   (routes, workflow definitions, stage skills, role contracts, templates, docs skeleton, reconciliation) and the policy
   that turns devkit's engines into SDD behaviour (which rules run, which checks gate a stage, how search scopes and pins
@@ -355,6 +358,7 @@ place per kind fact.
   move from `SPEC_` to `DOCS_`, and `DOCS_CONFIG_INVALID` reports a malformed `[tool.docs]`. (ADR-document-package)
 - **Scanner**: the document model keeps using devkit-agt's Markdown scanner; moving it to devkit-core is unrelated to
   this boundary. (ADR-document-package)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the next item.
 - **Distribution**: the spec bundle keeps shipping every rule asset, and the document rules' wrappers import
   devkit_docs. A document-only installation is separate work (`SPEC-document-bundle-split`). (ADR-document-package)
 - devkit-docs owns the auto-selected `docs:core`, all shared writing instructions, document rules and templates, the

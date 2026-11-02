@@ -8,7 +8,7 @@ target: ADR-proposal-acceptance, ADR-mcp-runtime-and-shared-artifacts
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-02
 ---
 
@@ -44,3 +44,5 @@ created_at: 2026-11-02
 docs/decisions/2026-10/20261022-proposal-acceptance.md: "a native `spec_plan_accept` form explicitly authorizes ..."
 docs/decisions/2026-10/20261022-mcp-runtime-and-shared-artifacts.md: "Native confirmation is the normal route when connected"
 ```
+
+- **Disposition**: `SPEC-adr-ledger-cleanup`: `ADR-retire-native-approval-and-moved-ownership-clauses` retires the native approval clauses of both ADRs, with pointer lines. Verified by `devkit rules check` and the spec review.
