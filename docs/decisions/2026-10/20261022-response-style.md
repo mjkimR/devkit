@@ -128,13 +128,17 @@ can create false corroboration, and a repository license does not establish webs
 
 ### Guidance budget
 
-- Retain the 300-byte contract and one response style with the existing language variable. The bundle MUST NOT
-  implement presets, new variables, per-host variants, manifest exceptions or fragment splitting. A candidate may
-  improve the pointer within the current limit; `MAT-response-style-rewrite-draft` supplies a candidate pointer that
-  fits this budget. (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages`
-- No reminder-length experiment is required. An actual limit expansion MUST rest on observed host behavior, an
-  aggregate guidance budget and a new accepted design. The current scope promises no unimplemented distribution change
-  and claims no measured long-session effect. (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages`
+- Retain the 300-byte contract and one response style with the existing language variable.
+  (ADR-response-style-guidance-budget)
+- The bundle MUST NOT implement presets, new variables, per-host variants, manifest exceptions or fragment splitting.
+  (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages`
+- A candidate may improve the pointer within the current limit; `MAT-response-style-rewrite-draft` supplies a
+  candidate pointer that fits this budget. (ADR-response-style-guidance-budget)
+- No reminder-length experiment is required. (ADR-response-style-guidance-budget)
+- An actual limit expansion MUST rest on observed host behavior, an aggregate guidance budget and a new accepted
+  design. (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages`
+- The current scope promises no unimplemented distribution change and claims no measured long-session effect.
+  (ADR-response-style-guidance-budget)
 - The cap is a per-guidance-fragment cap for text inserted into `AGENTS.md`, not a total-file or skill-body cap.
   Detailed guidance stays in `SKILL.md`, and no byte, word or token ceiling is introduced for that body.
   (ADR-response-style-guidance-budget)
@@ -162,8 +166,9 @@ can create false corroboration, and a repository license does not establish webs
 - Record each source, its scope and limitations; do not count shared or unverified ancestry as independent votes.
   (ADR-response-style-source-selection)
 - Bundle text MUST transfer ideas using original wording, never source examples, structure or
-  copyleft/unknown-license expression → `CAP-DIST-content-packages`. Track each candidate rule to a source idea or
-  explicit local requirement and the agreed example review. Link observed results when an optional live comparison is undertaken. (ADR-response-style-source-selection)
+  copyleft/unknown-license expression. (ADR-response-style-source-selection) → `CAP-DIST-content-packages`
+- Track each candidate rule to a source idea or explicit local requirement and the agreed example review. Link observed
+  results when an optional live comparison is undertaken. (ADR-response-style-source-selection)
 
 ---
 

@@ -48,7 +48,8 @@ policy keeps landing only in ADRs.
    - **When to Reconsider**: when reviews keep finding normative ADR clauses that have no restating document, or
      restatements whose strength differs from the ADR.
 4. **Scope Excluded**: Changing any decision. A restatement keeps the clause's existing meaning and strength. A
-   clause that the current implementation contradicts is reported, not restated.
+   clause that the current implementation contradicts is reported, not restated. The one exception is
+   `ADR-retire-scheduled-roadmap-review` (AC-07), which the user decided during review.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
@@ -104,6 +105,16 @@ policy keeps landing only in ADRs.
 - **And** `uv run devkit rules check --phase hygiene` reports no `RULE-agent-asset-wording` warning for the edited
   bundle assets
 
+### [AC-07] The stale roadmap review is retired by a new ADR
+- **Given** the Review clause of `ADR-roadmap-and-milestones`, which no shipped guidance carries out since commit
+  `e9f589c4`
+- **When** the change lands
+- **Then** `ADR-retire-scheduled-roadmap-review` (`status: accepted`, `supersedes: [ADR-roadmap-and-milestones]`)
+  retires that clause only
+- **And** `ADR-roadmap-and-milestones` stays `accepted`, with a "Superseded in part by" line under its heading and at
+  the Review clause
+- **And** `uv run devkit rules check docs/decisions` exits `0`
+
 ## 5. ADR-only clauses (audit input)
 
 The last column is the initial owner document. The implementer may choose a better-fitting owner and records the
@@ -131,5 +142,6 @@ choice in `plan.md`.
   2026-11-02).
 - Adding the keyword and the restating ID to existing clauses of the 13 ADRs is a format edit, which
   `ADR-immutable-decisions-editable-records` allows without a new ADR.
+- The user decided to retire the stale roadmap review through a new ADR (conversation, 2026-11-02).
 - `docs/development/` is a quick reference, not a contract location. A clause found only there still needs a
   restatement in a capability or architecture document.

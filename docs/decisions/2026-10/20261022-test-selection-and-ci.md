@@ -77,7 +77,8 @@ production node: the measured file-only split reduces excess tests but cannot na
   default. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes)
 - Selection MUST resolve helpers, applicable conftests, relative imports, initializers and re-exports conservatively.
   Use broad owner dependencies for static uncertainty and full fallback for unsafe/unknown change mapping or parse
-  failure. Retain existing explicit data/structural/frontend checks and all full triggers.
+  failure. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`
+- Selection MUST retain existing explicit data/structural/frontend checks and all full triggers.
   (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`
 - An implicit package edge on every fine spec test MUST NOT defeat the new granularity; opaque consumers explicitly
   retain a broad dependency. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`

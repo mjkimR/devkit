@@ -20,6 +20,12 @@ plan: PLAN-adr-normative-outcomes
   - **Verification**: `just test devkit-spec tests/integration/bundles/spec/test_writing_guidance.py`;
     `uv run devkit rules check --phase hygiene <edited bundle files>`
 
+- [x] **Task 1.2**: Retire the scheduled roadmap review through a new ADR
+  - **_Boundary**: `docs/decisions/2026-11/20261102-retire-scheduled-roadmap-review.md`,
+    `docs/decisions/2026-10/20261022-roadmap-and-milestones.md`
+  - _Requirements: AC-07_
+  - **Verification**: `uv run devkit rules check docs/decisions`
+
 ## Phase 2: Restatements (disjoint document scopes)
 
 - [x] **Task 2.1**: Governance: snapshot-gate fix and read-only shared `DocumentIndex`

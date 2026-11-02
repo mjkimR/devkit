@@ -204,9 +204,10 @@ enqueue implicitly when target queue policy is enabled, even without `--auto`.
   any other landing is never reported as checked. (ADR-pull-request-merge-with-pinned-source-and-verified-landing)
 - Checks and review (user decision, q-checks-wait a): the merge call is made only when the PR is mergeable with
   required checks and reviews satisfied, which happens in the approving call when the agent already pushed a ready PR
-  whose checks passed. Otherwise the approving call MUST publish and return `INTEGRATION_CHECKS_PENDING`, and
-  `integration_resume` merges later only while the remote target still equals the last build target (else a new
-  confirmation). (ADR-pull-request-merge-with-pinned-source-and-verified-landing) → `CAP-INT-mcp-services`
+  whose checks passed. Otherwise the approving call MUST publish and return `INTEGRATION_CHECKS_PENDING`.
+  (ADR-pull-request-merge-with-pinned-source-and-verified-landing) → `CAP-INT-mcp-services`
+- After `INTEGRATION_CHECKS_PENDING`, `integration_resume` merges later only while the remote target still equals the
+  last build target (else a new confirmation). (ADR-pull-request-merge-with-pinned-source-and-verified-landing)
 - Unchecked landing (user decision, q-unchecked-landing): once the merge is confirmed (PR `MERGED`, `M^2` the source)
   and the source is an ancestor of the fetched target, cleanup runs whether or not the landing was checked. Every
   landing other than the checked one (an advance in the window, a tree mismatch, a first parent outside the

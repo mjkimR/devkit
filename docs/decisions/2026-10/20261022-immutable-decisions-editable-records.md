@@ -59,7 +59,8 @@ names and retired IDs, and the ledger fragmented.
 We adopt **Option 1**.
 
 - **Decision changes**: reversing, invalidating, narrowing or widening a decision, or changing its scope, drivers'
-  weight or consequences, MUST be a new ADR (→ `CAP-DOCS-document-model`). When it replaces a whole ADR, it names it in `supersedes`, and the replaced
+  weight or consequences, MUST be a new ADR. → `CAP-DOCS-document-model`
+- When a decision change replaces a whole ADR, it names it in `supersedes`, and the replaced
   ADR gets `status: superseded` and `superseded_by`. When it replaces only part of an ADR, it names that ADR and the
   part in its outcome, and the earlier ADR's affected statement gets a one-line pointer to the new ADR.
 - **Editorial edits** MAY be made in place on accepted ADRs and need no new ADR: wording and format, the template's

@@ -89,6 +89,8 @@ CI run the complete suite (`ADR-test-selection-and-ci`). The selector keeps thes
 - The selector MUST resolve helpers, applicable conftests, relative imports, initializers and re-exports
   conservatively: a static uncertainty widens to a broad owner dependency, and an unsafe or unknown change mapping or
   a parse failure selects the full suite.
+- The selector MUST keep the explicit data, structural and frontend checks and every full-suite trigger
+  (`scripts/affected_tests.py` `FULL_PREFIXES`, `FULL_FILES`, `FULL_NAMES`, `FRONTEND_CHECK`).
 - The selector MUST NOT add an implicit package edge to every fine-grained `devkit_spec` test; opaque consumers
   (root, wildcard, CLI, bundle and source-tree consumers) MUST keep an explicit broad dependency.
 - Source code MUST NOT use a deferred import to hide a real dependency from the selector.
