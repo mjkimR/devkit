@@ -2,7 +2,7 @@
 id: SPEC-adr-admission-and-trace-format
 title: ADR admission criteria and restatement trace format
 summary: decision-writing gains admission criteria that ADRs and PADRs share, and Decision Outcome clauses record their restatement as a trailing trace with the target ID, location and keyword instead of inline RFC 2119 keywords.
-status: in-progress
+status: completed
 created: 2026-11-02
 related_capabilities: [CAP-HARN-agent-guidance]
 related_usecases: []
