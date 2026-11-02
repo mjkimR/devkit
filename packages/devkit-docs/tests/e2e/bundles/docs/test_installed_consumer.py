@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[6]
+DOCS_RULES = ROOT / "packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules"
 
 
 def test_document_only_built_wheels(tmp_path: Path) -> None:
@@ -43,7 +44,8 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
     assert not (consumer / ".devkit/managed/spec").exists()
     assert not (consumer / ".agents/skills/spec").exists()
     assert not (consumer / ".devkit/managed/docs/workflows").exists()
-    assert len(list((consumer / ".devkit/managed/docs/rules").glob("*/rule.py"))) == 9
+    shipped_rules = {path.parent.name for path in DOCS_RULES.glob("*/rule.py")}
+    assert {path.parent.name for path in (consumer / ".devkit/managed/docs/rules").glob("*/rule.py")} == shipped_rules
     receipt = json.loads((consumer / ".devkit/installation.json").read_text())
     assert '"spec"' not in json.dumps(receipt)
     cli("add", "docs:docs-skeleton")

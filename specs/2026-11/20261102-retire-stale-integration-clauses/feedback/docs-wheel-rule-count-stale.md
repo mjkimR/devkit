@@ -8,7 +8,7 @@ target: packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-02
 ---
 
@@ -41,3 +41,5 @@ created_at: 2026-11-02
 FAILED packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py::test_document_only_built_wheels
 E       AssertionError: assert 10 == 9
 ```
+
+- **Disposition**: session bugfix on `dev-docs-wheel-rule-count`: the test now compares the installed docs rules with the rule directories the bundle ships, so a new rule no longer breaks it. Verified by reproducing `assert 10 == 9` on `main` and running the test to a pass.
