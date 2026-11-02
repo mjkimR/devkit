@@ -248,7 +248,7 @@ def test_write_failure_leaves_the_record_intact(tmp_path: Path) -> None:
     assert fs.update(token, stored.revision, "r2", stored, Deadline(5)).revision == 2
 
 
-def test_journal_appends_lines_and_reads_them_back_in_time_order(tmp_path: Path) -> None:
+def test_journal_appends_lines_and_reads_them_back_in_journal_order(tmp_path: Path) -> None:
     fs = registry(tmp_path)
     fs.append(
         "ns", [Event("register", at="2026-10-08T00:00:02.000000Z", task="SPEC-a", slug="a", revision=1)], Deadline(5)
@@ -260,7 +260,8 @@ def test_journal_appends_lines_and_reads_them_back_in_time_order(tmp_path: Path)
     lines = journal.read_text().splitlines()
     assert len(lines) == 3 and lines[1] == '{"event": "upd'
     events, problems = fs.history("ns", Deadline(5))
-    assert [event.event for event in events] == ["release", "register"]
+    # append order under the namespace lock, never re-sorted by `at`: a wall-clock step back must not reorder it
+    assert [event.event for event in events] == ["register", "release"]
     assert [(problem.file, problem.line, problem.reason) for problem in problems] == [("journal.jsonl", 2, "parse")]
     assert json.loads(lines[0]) == {
         "at": "2026-10-08T00:00:02.000000Z",

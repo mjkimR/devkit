@@ -8,7 +8,7 @@ target: packages/devkit-spec/tests/integration/features/scope/test_cli.py::test_
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-31
 ---
 
@@ -40,3 +40,16 @@ AssertionError: At index 0 diff: 'update' != 'register'
 isolated pytest node: 1 passed in 0.32s
 subsequent just test-affected: 2140 passed in 18.06s
 ```
+
+## Resolution
+
+- **Disposition**: Resolved directly in a session bugfix (`packages/devkit-spec/src/devkit_spec/features/scope/repositories/localfs.py`).
+  The cause was `LocalRegistry.history` re-sorting journal events by their wall-clock `at`: a backward system-clock
+  step (macOS `timed` applies `settimeofday` steps, a -53 ms one was logged) between `register` and `update`, about
+  100 ms apart in this test, stamps the later event earlier. `CAP-COLL-work-scope-registry` defines `query --history`
+  in journal order, and appends are serialized under the namespace lock, so history now keeps the append order.
+- **Verification**: A simulated 150 ms and 1 s backward step reproduced the recorded failure; 400 repeated runs under
+  eight xdist workers without a step passed. `tests/integration/features/scope/test_cli.py::test_history_keeps_journal_order_when_the_wall_clock_steps_back`
+  failed before the fix (`At index 0 diff: 'update' != 'register'`) and passes after it;
+  `test_localfs.py::test_journal_appends_lines_and_reads_them_back_in_journal_order` now asserts append order.
+  `just test-affected` passed 1563 tests.

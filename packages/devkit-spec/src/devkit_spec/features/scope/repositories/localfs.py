@@ -462,6 +462,8 @@ class LocalRegistry:
                 handle.write(data)
 
     def history(self, namespace: str, deadline: Deadline) -> tuple[list[Event], list[Problem]]:
+        """The journal's events in append order, which the namespace lock serializes; never re-sorted by ``at``,
+        whose wall clock can step back."""
         events: list[Event] = []
         problems: list[Problem] = []
         with self._read_locked(namespace, deadline) as directory:
@@ -479,7 +481,6 @@ class LocalRegistry:
                     events.append(Event.from_dict(json.loads(line)))
                 except (ValueError, KeyError, TypeError):
                     problems.append(Problem(JOURNAL_FILE, "parse", number))
-        events.sort(key=lambda event: event.at)
         return events, problems
 
 

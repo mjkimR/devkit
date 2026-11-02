@@ -11,6 +11,7 @@ from spec_support.proposals import accept
 from spec_support.scope import CAP_A, CAP_PLANNED, SPEC, git, make_repo, write
 
 from devkit_spec.features.proposals import create_proposal
+from devkit_spec.features.scope.usecases import flow
 
 SPEC_B = "specs/2026-10/20261002-b"
 
@@ -364,6 +365,17 @@ def test_history_pages_are_recent_bounded_and_stable_across_appends(repo: Path) 
     )
     assert [e["revision"] for e in last["events"]] == list(range(1, 24))
     assert last["pagination"]["next_cursor"] is None
+
+
+def test_history_keeps_journal_order_when_the_wall_clock_steps_back(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert _scope(repo, "register", "--spec", SPEC).exit_code == 0
+    # the system clock was stepped back between the two operations: the later event carries the earlier `at`
+    monkeypatch.setattr(flow, "utc_now", lambda: "2000-01-01T00:00:00.000000Z")
+    assert _scope(repo, "update", "--spec", SPEC).exit_code == 0
+    history = _json(_scope(repo, "query", "--history", "--format", "json"))
+    assert [event["event"] for event in history["events"]] == ["register", "update"]
 
 
 def test_history_filter_precedes_pagination_and_cursor_is_bound_to_filter(repo: Path) -> None:
