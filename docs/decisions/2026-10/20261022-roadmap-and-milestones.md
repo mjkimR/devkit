@@ -14,6 +14,7 @@ aliases:
 # [ADR-roadmap-and-milestones] Repository-owned roadmap, milestone documents and unit prerequisites
 
 Superseded in part by `ADR-archive-terminal-milestones-in-roadmap`: its root-only milestone storage convention.
+Superseded in part by `ADR-retire-scheduled-roadmap-review`: the scheduled roadmap review (Review).
 
 - **Status**: Accepted
 - **Date**: 2026-10-22
@@ -218,6 +219,7 @@ handoff, and proposal disappearance cannot certify completion.
   "confirm the intent". Drafts in milestones that are not ready or are `done` or `dropped`, and `needs_decompose`
   drafts, are reported as Backlog actions. Open feedback adds a suggestion of a hygiene pass.
   (ADR-milestone-documents, ADR-separate-unit-prerequisites-from-milestone-themes)
+- Superseded in part by `ADR-retire-scheduled-roadmap-review`: the scheduled roadmap review below.
 - **Review**: when three milestones are `done` or on 2027-01-31, whichever comes first, Backlog reviews whether
   milestones were used and whether the warnings fired usefully, and records the result as a decision (a roadmap-review
   ADR); unused machinery is proposed for removal. The carrier is `spec-next`'s idle step: it counts `done` milestones,

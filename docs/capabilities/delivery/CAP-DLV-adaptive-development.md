@@ -75,6 +75,11 @@ owns the approach, bundle, entry and context-file names.
 17. **Useful alternatives**: WHEN research choices affect resume, current facts SHOULD link retained notes, surviving
     alternatives and conditions that would reopen a choice, and link a retained research material by its `MAT-<slug>`
     ID rather than copy it.
+18. **One name**: Documents MUST call the approach "adaptive development"; identifiers and commands MUST use
+    `adaptive-dev`. The former `incubation` name MUST NOT be accepted: no `incubation` bundle alias
+    (`SELECTION_INVALID`) or approach value (`DEVELOPMENT_CONFIG_INVALID`), and no fallback read of
+    `.devkit/incubation.md`. Tests: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and
+    `packages/devkit-dist/tests/integration/features/project/test_development.py`.
 
 Distribution checks enforce file/metadata contracts. Clarification, evidence, optionality and resume are semantic
 agent contracts; keyword assertions alone do not establish them.

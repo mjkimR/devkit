@@ -151,11 +151,19 @@ Planning-only UX timing belong to the spec constitution.
 | `contract-authoring` | Authoring or reviewing specifications, acceptance criteria, policies, instructions, rules or workflows: RFC 2119 wording, measurable contracts, Non-Goals, examples (policy exceptions are in the spec constitution). |
 | `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, approach-owned retention boundaries, traceability, summaries, ID references, and terminology and the glossary: six domain-neutral naming rules in its Glossary section (`ADR-writing-and-terminology-guidance`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
 | `document-writing` | Writing or editing any document: the sentence-level baseline (one directive or claim per sentence, condition first, prohibitions with their alternative, one-clause reasons with background by ID, no hedges or emphatic capitals, one default, concrete examples); the per-kind instructions add to it. |
-| `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, outcome, consequences and the `Confirmation` section naming the check, test or review. |
+| `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, a Decision Outcome of one list item per clause (a normative clause carries one RFC 2119 keyword and the ID of the capability or architecture document that restates it, which stays authoritative; a clause without one is rationale), consequences and the `Confirmation` section naming the check, test, review or restating IDs. |
 | `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
 | `usecase-writing` | Writing a use case: goal, main success scenario, extensions keyed to its steps, postconditions, Example Mapping to Given/When/Then scenarios. |
 | `ux-writing` | Writing a UX document (`docs/ux/`) or a Screens draft: one screen, modal or panel per document, purpose, content tree without character-cell layouts, states, interactions naming the served step, contrasting candidates, the `docs/steering/ux-objects.md` register created with the first UX document, style and medium left to the project (`ADR-ux-screen-documents`). |
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
+
+- **Instruction headers**: every writing instruction of the docs bundle and the `authoring` bundle's
+  `agent-asset-writing` MUST have a `description` that starts with `Read before` and stays within 300 characters.
+  Check: `packages/devkit-spec/tests/integration/bundles/spec/test_writing_guidance.py` (docs bundle) and
+  `packages/devkit/tests/integration/bundles/authoring/test_bundle.py` (the `Read before` prefix only).
+- **One owner per writing rule**: a writing rule MUST be stated in only one writing instruction of the docs bundle;
+  the per-kind instructions add to `document-writing` instead of restating it. Rationale:
+  `ADR-writing-and-terminology-guidance`.
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
 before development work; start work with `/spec <intent>`, each new task intake running its intake step first (so

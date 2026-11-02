@@ -1,0 +1,12 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'feature, spec depth: restate ADR-only clauses of 13 accepted ADRs in capability/architecture
+  documents with RFC 2119 keywords, fix the CAP-GOV-rule-authoring snapshot-gate contradiction,
+  and revise decision-writing, the decision template and the completion classification
+  so Decision Outcome lists clauses with keyword and target document ID; no retroactive
+  ADR rewrite'
+by: user
+at: '2026-11-02T01:58:30.077706Z'

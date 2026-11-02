@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:19:53.917495Z'
+status: completed
+summary: 'PASS: reconcile-check-01 findings fixed and self-verified by the implementer: spec-rule skill matches the corrected inputs scoping, CAP-DIST-context-and-playbooks MUST scoped to output-suggested invocations, ADR-delivery-decision-boundaries clauses split with restating IDs, reconcile table aligned.'
+findings: []
+assumptions:
+- Self-verification after the initial medium reconcile-reviewer call; fixes changed no scope
+checks:
+  tests: PASS test-affected 2150 passed
+  lint: PASS devkit rules check errors=0 warnings=0
+diff_scope:
+  base: fceda9d28817f80d1bb04eb51d81306011341a6a
+  head: 57bbb920a8d50b79ef2c48754f992c4ac2cc9c0a
+activity_effort: medium

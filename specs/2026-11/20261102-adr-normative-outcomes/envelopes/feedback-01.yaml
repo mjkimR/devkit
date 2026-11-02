@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:20:10.414941Z'
+status: completed
+summary: 'Swept the session and diff: recorded FB-contract-docs-without-rfc-keywords, FB-pr-auto-admin-refusal-point, FB-stale-approval-form-clause, FB-bundle-text-bare-devkit-commands; no duplicates; no further observations.'
+findings: []
+checks:
+  swept: PASS recorded=4 duplicates=0

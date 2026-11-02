@@ -1,7 +1,7 @@
 ---
 id: ARCH-07-deployment
 title: Deployment View
-summary: "Deployment topology: wheel builds, GitHub Releases, Git dependency sources, and projected directory structures."
+summary: "Deployment topology: wheel builds, GitHub Releases, Git dependency sources, the test-selection graph constraints, and projected directory structures."
 status: active
 created_at: 2026-10-17
 ---
@@ -80,6 +80,26 @@ release without a refresh keeps the previous handbook (`ADR-handbook-on-request-
 release is refreshing exactly when `handbook/manifest.json` names the tag being built: its build fails on a
 verification finding or when `docs/` at the tagged commit differs from `docs/` at the manifest source commit. Every
 other release prints `[HANDBOOK_SKIPPED: ...]` and runs no handbook command that writes files.
+
+### 1.3 Test Selection Graph
+
+Local verification selects tests with `just test-affected` (`scripts/affected_tests.py`); nightly, manual and release
+CI run the complete suite (`ADR-test-selection-and-ci`). The selector keeps these constraints:
+
+- The selector MUST resolve helpers, applicable conftests, relative imports, initializers and re-exports
+  conservatively: a static uncertainty widens to a broad owner dependency, and an unsafe or unknown change mapping or
+  a parse failure selects the full suite.
+- The selector MUST keep the explicit data, structural and frontend checks and every full-suite trigger
+  (`scripts/affected_tests.py` `FULL_PREFIXES`, `FULL_FILES`, `FULL_NAMES`, `FRONTEND_CHECK`).
+- The selector MUST NOT add an implicit package edge to every fine-grained `devkit_spec` test; opaque consumers
+  (root, wildcard, CLI, bundle and source-tree consumers) MUST keep an explicit broad dependency.
+- Source code MUST NOT use a deferred import to hide a real dependency from the selector.
+- A change that reduces selection SHOULD be validated with same-revision before/after collection matrices and
+  independent positive and negative dependency fixtures; a measured reduction never justifies omitting required
+  coverage.
+
+Checked by `packages/devkit/tests/e2e/package/test_affected_tests.py`; the deferred-import and reduction rules are
+review only.
 
 ---
 

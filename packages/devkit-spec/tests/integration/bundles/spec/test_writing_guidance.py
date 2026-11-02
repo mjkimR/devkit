@@ -60,6 +60,24 @@ def test_the_decision_guide_and_template_keep_a_partly_replaced_adr_accepted() -
     assert_rule(template, "stay accepted", "superseded in part by `adr-<new>`")
 
 
+def test_the_decision_guide_and_template_mark_normative_outcome_clauses() -> None:
+    guide = raw("instructions/decision-writing.md")
+    assert_rule(guide, "one list item per clause")
+    assert_rule(guide, "normative clause", "one rfc 2119 keyword", "capability or architecture document", "restates it")
+    assert_rule(guide, "no document restates", "without a keyword", "rationale or context only")
+    assert_rule(guide, "follow the restating document", "strength", "intended at decision time")
+    assert_rule(guide, "**confirmation**", "restating ids")
+    assert "Split a multi-part decision" not in guide
+    template = raw("templates/decision.md")
+    assert_rule(template, "<clause with must|should|may> → `cap-<area>-<slug>`")
+    assert_rule(template, "`arch-<id>`", "rationale clause carries no keyword")
+    completion = raw("skills/spec/references/completion.md")
+    assert_rule(
+        completion, "lasting rules → capabilities or architecture with rfc 2119 keywords", "cites each restating id"
+    )
+    assert "lasting policy → ADRs" not in completion
+
+
 def test_the_capability_guide_gives_every_ears_template_and_the_template_points_to_it() -> None:
     guide = text("instructions/capability-writing.md")
     for clause in (

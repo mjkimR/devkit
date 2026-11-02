@@ -1,0 +1,35 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:11:59.953092Z'
+status: completed
+summary: 'REVISE: AC-01..AC-06 met in intent; three P3 findings on how edited ADRs mark restated clauses.'
+findings:
+- issue: ADR-local-and-pull-request-integration 'Checks and review' item is marked MUST -> CAP-INT-mcp-services but still describes the removed integration_resume resume path, which the restating capability contradicts.
+  evidence: docs/decisions/2026-10/20261022-local-and-pull-request-integration.md:205-209; docs/capabilities/integration/CAP-INT-mcp-services.md:126-129,190; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:396-405
+  failure_condition: A reviewer checks the marked clause against its restating ID and finds a resume mechanism that neither the capability nor the code has.
+  suggested_action: Keep the marker on the publish-and-return-pending clause only; record the resume sentence as stale in reconcile.md.
+  resolution: open
+  severity: P3
+- issue: ADR-test-selection-and-ci 'Selection MUST resolve ...' item is marked -> ARCH-07-deployment but also requires retaining explicit data/structural/frontend checks and all full triggers, which ARCH-07 section 1.3 does not restate.
+  evidence: docs/decisions/2026-10/20261022-test-selection-and-ci.md:78-81; docs/architecture/ARCH-07-deployment.md:84-100
+  failure_condition: The selector drops an explicit check or a full trigger and the restating document does not forbid it.
+  suggested_action: Add a MUST bullet to ARCH-07 section 1.3 or move the sentence into an unmarked item.
+  resolution: open
+  severity: P3
+- issue: Several ADR edits do not follow the clause format (one keyword per item, '-> ID' at the end of the clause).
+  evidence: docs/decisions/2026-10/20261030-adaptive-dev-approach-name.md:59-60; docs/decisions/2026-10/20261022-configuration-language-and-rendering.md:169-173; docs/decisions/2026-10/20261022-response-style.md:164-166; docs/decisions/2026-10/20261022-immutable-decisions-editable-records.md:62
+  failure_condition: A reader cannot tell which sentence of a multi-sentence item the restating ID and keyword cover.
+  suggested_action: Split mixed items so each marked item has one keyword and ends with '-> ID'; re-wrap long lines.
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native isolated code-reviewer subagent'
+checks:
+  tests: PASS test_writing_guidance.py 7 passed; test-affected 2150 passed at head
+  lint: PASS devkit rules check errors=0; hygiene only pre-existing file-length warnings
+diff_scope:
+  base: fceda9d28817f80d1bb04eb51d81306011341a6a
+  head: 0980de5b60b7f2dfdd88656035e9222d631b9b14
+activity_effort: medium

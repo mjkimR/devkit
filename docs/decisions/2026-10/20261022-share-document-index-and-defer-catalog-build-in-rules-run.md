@@ -39,6 +39,7 @@ Chosen: **Shared index in `WorkspaceCache` and deferred catalog in `markdown_lin
 - **Spec rules memoization**: `document_index(ctx)` retrieves or computes `DocumentIndex` via `ctx.cache.get_or_compute("spec.document_index", ...)`, ensuring exactly one build per `RuleContext`.
 - **Autofix invalidation**: when `ctx.cache.write_text` modifies a Markdown file, `spec.document_index` and `_catalog` are invalidated so convergence rechecks see updated content.
 - **Deferred markdown catalog**: `MarkdownLinkRule._broken_links` retrieves `ctx.cache.get_catalog(root)` lazily only when an invalid local target requires a repair candidate.
+- **Read-only shared index**: rules receiving the shared `DocumentIndex` MUST NOT modify it or its parsed documents (the risk accepted in Consequences) → `CAP-GOV-rule-authoring`.
 
 ## 5. Consequences
 

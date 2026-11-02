@@ -126,12 +126,12 @@ guidance is the agreed baseline.
   are filled where a rejected synonym or an identifier is known. (ADR-seeded-glossary-columns)
 - **Layered writing instructions** in the `spec` bundle, preset `core`: `document-writing` (sentence-level rules for
   every document), `decision-writing`, `capability-writing`, `usecase-writing`, `architecture-writing`.
-  `contract-authoring` and `living-spec-writing` keep their own topics; a rule lives in one of them only.
-  (ADR-layered-writing-guidance)
+  `contract-authoring` and `living-spec-writing` keep their own topics; a rule MUST live in one of them only
+  → `CAP-HARN-agent-guidance`. (ADR-layered-writing-guidance)
 - **Authoring**: the `authoring` bundle, presets `skill-authoring` and `all`, carries `agent-asset-writing`,
   self-contained; the `skill-authoring` playbook keeps procedures only. (ADR-layered-writing-guidance)
-- **Descriptions**: each writing instruction's description starts with `Read before` and stays at most 300
-  characters. (ADR-layered-writing-guidance)
+- **Descriptions**: each writing instruction's description MUST start with `Read before` and stay at most 300
+  characters → `CAP-HARN-agent-guidance`. (ADR-layered-writing-guidance)
 
 ---
 

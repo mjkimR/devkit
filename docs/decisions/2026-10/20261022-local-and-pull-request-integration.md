@@ -204,9 +204,10 @@ enqueue implicitly when target queue policy is enabled, even without `--auto`.
   any other landing is never reported as checked. (ADR-pull-request-merge-with-pinned-source-and-verified-landing)
 - Checks and review (user decision, q-checks-wait a): the merge call is made only when the PR is mergeable with
   required checks and reviews satisfied, which happens in the approving call when the agent already pushed a ready PR
-  whose checks passed. Otherwise the approving call publishes and returns `INTEGRATION_CHECKS_PENDING`, and
-  `integration_resume` merges later only while the remote target still equals the last build target (else a new
-  confirmation). (ADR-pull-request-merge-with-pinned-source-and-verified-landing)
+  whose checks passed. Otherwise the approving call MUST publish and return `INTEGRATION_CHECKS_PENDING`.
+  (ADR-pull-request-merge-with-pinned-source-and-verified-landing) → `CAP-INT-mcp-services`
+- After `INTEGRATION_CHECKS_PENDING`, `integration_resume` merges later only while the remote target still equals the
+  last build target (else a new confirmation). (ADR-pull-request-merge-with-pinned-source-and-verified-landing)
 - Unchecked landing (user decision, q-unchecked-landing): once the merge is confirmed (PR `MERGED`, `M^2` the source)
   and the source is an ancestor of the fetched target, cleanup runs whether or not the landing was checked. Every
   landing other than the checked one (an advance in the window, a tree mismatch, a first parent outside the
@@ -225,23 +226,25 @@ enqueue implicitly when target queue policy is enabled, even without `--auto`.
   `headRefOid`, `baseRefOid`, `mergeCommit`, `state`, `isDraft` and the check, review and mergeability state that tells
   pending from failed and from mergeable, the pinned-source merge, and remote branch deletion leased on the expected
   SHA. Calls run with no terminal prompt and a bound per call, returning exit status, stdout and stderr.
-  Authentication is `gh`'s; devkit stores no token. No token reader, direct HTTP client, additional hosting platform or
-  protection bypass is introduced. (ADR-github-pull-request-repository-binding)
+  Authentication is `gh`'s; devkit MUST NOT store a token. No token reader, direct HTTP client, additional hosting
+  platform or protection bypass is introduced. (ADR-github-pull-request-repository-binding) → `CAP-INT-mcp-services`
 - Every repository operation binds the resolved host and owner/repository using the syntax its gh command supports:
   `-R` where supported, a repository operand for `repo view`, and an explicit hostname and repository endpoint or
   GraphQL variables for `gh api`. Applicable rules are read from structured API responses through gh, not by parsing
   ruleset display text. Repository discovery binds the selected Git remote, including SSH aliases gh resolves; it never
   silently chooses an unrelated default remote or omits the Enterprise hostname. (ADR-github-pull-request-repository-binding)
-- The merge is the synchronous `gh api --method PUT repos/<owner>/<repo>/pulls/<number>/merge`, with the explicit
-  hostname, the approved `sha`, `merge_method=merge` and a composed commit title and body; the asynchronous endpoint
-  and queue or admin bypass are not used. HTTP refusal statuses are reported separately from unknown transport
-  outcomes, which remain observational recovery. (ADR-github-pull-request-repository-binding)
+- The merge MUST be the synchronous `gh api --method PUT repos/<owner>/<repo>/pulls/<number>/merge`, with the
+  explicit hostname, the approved `sha`, `merge_method=merge` and a composed commit title and body; the asynchronous
+  endpoint and queue or admin bypass are not used. HTTP refusal statuses are reported separately from unknown transport
+  outcomes, which remain observational recovery. (ADR-github-pull-request-repository-binding) → `CAP-INT-mcp-services`
 - Remote branch deletion is `git push --force-with-lease=refs/heads/<branch>:<sha> <remote> --delete <branch>`, the
-  only leased form. `gh pr merge --delete-branch` is not used (it deletes the local branch outside devkit's guards).
-  (ADR-github-pull-request-adapter-in-devkit-worktree, preserved by ADR-github-pull-request-repository-binding)
-- Refused before the confirmation with stable codes: a remote `gh` cannot resolve, `gh` missing or not authenticated, a
-  cross-repository (fork) PR, a merge queue on the target, and any path that would need `--auto` or `--admin`. A
-  nonzero exit that is not a recognised refusal is an unknown outcome, resolved from the remote.
+  only leased form. `gh pr merge --delete-branch` MUST NOT be used (it deletes the local branch outside devkit's
+  guards). (ADR-github-pull-request-adapter-in-devkit-worktree, preserved by ADR-github-pull-request-repository-binding) → `CAP-INT-mcp-services`
+- MUST be refused before the confirmation with stable codes: a remote `gh` cannot resolve, `gh` missing or not
+  authenticated, a cross-repository (fork) PR and a merge queue on the target. A nonzero exit that is not a recognised
+  refusal is an unknown outcome, resolved from the remote.
+  (ADR-github-pull-request-adapter-in-devkit-worktree, preserved by ADR-github-pull-request-repository-binding) → `CAP-INT-mcp-services`
+- Also refused before the confirmation: any path that would need `--auto` or `--admin`.
   (ADR-github-pull-request-adapter-in-devkit-worktree, preserved by ADR-github-pull-request-repository-binding)
 
 ---

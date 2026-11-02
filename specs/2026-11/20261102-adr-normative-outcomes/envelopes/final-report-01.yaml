@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:20:36.650463Z'
+status: completed
+summary: ADR Decision Outcomes now list clauses with an RFC 2119 keyword and the restating capability/architecture ID; ADR-only clauses of 12 ADRs restated; the scheduled roadmap review retired by ADR-retire-scheduled-roadmap-review (user decision); snapshot-gate contradiction fixed in CAP-GOV-rule-authoring and the spec-rule skill.
+findings: []
+assumptions:
+- Development ran in direct mode by the Host with five parallel general subagents on disjoint document scopes
+- sdd-overall-refactor routing sentence aligned with the new completion classification (plan section 5)
+checks:
+  tests: PASS just test-affected 2150 passed
+  build: PASS devkit generated check stale=0; pyright devkit-spec 0 errors
+  lint: PASS devkit rules check --ci --base fceda9d2 errors=0 warnings=0
+diff_scope:
+  base: fceda9d28817f80d1bb04eb51d81306011341a6a
+  head: ae43acbfe46773499e61b686b55d55602cd972fb
