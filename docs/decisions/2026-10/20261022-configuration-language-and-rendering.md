@@ -119,7 +119,7 @@ The evidence for the local-configuration part is in
 - New devkit worktrees receive the local file from the base caller before setup. Attach preserves an existing
   worktree's choice. No live inheritance, process cloud latch or global environment override is introduced.
   (ADR-separate-shared-configuration-from-local-execution-and-rendering)
-- A retained MCP service binds a configuration workspace separately from its runtime and integration roots.
+- A retained MCP service binds a configuration workspace separately from its runtime workspace root.
   Environment is a runtime constraint, never an approval grant; MCP owns enforcement and rechecks the bound workspace.
   (ADR-separate-shared-configuration-from-local-execution-and-rendering)
 
