@@ -17,10 +17,10 @@ created_at: 2026-10-21
 ## 1. Policy Principles
 
 1. **Minimize unnecessary interruptions**: Agents resolve ambiguities using recommended options within agreed scope. Non-blocking improvements become feedback records; execution halts only when agreed constraints cannot be met (`problem` envelope).
-2. **Configuration models governance only**: Operational modes (`direct`, `local-orchestrated`, `cloud-pr`) are transient session choices and never stored in `.devkit/config.toml`.
-3. **Modes and effort levels do not lower policy**: High effort does not add human approvals to delegated workflows; low effort does not waive exit checks or reconcile verification.
-4. **`session` depth creates no durable artifacts**: Verification relies on test execution and conversational reporting; no envelope or reconcile files are generated regardless of effort.
-5. **Isolation policy values are `auto` or `required`**: Switches governing worktrees and pull requests (`[tool.spec] worktree` and `[worktree] pull_request`) use `auto` or `required` levels; booleans are rejected (`SPEC_CONFIG_INVALID`, `WORKTREE_CONFIG_INVALID`). Approval gates use `ask` or `auto` (`[workflow.approvals]`), stage toggles use `on` or `off` (`[workflow.stages]`), and boolean flags are explicit (e.g. `[worktree] delete_branch = true`).
+2. **Configuration models governance only**: Operational modes (`direct`, `local-orchestrated`, `cloud-pr`) are transient session choices and MUST NOT be stored in `.devkit/config.toml`.
+3. **Modes and effort levels do not lower policy**: High effort MUST NOT add human approvals to delegated workflows; low effort MUST NOT waive exit checks or reconcile verification.
+4. **`session` depth creates no durable artifacts**: Verification relies on test execution and conversational reporting; a `session` task MUST NOT generate envelope or reconcile files, regardless of effort.
+5. **Isolation policy values are `auto` or `required`**: Switches governing worktrees and pull requests (`[tool.spec] worktree` and `[worktree] pull_request`) MUST use `auto` or `required` levels; booleans are rejected (`SPEC_CONFIG_INVALID`, `WORKTREE_CONFIG_INVALID`). Approval gates use `ask` or `auto` (`[workflow.approvals]`), stage toggles use `on` or `off` (`[workflow.stages]`), and boolean flags are explicit (e.g. `[worktree] delete_branch = true`).
 
 ---
 
@@ -64,8 +64,9 @@ flowchart TD
     classDef store fill:#f5f5f4,stroke:#78716c,color:#111
 ```
 
-- **Branch naming**: Always `plan-<slug>` for proposal Planning and `dev-<slug>` for development. Reusing existing branches without explicit `--existing-branch` is rejected.
-- **Dedicated worktrees**: Managed exclusively via `devkit worktree start <branch>` to ensure synchronized hook environments and unified tracking.
+- **Branch naming**: An activity branch MUST be named `plan-<slug>` for proposal Planning and `dev-<slug>` for development.
+  `devkit worktree start` MUST reject reusing an existing branch without explicit `--existing-branch`.
+- **Dedicated worktrees**: A dedicated worktree MUST be managed exclusively via `devkit worktree start <branch>` to ensure synchronized hook environments and unified tracking.
 
 ---
 
@@ -88,8 +89,10 @@ flowchart TD
     classDef req fill:#fee2e2,stroke:#b91c1c,color:#111
 ```
 
-- When `pull_request = "required"`, local integration commands (`finish --merge`, `devkit integration integrate --route local`) fail closed with `WORKTREE_PR_POLICY`.
-- The `devkit integration integrate` CLI rebuilds readiness and policy from the retained base after Host conversational approval; automatic authority comes only from that base's policy. Its `local` route excludes fetch and push and triggers scoped cleanup (`CAP-INT-mcp-services`). The separate `devkit worktree finish --merge` command pushes base upstream.
+- When `pull_request = "required"`, local integration commands (`finish --merge`, `devkit integration integrate --route local`) MUST fail closed with `WORKTREE_PR_POLICY`.
+- The `devkit integration integrate` CLI MUST rebuild readiness and policy from the retained base after Host
+  conversational approval. Automatic authority MUST come only from that base's policy. Its `local` route MUST exclude
+  fetch and push, and it triggers scoped cleanup (`CAP-INT-mcp-services`). The separate `devkit worktree finish --merge` command pushes base upstream.
 
 ---
 
@@ -97,14 +100,15 @@ flowchart TD
 
 | Gate | `ask` Policy | `auto` Policy | Hard Invariants |
 | :--- | :--- | :--- | :--- |
-| `plan-intent` | Explicit instruction or confirmation | Explicit task prompt satisfies intent | Task cannot start without instruction. |
+| `plan-intent` | Explicit instruction or confirmation | Explicit task prompt satisfies intent | Task MUST NOT start without instruction. |
 | `plan-accept` | Explicit human acceptance | Direction accepted via policy delegation | Merge is an acceptance effect, not Development approval. |
-| `proposal-handoff`| Human confirms starting Development | Autonomous handoff and Unit creation | Requires accepted proposal anchor. |
-| `dev-integration`| Explicit user confirmation prompt | Autonomous integration upon passing checks | Review, verification, and reconcile must pass. |
+| `proposal-handoff`| Human confirms starting Development | Autonomous handoff and Unit creation | Handoff MUST have an accepted proposal anchor. |
+| `dev-integration`| Explicit user confirmation prompt | Autonomous integration upon passing checks | Review, verification, and reconcile MUST pass. |
 
-The four decision gates correspond to `[workflow.approvals]` configuration. Unrecoverable failures enter the `exception` workflow stage (`exception: true`), which always requires explicit human recovery and cannot be delegated or configured in approvals.
+The four decision gates correspond to `[workflow.approvals]` configuration. Unrecoverable failures enter the `exception` workflow stage (`exception: true`), which a human MUST recover explicitly. That stage MUST NOT be delegated or configured in approvals.
 
-Policy delegation is reported as `policy`, never as fabricated human consent. Revocation of auto authority immediately halts pending effects.
+Policy delegation MUST be reported as `policy`, never as fabricated human consent. Revocation of auto authority MUST
+immediately halt pending effects.
 
 ---
 
@@ -114,7 +118,7 @@ Abandoned task branches are detected during project hygiene sweeps (`devkit rule
 - **Eligibility**: Activity branches matching `plan-*` or `dev-*`.
 - **Precondition**: `gh auth status` succeeds (skipped gracefully if unauthenticated).
 - **Evaluation**: Emits a warning when the latest commit and the linked PR activity are both older than `[worktree] stale_after`.
-- **Remediation**: Output presents actionable resume or discard commands (`devkit worktree finish <branch> --discard`). Automated deletion is never performed.
+- **Remediation**: Output presents actionable resume or discard commands (`devkit worktree finish <branch> --discard`). The sweep MUST NOT delete a branch automatically.
 
 ---
 

@@ -15,17 +15,17 @@ Commands, configuration and codes are in the [reference](../development/referenc
 
 ## 1. Principles
 
-1. **Native config fidelity**: native subagent definitions and tool configurations are copied verbatim, never
+1. **Native config fidelity**: native subagent definitions and tool configurations MUST be copied verbatim, never
    converted between hosts. An agent without a native variant gets no projection and the sync reports it
-   (`unprojected`); a role contract must name every agent, so a missing host fails validation. Nothing is silently
+   (`unprojected`); a role contract MUST name every agent, so a missing host fails validation. Nothing is silently
    stripped or degraded.
 2. **Standard Python packaging**: content ships as wheels installed with `uv` as dev dependencies and discovered
    through `importlib.metadata`; versions are pinned by `uv.lock`. There is no custom resolver, downloader or cache.
 3. **Deterministic, side-effect-free ingestion**: reproducible manifests, normalized modes (`0644`/`0755`), strict
-   relative path containment, and no execution of bundle code during a sync.
+   relative path containment. A sync MUST NOT execute bundle code.
 4. **Explicit ownership**: managed assets, overrides, seeded files and foreign files are kept apart; an unmanaged
-   collision or a modified deployed file halts the sync before any write.
-5. **Transactional integrity**: every installation, upgrade and removal is planned and conflict-checked up front,
+   collision or a modified deployed file MUST halt the sync before any write.
+5. **Transactional integrity**: every installation, upgrade and removal MUST be planned and conflict-checked up front,
    then executed under a project lock with a write-ahead journal, atomic replacement and recovery.
 
 ## 2. Architecture Units
@@ -74,7 +74,7 @@ own dependencies through wheels.
 The distribution feature lives in `packages/devkit-dist/src/devkit_dist/features/distribution/`.
 It uses shared primitives from `devkit_core.core`, project configuration and receipts from
 `devkit_dist.features.project`, `devkit.advisory`, document search and native host contracts.
-The dist wheel never depends on `devkit-agt`. Feature imports use absolute paths. The feature root
+The dist wheel MUST NOT depend on `devkit-agt`. Feature imports use absolute paths. The feature root
 `__init__.py` exports nothing, so importing one module never loads the whole feature; callers import each
 name from the module that defines it.
 
@@ -83,7 +83,7 @@ name from the module that defines it.
 - `usecases/` owns sync and recovery, context and playbook reads, overrides, project listing/status
   and bundle planning. `sync_selection` and `add_selection` own persistence and replacement/union
   policy. Public operations also own installed-bundle discovery and cleanup. CLI adapters provide
-  parsed inputs and format results; they do not compose configuration-save callbacks.
+  parsed inputs and format results; they MUST NOT compose configuration-save callbacks.
 - `services/bundles/` owns manifest and header validation, role rendering, guidance fragments,
   configurable template rendering and deterministic package creation. It has no installation workspace dependency.
 - `services/installation/` owns workspace path safety and snapshots, transaction journaling and
@@ -96,7 +96,7 @@ name from the module that defines it.
 The distribution feature exposes transport operations through `BaseUseCase.execute`, including
 `SyncSelection`, `GetContext`, `GetPlaybook`, `SearchPlaybooks` and override operations. Internal
 composition retains helpers such as `sync_project`, `load_bundle`, `plan_bundle`, `get_project_status` and
-`get_project_listing`. CLI adapters expose these operations through use cases; internal services do not
+`get_project_listing`. CLI adapters expose these operations through use cases; internal services MUST NOT
 import transport code.
 
 Built-in data bundles live under `devkit_dist.bundles`: `devkit`, `advisory` and `git_commits`.
@@ -112,7 +112,7 @@ sync do not load the engine. The installation config reader owns `[bundles.<name
 those values against declarations and renders selected instruction, guidance, document and skill `.md.jinja` sources,
 including raw project overrides, into final managed `.md` files before transaction planning and receipt hashing.
 Skill projections use the rendered filenames and contents before native invocation settings are inserted.
-This does not execute bundle Python code or alter the verbatim contract of native host configurations.
+Rendering MUST NOT execute bundle Python code or alter the verbatim contract of native host configurations.
 
 
 ## Shared configuration and personal runtime views
@@ -122,16 +122,17 @@ execution resolution, independent of distribution asset planning and harness eng
 receipt loading. Distribution `local_render.py` compares effective and canonical inventory, checks ignored/untracked
 output eligibility, captures configuration inputs and validates transient render evidence. `sync.py` journals local
 configuration and ledger writes alongside output and shared selection edits. Runtime context/status receive a
-validated receipt view; that view never becomes engine or snapshot authority. Worktree lifecycle captures and copies
+validated receipt view; that view MUST NOT become engine or snapshot authority. Worktree lifecycle captures and copies
 local preferences before setup on creation only. See `CAP-DIST-sync-and-transactions` and `CAP-WT-task-worktrees`.
 
 ## Local MCP registration
 
-Ordinary sync asks the optional launch provider for a retained executable/executor and explicit owning workspace,
-then reconciles eligible project host entries separately from portable receipts. The host layer owns the exact-entry
-ledger, collision inspection and recoverable registration journal. It never imports `devkit_mcp` by module name.
-The fixed lock order is common Git exclusion lock followed by checkout project lock. Dry-run/check compute the same
-plan without registration writes; locked sync validates only and directs changed local registrations to ordinary
-sync. Fresh absent registrations are initialized separately after locked asset restoration. Trusted native
-lifecycle children carry only an owning-workspace refusal constraint, checked after locks and before transaction
-writes; approval authority remains in the Host invocation. Tracked or visible foreign destinations remain untouched. See `CAP-MCP-runtime-registration`.
+Ordinary sync asks the optional launch provider for a retained executable/executor and explicit owning workspace, then
+reconciles eligible project host entries separately from portable receipts. The host layer owns the exact-entry ledger,
+collision inspection and recoverable registration journal. It MUST NOT import `devkit_mcp` by module name. The lock
+order is fixed: the common Git exclusion lock MUST be taken before the checkout project lock. Dry-run/check compute the
+same plan without registration writes; locked sync validates only and directs changed local registrations to ordinary
+sync. Fresh absent registrations are initialized separately after locked asset restoration. Trusted native lifecycle
+children carry only an owning-workspace refusal constraint, checked after locks and before transaction writes; approval
+authority remains in the Host invocation. Registration MUST NOT touch tracked or visible foreign destinations. See
+`CAP-MCP-runtime-registration`.

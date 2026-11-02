@@ -43,7 +43,7 @@ command = "uv lock"
 - **Ordering**: artifacts run in `after` order, ties in id order. An `after` naming an unknown or disabled artifact, or a cycle, is `GENERATED_CONFIG_INVALID`.
 - **Ids** are lowercase letters, digits, `-` and `_`, starting with a letter or digit.
 - **Errors**: an unreadable or invalid TOML file is `CONFIG_INVALID`. Any other problem in it is `GENERATED_CONFIG_INVALID`, targeting `.devkit/generated.toml`. `.devkit/config.toml` accepts no `[generated]` table.
-- **Commands** must be deterministic: the same inputs give the same bytes, with no timestamps, absolute paths or machine-specific ordering. A command that is not deterministic makes `check` report the artifact as always stale and makes `resolve` produce churn.
+- **Commands** MUST be deterministic: the same inputs give the same bytes, with no timestamps, absolute paths or machine-specific ordering. A command that is not deterministic makes `check` report the artifact as always stale and makes `resolve` produce churn.
 
 ### Built-in Artifacts
 
@@ -68,20 +68,20 @@ after = ["uv-lock"]
 
 A project that tracks native projections (`.claude/skills/...`) adds them to the receipt's `updates`. Do not add them to its `paths`, which would seed project-owned skills in the same directories from one side.
 
-`devkit generated list` prints the registered artifacts, devkit's built-in ones and those of `.devkit/generated.toml`, in their effective order, one line each: `[GENERATED: <id> source=builtin|project seed=<side> paths=<globs> command="<command>"]`. `--format json` prints `{"artifacts": [...]}` with each artifact's registry fields plus `builtin`. It runs no command and changes nothing.
+`devkit generated list` prints the registered artifacts, devkit's built-in ones and those of `.devkit/generated.toml`, in their effective order, one line each: `[GENERATED: <id> source=builtin|project seed=<side> paths=<globs> command="<command>"]`. `--format json` prints `{"artifacts": [...]}` with each artifact's registry fields plus `builtin`. It MUST NOT run a command or change anything.
 
 ## 2. resolve
 
-`devkit generated resolve` runs while the index has unmerged paths: during a merge, rebase, cherry-pick, revert or `git am`, or after any command that leaves conflicts. It never commits.
+`devkit generated resolve` runs while the index has unmerged paths: during a merge, rebase, cherry-pick, revert or `git am`, or after any command that leaves conflicts. It MUST NOT commit.
 
 1. **Classify.** Each unmerged path is either owned (an enabled artifact's `paths` match it) or not. The plan is the artifacts that own a conflict, plus every artifact that comes after one of them, in order.
-2. **Refuse on conflicted inputs.** If a conflict the plan does not own matches the `inputs` or `updates` of an artifact in the plan, or the artifact declares no `inputs`, `resolve` refuses with `GENERATED_INPUTS_CONFLICTED` (`INPUT_ERROR`) before changing anything. `[TARGET]` names the conflicted paths, the details name the artifacts that read each one, and `[FIX]` is the exact `git add` and `uv run devkit generated resolve` to run once they are resolved. The command would otherwise read conflict markers, or rewrite a file it updates with the markers inside and stage it. Resolve those paths by hand, stage them, and rerun.
-3. **Seed.** Each owned conflict is set to its artifact's `seed` side: `git checkout --ours|--theirs`, or removal when that side deleted the file. Every owned conflict is seeded before any command runs, so no command reads markers from another artifact's files. The seed matters for incremental generators: `uv lock` keeps the pins of the lockfile it finds, so the merged lock starts from the seed side's resolutions.
-4. **Regenerate.** Each artifact in the plan runs its command, except an `optional` one that owns no conflict and has none of its paths tracked. A failed command is `GENERATED_COMMAND_FAILED` with the log path and last output lines. A command that changes any file outside its `paths` and `updates` is `GENERATED_OUTPUT_UNDECLARED`, and its changes stay in the work tree for review. Either error stops the run with nothing staged. Rerunning starts over from the same conflicts, because seeding overwrites what the stopped run left.
+2. **Refuse on conflicted inputs.** IF a conflict the plan does not own matches the `inputs` or `updates` of an artifact in the plan, or the artifact declares no `inputs`, THEN `resolve` MUST refuse with `GENERATED_INPUTS_CONFLICTED` (`INPUT_ERROR`) before changing anything. `[TARGET]` names the conflicted paths, the details name the artifacts that read each one, and `[FIX]` is the exact `git add` and `uv run devkit generated resolve` to run once they are resolved. The command would otherwise read conflict markers, or rewrite a file it updates with the markers inside and stage it. Resolve those paths by hand, stage them, and rerun.
+3. **Seed.** Each owned conflict is set to its artifact's `seed` side: `git checkout --ours|--theirs`, or removal when that side deleted the file. Every owned conflict MUST be seeded before any command runs, so no command reads markers from another artifact's files. The seed matters for incremental generators: `uv lock` keeps the pins of the lockfile it finds, so the merged lock starts from the seed side's resolutions.
+4. **Regenerate.** Each artifact in the plan runs its command, except an `optional` one that owns no conflict and has none of its paths tracked. A failed command is `GENERATED_COMMAND_FAILED` with the log path and last output lines. A command that changes any file outside its `paths` and `updates` is `GENERATED_OUTPUT_UNDECLARED`, and its changes stay in the work tree for review. Either error MUST stop the run with nothing staged. Rerunning starts over from the same conflicts, because seeding overwrites what the stopped run left.
 5. **Stage.** The owned conflicts and every file a command changed are staged (`git add`, or `git rm --cached` for a removed file). Paths are staged as they are in the work tree.
 6. **Report.** Conflicts that remain are not owned by any artifact. They are listed in a `GENERATED_CONFLICTS_REMAIN` warning, and no `[NEXT_CMD]` is printed. With none left, `[NEXT_CMD: git <operation> --continue]` names the command that continues the operation. During a rebase, each replayed commit may stop again, so run `resolve` at each stop.
 
-`--dry-run` stops after step 2. It prints the plan (`GENERATED_PLANNED`), changes nothing and runs no command. With no unmerged paths, `resolve` does nothing and exits `0`, so a rerun after success is harmless.
+WHERE `--dry-run` is given, `resolve` MUST stop after step 2. It prints the plan (`GENERATED_PLANNED`), changes nothing and runs no command. WHEN no path is unmerged, `resolve` MUST do nothing and exit `0`, so a rerun after success is harmless.
 
 **Sides during a rebase.** Git's index stages are inverted during a rebase: `ours` (stage 2) is the branch being rebased onto, and `theirs` (stage 3) is the commit being replayed. The regenerated result is the same either way. Only the starting state of an incremental generator differs.
 
@@ -89,18 +89,18 @@ A project that tracks native projections (`.claude/skills/...`) adds them to the
 
 ## 3. Detecting Undeclared Writes
 
-Before and after each command, devkit records every path `git status` lists (untracked included, ignored excluded) with its status and content digest. A path whose entry differs afterwards was changed by the command. It must match the artifact's `paths` or `updates`, or the run stops with `GENERATED_OUTPUT_UNDECLARED`. Ignored files (`.venv/`, `.devkit/managed/`, build caches) are never compared, so environment and cache writes are allowed. The check catches commands that touch more than they declare, which `resolve` would otherwise stage or leave unnoticed.
+Before and after each command, devkit records every path `git status` lists (untracked included, ignored excluded) with its status and content digest. A path whose entry differs afterwards was changed by the command. It MUST match the artifact's `paths` or `updates`, or the run stops with `GENERATED_OUTPUT_UNDECLARED`. Ignored files (`.venv/`, `.devkit/managed/`, build caches) MUST NOT be compared, so environment and cache writes are allowed. The check catches commands that touch more than they declare, which `resolve` would otherwise stage or leave unnoticed.
 
 ## 4. regen
 
-`devkit generated regen [ID...]` runs the commands of the given artifacts and of every artifact after them in place, or of every artifact when no id is given. It stages nothing. An `optional` artifact with nothing tracked is skipped. It refuses with `GENERATED_UNMERGED` (`AUTO`, `[FIX]` `uv run devkit generated resolve`, `[TARGET]` the unmerged paths) while the index has unmerged paths, because a command would read conflict markers.
+`devkit generated regen [ID...]` runs the commands of the given artifacts and of every artifact after them in place, or of every artifact when no id is given. It MUST NOT stage anything. An `optional` artifact with nothing tracked is skipped. It MUST refuse with `GENERATED_UNMERGED` (`AUTO`, `[FIX]` `uv run devkit generated resolve`, `[TARGET]` the unmerged paths) while the index has unmerged paths, because a command would read conflict markers.
 
 ## 5. check
 
-`devkit generated check [ID...] [--rev REV]` checks out `REV` (default `HEAD`) in a temporary detached worktree, reads the registry (`.devkit/generated.toml`) from that commit, runs the commands there in order, and reports each artifact whose owned files (`paths`) changed as `GENERATED_STALE`. A change to a file the artifact only `updates` is listed in its `changed` files but does not make it stale. It exits `1` when any artifact is stale (`INPUT_ERROR`), with `[TARGET]` naming the stale files and `[FIX]` the exact `uv run devkit generated regen` command. Text output prints a line per stale artifact only; current and skipped artifacts are `-v` log lines counted by the summary. The checkout is not touched, and the temporary worktree is removed afterwards.
+`devkit generated check [ID...] [--rev REV]` checks out `REV` (default `HEAD`) in a temporary detached worktree, reads the registry (`.devkit/generated.toml`) from that commit, runs the commands there in order, and reports each artifact whose owned files (`paths`) changed as `GENERATED_STALE`. A change to a file the artifact only `updates` is listed in its `changed` files but does not make it stale. It MUST exit `1` when any artifact is stale (`INPUT_ERROR`), with `[TARGET]` naming the stale files and `[FIX]` the exact `uv run devkit generated regen` command. Text output prints a line per stale artifact only; current and skipped artifacts are `-v` log lines counted by the summary. `check` MUST NOT touch the checkout, and it removes the temporary worktree afterwards.
 
-- The commands run in a fresh checkout. That checkout has no ignored files (no `.venv`, no `.devkit/managed/`) and gets the caller's environment, so a command must work from a clean clone, as it does in CI.
-- Undeclared writes stop `check` too (`GENERATED_OUTPUT_UNDECLARED`), with exit `2`.
+- The commands run in a fresh checkout. That checkout has no ignored files (no `.venv`, no `.devkit/managed/`) and gets the caller's environment, so a command MUST work from a clean clone, as it does in CI.
+- Undeclared writes MUST stop `check` too (`GENERATED_OUTPUT_UNDECLARED`), with exit `2`.
 - `{devkit} sync` in the temporary worktree writes the shared Git hooks like any writing sync (`CAP-GATE-commit-gates`). The hooks it writes are the same ones the checkout already has.
 
 In CI: `uv run devkit generated check`.
@@ -122,4 +122,4 @@ The server-side merge of a hosting service (a pull request's merge button or mer
 ## 7. Scope
 
 - **Whole files only.** An artifact owns whole files. A file that is partly project-owned, such as the root `AGENTS.md` with its DEVKIT block, is not an artifact. Its conflicts are resolved by hand, and the owning command rewrites its part through `updates`.
-- **Trust.** Commands come from the tracked `.devkit/generated.toml` and run with the caller's privileges, as `verify-commands` gate commands do. A CI job that runs `resolve` or `check` on untrusted contributions must take the configuration from a trusted commit.
+- **Trust.** Commands come from the tracked `.devkit/generated.toml` and run with the caller's privileges, as `verify-commands` gate commands do. A CI job that runs `resolve` or `check` on untrusted contributions MUST take the configuration from a trusted commit.

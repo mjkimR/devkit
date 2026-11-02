@@ -49,7 +49,7 @@ flowchart BT
     style AH fill:none,stroke:#9ca3af,stroke-dasharray:2 4
 ```
 
-1. **Unidirectional flow**: Lower packages never import higher orchestrators. `devkit-core` has zero harness dependencies; `devkit-dist` exposes the `devkit` executable without importing `devkit-agt`; `devkit-agt` mounts the developer harness; `devkit-mcp` exposes services over MCP; `devkit-docs` owns the document system and never imports `devkit-spec`; `devkit-spec` packages SDD assets and hooks (`ADR-document-package`).
+1. **Unidirectional flow**: Lower packages MUST NOT import higher orchestrators. `devkit-core` MUST NOT depend on the harness. `devkit-dist` exposes the `devkit` executable and MUST NOT import `devkit-agt`. `devkit-agt` mounts the developer harness; `devkit-mcp` exposes services over MCP. `devkit-docs` owns the document system and MUST NOT import `devkit-spec`. `devkit-spec` packages SDD assets and hooks (`ADR-document-package`).
 2. **Runtime pinning**: Cloud platforms (`autohub`) consume fixed distribution wheel pins, verifying contract receipts rather than running ad-hoc repository checkouts.
 
 ---
@@ -92,7 +92,7 @@ flowchart BT
 | **Subagent Roles** | `scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `ux-reviewer`, `triage`, `decomposer` | Read-only inspection, criticism, code and document verification, walkthrough review of drafted screens, Backlog feedback grouping and draft split proposals; returns structured messages. | Writing envelope files to disk, modifying production code. |
 | **Cloud Agent** | Remote runner agent | Mirrors worker execution inside cloud PR runs. | Handling local conversation prompts. |
 
-The git-operator boundary is message-level and preserves existing CLI guards
+The git-operator boundary is message-level and MUST preserve existing CLI guards
 (`ADR-reusable-lifecycle-resource-manager`). On Codex its projection is emulated: explicit paths, current-job
 authority, per-operation permission requests and Host effect verification substitute for native role/path
 enforcement. Claude Code is native; Antigravity live continuation remains unverified. The bundle projection

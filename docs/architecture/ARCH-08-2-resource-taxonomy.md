@@ -71,8 +71,8 @@ Each label maps to one manifest `kind` (see the `CAP-DIST-manifest-spec`): `inst
   ```
 - **Consumption**: Read by any agent session upon entering the repository, including sessions started without a skill. It is the only entry point devkit provides for such sessions.
 - **Bundle Fragments**: A bundle adds lines with a `guidance` asset (Markdown list items, at most 300 bytes each). A fragment is reserved for a pointer every session needs at a moment no skill marks, stated with its read condition, for example the `git-commits` line "Before drafting or creating a commit message, read `<path>`". `{path:<asset-id>}` resolves to the file agents read (the override, else the managed copy). Fragments follow devkit's own lines, ordered by bundle and asset id, so the block changes only with the selection.
-- **Token Budget**: devkit's own lines stay under 1 KB; each selected fragment adds at most 300 bytes. The block never contains project-specific policies or domain rules: fragments point to them, and bundle-level guidance stays in each bundle's constitution and instructions, reached through `get-context`. The opt-in `RULE-agent-guide-size` measures the whole root guide, block included.
-- **Target Location**: Host project root `AGENTS.md`. Generated from the current selection and hash-guarded through the receipt; bytes outside the markers are project-owned. `guidance_block = false` in `.devkit/config.toml` turns it off. `CLAUDE.md` is never written; projects that need one point it at `AGENTS.md` themselves. See `CAP-DIST-workspace-ownership`.
+- **Token Budget**: devkit's own lines stay under 1 KB; each selected fragment adds at most 300 bytes. The block MUST NOT contain project-specific policies or domain rules: fragments point to them, and bundle-level guidance stays in each bundle's constitution and instructions, reached through `get-context`. The opt-in `RULE-agent-guide-size` measures the whole root guide, block included.
+- **Target Location**: Host project root `AGENTS.md`. Generated from the current selection and hash-guarded through the receipt; bytes outside the markers are project-owned. `guidance_block = false` in `.devkit/config.toml` turns it off. `CLAUDE.md` MUST NOT be written; projects that need one point it at `AGENTS.md` themselves. See `CAP-DIST-workspace-ownership`.
 
 #### 2. `package-constitution`
 - **Role**: The foundational architecture guide of a bundle or domain (repository rules, backend conventions, testing architecture).
@@ -82,31 +82,31 @@ Each label maps to one manifest `kind` (see the `CAP-DIST-manifest-spec`): `inst
 
 #### 3. `package-instruction`
 - **Role**: Natural-language coding standards, API design rules, domain constraints, and architectural guidelines that require developer judgment.
-- **Consumption**: Progressive disclosure, like agent skills: `get-context` exposes the YAML headers and readable file paths of synchronized instructions, never their bodies. The agent selects relevant instructions by name and description and reads their files only when needed. No instruction body is eagerly included in the default context.
+- **Consumption**: Progressive disclosure, like agent skills: `get-context` exposes the YAML headers and readable file paths of synchronized instructions and MUST NOT expose their bodies. The agent selects relevant instructions by name and description and reads their files only when needed. No instruction body is eagerly included in the default context.
 - **Token Budget**: Headers consume context when the bundle is first used; bodies only when selected.
 - **Target Location**: `.devkit/managed/<bundle>/instructions/<name>.md`.
-- **Format Requirements**: Single Markdown document with English YAML frontmatter specifying `name` and `description`.
+- **Format Requirements**: An instruction MUST be a single Markdown document with English YAML frontmatter specifying `name` and `description`.
 
 #### Bundle context delivery contract
 
 The **bundle context** is the whole `get-context <bundle>` response: the constitution (when present, read in full), the instruction header catalog (read selectively) and the titles and summaries of the project documents in the directory the bundle declares (`context_documents`), whose bodies are read on demand. The response, the skill body prerequisite that `devkit sync` injects and the once-per-bundle rule are specified in `CAP-DIST-context-and-playbooks` (section 2). In addition:
 
-- Bundle source files never receive the prerequisite.
-- Other package entry points may request the same context with the same command and the same once-per-bundle rule.
+- Bundle source files MUST NOT receive the prerequisite.
+- Other package entry points MAY request the same context with the same command and the same once-per-bundle rule.
 - The command is stateless: context deduplication is the agent's responsibility; automatic injection and exactly-once runtime enforcement are not guaranteed.
-- Installation, listing, and skill discovery do not load the context. Instruction bodies remain on demand after `get-context` runs.
+- Installation, listing, and skill discovery MUST NOT load the context. Instruction bodies remain on demand after `get-context` runs.
 
 #### 4. `package-playbook`
 - **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
-- **Consumption**: Only through these entry conditions, never through unbounded or implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks); an entry skill's bounded intake search (condition 4) is the one search an ordinary task intake runs:
+- **Consumption**: A playbook MUST be reached only through these entry conditions, never through unbounded or implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks); an entry skill's bounded intake search (condition 4) is the one search an ordinary task intake runs:
   1. **Explicit user invocation** of the shared `devkit-playbook` skill (`"use devkit-playbook to recover the replica"`).
   2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit_agt.features.rules` (`just rules-check`, CI, the `rules-check` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
 
-  3. **Explicit exact invocation**: the user names the exact bundle/playbook ID for the task, or explicitly configures an external schedule naming it. `devkit playbook get <bundle>/<playbook>` retrieves the effective procedure without discovery or execution. Each run checks prerequisites and preserves workflow gates, permissions and user constraints; schedules and unavailable approval UI grant no gated-operation approval. External systems own scheduling and execution history (`ADR-external-playbook-execution`).
+  3. **Explicit exact invocation**: the user names the exact bundle/playbook ID for the task, or explicitly configures an external schedule naming it. `devkit playbook get <bundle>/<playbook>` retrieves the effective procedure without discovery or execution. Each run MUST check prerequisites and preserve workflow gates, permissions and user constraints; schedules and unavailable approval UI grant no gated-operation approval. External systems own scheduling and execution history (`ADR-external-playbook-execution`).
 
   4. **Confirmed intake offer**: an installed entry skill runs one bounded search at a new task intake and names at most one candidate whose description states the requested operation; the user's confirmation is the explicit invocation. The `spec` skill is the one such entry (`CAP-HARN-agent-guidance`, `ADR-spec-intake-playbook-discovery`); `devkit-dist` stays neutral about it.
 
-  Individual playbooks are not exposed in the default context, `get-context` or the native skill catalog, and ordinary prompt instructions do not bypass these entry conditions.
+  Individual playbooks MUST NOT be exposed in the default context, `get-context` or the native skill catalog, and ordinary prompt instructions do not bypass these entry conditions.
 - **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` array of previous asset IDs of the playbook in the same bundle, resolved by `devkit playbook get` and never searched (`ADR-playbook-aliases-as-identifiers`). The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>`: a single Markdown file (for example `playbooks/<slug>.md`) or a directory whose entry is `<dir>/SKILL.md`.
 
@@ -136,17 +136,17 @@ An explicit invocation applies to the requested task, not to all future tasks in
 
 #### `devkit-playbook` entry point and search contract
 
-`devkit sync` generates one shared `devkit-playbook` skill when selected playbooks exist (Codex: `policy.allow_implicit_invocation: false`; Claude Code: `disable-model-invocation: true`; other hosts follow the skill body). For an explicitly requested discovery invocation, the agent turns the task into an English query, runs `uv run devkit playbook search "<English query>"`, reads the selected candidate's full procedure and checks its prerequisites before executing it. A search match ranks relevance only; it grants no extra permission. When nothing fits, the agent completes the task and offers a playbook draft, persisted only with the user's approval and never into managed copies; this draft offer belongs to explicit discovery only, and an intake search with no match stays silent. The search contract (indexed fields, modes, `[playbooks]` defaults and bounds, the byte budget, frontmatter rules) is specified in `CAP-DIST-context-and-playbooks` (section 3); the rankings are `CAP-SRCH-document-search`'s.
+`devkit sync` generates one shared `devkit-playbook` skill when selected playbooks exist (Codex: `policy.allow_implicit_invocation: false`; Claude Code: `disable-model-invocation: true`; other hosts follow the skill body). For an explicitly requested discovery invocation, the agent turns the task into an English query, runs `uv run devkit playbook search "<English query>"`, reads the selected candidate's full procedure and checks its prerequisites before executing it. A search match ranks relevance only; it grants no extra permission. When nothing fits, the agent completes the task and offers a playbook draft. The draft MUST NOT be persisted without the user's approval or into managed copies; this draft offer belongs to explicit discovery only, and an intake search with no match stays silent. The search contract (indexed fields, modes, `[playbooks]` defaults and bounds, the byte budget, frontmatter rules) is specified in `CAP-DIST-context-and-playbooks` (section 3); the rankings are `CAP-SRCH-document-search`'s.
 
-**Open item: optional query for bundle context.** `devkit get-context <bundle>` takes no query. A future optional English query could narrow instruction header exposure as catalogs grow; it would have to keep the full constitution in every response, keep instruction bodies on demand, keep the no-query behavior, and must not enable playbook discovery during ordinary task handling beyond an entry skill's bounded intake step. This is a review item, not a planned command signature.
+**Open item: optional query for bundle context.** `devkit get-context <bundle>` takes no query. A future optional English query could narrow instruction header exposure as catalogs grow; such a query MUST keep the full constitution in every response, keep instruction bodies on demand, keep the no-query behavior and not enable playbook discovery during ordinary task handling beyond an entry skill's bounded intake step. This is a review item, not a planned command signature.
 
 ### B. Mechanized Execution Layer (Code & Native Tooling)
 
 #### 7. `governance-rule`
 - **Role**: Invariants that can and must be 100% mechanically verified via parsing, regex, or static analysis.
-- **Consumption**: Evaluated out-of-band by `devkit_agt.features.rules` during `just rules-check`, `devkit rules check`, the `rules-check` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
+- **Consumption**: Evaluated out-of-band by `devkit_agt.features.rules` during `just rules-check`, `devkit rules check`, the `rules-check` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml` and MUST NOT edit the managed files.
 - **Format Requirements**: A plugin package directory: the rule module, optional `__init__.py`, helper modules imported relatively, the guide, resources and the rule's tests in `tests/` (`CAP-GOV-rule-authoring`; run with `devkit rules test`, `CAP-GOV-rule-authoring`).
-- **Token Budget**: Zero LLM context unless violations are reported. A rule may ship a Markdown guide that `devkit rules explain` prints on demand.
+- **Token Budget**: Zero LLM context unless violations are reported. A rule MAY ship a Markdown guide that `devkit rules explain` prints on demand.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `rules/<rule>/`).
 
 #### 8. `agent-skill`
@@ -157,7 +157,7 @@ An explicit invocation applies to the requested task, not to all future tasks in
 #### 9. `agent-subagent`
 - **Role**: Standalone agent persona definition configuring system prompts, permissions, and tool access for delegated subagent tasks.
 - **Consumption**: Read by agent runtimes when spawning child tasks.
-- **Format Requirements**: Either vendor-native files per agent (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`, `.md` for Antigravity in `.agents/agents/<name>.md`), or one host-neutral role contract (Markdown with a `hosts` table of allowlisted per-agent keys and a status) that `devkit sync` renders into those native files. A contract may carry `x-<name>` extension keys for other tools; devkit never renders them.
+- **Format Requirements**: Either vendor-native files per agent (`.toml` for Codex in `.codex/agents/<name>.toml`, `.md` for Claude Code in `.claude/agents/<name>.md`, `.md` for Antigravity in `.agents/agents/<name>.md`), or one host-neutral role contract (Markdown with a `hosts` table of allowlisted per-agent keys and a status) that `devkit sync` renders into those native files. A contract MAY carry `x-<name>` extension keys for other tools; devkit never renders them.
 - **Target Location**: Native agent persona directories; a contract itself stays under `.devkit/managed/<bundle>/`.
 
 #### 10. `git-commit-gate`
@@ -169,7 +169,7 @@ An explicit invocation applies to the requested task, not to all future tasks in
 
 ## 4. Placement Decision Matrix
 
-When authoring new project guidance or developer tooling, select the resource kind with this decision tree:
+When authoring new project guidance or developer tooling, an author SHOULD select the resource kind with this decision tree:
 
 ```text
 Q1: Can this invariant be 100% deterministically verified by machine code?
