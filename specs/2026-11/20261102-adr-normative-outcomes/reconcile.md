@@ -74,10 +74,10 @@ targets:
 | `ADR-spec-package-on-devkit` | `ARCH-05-1-containers` §2.5 | MUST |
 | `ADR-test-selection-and-ci` | `ARCH-07-deployment` §1.3 | MUST, MUST NOT, SHOULD |
 | `ADR-writing-and-terminology-guidance` | `CAP-HARN-agent-guidance` §4.3 | MUST |
-| `ADR-configuration-language-and-rendering` | `CAP-DIST-content-packages` §1 (cloud text, installation guides) | MUST, MAY |
+| `ADR-configuration-language-and-rendering` | `CAP-DIST-content-packages` §1 (cloud text, installation guides) | MUST |
 | `ADR-delivery-decision-boundaries` | `CAP-DLV-project-policy` rule 10 | MUST, MUST NOT, SHOULD, MAY |
 | `ADR-immutable-decisions-editable-records` | `CAP-DOCS-document-model` §Decision supersession, scoped to `sdd` | MUST, MAY |
-| `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation` | `CAP-DIST-context-and-playbooks` §1 | MUST, MAY |
+| `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation` | `CAP-DIST-context-and-playbooks` §1, scoped to output-suggested invocations (`FB-bundle-text-bare-devkit-commands`) | MUST, MAY |
 | `ADR-local-and-pull-request-integration` | `CAP-INT-mcp-services` §Authority and route limits, codes table | MUST, MUST NOT |
 
 In each ADR, the restated clauses carry the keyword and `→ <ID>` as a format-only edit. Items were split only where
@@ -118,6 +118,9 @@ Owner choices that differ from spec §5 are listed in `PLAN-adr-normative-outcom
 - Git snapshot runs skip a rule when no diff candidate path matches its `inputs`.
 - Deleted paths count as candidates.
 - A `.devkit/config.toml` or `.devkit/installation.json` candidate keeps every rule.
+
+The spec bundle's `spec-rule` skill repeated the corrected wording. It now describes the same scoping, so the
+quick reference agrees with the capability.
 
 ## Deferred work handoff
 

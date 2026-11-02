@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:18:33.933766Z'
+status: completed
+summary: 'REVISE: all 24 targets listed and restatements match code except two P2 gaps (spec-rule snapshot wording, uv run devkit scope) and one P3 clause-format gap.'
+findings:
+- issue: spec-rule/SKILL.md still says full runs and the snapshot gates always run an inputs-declaring rule, contradicting the AC-05 correction.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule/SKILL.md:35-38; docs/capabilities/governance/CAP-GOV-rule-authoring.md:123-130; packages/devkit/src/devkit_agt/features/rules/services/evaluator.py:49-66
+  failure_condition: An agent writing a rule from spec-rule expects --staged/--ci to always evaluate an inputs-declaring rule.
+  suggested_action: Reword the spec-rule line to the capability's scoping.
+  resolution: open
+  severity: P2
+- issue: CAP-DIST-context-and-playbooks states every documented devkit invocation MUST be uv run devkit, broader than the enforced surfaces; bundle prose names bare devkit commands.
+  evidence: docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md:35-39; feedback/bundle-text-bare-devkit-commands.md
+  failure_condition: A reviewer reads bare devkit commands in a bundle skill as a MUST violation.
+  suggested_action: Scope the capability sentence to the enforced surfaces and cite the spec constitution's translation rule for bundle prose.
+  resolution: open
+  severity: P2
+- issue: ADR-delivery-decision-boundaries Helper commands item holds two keywords and the Autonomy item keeps a SHOULD without restating ID; ADR-configuration-language-and-rendering local-text clause is unmarked while reconcile.md lists MAY.
+  evidence: docs/decisions/2026-10/20261022-delivery-decision-boundaries.md:175-188; docs/decisions/2026-10/20261022-configuration-language-and-rendering.md:172-174; reconcile.md table
+  failure_condition: A reviewer cannot tell which keyword a restating ID covers, or finds a keyword clause without a restating document.
+  suggested_action: Split the Helper commands item; mark or drop the Autonomy SHOULD; align the MAY row in reconcile.md.
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native isolated reconcile-reviewer subagent'
+checks: {}
+diff_scope:
+  base: fceda9d28817f80d1bb04eb51d81306011341a6a
+  head: 63ce0be262410d18928ac0c6a7fe706c8df6e38c
+activity_effort: medium

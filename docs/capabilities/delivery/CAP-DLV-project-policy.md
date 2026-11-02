@@ -98,7 +98,9 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
 9. **Feedback consumption**: agents read effective feedback settings through `devkit spec policy`. Capture,
    detail and reminder behavior is defined by `CAP-HARN-agent-guidance`; a workflow stage switch remains in
    devkit's `[workflow.stages]` rather than a second feedback enable flag.
-10. **Autonomy between boundaries** (rule 4): helper commands and validation procedures MUST NOT add a human
+10. **Autonomy between boundaries** (rule 4): within agreed intent and existing authority, agents SHOULD choose
+    implementation details, run commands, inspect failures, correct defects, revalidate and retry without asking the
+    user; a routine negative result alone needs no user input. Helper commands and validation procedures MUST NOT add a human
     approval or acknowledgment solely to process routine findings; they SHOULD report completed work, failures or
     unknown outcomes with stable codes and deterministic next actions. A required check MAY still block an invalid
     transition; the agent resolves its cause within scope. Agents MUST escalate when a defined human decision is

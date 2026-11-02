@@ -34,8 +34,10 @@ Read [templates](references/templates.md) before Step 2.
    - Settings a project may tune ([config](references/config.md)).
    - Reading files beyond its targets (a whole-workspace scan, a configuration file) requires
      `inputs=("<pattern>", ...)`: workspace patterns (`[rules] exclude` `**` grammar) for every file whose content can
-     change its findings. A run with explicit targets then skips the rule when no target matches; full runs and the
-     snapshot gates always run it. A rule that reports only its targets leaves `inputs` unset.
+     change its findings. A run with explicit targets or a Git snapshot run (`--staged`, `--ci`) then skips the rule
+     when no target or diff path matches, deleted paths included. A change to `.devkit/config.toml` or
+     `.devkit/installation.json`, or a run without targets, evaluates every rule. A rule that reports only its targets
+     leaves `inputs` unset.
 2. **Create** `rules/<name>/rule.py`, `guide.md` and `tests/test_rule.py`; register the asset in `bundle.toml` and the
    project's preset. Name an instruction that holds the rule's judgment with `related=("<bundle>:<asset-id>",)`.
 3. **Implement** `check`, each `Violation` with an actionable `remediation`. Add `fix` only when repository state
