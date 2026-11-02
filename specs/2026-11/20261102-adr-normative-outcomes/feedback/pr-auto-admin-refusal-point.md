@@ -46,4 +46,4 @@ usecases/pull_request.py:395-407 returns INTEGRATION_CHECKS_PENDING after approv
 from the merge call to INTEGRATION_MERGE_REFUSED.
 ```
 
-- **Disposition**: `SPEC-retire-stale-integration-clauses`: `ADR-retire-stale-integration-approval-clauses` retires the pre-confirmation `--auto`/`--admin` refusal; the code stays as `CAP-INT-mcp-services` states. Verified by `devkit rules check` and the spec review.
+- **Disposition**: `SPEC-retire-stale-integration-clauses`: `ADR-local-and-pull-request-integration` retires the pre-confirmation `--auto`/`--admin` refusal; the code stays as `CAP-INT-mcp-services` states. Verified by `devkit rules check` and the spec review.

@@ -65,7 +65,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    Owning base auto, also retained by the prospective source, delegates only that boundary's verified local effects.
    A task branch cannot authorize itself; revocation stops remaining effects. Authority is reported as `policy`, never
    as a human approval. The Planning acceptance merge belongs to `plan-accept`, not Development's `dev-integration`.
-   Host permissions, required PR policy and publication authority remain separate (`ADR-delivery-decision-boundaries`).
+   Host permissions, required PR policy and publication authority remain separate (`ADR-delivery-approval-and-lifecycle-authority`).
    `exception` is a resolution stage, not a gate: its key emits `SPEC_APPROVAL_KEY_IGNORED` and is not listed.
 5. **Strict table**: `[tool.spec]` MUST be a table with only the keys `worktree`, `depth_escalation`, `scope` and
    `feedback`; anything else is `SPEC_CONFIG_INVALID`, raised by every command that reads the table.

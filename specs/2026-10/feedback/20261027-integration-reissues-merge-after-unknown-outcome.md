@@ -40,7 +40,7 @@ created_at: 2026-10-27
 - **Versions**: branch `dev-review-refactor`.
 - **Conditions**: pull-request route; GitHub returns an indeterminate merge result (timeout or 5xx).
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `CAP-INT-mcp-services`, `ADR-host-cli-lifecycle-authority`,
+- **Related Assets**: `CAP-INT-mcp-services`, `ADR-delivery-approval-and-lifecycle-authority`,
   `docs/materials/2026-10/20261027-review-refactor-code-pass/report.md`.
 
 ## Evidence
@@ -52,4 +52,4 @@ the fake recorded merge_calls == 2 while the PR stayed open." "A closed pending 
 
 ## Disposition
 
-- **Disposition**: ~~`PROP-pr-merge-recovery`~~ (Git `2092282ab6a30059243e26ee4cc148e865e91107`): promoted for Planning; its persistent-journal direction was rejected by the user and retired under `ADR-reject-persistent-pr-merge-journal`.
+- **Disposition**: ~~`PROP-pr-merge-recovery`~~ (Git `2092282ab6a30059243e26ee4cc148e865e91107`): promoted for Planning; its persistent-journal direction was rejected by the user and retired under `ADR-local-and-pull-request-integration`.

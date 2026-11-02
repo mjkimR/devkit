@@ -1,9 +1,9 @@
 ---
 id: ADR-orchestration-workers
 title: Orchestration workers deliver committed, recorded and inspectable runs
-summary: "For delegated Planning and Development runs, we have workers commit self-contained results on activity branches with one worker envelope per run, the Host inspect the cumulative range, and Codex run them natively, to keep one contract, accepting Git writes and caller-checked bounds."
+summary: "For delegated runs, we have workers commit self-contained results, sync outputs included, on activity branches with one envelope per turn, the Host inspect the range without a base-checkout equality, and Codex run them natively, to keep one contract, accepting Git writes and caller-checked bounds."
 status: accepted
-created_at: 2026-10-22
+created_at: 2026-11-02
 aliases:
   - ADR-worker-delivers-committed-result
   - ADR-run-records-and-activity-branches
@@ -13,18 +13,22 @@ aliases:
   - ADR-role-effort-presets
   - ADR-answer-envelopes-settle-worker-assumptions
   - ADR-informational-range-inspection-reuses-existing-checks
+  - ADR-admit-change-sync-outputs
+  - ADR-drop-the-base-checkout-equality-from-worker-validation
 ---
 
 # [ADR-orchestration-workers] Orchestration workers deliver committed, recorded and inspectable runs
 
-Superseded in part by `ADR-reusable-lifecycle-resource-manager`: its Host-only lifecycle invocation clauses.
-
 - **Status**: Accepted
-- **Date**: 2026-10-22
-- **Deciders**: @mjkimR
+- **Date**: 2026-11-02
+- **Deciders**: @mjkimR (user)
 - **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, `CAP-DLV-proposal-planning`,
-  `CAP-DLV-project-policy`, `CAP-HARN-agent-guidance`, the `worker` role contract, `spec-delegate`,
-  `spec-orchestrate`, `spec-tasks`
+  `CAP-DLV-project-policy`, `CAP-DLV-workflow-envelopes`, `CAP-HARN-agent-guidance`, the `worker` role contract,
+  `spec-delegate`, `spec-orchestrate`, `spec-tasks`
+
+The role reasoning effort presets once decided under the alias `ADR-role-effort-presets`, with the model-selection
+exclusion, are decided by `ADR-subagent-levels`; Host-only lifecycle invocation is decided by
+`ADR-delivery-approval-and-lifecycle-authority`. Neither is restated here.
 
 ---
 
@@ -57,12 +61,9 @@ Further gaps followed on the same runs:
   (`FB-direct-planning-procedure-location`). `CAP-DLV-delivery-workflows` puts a procedure in the contract only "for a
   role whose procedure no main session runs" (`SPEC-subagent-procedure-in-contract`), and a `direct` Host does run
   Planning. Moving the steps had to fit the bundle's byte budgets:
-  `packages/devkit-spec/tests/integration/bundles/spec/test_bundle_budgets.py` caps every skill and playbook document at 12288 bytes, holds
-  `spec/SKILL.md` to 11776 bytes and requires every file under a skill's `references/` to be linked from that skill.
-- Every spec role contract carried an abstract `x-model-profile` that nothing reads, so each projected subagent ran at
-  the host's default reasoning effort (`medium` on the Claude 5.5 family). Naming models would need an update on every
-  model release. Claude Code (`effort`) and Codex (`model_reasoning_effort`) both accept a per-agent effort in the
-  host blocks devkit already projects; Antigravity has no such key (`materials/host-effort-semantics.md`).
+  `packages/devkit-spec/tests/integration/bundles/spec/test_bundle_budgets.py` caps every skill and playbook document
+  at 12288 bytes, holds `spec/SKILL.md` to 11776 bytes and requires every file under a skill's `references/` to be
+  linked from that skill.
 - When the user's answers also settle assumptions a worker recorded (its `worker` envelope's `assumptions`), the
   `answer` envelope had no place for them: its items are `{question, choice, decision, constraints}`, each tied to a
   question, and a run recorded them as `constraints` prefixed "Settled by the user in the same round:"
@@ -75,6 +76,23 @@ Further gaps followed on the same runs:
   the unit's range and returns one result, including the compared heads and changed paths a read-only reviewer needs
   (`FB-reconcile-reviewer-no-diff-list`). The inputs the Host supplied by hand are already determined by the worktree
   and the unit's committed records.
+- A delegated Development worker writes only its payload's write scope. For a change to a bundle source the project
+  selects, the payload named "the tracked files `devkit sync --check` lists for that change", and the
+  `development-worker` contract treats a tracked sync output the write scope omits as a problem. The Host builds the
+  payload before the change exists, so `devkit sync --check` on the accepted head lists nothing for a seed the change
+  adds. A new seed path in a selected preset (`docs/ux/README.md` from `SPEC-ux-documentation`) was therefore always
+  outside the named scope, and the worker stopped until the Host admitted it; a worker told up front that such
+  outputs are admitted completed without stopping.
+- A worker's default cwd may be the base checkout, so a relative-path write or a commit can escape its worktree,
+  outside the audited range `<accepted>..<returned>`. Requiring the base checkout's status and HEAD unchanged since a
+  pre-spawn record stops on every Host integration and every commit another session makes to the base branch, so the
+  Host serialized independent integrations behind a running worker (`MAT-git-operator-consumer-pilot`); that record
+  lives only in the Host's conversation. Existing checks catch most escapes once one condition is explicit: a dirty
+  base checkout refuses handoff (`SPEC_HANDOFF_BASE_DIRTY`) and integration (`WORKTREE_BASE_DIRTY`); a full escape
+  (the whole turn, its `worker` envelope included, committed in the base) fails only if `<returned>` must add this
+  turn's envelope, since inspection derives `head` from the latest envelope on the branch and on a later turn would
+  re-audit the previous turn and pass. A partial committed escape (some worker commits on the base branch) passes
+  every check: the `WORKTREE_MERGE_NOT_FF` fix merges the base into the branch without naming any commit.
 
 ---
 
@@ -95,11 +113,6 @@ Further gaps followed on the same runs:
 - Byte budgets as measured at base `97cdcd8`: `spec/SKILL.md` 6531 bytes; the largest `spec` reference 6833 bytes
   (`completion.md`); the `planning-worker` contract 7953 bytes, of which steps 2 to 6 are 4277 bytes. No test or rule
   caps a role contract's size.
-- No maintenance when models change: name no model, use only `low`, `medium` and `high`, which both hosts accept on
-  current models.
-- A worker takes over the Host's own work, so it should run at the effort the user chose for the session.
-- `activity-effort` decides how thorough a review is; the reasoning effort stays independent of it, because Codex
-  lets the agent file override a spawn value and an `emulated` role has no separate call at all.
 - The plan-intent fixed a slot in the answer envelope for settled assumptions; a pure convention is out. Worker
   envelopes are never overwritten, so a position in their `assumptions` list is stable; consistency with
   `reverify --resolve N` / `--waive N=REASON`, which address findings by 1-based position. Settling an assumption
@@ -109,86 +122,126 @@ Further gaps followed on the same runs:
 - Reuse, not reimplementation: existing codes and actions of the wrapped checks are preserved.
 - Derive, never guess: an input the records do not determine is a could-not-run with a stable code, and an explicit
   flag only overrides a derived value (user decision at the `plan-accept` review).
+- No Development stop on a path that follows mechanically from the agreed change.
+- No new code, command or rule mode when procedure suffices.
+- The Host can still tell an admitted sync output from an unrelated out-of-scope write.
+- A worker write outside its worktree must not stay hidden; a defect that surfaces later in CI, integration or
+  hygiene is acceptable.
+- Host integrations and other sessions' commits must not wait for a running worker.
+- Lifecycle checks stay light: no per-integration declaration, no conversation-only record and no new mechanism
+  without an observed failure.
+- The worker's own write audit (ancestry, changed paths in scope, clean worktree) stays as it is.
 
 ---
 
 ## 3. Considered Options
 
-### Committed worker results (`ADR-worker-delivers-committed-result`)
+### Committed worker results (ADR-worker-delivers-committed-result)
 
 - **The worker commits a complete result; failures are blocked** (selected): the worker stages only its write scope,
   commits on the unit branch through the commit gate and returns the head; the host validates the cumulative range
   from the last accepted head. Pros: the same result shape locally and in a pull request; the commit gate runs on the
   worker's work. Cons: the worker gains a Git write action; a rejected range stays in the branch history.
-- **Unstaged result, the host repairs and commits** (status quo, rejected): impossible where the worker's branch is
-  checked before the host sees it; the host keeps finishing delegated work.
-- **The worker commits; failures are reset or the pull request is closed** (rejected): discards delegated work and its
-  evidence; differs between local and pull-request delivery.
+- **Unstaged result, the host repairs and commits** (status quo, rejected in ADR-worker-delivers-committed-result):
+  impossible where the worker's branch is checked before the host sees it; the host keeps finishing delegated work.
+- **The worker commits; failures are reset or the pull request is closed** (rejected in
+  ADR-worker-delivers-committed-result): discards delegated work and its evidence; differs between local and
+  pull-request delivery.
 
-### Run records (`ADR-run-records-and-activity-branches`)
+### Run records (ADR-run-records-and-activity-branches)
 
 - **One worker envelope per run, references for answers and resolutions** (selected): one record per run, one blocked
   rule, answers and fixes traceable to the run that needed them. Cons: a Host that blocks a range writes a `worker`
   envelope although it is not a worker role.
-- **Separate question and problem kinds** (rejected): the same questions in two files, and two places that can
-  disagree about why a run stopped.
+- **Separate question and problem kinds** (rejected in ADR-run-records-and-activity-branches): the same questions in
+  two files, and two places that can disagree about why a run stopped.
 
-### Codex worker execution (`ADR-codex-native-worker-execution`)
+### Codex worker execution (ADR-codex-native-worker-execution)
 
 - **Native subagent with emulated boundaries** (selected): named projection or generic effective-contract loading,
   individual command approvals; the caller verifies boundaries and unavailable approvals can stop work.
-- **Keep Codex unsupported** (retained as runtime fallback only): the Host performs all work in direct mode, which
-  discards demonstrated native execution with approved commands.
-- **Separate process worker** (excluded): process launcher, permission configuration and output capture; new
-  lifecycle and settings work without a demonstrated need.
+- **Keep Codex unsupported** (retained as runtime fallback only in ADR-codex-native-worker-execution): the Host
+  performs all work in direct mode, which discards demonstrated native execution with approved commands.
+- **Separate process worker** (excluded in ADR-codex-native-worker-execution): process launcher, permission
+  configuration and output capture; new lifecycle and settings work without a demonstrated need.
 
-### Where the Planning steps live (`ADR-executor-neutral-planning-steps-in-a-spec-reference`)
+### Where the Planning steps live (ADR-executor-neutral-planning-steps-in-a-spec-reference)
 
 - **Move the neutral steps to `spec/references/planning.md`; the contract cites it** (selected).
-- **Copy the steps into a reference and keep them in the contract** (rejected): two texts to keep in step.
-- **Point the routing table at the contract for `direct` Hosts** (rejected): the FB's workaround, still a prompt for
-  another actor.
+- **Copy the steps into a reference and keep them in the contract** (rejected in
+  ADR-executor-neutral-planning-steps-in-a-spec-reference): two texts to keep in step.
+- **Point the routing table at the contract for `direct` Hosts** (rejected in
+  ADR-executor-neutral-planning-steps-in-a-spec-reference): the FB's workaround, still a prompt for another actor.
 
-### Byte budget for the Planning reference (`ADR-planning-reference-fits-the-existing-byte-budgets`)
+### Byte budget for the Planning reference (ADR-planning-reference-fits-the-existing-byte-budgets)
 
 - **New `references/planning.md`, linked once from the routing table's proposal row** (selected).
-- **Append the steps to `worker-records.md`** (6791 bytes, rejected): about 11 KB, near the budget edge, and mixes
-  record mechanics with the activity's order.
+- **Append the steps to `worker-records.md`** (6791 bytes, rejected in
+  ADR-planning-reference-fits-the-existing-byte-budgets): about 11 KB, near the budget edge, and mixes record
+  mechanics with the activity's order.
 
-### Role reasoning effort (`ADR-role-effort-presets`)
-
-- **Reviewers only** (selected): `scout` and `reconcile-reviewer` (`light-medium`) `medium`; `code-reviewer`
-  (`general-high`) and `challenger` (`high-reasoning`) `high`; `planning-worker` and `development-worker` unset.
-- **By profile** (rejected): as above, plus both workers `high` after their `general-high` profile; it overrides the
-  session effort the user picked for the work the worker takes over.
-- **Per call, tied to `activity-effort`** (rejected in Backlog): it works only on Claude Code.
-
-### Settled worker assumptions (`ADR-answer-envelopes-settle-worker-assumptions`)
+### Settled worker assumptions (ADR-answer-envelopes-settle-worker-assumptions)
 
 - **A. `settles` items by position** (selected): `settles: [{assumption: 2, decision: "..."}]`, the 1-based position
   in the `answers_to` worker's `assumptions`.
-- **B. `settles` items by text** (not chosen): the assumption string copied exactly.
-- **C. Assumption ids** (rejected): give worker assumptions ids (`{id, text}`), referenced by `settles`; it would
-  change every worker envelope's schema.
+- **B. `settles` items by text** (not chosen in ADR-answer-envelopes-settle-worker-assumptions): the assumption string
+  copied exactly.
+- **C. Assumption ids** (rejected in ADR-answer-envelopes-settle-worker-assumptions): give worker assumptions ids
+  (`{id, text}`), referenced by `settles`; it would change every worker envelope's schema.
 
-### Range inspection (`ADR-informational-range-inspection-reuses-existing-checks`)
+### Range inspection (ADR-informational-range-inspection-reuses-existing-checks)
 
 - **A thin `devkit-spec` command that derives its inputs, calls the existing checks and aggregates their results**
   (selected; the explicit-input variant was superseded at the `plan-accept` review), named
   `devkit spec worker inspect`; `devkit spec range inspect` and `devkit spec scope inspect` (mixing it with the scope
   registry) were the alternatives.
-- **A new check class in the workflow engine evaluated at a stage's exit** (rejected): it would become a gate.
-- **Documentation-only (a shell recipe in `spec-delegate`)** (rejected): the hand-written scope pattern stays per run
-  and the reviewer payload still lacks a generated path list.
+- **A new check class in the workflow engine evaluated at a stage's exit** (rejected in
+  ADR-informational-range-inspection-reuses-existing-checks): it would become a gate.
+- **Documentation-only (a shell recipe in `spec-delegate`)** (rejected in
+  ADR-informational-range-inspection-reuses-existing-checks): the hand-written scope pattern stays per run and the
+  reviewer payload still lacks a generated path list.
+
+### Sync outputs of the change (ADR-admit-change-sync-outputs)
+
+- **Keep the current state** (not chosen in ADR-admit-change-sync-outputs): the Host admits each new seeded path by
+  hand after a worker problem; one stop per new seed, as observed.
+- **Derive the outputs in code (Q1)** (not chosen in ADR-admit-change-sync-outputs): a command lists the change's sync
+  outputs for the payload; it can run only after the change exists, so it serves the Host's validation, not the
+  payload, and duplicates `devkit sync --check`.
+- **Declare the outputs in Planning (Q2)** (not chosen in ADR-admit-change-sync-outputs): `RULE-proposal-boundaries`
+  accepts a not-yet-existing seeded target named with its seed source; new rule syntax and code for a path the receipt
+  already records after sync.
+- **Standing procedure (Q3)** (selected): the write scope admits, as a class, every tracked path `devkit sync` writes
+  from the change; the worker records each in `_Boundary:` and the Host checks it against
+  `.devkit/installation.json`.
+
+### Base-checkout observation during validation (ADR-drop-the-base-checkout-equality-from-worker-validation)
+
+`MAT-base-observation-options` holds the failure traces and the review history of the warning option.
+
+- **Keep the HEAD equality** (not chosen in ADR-drop-the-base-checkout-equality-from-worker-validation): detects every
+  escape; serializes every advance and needs a conversation-only record.
+- **Drop the equality and its record; require the turn's own envelope** (selected): no ceremony and no code; a partial
+  committed escape whose content passes CI stays hidden.
+- **Host declares its own advances; any other advance stops** (not chosen in
+  ADR-drop-the-base-checkout-equality-from-worker-validation): detects every escape; one declaration per integration,
+  a durable pre-spawn record, and a foreign-session commit still stops validation.
+- **Derived scope-overlap warning in inspection** (not chosen in
+  ADR-drop-the-base-checkout-equality-from-worker-validation): names in-scope base commits without a record; a
+  time-bounded window drops escapes because committer times do not follow ancestry, and a topology-only window repeats
+  other units' commits for accounting or user confirmation.
 
 ---
 
 ## 4. Decision Outcome
 
-### Committed results and their validation
+Workers commit self-contained results on activity branches, record each run in one `worker` envelope, and the Host
+inspects the cumulative range with one command and decides. Dropping the base-checkout equality was the user's choice:
+the remaining checks name every escape except a partial committed one, accepted as an exception to the first
+base-observation driver, and each mechanism that also names that case adds recurring Host or user work.
+(ADR-drop-the-base-checkout-equality-from-worker-validation)
 
-Superseded in part by `ADR-drop-the-base-checkout-equality-from-worker-validation`: the base-checkout clauses below
-and in the Decision Outcome's Range inspection; the rest stays in force.
+### Committed results and their validation
 
 - The `worker` role's Git actions are `[read, commit]`: stage write-scope paths, commit on its unit branch through the
   commit gate, leave the worktree clean. It never pushes, merges, rebases, resets, amends, stashes or checks out;
@@ -199,13 +252,35 @@ and in the Decision Outcome's Range inspection; the rest stays in force.
   (ADR-worker-delivers-committed-result)
 - The host validates the cumulative range from the last accepted head (initially the head recorded before spawning)
   to the returned head: it descends from that head, every changed path is in the write scope, `spec.md` changes only
-  in `status`, the worktree is clean and the base checkout unchanged. (ADR-worker-delivers-committed-result)
+  in `status` and the worktree is clean. (ADR-worker-delivers-committed-result)
+- The Host no longer records the base checkout before spawning and no longer requires its status or HEAD unchanged at
+  validation. (ADR-drop-the-base-checkout-equality-from-worker-validation)
+- The range passes when `<returned>` adds this turn's `worker` envelope (absent at `<accepted>`), plus the existing
+  ancestry, worktree HEAD, write-scope, clean-worktree and check conditions.
+  (ADR-drop-the-base-checkout-equality-from-worker-validation)
+- Base advances by the Host, another session or an unknown author never block a worker's range; no base merge is
+  required before validation. (ADR-drop-the-base-checkout-equality-from-worker-validation)
 - A failed validation blocks the unit from review and integration. The commits stay (no reset; a pull request stays
   open and blocked); further commits by the worker or the host fix it, reverting out-of-scope changes, and the next
   validation covers the cumulative range. (ADR-worker-delivers-committed-result)
 - The Host's failed range check is a problem in the Host's own `worker` envelope (a `failed` worker envelope); an
   accepted range writes nothing; it is cleared by a resolution that names it, not by a later check. There is no
   `question` or `validation` kind. (ADR-run-records-and-activity-branches)
+
+### Sync outputs of the change
+
+- The standing procedure (Q3) is chosen because it removes the stop with wording only and keeps the Host's check
+  deterministic. (ADR-admit-change-sync-outputs)
+- The write scope admits the class "the tracked paths `devkit sync` writes in the worktree after the change, when
+  `devkit sync --check` exits `0` on the accepted head"; a clean starting sync makes every later output a consequence
+  of the change. The worker runs that check before its first edit and records it as `sync_start`; a nonzero exit is a
+  problem. (ADR-admit-change-sync-outputs)
+- The worker commits each such path, names it in the owning task's `_Boundary:` with the note `(sync output)`, and
+  reports it in its `worker` envelope summary. (ADR-admit-change-sync-outputs)
+- The Host checks each `(sync output)` entry `tasks.md` gained itself, because `devkit spec worker inspect` reads
+  `_Boundary:` at the returned head: it passes when `sync_start` is `0`, `devkit sync --check` exits `0` on the
+  returned head, and the path is under `seeded` or `files` in `.devkit/installation.json`, is the receipt itself, or
+  is the file that holds the managed guidance block. (ADR-admit-change-sync-outputs)
 
 ### Run records and the hold
 
@@ -305,23 +380,6 @@ and in the Decision Outcome's Range inspection; the rest stays in force.
   `spec/SKILL.md` (about 6.6 KB of 11776); the contract shrinks to about 4 KB. No reference is trimmed.
   (ADR-planning-reference-fits-the-existing-byte-budgets)
 
-### Role reasoning effort presets
-
-Superseded in part by `ADR-subagent-level-projection`: this decision alone; the other decisions in this
-consolidated ADR remain in force. The preset-specific consequences and confirmation below are historical for this
-decision.
-
-- Reviewer presets: `scout` and `reconcile-reviewer` `medium`; `code-reviewer` and `challenger` `high`. The
-  `claude-code` block sets `effort` and the `codex` block sets `model_reasoning_effort` to the role's value; a `codex`
-  block whose status is `unsupported` gets none. Antigravity stays unset. The workers set no preset.
-  (ADR-role-effort-presets)
-- The preset applies only when the projected agent is spawned. A role the main session runs itself (Codex `emulated`,
-  or a main-session substitute) uses the session's effort; `CAP-DLV-delivery-workflows` §4.6 states this in one
-  sentence. (ADR-role-effort-presets)
-- `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` pins the mapping for every role contract: each role's
-  `x-model-profile` and its expected preset per host, so a changed profile, a changed preset or a new contract without
-  an entry fails the test. (ADR-role-effort-presets)
-
 ### Range inspection
 
 - The command is `devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>]
@@ -361,8 +419,8 @@ decision.
   the scope for the Host to judge. (ADR-informational-range-inspection-reuses-existing-checks)
 - **Base checkout**: `--base-checkout`, else the worktree's registered base checkout (the one whose Git directory is
   the common one, as `devkit worktree` locates it); absent when the command runs in the base checkout itself. Its HEAD
-  and dirty paths are information, not a check: comparing them with what the Host recorded before spawning stays the
-  Host's step. (ADR-informational-range-inspection-reuses-existing-checks)
+  and dirty paths are information, not a check. (ADR-informational-range-inspection-reuses-existing-checks,
+  ADR-drop-the-base-checkout-equality-from-worker-validation)
 - A could-not-run code's action is to pass the named flag. Each input in the result names its value and its source
   (`argument` or the derivation used). (ADR-informational-range-inspection-reuses-existing-checks)
 - Each check reports `pass`, `fail` or `not-run` (with its cause), so a check that could not run is distinct from a
@@ -393,49 +451,64 @@ decision.
 
 - **Positive**:
   - The host no longer repairs worker output; a worker's branch is reviewable as is; the pilot's three worker
-    frictions are resolved by the contract.
+    frictions are resolved by the contract. (ADR-worker-delivers-committed-result)
   - The Host's per-range validation becomes one call, usually without arguments; its decision and recording (accept,
     or block with a `worker` envelope) are unchanged. Reviewer payloads can carry a generated changed-path list
-    instead of the caller's selection.
+    instead of the caller's selection. (ADR-informational-range-inspection-reuses-existing-checks)
   - Codex roles become projected by normal sync and can use tested native mechanisms where scoped approvals work.
-  - Reviewers run at a fixed effort on Claude Code and Codex with no model names to maintain; on Claude Code a
-    per-call `effort` or `CLAUDE_CODE_EFFORT_LEVEL` still overrides the preset, on Codex the preset wins over a spawn
-    value.
+    (ADR-codex-native-worker-execution)
+  - A new seed or projection no longer needs a Host decision per path; `devkit spec worker inspect` derives the
+    recorded path from `_Boundary:` with no code change. (ADR-admit-change-sync-outputs)
+  - Independent integrations and foreign commits proceed while a worker runs; the Host drops one record and one
+    comparison per worker. (ADR-drop-the-base-checkout-equality-from-worker-validation)
 - **Negative / Risks**:
   - A rejected range remains in the unit branch's history until it is fixed; a worker with Git write access must be
     trusted not to bypass the commit gate (the range check catches out-of-scope paths).
+    (ADR-worker-delivers-committed-result)
   - Approval refusal and inability to preserve a committed result remain visible failure modes. Named-role loading and
     denied approvals have not been live validated, and no general host/version or persistent-grant guarantee follows.
+    (ADR-codex-native-worker-execution)
   - The worker reads one more file at spawn (about 4.5 KB), as it already does for `review-loop.md` and `sweep.md`.
+    (ADR-executor-neutral-planning-steps-in-a-spec-reference)
   - A derived scope can differ from the payload scope the Host wrote (a payload that adds paths the documents do not
     declare); the Host then passes its scope with `--scope`, and the result names the scope's source either way.
+    (ADR-informational-range-inspection-reuses-existing-checks)
   - Deriving the base reads the unit's records at an earlier commit, so the envelope check must run on a committed
     tree, not only on the working directory. The rules check over the range is as costly as
     `devkit rules check --ci`; the command runs it once per call.
+    (ADR-informational-range-inspection-reuses-existing-checks)
+  - The Host's sync-output check is a review step against the receipt, not an automated scope check.
+    (ADR-admit-change-sync-outputs)
+  - A partial committed escape (a worker committing some work on the base branch through the wrong cwd) is named by
+    no check. If its content passes CI, nobody reviews or attributes it, so it stays hidden. It needs several commands
+    of one turn to miss the worktree cwd; none has been observed.
+    (ADR-drop-the-base-checkout-equality-from-worker-validation)
 - **Follow-ups and effects on other records**:
   - `devkit spec proposal handoff` refuses any checkout on another branch than `dev-<slug>`
     (`SPEC_PROPOSAL_WRONG_WORKTREE`); `ADR-worktrees-and-scope` extends the guard to the base checkout.
+    (ADR-run-records-and-activity-branches)
   - `/spec-next` reports `[PENDING_QUESTION]`, `[BLOCKED]` and stale activity branches; the feedback hygiene playbook
     lists stale branches for the user to resume or discard. A stale branch's unit is shown only when an attach recorded
-    it; the Host maps the slug otherwise.
+    it; the Host maps the slug otherwise. (ADR-run-records-and-activity-branches)
   - The `planning-worker` row of the `CAP-DLV-delivery-workflows` role table names its procedure in
     `spec/references/planning.md`, with the sentence on where worker procedures live; `CAP-HARN-agent-guidance` lists
     only the asset ids and needs no change. If the Planning reference grows past about 8 KB, split it rather than
-    trimming another reference.
-  - The model-selection non-goal of `CAP-DLV-delivery-workflows` narrows: model choice stays with the runtime, while
-    role contracts preset a reasoning effort per role. Raising a reviewer above `high` later is a contract edit plus
-    the test table, once both hosts accept the value on the models in use.
+    trimming another reference. (ADR-executor-neutral-planning-steps-in-a-spec-reference)
   - `settles` touches the `Answer`/envelope model, `_check_kind_fields`, reference validation and the `answer`
     command; `envelope check --format json` entries carry `settles`; `CAP-DLV-workflow-envelopes` section 1.1 (table
-    and example) and section 2 (flag table, key order).
+    and example) and section 2 (flag table, key order). (ADR-answer-envelopes-settle-worker-assumptions)
+  - If a worker records a `(sync output)` path the receipt does not hold, or the class proves ambiguous twice,
+    revisit the derivation option (Q1) as a `worker inspect` check. (ADR-admit-change-sync-outputs)
+  - If a partial committed escape is observed, add a commit-gate check that refuses a commit in the base checkout
+    touching a path an active task worktree's unit owns (`CAP-COLL-work-scope-registry`). No follow-up is filed before
+    that observation. (ADR-drop-the-base-checkout-equality-from-worker-validation)
 
 ---
 
 ## 6. Confirmation
 
-- `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` pins the reasoning-effort mapping per role and host.
-- `packages/devkit-spec/tests/integration/bundles/spec/test_bundle_budgets.py` holds the byte budgets and the link coverage of
-  `references/planning.md`.
+- `packages/devkit-spec/tests/integration/bundles/spec/test_bundle_budgets.py` holds the byte budgets and the link
+  coverage of `references/planning.md`.
 - Phrase tests follow the moved Planning text: `test_the_planning_worker_collects_questions_in_one_round` and the
   planning half of `test_a_run_records_its_questions_and_problem_in_one_worker_envelope` read the reference;
   `test_a_worker_commits_its_result_and_records_in_its_worktree` keeps its contract assertions (`git -C <worktree>`,
@@ -446,4 +519,11 @@ decision.
   evidence came from the Planning and Development runs of `SPEC-codex-native-workers`.
 - The Host's range validation (`spec-delegate` `references/worker.md`, `devkit spec worker inspect`) checks every
   returned range.
-
+- `packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py` pins the payload and
+  `development-worker` sync-output wording; the Host's receipt check is review only.
+- `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py`: `spec-delegate/references/worker.md`
+  and `payload.md` carry no pre-spawn base record and no unchanged-base requirement; `worker.md` requires the turn's
+  own envelope and keeps the remaining range conditions.
+- The reconcile review checks that `CAP-DLV-delivery-workflows`' acceptance requirements name the turn's own `worker`
+  envelope instead of an unchanged base, that its base-checkout observation names no Host comparison, and review
+  confirmed that the two superseded clauses were named when the base-checkout decision was promoted.

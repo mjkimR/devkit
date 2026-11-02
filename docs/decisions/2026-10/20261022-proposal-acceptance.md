@@ -162,7 +162,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   (ADR-direct-acceptance-command-and-handoff-guard)
 - **Acceptance authority**: the command runs after an explicit acceptance (`--by user`; autohub records the user's UI
   acceptance the same way); the original human-only restriction is replaced by policy delegation of `plan-accept`
-  (`ADR-delivery-decision-boundaries`), while this writer and its carry guards remain in force.
+  (`ADR-delivery-approval-and-lifecycle-authority`), while this writer and its carry guards remain in force.
   (ADR-direct-acceptance-command-and-handoff-guard)
 - **Repair**: with `--direct` the command also repairs a proposal already `accepted` that has no effective
   `gate:plan-accept` and no `worker` envelope (no Planning ran), applying every direct-acceptance check except the

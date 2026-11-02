@@ -166,13 +166,13 @@ while it proceeds, so the unit documents and worker boundaries hold it back.
   (ADR-task-kind-and-planning-depth)
 - **Gates**: `plan-intent`, `plan-accept` and `dev-integration` are named gates matching the engine's request ids;
   Development has no direction gate. Which gates accept a policy and which values they take is stated in
-  `ADR-delivery-decision-boundaries`, which replaced the rule that `plan-intent` and `plan-accept` are always the
+  `ADR-delivery-approval-and-lifecycle-authority`, which replaced the rule that `plan-intent` and `plan-accept` are always the
   user's with no policy key. (ADR-task-kind-and-planning-depth)
 - **Handoff target**: the handoff target is `sdd-spec-<task_kind>`, read from the proposal's `task_kind`, the only
   axis value stored as a field because a proposal is not yet bound to its spec workflow; `handoff_workflow` is replaced
   by `task_kind`; `spec.md` has no `kind` field. The handoff carries `gate:plan-intent` and `gate:plan-accept` under
   their own names. (ADR-task-kind-and-planning-depth)
-- **Integration gate semantics**: the approval-gate semantics of `ADR-delivery-decision-boundaries` for integration
+- **Integration gate semantics**: the approval-gate semantics of `ADR-delivery-approval-and-lifecycle-authority` for integration
   stay under the name `dev-integration`. (ADR-task-kind-and-planning-depth)
 - **Envelopes**: Planning's question rounds, the structured question, answer, problem and resolution envelopes and the
   blocked state rest on devkit envelope contracts that are adopted separately. (ADR-task-kind-and-planning-depth)

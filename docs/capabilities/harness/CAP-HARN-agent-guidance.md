@@ -218,9 +218,9 @@ tracked receipt/projection updates, then verifies the final content before reque
 incorporates the base and synchronizes again only after preparation reports `WORKTREE_MERGE_CONFLICT`,
 `INTEGRATION_RECEIPT_CONFLICT`, `INTEGRATION_NOT_READY`, or `WORKTREE_MERGE_NOT_FF` under `merge = "ff-only"` or on
 the pull-request route; on the local `no-ff` route the receipt check and the CI rules on the merged result guard a
-conflict-free moved base (`ADR-moved-target-merge`); a conflict confined to registered generated files is kept at
+conflict-free moved base (`ADR-local-and-pull-request-integration`); a conflict confined to registered generated files is kept at
 each artifact's seed side and disclosed (`INTEGRATION_GENERATED_SEEDED`), not refused
-(`ADR-generated-conflicts-in-prepared-merge`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
+(`ADR-local-and-pull-request-integration`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
 base-checkout projections, runs and commits the disclosed `devkit generated regen <ids>` in direct mode, and reports
 failures or unexpected tracked changes for inspection.
 
@@ -399,7 +399,7 @@ either location and retain aliases; the theme status selects its location. Check
 Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. After the unit prerequisite filter below, eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone, needs_decompose and XL drafts are Backlog actions (the latter two name the decomposer); unit-ready critical drafts still rank first; milestone exceptions never bypass unit prerequisites. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene.
 
 
-Proposal acceptance and handoff run through Host-authorized CLI operations (`ADR-host-cli-lifecycle-authority`).
+Proposal acceptance and handoff run through Host-authorized CLI operations (`ADR-delivery-approval-and-lifecycle-authority`).
 The Host reviews the proposal, every PADR and the envelopes at the final committed `plan-<slug>` source, presents
 the findings and effects, and invokes `devkit spec proposal accept` only after the user's decision under `ask`.
 `devkit spec proposal report` renders an optional briefing; acceptance requires no published report, while shared

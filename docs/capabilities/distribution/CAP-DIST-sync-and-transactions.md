@@ -495,7 +495,7 @@ of `write`, it MUST return `MCP_REGISTRATION_PENDING` with fix `uv run devkit sy
 Absent-provider, `None` and runtime-unavailable plans produce no pending notice; the runtime-unavailable warning
 is retained. General `devkit status` omits this speculative registration check, including its MCP ownership-ledger
 and destination inspection, and never loads the registration provider or probes runtime readiness.
-Explicit MCP and sync commands retain actual registration diagnostics. See `ADR-remove-speculative-mcp-status-notice`
+Explicit MCP and sync commands retain actual registration diagnostics. See `ADR-mcp-runtime-and-shared-artifacts`
 and `packages/devkit-dist/tests/integration/features/distribution/test_sync_reporting.py`.
 
 ### Bundle template inputs

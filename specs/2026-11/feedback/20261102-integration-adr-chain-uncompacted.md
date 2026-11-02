@@ -8,7 +8,7 @@ target: docs/decisions/
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-02
 ---
 
@@ -20,13 +20,11 @@ Category note: decision ledger size.
 
 - **Current Procedure**: The 2026-11-02 `adr-compaction` run compacted 77 ADRs into 20 replacements and left one
   supersession component of 13 ADRs untouched. Supersession closure forbids splitting it, and as one replacement it
-  would be a mega-ADR with about 30 aliases and five unrelated clause families. The 13 ADRs:
-  `ADR-configuration-language-and-rendering`, `ADR-delivery-decision-boundaries`,
-  `ADR-local-and-pull-request-integration`, `ADR-orchestration-workers`, `ADR-host-cli-lifecycle-authority`,
-  `ADR-subagent-level-projection`, `ADR-five-subagent-levels`, `ADR-lean-subagent-level`,
-  `ADR-reusable-lifecycle-resource-manager`, `ADR-drop-the-base-checkout-equality-from-worker-validation`,
-  `ADR-moved-target-merge`, `ADR-generated-conflicts-in-prepared-merge`,
-  `ADR-retire-stale-integration-approval-clauses`.
+  would be a mega-ADR with about 30 aliases and five unrelated clause families. The 13 ADRs (former IDs, now aliases):
+  configuration-language-and-rendering, delivery-decision-boundaries, local-and-pull-request-integration,
+  orchestration-workers, host-cli-lifecycle-authority, subagent-level-projection, five-subagent-levels,
+  lean-subagent-level, reusable-lifecycle-resource-manager, drop-the-base-checkout-equality-from-worker-validation,
+  moved-target-merge, generated-conflicts-in-prepared-merge, retire-stale-integration-approval-clauses.
 - **Proposed Procedure**: Untangle the chain first. Where a later ADR replaced a whole topic, state the replacement
   per topic so the component splits into coherent groups (gates and authority, merge routes, workers and subagent
   levels, configuration and rendering). Then compact each group. Fold in `FB-native-approval-adrs-without-pointers`.
@@ -38,7 +36,7 @@ Category note: decision ledger size.
 
 ## Diagnostic Details
 
-- **Reproduction**: Compute the supersession closure of `ADR-retire-stale-integration-approval-clauses`.
+- **Reproduction**: Compute the supersession closure of `ADR-local-and-pull-request-integration`.
 - **Expected / Actual**: Expected topic-sized groups; observed one component of 13.
 - **Versions**: base `27987dd7`.
 - **Conditions**: not applicable.
@@ -52,3 +50,5 @@ retire-stale-integration-approval-clauses supersedes local-and-pull-request-inte
 configuration-language-and-rendering; reusable-lifecycle-resource-manager supersedes host-cli-lifecycle-authority,
 orchestration-workers and five-subagent-levels; subagent-level-projection supersedes an orchestration-workers alias.
 ```
+
+- **Disposition**: `SPEC-adr-ledger-cleanup` replaced the closure rule with topic groups (`ADR-decision-ledger`); the second `adr-compaction` run compacted the integration component into `ADR-delivery-approval-and-lifecycle-authority`, `ADR-local-and-pull-request-integration`, `ADR-orchestration-workers`, `ADR-subagent-levels` and `ADR-mcp-runtime-and-shared-artifacts`. Verified by two fidelity reviews and `devkit rules check`.

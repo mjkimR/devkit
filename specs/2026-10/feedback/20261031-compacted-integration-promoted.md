@@ -17,7 +17,7 @@ aliases:
 
 - **Symptom**: Add automatic integration dispatch under dev-integration=auto once ask-mode integration is validated
 - **Response**: Promoted outcome
-- **Reason**: promoted to `SPEC-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-delivery-decision-boundaries` remains the current contract until a successor decision is accepted.
+- **Reason**: promoted to `SPEC-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-delivery-approval-and-lifecycle-authority` remains the current contract until a successor decision is accepted.
 
 ## FB-integrate-assumes-a-remote-base
 

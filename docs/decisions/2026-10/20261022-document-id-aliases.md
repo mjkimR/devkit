@@ -9,6 +9,8 @@ created_at: 2026-10-22
 
 # [ADR-document-id-aliases] Document ID aliases
 
+Superseded in part by `ADR-decision-ledger`: the decision-record exemption from alias rewrites (References).
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 
@@ -18,7 +20,7 @@ created_at: 2026-10-22
 
 A document is found only by its exact ID. Renaming a capability, story, architecture document, milestone or any other
 ID-bearing document, or merging two of them, breaks every reference written with the old ID: `RULE-document-reference`
-reports each one as unresolved, and `devkit spec resolve <old-id>` finds nothing. The only rename handled today is the
+reports each one as unresolved, and `devkit docs resolve <old-id>` finds nothing. The only rename handled today is the
 handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
 
 ## 2. Decision Drivers
@@ -67,6 +69,7 @@ Option 4.
 - **Renaming**: a document whose ID derives from its path is renamed by moving the file, setting the new ID and
   keeping the old ID in `aliases`; renaming a spec bundle keeps an alias on every file whose ID derives from the
   bundle slug (`spec.md`, `plan.md`, `tasks.md`, `reconcile.md`). `CAP-DOCS-document-model` states the procedure.
+- Superseded in part by `ADR-decision-ledger`: the decision-record exemption in the next item.
 - **References**: an alias reference resolves. In a current document it is an error that `devkit rules fix` rewrites
   to the canonical ID (frontmatter and prose, through the existing rewrite service). In historical files (completed
   spec bundles, done or dropped milestones) and in decision records (ADRs under `docs/decisions/` and PADRs, which
@@ -81,10 +84,10 @@ Option 4.
   `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing ID or alias or another one graduating in
   the same handoff; scaffolding and the `PROP`/`SPEC` slug-pair check treat a `SPEC-<slug>` alias like a declared
   `SPEC-<slug>`, so the clash surfaces before Planning.
-- **Output**: `devkit spec resolve <alias>` prints the canonical document with `alias=<alias>` in its `[DOCUMENT]`
-  sentinel and an `alias` field in JSON; no notice is emitted. `devkit spec refs <canonical> --direction in` includes
+- **Output**: `devkit docs resolve <alias>` prints the canonical document with `alias=<alias>` in its `[DOCUMENT]`
+  sentinel and an `alias` field in JSON; no notice is emitted. `devkit docs refs <canonical> --direction in` includes
   alias-written references, and `--direction out` groups an alias and its canonical ID as one target.
-  `devkit spec search` pins an exact alias match like an exact ID.
+  `devkit docs search` pins an exact alias match like an exact ID.
 
 ## 5. Consequences
 

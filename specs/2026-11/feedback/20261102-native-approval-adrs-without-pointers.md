@@ -18,12 +18,12 @@ created_at: 2026-11-02
 
 - **Current Procedure**: `ADR-proposal-acceptance` lets a native `spec_plan_accept` form authorize acceptance.
   `ADR-mcp-runtime-and-shared-artifacts` makes native confirmation the normal route when connected. In
-  practice, `ADR-host-cli-lifecycle-authority` already replaced both with a Host conversation followed by a CLI call.
+  practice, `ADR-delivery-approval-and-lifecycle-authority` already replaced both with a Host conversation followed by a CLI call.
   `devkit spec proposal accept` is the acceptance command. Neither ADR carries a "Superseded in part by" line.
   `ADR-proposal-acceptance` also describes a "narrowly scoped supersession" of the viewer that keeps Git-only ordinary
   endpoints, which `ADR-repository-viewer` has since replaced.
 - **Proposed Procedure**: Add the missing partial-supersession pointers (or a small retiring ADR, as
-  `ADR-retire-stale-integration-approval-clauses` did). Then compact both with the integration chain
+  `ADR-local-and-pull-request-integration` did). Then compact both with the integration chain
   (`FB-integration-adr-chain-uncompacted`).
 - **Expected Benefit**: No accepted ADR describes an approval route that does not exist.
 - **Cost & Risk**: Low; no behavior changes.

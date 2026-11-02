@@ -63,7 +63,7 @@ Extra pytest arguments follow these defaults, so `just test all -n0` runs serial
 
 Development, review and integration use affected tests without a separate mandatory local `just test`.
 Before integration, run `just test-affected --base <base-ref>` on the task branch. Local integration merges a
-conflict-free moved base itself and runs only the CI rules on the merged result (`ADR-moved-target-merge`); merge the
+conflict-free moved base itself and runs only the CI rules on the merged result (`ADR-local-and-pull-request-integration`); merge the
 base into the task branch, resolve conflicts and refresh the affected tests only after it reports a conflict or a
 failing check. Once every unit of a local-orchestrated run is finished, run `devkit generated check` on `main`,
 regenerate stale artifacts with `devkit generated regen <ids>` and commit them, then run `just test-affected --base
