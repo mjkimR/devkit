@@ -17,6 +17,8 @@ aliases:
 
 Superseded in part by `ADR-host-cli-lifecycle-authority`: its process-local lifecycle request, native confirmation and resume interface. The merge construction, readiness, policy binding, pull-request route limits, landing validation, integration locking and exact cleanup guards remain in force.
 
+Superseded in part by `ADR-retire-stale-integration-approval-clauses`: the refusal before the confirmation of a path that would need `--auto` or `--admin`.
+
 Superseded in part by `ADR-moved-target-merge`: its local containment clauses (`prepare` requiring the source to contain the target, the not-fast-forward fix and the execution context reaching the provider only at a build). The other clauses remain in force.
 
 - **Status**: Accepted
@@ -244,6 +246,7 @@ enqueue implicitly when target queue policy is enabled, even without `--auto`.
   authenticated, a cross-repository (fork) PR and a merge queue on the target. A nonzero exit that is not a recognised
   refusal is an unknown outcome, resolved from the remote.
   (ADR-github-pull-request-adapter-in-devkit-worktree, preserved by ADR-github-pull-request-repository-binding) → `CAP-INT-mcp-services`
+- Superseded in part by `ADR-retire-stale-integration-approval-clauses`: the next item.
 - Also refused before the confirmation: any path that would need `--auto` or `--admin`.
   (ADR-github-pull-request-adapter-in-devkit-worktree, preserved by ADR-github-pull-request-repository-binding)
 

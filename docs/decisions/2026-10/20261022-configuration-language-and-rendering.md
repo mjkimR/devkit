@@ -12,6 +12,9 @@ aliases:
 
 # [ADR-configuration-language-and-rendering] Configuration, language preference and execution-aware rendering
 
+Superseded in part by `ADR-retire-stale-integration-approval-clauses`: its confirmation-form text rules (schema-metadata explanations, verbatim provider prose, per-form language
+sampling) and "native approval routes" in local text.
+
 - **Status**: Accepted
 - **Date**: 2026-10-22
 - **Deciders**: @minjae
@@ -133,10 +136,12 @@ The evidence for the local-configuration part is in
 - Templates keep only `vars`; canonical and effective inventories resolve their respective config snapshots.
   Local-render eligibility and receipt boundaries are unchanged.
   (ADR-shared-language-preference-with-bounded-approval-content)
+- Superseded in part by `ADR-retire-stale-integration-approval-clauses`: the schema-metadata and verbatim-prose sentences of the next item.
 - Domains own reviewed static English/Korean confirmation templates. Messages explain all choices even when a host
   omits schema metadata. Canonical keys, action values, identifiers and evidence are preserved; source/provider prose
   is displayed verbatim. English and Korean are coverage of owned supplied content, not the entire visible screen.
   (ADR-shared-language-preference-with-bounded-approval-content)
+- Superseded in part by `ADR-retire-stale-integration-approval-clauses`: per-form language sampling in the next item.
 - The runtime propagates owning-workspace context without taking over domain language copy or approval logic.
   Language is sampled once per form; environment and stale-scope checks remain independent and unchanged.
   (ADR-shared-language-preference-with-bounded-approval-content)
@@ -168,6 +173,7 @@ The evidence for the local-configuration part is in
   guidance. (ADR-execution-aware-agent-rendering)
 - Cloud operational text MUST provide only supported CLI paths and explicit Host boundaries for unavailable
   operations. (ADR-execution-aware-agent-rendering) → `CAP-DIST-content-packages`
+- Superseded in part by `ADR-retire-stale-integration-approval-clauses`: "native approval routes" in the next item.
 - Local text retains MCP-first discovery/connection and native approval routes. Audit the reachable maintained
   surface, including references and variants, instead of claiming arbitrary source files or custom overrides are
   MCP-free. (ADR-execution-aware-agent-rendering)

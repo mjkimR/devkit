@@ -8,7 +8,7 @@ target: ADR-configuration-language-and-rendering
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-02
 ---
 
@@ -42,3 +42,5 @@ created_at: 2026-11-02
 CAP-INT-mcp-services states that ADR-host-cli-lifecycle-authority superseded the native confirmation interface; under
 `ask` the Host presents the scope in conversation.
 ```
+
+- **Disposition**: `SPEC-retire-stale-integration-clauses`: `ADR-retire-stale-integration-approval-clauses` retires the confirmation-form text rules and "native approval routes". Verified by `devkit rules check` and the spec review.

@@ -8,7 +8,7 @@ target: ADR-local-and-pull-request-integration
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-02
 ---
 
@@ -45,3 +45,5 @@ ADR Decision Outcome: "Also refused before the confirmation: any path that would
 usecases/pull_request.py:395-407 returns INTEGRATION_CHECKS_PENDING after approval; 412-419 maps HTTP 403/405/409/422
 from the merge call to INTEGRATION_MERGE_REFUSED.
 ```
+
+- **Disposition**: `SPEC-retire-stale-integration-clauses`: `ADR-retire-stale-integration-approval-clauses` retires the pre-confirmation `--auto`/`--admin` refusal; the code stays as `CAP-INT-mcp-services` states. Verified by `devkit rules check` and the spec review.

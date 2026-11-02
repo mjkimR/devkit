@@ -8,7 +8,7 @@ target: CAP-DIST-context-and-playbooks
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-02
 ---
 
@@ -41,3 +41,5 @@ created_at: 2026-11-02
 spec bundle constitution: "Run a bare `devkit ...` command from bundle text or skills in the project's documented form
 (`uv run devkit ...`)."
 ```
+
+- **Disposition**: `SPEC-retire-stale-integration-clauses`: dismissed by user decision. `CAP-DIST-context-and-playbooks` scopes the `uv run devkit` rule to output-suggested invocations, and the spec bundle's constitution runs bare commands from bundle prose in the documented form, so rewriting bundle prose adds text without changing behavior.
