@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-adr-normative-outcomes
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-05-1-containers.md
     resolution: modified
