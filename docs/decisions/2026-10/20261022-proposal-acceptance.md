@@ -14,7 +14,7 @@ aliases:
 
 # [ADR-proposal-acceptance] Proposal acceptance, review reports and proposal records
 
-Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause and the viewer exception clause.
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the viewer exception clause and the native form rendering consequence.
 
 - **Status**: Accepted
 - **Date**: 2026-10-22
