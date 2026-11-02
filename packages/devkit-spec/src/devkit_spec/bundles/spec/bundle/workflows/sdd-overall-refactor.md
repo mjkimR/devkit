@@ -110,7 +110,8 @@ It has no unit: no `spec.md`, `plan.md`, `tasks.md`, `reconcile.md` or envelope.
 - **Intent**: agree the goal, the scope and what stays out in the conversation; record nothing.
 - **Restructure**: change code, tests and the Living Spec together; commit at checkpoints. Work on the base checkout
   or on `dev-<slug>`, as the `GIT_POLICY` levels allow. Write a lasting rule the refactor settles into the capabilities
-  or architecture with an RFC 2119 keyword, and its reason into an ADR that cites the restating ID.
+  or architecture with an RFC 2119 keyword, and its reason into an ADR that cites the restating ID when the decision
+  meets the `decision-writing` admission criteria.
 - **Verify**: the full test suite (`just test`), lint and type checks, and `devkit rules check`; the Living Spec states
   the result.
 - **Review**: at the activity's `activity-effort` as the `spec` skill's `references/effort.md` defines it for

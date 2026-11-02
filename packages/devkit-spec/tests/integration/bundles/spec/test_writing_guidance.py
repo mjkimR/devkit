@@ -77,12 +77,13 @@ def test_the_decision_guide_and_template_mark_normative_outcome_clauses() -> Non
     planning = raw("skills/spec/references/planning.md")
     assert_rule(planning, "new padr", "admission criteria", "planning decisions")
     template = raw("templates/decision.md")
-    assert_rule(template, "<declarative clause> → `cap-<area>-<slug>` <section or rule> (<must|should|may>)")
+    assert_rule(template, "<declarative clause>. → `cap-<area>-<slug>` <section or rule> (<must|should|may>)")
     assert_rule(template, "`arch-<id>`", "rationale clause carries no trace")
     completion = raw("skills/spec/references/completion.md")
     assert_rule(
         completion, "lasting rules → capabilities or architecture with rfc 2119 keywords", "cites each restating id"
     )
+    assert_rule(completion, "`decision-writing` admission criteria", "other choices → `plan.md`")
     assert "lasting policy → ADRs" not in completion
 
 

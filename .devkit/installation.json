@@ -1144,7 +1144,7 @@
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "d9f88d638276a3d2f4521450e9a4593481ebe26a36bc8ba227eeaa415d856930"
+      "sha256": "f024114c1b6f5abcb9833fa55b5670e5477f1c90c783e3dc51913905e542c13f"
     },
     ".agents/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -1388,7 +1388,7 @@
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "d9f88d638276a3d2f4521450e9a4593481ebe26a36bc8ba227eeaa415d856930"
+      "sha256": "f024114c1b6f5abcb9833fa55b5670e5477f1c90c783e3dc51913905e542c13f"
     },
     ".claude/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -1812,7 +1812,7 @@
     },
     ".devkit/managed/docs/templates/decision.md": {
       "mode": 420,
-      "sha256": "4db1fc1f521d78d008fd7967d31d3a82046ac05a6876fa8147e09811a2ebc0be"
+      "sha256": "9616554d8a36f00176ac40c3eb7dac28decabeb7e65c93176ccaa46d76d79f1a"
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,
@@ -2092,7 +2092,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "d9f88d638276a3d2f4521450e9a4593481ebe26a36bc8ba227eeaa415d856930"
+      "sha256": "f024114c1b6f5abcb9833fa55b5670e5477f1c90c783e3dc51913905e542c13f"
     },
     ".devkit/managed/spec/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -2196,7 +2196,7 @@
     },
     ".devkit/managed/spec/workflows/sdd-overall-refactor.md": {
       "mode": 420,
-      "sha256": "c1902b2120d0e0a1876336a2e3610a64d1de071d715fcbe5e3790505838794df"
+      "sha256": "3ccf7815bb358d6b4c5605bd34737918544951cf76ad5e15ed002eab99f2273c"
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,

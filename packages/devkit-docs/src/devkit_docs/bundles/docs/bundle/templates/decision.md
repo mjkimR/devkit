@@ -52,7 +52,7 @@ created_at: YYYY-MM-DD
 We decided to adopt **[Option 1]**.
 
 <!-- One declarative list item per clause (decision-writing). A clause that a capability or architecture document restates ends with its trace: the ID (`CAP-<AREA>-<slug>` or `ARCH-<id>`), the section or rule, and the keyword that document uses. A rationale clause carries no trace. -->
-- <declarative clause> → `CAP-<AREA>-<slug>` <section or rule> (<MUST|SHOULD|MAY>)
+- <declarative clause>. → `CAP-<AREA>-<slug>` <section or rule> (<MUST|SHOULD|MAY>)
 - [Option 1] best satisfies [Driver 1] and [Driver 2] in a balanced manner, and potential drawbacks can be mitigated through ...
 
 ---
