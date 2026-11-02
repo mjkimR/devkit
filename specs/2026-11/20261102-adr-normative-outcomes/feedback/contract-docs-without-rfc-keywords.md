@@ -8,7 +8,7 @@ target: docs/capabilities/, docs/architecture/
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-02
 ---
 
@@ -46,3 +46,5 @@ created_at: 2026-11-02
 example ARCH-04-delivery-strategy, ARCH-05-1-containers (before this spec), CAP-WT-task-worktrees and
 CAP-DIST-workspace-ownership.
 ```
+
+- **Disposition**: overall-refactor `rfc-keyword-contracts` (merge `73c50ddf`): the prose rules of 21 capability and architecture documents now carry RFC 2119 keywords; `ARCH-01-introduction-and-goals`, `ARCH-03-context` and `ARCH-06-runtime-view` are descriptive and unchanged. Verified by code review (findings fixed), `devkit rules check` and the full suite.
