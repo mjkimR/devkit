@@ -45,4 +45,4 @@ docs/decisions/2026-10/20261022-proposal-acceptance.md: "a native `spec_plan_acc
 docs/decisions/2026-10/20261022-mcp-runtime-and-shared-artifacts.md: "Native confirmation is the normal route when connected"
 ```
 
-- **Disposition**: `SPEC-adr-ledger-cleanup`: `ADR-retire-native-approval-and-moved-ownership-clauses` retires the native approval clauses of both ADRs, with pointer lines. Verified by `devkit rules check` and the spec review.
+- **Disposition**: `SPEC-adr-ledger-cleanup`: `ADR-retire-native-approval-and-moved-ownership-clauses` retires the native approval clauses of both ADRs, with pointer lines. Verified by `devkit rules check`, the spec review and its reverify; recorded in the spec's `reconcile.md`.

@@ -71,6 +71,9 @@ compaction clauses stay in force.
   ID. → `CAP-DOCS-document-model` §Decision supersession (MUST)
 - An ADR kept outside the run whose `supersedes` names a compacted member names the member's replacement instead. That
   replacement carries the matching "Superseded in part by" line. → `CAP-DOCS-document-model` §Decision supersession (MUST)
+- A compacted member that partially supersedes an ADR kept outside the run passes that entry on: its replacement lists
+  the kept ADR in `supersedes`, the one exception to a replacement having none, and the kept ADR's pointer names the
+  replacement. → `CAP-DOCS-document-model` §Decision supersession (MUST)
 
 ---
 

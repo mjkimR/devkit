@@ -30,7 +30,7 @@ ADRs still state them:
   exception out of a Git-only viewer.
 - The document-and-SDD bundle split, now in `ADR-document-system`, gave the document rules, templates, docs skeleton
   and steering context to the docs bundle. `ADR-document-system` still says the spec bundle ships every rule asset and
-  lists templates and the docs skeleton as devkit-spec methodology. `ADR-steering-documents` still says
+  lists templates, without distinguishing document templates, and the docs skeleton as devkit-spec methodology. `ADR-steering-documents` still says
   `devkit get-context spec` lists the steering documents.
 
 The ADR compaction found these clauses and kept them verbatim, because a compaction changes no decision
@@ -70,16 +70,22 @@ four stay `accepted`.
 - From `ADR-proposal-acceptance`, the native lifecycle approval clause is retired: a native `spec_plan_accept` form no
   longer authorizes acceptance, merge, cleanup or handoff. Acceptance follows `ADR-host-cli-lifecycle-authority`:
   the user's conversational decision, then `devkit spec proposal accept`.
+- From `ADR-proposal-acceptance`, the consequence that native form rendering needs separate live evidence is retired
+  with the native form.
 - From `ADR-proposal-acceptance`, the viewer exception clause is retired. The viewer reads the working tree under
   `ADR-repository-viewer`, which also carries its loopback, Host-check, no-CORS, sanitization and read-only
   protections.
-- From `ADR-mcp-runtime-and-shared-artifacts`, the native confirmation sentences of the Host-approval clause are
-  retired. Approvals still belong to the Host, now through `ADR-host-cli-lifecycle-authority`.
+- From the Host-approval clause of `ADR-mcp-runtime-and-shared-artifacts`, three parts are retired: native
+  confirmation as the normal route, CLI/PR authorization as mere recovery, and no extra approval after native
+  confirmation. Approvals still belong to the Host, now through `ADR-host-cli-lifecycle-authority`, and no host
+  permission prompt is suppressed.
 - From `ADR-document-system`, the distribution clause that the spec bundle keeps shipping every rule asset is retired.
-  So is the listing of templates and the docs skeleton as devkit-spec methodology. The document-and-SDD bundle clauses
+  So are the document templates and the docs skeleton in the devkit-spec methodology list; devkit-spec keeps its lifecycle
+  templates. The document-and-SDD bundle clauses
   of the same ADR give them to the docs bundle.
 - From `ADR-steering-documents`, the statements are retired that `devkit get-context spec` lists the steering
-  documents and that the list reaches every role through the spec context. The docs bundle declares
+  documents, that role contracts receive the list through the spec context, and that a guidance test asserts this.
+  Role contracts still load the spec context for their own work. The docs bundle declares
   `context_documents`, so `devkit get-context docs` lists them.
 
 ---

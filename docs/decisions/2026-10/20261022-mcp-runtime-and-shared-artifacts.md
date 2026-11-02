@@ -12,7 +12,7 @@ aliases:
 
 # [ADR-mcp-runtime-and-shared-artifacts] Independent MCP runtime, immutable shared artifacts and revision-bound reports
 
-Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native confirmation sentences of the Host-approval clause.
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: native confirmation as the normal route, CLI/PR authorization as recovery and no extra approval after native confirmation (Host-approval clause).
 
 - **Status**: Accepted
 - **Date**: 2026-10-22
@@ -121,7 +121,9 @@ delivery or resolution, and an external publication can fail independently from 
 - Cloud auto-registration exposes the read-only service subset. Both runtime and domain mutation boundaries refuse
   cloud interactive approval and resumed mutation; no missing UI grants authority.
   (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
-- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native confirmation sentences of the next item.
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: in the next item, native confirmation as the normal route, CLI/PR
+  authorization as recovery, and no extra approval after native confirmation. "Approvals belong to the Host" and "no
+  host permission prompt is suppressed" stay in force.
 - Direct/local-orchestrated approvals belong to the Host. Native confirmation is the normal route when connected;
   explicit existing CLI/PR authorization is recovery. No extra conversational approval is required after the exact
   native confirmation, and no host permission prompt is suppressed.

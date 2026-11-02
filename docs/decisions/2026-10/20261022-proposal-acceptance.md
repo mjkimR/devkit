@@ -1,7 +1,7 @@
 ---
 id: ADR-proposal-acceptance
 title: Proposal acceptance, review reports and proposal records
-summary: "For proposal acceptance, we use one validated accept command with an eligibility-checked direct path, a handoff guard, source-bound review reports with native approval, checked boundary paths and proposal-local feedback, to bind acceptance to exact reviewed sources, accepting more modules."
+summary: "For proposal acceptance, we use one validated accept command with an eligibility-checked direct path, a handoff guard, source-bound review reports, checked boundary paths and proposal-local feedback, to bind acceptance to exact reviewed sources, accepting more modules."
 status: accepted
 created_at: 2026-10-22
 aliases:
@@ -312,7 +312,8 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   - Depth escalation has no frontmatter marker, so that exclusion stays a judgment; a marker is not added for it.
     (ADR-eligibility-for-direct-acceptance)
   - More modules participate in review and approval, but responsibilities stay in their domain packages. Host-specific
-    URI clickability and native form rendering need separate live evidence. Local missing MCP tools pause dependent
+    URI clickability and native form rendering need separate live evidence (native form rendering: superseded in part by
+    `ADR-retire-native-approval-and-moved-ownership-clauses`). Local missing MCP tools pause dependent
     work and request connection. Cloud CLI and MCP-invisible template work stay separate.
     (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
   - Warnings do not refuse commits (`GATE_RULES_WARNINGS`); a draft or a reviewing proposal with a placeholder

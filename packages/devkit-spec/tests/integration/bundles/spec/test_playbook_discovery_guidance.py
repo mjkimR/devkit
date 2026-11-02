@@ -128,6 +128,7 @@ def test_adr_compaction_groups_by_topic_and_handles_crossing_supersessions() -> 
     assert_rule(body, "wholly superseded adr", "group of its superseder")
     assert_rule(body, "partial supersession", "may cross groups")
     assert_rule(body, "crossing pair", "leaves out the replaced clauses", "cites the target's replacement id")
+    assert_rule(body, "add `supersedes` only for an adr kept outside the run", "partially superseded")
     assert "supersession closure" not in body
 
 

@@ -45,4 +45,4 @@ created_at: 2026-11-02
 packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml:6 context_documents = "docs/steering"
 ```
 
-- **Disposition**: `SPEC-adr-ledger-cleanup`: `ADR-retire-native-approval-and-moved-ownership-clauses` retires the moved-ownership clauses of `ADR-document-system` and `ADR-steering-documents`, with pointer lines. Verified by `devkit rules check` and the spec review.
+- **Disposition**: `SPEC-adr-ledger-cleanup`: `ADR-retire-native-approval-and-moved-ownership-clauses` retires the moved-ownership clauses of `ADR-document-system` and `ADR-steering-documents`, with pointer lines. Verified by `devkit rules check`, the spec review and its reverify; recorded in the spec's `reconcile.md`.
