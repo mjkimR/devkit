@@ -1128,7 +1128,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "ba528874021f0fe2982500a7aec4b8b78809f8178bc9f0a340cf6bb91f70e2d8"
+      "sha256": "960c97270c3b4c445235211f6824eaae32d00a21ef264e1d0bffad8bdc4b3694"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1144,7 +1144,7 @@
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "8630f14e7b92ce997b90e766589984a85e5c6f87910fda90d8ce4678d223ec4b"
+      "sha256": "d9f88d638276a3d2f4521450e9a4593481ebe26a36bc8ba227eeaa415d856930"
     },
     ".agents/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -1372,7 +1372,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "ba528874021f0fe2982500a7aec4b8b78809f8178bc9f0a340cf6bb91f70e2d8"
+      "sha256": "960c97270c3b4c445235211f6824eaae32d00a21ef264e1d0bffad8bdc4b3694"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1388,7 +1388,7 @@
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "8630f14e7b92ce997b90e766589984a85e5c6f87910fda90d8ce4678d223ec4b"
+      "sha256": "d9f88d638276a3d2f4521450e9a4593481ebe26a36bc8ba227eeaa415d856930"
     },
     ".claude/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -2076,7 +2076,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "ba528874021f0fe2982500a7aec4b8b78809f8178bc9f0a340cf6bb91f70e2d8"
+      "sha256": "960c97270c3b4c445235211f6824eaae32d00a21ef264e1d0bffad8bdc4b3694"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -2092,7 +2092,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "8630f14e7b92ce997b90e766589984a85e5c6f87910fda90d8ce4678d223ec4b"
+      "sha256": "d9f88d638276a3d2f4521450e9a4593481ebe26a36bc8ba227eeaa415d856930"
     },
     ".devkit/managed/spec/skills/spec/references/depth-and-close.md": {
       "mode": 420,

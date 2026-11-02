@@ -50,9 +50,8 @@ guess or switch it. The rest of this skill applies to SDD.
 | `spec` | `sdd-spec-<task_kind>` | On `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."` (`--workflow sdd-spec-bugfix` for a defect), record `plan-intent`, commit. |
 | `proposal` | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix`; judge `size` against the `XL` definition ([backlog](references/backlog.md)), show it with `planning_effort` in the plan-intent request, then record `plan-intent`. Planning on `plan-<slug>` per [planning](references/planning.md), or a direct acceptance ([backlog](references/backlog.md)). Development on `dev-<slug>` from `devkit spec proposal handoff <slug>`. |
 | Spike, independent review, or reconcile verification in an isolated context | Support role | `spec-delegate`, as the `activity-effort` asks. |
-{% if execution.environment == "local" %}| Native approval preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |
-{% else %}| Integration after separately existing CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |
-{% endif %}
+| Integration preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |
+
 A workflow's rules are in `.devkit/managed/spec/workflows/<workflow-id>.md`, its stages in `devkit workflow show <workflow-id>` (`--unit <dir>` once a Unit exists). Go back within Development with `devkit workflow return --unit <dir> --to <stage>`; Development never returns to Planning. Record envelopes per [envelope](references/envelope.md) and a run's questions and problems per [worker records](references/worker-records.md).
 
 ## Completion

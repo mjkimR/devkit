@@ -19,4 +19,9 @@ plan: PLAN-retire-stale-integration-clauses
     `specs/2026-11/20261102-adr-normative-outcomes/feedback/stale-approval-form-clause.md`,
     `specs/2026-11/20261102-adr-normative-outcomes/feedback/bundle-text-bare-devkit-commands.md`
   - _Requirements: AC-03_
+- [x] **Task 1.3**: Remove the stale native-approval wording from local bundle text (review finding)
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja`,
+    `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/completion.md.jinja`,
+    `packages/devkit-mcp/src/devkit_mcp/features/runtime/cli/app.py`
+  - _Requirements: AC-01_
   - **Verification**: `uv run devkit rules check`; `just test-affected`

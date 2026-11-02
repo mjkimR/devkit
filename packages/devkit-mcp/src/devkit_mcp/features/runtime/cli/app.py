@@ -8,7 +8,7 @@ from devkit_mcp.features.runtime.cli.serve import serve
 
 @click.group()
 def cli() -> None:
-    """Configure and serve optional MCP services with Host-owned native approval."""
+    """Configure and serve optional MCP services."""
 
 
 for command in (setup, remove, status, serve):

@@ -78,5 +78,5 @@ ADRs still state clauses that only that channel could carry out:
 ## 6. Assumptions
 
 - The user chose to retire both clauses through one ADR, to keep the code unchanged and to dismiss the bare-command
-  feedback (conversation, 2026-11-02).
+  feedback (user decision).
 - "Source/provider prose is displayed verbatim" served only the MCP confirmation forms, so it is retired with them.

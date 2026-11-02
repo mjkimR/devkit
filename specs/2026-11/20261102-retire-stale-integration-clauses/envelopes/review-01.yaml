@@ -1,0 +1,35 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:29:40.507730Z'
+status: completed
+summary: 'REVISE: AC-01..AC-03 met, retirements match the code; three P3 findings (stale local native-approval wording, missing outcome reason, conversation provenance in spec).'
+findings:
+- issue: Local bundle text still describes a native approval that no longer exists.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:53; skills/spec/references/completion.md.jinja:36; packages/devkit-mcp/src/devkit_mcp/features/runtime/cli/app.py:11
+  failure_condition: A local-environment agent expects a native approval step the CLI route does not have.
+  suggested_action: Reword the local branches to integration approval, or record a follow-up.
+  resolution: open
+  severity: P3
+- issue: Decision Outcome states the chosen option without the reason tied to named drivers.
+  evidence: docs/decisions/2026-11/20261102-retire-stale-integration-approval-clauses.md:61
+  failure_condition: A reader cannot see why Option 2 lost without section 3.
+  suggested_action: Add one reason sentence after the chosen option.
+  resolution: open
+  severity: P3
+- issue: Spec Assumptions cite a conversation and a date.
+  evidence: specs/2026-11/20261102-retire-stale-integration-clauses/spec.md:80-81
+  failure_condition: The spec carries conversation provenance instead of a user decision.
+  suggested_action: Replace with (user decision).
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native isolated code-reviewer subagent'
+checks:
+  lint: PASS devkit rules check --ci --base 400653a4 errors=0
+  tests: PASS test-affected 15 passed
+diff_scope:
+  base: 400653a4c55b7e23645e25a83568781476166eec
+  head: 93f79c80e6bfb46b60141f2d1b325dd3ab10fd35
+activity_effort: medium

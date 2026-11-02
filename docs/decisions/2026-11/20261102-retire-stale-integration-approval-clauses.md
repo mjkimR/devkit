@@ -59,7 +59,8 @@ accepted ADRs still state clauses that only that channel could carry out:
 
 ## 4. Decision Outcome
 
-We adopt **Option 1**. This ADR replaces only the clauses below. Every other clause of the two ADRs stays in force,
+We adopt **Option 1**. It keeps the accepted ADRs in step with the shipped route and writes no code for a removed
+channel. Unsafe merges stay impossible, because the route never enqueues, auto-merges or admin-merges. This ADR replaces only the clauses below. Every other clause of the two ADRs stays in force,
 and both ADRs stay `accepted`.
 
 - From `ADR-local-and-pull-request-integration`, it retires the refusal before the confirmation of "any path that
