@@ -2,7 +2,7 @@
 id: SPEC-adr-normative-outcomes
 title: ADR normative outcomes and Living Spec restatement
 summary: Decision Outcomes list clauses with RFC 2119 keywords and the target document ID; restate the ADR-only clauses of 13 accepted ADRs in capability/architecture documents and fix the snapshot-gate contradiction in CAP-GOV-rule-authoring.
-status: planned
+status: in-progress
 created: 2026-11-02
 related_capabilities: [CAP-HARN-agent-guidance, CAP-GOV-rule-authoring]
 related_usecases: []
