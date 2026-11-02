@@ -105,9 +105,9 @@ flowchart LR
 | **`proposal`** | `sdd-proposal` → `sdd-spec-feature` | `sdd-proposal` → `sdd-spec-bugfix` |
 
 `overall-refactor`, a structural change across the project that adds no behavior, has no depth: it runs
-`sdd-overall-refactor` in `direct` mode, without a Unit (`ADR-overall-refactor-workflow`).
+`sdd-overall-refactor` in `direct` mode, without a Unit (`ADR-delivery-classification`).
 A `review-refactor` maintenance run applies its multi-module behavior-preserving work items the same way, its direction
-settling batch by batch with the user (`ADR-apply-review-refactor-changes-in-parallel-checkouts`).
+settling batch by batch with the user (`ADR-review-refactor-application`).
 
 ```mermaid
 flowchart LR
@@ -125,7 +125,7 @@ Depth MAY escalate during Development (`session → spec`) when contract or docu
 Determines the thoroughness of inspection and review per activity (`low`, `medium`, `high`, default `medium`):
 - `low`: Self-review and self-verification by the working actor.
 - `medium`: An initial `code-reviewer` subagent MUST run. Self-verification MAY replace `reconcile-reviewer` only when contracts and diff coverage are provably unambiguous.
-- `high`: Bounded re-review loop (`ADR-host-owned-review-loop-recovery`) reviewing whole batches, stopping when rounds find no issues or only minor fixes. An independent `reconcile-reviewer` MUST run.
+- `high`: Bounded re-review loop (`ADR-review-loop`) reviewing whole batches, stopping when rounds find no issues or only minor fixes. An independent `reconcile-reviewer` MUST run.
 
 ---
 

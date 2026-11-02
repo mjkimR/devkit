@@ -56,7 +56,7 @@ distribution's schemas, commands or APIs bumps the minor version, otherwise the 
 and `uv.lock`. Existing internal version constraints become exact matching pins; unversioned requirements retain
 their spelling. The separately built devkit-embed wheel keeps its model version. `just version-check` and
 `scripts/release.sh` enforce metadata consistency; release builds also check the tag and `uv lock --check`.
-The version source and generated metadata policy is `ADR-single-release-version`. A tool installation names the owner of the `devkit` executable and adds the harness:
+The version source and generated metadata policy is `ADR-package-ownership-and-release-version`. A tool installation names the owner of the `devkit` executable and adds the harness:
 `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
 name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist`, `devkit-core`,
@@ -74,7 +74,7 @@ preparation without a success sentinel; resolve its advisory and rerun `just ver
 When the user requests it, release preparation refreshes the handbook (`CAP-DLV-release-handbook`) after `VERSION`
 names the upcoming release and before the `just version-sync` metadata commit: the `devkit-dev/handbook` playbook
 regenerates and verifies `handbook/` and commits it, writing `v<VERSION>` as the manifest tag. There is no cadence; a
-release without a refresh keeps the previous handbook (`ADR-handbook-on-request-release-snapshot`).
+release without a refresh keeps the previous handbook (`ADR-release-handbook`).
 
 `scripts/release.sh` runs the handbook check after the tag, metadata and lock checks and before any wheel build. A
 release is refreshing exactly when `handbook/manifest.json` names the tag being built: its build fails on a

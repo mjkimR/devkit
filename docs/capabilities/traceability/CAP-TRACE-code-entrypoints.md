@@ -22,7 +22,7 @@ Capabilities and use cases MAY declare `entrypoints` in their frontmatter: the f
 implementation starts. An entrypoint is an anchor for finding code from a document and documents from code. devkit-docs owns
 the path contract (`devkit_docs.features.governance.services.entrypoint_paths`), keeps the declarations alive
 (`RULE-code-entrypoints`) and finds documents by path (`devkit docs list --file`, `CAP-DOCS-document-lookup`)
-(`ADR-document-package`). devkit-spec proposes declarations from the spec bundles that already name both sides
+(`ADR-document-system`). devkit-spec proposes declarations from the spec bundles that already name both sides
 (`devkit spec entrypoints derive`); `devkit_spec.features.entrypoints` implements that derivation.
 
 The manual sweep in `CAP-DLV-drift-reconciliation` consumes entrypoints only to locate evidence. Changed paths,

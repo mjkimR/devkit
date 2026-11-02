@@ -21,8 +21,8 @@ directions with sourced evidence and retains the result as one indexed material 
 proposals, specs, decisions and adaptive current context cite by its `MAT-<slug>` ID. The entry works under either
 development approach and neither reads nor changes it.
 
-`ADR-split-deep-research-bundle` owns the bundle split and role ownership; `ADR-retain-research-as-cited-materials`
-owns the retained material and its citation.
+`ADR-adaptive-development-and-research` owns the bundle split and role ownership, and the retained material and its
+citation.
 
 ## 2. Scope and Boundary
 

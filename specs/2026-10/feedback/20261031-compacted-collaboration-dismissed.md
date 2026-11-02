@@ -16,7 +16,7 @@ aliases:
 
 - **Symptom**: Retain cloud-backed sharing of initial handoff snapshots
 - **Response**: Dismissed outcome
-- **Reason**: Dismissed on the user's decision . It records no observed failure, and the cloud sharing direction is already recorded in `ADR-host-owned-scope-observation` and `CAP-COLL-work-scope-registry`. Raise it as a proposal when cloud scope sharing is planned.
+- **Reason**: Dismissed on the user's decision . It records no observed failure, and the cloud sharing direction is already recorded in `ADR-worktrees-and-scope` and `CAP-COLL-work-scope-registry`. Raise it as a proposal when cloud scope sharing is planned.
 
 ## FB-subagent-followup-failure-lacks-diagnostic
 

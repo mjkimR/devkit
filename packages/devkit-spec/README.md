@@ -9,7 +9,7 @@ Devkit provides asset distribution, rule/workflow/gate engines, task worktrees a
 [devkit-docs](../devkit-docs/README.md) provides the Living Spec document model (kinds, IDs, references,
 namespaces), the `devkit docs` commands and the document rules' implementations. This extension adds proposals,
 spec bundles, code entrypoints, scope registry, the lifecycle rules and SDD guidance; the `spec` bundle ships every
-rule asset, including the document rules, whose wrappers import devkit-docs (`ADR-document-package`). Contracts
+rule asset, including the document rules, whose wrappers import devkit-docs (`ADR-document-system`). Contracts
 start at `CAP-HARN-command-mount` and `CAP-HARN-agent-guidance`; repository documentation starts at
 [docs/README.md](../../docs/README.md).
 

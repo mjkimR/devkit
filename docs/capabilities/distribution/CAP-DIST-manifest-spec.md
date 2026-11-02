@@ -202,7 +202,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Workflows**: two `workflow` assets of one bundle may not declare the same header `id`.
 - **Playbook aliases**: across the `playbook` assets of one bundle, no header alias may equal a playbook asset ID of
   the bundle (its own included) or an alias another playbook already declares (`BUNDLE_INVALID`;
-  `ADR-playbook-aliases-as-identifiers`).
+  `ADR-playbook-retrieval`).
 - **Presets**: asset lists are nonempty, unique and reference declared ids.
 - **Verbatim native content**: `subagent` variant files are never parsed, modified or stripped. Skill variants are
   deployed like a skill `source`, context prerequisite included

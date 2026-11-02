@@ -21,9 +21,8 @@ support roles and a current-context template. The invoking agent is the coordina
 in adaptive development; no amount of work implies eventual SDD adoption. Explicit research teams are a separate bundle
 (`CAP-DLV-deep-research`); this bundle neither invokes nor suggests them and links their retained material by ID.
 
-`ADR-split-deep-research-bundle` owns the bundle's contents and its retained approach check and current context.
-`ADR-retain-research-as-cited-materials` owns linking a research material by its ID. `ADR-adaptive-dev-approach-name`
-owns the approach, bundle, entry and context-file names.
+`ADR-adaptive-development-and-research` owns the bundle's contents and its retained approach check and current context,
+linking a research material by its ID, and the approach, bundle, entry and context-file names.
 
 ## 2. Scope and Boundary
 

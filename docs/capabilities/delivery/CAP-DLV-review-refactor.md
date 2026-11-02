@@ -32,7 +32,7 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
   behavior, folding of repeated technical helpers and removal of unneeded code, guidance, options and commands with
   recorded evidence; application of agreed behavior-preserving changes as direct-mode refactors, in parallel
   isolated checkouts where their write scopes are disjoint.
-- **Out of scope**: a scheduler or trigger (external runners, `ADR-external-playbook-execution`), a history store
+- **Out of scope**: a scheduler or trigger (external runners, `ADR-playbook-retrieval`), a history store
   (`PROP-maintenance-history`), contract drift (`CAP-DLV-drift-reconciliation`), rule adoption
   (`CAP-GOV-rule-authoring`), detector tools as dependencies, cosmetic churn and behavior-changing feature work.
 
@@ -43,7 +43,7 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
 2. **Intake**: the playbook MUST record the run ID, repository identity, HEAD, dirty paths, prior reports and the
    report destination, and MUST clarify missing surfaces or roots before inspecting.
 3. **Surface batches**: the playbook MUST split the run into one batch per selected surface, each with one decision
-   round (`ADR-bound-review-refactor-runs-by-surface-batch`).
+   round (`ADR-review-refactor-application`).
 4. **Cross-surface findings**: a finding spanning surfaces MUST cite both sides and belong to the batch where its
    change lands; IF that surface is not selected, THEN it MUST be deferred with a follow-up unless the user adds the
    surface, which adds its own batch and decision round and is recorded in the report.
@@ -75,7 +75,7 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
 3. **Preservation evidence**: each consolidation or removal MUST record static and dynamic reachability searches
    with their results and the relevant verification before and after; a characterization test MUST be added only
    when a merged caller is exercised by no test; a guidance change MUST record a retained-constraint map
-   (`ADR-require-reachability-evidence-and-layered-placement`).
+   (`ADR-review-refactor-application`).
    - **Differential comparison**: WHERE a change consolidates or replaces a parser, scanner, matcher, file listing,
      serialized format or other function whose inputs can be enumerated or generated, its evidence MUST include a
      comparison of the old and new code on the same inputs (the repository's own corpus plus edge cases of the input
@@ -91,10 +91,10 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
 5. **Route**: a batch's behavior-preserving work item MUST follow the repository's cross-area refactor workflow
    (`sdd-overall-refactor` with `spec`) unless every edited source file lies in one feature or module, which follows
    the feature workflow at its own depth; the route and edited paths MUST be stated in the decision round
-   (`ADR-apply-review-refactor-changes-in-parallel-checkouts`, refining `ADR-overall-refactor-workflow`).
+   (`ADR-review-refactor-application`, refining `ADR-delivery-classification`).
 6. **Direct mode**: WHERE the work item follows the cross-area refactor route, the playbook's agent MUST apply it on
    its own branch, without a Unit or workers, within the batch's write scope
-   (`ADR-apply-review-refactor-changes-in-parallel-checkouts`).
+   (`ADR-review-refactor-application`).
    - **Parallel application**: WHERE the host supports subagents, agreed changes with disjoint write scopes SHOULD run
      as concurrent edit tasks, each in its own isolated checkout created at the work item branch's current commit and
      prepared with the repository's documented setup (for example dependency installation and managed-asset
@@ -122,7 +122,7 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
 9. **Contract removals**: an approved removal of a command, option, public interface or compatibility path MUST be its
    own work item through the normal development workflow with the contract and documentation updated, unless the
    declared compatibility policy states no external consumer exists, in which case it MUST name the inputs no longer
-   accepted (`ADR-apply-approved-contract-removals-as-separate-work-items`).
+   accepted (`ADR-review-refactor-application`).
 
 ## 5. Report Interface
 

@@ -19,7 +19,7 @@ created_at: 2026-10-13
 
 `devkit docs search` finds documents by meaning when the exact ID is not known. The ranking is devkit's
 (`CAP-SRCH-document-search`); devkit-docs adds the document search policy on top
-(`ADR-document-package`): which documents are candidates, which fields are embedded, exact-match pinning and glossary
+(`ADR-document-system`): which documents are candidates, which fields are embedded, exact-match pinning and glossary
 expansion. Going from a known ID to its path stays `devkit docs resolve` (`CAP-DOCS-document-lookup`).
 
 ## 2. Scope & Boundary

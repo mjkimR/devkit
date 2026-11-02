@@ -65,7 +65,7 @@ still runs and the result names what is stale.
   `devkit generated regen <ids>` command) and with an `INTEGRATION_GENERATED_SEEDED` warning, beside the readiness
   disclosure.
 - A local-orchestrated run regenerates stale artifacts on the base branch and commits them before its batch test run
-  (`ADR-post-batch-test-run`); a direct-mode integration does so after landing.
+  (`ADR-test-selection-and-ci`); a direct-mode integration does so after landing.
 
 ## 5. Consequences
 

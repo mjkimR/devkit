@@ -18,8 +18,8 @@ created_at: 2026-10-17
 Each application wheel owns a regular Python package (`ARCH-05-1-containers`): `devkit_dist`
 holds distribution behavior and the root command line; `devkit_agt` holds the harness engines;
 `devkit_docs` holds the document system; `devkit_spec`, `devkit_mcp` and `devkit_viewer` own their extensions.
-The public advisory API remains `devkit.advisory`. `ADR-package-split-and-namespaces` records the ownership and
-layout decision; `ADR-document-package` places the document layer in `devkit_docs` below `devkit_spec`.
+The public advisory API remains `devkit.advisory`. `ADR-package-ownership-and-release-version` records the ownership and
+layout decision; `ADR-document-system` places the document layer in `devkit_docs` below `devkit_spec`.
 
 ```mermaid
 graph TD
@@ -204,7 +204,7 @@ consume the process-local binding without importing the transport. Dist discover
 
 The document wheel owns `devkit_docs/bundles/docs/bundle/`. Its auto-selected docs bundle carries shared
 instructions, document rule wrappers, templates and steering context; `devkit_spec/bundles/spec/bundle/` owns SDD
-lifecycle assets. No asset has two owners (`ADR-document-and-sdd-bundles`).
+lifecycle assets. No asset has two owners (`ADR-document-system`).
 
 
 The project feature owns typed shared development approach inspection in devkit-dist. Integration in devkit-agt

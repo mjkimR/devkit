@@ -53,7 +53,7 @@ flowchart BT
    `.devkit/architecture.toml`). `devkit-core` MUST NOT depend on the harness (`RULE-architecture`). `devkit-dist`
    exposes the `devkit` executable and MUST NOT import `devkit-agt` (`RULE-architecture`). `devkit-agt` mounts the
    developer harness; `devkit-mcp` exposes services over MCP. `devkit-docs` owns the document system and MUST NOT
-   import `devkit-spec` (`RULE-architecture`). `devkit-spec` packages SDD assets and hooks (`ADR-document-package`).
+   import `devkit-spec` (`RULE-architecture`). `devkit-spec` packages SDD assets and hooks (`ADR-document-system`).
 2. **Runtime pinning**: Cloud platforms (`autohub`) consume fixed distribution wheel pins, verifying contract receipts rather than running ad-hoc repository checkouts.
 
 ---

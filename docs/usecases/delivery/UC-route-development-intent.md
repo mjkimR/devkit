@@ -36,7 +36,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 
 1. The agent inspects `devkit config show`, confirms the effective approach is SDD, loads the spec constitution once in its agent context and enters the `spec` skill with the user's
    intent. At this new task intake it runs one bounded `devkit playbook search`; no candidate names the requested
-   operation, so it continues without a question (`CAP-HARN-agent-guidance`, `ADR-spec-intake-playbook-discovery`).
+   operation, so it continues without a question (`CAP-HARN-agent-guidance`, `ADR-decision-ledger`).
 2. The agent reads the effective project policy (`CAP-DLV-project-policy`).
 3. The agent classifies the request on `task-kind`, then `planning-depth` by what must be settled before
    implementation, then the mode and `activity-effort`, and states the classification to the user

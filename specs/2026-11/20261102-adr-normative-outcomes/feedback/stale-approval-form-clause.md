@@ -21,7 +21,7 @@ created_at: 2026-11-02
   and local text to keep "native approval routes". Two later commits removed the MCP-native approval paths and the
   confirmation channel.
 - **Proposed Procedure**: Retire those clauses through a new ADR that partially supersedes the ADR, as
-  `ADR-retire-scheduled-roadmap-review` did for the roadmap review. The still-valid part, domain-owned static English
+  `ADR-roadmap-and-milestones-ledger` did for the roadmap review. The still-valid part, domain-owned static English
   and Korean copy, is already restated in `CAP-DIST-sync-and-transactions` and `CAP-DLV-proposal-planning`.
 - **Expected Benefit**: The accepted ADRs stop describing an interface that no longer exists.
 - **Cost & Risk**: Low; it changes no behavior.

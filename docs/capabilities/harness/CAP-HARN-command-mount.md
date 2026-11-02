@@ -20,12 +20,12 @@ entrypoints:
 
 devkit-spec and devkit-docs have no executable of their own. devkit-spec's click group `spec` (`devkit_spec.cli:cli`)
 is registered under the `devkit.commands` entry point `spec`, and devkit-docs' group `docs` (`devkit_docs.cli:cli`)
-under the entry point `docs` (`ADR-document-package`); devkit's root group imports each only when its command runs
+under the entry point `docs` (`ADR-document-system`); devkit's root group imports each only when its command runs
 (`ARCH-05-3-command-plugins`). Agents reach
 the whole toolchain through the one `devkit` executable of the project environment. Every subcommand is built on
 `devkit_dist.adapters.cli` and follows devkit's agent-first output contract
 (`ARCH-08-1-agent-output`). Rationale:
-`ADR-spec-package-on-devkit`.
+`ADR-document-system`.
 
 ## 2. Scope & Boundary
 

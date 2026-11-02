@@ -68,7 +68,7 @@ base into the task branch, resolve conflicts and refresh the affected tests only
 failing check. Once every unit of a local-orchestrated run is finished, run `devkit generated check` on `main`,
 regenerate stale artifacts with `devkit generated regen <ids>` and commit them, then run `just test-affected --base
 <batch start>` once on `main`, keeping its `mode=full` fallback; outside such a run, a later batch run or nightly CI tests the
-combined head (`ADR-post-batch-test-run`). If the content changes before merging, refresh affected tests and the
+combined head (`ADR-test-selection-and-ci`). If the content changes before merging, refresh affected tests and the
 checks that cover the new content. Reviewers reuse valid check results and rerun only missing or stale checks. Lint,
 types and governance remain required:
 

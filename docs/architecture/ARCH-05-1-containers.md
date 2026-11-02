@@ -77,7 +77,7 @@ Application wheels own independent regular packages: `devkit_dist`, `devkit_agt`
 continues to ship the PEP 420 `devkit.advisory` API; it never ships `devkit/__init__.py`.
 No installed file belongs to two wheels. Foundation and application distributions are released in
 lockstep from one tag, pinning workspace runtime dependencies to that exact version
-(`ADR-package-split-and-namespaces`).
+(`ADR-package-ownership-and-release-version`).
 
 ### 2.1 `devkit-dist` (`packages/devkit-dist`)
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
@@ -86,7 +86,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Contents**: Project configuration and receipts (`devkit_dist.features.project`), shared CLI boundary (`devkit_dist.adapters.cli`, `devkit-cli` bound to devkit), document search (`devkit_dist.features.search`), host hooks and project MCP registrations
   (`devkit_dist.features.host`), immutable expiring artifacts (`devkit_dist.features.shared`, importing only core/advisory), asset distribution (`devkit_dist.features.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit_dist.cli`, `devkit_dist.__main__`) and the built-in bundles `devkit`, `advisory` and
-  `git-commits` (`ADR-foundation-and-mcp-package-ownership`).
+  `git-commits` (`ADR-package-ownership-and-release-version`).
 - **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` and `devkit-advisory` (locked to the same version);
   extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
   run in an environment without it (`just test-dist`).
@@ -95,7 +95,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Distribution Wheel**: `devkit_agt-<version>-py3-none-any.whl`
 - **CLI**: no console script; `devkit rules`, `devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`,
   `devkit integration` and `devkit run` mount under the `devkit` executable through `devkit.commands`
-  (`ADR-package-split-and-namespaces`).
+  (`ADR-package-ownership-and-release-version`).
 - **Contents**: The developer harness: rules engine, delivery workflows, commit gates, task worktrees, tracked
   generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
   `harness` (auto-selected).
@@ -126,7 +126,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
   It ships no bundle and knows no delivery process: the `devkit.docs.status_overlay` entry-point group lets a
   delivery package change how `devkit docs list` shows a document's status.
 - **Dependencies**: `devkit-agt`, `devkit-core` and `click` (same version); its `search` extra requires
-  `devkit-agt[search]`. It never imports `devkit_spec` (`ADR-document-package`).
+  `devkit-agt[search]`. It never imports `devkit_spec` (`ADR-document-system`).
 - **Contracts**: `CAP-DOCS-document-model`.
 
 ### 2.5 `devkit-spec` (`packages/devkit-spec`)
@@ -140,7 +140,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
   Planning as `reviewing`.
 - **Dependencies**: `devkit-docs`, `devkit-agt`, `devkit-core` and `click` (same version); its `search` extra
   requires `devkit-docs[search]`. Its proposal acceptance and handoff run through the `devkit spec proposal` CLI,
-  and the base harness remains SDD-agnostic (`ADR-document-package`).
+  and the base harness remains SDD-agnostic (`ADR-document-system`).
 - **Generic first**: a generic capability that devkit-spec needs MUST be added to the base packages
   (`devkit-core`, `devkit-dist`, `devkit-agt` or `devkit-docs`) first; devkit-spec keeps only spec-driven behavior.
   `RULE-architecture` keeps the base packages from importing `devkit_spec`; the placement itself is review only.
@@ -155,8 +155,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Dependencies**: `devkit-agt`, `devkit-core` and `click`. It consumes foundation primitives,
   distribution project support and `devkit.advisory`; it has no dependency on `devkit-docs` or `devkit-spec` code,
   since the page parses the documents itself.
-- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer` as superseded in part by
-  `ADR-viewer-working-tree`.
+- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-repository-viewer`.
 
 ### 2.7 Opt-in and Example Content Packages
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).

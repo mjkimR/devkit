@@ -71,7 +71,7 @@ Option 4.
   to the canonical ID (frontmatter and prose, through the existing rewrite service). In historical files (completed
   spec bundles, done or dropped milestones) and in decision records (ADRs under `docs/decisions/` and PADRs, which
   graduate into ADRs) it resolves silently and `devkit rules fix` never rewrites it, so a record that names the
-  retired ID as history keeps its meaning. (Decision records: replaced by `ADR-immutable-decisions-editable-records`,
+  retired ID as history keeps its meaning. (Decision records: replaced by `ADR-decision-ledger`,
   which rewrites alias references in ADRs and PADRs too.) A glossary Owner naming an alias is reported but not fixed.
 - **Handoff**: carried aliases follow their document's handoff rename: a proposal's `PROP-` aliases become `SPEC-`
   aliases on `spec.md`, a promoted PADR's `PADR-` aliases become `ADR-` aliases on its ADR. A reference written with
@@ -91,5 +91,5 @@ Option 4.
 - A rename keeps the old ID in `aliases`, and one `devkit rules fix` moves current documents to the new ID.
 - The handoff gains alias translation and an alias clash check (`CAP-DLV-proposal-planning`).
 - Aliases are identifiers, not search keywords; the playbook field of the same name follows this meaning
-  (`ADR-playbook-aliases-as-identifiers`).
+  (`ADR-playbook-retrieval`).
 - ADR supersession stays as it is, and no file under `docs/decisions/` is edited by this work.

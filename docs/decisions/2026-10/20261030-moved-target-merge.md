@@ -121,7 +121,7 @@ changes before the confirmation.
     before the confirmation instead of after it, and before the acceptance commit in composed acceptance.
 - **Negative / Risks**:
   - A semantic conflict no CI rule catches can land after a conflict-free merge; tests and review ran on the source
-    only, as the disclosure states. `ADR-post-batch-test-run` adds the batch run that surfaces it.
+    only, as the disclosure states. `ADR-test-selection-and-ci` adds the batch run that surfaces it.
   - Preparation of a moved target needs Git 2.38 or later (`WORKTREE_GIT_UNSUPPORTED` otherwise) and costs a
     `merge-tree` and CI rules over the result.
   - A provider outside devkit-spec that assumed `result_sha` is `None` at prepare now sees a prospective commit; the

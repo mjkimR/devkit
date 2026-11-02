@@ -84,7 +84,7 @@ The receipt is the single record of the installed state, committed to Git, `sche
   `guidance_block = false`. `AGENTS.md` itself is never listed under `files`.
 - `seeded`: for every selected seeded asset, the paths it seeds (bundle, asset id, path), sorted by path; present
   only while such an asset is selected, informational, never a selection input.
-- `tool`: the distributor that wrote the receipt, `devkit-dist` (`ADR-package-split-and-namespaces`). A different
+- `tool`: the distributor that wrote the receipt, `devkit-dist` (`ADR-package-ownership-and-release-version`). A different
   running tool alone is not a change: a sync with nothing else to do keeps the receipt byte for byte (so
   `sync --check` stays clean across teammates on different versions); the next sync that writes anything records the
   running tool with a `TOOL_VERSION_CHANGED` notice, which names the package on both sides when it changed (a receipt
@@ -274,7 +274,7 @@ spec = "core"
   (`pull_request = "auto"`, `delete_branch = true`, `stale_after = "14d"`, no setup command; `setup = "uv sync"` is
   marked as an example), so each template lives with the engine that applies it and a standalone `devkit-dist`
   template shows no harness table. With `devkit-agt` installed these tables render right after the project's tables
-  and before any `[tool.*]` table, in the order and text shown above (`ADR-package-split-and-namespaces`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
+  and before any `[tool.*]` table, in the order and text shown above (`ADR-package-ownership-and-release-version`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
   behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
   its `[tool.<name>]` table. Called with no argument, it returns `list[devkit_dist.features.project.services.config_template.TemplateTable]`
@@ -611,7 +611,7 @@ is `default` or `.devkit/config.toml`. No environment override exists; local con
 IF the development table has an unknown key, wrong shape, type or value, THEN policy-dependent operations MUST
 refuse with `DEVELOPMENT_CONFIG_INVALID` (exit 2) before writing; its fix is
 `Use [development] approach = "sdd" or "adaptive-dev" in .devkit/config.toml`. A committed snapshot is parsed the same
-way, and a value outside the two gets no compatibility reading (`ADR-adaptive-dev-approach-name`). The commented
+way, and a value outside the two gets no compatibility reading (`ADR-adaptive-development-and-research`). The commented
 config template shows its default.
 `packages/devkit-dist/tests/integration/features/project/test_development.py` and the dist-only suite enforce this.
 

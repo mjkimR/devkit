@@ -98,5 +98,5 @@ aliases:
 ## FB-split-feedback-disposition-outside-scope
 
 - **Symptom**: A Planning split leaves promoted source feedback pointing at the narrowed proposal
-- **Response**: Dismissed under `ADR-feedback-lifecycle`
+- **Response**: Dismissed under `ADR-feedback-lifecycle-ledger`
 - **Reason**: promotion closes the originating feedback. Subsequent splitting or completion is tracked in the receiving work, without reopening the source or requiring a new source disposition. No additional Planning-worker permission to maintain terminal feedback is needed. The original observation is retained as history.

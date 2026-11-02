@@ -66,10 +66,10 @@ sequence.
    `sdd-session-feature` or `sdd-session-bugfix`, `spec` uses `sdd-spec-feature` or `sdd-spec-bugfix`, `proposal` uses
    `sdd-proposal` until handoff and then `sdd-spec-<task_kind>`. A team review is `proposal` depth plus PR policy, not
    a workflow. The task kind `overall-refactor` has no depth and one workflow, `sdd-overall-refactor`, run in `direct`
-   mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). A behavior-preserving work
+   mode only, without a Unit, proposal or spec bundle (`ADR-delivery-classification`). A behavior-preserving work
    item agreed in a review-refactor decision round whose edited source files span more than one feature or module is
    `overall-refactor` work, and a single-module one follows the feature workflows
-   (`ADR-apply-review-refactor-changes-in-parallel-checkouts`, `CAP-DLV-review-refactor`). The axes are not stored as
+   (`ADR-review-refactor-application`, `CAP-DLV-review-refactor`). The axes are not stored as
    fields: the Unit's kind and the bound workflow show them.
 2. **Definitions are authoritative**: an executor MUST take stage order, checks, gates and returns from
    `devkit workflow show <id>` / `devkit workflow show --unit <dir>` and `devkit workflow next --unit <dir>`. The
@@ -96,7 +96,7 @@ sequence.
    are made with the recommended option and recorded; a non-blocking improvement is reported as feedback (a
    follow-up draft proposal is also allowed); only a problem that cannot be solved without changing the agreed goal,
    scope or contract stops the work. At `high` the review loop also stops it (rule 15,
-   `ADR-host-owned-review-loop-recovery`): a batch that is not minor at the cap round, a recurring P1, and a P1 the
+   `ADR-review-loop`): a batch that is not minor at the cap round, a recurring P1, and a P1 the
    implementer holds invalid that the reviewer asserts again after one more round given the counter-evidence are each
    a `problem` in the run's `worker` envelope (the contested one with the disagreement and the evidence). The Host
    owns the recovery within the authorized goal, scope and constraints, and recovery adds no user approval gate; it
@@ -115,7 +115,7 @@ sequence.
    `review-refine` and `living-spec-draft` adds no stage, check or approval file. The reflection includes `docs/steering/glossary.md`,
    where it exists, when the change introduces or renames a domain term (`spec-sync`, first step), and, when `spec.md`
    has a Screens section, each drafted screen written to `docs/ux/`, its step citations in the use cases and its
-   register rows in `docs/steering/ux-objects.md`, each a `reconcile.md` target (`ADR-ux-drafts-before-code`).
+   register rows in `docs/steering/ux-objects.md`, each a `reconcile.md` target (`ADR-ux-screens`).
    Per-feature `spec-sync` reflects the core contract delta. The separately invoked maintenance playbook in
    `CAP-DLV-drift-reconciliation` reviews accumulated drift in a bounded batch; it adds no delivery stage or
    scheduler. Each mismatch needs the user's explicit disposition before corrections enter this workflow.
@@ -156,7 +156,7 @@ sequence.
     verification evidence in `reconcile-check`; small size alone is insufficient. At medium the implementer verifies
     fixes and subsequent changes and decides repeat calls, considering expanded scope, uncertain correctness and
     contract interpretation. A failed or stale initial call is not required-review evidence. These choices do not
-    change the effort, stages or required policies (`ADR-host-owned-review-loop-recovery`).
+    change the effort, stages or required policies (`ADR-review-loop`).
     The implementer always writes, fixes and resolves the Living Spec reflection and `reconcile.md`; the
     verification at every effort is a `reconcile-check` envelope the `living-spec-draft` exit reads, so its findings
     are fixed in the reconcile and never reopen `review-refine`.
@@ -175,7 +175,7 @@ sequence.
     marker counts, in sequence order, only before the loop's first marked round and only when a `worker` envelope of
     the segment written before that marker records `activity_effort: high`; the higher number holds when a marker
     disagrees with that count, a `reverify` is never a round, and a fold of the user's answers is a new batch of the same loop that gets at most one
-    fresh round outside the cap (`ADR-review-and-reconcile-verification`). A batch not minor at the cap round and a recurring P1
+    fresh round outside the cap (`ADR-review-loop`). A batch not minor at the cap round and a recurring P1
     (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). Recurrence means the same failure
     condition remains after an attempted fix, including an incomplete fix, or returns; the reviewer names the earlier
     finding and explains the shared failure condition. A distinct defect introduced by a fix is a new finding:
@@ -204,8 +204,8 @@ sequence.
     naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows, and each
     `challenger` round with the `reverify` that closes it, and each `ux-review` round with its open findings, which
     the user decides there. Gates, exit checks and `required` policies hold at every effort.
-    The UX review (`ADR-ux-review-before-code`) is an optional delegation before code, never a stage or a gate: the
-    isolated, read-only `ux-reviewer` runs `spec-ux-review` on drafted screens (`ADR-ux-drafts-before-code`) in
+    The UX review (`ADR-ux-screens`) is an optional delegation before code, never a stage or a gate: the
+    isolated, read-only `ux-reviewer` runs `spec-ux-review` on drafted screens (`ADR-ux-screens`) in
     Planning (recorded at `spike`) or, at spec depth, after the Screens section of `spec.md` is written and before the
     plan (inside `specify` before `spec-plan`, or `characterize` before `plan-tasks` for a bugfix, recorded at that
     stage). It walks each linked use case's main scenario and extensions through the screens and scores each screen
@@ -465,7 +465,7 @@ with a null CLI status and exit code and empty effects; CLI readiness or `auto` 
 permission, and live effects, Git observation, host emulation, isolated fixtures and untested cases are reported
 apart. The handoff result's
 `commit` names the transaction the composed handoff committed itself
-(`ADR-composed-handoff-commits-its-own-transaction`). The operator returns production edits, semantic conflict
+(`ADR-proposal-handoff`). The operator returns production edits, semantic conflict
 resolution and authority beyond the job to the Host and performs no such mutation.
 
 A dispatch MAY carry a finite, exact preparation list of `prepare-worktree` items; every other operation MUST stay
@@ -617,13 +617,13 @@ Registered under the `devkit_agt.features.integration.readiness` entry point as 
 
 ## Source feedback at completion
 
-`ADR-feedback-lifecycle` defines promoted and resolved as terminal routes: promotion transfers tracking to
+`ADR-feedback-lifecycle-ledger` defines promoted and resolved as terminal routes: promotion transfers tracking to
 identified follow-up work; resolution closes a direct verified fix without promotion. Only open feedback needs action.
 Task entry preserves source FB IDs and scope through handoff and drafting. Terminal references require no completion
 disposition or re-verification and do not implicitly authorize source writes. Completion of follow-up work never
 converts promoted sources to resolved.
 
-Before recording feedback, search existing feedback of every status and act on matching results (`ADR-recording-looks-up-existing-feedback-of-every-status-first`). The user-invoked `feedback-compaction` playbook deletes eligible resolved feedback and its aliases, while retaining other terminal outcomes in compact records with aliases. Active references and incomplete or unmerged work protect feedback from deletion. A recurrence after deletion is recorded as a fresh observation; Git history retains the originals (`ADR-resolved-feedback-retires-by-deletion`, `CAP-HARN-agent-guidance`).
+Before recording feedback, search existing feedback of every status and act on matching results. The user-invoked `feedback-compaction` playbook deletes eligible resolved feedback and its aliases, while retaining other terminal outcomes in compact records with aliases. Active references and incomplete or unmerged work protect feedback from deletion. A recurrence after deletion is recorded as a fresh observation; Git history retains the originals (`ADR-feedback-lifecycle-ledger`, `CAP-HARN-agent-guidance`).
 
 At `living-spec-draft`, review only explicit open direct-fix sources against implementation and verification and
 record outcomes in `reconcile.md`. At `report-session`, do the same before committing and report outcomes without
@@ -698,7 +698,7 @@ authoritative, and the Host decides acceptance under the existing procedure.
 SDD guidance MUST load `devkit get-context docs` before using document contracts. The docs bundle owns shared
 authoring instructions and templates; spec retains lifecycle gates, immutable decision supersession and completed
 spec preservation. Installing devkit-spec auto-selects both core bundles. Explicitly removing docs requires
-`devkit add docs` to restore the supported SDD selection (`ADR-document-and-sdd-bundles`).
+`devkit add docs` to restore the supported SDD selection (`ADR-document-system`).
 
 
 ## Adaptive development applicability
