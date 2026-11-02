@@ -19,7 +19,7 @@ updated: 2026-10-21
 execution-context contract. It stores regenerable reports and MUST NOT store scope records, tokens, ownership or
 approval authority (`ADR-mcp-runtime-and-shared-artifacts`). The initial kind is proposal-review. Inputs are a
 lowercase kebab slug (up to 120 characters), a full lowercase 40/64-hex source_sha, ko/en language and UTF-8 Markdown
-of at most 1 MiB. Consumers verify that source_sha is their actual reviewed commit.
+of at most 1 MiB. Consumers SHOULD verify that source_sha is their actual reviewed commit.
 
 Content identity consists of repository namespace, kind, slug, source_sha, language and the SHA-256 body digest.
 Metadata includes those fields, a server-generated UUID generation_id, text/markdown content type, byte_count,
@@ -78,8 +78,8 @@ DEVKIT_SHARED_ADAPTER overrides only the adapter key. CLI uses its explicit work
 configuration workspace. Adapter ID and namespace accompany results. Local-orchestrated callers MUST verify
 connected project tools before dependent operations. IF the tools are absent, THEN the caller MUST request a user
 connection repair and stop the operation without automatic CLI fallback. An explicit separately authorized CLI
-choice MAY override the preference, but a permission refusal MUST NOT authorize rerouting. Compare
-adapter/namespace across linked callers.
+choice MAY override the preference, but a permission refusal MUST NOT authorize rerouting. Linked
+callers SHOULD compare adapter/namespace.
 
 ## Public extensions
 

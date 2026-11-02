@@ -16,7 +16,7 @@ created_at: 2026-10-17
 | Field | Read by | Purpose |
 | --- | --- | --- |
 | `id` | (result) | Unique within an index; ties rank by id. |
-| `metadata` | lexical and dense | The text written for finding the document: a title and description, usually from frontmatter. Write it in English. |
+| `metadata` | lexical and dense | The text written for finding the document: a title and description, usually from frontmatter. It SHOULD be written in English. |
 | `body` | lexical only | Optional; any language. |
 
 The embedding model is English-only, so dense ranking reads only `metadata`. A repository whose documents are in another language stays searchable by giving each document English frontmatter metadata; its body still contributes to BM25.
@@ -62,7 +62,7 @@ Dense ranking does not replace BM25. On devkit's and specrig's English documents
 
 ## 5. Building the Model Package
 
-The package lives in `models/devkit-embed`, outside the uv workspace; its prebuilt wheel is committed under `models/devkit-embed/wheels/` and referenced via the local path source in `[tool.uv.sources]` of `devkit-dist` and the repository root. This ensures workspace commands, test suites, and sandboxed runs execute completely offline without remote network queries or DNS lookups. The raw weights and tokenizer source files are not committed directly: `just model-build` runs `scripts/fetch_model.py`, which downloads each file from the pinned Hugging Face revision, checks its source SHA-256, rounds the float32 embeddings to float16 (round to nearest even, deterministic) with an 8-byte aligned canonical header, checks the output SHA-256 against `model.json` and moves the file into place (files that already match are left alone), then builds the wheel into `dist/model/`. The package's Hatch build hook MUST refuse to build a wheel whose files are missing or do not match `model.json`; an editable install builds without them, and a dense search then reports `SEARCH_MODEL_INVALID`. The build is reproducible: a rebuild from the same `model.json` matches the committed wheel byte for byte.
+The package lives in `models/devkit-embed`, outside the uv workspace; its prebuilt wheel is committed under `models/devkit-embed/wheels/` and referenced via the local path source in `[tool.uv.sources]` of `devkit-dist` and the repository root. This ensures workspace commands, test suites, and sandboxed runs execute completely offline without remote network queries or DNS lookups. The raw weights and tokenizer source files are not committed directly: `just model-build` runs `scripts/fetch_model.py`, which downloads each file from the pinned Hugging Face revision, checks its source SHA-256, rounds the float32 embeddings to float16 (round to nearest even, deterministic) with an 8-byte aligned canonical header, checks the output SHA-256 against `model.json` and moves the file into place (files that already match are left alone), then builds the wheel into `dist/model/`. The package's Hatch build hook MUST refuse to build a wheel whose files are missing or do not match `model.json`; an editable install builds without them, and a dense search then reports `SEARCH_MODEL_INVALID`. The build SHOULD be reproducible: a rebuild from the same `model.json` matches the committed wheel byte for byte.
 
 Licensing: potion-base-8M and bge-base-en-v1.5 are MIT licensed; the package ships the MIT license of Model2Vec as `LICENSE` and the provenance in `NOTICE`.
 

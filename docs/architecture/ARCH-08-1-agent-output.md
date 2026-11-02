@@ -16,7 +16,7 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 2. **Match, do not parse.** Text output MUST be one fact per line, each behind a sentinel an agent can match with a fixed string. JSON output MUST be exactly one object. Neither needs prose understanding.
 3. **Codes, not prose.** Every condition worth reporting MUST have a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests MUST branch on codes, never on message text.
 4. **Directives, not narration.** A condition the agent must act on MUST carry an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
-5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics MUST be logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards (`CAP-ADV-agent-advisory-protocol`).
+5. **Context budget.** The default output SHOULD carry only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics MUST be logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards (`CAP-ADV-agent-advisory-protocol`).
 6. **Deterministic.** The same state MUST give the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale). stdout and stderr MUST always be UTF-8 (a character UTF-8 cannot encode, such as a lone surrogate from an undecodable path, is written as its `\uXXXX` escape, which keeps JSON valid). JSON text MUST be UTF-8 too, never `\uXXXX`-escaped: an escaped non-English path or message costs the agent context and has to be decoded back before it can be used.
 7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; they MUST NOT write to stdout or stderr, which only the CLI layer does. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
 
@@ -99,7 +99,7 @@ Every command takes the same three output options (`devkit_dist.adapters.cli.out
 - `-q` and `-v` together (from flags, or from the environment when no flag is given) are `ARGUMENT_INVALID`.
 - `-q` and `-v` affect stderr only; stdout, text or JSON, MUST be the same in all three.
 - `--strict` only ever raises the exit code (`0` to `1`); notices never count. It concerns advisory warnings only: a rule violation of severity `warning` is a finding, governed by the rule's severity in `[rules]`, not by `--strict`.
-- Options go before positional arguments. `devkit gate run` passes everything after `<stage>` to the gates as hook arguments, so `devkit gate run -v pre-commit`, not `devkit gate run pre-commit -v`.
+- Options SHOULD go before positional arguments. `devkit gate run` passes everything after `<stage>` to the gates as hook arguments, so its options MUST go before `<stage>`: `devkit gate run -v pre-commit`, not `devkit gate run pre-commit -v`.
 
 ## 7. Exit Codes
 

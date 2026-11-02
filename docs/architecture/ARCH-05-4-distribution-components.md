@@ -19,8 +19,9 @@ Commands, configuration and codes are in the [reference](../development/referenc
    converted between hosts. An agent without a native variant gets no projection and the sync reports it
    (`unprojected`); a role contract MUST name every agent, so a missing host fails validation. Nothing is silently
    stripped or degraded.
-2. **Standard Python packaging**: content ships as wheels installed with `uv` as dev dependencies and discovered
-   through `importlib.metadata`; versions are pinned by `uv.lock`. There is no custom resolver, downloader or cache.
+2. **Standard Python packaging**: content ships as wheels installed with `uv` as dev dependencies and discovered through
+   `importlib.metadata`; versions are pinned by `uv.lock`. devkit MUST NOT add a custom resolver, downloader or cache
+   (review only).
 3. **Deterministic, side-effect-free ingestion**: reproducible manifests, normalized modes (`0644`/`0755`), strict
    relative path containment. A sync MUST NOT execute bundle code.
 4. **Explicit ownership**: managed assets, overrides, seeded files and foreign files are kept apart; an unmanaged
@@ -64,19 +65,18 @@ Commands, configuration and codes are in the [reference](../development/referenc
 
 Three `schema = 1` contracts connect the units: the bundle manifest `bundle.toml` inside each content wheel
 (`CAP-DIST-manifest-spec`), the Git-tracked project configuration `.devkit/config.toml`
-(`CAP-DIST-sync-and-transactions`) and the Git-tracked receipt
-`.devkit/installation.json` (`CAP-DIST-sync-and-transactions`).
-`devkit_agt.features.rules`, `devkit_agt.features.workflow` and `devkit_agt.features.gate` load the assets the receipt records; asset code declares its
-own dependencies through wheels.
+(`CAP-DIST-sync-and-transactions`) and the Git-tracked receipt `.devkit/installation.json`
+(`CAP-DIST-sync-and-transactions`). `devkit_agt.features.rules`, `devkit_agt.features.workflow` and
+`devkit_agt.features.gate` load the assets the receipt records; asset code MUST declare its own dependencies through
+wheels (review only).
 
 ## 3. Module Layout
 
-The distribution feature lives in `packages/devkit-dist/src/devkit_dist/features/distribution/`.
-It uses shared primitives from `devkit_core.core`, project configuration and receipts from
-`devkit_dist.features.project`, `devkit.advisory`, document search and native host contracts.
-The dist wheel MUST NOT depend on `devkit-agt`. Feature imports use absolute paths. The feature root
-`__init__.py` exports nothing, so importing one module never loads the whole feature; callers import each
-name from the module that defines it.
+The distribution feature lives in `packages/devkit-dist/src/devkit_dist/features/distribution/`. It uses shared
+primitives from `devkit_core.core`, project configuration and receipts from `devkit_dist.features.project`,
+`devkit.advisory`, document search and native host contracts. The dist wheel MUST NOT depend on `devkit-agt`. Feature
+imports SHOULD use absolute paths. The feature root `__init__.py` MUST export nothing (review only), so importing one
+module never loads the whole feature; callers import each name from the module that defines it.
 
 - `cli/` adapts distribution commands to use cases and formats their results. The root executable
   discovers the commands lazily (`ARCH-05-3-command-plugins`).
@@ -84,8 +84,8 @@ name from the module that defines it.
   and bundle planning. `sync_selection` and `add_selection` own persistence and replacement/union
   policy. Public operations also own installed-bundle discovery and cleanup. CLI adapters provide
   parsed inputs and format results; they MUST NOT compose configuration-save callbacks.
-- `services/bundles/` owns manifest and header validation, role rendering, guidance fragments,
-  configurable template rendering and deterministic package creation. It has no installation workspace dependency.
+- `services/bundles/` owns manifest and header validation, role rendering, guidance fragments, configurable template
+  rendering and deterministic package creation. It MUST NOT depend on the installation workspace (review only).
 - `services/installation/` owns workspace path safety and snapshots, transaction journaling and
   recovery, configuration selection, bundle discovery, inventory, native projections, guidance blocks
   and generated entry skills. Receipt handling applies distribution ownership rules to the typed reader
@@ -107,12 +107,13 @@ remain `devkit`, `advisory`, `git-commits`, `harness` and `authoring`. Output an
 ## Configurable content rendering
 
 The `services/bundles/templates.py` module owns scalar variable declarations, template destination naming and restricted
-Jinja rendering. Its Jinja imports are local to rendering so CLI discovery, ordinary bundle loading and non-template
-sync do not load the engine. The installation config reader owns `[bundles.<name>.variables]`; inventory resolves
-those values against declarations and renders selected instruction, guidance, document and skill `.md.jinja` sources,
-including raw project overrides, into final managed `.md` files before transaction planning and receipt hashing.
-Skill projections use the rendered filenames and contents before native invocation settings are inserted.
-Rendering MUST NOT execute bundle Python code or alter the verbatim contract of native host configurations.
+Jinja rendering. Its Jinja imports MUST stay local to rendering (`test_templates.py` checks it), so CLI discovery,
+ordinary bundle loading and non-template sync do not load the engine. The installation config reader owns
+`[bundles.<name>.variables]`; inventory resolves those values against declarations and renders selected instruction,
+guidance, document and skill `.md.jinja` sources, including raw project overrides, into final managed `.md` files before
+transaction planning and receipt hashing. Skill projections use the rendered filenames and contents before native
+invocation settings are inserted. Rendering MUST NOT execute bundle Python code or alter the verbatim contract of native
+host configurations.
 
 
 ## Shared configuration and personal runtime views

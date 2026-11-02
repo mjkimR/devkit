@@ -180,6 +180,6 @@ Unrecoverable failures (retry caps, tool crashes, semantic conflicts) transition
 
 1. **State lives in branches**: Workers are one-shot entities; incoming workers MUST resume execution only from committed branch state, Unit files, and envelopes.
 2. **The working actor records its own evidence**: Subagents MUST be read-only. The invoking actor MUST record envelope findings and decision records.
-3. **Autonomous progression within agreed boundaries**: Actors proceed on recommended choices within agreed intent; non-blocking improvements become feedback. Agreement breaches MUST halt as structured problems.
+3. **Autonomous progression within agreed boundaries**: Actors SHOULD proceed on recommended choices within agreed intent, and non-blocking improvements SHOULD become feedback. Agreement breaches MUST halt as structured problems.
 4. **Nested execution**: Host delegates to workers, and workers nest delegated review subagents (depth 2). Environments incapable of nesting MUST use `direct` mode.
 

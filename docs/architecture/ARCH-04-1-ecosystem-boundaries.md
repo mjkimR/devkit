@@ -49,7 +49,11 @@ flowchart BT
     style AH fill:none,stroke:#9ca3af,stroke-dasharray:2 4
 ```
 
-1. **Unidirectional flow**: Lower packages MUST NOT import higher orchestrators. `devkit-core` MUST NOT depend on the harness. `devkit-dist` exposes the `devkit` executable and MUST NOT import `devkit-agt`. `devkit-agt` mounts the developer harness; `devkit-mcp` exposes services over MCP. `devkit-docs` owns the document system and MUST NOT import `devkit-spec`. `devkit-spec` packages SDD assets and hooks (`ADR-document-package`).
+1. **Unidirectional flow**: Lower packages MUST NOT import higher orchestrators (`RULE-architecture`,
+   `.devkit/architecture.toml`). `devkit-core` MUST NOT depend on the harness (`RULE-architecture`). `devkit-dist`
+   exposes the `devkit` executable and MUST NOT import `devkit-agt` (`RULE-architecture`). `devkit-agt` mounts the
+   developer harness; `devkit-mcp` exposes services over MCP. `devkit-docs` owns the document system and MUST NOT
+   import `devkit-spec` (`RULE-architecture`). `devkit-spec` packages SDD assets and hooks (`ADR-document-package`).
 2. **Runtime pinning**: Cloud platforms (`autohub`) consume fixed distribution wheel pins, verifying contract receipts rather than running ad-hoc repository checkouts.
 
 ---

@@ -101,7 +101,7 @@ The manifest MUST follow the `CAP-DIST-manifest-spec` without exception; `devkit
 In a **uv workspace**, add the package to the members and to the dev group next to the devkit requirement the
 project already declares: `devkit-agt` when the project uses the harness (and always when the bundle ships rules,
 gates or workflows, which only `devkit-agt` runs), otherwise `devkit-dist`. `devkit-agt` depends on `devkit-dist` at
-the same version, so a project never declares both (`ADR-package-split-and-namespaces`):
+the same version, so a project SHOULD NOT declare both (`ADR-package-split-and-namespaces`):
 
 ```toml
 # pyproject.toml (repository root)

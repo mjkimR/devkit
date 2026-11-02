@@ -121,8 +121,10 @@ See `CAP-HOST-lifecycle-observation`.
      informational. Seeded files are never receipt-verified context files; a bundle's declared context document
      directory (`context_documents`, `CAP-DIST-context-and-playbooks`) may still list the project files in it,
      seeded ones included, read from the workspace without a hash check.
-8. **Git policy**: commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,
-   `.devkit/installation.json`, `.devkit/.gitignore`, the root `AGENTS.md` and seeded files.
+8. **Git policy**: a project MUST commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,
+   `.devkit/installation.json`, `.devkit/.gitignore`, the root `AGENTS.md` and seeded files. `devkit sync --check`
+   and `sync --locked` fail on a stale or missing receipt (`RECEIPT_STALE`), and `devkit generated check` reports
+   the built-in `devkit-receipt` artifact as `GENERATED_STALE` (`CAP-GEN-tracked-artifacts`).
    - `.devkit/managed/` and `.devkit/transient/` are ignored by `.devkit/.gitignore`. A writing sync seeds it when
      it is absent (a `seed` action, so `sync --check` exits `1` until then) and preserves project comments/rules afterwards. Every writing sync MUST manage exactly `/config.local.toml`, appending it when absent; other existing entries are not rewritten. A deleted file is seeded again. The receipt never records it.
    - Native copies (`.agents/`, `.codex/`, `.claude/`) live beside project-owned files, so ignoring them is left to
@@ -195,7 +197,7 @@ drops them, its `[DETAIL]`).
 Overrides resolve by bundle name and path. When an asset belongs to another bundle than the one an override names
 (an override of `devkit:devkit-run`, an asset of the `harness` bundle), the override does not apply: the asset
 deploys from upstream, the override files stay in place with their record while they remain, and the project
-re-creates the override with `devkit override create <bundle>:<asset>` under the asset's bundle. An override of an asset that keeps its
+SHOULD re-create the override with `devkit override create <bundle>:<asset>` under the asset's bundle. An override of an asset that keeps its
 bundle and path but loses content keeps applying, with drift reported, until the project reconciles it.
 
 ### Reconciliation

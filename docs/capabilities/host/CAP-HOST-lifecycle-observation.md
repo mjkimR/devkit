@@ -34,8 +34,8 @@ or contain a Git executor, automatic policy dispatch or background recovery. Set
 
 The initial adapter targets locally executed Codex CLI command hooks on POSIX. Other hosts are unsupported.
 Protocol definitions follow [Codex Hooks](https://learn.chatgpt.com/docs/hooks); deployment and subprocess tests
-verify the generated command, not interactive host trust or event delivery. Record those separately in a real
-Codex session. A configured hook is not proof of a running hook.
+verify the generated command, not interactive host trust or event delivery. Those SHOULD be recorded separately in a
+real Codex session. A configured hook is not proof of a running hook.
 
 ## 2. Hook assets
 

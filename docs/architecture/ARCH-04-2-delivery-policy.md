@@ -16,7 +16,9 @@ created_at: 2026-10-21
 
 ## 1. Policy Principles
 
-1. **Minimize unnecessary interruptions**: Agents resolve ambiguities using recommended options within agreed scope. Non-blocking improvements become feedback records; execution halts only when agreed constraints cannot be met (`problem` envelope).
+1. **Minimize unnecessary interruptions**: Agents SHOULD resolve ambiguities using recommended options within agreed scope and record them. Non-blocking
+   improvements become feedback records. Execution MUST halt when agreed constraints cannot be met (`problem`
+   envelope), and SHOULD NOT halt otherwise.
 2. **Configuration models governance only**: Operational modes (`direct`, `local-orchestrated`, `cloud-pr`) are transient session choices and MUST NOT be stored in `.devkit/config.toml`.
 3. **Modes and effort levels do not lower policy**: High effort MUST NOT add human approvals to delegated workflows; low effort MUST NOT waive exit checks or reconcile verification.
 4. **`session` depth creates no durable artifacts**: Verification relies on test execution and conversational reporting; a `session` task MUST NOT generate envelope or reconcile files, regardless of effort.
