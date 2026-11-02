@@ -52,7 +52,7 @@ Steering documents must be listed in every agent context, current at run time (`
 
 We decided to adopt **Option 1**: it reads at run time (driver 1) from a directory the bundle names, so `devkit-dist`
 knows no steering path (driver 2). A file with malformed frontmatter or a missing `title` or `summary` is listed with
-`null` for the missing value, never an error (driver 3); `RULE-steering-documents` reports it. The `spec` bundle
+`null` for the missing value, never an error (driver 3); `RULE-steering-documents` reports it. The `docs` bundle
 declares `docs/steering`.
 
 ## 5. Consequences

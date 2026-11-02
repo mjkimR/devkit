@@ -105,7 +105,7 @@ guidance is the agreed baseline.
   existing package-glossary sentence stays in the section. The Glossary stays in `living-spec-writing`.
   (ADR-terminology-guidance-lives-in-living-spec-writing, ADR-layered-writing-guidance)
 - **Generic nouns**: the instruction lists a short default of bare generic nouns (rule 1); the seeded
-  `docs/glossary.md` carries a project section for additional avoided generic nouns and exceptions, which the
+  `docs/steering/glossary.md` carries a project section for additional avoided generic nouns and exceptions, which the
   instruction points to. (ADR-terminology-guidance-lives-in-living-spec-writing)
 - **Bound**: an acceptance criterion of the terminology spec: the change adds at most 30 lines to
   `living-spec-writing.md` (lines of at most 120 characters, the instruction's style). The `spec-sync` addition is one
@@ -124,7 +124,7 @@ guidance is the agreed baseline.
   (ADR-seeded-glossary-columns)
 - **devkit-spec's own glossary** uses the five columns: `Defined in` became `Owner`, and `Avoid` and `Code identifiers`
   are filled where a rejected synonym or an identifier is known. (ADR-seeded-glossary-columns)
-- **Layered writing instructions** in the `spec` bundle, preset `core`: `document-writing` (sentence-level rules for
+- **Layered writing instructions** in the `docs` bundle, preset `core`: `document-writing` (sentence-level rules for
   every document), `decision-writing`, `capability-writing`, `usecase-writing`, `architecture-writing`.
   `contract-authoring` and `living-spec-writing` keep their own topics; a rule lives in one of them only.
   (ADR-layered-writing-guidance) → `CAP-HARN-agent-guidance` §4.3 (MUST)
@@ -151,7 +151,7 @@ guidance is the agreed baseline.
   - No new asset in `bundle.toml` for terminology; `CAP-HARN-agent-guidance` section 4.3 updates the
     `living-spec-writing` row, and section 4.7 describes the five seeded columns and the project section for avoided
     generic nouns. (ADR-terminology-guidance-lives-in-living-spec-writing, ADR-seeded-glossary-columns)
-  - Projects without `docs/glossary.md` read the rules; registration steps apply only where a glossary exists.
+  - Projects without `docs/steering/glossary.md` read the rules; registration steps apply only where a glossary exists.
     (ADR-terminology-guidance-lives-in-living-spec-writing)
   - The seeded `glossary.yaml` comment already asks for searched abbreviations and translations; the Avoid line extends
     that practice without a schema change. (ADR-seeded-glossary-columns)

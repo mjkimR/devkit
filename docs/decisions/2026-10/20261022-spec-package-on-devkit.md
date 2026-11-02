@@ -167,7 +167,7 @@ Rebuilding on devkit raises the questions of the package's shape:
   fields use these names. (ADR-skills-named-spec)
 - **Docs skeleton**: the seeded `docs/` skeleton (Living Spec directories, arc42 chapters, glossary and search synonyms)
   ships in its own preset, `[presets.docs-skeleton] assets = ["docs-skeleton"]`, added with
-  `devkit add spec:docs-skeleton`, so installing devkit-spec never writes files into an existing `docs/` tree.
+  `devkit add docs:docs-skeleton`, so installing devkit-spec never writes files into an existing `docs/` tree.
   (ADR-docs-skeleton-is-opt-in)
 - **Generic first**: a generic capability devkit-spec needs is added to devkit first. (ADR-rebuild-spec-on-devkit)
   → `ARCH-05-1-containers` §2.5 (MUST)
