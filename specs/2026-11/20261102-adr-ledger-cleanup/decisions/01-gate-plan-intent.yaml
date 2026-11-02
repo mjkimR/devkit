@@ -1,0 +1,14 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'feature, spec depth: a new ADR replaces the closed-under-supersession compaction
+  rule of ADR-decision-ledger with topic groups (wholly superseded ADRs join their
+  superseder; partial supersession may cross groups and is recorded on the replacements),
+  restated in CAP-DOCS-document-model and the adr-compaction playbook; a retiring
+  ADR removes the native-approval clauses of ADR-proposal-acceptance and ADR-mcp-runtime-and-shared-artifacts
+  and the moved-ownership clauses of ADR-document-system and ADR-steering-documents;
+  the integration-chain compaction follows as a separate playbook run'
+by: user
+at: '2026-11-02T05:49:50.966208Z'
