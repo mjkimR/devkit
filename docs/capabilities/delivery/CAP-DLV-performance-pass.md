@@ -16,7 +16,7 @@ created_at: 2026-10-28
 ## 1. Summary
 
 The opt-in `maintenance` catalog bundle supplies the `performance-pass` playbook beside `review-refactor`
-(`CAP-DIST-content-packages`, `ADR-keep-performance-passes-in-a-separate-maintenance-playbook`). It is a
+(`CAP-DIST-content-packages`, `ADR-performance-pass`). It is a
 directory-form asset: `SKILL.md` holds the entry condition, intake, modes, the resolution of `review-refactor`, the
 decision round, the report and completion; `references/measurement.md`, `references/profiling.md`,
 `references/candidates.md` and `references/changes.md` hold the phases only some runs need, each read when its phase
@@ -34,12 +34,12 @@ latency, subprocess count or peak memory of operations the user selects; mainten
   - a regression-investigation mode or bisection, added when a real regression run shows the need
     (`SPEC-performance-pass`);
   - a bundled timing script; the run uses an installed benchmark tool or the agent's own loop
-    (`ADR-measure-performance-unprofiled-and-interleaved-in-one-session`);
-  - a scheduler or trigger (external runners, `ADR-external-playbook-execution`) and a history store
+    (`ADR-performance-pass`);
+  - a scheduler or trigger (external runners, `ADR-playbook-retrieval`) and a history store
     (`PROP-maintenance-history`);
   - the direct-mode overall-refactor route, which stays granted to `CAP-DLV-review-refactor` runs only;
   - a contract-changing speedup inside the behavior-preserving work item; it is its own work item through the
-    repository's normal development workflow (`ADR-classify-performance-changes-by-observable-behavior`).
+    repository's normal development workflow (`ADR-performance-pass`).
 
 ## 3. Run Contract
 
@@ -60,7 +60,7 @@ latency, subprocess count or peak memory of operations the user selects; mainten
 5. **Resolving `review-refactor`**: before the decision round, the playbook's agent MUST run
    `devkit playbook get maintenance/review-refactor` and read each cited file next to the returned `source.path`;
    WHERE that path is an override directory without the file, the agent MUST read the same relative path under the
-   bundle's managed directory (`ADR-reuse-review-refactor-application-through-exact-playbook-retrieval`).
+   bundle's managed directory (`ADR-performance-pass`).
    - **Reference reading**: reading that text MUST NOT start any of `review-refactor`'s intake, batches or decision
      rounds (`CAP-DIST-context-and-playbooks`).
    - **Citation form**: each citation MUST name the file and the heading text without its number, for example
@@ -81,7 +81,7 @@ latency, subprocess count or peak memory of operations the user selects; mainten
 
 ## 4. Measurement Contract
 
-`ADR-measure-performance-unprofiled-and-interleaved-in-one-session` governs every timed run; `references/measurement.md`
+`ADR-performance-pass` governs every timed run; `references/measurement.md`
 states the procedure.
 
 1. **No bundled script**: the playbook MUST ship no timing script; the agent SHOULD use an installed benchmark tool
@@ -122,7 +122,7 @@ states the procedure.
    preferred over micro-optimization of a single call.
 2. **Behavior-preserving**: a change MUST count as behavior-preserving only when stdout, stderr, exit codes, written
    files and their bytes, persisted formats, error behavior and the order of observable side effects stay the same
-   for every accepted input (`ADR-classify-performance-changes-by-observable-behavior`).
+   for every accepted input (`ADR-performance-pass`).
    - A private cache format change qualifies when a version or fingerprint invalidates old entries and outputs are
      identical with the cache off, cold and warm.
    - A memo within one run qualifies when its key covers every input that changes the answer and it never memoizes a
@@ -138,7 +138,7 @@ states the procedure.
 5. **Application**: the work item MUST follow the cited `review-refactor` sections: from `references/applying.md`,
    "Branch and edit tasks", "Subagent edits", "Commits and verification", "Review", "Report", "Integration" and
    "Contract removals"; from `references/criteria.md`, "Preservation evidence" with its differential comparison
-   (`ADR-reuse-review-refactor-application-through-exact-playbook-retrieval`).
+   (`ADR-performance-pass`).
    - **Branch and integration**: the work item's branch and integration path MUST be those of the feature workflow it
      was routed to, whatever the number of modules it edits; text of the cited sections naming the overall-refactor
      workflow's branch policy or integration path MUST NOT apply.

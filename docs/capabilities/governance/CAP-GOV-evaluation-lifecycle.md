@@ -64,7 +64,7 @@ Command synopsis, output and exit codes: [Rules Reference, CLI usage](../../deve
 
 A snapshot miss extracts from its evaluation workspace and creates no memo there or in the host. Borrowing changes
 neither rule membership nor snapshot policy authority. Git worktrees retain separate memo roots.
-`CAP-GOV-rules-engine` and `ADR-persist-python-facts-and-reuse-in-snapshots` define storage and pruning.
+`CAP-GOV-rules-engine` and `ADR-rules-run-workspace-cache` define storage and pruning.
 
 ## 4. Phase Transitions: Overrides and Promotions
 

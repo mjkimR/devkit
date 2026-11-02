@@ -414,7 +414,7 @@ decision.
     `devkit rules check --ci`; the command runs it once per call.
 - **Follow-ups and effects on other records**:
   - `devkit spec proposal handoff` refuses any checkout on another branch than `dev-<slug>`
-    (`SPEC_PROPOSAL_WRONG_WORKTREE`); `ADR-worktrees-branches-and-scope` extends the guard to the base checkout.
+    (`SPEC_PROPOSAL_WRONG_WORKTREE`); `ADR-worktrees-and-scope` extends the guard to the base checkout.
   - `/spec-next` reports `[PENDING_QUESTION]`, `[BLOCKED]` and stale activity branches; the feedback hygiene playbook
     lists stale branches for the user to resume or discard. A stale branch's unit is shown only when an attach recorded
     it; the Host maps the slug otherwise.

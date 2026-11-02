@@ -18,7 +18,7 @@ The handbook is the entry point for people who want to know what devkit is and h
 of the Living Spec bound to a release tag: English pages under `handbook/en/` reorganize `docs/` by user journey and
 concept, other languages translate the English pages, and every page links to its Living Spec sources at the tag.
 It is refreshed only when the user runs the `devkit-dev/handbook` playbook during release preparation
-(`ADR-handbook-on-request-release-snapshot`), so between refreshes it is intentionally stale and says which release
+(`ADR-release-handbook`), so between refreshes it is intentionally stale and says which release
 it describes.
 
 ## 2. Scope & Boundary
@@ -41,7 +41,7 @@ it describes.
    `langs`, `en` first; every language MUST have the English file set at identical relative paths.
    (`tools/devkit-dev/tests/integration/test_handbook_script.py`)
 2. **Language boundary**: Non-English text MUST appear only under `handbook/<lang>/` for a language other than `en`
-   (`ADR-localized-handbook-language-exception`); identifiers (commands, error codes, document IDs, paths) are never
+   (`ADR-release-handbook`); identifiers (commands, error codes, document IDs, paths) are never
    translated. Checked in review.
 3. **Generated pages**: `decisions.md` (each accepted ADR's summary and source link), `changes.md` (accepted ADRs and
    completed specs new since the previous snapshot) and `glossary.md` (the glossary terms at the source commit, with each

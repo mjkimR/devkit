@@ -20,7 +20,7 @@ entrypoints:
 
 The `spec:core` bundle supplies the explicit `spec/sdd-baseline` playbook and its ordinary material report template.
 It establishes an evidenced baseline for the user-selected retained adaptive-development product before subsequent
-changes use SDD. `ADR-adopt-sdd-through-an-evidenced-baseline-playbook` selects this guidance procedure instead of a
+changes use SDD. `ADR-adaptive-development-and-research` selects this guidance procedure instead of a
 new runtime, CLI or retrospective feature Unit. Baseline preparation can remain incomplete while the product stays in
 adaptive development.
 

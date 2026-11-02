@@ -19,7 +19,7 @@ created_at: 2026-10-13
 A monorepo registers its packages as namespaces, each with its own Living Spec under `docs/packages/<name>/` (the
 same layout as `docs/`). A namespace narrows what browsing shows, never what exists: `devkit docs list` and
 `devkit docs search` show the selected namespace plus the global documents, while IDs, `resolve`, `refs` and the
-reference rules stay repository-wide. devkit-docs owns the registry (`ADR-document-package`):
+reference rules stay repository-wide. devkit-docs owns the registry (`ADR-document-system`):
 `devkit_docs.features.documents.services.namespaces` implements it.
 
 ## 2. Scope & Boundary

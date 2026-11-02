@@ -30,7 +30,7 @@ import SDK-free contracts, which must remain available without installing a tran
 
 `CAP-COLL-work-scope-registry` records authoritative owner tokens and optimistic revisions, while proposal review
 reports are regenerable presentation artifacts. Applying TTL and generic CRUD to both would violate the registry's
-non-expiring storage and read-only query contract in `ADR-worktrees-branches-and-scope`
+non-expiring storage and read-only query contract in `ADR-worktrees-and-scope`
 (`SPEC-worker-shared-state-mcp`).
 
 `MS-maintenance-operations` needs a manually useful weekly report before a scheduler or durable history
@@ -99,7 +99,7 @@ delivery or resolution, and an external publication can fail independently from 
 
 - Create `devkit_mcp` in the optional, foundation-lockstep `devkit-mcp` wheel. It depends on dist and SDK/runtime
   libraries, serves `devkit.host.services`, and mounts `devkit mcp`. SDK-free service contracts move to the core
-  foundation (`devkit.core.mcp` when decided; `devkit_core.base` under `ADR-package-split-and-namespaces`); agt/spec
+  foundation (`devkit.core.mcp` when decided; `devkit_core.base` under `ADR-package-ownership-and-release-version`); agt/spec
   own their services. (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
 - Dist's host/distribution layer owns a narrow desired-registration provider contract, project host-file transactions
   and an ignored machine-local ownership ledger. The runtime provider owns launch selection and requirements.

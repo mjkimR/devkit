@@ -62,7 +62,7 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   has to be named).
 - `documents`: always present, `[]` when the bundle declares no context document directory
   (`context_documents` in `bundle.toml`, `CAP-DIST-manifest-spec`) or the directory is absent
-  (`ADR-bundle-context-lists-project-documents`). The declaration is read from the receipt-verified managed
+  (`ADR-steering-documents`). The declaration is read from the receipt-verified managed
   `bundle.toml`; the directory's files are project-owned and read from the workspace at run time, under the same lock,
   without a hash check. Each entry has the absolute `path`, `title` and `summary` of one Markdown file, sorted by
   path. Only regular, non-symlink `*.md` files other than `README.md` directly inside the directory are listed, and
@@ -113,7 +113,7 @@ confirmation of a playbook another installed entry skill offered is the explicit
 
 A playbook is a Markdown file or a directory with `SKILL.md`. Its YAML frontmatter has nonempty English `name` and
 `description` strings and an optional `aliases` array of previous asset IDs of the playbook in the same bundle
-(`ADR-playbook-aliases-as-identifiers`): each matches the manifest slug grammar `[a-z][a-z0-9-]*` (not frontmatter
+(`ADR-playbook-retrieval`): each matches the manifest slug grammar `[a-z][a-z0-9-]*` (not frontmatter
 `name`), no item repeats, and no alias equals a playbook asset ID of the bundle (its own included) or another
 playbook's alias; bundle validation refuses a violation (`BUNDLE_INVALID`). Aliases are identifiers, not search
 keywords: a renamed playbook keeps its published `<bundle>/<old-id>` selectors working. `x-<name>` extension keys
@@ -245,12 +245,12 @@ schedule naming that exact ID, authorizes retrieval and interpretation within th
 schedule naming a declared alias is explicit invocation of the canonical playbook `get` reports.
 Retrieval cannot verify authorization and grants none. Ordinary task wording alone never selects or
 runs a playbook: an entry skill may run one bounded search at its intake and offer a candidate, and the user's
-confirmation of that offer is the explicit invocation (`ADR-spec-intake-playbook-discovery`). Explicit discovery and
+confirmation of that offer is the explicit invocation (`ADR-decision-ledger`). Explicit discovery and
 rule remediation remain supported.
 Each run starts fresh procedure progress, checks prerequisites and obeys project workflow gates,
 permissions and user constraints. Schedules do not provide future gated approvals, and unavailable
 approval UI is not approval. External systems own cadence, launch, retries, overlap control and
-execution history; devkit supplies instructions and context requirements (`ADR-external-playbook-execution`).
+execution history; devkit supplies instructions and context requirements (`ADR-playbook-retrieval`).
 A playbook may read a co-deployed playbook's body resources as reference text, resolved through exact retrieval
 as §4 describes; that reading is no invocation and starts none of that playbook's intake or decision rounds
-(`ADR-reuse-review-refactor-application-through-exact-playbook-retrieval`).
+(`ADR-performance-pass`).

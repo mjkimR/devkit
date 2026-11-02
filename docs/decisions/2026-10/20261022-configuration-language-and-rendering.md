@@ -49,7 +49,7 @@ The evidence for the local-configuration part is in
 - Worktree creation supplies its initial preferences before setup; each created checkout owns subsequent changes.
 - A base-anchored service identifies its configuration workspace independently of its runtime root.
 - Project configuration belongs to devkit-dist, which cannot import the harness
-  (`ADR-foundation-and-mcp-package-ownership`).
+  (`ADR-package-ownership-and-release-version`).
 - One local-capable language preference serves real consumers without exposing governance config to templates,
   changing approval authority, translating immutable source evidence, or promising host UI control.
 - Preserve explicit consumer choices and shared receipt determinism; use the existing core configuration and the

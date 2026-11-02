@@ -148,7 +148,7 @@ evaluates it. No indexing or graph edges; plain-text IDs and feedback `target` f
 - References resolve through the canonical mapping of `CAP-DOCS-document-model` (section 3.5). MUST report a
   reference written with another document's alias in a current document (fixable: rewritten to the canonical ID in
   frontmatter and prose); relation-field prefix typing applies to the ID as written. Decision records (ADRs and PADRs) are
-  current documents here (`ADR-immutable-decisions-editable-records`). In historical files an alias reference resolves
+  current documents here (`ADR-decision-ledger`). In historical files an alias reference resolves
   silently and `devkit rules fix` never rewrites it. A
   document mentioning its own alias is not reported. A reference to a colliding alias is reported as ambiguous and
   left unchanged.
@@ -326,7 +326,7 @@ A proposal's boundary is copied into its spec at handoff, so it names real paths
 
 ### 3.14 `RULE-steering-documents`
 
-Steering documents are listed in every agent context (`ADR-background-pointer-in-constitution`), so the directory stays
+Steering documents are listed in every agent context (`ADR-steering-documents`), so the directory stays
 small and each entry readable. Only the root `docs/steering/` is checked, and only when the run targets a file in it.
 
 - MUST report: a file in a subdirectory of `docs/steering/`; a file that is neither `*.md` nor `glossary.yaml`;
@@ -341,7 +341,7 @@ small and each entry readable. Only the root `docs/steering/` is checked, and on
 
 ### 3.15 `RULE-ux-links`
 
-A UX document and the use cases it serves do not contradict each other (`ADR-ux-step-links-and-coverage`). Checks
+A UX document and the use cases it serves do not contradict each other (`ADR-ux-screens`). Checks
 every current UX document outside materials against every current use case. A use case's steps are the `N.` items
 at column 0 under its `Main Success Scenario` H2 (a nested numbered list continues its step) and the `- **<key>.**` bullets under its `Extensions` H2 (`2a`, `*a`, also
 written `\*a`); a line indented by a space continues the item, and any other line ends it, so intro paragraphs,
@@ -423,10 +423,10 @@ max_length = 300
 
 ### 4.3 Packaging
 
-Each rule is a class in a package (`ADR-spec-package-on-devkit`). The document rules (`RULE-code-entrypoints`,
+Each rule is a class in a package (`ADR-document-system`). The document rules (`RULE-code-entrypoints`,
 `RULE-document-reference`, `RULE-decision-supersession`, `RULE-document-summary`, `RULE-id-convention`, `RULE-spec-format`,
 `RULE-steering-documents`, `RULE-traceability-link`, `RULE-ux-coverage`, `RULE-ux-links`) live in
-`devkit_docs.features.governance.usecases.<name>`, beside the document model they check (`ADR-document-package`);
+`devkit_docs.features.governance.usecases.<name>`, beside the document model they check (`ADR-document-system`);
 the lifecycle rules (`RULE-spec-lifecycle`, `RULE-spec-progress`, `RULE-task-coverage`, `RULE-reconcile-contract`,
 `RULE-proposal-boundaries`) and the rejected-proposal hygiene live in `devkit_spec.features.governance.usecases.<name>`.
 Document rule assets ship in the `docs` bundle; lifecycle rule assets ship in `spec`. Each owner deploys
@@ -461,7 +461,7 @@ The existing spec hygiene extension also checks repository milestone membership 
 | `SPEC_MILESTONE_DONE_UNSETTLED` | WARNING | A done milestone still has unsettled members; review and reassign/clear those members, reject a proposal or finish the work before closing the milestone. |
 | `SPEC_MILESTONE_DROPPED_UNSETTLED` | WARNING | A dropped milestone still has unsettled members; review and reassign/clear or reject those members. |
 
-Warnings carry the milestone and member paths, deterministic remediation and the usual success exit code unless strict mode is requested. No out-of-order activation or close-candidate warning is emitted (`ADR-roadmap-and-milestones`).
+Warnings carry the milestone and member paths, deterministic remediation and the usual success exit code unless strict mode is requested. No out-of-order activation or close-candidate warning is emitted (`ADR-roadmap-and-milestones-ledger`).
 
 ### Milestone validation contract
 

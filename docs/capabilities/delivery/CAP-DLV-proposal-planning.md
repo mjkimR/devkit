@@ -203,7 +203,7 @@ A proposal receiving feedback records full source FB IDs and its received scope 
 section. Handoff carries those references into the spec (feature and bugfix); drafting retains them. Promotion routes
 work and closes the feedback without claiming implementation success. Promoted and other terminal sources require
 no completion edits or re-verification; their references remain traceability. Handoff never resolves open feedback.
-Only direct fixes of explicit open sources are checked at completion under `ADR-feedback-lifecycle`.
+Only direct fixes of explicit open sources are checked at completion under `ADR-feedback-lifecycle-ledger`.
 
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion; a draft
 deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit.
@@ -293,7 +293,7 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   conventions and governance, and a before/after comparison. Under use cases, a `Screens (docs/ux/)` subsection holds
   the drafted screens when the proposal changes what a person sees: one draft per screen, modal or panel in the `ux`
   template's shape, with the use case step citations and `docs/steering/ux-objects.md` rows they need and new IDs in
-  plain text; `spec-specify` carries them into `spec.md` at handoff (`ADR-ux-drafts-before-code`).
+  plain text; `spec-specify` carries them into `spec.md` at handoff (`ADR-ux-screens`).
 
 ### Milestone closure boundary
 
@@ -350,7 +350,7 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    an ADR, the materials directory, a carried file) whose directory resolves outside the workspace are refused
    before writing (`SPEC_PROPOSAL_TARGET_EXISTS`).
 
-   **Merging into an existing materials directory** (`ADR-merge-proposal-materials-per-leaf-at-handoff`): when the
+   **Merging into an existing materials directory** (`ADR-proposal-handoff`): when the
    dated directory already exists, the handoff merges into it per leaf, planned in one preflight pass over the
    `materials/` leaves and the carried files:
 
@@ -473,7 +473,7 @@ base checkout but leaves their directories. `devkit spec proposal prune [<slug>]
 holds no file at any depth (a symbolic link counts as a file; devkit's `remove_empty_tree`). A directory holding any
 file is kept, and one that cannot be listed fails the prune before anything is removed. devkit-spec's
 `devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
-(`ADR-worktrees-branches-and-scope`) and, on the guarded integration path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension is retried after inspecting current Git state and rerunning the appropriate CLI operation.
+(`ADR-worktrees-and-scope`) and, on the guarded integration path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension is retried after inspecting current Git state and rerunning the appropriate CLI operation.
 
 ### 4.9 Commands and Options
 
@@ -660,7 +660,7 @@ proposal and any created worktree for inspection; the command never rolls those 
 WHEN the handoff and scope registration succeed, the composed handoff MUST stage the whole delta `git status` reports
 in `dev-<slug>` (the worktree was clean at the reviewed base head before the handoff) and commit it once with the
 subject `spec: hand off <slug> to Development` under the normal commit gate
-(`ADR-composed-handoff-commits-its-own-transaction`). It reports `commit`, the HEAD read after `git commit` returns
+(`ADR-proposal-handoff`). It reports `commit`, the HEAD read after `git commit` returns
 (a metadata-rewriting post-commit hook changes the SHA), and checks that HEAD's single parent is the reviewed base
 head and the worktree is clean; a landed commit that fails either check is `status: needs_recovery` with
 `SPEC_HANDOFF_STALE`, the landed `commit` and the parents or dirty paths, no next command and a next action whose

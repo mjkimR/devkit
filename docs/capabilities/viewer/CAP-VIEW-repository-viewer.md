@@ -14,12 +14,10 @@ created_at: 2026-10-19
 # [CAP-VIEW-repository-viewer] Local Repository Viewer
 
 The `devkit-viewer` distribution gives people a screen for what agents read through `devkit spec`: the Living Spec,
-proposals, specs and milestones (`ADR-roadmap-and-milestones`). It mounts
+proposals, specs and milestones (`ADR-roadmap-and-milestones-ledger`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
-consumes its component library as a vendored tarball (`ADR-viewer`). The server's
-choices are `ADR-viewer` as superseded in part by `ADR-viewer-working-tree`, `ADR-viewer-planning-proposal-overlay` for
-proposals under Planning, and `ADR-handbook-first-book-on-request` with `ADR-handbook-staleness-from-version` for the
-reading tab. Command quick reference:
+consumes its component library as a vendored tarball. The server's choices, including proposals under Planning, are
+`ADR-repository-viewer`, and `ADR-release-handbook` shapes the reading tab. Command quick reference:
 [reference](../../development/reference/viewer.md).
 
 ## 1. Serving
@@ -65,7 +63,7 @@ The dashboard listing reads candidate frontmatter through the closing YAML delim
 ### 2.1 Planning sources
 
 A proposal under Planning is edited on its `plan-<slug>` branch. The server reads that proposal's directory from local
-sources only (`ADR-viewer-planning-proposal-overlay`). A source has the ID `worktree:plan-<slug>`, `branch:plan-<slug>`
+sources only (`ADR-repository-viewer`). A source has the ID `worktree:plan-<slug>`, `branch:plan-<slug>`
 or `remote:<remote>/plan-<slug>`, the label `worktree plan-<slug>`, `plan-<slug>` or `<remote>/plan-<slug>`, and its
 kind; `<slug>` matches `[A-Za-z0-9][A-Za-z0-9._-]*` without `..`.
 
@@ -222,7 +220,7 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
   in browser storage for all repositories, and without one the tab starts with the browser language when listed,
   else `en`. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Staleness**: The header MUST order the manifest tag against `v<VERSION>` read as a file
-  (`ADR-handbook-staleness-from-version`): ahead names the snapshot as prepared for the upcoming release, equal shows
+  (`ADR-release-handbook`): ahead names the snapshot as prepared for the upcoming release, equal shows
   the tag and generation date, behind adds a non-alert note naming both versions and pointing to the book, and an
   absent or unparsable `VERSION` shows the tag and date only. Check:
   `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
@@ -276,7 +274,7 @@ library.
 
 `GET /review/<registered-repository-id>/<32-hex-generation-id>` reads exactly one `proposal-review` artifact
 through the registered repository's configured local shared adapter. This exact-generation route is the exception in
-`ADR-viewer`; ordinary working-tree reads remain unchanged. The route accepts no path,
+`ADR-repository-viewer`; ordinary working-tree reads remain unchanged. The route accepts no path,
 remote URL, adapter selector or revision expression. Remote adapters are unavailable here. It calls only exact
 `get`, never list, put or sweep. Namespace, kind, digest and expiry are validated. Source SHA, language and expiry
 are prominent; the artifact is evidence for that source, not a claim that the branch is still current.

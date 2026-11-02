@@ -24,7 +24,7 @@ Related: `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`, [Rules Refere
 4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop (`CAP-GOV-evaluation-lifecycle`).
 5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy; target scoping lives in `evaluate_rules`, so they also agree on which rules explicit targets and snapshot diffs can affect (`CAP-GOV-evaluation-lifecycle`).
 
-6. **Persistent extraction**: rule-owned per-file Python facts reuse syntax extraction across processes; discovery, current configuration and cross-file judgments run on every evaluation (`ADR-pull-per-file-python-facts`).
+6. **Persistent extraction**: rule-owned per-file Python facts reuse syntax extraction across processes; discovery, current configuration and cross-file judgments run on every evaluation (`ADR-rules-run-workspace-cache`).
 
 ## 2. Subsystem Layout
 
@@ -81,7 +81,7 @@ The memo format is `version`, `fingerprint` and `entries`; each logical path map
 and rule-codec `payload`. The memo is trusted local derived state, not authenticated execution state.
 Unchanged serialized bytes cause no replacement. Concurrent writers use last atomic replacement; lost entries cause
 later misses. Stores remain loaded separately from computed judgments across invalidations.
-`ADR-persist-python-facts-and-reuse-in-snapshots` owns the storage and writer policy.
+`ADR-rules-run-workspace-cache` owns the storage and writer policy.
 
 
 ## Explicit rule omissions
