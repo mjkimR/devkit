@@ -1,0 +1,12 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'feature, spec depth: one new ADR partially supersedes ADR-local-and-pull-request-integration
+  (pre-confirmation --auto/--admin refusal) and ADR-configuration-language-and-rendering
+  (MCP approval-form text rules and native approval routes); resolve FB-pr-auto-admin-refusal-point
+  and FB-stale-approval-form-clause; dismiss FB-bundle-text-bare-devkit-commands;
+  no code change'
+by: user
+at: '2026-11-02T02:25:37.123542Z'

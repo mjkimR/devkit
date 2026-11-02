@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:32:50.138044Z'
+status: completed
+summary: 'REVISE: one P1 missing target (CAP-DIST-content-packages per-form MCP language rule) and two P3 stale agent-facing form texts.'
+findings:
+- issue: CAP-DIST-content-packages still states MCP approval language and a per-form preference reread that the new ADR retires; it is a missing reconcile target.
+  evidence: docs/capabilities/distribution/CAP-DIST-content-packages.md:190-191; reconcile.md:23
+  failure_condition: An agent expects MCP approval forms that reread language per form.
+  suggested_action: Rewrite to current behavior, add as target, correct the reconcile sentence.
+  resolution: open
+  severity: P1
+- issue: guides/install/mcp.md and CAP-HOST-lifecycle-observation still describe approval forms and a visible-form evidence gap.
+  evidence: guides/install/mcp.md:58-60; docs/capabilities/host/CAP-HOST-lifecycle-observation.md:164-165
+  failure_condition: An installing agent expects localized approval forms.
+  suggested_action: Remove the form sentences and the visible-form gap; add targets.
+  resolution: open
+  severity: P3
+- issue: devkit-mcp package description still says native confirmation runtime.
+  evidence: packages/devkit-mcp/pyproject.toml:4
+  failure_condition: Package metadata describes a runtime that no longer exists.
+  suggested_action: Reword the description.
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native isolated reconcile-reviewer subagent'
+checks: {}
+diff_scope:
+  base: 400653a4c55b7e23645e25a83568781476166eec
+  head: 583f1c2c7e7d16ad5f7052db6e8516568d2d8ba2
+activity_effort: medium

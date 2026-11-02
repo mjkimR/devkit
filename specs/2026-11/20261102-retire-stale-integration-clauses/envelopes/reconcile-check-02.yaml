@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:38:05.694685Z'
+status: completed
+summary: 'PASS: reconcile-check-01 findings fixed and self-verified: CAP-DIST-content-packages and CAP-HOST-lifecycle-observation added as targets and rewritten, guide and devkit-mcp description reworded; rg finds no remaining form wording in capabilities, guides or packages.'
+findings: []
+assumptions:
+- Self-verification by the implementer after the initial medium reconcile-reviewer call
+checks:
+  tests: PASS 6260 passed; 1 failure pre-existing on main (FB-docs-wheel-rule-count-stale)
+  lint: PASS devkit rules check errors=0
+diff_scope:
+  base: 400653a4c55b7e23645e25a83568781476166eec
+  head: bb36e80a61b86aec1d476a44fb00d31d8cb1d1ab
+activity_effort: medium

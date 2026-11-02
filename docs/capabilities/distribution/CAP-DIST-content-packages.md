@@ -187,8 +187,8 @@ The `language` variable opts into `default_from = "presentation.language"`, reta
 The shared/local presentation preference supplies it only when no bundle-specific value exists. A shared explicit
 `[bundles.response-style.variables] language = "auto"` still wins over local `[presentation] language = "ko"`.
 Remove the consumer override to inherit, or set a personal bundle variable to override it locally. Existing free-text
-consumer overrides remain supported and never control MCP approval language. Rerun sync to update rendered assets;
-MCP instead rereads the owning-workspace preference for each form. See `CAP-DIST-sync-and-transactions`.
+consumer overrides remain supported and never control devkit-owned approval copy. Rerun sync to update rendered
+assets; approval copy rereads the owning-workspace preference for each request. See `CAP-DIST-sync-and-transactions`.
 
 The `language` variable is rendered by Jinja: `auto` follows the current request; a configured value supplies
 the conversation default; an explicit user language request overrides either. Repository and task language
