@@ -153,7 +153,7 @@ state what it replaced and cite the target's replacement ID. An ADR kept outside
 compacted member MUST name the member's replacement instead, and that replacement MUST carry the matching
 "Superseded in part by" line. WHEN a compacted member partially supersedes an ADR kept outside the run, its
 replacement MUST list that ADR in `supersedes`, and the kept ADR's pointer MUST name the replacement
-(`ADR-group-compaction-by-topic`). On a decision, `supersedes` and `superseded_by` are metadata the index
+(`ADR-decision-ledger`). On a decision, `supersedes` and `superseded_by` are metadata the index
 does not read (section 3.3 rule 6 covers Unit anchors), so they do not add reference-graph edges.
 `RULE-decision-supersession` MUST report inconsistent status and `superseded_by`, unresolved or malformed ADR
 replacement metadata, a `supersedes` target without superseded status or a matching partial pointer, and a partial

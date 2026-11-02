@@ -146,6 +146,6 @@ the parent's exact effort on Antigravity. Model/effort inheritance is independen
 
 `CAP-DIST-sync-and-transactions` defines shared project overrides, validation and precedence. Delivery
 `activity-effort` remains procedural depth. Bundle plan uses built-in mappings and source levels without reading
-project config. `ADR-five-subagent-levels` records the original mappings and native-runtime limitations;
-`ADR-lean-subagent-level` adds lean without changing existing levels. Lean fixes medium effort where supported;
+project config. `ADR-subagent-levels` records the original mappings and native-runtime limitations
+and adds lean without changing existing levels. Lean fixes medium effort where supported;
 it is a resource preset, not a guaranteed quality ranking below standard.

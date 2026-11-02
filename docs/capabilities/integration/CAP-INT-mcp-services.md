@@ -18,7 +18,7 @@ pull-request route. The `devkit integration` CLI exposes the operation. Under `a
 source, target, report and cleanup effects, receives the user's conversational decision, then invokes the command
 directly or delegates its exact effects to git-operator.
 The CLI revalidates the operation but does not authenticate that conversation. Under `auto`, it derives authority
-from the retained base policy. `ADR-host-cli-lifecycle-authority` supersedes the former lifecycle MCP execution
+from the retained base policy. `ADR-delivery-approval-and-lifecycle-authority` supersedes the former lifecycle MCP execution
 interface and, in part, the lifecycle request, native confirmation and resume interface of
 `ADR-local-and-pull-request-integration`, which remains authoritative for the merge construction and route guards
 below, this capability's current contract.
@@ -56,7 +56,7 @@ planned `steps` and, when the build seeded generated files, `generated`, never i
 `[INTEGRATION: status=... ... target_sha=<confirmation target> build_target=<sha>|- result=<sha>|- ...
 seeded=<ids>|- disclosure="<text>" effects=<step>:<state>,...]` or one JSON object, whose `build` names the confirmation target,
 the build target and the landed result. Every result that carries a request thus states the merged target and what
-was checked on the merged result (`ADR-moved-target-merge`); a cleanup-only result names only the prepared target. Warnings and notices use the Agent
+was checked on the merged result (`ADR-local-and-pull-request-integration`); a cleanup-only result names only the prepared target. Warnings and notices use the Agent
 Advisory Protocol on stderr, then the errors, last. A refusal before any effect exits `2`; an execution stopped by an
 error after an effect exits `1`; a successful result exits `0`, also a `partial` one whose only advisory is the
 `INTEGRATION_CLEANUP_INCOMPLETE` or `INTEGRATION_GENERATED_SEEDED` warning, unless `--strict` raises a
@@ -78,7 +78,7 @@ checkout, checks the result and fast-forwards the base. It performs no fetch, pu
 WHEN the source does not contain the confirmation target under `[worktree] merge = "no-ff"`, local `prepare` MUST
 build the prospective merge in the object store and run the finish guards on `merge-base(target, source)`, the
 readiness provider, the receipt check and the prospective policy digest on it before it returns a request; the
-source need not contain the target first (`ADR-moved-target-merge`). A conflict no generated artifact settles (see
+source need not contain the target first (`ADR-local-and-pull-request-integration`). A conflict no generated artifact settles (see
 below) refuses with `WORKTREE_MERGE_CONFLICT`, a failing check with `INTEGRATION_NOT_READY` or `INTEGRATION_RECEIPT_CONFLICT`, Git
 below 2.38 with `WORKTREE_GIT_UNSUPPORTED`, a missing committer identity with `WORKTREE_COMMIT_FAILED`, each with
 nothing changed; only after a conflict or a failing check does the Host merge the target into the task branch. The prospective commit is unsigned, referenced by no ref and copies the committer line of the
@@ -92,7 +92,7 @@ WHEN every conflict of a local prepare or integrate build is in a path an enable
 (`CAP-GEN-tracked-artifacts`; the built-in artifacts plus the `.devkit/generated.toml` committed at the build target)
 and no artifact to regenerate reads or updates another conflict, the build MUST keep each owned path from the
 artifact's `seed` side (`ours` the target, `theirs` the source; removed where that side deleted it) instead of
-refusing, and run every check above on that result (`ADR-generated-conflicts-in-prepared-merge`). Nothing is
+refusing, and run every check above on that result (`ADR-local-and-pull-request-integration`). Nothing is
 regenerated. The prospective and the real build of one source and target produce one tree. The result discloses the
 seeded artifacts in `generated` (`{"seeded": [{"id", "paths", "seed", "kept": "target"|"source"}], "regenerate":
 "uv run devkit generated regen <ids>"}`), in the `seeded=` sentinel field and with an `INTEGRATION_GENERATED_SEEDED`
@@ -132,7 +132,7 @@ warning; integrate replaces prepare's disclosure with its own build's. Any other
 - Neither route changes host tool permission, filesystem permission, trust or publication policy.
 
 In `local-orchestrated`, git-operator may prepare and execute the exact currently authorized CLI job
-(`ADR-reusable-lifecycle-resource-manager`, `CAP-DLV-delivery-workflows`). The Host keeps approval, publication
+(`ADR-delivery-approval-and-lifecycle-authority`, `CAP-DLV-delivery-workflows`). The Host keeps approval, publication
 authority, source preparation, semantic decisions and result acceptance. WHEN execution is delegated, the operator
 MUST revalidate job identity/refs and preserve CLI readiness, digest, route and cleanup checks.
 

@@ -17,11 +17,11 @@ Local `prepare` of a source that does not contain the target (a moved target) bu
 object store (Git 2.38 or later for `git merge-tree --write-tree`) and runs readiness, the finish guards on the merge
 base, the receipt check and the prospective policy on it before presenting the scope; a conflict no generated
 artifact settles refuses with
-`WORKTREE_MERGE_CONFLICT` and nothing changed (`ADR-moved-target-merge`). The source need not contain the target first.
+`WORKTREE_MERGE_CONFLICT` and nothing changed (`ADR-local-and-pull-request-integration`). The source need not contain the target first.
 A merge whose conflicts are all in files an enabled generated artifact owns (registry committed at the build target)
 keeps each artifact's `seed` side instead, unless an artifact to regenerate reads another conflict; prepare and
 integrate then disclose `generated` (`seeded`, `regenerate`), `seeded=<ids>` and `INTEGRATION_GENERATED_SEEDED`
-(`ADR-generated-conflicts-in-prepared-merge`). Composed acceptance and the pull-request route settle no conflict.
+(`ADR-local-and-pull-request-integration`). Composed acceptance and the pull-request route settle no conflict.
 The CLI execution absorbs target commits that land after its prepared-scope comparison in one build and waits up to
 20 seconds (`LOCK_WAIT`) for another devkit integration. The result
 reports the prepared target, build target and result commit under `build`. After an unknown outcome, inspect

@@ -88,7 +88,7 @@ merging reports `push=excluded`. Public `plan_finish` and `validate_finish` bind
 identities (`plan_finish` records the merge method and whether the target already contains the branch; only with
 `advance=True`, which local integration alone sets, and under `merge = "no-ff"` does it plan a branch that does
 not contain the target, which `finish --merge`, `ff-only` and the pull-request route still refuse with
-`WORKTREE_MERGE_NOT_FF` (`ADR-moved-target-merge`); after the merge `validate_finish` accepts a base that contains
+`WORKTREE_MERGE_NOT_FF` (`ADR-local-and-pull-request-integration`); after the merge `validate_finish` accepts a base that contains
 the result, so later commits on the base are allowed), and `before_step` validates each mutation boundary for the
 `CAP-INT-mcp-services`. These APIs do not supply business approval.
 Installed callbacks and native Git hooks MUST obey the local-only contract; this API is not a process sandbox.
@@ -187,7 +187,7 @@ The package is laid out by layer under `features/worktree/`:
   `settle` callable, the `ConflictSettler` of `models/merging.py`, which names for every conflicted path the side to
   keep, `"ours"` the target or `"theirs"` the source, and the build commits that tree, removing a path the kept side
   deleted; a path it leaves unsettled refuses with the path as a detail; the worktree feature never reads the
-  generated registry, `ADR-generated-conflicts-in-prepared-merge`), and with `prospective=True`
+  generated registry, `ADR-local-and-pull-request-integration`), and with `prospective=True`
   (local preparation) it writes that merge as an unsigned, unreferenced commit whose author and committer copy the
   committer line of the parent with the later committer date, so its id depends only on the tree, the parents and
   the message.

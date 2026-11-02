@@ -105,7 +105,7 @@ owned entries. An unloadable installed provider is an error, not an uninstall si
 It MUST NOT load the MCP registration provider, probe runtime readiness or write registration state.
 It omits the missing-registration check and its ownership-ledger/destination inspection.
 Explicit `devkit mcp status`, `devkit mcp setup`, ordinary sync and registrations-only sync diagnose actual
-registration plans. See `ADR-remove-speculative-mcp-status-notice` and
+registration plans. See `ADR-mcp-runtime-and-shared-artifacts` and
 `packages/devkit-dist/tests/integration/features/distribution/test_sync_reporting.py`.
 
 **Withheld registration writes.** WHEN locked sync withholds a selected host's actual registration-plan state

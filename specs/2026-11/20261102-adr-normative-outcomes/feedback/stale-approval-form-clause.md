@@ -34,7 +34,7 @@ created_at: 2026-11-02
 - **Versions**: base `fceda9d2`; removal commits `2a491881`, `8f570521`.
 - **Conditions**: not applicable.
 - **Workarounds Attempted**: none.
-- **Related Assets**: `ADR-host-cli-lifecycle-authority`, `CAP-INT-mcp-services`.
+- **Related Assets**: `ADR-delivery-approval-and-lifecycle-authority`, `CAP-INT-mcp-services`.
 
 ## Evidence
 
@@ -43,4 +43,4 @@ CAP-INT-mcp-services states that ADR-host-cli-lifecycle-authority superseded the
 `ask` the Host presents the scope in conversation.
 ```
 
-- **Disposition**: `SPEC-retire-stale-integration-clauses`: `ADR-retire-stale-integration-approval-clauses` retires the confirmation-form text rules and "native approval routes". Verified by `devkit rules check` and the spec review.
+- **Disposition**: `SPEC-retire-stale-integration-clauses`: `ADR-local-and-pull-request-integration` retires the confirmation-form text rules and "native approval routes". Verified by `devkit rules check` and the spec review.

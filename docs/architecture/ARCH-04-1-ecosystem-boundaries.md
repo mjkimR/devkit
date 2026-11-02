@@ -97,7 +97,7 @@ flowchart BT
 | **Cloud Agent** | Remote runner agent | Mirrors worker execution inside cloud PR runs. | Handling local conversation prompts. |
 
 The git-operator boundary is message-level and MUST preserve existing CLI guards
-(`ADR-reusable-lifecycle-resource-manager`). On Codex its projection is emulated: explicit paths, current-job
+(`ADR-delivery-approval-and-lifecycle-authority`). On Codex its projection is emulated: explicit paths, current-job
 authority, per-operation permission requests and Host effect verification substitute for native role/path
 enforcement. Claude Code is native; Antigravity live continuation remains unverified. The bundle projection
 checks are in `packages/devkit-spec/tests/integration/bundles/spec/test_git_operator.py`; runtime compliance is

@@ -322,7 +322,7 @@ place per kind fact.
 - Approvals, stage switches and worktree integration stay in devkit's tables (`[workflow.approvals]`,
   `[workflow.stages]`, `[worktree]`); `[tool.spec]` holds `worktree` and `[tool.spec.scope]`; `devkit spec policy`
   prints the effective values of both. Mapping: approvals to `[workflow.approvals]`
-  (`ADR-delivery-decision-boundaries`), the feedback sweep to `[workflow.stages]` (`collect-feedback`), `pull_request`
+  (`ADR-delivery-approval-and-lifecycle-authority`), the feedback sweep to `[workflow.stages]` (`collect-feedback`), `pull_request`
   and branch cleanup to `[worktree]`, `git.worktree` to `[tool.spec] worktree`. (ADR-policy-in-the-tool-spec-table)
 - The spec rules are implemented and tested in the package; each `bundle/rules/<name>/rule.py` imports the package's
   rule class and subclasses it, with the guide `guide.md` beside it. Rules read files only through `ctx.cache` so

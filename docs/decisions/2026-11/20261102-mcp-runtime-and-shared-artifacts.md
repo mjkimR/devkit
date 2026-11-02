@@ -1,13 +1,14 @@
 ---
 id: ADR-mcp-runtime-and-shared-artifacts
 title: Independent MCP runtime, immutable shared artifacts and revision-bound reports
-summary: "For optional MCP access and regenerable reports, we put MCP transport in an optional devkit-mcp wheel with guarded project registration and keep reports as immutable artifacts apart from scope and publication records, to keep authority separate, accepting new wheels and records."
+summary: "For optional MCP access and regenerable reports, we put MCP transport in an optional devkit-mcp wheel with guarded project registration, keep general status free of speculative MCP notices and keep reports immutable apart from scope and publication records, accepting new wheels and records."
 status: accepted
-created_at: 2026-10-22
+created_at: 2026-11-02
 aliases:
   - ADR-independent-mcp-runtime-with-project-registration-and-environment-guards
   - ADR-separate-shared-artifacts-from-scope
   - ADR-weekly-report-evidence-and-publication
+  - ADR-remove-speculative-mcp-status-notice
 ---
 
 # [ADR-mcp-runtime-and-shared-artifacts] Independent MCP runtime, immutable shared artifacts and revision-bound reports
@@ -15,45 +16,64 @@ aliases:
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: native confirmation as the normal route, CLI/PR authorization as recovery and no extra approval after native confirmation (Host-approval clause).
 
 - **Status**: Accepted
-- **Date**: 2026-10-22
+- **Date**: 2026-11-02
 - **Deciders**: @minjae
 - **Involved Components/Capabilities**: `packages/devkit-mcp/`, `packages/devkit-dist/` (shared artifacts, host
-  registration), `packages/devkit-core/`, `CAP-HOST-lifecycle-observation`, `CAP-COLL-work-scope-registry`, the
-  maintenance bundle's reporting playbook, `MS-maintenance-operations`
+  registration), `packages/devkit-core/`, `CAP-HOST-lifecycle-observation`, `CAP-COLL-work-scope-registry`,
+  `CAP-MCP-runtime-registration`, `CAP-DIST-sync-and-transactions`, the maintenance bundle's reporting playbook,
+  `MS-maintenance-operations`
 
 ---
 
 ## 1. Context & Problem Statement
 
-The package split moved host whole into dist and made the MCP server version follow dist. The selected
-independent-runtime direction (`SPEC-standalone-devkit-mcp`) requires a narrow revision of those MCP clauses. Existing
-hooks, CLI executable ownership and portable installation receipts retain their current owners. Existing services
-import SDK-free contracts, which must remain available without installing a transport package.
+**MCP runtime.** The package split moved host whole into dist and made the MCP server version follow dist. The
+selected independent-runtime direction (`SPEC-standalone-devkit-mcp`) requires a narrow revision of those MCP clauses.
+Existing hooks, CLI executable ownership and portable installation receipts retain their current owners. Existing
+services import SDK-free contracts, which must remain available without installing a transport package.
 
-`CAP-COLL-work-scope-registry` records authoritative owner tokens and optimistic revisions, while proposal review
-reports are regenerable presentation artifacts. Applying TTL and generic CRUD to both would violate the registry's
-non-expiring storage and read-only query contract in `ADR-worktrees-and-scope`
+**General status.** Provider metadata cannot establish an actionable registration: the provider can find no retained
+runtime or return `None`. General status deliberately does not load that provider, so a pending notice inferred from
+provider metadata can recommend an unhelpful retry.
+
+**Shared artifacts.** `CAP-COLL-work-scope-registry` records authoritative owner tokens and optimistic revisions,
+while proposal review reports are regenerable presentation artifacts. Applying TTL and generic CRUD to both would
+violate the registry's non-expiring storage and read-only query contract in `ADR-worktrees-and-scope`
 (`SPEC-worker-shared-state-mcp`).
 
-`MS-maintenance-operations` needs a manually useful weekly report before a scheduler or durable history
-backend exists (`SPEC-weekly-report`). Commits, accepted proposals and current check results alone cannot prove weekly
-delivery or resolution, and an external publication can fail independently from successful evidence collection.
+**Weekly reports.** `MS-maintenance-operations` needs a manually useful weekly report before a scheduler or durable
+history backend exists (`SPEC-weekly-report`). Commits, accepted proposals and current check results alone cannot
+prove weekly delivery or resolution, and an external publication can fail independently from successful evidence
+collection.
 
 ---
 
 ## 2. Decision Drivers
 
 - Keep runtime installation optional, avoid cyclic dependencies and duplicate wheel paths.
+  (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
 - Make project registration converge even after runtime removal; sync must never approve host trust.
+  (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
 - Preserve exact native approval authority; add no new approval authority.
+  (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
 - Configuration location must not be confused with the retained executable required by worktree cleanup.
+  (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
+- Keep general status provider-free and free of speculative registration advice.
+  (ADR-remove-speculative-mcp-status-notice)
+- Preserve diagnostics produced by actual registration planning. (ADR-remove-speculative-mcp-status-notice)
+- Introduce no runtime observation or substitute readiness mechanism. (ADR-remove-speculative-mcp-status-notice)
 - Bounded report sharing across linked worktrees with immutable commit binding.
+  (ADR-separate-shared-artifacts-from-scope)
 - SDD-agnostic package ownership; independent CLI access; optional retained local MCP transport; read-only viewers and
-  queries.
+  queries. (ADR-separate-shared-artifacts-from-scope)
 - Preserve source revision, observation interval and limitations behind each report claim.
+  (ADR-weekly-report-evidence-and-publication)
 - Keep report generation useful without maintenance sweeps, external accounts or publication authority.
+  (ADR-weekly-report-evidence-and-publication)
 - Make retries and same-period reruns distinguishable without a new runtime or database.
+  (ADR-weekly-report-evidence-and-publication)
 - Fit the independently invocable maintenance playbooks in `SPEC-periodic-drift-reconciliation`.
+  (ADR-weekly-report-evidence-and-publication)
 
 ---
 
@@ -61,35 +81,44 @@ delivery or resolution, and an external publication can fail independently from 
 
 ### MCP runtime
 
-- **Leave MCP in dist** (rejected by `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards`):
+- **Leave MCP in dist** (rejected in `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards`):
   fewest moves, but does not satisfy the selected independent runtime direction.
-- **Put contracts and registration exclusively in runtime** (rejected by
+- **Put contracts and registration exclusively in runtime** (rejected in
   `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards`): forces optional-runtime imports in
   domain services and leaves no cleanup after uninstall.
-- **Runtime wheel, lower contracts and dist file reconciliation** (selected by
+- **Runtime wheel, lower contracts and dist file reconciliation** (selected in
   `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards`): optional SDK, acyclic imports,
   reversible owned registration; requires explicit provider and local ownership boundaries.
-- **User-scoped global setup as default** (rejected by
+- **User-scoped global setup as default** (rejected in
   `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards`): binds one repository/runtime
   globally and does not meet project sync selection.
 
+### General status
+
+- **Keep the metadata inference** (rejected in `ADR-remove-speculative-mcp-status-notice`): retains the unsupported
+  assumption that provider presence implies desired work.
+- **Add runtime observation or probing** (rejected in `ADR-remove-speculative-mcp-status-notice`): introduces a
+  mechanism the settled scope excludes.
+- **Remove the general-status notice** (selected in `ADR-remove-speculative-mcp-status-notice`): keeps diagnosis in
+  explicit registration operations and simplifies status.
+
 ### Shared artifacts
 
-- **A common mutable record/artifact backend** (rejected by `ADR-separate-shared-artifacts-from-scope`): couples
+- **A common mutable record/artifact backend** (rejected in `ADR-separate-shared-artifacts-from-scope`): couples
   unrelated authority and expiry semantics.
-- **Immutable local artifacts with an adapter seam** (selected by `ADR-separate-shared-artifacts-from-scope`): meets
+- **Immutable local artifacts with an adapter seam** (selected in `ADR-separate-shared-artifacts-from-scope`): meets
   the immediate report consumer.
-- **A production remote artifact adapter** (deferred by `ADR-separate-shared-artifacts-from-scope`): viable but
+- **A production remote artifact adapter** (deferred in `ADR-separate-shared-artifacts-from-scope`): viable but
   requires a provider/authentication/deployment decision; deferred to `FB-remote-shared-adapter-follow-up`.
 
 ### Weekly reports
 
-- **Replace one report per calendar week and embed its mutable publication result** (rejected by
+- **Replace one report per calendar week and embed its mutable publication result** (rejected in
   `ADR-weekly-report-evidence-and-publication`): destroys earlier evidence and changes the report after publication.
-- **Immutable run-specific local reports with publication outcomes in a companion record** (selected by
+- **Immutable run-specific local reports with publication outcomes in a companion record** (selected in
   `ADR-weekly-report-evidence-and-publication`): stable evidence, same-period reruns, ordinary files and existing
   connectors.
-- **A history backend and automatic maintenance sweeps with reporting** (rejected by
+- **A history backend and automatic maintenance sweeps with reporting** (rejected in
   `ADR-weekly-report-evidence-and-publication`): dependencies and external mutations beyond the manual reporting
   milestone; durable history storage belongs to `MS-maintenance-operations`.
 
@@ -121,17 +150,21 @@ delivery or resolution, and an external publication can fail independently from 
 - Cloud auto-registration exposes the read-only service subset. Both runtime and domain mutation boundaries refuse
   cloud interactive approval and resumed mutation; no missing UI grants authority.
   (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
-- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: in the next item, native confirmation as the normal route, CLI/PR
-  authorization as recovery, and no extra approval after native confirmation. "Approvals belong to the Host" and "no
-  host permission prompt is suppressed" stay in force.
-- Direct/local-orchestrated approvals belong to the Host. Native confirmation is the normal route when connected;
-  explicit existing CLI/PR authorization is recovery. No extra conversational approval is required after the exact
-  native confirmation, and no host permission prompt is suppressed.
+- Direct/local-orchestrated approvals belong to the Host, and no host permission prompt is suppressed.
   (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
 - This replaces only the package split's whole-host MCP placement and its MCP server-version owner, not their other
   contracts, and authorizes the narrow project-registration exception reflected in `CAP-HOST-lifecycle-observation`.
   The proposal contains the detailed acceptance evidence and failure semantics.
   (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)
+
+### General status and registration diagnosis
+
+- General `devkit status` does not emit `MCP_REGISTRATION_PENDING`. (ADR-remove-speculative-mcp-status-notice)
+- Locked sync keeps its notice when an actual registration plan has a host state of `write` whose write is withheld.
+  Explicit MCP commands, runtime selection and provider failure behavior are preserved.
+  (ADR-remove-speculative-mcp-status-notice)
+- This revises only the general-status notification clauses of `CAP-MCP-runtime-registration` and
+  `CAP-DIST-sync-and-transactions`; the provider boundary above remains. (ADR-remove-speculative-mcp-status-notice)
 
 ### Shared artifacts
 
@@ -166,29 +199,34 @@ delivery or resolution, and an external publication can fail independently from 
 
 ## 5. Consequences
 
-- **MCP runtime**: a new release wheel, command path and testing matrix are required. No external consumers require a
-  migration shim; previous user-scoped entries get explicit conflict/recovery instructions rather than automatic
-  conversion. Machine-local registration ownership must survive normal sync and detect edits. Consumers that track
-  native project config cannot receive automatic machine-specific registration in that file; an existing
-  host-managed registration or the explicit CLI/PR route remains available. Exclusions created for new files are
-  narrowly owned and retained as clone-local setup, with explicit cleanup guidance; creating them must not hide
-  existing foreign untracked host files in another registered worktree. Generated absolute paths are local setup.
-  Runtime registration cannot prove actual host discovery, trust or form UI; those require separate implementation
-  evidence. The configuration proposal is an integration-order dependency, not an assumed accepted contract:
-  dependent Development cannot proceed against missing APIs or invent a resolver.
-- **Shared artifacts**: consumers must retain exact artifact references and verify source commits; artifact existence
-  never approves work. Two reports for one commit may coexist. Filesystem sharing trusts the same OS user and the
-  retained MCP process, not forged caller identity. First delivery publishes the remote-adapter protocol and
-  registration contract but cannot claim production cross-host support; a concrete backend restarts in a separate
-  proposal once its consumer, provider/authentication, namespace owner and integration environment are known.
-  `SPEC-cloud-agent-rendering` owns cloud-specific asset rendering; local orchestration still checks MCP connection
-  before dependent operations. Scope-registry ownership and revision behavior require no migration.
-- **Weekly reports**: reports can be inspected without external setup and retain prior evidence across reruns.
-  Several reports may cover one interval, so each names its identity and supersession relationship. Publication
-  records can change without changing the report digest. Readers must check scope, revision and limitations before
-  comparing runs. The maintenance bundle can be initialized with reporting alone when absent; existing companion
-  assets are preserved when present. The Host serializes overlapping catalog writes. The future history backend
-  remains independent.
+- **MCP runtime** (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards): a new release wheel,
+  command path and testing matrix are required. No external consumers require a migration shim; previous user-scoped
+  entries get explicit conflict/recovery instructions rather than automatic conversion. Machine-local registration
+  ownership must survive normal sync and detect edits. Consumers that track native project config cannot receive
+  automatic machine-specific registration in that file; an existing host-managed registration or the explicit CLI/PR
+  route remains available. Exclusions created for new files are narrowly owned and retained as clone-local setup, with
+  explicit cleanup guidance; creating them must not hide existing foreign untracked host files in another registered
+  worktree. Generated absolute paths are local setup. Runtime registration cannot prove actual host discovery, trust or
+  form UI; those require separate implementation evidence. The configuration proposal is an integration-order
+  dependency, not an assumed accepted contract: dependent Development cannot proceed against missing APIs or invent a
+  resolver.
+- **General status** (ADR-remove-speculative-mcp-status-notice): a real missing registration no longer prompts through
+  general status. Explicit MCP/sync commands remain the route for registration diagnosis and reconciliation. No cache,
+  TTL, fingerprint, persistence schema or active-only check replaces the removed inference.
+- **Shared artifacts** (ADR-separate-shared-artifacts-from-scope): consumers must retain exact artifact references and
+  verify source commits; artifact existence never approves work. Two reports for one commit may coexist. Filesystem
+  sharing trusts the same OS user and the retained MCP process, not forged caller identity. First delivery publishes
+  the remote-adapter protocol and registration contract but cannot claim production cross-host support; a concrete
+  backend restarts in a separate proposal once its consumer, provider/authentication, namespace owner and integration
+  environment are known. `SPEC-cloud-agent-rendering` owns cloud-specific asset rendering; local orchestration still
+  checks MCP connection before dependent operations. Scope-registry ownership and revision behavior require no
+  migration.
+- **Weekly reports** (ADR-weekly-report-evidence-and-publication): reports can be inspected without external setup and
+  retain prior evidence across reruns. Several reports may cover one interval, so each names its identity and
+  supersession relationship. Publication records can change without changing the report digest. Readers must check
+  scope, revision and limitations before comparing runs. The maintenance bundle can be initialized with reporting
+  alone when absent; existing companion assets are preserved when present. The Host serializes overlapping catalog
+  writes. The future history backend remains independent.
 
 ---
 
@@ -196,5 +234,9 @@ delivery or resolution, and an external publication can fail independently from 
 
 - The `devkit-mcp` testing matrix and dist-only operation without the runtime; the proposals' acceptance fixtures for
   registration, shared artifacts and expiry.
+  (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards, ADR-separate-shared-artifacts-from-scope)
+- AC-1 through AC-5 in `SPEC-mcp-runtime-pending` require a provider-result matrix, no-load/no-probe assertions,
+  locked-sync notice preservation, independent status diagnostics and consistent Living Spec wording.
+  (ADR-remove-speculative-mcp-status-notice)
 - The reporting playbook remains content-only; manual scenario evidence supplements package and governance tests.
-
+  (ADR-weekly-report-evidence-and-publication)

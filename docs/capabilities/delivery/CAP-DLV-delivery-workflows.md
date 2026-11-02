@@ -399,8 +399,8 @@ The source scout contract selects `level: compact`; it requests Haiku, Luna or F
 The git-operator contract selects `level: lean`: Sonnet medium, gpt-6.1-terra medium and Flash with effort omitted.
 All other shipped roles omit neutral level, model, effort and `x-model-profile` settings and inherit through
 native host defaults. Projects can override or reset role levels in `.devkit/config.toml`.
-`CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-five-subagent-levels` defines the scout
-exception and original five presets; `ADR-lean-subagent-level` adds lean. `ADR-reusable-lifecycle-resource-manager`
+`CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-subagent-levels` defines the scout
+exception, the original five presets and lean. `ADR-delivery-approval-and-lifecycle-authority`
 supersedes only the scout-only source-level restriction for git-operator. No model level changes `activity-effort`, write scope or verification gates.
 `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` checks every shipped role.
 
@@ -432,7 +432,7 @@ to an already-modified file shows too, envelope recording, range validation) liv
 WHEN the Host first delegates a lifecycle job in one conversation and repository, it SHOULD create one
 `git-operator` and reuse its exact identity through native continuation for later jobs. IF that identity or
 continuation is unavailable, THEN it MUST rebuild from current CLI/Git observations and current Host authority.
-The role has no persistent service, approval store or global repository lock (`ADR-reusable-lifecycle-resource-manager`).
+The role has no persistent service, approval store or global repository lock (`ADR-delivery-approval-and-lifecycle-authority`).
 
 Each job carries operation, absolute repository/base/worktree paths, Unit/branch, source/target refs,
 intended_effects, authority, allowed_boundaries, writers_quiesced and expected_checks. It includes prepared_digest
@@ -510,7 +510,7 @@ runs `devkit sync`, commits every output, names each one the payload did not lis
 as `(sync output)` and in its `worker` envelope summary, and never edits `.devkit/managed/`. The Host passes each new
 `(sync output)` entry only when `sync_start` is `0`, `devkit sync --check` exits `0` on the returned head and the path
 is under `seeded` or `files` in `.devkit/installation.json`, is the receipt itself or is `AGENTS.md`
-(`ADR-admit-change-sync-outputs`). A before/after acceptance outcome names a baseline the worker can produce in its
+(`ADR-orchestration-workers`). A before/after acceptance outcome names a baseline the worker can produce in its
 worktree (the head with the change disabled, or a Planning measurement on the same machine), or the Host takes the
 base measurement, because the worker never checks out another commit (`SPEC-delegation-sandbox-guidance`).
 Planning resolves operational instructions and CLI execution in the assigned worktree. When a turn needs newer
@@ -536,7 +536,7 @@ from review and integration without discarding anything until a resolution names
 (`ADR-orchestration-workers`). The Host records and compares no base-checkout state: base advances by the Host,
 another session or an unknown author never block the range, and a worker commit that escapes onto the base branch
 while the rest of its turn lands on its branch is an accepted residual no check names
-(`ADR-drop-the-base-checkout-equality-from-worker-validation`). Host statuses: Claude Code
+(`ADR-orchestration-workers`). Host statuses: Claude Code
 `native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
 (`ADR-orchestration-workers`). Native Codex spawning does not enforce the worker's role/path boundary;
 Git administration remains shared. Workers declare no model, reasoning effort or approval-policy override; project model levels follow distribution policy.
@@ -605,7 +605,7 @@ prompt.
 
 ### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`)
 
-Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-delivery-decision-boundaries`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-local-and-pull-request-integration`; at `prepare` of a source that does not contain the target, the confirmation target with an unlanded prospective merge commit as `context.result_sha`, `ADR-moved-target-merge`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
+Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-delivery-approval-and-lifecycle-authority`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-local-and-pull-request-integration`; at `prepare` of a source that does not contain the target, the confirmation target with an unlanded prospective merge commit as `context.result_sha`, `ADR-local-and-pull-request-integration`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
 
 1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto for task intent and the three main boundaries) in both the base checkout and the materialized `source_sha` snapshot.
 2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:

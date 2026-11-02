@@ -22,7 +22,7 @@ supersedes: [ADR-proposal-acceptance, ADR-mcp-runtime-and-shared-artifacts, ADR-
 Later decisions replaced some clauses of four accepted ADRs without adding a "Superseded in part by" line, so those
 ADRs still state them:
 
-- `ADR-host-cli-lifecycle-authority` moved approval to the Host's conversation followed by a CLI call. Commits
+- `ADR-delivery-approval-and-lifecycle-authority` moved approval to the Host's conversation followed by a CLI call. Commits
   `2a491881` and `8f570521` then removed the native approval forms. `ADR-proposal-acceptance` still authorizes
   acceptance through a native `spec_plan_accept` form. `ADR-mcp-runtime-and-shared-artifacts` still makes native
   confirmation the normal route.
@@ -51,7 +51,7 @@ The ADR compaction found these clauses and kept them verbatim, because a compact
 ### Option 1: Retire the clauses with one ADR (Selected)
 - **Overview**: One partial supersession of the four ADRs, naming each clause.
 - **Pros**: One record of one cleanup; pointer lines make the retirement visible where the clause stood.
-- **Cons**: One ADR touches four topics. Under `ADR-group-compaction-by-topic`, that does not bind them into one
+- **Cons**: One ADR touches four topics. Under `ADR-decision-ledger`, that does not bind them into one
   compaction group.
 
 ### Option 2: Add pointer lines only
@@ -68,7 +68,7 @@ We adopt **Option 1**. It retires only the clauses below. Every other clause of 
 four stay `accepted`.
 
 - From `ADR-proposal-acceptance`, the native lifecycle approval clause is retired: a native `spec_plan_accept` form no
-  longer authorizes acceptance, merge, cleanup or handoff. Acceptance follows `ADR-host-cli-lifecycle-authority`:
+  longer authorizes acceptance, merge, cleanup or handoff. Acceptance follows `ADR-delivery-approval-and-lifecycle-authority`:
   the user's conversational decision, then `devkit spec proposal accept`.
 - From `ADR-proposal-acceptance`, the consequence that native form rendering needs separate live evidence is retired
   with the native form.
@@ -77,7 +77,7 @@ four stay `accepted`.
   protections.
 - From the Host-approval clause of `ADR-mcp-runtime-and-shared-artifacts`, three parts are retired: native
   confirmation as the normal route, CLI/PR authorization as mere recovery, and no extra approval after native
-  confirmation. Approvals still belong to the Host, now through `ADR-host-cli-lifecycle-authority`, and no host
+  confirmation. Approvals still belong to the Host, now through `ADR-delivery-approval-and-lifecycle-authority`, and no host
   permission prompt is suppressed.
 - From `ADR-document-system`, the distribution clause that the spec bundle keeps shipping every rule asset is retired.
   So are the document templates and the docs skeleton in the devkit-spec methodology list; devkit-spec keeps its lifecycle

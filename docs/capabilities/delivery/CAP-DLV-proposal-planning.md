@@ -649,7 +649,7 @@ HEAD, the preparation builds the prospective merge and the preview MUST run the 
 on it (the CI rules on the merged result and a base change to the proposal directory since the merge base) before
 the acceptance commit, refusing with `SPEC_PROPOSAL_APPROVAL_NOT_READY`; a conflict refuses with
 `WORKTREE_MERGE_CONFLICT`. A conflict-free moved base needs no merge into `plan-<slug>`: the landed merge has the
-moved base as first and the acceptance commit as second parent (`ADR-moved-target-merge`).
+moved base as first and the acceptance commit as second parent (`ADR-local-and-pull-request-integration`).
 
 `devkit spec proposal handoff <slug> --effort low|medium|high` validates an already accepted
 proposal on the retained base, creates or validates `dev-<slug>`, runs setup and sync, then performs proposal handoff
@@ -691,7 +691,7 @@ decision and reads no policy itself.
 
 These operations do not dispatch a worker, create a pull request or authorize final Development integration. A
 partial result requires Git/worktree inspection; after an already-landed operation, recovery runs only a guarded
-remaining cleanup. `ADR-host-cli-lifecycle-authority` defines Host authorization and recovery boundaries.
+remaining cleanup. `ADR-delivery-approval-and-lifecycle-authority` defines Host authorization and recovery boundaries.
 
 The composed `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` is the
 single Planning acceptance route, and the Host runs it itself: it already includes the integration and cleanup, so
@@ -738,7 +738,7 @@ setup/handoff. Dirty or mismatched partial state requires inspection; it is neve
 merely because a branch exists. The one exception is the acceptance commit itself: when the commit gate refuses
 it, nothing has landed, so the service withdraws its own two acceptance writes (the status change and the gate
 record), leaves the Planning worktree as it was and reports `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` with the gate's
-output as details. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
+output as details. See `ADR-proposal-acceptance` and `ADR-delivery-approval-and-lifecycle-authority`.
 
 `proposal report` checks the slug and `--source-sha` before it reads the checkout, so a missing proposal is never
 reported as a dirty tree.
