@@ -110,6 +110,25 @@ warning; integrate replaces prepare's disclosure with its own build's. Any other
 - A required pull-request policy refuses the local route. Automatic pull-request execution is refused.
 - Pull-request execution validates and discloses remote writes through the existing GitHub adapter. It preserves
   repository binding, head pinning, required checks, landing verification and leased branch cleanup.
+- **GitHub through `gh`.** The pull-request route MUST reach GitHub only through `gh` under `gh`'s own
+  authentication; devkit MUST NOT store or read a token, call GitHub over its own HTTP client or bypass protection.
+- **Refusal before approval.** IF `gh` is missing or unauthenticated, cannot resolve the selected remote, an
+  existing PR is cross-repository (fork) or the target has a merge queue, THEN `prepare` MUST refuse with a stable code
+  (`INTEGRATION_GH_UNAVAILABLE`, `INTEGRATION_REMOTE_UNSUPPORTED`) before the Host presents the scope.
+- **No queue or bypass.** The route MUST NOT enqueue, auto-merge or admin-merge (`--auto`, `--admin`); a merge that
+  needs them is either pending or refused by the platform.
+- **Synchronous pinned merge.** The merge MUST be the synchronous `gh api --hostname <host> --method PUT
+  repos/<owner>/<repo>/pulls/<number>/merge` with the approved source `sha` and `merge_method=merge`. IF the platform
+  answers 403, 405, 409 or 422 and the PR is not merged, THEN integrate MUST fail with `INTEGRATION_MERGE_REFUSED`;
+  any other unmerged outcome is `INTEGRATION_STEP_UNKNOWN`, resolved only from the PR state.
+- **Leased remote deletion.** Remote branch deletion MUST use only `git push
+  --force-with-lease=refs/heads/<branch>:<sha> <remote> --delete <branch>`; integration MUST NOT run
+  `gh pr merge --delete-branch`, which deletes the local branch outside devkit's guards.
+- **Checks pending.** WHEN required checks, required reviews or platform mergeability are not yet satisfied after the
+  checked build, integrate MUST publish the source and PR, make no merge call and return `status=pending` with the
+  `INTEGRATION_CHECKS_PENDING` notice. The merge then takes a fresh `prepare` and Host decision.
+  Covered by `packages/devkit/tests/integration/features/worktree/test_pull_request.py` and
+  `packages/devkit/tests/integration/features/integration/test_pull_request.py`.
 - Neither route changes host tool permission, filesystem permission, trust or publication policy.
 
 In `local-orchestrated`, git-operator may prepare and execute the exact currently authorized CLI job
@@ -184,6 +203,7 @@ registered.
 | `INTEGRATION_TARGET_MOVED` | Nothing changed on the target. Prepare again on the current target (the local route builds the merge itself; the pull-request route needs the target merged into the source), then obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |
 | `INTEGRATION_GENERATED_SEEDED` | `WARNING`: the merge kept the named generated files from one side without regenerating them. After the integration lands, run the `[FIX]` command (`devkit generated regen <ids>`) on the target branch and commit the regenerated files; a `local-orchestrated` run does it once before its batch test run. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git and worktree state; run guarded already-merged finish for a marked remaining worktree, or the owning extension command for a remaining scoped post-finish target. |
+| `INTEGRATION_CHECKS_PENDING` | `NOTICE`: the PR is published and unmerged. Wait for its checks and reviews with an agent bound, inspect the PR, then prepare again and integrate with the new digest after Host approval. |
 | `INTEGRATION_LANDED_UNCHECKED` | Run the provider's landed-target check and do not report checked integration until it passes. |
 
 Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`,

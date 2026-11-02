@@ -54,8 +54,9 @@ driver) while giving one place per fact and a failing check (first two drivers).
 - Each relation field maps to exactly one prefix, checked for uniqueness: `depends_on` sits only on the milestone
   row, and its unit-anchor case (`PROP-`/`SPEC-`) stays code. The use case and capability link pair of
   `RULE-traceability-link` is one explicit pair declaration beside the rows, not row data.
-- Consumers read the rows through one accessor called at check time, never through constants bound at import; the
-  ID regexes (`ID_SOURCE`, `ID_PATTERN`) are the exception and are built from the rows at import.
+- Consumers MUST read the rows through one accessor called at check time, never through constants bound at import;
+  the ID regexes (`ID_SOURCE`, `ID_PATTERN`) are the exception and are built from the rows at import →
+  `CAP-DOCS-document-model`.
 - The path-keyed copies of a fact derive from the rows too: `entrypoints/services/paths.py` builds its
   entrypoint-bearing directories from them.
 - `PREFIXES`, `ID_SOURCE`, `ID_PATTERN`, `kind_of` and `is_id` keep their names and signatures and derive from the
@@ -67,7 +68,8 @@ driver) while giving one place per fact and a failing check (first two drivers).
   relation rules (`depends_on`, `milestone`, provenance), spec, proposal, feedback and milestone lifecycles
   (`MAT-kind-facts-inventory` section 2). Each Living Spec row needs a path-grammar branch in `RULE-id-convention`,
   and a row without one raises, so no kind is checked under another kind's grammar.
-- Templates stay bundle files with no table field, because no code reads them.
+- The table MUST NOT hold a template field: templates stay bundle files, because no code reads them →
+  `CAP-DOCS-document-model`.
 
 ## 5. Consequences
 

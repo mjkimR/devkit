@@ -182,12 +182,12 @@ makes users coordinate execution details.
   stable codes and deterministic next actions so the responsible agent can continue. A required check may still
   prevent an invalid transition; the agent resolves its cause within scope rather than asking the user to manage each
   step. This principle does not require an automatic retry engine or background recovery service.
-  (ADR-autonomy-between-approval-gates)
-- **Escalation**: escalate when a defined human decision is due, agreed goal/scope/contract must change, necessary
-  authority is missing, an existing explicit stop rule applies, or the responsible agent cannot resolve the problem
-  within the agreement. In local orchestration, a worker reports to the Host/main agent; that agent resolves matters
-  within its authority and brings only necessary decisions to the user. Preserve and report actual partial state.
-  (ADR-autonomy-between-approval-gates)
+  (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy`
+- **Escalation**: agents MUST escalate when a defined human decision is due, agreed goal/scope/contract must change,
+  necessary authority is missing, an existing explicit stop rule applies, or the responsible agent cannot resolve the
+  problem within the agreement. In local orchestration, a worker reports to the Host/main agent; that agent resolves
+  matters within its authority and brings only necessary decisions to the user. Preserve and report actual partial
+  state. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy`
 - **Autonomy limits**: autonomy grants no new commit, merge, publication or deletion authority and does not bypass an
   approval refusal, sandbox restriction, required check/review, bounded review-loop stop or delegated write boundary;
   the gate decisions above and effective `CAP-DLV-project-policy` remain in force. Reuse authorization already given

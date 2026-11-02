@@ -32,6 +32,12 @@ it in stages:
   bounded intake search (the `spec` skill's, `CAP-HARN-agent-guidance`); a candidate found that way runs only after
   the user confirms it.
 
+**Agent-facing invocation**: every devkit invocation that guidance documents or an output suggests to an agent (an
+advisory `fix`, a sentinel, a next-step field, the context `argv`) MUST take the form `uv run devkit ...`
+(`packages/devkit/tests/integration/package/test_agent_output_contract.py`). Hooks MAY keep their own direct forms,
+such as the worktree's `.venv` interpreter or `devkit` from `PATH`
+(`ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`).
+
 ## 2. Bundle Context (`devkit get-context`)
 
 `devkit get-context <bundle>` returns the bundle's **context**: its constitution, the header catalog of its

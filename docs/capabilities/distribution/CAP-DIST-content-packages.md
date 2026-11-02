@@ -63,6 +63,14 @@ unless a shipped bundle seeds a document with that ID; placeholders and examples
 allowed, and the repository-only `devkit-dev` bundle is exempt
 (`tools/devkit-dev/tests/integration/test_bundle_citations.py`).
 
+**Execution-aware bundle text**: WHERE sync renders for `cloud`, every reachable output of the maintained bundles
+(`advisory`, `authoring`, `devkit`, `harness`, `response-style`, `spec`), including references and native
+projections, MUST give only supported CLI paths and an explicit Host boundary for an unavailable operation, with no
+MCP or native-approval routing (`packages/devkit-spec/tests/integration/bundles/spec/test_cloud_guidance.py`).
+Local-rendered text MAY keep MCP-first discovery and connection with the CLI as fallback. The guarantee covers the
+maintained bundles, not custom overrides or other source files. Installation guides MUST keep cloud setup separate
+from optional local onboarding (`ADR-configuration-language-and-rendering`).
+
 ## 2. Installation and Lifecycle
 
 ```bash
@@ -192,6 +200,12 @@ including LF. This is not a limit on the whole guide or skill body. Deployment c
 projections; the authored examples in `MAT-response-style-rewrite-draft` illustrate the accepted design and do
 not measure model adherence, reader comprehension, comparative quality or host compaction behavior
 (`ADR-response-style`).
+
+The bundle MUST NOT add presets, variables other than `language`, per-host variants, extra decorative marks, a
+manifest exception or a pointer split across fragments; an improved pointer MUST fit the current limit. Raising that
+limit MUST rest on observed host behavior, an aggregate guidance budget and a new accepted decision. Bundle text
+MUST carry a source's ideas in original wording and MUST NOT reuse its examples, structure or copyleft or
+unknown-licence expression (`ADR-response-style`).
 
 ## 6. Opt-in Maintenance
 

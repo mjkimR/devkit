@@ -56,8 +56,10 @@ Option 6, decided by the user.
   `.devkit/adaptive-dev.md`.
 - No compatibility is kept: `"incubation"` is an ordinary invalid approach value, refused in the working
   configuration and in committed snapshots with `DEVELOPMENT_CONFIG_INVALID`, whose fix names `"sdd"` or
-  `"adaptive-dev"`. The `incubation` bundle name gets no alias, and `.devkit/incubation.md` gets no fallback read.
-- Documents call the approach "adaptive development"; identifiers and commands use `adaptive-dev`.
+  `"adaptive-dev"`. The `incubation` bundle name MUST NOT get an alias, and `.devkit/incubation.md` MUST NOT get a
+  fallback read. → `CAP-DLV-adaptive-development`
+- Documents MUST call the approach "adaptive development"; identifiers and commands MUST use `adaptive-dev`.
+  → `CAP-DLV-adaptive-development`
 - The approach contract is unchanged: a product may stay in adaptive development, and SDD adoption stays the
   explicit `sdd-baseline` procedure.
 - This decision replaces the value set `sdd` and `incubation` in `ADR-own-development-approach-policy-outside-sdd`

@@ -154,6 +154,16 @@ aliases without rewriting metadata. A wholly superseded ADR may retain earlier p
 relationships remain checked. `RULE-document-reference` also resolves the ID an in-part line cites.
 Review determines whether the clauses are wholly or partly replaced; neither rule interprets decision meaning.
 
+WHILE the development approach is `sdd`, which owns decision revision (`ADR-document-and-sdd-bundles`), accepted
+ADRs follow `ADR-immutable-decisions-editable-records`; review of the diff, not a rule, checks both rules:
+
+- **Decision change**: reversing, invalidating, narrowing or widening a decision, or changing its scope, drivers'
+  weight or consequences, MUST be recorded as a new ADR that replaces the earlier one wholly or in part as above.
+- **Editorial edit**: an accepted ADR MAY be edited in place without a new ADR for wording and format, the
+  template's current sections, stale paths and command, code and file names, references rewritten to canonical IDs,
+  and metadata (`status`, `superseded_by`, `aliases`). An edit that changes what a statement decides is a decision
+  change.
+
 ### 3.2 IDs and Kinds
 
 An ID is `<PREFIX>-<slug>`: one of the prefixes below, a dash, then a letter or digit followed by letters, digits,
@@ -185,6 +195,10 @@ the `RULE-spec-format` scope, whether a first H1 carries an ID token, the summar
 ID pattern and prefix map derive from the rows. A table with a missing, extra or reordered row, a prefix or relation
 field in two rows, or an inconsistent row MUST fail with `KindTableError`; a consumer that lacks a fact a kind needs
 MUST fail the same way instead of applying another kind's. Path grammars and lifecycles stay kind-specific code.
+Consumers MUST read the rows through `definitions()` or `definition(kind)` when they run, never through constants
+bound at import, so an injected table changes their results; the ID grammar (`PREFIXES`, `ID_SOURCE`, `ID_PATTERN`)
+is the one exception, built from the rows at import (`packages/devkit-docs/tests/unit/features/documents/`). The
+table MUST NOT hold a template field: templates stay bundle files that no code reads.
 
 The `ux` row (`ADR-ux-screen-documents`) is a Living Spec, area-scoped kind with an always-required summary, a heading
 token, no `entrypoints`, no terminal status (statuses `draft`, `active`, `deprecated`) and no relation field that
@@ -342,7 +356,8 @@ index.is_browsing_historical(document)  # what list and search hide unless asked
 `relation_prefixes()` maps each relation field to the prefix it takes, `by_prefix(value)` returns the row whose
 prefix opens `value` as `<PREFIX>-...`, and `KindTableError` reports an inconsistent table or a missing fact. A row's
 `summary` is a `Summary` (`always`, `anchor`, `never`) and its `format_scope` a `FormatScope` (`none`, `global`,
-`every-root`). `PREFIXES` and `TERMINAL_STATUSES` are copies of the rows taken at import.
+`every-root`). `PREFIXES` and `TERMINAL_STATUSES` are copies of the rows taken at import: `PREFIXES` belongs to the
+ID grammar, and `TERMINAL_STATUSES` is for library callers only, since `is_terminal` reads the table when it runs.
 
 `parse_document(path, text)` reads one document (`None` without a well-formed ID); `visible_lines` is the prose
 scanner behind reference extraction; `SOURCE_DIRECTORIES`, `is_document_file` and `in_source_directory` expose the

@@ -60,3 +60,13 @@ Documentation and agent guidance only. No code path changes.
 - `uv run devkit rules check --phase hygiene` on the edited bundle assets: no `RULE-agent-asset-wording` warning.
 - `rg -n '\b(ADR|PADR|CAP|UC|UX|ARCH|SPEC|PROP|MS|MAT|FB)-[A-Za-z0-9]'` on the edited bundle files: placeholders only.
 - `just test-affected`: covers `test_writing_guidance.py` and any guidance test that touches the edited files.
+
+## 5. Owner Choices Made During Build
+
+- `ADR-configuration-language-and-rendering`: the cloud/local text rule went to `CAP-DIST-content-packages` §1 next to
+  the self-contained bundle text rule, because `CAP-DIST-sync-and-transactions` already exceeds `RULE-file-length`.
+- `ADR-immutable-decisions-editable-records`: restated in `CAP-DOCS-document-model` §Decision supersession, scoped to
+  the `sdd` approach, because the larger delivery capabilities already exceed `RULE-file-length`.
+- `ADR-delivery-decision-boundaries`: restated as a new rule 10 of `CAP-DLV-project-policy`, so the rule numbers that
+  specs cite stay stable.
+- `sdd-overall-refactor` routes a lasting rule the same way as the completion classification (AC-03 consistency).

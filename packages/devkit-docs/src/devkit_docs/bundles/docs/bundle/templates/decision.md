@@ -51,8 +51,9 @@ created_at: YYYY-MM-DD
 ## 4. Decision Outcome
 We decided to adopt **[Option 1]**.
 
-**Rationale**:
-[Option 1] best satisfies [Driver 1] and [Driver 2] in a balanced manner, and potential drawbacks can be mitigated through ...
+<!-- One list item per clause (decision-writing). A normative clause carries one RFC 2119 keyword and the ID of the capability or architecture document that restates it (`CAP-<AREA>-<slug>` or `ARCH-<id>`); a rationale clause carries no keyword. -->
+- <clause with MUST|SHOULD|MAY> → `CAP-<AREA>-<slug>`
+- [Option 1] best satisfies [Driver 1] and [Driver 2] in a balanced manner, and potential drawbacks can be mitigated through ...
 
 ---
 
@@ -64,4 +65,4 @@ We decided to adopt **[Option 1]**.
 ---
 
 ## 6. Confirmation
-<!-- How compliance is checked: a rule ID, a test path or a review step; "Review only" when no check exists. -->
+<!-- How compliance is checked: a rule ID, a test path, a review step or the restating IDs of Decision Outcome; "Review only" when no check exists. -->

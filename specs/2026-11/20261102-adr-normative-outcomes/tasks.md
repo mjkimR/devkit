@@ -8,7 +8,7 @@ plan: PLAN-adr-normative-outcomes
 
 ## Phase 1: Authoring rule
 
-- [ ] **Task 1.1**: Decision Outcome clause format in decision-writing, the decision template and the completion
+- [x] **Task 1.1**: Decision Outcome clause format in decision-writing, the decision template and the completion
   classification, with guidance tests; `CAP-HARN-agent-guidance` row and its two ADR-only clauses
   - **_Boundary**: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md`,
     `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md`,
@@ -22,24 +22,24 @@ plan: PLAN-adr-normative-outcomes
 
 ## Phase 2: Restatements (disjoint document scopes)
 
-- [ ] **Task 2.1**: Governance: snapshot-gate fix and read-only shared `DocumentIndex`
+- [x] **Task 2.1**: Governance: snapshot-gate fix and read-only shared `DocumentIndex`
   - **_Boundary**: `docs/capabilities/governance/CAP-GOV-rule-authoring.md`,
     `docs/decisions/2026-10/*share-document-index-and-defer-catalog-build-in-rules-run.md`
   - _Requirements: AC-04, AC-05_
   - **Verification**: `uv run devkit rules check docs/capabilities/governance docs/decisions`
-- [ ] **Task 2.2**: Document model: kind-table accessor and editable ADR records
+- [x] **Task 2.2**: Document model: kind-table accessor and editable ADR records
   - **_Boundary**: `docs/capabilities/documents/CAP-DOCS-document-model.md`,
     `docs/decisions/2026-10/*kind-definition-table-keyed-on-the-declared-kind-enum.md`,
     `docs/decisions/2026-10/*immutable-decisions-editable-records.md`
   - _Requirements: AC-04_
   - **Verification**: `uv run devkit rules check docs/capabilities/documents docs/decisions`
-- [ ] **Task 2.3**: Delivery: adaptive-dev naming and helper autonomy with escalation triggers
+- [x] **Task 2.3**: Delivery: adaptive-dev naming and helper autonomy with escalation triggers
   - **_Boundary**: `docs/capabilities/delivery/CAP-DLV-adaptive-development.md`,
     `docs/capabilities/delivery/CAP-DLV-project-policy.md`,
     `docs/decisions/2026-10/*adaptive-dev-approach-name.md`, `docs/decisions/2026-10/*delivery-decision-boundaries.md`
   - _Requirements: AC-04_
   - **Verification**: `uv run devkit rules check docs/capabilities/delivery docs/decisions`
-- [ ] **Task 2.4**: Distribution: response-style limits, approval and cloud/local text, `uv run devkit` invocation
+- [x] **Task 2.4**: Distribution: response-style limits, approval and cloud/local text, `uv run devkit` invocation
   - **_Boundary**: `docs/capabilities/distribution/CAP-DIST-content-packages.md`,
     `docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md`,
     `docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md`,
@@ -47,12 +47,12 @@ plan: PLAN-adr-normative-outcomes
     `docs/decisions/2026-10/*keep-uv-run-as-the-agent-facing-devkit-invocation.md`
   - _Requirements: AC-04_
   - **Verification**: `uv run devkit rules check docs/capabilities/distribution docs/decisions`
-- [ ] **Task 2.5**: Integration: GitHub adapter limits and the checks-pending flow
+- [x] **Task 2.5**: Integration: GitHub adapter limits and the checks-pending flow
   - **_Boundary**: `docs/capabilities/integration/CAP-INT-mcp-services.md`,
     `docs/decisions/2026-10/*local-and-pull-request-integration.md`
   - _Requirements: AC-04_
   - **Verification**: `uv run devkit rules check docs/capabilities/integration docs/decisions`
-- [ ] **Task 2.6**: Architecture: generic-first and test-selection graph rules
+- [x] **Task 2.6**: Architecture: generic-first and test-selection graph rules
   - **_Boundary**: `docs/architecture/ARCH-05-1-containers.md`, `docs/architecture/ARCH-07-deployment.md`,
     `docs/decisions/2026-10/*spec-package-on-devkit.md`, `docs/decisions/2026-10/*test-selection-and-ci.md`
   - _Requirements: AC-04_
@@ -60,7 +60,7 @@ plan: PLAN-adr-normative-outcomes
 
 ## Phase 3: Integration checks
 
-- [ ] **Task 3.1**: Whole-change checks
+- [x] **Task 3.1**: Whole-change checks
   - **_Boundary**: `specs/2026-11/20261102-adr-normative-outcomes/`
   - _Requirements: AC-06_
   - **Verification**: `uv run devkit rules check`; `uv run devkit rules check --phase hygiene`; `just test-affected`

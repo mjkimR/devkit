@@ -141,6 +141,9 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Dependencies**: `devkit-docs`, `devkit-agt`, `devkit-core` and `click` (same version); its `search` extra
   requires `devkit-docs[search]`. Its proposal acceptance and handoff run through the `devkit spec proposal` CLI,
   and the base harness remains SDD-agnostic (`ADR-document-package`).
+- **Generic first**: a generic capability that devkit-spec needs MUST be added to the base packages
+  (`devkit-core`, `devkit-dist`, `devkit-agt` or `devkit-docs`) first; devkit-spec keeps only spec-driven behavior.
+  `RULE-architecture` keeps the base packages from importing `devkit_spec`; the placement itself is review only.
 - **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
 
 ### 2.6 `devkit-viewer` (`packages/devkit-viewer`)

@@ -169,7 +169,8 @@ Rebuilding on devkit raises the questions of the package's shape:
   ships in its own preset, `[presets.docs-skeleton] assets = ["docs-skeleton"]`, added with
   `devkit add spec:docs-skeleton`, so installing devkit-spec never writes files into an existing `docs/` tree.
   (ADR-docs-skeleton-is-opt-in)
-- **Generic first**: a generic capability devkit-spec needs is added to devkit first. (ADR-rebuild-spec-on-devkit)
+- **Generic first**: a generic capability devkit-spec needs MUST be added to devkit first.
+  (ADR-rebuild-spec-on-devkit) → `ARCH-05-1-containers`
 
 ---
 
