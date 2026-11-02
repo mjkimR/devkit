@@ -171,14 +171,14 @@ The evidence for the local-configuration part is in
   sync/status/check plans from saved selection, and runtime guards always read effective execution configuration
   independently. Locked sync continues to reject canonical changes; ordinary sync can rewrite tracked canonical
   guidance. (ADR-execution-aware-agent-rendering)
-- Cloud operational text MUST provide only supported CLI paths and explicit Host boundaries for unavailable
-  operations. (ADR-execution-aware-agent-rendering) → `CAP-DIST-content-packages`
+- Cloud operational text provides only supported CLI paths and explicit Host boundaries for unavailable operations.
+  (ADR-execution-aware-agent-rendering) → `CAP-DIST-content-packages` §1 (MUST)
 - Superseded in part by `ADR-retire-stale-integration-approval-clauses`: "native approval routes" in the next item.
 - Local text retains MCP-first discovery/connection and native approval routes. Audit the reachable maintained
   surface, including references and variants, instead of claiming arbitrary source files or custom overrides are
   MCP-free. (ADR-execution-aware-agent-rendering)
-- Installation guides MUST distinguish cloud setup from optional local onboarding.
-  (ADR-execution-aware-agent-rendering) → `CAP-DIST-content-packages`
+- Installation guides distinguish cloud setup from optional local onboarding. (ADR-execution-aware-agent-rendering)
+  → `CAP-DIST-content-packages` §1 (MUST)
 
 ---
 

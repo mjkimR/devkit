@@ -65,8 +65,8 @@ and both ADRs stay `accepted`.
 
 - From `ADR-local-and-pull-request-integration`, it retires the refusal before the confirmation of "any path that
   would need `--auto` or `--admin`".
-- The PR route MUST NOT enqueue, auto-merge or admin-merge. A merge that needs admin rights ends as
-  `INTEGRATION_MERGE_REFUSED`. → `CAP-INT-mcp-services`
+- The PR route does not enqueue, auto-merge or admin-merge. A merge that needs admin rights ends as
+  `INTEGRATION_MERGE_REFUSED`. → `CAP-INT-mcp-services` §Authority and route limits (MUST NOT)
 - The refusals before the confirmation for an unresolvable remote, missing or unauthenticated `gh`, a fork PR and a
   merge queue stay in force.
 - From `ADR-configuration-language-and-rendering`, it retires these confirmation-form rules: messages explain every

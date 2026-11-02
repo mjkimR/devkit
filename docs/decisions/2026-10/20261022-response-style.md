@@ -120,8 +120,8 @@ can create false corroboration, and a repository license does not establish webs
 - State omission/distortion and obscurity as failure conditions, with omission the more serious failure. Required
   content stays present and discoverable; concise reporting never reduces required work.
   (ADR-response-style-adaptive-replies)
-- The bundle MUST NOT add presets or extra decorative marks. (ADR-response-style-adaptive-replies)
-  → `CAP-DIST-content-packages`
+- The bundle adds no presets or extra decorative marks. (ADR-response-style-adaptive-replies)
+  → `CAP-DIST-content-packages` §5 (MUST NOT)
 - The draft supplied a direction for user review rather than an approval or deployed instruction; deployment follows
   the delivery workflow. A source citation or illustrative reply does not establish observed runtime quality.
   (ADR-response-style-adaptive-replies)
@@ -130,13 +130,13 @@ can create false corroboration, and a repository license does not establish webs
 
 - Retain the 300-byte contract and one response style with the existing language variable.
   (ADR-response-style-guidance-budget)
-- The bundle MUST NOT implement presets, new variables, per-host variants, manifest exceptions or fragment splitting.
-  (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages`
+- The bundle implements no presets, new variables, per-host variants, manifest exceptions or fragment splitting.
+  (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages` §5 (MUST NOT)
 - A candidate may improve the pointer within the current limit; `MAT-response-style-rewrite-draft` supplies a
   candidate pointer that fits this budget. (ADR-response-style-guidance-budget)
 - No reminder-length experiment is required. (ADR-response-style-guidance-budget)
-- An actual limit expansion MUST rest on observed host behavior, an aggregate guidance budget and a new accepted
-  design. (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages`
+- An actual limit expansion rests on observed host behavior, an aggregate guidance budget and a new accepted design.
+  (ADR-response-style-guidance-budget) → `CAP-DIST-content-packages` §5 (MUST)
 - The current scope promises no unimplemented distribution change and claims no measured long-session effect.
   (ADR-response-style-guidance-budget)
 - The cap is a per-guidance-fragment cap for text inserted into `AGENTS.md`, not a total-file or skill-body cap.
@@ -165,8 +165,8 @@ can create false corroboration, and a repository license does not establish webs
   their own license gaps. (ADR-response-style-source-selection)
 - Record each source, its scope and limitations; do not count shared or unverified ancestry as independent votes.
   (ADR-response-style-source-selection)
-- Bundle text MUST transfer ideas using original wording, never source examples, structure or
-  copyleft/unknown-license expression. (ADR-response-style-source-selection) → `CAP-DIST-content-packages`
+- Bundle text transfers ideas using original wording, never source examples, structure or copyleft/unknown-license
+  expression. (ADR-response-style-source-selection) → `CAP-DIST-content-packages` §5 (MUST)
 - Track each candidate rule to a source idea or explicit local requirement and the agreed example review. Link observed
   results when an optional live comparison is undertaken. (ADR-response-style-source-selection)
 

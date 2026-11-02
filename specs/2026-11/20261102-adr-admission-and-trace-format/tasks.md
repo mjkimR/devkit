@@ -8,7 +8,7 @@ plan: PLAN-adr-admission-and-trace-format
 
 ## Phase 1: Guidance
 
-- [ ] **Task 1.1**: Admission criteria and trace format in decision-writing, the template and Planning, with tests
+- [x] **Task 1.1**: Admission criteria and trace format in decision-writing, the template and Planning, with tests
   - **_Boundary**: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md`,
     `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`,
@@ -19,14 +19,14 @@ plan: PLAN-adr-admission-and-trace-format
 
 ## Phase 2: Existing ADRs
 
-- [ ] **Task 2.1**: Rewrite the markers of the 13 ADRs into the trace format
+- [x] **Task 2.1**: Rewrite the markers of the 13 ADRs into the trace format
   - **_Boundary**: `docs/decisions/2026-10/`, `docs/decisions/2026-11/`
   - _Requirements: AC-04_
   - **Verification**: `uv run devkit rules check docs/decisions`
 
 ## Phase 3: Checks
 
-- [ ] **Task 3.1**: Whole-change checks
+- [x] **Task 3.1**: Whole-change checks
   - **_Boundary**: `specs/2026-11/20261102-adr-admission-and-trace-format/`
   - _Requirements: AC-05_
   - **Verification**: `uv run devkit rules check`; `just test-affected`

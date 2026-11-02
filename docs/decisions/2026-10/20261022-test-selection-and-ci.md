@@ -75,20 +75,21 @@ production node: the measured file-only split reduces excess tests but cannot na
   (ADR-nightly-ci-verification)
 - Select per-file test groups and opt-in module-level devkit_spec nodes; keep other production owners coarse by
   default. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes)
-- Selection MUST resolve helpers, applicable conftests, relative imports, initializers and re-exports conservatively.
-  Use broad owner dependencies for static uncertainty and full fallback for unsafe/unknown change mapping or parse
-  failure. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`
-- Selection MUST retain existing explicit data/structural/frontend checks and all full triggers.
-  (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`
-- An implicit package edge on every fine spec test MUST NOT defeat the new granularity; opaque consumers explicitly
-  retain a broad dependency. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`
-- Deferred imports MUST NOT conceal real dependencies. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes)
-  → `ARCH-07-deployment`
+- Selection resolves helpers, applicable conftests, relative imports, initializers and re-exports conservatively. Use
+  broad owner dependencies for static uncertainty and full fallback for unsafe/unknown change mapping or parse failure.
+  (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment` §1.3 (MUST)
+- Selection retains existing explicit data/structural/frontend checks and all full triggers.
+  (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment` §1.3 (MUST)
+- An implicit package edge on every fine spec test does not defeat the new granularity; opaque consumers explicitly
+  retain a broad dependency. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes)
+  → `ARCH-07-deployment` §1.3 (MUST NOT)
+- Deferred imports do not conceal real dependencies. (ADR-select-tests-by-file-with-finer-spec-dependency-nodes)
+  → `ARCH-07-deployment` §1.3 (MUST NOT)
 - Do not add helper extraction or runtime coverage storage to this implementation.
   (ADR-select-tests-by-file-with-finer-spec-dependency-nodes)
-- Reductions SHOULD be validated on same-revision before/after collection matrices alongside independent positive and
-  negative dependency fixtures. Exact numerical reductions are evidence, not authority to omit required coverage.
-  (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment`
+- Reductions are validated on same-revision before/after collection matrices alongside independent positive and negative
+  dependency fixtures. Exact numerical reductions are evidence, not authority to omit required coverage.
+  (ADR-select-tests-by-file-with-finer-spec-dependency-nodes) → `ARCH-07-deployment` §1.3 (SHOULD)
 
 ---
 

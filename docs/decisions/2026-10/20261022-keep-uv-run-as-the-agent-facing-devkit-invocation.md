@@ -47,10 +47,10 @@ devkit targets POSIX only (`ARCH-03-context`).
 
 ## 4. Decision Outcome
 
-- The documented agent-facing form MUST be `uv run devkit` on every path → `CAP-DIST-context-and-playbooks`.
+- The documented agent-facing form is `uv run devkit` on every path. → `CAP-DIST-context-and-playbooks` §1 (MUST)
 - It is the only option that meets the correctness and portability drivers; every direct form trades them for a
   saving of 2-14 % of a frequent call, about 1 s across a 50-call agent session.
-- Hooks MAY keep their current forms; they never paid the `uv run` cost → `CAP-DIST-context-and-playbooks`.
+- Hooks may keep their current forms; they never paid the `uv run` cost. → `CAP-DIST-context-and-playbooks` §1 (MAY)
 
 ## 5. Consequences
 
