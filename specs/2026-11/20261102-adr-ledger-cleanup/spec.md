@@ -2,7 +2,7 @@
 id: SPEC-adr-ledger-cleanup
 title: Topic compaction groups and retired stale ADR clauses
 summary: ADR compaction groups follow topics instead of the whole supersession closure, with cross-group partial supersession recorded on the replacements; a retiring ADR removes the native-approval and moved-ownership clauses that no longer hold.
-status: in-progress
+status: completed
 created: 2026-11-02
 related_capabilities: [CAP-DOCS-document-model]
 related_usecases: []

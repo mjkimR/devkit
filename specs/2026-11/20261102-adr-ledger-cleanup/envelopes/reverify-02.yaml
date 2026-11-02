@@ -1,0 +1,65 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T05:58:54.606842Z'
+status: completed
+review: review-01.yaml
+summary: 'PASS: the implementer added the native form rendering consequence to the proposal-acceptance header pointer; rules check clean.'
+findings:
+- issue: A compacted member that partially supersedes an ADR kept outside the run leaves a pointer whose replacement has no supersedes, which RULE-decision-supersession rejects.
+  evidence: playbooks/adr-compaction/SKILL.md:34-35,52-53; decision_supersession.py:107-114; CAP-DOCS-document-model.md:149-155
+  failure_condition: A run whose member M supersedes a kept ADR K fails devkit rules check on K.
+  suggested_action: Keep a supersedes entry on the replacement for each kept target; state the reverse rule in the ADR, capability, playbook and test.
+  resolution: resolved
+  severity: P2
+- issue: The retiring ADR retires 'templates' from devkit-spec's methodology, but devkit-spec still ships lifecycle templates.
+  evidence: retire-native-approval-and-moved-ownership-clauses.md:377-379; document-system.md:367; spec bundle templates/proposal.md
+  failure_condition: An agent concludes devkit-spec owns no templates.
+  suggested_action: Narrow the retirement and pointers to document templates and the docs skeleton.
+  resolution: resolved
+  severity: P2
+- issue: The mcp-runtime pointer does not say which parts of the Host-approval sentences survive.
+  evidence: mcp-runtime-and-shared-artifacts.md:124-127
+  failure_condition: A reader cannot tell whether CLI is recovery or whether no-suppression holds.
+  suggested_action: Name the retired parts exactly and state what stays in force.
+  resolution: resolved
+  severity: P3
+- issue: The steering pointer retires role-contract loading, which the retiring outcome does not name; Confirmation :176 still states it.
+  evidence: steering-documents.md:114-121,176
+  failure_condition: Pointer and outcome give different retired scopes.
+  suggested_action: Make outcome and pointer agree and cover the Confirmation sentence.
+  resolution: resolved
+  severity: P3
+- issue: Retired content still shows in proposal-acceptance's summary and a consequence, and document-system names the stale spec preset selection.
+  evidence: proposal-acceptance.md:4,315; document-system.md:561; .devkit/config.toml:5-6
+  failure_condition: Search shows a summary advertising the retired route.
+  suggested_action: Editorial repairs or name the consequence in the retiring ADR.
+  resolution: resolved
+  severity: P3
+- issue: Playbook crossing-pair bullet absorbed the considered-options and no-History sentences.
+  evidence: playbooks/adr-compaction/SKILL.md:44-46
+  failure_condition: Those rules read as applying only to crossing pairs.
+  suggested_action: Move them back to their own bullet and rewrap.
+  resolution: resolved
+  severity: P3
+- issue: Feedback set resolved before review, citing a review that had not run.
+  evidence: specs/2026-11/feedback/20261102-*-without-pointers.md
+  failure_condition: A disposition cites verification that did not happen as written.
+  suggested_action: Confirm dispositions after fixes and record outcomes in reconcile.md.
+  resolution: resolved
+  severity: P3
+- issue: ADR-proposal-acceptance header pointer omits the retired native form rendering consequence.
+  evidence: docs/decisions/2026-10/20261022-proposal-acceptance.md:17,315-316
+  failure_condition: A reader of the header pointer misses one retired statement.
+  suggested_action: Add the consequence to the header pointer.
+  resolution: resolved
+  severity: P3
+assumptions:
+- Self-verification of a one-line pointer fix
+checks:
+  lint: PASS devkit rules check errors=0
+diff_scope:
+  base: 83c5fbbf2e50253686b520a8e4804c0f0d9cd082
+  head: af1842381407f036848db5341a1543bf5684d288
+activity_effort: medium
