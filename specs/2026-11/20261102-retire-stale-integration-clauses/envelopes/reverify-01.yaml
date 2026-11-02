@@ -1,0 +1,36 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T02:31:06.377862Z'
+status: completed
+review: review-01.yaml
+summary: 'PASS: the implementer verified all three fixes: local spec skill and completion reference now say integration approval, the MCP CLI help drops native approval, the ADR outcome states its reason, the spec records a user decision.'
+findings:
+- issue: Local bundle text still describes a native approval that no longer exists.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:53; skills/spec/references/completion.md.jinja:36; packages/devkit-mcp/src/devkit_mcp/features/runtime/cli/app.py:11
+  failure_condition: A local-environment agent expects a native approval step the CLI route does not have.
+  suggested_action: Reword the local branches to integration approval, or record a follow-up.
+  resolution: resolved
+  severity: P3
+- issue: Decision Outcome states the chosen option without the reason tied to named drivers.
+  evidence: docs/decisions/2026-11/20261102-retire-stale-integration-approval-clauses.md:61
+  failure_condition: A reader cannot see why Option 2 lost without section 3.
+  suggested_action: Add one reason sentence after the chosen option.
+  resolution: resolved
+  severity: P3
+- issue: Spec Assumptions cite a conversation and a date.
+  evidence: specs/2026-11/20261102-retire-stale-integration-clauses/spec.md:80-81
+  failure_condition: The spec carries conversation provenance instead of a user decision.
+  suggested_action: Replace with (user decision).
+  resolution: resolved
+  severity: P3
+assumptions:
+- Self-verification after the initial medium review; the wording fixes add no behavior
+checks:
+  tests: PASS test-affected 1750 passed
+  lint: PASS devkit rules check errors=0; ruff devkit-mcp clean
+diff_scope:
+  base: 93f79c80e6bfb46b60141f2d1b325dd3ab10fd35
+  head: db1ef1facbe42b2e26cbb339caf97ace09745f29
+activity_effort: medium
