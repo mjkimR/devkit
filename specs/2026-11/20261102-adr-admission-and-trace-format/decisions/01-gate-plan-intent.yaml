@@ -1,0 +1,12 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'feature, spec depth: decision-writing gets ADR admission criteria applying
+  to ADRs and PADRs (Planning guidance points to them; smaller choices stay in proposal
+  or spec records); Decision Outcome clauses become declarative with a trailing trace
+  (-> ID location (KEYWORD)); the decision template, guidance tests and the 15 marked
+  ADRs follow; no handoff code change'
+by: user
+at: '2026-11-02T04:40:43.411495Z'
