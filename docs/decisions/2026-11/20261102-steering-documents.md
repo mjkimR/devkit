@@ -12,6 +12,8 @@ aliases:
 
 # [ADR-steering-documents] Steering documents in one directory, listed in every context
 
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the listing of steering documents through `devkit get-context spec` and its reach through the spec context.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Involved Components/Capabilities**: `docs/steering/`, `CAP-DIST-manifest-spec`, `CAP-DIST-context-and-playbooks`,
@@ -109,6 +111,8 @@ bundle-declared context document directory and their bodies are read on demand.
 
 ### Loading
 
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the `get-context spec` listing and the steering list
+  reaching role contracts through the spec context, in the next two items and in the matching Confirmation item.
 - `devkit get-context spec` lists each steering file's `title` and `summary` (its one-line scope) in every context; one
   constitution line names `docs/steering/` and tells the agent to read a body before a decision that concerns its
   scope; every spec role contract loads the context through `devkit get-context spec`; `RULE-steering-documents` caps
@@ -168,6 +172,7 @@ bundle-declared context document directory and their bodies are read on demand.
   `RULE-document-reference` for IDs cited in steering files; tests under `packages/devkit-spec/tests/` that the Owner
   check and synonym expansion read `docs/steering/` and no longer `docs/glossary.md`; the handbook script tests in
   `tools/devkit-dev/tests/integration/test_handbook_script.py` for both layouts. (ADR-steering-documents-directory)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the role-contract part of the next item.
 - A guidance test under `packages/devkit-spec/tests/integration/bundles/spec/` asserts the constitution line, its
   trigger and that every role contract under `subagents/` loads the spec context; `RULE-steering-documents` checks the
   caps and frontmatter; a test under `packages/devkit-dist/tests/` asserts the size of the `documents` output at the

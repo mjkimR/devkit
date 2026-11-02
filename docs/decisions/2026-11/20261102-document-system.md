@@ -22,6 +22,8 @@ aliases:
 
 # [ADR-document-system] The document system in devkit-docs and devkit-spec as its SDD layer
 
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the spec bundle's rule-asset distribution clause and the document templates and the docs skeleton in the devkit-spec methodology list (its lifecycle templates stay).
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR
@@ -306,6 +308,7 @@ place per kind fact.
 
 ### Spec package on devkit
 
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: document templates and "docs skeleton" in the next item; lifecycle templates stay.
 - devkit-spec is a Python package on devkit's public surface. It keeps only what is spec-driven: the methodology
   (routes, workflow definitions, stage skills, role contracts, templates, docs skeleton, reconciliation) and the policy
   that turns devkit's engines into SDD behaviour (which rules run, which checks gate a stage, how search scopes and pins
@@ -355,6 +358,7 @@ place per kind fact.
   move from `SPEC_` to `DOCS_`, and `DOCS_CONFIG_INVALID` reports a malformed `[tool.docs]`. (ADR-document-package)
 - **Scanner**: the document model keeps using devkit-agt's Markdown scanner; moving it to devkit-core is unrelated to
   this boundary. (ADR-document-package)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the next item.
 - **Distribution**: the spec bundle keeps shipping every rule asset, and the document rules' wrappers import
   devkit_docs. A document-only installation is separate work (`SPEC-document-bundle-split`). (ADR-document-package)
 - devkit-docs owns the auto-selected `docs:core`, all shared writing instructions, document rules and templates, the
@@ -554,7 +558,7 @@ place per kind fact.
     sets include them) must be encoded per consumer, not unified, or a message changes.
     (ADR-kind-definition-table-keyed-on-the-declared-kind-enum)
 - **Follow-ups**:
-  - This repository selects the preset (`spec = ["core", "docs-skeleton"]`) and has replaced the seeded content with
+  - This repository selects the preset (`docs = ["core", "docs-skeleton"]`) and has replaced the seeded content with
     its own Living Spec. (ADR-docs-skeleton-is-opt-in)
   - `SPEC-document-bundle-split` provides a document-only installation. The viewer hard-codes kind prefixes and
     layout; a change to the kind table must be mirrored there. (ADR-document-package)

@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T05:59:14.625613Z'
+status: completed
+summary: 'PASS (self-verified): reconcile.md covers every changed Living Spec file; the CAP-DOCS-document-model paragraph matches the five traced clauses of ADR-group-compaction-by-topic; retired clauses carry pointers and their current rules are named in existing capabilities.'
+findings: []
+assumptions:
+- 'Skipped the reconcile-reviewer at medium: agent-facing text changed in one package (devkit-spec playbook) besides the change''s own Living Spec reflection; every affected contract is identified above and the code reviewer verified the playbook rule against decision_supersession.py'
+checks: {}
+diff_scope:
+  base: f937bcd0fbcd44018f70f1aa9ffaa6aa44c59fcd
+  head: af1842381407f036848db5341a1543bf5684d288
+activity_effort: medium

@@ -144,7 +144,16 @@ historical by rule 8. A later ADR that replaces only part of an earlier one name
 replaced clauses in its outcome; the earlier ADR MUST stay `accepted`, so browsing and search still return its
 in-force clauses, MUST NOT carry `superseded_by`, and gains one body line per partial superseder, below its heading
 or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."
-(`ADR-decision-ledger`). On a decision, `supersedes` and `superseded_by` are metadata the index
+(`ADR-decision-ledger`).
+
+**Compaction groups**: an ADR compaction MUST form each group by topic, with two or more members, and MUST place a
+wholly superseded ADR in the group of its superseder. WHEN a partially superseding member and its target land in
+different groups, the target's replacement MUST leave out the replaced clauses, and the superseding replacement MUST
+state what it replaced and cite the target's replacement ID. An ADR kept outside the run whose `supersedes` names a
+compacted member MUST name the member's replacement instead, and that replacement MUST carry the matching
+"Superseded in part by" line. WHEN a compacted member partially supersedes an ADR kept outside the run, its
+replacement MUST list that ADR in `supersedes`, and the kept ADR's pointer MUST name the replacement
+(`ADR-group-compaction-by-topic`). On a decision, `supersedes` and `superseded_by` are metadata the index
 does not read (section 3.3 rule 6 covers Unit anchors), so they do not add reference-graph edges.
 `RULE-decision-supersession` MUST report inconsistent status and `superseded_by`, unresolved or malformed ADR
 replacement metadata, a `supersedes` target without superseded status or a matching partial pointer, and a partial

@@ -16,8 +16,10 @@ run.
 
 Read every ADR in scope, superseded ones included (`uv run devkit docs list decision --history -n 0`).
 
-- A group holds the supersession closure of its members (`supersedes`, `superseded_by` in frontmatter; these are not
-  in the reference graph) plus ADRs on the same topic. It has two or more members.
+- Group ADRs by topic: a group is one decision area a reader looks up, with two or more members.
+- Put a wholly superseded ADR (`superseded_by` in frontmatter) in the group of its superseder.
+- A partial supersession (`supersedes` with a "Superseded in part by" line) may cross groups. Note each crossing pair
+  in the group map; Step 2 handles it.
 - Leave out an ADR that contradicts another in-effect ADR or no longer matches the code or the Living Spec, and record
   it with the `spec-feedback` skill.
 - Order members by `created_at`, then supersession order.
@@ -30,15 +32,21 @@ groups.
 Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devkit/managed/docs/templates/decision.md`:
 
 - Frontmatter: `status: accepted`, `created_at` today, `aliases:` every member ID and every alias a member declared;
-  no `supersedes` or `proposal`.
+  no `proposal`. Add `supersedes` only for an ADR kept outside the run that a member partially superseded; list the
+  kept ADR there.
 - Section 4 lists only statements in effect, each ending with its source ID in parentheses; a clause a "Superseded
-  in part by" line names is not in effect. Considered options keep each option a member rejected, labelled by that
-  member. No History section.
+  in part by" line names is not in effect.
+- Considered options keep each option a member rejected, labelled by that member. No History section.
+- For a crossing pair, the target's replacement leaves out the replaced clauses. The superseding replacement states
+  what it replaced and cites the target's replacement ID.
 - Add, drop or change the meaning of no driver, option, scope or consequence.
 
 ## Step 3: Apply and verify
 
 1. `git rm` the member files, then run `uv run devkit rules fix` to rewrite alias references in current documents.
+   If an ADR kept outside the run names a member in `supersedes`, name the member's replacement instead, and add the
+   matching "Superseded in part by" line to that replacement. A kept ADR's own "Superseded in part by" line now names
+   the member's replacement, which lists it in `supersedes` (Step 2).
 2. Replace a retired ID in a `docs/steering/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
 3. Correct every path, test and rule ID in a replacement's Confirmation section that no longer exists; write "Review
    only" when no check exists.

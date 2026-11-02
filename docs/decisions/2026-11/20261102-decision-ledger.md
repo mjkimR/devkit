@@ -12,6 +12,8 @@ aliases:
 
 # [ADR-decision-ledger] Immutable decisions, editable records and confirm-first playbook discovery
 
+Superseded in part by `ADR-group-compaction-by-topic`: "A group is closed under supersession" (Compaction).
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @minjae
@@ -129,6 +131,7 @@ offer rare.
 
 ### Compaction
 
+- Superseded in part by `ADR-group-compaction-by-topic`: the closure sentence of the next item.
 - **Compaction**: related ADRs may be consolidated into one replacement ADR whose `aliases` lists the retired IDs and
   every alias they declared; the retired files are deleted in the same commit. The replacement's outcome holds exactly
   the statements in effect, each citing its source ID; superseded parts are left out, rejected alternatives stay in the

@@ -1,7 +1,7 @@
 ---
 id: ADR-proposal-acceptance
 title: Proposal acceptance, review reports and proposal records
-summary: "For proposal acceptance, we use one validated accept command with an eligibility-checked direct path, a handoff guard, source-bound review reports with native approval, checked boundary paths and proposal-local feedback, to bind acceptance to exact reviewed sources, accepting more modules."
+summary: "For proposal acceptance, we use one validated accept command with an eligibility-checked direct path, a handoff guard, source-bound review reports, checked boundary paths and proposal-local feedback, to bind acceptance to exact reviewed sources, accepting more modules."
 status: accepted
 created_at: 2026-10-22
 aliases:
@@ -13,6 +13,8 @@ aliases:
 ---
 
 # [ADR-proposal-acceptance] Proposal acceptance, review reports and proposal records
+
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the viewer exception clause and the native form rendering consequence.
 
 - **Status**: Accepted
 - **Date**: 2026-10-22
@@ -230,6 +232,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   through the shared adapter. The Host owns semantic comparison. Storage and presentation confer no approval. Publish
   after the final worker commit to avoid a report/commit cycle. TTL regeneration occurs outside a pending form and
   always requires fresh review. (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the next item.
 - **Native lifecycle approval**: a native `spec_plan_accept` form explicitly authorizes acceptance commit, checked
   local merge, disclosed cleanup and optional handoff. `accept_only` and `accept_and_handoff` have distinct effects.
   Holds are nonmutating, not rejection. Existing integration owns readiness/policy and exposes only a typed in-process
@@ -240,6 +243,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   remaining authority; fresh inspection and approval describe only remaining effects. No rollback removes user
   changes. Standalone handoff uses an exact accepted-base report and remains explicitly approved.
   (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
+- Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the next item.
 - **Viewer exception**: a narrowly scoped supersession of `ADR-repository-viewer` permits only
   registered-local-adapter, exact-generation `proposal-review` artifact reads outside Git. Git-only ordinary
   endpoints, loopback/Host/no-CORS protections, sanitization, no write/approval endpoints and no server regeneration
@@ -308,7 +312,8 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   - Depth escalation has no frontmatter marker, so that exclusion stays a judgment; a marker is not added for it.
     (ADR-eligibility-for-direct-acceptance)
   - More modules participate in review and approval, but responsibilities stay in their domain packages. Host-specific
-    URI clickability and native form rendering need separate live evidence. Local missing MCP tools pause dependent
+    URI clickability and native form rendering need separate live evidence (native form rendering: superseded in part by
+    `ADR-retire-native-approval-and-moved-ownership-clauses`). Local missing MCP tools pause dependent
     work and request connection. Cloud CLI and MCP-invisible template work stay separate.
     (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
   - Warnings do not refuse commits (`GATE_RULES_WARNINGS`); a draft or a reviewing proposal with a placeholder

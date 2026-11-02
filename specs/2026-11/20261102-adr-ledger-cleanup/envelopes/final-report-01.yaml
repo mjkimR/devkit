@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T05:59:31.013012Z'
+status: completed
+summary: ADR compaction groups follow topics (ADR-group-compaction-by-topic, CAP-DOCS-document-model, adr-compaction playbook); ADR-retire-native-approval-and-moved-ownership-clauses retires the stale native-approval and moved-ownership clauses of four ADRs.
+findings: []
+checks:
+  tests: PASS just test-affected 1578 passed; test_playbook_discovery_guidance.py 15 passed
+  build: PASS devkit generated regen devkit-receipt; check clean
+  lint: PASS devkit rules check --ci --base f937bcd0 errors=0
+diff_scope:
+  base: f937bcd0fbcd44018f70f1aa9ffaa6aa44c59fcd
+  head: 01ccbc6047896943e4a1f41d624f7f9652fa2e70
