@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-retire-stale-integration-clauses
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-10/20261022-configuration-language-and-rendering.md
     resolution: modified
@@ -37,6 +37,11 @@ targets:
 - `FB-pr-auto-admin-refusal-point`: `resolved` (Disposition names this spec).
 - `FB-stale-approval-form-clause`: `resolved`.
 - `FB-bundle-text-bare-devkit-commands`: `dismissed` by user decision.
+
+## Discovered outside scope
+
+- `FB-docs-wheel-rule-count-stale`: a full-suite run found `test_document_only_built_wheels` failing on `main` too
+  (expected rule count 9, actual 10).
 
 ## Entrypoints
 

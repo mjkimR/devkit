@@ -2,7 +2,7 @@
 id: SPEC-retire-stale-integration-clauses
 title: Retire stale integration ADR clauses
 summary: A new ADR retires the pre-confirmation --auto/--admin refusal clause and the MCP approval-form text rules that the Host-run CLI integration no longer has; FB-bundle-text-bare-devkit-commands is dismissed.
-status: in-progress
+status: completed
 created: 2026-11-02
 related_capabilities: [CAP-INT-mcp-services]
 related_usecases: []
