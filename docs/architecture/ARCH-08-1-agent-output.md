@@ -12,13 +12,13 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 
 ## 1. Principles
 
-1. **Each advisory reaches the agent once.** In text mode stdout carries facts, the result of the command, and stderr carries directives: what the agent must do or know about that result. In JSON mode the one JSON object carries both, every advisory with its directive text, and stderr carries no advisory. Agent hosts usually merge the two channels into one tool result, so an advisory printed on both would be read, and paid for, twice.
-2. **Match, do not parse.** Text output is one fact per line, each behind a sentinel an agent can match with a fixed string. JSON output is exactly one object. Neither needs prose understanding.
-3. **Codes, not prose.** Every condition worth reporting has a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests branch on codes, never on message text.
-4. **Directives, not narration.** A condition the agent must act on carries an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
-5. **Context budget.** The default output carries only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics are logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards (`CAP-ADV-agent-advisory-protocol`).
-6. **Deterministic.** The same state gives the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale). stdout and stderr are always UTF-8 (a character UTF-8 cannot encode, such as a lone surrogate from an undecodable path, is written as its `\uXXXX` escape, which keeps JSON valid). JSON text is UTF-8 too, never `\uXXXX`-escaped: an escaped non-English path or message costs the agent context and has to be decoded back before it can be used.
-7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; only the CLI layer writes to stdout or stderr. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
+1. **Each advisory reaches the agent once.** In text mode stdout carries facts, the result of the command, and stderr carries directives: what the agent must do or know about that result. In JSON mode the one JSON object carries both, every advisory with its directive text, and stderr MUST NOT carry an advisory. Agent hosts usually merge the two channels into one tool result, so an advisory printed on both would be read, and paid for, twice.
+2. **Match, do not parse.** Text output MUST be one fact per line, each behind a sentinel an agent can match with a fixed string. JSON output MUST be exactly one object. Neither needs prose understanding.
+3. **Codes, not prose.** Every condition worth reporting MUST have a stable `UPPER_SNAKE` code. Messages explain; codes identify. Callers and tests MUST branch on codes, never on message text.
+4. **Directives, not narration.** A condition the agent must act on MUST carry an `[ACTION]` directive that says what to do and what not to do. Nothing relies on the agent inferring intent from a description.
+5. **Context budget.** The default output SHOULD carry only what changes the agent's next step or must reach the user. Progress, timing, passed checks and diagnostics MUST be logs, shown only under `-v`. A lasting condition that asks for nothing is announced once, when it appears, and stays visible as data afterwards (`CAP-ADV-agent-advisory-protocol`).
+6. **Deterministic.** The same state MUST give the same bytes: no colour, no emoji, no box drawing, no progress bars, no alignment tables, no output that changes with the terminal (TTY detection, width, locale). stdout and stderr MUST always be UTF-8 (a character UTF-8 cannot encode, such as a lone surrogate from an undecodable path, is written as its `\uXXXX` escape, which keeps JSON valid). JSON text MUST be UTF-8 too, never `\uXXXX`-escaped: an escaped non-English path or message costs the agent context and has to be decoded back before it can be used.
+7. **Libraries never print.** Library functions return results and collected advisories, and raise `AdvisoryError`; they MUST NOT write to stdout or stderr, which only the CLI layer does. An embedding caller (another tool, an MCP server, a test) gets the same information as data.
 
 ## 2. Channels
 
@@ -30,14 +30,14 @@ The primary consumer of every `devkit` command is an AI coding agent that runs i
 | stderr, JSON mode | `[INFO]` log lines under `-v`; click's `Usage:` text | advisories: the JSON object carries them |
 | exit code | `0` success, `1` negative result, `2` could not do its job | anything finer; the code says which, the advisories say why |
 
-Every stderr line is either a sentinel line or a continuation line indented 9 spaces under the sentinel above it.
+Every stderr line other than click's `Usage:` text MUST be either a sentinel line or a continuation line indented 9 spaces under the sentinel above it.
 
-The native `devkit host hook` transport is a scoped exception: it emits only the host-defined JSON response on
+The native `devkit host hook` transport is a scoped exception: it MUST emit only the host-defined JSON response on
 stdout, warnings on stderr and exit 0 for advisory dispatch failures. It has no `--format`, verbosity or strict
-options. It never emits devkit result sentinels or ordinary error objects; see
+options. It MUST NOT emit devkit result sentinels or ordinary error objects; see
 `CAP-HOST-lifecycle-observation`. Other host commands follow this contract.
 
-`devkit mcp serve` likewise reserves stdout for native MCP JSON-RPC, without ordinary output options.
+`devkit mcp serve` likewise MUST reserve stdout for native MCP JSON-RPC, without ordinary output options.
 Startup errors go to stderr and exit 2; per-tool results carry structured advisory data. The optional SDK owns
 protocol framing. See `CAP-MCP-runtime-registration`.
 
@@ -49,18 +49,18 @@ Text-mode stdout is made of one-line sentinels:
 [KIND: <positional value> key=value key=value key="free text"]
 ```
 
-- `KIND` is `UPPER_SNAKE` and names the fact (`VIOLATION`, `SUMMARY`, `STAGE`, `GATE`, `HOOK`, `UNIT`, `OK`, ...).
-- A value is written bare when it has no whitespace, `"`, `[`, `]`, `=` or backslash; otherwise, and always for free text (messages, titles, remediations, descriptions), it is written as a JSON string, so quotes, backslashes and newlines are escaped and the fact stays on one line.
+- `KIND` MUST be `UPPER_SNAKE` and name the fact (`VIOLATION`, `SUMMARY`, `STAGE`, `GATE`, `HOOK`, `UNIT`, `OK`, ...).
+- A value is written bare when it has no whitespace, `"`, `[`, `]`, `=` or backslash; otherwise, and always for free text (messages, titles, remediations, descriptions), it MUST be written as a JSON string, so quotes, backslashes and newlines are escaped and the fact stays on one line.
 - An empty value (`None` or `""`) is `-`; a boolean is `yes` or `no`; a list is space- or comma-separated as the command documents it.
-- Every devkit command renders a field value with the one `devkit_dist.adapters.cli.field_value` (booleans alone with `yes_no`).
-- A command that succeeds with nothing to report prints an `[OK: ...]` line, so an empty stdout never has to be interpreted.
+- Every devkit command MUST render a field value with the one `devkit_dist.adapters.cli.field_value` (booleans alone with `yes_no`).
+- A command that succeeds with nothing to report MUST print an `[OK: ...]` line, so an empty stdout never has to be interpreted.
 - A document a command is asked to print (`devkit rules explain`'s guide, `devkit workflow show`'s rendering) follows its sentinel lines as written, and so does the bounded excerpt of a failed command after its `[RUN_OUTPUT: ...]` (`devkit run`) or `[RULE_TEST_OUTPUT: ...]` (`devkit rules test`) line.
 
-**Reserved names.** `ERROR`, `WARN`, `WARNING`, `NOTICE`, `INFO`, `DEBUG`, `ACTION`, `WHEN`, `TARGET`, `FIX`, `REPORT` and `DETAIL` are stderr sentinels and are never used as a stdout `KIND`. Something that would read as `[NOTICE: ...]` on stdout is a notice and goes to stderr; a fact that merely mentions a notice-like state gets its own kind (for example `[STALE_APPROVAL: ...]`).
+**Reserved names.** `ERROR`, `WARN`, `WARNING`, `NOTICE`, `INFO`, `DEBUG`, `ACTION`, `WHEN`, `TARGET`, `FIX`, `REPORT` and `DETAIL` are stderr sentinels and MUST NOT be used as a stdout `KIND`. Something that would read as `[NOTICE: ...]` on stdout is a notice and MUST go to stderr; a fact that merely mentions a notice-like state gets its own kind (for example `[STALE_APPROVAL: ...]`).
 
 ## 4. stdout: JSON
 
-Under `--format json` (and for the distribution commands other than `sync`, `add` and `remove`, which are JSON-only), stdout is exactly one JSON object, never a bare array. It is compact (no indentation and no spaces after separators), since every byte reaches the agent's context; the example below is indented for reading only. A JSON-only command also accepts `--format json` as a no-op, so an agent may pass it to every command; any other format is a usage error:
+Under `--format json` (and for the distribution commands other than `sync`, `add` and `remove`, which are JSON-only), stdout MUST be exactly one JSON object, never a bare array. It MUST be compact (no indentation and no spaces after separators), since every byte reaches the agent's context; the example below is indented for reading only. A JSON-only command also accepts `--format json` as a no-op, so an agent MAY pass it to every command; any other format is a usage error:
 
 ```json
 {
@@ -72,8 +72,8 @@ Under `--format json` (and for the distribution commands other than `sync`, `add
 
 - The command's payload sits under named keys (`violations`, `rules`, `units`, `checks`, `requests`, `overrides`, ...), or is the object itself for a single result (`SyncResult`).
 - `errors` lists problems the command collected instead of raising, `notices` lists its warnings and notices; each entry is an advisory's `to_dict()`: `{"code", "level", "message", "exit_code", "advisory": {...}}`, plus fields a module adds (`rule_id`, `file`, `where`). `advisory` holds what the block would show: `mode`, the `[ACTION]` directive as `action`, and each other field only when it has a value (`CAP-ADV-agent-advisory-protocol`). A command that can collect neither omits the key.
-- A command that fails outright prints `{"error": {...}}` (the same envelope) instead of a result, with the warnings and notices it collected before the failure under `notices`.
-- JSON is never filtered by `-q` or `-v`: it always carries every error and notice.
+- A command that fails outright MUST print `{"error": {...}}` (the same envelope) instead of a result, with the warnings and notices it collected before the failure under `notices`.
+- JSON MUST NOT be filtered by `-q` or `-v`: it always carries every error and notice.
 
 ## 5. stderr: Advisories
 
@@ -83,7 +83,7 @@ In text mode every error, warning and notice is an Agent Advisory Protocol block
 2. warnings and notices, after the result has been printed: warnings first, then notices, each in the order the command collected them (JSON keeps the collected order);
 3. errors, last, so the decisive block ends the output.
 
-A command prints each block once. A text-mode command whose result was printed before an error stopped it (`Reported`) renders that error after the result.
+A command MUST print each block once. A text-mode command whose result was printed before an error stopped it (`Reported`) renders that error after the result.
 
 ## 6. Verbosity and Strictness
 
@@ -97,9 +97,9 @@ Every command takes the same three output options (`devkit_dist.adapters.cli.out
 
 - An environment variable is on only when its value is exactly `1`. A command-line flag wins over the environment.
 - `-q` and `-v` together (from flags, or from the environment when no flag is given) are `ARGUMENT_INVALID`.
-- `-q` and `-v` affect stderr only; stdout, text or JSON, is the same in all three.
+- `-q` and `-v` affect stderr only; stdout, text or JSON, MUST be the same in all three.
 - `--strict` only ever raises the exit code (`0` to `1`); notices never count. It concerns advisory warnings only: a rule violation of severity `warning` is a finding, governed by the rule's severity in `[rules]`, not by `--strict`.
-- Options go before positional arguments. `devkit gate run` passes everything after `<stage>` to the gates as hook arguments, so `devkit gate run -v pre-commit`, not `devkit gate run pre-commit -v`.
+- Options SHOULD go before positional arguments. `devkit gate run` passes everything after `<stage>` to the gates as hook arguments, so its options MUST go before `<stage>`: `devkit gate run -v pre-commit`, not `devkit gate run pre-commit -v`.
 
 ## 7. Exit Codes
 
@@ -112,7 +112,7 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 - `devkit` installs a `NullHandler` on the `devkit` logger, so log records never reach the interpreter's last-resort handler and never leak onto stderr, in the CLI or in an embedding program.
 - Under `-v`, the CLI boundary attaches a stderr handler for the run that prints every `devkit` record as `[INFO]   <module>: <message>` (`<module>` is the logger name without `devkit.`, such as `gate.engine.runner`), with a traceback and further lines indented 9 spaces as continuation lines. The sentinel is `[INFO]` whatever the record's level: a log line is never a directive.
 - What to log: passed and skipped checks, timing, cache hits, why a candidate was or was not selected, the traceback behind an error the run already reports as an advisory.
-- What never to log: anything the agent must act on or the user must learn. That is a warning or notice, returned with the result. Library code does not log at `WARNING` or above to communicate; `logger.exception` is used only to keep the traceback of an error that is also reported as an advisory.
+- What never to log: anything the agent must act on or the user must learn; it MUST be a warning or notice, returned with the result. Library code MUST NOT log at `WARNING` or above to communicate. `logger.exception` MAY be used only to keep the traceback of an error that is also reported as an advisory.
 
 ## 9. Implementation Map
 

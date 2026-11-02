@@ -13,9 +13,10 @@ A repository's own assets (a rule encoding a project convention, a skill driving
 playbook) must be versioned with it, never published, and still get everything devkit does for distributed assets:
 planning, hash-tracked projection, receipt recording, rule discovery and Git snapshot gates. The consumer-facing
 version of this document is the `in-repo-bundle` instruction of the [`devkit` guide bundle](../../development/reference/distribution.md#4-bundles-shipped-with-devkit);
-keep the two in step. The bundle setup is mirrored by the `devkit` bundle's `in-repo-bundle` instruction (shipped by
-`devkit-dist`); rule discovery, rule tests and Git snapshot gates by the `harness` bundle's `harness-assets`
+the two MUST be kept in step. The bundle setup is mirrored by the `devkit` bundle's `in-repo-bundle` instruction
+(shipped by `devkit-dist`); rule discovery, rule tests and Git snapshot gates by the `harness` bundle's `harness-assets`
 instruction (shipped by `devkit-agt`, which runs the rules).
+Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 1. Decision
 
@@ -31,7 +32,7 @@ with `.devkit/overrides/` (overrides change upstream files; bundles add assets).
 
 ## 2. Layout
 
-By convention the package lives under `tools/` and is named after the repository:
+By convention the package SHOULD live under `tools/` and be named after the repository:
 
 ```text
 my-repo/
@@ -93,7 +94,7 @@ source = "playbooks/on-call.md"
 
 The entry point name (`my-repo`) is the bundle name
 (`CAP-DIST-content-packages`).
-The manifest follows the `CAP-DIST-manifest-spec` without exception; `devkit bundle validate` and
+The manifest MUST follow the `CAP-DIST-manifest-spec` without exception; `devkit bundle validate` and
 `devkit bundle plan` work on `tools/my-repo-devkit/src/my_repo_devkit/bundle` before it is installed.
 
 ## 3. Installation
@@ -101,7 +102,7 @@ The manifest follows the `CAP-DIST-manifest-spec` without exception; `devkit bun
 In a **uv workspace**, add the package to the members and to the dev group next to the devkit requirement the
 project already declares: `devkit-agt` when the project uses the harness (and always when the bundle ships rules,
 gates or workflows, which only `devkit-agt` runs), otherwise `devkit-dist`. `devkit-agt` depends on `devkit-dist` at
-the same version, so a project never declares both (`ADR-package-split-and-namespaces`):
+the same version, so a project SHOULD NOT declare both (`ADR-package-split-and-namespaces`):
 
 ```toml
 # pyproject.toml (repository root)
@@ -128,10 +129,10 @@ uv sync
 uv run devkit add my-repo        # records [presets] my-repo = "all" and synchronizes
 ```
 
-The package belongs in `[dependency-groups].dev`, never `[project.dependencies]`: dependency groups are not written
-to a built wheel, so if the repository is itself published, its consumers never receive the bundle, its rules or its
-entry point (`CAP-DIST-content-packages`). To share the bundle later,
-publish the package or let other repositories depend on it with a Git URL and `subdirectory`.
+The package MUST be declared in `[dependency-groups].dev`, never in `[project.dependencies]`: dependency groups are
+not written to a built wheel, so if the repository is itself published, its consumers never receive the bundle, its
+rules or its entry point (`CAP-DIST-content-packages`). To share the bundle later, publish the package or let
+other repositories depend on it with a Git URL and `subdirectory`.
 
 ## 4. Editing Lifecycle
 
@@ -140,9 +141,9 @@ publish the package or let other repositories depend on it with a Git URL and `s
    receipt on every run, so the package version need not change.
 3. Commit the source change with the updated `.devkit/installation.json`.
 
-Never edit `.devkit/managed/<bundle>/`: a modified managed file stops the sync as for any bundle. Overrides are for
-bundles the repository does not own. Bump the bundle `version` once another repository consumes the bundle, so
-their receipts record which version they run.
+A project MUST NOT edit `.devkit/managed/<bundle>/`: a modified managed file stops the sync as for any bundle.
+Overrides are for bundles the repository does not own. WHEN another repository consumes the bundle, the project
+SHOULD bump the bundle `version`, so their receipts record which version they run.
 
 ## 5. Rules and Snapshot Gates
 
@@ -157,16 +158,16 @@ matches the `files` entry of the receipt committed to the snapshot; a staged sna
 same hash
 (`CAP-GOV-evaluation-lifecycle`). Hence:
 
-- After editing a rule, run `devkit sync` and stage the receipt with the rule source; a stale receipt fails the gate,
-  whose `[FIX]` says to run `devkit sync`.
-- A fresh clone runs `uv sync` and `uv run devkit sync --locked` before the gate can run; otherwise it reports the
-  managed rule as missing, as for upstream bundles. Run the same in CI: it fails (`RECEIPT_STALE`) when a bundle
-  source was committed without the receipt it produces.
+- After editing a rule, the developer MUST run `devkit sync` and stage the receipt with the rule source; a stale
+  receipt fails the gate, whose `[FIX]` says to run `devkit sync`.
+- A fresh clone MUST run `uv sync` and `uv run devkit sync --locked` before the gate can run; otherwise it reports
+  the managed rule as missing, as for upstream bundles. CI SHOULD run the same: it fails (`RECEIPT_STALE`) when a
+  bundle source was committed without the receipt it produces.
 - The committed receipt pins exactly which rule code a gate executed.
 
 `devkit rules` loads built-in rules, then rule assets in receipt order (bundle name order), then `--rules-dir`; a
 rule with an earlier rule's ID replaces it. An in-repository bundle can shadow an upstream rule that way, but the
-order between bundles is not a declared priority, so prefer IDs prefixed with the repository name
+order between bundles is not a declared priority, so rule IDs SHOULD be prefixed with the repository name
 (`RULE-myrepo-no-todo`) unless shadowing is the intent.
 
 ## 6. Project-Specific Mechanisms

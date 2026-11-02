@@ -54,7 +54,7 @@ flowchart LR
 | **Planning** | Classified request | Agreed intent in conversation (`session`), spec Unit (`spec`), or accepted proposal (`proposal`) | Inline: `direct`<br/>Proposal: `direct`, `local-orchestrated`, `cloud-pr` | `plan-intent`, `plan-accept` (proposal) |
 | **Development** | Agreed intent (Unit or session agreement) | Verified changes, reports, Living Spec & reconcile updates | `direct`, `local-orchestrated`, `cloud-pr` | `proposal-handoff`, `dev-integration` |
 
-Development always starts from agreed intent. Unit-bearing paths evaluate stage exit conditions with `devkit workflow next`, while `session` tasks complete within conversation context without durable envelopes or reconcile files.
+Development MUST start from agreed intent. Unit-bearing paths MUST evaluate stage exit conditions with `devkit workflow next`; `session` tasks complete within conversation context without durable envelopes or reconcile files.
 
 ---
 
@@ -91,7 +91,7 @@ flowchart LR
 
 ### 2.1 `task-kind`
 - `feature` (default): New behavior or intentional modifications to existing capabilities.
-- `bugfix`: Defect violating an agreed contract. Requires characterization (current, expected, preserved behavior) and reproduction evidence (Red → Green).
+- `bugfix`: Defect violating an agreed contract. A `bugfix` MUST carry characterization (current, expected, preserved behavior) and reproduction evidence (Red → Green).
 
 ### 2.2 `planning-depth`
 - `session`: No contract or Living Spec changes required; fully verifiable within one session without durable artifacts.
@@ -119,13 +119,13 @@ flowchart LR
     classDef host fill:#bfdbfe,stroke:#1d4ed8,color:#111
 ```
 
-Depth may escalate during Development (`session → spec`) when contract or documentation changes are discovered. Lowering depth is prohibited, with the sole exception of session reclassification of unreviewed draft proposals at pickup (`ADR-delivery-classification`).
+Depth MAY escalate during Development (`session → spec`) when contract or documentation changes are discovered. Depth MUST NOT be lowered, with the sole exception of session reclassification of unreviewed draft proposals at pickup (`ADR-delivery-classification`).
 
 ### 2.3 `activity-effort`
 Determines the thoroughness of inspection and review per activity (`low`, `medium`, `high`, default `medium`):
 - `low`: Self-review and self-verification by the working actor.
-- `medium`: Mandatory initial `code-reviewer` subagent execution. Conditional self-verification for `reconcile-reviewer` only when contracts and diff coverage are provably unambiguous.
-- `high`: Bounded re-review loop (`ADR-host-owned-review-loop-recovery`) reviewing whole batches, stopping when rounds find no issues or only minor fixes. Mandatory independent `reconcile-reviewer`.
+- `medium`: An initial `code-reviewer` subagent MUST run. Self-verification MAY replace `reconcile-reviewer` only when contracts and diff coverage are provably unambiguous.
+- `high`: Bounded re-review loop (`ADR-host-owned-review-loop-recovery`) reviewing whole batches, stopping when rounds find no issues or only minor fixes. An independent `reconcile-reviewer` MUST run.
 
 ---
 
@@ -157,7 +157,7 @@ flowchart LR
     classDef store fill:#f5f5f4,stroke:#78716c,color:#111
 ```
 
-A slug identifies the line of work across activities, while each activity runs in its respective Unit and branch. Units never nest, and `session` tasks operate without a Unit.
+A slug identifies the line of work across activities, while each activity runs in its respective Unit and branch. Units MUST NOT nest; `session` tasks operate without a Unit.
 
 ---
 
@@ -172,14 +172,14 @@ The four decision gates represent explicit authorization boundaries in `[workflo
 | `proposal-handoff`| Authorizes starting Development and Unit transition | Defaults to `ask`; supports policy delegation (`auto`). Schedulable independently of `plan-accept`. |
 | `dev-integration` | Authorizes merging verified Development changes | Evaluated by `approvals.dev-integration` (`ask` or `auto`). Requires passing verification and reconcile. |
 
-Unrecoverable failures (retry caps, tool crashes, semantic conflicts) transition to the `exception` workflow stage (`exception: true`). Unlike decision gates, `exception` is a workflow stage requiring explicit human handling and cannot be delegated or configured in `[workflow.approvals]`.
+Unrecoverable failures (retry caps, tool crashes, semantic conflicts) transition to the `exception` workflow stage (`exception: true`). Unlike decision gates, `exception` is a workflow stage that a human MUST handle explicitly. It MUST NOT be delegated or configured in `[workflow.approvals]`.
 
 ---
 
 ## 5. Core Architectural Principles
 
-1. **State lives in branches**: Workers are one-shot entities; incoming workers resume execution purely from committed branch state, Unit files, and envelopes.
-2. **The working actor records its own evidence**: Subagents are read-only; the invoking actor records envelope findings and decision records.
-3. **Autonomous progression within agreed boundaries**: Actors proceed on recommended choices within agreed intent; non-blocking improvements become feedback, while agreement breaches halt as structured problems.
-4. **Nested execution**: Host delegates to workers, and workers nest delegated review subagents (depth 2). Environments incapable of nesting use `direct` mode.
+1. **State lives in branches**: Workers are one-shot entities; incoming workers MUST resume execution only from committed branch state, Unit files, and envelopes.
+2. **The working actor records its own evidence**: Subagents MUST NOT modify tracked files or records; a reviewer MAY write throwaway probe tests under its ignored probe path. The invoking actor MUST record envelope findings and decision records.
+3. **Autonomous progression within agreed boundaries**: Actors SHOULD proceed on recommended choices within agreed intent, and non-blocking improvements SHOULD become feedback. Agreement breaches MUST halt as structured problems.
+4. **Nested execution**: Host delegates to workers, and workers nest delegated review subagents (depth 2). Environments incapable of nesting MUST use `direct` mode.
 

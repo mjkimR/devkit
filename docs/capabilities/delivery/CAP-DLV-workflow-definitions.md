@@ -16,7 +16,7 @@ created_at: 2026-10-17
 
 ## 1. Workflow Definition File
 
-A definition is a Markdown file in `definitions_dir` (default `.devkit/workflows/`) or a synchronized `kind = "workflow"` asset. Only the YAML frontmatter is parsed; the body holds prose gate rules. Python YAML syntax is read through `devkit_core.core.yaml` with PyYAML's LibYAML safe loader. If its C binding is unavailable, the read fails with `YAML_BINDING_UNAVAILABLE` and exit `2`; the definition is not reported as malformed workflow input.
+A definition is a Markdown file in `definitions_dir` (default `.devkit/workflows/`) or a synchronized `kind = "workflow"` asset. The engine MUST parse only the YAML frontmatter; the body holds prose gate rules. Python YAML syntax is read through `devkit_core.core.yaml` with PyYAML's LibYAML safe loader. IF its C binding is unavailable, THEN the read MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`. The definition MUST NOT be reported as malformed workflow input in that case.
 
 ```markdown
 ---
@@ -107,11 +107,11 @@ Prose for humans and agents. Not parsed.
 | `isolation` | string | `none`, `preferred`, `required`. A non-developer role with isolation other than `none` yields `[DELEGATE]`. It asks for a subagent's separate context, not a Git worktree; the worktree and pull request policy is `[worktree]` (`CAP-WT-task-worktrees`). |
 | `returns` | list of `{to, when}` | Stages this stage may return to and why. `to` must name a stage in the same document. Taking a return is `devkit workflow return --to <stage>` (`CAP-DLV-human-interaction`). |
 
-Unknown document or stage keys, malformed or duplicate ids, malformed gate names, duplicate or colliding declared checks (each reported once; the other declared checks stay usable), unregistered checks, `runner` or `human` checks in a `next` candidate's `when`, malformed check invocations, a `file` argument outside the unit directory (absolute or with `..`), unknown `returns.to` targets, invalid `isolation` values and unknown roles are validation problems, which `devkit workflow validate` reports with the stage id and field. An `optional` stage with a `human_gate` or a `human` exit check is not a problem but a warning (`WORKFLOW_OPTIONAL_STAGE_UNASKED`, `OptionalStageWarning`, from `definition_warnings`): `validate` lists it under `notices` (text: a `[WARN]` block on stderr), exits `0` for it, and `1` only under `--strict`; every other command uses the definition as usual. A value of the wrong type (`optional: "false"`, `role: 3`), an unknown key inside a `returns`, `checks` or `next` item, and a malformed `layout` mapping are structural errors reported with the file.
+Unknown document or stage keys, malformed or duplicate ids, malformed gate names, duplicate or colliding declared checks (each reported once; the other declared checks stay usable), unregistered checks, `runner` or `human` checks in a `next` candidate's `when`, malformed check invocations, a `file` argument outside the unit directory (absolute or with `..`), unknown `returns.to` targets, invalid `isolation` values and unknown roles are validation problems, which `devkit workflow validate` MUST report with the stage id and field. An `optional` stage with a `human_gate` or a `human` exit check is not a problem but a warning (`WORKFLOW_OPTIONAL_STAGE_UNASKED`, `OptionalStageWarning`, from `definition_warnings`): `validate` lists it under `notices` (text: a `[WARN]` block on stderr), exits `0` for it, and `1` only under `--strict`; every other command uses the definition as usual. A value of the wrong type (`optional: "false"`, `role: 3`), an unknown key inside a `returns`, `checks` or `next` item, and a malformed `layout` mapping are structural errors reported with the file.
 
 ### Shared Stages
 
-A stage id is shared vocabulary across definitions: `[workflow.stages]` turns it off by id everywhere, and skills, runners and people recognize it by name. `devkit workflow validate` with no arguments therefore also compares every stage id that appears in more than one discovered definition and reports `shared stage '<id>' differs between <a> and <b>: <field>` (`SHARED_STAGE_MISMATCH`, exit `1`) for each of `exit`, `gate`, `role`, `isolation`, `skills` and `artifacts` that differs from the first definition (in discovery order) that declared the id. Validating explicit paths does not run the comparison.
+A stage id is shared vocabulary across definitions: `[workflow.stages]` turns it off by id everywhere, and skills, runners and people recognize it by name. `devkit workflow validate` with no arguments therefore MUST also compare every stage id that appears in more than one discovered definition and report `shared stage '<id>' differs between <a> and <b>: <field>` (`SHARED_STAGE_MISMATCH`, exit `1`) for each of `exit`, `gate`, `role`, `isolation`, `skills` and `artifacts` that differs from the first definition (in discovery order) that declared the id. Validating explicit paths does not run the comparison.
 
 ### Handoff Candidates
 
@@ -130,7 +130,7 @@ next:
 | `when` | list of checks | Preconditions evaluated against the unit, in the same syntax as `exit`. A candidate is *eligible* when every check holds; an empty list is always eligible. Only checks the engine evaluates (`disk`, `lint`, `plugin`) are allowed: a `runner` or `human` check is a validation problem, since nothing can satisfy it while a handoff is chosen. |
 | `recommended` | bool | Shown to the person choosing; informational. |
 
-Eligibility is computed from checks so that an automatic handoff is deterministic; whether a person or the engine chooses is the `CAP-DLV-workflow-orchestration` policy. The candidate's own first stage then evaluates the unit's existing files, so a candidate whose entry checks require earlier artifacts is naturally filtered by `when`.
+The engine MUST compute eligibility from checks so that an automatic handoff is deterministic; whether a person or the engine chooses is the `CAP-DLV-workflow-orchestration` policy. The candidate's own first stage then evaluates the unit's existing files, so a candidate whose entry checks require earlier artifacts is naturally filtered by `when`.
 
 ## 2. Checks
 
@@ -158,7 +158,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 
 ### Aliases
 
-Aliases resolve against the anchor name in force for the workflow (its own `layout.anchor`, else the configured one), in validation and at evaluation time. The anchor name is passed whole as one argument, so a name with spaces or parentheses works.
+Aliases MUST resolve against the anchor name in force for the workflow (its own `layout.anchor`, else the configured one), in validation and at evaluation time. The anchor name is passed whole as one argument, so a name with spaces or parentheses works.
 
 | Alias | Expands to |
 | --- | --- |
@@ -172,18 +172,18 @@ Aliases resolve against the anchor name in force for the workflow (its own `layo
 
 ### Implicit Gate Check
 
-A stage with `human_gate` carries an implicit `human` check named `gate:<gate>`. It is asked only once every exit check of the stage holds: until then it is not listed under `[UNMET]`, no request is emitted, `[WAITING]` does not name it and `[GATE]` shows it as `satisfied=no`. Then it is listed under `[UNMET]` like any other check; its `[CHECK]` line is left out, since the `[GATE]` line already reports it. It is satisfied by an accepted `gate:<gate>` decision record of the current segment, by `--given <gate>`, or by the `auto` policy; the whole stage is skipped under `off`, and any stage is skipped by `[workflow.stages] <id> = "off"` before its checks are evaluated (`CAP-DLV-workflow-orchestration`).
+A stage with `human_gate` carries an implicit `human` check named `gate:<gate>`. The engine MUST ask it only once every exit check of the stage holds: until then it is not listed under `[UNMET]`, no request is emitted, `[WAITING]` does not name it and `[GATE]` shows it as `satisfied=no`. Then it is listed under `[UNMET]` like any other check; its `[CHECK]` line is left out, since the `[GATE]` line already reports it. It is satisfied by an accepted `gate:<gate>` decision record of the current segment, by `--given <gate>`, or by the `auto` policy; the whole stage is skipped under `off`, and any stage is skipped by `[workflow.stages] <id> = "off"` before its checks are evaluated (`CAP-DLV-workflow-orchestration`).
 
 ## 3. Binding
 
-`new` and `bind` write `workflow: <id>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file is refused with `WORKFLOW_NOT_BINDABLE` before anything is written. `next --workflow <path>` still evaluates a unit against such a file without binding it. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
+`new` and `bind` write `workflow: <id>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file MUST be refused with `WORKFLOW_NOT_BINDABLE` before anything is written. `next --workflow <path>` still evaluates a unit against such a file without binding it. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
 
 ```yaml
 workflow: spec-driven
 workflow_history: [{workflow: triage, completed: '2026-10-13', last_decision: 2}]
 ```
 
-Binding updates replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor is replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten (any error, an interrupt included) removes the decision record it wrote for `--workflow`. Only a process killed outright between the two writes leaves that record behind: an accepted `handoff` choice in the unchanged segment, which the next `handoff` uses. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments are never re-evaluated.
+Binding updates MUST replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor MUST be replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten (any error, an interrupt included) MUST remove the decision record it wrote for `--workflow`. Only a process killed outright between the two writes leaves that record behind: an accepted `handoff` choice in the unchanged segment, which the next `handoff` uses. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments MUST NOT be re-evaluated.
 
 On `next` (the policy lives in the library, `Workspace.evaluate_unit`):
 

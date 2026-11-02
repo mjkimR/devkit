@@ -18,73 +18,83 @@ entrypoints:
 The opt-in maintenance bundle supplies weekly-report independently of drift/upkeep. Explicit invocation through
 `devkit-playbook`, exact `devkit playbook get maintenance/weekly-report` or the user's confirmation of a `spec`
 intake offer follows
-`CAP-DIST-context-and-playbooks`; selection/retrieval never executes it. Generation reuses available tools and
-artifacts without automatically running checks, maintenance, fixes or creating follow-ups. No scheduler,
-detector, runtime publisher, history backend or standalone skill is included. Publication needs separate authority.
+`CAP-DIST-context-and-playbooks`; selection/retrieval MUST NOT execute it. Generation SHOULD reuse available tools and
+artifacts. It MUST NOT automatically run checks, maintenance or fixes, or create follow-ups. No scheduler,
+detector, runtime publisher, history backend or standalone skill is included. Publication MUST have separate
+authority. Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 2. Intake and Evidence
 
-Record credential-free repository identity, scope, inspected SHA, local integration ref and resolved SHA,
-generation timestamp and dirty state. Never fetch, switch branches or change source content implicitly.
-The default interval is the previous complete Monday-to-Monday calendar week in the configured user timezone;
-unknown timezone requires input, and explicit endpoints are accepted. Record inclusive start, exclusive end,
-timezone and each endpoint's UTC offset; DST weeks need not be 168 hours. Reject unresolved/ambiguous intervals.
-A local ref does not prove remote freshness.
+Intake MUST record credential-free repository identity, scope, inspected SHA, local integration ref and resolved
+SHA, generation timestamp and dirty state. The playbook MUST NOT fetch, switch branches or change source content
+implicitly. The default interval MUST be the previous complete Monday-to-Monday calendar week in the configured user
+timezone. IF the timezone is unknown, THEN the playbook MUST ask for it. The playbook MUST accept explicit endpoints.
+It MUST record inclusive start, exclusive end, timezone and each endpoint's UTC offset; DST weeks need not be 168
+hours. IF an interval is unresolved or ambiguous, THEN the playbook MUST reject it. The playbook MUST NOT treat a
+local ref as proof of remote freshness.
 
-Committed content at the captured revision is default. Checkout lookup is a working-tree observation reconciled
-against that SHA; explicitly selected uncommitted content needs a preserved diff/artifact reference. Recheck
-HEAD, integration ref and relevant dirty content after collection and before final verification; changed evidence
-must be re-collected or marked unverified, never silently mixed. Preserve unrelated edits.
+Committed content at the captured revision MUST be the default evidence. Checkout lookup is a working-tree
+observation reconciled against that SHA; explicitly selected uncommitted content MUST have a preserved diff/artifact
+reference. The playbook MUST recheck HEAD, integration ref and relevant dirty content after collection and before
+final verification. Changed evidence MUST be re-collected or marked unverified; it MUST NOT be silently mixed. The
+playbook MUST preserve unrelated edits.
 
-Use existing Git inspection, document lookup including completed specs/history, all intended namespaces and
-complete pagination, changed ADRs/capabilities/use cases, workflow records and check artifacts. Every factual claim
-cites commit plus path/document ID, envelope or check artifact; assessments are separate. Dated claims identify
-the timestamp basis. Git timestamps are discovery hints, never integration proof. Without integration time,
-report reachable changes as snapshot evidence rather than claiming weekly delivery. Check results cover only
-their recorded revision and scope. Never infer remote release or deployment.
+The playbook SHOULD use existing Git inspection, document lookup including completed specs/history, all intended
+namespaces and complete pagination, changed ADRs/capabilities/use cases, workflow records and check artifacts. Every
+factual claim MUST cite commit plus path/document ID, envelope or check artifact; assessments MUST be kept separate.
+Dated claims MUST identify the timestamp basis. The playbook MUST NOT treat Git timestamps as integration proof; they
+are discovery hints. IF integration time is unavailable, THEN the report MUST present reachable changes as snapshot
+evidence rather than claiming weekly delivery. The report MUST NOT extend check results beyond their recorded
+revision and scope. The playbook MUST NOT infer remote release or deployment.
 
-Completed spec work requires completed status, checked tasks, verification/reconcile evidence and delivered
-commits reachable from the captured integration SHA. Session work needs change, verification report and
-reachability. Proposals, checkboxes and commits alone prove no delivery; missing evidence lowers claims to
-unverified and implementation without verified integration is separate.
+A completed spec work claim MUST have completed status, checked tasks, verification/reconcile evidence and delivered
+commits reachable from the captured integration SHA. A session work claim MUST have change, verification report and
+reachability. The playbook MUST NOT treat proposals, checkboxes or commits alone as proof of delivery. IF evidence is
+missing, THEN the report MUST lower the claim to unverified. Implementation without verified integration MUST be
+reported separately.
 
 ## 3. Health, Comparison and Actions
 
-Inventory sources with revision, scope, observed time, result and citation. Missing, stale, failed and
-not-comparable remain explicit; none means clean. Optional-source failure permits generation with limitations.
-Compare only compatible scope, finding identity and evidence. Match feedback/proposal ID first, otherwise source,
-affected target and substantive discrepancy. First observations are new, evidenced continuing items recurring,
-and resolution needs direct evidence; absence is unknown. Absent prior report or incompatible scope is explicit.
-Prioritize actions by demonstrated impact and urgency with reasons and concrete next steps. Link existing open
-follow-ups; terminal feedback remains traceability and is not reopened. Generation creates no follow-up work.
+The report MUST inventory sources with revision, scope, observed time, result and citation. Missing, stale, failed
+and not-comparable sources MUST remain explicit; the report MUST NOT present none as clean. IF an optional source
+fails, THEN generation MAY proceed with limitations. The playbook MUST compare only compatible scope, finding identity
+and evidence. It MUST match feedback/proposal ID first, otherwise source, affected target and substantive
+discrepancy. First observations MUST be marked new and evidenced continuing items recurring. A resolution MUST have
+direct evidence; absence MUST be reported as unknown. An absent prior report or incompatible scope MUST be stated
+explicitly. The playbook MUST prioritize actions by demonstrated impact and urgency with reasons and concrete next
+steps. It MUST link existing open follow-ups; terminal feedback remains traceability and MUST NOT be reopened.
+Generation MUST NOT create follow-up work.
 
 ## 4. Artifact and Outcome Contract
 
-Select a local location explicitly, defaulting to owning-unit materials or an existing repository materials
-location; otherwise resolve it at invocation. Never silently create a tracked report on the default branch.
-The logical key is repository identity, scope and exact interval/timezone. Each run has a unique ID and source
-SHA; use a collision-checked exclusively created artifact. Reruns name superseded runs and preserve earlier bytes.
-No seven-day TTL or automatic history discovery applies (`ADR-mcp-runtime-and-shared-artifacts`).
+The playbook MUST select a local location explicitly, defaulting to owning-unit materials or an existing repository
+materials location; otherwise it MUST resolve the location at invocation. It MUST NOT silently create a tracked
+report on the default branch. The logical key is repository identity, scope and exact interval/timezone. Each run
+MUST have a unique ID and source SHA, and its artifact MUST be collision-checked and exclusively created. Reruns
+MUST name superseded runs and preserve earlier bytes. No seven-day TTL or automatic history discovery applies
+(`ADR-mcp-runtime-and-shared-artifacts`).
 
-Reports contain identity/evidence inventory; completed and unintegrated work; decisions/behavior changes;
+Reports MUST contain identity/evidence inventory; completed and unintegrated work; decisions/behavior changes;
 repository health; unresolved problems/prioritized actions; and prior comparison, limitations and outcomes.
-Generation completes only after artifact readback, identity and evidence-link verification, with unavailable
-links marked unverified. Required identity/interval or artifact verification failure fails generation. Compute
-SHA-256 after verification and keep content immutable; changed content is a new run.
+Generation MUST complete only after artifact readback, identity and evidence-link verification, with unavailable
+links marked unverified. IF required identity/interval or artifact verification fails, THEN generation MUST fail.
+The playbook MUST compute SHA-256 after verification and MUST keep content immutable; changed content is a new run.
 
-A separate local companion record stores run ID, artifact, digest, generation outcome, publication outcome,
-destination, authority, attempts and receipt/error evidence. It preserves attempts and changes without altering
-the report. Missing companion blocks publication but does not erase a verified report. Publication is:
+A separate local companion record MUST store run ID, artifact, digest, generation outcome, publication outcome,
+destination, authority, attempts and receipt/error evidence. It MUST preserve attempts and changes without altering
+the report. IF the companion is missing, THEN publication MUST be blocked; a missing companion MUST NOT erase a
+verified report. Publication is:
 
 - pending without destination, authority, publisher or permission;
 - published only after verified destination receipt/link and matching content/run/digest;
 - failed for confirmed failure;
 - unknown for lost response or unverifiable destination.
 
-Use only an existing authorized connector/command for an explicitly user-selected destination. Invocation and
-integration policy never authorize upload, message, commit, push or other external mutation. Check destination
-collisions, require explicit authority for replacement and recheck local digest before send. Retrying retains
-run ID and exact bytes. Inspect unknown destination state first: a matching receipt resolves published without
-resending; unverifiable stays unknown and requests disposition; confirmed absence permits retry within authority.
-A mismatched destination is a collision. Publication failure leaves completed generation intact. Controlled
-exercises label simulated authority/receipts and make no claim of external publication.
+The playbook MUST use only an existing authorized connector/command for an explicitly user-selected destination.
+Invocation and integration policy MUST NOT authorize upload, message, commit, push or other external mutation. The
+playbook MUST check destination collisions, require explicit authority for replacement and recheck the local digest
+before send. A retry MUST retain run ID and exact bytes. The playbook MUST inspect unknown destination state first: a
+matching receipt resolves published without resending; unverifiable stays unknown and requests disposition;
+confirmed absence permits retry within authority. A mismatched destination MUST be treated as a collision. A
+publication failure MUST leave completed generation intact. Controlled exercises MUST label simulated
+authority/receipts and MUST NOT claim external publication.

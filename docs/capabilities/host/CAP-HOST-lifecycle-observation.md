@@ -26,16 +26,16 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 - `host/runner`: receipt-bound dispatch to the `devkit_dist.features.host.handlers` entry-point group.
 - `distribution`: manifest validation, selection, overrides, shared-file planning, receipt, transaction and removal.
 
-`host` depends only on `core` and `advisory`; `distribution` may depend on `host`. No service is required to import
+Among features, `host` MUST depend only on `devkit_dist.features.project` (`RULE-architecture`). `distribution` MAY depend on `host`. No service is required to import
 distribution internals. The separate `devkit_mcp` runtime supplies optional FastMCP stdio transport for installed
 service factories (`devkit_dist.features.host.services`). `CAP-INT-mcp-services` defines the CLI
-integration approval contract, while `host/registrations` reconciles exact local project entries. Host adapters grant no filesystem/network permission and
-contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).
+integration approval contract, while `host/registrations` reconciles exact local project entries. Host adapters MUST NOT grant filesystem/network permission
+or contain a Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).
 
 The initial adapter targets locally executed Codex CLI command hooks on POSIX. Other hosts are unsupported.
 Protocol definitions follow [Codex Hooks](https://learn.chatgpt.com/docs/hooks); deployment and subprocess tests
-verify the generated command, not interactive host trust or event delivery. Record those separately in a real
-Codex session. A configured hook is not proof of a running hook.
+verify the generated command, not interactive host trust or event delivery. Those SHOULD be recorded separately in a
+real Codex session. A configured hook is not proof of a running hook.
 
 ## 2. Hook assets
 
@@ -61,49 +61,51 @@ timeout = 10
 Required fields are `host`, `event`, `handler`. `matcher` defaults to the empty string (all occurrences), and
 `timeout` defaults to 10 seconds, an integer from 1 through 600. Unknown fields are errors. Only `codex` is supported;
 events are `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`, `SessionEnd`. Nonempty matchers on
-`UserPromptSubmit` or `Stop` are rejected because Codex ignores them. `SessionEnd` requires an explicit timeout of
-at most 3 seconds. The native host interprets matcher regular expressions; devkit does not translate them.
+`UserPromptSubmit` or `Stop` MUST be rejected because Codex ignores them. `SessionEnd` MUST have an explicit timeout
+of at most 3 seconds. The native host interprets matcher regular expressions; devkit MUST NOT translate them.
 
-Only a selected hook targeting a selected agent is registered. Unsupported selected agents are reported under
+Sync MUST register only a selected hook targeting a selected agent. Unsupported selected agents are reported under
 `unprojected`. `variants`, `seeded` and `invocation` are not supported for hooks. Project overrides follow the normal
-asset override contract; sync validates the effective definition before changing host configuration.
+asset override contract; sync MUST validate the effective definition before changing host configuration.
 
 ## 3. Shared configuration ownership
 
 `devkit bundle plan` lists generated registrations under `host_hooks`. `sync --dry-run` and `sync --check` include
-the shared host configuration in the same planning path as ordinary sync. No code is run during planning.
+the shared host configuration in the same planning path as ordinary sync. Planning MUST NOT run code.
 
-For Codex, sync updates only receipt-recorded matcher groups in `.codex/hooks.json`. The receipt's `host_hooks`
-array stores `host`, `asset` (`bundle:id`), `event`, `handler`, `command`, `matcher`, `timeout`; it does not claim ownership of the
-whole host file through `files`. Existing top-level metadata, foreign events and foreign matcher groups are
+For Codex, sync MUST update only receipt-recorded matcher groups in `.codex/hooks.json`. The receipt's `host_hooks`
+array stores `host`, `asset` (`bundle:id`), `event`, `handler`, `command`, `matcher`, `timeout`; it MUST NOT claim ownership of the
+whole host file through `files`. Existing top-level metadata, foreign events and foreign matcher groups MUST be
 preserved semantically, including their relative order. JSON whitespace can change when entries change; a no-op
-keeps the exact bytes and the existing file mode. Duplicate JSON keys and malformed hook maps are refused.
+MUST keep the exact bytes and the existing file mode. Duplicate JSON keys and malformed hook maps MUST be refused.
 
-Each previous owned group must occur exactly once in an existing host file. A missing, edited or duplicated group
-is `HOST_HOOK_CONFLICT`, before any transaction writes. Identical unowned groups are refused rather than adopted.
+Each previous owned group MUST occur exactly once in an existing host file. IF an owned group is missing, edited or
+duplicated, THEN sync MUST fail with `HOST_HOOK_CONFLICT` before any transaction writes. Identical unowned groups
+MUST be refused rather than adopted.
 Restore the recorded group from the receipt after reviewing local edits, then sync. No force/adopt mode exists.
 An absent entire file can be restored from the receipt, including by `sync --locked` when nothing else changes.
-Locked sync never edits an existing shared host file; a changed selection or definition is `RECEIPT_STALE`.
+Locked sync MUST NOT edit an existing shared host file; a changed selection or definition is `RECEIPT_STALE`.
 
-Removing a hook, deselecting its bundle or dropping Codex from the agent selection removes only its exact owned
-group. An empty `hooks` object and the file container remain. The shared-file change participates in the existing
-sync journal and rollback. Symlinked or nonregular host destinations are refused. The devkit project lock
-serializes devkit writers; other editors do not take that lock, so avoid editing host configuration during sync.
+Removing a hook, deselecting its bundle or dropping Codex from the agent selection MUST remove only its exact owned
+group. An empty `hooks` object and the file container remain. The shared-file change MUST participate in the
+existing sync journal and rollback. Symlinked or nonregular host destinations MUST be refused. The devkit project
+lock serializes devkit writers; other editors do not take that lock, so users SHOULD NOT edit host configuration
+during sync.
 
 This is a narrow exception to distribution's host-settings boundary: credentials, project trust, hook trust, user settings and permission settings remain host-owned. Exact ignored
-project MCP entries are separately reconciled under `CAP-MCP-runtime-registration`. Existing inline hooks are preserved;
-Codex can load them alongside `hooks.json` and report its own configuration warning.
+project MCP entries are separately reconciled under `CAP-MCP-runtime-registration`. Existing inline hooks MUST be
+preserved; Codex can load them alongside `hooks.json` and report its own configuration warning.
 
 ## 4. Runtime and service extension
 
-The generated command is `devkit host hook --host codex --asset <bundle:id>`. The Codex process must have the
+The generated command is `devkit host hook --host codex --asset <bundle:id>`. The Codex process MUST have the
 installed `devkit` executable on its PATH; for a project-local installation, launch Codex with the project's
-`.venv/bin` prepended to PATH. No package installation or network operation runs inside the hook. The executable
-and its environment must remain available for the lifetime of the host session.
+`.venv/bin` prepended to PATH. The hook MUST NOT run a package installation or network operation. The executable
+and its environment MUST remain available for the lifetime of the host session.
 
-The command reads at most 1 MiB of native JSON, uses the event's absolute `cwd` to find the devkit project (also from
-a subdirectory), verifies the receipt-selected source, registration and event, and invokes exactly one installed
-handler. An interrupted sync journal prevents dispatch. The host's registration timeout bounds the process.
+The command MUST read at most 1 MiB of native JSON, use the event's absolute `cwd` to find the devkit project (also from
+a subdirectory), verify the receipt-selected source, registration and event, and invoke exactly one installed handler.
+WHILE a sync journal is interrupted, the command MUST NOT dispatch. The host's registration timeout bounds the process.
 
 Service packages register a callable:
 
@@ -120,32 +122,32 @@ def context(event: HookEvent) -> HookResponse:
 ```
 
 A handler receives `host`, native event `name`, project `root`, qualified `asset` and the native `payload` mapping.
-It returns `HookResponse()`, or context of at most 4096 characters for `SessionStart`, `UserPromptSubmit`,
+It MUST return `HookResponse()`, or context of at most 4096 characters for `SessionStart`, `UserPromptSubmit`,
 `PreToolUse` or `PostToolUse`. Codex receives `hookSpecificOutput` with `hookEventName` and `additionalContext`.
 Other events accept an empty response only. Handler identity is bound into the receipt as well: changing a hook
 override to another service requires sync before dispatch, even when the native command stays the same. Missing, duplicate or unloadable handlers and malformed responses are
-`HOST_HOOK_DISPATCH_FAILED`. Handler exceptions are reported by type without copying exception text that could
-contain input. Python stdout from handlers is discarded to preserve the native response protocol. Handlers must
-not print, log sensitive event content, spawn detached work or interpret event input as approval authority.
+`HOST_HOOK_DISPATCH_FAILED`. Handler exceptions MUST be reported by type without copying exception text that could
+contain input. Python stdout from handlers MUST be discarded to preserve the native response protocol. Handlers MUST NOT
+print, log sensitive event content, spawn detached work or interpret event input as approval authority.
 
-The first path is advisory: input/configuration/handler failures emit a warning on stderr, native `{}` on stdout
-and exit 0. It grants no approval or permission and cannot enforce a security boundary. A host timeout also has
-host-defined behavior. Domain services must enforce their own readiness and authorization at mutation time.
+The first path is advisory: input/configuration/handler failures MUST emit a warning on stderr, native `{}` on stdout
+and exit 0. It MUST NOT grant approval or permission, and it cannot enforce a security boundary. A host timeout also has
+host-defined behavior. Domain services MUST enforce their own readiness and authorization at mutation time.
 
-`devkit host hook` is a documented host-protocol exception to normal CLI output: stdout is the native response,
-with no result sentinels or ordinary error object. `host status` follows the normal output/advisory contract.
+`devkit host hook` is a documented host-protocol exception to normal CLI output: stdout MUST be the native response,
+with no result sentinels or ordinary error object. `host status` MUST follow the normal output/advisory contract.
 
 ## 5. Observer and inspection
 
-The built-in `observe` handler stores only `host`, `asset`, `event` and UTC `received_at`, atomically, in
+The built-in `observe` handler MUST store only `host`, `asset`, `event` and UTC `received_at`, atomically, in
 `.devkit/transient/host/<host>/<bundle>/<asset>.json` (mode 0600). Each file holds the latest event, not an audit log
-or retry journal. It stores no session IDs, cwd, prompts, tool inputs, commands or transcript content. Concurrent
+or retry journal. It MUST NOT store session IDs, cwd, prompts, tool inputs, commands or transcript content. Concurrent
 observations can overwrite the latest timestamp; counts and exactly-once delivery are not claimed.
 
 `devkit host status --format json` reports each registration, source/handler validity and last observer metadata.
 `runtime_on_path` describes the current inspection process; it cannot establish the PATH of a separately launched
-Codex process. Trust and execution permissions are always `unknown`. `devkit status` includes hook installation
-problems without loading service handlers. Neither status command establishes effective host enablement.
+Codex process. Trust and execution permissions MUST always be reported as `unknown`. `devkit status` MUST include hook
+installation problems without loading service handlers. Neither status command establishes effective host enablement.
 
 The observer handler remains available to hook definitions supplied by installed bundles. Business approvals, setup
 and trust prompts, and execution-permission prompts are separate observations.
@@ -155,10 +157,10 @@ and trust prompts, and execution-permission prompts are separate observations.
 Dist owns the narrow `devkit.mcp.registrations` provider boundary and project-file reconciler described by
 `CAP-MCP-runtime-registration`. It does not own MCP transport. Installing the optional runtime enables
 ordinary sync to reconcile exact local Codex, Claude Code and Antigravity entries; `[mcp] register = false` opts out. Uninstall,
-opt-out and selected-agent removal retire only exact owned entries. Host trust, permissions and global settings
+opt-out and selected-agent removal MUST retire only exact owned entries. Host trust, permissions and global settings
 remain host-owned. Registration facts do not prove connectivity.
 
 
 Approval language is bounded supplied content under `CAP-INT-mcp-services` and
-`CAP-DLV-proposal-planning`. The owning workspace's presentation preference does not localize hooks, tool results,
-host chrome, trust or permission prompts, and changes no registration or execution guard.
+`CAP-DLV-proposal-planning`. The owning workspace's presentation preference MUST NOT localize hooks, tool results,
+host chrome, trust or permission prompts, or change any registration or execution guard.
