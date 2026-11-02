@@ -8,6 +8,10 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-11/20261102-retire-stale-integration-approval-clauses.md
     resolution: modified
+  - file: docs/capabilities/distribution/CAP-DIST-content-packages.md
+    resolution: modified
+  - file: docs/capabilities/host/CAP-HOST-lifecycle-observation.md
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-retire-stale-integration-clauses`
@@ -20,10 +24,13 @@ targets:
 - Capabilities are unchanged:
   - `CAP-INT-mcp-services` already states the current refusal points and the ban on enqueue, auto-merge and admin-merge.
   - `CAP-DIST-sync-and-transactions` already states the domain-owned English and Korean copy.
-  - No capability stated the retired form rules.
+  - `CAP-DIST-content-packages` §5 stated the per-form language reread of MCP approval forms. It now says that
+    devkit-owned approval copy rereads the preference for each request.
+  - `CAP-HOST-lifecycle-observation` drops the visible-form evidence gap.
 - Agent-facing text now matches the retirement:
   - the local render of the spec skill's routing row and of the completion reference say "integration approval";
-  - the help of `devkit-mcp` drops "native approval".
+  - the help and package description of `devkit-mcp` drop "native approval" and "native confirmation runtime";
+  - `guides/install/mcp.md` drops the omitted-metadata and visible-localized-form sentences.
 
 ## Source feedback
 

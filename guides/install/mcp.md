@@ -56,9 +56,8 @@ Set `[presentation] language = "ko"` in shared `.devkit/config.toml` or ignored 
 devkit-owned approval copy (the proposal review report). `en` selects English; `auto` uses English in approval copy and
 follows the request in response-style. Unsupported strings fall back to English with provenance in `devkit config show --effective`.
 Run sync to update inherited response-style assets; explicit bundle variables continue to win. Approval copy rereads
-the preference per request from the owning checkout. Host buttons, validation/trust/permission prompts and omitted
-metadata remain client-owned. Visible localized forms on both terminal hosts remain unverified; see
-`CAP-INT-mcp-services` and `MAT-language-development-evidence`.
+the preference per request from the owning checkout. Host buttons and trust or permission prompts remain
+client-owned; see `CAP-INT-mcp-services`.
 
 ## Cloud setup
 

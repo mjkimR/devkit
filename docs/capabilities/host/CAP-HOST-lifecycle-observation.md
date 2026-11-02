@@ -161,5 +161,4 @@ remain host-owned. Registration facts do not prove connectivity.
 
 Approval language is bounded supplied content under `CAP-INT-mcp-services` and
 `CAP-DLV-proposal-planning`. The owning workspace's presentation preference does not localize hooks, tool results,
-host chrome, trust or permission prompts, and changes no registration or execution guard. See
-`MAT-language-development-evidence` for the explicit per-host visible-form evidence gap.
+host chrome, trust or permission prompts, and changes no registration or execution guard.
