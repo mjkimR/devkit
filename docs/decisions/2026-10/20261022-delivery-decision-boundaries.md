@@ -172,23 +172,25 @@ makes users coordinate execution details.
   scope. Splitting workers creates no extra user approval requirement. Changes to authorized goals, scope or
   constraints require fresh authority. Completion checks and partial-effect recovery remain mandatory under both `ask`
   and `auto`. (ADR-policy-delegated-decision-boundaries)
-- **Autonomy between decision points**: human intervention is concentrated at the workflow's defined approval and
-  human review points. Within agreed intent and existing authority, agents SHOULD choose implementation details,
-  execute commands, inspect failures, correct defects, revalidate and retry autonomously. A routine negative result
-  alone does not require user input. Automated checks and agent reviews remain execution work; they do not by
-  themselves create a human review point. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy`
-- **Helper commands**: helper commands and validation procedures MUST NOT introduce a human approval or
-  acknowledgment solely to process routine findings. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy`
+- **Autonomy between decision points**: human intervention is concentrated at the workflow's defined approval and human
+  review points. Within agreed intent and existing authority, agents SHOULD choose implementation details, execute
+  commands, inspect failures, correct defects, revalidate and retry autonomously. A routine negative result alone does
+  not require user input. Automated checks and agent reviews remain execution work; they do not by themselves create a
+  human review point. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy` rule 10 (SHOULD)
+- **Helper commands**: helper commands and validation procedures MUST NOT introduce a human approval or acknowledgment
+  solely to process routine findings. (ADR-autonomy-between-approval-gates)
+  → `CAP-DLV-project-policy` rule 10 (MUST NOT)
 - Helper commands SHOULD report completed work, failures or unknown outcomes, stable codes and deterministic next
-  actions so the responsible agent can continue. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy`
+  actions so the responsible agent can continue. (ADR-autonomy-between-approval-gates)
+  → `CAP-DLV-project-policy` rule 10 (SHOULD)
 - A required check may still prevent an invalid transition; the agent resolves its cause within scope rather than
   asking the user to manage each step. This principle does not require an automatic retry engine or background
   recovery service. (ADR-autonomy-between-approval-gates)
-- **Escalation**: agents MUST escalate when a defined human decision is due, agreed goal/scope/contract must change,
+- **Escalation**: agents escalate when a defined human decision is due, agreed goal/scope/contract must change,
   necessary authority is missing, an existing explicit stop rule applies, or the responsible agent cannot resolve the
   problem within the agreement. In local orchestration, a worker reports to the Host/main agent; that agent resolves
   matters within its authority and brings only necessary decisions to the user. Preserve and report actual partial
-  state. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy`
+  state. (ADR-autonomy-between-approval-gates) → `CAP-DLV-project-policy` rule 10 (MUST)
 - **Autonomy limits**: autonomy grants no new commit, merge, publication or deletion authority and does not bypass an
   approval refusal, sandbox restriction, required check/review, bounded review-loop stop or delegated write boundary;
   the gate decisions above and effective `CAP-DLV-project-policy` remain in force. Reuse authorization already given

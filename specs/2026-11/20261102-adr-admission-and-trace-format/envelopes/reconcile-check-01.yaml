@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-02T04:50:15.851569Z'
+status: completed
+summary: 'PASS: reconcile.md names all 14 changed Living Spec files; all 35 traces resolve to the cited section or rule with the matching keyword; no Living Spec text keeps the inline-keyword format or routes every decision to an ADR.'
+findings: []
+assumptions:
+- 'Route: native isolated reconcile-reviewer subagent'
+checks: {}
+diff_scope:
+  base: cdbf1e99fce0c4505a9c09459e1c54f440e97a29
+  head: cfcca59502260b3579134645bc12e15c8005dd7b
+activity_effort: medium

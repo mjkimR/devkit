@@ -51,8 +51,8 @@ created_at: YYYY-MM-DD
 ## 4. Decision Outcome
 We decided to adopt **[Option 1]**.
 
-<!-- One list item per clause (decision-writing). A normative clause carries one RFC 2119 keyword and the ID of the capability or architecture document that restates it (`CAP-<AREA>-<slug>` or `ARCH-<id>`); a rationale clause carries no keyword. -->
-- <clause with MUST|SHOULD|MAY> → `CAP-<AREA>-<slug>`
+<!-- One declarative list item per clause (decision-writing). A clause that a capability or architecture document restates ends with its trace: the ID (`CAP-<AREA>-<slug>` or `ARCH-<id>`), the section or rule, and the keyword that document uses. A rationale clause carries no trace. -->
+- <declarative clause>. → `CAP-<AREA>-<slug>` <section or rule> (<MUST|SHOULD|MAY>)
 - [Option 1] best satisfies [Driver 1] and [Driver 2] in a balanced manner, and potential drawbacks can be mitigated through ...
 
 ---

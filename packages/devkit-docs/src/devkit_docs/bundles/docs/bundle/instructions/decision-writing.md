@@ -1,11 +1,22 @@
 ---
 name: decision-writing
-description: Read before writing or editing an ADR (docs/decisions/) or a proposal's PADR. Defines the Y-statement summary, context, options, normative outcome clauses, consequences, the Confirmation section and whole or partial supersession.
+description: Read before writing or editing an ADR (docs/decisions/) or a proposal's PADR. Defines when a decision warrants one, the Y-statement summary, context, options, outcome clauses with their restatement trace, consequences, the Confirmation section and supersession.
 ---
 
 # Decision Writing
 
 An ADR records one decision and its reasons. Start from the `decision` template; a PADR has the same sections.
+
+## When to Write
+
+These admission criteria apply to an ADR and to a PADR alike. Write one only when at least one holds:
+
+- The decision is costly to reverse.
+- It affects more than one package, feature area or document kind.
+- More than one viable option was weighed.
+- It changes an existing contract or lasting rule.
+
+Record a choice that meets none of them in the proposal's Planning decisions or the spec's `plan.md` instead.
 
 ## Summary
 
@@ -28,14 +39,14 @@ An ADR records one decision and its reasons. Start from the `decision` template;
 
 ## Decision Outcome Clauses
 
-Capabilities and architecture documents state the lasting rules; the ADR records why.
+Capabilities and architecture documents state the lasting rules; the ADR records what was decided and why.
 
-- Write one list item per clause.
-- Give a normative clause one RFC 2119 keyword and the backticked ID of the capability or architecture document that
-  restates it: "Exports MUST write UTF-8 → `CAP-<AREA>-<slug>`."
-- Write a clause that no document restates without a keyword; it records rationale or context only.
-- If the restating document and the ADR differ, follow the restating document; the ADR keyword records the strength
-  intended at decision time.
+- Write one list item per clause, as a declarative sentence without an RFC 2119 keyword.
+- End a clause that a capability or architecture document restates with its trace: the backticked ID, the section or
+  rule that holds it and the keyword that document uses: "Exports write UTF-8. → `CAP-<AREA>-<slug>` rule 3 (MUST)."
+- Leave the trace off a clause that no document restates; it records rationale or context only.
+- If the restating document and the ADR differ, follow the restating document; the trace records where and how
+  strongly the decision was restated.
 
 ## Supersession
 

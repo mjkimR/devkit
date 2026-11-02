@@ -62,19 +62,28 @@ def test_the_decision_guide_and_template_keep_a_partly_replaced_adr_accepted() -
 
 def test_the_decision_guide_and_template_mark_normative_outcome_clauses() -> None:
     guide = raw("instructions/decision-writing.md")
-    assert_rule(guide, "one list item per clause")
-    assert_rule(guide, "normative clause", "one rfc 2119 keyword", "capability or architecture document", "restates it")
-    assert_rule(guide, "no document restates", "without a keyword", "rationale or context only")
-    assert_rule(guide, "follow the restating document", "strength", "intended at decision time")
+    assert_rule(guide, "one list item per clause", "declarative sentence without an rfc 2119 keyword")
+    assert_rule(guide, "backticked id", "section or rule that holds it", "keyword that document uses")
+    assert_rule(guide, "`cap-<area>-<slug>` rule 3 (must)")
+    assert_rule(guide, "no document restates", "rationale or context only")
+    assert_rule(guide, "follow the restating document", "where and how strongly")
     assert_rule(guide, "**confirmation**", "restating ids")
     assert "Split a multi-part decision" not in guide
+    assert "Give a normative clause one RFC 2119 keyword" not in guide
+    assert_rule(guide, "an adr and to a padr alike", "at least one holds")
+    for criterion in ("costly to reverse", "more than one package", "more than one viable option", "existing contract"):
+        assert_rule(guide, criterion)
+    assert_rule(guide, "meets none of them", "planning decisions", "`plan.md`")
+    planning = raw("skills/spec/references/planning.md")
+    assert_rule(planning, "new padr", "admission criteria", "planning decisions")
     template = raw("templates/decision.md")
-    assert_rule(template, "<clause with must|should|may> → `cap-<area>-<slug>`")
-    assert_rule(template, "`arch-<id>`", "rationale clause carries no keyword")
+    assert_rule(template, "<declarative clause>. → `cap-<area>-<slug>` <section or rule> (<must|should|may>)")
+    assert_rule(template, "`arch-<id>`", "rationale clause carries no trace")
     completion = raw("skills/spec/references/completion.md")
     assert_rule(
         completion, "lasting rules → capabilities or architecture with rfc 2119 keywords", "cites each restating id"
     )
+    assert_rule(completion, "`decision-writing` admission criteria", "other choices → `plan.md`")
     assert "lasting policy → ADRs" not in completion
 
 
