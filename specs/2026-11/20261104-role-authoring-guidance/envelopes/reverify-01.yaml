@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:24:50.310798Z'
+status: completed
+review: review-01.yaml
+summary: Implementer verified conditional local-role invocation and explicit registered-role invocation; required host settings remain applied.
+findings:
+- issue: Scope general-subagent invocation to skill-local roles.
+  evidence: agent-asset-writing.md Role Placement general-subagent directive lacks a skill-local condition.
+  failure_condition: Required registered-role host settings are lost if the subsequent unconditional general-subagent directive is followed.
+  suggested_action: Limit general invocation to local roles and explicitly invoke registered roles through the host.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 152 affected tests after fix
+  hygiene: PASS zero warnings
+diff_scope:
+  base: bbb8cf004802c214b78f6ca0ae3a44774179117c
+  head: 1bbdd9d455c6a83b9a20833b5747426335e3ae5a

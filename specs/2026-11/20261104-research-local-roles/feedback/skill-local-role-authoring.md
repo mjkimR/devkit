@@ -8,7 +8,7 @@ target: packages/devkit/src/devkit_agt/bundles/authoring/bundle/instructions/age
 origin: user
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -36,3 +36,9 @@ created_at: 2026-11-04
 The shared instruction's description names skills, playbooks and instructions, but not subagents. Its structure
 section addresses conditional references without a role-registration criterion. The deep-research bundle now
 selects only one skill asset and packages four role documents under its `roles/` directory; 112 affected tests pass.
+
+## Disposition
+
+Resolved by `SPEC-role-authoring-guidance`: the shared instruction covers subagents, role placement and bounded
+loading; the skill-authoring playbook points to it conditionally. Independent review and 152 affected tests,
+package lint/type checks and asset hygiene passed. Existing role registrations and runtime contracts are unchanged.
