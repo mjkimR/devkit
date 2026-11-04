@@ -2,7 +2,7 @@
 id: SPEC-test-host-preflight
 title: Check selected test host prerequisites before pytest
 summary: "Checks local loopback availability for selected server tests before pytest and explains conditional wheel-build network requirements."
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []
