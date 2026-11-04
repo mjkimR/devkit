@@ -1,7 +1,7 @@
 # GitHub publication API evidence for PROP-maintenance-history
 
 - Read date: 2026-11-04 (all URLs below were read on this date; REST API version header shown in the docs: `2026-03-10`)
-- Scope: answers Spike Question Q1 of `SPEC-maintenance-history` (atomic multi-file publication and non-forced, retry-safe ref updates under concurrent writers) using official GitHub docs (docs.github.com REST/GraphQL reference, cli.github.com manual) and the Git book only. Nothing in this file touches the local checkout.
+- Scope: answers Spike Question Q1 of the original proposal of `SPEC-maintenance-history` (atomic multi-file publication and non-forced, retry-safe ref updates under concurrent writers) using official GitHub docs (docs.github.com REST/GraphQL reference, cli.github.com manual) and the Git book only. Nothing in this file touches the local checkout.
 
 Citation convention: `[doc-short-name, section]` refers to the URL listed in the Sources block at the end. Quotes marked "(summary)" were extracted from a fetched page by a summarizing reader and must be re-checked against the live page before they become normative text.
 
