@@ -1,0 +1,9 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: direction-handoff
+note: 'Direction accepted: inline exception notation (global: cell, off screen: phrase)
+  and use-case-first targeting; dev_effort medium'
+by: user
+at: '2026-11-03T23:39:35.068805Z'
