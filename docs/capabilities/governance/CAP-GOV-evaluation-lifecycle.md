@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/rules/services/evaluator.py
   - packages/devkit/src/devkit_agt/features/rules/usecases/project.py
+  - packages/devkit/src/devkit_agt/features/rules/services/builtins/file_length/rule.py
 created_at: 2026-10-17
 usecases:
   - UC-resolve-stale-activity-branches
