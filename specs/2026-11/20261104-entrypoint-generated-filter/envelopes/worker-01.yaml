@@ -1,0 +1,30 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:40:52.874558Z'
+status: completed
+summary: Completed approved managed-output derivation filter and selector protection; FB-entrypoints-derive-offers-managed-paths resolved. No bundle edits, tracked sync outputs or scope extensions. Independent Code Review passed; independent reconcile P3 grammar finding fixed and self-reverified. Final report complete; Host retains integration and cleanup.
+findings: []
+assumptions:
+- Codex isolation is emulated through explicit absolute cwd/git paths, per-operation permission requests and snapshot/diff checks; no native confinement guarantee.
+- Both reviewers reported no authored-content reads outside the assigned worktree; normal runtimes/shared Git metadata were used.
+- New feature edges remain out of scope; typed receipt reader reuses the declared entrypoints-to-project dependency.
+unverified_areas:
+- Host-owned moved-base cumulative preparation, integration and cleanup were not executed.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0; no outputs
+  tests: PASS full6550 passed15 skipped; focused98
+  lint: PASS Ruff check/format and diff check
+  types: PASS devkit-spec Pyright0
+  build: PASS offline devkit-spec wheel
+  ci: PASS cumulative22 rules zero violations against700c339b
+  review: PASS independent review-01 no findings; snapshot unchanged
+  reconcile: PASS independent semantic verification; bounded P3 wording fix self-verified in reconcile-check-02
+  baseline: PASS actual namespace-roadmap managed candidates3 to0;17 authored retained
+  boundaries: PASS initial source/helper/unit/CAP/source-feedback paths only; no extension
+diff_scope:
+  base: 00511ae149771e6197b51ba52f706992ff272161
+  head: 45bc1e6a57fd9e0ea042e5e1393d1d83844d3be3
+activity_effort: medium
