@@ -39,6 +39,11 @@ decision round does: an unattended run stops at the decision round with nothing 
 | `survey` | The user names candidate operations and wants a ranked list | measurement, profiling when needed (section 2), candidates | Decision round with nothing applied. An approved change turns the run `targeted`; record the switch in the report |
 | `targeted` | The user names operations to speed up | Every reference in phase order, each on its read condition (sections 2 and 5) | Report with measured before/after per change |
 
+If `devkit maintenance history --help` succeeds, run `devkit maintenance history start --playbook performance-pass
+--scope "<selected scope>" --into <run-parent> --report <report-path>` after fixing the report path and before
+inspection; retain the returned run directory and use its run ID. Pass known prior or superseded run IDs through
+`--prior-run` or `--supersedes`. Without that command, keep the local identity and outcome record described here.
+
 ## 2. Measure and attribute
 
 1. In every mode, read `references/measurement.md` before the first timed run, and record a baseline per target by
@@ -107,8 +112,22 @@ Recheck HEAD and dirty paths, then write the report:
   pending.
 - The final interleaved measurement of every target against the intake revision.
 - Outcome: `stopped at decision round`, `applied` or `partially applied`, with the work items' integration state.
-  Update it once each work item integrates or stops.
+  With history records, retain the frozen report and append an amendment when each work item integrates or stops;
+  otherwise update the local report outcome.
 
 Claim the run complete only with no pending decision, every agreed change committed or routed and the final
 measurement recorded. A `survey` run that applied nothing is complete with its decisions recorded and its outcome
 `stopped at decision round`.
+
+## History completion and optional publication
+
+1. If intake created a history run, finish the verified local report with `devkit maintenance history finish
+   --run <run-dir> --outcome completed|failed|interrupted --result "<playbook outcome>"`; declare extra evidence
+   through repeatable `--file <path>` to freeze its digest. Revalidate evidence if `HISTORY_RUN_DRIFTED` appears.
+2. Publish only after the user selects and authorizes `<owner/repo>#<branch>`: `devkit maintenance history publish
+   --run <run-dir> --repository <owner/repo> --branch <branch> --authority "<authority>" [--file <frozen-path>]`.
+   If the branch is missing, request separate authority for `devkit maintenance history init`; configuration grants none.
+3. Preserve pending, failed or unknown publication separately from the run outcome; retry the same bytes and
+   destination by inspection, never by blind resend. Label simulated authority and receipts in an exercise.
+4. For a published run whose work later integrates or stops, call `devkit maintenance history update --run <run-dir>
+   --integration-state "<state>" --authority "<authority>" [--applied-commit <sha>]`; leave the report bytes unchanged.

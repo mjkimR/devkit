@@ -33,6 +33,11 @@ user may start drift reconciliation as a separate invocation.
 6. Never edit receipt-owned files (`.devkit/managed/`, agent projections): read them as evidence, and send a finding
    or following edit against them to the source bundle, an upstream follow-up or `devkit override`.
 
+If `devkit maintenance history --help` succeeds, run `devkit maintenance history start --playbook review-refactor
+--scope "<selected scope>" --into <run-parent> --report <report-path>` after fixing the report path and before
+inspection; retain the returned run directory and use its run ID. Pass known prior or superseded run IDs through
+`--prior-run` or `--supersedes`. Without that command, keep the local identity and outcome record described here.
+
 ## 2. Review a batch
 
 Read `references/criteria.md` before reviewing; it holds the review questions per surface, the dispositions and the
@@ -101,7 +106,21 @@ Recheck HEAD and dirty paths, then write the report:
   or callers no longer accepted.
 - Decisions with provenance, follow-ups, and counts: found, applied, contract work items, deferred, kept, pending.
 - Outcome: `stopped at decision round`, `applied` or `partially applied`, with the work items' integration state.
-  Update it once each work item integrates or stops.
+  With history records, retain the frozen report and append an amendment when each work item integrates or stops;
+  otherwise update the local report outcome.
 
 Claim a batch complete only with no pending decision and every agreed change committed or routed. A zero-finding
 batch still names its coverage and gaps. Never claim the whole repository reviewed from a batch.
+
+## History completion and optional publication
+
+1. If intake created a history run, finish the verified local report with `devkit maintenance history finish
+   --run <run-dir> --outcome completed|failed|interrupted --result "<playbook outcome>"`; declare extra evidence
+   through repeatable `--file <path>` to freeze its digest. Revalidate evidence if `HISTORY_RUN_DRIFTED` appears.
+2. Publish only after the user selects and authorizes `<owner/repo>#<branch>`: `devkit maintenance history publish
+   --run <run-dir> --repository <owner/repo> --branch <branch> --authority "<authority>" [--file <frozen-path>]`.
+   If the branch is missing, request separate authority for `devkit maintenance history init`; configuration grants none.
+3. Preserve pending, failed or unknown publication separately from the run outcome; retry the same bytes and
+   destination by inspection, never by blind resend. Label simulated authority and receipts in an exercise.
+4. For a published run whose work later integrates or stops, call `devkit maintenance history update --run <run-dir>
+   --integration-state "<state>" --authority "<authority>" [--applied-commit <sha>]`; leave the report bytes unchanged.

@@ -142,4 +142,4 @@ We decided to adopt **Option 1**.
 Integration tests of the `devkit maintenance history` commands with an injected runner (multi-file publication,
 interleaved writers with both index lines at the final head, lost response, collision, foreign branch, 404 on a
 private repository, amendment, unchanged local Git state) and the restating clauses of
-the new delivery capability `maintenance-history` (ID assigned at spec-sync).
+`CAP-DLV-maintenance-history` rules 1–12.

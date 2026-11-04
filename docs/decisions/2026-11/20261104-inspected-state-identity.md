@@ -106,4 +106,4 @@ Tests of `devkit maintenance history start` on a temporary repository: identical
 file, a global excludes file that hides an untracked path changes it, `diff_digest` is recomputed from the
 retained file alone, a changed file changes both, the run directory and the report path never count as drift
 inside or outside the worktree, and `git for-each-ref`, the index checksum and `git status --porcelain` outside the
-run directory are unchanged after the command. Restated by the new delivery capability `maintenance-history` (ID assigned at spec-sync).
+run directory are unchanged after the command. Restated by `CAP-DLV-maintenance-history` rules 1–12.

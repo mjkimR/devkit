@@ -11,7 +11,7 @@ spec: SPEC-maintenance-history
 
 ## 2. Architecture Overview & Impact
 
-A `maintenance_history` feature in devkit-agt has CLI, typed BaseUseCase operations, services, repositories and models. The CLI adapts arguments and renders returned results. Local capture uses an isolated Git index; GitHub access uses an injected gh runner. Feature edges to rules and project configuration support the secret check and defaults. Catalog changes remain content-only.
+A `maintenance_history` feature in devkit-agt has CLI, typed BaseUseCase operations, services, repositories and models. The CLI adapts arguments and renders returned results. Local capture uses an isolated Git index; GitHub access uses an injected gh runner. The Host authorized adding maintenance_history to the devkit_agt features list and only its feature_dependencies entries. Feature edges to rules and project configuration support the secret check and defaults. Catalog changes remain content-only.
 
 ## 3. Component & Interface Design
 

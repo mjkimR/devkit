@@ -16,6 +16,11 @@ neither drift nor consistency; a failing check proves only its own condition.
    materials location. Clarify missing scope before inspecting.
 2. List candidate contracts, interfaces and consumer guidance; split a large area into explicit batches.
 
+If `devkit maintenance history --help` succeeds, run `devkit maintenance history start --playbook drift-reconciliation
+--scope "<selected scope>" --into <run-parent> --report <report-path>` after fixing the report path and before
+inspection; retain the returned run directory and use its run ID. Pass known prior or superseded run IDs through
+`--prior-run` or `--supersedes`. Without that command, keep the local identity and outcome record described here.
+
 ## 2. Collect evidence
 
 Use existing tools only: in a devkit-spec repository `devkit docs resolve <ID>`, `devkit docs refs <ID> --direction
@@ -60,3 +65,16 @@ Recheck HEAD and dirty paths, then record coverage (reviewed, excluded with reas
 corrections and counts (detected, resolved, deferred, waived, pending). A zero-finding review still names its
 coverage and gaps. Claim the batch fully reconciled only with no pending decision, and never claim
 whole-repository consistency.
+
+## History completion and optional publication
+
+1. If intake created a history run, finish the verified local report with `devkit maintenance history finish
+   --run <run-dir> --outcome completed|failed|interrupted --result "<playbook outcome>"`; declare extra evidence
+   through repeatable `--file <path>` to freeze its digest. Revalidate evidence if `HISTORY_RUN_DRIFTED` appears.
+2. Publish only after the user selects and authorizes `<owner/repo>#<branch>`: `devkit maintenance history publish
+   --run <run-dir> --repository <owner/repo> --branch <branch> --authority "<authority>" [--file <frozen-path>]`.
+   If the branch is missing, request separate authority for `devkit maintenance history init`; configuration grants none.
+3. Preserve pending, failed or unknown publication separately from the run outcome; retry the same bytes and
+   destination by inspection, never by blind resend. Label simulated authority and receipts in an exercise.
+4. For a published run whose work later integrates or stops, call `devkit maintenance history update --run <run-dir>
+   --integration-state "<state>" --authority "<authority>" [--applied-commit <sha>]`; leave the report bytes unchanged.

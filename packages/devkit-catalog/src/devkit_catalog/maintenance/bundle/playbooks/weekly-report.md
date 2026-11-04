@@ -24,6 +24,11 @@ sweep, full test suite, automatic fix, feedback or proposal creation, and change
 4. Key the report by identity, scope and exact interval. Give each run a unique ID and a new, exclusively created
    file; a rerun names the run it supersedes and never overwrites it.
 
+If `devkit maintenance history --help` succeeds, run `devkit maintenance history start --playbook weekly-report
+--scope "<selected scope>" --into <run-parent> --report <report-path>` after fixing the report path and before
+inspection; retain the returned run directory and use its run ID. Pass known prior or superseded run IDs through
+`--prior-run` or `--supersedes`. Without that command, keep the local identity and outcome record described here.
+
 ## 2. Gather evidence
 
 Read committed content at the captured SHA (`git show <sha>:<path>`). Where document lookup is installed, include
@@ -62,7 +67,7 @@ generation complete; otherwise it fails and nothing is published. Record its SHA
 
 ## 5. Record and publish
 
-Create a companion outcome record: run ID, artifact, digest, generation outcome, publication outcome, destination,
+If intake created a history run, use its record as the companion; otherwise create a companion outcome record: run ID, artifact, digest, generation outcome, publication outcome, destination,
 authority, attempts and evidence. Publication changes only this record.
 
 | Publication outcome | Evidence and action |
@@ -80,3 +85,16 @@ different content is a collision.
 
 Finish by naming the artifact, both outcomes, limitations and next steps; in an exercise, label simulated authority
 and receipts.
+
+## History completion and optional publication
+
+1. If intake created a history run, finish the verified local report with `devkit maintenance history finish
+   --run <run-dir> --outcome completed|failed|interrupted --result "<playbook outcome>"`; declare extra evidence
+   through repeatable `--file <path>` to freeze its digest. Revalidate evidence if `HISTORY_RUN_DRIFTED` appears.
+2. Publish only after the user selects and authorizes `<owner/repo>#<branch>`: `devkit maintenance history publish
+   --run <run-dir> --repository <owner/repo> --branch <branch> --authority "<authority>" [--file <frozen-path>]`.
+   If the branch is missing, request separate authority for `devkit maintenance history init`; configuration grants none.
+3. Preserve pending, failed or unknown publication separately from the run outcome; retry the same bytes and
+   destination by inspection, never by blind resend. Label simulated authority and receipts in an exercise.
+4. For a published run whose work later integrates or stops, call `devkit maintenance history update --run <run-dir>
+   --integration-state "<state>" --authority "<authority>" [--applied-commit <sha>]`; leave the report bytes unchanged.

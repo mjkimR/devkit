@@ -69,3 +69,7 @@ location without a unit. It MUST contain intake, coverage, findings, decisions, 
 Existing commands retain their own output contracts; the playbook MUST NOT present narrative semantic assessment as a
 new checker result. Isolated seeded exercises MUST label simulated decisions. They MUST NOT authorize a real source
 change.
+
+## Maintenance history integration
+
+WHERE `devkit maintenance history` is installed, the playbook MUST use the run identity and companion record of `CAP-DLV-maintenance-history`, starting after fixing the report path and finishing after report verification. Publication and amendments MUST retain separate explicit user authority. Without the command, this capability's local record procedure applies. The separate history backend belongs to `CAP-DLV-maintenance-history`.

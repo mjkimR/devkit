@@ -36,7 +36,7 @@ latency, subprocess count or peak memory of operations the user selects; mainten
   - a bundled timing script; the run uses an installed benchmark tool or the agent's own loop
     (`ADR-performance-pass`);
   - a scheduler or trigger (external runners, `ADR-playbook-retrieval`) and a history store
-    (`SPEC-maintenance-history`);
+    (`CAP-DLV-maintenance-history`);
   - the direct-mode overall-refactor route, which stays granted to `CAP-DLV-review-refactor` runs only;
   - a contract-changing speedup inside the behavior-preserving work item; it is its own work item through the
     repository's normal development workflow (`ADR-performance-pass`).
@@ -169,7 +169,10 @@ measured, components attributed, candidates dropped below the noise floor, gaps)
 records, each change with its candidate, classification, differential inputs and count, verification, measured
 before and after and commit; decisions with provenance, follow-ups, counts and the final interleaved measurement
 against the intake revision; and the outcome (`stopped at decision round`, `applied` or `partially applied`) with the
-work items' integration state; a report written before a work item integrates MUST have its outcome updated when
-that work item integrates or stops. A run is complete when no decision is pending, every agreed change is committed or
+work items' integration state; WHERE a history run exists, later integration state MUST be an append-only amendment under `CAP-DLV-maintenance-history`, preserving the report; otherwise update the local report outcome when a work item integrates or stops. A run is complete when no decision is pending, every agreed change is committed or
 routed and the final measurement is recorded; a `survey` run that applied nothing is complete with its decisions
 recorded and outcome `stopped at decision round`.
+
+## Maintenance history integration
+
+WHERE `devkit maintenance history` is installed, the playbook MUST use the run identity and companion record of `CAP-DLV-maintenance-history`, starting after fixing the report path and finishing after report verification. Publication and amendments MUST retain separate explicit user authority. Without the command, this capability's local record procedure applies. The separate history backend belongs to `CAP-DLV-maintenance-history`.

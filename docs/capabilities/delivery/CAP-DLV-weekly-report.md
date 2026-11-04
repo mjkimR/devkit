@@ -20,7 +20,7 @@ The opt-in maintenance bundle supplies weekly-report independently of drift/upke
 intake offer follows
 `CAP-DIST-context-and-playbooks`; selection/retrieval MUST NOT execute it. Generation SHOULD reuse available tools and
 artifacts. It MUST NOT automatically run checks, maintenance or fixes, or create follow-ups. No scheduler,
-detector, runtime publisher, history backend or standalone skill is included. Publication MUST have separate
+detector or standalone skill is included. The separate runtime publisher and history backend belong to `CAP-DLV-maintenance-history`. Publication MUST have separate
 authority. Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 2. Intake and Evidence
@@ -98,3 +98,7 @@ matching receipt resolves published without resending; unverifiable stays unknow
 confirmed absence permits retry within authority. A mismatched destination MUST be treated as a collision. A
 publication failure MUST leave completed generation intact. Controlled exercises MUST label simulated
 authority/receipts and MUST NOT claim external publication.
+
+## Maintenance history integration
+
+WHERE `devkit maintenance history` is installed, the playbook MUST use the run identity and companion record of `CAP-DLV-maintenance-history`, starting after fixing the report path and finishing after report verification. Publication and amendments MUST retain separate explicit user authority. Without the command, this capability's local record procedure applies. The separate history backend belongs to `CAP-DLV-maintenance-history`.

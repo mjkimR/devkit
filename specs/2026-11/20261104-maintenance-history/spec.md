@@ -2,7 +2,7 @@
 id: SPEC-maintenance-history
 title: Maintenance execution history on a GitHub orphan branch
 summary: "Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history."
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []
@@ -90,6 +90,8 @@ depend on it. This draft is the direct member of `MS-maintenance-run-history`, w
 
 ## Assumptions
 
+- Host clarification: repeatable `finish --file` registers added evidence and freezes its digest; `publish --file` selects only that frozen set, with no added files selected by default. This preserves the accepted immutable record contract despite late publication selection.
+
 - The accepted command table and failure table carried below remain the detailed interface contract; implementation choices do not parse GitHub error messages.
 - The live exercise requires a concrete destination and authority from the Host; local fakes are supplementary evidence, not live confirmation.
 - `start` may operate before publication initialization; local operation still resolves a credential-free repository identity from configuration or origin.
@@ -134,7 +136,7 @@ advisories on stderr with a stable `UPPER_SNAKE` code and an `[ACTION]`, one JSO
 | --- | --- |
 | `init --authority "<text>" [--repository <owner/repo>] [--branch <name>]` | Creates the deterministic root commit and the branch, or validates an existing branch against the constant root (§3.2); refuses a foreign branch without updating it; prints the root SHA, the head SHA and the authority text on its result line and writes no local file |
 | `start --playbook <id> --scope "<text>" --into <dir> --report <path> [--timezone <IANA name>] [--supersedes <run-id>]... [--prior-run <run-id>]...` | Captures the inspected state (§3.3) and writes the local run directory `<dir>/<run-id>/` with `record.json` and, for a dirty run, `inspected.diff`; `--report` is the report path the playbook recorded at intake and fixes the comparison set |
-| `finish --run <dir> --outcome completed\|failed\|interrupted [--result "<text>"] [--report <file>] [--applied-commit <sha>]... [--follow-up <ID>]...` | Recaptures the inspected state with the set fixed at `start`, warns on drift, runs the secret check over the report and the record, computes the report SHA-256, closes the record; `--report` is optional and must equal the path given at `start`, otherwise `finish` refuses with an input error |
+| `finish --file <path>... --run <dir> --outcome completed\|failed\|interrupted [--result "<text>"] [--report <file>] [--applied-commit <sha>]... [--follow-up <ID>]...` | Recaptures the inspected state with the set fixed at `start`, warns on drift, runs the secret check over the report and the record, computes the report SHA-256, closes the record; `--report` is optional and must equal the path given at `start`, otherwise `finish` refuses with an input error |
 | `publish --run <dir> --authority "<text>" [--repository] [--branch] [--file <path>]...` | Publishes the record, the report and the named files as one commit on the history branch; writes the publication fields into the local record |
 | `update --run <dir> --authority "<text>" --integration-state "<text>" [--applied-commit <sha>]...` | Publishes an append-only amendment `updates/<UTC time>-<8 hex>.json` for a run whose work items integrated or stopped after `finish`; the name is fixed at the first attempt and kept in the local record so a retry reuses it |
 | `list --playbook <id> [--source-sha <sha>] [--outcome <value>] [--include-superseded] [--limit <n>]` | Reads the index shards newest year first until `--limit` is met and prints one `[HISTORY_RUN: ...]` line per run; an absent branch is an empty result with a notice, never a refusal |
