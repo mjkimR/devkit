@@ -61,4 +61,4 @@ challenger-01.yaml finding 1 (P2, Decision needed); answer-01.yaml q1 choice a (
 
 ## Disposition
 
-- **Disposition**: `SPEC-viewer-namespace-roadmap` receives discovery, dependency and membership work as a standalone proposal without milestone membership. Implementation remains pending.
+- **Disposition**: `SPEC-viewer-namespace-roadmap` receives discovery, dependency and membership work as a standalone spec without milestone membership. Implementation remains pending.

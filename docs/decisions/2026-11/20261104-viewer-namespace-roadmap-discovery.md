@@ -9,7 +9,7 @@ created_at: 2026-11-04
 
 # [ADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
 
-- **Status**: Draft; recommended option pending proposal acceptance.
+- **Status**: Accepted.
 
 ## 1. Context & Problem Statement
 
@@ -27,7 +27,7 @@ repository's devkit and remains independent of its pinned document-system versio
 
 ## 3. Considered Options
 
-- **Structural roadmap paths** (recommended): one path policy for Python headers and frontend tree/blob readers;
+- **Structural roadmap paths** (selected): one path policy for Python headers and frontend tree/blob readers;
   no configuration parser, dependency or data-source method; unregistered directories can appear.
 - **Registered namespaces only**: closer registry parity with CLI discovery; both languages/hosts need a shared
   registry interpretation and error policy, which expands this file-reader change.
@@ -35,7 +35,7 @@ repository's devkit and remains independent of its pinned document-system versio
 
 ## 4. Decision Outcome
 
-The following clauses draft the recommended structural option; proposal acceptance settles them.
+Structural roadmap discovery is selected to keep local and library readers independent of namespace configuration.
 
 - Both dashboard routes and the roadmap loader discover global roadmap roots and the same roots directly under
   `docs/packages/<name>/`, including only the reserved flat `_archive/`. → `CAP-VIEW-repository-viewer` 4.1 and 5 (MUST).
