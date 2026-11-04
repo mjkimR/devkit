@@ -5,168 +5,153 @@ summary: Lets a registered namespace keep its own MS milestones under docs/packa
 status: planned
 created: 2026-11-04
 namespace: global
-related_capabilities: []
+related_capabilities: [CAP-DOCS-namespaces, CAP-GOV-spec-rules, CAP-DLV-proposal-planning]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-namespace-roadmap] Per-namespace milestones under the namespace docs root
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-namespace-roadmap on 2026-11-04.
-- **Preserved Materials**: `docs/materials/2026-11/20261104-namespace-roadmap`
-
-### 1. Background & Hypothesis
-
 `CAP-DOCS-namespaces` mirrors `docs/` under `docs/packages/<name>/` for capabilities, use cases, UX and architecture
-documents, but milestones are global only. `ADR-roadmap-and-milestones-ledger` §4 deferred per-namespace roadmaps
+documents, but milestones are global only. `ADR-roadmap-and-milestones-ledger` deferred per-namespace roadmaps
 "until a repository needs them", and the code enforces the deferral: `milestone_path_valid` accepts only
-`docs/roadmap/(_archive/)?MS-<slug>.md`, and `RULE-id-convention` walks every namespace `roadmap/` directory and
-reports each file there as misplaced (`id_convention.py`, the `docs_root == "docs"` condition). The `MILESTONE` kind
-row is `FormatScope.GLOBAL`, and the Backlog references state that milestones are global.
+`docs/roadmap/(_archive/)?MS-<slug>.md`; `RULE-id-convention` walks every namespace `roadmap/` directory and reports
+each file there as misplaced; the `MILESTONE` kind row is `FormatScope.GLOBAL`, so `RULE-spec-format` scans the
+global root only; `devkit spec proposal new --milestone` refuses a milestone outside the global root; and the
+Backlog references state that milestones are global.
 
-A monorepo whose packages are independent products now needs them: g-sandbox (`playground/g-sandbox`) holds four games
-sharing one platform, each with its own release cadence and its own background under `docs/packages/<game>/`. Its
-milestones would either crowd one global roadmap with unrelated themes or stay outside the document system.
+A monorepo whose packages are independent products needs them: several games sharing one platform, each with its own
+release cadence and its own docs under `docs/packages/<game>/`. Their milestones either crowd one global roadmap with
+unrelated themes or stay outside the document system.
 
-Hypothesis: the namespace layer already supplies what per-namespace milestones need. Membership of a document under
+The namespace layer already supplies what per-namespace milestones need: membership of a document under
 `docs/packages/<name>/` is `<name>` (`CAP-DOCS-namespaces` 3.2), `devkit docs list` already selects namespaces, and
-`living_path` already maps `docs/packages/<name>/roadmap/X` to `docs/roadmap/X` for the rules. Allowing the placement
-and making the lifecycle checks namespace-aware is therefore a contained change; no new discovery command or ID scheme
-is needed. This is the first direct member of `MS-monorepo-namespace-support`.
+`living_path` already maps `docs/packages/<name>/roadmap/X` to `docs/roadmap/X` for the rules. This spec allows the
+placement and makes the lifecycle checks namespace-aware. The decision is `ADR-namespace-milestone-roots`, promoted at
+handoff; the Planning spike inventory is retained at `docs/materials/2026-11/20261104-namespace-roadmap/global-roadmap-root-inventory.md`.
+This is the first direct member of `MS-monorepo-namespace-support`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Per-namespace milestones under the namespace docs root so that system capabilities are extended.
+- **US-1**: As the owner of a monorepo package registered as a namespace, I want to keep that package's milestones at
+  `docs/packages/<name>/roadmap/` with the same lifecycle placement as the global roadmap, so that the global roadmap
+  holds only cross-package themes and the rules accept my files.
+- **US-2**: As an AI coding agent creating a proposal for a package, I want `--milestone` to accept a milestone at the
+  namespace roadmap root, so that a package proposal declares membership of a package milestone.
+- **US-3**: As an AI coding agent working inside a package directory, I want `devkit docs list milestone` to show that
+  package's milestones beside the global ones, and `--all-namespaces` to show every milestone, so that selection
+  follows `CAP-DOCS-namespaces` 3.3 for milestones as for the other kinds.
+- **US-4**: As an AI coding agent following the Backlog and milestone guidance, I want the references, template and
+  rule guides to name the milestone's own roadmap root, so that a lifecycle move of a namespace milestone stays inside
+  its root.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: namespaced IDs or per-package ID spaces; IDs, aliases and the `MS-` prefix stay repository-wide.
+2. **Scope Excluded**: per-namespace goals as ID-bearing documents, or a rule that checks a milestone's goal citation;
+   the citation stays a review-only recommendation.
+3. **Scope Excluded**: a namespace directory for proposals; the `PROPOSAL` kind row stays `FormatScope.GLOBAL`.
+4. **Scope Excluded**: a namespace copy of `_archive/` semantics beyond the path, or any change to `milestone_path_valid`'s
+   global regex; callers map a path through `living_path` before validating it.
+5. **Scope Excluded**: the local viewer (`packages/devkit-viewer/`, `CAP-VIEW-repository-viewer`), on the user's
+   decision in Planning; the follow-up is `FB-viewer-namespace-roadmap-roots`.
+6. **Scope Excluded**: a same-namespace constraint between a proposal and the milestone it names; a proposal of any
+   namespace may name a milestone at the global root or at any namespace root.
+7. **Scope Excluded**: external tracker synchronization of namespace roadmaps.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+The rule behavior is checked by the rule tests under `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/`,
+the command behavior by the integration tests of `devkit-docs` and `devkit-spec`, and the guidance wording by the
+`spec` bundle's guidance test. "Registered" means listed in `[[tool.docs.namespaces]]` of `.devkit/config.toml`.
 
-## 5. Carried Proposal Notes
+### [AC-01] A registered namespace milestone at each lifecycle location passes `RULE-id-convention`
+- **Given** a workspace registering namespace `api` and milestone files `docs/packages/api/roadmap/MS-example.md`
+  with `status: planned` or `active`, and `docs/packages/api/roadmap/_archive/MS-example.md` with `status: done` or
+  `dropped`, each with `id` equal to its file stem
+- **When** `RULE-id-convention` checks the file
+- **Then** it reports no violation, the file is not moved and its text is unchanged; the global pairs keep their
+  current results.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Misplaced namespace milestones are reported with both roots in the remediation
+- **Given** the same workspace
+- **When** `RULE-id-convention` checks `docs/packages/api/roadmap/MS-example.md` with `status: done` or `dropped`,
+  `docs/packages/api/roadmap/_archive/MS-example.md` with `status: planned` or `active`,
+  `docs/packages/api/roadmap/2026/MS-example.md`, or `docs/packages/web/roadmap/MS-example.md` where `web` is not
+  registered
+- **Then** each is reported as an invalid partition path, is not fixed, and the message and remediation name both
+  `docs/roadmap/` and `docs/packages/<name>/roadmap/` with `_archive/` for done/dropped; a milestone document
+  found outside every roadmap directory is reported with the same two-root remediation.
 
-### 2. Technical Spike Questions
+### [AC-03] `RULE-spec-format` checks a namespace milestone as it checks a global one
+- **Given** a workspace registering namespace `api`
+- **When** `RULE-spec-format` runs with no explicit targets, and `docs/packages/api/roadmap/MS-a.md` has
+  `status: draft` and no `created_at`
+- **Then** the milestone status is reported as `milestone status must be planned | active | done | dropped` (not
+  fixable) and the missing `created_at` is reported and fixed with `--fix`; `docs/packages/api/roadmap/_archive/MS-done.md`
+  with `status: done` is history, checked only as an explicit target, and keeps its status and placement after a fix.
+  An unregistered `docs/packages/web/roadmap/MS-b.md` is not scanned by default.
 
-- **Q1**: Which checks and commands hard-code the global roadmap root, and does each need the namespace root or only
-  `living_path`?
-  - *Finding* (`docs/materials/2026-11/20261104-namespace-roadmap/global-roadmap-root-inventory.md`): four code locations and none needs a new root
-    parameter. `milestone_path_valid` stays as it is; its three callers validate the path mapped through
-    `living_path(path, namespaces=registered)`: `RULE-id-convention` (which also drops the `docs_root == "docs"`
-    condition and names both roots in its remediation), `RULE-spec-format` (whose `docs/roadmap/` prefix test guards the
-    milestone status and `created_at` checks) and the proposal `--milestone` validation
-    (`devkit_spec.features.proposals.usecases.roadmap.milestone_id`). The fourth is the kind table: the `MILESTONE`
-    row's `FormatScope.GLOBAL` becomes `EVERY_ROOT`, so `RULE-spec-format` scans each namespace `roadmap/`. The
-    document index already indexes `docs/packages/<name>/roadmap/` (discovery covers all of `docs/`), `historical`,
-    the `depends_on` graph of `RULE-document-reference` and the `SPEC_MILESTONE_*_UNSETTLED` hygiene advisories are
-    kind- and status-based, and `spec-next` already lists milestones with `--all-namespaces`: none of them changes.
-    The local viewer's dashboard and roadmap tab read `docs/roadmap/` without the namespace registry
-    (`CAP-VIEW-repository-viewer` 4.1 and §5), so until the viewer learns the namespace roots it not only omits namespace
-    milestones: a global milestone whose `depends_on` names a namespace milestone renders as an unknown dependency and
-    is never ready, and a proposal whose `milestone` names a namespace milestone appears in no roadmap card
-    (challenger-01, finding 1). The viewer stays out of this proposal on the user's decision (answer-01, q1); the three
-    effects are recorded as `FB-viewer-namespace-roadmap-roots` for follow-up work.
-- **Q2**: Where does a namespace milestone cite its goal? `ADR-roadmap-and-milestones-ledger` keeps goals as prose in
-  `ARCH-01-introduction-and-goals` and names "goals per namespace" as its own reopen condition.
-  - *Finding*: as a global milestone does, in prose, citing `ARCH-01-introduction-and-goals` or an architecture
-    document under its namespace docs root by ID (`CAP-DOCS-namespaces` mirrors `architecture/`, so a package can hold
-    its own goals document today). A namespace steering file (`PROP-namespace-steering`) carries no ID, so it can only
-    be named by path, once it exists; nothing in this proposal depends on it. The citation stays a recommendation
-    (`ARCH-01-introduction-and-goals` "SHOULD cite"), checked in review only, as today, so goals stay prose without IDs and
-    ADR-roadmap-in-repository is not reopened. The two proposals therefore need no shared Planning round and no
-    `depends_on` edge; `PROP-namespace-steering` Q3 can take this finding as its answer.
-- **Q3**: What does a cross-namespace milestone edge mean, and how does `devkit docs list milestone` behave without
-  `--namespace` from a package directory?
-  - *Finding*: `depends_on: [MS-<other>]` across namespaces resolves because IDs are repository-wide
-    (`CAP-DOCS-namespaces` 3.3 rule 5) and the `RULE-document-reference` graph is built over every milestone
-    document; the lifecycle rules (activate shows each dependency not done or dropped; close, drop, reopen, merge) need
-    no namespace clause. Default selection follows 3.3 rule 3: from a package directory, that package's milestones plus
-    the global ones; from the repository root, every namespace; `--namespace` and `--all-namespaces` as for the other
-    kinds. Membership of a file under `docs/packages/<name>/roadmap/` is `<name>` by 3.2 rule 1 with no change.
+### [AC-04] `devkit spec proposal new --milestone` accepts a milestone at either root
+- **Given** a workspace registering namespace `api` with `docs/packages/api/roadmap/MS-api-launch.md` (`status: active`)
+  and `docs/roadmap/MS-foundation.md` (`status: planned`)
+- **When** `devkit spec proposal new member --milestone` MS-api-launch runs from the repository root or from the
+  package's source directory, or with `--milestone` MS-foundation
+- **Then** it exits `0` and writes `milestone: MS-api-launch` (or MS-foundation) into the proposal's frontmatter;
+  the milestone file is unchanged. A done or dropped namespace milestone in its `_archive/` still returns
+  `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation.
 
-### 3. Proposed Design & Impact
+### [AC-05] An invalid namespace placement is refused before any write
+- **Given** the same workspace with `docs/packages/api/roadmap/MS-api-launch.md` whose `status` is `done`, or the
+  file under `docs/packages/api/roadmap/_archive/` with `status: active`, or at `docs/packages/web/roadmap/` where
+  `web` is not registered
+- **When** `devkit spec proposal new member --milestone` MS-api-launch runs
+- **Then** it fails with `ARGUMENT_INVALID` (exit `2`), the message names a milestone at the global or a namespace
+  roadmap root, the fix names `devkit docs list milestone --all-namespaces`, and `docs/proposals/` is not created.
 
-Decision record: `ADR-namespace-milestone-roots` (supersedes `ADR-roadmap-and-milestones-ledger` in part).
+### [AC-06] `devkit docs list milestone` selects namespace milestones by the current directory
+- **Given** a workspace registering namespaces `api` (`services/api`) and `web` (`apps/web`) with milestones
+  `docs/packages/api/roadmap/MS-api-launch.md`, `docs/packages/web/roadmap/MS-web-launch.md` and
+  `docs/roadmap/MS-foundation.md`
+- **When** `devkit docs list milestone --format json` runs from `services/api`
+- **Then** the documents are MS-api-launch and MS-foundation, each with its `namespace`; with `--all-namespaces`
+  the documents are all three; from the repository root all three are listed.
 
-- **Placement**: a milestone of a registered namespace lives at `docs/packages/<name>/roadmap/MS-<slug>.md`
-  (planned/active) or `docs/packages/<name>/roadmap/_archive/MS-<slug>.md` (done/dropped), the global layout under the
-  namespace docs root. `milestone_path_valid` keeps its global regex; `RULE-id-convention`, `RULE-spec-format` and the
-  proposal `--milestone` validation pass it the path mapped through `living_path` with the registered namespaces. An
-  unregistered `docs/packages/<name>/` stays a plain `docs/` directory: its `roadmap/` files are still reported as
-  misplaced, as its other documents are.
-- **Format scope**: the `MILESTONE` kind row becomes `FormatScope.EVERY_ROOT`, so `RULE-spec-format` checks a
-  namespace milestone's frontmatter (`id`, `title`, `status` in planned/active/done/dropped, `created_at`, English
-  `summary`) as it checks a global one. The `PROPOSAL` row stays `GLOBAL`: proposal bundles keep one directory.
-- **Identity and membership**: IDs, aliases and the `MS-` prefix stay repository-wide; a namespace milestone is a
-  member of its namespace by path (3.2 rule 1), and a direct proposal of any namespace declares membership through
-  `milestone` naming a milestone at either root. `devkit spec proposal new --milestone` accepts both; its
-  `ARGUMENT_INVALID` message and fix name "a milestone at the global or a namespace roadmap root" and
-  `devkit docs list milestone --all-namespaces`. `SPEC_PROPOSAL_MILESTONE_INACTIVE` is unchanged.
-- **Selection and edges**: `devkit docs list milestone` and `search` follow `CAP-DOCS-namespaces` 3.3 without a
-  milestone clause; milestone `depends_on` resolves across namespaces; the hygiene advisories read every milestone.
-- **Guidance**: the roadmap README, `ARCH-01-introduction-and-goals` (Repository roadmap), the `spec` skill
-  references (`backlog.md` Milestones, `roadmap-catalog.md`, `milestone-completion.md`), the milestone template and the
-  `id_convention` and `spec_format` rule guides replace "milestones are global" and the literal `docs/roadmap/` of
-  lifecycle moves with the two roots and "the milestone's roadmap root"; the `_archive/` move stays inside that root.
-  The seeded introduction-and-goals architecture document of the `docs` bundle names the namespace root in its roadmap sentence.
-- **Decision record**: handoff promotes `ADR-namespace-milestone-roots` to an ADR; Development writes one
-  "Superseded in part by" line into `ADR-roadmap-and-milestones-ledger` naming both replaced clauses: "Milestones are
-  global; per-namespace roadmaps are deferred until a repository needs them" (ADR-milestone-documents) and "live
-  milestones remain at the global roadmap root `docs/roadmap/`" (ADR-archive-terminal-milestones-in-roadmap), as the
-  PADR's Decision Outcome lists them (challenger-01, finding 2).
-  `.devkit/managed/` copies are regenerated by `devkit generated regen`, never edited.
-- **Tests**: `RULE-id-convention` fixtures with a registered namespace milestone at each lifecycle location (planned at
-  the root, done in `_archive/`, a done file left at the root reported, a planned file in `_archive/` reported), an
-  unregistered `docs/packages/<name>/roadmap/` file still reported, a namespace `_archive/` move; `RULE-spec-format`
-  fixtures for a namespace milestone's status and `created_at`; `test_roadmap.py` with `proposal new --milestone`
-  naming a namespace milestone from the repository root and from the package directory; a `devkit docs list
-  milestone` test from a package directory and with `--all-namespaces`; the guidance test
-  (`test_milestone_archive_guidance.py`) updated for the new wording.
+### [AC-07] A monorepo passes `devkit rules check` with a cross-namespace milestone edge
+- **Given** a workspace registering namespace `api` with a valid namespace milestone at each lifecycle location
+  (planned at the root, done in `_archive/`, each with `id`, `title`, `status`, `created_at` and an English `summary`),
+  and a global milestone whose `depends_on` names the namespace milestone
+- **When** `RULE-id-convention`, `RULE-spec-format` and `RULE-document-reference` check the workspace
+- **Then** none reports a finding for the milestones.
 
-Expected affected contracts: `CAP-DOCS-namespaces` (3.4 and the kinds a namespace mirrors), `CAP-GOV-spec-rules`
-(`RULE-id-convention`, the `RULE-spec-format` scope list and the Milestone validation contract),
-`CAP-DLV-proposal-planning` (`--milestone`), the roadmap section of `ARCH-01-introduction-and-goals`,
-`ADR-roadmap-and-milestones-ledger` (superseded in part). `CAP-VIEW-repository-viewer` is unchanged (answer-01, q1).
+### [AC-08] The guidance names the milestone's roadmap root
+- **Given** the shipped `spec` skill references `backlog.md`, `roadmap-catalog.md` and `milestone-completion.md`, the
+  `docs` bundle's milestone template, the `id_convention` and `spec_format` rule guides and the seeded
+  `ARCH-01-introduction-and-goals`
+- **When** an agent reads them
+- **Then** the Milestones section of `backlog.md` states both roots (`docs/roadmap/MS-<slug>.md` and
+  `docs/packages/<name>/roadmap/MS-<slug>.md`, `_archive/` for done/dropped) and that a lifecycle move stays inside
+  the milestone's roadmap root; `roadmap-catalog.md` no longer calls milestones global documents;
+  `milestone-completion.md` step 3 moves the file into the `_archive/` of the milestone's roadmap root; the template's
+  placement sentence names the roadmap root the milestone lives under; the rule guides' milestone row and scope
+  sentence name the namespace roadmap root; the guidance test asserts the reference wording, and none of the files
+  states that milestones are global only.
 
-#### Planning decisions
+## 5. Source feedback
 
-- Validation reuses `living_path` with the registered namespaces instead of a docs-root parameter on
-  `milestone_path_valid`: the mapping exists, keeps unregistered directories misplaced and leaves the global function
-  unchanged (Host decision within scope).
-- A proposal may name a milestone of another namespace or the global root; no same-namespace constraint is added,
-  since identity is repository-wide and a platform proposal may serve a package theme (Host decision within scope).
-- The goal citation of a namespace milestone stays a review-only recommendation, as the global one is; no rule is
-  added, and `PROP-namespace-steering` is neither a prerequisite nor planned jointly (Host decision within scope; Q2).
-- `packages/devkit-viewer/` stays excluded and `CAP-VIEW-repository-viewer` unchanged on the user's decision (answer-01,
-  q1): the viewer shows global milestones only and mis-renders cross-root edges until the follow-up
-  `FB-viewer-namespace-roadmap-roots` is taken up; it would enumerate `docs/packages/*/roadmap(/_archive)/MS-*.md` by
-  path pattern from the Git tree, since it reads no registry.
-- Challenger round 1 (historical Git `dbaf8f3812a2a01cb2254ddf8418349aba0517ce:docs/proposals/PROP-namespace-roadmap/envelopes/challenger-01.yaml`): finding 2 (the two-clause supersession pointer) is folded in
-  section 3 and closed in `reverify-01`; finding 1 (the viewer exclusion's cost) was the `Decision needed` behind q1,
-  decided by the user in `answer-01` and closed in `reverify-02`.
-- `boundaries.owns` gains the `docs` bundle (rule guides, tests, template, seed), both test trees and the governance
-  and delivery capability directories the inventory names; `size` stays `M` (one spec, one task kind).
-- `dev_effort` stays `medium`: two packages and five documents change, every change is covered by rule or command
-  tests and nothing is irreversible.
+None from Planning. The feedback carried in this bundle is deferred work, not input: `FB-viewer-namespace-roadmap-roots`
+(the viewer's roadmap roots, Non-Goal 5) and `FB-padr-default-slug-from-long-title` (Planning guidance, unrelated to
+this change).
 
-### 4. Lifecycle & Retirement Criteria
+## 6. Assumptions
 
-Planning settled Q1 to Q3 above; acceptance and handoff create one feature spec. Completion requires the rule and
-command tests above, synchronized references and a monorepo fixture in which `devkit rules check` reports no finding
-for a namespace milestone at each lifecycle location and `devkit docs list milestone` from the package directory lists
-it beside the global milestones.
-
-Non-goals: namespaced IDs or per-package ID spaces; per-namespace goals as ID-bearing documents; a namespace copy of
-`_archive/` semantics beyond the path; a rule that checks the goal citation; a namespace directory for proposals;
-external tracker synchronization of namespace roadmaps.
-
+- The remediation strings of `RULE-id-convention` keep their current shape (one sentence naming the valid locations,
+  then the fix command); only the location clause changes.
+- `devkit docs list milestone` needs no code change: the index already discovers `docs/packages/<name>/roadmap/` and
+  selection is namespace-generic; AC-06 pins that behavior.
+- A cross-namespace `depends_on` edge needs no code change: `RULE-document-reference` resolves repository-wide IDs;
+  AC-07 pins that behavior.
+- The "Superseded in part by" pointer the handoff wrote into `ADR-roadmap-and-milestones-ledger` is completed at
+  `living-spec-draft` to name the two replaced clauses, as `ADR-namespace-milestone-roots` lists them.
