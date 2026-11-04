@@ -57,15 +57,12 @@ Preparation and package selection do not activate SDD.
 
 1. Recheck the relevant source and dirty paths against report evidence.
    If they changed, invalidate affected observations and repeat the affected comparison/checks before readiness.
-2. Present the ready report/revision, retained scope, actual check outcomes, selected SDD assets and exact policy effects, including the integration provider.
-   If the provider is absent or `project`, present configuring `spec` as a necessary activation effect; retain an existing `spec` provider.
-   For another configured provider, verify its SDD readiness contract or report the unresolved compatibility before activation.
-   If that provider change is not authorized, report the mismatch and do not claim successful SDD adoption.
+2. Present the ready report/revision, retained scope, actual check outcomes, selected SDD assets and exact policy effects.
    Reuse an explicit user decision already bound to the same source and effects; otherwise obtain that decision now.
    Preparation intent alone does not authorize activation against an unknown final scope.
 3. Edit only `.devkit/config.toml` to set `[development] approach = "sdd"`; preserve the rest of the shared configuration.
    Use the existing `[development]` table when present instead of creating a duplicate table.
-   If the authorized effects include the necessary provider change, set `[integration] provider = "spec"` in the same shared configuration.
+   Integration requires no readiness-provider selection; an existing `[integration] provider` is ignored.
    Preserve approval, worktree, other integration and project-check settings unless their change was authorized.
    Do not introduce a universal SDD settings profile or a second approach source.
 4. Run `uv run devkit sync`, `uv run devkit config show`, `uv run devkit spec policy` and `uv run devkit sync --check`.

@@ -82,6 +82,8 @@ capabilities:
   the agent cannot handle it itself: the workflow enters the `exception` stage, which ends only when the user has
   handled the cause, then returns to the stage that raised it (`CAP-DLV-delivery-workflows`); resumes at step 7.
 
+- **\*b.** A final check fails after confirmed landing: the Host retains completed effects, repairs the target in scope and rechecks with its synchronized runtime; delivery stays unfinished until required checks pass (`CAP-DLV-delivery-workflows`).
+
 ---
 
 ## 4. Postconditions
@@ -89,8 +91,7 @@ capabilities:
 - **Success guarantee**: Each problem that stopped the work is named by a `resolution` written by whoever fixed it,
   the Unit is no longer held, and the workflow continues from where the Unit stood; or the task is closed with its
   learnings preserved and its unmerged branch dropped.
-- **Minimal guarantee**: An unresolved problem keeps the Unit held: no gate passes, no handoff runs and no merge
-  lands. The failed range, head, open findings and attempted remedies stay in Git. Nothing is deleted without the
+- **Minimal guarantee**: An unresolved problem keeps the Unit held: the Host allows no gate, handoff or merge after source-runtime hold inspection. The failed range, head, open findings and attempted remedies stay in Git. Nothing is deleted without the
   user's decision, and the base branch receives nothing from a held or closed task.
 
 ---
@@ -111,8 +112,7 @@ capabilities:
 - **Given**: an active Unit branch holding an unresolved problem envelope
 - **When**: the agent or developer resolves the underlying issue and records a `resolution` envelope that names the
   `worker` envelope file in `resolves:`
-- **Then**: `devkit workflow envelope check --unit <dir>` reports no `[BLOCKED]` line, and the gates and the
-  integration guard let the Unit progress
+- **Then**: `devkit workflow envelope check --unit <dir>` reports no `[BLOCKED]` line, and the gates and Host branch checks let the Unit progress
 
 ### Scenario 3: A choice inside the agreed intent does not stop the work
 - **Covers**: 1a
@@ -175,3 +175,9 @@ capabilities:
 - **When**: the agent returns the stage to `exception` with the cause and evidence
 - **Then**: the stage stays current until `exception-handled` is given by the user, then returns to `integrate`, and
   no new task is opened to bypass the cap
+
+### Scenario 12: Final verification fails after confirmed landing
+- **Covers**: *b
+- **Given**: Git integration and cleanup completed, but setup, imports or final project checks fail
+- **When**: the Host handles the failure
+- **Then**: delivery remains unfinished, landed history is retained, and in-scope target repair plus passing rechecks of the resulting HEAD precede completion; the merge is not replayed

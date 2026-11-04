@@ -237,7 +237,7 @@ through `uv run devkit add docs:docs-skeleton`; existing seeded files remain pro
 
 When the approved installation is for adaptive development, use devkit-docs plus devkit-catalog and explicitly select
 `uv run devkit add adaptive-dev`. Configure shared `[development] approach = "adaptive-dev"` and inspect
-`uv run devkit config show`; the optional independent integration provider is `project`. Follow
+`uv run devkit config show`; integration requires no readiness-provider selection. Follow
 [the adaptive development setup](../INSTALL_GUIDE.md#adaptive-development) for the complete configuration.
 
 Start or resume with `/adaptive-dev`. Product iteration and optional roles impose no mandatory team sequence. The
@@ -255,3 +255,7 @@ projections and announces the separate research bundle once with `BUNDLE_UNSELEC
 - Preserve host tool and sandbox restrictions through the invoking host; skill-local role files do not apply native execution settings.
 - Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
   refused until then.
+
+After approved integration lands, synchronize the target environment from its landed dependency declarations and
+run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
+report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.

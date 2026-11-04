@@ -124,3 +124,11 @@ them.
 Keep current goals, choices versus assumptions, source-specific checks, unresolved evidence and exact note links,
 retained research material IDs, useful surviving alternatives/reopening conditions and the next action. Remove superseded experiments only when
 they no longer inform work. A fresh context rechecks identities and applicability instead of replaying history.
+
+## Integration and final verification
+
+Adaptive development uses the same explicit-branch Git integration as SDD without task labels, claims or provider
+selection. The Host performs independent branch checks and, after approved landing and cleanup, synchronizes the
+landed dependencies and runs required final checks in fresh processes. No implicit Unit or verification ledger is
+created. A final failure leaves delivery unfinished until target repair and recheck pass
+(`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`).

@@ -59,14 +59,9 @@ Authorized activation edits only the necessary shared settings:
 [development]
 approach = "sdd"
 
-[integration]
-provider = "spec"
 ```
 
-Retain an existing `spec` provider. If the provider is absent or the project uses `project`, present configuring `spec` as an
-explicit activation effect requiring authority. Without that authority, report the mismatch and claim no successful
-adoption. Preserve approval, worktree, other integration and project-check settings unless their change was authorized.
-This example is not a universal settings profile or a command to overwrite the configuration.
+Integration requires no provider selection. An existing `[integration] provider` is ignored; preserve unrelated policy and check settings.
 
 ```bash
 uv run devkit sync
@@ -84,3 +79,7 @@ actual partial state and the supported recovery; claim neither successful adopti
 from the existing report after rechecking its evidence. Preserve unrelated edits and existing SDD history.
 
 The current contract is `CAP-DLV-sdd-baseline-adoption`; the actor flow is `UC-adopt-sdd-from-adaptive-development`.
+
+After approved integration lands, synchronize the target environment from its landed dependency declarations and
+run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
+report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.

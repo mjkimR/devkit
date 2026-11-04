@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
 import pytest
-from devkit_agt.features.integration import AuthorityError, IntegrationService, Task
+from devkit_agt.features.integration import AuthorityError, IntegrationService
 from devkit_agt.features.worktree import RemoveFailedError, locate, start
 from testsupport.rules import git, init_repo, write
 
-TASK = Task("session", "fixture-task")
 
-
-def integrate(service: IntegrationService, task: Task = TASK, route: str = "local"):
+def integrate(service: IntegrationService, route: str = "local"):
     """A CLI invocation under automatic policy: no presented digest is needed."""
-    return service.execute_cli("dev-demo", task, route)
+    return service.execute_cli("dev-demo", route)
 
 
 @pytest.fixture
@@ -110,10 +108,9 @@ def test_source_only_auto_still_requires_ask(repo):
     config.write_text(config.read_text() + '[workflow.approvals]\ndev-integration="auto"\n')
     git(worktree, "add", ".")
     git(worktree, "commit", "-qm", "source-only auto")
-    task = Task("session", "fixture", claims_json='{"approved": true}')
-    assert IntegrationService(base).prepare("dev-demo", task).request.approval_policy == "ask"
+    assert IntegrationService(base).prepare("dev-demo").request.approval_policy == "ask"
     with pytest.raises(AuthorityError):
-        integrate(IntegrationService(base), task)
+        integrate(IntegrationService(base))
     assert worktree.exists()
 
 

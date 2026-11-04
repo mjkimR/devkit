@@ -48,7 +48,7 @@ state the next job depends on.
    with the job; changed refs/scope, dirty resources, active writers or missing authority preserve resources and
    return the exact blocker to the Host. Do not silently refresh a job's authorized refs or digest.
 3. Run the existing guarded CLI operation with exact arguments within `allowed_boundaries` and authority.
-   Readiness refusals return required source preparation; never author production fixes to make readiness pass.
+   Git refusals return required source preparation; never author production fixes. Return confirmed landing with verification pending for Host runtime synchronization and final checks.
    Run removal from the retained base with a runtime outside the worktree being removed.
 4. After partial or unknown effects, inspect live CLI/Git state before attempting only a verified supported
    remaining operation within current authority. Preserve recovery identity and completed effects. Normal
@@ -133,7 +133,7 @@ so. The list status is `completed` only when every listed item is `completed`, e
 item is `needs_input`, else `failed`; add no `partial` status.
 
 Keep evidence kinds apart: the original CLI result, the role status, your Git observations, host emulation and
-remaining work. A host refusal before dispatch is a blocker code with that null CLI result; CLI readiness or `auto`
+remaining work. A host refusal before dispatch is a blocker code with that null CLI result; CLI Git policy or `auto`
 policy is never host permission, and a denial or later reauthorization is an observation, not a reusable credential.
 Report isolated fixtures, replays and untested cases as such, and never report unmeasured cost or latency as an
 improvement.

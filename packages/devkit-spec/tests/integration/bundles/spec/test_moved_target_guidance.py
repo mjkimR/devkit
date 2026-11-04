@@ -13,8 +13,6 @@ def test_integrate_step_one_merges_the_base_only_after_a_reported_refusal(enviro
         integrate,
         "1. Merge the base into the task branch only to resolve what the CLI reports",
         "`WORKTREE_MERGE_CONFLICT`",
-        "`INTEGRATION_RECEIPT_CONFLICT`",
-        "`INTEGRATION_NOT_READY`",
         "never rebase",
         "`devkit generated resolve` first",
         "`devkit rules fix`",
@@ -51,7 +49,9 @@ def test_orchestrate_completion_runs_the_batch_tests_once_finished_units_include
         "`just test-affected --base <batch start>`",
         "full fallback",
         "feedback",
-        "revert nothing",
+        "Every landed unit stays pending",
+        "Repair a failing target and recheck",
+        "never automatically roll back",
         "integrated no unit runs nothing",
     )
 
@@ -64,7 +64,12 @@ def test_proposal_review_merges_the_base_only_to_resolve_a_refusal() -> None:
 
 def test_completion_reference_makes_the_base_merge_conditional() -> None:
     completion = raw("skills/spec/references/completion.md")
-    assert_rule(completion, "CI rules on the merged result", "only to resolve a conflict or failing check")
+    assert_rule(
+        completion,
+        "Integration checks Git effects only",
+        "synchronizes declared dependencies in a fresh process",
+        "final project checks",
+    )
     assert "prepare the task branch against the base" not in completion
 
 
@@ -75,7 +80,7 @@ def test_seeded_generated_artifacts_are_presented_and_regenerated_on_the_base(en
     assert_rule(integrate, "A conflict confined to registered generated files does not refuse", "`generated`")
     assert_rule(
         integrate,
-        "6. After bundle changes land",
+        "7. After bundle changes land",
         "`generated.regenerate` command in the base checkout",
         "commit the regenerated files",
         "batch completion step",
@@ -97,4 +102,23 @@ def test_batch_test_run_regenerates_stale_generated_artifacts_first() -> None:
     )
     operations = raw("skills/spec-orchestrate/references/git-operator-operations.md")
     assert_rule(operations, "`prepare-integration`", "any `generated` artifacts kept from one side")
-    assert_rule(operations, "`execute-integration`", "return the `generated` disclosure when present")
+    assert_rule(operations, "`execute-integration`", "the `generated` disclosure when present", "verification=pending")
+
+
+@pytest.mark.parametrize("environment", ["local", "cloud"])
+def test_final_verification_follows_landing_setup_and_regeneration(environment):
+    integrate = raw("skills/spec-integrate/SKILL.md", environment)
+    markers = [
+        "6. After landing",
+        "7. After bundle changes land",
+        "8. Run required final project checks",
+        "9. If setup, imports or final checks fail",
+        "10. Report Git effects",
+    ]
+    assert [integrate.index(marker) for marker in markers] == sorted(integrate.index(marker) for marker in markers)
+    assert "saved premerge target SHA" in integrate and "never the target branch compared to itself" in integrate
+    assert "full fallback" in integrate and "frontend checks" in integrate
+    assert "Do not replay the merge or automatically roll back" in integrate
+    assert "verification=pending" in integrate and "delivery complete only after final verification passes" in integrate
+    assert "INTEGRATION_RULE_RUNTIME_MISMATCH" not in integrate
+    assert "--task-kind" not in integrate and "--claims" not in integrate

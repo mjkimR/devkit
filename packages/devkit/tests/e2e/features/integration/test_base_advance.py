@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -13,9 +15,7 @@ from pathlib import Path
 import devkit_agt.features.integration.usecases.service as service_module
 import pytest
 from devkit.advisory import ActionMode, Actor
-from devkit_agt.features.integration import IntegrationService, ProviderError, Task
-from devkit_agt.features.integration.models.errors import ReceiptConflictError
-from devkit_agt.features.integration.repositories.receipts import check_merge
+from devkit_agt.features.integration import IntegrationService
 from devkit_agt.features.worktree import (
     CommitFailedError,
     GitUnsupportedError,
@@ -25,7 +25,6 @@ from devkit_agt.features.worktree import (
 from devkit_core.core.locks import file_lock
 from testsupport.rules import git, write
 
-TASK = Task("session", "fixture-task")
 LOCK = ".git/devkit-integration.lock"
 
 
@@ -38,7 +37,7 @@ def commit(root: Path, rel: str, text: str = "x\n") -> str:
 
 def integrate(service: IntegrationService, action=None):
     """One Host-approved CLI invocation; ``action`` runs after the call's own preparation, before its build."""
-    digest = service.prepare("dev-demo", TASK).request.digest
+    digest = service.prepare("dev-demo").request.digest
     if action is not None:
         prepare = service.prepare
 
@@ -48,15 +47,12 @@ def integrate(service: IntegrationService, action=None):
             return result
 
         service.prepare = prepared  # type: ignore[method-assign]
-    return service.execute_cli("dev-demo", TASK, expected_digest=digest)
+    return service.execute_cli("dev-demo", expected_digest=digest)
 
 
 def test_clean_advance_after_preparation_lands_a_merge_commit(repo, ready_provider, monkeypatch):
     base, worktree = repo
     tip, target = git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
-    guards = []
-    original = service_module.run_finish_guards
-    monkeypatch.setattr(service_module, "run_finish_guards", lambda *args: guards.append(args[2:]) or original(*args))
     moved = []
     result = integrate(IntegrationService(base), lambda: moved.append(commit(base, "theirs.txt")))
     assert result.status == "completed", result.errors
@@ -64,9 +60,7 @@ def test_clean_advance_after_preparation_lands_a_merge_commit(repo, ready_provid
     assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved[0], tip]
     assert set(git(base, "ls-tree", "--name-only", "HEAD").split()) >= {"theirs.txt", "ready.txt"}
     assert result.build() == {"confirmation_target": target, "build_target": moved[0], "result": head}
-    built = ready_provider.calls[-1]
-    assert built.finish.target_sha == moved[0] and built.result_sha == head
-    assert guards[-1] == (target, tip)  # merge-base(build target, source) and the source tip
+    assert ready_provider.calls == [] and result.verification == "pending"
     assert not worktree.exists()
 
 
@@ -87,7 +81,7 @@ def test_ff_only_in_the_source_policy_fast_forwards_and_refuses_an_advance(repo)
     commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
     tip = git(worktree, "rev-parse", "HEAD")
     service = IntegrationService(base)
-    assert service.prepare("dev-demo", TASK).request.approval_scope()["merge_method"] == "ff-only"
+    assert service.prepare("dev-demo").request.approval_scope()["merge_method"] == "ff-only"
     moved = []
     refused = integrate(service, lambda: moved.append(commit(base, "theirs.txt")))
     assert refused.status == "blocked" and refused.errors[0].code == "WORKTREE_MERGE_NOT_FF"
@@ -147,7 +141,6 @@ def test_receipt_and_asset_only_advance_is_absorbed(repo):
         '[integration]\nprovider = "fixture"\n[worktree]\ndelete_branch = false\n',
         '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n',
         '[integration]\nprovider = "fixture"\n[worktree]\npull_request = "required"\n',
-        '[integration]\nprovider = "other"\n',
         '[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n',
     ],
 )
@@ -159,7 +152,7 @@ def test_policy_advance_is_stale(repo, config):
     assert git(base, "rev-parse", "HEAD") == moved[0] and worktree.exists()
 
 
-def test_merge_that_leaves_a_receipt_record_inconsistent_is_refused(tmp_path, repo):
+def test_merge_defers_receipt_consistency_until_landed_runtime(tmp_path, repo):
     base, worktree = repo
     lines = b"one\ntwo\nthree\nfour\nfive\n"
     write(base, "managed.md", lines)
@@ -178,59 +171,16 @@ def test_merge_that_leaves_a_receipt_record_inconsistent_is_refused(tmp_path, re
         return moved.append(commit(base, "managed.md", lines.replace(b"five", b"FIVE").decode()))
 
     result = integrate(IntegrationService(base), action)
-    assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_RECEIPT_CONFLICT"
-    assert list(result.errors[0].target_files) == ["managed.md"]
-    assert git(base, "rev-parse", "HEAD") == moved[0] and worktree.exists()
-
-
-def test_receipt_check_skips_untracked_and_parent_inconsistencies(repo):
-    base, _ = repo
-    write(base, ".devkit/installation.json", _receipt({".claude/x.md": b"a\n", "stale.md": b"recorded\n"}))
-    write(base, "stale.md", "different\n")  # already inconsistent on the parent
-    git(base, "add", ".")
-    git(base, "commit", "-qm", "receipt")
-    head = git(base, "rev-parse", "HEAD")
-    check_merge(base, head, (head, git(base, "rev-parse", "HEAD~1")))
-    write(base, ".devkit/installation.json", "{broken")
-    git(base, "commit", "-qam", "broken receipt")
-    with pytest.raises(Exception) as raised:
-        check_merge(base, git(base, "rev-parse", "HEAD"), (head,))
-    assert getattr(raised.value, "code", "") == "INTEGRATION_RECEIPT_CONFLICT"
-
-
-@pytest.mark.parametrize("disclosure", ["", "two\nlines", "x" * 201])
-def test_missing_or_malformed_disclosure_fails_closed(repo, ready_provider, disclosure):
-    base, _ = repo
-    ready_provider.disclosure = disclosure
-    with pytest.raises(ProviderError):
-        IntegrationService(base).prepare("dev-demo", TASK)
-
-
-def test_changed_source_bound_evidence_at_the_build_is_stale(repo, ready_provider, monkeypatch):
-    base, worktree = repo
-    original = type(ready_provider).check
-
-    def check(self, context):
-        value = original(self, context)
-        if context.result_sha is not None:
-            from dataclasses import replace
-
-            from devkit_agt.features.integration import Evidence
-
-            return replace(value, evidence=(*value.evidence, Evidence("EXTRA", "changed")))
-        return value
-
-    monkeypatch.setattr(type(ready_provider), "check", check)
-    result = integrate(IntegrationService(base))
-    assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_REQUEST_STALE"
-    assert worktree.exists()
+    assert result.status == "completed" and result.verification == "pending"
+    assert git(base, "show", "HEAD:managed.md") == "ONE\ntwo\nthree\nfour\nFIVE"
+    assert not worktree.exists()
 
 
 def test_prepared_scope_states_the_target_and_the_disclosure(repo):
     base, _ = repo
-    request = IntegrationService(base).prepare("dev-demo", TASK).request
+    request = IntegrationService(base).prepare("dev-demo").request
     scope = request.approval_scope()
-    assert scope["readiness"] == {"disclosure": "fixture checks on the merged result only"}
+    assert "readiness" not in scope
     assert scope["target"] == {"branch": "main", "sha": request.context.finish.target_sha}
     assert scope["merge_method"] == "no-ff" and scope["already_merged"] is False
 
@@ -240,7 +190,7 @@ def test_already_merged_branch_is_a_cleanup_only_request(repo):
     git(base, "merge", "-q", "--no-ff", "-m", "chore(merge): integrate dev-demo into main", "dev-demo")
     head = git(base, "rev-parse", "HEAD")
     service = IntegrationService(base)
-    assert service.prepare("dev-demo", TASK).request.approval_scope()["already_merged"] is True
+    assert service.prepare("dev-demo").request.approval_scope()["already_merged"] is True
     result = integrate(service)
     assert result.status == "completed" and result.steps["merge"] == "skipped"
     assert result.request.approval_scope()["already_merged"] is True and result.build_target is None
@@ -251,19 +201,12 @@ def test_already_merged_branch_is_a_cleanup_only_request(repo):
 def test_moved_target_before_preparation_lands_a_merge_without_a_base_merge(repo, ready_provider, monkeypatch):
     """``ADR-moved-target-merge``: the source need not contain a conflict-free moved target."""
     base, worktree = repo
-    tip, cut = git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
+    tip = git(worktree, "rev-parse", "HEAD")
     moved = commit(base, "theirs.txt")
-    guards = []
-    original = service_module.run_finish_guards
-    monkeypatch.setattr(service_module, "run_finish_guards", lambda *args: guards.append(args[2:]) or original(*args))
     service = IntegrationService(base)
-    request = service.prepare("dev-demo", TASK).request
-    prepared = ready_provider.calls[-1]
+    request = service.prepare("dev-demo").request
     assert request.context.result_sha is None and request.context.finish.target_sha == moved
-    assert prepared.result_sha is not None and prepared.finish.target_sha == moved
-    assert git(base, "rev-parse", f"{prepared.result_sha}^1", f"{prepared.result_sha}^2").split() == [moved, tip]
-    assert guards[-1] == (cut, tip)  # merge-base(target, source) and the source tip
-    assert prepared.result_sha not in git(base, "for-each-ref", "--format=%(objectname)")
+    assert ready_provider.calls == []
     result = integrate(service)
     assert result.status == "completed", result.errors
     head = git(base, "rev-parse", "HEAD")
@@ -278,7 +221,7 @@ def test_moved_target_conflict_refuses_at_prepare_with_nothing_changed(repo):
     moved = commit(base, "README.md", "theirs\n")
     before = git(base, "show-ref")
     with pytest.raises(MergeConflictError) as raised:
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
     assert "resolve the conflict" in (raised.value.fix or "") and "never rebase" in (raised.value.fix or "")
     assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
     assert git(base, "rev-parse", "dev-demo") == tip and worktree.exists()
@@ -301,7 +244,7 @@ def test_moved_target_that_changed_integration_policy_integrates(repo, config, b
     assert result.authority == ("policy" if "auto" in config else "host-conversation")
 
 
-def test_moved_target_that_leaves_a_receipt_record_inconsistent_refuses_at_prepare(repo):
+def test_moved_target_receipt_consistency_waits_for_final_checks(repo):
     base, worktree = repo
     lines = b"one\ntwo\nthree\nfour\nfive\n"
     write(base, "managed.md", lines)
@@ -315,21 +258,21 @@ def test_moved_target_that_leaves_a_receipt_record_inconsistent_refuses_at_prepa
     git(worktree, "add", ".")
     git(worktree, "commit", "-qm", "re-sync")
     moved = commit(base, "managed.md", lines.replace(b"five", b"FIVE").decode())
-    with pytest.raises(ReceiptConflictError) as raised:
-        IntegrationService(base).prepare("dev-demo", TASK)
-    assert list(raised.value.target_files) == ["managed.md"] and "prepare again" in (raised.value.fix or "")
+    prepared = IntegrationService(base).prepare("dev-demo")
+    assert prepared.verification == "not_started"
     assert git(base, "rev-parse", "HEAD") == moved and worktree.exists()
+    assert integrate(IntegrationService(base)).verification == "pending"
 
 
 def test_moved_target_digest_does_not_depend_on_identity_or_time_zone(repo, monkeypatch):
     base, worktree = repo
     commit(base, "theirs.txt")
-    digest = IntegrationService(base).prepare("dev-demo", TASK).request.digest
+    digest = IntegrationService(base).prepare("dev-demo").request.digest
     monkeypatch.setenv("TZ", "Pacific/Kiritimati")
     monkeypatch.setenv("GIT_COMMITTER_NAME", "Someone Else")
     monkeypatch.setenv("GIT_COMMITTER_EMAIL", "else@example.invalid")
-    assert IntegrationService(base).prepare("dev-demo", TASK).request.digest == digest
-    result = IntegrationService(base).execute_cli("dev-demo", TASK, expected_digest=digest)
+    assert IntegrationService(base).prepare("dev-demo").request.digest == digest
+    result = IntegrationService(base).execute_cli("dev-demo", expected_digest=digest)
     assert result.status == "completed", result.errors
     assert not worktree.exists()
 
@@ -339,7 +282,7 @@ def test_moved_target_under_ff_only_still_refuses_at_prepare(repo):
     commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
     moved = commit(base, "theirs.txt")
     with pytest.raises(MergeNotFastForwardError) as raised:
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
     assert raised.value.actor is Actor.TOOL and raised.value.mode is ActionMode.AUTO
     fix = raised.value.fix or ""
     assert "never rebase" in fix and "rebase or merge" not in fix
@@ -353,7 +296,7 @@ def test_moved_target_needs_merge_tree_support(repo, monkeypatch):
     commit(base, "theirs.txt")
     monkeypatch.setattr(merging, "git_version", lambda _base: (2, 37))
     with pytest.raises(GitUnsupportedError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
 
 
 def test_moved_target_without_identity_is_refused_before_the_confirmation(repo):
@@ -361,14 +304,14 @@ def test_moved_target_without_identity_is_refused_before_the_confirmation(repo):
     commit(base, "theirs.txt")
     git(base, "config", "user.name", "")
     with pytest.raises(CommitFailedError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
 
 
 def test_missing_identity_is_refused_before_the_confirmation(repo):
     base, _ = repo
     git(base, "config", "user.name", "")
     with pytest.raises(CommitFailedError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
 
 
 def test_lock_released_within_the_wait_lets_the_build_run(repo, monkeypatch):
@@ -502,10 +445,8 @@ def test_receipt_only_conflict_is_seeded_from_the_target_and_disclosed(repo, rea
         base, worktree, {receipt: (_projection("base"), _projection("source"), _projection("target"))}
     )
     service = IntegrationService(base)
-    prepared = service.prepare("dev-demo", TASK)
-    prospective = ready_provider.calls[-1].result_sha
-    assert prospective is not None
-    assert git(base, "show", f"{prospective}:{receipt}") == _projection("target").rstrip("\n")
+    prepared = service.prepare("dev-demo")
+    assert ready_provider.calls == []
     assert [(item.id, item.paths, item.seed, item.kept) for item in prepared.seeded] == [
         ("devkit-receipt", (receipt,), "ours", "target")
     ]
@@ -517,7 +458,7 @@ def test_receipt_only_conflict_is_seeded_from_the_target_and_disclosed(repo, rea
     result = integrate(service)
     assert result.status == "completed", result.errors
     assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
-    assert git(base, "rev-parse", "HEAD^{tree}") == git(base, "rev-parse", f"{prospective}^{{tree}}")
+    assert git(base, "show", f"HEAD:{receipt}") == _projection("target").rstrip("\n")
     assert result.compact_dict()["generated"] == generated
     assert [item.code for item in result.notices] == ["INTEGRATION_GENERATED_SEEDED"]
 
@@ -555,14 +496,14 @@ def test_receipt_conflict_beside_another_conflict_refuses_with_nothing_changed(r
     )
     before = git(base, "show-ref")
     with pytest.raises(MergeConflictError) as raised:
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
     assert raised.value.details == (detail,) and "Merge the target branch" in (raised.value.fix or "")
     assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
     assert git(base, "rev-parse", "dev-demo") == tip and worktree.exists()
     assert git(worktree, "status", "--porcelain") == "" and git(base, "status", "--porcelain") == ""
 
 
-def test_seeded_receipt_that_leaves_a_record_inconsistent_refuses(repo, ready_provider):
+def test_seeded_receipt_consistency_is_verified_after_sync(repo, ready_provider):
     base, worktree = repo
     lines = b"one\ntwo\n"
     ours = b"ONE\ntwo\n"
@@ -579,14 +520,13 @@ def test_seeded_receipt_that_leaves_a_record_inconsistent_refuses(repo, ready_pr
             ),
         },
     )
-    with pytest.raises(ReceiptConflictError) as raised:
-        IntegrationService(base).prepare("dev-demo", TASK)
-    assert list(raised.value.target_files) == ["managed.md"]
-    prospective = ready_provider.calls[-1].result_sha
-    assert git(base, "show", f"{prospective}:.devkit/installation.json") == git(
+    result = integrate(IntegrationService(base))
+    assert result.verification == "pending" and result.status == "completed"
+    assert ready_provider.calls == []
+    assert git(base, "show", "HEAD:.devkit/installation.json") == git(
         base, "show", f"{moved}:.devkit/installation.json"
     )
-    assert git(base, "rev-parse", "HEAD") == moved and git(base, "rev-parse", "dev-demo") == tip
+    assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
 
 
 def test_registry_committed_at_the_target_decides(repo):
@@ -600,7 +540,7 @@ def test_registry_committed_at_the_target_decides(repo):
         {".devkit/installation.json": (_projection("base"), _projection("source"), _projection("target"))},
     )
     with pytest.raises(MergeConflictError) as raised:
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
     assert raised.value.details == (".devkit/installation.json: owned by no generated artifact",)
 
 
@@ -624,8 +564,34 @@ def test_composed_acceptance_preparation_settles_no_conflict(repo, composed):
     service = IntegrationService(base)
     with pytest.raises(MergeConflictError):
         if composed == "lifecycle":
-            service._prepare("dev-demo", TASK, lifecycle=_Lifecycle())  # type: ignore[arg-type]
+            service._prepare("dev-demo", lifecycle=_Lifecycle())  # type: ignore[arg-type]
         else:
-            service._prepare("dev-demo", TASK, settle_generated=False)
+            service._prepare("dev-demo", settle_generated=False)
     assert git(base, "show-ref") == before and git(base, "rev-parse", "HEAD") == moved
     assert git(base, "rev-parse", "dev-demo") == tip and git(base, "status", "--porcelain") == ""
+
+
+def test_final_check_failure_is_repaired_on_landed_target_without_merge_replay(repo):
+    """The Host checks fresh processes and repairs a descendant after integration cleanup."""
+    base, worktree = repo
+    check = "from pathlib import Path; assert int(Path('source.txt').read_text()) * int(Path('target.txt').read_text()) <= 2"
+    commit(base, "source.txt", "1\n")
+    commit(base, "target.txt", "1\n")
+    git(worktree, "merge", "-qm", "adopt common check inputs", "main")
+    commit(worktree, "source.txt", "2\n")
+    assert subprocess.run([sys.executable, "-c", check], cwd=worktree, check=False).returncode == 0
+    # Each branch passes alone; their independent changes fail only when combined.
+    commit(base, "target.txt", "2\n")
+    assert subprocess.run([sys.executable, "-c", check], cwd=base, check=False).returncode == 0
+    saved_target = git(base, "rev-parse", "HEAD")
+    result = integrate(IntegrationService(base))
+    landed = git(base, "rev-parse", "HEAD")
+    assert result.status == "completed" and result.landed_sha == landed
+    assert result.verification == "pending" and not worktree.exists()
+    failed = subprocess.run([sys.executable, "-c", check], cwd=base, capture_output=True, check=False)
+    assert failed.returncode == 1 and b"AssertionError" in failed.stderr
+    repaired = commit(base, "source.txt", "1\n")
+    assert git(base, "rev-parse", "HEAD^1") == landed and repaired != landed
+    assert subprocess.run([sys.executable, "-c", check], cwd=base, check=False).returncode == 0
+    assert git(base, "rev-list", "--count", "--first-parent", "--merges", f"{saved_target}..HEAD") == "1"
+    assert "ready.txt" in git(base, "diff", "--name-only", saved_target, "HEAD")

@@ -22,53 +22,35 @@ def digest(value: Any) -> str:
     ).hexdigest()
 
 
-@dataclass(frozen=True)
-class Task:
-    kind: str
-    id: str
-    unit: str | None = None
-    # Caller declarations are distinct from provider-verified evidence and are never approval authority.
-    claims_json: str = "{}"
-
-
-def _task_arguments(branch: str, task: Task, route: str) -> str:
-    """The arguments that name ``branch``, ``task`` and ``route`` to ``devkit integration prepare|integrate``."""
-    parts = [branch, "--task-kind", task.kind, "--task-id", task.id]
-    if task.unit is not None:
-        parts += ["--unit", task.unit]
+def _branch_arguments(branch: str, route: str) -> str:
+    parts = [branch]
     if route != "local":
         parts += ["--route", route]
-    if task.claims_json != "{}":
-        parts += ["--claims", task.claims_json]
     return " ".join(shlex.quote(part) for part in parts)
 
 
-def prepare_command(branch: str, task: Task, route: str, *, workspace: str | None = None) -> str:
-    """The exact ``prepare`` command that shows the scope of ``branch`` for ``task`` on ``route``."""
+def prepare_command(branch: str, route: str, *, workspace: str | None = None) -> str:
+    """The exact command showing the approved Git scope."""
     where = f" -w {shlex.quote(workspace)}" if workspace is not None else ""
-    return devkit_command(f"integration prepare {_task_arguments(branch, task, route)}{where}")
+    return devkit_command(f"integration prepare {_branch_arguments(branch, route)}{where}")
 
 
-def integrate_command(branch: str, task: Task, route: str, digest: str | None, *, workspace: str | None = None) -> str:
-    """The exact ``integrate`` command for the prepared scope whose digest is ``digest`` (none under ``auto``)."""
+def integrate_command(branch: str, route: str, digest: str | None, *, workspace: str | None = None) -> str:
+    """The exact command executing the prepared Git scope."""
     pinned = f" --expected-digest {digest}" if digest else ""
     where = f" -w {shlex.quote(workspace)}" if workspace is not None else ""
-    return devkit_command(f"integration integrate {_task_arguments(branch, task, route)}{pinned}{where}")
+    return devkit_command(f"integration integrate {_branch_arguments(branch, route)}{pinned}{where}")
 
 
 @dataclass(frozen=True)
 class IntegrationContext:
-    """What a provider, guard or cleanup extension checks.
+    """Git context for proposal acceptance and scoped cleanup.
 
-    At ``prepare`` this is the approved context: ``finish.target_sha`` is the confirmation target and ``result_sha``
-    is ``None`` (nothing is built). When the source does not contain the confirmation target, a provider receives at
-    ``prepare`` a prospective context instead: ``result_sha`` is an unsigned prospective merge commit that never lands
-    (``ADR-moved-target-merge``). At each build the service passes an execution context: ``finish.target_sha`` is
-    the build target (the confirmation target or a descendant) and ``result_sha`` the commit that would land.
+    ``finish.target_sha`` is the confirmed or current build target; ``result_sha``
+    is a prospective Git build when one is needed, never proof of actual landing.
     """
 
     finish: FinishPlan
-    task: Task
     network: str = "forbid"
     result_sha: str | None = None
 
@@ -81,37 +63,14 @@ class Evidence:
 
 @dataclass(frozen=True)
 class Readiness:
-    """A provider's verdict bound to the context's source, target and result commits.
-
-    ``target_bound`` names the evidence codes whose values may change when the target advances (all other evidence
-    must equal the approved evidence at each build); ``disclosure`` is the one-line, at most 200-character statement
-    of what the provider checks on the merged result, included in the report the Host presents before approval. Both
-    are part of the request digest.
-    """
+    """Internal proposal-acceptance eligibility evidence bound to reviewed commits."""
 
     source_sha: str
     target_sha: str
     evidence: tuple[Evidence, ...]
     reasons: tuple[str, ...] = ()
     result_sha: str | None = None
-    target_bound: tuple[str, ...] = ()
     disclosure: str = ""
-    landed_check: str = ""
-
-    def comparable(self) -> tuple[object, ...]:
-        """The part a build's readiness must repeat: everything except target-bound evidence and the commits."""
-        bound = set(self.target_bound)
-        return (
-            self.source_sha,
-            tuple(item for item in self.evidence if item.code not in bound),
-            self.target_bound,
-            self.disclosure,
-            self.landed_check,
-        )
-
-
-class ReadinessProvider(Protocol):
-    def check(self, context: IntegrationContext) -> Readiness: ...
 
 
 @dataclass(frozen=True)
@@ -150,13 +109,10 @@ class CleanupScope:
 class IntegrationRequest:
     id: str
     context: IntegrationContext
-    provider: str
-    provider_identity: str
     policy_digest: str
     post_policy_digest: str
-    guards: tuple[str, ...]
-    readiness: Readiness
     cleanup: tuple[CleanupScope, ...]
+    acceptance: Readiness | None = None
     route: str = "local"
     repository: Repository | None = None
     pr_number: int | None = None
@@ -179,7 +135,6 @@ class IntegrationRequest:
             "digest": self.digest,
             "approval": {"gate": self.approval_gate, "policy": self.approval_policy},
             "repository": plan.base,
-            "task": {"kind": self.context.task.kind, "id": self.context.task.id},
             "source": {"branch": plan.branch, "sha": plan.source_sha},
             "target": {"branch": plan.target_branch, "sha": plan.target_sha},
             "worktree": {"path": plan.path, "remove": plan.worktree_identity is not None},
@@ -197,7 +152,6 @@ class IntegrationRequest:
             "route": self.route,
             "remote": self.repository.public_scope() if self.repository else None,
             "pull_request": self._pull_request(),
-            "readiness": {"disclosure": self.readiness.disclosure},
         }
 
     def _pull_request(self) -> int | str | None:
@@ -260,11 +214,17 @@ class IntegrationResult:
     # The latest build of this process, outside the request digest: the target it read and the commit it built.
     build_target: str | None = None
     result_sha: str | None = None
+    landed_sha: str | None = None
     build_checked: bool = False
     pull_request: dict[str, Any] = field(default_factory=dict)
     landing: dict[str, Any] = field(default_factory=dict)
     # The generated artifacts the latest build (prospective at prepare, real at integrate) kept from one side.
     seeded: tuple[SeededArtifact, ...] = ()
+
+    @property
+    def verification(self) -> str:
+        """Only a confirmed landing starts Host-owned final verification."""
+        return "pending" if self.landed_sha is not None else "not_started"
 
     def build(self) -> dict[str, Any] | None:
         if self.build_target is None:
@@ -286,6 +246,8 @@ class IntegrationResult:
         result: dict[str, Any] = {
             "request": self.request.approval_scope(),
             "status": self.status,
+            "verification": self.verification,
+            "landed_sha": self.landed_sha,
             "authority": self.authority,
             "steps": dict(self.steps),
             "pull_request": dict(self.pull_request),
@@ -311,6 +273,8 @@ class IntegrationResult:
         return {
             "request": self.request.to_dict(),
             "status": self.status,
+            "verification": self.verification,
+            "landed_sha": self.landed_sha,
             "authority": self.authority,
             "ui_action": self.ui_action,
             "steps": dict(self.steps),

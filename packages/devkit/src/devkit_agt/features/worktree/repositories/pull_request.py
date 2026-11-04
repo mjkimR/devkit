@@ -102,7 +102,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "Network budget exhausted before the next operation",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` for remaining work; do not repeat an unknown mutation",
+                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --route pull-request` for remaining work; do not repeat an unknown mutation",
             )
         return run_git(self.root, *args, timeout=remaining)
 
@@ -112,7 +112,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "GitHub observation timed out or exhausted the network budget",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` for remaining work; do not repeat an unknown mutation",
+                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --route pull-request` for remaining work; do not repeat an unknown mutation",
             )
         if result.returncode != 0:
             raise PullRequestError(
@@ -341,7 +341,7 @@ class GitHub:
                 checks.append({"name": check.get("name", check.get("context")), "bucket": bucket, "state": state})
         return checks
 
-    def create(self, repository: Repository, branch: str, target: str, task_id: str) -> CommandResult:
+    def create(self, repository: Repository, branch: str, target: str) -> CommandResult:
         return self._call(
             self.root,
             [
@@ -356,13 +356,11 @@ class GitHub:
                 "--title",
                 f"Integrate {branch} into {target}",
                 "--body",
-                f"devkit task: {task_id}",
+                f"Integrate source branch {branch} into {target}.",
             ],
         )
 
-    def merge(
-        self, repository: Repository, number: int, source: str, branch: str, target: str, task_id: str
-    ) -> CommandResult:
+    def merge(self, repository: Repository, number: int, source: str, branch: str, target: str) -> CommandResult:
         # The synchronous endpoint cannot enqueue. gh pr merge can enqueue implicitly when queue policy changes.
         result = self._call(
             self.root,
@@ -381,7 +379,7 @@ class GitHub:
                 "-f",
                 f"commit_title=chore(merge): integrate {branch} into {target}",
                 "-f",
-                f"commit_message={task_id}",
+                f"commit_message=Integrate source branch {branch} into {target}.",
             ],
         )
         lines = result.stdout.splitlines()
@@ -433,7 +431,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "Git mutation outcome is unconfirmed",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` for remaining work; do not repeat an unknown mutation",
+                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --route pull-request` for remaining work; do not repeat an unknown mutation",
                 str(exc),
             ) from exc
 

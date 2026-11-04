@@ -62,14 +62,14 @@ the owning package is an application, library or content wheel.
 Extra pytest arguments follow these defaults, so `just test all -n0` runs serially.
 
 Development, review and integration use affected tests without a separate mandatory local `just test`.
-Before integration, run `just test-affected --base <base-ref>` on the task branch. Local integration merges a
-conflict-free moved base itself and runs only the CI rules on the merged result (`ADR-local-and-pull-request-integration`); merge the
-base into the task branch, resolve conflicts and refresh the affected tests only after it reports a conflict or a
-failing check. Once every unit of a local-orchestrated run is finished, run `devkit generated check` on `main`,
-regenerate stale artifacts with `devkit generated regen <ids>` and commit them, then run `just test-affected --base
-<batch start>` once on `main`, keeping its `mode=full` fallback; outside such a run, a later batch run or nightly CI tests the
-combined head (`ADR-test-selection-and-ci`). If the content changes before merging, refresh affected tests and the
-checks that cover the new content. Reviewers reuse valid check results and rerun only missing or stale checks. Lint,
+Before integration, run `just test-affected --base <base-ref>` on the source branch and save the target SHA before
+the first merge. After approved Git landing and cleanup, synchronize the landed dependencies with `just init` and
+start fresh processes. Run `uv run devkit sync`, check generated artifacts, regenerate and commit stale outputs,
+then run `just test-affected --base <saved-target-sha>` on the final target HEAD with its `mode=full` fallback and
+frontend checks. A local-orchestrated batch may run this once after selected merges and repairs; all landed units
+remain pending until the combined head passes. Failed setup/imports/checks require target repair and recheck, not
+merge replay or automatic rollback. Report checked HEAD, commands and outcomes. Nightly CI is a backstop, not a
+substitute for final checks (`ADR-post-merge-verification`). Refresh checks when HEAD changes. Lint,
 types and governance remain required:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the

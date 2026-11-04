@@ -40,7 +40,6 @@ class Provider:
             (Evidence("FIXTURE_CHECK_PASSED", plan.source_sha), Evidence("TARGET_SHA", plan.target_sha)),
             () if ready and self.allowed else ("finish the fixture checks",),
             result_sha=context.result_sha,
-            target_bound=("TARGET_SHA",),
             disclosure=self.disclosure,
         )
 

@@ -215,3 +215,11 @@ scoped and checked across linked worktrees before addition. MCP MUST use a retai
 executor, with the task checkout passed separately as its configuration workspace. Task cleanup MUST NOT remove the
 runtime. Configuration-workspace deletion MUST block subsequent approval and resume, apart from exact same-call terminal
 cleanup already approved; see `CAP-MCP-runtime-registration`.
+
+## Integration verification boundary
+
+The integration CLI reports confirmed Git landing and cleanup separately from final project verification.
+`verification=pending` with `landed_sha` identifies confirmed landing; unperformed or unknown landing reports
+`verification=not_started`. The Host synchronizes the landed runtime and runs required final checks before delivery
+completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). Standalone
+`devkit worktree finish --merge` retains its existing guards.

@@ -10,15 +10,12 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit_agt.features.integration import IntegrationContext, IntegrationService, ReadinessError, Task
-from devkit_agt.features.integration.services import providers
-from devkit_agt.features.worktree import PullRequestPolicyError, locate, plan_finish
+from devkit_agt.features.integration import IntegrationService
+from devkit_agt.features.worktree import PullRequestPolicyError, locate
 from devkit_core.core import git as core_git
 from devkit_dist.cli import cli as devkit_cli
 from spec_support.delivery import _cli, _complete_proposal, _make_synced_repo, _start_worktree
 from spec_support.scope import git, write
-
-from devkit_spec.features.delivery.usecases.integration import check
 
 
 def _complete_feature_spec(
@@ -277,187 +274,6 @@ def _complete_bugfix_spec(wt: Path, slug: str = "fix", *, date: str = "2026-10-1
     return unit
 
 
-def test_unit_readiness_passes_for_completed_feature_bugfix_and_proposal(tmp_path: Path, synced_template: Path) -> None:
-    repo = _make_synced_repo(tmp_path / "f", synced_template)
-    wt_feat = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
-    unit_feat = _complete_feature_spec(wt_feat, "feat")
-    plan_feat = plan_finish(locate(repo), "dev-feat")
-    ctx_feat = IntegrationContext(plan_feat, Task(kind="unit", id="SPEC-feat", unit=unit_feat))
-
-    r1 = check(ctx_feat)
-    r2 = check(ctx_feat)
-    assert r1 == r2
-    assert r1.reasons == ()
-    codes = {item.code: item.value for item in r1.evidence}
-    assert codes["TASK_KIND"] == "unit"
-    assert codes["WORKFLOW"] == "sdd-spec-feature"
-    assert codes["UNIT"] == unit_feat
-    assert codes["TASK_TITLE"] == "Feature feat"
-    assert codes["TASK_SUMMARY"] == "Add feature feat."
-    assert codes["RESULT_SUMMARY"] == "All checks pass."
-    assert codes["HOLD_STATUS"] == "clear"
-    assert codes["CI_RULES"] == "pass"
-
-    wt_fix = _start_worktree(repo, "dev-fix", tmp_path / "wt-fix")
-    unit_fix = _complete_bugfix_spec(wt_fix, "fix")
-    plan_fix = plan_finish(locate(repo), "dev-fix")
-    ctx_fix = IntegrationContext(plan_fix, Task(kind="unit", id="SPEC-fix", unit=unit_fix))
-    r_fix = check(ctx_fix)
-    assert r_fix.reasons == ()
-    assert dict((e.code, e.value) for e in r_fix.evidence)["WORKFLOW"] == "sdd-spec-bugfix"
-
-    wt_prop = _start_worktree(repo, "plan-idea", tmp_path / "wt-idea")
-    unit_prop = _complete_proposal(wt_prop, "idea")
-    plan_prop = plan_finish(locate(repo), "plan-idea")
-    ctx_prop = IntegrationContext(plan_prop, Task(kind="unit", id="PROP-idea", unit=unit_prop))
-    r_prop = check(ctx_prop)
-    assert r_prop.reasons == ()
-    assert dict((e.code, e.value) for e in r_prop.evidence)["WORKFLOW"] == "sdd-proposal"
-
-
-def test_unit_readiness_refuses_incomplete_held_mismatched_or_ci_violating_units(
-    tmp_path: Path, synced_template: Path
-) -> None:
-    repo = _make_synced_repo(tmp_path, synced_template)
-    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
-    unit = _complete_feature_spec(wt, "feat")
-
-    # 1. Wrong task.id is refused with non-empty coded evidence.
-    plan = plan_finish(locate(repo), "dev-feat")
-    bad_id = check(IntegrationContext(plan, Task(kind="unit", id="SPEC-other", unit=unit)))
-    assert bad_id.evidence and any("task.id" in reason for reason in bad_id.reasons)
-
-    # 2. Unchecked task in tasks.md is refused.
-    tasks_file = wt / unit / "tasks.md"
-    tasks_file.write_text(tasks_file.read_text(encoding="utf-8").replace("- [x]", "- [ ]"), encoding="utf-8")
-    git(wt, "add", "-A")
-    git(wt, "commit", "-q", "-m", "uncheck task")
-    plan_unchecked = plan_finish(locate(repo), "dev-feat")
-    r_unchecked = check(IntegrationContext(plan_unchecked, Task(kind="unit", id="SPEC-feat", unit=unit)))
-    assert r_unchecked.evidence and any("tasks-all-checked" in reason for reason in r_unchecked.reasons)
-
-    # Restore tasks.md, add a failed worker envelope with an unresolved problem (hold).
-    tasks_file.write_text(tasks_file.read_text(encoding="utf-8").replace("- [ ]", "- [x]"), encoding="utf-8")
-    _cli(
-        wt,
-        "workflow",
-        "envelope",
-        "worker",
-        "--unit",
-        unit,
-        "--stage",
-        "build-verify",
-        "--status",
-        "failed",
-        "--summary",
-        "Blocked on contract.",
-        "--problem",
-        "Contract contradiction.",
-        "--recovery",
-        "Return to specify.",
-        "--effort",
-        "medium",
-    )
-    git(wt, "add", "-A")
-    git(wt, "commit", "-q", "-m", "record blocked worker")
-    plan_held = plan_finish(locate(repo), "dev-feat")
-    r_held = check(IntegrationContext(plan_held, Task(kind="unit", id="SPEC-feat", unit=unit)))
-    assert any("held" in reason for reason in r_held.reasons)
-
-    # 3. Phase.CI rule violation (dangling SPEC-nonexistent reference) is refused.
-    write(
-        wt,
-        "docs/capabilities/delivery/CAP-DLV-sample.md",
-        "---\nid: CAP-DLV-sample\ntitle: Sample\nsummary: Sample capability.\nstatus: active\ncreated: 2026-10-01\nupdated: 2026-10-17\n---\n\n# [CAP-DLV-sample] Sample\n\n## 1. Overview\nReferences `SPEC-does-not-exist`.\n",
-    )
-    git(wt, "add", "-A")
-    git(wt, "commit", "-q", "-m", "introduce broken doc reference")
-    plan_ci = plan_finish(locate(repo), "dev-feat")
-    r_ci = check(IntegrationContext(plan_ci, Task(kind="unit", id="SPEC-feat", unit=unit)))
-    assert any("CI rule violation" in reason for reason in r_ci.reasons)
-
-    with pytest.raises(ReadinessError):
-        IntegrationService(repo).prepare("dev-feat", Task(kind="unit", id="SPEC-feat", unit=unit))
-
-
-def test_session_readiness_verifies_claims_and_refuses_invalid_claims_or_plan_branch(
-    tmp_path: Path, synced_template: Path
-) -> None:
-    repo = _make_synced_repo(tmp_path, synced_template)
-    wt = _start_worktree(repo, "dev-quick", tmp_path / "wt-quick")
-    write(wt, "src/app.py", "VALUE = 10\n")
-    git(wt, "add", "-A")
-    git(wt, "commit", "-q", "-m", "fix: quick session fix")
-    plan = plan_finish(locate(repo), "dev-quick")
-
-    valid_bugfix = Task(
-        kind="session",
-        id="quick",
-        claims_json=json.dumps(
-            {
-                "task_kind": "bugfix",
-                "effort": "low",
-                "review": "passed",
-                "tests": "PASS pytest",
-                "lint": True,
-                "reproduced": True,
-                "resolved": True,
-            }
-        ),
-    )
-    r_ok = check(IntegrationContext(plan, valid_bugfix))
-    assert r_ok.reasons == ()
-    assert dict((e.code, e.value) for e in r_ok.evidence)["WORKFLOW"] == "sdd-session-bugfix"
-
-    refactor = Task(
-        kind="session",
-        id="quick",
-        claims_json=json.dumps(
-            {"task_kind": "overall-refactor", "effort": "medium", "review": "passed", "tests": "PASS", "lint": True}
-        ),
-    )
-    r_refactor = check(IntegrationContext(plan, refactor))
-    assert r_refactor.reasons == ()
-    assert dict((e.code, e.value) for e in r_refactor.evidence)["WORKFLOW"] == "sdd-overall-refactor"
-
-    missing_repro = Task(
-        kind="session",
-        id="quick",
-        claims_json=json.dumps(
-            {
-                "task_kind": "bugfix",
-                "effort": "low",
-                "review": True,
-                "tests": True,
-                "lint": True,
-            }
-        ),
-    )
-    r_bad = check(IntegrationContext(plan, missing_repro))
-    assert any("reproduced" in reason for reason in r_bad.reasons)
-
-    # A plan-<slug> branch cannot be integrated as a session task.
-    wt_plan = _start_worktree(repo, "plan-quick", tmp_path / "wt-plan-quick")
-    write(wt_plan, "src/app.py", "VALUE = 11\n")
-    git(wt_plan, "add", "-A")
-    git(wt_plan, "commit", "-q", "-m", "plan edit")
-    plan_branch = plan_finish(locate(repo), "plan-quick")
-    r_plan = check(IntegrationContext(plan_branch, valid_bugfix))
-    assert any("dev-<slug>" in reason for reason in r_plan.reasons)
-
-    # Touching an unaccepted proposal unit on a session branch is also refused.
-    write(
-        wt,
-        "docs/proposals/PROP-other/proposal.md",
-        "---\nid: PROP-other\ntitle: Other\nsummary: Draft.\nstatus: draft\ncreated: 2026-10-17\nupdated: 2026-10-17\n---\n\n# [PROP-other] Other\n\n## 1. Summary\nDraft.\n",
-    )
-    git(wt, "add", "-A")
-    git(wt, "commit", "-q", "-m", "touch draft proposal")
-    plan_touched_prop = plan_finish(locate(repo), "dev-quick")
-    r_prop = check(IntegrationContext(plan_touched_prop, valid_bugfix))
-    assert any("touched proposal unit docs/proposals/PROP-other is not accepted" in reason for reason in r_prop.reasons)
-
-
 @pytest.mark.parametrize("auto", [False, True])
 def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     tmp_path: Path, synced_template: Path, monkeypatch: pytest.MonkeyPatch, auto: bool
@@ -480,15 +296,14 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     monkeypatch.setattr(core_git, "run_git", _no_network_git)
 
     service = IntegrationService(repo)
-    task = Task(kind="unit", id="SPEC-feat", unit=unit)
 
     # 1. Preparing (the scope the Host presents) leaves worktree, branch, base, and scope record untouched.
-    digest = service.prepare("dev-feat", task).request.digest
+    digest = service.prepare("dev-feat").request.digest
     assert wt.is_dir()
     assert "SPEC-feat" in _cli(repo, "spec", "scope", "query")
 
     # 2. The approved invocation merges into base, removes worktree & branch, prunes proposal dir, sweeps scope record.
-    completed = service.execute_cli("dev-feat", task, expected_digest=None if auto else digest)
+    completed = service.execute_cli("dev-feat", expected_digest=None if auto else digest)
     assert completed.status == "completed", completed.to_dict()
     assert completed.authority == ("policy" if auto else "host-conversation")
     assert completed.steps["merge"] == "completed"
@@ -510,11 +325,10 @@ def test_integration_service_respects_delete_branch_false_and_pull_request_requi
         extra_config="[worktree]\ndelete_branch = false\n",
     )
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-keep")
-    unit = _complete_feature_spec(wt, "feat")
+    _complete_feature_spec(wt, "feat")
     service = IntegrationService(repo)
-    task = Task(kind="unit", id="SPEC-feat", unit=unit)
 
-    res = service.execute_cli("dev-feat", task, expected_digest=service.prepare("dev-feat", task).request.digest)
+    res = service.execute_cli("dev-feat", expected_digest=service.prepare("dev-feat").request.digest)
     assert res.status == "completed"
     assert res.steps["branch_delete"] == "skipped"
     assert res.steps["marker_clear"] == "completed"
@@ -527,9 +341,9 @@ def test_integration_service_respects_delete_branch_false_and_pull_request_requi
         extra_config='[worktree]\npull_request = "required"\n',
     )
     wt_pr = _start_worktree(pr_repo, "dev-feat", tmp_path / "wt-pr")
-    unit_pr = _complete_feature_spec(wt_pr, "feat")
+    _complete_feature_spec(wt_pr, "feat")
     with pytest.raises(PullRequestPolicyError):
-        IntegrationService(pr_repo).prepare("dev-feat", Task(kind="unit", id="SPEC-feat", unit=unit_pr))
+        IntegrationService(pr_repo).prepare("dev-feat")
 
 
 def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_template: Path) -> None:
@@ -541,13 +355,10 @@ def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_
     assert "[SCOPE: SPEC-feat " in _cli(wt, "spec", "scope", "register", "--spec", unit)
 
     service = IntegrationService(repo)
-    task = Task(kind="unit", id="SPEC-feat", unit=unit)
 
     locked.chmod(0)
     try:
-        partial = service.execute_cli(
-            "dev-feat", task, expected_digest=service.prepare("dev-feat", task).request.digest
-        )
+        partial = service.execute_cli("dev-feat", expected_digest=service.prepare("dev-feat").request.digest)
     finally:
         locked.chmod(0o755)
 
@@ -559,7 +370,7 @@ def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_
     assert "SPEC-feat" not in _cli(repo, "spec", "scope", "query")
 
     assert (repo / "docs/proposals/PROP-feat").exists()
-    assert providers.provider("spec")[1] is not None
+    assert partial.verification == "pending"
 
 
 @pytest.fixture(scope="module")
@@ -747,91 +558,6 @@ def test_handoff_stage_off_cannot_replace_required_plan_approvals(accepted_hando
         prepare(repo, "idea")
 
 
-def test_readiness_on_the_result_declares_target_bound_codes_and_reads_the_merged_tree(
-    tmp_path: Path, synced_template: Path
-) -> None:
-    from dataclasses import replace
-
-    from devkit_agt.features.worktree import build_result
-
-    from devkit_spec.features.delivery.usecases.integration import DISCLOSURE, TARGET_BOUND, _build_snapshot
-
-    repo = _make_synced_repo(tmp_path, synced_template)
-    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
-    unit = _complete_feature_spec(wt, "feat")
-    plan = plan_finish(locate(repo), "dev-feat")
-    context = IntegrationContext(plan, Task(kind="unit", id="SPEC-feat", unit=unit))
-    approved = check(context)
-    codes = {item.code: item.value for item in approved.evidence}
-    assert approved.reasons == () and approved.target_bound == TARGET_BOUND == ("TARGET_SHA", "RESULT_SHA")
-    assert approved.disclosure == DISCLOSURE and approved.result_sha is None
-    assert "RESULT_SHA" not in codes and len(codes["SPEC_POLICY"]) == 64
-
-    def build(target_change: tuple[str, str]) -> IntegrationContext:
-        write(repo, *target_change)
-        git(repo, "add", "-A")
-        git(repo, "commit", "-q", "-m", f"target: {target_change[0]}")
-        moved = git(repo, "rev-parse", "HEAD")
-        result = build_result(
-            repo,
-            branch="dev-feat",
-            target_branch="main",
-            target=moved,
-            source=plan.source_sha,
-            method="no-ff",
-            advance=True,
-        )
-        return replace(context, finish=replace(plan, target_sha=moved), result_sha=result)
-
-    clean = build(("docs/other.md", "unrelated\n"))
-    built = check(clean)
-    assert built.reasons == () and built.result_sha == clean.result_sha
-    assert {item.code: item.value for item in built.evidence}["RESULT_SHA"] == clean.result_sha
-    assert built.comparable() == approved.comparable()  # only target-bound evidence changed
-    assert clean.result_sha is not None
-    snapshot = _build_snapshot(repo, plan.source_sha, clean.finish.target_sha, clean.result_sha)
-    assert snapshot.base == clean.finish.target_sha
-    assert snapshot.tree == git(repo, "rev-parse", f"{clean.result_sha}^{{tree}}")
-    assert "docs/other.md" not in snapshot.changed and "src/app.py" in snapshot.changed
-
-    in_unit = check(build((f"{unit}/note.md", "target note\n")))
-    assert any(f"the target changed {unit}" in reason for reason in in_unit.reasons)
-
-
-def test_spec_policy_evidence_changes_with_the_target_tool_spec(tmp_path: Path, synced_template: Path) -> None:
-    from dataclasses import replace
-
-    from devkit_agt.features.worktree import build_result
-
-    repo = _make_synced_repo(tmp_path, synced_template)
-    wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
-    unit = _complete_feature_spec(wt, "feat")
-    plan = plan_finish(locate(repo), "dev-feat")
-    context = IntegrationContext(plan, Task(kind="unit", id="SPEC-feat", unit=unit))
-    before = {item.code: item.value for item in check(context).evidence}["SPEC_POLICY"]
-    config = repo / ".devkit/config.toml"
-    text = config.read_text(encoding="utf-8")
-    text = (
-        text.replace("[tool.spec]\n", '[tool.spec]\nworktree = "auto"\n', 1)
-        if "[tool.spec]\n" in text
-        else (text + '\n[tool.spec]\nworktree = "auto"\n')
-    )
-    config.write_text(text, encoding="utf-8")
-    git(repo, "commit", "-q", "-am", "change tool.spec")
-    moved = git(repo, "rev-parse", "HEAD")
-    result = build_result(
-        repo,
-        branch="dev-feat",
-        target_branch="main",
-        target=moved,
-        source=plan.source_sha,
-        method="no-ff",
-        advance=True,
-    )
-    after = check(replace(context, finish=replace(plan, target_sha=moved), result_sha=result))
-    assert {item.code: item.value for item in after.evidence}["SPEC_POLICY"] != before
-
-
 def test_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypatch):
     from devkit_agt.features.worktree.usecases import lifecycle
     from devkit_dist.features.host.usecases import registrations
@@ -871,7 +597,7 @@ def test_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypat
 
 
 def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base):
-    from devkit_agt.features.worktree import locate, start
+    from devkit_agt.features.worktree import start
 
     from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
 
@@ -886,7 +612,7 @@ def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base)
 
 @pytest.mark.parametrize("mutation", ["dirty", "head", "marker"])
 def test_handoff_recovery_refuses_changed_provenance_before_effects(accepted_handoff_base, mutation):
-    from devkit_agt.features.worktree import locate, start
+    from devkit_agt.features.worktree import start
 
     from devkit_spec.base.errors import HandoffWorktreeConflictError
     from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
@@ -964,7 +690,7 @@ def test_moved_target_that_changed_tool_spec_integrates_through_the_spec_provide
     """``SPEC-integration-merge-moved-target``: ``SPEC_POLICY`` binds the prospective result at prepare."""
     repo = _make_synced_repo(tmp_path, synced_template)
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
-    unit = _complete_feature_spec(wt, "feat")
+    _complete_feature_spec(wt, "feat")
     tip = git(wt, "rev-parse", "HEAD")
     text = (repo / ".devkit/config.toml").read_text(encoding="utf-8")
     text = (
@@ -974,15 +700,14 @@ def test_moved_target_that_changed_tool_spec_integrates_through_the_spec_provide
     )
     moved = _commit_base(repo, ".devkit/config.toml", text)
     service = IntegrationService(repo)
-    task = Task(kind="unit", id="SPEC-feat", unit=unit)
-    request = service.prepare("dev-feat", task).request
-    assert request.readiness.result_sha is not None and request.context.result_sha is None
-    completed = service.execute_cli("dev-feat", task, expected_digest=request.digest)
+    request = service.prepare("dev-feat").request
+    assert request.acceptance is None and request.context.result_sha is None
+    completed = service.execute_cli("dev-feat", expected_digest=request.digest)
     assert completed.status == "completed", completed.to_dict()
     assert git(repo, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, tip]
 
 
-def test_reference_drift_on_the_prospective_result_refuses_at_prepare(tmp_path: Path, synced_template: Path) -> None:
+def test_reference_drift_is_left_to_final_landed_rules(tmp_path: Path, synced_template: Path) -> None:
     repo = _make_synced_repo(tmp_path, synced_template)
     cited = "docs/capabilities/delivery/CAP-DLV-cited.md"
     _commit_base(
@@ -997,14 +722,12 @@ def test_reference_drift_on_the_prospective_result_refuses_at_prepare(tmp_path: 
         "created: 2026-10-01\nupdated: 2026-10-17\n---\n\n# [CAP-DLV-sample] Sample\n\n## 1. Overview\n"
         "Builds on `CAP-DLV-cited`.\n"
     )
-    unit = _complete_feature_spec(wt, "feat", extra={"docs/capabilities/delivery/CAP-DLV-sample.md": sample})
-    task = Task(kind="unit", id="SPEC-feat", unit=unit)
-    IntegrationService(repo).prepare("dev-feat", task)  # ready while the target still has the cited document
+    _complete_feature_spec(wt, "feat", extra={"docs/capabilities/delivery/CAP-DLV-sample.md": sample})
+    IntegrationService(repo).prepare("dev-feat")  # ready while the target still has the cited document
     moved = _commit_base(repo, cited, None)
-    with pytest.raises(ReadinessError) as raised:
-        IntegrationService(repo).prepare("dev-feat", task)
-    drift = [line for line in raised.value.details if "CAP-DLV-cited" in line]
-    assert drift and all("on the merged result" in line and "devkit rules fix" in line for line in drift), (
-        raised.value.details
-    )
+    service = IntegrationService(repo)
+    prepared = service.prepare("dev-feat")
+    assert prepared.verification == "not_started"
     assert git(repo, "rev-parse", "HEAD") == moved and wt.is_dir()
+    result = service.execute_cli("dev-feat", expected_digest=prepared.request.digest)
+    assert result.verification == "pending" and result.status == "completed"

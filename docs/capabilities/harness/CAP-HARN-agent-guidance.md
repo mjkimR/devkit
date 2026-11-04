@@ -235,16 +235,11 @@ For intended moves or deletions, the Host checks ID references and path links be
 link-repair-only document paths. Unexpected repair targets require narrow boundary expansion before editing.
 Workers retain their strict write boundaries.
 
-For changed bundle sources, the Host runs official `devkit sync` in the integration worktree, inspects and commits
-tracked receipt/projection updates, then verifies the final content before requesting integration approval. It
-incorporates the base and synchronizes again only after preparation reports `WORKTREE_MERGE_CONFLICT`,
-`INTEGRATION_RECEIPT_CONFLICT`, `INTEGRATION_NOT_READY`, or `WORKTREE_MERGE_NOT_FF` under `merge = "ff-only"` or on
-the pull-request route; on the local `no-ff` route the receipt check and the CI rules on the merged result guard a
-conflict-free moved base (`ADR-local-and-pull-request-integration`); a conflict confined to registered generated files is kept at
-each artifact's seed side and disclosed (`INTEGRATION_GENERATED_SEEDED`), not refused
-(`ADR-local-and-pull-request-integration`). Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
-base-checkout projections, runs and commits the disclosed `devkit generated regen <ids>` in direct mode, and reports
-failures or unexpected tracked changes for inspection.
+For changed bundle sources, the Host runs `devkit sync` in the source worktree and commits tracked outputs before
+approval. A local conflict-free moved target needs no source base merge; Git conflicts or `ff-only`/PR ancestry
+refusals require source preparation and re-verification. Generated conflicts may be seeded and disclosed.
+After landing, the Host synchronizes dependencies in a fresh process, synchronizes bundles, regenerates stale
+tracked artifacts and commits before final checks (`ADR-post-merge-verification`).
 
 ### Host scope observation
 
@@ -264,17 +259,18 @@ The contract is CAP-COLL-work-scope-registry; the rationale is ADR-host-owned-sc
 
 ### Repository verification policy
 
-`spec-plan`, `spec-review` and `spec-integrate` follow the consuming repository's verification policy. They plan and
-run affected tests when supported, preserve selector full-suite fallbacks and frontend checks, and require a local
-full suite only when the repository or selector calls for it. Delegated reviewers reuse valid results and run
-only missing or stale checks. Local `no-ff` integration merges a conflict-free moved base itself and runs only the CI
-rules on the merged result (`ff-only` and the pull-request route still need the base merged into the branch); the Host merges the base and re-verifies what that changed only after a reported conflict or
-failing check. Once every unit of a `local-orchestrated` run is finished (integrated, blocked with its problem
-recorded, waiting for a user decision or continued in `direct`), `spec-orchestrate` first runs `devkit generated check` on the base
-branch HEAD, regenerates and commits any stale artifact (`devkit generated regen <ids>`), then runs the repository's
-integrated-content verification once on that head from the batch start; outside such a run, a later batch
-run or the repository's scheduled CI tests the combined head (`ADR-test-selection-and-ci`). Lint, type and cumulative
-governance checks remain required. Nightly/release coverage is a repository choice, not a bundle-wide schedule.
+`spec-plan`, `spec-review` and `spec-integrate` follow the consumer repository's required checks. Reviewers reuse
+valid results and run missing or stale checks. WHEN Git effects land, the Host MUST run final verification with
+the landed runtime before reporting delivery complete. It saves the target SHA before the first merge and uses
+that SHA for affected selection, preserving full fallback and frontend checks. It never compares main to itself.
+After synchronization, `devkit generated check` and required regeneration/commits precede final tests, lint/types
+and governance checks. A local-orchestrated batch MAY verify once after selected merges and repairs; all landed
+units stay pending until the combined HEAD passes. A failed check requires in-scope target repair and recheck;
+feedback alone does not complete the work. Setup/import failures are unfinished verification. Automatic rollback
+and merge replay are prohibited. The report names the checked HEAD, commands and results; a moved HEAD invalidates
+the current-head claim until affected checks are refreshed. Nightly/release CI remains a backstop.
+This is Host procedure, not CLI enforcement (`ADR-post-merge-verification`). Guidance verification:
+`packages/devkit-spec/tests/integration/bundles/spec/test_moved_target_guidance.py`.
 
 ### Feedback capture policy
 

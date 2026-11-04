@@ -157,7 +157,7 @@ def test_evidence_kinds_and_host_permission_stay_separate() -> None:
     for tokens in (
         ("original CLI result", "role status", "Git observations", "host emulation", "remaining work"),
         ("host refusal before dispatch", "blocker code", "null CLI result"),
-        ("CLI readiness or `auto`", "never host permission"),
+        ("CLI Git policy or `auto`", "never host permission"),
         ("isolated fixtures, replays and untested cases",),
         ("never report unmeasured cost or latency as an", "improvement"),
     ):
@@ -186,7 +186,7 @@ def test_planning_acceptance_is_the_hosts_composed_command_and_no_operator_job()
 # SPEC-git-operator-planning-completion-route AC-02
 def test_acceptance_skills_name_the_host_run_command_and_the_post_commit_recovery() -> None:
     orchestrate = raw("skills/spec-orchestrate/SKILL.md")
-    assert_rule(orchestrate, "4. **Accept** Planning", "yourself", COMPOSED_ACCEPT, "no `git-operator` job")
+    assert_rule(orchestrate, "4. **Accept** Planning", "yourself", COMPOSED_ACCEPT, "no redundant integration job")
     review = raw("skills/spec-review-proposal/SKILL.md")
     for tokens in (
         ("4. When readiness holds", "the Host runs", COMPOSED_ACCEPT, "itself"),

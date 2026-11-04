@@ -59,8 +59,10 @@ capabilities:
    (`CAP-DLV-proposal-planning`).
 6. The user accepts the direction; the agent records the acceptance and the accepted status in one step
    (`CAP-DLV-proposal-planning`).
-7. The agent integrates the Planning branch under `plan-accept`'s authority; the workflow reports the proposal unit
-   complete (`CAP-DLV-delivery-workflows`).
+7. The agent integrates the Planning branch under `plan-accept`'s authority, with final verification pending. The
+   Host synchronizes the landed runtime in fresh processes, regenerates and commits required artifacts, and runs
+   final checks against the saved premerge target SHA. Only passing checks complete Planning delivery
+   (`CAP-DLV-delivery-workflows`).
 8. With `proposal-handoff` authority, the agent starts `dev-<slug>` and hands the proposal off: the system creates the
    spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs and writes the "Superseded in
    part by" line into each ADR a PADR's `supersedes` names that is not `superseded`, moves materials and open
@@ -105,13 +107,7 @@ capabilities:
 - **5c.** The owning base and the prospective source both set `plan-accept` to `auto`: the agent records the
   acceptance by policy, reported as policy, never as the user's consent (`CAP-DLV-proposal-planning`); resumes at
   step 6.
-- **6a.** The base moved since Planning (`plan-<slug>` lacks the base HEAD) when the agent runs the composed
-  acceptance (`devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff`): the system builds the
-  prospective merge and runs the delivery provider's result checks on it before the acceptance commit. A failing CI
-  rule on the prospective result, or a base change to the proposal directory since the merge base, refuses with
-  `SPEC_PROPOSAL_APPROVAL_NOT_READY`; a conflict refuses with `WORKTREE_MERGE_CONFLICT`; neither writes an
-  acceptance (`CAP-DLV-proposal-planning`). The agent merges the base into `plan-<slug>`, resolving any conflict,
-  runs `devkit rules fix` on the proposal, commits and reruns; resumes at step 6.
+- **6a.** The moved target changed the reviewed proposal directory or conflicts with Planning: acceptance refuses before its first write; the Host resolves and reviews that scope before retry (`CAP-DLV-proposal-planning`); resumes at step 5.
 - **7a.** The Host starts Development from the retained base checkout: under `proposal-handoff=ask` it presents the
   accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
   only after the user's conversational approval invokes or delegates `devkit spec proposal handoff <slug> --effort <level>`; under
@@ -147,14 +143,15 @@ capabilities:
   resumes at step 8.
 - **7f.** A write fails during the handoff: the system rolls back what it wrote and moved, keeps the proposal and
   reports `SPEC_PROPOSAL_HANDOFF_FAILED` (`CAP-DLV-proposal-planning`); resumes at step 7.
-- **7g.** The base moved since Planning and the prospective merge passes its result checks: the composed acceptance
+- **7g.** The base moved since Planning and the prospective Git merge and proposal scope checks pass: the composed acceptance
   lands it with no merge into `plan-<slug>`, the landed merge having the moved base as first and the acceptance commit
-  as second parent, and its result carries `target_sha` (the merged base), `landed_sha` and `disclosure` (the
-  delivery provider's disclosure) (`CAP-DLV-proposal-planning`); resumes at step 8.
+  as second parent, and its result carries `target_sha` (the merged base), `landed_sha` and `verification=pending` (`CAP-DLV-proposal-planning`); resumes at step 8.
 - **8a.** A sibling draft in its own Planning cites the handed-off proposal: the handoff rewrites its `depends_on` and
   references; when the sibling's Planning merges first and merging the base into `dev-<slug>` conflicts in
   `docs/proposals/PROP-<other>/`, the Host takes the base version and runs `devkit rules fix` on it
   (`CAP-DLV-proposal-planning`); resumes at step 9.
+
+- **7h.** Composed acceptance lands: it returns pending verification and an unstarted handoff continuation. The Host synchronizes the landed runtime, runs final checks, then invokes handoff in a fresh process with unchanged authorized scope and effort (`CAP-DLV-proposal-planning`); resumes at step 7.
 
 ## 4. Postconditions
 
@@ -349,13 +346,17 @@ capabilities:
   change since `plan-<slug>` branched
 - **When**: the agent runs `devkit spec proposal accept <slug> --by user --mode accept_only`
 - **Then**: the command exits `0` with `[ACCEPTED: PROP-<slug> status=accepted ...]` naming `target_sha` (the moved
-  base), `landed_sha` (the new base HEAD) and `disclosure`; the acceptance commit's only parent is the reviewed
+  base), `landed_sha` (the new base HEAD) and `verification`; the acceptance commit's only parent is the reviewed
   `plan-<slug>` HEAD, and the landed merge has the moved base as first and the acceptance commit as second parent
 
-### Scenario 25: A moved base that fails the result checks is refused before acceptance
+### Scenario 25: Changed proposal scope is refused before acceptance
 - **Covers**: 6a
-- **Given**: a proposal in review on `plan-<slug>` and a base that since changed the proposal directory, or whose
-  prospective merge fails a CI rule
-- **When**: the agent runs `devkit spec proposal accept <slug> --by user --mode accept_only`
-- **Then**: the command exits `2` with `SPEC_PROPOSAL_APPROVAL_NOT_READY`, whose `[FIX]` merges the base into
-  `plan-<slug>` and runs `devkit rules fix`; `plan-<slug>` keeps its HEAD and the proposal stays in review
+- **Given**: a moved target changed the reviewed proposal directory
+- **When**: the Host requests composed acceptance
+- **Then**: it refuses with SPEC_PROPOSAL_APPROVAL_NOT_READY before the acceptance commit and leaves Planning available for review
+
+### Scenario 26: Acceptance yields before fresh handoff
+- **Covers**: 7h
+- **Given**: accepted mode accept_and_handoff with authorized scope and selected effort
+- **When**: the Planning merge lands
+- **Then**: verification is pending and handoff is not_started; after synchronization and passing final checks, the Host invokes the fresh handoff command with retained authority and effort

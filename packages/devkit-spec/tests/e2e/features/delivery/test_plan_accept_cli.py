@@ -82,22 +82,15 @@ def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
             "json",
         ],
     )
-    assert result.exit_code in {0, 1}, result.output
+    assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
-    if mode == "accept_only":
-        assert payload["status"] == "accepted", json.dumps(payload, indent=2)
-        assert result.exit_code == 0
-    else:
-        assert payload["status"] in {"handed_off", "needs_recovery"}, json.dumps(payload, indent=2)
-        assert result.exit_code == (0 if payload["status"] == "handed_off" else 1)
+    assert payload["status"] == "accepted" and payload["verification"] == "pending"
+    assert payload["handoff_status"] == "not_started"
     assert payload["acceptance_authority"] == "user"
     assert "acceptance_commit" in payload["completed_steps"]
     assert "status: accepted" in (repo / "docs/proposals/PROP-idea/proposal.md").read_text()
-    assert not planning.exists()
-    assert bool(git(repo, "branch", "--list", "dev-idea")) is (mode == "accept_and_handoff")
-    if mode == "accept_and_handoff" and payload["status"] == "needs_recovery":
-        assert (repo.parent / "repo-wt-dev-idea").exists()
-        assert "worktree_setup" in payload["completed_steps"]
+    assert not planning.exists() and not git(repo, "branch", "--list", "dev-idea")
+    assert payload["continuation"]["handoff_authorized"] is (mode == "accept_and_handoff")
 
 
 def test_accept_cli_refuses_invalid_mode(pending):
@@ -225,7 +218,7 @@ def test_accept_cli_integrates_a_moved_target_without_a_base_merge(pending):
     assert git(repo, "rev-parse", f"{acceptance}^") == source  # the acceptance commit's only parent: no base merge
     assert git(repo, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved, acceptance]
     assert payload["landed_sha"] == git(repo, "rev-parse", "HEAD") and payload["target_sha"] == moved
-    assert payload["disclosure"] == "CI rules only on the merged result; tests and review ran on the source only"
+    assert payload["verification"] == "pending"
 
 
 def test_accept_cli_text_names_the_merged_target_and_the_disclosure(pending):
@@ -238,7 +231,7 @@ def test_accept_cli_text_names_the_merged_target_and_the_disclosure(pending):
     line = result.stdout.splitlines()[0]
     assert line.startswith("[ACCEPTED: PROP-idea ") and f" target_sha={moved} " in line
     assert f" landed_sha={git(repo, 'rev-parse', 'HEAD')} " in line
-    assert 'disclosure="CI rules only on the merged result; tests and review ran on the source only"' in line
+    assert "verification=pending handoff=not_started" in line
 
 
 def test_accept_cli_refuses_a_target_change_to_the_proposal_before_the_acceptance_commit(pending):
@@ -268,14 +261,13 @@ def test_accept_cli_refuses_reference_drift_on_the_prospective_result(pending):
     anchor = planning / "docs/proposals/PROP-idea/proposal.md"
     anchor.write_text(anchor.read_text() + "\nThis builds on `CAP-DLV-cited`.\n")
     git(planning, "commit", "-am", "Cite the capability")
-    source = git(planning, "rev-parse", "HEAD")
     _advance(repo, cited, None)
-    error = _accept_json(repo, "--by", "user", "--mode", "accept_only")
-    assert error["code"] == "SPEC_PROPOSAL_APPROVAL_NOT_READY", json.dumps(error, indent=2)
-    details = error["advisory"]["details"]
-    assert any("CAP-DLV-cited" in line and "devkit rules fix" in line for line in details), details
-    assert git(planning, "rev-parse", "HEAD") == source
-    assert "status: reviewing" in anchor.read_text()
+    result = CliRunner().invoke(
+        proposal_group, ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["verification"] == "pending" and payload["status"] == "accepted"
 
 
 def _refuse_handoff_commit(repo: Path, tmp_path: Path) -> None:
@@ -290,59 +282,52 @@ def _refuse_handoff_commit(repo: Path, tmp_path: Path) -> None:
     git(repo, "config", "core.hooksPath", str(hooks))
 
 
-# SPEC-git-operator-result-readiness AC-03
-def test_a_refused_handoff_commit_prints_the_stopped_acceptance_and_its_next_action(pending, tmp_path):
-    repo, _planning = pending
-    _refuse_handoff_commit(repo, tmp_path)
+def test_acceptance_yields_before_handoff_evaluation(pending, monkeypatch):
+    from devkit_spec.features.delivery.usecases import native_handoff
 
+    repo, _ = pending
+    monkeypatch.setattr(native_handoff, "prepare", lambda *a, **kw: pytest.fail("old-process handoff evaluated"))
+    result = CliRunner().invoke(
+        proposal_group,
+        [
+            "accept",
+            "idea",
+            "--by",
+            "user",
+            "--mode",
+            "accept_and_handoff",
+            "--effort",
+            "high",
+            "-w",
+            str(repo),
+            "--format",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "accepted" and payload["verification"] == "pending"
+    assert payload["handoff_status"] == "not_started" and "handoff" not in payload["completed_steps"]
+    assert "commit" not in payload and "worktree" not in payload
+    assert payload["continuation"]["activity_effort"] == "high"
+    assert payload["continuation"]["mode"] == "accept_and_handoff"
+    assert payload["continuation"]["handoff_authorized"] is True
+    assert payload["continuation"]["landed_sha"] == git(repo, "rev-parse", "HEAD")
+    assert "spec proposal handoff idea --effort high" in payload["next_action"]
+    assert "fresh process" in payload["next_action"]
+
+
+def test_acceptance_text_reports_pending_verification_and_fresh_continuation(pending, tmp_path):
+    repo, _ = pending
+    _refuse_handoff_commit(repo, tmp_path)
     result = CliRunner().invoke(
         proposal_group,
         ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)],
     )
-
-    assert result.exit_code == 1, result.output
-    lines = result.stdout.splitlines()
-    assert lines[0].startswith("[ACCEPTED_STOPPED: PROP-idea status=needs_recovery mode=accept_and_handoff")
-    assert ",handoff" in lines[0] and "handoff_commit" not in lines[0] and lines[0].endswith(" commit=-]")
-    assert lines[1].startswith("[NEXT_ACTION: ") and "[NEXT_CMD:" not in result.stdout
-    assert "(SPEC_HANDOFF_COMMIT_REFUSED)" in result.stderr
-
-
-# SPEC-git-operator-result-readiness AC-03
-def test_a_refused_handoff_commit_stops_the_combined_acceptance_after_the_handoff(pending, tmp_path):
-    repo, _planning = pending
-    _refuse_handoff_commit(repo, tmp_path)
-    args = ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)]
-
-    result = CliRunner().invoke(proposal_group, [*args, "--format", "json"])
-
-    assert result.exit_code == 1, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "needs_recovery" and payload["commit"] is None
-    assert "handoff" in payload["completed_steps"] and "handoff_commit" not in payload["completed_steps"]
-    assert [error["code"] for error in payload["errors"]] == ["SPEC_HANDOFF_COMMIT_REFUSED"]
-    assert payload["next_action"] == payload["errors"][0]["advisory"]["fix"]
-    development = repo.parent / "repo-wt-dev-idea"
-    assert git(development, "rev-parse", "HEAD") == git(repo, "rev-parse", "HEAD")
-    assert git(development, "status", "--porcelain") != ""
-
-
-# SPEC-git-operator-result-readiness AC-03
-def test_a_combined_acceptance_commits_the_handoff_transaction(pending):
-    repo, _planning = pending
-    args = ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)]
-
-    result = CliRunner().invoke(proposal_group, [*args, "--format", "json"])
-
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "handed_off", json.dumps(payload, indent=2)
-    development = repo.parent / "repo-wt-dev-idea"
-    head = git(development, "rev-parse", "HEAD")
-    assert payload["commit"] == head
-    assert git(development, "rev-list", "--parents", "-n", "1", head).split() == [head, git(repo, "rev-parse", "HEAD")]
-    assert {"handoff", "handoff_commit"} <= set(payload["completed_steps"])
-    assert git(development, "status", "--porcelain") == ""
+    assert "verification=pending handoff=not_started" in result.stdout
+    assert "commit=" not in result.stdout and "[NEXT_ACTION:" in result.stdout
+    assert "SPEC_HANDOFF_COMMIT_REFUSED" not in result.stderr
 
 
 QUESTION = """\

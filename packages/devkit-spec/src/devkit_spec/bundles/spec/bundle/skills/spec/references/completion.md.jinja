@@ -9,10 +9,10 @@ Before reporting completion, classify the Living Spec impact: contracts → capa
 The constitution defines the boundaries and their `ask|auto` values. Run `devkit spec policy` before deciding one.
 
 - An `ask` boundary needs authority for its exact effects; reuse an explicit decision already given instead of asking again.
-- `auto` delegates the boundary to the Host after readiness checks; report the policy as the authority, never as human approval or review.
+- `auto` delegates the boundary to the Host after branch checks; report the policy as the authority, never as human approval or review.
 - A stale source invalidates the old request: inspect the partial state and authorize only the remaining effects, preserving the source SHA, authority and recovery state.
 - Planning integration is part of `plan-accept`; `dev-integration` governs only the final Development result.
-- Neither value bypasses readiness, host restrictions or publication policy, or grants commit or publication authority. Never switch execution routes to evade a host refusal.
+- Neither value bypasses branch checks, host restrictions or publication policy, or grants commit or publication authority. Never switch execution routes to evade a host refusal.
 - The Host gives approval after validating worker boundaries, committed scope and required checks; workers return that evidence and never ask for business approval.
 {% if execution.environment == "local" %}- Under `ask`, the Host presents the exact source, report, target and effects, obtains the user's conversational decision, then invokes the CLI. CLI invocation alone is not approval, and the CLI does not authenticate the conversation.
 {% else %}- Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval.
@@ -33,7 +33,7 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 - Set `reconcile.md` to `resolved` only when every target is reflected in the comparison diff or has a waiver of at least 20 non-whitespace characters. A required contract mismatch cannot be waived.
 - The rules require each `modified` target to change on the branch (commits since the merge base count) but do not prove semantic impact; compare it yourself.
 - Verify the reconciliation with a `reconcile-check` envelope at `living-spec-draft` at every effort ([effort](effort.md), [review loop](review-loop.md)). After review fixes or changed inputs, recheck the impact and return `reconcile.md` to `pending` for new targets.
-- An intermediate commit is never completion evidence: the final cumulative check runs on the integrated head, and preparation runs the CI rules on the merged result. Before integration approval, run the cumulative check; merge the base and re-verify the changed paths only to resolve a conflict or failing check that preparation reports (`spec-integrate` step 1).
+- Before integration approval, verify branch content and workflow holds with the source runtime. Integration checks Git effects only. After landing, the Host synchronizes declared dependencies in a fresh process, regenerates and commits required artifacts, and runs final project checks against the resulting target HEAD before reporting delivery complete. Save the premerge target SHA for affected-test selection. Failed setup, imports or checks leave verification unfinished; repair the target and recheck without replaying the merge or automatic rollback.
 
 A `session` task follows its workflow's completion conditions; never abandon remaining authorized work for a session time limit. For a task addressing named feedback, follow [source feedback](source-feedback.md).
 

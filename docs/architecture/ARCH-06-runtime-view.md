@@ -74,3 +74,12 @@ sequenceDiagram
 1. **Start**: `devkit worktree start <branch> [--unit <dir>]` checks that no uncommitted conflicts exist, checks that the branch does not already exist, and creates a linked Git worktree under `.devkit/worktrees/<slug>`.
 2. **Execute**: The agent runs development tasks isolated within the allocated worktree.
 3. **Finish**: `devkit worktree finish [--merge]` validates that envelopes hold no unresolved questions or problems, commits final artifacts, integrates into the base branch, and safely removes the worktree.
+
+## Post-merge verification runtime
+
+The Host verifies the branch through its runtime, executes approved integration/cleanup, synchronizes dependencies
+from landed declarations, and starts fresh commands for bundle sync, generated-artifact regeneration and final
+project checks. Regeneration and repair commits precede checks of the resulting target HEAD. The integration
+process interprets no new rule imports, receipt schema or workflow content after landing. Proposal acceptance
+yields before handoff; the Host invokes handoff only after final verification in a fresh process.
+`ADR-post-merge-verification`, `CAP-INT-mcp-services` and `CAP-DLV-delivery-workflows` own these contracts.

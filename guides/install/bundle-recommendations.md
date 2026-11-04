@@ -75,8 +75,6 @@ For development without SDD lifecycle records, install the document system and c
 [development]
 approach = "adaptive-dev"
 
-[integration]
-provider = "project"
 ```
 
 Inspect `uv run devkit config show`; the absent approach defaults to `sdd`. Local/environment overrides are not
@@ -87,3 +85,7 @@ claims and the ordinary approval/route/cleanup checks. Select `adaptive-dev:core
 all three support roles are optional. The coordinator maintains project-owned
 `.devkit/adaptive-dev.md`; sync and re-selection preserve it. Baseline adoption is a separate explicit procedure;
 installing assets or changing this setting does not establish a verified SDD baseline.
+
+After approved integration lands, synchronize the target environment from its landed dependency declarations and
+run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
+report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.

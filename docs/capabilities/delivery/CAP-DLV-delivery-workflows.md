@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD workflows define stages, gates, verification and run records with deterministic single-envelope commits. One-shot workers deliver committed turns; reusable lean git-operator executes Host-authorized lifecycle jobs with readiness and recovery checks."
+summary: "SDD workflows define stages, gates, verification and run records with deterministic single-envelope commits. One-shot workers deliver committed turns; reusable lean git-operator executes Host-authorized lifecycle jobs with Git identity and recovery checks."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -16,7 +16,6 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit-spec/src/devkit_spec/features/worker/cli/commands.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
-  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -25,8 +24,7 @@ entrypoints:
 
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
 (`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), ten host-neutral role contracts
-(`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset, and the
-`devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
+(`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset. devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
 `devkit sync` projects the roles into each agent host's subagent directory
 (`CAP-DIST-agent-projections`). The
@@ -38,7 +36,7 @@ sequence.
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
   the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the ten role contracts, and the
-  `devkit_agt.features.integration.readiness` provider (`devkit_spec.features.delivery.usecases.integration.check`) for Unit and `session` tasks, and
+  Host-led branch and final verification, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:
   - Evaluating a definition, recording answers and envelopes, binding units: devkit's `devkit workflow` commands.
@@ -461,7 +459,7 @@ with dirty paths is neither a failed CLI operation nor ready input. Every result
 next action. WHEN the Host starts a worker on such a result, it MUST first compare `checks.worker_input` with its own
 Git observation and start the worker only on a clean HEAD that is the reported `head` or a descendant made only of
 its own commits since (the post-handoff link fixes); an exit code alone never stands for ready input. A host refusal before dispatch is a blocker code
-with a null CLI status and exit code and empty effects; CLI readiness or `auto` policy is never reported as host
+with a null CLI status and exit code and empty effects; CLI Git policy or `auto` policy is never reported as host
 permission, and live effects, Git observation, host emulation, isolated fixtures and untested cases are reported
 apart. The handoff result's
 `commit` names the transaction the composed handoff committed itself
@@ -630,17 +628,30 @@ prompt.
 | `devkit worktree finish <branch> [--merge [--local-only]]` | Land the branch on the base as a merge commit, or a fast-forward under `[worktree] merge = "ff-only"` (skipping `fetch`/`push` when `--local-only`), remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension. |
 | `devkit worktree status --stale` | Activity branches idle beyond `[worktree] stale_after`; also warned by `devkit rules check -p hygiene`. |
 
-### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`)
+### 4.8 Branch verification and final landed verification
 
-Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-delivery-approval-and-lifecycle-authority`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-local-and-pull-request-integration`; at `prepare` of a source that does not contain the target, the confirmation target with an unlanded prospective merge commit as `context.result_sha`, `ADR-local-and-pull-request-integration`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
+1. **Branch checks.** Before approval, the Host MUST run the source runtime's required tests, lint/types, rules and
+   workflow/envelope checks. Unresolved problems, pending questions and incomplete stage evidence hold integration
+   at this Host boundary. Generic integration parses none of those source records.
+2. **Final verification.** After confirmed Git landing and its scoped cleanup, the Host MUST synchronize the target
+   environment from landed dependency declarations and invoke fresh processes. It synchronizes bundles, regenerates
+   stale tracked artifacts and commits regeneration before running required final checks against the resulting HEAD.
+3. **Completion evidence.** The Host MUST report checked HEAD, commands and outcomes before reporting delivery
+   complete. The merge CLI's `verification=pending` and successful exit are not proof of external checks. A moved
+   HEAD requires inspecting the added changes and refreshing affected checks.
+4. **Recovery.** IF setup, imports or final checks fail, THEN delivery MUST remain unfinished. The Host repairs the
+   target within agreed scope and rechecks without merge replay or automatic rollback. Direct project test commands
+   may diagnose a broken wrapper; required rule/workflow checks still require repairing the tool.
+5. **Batching.** The Host MUST save the target SHA before the first merge and use it for final affected-test selection,
+   preserving full fallback and required frontend checks. A local-orchestrated batch MAY run final checks once after
+   all selected merges and in-scope repairs. Every landed unit remains pending until the combined HEAD passes.
+6. **Acceptance.** Proposal acceptance retains direction eligibility and explicit authority, but composed acceptance
+   yields before handoff. The Host verifies the accepted landing and invokes handoff in a fresh process with the
+   unchanged authorized scope, mode and effort (`CAP-DLV-proposal-planning`).
 
-1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto for task intent and the three main boundaries) in both the base checkout and the materialized `source_sha` snapshot.
-2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:
-   - `dev-<slug>` (`sdd-spec-feature` or `sdd-spec-bugfix`): evaluated with `given=("dev-integration",)`; requires `current_stage == "integrate"`, zero unmet checks across earlier stages (`specify`/`characterize`, `build-verify` or `reproduce`/`fix-verify`, `review-refine`, `living-spec-draft`, `collect-feedback` when enabled, `final-change-report`, `integration-approval`), no envelope hold (`blocked` or `pending_questions`), `spec.md` `status: completed`, `reconcile.md` `status: resolved`, and (when handed off from a proposal) carried `gate:plan-accept` accepted.
-   - `plan-<slug>` (`sdd-proposal`): requires `proposal.md` `status: accepted`, `gate:plan-intent` and `gate:plan-accept` accepted, `collect-feedback` satisfied when enabled, `complete == True` (`current_stage is None`), and no envelope hold.
-3. **Session tasks (`task.kind == "session"`)**: requires a `dev-<slug>` branch with no spec unit for `<slug>`, verifies that no spec or proposal unit touched between `merge_base(target_sha, source_sha)` and `source_sha` is held or incomplete (`spec.md` must be `completed`, `proposal.md` must be `accepted`), and validates structured JSON declarations in `task.claims_json` (`task_kind` in `feature|bugfix|overall-refactor`, `effort` in `low|medium|high`, `review`, `tests`, `lint` passed, plus `reproduced: true` and `resolved: true` for `bugfix`).
-4. **Cumulative CI governance rules**: runs `run_project_rules(workspace, snapshot=ci_snapshot, phase=Phase.LINTER)` on the `merge_base..source_sha` snapshot (`mode="ci"`), or with a result commit on the `build_target..result_sha` snapshot (the tree that would land), and requires zero load/evaluation errors and zero blocking violations (`CI_RULES=pass`). The unit is still evaluated from the source tree; with a result commit, a target change inside the unit directory since the merge base is a reason. Each CI-rule reason found on a prospective or built result names the conditional base merge: merge the target into the task branch, fix what the rules report (`devkit rules fix`), re-verify what the merge changed and prepare again. `result_reasons(context)` returns these result-dependent reasons alone (none without `context.result_sha`) for the composed proposal acceptance, whose preview refuses with them before its acceptance commit (`CAP-DLV-proposal-planning`). Tests are not re-run on the result.
-5. **Deterministic evidence**: returns `Readiness(source_sha, target_sha, evidence=..., reasons=..., result_sha=..., target_bound=("TARGET_SHA", "RESULT_SHA"), disclosure="CI rules only on the merged result; tests and review ran on the source only")` whose coded `Evidence` tuple (`TASK_KIND`, `WORKFLOW`, `UNIT`, `SOURCE_SHA`, `TARGET_SHA`, `STAGE_STATUS`, `HOLD_STATUS`, `SESSION_CLAIMS`, `CI_RULES`, `SPEC_POLICY`, `RESULT_SHA` with a prospective or built result, and conditional `SESSION_CLAIMS_INVALID` when session claim validation adds refusal reasons) is deterministic from committed Git state and the explicit invocation claims. `SESSION_CLAIMS_INVALID` directs the integration boundary to identify `--claims` correction and retry of the same command without discarding other readiness reasons. `SPEC_POLICY` digests the parsed `[tool.spec]` of the target and of the result (the source when there is none) and is not target-bound, so a `[tool.spec]` change on the target after preparation refuses the build through `IntegrationService`'s evidence equality, which ignores only the target-bound codes; one made before preparation is read from the prospective result and integrates when the source did not change it.
+`ADR-post-merge-verification` records this boundary. Guidance regressions in
+`packages/devkit-spec/tests/integration/bundles/spec/test_moved_target_guidance.py` check the sequence; the Host's
+execution of external project checks is review-only, not enforced by the merge CLI.
 
 ## Source feedback at completion
 

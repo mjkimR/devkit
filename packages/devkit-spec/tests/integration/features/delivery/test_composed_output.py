@@ -122,7 +122,7 @@ def test_a_stopped_acceptance_reads_the_handoff_errors(tmp_path: Path, monkeypat
     assert result.exit_code == 1, result.output
     assert result.stdout.splitlines() == [
         "[ACCEPTED_STOPPED: PROP-idea status=needs_recovery mode=accept_and_handoff authority=user"
-        " completed=acceptance_commit,merge commit=-]",
+        " completed=acceptance_commit,merge]",
         '[NEXT_ACTION: "Inspect preserved handoff effects"]',
     ]
     assert "SPEC_HANDOFF_STALE" in result.stderr
@@ -176,22 +176,24 @@ def test_a_refused_handoff_commit_names_its_next_action_not_the_nested_command(
 
 
 # SPEC-git-operator-result-readiness AC-03
-def test_a_combined_acceptance_prints_the_handoff_commit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_combined_acceptance_reports_pending_without_a_handoff_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _accept(
         monkeypatch,
         {
-            "status": "handed_off",
-            "completed_steps": ["acceptance_commit", "merge", "worktree_setup", "handoff", "handoff_commit"],
-            "commit": "b" * 40,
-            "handoff": {"next_command": "uv run devkit workflow next --unit specs/x", "errors": [], "notices": []},
+            "status": "accepted",
+            "completed_steps": ["acceptance_commit", "merge"],
+            "verification": "pending",
+            "handoff_status": "not_started",
             "acceptance_authority": "user",
             "errors": [],
+            "next_action": "Synchronize the landed runtime and verify before fresh handoff",
         },
     )
     result = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low")
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
-        "[ACCEPTED: PROP-idea status=handed_off mode=accept_and_handoff authority=user"
-        f" completed=acceptance_commit,merge,worktree_setup,handoff,handoff_commit commit={'b' * 40}]",
-        "[NEXT_CMD: uv run devkit workflow next --unit specs/x]",
+        "[ACCEPTED: PROP-idea status=accepted mode=accept_and_handoff authority=user completed=acceptance_commit,merge verification=pending handoff=not_started]",
+        '[NEXT_ACTION: "Synchronize the landed runtime and verify before fresh handoff"]',
     ]

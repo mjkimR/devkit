@@ -2,7 +2,7 @@
 id: SPEC-post-merge-verification
 title: Verify integration after merging with the resulting runtime
 summary: Verify the landed result with its declared devkit runtime after branch checks, and simplify integration preparation, recovery and CLI usage.
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: [CAP-INT-mcp-services, CAP-DLV-delivery-workflows, CAP-DLV-proposal-planning]
 related_usecases: [UC-drive-development-to-integration, UC-plan-and-hand-off-a-proposal]
@@ -229,4 +229,4 @@ implementation, review, Living Spec reconciliation and final verification eviden
 
 ## 6. Development assumptions and baseline
 
-The accepted input is `810adf730993710119ab351b4bbbdce7d716ad98`; inspecting its integration path confirms the Planning premise: preparation and landing call readiness providers, rule/receipt checks and content finish guards. No scope-breaking base change was found. Measure these invocations with regression spies before and after the change; the expected after count is zero. The Host owns external final test execution, not the merge CLI.
+The accepted input is `810adf730993710119ab351b4bbbdce7d716ad98`; inspecting its integration path confirms the Planning premise: preparation and landing call readiness providers, rule/receipt checks and content finish guards. No scope-breaking base change was found. Measure direct content-check call sites in the accepted input and implementation without checking out the base; regression spies verify the after behavior. The expected after count is zero. The Host owns external final test execution, not the merge CLI.

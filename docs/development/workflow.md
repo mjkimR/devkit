@@ -28,11 +28,11 @@ Before committing changes, ensure that:
    Automatic selection uses individual test files, devkit area nodes and module-level devkit_spec dependencies;
    helper/conftest imports and conservative full fallbacks remain part of selection. Other packages retain coarse
    ownership by default. Complete nightly/manual/release checks cover runtime dependencies static analysis misses.
-   Before integration, `just test-affected --base <base-ref>` verifies the task branch; a conflict-free moved base
-   needs no merge or rerun, because integration checks the CI rules on the merged result. Keep its full-suite
-   fallback and frontend checks. After a local-orchestrated run, `devkit generated check` runs on `main` (stale
-   artifacts are regenerated with `devkit generated regen <ids>` and committed), then `just test-affected --base
-   <batch start>` runs once on `main`; otherwise a later batch run or nightly CI tests the combined head
-   (`ADR-test-selection-and-ci`). Complete CI runs overnight for unverified default-branch heads and before release
-   (`ADR-test-selection-and-ci`).
+   Before integration, verify the branch and save the target SHA before the first merge. After landing, synchronize
+   dependencies with `just init` and use fresh processes for sync, generated-artifact checks and regeneration.
+   Commit generated/repair changes, then run `just test-affected --base <saved-target-sha>` against the final target
+   HEAD, preserving full fallback and frontend checks. Batch units remain pending until this combined head passes.
+   Repair and recheck failures on the target; do not replay merges or automatically roll back. Report the tested
+   HEAD, commands and outcomes (`ADR-post-merge-verification`). Nightly/release CI remains the full-suite backstop.
+
 4. `just rules-check --staged` reports 0 governance violations.

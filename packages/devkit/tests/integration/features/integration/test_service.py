@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 import devkit_agt.features.integration.services.providers as providers
 import devkit_agt.features.worktree.services.merging as merging
 import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
@@ -12,10 +10,8 @@ from devkit_agt.features.integration import (
     CleanupContractError,
     CleanupResult,
     CleanupTarget,
-    Evidence,
     IntegrationConfigError,
     IntegrationService,
-    Task,
 )
 from devkit_agt.features.worktree import PullRequestPolicyError, RemoveFailedError, finish, locate
 from devkit_core.base.errors import GitError
@@ -23,13 +19,11 @@ from testsupport.rules import git, write
 
 from .conftest import Entry
 
-TASK = Task("session", "fixture-task")
-
 
 def integrate(service: IntegrationService):
     """One Host-approved CLI invocation: the digest pins the scope presented by prepare."""
-    digest = service.prepare("dev-demo", TASK).request.digest
-    return service.execute_cli("dev-demo", TASK, expected_digest=digest)
+    digest = service.prepare("dev-demo").request.digest
+    return service.execute_cli("dev-demo", expected_digest=digest)
 
 
 def test_host_approved_cli_integrates_and_cleans_without_network(repo, monkeypatch):
@@ -63,13 +57,14 @@ def test_host_approved_cli_integrates_and_cleans_without_network(repo, monkeypat
     assert "refs/heads/dev-demo" not in git(base, "show-ref")
     assert "merge" in called and not set(called) & {"fetch", "push", "ls-remote"}
     assert result.to_dict()["network_operations"] == "excluded"
+    assert result.compact_dict()["landed_sha"] == git(base, "rev-parse", "HEAD")
 
 
 def test_ask_cli_without_the_presented_digest_has_no_authority(repo):
     base, worktree = repo
     before = git(base, "show-ref")
     with pytest.raises(AuthorityError):
-        IntegrationService(base).execute_cli("dev-demo", TASK)
+        IntegrationService(base).execute_cli("dev-demo")
     assert git(base, "show-ref") == before and worktree.exists()
     assert not (base / ".git/devkit-integration.lock").exists()
 
@@ -78,7 +73,7 @@ def test_ask_cli_without_the_presented_digest_has_no_authority(repo):
 def test_changed_scope_invalidates_the_presented_digest(repo, moved):
     base, worktree = repo
     service = IntegrationService(base)
-    digest = service.prepare("dev-demo", TASK).request.digest
+    digest = service.prepare("dev-demo").request.digest
     before = git(base, "rev-parse", "HEAD")
     if moved == "source":
         write(worktree, "changed.txt", "changed\n")
@@ -88,23 +83,27 @@ def test_changed_scope_invalidates_the_presented_digest(repo, moved):
         git(base, "commit", "--amend", "-qm", "rewritten target")
         before = git(base, "rev-parse", "HEAD")
     elif moved == "policy":
-        write(base, ".devkit/config.toml", '[integration]\nprovider = "other"\n')
+        write(base, ".devkit/config.toml", "[worktree]\ndelete_branch = false\n")
     else:
         git(base, "worktree", "move", str(worktree), str(worktree.with_name("moved")))
     with pytest.raises(AdvisoryError):
-        service.execute_cli("dev-demo", TASK, expected_digest=digest)
+        service.execute_cli("dev-demo", expected_digest=digest)
     assert git(base, "rev-parse", "HEAD") == before
 
 
-def test_review_readiness_is_rechecked_by_the_approving_call(repo, ready_provider):
+def test_merge_does_not_discover_or_call_readiness(repo, ready_provider, monkeypatch):
     base, worktree = repo
-    service = IntegrationService(base)
-    digest = service.prepare("dev-demo", TASK).request.digest
     ready_provider.allowed = False
-    with pytest.raises(AdvisoryError) as error:
-        service.execute_cli("dev-demo", TASK, expected_digest=digest)
-    assert error.value.code == "INTEGRATION_NOT_READY"
-    assert worktree.exists()
+    original = providers.metadata.entry_points
+
+    def entries(**kw):
+        assert kw.get("group") not in {"devkit.integration.readiness", "devkit.finish_guard"}
+        return original(**kw)
+
+    monkeypatch.setattr(providers.metadata, "entry_points", entries)
+    result = integrate(IntegrationService(base))
+    assert result.status == "completed" and result.verification == "pending"
+    assert ready_provider.calls == [] and not worktree.exists()
 
 
 @pytest.mark.parametrize("dirty", ["base", "source", "locked"])
@@ -115,7 +114,7 @@ def test_preflight_preserves_dirty_or_locked_worktrees(repo, dirty):
     else:
         write(base if dirty == "base" else worktree, "untracked.txt", "preserve\n")
     with pytest.raises(AdvisoryError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
     assert worktree.exists()
 
 
@@ -125,7 +124,7 @@ def test_required_pr_blocks_local_execution(repo):
     git(base, "add", ".")
     git(base, "commit", "-qm", "require PR")
     with pytest.raises(PullRequestPolicyError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
 
 
 def test_delete_branch_false_is_preserved(repo):
@@ -182,7 +181,7 @@ def test_unscoped_post_finish_extension_blocks_before_approval(repo, monkeypatch
         ),
     )
     with pytest.raises(CleanupContractError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
 
 
 def test_scoped_cleanup_receives_exact_targets_and_reports_partial_after_git_is_finished(repo, monkeypatch):
@@ -218,11 +217,22 @@ def test_scoped_cleanup_receives_exact_targets_and_reports_partial_after_git_is_
     assert result.cleanup_steps == {"scoped": "failed"} and cleanup.attempts == 1
 
 
-def test_missing_provider_configuration_fails_closed(repo):
+def test_missing_provider_configuration_is_supported(repo):
+    base, worktree = repo
+    for root in (base, worktree):
+        write(root, ".devkit/config.toml", "")
+        git(root, "add", ".")
+        git(root, "commit", "-qm", "remove legacy provider")
+    assert integrate(IntegrationService(base)).verification == "pending"
+
+
+@pytest.mark.parametrize("config", ['[integration]\nunknown = "x"\n', 'integration = "x"\n'])
+def test_unknown_integration_configuration_is_actionable(repo, config):
     base, _ = repo
-    write(base, ".devkit/config.toml", "")
-    with pytest.raises(IntegrationConfigError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+    write(base, ".devkit/config.toml", config)
+    with pytest.raises(IntegrationConfigError) as raised:
+        IntegrationService(base).prepare("dev-demo")
+    assert "Remove unknown keys" in (raised.value.fix or "")
 
 
 def test_public_local_only_finish_excludes_fetch_and_push(repo):
@@ -268,6 +278,7 @@ def test_unknown_merge_outcome_is_inspected_and_not_merged_twice(repo, monkeypat
     service = IntegrationService(base)
     result = integrate(service)
     assert result.steps["merge"] == "unknown" and result.observed["target_sha"] == result.result_sha
+    assert result.verification == "not_started" and result.landed_sha is None
     monkeypatch.setattr(merging, "run_git", original)
     retried = integrate(service)
     assert retried.status == "completed" and retried.steps["merge"] == "skipped" and len(calls) == 1
@@ -281,7 +292,7 @@ def test_server_runtime_inside_worktree_is_refused_even_with_symlinked_python(re
     base, worktree = repo
     monkeypatch.setattr(sys, "executable", str(worktree / ".venv/bin/python"))
     with pytest.raises(RuntimeLocationError):
-        IntegrationService(base).prepare("dev-demo", TASK)
+        IntegrationService(base).prepare("dev-demo")
 
 
 def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(repo, monkeypatch):
@@ -309,7 +320,7 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
             else original(**kw)
         ),
     )
-    result = IntegrationService(base).prepare("dev-demo", TASK)
+    result = IntegrationService(base).prepare("dev-demo")
     assert worktree.exists()
     compact = result.compact_dict()
     assert compact["request"]["repository"] == str(base) and compact["request"]["worktree"]["path"] == str(worktree)
@@ -320,22 +331,6 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
     detailed = result.to_dict()
     assert detailed["request"]["cleanup"][0]["targets"][0]["revision"] == "internal-revision-1"
     assert compact["request"]["digest"] == detailed["request"]["digest"]
-
-
-def test_committed_work_evidence_is_bound_by_the_digest(repo):
-    base, _ = repo
-    request = IntegrationService(base).prepare("dev-demo", TASK).request
-    readiness = replace(
-        request.readiness,
-        evidence=(
-            *request.readiness.evidence,
-            Evidence("TASK_TITLE", "Deliver activity decisions"),
-            Evidence("TASK_SUMMARY", "Choose effort before Development"),
-            Evidence("RESULT_SUMMARY", "Implemented and checked.\nDelete local branch: no"),
-        ),
-    )
-    request = replace(request, readiness=readiness)
-    assert request.digest != replace(request, readiness=replace(readiness, evidence=())).digest
 
 
 def test_cloud_execution_environment_blocks_the_cli_before_effects(repo):
@@ -350,5 +345,5 @@ def test_cloud_execution_environment_blocks_the_cli_before_effects(repo):
     before = git(base, "show-ref")
     service = IntegrationService(base)
     with pytest.raises(McpInteractiveError), invocation(ExecutionBinding(worktree, base)):
-        service.execute_cli("dev-demo", TASK, expected_digest="0" * 64)
+        service.execute_cli("dev-demo", expected_digest="0" * 64)
     assert git(base, "show-ref") == before and worktree.exists()

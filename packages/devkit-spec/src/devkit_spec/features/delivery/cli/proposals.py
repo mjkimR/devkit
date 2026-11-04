@@ -165,7 +165,7 @@ def _echo_composed(kind: str, slug: str, result: dict[str, Any], effects: bool, 
         command = result.get("next_command") or (handoff.get("next_command") if code == 0 else None)
         if command:
             click.echo(f"[NEXT_CMD: {command}]")
-        elif code and result.get("next_action"):
+        elif result.get("next_action"):
             click.echo(sentinel("NEXT_ACTION", result["next_action"]))
     echo_notices(notices)
     if code == 0:
@@ -379,7 +379,12 @@ def accept_cmd(
         result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
         merged = {
             key: result[name]
-            for key, name in (("target_sha", "target_sha"), ("landed_sha", "landed_sha"), ("disclosure", "disclosure"))
+            for key, name in (
+                ("target_sha", "target_sha"),
+                ("landed_sha", "landed_sha"),
+                ("verification", "verification"),
+                ("handoff", "handoff_status"),
+            )
             if result.get(name)
         }
         _echo_composed(
@@ -391,7 +396,6 @@ def accept_cmd(
             authority=result.get("acceptance_authority", "-"),
             completed=",".join(result.get("completed_steps", [])) or "-",
             **merged,
-            **({"commit": result.get("commit") or "-"} if mode == "accept_and_handoff" else {}),
         )
         return
     if effort is not None:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import sys
 from dataclasses import replace
 from pathlib import Path
@@ -14,13 +13,11 @@ from devkit_core.core.git import run_git_text
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
 
-import devkit_agt.features.integration.repositories.receipts as receipts
 import devkit_agt.features.integration.services.providers as providers
 from devkit_agt.features.integration.models.contracts import (
     IntegrationContext,
     IntegrationRequest,
     IntegrationResult,
-    Task,
     prepare_command,
 )
 from devkit_agt.features.integration.models.errors import IntegrationConfigError, StaleRequestError
@@ -34,7 +31,6 @@ from devkit_agt.features.worktree import (
     is_ancestor,
     locate,
     plan_finish,
-    run_finish_guards,
     validate_finish,
 )
 from devkit_agt.features.worktree.repositories.pull_request import GitHub, PullRequestError
@@ -79,16 +75,10 @@ def _pr_identity(pr: dict[str, Any], branch: str, target: str) -> None:
         raise _error("INTEGRATION_PR_CONFLICT", "PR draft, base, head or closed state conflicts with approved scope")
 
 
-def prepare(service: IntegrationService, branch: str, task: Task) -> IntegrationResult:
+def prepare(service: IntegrationService, branch: str) -> IntegrationResult:
     guard_execution()
     root, port = service.root, _port(service)
     port.begin_call()
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}", task.id):
-        raise IntegrationConfigError(
-            "PR task id must be an identifier, not free-form published text",
-            target_files=["--task-id"],
-            fix="Pass --task-id an identifier such as the unit or session id",
-        )
     position = locate(root)
     if position.branch is None:
         raise _error("INTEGRATION_TARGET_UPSTREAM", "Target checkout is detached")
@@ -186,32 +176,22 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         already_merged=already,
         delete_branch=bool(target_policy["delete_branch"] and (already or source_policy["delete_branch"])),
     )
-    name = target_policy["provider"]
-    if not isinstance(name, str) or not providers.NAME.fullmatch(name) or target_policy["dev-integration"] != "ask":
-        raise IntegrationConfigError("Remote target requires a configured provider and dev-integration=ask")
-    context = IntegrationContext(plan, task)
-    ident, provider = providers.provider(name)
-    ready = providers.check(provider, context)
-    if not isinstance(ready.landed_check, str) or not ready.landed_check.strip():
-        raise IntegrationConfigError("PR integration requires the provider to declare a landed-target check")
-    run_finish_guards(root, branch, source if already else target_sha, source)
+    if target_policy["dev-integration"] != "ask":
+        raise IntegrationConfigError("Remote target requires dev-integration=ask")
+    context = IntegrationContext(plan)
     cleanup = providers.cleanup_scopes(context, providers.cleanup_extensions())
     validate_finish(plan, target=local_target, check_upstream=False)
     request = IntegrationRequest(
         uuid4().hex,
         context,
-        name,
-        ident,
         providers.policy_digest(target_config),
         providers.policy_digest(target_config if already else source_config),
-        providers.guards(),
-        ready,
         cleanup,
-        "pull-request",
-        repository,
-        pr["number"] if pr else None,
-        local_target,
-        tuple(r["type"] for r in remote_rules if r["type"].startswith("unverified")),
+        route="pull-request",
+        repository=repository,
+        pr_number=pr["number"] if pr else None,
+        local_target=local_target,
+        unverified_rules=tuple(r["type"] for r in remote_rules if r["type"].startswith("unverified")),
     )
     result = IntegrationResult(request)
     result.observed["unverified_rules"] = [r["type"] for r in remote_rules if r["type"].startswith("unverified")]
@@ -232,6 +212,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
     )
     if already:
         result.steps.update(push="completed", pull_request="completed", merge="completed")
+        result.landed_sha = (pr.get("mergeCommit") or {}).get("oid") if pr else None
     result.pull_request = dict(pr or {})
     result.cleanup_steps = {scope.extension: "not_run" for scope in cleanup}
     return result
@@ -299,8 +280,6 @@ def _validate(service: IntegrationService, result: IntegrationResult, *, merged:
         target=request.local_target,
         check_upstream=False,
     )
-    if providers.guards() != request.guards or providers.provider(request.provider)[0] != request.provider_identity:
-        raise StaleRequestError("Installed guard or readiness provider changed")
     extensions = providers.cleanup_extensions()
     if {n: i for n, (i, _) in extensions.items()} != {s.extension: s.identity for s in request.cleanup}:
         raise StaleRequestError("Cleanup extension installation changed")
@@ -344,7 +323,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
             else:
                 result.steps[operation] = "unknown"
                 guard_execution()
-                port.create(repository, plan.branch, plan.target_branch, request.context.task.id)
+                port.create(repository, plan.branch, plan.target_branch)
                 candidates = [p for p in port.find(repository, plan.branch) if p["state"] == "OPEN"]
                 if len(candidates) != 1:
                     raise _error("INTEGRATION_STEP_UNKNOWN", "PR creation outcome is not confirmed")
@@ -380,24 +359,15 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     method="no-ff",
                     advance=True,
                 )
-                context = service._context(result)
-                run_finish_guards(
-                    root, plan.branch, run_git_text(root, "merge-base", target, plan.source_sha), plan.source_sha
-                )
-                ready = providers.check(providers.provider(request.provider)[1], context)
-                if (
-                    ready.comparable() != request.readiness.comparable()
-                    or providers.policy_digest(_policy(root, result.result_sha)) != request.post_policy_digest
-                ):
-                    raise StaleRequestError("Prospective merge changes approved policy or completion evidence")
-                receipts.check_merge(root, result.result_sha, (target, plan.source_sha))
+                if providers.policy_digest(_policy(root, result.result_sha)) != request.post_policy_digest:
+                    raise StaleRequestError("Prospective merge changes approved policy")
                 result.build_checked = True
                 pending = _checks(port, request, pr)
                 if pending:
                     notice = _error(
                         "INTEGRATION_CHECKS_PENDING",
                         "Pending: " + ", ".join(pending),
-                        f"Wait with `gh pr checks {pr['number']} -R {repository.selector} --watch` using an agent bound, inspect the PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints; report checks that do not start",
+                        f"Wait with `gh pr checks {pr['number']} -R {repository.selector} --watch` using an agent bound, inspect the PR, then run `{prepare_command(plan.branch, 'pull-request')}` and, after Host approval, integrate with the digest it prints; report checks that do not start",
                     )
                     notice.level = Level.NOTICE
                     result.notices.append(notice)
@@ -409,9 +379,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     raise _error("INTEGRATION_TARGET_MOVED", "Target moved after the checked build")
                 result.steps["merge"] = "unknown"
                 guard_execution()
-                response = port.merge(
-                    repository, pr["number"], plan.source_sha, plan.branch, plan.target_branch, request.context.task.id
-                )
+                response = port.merge(repository, pr["number"], plan.source_sha, plan.branch, plan.target_branch)
                 pr = port.view(repository, pr["number"])
                 if pr["state"] != "MERGED" and response.http_status in {403, 405, 409, 422}:
                     result.steps["merge"] = "failed"
@@ -433,6 +401,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     guard_execution()
                     port.fetch_commit(repository, merge_oid)
             merge, parent, tree = _confirmed(root, pr, plan.source_sha)
+            result.landed_sha = merge
             result.steps["merge"] = "completed"
             operation = "fetch"
             result.steps["fetch"] = "completed"
@@ -453,6 +422,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                 reason = "advanced"
             elif tree != run_git_text(root, "rev-parse", f"{result.result_sha}^{{tree}}"):
                 reason = "tree-mismatch"
+            result.result_sha = merge
             result.landing = {
                 "checked": reason is None,
                 "reason": reason,
@@ -460,14 +430,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                 "first_parent": parent,
                 "fetched_target": target,
             }
-            if reason:
-                notice = _error(
-                    "INTEGRATION_LANDED_UNCHECKED",
-                    f"Landing was not checked: {reason}",
-                    f"After cleanup run {request.readiness.landed_check} in {plan.base}; do not report integration as checked; fix failures in a new unit",
-                )
-                notice.level = Level.WARNING
-                result.notices.append(notice)
+
             operation = "local_fast_forward"
             if (
                 run_git_text(root, "status", "--porcelain")
@@ -476,13 +439,13 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Base checkout is dirty or on another branch",
-                    f"Make the base checkout clean on the target branch, inspect the merged PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
+                    f"Make the base checkout clean on the target branch, inspect the merged PR, then run `{prepare_command(plan.branch, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                 )
             if not is_ancestor(root, run_git_text(root, "rev-parse", "HEAD"), target):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Local target cannot fast-forward",
-                    f"Make the base checkout clean and fast-forwardable, inspect the merged PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
+                    f"Make the base checkout clean and fast-forwardable, inspect the merged PR, then run `{prepare_command(plan.branch, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                 )
             validate_finish(
                 plan,
@@ -549,7 +512,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                         raise _error(
                             "INTEGRATION_CLEANUP_INCOMPLETE",
                             "Scoped cleanup is incomplete",
-                            f"Inspect Git, PR and cleanup state, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
+                            f"Inspect Git, PR and cleanup state, then run `{prepare_command(plan.branch, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                         )
                     result.cleanup_steps[scope.extension] = "completed"
             result.steps[operation] = "completed"

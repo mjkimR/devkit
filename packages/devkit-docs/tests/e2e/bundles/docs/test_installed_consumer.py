@@ -63,9 +63,7 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
 
     assert json.loads(cli("config", "show"))["configuration"]["development"]["approach"] == "sdd"
     config = consumer / ".devkit/config.toml"
-    config.write_text(
-        config.read_text() + '\n[development]\napproach = "adaptive-dev"\n[integration]\nprovider = "project"\n'
-    )
+    config.write_text(config.read_text() + '\n[development]\napproach = "adaptive-dev"\n')
     inspected = json.loads(cli("config", "show"))
     assert inspected["configuration"]["development"]["approach"] == "adaptive-dev"
     assert inspected["sources"]["development.approach"] == ".devkit/config.toml"
@@ -76,7 +74,7 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
     run("git", "add", ".", cwd=consumer)
     run("git", "commit", "-qm", "configure document-only adaptive-dev", cwd=consumer)
     started = json.loads(cli("worktree", "start", "dev-demo", "--format", "json"))
-    # The retained CLI's result exposes the worktree path; it is a real installed project provider consumer.
+    # The retained CLI's result exposes the worktree path; it is a real installed consumer without a readiness provider.
     worktree = consumer.parent / "consumer-wt-dev-demo"
     assert worktree.is_dir(), started
     (worktree / "app.py").write_text("value = 1\n")
@@ -87,14 +85,9 @@ def test_document_only_built_wheels(tmp_path: Path) -> None:
             "integration",
             "prepare",
             "dev-demo",
-            "--task-kind",
-            "session",
-            "--task-id",
-            "docs-consumer",
-            "--claims",
-            json.dumps({"review": "PASS source review", "tests": "PASS project tests", "lint": "PASS lint"}),
             "--format",
             "json",
         )
     )
     assert prepared["status"] == "prepared"
+    assert prepared["verification"] == "not_started" and prepared["landed_sha"] is None
