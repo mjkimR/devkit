@@ -1,16 +1,16 @@
 ---
-id: PADR-ux-coverage-step-targeting
+id: ADR-ux-coverage-step-targeting
 title: Uncovered steps are reported on their use case
 summary: For locating an uncited use case step, we report it on the use case when the run targets it and only otherwise on the first listing UX document, to point the warning at the document the fix edits, accepting a partial supersession of the targeting clause of ADR-ux-screens.
-proposal: PROP-ux-coverage-explicit-exceptions
+proposal: SPEC-ux-coverage-explicit-exceptions
 supersedes: [ADR-ux-screens]
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-ux-coverage-step-targeting] Uncovered steps are reported on their use case
+# [ADR-ux-coverage-step-targeting] Uncovered steps are reported on their use case
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 
 ---
@@ -21,7 +21,7 @@ created_at: 2026-11-04
 run, and on the use case only when no listed UX document is in the run (`ADR-ux-screens`, the
 `RULE-traceability-link` precedent). In a whole-workspace run every document is in the run, so one listing screen,
 in the consumer evidence a navigation panel, carries every workflow gap of the use cases it lists. With
-`PADR-explicit-ux-coverage-exception-notation` the fix for such a gap is written in the use case, a screen citation
+`ADR-explicit-ux-coverage-exception-notation` the fix for such a gap is written in the use case, a screen citation
 or an `off screen:` phrase, so the report names a file the fix never touches.
 
 ---

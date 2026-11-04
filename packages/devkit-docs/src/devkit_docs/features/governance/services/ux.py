@@ -12,9 +12,15 @@ step it branches from); without that phrase, or for ``*a`` at the same step, it 
 
 A UX document's ``element`` is ``screen``, ``modal`` or ``panel``; its ``Interactions`` H2 holds a table whose header
 is ``Trigger | Step | From | To | Target | Capability | Feedback``. A Step cell is empty (``-`` and dashes count as
-empty) or one or more `` `UC-<slug>` <key> `` pairs separated by commas or semicolons; a Target cell is empty (the
+empty), one or more `` `UC-<slug>` <key> `` pairs separated by commas or semicolons, or a global classification
+``global: <reason>`` (any case; the reason is opaque text, so no pair is read from it); a Target cell is empty (the
 interaction stays on the element), a UX ID, ``close``, ``back`` or ``end``. A panel is named by an element whose
 ``Content`` H2 cites the panel's UX ID.
+
+Two markers classify an intended coverage gap (``ADR-explicit-ux-coverage-exception-notation``): the global Step cell
+above, and the phrase ``off screen: <reason>`` (``off-screen:``, any case) on one of a step's lines, the reason being
+the rest of that line without its closing ``)`` and sentence period. Both are parsed here once; ``RULE-ux-coverage`` honors them and
+reports a marker without a reason, and ``RULE-ux-links`` reads nothing of them.
 
 The flow graph is computed per use case: its entries are the elements cited by the first main step, by a main step
 whose preceding step cites none and by an extension; its edges are the interactions of the elements the use case's
@@ -50,13 +56,16 @@ _RESUMES = re.compile(
 )
 _STEP_PAIR = re.compile(r"`(UC-[A-Za-z0-9][A-Za-z0-9_-]*)`[ \t]+(\\?\*[a-z]+|\d+[a-z]*)")
 _SEPARATORS = re.compile(r"[\s,;]*")
+_GLOBAL = re.compile(r"^global:[ \t]*(.*)$", re.IGNORECASE)
+_OFF_SCREEN = re.compile(r"\boff[ -]screen:[ \t]*(.*)$", re.IGNORECASE)
 
 
 @dataclass(frozen=True, slots=True)
 class Step:
     """One main-scenario step or extension of a use case: ``key`` (``3``, ``2a``, ``*a``), its first and last body
-    line, ``resumes`` (the key an extension resumes at, ``None`` when it ends the use case or for a main step) and the
-    canonical UX IDs its lines cite, in order."""
+    line, ``resumes`` (the key an extension resumes at, ``None`` when it ends the use case or for a main step), the
+    canonical UX IDs its lines cite, in order, and ``off_screen``: ``None`` without the phrase, ``""`` for a phrase
+    without a reason, else the reason."""
 
     key: str
     line: int
@@ -64,6 +73,7 @@ class Step:
     extension: bool
     resumes: str | None
     screens: tuple[str, ...]
+    off_screen: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,8 +133,10 @@ class StepRef:
 
 @dataclass(frozen=True, slots=True)
 class Interaction:
-    """One row of the Interactions table: its line, the Step cell (raw, its pairs and whether it parses) and the
-    Target cell (raw, and the canonical UX ID or exit word it names; ``""`` when empty or invalid)."""
+    """One row of the Interactions table: its line, the Step cell (raw, its pairs and whether it parses), the
+    Target cell (raw, and the canonical UX ID or exit word it names; ``""`` when empty or invalid) and
+    ``global_reason``: ``None`` when the cell is not a global classification, ``""`` for one without a reason, else
+    the reason."""
 
     line: int
     step_cell: str
@@ -132,6 +144,7 @@ class Interaction:
     step_valid: bool
     target_cell: str
     target: str
+    global_reason: str | None = None
 
     @property
     def step_empty(self) -> bool:
@@ -286,8 +299,25 @@ def use_case(index: DocumentIndex, document: Document, text: str) -> UseCase:
                 stem = found.key.rstrip("abcdefghijklmnopqrstuvwxyz")
                 resumes = stem if stem.isdigit() else None
         screens = tuple(_ux_targets(index, document, found.first, found.last))
-        steps.append(Step(found.key, found.first, found.last, found.extension, resumes, screens))
+        steps.append(
+            Step(found.key, found.first, found.last, found.extension, resumes, screens, _off_screen(found.raw))
+        )
     return UseCase(document, tuple(steps))
+
+
+def _off_screen(lines: list[str]) -> str | None:
+    """The reason of the first ``off screen:`` phrase on ``lines`` (``""`` without one), ``None`` without a phrase."""
+    for line in lines:
+        match = _OFF_SCREEN.search(line)
+        if match is not None:
+            return match.group(1).strip().rstrip(".").rstrip(")").rstrip(".").strip()
+    return None
+
+
+def _global_reason(cell: str) -> str | None:
+    """The reason of a ``global: <reason>`` Step cell (``""`` without one), ``None`` for any other cell."""
+    match = _GLOBAL.match(cell.strip())
+    return match.group(1).strip() if match is not None else None
 
 
 def _cells(line: str) -> list[str]:
@@ -299,7 +329,7 @@ def _cells(line: str) -> list[str]:
 
 
 def _step_refs(index: DocumentIndex, cell: str) -> tuple[tuple[StepRef, ...], bool]:
-    if cell.strip() in EMPTY_CELLS:
+    if cell.strip() in EMPTY_CELLS or _global_reason(cell) is not None:
         return (), True
     pairs = tuple(StepRef(index.canonical_id(m.group(1)), _key(m.group(2))) for m in _STEP_PAIR.finditer(cell))
     rest = _SEPARATORS.fullmatch(_STEP_PAIR.sub("", cell)) is not None
@@ -364,7 +394,9 @@ def ux_document(index: DocumentIndex, document: Document, text: str) -> UxDocume
             continue  # the delimiter row
         cells += [""] * (len(COLUMNS) - len(cells))
         steps, valid = _step_refs(index, cells[1])
-        screen.rows.append(Interaction(number, cells[1], steps, valid, cells[4], _target(index, cells[4])))
+        screen.rows.append(
+            Interaction(number, cells[1], steps, valid, cells[4], _target(index, cells[4]), _global_reason(cells[1]))
+        )
     if content is not None:
         end = content[1] if section != "content" else last
         screen.content = set(_ux_targets(index, document, content[0], max(end, content[0])))

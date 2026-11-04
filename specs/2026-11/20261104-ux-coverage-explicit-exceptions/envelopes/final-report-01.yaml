@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T00:03:07.805435Z'
+status: completed
+summary: 'SPEC-ux-coverage-explicit-exceptions: reasoned global: Step cells and off screen: step phrases parsed once in the shared UX model and honored by RULE-ux-coverage, with classification-without-reason and contradictory forms reported as warnings; step reports placed on the use case first; RULE-ux-links logic unchanged (text only); guides, instructions, template, CAP-GOV-spec-rules and ADR-ux-screens pointers updated; rule, parser and package tests added.'
+findings: []
+assumptions:
+- 'Git policy auto choices: local merge route (no PR needed: no platform review or CI requirement, base accepts direct pushes); worktree required by policy'
+- Task 1 boundary extended with packages/devkit-docs/tests/unit/features/governance/test_ux_markers.py for the parser unit tests; ux_links.py edited for docstring and remediation text only, per answer-01 q2
+- The consumer example is reproduced by rule-test fixtures; no consumer repository changed
+checks:
+  tests: PASS just test-affected 2172 passed; uv run devkit rules test RULE-ux-coverage RULE-ux-links passed=2
+  build: PASS uv run devkit generated check stale=0; devkit sync --check clean
+  lint: PASS uv run devkit rules check --ci --base 4f8cc732 errors=0 warnings=0; just lint-check devkit-docs; just check devkit-docs
+diff_scope:
+  base: 4f8cc73225c79629195b5343bc3ca9d585888626
+  head: e5afc1b0a175b8b15b4791e5cb468015e6816eca
+activity_effort: medium

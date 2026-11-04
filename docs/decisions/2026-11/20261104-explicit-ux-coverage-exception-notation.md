@@ -1,16 +1,16 @@
 ---
-id: PADR-explicit-ux-coverage-exception-notation
+id: ADR-explicit-ux-coverage-exception-notation
 title: Explicit UX coverage exception notation
 summary: For recognizing legitimate UX coverage gaps, we add a reasoned inline classification (a global Step cell and an off-screen step phrase) that RULE-ux-coverage honors, to keep warnings actionable, accepting one more micro-syntax in two documents.
-proposal: PROP-ux-coverage-explicit-exceptions
+proposal: SPEC-ux-coverage-explicit-exceptions
 supersedes: [ADR-ux-screens]
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-explicit-ux-coverage-exception-notation] Explicit UX coverage exception notation
+# [ADR-explicit-ux-coverage-exception-notation] Explicit UX coverage exception notation
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 
 ---
@@ -56,16 +56,17 @@ Inline markers, because they alone meet the no-drift and no-boilerplate drivers 
 precedent.
 
 - A global interaction's Step cell, stripped, starts with `global:` (any case) followed by a non-empty reason, an
-  opaque text from which no step pair is read; the row serves no step. → `CAP-GOV-spec-rules` 3.16 (SHOULD)
+  opaque text from which no step pair is read; the row serves no step. → `CAP-GOV-spec-rules` 3.16 (MUST NOT)
 - An off-screen main-scenario step or extension holds `off screen: <reason>` (`off-screen:` and any case count) in
-  one of its lines; the reason is the rest of that line, a trailing `)` and whitespace dropped. → `CAP-GOV-spec-rules`
-  3.16 (SHOULD)
+  one of its lines; the reason is the rest of that line without its closing `)` and sentence period.
+  → `CAP-GOV-spec-rules` 3.16 (MUST NOT)
 - The shared UX model parses both markers once; `RULE-ux-links` treats a classified Step cell as an empty one, and
   any other cell that is neither empty nor pairs, a cell starting with pairs and carrying `global:` later or a
   misspelled `global` included, as invalid through its existing cell check. → `CAP-GOV-spec-rules` 3.15 (MUST)
 - `RULE-ux-coverage` does not report a row classified global with a reason or a step classified off screen with a
   reason. It reports, at its warning severity and with its own message, a classification without a reason and an
-  off-screen classification on a step that cites a UX ID. → `CAP-GOV-spec-rules` 3.16 (SHOULD)
+  off-screen classification on a step that cites a UX ID. → `CAP-GOV-spec-rules` 3.16 (MUST NOT for the classified
+  item; SHOULD for the defective forms)
 - The reason is checked for presence only; no heuristic on trigger or step wording decides a classification. An
   off-screen reason names no screen, since a code-span UX ID on the step's lines is a citation; a step whose response
   appears on a screen cites that screen.

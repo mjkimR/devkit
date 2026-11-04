@@ -6,8 +6,9 @@ Over every current UX document (kind ``ux``; parsing in ``governance.services.ux
 - a missing ``element``, or one other than ``screen``, ``modal`` or ``panel``;
 - a missing ``Interactions`` H2, or one without a table whose header is
   ``Trigger | Step | From | To | Target | Capability | Feedback``;
-- a Step cell that is neither empty nor `` `UC-<slug>` <key> `` pairs; a pair naming a use case ``usecases`` does
-  not list, a key the use case has no step for, or a step that does not cite the document;
+- a Step cell that is neither empty, `` `UC-<slug>` <key> `` pairs nor a ``global: <reason>`` classification; a pair
+  naming a use case ``usecases`` does not list, a key the use case has no step for, or a step that does not cite the
+  document;
 - a ``usecases`` entry no Step cell names;
 - a Target cell that is neither empty, a UX document's ID, ``close``, ``back`` nor ``end``;
 - a ``modal`` without a ``close`` or ``back`` row;
@@ -104,7 +105,8 @@ def _own(screen: UxDocument, add: Add) -> None:
                 screen,
                 row.line,
                 f'Step cell "{row.step_cell}" is not `UC-<slug>` <key>',
-                "Write the served step as `UC-<slug>` <key> (for example `UC-sign-in` 2a), or leave the cell empty",
+                "Write the served step as `UC-<slug>` <key> (for example `UC-sign-in` 2a), classify a global control"
+                " as `global: <reason>`, or leave the cell empty",
             )
         if not row.target_valid:
             add(

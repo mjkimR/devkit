@@ -1680,11 +1680,11 @@
     },
     ".devkit/managed/docs/instructions/usecase-writing.md": {
       "mode": 420,
-      "sha256": "f2ace3048796934de1847c72b5c131a864eec5c8025f56f0edf7d2a31811c408"
+      "sha256": "803c8e95f3ba927aa1b0713e5e13511928add6b437d7a0f5620362a1435af804"
     },
     ".devkit/managed/docs/instructions/ux-writing.md": {
       "mode": 420,
-      "sha256": "311e948d7a8f5fa1eeb40abdb93e0e08bd1efe5e0e3399b4f0530d3f1d94c11b"
+      "sha256": "f0ffc4dcd90ab87c677b20b80c5f839c2f2f29948853c8c818372be1975a5b65"
     },
     ".devkit/managed/docs/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -1784,7 +1784,7 @@
     },
     ".devkit/managed/docs/rules/ux_coverage/guide.md": {
       "mode": 420,
-      "sha256": "c0396e049a1628982fbb2c5188cb61e251e9705d119dccfe9aac1297074f4567"
+      "sha256": "69ab9c530969aeb4091c8455e0203c2f51e7a750199c09cac954e7df7e2f61c9"
     },
     ".devkit/managed/docs/rules/ux_coverage/rule.py": {
       "mode": 420,
@@ -1792,11 +1792,11 @@
     },
     ".devkit/managed/docs/rules/ux_coverage/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "587a6146fad7d870c9b3955812535672fd9ba91c0983a3ae03beb92442463bf6"
+      "sha256": "826361774e77e87509b3b7495a33384f12627541091fd087ecb8592c2508f92e"
     },
     ".devkit/managed/docs/rules/ux_links/guide.md": {
       "mode": 420,
-      "sha256": "5d08e50d2f06f802eb1eb5f00808488e1c2e314e0a39623fb67e563967b20925"
+      "sha256": "6d250e9546e9363880d5bae758514f780c3daa5fcfbdb023fa4755784fe3ee03"
     },
     ".devkit/managed/docs/rules/ux_links/rule.py": {
       "mode": 420,
@@ -1804,7 +1804,7 @@
     },
     ".devkit/managed/docs/rules/ux_links/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "4da9aa469e3189720e319c6faad71de5f3880bd598a16b4d04b8cdb90cca9585"
+      "sha256": "49496dd26a71a91e0e775d6671b7fc63759b0dc2bca8761dfd1ccdbf63182703"
     },
     ".devkit/managed/docs/templates/capability.md": {
       "mode": 420,
@@ -1824,7 +1824,7 @@
     },
     ".devkit/managed/docs/templates/ux.md": {
       "mode": 420,
-      "sha256": "22f5bfc49344c47251b85489647136e8bd4ecae7e5b97afa6df80a0966f196d6"
+      "sha256": "b1afac4af0589847daf2663c88c35ec4bf1b06da3f8ded8755ae301a478583a7"
     },
     ".devkit/managed/harness/AGENTS.md": {
       "mode": 420,

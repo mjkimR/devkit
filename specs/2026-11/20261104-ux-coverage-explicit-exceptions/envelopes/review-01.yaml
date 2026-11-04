@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-03T23:55:25.358293Z'
+status: completed
+summary: 'PASS: AC-01..AC-08 and AC-10 confirmed by rule tests, AC-09 by unchanged fixtures and rules check --ci, AC-11 by grep, sync and generated checks; ux_links.py diff is text-only; non-goals held. Two P3 improvements.'
+findings:
+- issue: 'No RULE-ux-links test exercises a step carrying off screen: while citing a screen, or one classified without a citation; the links-side invariance rests on the model''s unchanged screens field.'
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_links/tests/test_rule.py:310-340
+  failure_condition: A later change makes the phrase alter Step.screens or the flow graph; no RULE-ux-links test would fail.
+  suggested_action: 'Add a ux_links test with a step `Opens `UX-login`; off screen: cached.` expecting the same reports as without the phrase.'
+  resolution: open
+  severity: P3
+- issue: Three newly written prose lines run far past the 120-column wrap of the surrounding text.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:357; bundles/docs/bundle/rules/ux_coverage/guide.md:15; bundles/docs/bundle/rules/ux_links/guide.md:54
+  failure_condition: Cosmetic only; no rule or lint fails.
+  suggested_action: Rewrap at 120 columns and regenerate the managed copies.
+  resolution: open
+  severity: P3
+assumptions:
+- Native isolated claude-code subagent, read-only; pre- and post-run tree snapshots identical (a85fb5c8)
+unverified_areas:
+- Consumer repository behavior reproduced only by fixtures
+checks:
+  tests: PASS uv run devkit rules test RULE-ux-coverage RULE-ux-links passed=2; pytest governance tests 60 passed; just test-affected 2171 passed
+  lint: PASS uv run devkit rules check --ci --base 4f8cc732 errors=0 warnings=0; just lint-check devkit-docs; just check devkit-docs
+  build: PASS uv run devkit generated check stale=0; devkit sync --check
+diff_scope:
+  base: 4f8cc73225c79629195b5343bc3ca9d585888626
+  head: 07f4ae74862b612604063260e26111fd7a051699
+activity_effort: medium
