@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Explicit user instruction: extend ux-writing with generic guidance for surfaces
+  beyond pages and forms at spec depth, task-kind feature, activity-effort medium;
+  the seven-item outline agreed in conversation is the intent'
+by: user
+at: '2026-11-04T01:03:45.665869Z'

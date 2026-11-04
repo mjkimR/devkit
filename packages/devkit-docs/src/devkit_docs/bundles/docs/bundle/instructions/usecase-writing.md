@@ -33,6 +33,10 @@ rely on. Start from the `usecase` template.
   appears on a screen.` The reason names no screen; a step whose response appears on one cites that screen instead.
   An uncited step without the phrase is a coverage gap `RULE-ux-coverage` keeps warning about. The screen holds the
   interface detail; the step stays an intent (`ux-writing`).
+- A long-running activity (a match, a recording, a session) is one step that cites the element where its outcome is
+  perceived, not one step per moment of it. A judgement the system makes whose result reaches no element (a score
+  computed, a device paired in the background) is classified `off screen: <reason>`; one whose result the person
+  sees cites the element that shows it.
 
 ## Extensions
 

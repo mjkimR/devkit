@@ -46,7 +46,8 @@ Each state offers a next action or says why none exists. -->
 ---
 
 ## 4. Interactions
-<!-- One row per trigger. Step: the served use case step as `UC-<slug>` <key> (`3`, `2a`, `*a`), or `global: <reason>`
+<!-- One row per trigger that serves a step or is a global control; continuous input is described in Content and
+States (ux-writing). Step: the served use case step as `UC-<slug>` <key> (`3`, `2a`, `*a`), or `global: <reason>`
 for a global control; an empty cell is a coverage gap. From and To: states. Target: the UX ID of the element it opens,
 close, back or end; empty when it stays here. Capability: the CAP that owns the operation. Feedback: what the person
 sees. -->

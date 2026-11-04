@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:22:59.451730Z'
+status: completed
+summary: 'round 1; reconcile-reviewer (native subagent): CAP-HARN-agent-guidance 4.3 ux-writing row verified, no-impact for CAP-GOV-spec-rules, ADR-ux-screens, use cases, steering, architecture and the UX READMEs confirmed, no waiver; two P3 wording items (usecase-writing catalog row lacks its step-citation items; ADR-explicit-ux-coverage-exception-notation counts one global example where ux-writing now has two)'
+findings:
+- issue: The CAP-HARN 4.3 usecase-writing row catalogs no UX step citation item although the diff adds the long-running and judged step criterion there.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:156 versus packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/usecase-writing.md:36-39
+  failure_condition: An agent reading 4.3 to find the owner of step citations for long-running or judged steps finds no row naming them.
+  suggested_action: Append the UX step citation items to the usecase-writing row (wording only).
+  resolution: open
+  severity: P3
+- issue: 'ADR-explicit-ux-coverage-exception-notation says ux-writing names the global: form with one example each; the instruction now carries two global: examples.'
+  evidence: docs/decisions/2026-11/20261104-explicit-ux-coverage-exception-notation.md:73-74 versus instructions/ux-writing.md:17-19 and :36-37
+  failure_condition: A reader checking the ADR's Confirmation counts two examples where the ADR says one.
+  suggested_action: Wording repair to 'at least one example each' listed as a modified target, or a waiver stating the count is not normative.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS 52/52 guidance and UX rule tests
+  lint: PASS devkit rules check --ci --base 22aaef0d errors=0 warnings=0
+diff_scope:
+  base: 22aaef0dd1b6410e220267e50c1c8d62520139c8
+  head: 87a6bd6fb64a340af39bb78c5c5cb509812e0d7c
