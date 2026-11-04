@@ -2,7 +2,7 @@
 id: PROP-maintenance-history
 title: Maintenance execution history on a GitHub orphan branch
 summary: "Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: delivery/
 priority: high                        # critical | high | medium | low
