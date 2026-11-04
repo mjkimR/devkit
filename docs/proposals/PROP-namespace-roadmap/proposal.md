@@ -2,7 +2,7 @@
 id: PROP-namespace-roadmap
 title: Per-namespace milestones under the namespace docs root
 summary: "Lets a registered namespace keep its own MS milestones under docs/packages/<name>/roadmap/ with the global lifecycle and selection, so packages on their own cadence stop crowding the global roadmap."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: documents/
 namespace: global
