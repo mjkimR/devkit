@@ -1,0 +1,50 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T00:52:56.344608Z'
+status: completed
+summary: 'Internal contracts collected from docs refs --direction in of the touched capabilities and ADRs: the history store is a new destination kind outside the shared artifact store, needs its own capability and decision, must publish only under explicit per-run authority, restates the weekly-report companion record and four publication states, needs a dirty-state content identity outside source_sha, and any gh api code belongs in a feature package rather than the content-only catalog.'
+findings:
+- issue: CAP-DLV-weekly-report excludes a history backend from its scope and ADR-mcp-runtime-and-shared-artifacts keeps it independent; the history branch therefore needs its own capability and a new decision, and the weekly-report scope clause must point at it at spec-sync
+  evidence: docs/capabilities/delivery/CAP-DLV-weekly-report.md:22-24; docs/decisions/2026-11/20261102-mcp-runtime-and-shared-artifacts.md:121-123,229
+  resolution: open
+- issue: Invocation and integration policy MUST NOT authorize commit, push or other external mutation, and destinations are invocation inputs with no standing publication permission; a default-on history write conflicts, so publication must be an explicitly authorized per-run step with pending as the default outcome
+  evidence: docs/capabilities/delivery/CAP-DLV-weekly-report.md:93-94; docs/decisions/2026-11/20261102-mcp-runtime-and-shared-artifacts.md:190-196; docs/decisions/2026-11/20261102-delivery-approval-and-lifecycle-authority.md:79,211
+  resolution: open
+- issue: The shared artifact store forbids overwrite and deletion, expires after seven days and a production remote adapter is deferred; the history store must not be a SharedArtifactAdapter
+  evidence: docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md:33-36; docs/decisions/2026-11/20261102-mcp-runtime-and-shared-artifacts.md:111-112; specs/2026-10/20261021-worker-shared-state-mcp/feedback/remote-shared-adapter-follow-up.md:31-37
+  resolution: open
+- issue: devkit-catalog is content-only (playbooks, references, rules); Python for a gh api client, digests and retries belongs in a feature package, naturally devkit-agt beside run_gh, which the pull-request ADR scopes to PR operations only; the proposal's boundaries.owns names only the catalog bundle and docs/capabilities/delivery/
+  evidence: packages/devkit-catalog/README.md:62-64; docs/architecture/ARCH-05-2-components.md:80-87; packages/devkit/src/devkit_agt/features/worktree/repositories/pull_request.py:50-97; docs/decisions/2026-11/20261102-local-and-pull-request-integration.md:191-193
+  suggested_action: 'Decision needed: content-only gh api procedure versus a devkit CLI in devkit-agt; the choice changes boundaries.owns and size'
+  resolution: open
+- issue: Playbooks record dirty paths only; CAP-DLV-weekly-report requires a preserved diff/artifact reference for selected uncommitted content; source_sha is defined as a commit so a tree hash must not be placed there; spec-delegate's temporary-index write-tree and run_git(index=...) are the existing mechanisms for a content identity
+  evidence: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md:14-15,32; docs/capabilities/delivery/CAP-DLV-weekly-report.md:36-37; docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md:20-22; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/SKILL.md:29-36; packages/devkit-core/src/devkit_core/core/git.py:85-92
+  resolution: open
+- issue: The companion record contract (run ID, artifact, digest, generation outcome, publication outcome, destination, authority, attempts, evidence), the four publication states and the retry-with-same-run-ID-and-bytes rule already exist and the history design restates them; the drift playbook lacks a run ID and the performance pass uses its own outcome vocabulary
+  evidence: docs/capabilities/delivery/CAP-DLV-weekly-report.md:72-74,83-98; docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md:34-35; docs/capabilities/delivery/CAP-DLV-performance-pass.md:171; docs/usecases/governance/UC-publish-a-weekly-report.md:69-76
+  resolution: open
+- issue: docs/materials/ is tracked research with MAT IDs; a run record is not a material, so the history branch is a new publication destination kind, not the repository's materials location
+  evidence: docs/materials/README.md:3-11; docs/decisions/2026-11/20261102-adaptive-development-and-research.md:300-312
+  resolution: open
+- issue: Glossary registers no term for run, record, publication, outcome, revision or destination; Receipt means installation.json and Snapshot run uses 'run'; the proposal should say playbook run, run record, source SHA and publication destination
+  evidence: docs/steering/glossary.md:22,33,45,54; docs/steering/glossary.yaml:3-28
+  resolution: open
+- issue: 'Verification without GitHub follows the injectable runner (fake gh), FakeGitHub subclass and PATH-shim patterns; CI runs no push/PR workflow, has contents: read and no gh setup, so live publication is a manual labelled exercise'
+  evidence: packages/devkit/tests/integration/features/worktree/test_stale.py:43-63; packages/devkit/tests/integration/features/integration/test_pull_request.py:16-28,110-111; packages/devkit/tests/integration/package/test_module_script.py:18-29; .github/workflows/ci.yml:12-22
+  resolution: open
+- issue: 'ARCH-08-1 and CAP-ADV bind any history command: stable UPPER_SNAKE codes with [ACTION]; rate limits map to DEFER, half-applied publication to HALT, destination or authority questions to INTERACTION'
+  evidence: docs/architecture/ARCH-08-1-agent-output.md:16-18,63,75; docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md:160-218
+  resolution: open
+assumptions:
+- Isolated native claude-code subagent (scout contract); repository evidence only at c0d060b7
+unverified_areas:
+- git add -A treatment of ignored files in a temporary index; git stash create as a candidate
+- Full text of ADR-review-refactor-application, ADR-proposal-handoff, ADR-worktrees-and-scope and SPEC-cli-host-lifecycle (search hits only)
+- Whether a references/ directory is accepted under a single-file playbook
+checks: {}
+diff_scope:
+  base: c0d060b7e798ad45ebc84dbff35b6922c9410698
+  head: c0d060b7e798ad45ebc84dbff35b6922c9410698
+activity_effort: high
