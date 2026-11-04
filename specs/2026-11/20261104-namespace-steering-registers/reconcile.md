@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-namespace-steering-registers
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-namespaces.md
     resolution: modified

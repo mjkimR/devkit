@@ -2,7 +2,7 @@
 id: SPEC-namespace-steering-registers
 title: Use global and selected namespace steering registers together
 summary: "Places namespace glossaries and UX object registers beside namespace steering, retaining shared global context and namespace-scoped search synonyms."
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities: [CAP-DOCS-namespaces, CAP-DOCS-document-search, CAP-GOV-spec-rules]
 related_usecases: []
