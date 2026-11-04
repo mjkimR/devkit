@@ -1,7 +1,7 @@
 ---
 id: ADR-decision-ledger
 title: Immutable decisions, editable records and confirm-first playbook discovery
-summary: "For the decision ledger and unknown procedures, we keep decisions immutable but let ADRs be edited and compacted by topic without changing meaning, and let spec offer one matching playbook at intake that confirmation invokes, to keep records current and procedures found, accepting judged edits."
+summary: "For the decision ledger and unknown procedures, we keep decisions immutable but let ADRs be edited and consolidated by topic without changing meaning, and let spec offer one matching playbook at intake that confirmation invokes, to keep records current and procedures found, accepting judged edits."
 status: accepted
 created_at: 2026-11-02
 aliases:
@@ -18,7 +18,7 @@ supersedes: [ADR-document-id-aliases]
 - **Date**: 2026-11-02
 - **Deciders**: @minjae
 - **Involved Components/Capabilities**: `docs/decisions/`, `capabilities/documents/`, `capabilities/governance/`,
-  `capabilities/harness/`, the `adr-compaction` playbook
+  `capabilities/harness/`, the `adr-consolidation` playbook
 
 ---
 
@@ -33,16 +33,16 @@ the current decision on one topic is spread across several records and supersess
 first) reassembles it at the cost of context. `ADR-document-id-aliases` lets every ID-bearing document carry `aliases`
 resolved through one canonical mapping, so records can be consolidated without breaking references.
 
-**Compaction groups.** Closing every compaction group under supersession lets a few bridging supersessions chain
+**Consolidation groups.** Closing every consolidation group under supersession lets a few bridging supersessions chain
 unrelated topics together: in the integration ADRs, one ADR that retires two clauses and one that replaces three
-lifecycle rules joined 13 ADRs into a single component, which compacted as one replacement would hold about 100
+lifecycle rules joined 13 ADRs into a single component, which consolidated as one replacement would hold about 100
 clauses and 30 aliases across five topics, a mega-ADR that nobody looks up as one decision. A replacement states only
 clauses in effect without closure: the target's replacement can leave out the replaced clauses, and the superseding
 statement lives in its own replacement.
 
 **Playbook discovery.** Playbooks run only on explicit invocation (`/devkit-playbook`, a named ID or a failing rule's
 remediation), so they stay unused unless the user already knows them. `ADR-playbook-retrieval` §4 stated that
-ordinary requests do not authorize discovery, and compaction's deletions are tied to the user's explicit invocation.
+ordinary requests do not authorize discovery, and consolidation's deletions are tied to the user's explicit invocation.
 Several playbooks grant file moves, ADR deletions or feedback status updates on that invocation, and search returns
 topical candidates for most ordinary requests (88 of 105 spec titles), so discovery needs a bound on what it offers and
 on what an offer authorizes.
@@ -59,9 +59,9 @@ on what an offer authorizes.
 - Every current document, ADRs included, converges on canonical IDs through one `devkit rules fix`.
   (ADR-immutable-decisions-editable-records)
 - The current decision on a topic is readable in one record. (ADR-adr-compaction)
-- Compaction reorganizes decisions; it never changes, adds or reverses one. (ADR-adr-compaction)
+- Consolidation reorganizes decisions; it never changes, adds or reverses one. (ADR-adr-compaction)
 - No reference breaks: every retired ID keeps resolving. (ADR-adr-compaction)
-- Running a compaction costs no more process than the change itself: no spec unit for an ID-preserving rewrite.
+- Running a consolidation costs no more process than the change itself: no spec unit for an ID-preserving rewrite.
   (ADR-adr-compaction)
 - Each replacement is one decision area a reader looks up. (ADR-group-compaction-by-topic)
 - A replacement still states only the clauses in effect. (ADR-group-compaction-by-topic)
@@ -81,16 +81,16 @@ on what an offer authorizes.
 ### Decision records
 - **Immutable decisions, editable records** (selected in `ADR-immutable-decisions-editable-records`): a change of
   decision needs a new ADR; an edit that keeps every decision's meaning is allowed in place. Pros: records stay
-  current; compaction is an ordinary edit; references in ADRs are fixed like any other. Cons: whether an edit changes
+  current; consolidation is an ordinary edit; references in ADRs are fixed like any other. Cons: whether an edit changes
   meaning is a judgment, not a mechanical check.
-- **Append-only with compaction as the only exception** (rejected in `ADR-immutable-decisions-editable-records`; the
+- **Append-only with consolidation as the only exception** (rejected in `ADR-immutable-decisions-editable-records`; the
   rule of `ADR-adr-compaction`): stale wording and references stay in every ADR; each other kind of cleanup needs its
   own exception.
 - **Freely editable ADRs** (rejected in `ADR-immutable-decisions-editable-records`): a decision could change without a
   record.
 
-### Compaction
-- **Compaction by replacement with aliases** (selected in `ADR-adr-compaction`): replace a group of related approved
+### Consolidation
+- **Consolidation by replacement with aliases** (selected in `ADR-adr-compaction`): replace a group of related approved
   ADRs with one new ADR whose `aliases` lists the retired IDs and whose considered options keep the alternatives the
   retired ADRs weighed; delete the retired files in the same commit. Pros: one record per topic; references resolve
   through the alias; the full text stays in Git. Cons: retired files leave the working tree.
@@ -98,7 +98,7 @@ on what an offer authorizes.
   deletion, but the ledger keeps every file and an alias can never resolve while the old ID is still declared.
 - **Keep the strict ledger** (rejected in `ADR-adr-compaction`): supersession only; fragmentation keeps growing.
 
-### Compaction groups
+### Consolidation groups
 - **Topic groups; partial supersession may cross groups** (selected in `ADR-group-compaction-by-topic`): group by
   topic; a wholly superseded ADR joins its superseder's group; a partial supersession may cross groups. Pros: coherent
   replacements; a bridging ADR no longer drags unrelated topics together. Cons: a reader follows a superseding
@@ -126,7 +126,7 @@ on what an offer authorizes.
 ## 4. Decision Outcome
 
 Decisions are immutable and decision records are editable and compactable without changing meaning, because that
-keeps every decision change recorded while records stay current and consolidated. Compaction groups are formed by
+keeps every decision change recorded while records stay current and consolidated. Consolidation groups are formed by
 topic, because each replacement stays one decision area while every replacement still states only clauses in effect.
 Playbooks are discovered at `spec`
 intake with confirm-first invocation, because it surfaces procedures while keeping authority with the user and the
@@ -149,33 +149,33 @@ offer rare.
   in any current document, and `devkit rules fix` rewrites it to the canonical ID. This replaces the decision-record
   exemption of `ADR-document-id-aliases` (its "References" outcome). Historical files (completed spec bundles, done or
   dropped milestones) stay as written. (ADR-immutable-decisions-editable-records)
-- **Checks**: no rule detects a decision change; review of the diff does. A compaction run is complete when
+- **Checks**: no rule detects a decision change; review of the diff does. A consolidation run is complete when
   `devkit rules fix` then `devkit rules check` pass, every deleted ADR ID resolves through `devkit docs resolve`, and a
   fidelity review finds no changed decision. (ADR-immutable-decisions-editable-records)
 
-### Compaction
+### Consolidation
 
-- **Compaction**: related ADRs may be consolidated into one replacement ADR whose `aliases` lists the retired IDs and
+- **Consolidation**: related ADRs may be consolidated into one replacement ADR whose `aliases` lists the retired IDs and
   every alias they declared; the retired files are deleted in the same commit. The replacement's outcome holds exactly
   the statements in effect, each citing its source ID; superseded parts are left out, rejected alternatives stay in the
   considered options. A contradiction or a statement that no longer matches the code or the Living Spec is not
-  resolved by compaction; it goes to feedback or a proposal. A compaction runs when the user explicitly invokes the
-  `adr-compaction` playbook, which authorizes its deletions, at `session` depth.
+  resolved by consolidation; it goes to feedback or a proposal. A consolidation runs when the user explicitly invokes the
+  `adr-consolidation` playbook, which authorizes its deletions, at `session` depth.
   (ADR-immutable-decisions-editable-records)
-- A compaction group is formed by topic and holds two or more members. (ADR-group-compaction-by-topic)
+- A consolidation group is formed by topic and holds two or more members. (ADR-group-compaction-by-topic)
   → `CAP-DOCS-document-model` §Decision supersession (MUST)
 - A wholly superseded ADR joins the group of its superseder. (ADR-group-compaction-by-topic)
   → `CAP-DOCS-document-model` §Decision supersession (MUST)
 - When a partially superseding member and its target land in different groups, the target's replacement leaves out
   the replaced clauses. The superseding replacement states what it replaced, and it cites the target's replacement
   ID. (ADR-group-compaction-by-topic) → `CAP-DOCS-document-model` §Decision supersession (MUST)
-- An ADR kept outside the run whose `supersedes` names a compacted member names the member's replacement instead. That
+- An ADR kept outside the run whose `supersedes` names a consolidated member names the member's replacement instead. That
   replacement carries the matching "Superseded in part by" line. (ADR-group-compaction-by-topic)
   → `CAP-DOCS-document-model` §Decision supersession (MUST)
-- A compacted member that partially supersedes an ADR kept outside the run passes that entry on: its replacement lists
+- A consolidated member that partially supersedes an ADR kept outside the run passes that entry on: its replacement lists
   the kept ADR in `supersedes`, the one exception to a replacement having none, and the kept ADR's pointer names the
   replacement. (ADR-group-compaction-by-topic) → `CAP-DOCS-document-model` §Decision supersession (MUST)
-- The user's confirmation of a discovered `adr-compaction` candidate counts as explicit invocation and authorizes its
+- The user's confirmation of a discovered `adr-consolidation` candidate counts as explicit invocation and authorizes its
   deletions. (ADR-spec-intake-playbook-discovery)
 
 ### Playbook discovery at spec intake
@@ -205,7 +205,7 @@ offer rare.
   - ADRs carry current names and canonical IDs; consolidation is routine. (ADR-immutable-decisions-editable-records)
   - Procedures are offered when the request names their operation; authority stays uniform and explicit.
     (ADR-spec-intake-playbook-discovery)
-  - Bridging supersessions no longer force mega-ADRs; the integration ADRs can be compacted by topic.
+  - Bridging supersessions no longer force mega-ADRs; the integration ADRs can be consolidated by topic.
     (ADR-group-compaction-by-topic)
 - **Negative / Risks**:
   - An editorial edit could change meaning unnoticed; the edit's diff review is the guard.
@@ -217,7 +217,7 @@ offer rare.
     and stated in another. (ADR-group-compaction-by-topic)
 - **Follow-ups**:
   - None for the decision records. (ADR-immutable-decisions-editable-records)
-  - The `adr-compaction` playbook follows the topic-group rule. (ADR-group-compaction-by-topic)
+  - The `adr-consolidation` playbook follows the topic-group rule. (ADR-group-compaction-by-topic)
   - `SPEC-review-refactor` and `SPEC-release-handbook` state their entry conditions in this form when they land; a
     recorded offer rate above the acceptance bound triggers a review of the selection rule.
     (ADR-spec-intake-playbook-discovery)
@@ -229,7 +229,7 @@ offer rare.
 - `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/tests/test_rule.py`
   (`test_alias_references_in_decision_records_are_fixed`, `test_alias_references_in_history_stay`).
   (ADR-immutable-decisions-editable-records)
-- Diff review for decision changes; the `adr-compaction` playbook's completion checks.
+- Diff review for decision changes; the `adr-consolidation` playbook's completion checks.
   (ADR-immutable-decisions-editable-records)
 - `RULE-decision-supersession` checks the remaining `supersedes` metadata and pointer lines; the playbook's fidelity
   review checks the replaced clauses. Otherwise review only. (ADR-group-compaction-by-topic)

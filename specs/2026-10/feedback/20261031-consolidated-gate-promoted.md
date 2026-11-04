@@ -1,11 +1,12 @@
 ---
-id: FB-compacted-gate-promoted
+id: FB-consolidated-gate-promoted
 title: Gate feedback, promoted
 summary: Git commit gates, hooks, and lifecycle checks.
 target: docs/capabilities/gate/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-gate-promoted
   - FB-commit-gate-runs-no-rules-check
   - FB-projected-roles-need-a-session-in-the-project
   - FB-read-only-review-context-lock
@@ -13,7 +14,7 @@ aliases:
   - FB-worktree-sync-repoints-the-hook-interpreter
 ---
 
-# [FB-compacted-gate-promoted] Gate feedback, promoted
+# [FB-consolidated-gate-promoted] Gate feedback, promoted
 
 ## FB-commit-gate-runs-no-rules-check
 

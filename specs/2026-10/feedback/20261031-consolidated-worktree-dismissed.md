@@ -1,18 +1,19 @@
 ---
-id: FB-compacted-worktree-dismissed
+id: FB-consolidated-worktree-dismissed
 title: Worktree feedback, dismissed
 summary: Task worktree management and environment isolation.
 target: docs/capabilities/worktree/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-worktree-dismissed
   - FB-handoff-ordering-dependency-unchecked
   - FB-native-worker-command-scoped-approvals
   - FB-shared-agent-invocation-constant
   - FB-sync-locked-leaves-check-failing
 ---
 
-# [FB-compacted-worktree-dismissed] Worktree feedback, dismissed
+# [FB-consolidated-worktree-dismissed] Worktree feedback, dismissed
 
 ## FB-handoff-ordering-dependency-unchecked
 

@@ -1,17 +1,18 @@
 ---
-id: FB-compacted-gate-dismissed
+id: FB-consolidated-gate-dismissed
 title: Gate feedback, dismissed
 summary: Git commit gates, hooks, and lifecycle checks.
 target: docs/capabilities/gate/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-gate-dismissed
   - FB-commit-rewrite-skews-committer-time
   - FB-plan-intent-overrides-accepted-adr
   - FB-reconcile-close-guidance-names-reverify
 ---
 
-# [FB-compacted-gate-dismissed] Gate feedback, dismissed
+# [FB-consolidated-gate-dismissed] Gate feedback, dismissed
 
 ## FB-commit-rewrite-skews-committer-time
 

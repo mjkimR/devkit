@@ -1,4 +1,4 @@
-"""The `feedback-compaction` playbook compacts closed feedback into per-area records with aliases
+"""The `feedback-consolidation` playbook consolidates closed feedback into per-area records with aliases
 (SPEC-feedback-dedup-and-compaction, ``ADR-closed-feedback-compacts-into-per-area-records-with-aliases``).
 
 Wording tests pin the invocation, scope, record shape and completion conditions; the record-shape test fills the
@@ -19,7 +19,7 @@ from distsupport.guidance import assert_rule
 from spec_support.bundle_text import BUNDLE, raw, text
 from spec_support.types import Write
 
-PLAYBOOK = "playbooks/feedback-compaction/SKILL.md"
+PLAYBOOK = "playbooks/feedback-consolidation/SKILL.md"
 RULES = Path(devkit_docs.__file__).parent / "bundles/docs/bundle/rules"
 REPOSITORY_ID = re.compile(r"\b(?:ADR|PADR|CAP|UC|UX|ARCH|SPEC|PROP|MS|MAT|FB)-[A-Za-z0-9][\w-]*")
 
@@ -42,12 +42,12 @@ def _template() -> str:
 def test_the_playbook_is_a_core_asset_of_the_spec_bundle() -> None:
     manifest = tomllib.loads(raw("bundle.toml"))
     assets = {asset["id"]: asset for asset in manifest["assets"]}
-    assert assets["feedback-compaction"] == {
-        "id": "feedback-compaction",
+    assert assets["feedback-consolidation"] == {
+        "id": "feedback-consolidation",
         "kind": "playbook",
-        "source": "playbooks/feedback-compaction",
+        "source": "playbooks/feedback-consolidation",
     }
-    assert "feedback-compaction" in manifest["presets"]["core"]["assets"]
+    assert "feedback-consolidation" in manifest["presets"]["core"]["assets"]
     assert (BUNDLE / PLAYBOOK).is_file()
 
 
@@ -80,7 +80,7 @@ def test_collection_selects_terminal_feedback_under_specs_and_reports_exclusions
     ):
         assert_rule(step, *item)
     assert_rule(step, "`docs/materials/`", "stays as written")
-    assert_rule(step, "existing resolved `fb-compacted-...` records", "other statuses stay in place")
+    assert_rule(step, "existing resolved `fb-consolidated-...` records", "other statuses stay in place")
 
 
 # AC-07
@@ -94,15 +94,15 @@ def test_grouping_and_the_record_shape() -> None:
     assert_rule(group, "misgrouped entry", "move the entry and its alias", "delete no file")
     assert_rule(
         write,
-        "`fb-compacted-<area>-<status>`",
+        "`fb-consolidated-<area>-<status>`",
         "package namespace",
         "`<namespace>-<area>`",
         "id, title and file name alike",
-        "`fb-compacted-<namespace>-<area>-<status>`",
+        "`fb-consolidated-<namespace>-<area>-<status>`",
     )
     assert_rule(write, "append the new entries and aliases", "in place")
-    assert_rule(write, "never create or extend a resolved compact record")
-    assert "`specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`" in text(PLAYBOOK)
+    assert_rule(write, "never create or extend a resolved consolidated record")
+    assert "`specs/<YYYY-MM>/feedback/<YYYYMMDD>-consolidated-<area>-<status>.md`" in text(PLAYBOOK)
     assert_rule(write, "only these seven fields", "every retired id", "every alias a member declared")
     assert_rule(
         write, "no observation field", "`scope`", "`kind`", "`category`", "`origin`", "`severity`", "`recurring`"
@@ -137,7 +137,7 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
         .replace("<one line: why this outcome>", "The lookup now searches every status")
     )
     assert "<" not in record
-    write(f"specs/2026-10/feedback/20261030-compacted-{area}-dismissed.md", record)
+    write(f"specs/2026-10/feedback/20261030-consolidated-{area}-dismissed.md", record)
     history = "specs/2026-09/20260901-sweep/spec.md"
     write(
         history,
@@ -146,7 +146,7 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
     )
     index = DocumentIndex.load(workspace)
     found = index.resolve("FB-retired-sweep-miss")
-    assert (found.id, found.kind.value, found.status) == (f"FB-compacted-{area}-dismissed", "feedback", "dismissed")
+    assert (found.id, found.kind.value, found.status) == (f"FB-consolidated-{area}-dismissed", "feedback", "dismissed")
     for rule in ("id_convention", "spec_format", "document_reference"):
         assert check(load_rule(RULES / rule / "rule.py"), workspace) == [], rule
     # Completed spec history is checked only as an explicit target: its retired ID must resolve through the alias.
@@ -157,7 +157,7 @@ def test_the_filled_template_is_a_feedback_record_whose_aliases_resolve(
 def test_apply_verify_and_completion_conditions() -> None:
     step = _section("## Step 4: Apply and verify")
     assert_rule(
-        step, "`git rm` eligible resolved files", "existing resolved compact records", "`uv run devkit rules fix`"
+        step, "`git rm` eligible resolved files", "existing resolved consolidated records", "`uv run devkit rules fix`"
     )
     assert_rule(step, "status check", "at the base", "equals the `status` of the record that aliases it")
     assert_rule(step, "fidelity review", "disposition", "`reconcile.md`")
@@ -183,31 +183,31 @@ def test_adr_candidates_are_listed_for_the_user_only() -> None:
 
 
 # AC-11
-def test_neighbouring_guidance_points_to_the_compact_form() -> None:
+def test_neighbouring_guidance_points_to_the_consolidated_form() -> None:
     assert_rule(
         raw("skills/spec/references/source-feedback.md"),
         "terminal source",
-        "compact record",
+        "consolidated record",
         "alias",
-        "`feedback-compaction`",
+        "`feedback-consolidation`",
         "stays as written",
     )
     assert_rule(
         raw("skills/spec/references/playbooks.md"),
-        "`spec/feedback-compaction`",
+        "`spec/feedback-consolidation`",
         "authorizes its deletions",
         "`session` depth",
     )
-    assert_rule(raw("playbooks/feedback-hygiene/SKILL.md"), "terminal feedback", "`feedback-compaction` playbook")
+    assert_rule(raw("playbooks/feedback-hygiene/SKILL.md"), "terminal feedback", "`feedback-consolidation` playbook")
 
 
 # AC-12
 def test_the_playbook_cites_no_repository_document() -> None:
     cited = set(REPOSITORY_ID.findall(raw(PLAYBOOK)))
-    assert cited == {"FB-compacted-"}, cited
+    assert cited == {"FB-consolidated-"}, cited
 
 
-def test_existing_resolved_compact_alias_references_remain_visible(workspace: Path, write: Write) -> None:
+def test_existing_resolved_consolidated_alias_references_remain_visible(workspace: Path, write: Write) -> None:
     record = (
         _template()
         .replace("<area>", "delivery")
@@ -220,13 +220,13 @@ def test_existing_resolved_compact_alias_references_remain_visible(workspace: Pa
         .replace("<the outcome with its spec, proposal, rule, ADR or report destination>", "Fixed")
         .replace("<one line: why this outcome>", "Fixed")
     )
-    write("specs/2026-10/feedback/20261030-compacted-delivery-resolved.md", record)
+    write("specs/2026-10/feedback/20261030-consolidated-delivery-resolved.md", record)
     write(
         "docs/a.md",
         "---\nid: CAP-A-a\ntitle: A\nsummary: A.\nstatus: active\n---\n# [CAP-A-a] A\n\n`FB-retired-sweep-miss`\n",
     )
     index = DocumentIndex.load(workspace)
-    assert "CAP-A-a" in index.incoming("FB-compacted-delivery-resolved")
+    assert "CAP-A-a" in index.incoming("FB-consolidated-delivery-resolved")
     collect = _section("## Step 1: Collect")
     group = _section("## Step 2: Group")
     assert_rule(collect, "current document outside this run's deletions")

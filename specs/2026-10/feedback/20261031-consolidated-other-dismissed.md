@@ -1,18 +1,19 @@
 ---
-id: FB-compacted-other-dismissed
+id: FB-consolidated-other-dismissed
 title: Other feedback, dismissed
 summary: General operational feedback and development ergonomics.
 target: other
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-other-dismissed
   - FB-affected-selector-helper-resolution-cost
   - FB-feature-branch-pushed-without-a-push-command
   - FB-host-smoke-stdin-isolation
   - FB-ruff-formats-plan-snippets
 ---
 
-# [FB-compacted-other-dismissed] Other feedback, dismissed
+# [FB-consolidated-other-dismissed] Other feedback, dismissed
 
 ## FB-affected-selector-helper-resolution-cost
 

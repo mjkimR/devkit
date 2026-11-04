@@ -1,7 +1,7 @@
 ---
 id: ADR-feedback-lifecycle-ledger
-title: Feedback lifecycle, recording lookup and compaction
-summary: "For the feedback backlog, we close items at promotion or direct verified resolution, search every status before recording, compact closed items into per-area records with aliases and delete resolved ones, to avoid duplicates and stale noise, accepting that retired resolved IDs stop resolving."
+title: Feedback lifecycle, recording lookup and consolidation
+summary: "For the feedback backlog, we close items at promotion or direct verified resolution, search every status before recording, consolidate closed items into per-area records with aliases and delete resolved ones, to avoid duplicates and stale noise, accepting that retired resolved IDs stop resolving."
 status: accepted
 created_at: 2026-11-02
 aliases:
@@ -13,7 +13,7 @@ aliases:
   - ADR-resolved-feedback-retires-by-deletion
 ---
 
-# [ADR-feedback-lifecycle-ledger] Feedback lifecycle, recording lookup and compaction
+# [ADR-feedback-lifecycle-ledger] Feedback lifecycle, recording lookup and consolidation
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
@@ -39,7 +39,7 @@ as new. `devkit docs search --kind feedback --history` already ranked both items
 
 Terminal feedback (`resolved`, `promoted`, `dismissed`, `forwarded`) stays as traceability, so the ledger only grows:
 233 of 242 files were terminal. Browsing hides them, but every full file stays in repository searches, where agents
-read settled observations as if they were current. ADR compaction (`ADR-decision-ledger`) already consolidates ADRs
+read settled observations as if they were current. ADR consolidation (`ADR-decision-ledger`) already consolidates ADRs
 into replacement records that keep retired IDs as aliases. The document model lets a `feedback` document declare
 `FB-` aliases, `devkit docs resolve` answers a retired ID with the record, and `devkit rules fix` rewrites alias
 references in current documents while leaving work history alone. Resolved feedback records verified fixes; keeping
@@ -88,7 +88,7 @@ checks and evidence.
   (about 0.03) and lexical scores vary per query, so no fixed threshold separates "same" from "related".
 - **Search every status with the existing document search, then judge the hits** (chosen in
   ADR-recording-looks-up-existing-feedback-of-every-status-first): reuses `devkit docs search`, finds reworded and
-  compacted items, costs one search per observation.
+  consolidated items, costs one search per observation.
 
 ### Closed feedback retention
 - **Keep every full file** (rejected in ADR-closed-feedback-compacts-into-per-area-records-with-aliases): no work, but
@@ -99,14 +99,14 @@ checks and evidence.
   ADR-closed-feedback-compacts-into-per-area-records-with-aliases): precise records, but every recorder must pick and
   keep a topic current, and a wrong choice misleads lookups.
 - **Compact at a user-invoked run into one record per capability area and outcome, keeping retired IDs as aliases**
-  (chosen in ADR-closed-feedback-compacts-into-per-area-records-with-aliases): ADR compaction's model; existing
+  (chosen in ADR-closed-feedback-compacts-into-per-area-records-with-aliases): ADR consolidation's model; existing
   terminal statuses stay true; misgrouping is cheap.
-- **One record per capability area with a new terminal status `compacted`** (rejected in
+- **One record per capability area with a new terminal status `consolidated`** (rejected in
   ADR-closed-feedback-compacts-into-per-area-records-with-aliases): fewer records, but changes the `feedback` kind's
   statuses in `devkit-docs` and `devkit-spec` and loses status filtering of past outcomes.
 
 ### Resolved feedback retention
-- **Keep compact records and aliases for all outcomes** (rejected in ADR-resolved-feedback-retires-by-deletion):
+- **Keep consolidated records and aliases for all outcomes** (rejected in ADR-resolved-feedback-retires-by-deletion):
   preserves lookup but retains resolved summaries indefinitely.
 - **Delete eligible resolved records** (chosen in ADR-resolved-feedback-retires-by-deletion): reduces ledger size but
   retired IDs no longer resolve.
@@ -140,7 +140,7 @@ checks and evidence.
 - Before writing, the recorder (a direct recording and every sweep) runs `devkit docs search "<symptom and asset
   words>" --kind feedback --history -n 5`, adding `--all-namespaces` where the sweep covers all namespaces, and reads
   the hits. A hit is the same observation when it describes the same symptom of the same asset or behavior, whatever
-  its `target` wording. For a compact record hit, the recorder reads only the entries that match the observation's
+  its `target` wording. For a consolidated record hit, the recorder reads only the entries that match the observation's
   words, and the matching entry decides. (ADR-recording-looks-up-existing-feedback-of-every-status-first)
 - By the matched status: (ADR-recording-looks-up-existing-feedback-of-every-status-first)
   - `open`: record nothing; name the existing ID. New evidence goes into that file when it is inside the recorder's
@@ -154,17 +154,17 @@ checks and evidence.
 - This lookup replaces the sweep's equal-`target` deduplication. A sweep reports duplicate IDs as before.
   (ADR-recording-looks-up-existing-feedback-of-every-status-first)
 
-### Compaction of closed feedback
+### Consolidation of closed feedback
 
-- Recording picks no topic; a feedback file stays where it was observed until a compaction run.
+- Recording picks no topic; a feedback file stays where it was observed until a consolidation run.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
-- The `feedback-compaction` playbook runs only when the user invokes or confirms it, at `session` depth from a clean
+- The `feedback-consolidation` playbook runs only when the user invokes or confirms it, at `session` depth from a clean
   tree; the invocation authorizes its deletions. It never changes an outcome or reopens an item.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
-- Eligible resolved feedback is deleted during that user-invoked compaction without aliases, including existing
-  resolved compact records and their aliases. The other terminal outcomes continue to be compacted with aliases.
+- Eligible resolved feedback is deleted during that user-invoked consolidation without aliases, including existing
+  resolved consolidated records and their aliases. The other terminal outcomes continue to be consolidated with aliases.
   (ADR-resolved-feedback-retires-by-deletion)
-- The run compacts every other terminal item under `specs/` except, each left in place and reported with the reason
+- The run consolidates every other terminal item under `specs/` except, each left in place and reported with the reason
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases); the same exceptions protect current references,
   incomplete work and unmerged branches from resolved deletion (ADR-resolved-feedback-retires-by-deletion):
   - an item of a spec bundle whose `spec.md` is not `completed`, or of a live proposal;
@@ -179,9 +179,9 @@ checks and evidence.
   `capabilities/<area>/`) that covers their target, judged by the run; an item no area covers goes to `other`. A
   misgrouped entry is accepted and may move at a later run. Lookup never depends on the grouping.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
-- Each group is one `feedback` record, `FB-compacted-<area>-<status>` (`FB-compacted-<namespace>-<area>-<status>` in a
-  package namespace), at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md`
-  (`<YYYYMMDD>-compacted-<namespace>-<area>-<status>.md` in a package namespace) on its first run. A later run appends
+- Each group is one `feedback` record, `FB-consolidated-<area>-<status>` (`FB-consolidated-<namespace>-<area>-<status>` in a
+  package namespace), at `specs/<YYYY-MM>/feedback/<YYYYMMDD>-consolidated-<area>-<status>.md`
+  (`<YYYYMMDD>-consolidated-<namespace>-<area>-<status>.md` in a package namespace) on its first run. A later run appends
   its entries to the existing record of the same area and status in place.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - The record's frontmatter holds only `id`, `title`, `summary` (the area's recurring symptoms, which the search ranks),
@@ -194,11 +194,11 @@ checks and evidence.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - The run deletes the originals, then runs `devkit rules fix`; completed spec history keeps the retired IDs.
   Compacted terminal feedback resolves through aliases; deleted resolved feedback stays in Git history, which keeps the
-  full originals. A branch that merges a compacted base runs
+  full originals. A branch that merges a consolidated base runs
   `devkit rules fix` as after any base merge. (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
-- Fidelity: for every compacted ID, its `status` at the base equals the `status` of the record that aliases it (a
+- Fidelity: for every consolidated ID, its `status` at the base equals the `status` of the record that aliases it (a
   mechanical check), and a review compares each Response with the original's disposition or the resolving
-  `reconcile.md`, as `adr-compaction` reviews its replacements.
+  `reconcile.md`, as `adr-consolidation` reviews its replacements.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - The run lists entries whose reason reads as lasting policy (a reason repeated across entries, or a general rule of
   behavior) that no accepted ADR states, for the user's decision only; it writes no ADR and no feedback for them.
@@ -217,7 +217,7 @@ checks and evidence.
     (ADR-feedback-lifecycle)
   - Reworded duplicates and regressions are caught where they are recorded; terminal items become a memory the
     recorder consults. (ADR-recording-looks-up-existing-feedback-of-every-status-first)
-  - The ledger shrinks to a few records per area; compacted IDs still resolve; the recording lookup finds compacted
+  - The ledger shrinks to a few records per area; consolidated IDs still resolve; the recording lookup finds consolidated
     observations. (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - **Negative / Risks**:
   - A promoted record cannot establish implementation success; read its destination for that evidence.
@@ -246,10 +246,10 @@ checks and evidence.
   (ADR-feedback-lifecycle)
 - Guidance tests under `packages/devkit-spec/tests/integration/bundles/spec/` pin the lookup command and the status
   table in the `spec-feedback` recording procedure and its sweep reference
-  (ADR-recording-looks-up-existing-feedback-of-every-status-first), and the compaction playbook's invocation, scope,
+  (ADR-recording-looks-up-existing-feedback-of-every-status-first), and the consolidation playbook's invocation, scope,
   record shape and completion conditions (ADR-closed-feedback-compacts-into-per-area-records-with-aliases).
-- The compaction run's own completion check: `devkit rules check` exits `0`; `devkit docs resolve <ID>` prints the
-  record with `alias=<ID>` for every compacted feedback ID; the base status of every compacted ID equals its record's
+- The consolidation run's own completion check: `devkit rules check` exits `0`; `devkit docs resolve <ID>` prints the
+  record with `alias=<ID>` for every consolidated feedback ID; the base status of every consolidated ID equals its record's
   status. (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
-- Guidance integration tests cover compaction and recording; document reference rule tests cover historical and
+- Guidance integration tests cover consolidation and recording; document reference rule tests cover historical and
   active references. (ADR-resolved-feedback-retires-by-deletion)

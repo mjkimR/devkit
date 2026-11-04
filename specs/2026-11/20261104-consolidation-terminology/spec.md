@@ -2,7 +2,7 @@
 id: SPEC-consolidation-terminology
 title: Rename record compaction to consolidation
 summary: Rename the record-merging term compaction to consolidation across the spec bundle playbooks, feedback records, ADR wording and Living Spec, keeping the old playbook and record IDs as aliases, so the term no longer collides with the everyday sense of shortening.
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities:
   - CAP-HARN-agent-guidance

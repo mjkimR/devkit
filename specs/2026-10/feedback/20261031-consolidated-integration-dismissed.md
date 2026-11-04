@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-integration-dismissed
+id: FB-consolidated-integration-dismissed
 title: Integration feedback, dismissed
 summary: Worktree preparation and branch integration procedures.
 target: docs/capabilities/integration/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-integration-dismissed
   - FB-readiness-rule-api-change-undiagnosed
 ---
 
-# [FB-compacted-integration-dismissed] Integration feedback, dismissed
+# [FB-consolidated-integration-dismissed] Integration feedback, dismissed
 
 ## FB-readiness-rule-api-change-undiagnosed
 

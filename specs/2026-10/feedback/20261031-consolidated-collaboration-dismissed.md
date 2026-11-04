@@ -1,16 +1,17 @@
 ---
-id: FB-compacted-collaboration-dismissed
+id: FB-consolidated-collaboration-dismissed
 title: Collaboration feedback, dismissed
 summary: Work scope registration and cross-agent collaboration.
 target: docs/capabilities/collaboration/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-collaboration-dismissed
   - FB-cloud-scope-snapshot-sharing
   - FB-subagent-followup-failure-lacks-diagnostic
 ---
 
-# [FB-compacted-collaboration-dismissed] Collaboration feedback, dismissed
+# [FB-consolidated-collaboration-dismissed] Collaboration feedback, dismissed
 
 ## FB-cloud-scope-snapshot-sharing
 

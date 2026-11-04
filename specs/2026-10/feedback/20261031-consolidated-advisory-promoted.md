@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-advisory-promoted
+id: FB-consolidated-advisory-promoted
 title: Advisory feedback, promoted
 summary: Agent advisory protocol and unique code reporting.
 target: docs/capabilities/advisory/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-advisory-promoted
   - FB-advisory-init-docstring-bundle
 ---
 
-# [FB-compacted-advisory-promoted] Advisory feedback, promoted
+# [FB-consolidated-advisory-promoted] Advisory feedback, promoted
 
 ## FB-advisory-init-docstring-bundle
 

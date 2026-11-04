@@ -1,11 +1,12 @@
 ---
-id: FB-compacted-delivery-dismissed
+id: FB-consolidated-delivery-dismissed
 title: Delivery feedback, dismissed
 summary: Delivery workflow stages, envelopes, and proposal handoff.
 target: docs/capabilities/delivery/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-delivery-dismissed
   - FB-automatic-review-managed-sync
   - FB-handbook-journey-misses-handoff-commit
   - FB-handoff-premise-drift-unreported
@@ -21,7 +22,7 @@ aliases:
   - FB-split-feedback-disposition-outside-scope
 ---
 
-# [FB-compacted-delivery-dismissed] Delivery feedback, dismissed
+# [FB-consolidated-delivery-dismissed] Delivery feedback, dismissed
 
 ## FB-automatic-review-managed-sync
 

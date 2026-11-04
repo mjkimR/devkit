@@ -1,11 +1,12 @@
 ---
-id: FB-compacted-worktree-promoted
+id: FB-consolidated-worktree-promoted
 title: Worktree feedback, promoted
 summary: Task worktree management and environment isolation.
 target: docs/capabilities/worktree/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-worktree-promoted
   - FB-fresh-worktree-environment-bootstrap
   - FB-gate-answers-carry-conversation-transcripts
   - FB-no-worktree-session-branch-shared-checkout
@@ -13,7 +14,7 @@ aliases:
   - FB-pr-remote-and-squash-integration
 ---
 
-# [FB-compacted-worktree-promoted] Worktree feedback, promoted
+# [FB-consolidated-worktree-promoted] Worktree feedback, promoted
 
 ## FB-fresh-worktree-environment-bootstrap
 

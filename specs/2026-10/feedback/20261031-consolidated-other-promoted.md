@@ -1,11 +1,12 @@
 ---
-id: FB-compacted-other-promoted
+id: FB-consolidated-other-promoted
 title: Other feedback, promoted
 summary: General operational feedback and development ergonomics.
 target: other
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-other-promoted
   - FB-config-template-has-no-preview
   - FB-current-reference-material
   - FB-derive-prints-every-pair
@@ -17,7 +18,7 @@ aliases:
   - FB-spec-summary-missing-from-new-guides
 ---
 
-# [FB-compacted-other-promoted] Other feedback, promoted
+# [FB-consolidated-other-promoted] Other feedback, promoted
 
 ## FB-config-template-has-no-preview
 

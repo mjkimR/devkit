@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-cli-promoted
+id: FB-consolidated-cli-promoted
 title: CLI feedback, promoted
 summary: Command line interface argument handling and terminal output.
 target: docs/capabilities/cli/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-cli-promoted
   - FB-readiness-cli-contract-checks-the-base-runtime
 ---
 
-# [FB-compacted-cli-promoted] CLI feedback, promoted
+# [FB-consolidated-cli-promoted] CLI feedback, promoted
 
 ## FB-readiness-cli-contract-checks-the-base-runtime
 

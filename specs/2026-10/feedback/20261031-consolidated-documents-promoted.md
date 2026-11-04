@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-documents-promoted
+id: FB-consolidated-documents-promoted
 title: Documents feedback, promoted
 summary: Living Spec document model, IDs, references, and frontmatter.
 target: docs/capabilities/documents/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-documents-promoted
   - FB-lock-bump-command-misses-new-devkit-commits
 ---
 
-# [FB-compacted-documents-promoted] Documents feedback, promoted
+# [FB-consolidated-documents-promoted] Documents feedback, promoted
 
 ## FB-lock-bump-command-misses-new-devkit-commits
 

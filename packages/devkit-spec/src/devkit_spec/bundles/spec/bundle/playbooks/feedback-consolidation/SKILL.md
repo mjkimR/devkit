@@ -1,20 +1,22 @@
 ---
-name: feedback-compaction
-description: Delete eligible resolved feedback and compact other closed feedback under specs/ into per-area outcome records with aliases.
+name: feedback-consolidation
+aliases:
+  - feedback-compaction
+description: Delete eligible resolved feedback and consolidate other closed feedback under specs/ into per-area outcome records with aliases.
 ---
 
-# Feedback compaction
+# Feedback consolidation
 
 Run this playbook only when the user invoked or confirmed it; that invocation authorizes the run's feedback
 deletions. It runs at `session` depth from a clean working tree; record the base commit (`git rev-parse HEAD`).
 
-A compaction never changes an outcome and never reopens an item: each entry keeps its terminal status and
+A consolidation never changes an outcome and never reopens an item: each entry keeps its terminal status and
 disposition. Git history keeps the full originals.
 
 ## Step 1: Collect
 
 List terminal feedback with `uv run devkit docs list feedback --history --all-namespaces -n 0`. Eligible: an item
-under `specs/` whose `status` is `resolved`, `promoted`, `dismissed` or `forwarded`, including existing resolved `FB-compacted-...` records and their aliases. Existing compact records of other statuses stay in place for Step 3 to extend. Leave each of these in place and record it with the
+under `specs/` whose `status` is `resolved`, `promoted`, `dismissed` or `forwarded`, including existing resolved `FB-consolidated-...` records and their aliases. Existing consolidated records of other statuses stay in place for Step 3 to extend. Leave each of these in place and record it with the
 reason for the report:
 
 - an `open` item;
@@ -31,7 +33,7 @@ Feedback under `docs/materials/` stays as written, like every material.
 
 ## Step 2: Group
 
-- Separate eligible resolved items for deletion without a record or alias. Apply the same exclusion checks to existing resolved compact records and every alias they carry.
+- Separate eligible resolved items for deletion without a record or alias. Apply the same exclusion checks to existing resolved consolidated records and every alias they carry.
 - Group each remaining eligible item by the capability area that covers its `target`: a `docs/capabilities/<area>/` directory,
   or `capabilities/<area>/` of a package namespace. Judge from the target, title and evidence; an item no area covers
   goes to `other`. A misgrouped entry is accepted and may move at a later run: move the entry and its alias to the
@@ -42,17 +44,17 @@ Feedback under `docs/materials/` stays as written, like every material.
 
 ## Step 3: Write or extend each record
 
-Write records only for `promoted`, `dismissed` and `forwarded` groups. Never create or extend a resolved compact record.
+Write records only for `promoted`, `dismissed` and `forwarded` groups. Never create or extend a resolved consolidated record.
 
-The record of a group is `FB-compacted-<area>-<status>`. For an area of a package namespace, `<area>` below stands
-for `<namespace>-<area>` in the ID, title and file name alike (`FB-compacted-<namespace>-<area>-<status>`), because the
-file name sets the ID. If `uv run devkit docs resolve FB-compacted-<area>-<status>` finds the record, append the new
+The record of a group is `FB-consolidated-<area>-<status>`. For an area of a package namespace, `<area>` below stands
+for `<namespace>-<area>` in the ID, title and file name alike (`FB-consolidated-<namespace>-<area>-<status>`), because the
+file name sets the ID. If `uv run devkit docs resolve FB-consolidated-<area>-<status>` finds the record, append the new
 entries and aliases to that file in place and update its `summary`. Otherwise create
-`specs/<YYYY-MM>/feedback/<YYYYMMDD>-compacted-<area>-<status>.md` with today's date from this template:
+`specs/<YYYY-MM>/feedback/<YYYYMMDD>-consolidated-<area>-<status>.md` with today's date from this template:
 
 ```markdown
 ---
-id: FB-compacted-<area>-<status>
+id: FB-consolidated-<area>-<status>
 title: <Area> feedback, <status>
 summary: <One English sentence naming the area's recurring symptoms; the search ranks it.>
 target: docs/capabilities/<area>/
@@ -62,7 +64,7 @@ aliases:
   - FB-<retired-name>
 ---
 
-# [FB-compacted-<area>-<status>] <Area> feedback, <status>
+# [FB-consolidated-<area>-<status>] <Area> feedback, <status>
 
 ## FB-<retired-name>
 
@@ -83,7 +85,7 @@ aliases:
 
 ## Step 4: Apply and verify
 
-1. `git rm` eligible resolved files, including existing resolved compact records, and the originals of other groups; then run `uv run devkit rules fix` to rewrite alias references in current documents.
+1. `git rm` eligible resolved files, including existing resolved consolidated records, and the originals of other groups; then run `uv run devkit rules fix` to rewrite alias references in current documents.
 2. Status check: for every deleted ID in a non-resolved group
    (`git diff --no-renames --name-only --diff-filter=D <base> -- specs/`), its `status` at the base
    (`git show <base>:<path>`) equals the `status` of the record that aliases it.

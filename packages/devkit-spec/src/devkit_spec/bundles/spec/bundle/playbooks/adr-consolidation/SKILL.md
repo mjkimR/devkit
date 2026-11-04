@@ -1,15 +1,17 @@
 ---
-name: adr-compaction
+name: adr-consolidation
+aliases:
+  - adr-compaction
 description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision.
 ---
 
-# ADR compaction
+# ADR consolidation
 
 Run this playbook only when the user invoked or confirmed it, for the whole ledger or named ADRs; that invocation
 authorizes the run's ADR deletions. It runs at `session` depth from a clean working tree; record the base commit
 (`git rev-parse HEAD`).
 
-A compaction never changes a decision. A decision that must change needs a new ADR with `supersedes`, outside this
+A consolidation never changes a decision. A decision that must change needs a new ADR with `supersedes`, outside this
 run.
 
 ## Step 1: Group

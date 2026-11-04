@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-viewer-forwarded
+id: FB-consolidated-viewer-forwarded
 title: Viewer feedback, forwarded
 summary: Living Spec viewer frontend and navigation.
 target: docs/capabilities/viewer/
 status: forwarded
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-viewer-forwarded
   - FB-approval-review-usage-limit
 ---
 
-# [FB-compacted-viewer-forwarded] Viewer feedback, forwarded
+# [FB-consolidated-viewer-forwarded] Viewer feedback, forwarded
 
 ## FB-approval-review-usage-limit
 

@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-governance-dismissed
+id: FB-consolidated-governance-dismissed
 title: Governance feedback, dismissed
 summary: Repository governance rules and architectural constraints.
 target: docs/capabilities/governance/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-governance-dismissed
   - FB-adr-before-build-misses-the-reconcile-commit
 ---
 
-# [FB-compacted-governance-dismissed] Governance feedback, dismissed
+# [FB-consolidated-governance-dismissed] Governance feedback, dismissed
 
 ## FB-adr-before-build-misses-the-reconcile-commit
 

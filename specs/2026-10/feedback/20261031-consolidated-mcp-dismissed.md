@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-mcp-dismissed
+id: FB-consolidated-mcp-dismissed
 title: MCP feedback, dismissed
 summary: Model Context Protocol services and tool registration.
 target: docs/capabilities/mcp/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-mcp-dismissed
   - FB-integration-approval-review-before-elicitation
 ---
 
-# [FB-compacted-mcp-dismissed] MCP feedback, dismissed
+# [FB-consolidated-mcp-dismissed] MCP feedback, dismissed
 
 ## FB-integration-approval-review-before-elicitation
 

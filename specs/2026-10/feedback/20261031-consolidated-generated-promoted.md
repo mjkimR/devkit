@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-generated-promoted
+id: FB-consolidated-generated-promoted
 title: Generated feedback, promoted
 summary: Tracked generated artifacts and registry checks.
 target: docs/capabilities/generated/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-generated-promoted
   - FB-generated-check-uncommitted-registry
 ---
 
-# [FB-compacted-generated-promoted] Generated feedback, promoted
+# [FB-consolidated-generated-promoted] Generated feedback, promoted
 
 ## FB-generated-check-uncommitted-registry
 

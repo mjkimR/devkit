@@ -1,11 +1,12 @@
 ---
-id: FB-compacted-distribution-promoted
+id: FB-consolidated-distribution-promoted
 title: Distribution feedback, promoted
 summary: Bundle asset synchronization, presets, and package distribution.
 target: docs/capabilities/distribution/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-distribution-promoted
   - FB-bundle-budget-forces-waivers
   - FB-commit-intent-before-planning-worktree
   - FB-effort-procedure-restated
@@ -20,7 +21,7 @@ aliases:
   - FB-wrapped-boundary-drops-paths
 ---
 
-# [FB-compacted-distribution-promoted] Distribution feedback, promoted
+# [FB-consolidated-distribution-promoted] Distribution feedback, promoted
 
 ## FB-bundle-budget-forces-waivers
 

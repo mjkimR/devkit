@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-harness-dismissed
+id: FB-consolidated-harness-dismissed
 title: Harness feedback, dismissed
 summary: Developer harness, scripts, and runtime execution.
 target: docs/capabilities/harness/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-harness-dismissed
   - FB-adr-standalone-rule-asset-claim
 ---
 
-# [FB-compacted-harness-dismissed] Harness feedback, dismissed
+# [FB-consolidated-harness-dismissed] Harness feedback, dismissed
 
 ## FB-adr-standalone-rule-asset-claim
 

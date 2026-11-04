@@ -1,15 +1,16 @@
 ---
-id: FB-compacted-documents-dismissed
+id: FB-consolidated-documents-dismissed
 title: Documents feedback, dismissed
 summary: Living Spec document model, IDs, references, and frontmatter.
 target: docs/capabilities/documents/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-documents-dismissed
   - FB-local-worktree-copy-premise-root-policy
 ---
 
-# [FB-compacted-documents-dismissed] Documents feedback, dismissed
+# [FB-consolidated-documents-dismissed] Documents feedback, dismissed
 
 ## FB-local-worktree-copy-premise-root-policy
 

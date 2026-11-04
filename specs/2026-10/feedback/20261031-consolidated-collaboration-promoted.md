@@ -1,16 +1,17 @@
 ---
-id: FB-compacted-collaboration-promoted
+id: FB-consolidated-collaboration-promoted
 title: Collaboration feedback, promoted
 summary: Work scope registration and cross-agent collaboration.
 target: docs/capabilities/collaboration/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-collaboration-promoted
   - FB-receipt-overlap-between-tasks
   - FB-skeleton-placeholder-registers-false-overlap
 ---
 
-# [FB-compacted-collaboration-promoted] Collaboration feedback, promoted
+# [FB-consolidated-collaboration-promoted] Collaboration feedback, promoted
 
 ## FB-receipt-overlap-between-tasks
 

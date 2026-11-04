@@ -1,18 +1,19 @@
 ---
-id: FB-compacted-governance-promoted
+id: FB-consolidated-governance-promoted
 title: Governance feedback, promoted
 summary: Repository governance rules and architectural constraints.
 target: docs/capabilities/governance/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-governance-promoted
   - FB-authoring-preset-not-selected
   - FB-link-rule-ignores-file-urls
   - FB-new-seed-sync-output-outside-boundaries
   - FB-reference-to-draft-added-on-base
 ---
 
-# [FB-compacted-governance-promoted] Governance feedback, promoted
+# [FB-consolidated-governance-promoted] Governance feedback, promoted
 
 ## FB-authoring-preset-not-selected
 

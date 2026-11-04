@@ -1,18 +1,19 @@
 ---
-id: FB-compacted-distribution-dismissed
+id: FB-consolidated-distribution-dismissed
 title: Distribution feedback, dismissed
 summary: Bundle asset synchronization, presets, and package distribution.
 target: docs/capabilities/distribution/
 status: dismissed
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-distribution-dismissed
   - FB-common-exclusion-policy-helper
   - FB-maintenance-companion-playbooks
   - FB-parallel-pruning-cuts-both-owners
   - FB-presentation-fallback-field-unused
 ---
 
-# [FB-compacted-distribution-dismissed] Distribution feedback, dismissed
+# [FB-consolidated-distribution-dismissed] Distribution feedback, dismissed
 
 ## FB-common-exclusion-policy-helper
 

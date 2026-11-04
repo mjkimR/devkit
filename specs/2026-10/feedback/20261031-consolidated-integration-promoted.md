@@ -1,17 +1,18 @@
 ---
-id: FB-compacted-integration-promoted
+id: FB-consolidated-integration-promoted
 title: Integration feedback, promoted
 summary: Worktree preparation and branch integration procedures.
 target: docs/capabilities/integration/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-integration-promoted
   - FB-auto-integration-dispatch
   - FB-integrate-assumes-a-remote-base
   - FB-integrate-merge-message-fails-commit-msg-gate
 ---
 
-# [FB-compacted-integration-promoted] Integration feedback, promoted
+# [FB-consolidated-integration-promoted] Integration feedback, promoted
 
 ## FB-auto-integration-dispatch
 

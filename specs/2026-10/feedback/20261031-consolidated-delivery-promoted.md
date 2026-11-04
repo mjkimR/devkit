@@ -1,11 +1,12 @@
 ---
-id: FB-compacted-delivery-promoted
+id: FB-consolidated-delivery-promoted
 title: Delivery feedback, promoted
 summary: Delivery workflow stages, envelopes, and proposal handoff.
 target: docs/capabilities/delivery/
 status: promoted
 created_at: 2026-10-31
 aliases:
+  - FB-compacted-delivery-promoted
   - FB-envelope-answer-help-item-keys
   - FB-envelope-findings-reject-severity
   - FB-envelope-head-accepts-unknown-commit
@@ -22,7 +23,7 @@ aliases:
   - FB-workflow-skill-records-every-gate
 ---
 
-# [FB-compacted-delivery-promoted] Delivery feedback, promoted
+# [FB-consolidated-delivery-promoted] Delivery feedback, promoted
 
 ## FB-envelope-answer-help-item-keys
 
