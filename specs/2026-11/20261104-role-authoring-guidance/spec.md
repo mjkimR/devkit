@@ -2,7 +2,7 @@
 id: SPEC-role-authoring-guidance
 title: Author skill-local roles and registered subagents
 summary: Define shared authoring criteria for skill-local role instructions and registered subagents.
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []

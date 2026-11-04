@@ -21,6 +21,8 @@ source, run `devkit sync` after editing.
 - Make `description` say what the skill does and when to use it, in the words a user or agent would type; it
   decides whether the skill triggers.
 - Put each situation or procedure that only some runs need in its own `references/<situation>.md`.
+- When the skill delegates work, apply Role Placement in `agent-asset-writing` before choosing a skill-local role
+  file or a registered subagent.
 
 ## Step 2: Restructure a large skill
 

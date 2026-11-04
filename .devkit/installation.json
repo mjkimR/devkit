@@ -1540,11 +1540,11 @@
     },
     ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
       "mode": 420,
-      "sha256": "311f9e45c3696a89e183004971dbb3c9927b0a6d3e5bb8164c0b0d64cd698d4e"
+      "sha256": "302ec3ddb5977a9ea1d784cb00b124ebae7d29b9b7d3f5a733c3ae8473b1111a"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,
-      "sha256": "8896c1753b6fe1afc70e15ea783bf5f77edc99b4adf23296374fdbd5c42cc25f"
+      "sha256": "e9268adb1efac401c80f4245c14c23233276c43dcadd22f05c93b17819c64a46"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
       "mode": 420,
