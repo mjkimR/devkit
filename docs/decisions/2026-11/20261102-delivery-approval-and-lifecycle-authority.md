@@ -17,6 +17,8 @@ aliases:
 
 # [ADR-delivery-approval-and-lifecycle-authority] Delivery approval gates, Host CLI lifecycle authority and reusable git-operator execution
 
+Superseded in part by `ADR-post-merge-verification`: For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR, Repository owner

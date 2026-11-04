@@ -1,45 +1,24 @@
 ---
-id: PROP-post-merge-verification
+id: SPEC-post-merge-verification
 title: Verify integration after merging with the resulting runtime
 summary: Verify the landed result with its declared devkit runtime after branch checks, and simplify integration preparation, recovery and CLI usage.
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: integration/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/integration/
-    - packages/devkit/src/devkit_agt/features/worktree/
-    - packages/devkit/pyproject.toml
-    - packages/devkit/tests/
-    - packages/devkit-spec/src/devkit_spec/
-    - packages/devkit-spec/pyproject.toml
-    - packages/devkit-spec/tests/
-    - docs/capabilities/integration/
-    - docs/capabilities/delivery/
-    - docs/capabilities/governance/
-    - docs/capabilities/worktree/
-    - docs/capabilities/harness/
-    - docs/usecases/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/development/
-    - AGENTS.md
-    - .devkit/config.toml
-    - guides/
-  excludes:
-    - packages/devkit-dist/src/
-    - packages/devkit-mcp/src/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-04
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-post-merge-verification] Verify integration after merging with the resulting runtime
+# [SPEC-post-merge-verification] Verify integration after merging with the resulting runtime
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-post-merge-verification on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-post-merge-verification`
+- Target Docs Blueprint: `PROP-post-merge-verification-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Integration evaluates source rules and workflow content with the target checkout's installed devkit. A branch can
 pass its own checks but fail integration because that runtime lacks its CLI, rule imports or receipt reader.
@@ -53,7 +32,26 @@ target is an accepted operational trade-off. Its frequency has not been measured
 This is one lifecycle change delivered by one spec, including CLI simplification, failure recovery and guidance.
 The local base at Planning start is `main` at `675f31df`; this proposal has no prerequisites.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Verify integration after merging with the resulting runtime so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — Verification owner:** The Host runs existing project commands after landing. Devkit adds no test runner,
   runtime installer, verification database or pass-token protocol.
@@ -66,11 +64,11 @@ The local base at Planning start is `main` at `675f31df`; this proposal has no p
 - **Q4 — CLI:** Remove merge-time readiness-provider inputs and checks. Keep explicit approval preparation, Git
   identities, route controls and honest partial-effect results. Proposal acceptance remains a separate operation.
 
-Scout evidence and compared alternatives are in `materials/integration-options.md`.
+Scout evidence and compared alternatives are in `docs/materials/2026-11/20261104-post-merge-verification/integration-options.md`.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Selected procedure
+#### 3.1 Selected procedure
 
 1. The Host verifies the source branch with its own runtime: project tests, lint/types as required, rules, review
    and SDD completion checks. Existing checks and unresolved-question/problem handling still apply here.
@@ -92,7 +90,7 @@ A missing dependency, setup failure or broken devkit import is unfinished verifi
 Use the repository's direct test commands when the devkit wrapper is itself broken; repair the tool before required
 rule/workflow checks can pass. Do not replay a completed merge to retry a final check.
 
-### 3.2 Verification policy and batching
+#### 3.2 Verification policy and batching
 
 Use each client repository's required checks; do not prescribe this repository's `just` recipes to clients.
 For this repository, record the target SHA before the first merge and run `just test-affected --base <that SHA>` on
@@ -110,7 +108,7 @@ Synchronize the local target to the observed landed commit under the existing ro
 or a clearly reported descendant including subsequent changes. Unknown merge outcomes preserve recovery state and
 never trigger another merge request or cleanup. No force push, admin bypass or implicit publication is introduced.
 
-### 3.3 CLI and implementation simplification
+#### 3.3 CLI and implementation simplification
 
 Proposed public invocation (normative target, not available in the existing CLI):
 
@@ -153,7 +151,7 @@ handoff authority for unchanged scope; changed content/effects require the exist
 label handoff completed or emit its worktree/commit fields before it occurs. `accept_only` ends after acceptance
 and its final verification. Add a fixture proving no old-process handoff evaluation after landing.
 
-### 3.4 Result and recovery contract
+#### 3.4 Result and recovery contract
 
 The CLI returns stable machine-readable Git-effect state and the actual landed revision. Add an explicit
 `verification: pending` result field on known successful landings; an unknown/unperformed landing has
@@ -166,7 +164,7 @@ Retain warning/strict behavior and exact completed-effect reporting. A partial c
 cleanup without asking to remerge. Final-check failures are reported by the actual check command and the Host.
 Cleanup may complete before a failing final check; the report must say both facts explicitly.
 
-### 3.5 Acceptance scenarios
+#### 3.5 Acceptance scenarios
 
 - **AC-01 Ordinary client:** Given unchanged tool dependencies and a passing branch, when it lands, final checks
   use the landed environment and report the checked HEAD before delivery is reported complete.
@@ -189,7 +187,7 @@ retains authorized mode/effort in its continuation, and never evaluates landed c
 - **AC-09 Cleanup and output:** Given a confirmed merge, authorized cleanup still runs with identity checks; final
   verification is pending in both JSON and text. Partial or unknown effects never become a false completion report.
 
-### 3.6 Boundaries and verification
+#### 3.6 Boundaries and verification
 
 Development changes the integration/worktree paths needed for this lifecycle, their tests, devkit-spec delivery
 and agent assets, package entry-point declarations, integration configuration and the Living Spec targets. The broad
@@ -203,10 +201,11 @@ final-check failure and recovery in temporary Git repositories. Validate the Hos
 and a recorded end-to-end walkthrough; do not claim the CLI enforces external test completion. Run lint, types,
 `just test-affected --base <base>` and rules on the implementation. No performance or failure-rate claim is made.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
-`PADR-post-merge-verification` partially supersedes integration/content-readiness and deferred-final-testing clauses
+`ADR-post-merge-verification` partially supersedes integration/content-readiness and deferred-final-testing clauses
 of the named ADRs. It preserves approval authority, Git identities, publication limits and partial-effect recovery.
 Planning acceptance authorizes the detailed direction and CLI removals. Development effort is high because the
 public command and integration contracts change. Handoff produces one implementation spec; completion requires
 implementation, review, Living Spec reconciliation and final verification evidence.
+

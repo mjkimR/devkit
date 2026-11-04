@@ -1,18 +1,18 @@
 ---
-id: PADR-post-merge-verification
+id: ADR-post-merge-verification
 title: Complete integration after verifying the landed runtime
 summary: "For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target."
-proposal: PROP-post-merge-verification
+proposal: SPEC-post-merge-verification
 supersedes:
   - ADR-local-and-pull-request-integration
   - ADR-delivery-approval-and-lifecycle-authority
   - ADR-test-selection-and-ci
   - ADR-proposal-acceptance
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-post-merge-verification] Complete integration after verifying the landed runtime
+# [ADR-post-merge-verification] Complete integration after verifying the landed runtime
 
 ## 1. Context & Problem Statement
 

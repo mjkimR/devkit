@@ -14,6 +14,8 @@ aliases:
 
 # [ADR-proposal-acceptance] Proposal acceptance, review reports and proposal records
 
+Superseded in part by `ADR-post-merge-verification`: For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target.
+
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the viewer exception clause and the native form rendering consequence.
 
 - **Status**: Accepted
