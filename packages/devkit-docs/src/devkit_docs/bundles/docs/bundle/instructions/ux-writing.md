@@ -67,11 +67,16 @@ status display fits it by these criteria, not by an exception to the rules.
 
 ## Objects and the register
 
-- Name every object by its glossary term (`docs/steering/glossary.md`). Labels use the use case's and the
-  glossary's terms.
+- Name every object by its glossary term (`docs/steering/glossary.md` plus the selected registered namespace's
+  `docs/packages/<name>/steering/glossary.md`). Labels use the use case's and the glossary's terms.
 - The representations and calls to action of each object per role live in one steering file,
   `docs/steering/ux-objects.md` (frontmatter `title` and `summary`, no `id`). Create it with the project's first UX
-  document; nothing seeds it, so a project without an interface never carries it.
+  document that needs shared object rows; nothing seeds it, so a project without an interface never carries it.
+- For namespace UX, read the root register together with `docs/packages/<name>/steering/ux-objects.md` when it exists.
+- Write namespace-specific object rows in that namespace register; keep shared object rows in the root register.
+- Create a namespace register only when local rows are needed; never copy the root register into every namespace.
+- Review representations and calls to action against both registers; the UX link and coverage rules do not parse
+  object registers or enforce vocabulary semantics.
 - Each register row holds only the object, the role, the representation names and the call-to-action names, for the
   objects the use cases with UX documents touch. When the steering body cap is reached, keep only those objects;
   when no steering slot is free, the review records the register item as not applicable with the reason.

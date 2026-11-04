@@ -171,3 +171,15 @@ def test_a_malformed_registry_degrades_to_the_root_directory_with_a_warning(proj
     assert notice["code"] == "CONTEXT_DOCUMENTS_EXTENSION_FAILED"
     assert result.stderr == ""  # JSON-only command: the one object carries the advisory (ARCH-08-1)
     assert _devkit(project, "get-context", "docs", "--strict", cwd=project / "packages/api").returncode == 1
+
+
+def test_optional_namespace_registers_are_listed_with_global_registers(project: Path) -> None:
+    for directory in ("docs/steering", API, WEB):
+        for name in ("glossary.md", "ux-objects.md"):
+            (project / directory / name).write_text(_steering(name, "Read before choosing vocabulary."))
+        (project / directory / "glossary.yaml").write_text("terms: []\n")
+    context = _context(project, "--for", "packages/api")
+    names = _names(context, project)
+    assert "docs/steering/glossary.md" in names and f"{API}/glossary.md" in names
+    assert "docs/steering/ux-objects.md" in names and f"{API}/ux-objects.md" in names
+    assert not any(name.startswith(WEB) or name.endswith(".yaml") for name in names)

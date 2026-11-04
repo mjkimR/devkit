@@ -12,7 +12,7 @@ The policy on top of the generic ranking:
   embedding whole bodies did worse than the ID alone.
 - **Pinning**: a query equal to a document's ID, workspace-relative path or file name (case-insensitive) puts that
   document first, whatever the ranking.
-- **Glossary expansion**: ``docs/steering/glossary.yaml`` (optional; ``terms: [{primary, synonyms: [...]}]``) adds a term's
+- **Glossary expansion**: global and selected registered namespace ``steering/glossary.yaml`` files (optional; ``terms: [{primary, synonyms: [...]}]``) adds a term's
   whole synonym cluster to the query when the query contains any of its terms, compared as ``tokenize`` words.
   Terms of different clusters with the same words (``C++`` and ``C#`` both tokenize to ``c``) expand to both
   clusters merged, so no cluster is lost.
@@ -59,32 +59,44 @@ class SpecSearchResult:
     hits: list[SpecHit]
 
 
-def load_glossary(root: Path) -> dict[tuple[str, ...], list[str]]:
-    """Each glossary term's words (devkit's ``tokenize``) mapped to its whole cluster; empty without
-    ``docs/steering/glossary.yaml``. Words that terms of several clusters share map to the union of those clusters, in
-    glossary order."""
-    path = root / GLOSSARY_PATH
-    if not path.is_file():
-        return {}
-    try:
-        data = safe_load(path.read_text(encoding="utf-8"), source=GLOSSARY_PATH) or {}
-    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
-        raise GlossaryInvalidError(f"{GLOSSARY_PATH}: {exc}") from exc
-    terms = data.get("terms", []) if isinstance(data, dict) else None
-    if not isinstance(terms, list):
-        raise GlossaryInvalidError(f"{GLOSSARY_PATH}: terms must be a list of {{primary, synonyms}}")
+def load_glossary(root: Path, paths: Sequence[str] = (GLOSSARY_PATH,)) -> dict[tuple[str, ...], list[str]]:
+    """Merge synonym files in the supplied order; missing files contribute no terms.
+
+    The default is the global register. The search use case supplies its registered namespace selection.
+    Token collisions union clusters, preserving the first occurrence of each term.
+    """
     index: dict[tuple[str, ...], list[str]] = {}
-    for term in terms:
-        if not isinstance(term, dict) or not isinstance(term.get("primary"), str):
-            raise GlossaryInvalidError(f"{GLOSSARY_PATH}: every term needs a primary string")
-        synonyms = term.get("synonyms", [])
-        if not isinstance(synonyms, list) or not all(isinstance(s, str) for s in synonyms):
-            raise GlossaryInvalidError(f"{GLOSSARY_PATH}: synonyms of {term['primary']} must be a list of strings")
-        cluster = [term["primary"], *synonyms]
-        for word in cluster:
-            words = tuple(tokenize(word))
-            if words:
-                index[words] = list(dict.fromkeys([*index.get(words, []), *cluster]))
+    for relative in paths:
+        path = root / relative
+        if not path.is_file():
+            continue
+
+        def invalid(detail: str, source: str = relative) -> GlossaryInvalidError:
+            return GlossaryInvalidError(
+                f"{source}: {detail}",
+                target_files=[source],
+                fix=f"Correct {source}: terms is a list of mappings, each with a primary string and an optional "
+                "synonyms list of strings",
+            )
+
+        try:
+            data = safe_load(path.read_text(encoding="utf-8"), source=relative) or {}
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
+            raise invalid(str(exc)) from exc
+        terms = data.get("terms", []) if isinstance(data, dict) else None
+        if not isinstance(terms, list):
+            raise invalid("terms must be a list of {primary, synonyms}")
+        for term in terms:
+            if not isinstance(term, dict) or not isinstance(term.get("primary"), str):
+                raise invalid("every term needs a primary string")
+            synonyms = term.get("synonyms", [])
+            if not isinstance(synonyms, list) or not all(isinstance(s, str) for s in synonyms):
+                raise invalid(f"synonyms of {term['primary']} must be a list of strings")
+            cluster = [term["primary"], *synonyms]
+            for word in cluster:
+                words = tuple(tokenize(word))
+                if words:
+                    index[words] = list(dict.fromkeys([*index.get(words, []), *cluster]))
     return index
 
 
@@ -148,6 +160,7 @@ def search_documents(
     limit: int = DEFAULT_LIMIT,
     min_similarity: float = DEFAULT_MIN_SIMILARITY,
     accept: Callable[[Document], bool] | None = None,
+    glossary_paths: Sequence[str] = (GLOSSARY_PATH,),
 ) -> SpecSearchResult:
     """Rank the documents of ``index`` for ``query`` under the document search policy; ``limit`` ``0`` returns all.
 
@@ -160,7 +173,7 @@ def search_documents(
         and (history or not index.is_browsing_historical(document))
         and (accept is None or accept(document))
     ]
-    expanded = expand_query(query, load_glossary(index.root))
+    expanded = expand_query(query, load_glossary(index.root, glossary_paths))
     pinned = [document for document in candidates if _matches_exactly(document, query)]
     ranking = SearchIndex(
         [
@@ -208,5 +221,13 @@ class SearchDocumentsUseCase(BaseUseCase):
             limit=limit,
             min_similarity=min_similarity,
             accept=scope.accepts,
+            glossary_paths=[
+                GLOSSARY_PATH,
+                *(
+                    f"{item.docs}/steering/glossary.yaml"
+                    for item in sorted(scope.namespaces, key=lambda item: item.name)
+                    if scope.selection.matches(item.name)
+                ),
+            ],
         )
         return result, index.problems, scope

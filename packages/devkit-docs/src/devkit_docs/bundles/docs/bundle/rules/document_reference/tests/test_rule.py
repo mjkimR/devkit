@@ -699,3 +699,21 @@ def test_cross_namespace_milestone_dependency_resolves(tmp_path: Path) -> None:
         "docs/packages/api/roadmap/MS-x.md": _doc("MS-x"),
     }
     assert check(RULE, tmp_path, files) == []
+
+
+def test_namespace_glossary_owners_are_checked_and_fixed(tmp_path: Path) -> None:
+    path = "docs/packages/api/steering/glossary.md"
+    row = _GLOSSARY_HEADER + "| one | definition | [CAP-A-old] | | |\n"
+    files = {
+        ".devkit/config.toml": '[[tool.docs.namespaces]]\nname = "api"\npath = "services/api"\n',
+        path: row,
+        "docs/steering/glossary.md": _GLOSSARY_HEADER + "| one | definition | `CAP-A-missing` | | |\n",
+        "docs/packages/api/steering/product.md": "\n\n`CAP-A-missing`\n",
+        "docs/a.md": _doc("CAP-A-new", header="aliases: [CAP-A-old]\n"),
+    }
+    found = check(RULE, tmp_path, files)
+    assert any(v.file == path and "Owner CAP-A-old" in v.message for v in found)
+    assert sum("CAP-A-missing" in v.message for v in found) == 2
+    fixed = check(RULE, tmp_path, targets=[path], fix=True)
+    assert not _found(fixed)
+    assert "[CAP-A-new]" in (tmp_path / path).read_text()

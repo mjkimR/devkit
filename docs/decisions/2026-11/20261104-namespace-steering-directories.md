@@ -10,6 +10,8 @@ created_at: 2026-11-04
 
 # [ADR-namespace-steering-directories] Namespace steering directories listed by the working directory's namespace
 
+Superseded in part by `ADR-namespace-steering-registers`: namespace glossary locations and exclusions, root-only search synonyms, and the deferred namespace UX object register.
+
 - **Status**: Accepted
 - **Date**: 2026-11-04
 - **Involved Components/Capabilities**: `docs/steering/`, `docs/packages/<name>/steering/`, `CAP-GOV-spec-rules`,

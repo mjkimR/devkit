@@ -449,7 +449,8 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 ### Screens (docs/ux/)
 
 <Only when the proposal changes what a person sees: one draft per screen, modal or panel in the ux template's shape
-(ux-writing), with the use case step citations and docs/steering/ux-objects.md rows they need. Write IDs this proposal
+(ux-writing), with the use case step citations and root docs/steering/ux-objects.md or namespace
+  docs/packages/<name>/steering/ux-objects.md rows they need; read both registers for namespace UX. Write IDs this proposal
 creates as plain text. Drop this subsection otherwise.>
 
 ---

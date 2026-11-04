@@ -14,7 +14,8 @@ Planning (recorded at `spike`), or of `spec.md` at spec depth before the plan (r
 
 - The Screens drafts in the UX template's shape (`ux-writing`), with their use case step citations.
 - The use cases the drafts list in `usecases`, as they will read after the change.
-- `docs/steering/ux-objects.md` when it exists, and the register rows drafted with the screens.
+- `docs/steering/ux-objects.md` and the selected namespace's `docs/packages/<name>/steering/ux-objects.md` when they
+  exist, and the register rows drafted with the screens.
 - The Evidence each draft links (wireframe, mock-up or screenshot), when present.
 
 ## Steps
@@ -41,7 +42,8 @@ a finding:
 - **R3 states**: every state offers a next action or says why none exists.
 - **R4 feedback**: every interaction gives feedback; irreversible ones confirm or can be undone.
 - **R5 terms**: labels use the use case's and the glossary's terms.
-- **R6 objects**: representations and calls to action match `docs/steering/ux-objects.md` plus the drafted rows for
+- **R6 objects**: representations and calls to action match the root and selected namespace `steering/ux-objects.md`
+  registers plus the drafted rows for
   the role; not applicable, with the reason, only when neither the file nor drafted rows exist or no steering slot
   is free.
 

@@ -200,29 +200,27 @@ def test_namespace_findings_name_the_namespace_directory(
     assert (file, line) == (path, expected[0]) and message.startswith(expected[1])
 
 
-def test_namespace_glossary_files_are_reported_and_not_counted(tmp_path: Path) -> None:
+def test_namespace_glossary_files_follow_the_root_contract(tmp_path: Path) -> None:
     files = {
         ".devkit/config.toml": _namespaces("api"),
-        **{f"{NAMESPACE}/topic-{number:02}.md": _doc() for number in range(10)},
         f"{NAMESPACE}/glossary.md": _doc("Glossary", "Read before naming a concept.", "# Glossary\n"),
         f"{NAMESPACE}/glossary.yaml": "terms: []\n",
-        "docs/steering/glossary.yaml": "terms: []\n",
-        "docs/steering/glossary.md": _doc("Glossary", "Read before naming a concept.", "# Glossary\n"),
+        f"{NAMESPACE}/ux-objects.md": _doc("UX objects", "Read before drafting UX.", "# Objects\n"),
     }
-    found = check(RULE, tmp_path, files, targets=[f"{NAMESPACE}/glossary.md", f"{NAMESPACE}/glossary.yaml"])
-    assert _found(found) == [
-        (
-            f"{NAMESPACE}/glossary.md",
-            1,
-            f"the package glossary lives at docs/packages/api/glossary.md, not in {NAMESPACE}/",
-        ),
-        (f"{NAMESPACE}/glossary.yaml", 1, f"{NAMESPACE}/ holds only Markdown files"),
-    ]
-    assert [v.remediation for v in found] == [
-        "Move the file to docs/packages/api/glossary.md",
-        "Remove the file; search synonyms are read from docs/steering/glossary.yaml only",
-    ]
-    assert check(RULE, tmp_path, targets=["docs/steering/glossary.yaml", "docs/steering/glossary.md"]) == []
+    assert check(RULE, tmp_path, files) == []
+    files.update({f"{NAMESPACE}/topic-{number:02}.md": _doc() for number in range(9)})
+    found = _found(check(RULE, tmp_path / "capped", files))
+    assert len(found) == 1 and "11 Markdown files" in found[0][2]
+
+
+def test_legacy_namespace_glossary_names_canonical_path_without_moving(tmp_path: Path) -> None:
+    path = "docs/packages/api/glossary.md"
+    files = {".devkit/config.toml": _namespaces("api"), path: "# Legacy glossary\n"}
+    found = check(RULE, tmp_path, files, targets=[path])
+    assert len(found) == 1
+    assert f"{NAMESPACE}/glossary.md" in found[0].remediation
+    assert not found[0].fixable
+    assert (tmp_path / path).read_text() == files[path]
 
 
 def _two_directories() -> dict[str, str]:

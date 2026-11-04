@@ -14,11 +14,12 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
 1. **Impact**: find affected documents from `spec.md` and the diff (`devkit docs refs <ID> --direction in`,
    `devkit docs search "<topic>"`). Update or create capabilities, use cases (templates in
    `.devkit/managed/docs/templates/`) and `docs/architecture/`; if the change did introduce or rename a domain term,
-   update `docs/steering/glossary.md` where it exists. No index tables in directory `README.md` files.
+   update the owning `docs/steering/glossary.md` or `docs/packages/<name>/steering/glossary.md` where it exists. No index tables in directory `README.md` files.
    - Screens: write each draft of the spec's `Screens` section to `docs/ux/<area>/UX-<slug>.md` (template `ux`) with
      its step citations to the use cases, and the `Screens` section's register rows to `docs/steering/ux-objects.md`
-     (created with the project's first UX document); make plain-text new IDs code spans. `RULE-ux-links` and
-     `RULE-ux-coverage` check them from then on.
+     for shared objects or `docs/packages/<name>/steering/ux-objects.md` for namespace-specific objects; read both
+     and create only a register whose rows are needed. Make plain-text new IDs code spans. `RULE-ux-links` and
+     `RULE-ux-coverage` check screen links and step coverage; register semantics remain a review concern.
    - Copy no user stories into `docs/` (they state the request, not the contract); fold the delivered behavior into
      the use cases it changes: steps, extensions with codes, postconditions, scenarios (`usecase-writing`).
 2. **Record**: create `reconcile.md` in the bundle with one target per changed Living Spec file, or no-impact
@@ -34,7 +35,7 @@ Run at `living-spec-draft`, after `spec-review` passes; write `docs/` by the `li
    ---
    ```
 
-   Every written UX document, changed use case and `docs/steering/ux-objects.md` is a target; every drafted screen
+   Every written UX document, changed use case and modified root or namespace `steering/ux-objects.md` is a target; every drafted screen
    has a `docs/ux/` target.
 3. **Deferred work and source feedback**: apply `completion.md`'s Deferred Work Handoff and
    [source feedback](../spec/references/source-feedback.md); record destinations and resolutions in `reconcile.md`.

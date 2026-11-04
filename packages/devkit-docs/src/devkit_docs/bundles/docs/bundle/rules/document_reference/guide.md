@@ -13,7 +13,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   well-formed ID): their relation fields, the `` `ID` `` and `[ID]` references in their prose, and their relative
   Markdown links. Provenance fields need no existing target: a spec's `proposal:` is not checked, and an anchor's
   `decomposed_from` and `supersedes` must only be `PROP-` IDs.
-- **Root glossary Owners**: additionally, `docs/steering/glossary.md` is checked without adding an ID or indexing it.
+- **Glossary Owners**: additionally, `docs/steering/glossary.md` and each registered namespace's
+  `docs/packages/<name>/steering/glossary.md` are checked without adding an ID or indexing them.
   In five-column tables headed `Term | Definition | Owner | Avoid | Code identifiers`, followed by a Markdown
   separator row, full IDs in backticks or brackets in the `Owner` cell must resolve uniquely. Empty owners and
   non-reference text are allowed. Uniquely resolving aliases are fixable without changing the reference delimiters or table layout; there are no reference-graph edges;
@@ -21,9 +22,9 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   add surplus cells. The same prose masking, targeting, exclusions and snapshot cache apply.
 - **Steering files**: every backtick-quoted full ID in the visible text of the Markdown files directly in
   `docs/steering/`, or in `docs/packages/<name>/steering/` of a namespace registered in `[[tool.docs.namespaces]]`
-  (other than `README.md`), the root glossary included, must resolve uniquely and must not be an alias.
+  (other than `README.md`), the root and namespace glossaries included, must resolve uniquely and must not be an alias.
   These files have no ID and stay out of the index; uniquely resolving code-span aliases are fixable without reference-graph edges. An ID already checked
-  as a glossary Owner on the same line is reported once.
+  as a glossary Owner in the same file and line is reported once.
 - **Quick references**: every backtick-quoted full ID in the visible text of the ID-free Markdown files the
   `quick_references` setting matches (by default developer references, installation guides and package and tool
   READMEs) must resolve uniquely; one written with an alias is reported and fixable. A matching file that declares an
@@ -63,7 +64,7 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - A reference to an ID no document declares: `no document has the ID <ID>`; or that several declare: `<ID> is declared
   by <n> documents: <paths>`; or an alias that several documents declare: `<ID> is an alias declared by <n>
   documents: <paths>`.
-- A reference written with an alias (fixable): `` <alias> is an alias of <ID>; reference `<ID>` ``. A root glossary
+- A reference written with an alias (fixable): `` <alias> is an alias of <ID>; reference `<ID>` ``. A glossary
   Owner naming an alias (fixable): `` Owner <alias> is an alias of <ID>; name `<ID>` ``; another ID cited in a
   steering file (fixable): `` <alias> is an alias of <ID>; name `<ID>` ``. An alias cited in a quick reference
   (fixable) reads like one in a document. An unresolved ID cited in a steering file or a quick reference reads like
@@ -86,7 +87,7 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - **Autofix**: `devkit rules fix` converts `[ID]` to `` `ID` ``, replaces a handed-off `PROP-<slug>` with the
   canonical ID of `SPEC-<slug>` and an alias reference with the canonical ID, keeping a quoted frontmatter value's
   quote style; decision records (ADRs and PADRs) are rewritten like any current document, and so are the code-span
-  alias citations of steering files and quick references. It also replaces aliases in root glossary Owner cells,
+  alias citations of steering files and quick references. It also replaces aliases in root and registered namespace glossary Owner cells,
   preserving backtick or bracket delimiters and table layout. It never changes a spec's `proposal:` provenance field, an `aliases` entry,
   a plain-text ID, skips completed specs, materials and files that are not valid UTF-8, and writes
   only the targets when the run names any. A rename spec writes the old IDs as plain text, so the fix leaves its

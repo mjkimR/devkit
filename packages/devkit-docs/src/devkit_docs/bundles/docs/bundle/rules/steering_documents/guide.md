@@ -11,10 +11,9 @@ body before a decision its summary covers. This rule keeps that always-loaded li
 - **What is checked**: the files under the root `docs/steering/` and under `docs/packages/<name>/steering/` of each
   namespace registered in `[[tool.docs.namespaces]]`, one directory at a time: a directory is checked when at least
   one of its files is targeted, and `max_files` counts each directory on its own. A namespace steering directory
-  follows the root contract; its `glossary.md` and `glossary.yaml` are reported (see below), because the package
-  glossary lives at `docs/packages/<name>/glossary.md` and search synonyms are read from `docs/steering/glossary.yaml`
-  only.
-- **What is not**: `README.md` is neither checked, counted nor listed. The root `glossary.yaml` (search synonyms) is
+  follows the root contract, including optional `glossary.md`, `glossary.yaml` and `ux-objects.md` registers.
+  A legacy `docs/packages/<name>/glossary.md` is reported with a manual move/merge instruction.
+- **What is not**: `README.md` is neither checked, counted nor listed. The root or namespace `glossary.yaml` (search synonyms) is
   allowed and not checked here. The steering directory of an unregistered `docs/packages/<name>/` is not checked.
   The IDs a steering file cites are checked by `RULE-document-reference`.
 
@@ -25,14 +24,9 @@ concerns: `docs/steering/` below reads `docs/packages/<name>/steering/` in a nam
 
 - A file in a subdirectory: `steering documents live directly in docs/steering/, not in <dir>/`.
 - A file that is neither Markdown nor `glossary.yaml`: `docs/steering/ holds only Markdown files and glossary.yaml`.
-  In a namespace steering directory, where `glossary.yaml` is not allowed either: `docs/packages/<name>/steering/
-  holds only Markdown files`.
-- `glossary.md` in a namespace steering directory, at line 1: `the package glossary lives at
-  docs/packages/<name>/glossary.md, not in docs/packages/<name>/steering/`. Move it there; it does not count toward
-  `max_files`.
-- `glossary.yaml` in a namespace steering directory, at line 1: `docs/packages/<name>/steering/ holds only Markdown
-  files`. Remove it; search synonyms are read from `docs/steering/glossary.yaml` only, and it does not count toward
-  `max_files`.
+- A legacy `docs/packages/<name>/glossary.md`, at line 1: `the namespace glossary belongs in
+  docs/packages/<name>/steering/glossary.md`. Move or merge the content into the canonical file with title and
+  English summary frontmatter; no automatic move is performed.
 - A file that is not UTF-8: `steering document must be UTF-8`. `devkit get-context` would list it with null values.
 - Frontmatter that does not parse: `steering document frontmatter is invalid: <detail>`.
 - Frontmatter that closes after the first 4096 bytes, all `devkit get-context` reads of a file: `frontmatter ends at

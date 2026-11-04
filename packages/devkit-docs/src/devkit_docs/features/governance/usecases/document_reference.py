@@ -18,7 +18,7 @@ Checks every current document that is not a material (``rules.is_material``):
   field, and an alias that another document declares as its ID or that several documents declare;
 - in the ID-free steering files (the Markdown files directly in ``docs/steering/`` or in a registered namespace's
   ``docs/packages/<name>/steering/``, other than ``README.md``), every backtick-quoted ID must resolve and must not be
-  an alias, and the Owner cells of the five-column tables of the root ``docs/steering/glossary.md`` likewise; neither
+  an alias, and the Owner cells of the five-column tables of the root and registered namespace ``steering/glossary.md`` files likewise; neither
   is added to the reference graph;
 - in the quick references (the ID-free Markdown files the ``quick_references`` setting matches, by default
   ``docs/development/``, ``guides/`` and the package and tool READMEs), every backtick-quoted ID must resolve, and one
@@ -49,8 +49,6 @@ from devkit_docs.features.documents.services.rewrite import rewrite
 from devkit_docs.features.governance import FIX_COMMAND, document_index, is_material, namespaces, reportable
 
 RULE_ID = "RULE-document-reference"
-STEERING = "docs/steering"
-GLOSSARY = f"{STEERING}/glossary.md"
 _CITED = re.compile(rf"(?<!`)`({ID_SOURCE})`(?!`)")
 # The repository's ID-free quick references: developer references, installation guides and package READMEs.
 QUICK_REFERENCES = ("docs/development/**/*.md", "guides/**/*.md", "packages/*/README.md", "tools/*/README.md")
@@ -338,22 +336,33 @@ class DocumentReferenceRule(BaseRule):
                     column=link.start + 1,
                 )
 
-    def _glossary(self, ctx: RuleContext, index: DocumentIndex) -> tuple[list[Violation], set[tuple[int, str]]]:
-        """Resolve only Owner references in the ID-free root glossary's five-column tables; also return the
-        ``(line, ID)`` pairs examined, which the steering pass does not report again."""
-        path = GLOSSARY
+    def _glossary(self, ctx: RuleContext, index: DocumentIndex) -> tuple[list[Violation], set[tuple[str, int, str]]]:
+        found: list[Violation] = []
+        examined: set[tuple[str, int, str]] = set()
+        for directory in _steering_directories(ctx):
+            findings, seen = self._glossary_file(ctx, index, f"{directory}/glossary.md")
+            found.extend(findings)
+            examined.update(seen)
+        return found, examined
+
+    def _glossary_file(
+        self, ctx: RuleContext, index: DocumentIndex, path: str
+    ) -> tuple[list[Violation], set[tuple[str, int, str]]]:
+        """Resolve Owner cells of one ID-free canonical glossary without duplicating steering citations."""
         if not ctx.is_file_targeted(path):
             return [], set()
         # find_files honors snapshot contents, exclusions and symlink policy; never read the live tree directly.
-        if ctx.workspace_root / path not in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",)):
+        if ctx.workspace_root / path not in ctx.cache.find_files(
+            ctx.workspace_root / path.rsplit("/", 1)[0], extensions=(".md",)
+        ):
             return [], set()
         text = ctx.cache.read_text_strict(path)
         if text is None:
             return [], set()
         found: list[Violation] = []
-        examined: set[tuple[int, str]] = set()
+        examined: set[tuple[str, int, str]] = set()
         for number, _, target in _owners(text):
-            examined.add((number, target))
+            examined.add((path, number, target))
             problem = _resolve_problem(index, target)
             alias = problem is None and index.canonical_id(target) != target
             if alias:
@@ -375,7 +384,7 @@ class DocumentReferenceRule(BaseRule):
                 )
         return found, examined
 
-    def _steering(self, ctx: RuleContext, index: DocumentIndex, examined: set[tuple[int, str]]) -> list[Violation]:
+    def _steering(self, ctx: RuleContext, index: DocumentIndex, examined: set[tuple[str, int, str]]) -> list[Violation]:
         """Resolve the backtick-quoted IDs of the ID-free steering files; aliases are fixable without graph edges."""
         found: list[Violation] = []
         for path in _steering_files(ctx):
@@ -385,7 +394,7 @@ class DocumentReferenceRule(BaseRule):
             if text is None:
                 continue
             for number, column, target in _citations(text):
-                if (number, target) in examined:
+                if (path, number, target) in examined:
                     continue
                 problem = _resolve_problem(index, target)
                 alias = problem is None and index.canonical_id(target) != target
@@ -491,7 +500,7 @@ class DocumentReferenceRule(BaseRule):
             if text is None:
                 continue
             updated = _rewrite_citations(text, index)
-            if path == GLOSSARY:
+            if path.rsplit("/", 1)[-1] == "glossary.md" and path in steering:
                 updated = _rewrite_owners(updated, index)
             if updated != text:
                 ctx.cache.write_text(path, updated, dry_run=ctx.dry_run)
