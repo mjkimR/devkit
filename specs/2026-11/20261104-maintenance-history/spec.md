@@ -1,14 +1,13 @@
 ---
 id: SPEC-maintenance-history
 title: Maintenance execution history on a GitHub orphan branch
-summary: Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history.
+summary: "Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history."
 status: planned
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-maintenance-history] Maintenance execution history on a GitHub orphan branch
 
@@ -28,18 +27,73 @@ depend on it. This draft is the direct member of `MS-maintenance-run-history`, w
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Maintenance execution history on a GitHub orphan branch so that system capabilities are extended.
+- **US-1**: As a maintenance agent, I want a frozen run record identifying inspected content and evidence.
+- **US-2**: As a maintenance agent, I want authorized atomic publication and retry-safe amendments on an independent history branch.
+- **US-3**: As a maintenance agent, I want to find and read prior runs without fetching or changing my checkout.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: schedulers, automatic code integration, history on or merged into a code branch, non-GitHub providers, retention cleanup and a web viewer.
+2. **Scope Excluded**: publishing retained dirty diffs without explicit file selection and granting publication authority through configuration.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Initialize and validate the history branch
+- **Given** an explicitly authorized repository and absent, matching, foreign or empty destination.
+- **When** `init` runs.
+- **Then** it creates one deterministic parentless root or validates its ancestry; foreign and empty destinations are refused without updating a ref, and no local file is written.
+
+### [AC-02] Identify inspected content without changing local Git state
+- **Given** a clean or dirty repository and run/report paths inside or outside it.
+- **When** `start` snapshots the comparison set fixed at intake.
+- **Then** source SHA, dirty paths, temporary-index tree and retained diff digest identify that content; run/report output is excluded and the real index, HEAD and refs stay unchanged.
+
+### [AC-03] Freeze evidence and detect drift
+- **Given** a started run and a report.
+- **When** `finish` records completed, failed or interrupted outcome.
+- **Then** it secret-checks report and record, freezes canonical record/report digests, refuses a different report path, and warns with `HISTORY_RUN_DRIFTED` if inspected content changed.
+
+### [AC-04] Publish atomically and retry by inspection
+- **Given** a finished run and explicit authority.
+- **When** `publish` targets a valid history branch.
+- **Then** record, report, selected files and one year-shard index line become visible through one non-forced ref update; identical retries resolve without resending and different content at the same path is refused.
+
+### [AC-05] Preserve concurrent writers and classify uncertain outcomes
+- **Given** races, rate limits, unavailable gh, permission failures, read/object-creation timeouts or a lost ref-update response.
+- **When** publication is attempted.
+- **Then** races rebuild on the latest head at most three times, successful writers survive; deferred operations remain pending, permission/collision failures are failed, and only a lost ref-update response is unknown until inspection.
+
+### [AC-06] Append immutable amendments
+- **Given** a published run whose work integrates or stops after finish.
+- **When** authorized `update` runs or retries.
+- **Then** it publishes an append-only amendment with a fixed retry filename and its own index line without changing the published record or report.
+
+### [AC-07] Retrieve latest runs and published files
+- **Given** year-sharded indexes, amendments, superseded runs or an absent branch.
+- **When** `list` or `get` runs.
+- **Then** list merges amendments by update time, filters source/outcome/supersession and limits newest-first; an absent branch lists zero with a notice and get refuses a missing run.
+
+### [AC-08] Keep publication separate from local evidence and authority
+- **Given** missing authority, a secret, changed evidence, config defaults or selected extra files.
+- **When** a history command runs.
+- **Then** missing authority, secrets and changed evidence are refused with the stated stable codes; configuration grants no authority and commands write local state only within the run directory.
+
+### [AC-09] Mount an agent-first command family and integrate four playbooks
+- **Given** devkit-agt is installed with or without the maintenance catalog.
+- **When** commands or any of the four playbooks run.
+- **Then** commands expose text sentinels or one JSON result with advisories on stderr; playbooks conditionally start/finish records, request separate publication authority and amend later integration state; manual paths remain available.
+
+### [AC-10] Confirm undocumented GitHub behavior through a labelled live exercise
+- **Given** a user-selected throwaway repository and explicit external mutation authority.
+- **When** the recorded live exercise runs.
+- **Then** it confirms repeated object POSTs, same-SHA ref updates, rejected stale ref updates and 404 distinctions with retained sanitized evidence before the capability claims live verification.
+
+## Assumptions
+
+- The accepted command table and failure table carried below remain the detailed interface contract; implementation choices do not parse GitHub error messages.
+- The live exercise requires a concrete destination and authority from the Host; local fakes are supplementary evidence, not live confirmation.
+- `start` may operate before publication initialization; local operation still resolves a credential-free repository identity from configuration or origin.
+
 
 ## 5. Carried Proposal Notes
 
