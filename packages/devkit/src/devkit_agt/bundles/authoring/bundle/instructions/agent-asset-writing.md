@@ -39,6 +39,9 @@ already knows, and cut every line that does not change its next action.
 
 ## Structure
 
+- When creating or restructuring a skill or playbook, read [skill-authoring](../playbooks/skill-authoring/SKILL.md)
+  for router structure and conditional references; locate its effective copy with
+  `devkit playbook get authoring/skill-authoring`.
 - Keep in the main file what every run needs: purpose and trigger, constraints, procedure, completion criteria.
 - Move what only some runs need into references one level deep, each linked with its read condition: "Read
   `references/recovery.md` when the sync fails." Never send the agent to read every reference up front.
