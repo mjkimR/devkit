@@ -12,6 +12,8 @@ aliases:
 
 # [ADR-steering-documents] Steering documents in one directory, listed in every context
 
+Superseded in part by `ADR-namespace-steering-directories`: For a registered namespace that needs package background, we check docs/packages/<name>/steering/ under the root steering contract and list it in a context through a devkit-docs provider selected by the working directory, to keep background visible at bounded cost, accepting one more entry point.
+
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the listing of steering documents through `devkit get-context spec` and its reach through the spec context.
 
 - **Status**: Accepted

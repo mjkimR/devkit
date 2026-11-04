@@ -51,7 +51,7 @@ See `CAP-HOST-lifecycle-observation`.
    of the template the file lacks, never changing a line
    (`CAP-DIST-sync-and-transactions`). The receipt MUST NOT claim it. Its schema, the template renderer and the receipt
    format belong to `devkit-dist`; the reserved harness tables (`[rules]`, `[workflow]`, `[gates]`, `[worktree]`,
-   `[integration]`) to the engines of `devkit-agt`, which contribute their commented templates through the
+   `[integration]`, `[maintenance]`) to the engines of `devkit-agt`, which contribute their commented templates through the
    `devkit.config_tables` entry points (`ADR-package-ownership-and-release-version`).
 2. **Managed assets (`.devkit/managed/<bundle>/`)**: generated files, regenerated deterministically by `devkit sync`.
    Ordinary files cache upstream bytes at their original relative paths. Supported `.md.jinja` sources instead
@@ -119,8 +119,9 @@ See `CAP-HOST-lifecycle-observation`.
      missing: devkit MUST NOT write through a project symlink, and neither sync fails for it.
    - The receipt records which asset seeded which path under `seeded`, never under `files`; the record is
      informational. Seeded files are never receipt-verified context files; a bundle's declared context document
-     directory (`context_documents`, `CAP-DIST-context-and-playbooks`) may still list the project files in it,
-     seeded ones included, read from the workspace without a hash check.
+     directory (`context_documents`, `CAP-DIST-context-and-playbooks`) and the directories a
+     `devkit.context_documents` provider lists for it may still list the project files in them, seeded ones
+     included, read from the workspace without a hash check.
 8. **Git policy**: a project MUST commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,
    `.devkit/installation.json`, `.devkit/.gitignore`, the root `AGENTS.md` and seeded files. `devkit sync --check`
    and `sync --locked` fail on a stale or missing receipt (`RECEIPT_STALE`), and `devkit generated check` reports

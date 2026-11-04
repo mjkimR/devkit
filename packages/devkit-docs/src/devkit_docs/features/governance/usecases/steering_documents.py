@@ -13,8 +13,12 @@ that list short and readable:
   order, is reported whenever any steering file is targeted, so a commit adding a file is refused even when the new
   file sorts before the others.
 
-Only the root ``docs/steering/`` is checked; there is no namespace copy. Not fixable: background is written, never
-generated.
+The same contract holds in the steering directory of every registered namespace, ``docs/packages/<name>/steering/``
+(``[[tool.docs.namespaces]]``), one directory at a time: targeting, the ``max_files`` count and the over-cap findings
+are per directory, and each message names its own directory. A namespace steering directory holds no glossary: its
+``glossary.md`` is reported as belonging at ``docs/packages/<name>/glossary.md`` and its ``glossary.yaml`` as not
+allowed (search synonyms are read from ``docs/steering/glossary.yaml`` only); neither counts toward ``max_files``. An
+unregistered ``docs/packages/<name>/steering/`` is not checked. Not fixable: background is written, never generated.
 """
 
 from __future__ import annotations
@@ -27,12 +31,14 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.base.errors import FrontmatterError
 from devkit_core.core import frontmatter
 
-from devkit_docs.features.governance import field_line
+from devkit_docs.features.documents.services.namespaces import docs_roots
+from devkit_docs.features.governance import field_line, namespaces
 from devkit_docs.utils.text import foreign_letters
 
 RULE_ID = "RULE-steering-documents"
 DIRECTORY = "docs/steering"
 SYNONYMS = "glossary.yaml"
+GLOSSARY = "glossary.md"
 INDEX = "README.md"
 # The header prefix ``devkit get-context`` reads of each file (devkit-dist ``context_documents.HEADER_LIMIT``).
 HEADER_LIMIT = 4096
@@ -66,9 +72,19 @@ class SteeringDocumentsRule(BaseRule):
                 raise ValueError(f"{name} must be a positive integer")
 
     def check(self, ctx: RuleContext) -> list[Violation]:
+        found: list[Violation] = []
+        for root in docs_roots(namespaces(ctx)):
+            found.extend(self._directory(ctx, root))
+        return found
+
+    def _directory(self, ctx: RuleContext, root: str) -> list[Violation]:
+        """The findings of one steering directory, ``<root>/steering``: the root ``docs/steering`` or a registered
+        namespace's ``docs/packages/<name>/steering``; targeting and the ``max_files`` cap apply to it alone."""
+        directory = f"{root}/steering"
+        namespaced = directory != DIRECTORY
         files = [
             relative
-            for path in ctx.cache.find_files(ctx.workspace_root / DIRECTORY, extensions=None)
+            for path in ctx.cache.find_files(ctx.workspace_root / directory, extensions=None)
             if (relative := ctx.relative_path(path)) is not None
         ]
         if not any(ctx.is_file_targeted(path) for path in files):
@@ -80,28 +96,44 @@ class SteeringDocumentsRule(BaseRule):
 
         documents: list[str] = []
         for path in files:
-            name = path.removeprefix(f"{DIRECTORY}/")
+            name = path.removeprefix(f"{directory}/")
             if "/" in name:
                 if ctx.is_file_targeted(path):
                     add(
                         path,
                         1,
-                        f"steering documents live directly in {DIRECTORY}/, not in {name.rsplit('/', 1)[0]}/",
-                        f"Move the file into {DIRECTORY}/ or out of the steering directory",
+                        f"steering documents live directly in {directory}/, not in {name.rsplit('/', 1)[0]}/",
+                        f"Move the file into {directory}/ or out of the steering directory",
                     )
                 continue
             if name == SYNONYMS:
+                if namespaced and ctx.is_file_targeted(path):
+                    add(
+                        path,
+                        1,
+                        f"{directory}/ holds only Markdown files",
+                        f"Remove the file; search synonyms are read from {DIRECTORY}/{SYNONYMS} only",
+                    )
                 continue
             if not name.endswith(".md"):
                 if ctx.is_file_targeted(path):
                     add(
                         path,
                         1,
-                        f"{DIRECTORY}/ holds only Markdown files and {SYNONYMS}",
+                        f"{directory}/ holds only Markdown files" + ("" if namespaced else f" and {SYNONYMS}"),
                         "Move the file out of the steering directory",
                     )
                 continue
             if name == INDEX:
+                continue
+            if namespaced and name == GLOSSARY:
+                if ctx.is_file_targeted(path):
+                    add(
+                        path,
+                        1,
+                        f"the package glossary lives at {root}/{GLOSSARY}, not in {directory}/",
+                        f"Move the file to {root}/{GLOSSARY}",
+                    )
                 continue
             documents.append(path)
             if ctx.is_file_targeted(path):
@@ -111,7 +143,7 @@ class SteeringDocumentsRule(BaseRule):
             add(
                 path,
                 1,
-                f"{DIRECTORY}/ has {len(documents)} Markdown files; at most {limit} are allowed",
+                f"{directory}/ has {len(documents)} Markdown files; at most {limit} are allowed",
                 "Merge steering documents by topic, or raise max_files in [rules.settings.RULE-steering-documents]",
             )
         return found

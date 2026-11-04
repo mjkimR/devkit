@@ -212,7 +212,9 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   seeded, and every preset that selects the fragment selects the named assets too.
 - **Context documents**: `context_documents` (optional top-level string) names one workspace directory whose
   Markdown files `devkit get-context` lists by `title` and `summary` (`CAP-DIST-context-and-playbooks`). It follows
-  the seeded `target` grammar below; another type or an unsafe path is `BUNDLE_INVALID`.
+  the seeded `target` grammar below; another type or an unsafe path is `BUNDLE_INVALID`. Installed
+  `devkit.context_documents` providers MAY add directories to list or mention for a declared directory and the
+  working directory; the manifest declares one directory only.
 - **Seeded assets**: `seeded` (boolean, default `false`) is allowed only on a `document` with a single `source`, and
   requires `target`; `target` is rejected otherwise. `target` is a normalized relative POSIX path (no `..`, leading
   `/`, backslash or `.` segment) whose first segment is not `.devkit`, `.agents`, `.claude` or `.codex`, which has

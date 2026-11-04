@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:05:41.977311Z'
+status: completed
+summary: 'PASS independent medium continuation reconciliation: all 16 targets covered; explicit composition, independent default playbooks and bounded live evidence agree with refined contract. Implementer verified subsequent status-only activation and retained doorway entrypoints.'
+findings: []
+assumptions:
+- Nested Reconcile Reviewer; Codex emulated explicit cwd/git -C and read-only snapshots provide substitute measures without native guarantee.
+- No explicit source/document reads outside assigned worktree; Git shared metadata and uv runtime/cache access are normal runtime and not individually audited.
+unverified_areas:
+- Private-repository access denial and service rate limits remain injected-test coverage and explicitly unverified live.
+checks:
+  target_coverage: PASS 16 unique targets; 9 changed canonical documents named; prior unchanged targets retain reconcile-check-01 coverage
+  reflection: PASS no default playbook history probes/lifecycle commands; separate explicit composition reference
+  decisions: PASS partial supersession changes blanket applicability only; root publication authority identity unchanged
+  evidence: PASS live success and failed first attempt distinct from injected-only classes
+  diff: PASS reviewer git diff --check; HEAD fresh and clean
+  tests: SKIP read-only reconcile reviewer performed static checks; implementer affected full 6368 passed 15 skipped
+  isolation: PASS before and after tree4d02a060ec61347915f352bcad35b9595cc6a893; no reviewer modifications
+diff_scope:
+  base: c94eb4fc1c23e74af0845ed7cdb8a80182fadf01
+  head: 0ddf67466d218f0b36b25e01e69e817a199da8df

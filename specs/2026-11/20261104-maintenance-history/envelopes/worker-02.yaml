@@ -1,0 +1,33 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:07:54.894945Z'
+status: completed
+summary: 'Completed standalone explicit opt-in maintenance history: default playbooks restored, root/publication/identity retained, actual authorized AC-10 live evidence retained and endpoint defect fixed. Independent review-03 and 16-target reconcile-check-02 pass; final-report-01 committed; no tracked sync outputs, no integration push or merge.'
+findings: []
+assumptions:
+- User supplied the exact test-sandbox destination and authority; answer-01 records the decision. No repository deletion force update or real project content publication; local test-sandbox checkout untouched.
+- User refined optional composition; ADR-opt-in-maintenance-history changes only blanket per-run applicability and exact authorized old-ADR partial-supersession trace.
+- Codex worktree boundary is emulated with explicit absolute cwd/git -C, operation-specific escalations, scoped commits and snapshots; no native guarantee. Nested reviewers reported no explicit source/document reads outside worktree; normal Git shared metadata and uv runtime/cache access were not individually audited.
+- Entrypoint derivation retained existing CLI/usecase doorway files and rejected broad directories tests config and wording-only target candidates. No deferred required work or critical open feedback.
+- Workflow next passes dev-integration by policy=auto source=policy and now requests integrate runner lint-ci-clean; Host owns preparation against moved main and integration.
+unverified_areas:
+- Private repository denial and service rate limits were not live-exercised; injected tests cover them. No moved-main preparation or integration was performed.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0 create=0 update=0 remove=0 seed=0; no tracked sync outputs
+  tests: PASS affected mode=full 6368 passed 15 skipped; focused integration20 reviewer catalog4
+  lint: PASS devkit and devkit-catalog lint-check
+  types: PASS devkit Pyright 0 errors
+  build: PASS offline devkit-agt sdist and wheel retained under ignored tmp
+  rules: PASS cumulative CI base c9f7c6d3 22 rules zero violations
+  review: PASS nested review-03 no findings; pre/post snapshot tree4d02a060ec61347915f352bcad35b9595cc6a893 unchanged
+  reconcile: PASS nested reconcile-check-02 16 targets; implementer verified status-only activation
+  baseline: PASS canonical endpoint regression RED1failed before fix GREEN20integration; four default playbooks equal pre-feature c9f7c6d3
+  live: PASS mjkimR/test-sandbox#devkit-history-exercise-20261104-c94eb4fc head39c0a871ff5bc4d04f5f50fdd87c44c77a586b2d retained; repeated objects same SHAs same-ref200 stale-ref422 missing-file/ref404 duplicate/amendment/retrieval pass
+  ci_continuation_range: FAIL post-activation c94 CI omitted six earlier target changes; cumulative c9 CI passes; no waiver
+diff_scope:
+  base: c94eb4fc1c23e74af0845ed7cdb8a80182fadf01
+  head: 4d27e1297a0256b07e400ee15d638c448b1b413b
+activity_effort: medium

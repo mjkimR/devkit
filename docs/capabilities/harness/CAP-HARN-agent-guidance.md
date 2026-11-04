@@ -126,7 +126,9 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 ### 4.2 Constitution
 
 `devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [],
-"documents": []}`. Shared instructions and steering summaries are returned by `devkit get-context docs`.
+"documents": [], "documents_elsewhere": [], "notices": []}` (the result keys of `CAP-DIST-context-and-playbooks` 2;
+the spec bundle declares no context directory). Shared instructions and steering summaries are returned by
+`devkit get-context docs`.
 The constitution's sections:
 
 1. **Context**: read it once per agent context and each relevant instruction before the action it governs; a

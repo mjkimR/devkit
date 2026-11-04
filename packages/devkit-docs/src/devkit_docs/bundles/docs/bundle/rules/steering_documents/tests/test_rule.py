@@ -154,3 +154,104 @@ def test_a_file_get_context_cannot_read_is_reported(tmp_path: Path) -> None:
         ("docs/steering/a.md", 1, "steering document must be UTF-8"),
         ("docs/steering/b.md", 1, f"frontmatter ends at byte {len(late)}; get-context reads only the first 4096 bytes"),
     ]
+
+
+NAMESPACE = "docs/packages/api/steering"
+NAMESPACE_COUNT = f"{NAMESPACE}/ has 11 Markdown files; at most 10 are allowed"
+
+
+def _namespaces(*names: str) -> str:
+    """``.devkit/config.toml`` registering a namespace per name, with source path ``packages/<name>``."""
+    return "".join(f'[[tool.docs.namespaces]]\nname = "{name}"\npath = "packages/{name}"\n\n' for name in names)
+
+
+def test_a_registered_namespace_directory_holds_well_formed_files(tmp_path: Path) -> None:
+    files = {
+        ".devkit/config.toml": _namespaces("api"),
+        f"{NAMESPACE}/README.md": "# Steering\n",
+        f"{NAMESPACE}/product.md": _doc(body="# Product\n"),
+        f"{NAMESPACE}/domain.md": _doc(title="도메인 개요", body="# Domain\n"),
+    }
+    assert check(RULE, tmp_path, files, targets=[f"{NAMESPACE}/product.md"]) == []
+    assert check(RULE, tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    ("name", "text", "expected"),
+    [
+        ("sub/a.md", _doc(), (1, f"steering documents live directly in {NAMESPACE}/, not in sub/")),
+        ("notes.txt", "x\n", (1, f"{NAMESPACE}/ holds only Markdown files")),
+        ("a.md", "---\nid: CAP-A-a\n" + _doc()[4:], (2, "steering documents carry no id")),
+        ("a.md", _doc(title=None), (1, "steering document has no title")),
+        ("a.md", _doc(summary=None), (1, "steering document has no summary")),
+        ("a.md", _doc(summary="제품 소개"), (3, "summary must be English; it contains 제품소개")),
+        ("a.md", _doc(body="x" * 24577), (5, "body has 24577 bytes; at most 24576 are allowed")),
+    ],
+    ids=["subdirectory", "other-file", "id", "no-title", "no-summary", "foreign-summary", "long-body"],
+)
+def test_namespace_findings_name_the_namespace_directory(
+    tmp_path: Path, name: str, text: str, expected: tuple[int, str]
+) -> None:
+    path = f"{NAMESPACE}/{name}"
+    files = {".devkit/config.toml": _namespaces("api"), path: text}
+    found = _found(check(RULE, tmp_path, files, targets=[path]))
+    assert len(found) == 1, found
+    file, line, message = found[0]
+    assert (file, line) == (path, expected[0]) and message.startswith(expected[1])
+
+
+def test_namespace_glossary_files_are_reported_and_not_counted(tmp_path: Path) -> None:
+    files = {
+        ".devkit/config.toml": _namespaces("api"),
+        **{f"{NAMESPACE}/topic-{number:02}.md": _doc() for number in range(10)},
+        f"{NAMESPACE}/glossary.md": _doc("Glossary", "Read before naming a concept.", "# Glossary\n"),
+        f"{NAMESPACE}/glossary.yaml": "terms: []\n",
+        "docs/steering/glossary.yaml": "terms: []\n",
+        "docs/steering/glossary.md": _doc("Glossary", "Read before naming a concept.", "# Glossary\n"),
+    }
+    found = check(RULE, tmp_path, files, targets=[f"{NAMESPACE}/glossary.md", f"{NAMESPACE}/glossary.yaml"])
+    assert _found(found) == [
+        (
+            f"{NAMESPACE}/glossary.md",
+            1,
+            f"the package glossary lives at docs/packages/api/glossary.md, not in {NAMESPACE}/",
+        ),
+        (f"{NAMESPACE}/glossary.yaml", 1, f"{NAMESPACE}/ holds only Markdown files"),
+    ]
+    assert [v.remediation for v in found] == [
+        "Move the file to docs/packages/api/glossary.md",
+        "Remove the file; search synonyms are read from docs/steering/glossary.yaml only",
+    ]
+    assert check(RULE, tmp_path, targets=["docs/steering/glossary.yaml", "docs/steering/glossary.md"]) == []
+
+
+def _two_directories() -> dict[str, str]:
+    files = {
+        ".devkit/config.toml": _namespaces("api"),
+        **_eleven(),
+        **{f"{NAMESPACE}/topic-{number:02}.md": _doc() for number in range(11)},
+        f"{NAMESPACE}/README.md": "# Steering\n",
+        "docs/packages/other/steering/a.md": "# No frontmatter\n",
+    }
+    return files
+
+
+def test_caps_and_targeting_apply_per_directory(tmp_path: Path) -> None:
+    files = _two_directories()
+    assert _found(check(RULE, tmp_path, files, targets=["docs/steering/topic-00.md"])) == [
+        ("docs/steering/topic-10.md", 1, COUNT)
+    ]
+    assert _found(check(RULE, tmp_path, targets=[f"{NAMESPACE}/topic-00.md"])) == [
+        (f"{NAMESPACE}/topic-10.md", 1, NAMESPACE_COUNT)
+    ]
+    assert _found(check(RULE, tmp_path)) == [
+        ("docs/steering/topic-10.md", 1, COUNT),
+        (f"{NAMESPACE}/topic-10.md", 1, NAMESPACE_COUNT),
+    ]
+
+
+def test_an_unregistered_namespace_directory_is_not_checked(tmp_path: Path) -> None:
+    files = _two_directories()
+    assert check(RULE, tmp_path, files, targets=["docs/packages/other/steering/a.md"]) == []
+    unregistered = {k: v for k, v in files.items() if k != ".devkit/config.toml"}
+    assert check(RULE, tmp_path / "none", unregistered, targets=[f"{NAMESPACE}/topic-00.md"]) == []

@@ -77,7 +77,7 @@ identity, lifecycle and selection as they are.
   where it named `docs/roadmap/`.
 - A namespace milestone names the goal it advances as a global milestone does: in prose, citing
   `ARCH-01-introduction-and-goals` or an architecture document under its namespace docs root by ID; a namespace
-  steering file (`PROP-namespace-steering`), which carries no ID, may be named by path once it exists. The citation
+  steering file (`SPEC-namespace-steering`), which carries no ID, may be named by path once it exists. The citation
   stays a recommendation checked in review only, as today.
 - This replaces, in part, the clause of `ADR-roadmap-and-milestones-ledger` "Milestones are global; per-namespace
   roadmaps are deferred until a repository needs them" (ADR-milestone-documents) and the global-root wording of

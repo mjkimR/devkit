@@ -61,7 +61,7 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | `devkit config show [--effective]` | Read-only effective checkout preferences (shared `.devkit/config.toml` with the ignored `.devkit/config.local.toml` over it, then defaults): `configuration`, `sources` (the workspace-relative file, or `default`, behind each dotted key), `execution_environment`, `presentation_language` and `notices` (`PRESENTATION_LANGUAGE_UNSUPPORTED`). `--effective` is the default and is accepted as is. |
 | `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, the tables installed engines register for the reserved names (`devkit.config_tables`: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` with `devkit-agt`), and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks, keeping the bytes and line endings of existing lines (`CAP-DIST-sync-and-transactions`). Prints `path`, `state` (`created`, `updated`, or `unchanged` exactly when the file's bytes stay the same), `added` (every key and table name written, commented ones included) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
-| `devkit get-context <bundle>` | The bundle constitution, the header catalog of its instructions and the `documents` list of its declared context directory (`CAP-DIST-context-and-playbooks`). |
+| `devkit get-context <bundle>` | The bundle constitution, the header catalog of its instructions and the `documents` list of its declared context directory merged with the directories the installed `devkit.context_documents` providers list for the working directory (`--for <dir>`, else the cwd inside the project, else the root; a bad `--for` is `ARGUMENT_INVALID`); `documents_elsewhere` names the directories they only mention (`path`, `files`), and `notices` carries one `CONTEXT_DOCUMENTS_EXTENSION_FAILED` per failed provider (exit `1` under `--strict`). JSON-only (`CAP-DIST-context-and-playbooks`). |
 | `devkit playbook get <bundle>/<playbook>` | Exact receipt-backed retrieval by asset ID or declared alias (an exact ID wins; `alias` names the alias used; an alias several effective headers declare is `PLAYBOOK_ALIAS_AMBIGUOUS`): complete body, effective metadata, source path/hash and context requirements. JSON-only, no execution or discovery (`CAP-DIST-context-and-playbooks`). |
 | `devkit playbook search <query>` | Search over synchronized playbook `name` and `description` (aliases are identifiers, never ranked): hybrid with the `search` extra (`devkit-dist[search]` or `devkit-agt[search]`), else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` (`CAP-DIST-context-and-playbooks`). |
 | `devkit override list` | Tracked project overrides: `bundle`, `asset`, `kind`, `relative_path` and `drift_detected`. The digests that decide the flag stay in the receipt. |
@@ -150,7 +150,7 @@ option = "on"
 
 A selection command that creates the file, and `devkit config template`, write commented managed-scope and update-policy keys,
 the tables installed engines register for the reserved top-level names (`devkit.config_tables`, entry point named
-after the table: devkit-agt registers `workflow` and `worktree`), and the registered `[tool.<name>]` tables of
+after the table: devkit-agt registers `workflow`, `worktree` and `maintenance`), and the registered `[tool.<name>]` tables of
 installed tools (`devkit.config_template`). Values show defaults, or marked examples when unset by default
 (`CAP-DIST-sync-and-transactions`). A template extension that fails is left out
 with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: it failed to load, raised,
@@ -158,7 +158,7 @@ has a name that is not a `[tool.<name>]` name, or for `devkit.config_tables` not
 valid tables; `what_to_report` names the entry point), in the command's `notices`, or in the sync result's when a
 selection command created the file.
 
-`devkit sync` passes the reserved tables `[rules]`, `[workflow]`, `[gates]`, `[worktree]` and `[integration]` through
+`devkit sync` passes the reserved tables `[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]` and `[maintenance]` through
 untouched, whether or not `devkit-agt` is installed; see the
 [Rules Reference](rules.md#project-configuration), the
 [Workflow Reference](workflow.md#configuration) and the
@@ -203,6 +203,7 @@ they run in their own `notices` list.
 | `GATE_HOOK_PRESERVED` | `WARNING` | `HookPreservedNotice` | an existing regular Git hook was preserved and chained during automatic installation | `details`: adapter path and unchanged executable mode; reported once when moved |
 | `GATE_HOOK_INSTALL_SKIPPED` | `WARNING` | `HookInstallSkippedNotice` | automatic hook installation could not safely run | `details`: reason code and paths; `fix`: remediation |
 | `STATUS_CHECK_EXTENSION_FAILED` | `WARNING` | `StatusCheckExtensionFailedNotice` | discovery, load, execution or result validation of an optional `devkit.status_checks` provider failed | message: provider name and target (or discovery); `what_to_report`: report the failure to the provider package maintainer; core status and later checks remain available |
+| `CONTEXT_DOCUMENTS_EXTENSION_FAILED` | `WARNING` | `ContextDocumentsExtensionFailedNotice` | a `devkit.context_documents` provider failed to load, raised or returned anything but a pair of sequences of safe workspace-relative directories; `devkit get-context` still lists the declared directory and carries the warning under its `notices` | message: the entry point and the problem; `what_to_report`: the entry point whose directories are left out |
 | `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised an exception other than an advisory, or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
 | `PRESENTATION_LANGUAGE_UNSUPPORTED` | `WARNING` | `PresentationLanguageUnsupportedNotice` | a shared or local `[presentation] language` other than `auto`, `en` or `ko` fell back to `en`; also returned by `devkit status` and `devkit config show` | `target_files`: the configuration file; `fix`: the accepted values and the file |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |

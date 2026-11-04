@@ -10,6 +10,7 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/status.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/context.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/context_documents.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/cli/context.py
 created_at: 2026-10-17
 usecases:
   - UC-reconcile-living-spec-drift
@@ -44,7 +45,10 @@ such as the worktree's `.venv` interpreter or `devkit` from `PATH`
 `devkit get-context <bundle>` returns the bundle's **context**: its constitution, the header catalog of its
 synchronized instructions and the list of its context documents, so an instruction-only bundle still has one. It runs from the project or a
 subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes; where
-the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`).
+the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`). The context is
+for a **working directory**: `--for <dir>`, else the current directory when it lies inside the project, else the
+resolved root. `--for` MUST name an existing directory that is the project root or under it (symlinks resolved);
+otherwise the command fails with `ARGUMENT_INVALID` targeting `--for` (exit `2`) before the lock is taken.
 
 - `constitution`: the full text of the optional UTF-8 constitution, literal `AGENTS.md` or rendered `AGENTS.md.jinja`, at the bundle root, which `devkit sync` always
   deploys to `.devkit/managed/<bundle>/AGENTS.md` whatever the presets; `null` when absent.
@@ -70,8 +74,24 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   the frontmatter block in them is decoded; a value that cannot be read (an unreadable file, a non-UTF-8 block, no
   frontmatter or frontmatter that does not close within those bytes, malformed YAML, a non-string value) is `null`,
   never an error. `devkit-dist` caps nothing
-  itself; the bundle's own rules bound the directory (the `spec` bundle's `RULE-steering-documents`,
+  itself; the bundle's own rules bound each directory (the `docs` bundle's `RULE-steering-documents`,
   `CAP-GOV-spec-rules`).
+- **Providers** (`ADR-namespace-steering-directories`): for a bundle with a declared directory, the command calls
+  every callable registered under the `devkit.context_documents` entry-point group, in sorted entry-point name
+  order, with the project root, the working directory (both absolute) and the declared directory
+  (workspace-relative). A provider returns a pair of sequences of workspace-relative directories in the seeded
+  `target` grammar (`CAP-DIST-manifest-spec`): the first to list, the second to mention. `documents` merges the
+  declared directory with every listed directory under the read rules above, de-duplicated by path and sorted by
+  path (a `docs/packages/<name>/steering/` file sorts before the `docs/steering/` ones). `documents_elsewhere` is
+  always present: for each mentioned directory that exists, is not listed and is reached without a symlink, its
+  absolute `path` and `files`, the count of files `documents` would hold for it; sorted by path, `[]` when none.
+  `devkit-dist` reads no `[tool.*]` table for this: the `docs` package registers the provider that selects a
+  registered namespace's mirror by the working directory (`CAP-DOCS-namespaces` 3.3 and 4.5).
+- **Provider failures never fail the context load**: a provider that fails to load, raises (`DOCS_CONFIG_INVALID`
+  included) or returns anything but a pair of sequences of safe workspace-relative directories contributes nothing,
+  and the JSON object carries one `CONTEXT_DOCUMENTS_EXTENSION_FAILED` warning per such provider under `notices`
+  (always present, `[]` when none), naming the entry point and its advisory text. The command is JSON-only, so stderr
+  carries no advisory (`ARCH-08-1-agent-output`); the exit code stays `0`, and is `1` under `--strict`.
 
 ```markdown
 ---

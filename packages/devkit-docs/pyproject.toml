@@ -25,6 +25,11 @@ docs = "devkit_docs.cli:cli"
 [project.entry-points."devkit.config_template"]
 docs = "devkit_docs.features.documents.repositories.config:template"
 
+# Context documents provider: `devkit get-context` lists the namespace mirror of a docs/-rooted context directory
+# (docs/packages/<name>/steering for the docs bundle) selected by the working directory, and mentions the others.
+[project.entry-points."devkit.context_documents"]
+docs = "devkit_docs.features.documents.services.context_documents:provide"
+
 [dependency-groups]
 dev = [
     "pyright>=1.1.390",

@@ -70,7 +70,7 @@ _BARE_LF = re.compile(r"(?<!\r)\n")
 # without them: ``rules`` (``devkit_agt.features.rules``: phase overrides), ``workflow`` (``devkit_agt.features.workflow``: layout, approvals),
 # ``gates`` (``devkit_agt.features.gate``: gate settings), ``worktree`` (``devkit_agt.features.worktree``) and ``integration``
 # (``devkit_agt.features.integration``). Their commented templates come from the ``devkit.config_tables`` entry points.
-RESERVED_TABLES = ("rules", "workflow", "gates", "worktree", "integration")
+RESERVED_TABLES = ("rules", "workflow", "gates", "worktree", "integration", "maintenance")
 # ``[tool.<name>]`` tables belong to whichever tool ``<name>`` is and are passed through unread, like ``[tool.*]`` in
 # ``pyproject.toml``; every other top-level key is rejected so typos are caught.
 FIELDS = frozenset(

@@ -69,3 +69,8 @@ location without a unit. It MUST contain intake, coverage, findings, decisions, 
 Existing commands retain their own output contracts; the playbook MUST NOT present narrative semantic assessment as a
 new checker result. Isolated seeded exercises MUST label simulated decisions. They MUST NOT authorize a real source
 change.
+
+
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

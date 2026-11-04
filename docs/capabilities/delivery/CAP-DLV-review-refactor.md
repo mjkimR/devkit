@@ -33,7 +33,7 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
   recorded evidence; application of agreed behavior-preserving changes as direct-mode refactors, in parallel
   isolated checkouts where their write scopes are disjoint.
 - **Out of scope**: a scheduler or trigger (external runners, `ADR-playbook-retrieval`), a history store
-  (`PROP-maintenance-history`), contract drift (`CAP-DLV-drift-reconciliation`), rule adoption
+  (`CAP-DLV-maintenance-history`), contract drift (`CAP-DLV-drift-reconciliation`), rule adoption
   (`CAP-GOV-rule-authoring`), detector tools as dependencies, cosmetic churn and behavior-changing feature work.
 
 ## 3. Run Contract
@@ -133,3 +133,8 @@ changes in their own section, separate from the inputs no longer accepted, decis
 counts and the outcome. A report written before its work item integrates has its outcome updated with the
 integration state when the work item integrates or stops. Seeded exercises label decisions simulated and change only
 the fixture. Completion applies to a batch with no pending decision; a batch never claims the whole repository.
+
+
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

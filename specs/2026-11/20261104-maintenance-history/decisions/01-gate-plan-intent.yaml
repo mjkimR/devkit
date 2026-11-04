@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-maintenance-history: Explicit user instruction to run Planning for the
+  proposal; size M, planning_effort high'
+by: user
+at: '2026-11-04T03:02:47.039758Z'

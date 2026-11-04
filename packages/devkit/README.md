@@ -5,7 +5,7 @@ files, approval-bound integration and compact command output, mounted under the 
 [`devkit-dist`](../devkit-dist/README.md). The distribution name is `devkit-agt`; imports use the regular `devkit_agt` package. It
 depends on `devkit-dist` and `devkit-advisory` at its own version (released in lockstep; see `ARCH-07-deployment`), so installing
 `devkit-agt` installs the whole CLI: every distribution command of `devkit-dist` plus `devkit rules`,
-`devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`. It
+`devkit workflow`, `devkit maintenance history`, `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`. It
 ships no console script of its own: its commands are `devkit.commands` plugins (`ARCH-05-3-command-plugins`).
 Requires Python 3.12 or later; runtime dependencies are `devkit-core`, `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
 `devkit-advisory` (`devkit-dist` brings `devkit-cli`). The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
@@ -87,3 +87,7 @@ accepts `sdd` (the absent default) or explicit `adaptive-dev`; bundle/package se
 Adaptive development keeps document and project checks without implicit SDD records. The common reader belongs to
 devkit-dist; the `project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to
 devkit-spec.
+
+## Maintenance history
+
+`devkit maintenance history` captures run evidence locally and publishes only with explicit destination authority. Start with `start --playbook weekly-report --scope "<scope>" --into <parent> --report <report>` and close with `finish --run <dir> --outcome completed`. Register extra evidence at finish with `--file <path>`; publish selects only frozen files. `init`, `publish` and `update` require `--authority`. `[maintenance.history] repository` and `branch` configure inputs only. See `CAP-DLV-maintenance-history` for codes and retry semantics.

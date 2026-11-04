@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-namespace-steering: Explicit user instruction to run Planning for the
+  proposal; size M, planning_effort medium'
+by: user
+at: '2026-11-04T02:29:23.847617Z'
