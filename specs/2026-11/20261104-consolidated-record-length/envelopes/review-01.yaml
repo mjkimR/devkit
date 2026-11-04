@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:04:53.378474Z'
+status: completed
+summary: Independent code reviewer verified AC-01–AC-06; one P3 null-rejection documentation mismatch; implementation matches accepted contract.
+findings:
+- issue: Documentation incorrectly promises rejection of null.
+  evidence: CAP-GOV-evaluation-lifecycle.md:156–157 and plan.md section 3 claim null rejection; unchanged optional-int settings resolver accepts None.
+  failure_condition: A consumer supplies None through the in-memory API; it disables the option successfully, contrary to the stated error contract.
+  suggested_action: Remove null rejection claims and explain internal None and TOML omission; preserve accepted implementation.
+  resolution: open
+  severity: P3
+assumptions:
+- Codex isolation emulated through absolute worktree reads/cwd and identical pre/post snapshot e3ee763a471ca49a36afe174cf6c9ba5308008bb; no authored outside reads or writes; runtime dependencies external.
+unverified_areas:
+- Living Spec reconciliation reserved for reconcile-reviewer.
+checks:
+  tests: PASS rule/CLI139 spec633 test-affected3956 partial227 paths; full fallback retained
+  lint: PASS Ruff lint/format and CI rules22 zero findings
+  types: PASS affected packages Pyright zero errors
+  build: PASS two affected wheels built offline
+  same_head: PASS six known ADR findings removed; document-system and four unrelated retained
+  independent: PASS full diff, settings resolver and parser inspected; None resolver probe accepts None
+diff_scope:
+  base: 5eb97c6e9fc430753d4ea2b7d333ce5a61077327
+  head: 4795a4a4e1934c86af824e2f7f930d7c4aa381c5
+activity_effort: medium
