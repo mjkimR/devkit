@@ -73,7 +73,8 @@ is needed. This is the first direct member of `MS-monorepo-namespace-support`.
     (`CAP-VIEW-repository-viewer` 4.1 and §5), so until the viewer learns the namespace roots it not only omits namespace
     milestones: a global milestone whose `depends_on` names a namespace milestone renders as an unknown dependency and
     is never ready, and a proposal whose `milestone` names a namespace milestone appears in no roadmap card
-    (challenger-01, finding 1). Whether this proposal extends the viewer is Planning question q1.
+    (challenger-01, finding 1). The viewer stays out of this proposal on the user's decision (answer-01, q1); the three
+    effects are recorded as `FB-viewer-namespace-roadmap-roots` for follow-up work.
 - **Q2**: Where does a namespace milestone cite its goal? `ADR-roadmap-and-milestones-ledger` keeps goals as prose in
   `ARCH-01-introduction-and-goals` and names "goals per namespace" as its own reopen condition.
   - *Finding*: as a global milestone does, in prose, citing `ARCH-01-introduction-and-goals` or an architecture
@@ -134,8 +135,7 @@ Decision record: `PADR-namespace-milestone-roots` (supersedes `ADR-roadmap-and-m
 Expected affected contracts: `CAP-DOCS-namespaces` (3.4 and the kinds a namespace mirrors), `CAP-GOV-spec-rules`
 (`RULE-id-convention`, the `RULE-spec-format` scope list and the Milestone validation contract),
 `CAP-DLV-proposal-planning` (`--milestone`), the roadmap section of `ARCH-01-introduction-and-goals`,
-`ADR-roadmap-and-milestones-ledger` (superseded in part). `CAP-VIEW-repository-viewer` changes only if q1 includes the
-viewer.
+`ADR-roadmap-and-milestones-ledger` (superseded in part). `CAP-VIEW-repository-viewer` is unchanged (answer-01, q1).
 
 ### Planning decisions
 
@@ -146,12 +146,13 @@ viewer.
   since identity is repository-wide and a platform proposal may serve a package theme (Host decision within scope).
 - The goal citation of a namespace milestone stays a review-only recommendation, as the global one is; no rule is
   added, and `PROP-namespace-steering` is neither a prerequisite nor planned jointly (Host decision within scope; Q2).
-- `packages/devkit-viewer/` is excluded until the user answers q1. If the viewer is included, the exclusion is lifted,
-  `CAP-VIEW-repository-viewer` 4.1 and §5 join the affected contracts and the viewer enumerates
-  `docs/packages/*/roadmap(/_archive)/MS-*.md` by path pattern from the Git tree (it reads no registry). If excluded,
-  the unknown-dependency and missing-member effects of Q1 are recorded as follow-up feedback and stand until it lands.
-- Challenger round 1 (`envelopes/challenger-01.yaml`): finding 2 (the two-clause supersession pointer) is folded above;
-  finding 1 is the `Decision needed` behind q1 and stays open for `plan-accept`.
+- `packages/devkit-viewer/` stays excluded and `CAP-VIEW-repository-viewer` unchanged on the user's decision (answer-01,
+  q1): the viewer shows global milestones only and mis-renders cross-root edges until the follow-up
+  `FB-viewer-namespace-roadmap-roots` is taken up; it would enumerate `docs/packages/*/roadmap(/_archive)/MS-*.md` by
+  path pattern from the Git tree, since it reads no registry.
+- Challenger round 1 (`envelopes/challenger-01.yaml`): finding 2 (the two-clause supersession pointer) is folded in
+  section 3 and closed in `reverify-01`; finding 1 (the viewer exclusion's cost) was the `Decision needed` behind q1,
+  decided by the user in `answer-01` and closed in `reverify-02`.
 - `boundaries.owns` gains the `docs` bundle (rule guides, tests, template, seed), both test trees and the governance
   and delivery capability directories the inventory names; `size` stays `M` (one spec, one task kind).
 - `dev_effort` stays `medium`: two packages and five documents change, every change is covered by rule or command
