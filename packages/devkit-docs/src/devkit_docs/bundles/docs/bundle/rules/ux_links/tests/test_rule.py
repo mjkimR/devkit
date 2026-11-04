@@ -356,3 +356,16 @@ def test_an_off_screen_phrase_changes_nothing_for_the_links(tmp_path: Path) -> N
     assert found(check(RULE, tmp_path, files)) == [
         (path("login"), "Step names UC-sign-in 2, which does not cite UX-login")
     ]
+
+
+def test_a_surface_without_a_task_flow_passes(tmp_path: Path) -> None:
+    """A screen and a panel with ``usecases: []`` and a header-only table are not reported (the ``ux-writing``
+    criteria for surfaces beyond pages and forms)."""
+    arena = (
+        "---\nid: UX-arena\ntitle: Arena\nsummary: The arena viewport.\narea: play\nelement: screen\nstatus: draft\n"
+        "usecases: []\ncapabilities: []\n---\n# [UX-arena] Arena\n\n## 2. Content\n\n- **Primary region**: the viewport;"
+        " `UX-hud` shows the score\n\n## 3. States\n\n- exploration\n- combat\n\n## 4. Interactions\n\n" + HEADER
+    )
+    hud = arena.replace("UX-arena", "UX-hud").replace("Arena", "HUD").replace("element: screen", "element: panel")
+    files = {"docs/ux/play/UX-arena.md": arena, "docs/ux/play/UX-hud.md": hud}
+    assert check(RULE, tmp_path, files) == []

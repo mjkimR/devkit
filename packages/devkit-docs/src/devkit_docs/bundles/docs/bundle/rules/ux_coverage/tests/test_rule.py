@@ -166,3 +166,16 @@ def test_step_reports_target_the_use_case_first(tmp_path: Path) -> None:
         (LOGIN, 18, "interaction has no Step"),
     ]
     assert _found(check(RULE, tmp_path, targets=[UC])) == everything[:2]
+
+
+def test_a_surface_without_a_task_flow_passes(tmp_path: Path) -> None:
+    """A screen and a panel with ``usecases: []`` and a header-only table are not reported (the ``ux-writing``
+    criteria for surfaces beyond pages and forms)."""
+    arena = (
+        "---\nid: UX-arena\ntitle: Arena\nsummary: The arena viewport.\narea: play\nelement: screen\nstatus: draft\n"
+        "usecases: []\ncapabilities: []\n---\n# [UX-arena] Arena\n\n## 2. Content\n\n- **Primary region**: the viewport\n\n"
+        "## 4. Interactions\n\n" + HEADER
+    )
+    hud = arena.replace("UX-arena", "UX-hud").replace("Arena", "HUD").replace("element: screen", "element: panel")
+    files = {UC: _usecase("Opens the page."), "docs/ux/play/UX-arena.md": arena, "docs/ux/play/UX-hud.md": hud}
+    assert check(RULE, tmp_path, files) == []

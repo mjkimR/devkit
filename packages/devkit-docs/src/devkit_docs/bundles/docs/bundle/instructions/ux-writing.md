@@ -1,6 +1,6 @@
 ---
 name: ux-writing
-description: Read before writing or editing a UX document (docs/ux/) or a Screens draft. Defines one element per document, its purpose, content tree, states and interactions, step citations, contrasting candidates, the UX object register and what stays with the project.
+description: Read before writing or editing a UX document (docs/ux/) or a Screens draft. Defines one element per document, its purpose, content tree, states and interactions, step citations, surfaces beyond pages and forms, contrasting candidates, the UX object register and what stays with the project.
 ---
 
 # UX Writing
@@ -21,6 +21,35 @@ UX document links both (`usecases`, `capabilities`). Start from the `ux` templat
   in `usecases`.
 - Every screen has an exit (a row targeting another element, `close`, `back` or `end`) unless the task ends on it;
   a modal has a `close` or `back` row. `RULE-ux-links` reports contradictions, `RULE-ux-coverage` the gaps.
+
+## Surfaces beyond pages and forms
+
+The vocabulary above comes from pages and forms; a viewport, a kiosk, a voice assistant, a terminal interface or a
+status display fits it by these criteria, not by an exception to the rules.
+
+- **Element**: the surface a person perceives as one place while it is shown is a `screen` (a game viewport, a
+  kiosk's attract loop, a terminal pane, a map). An overlay shown beside or over it throughout is a `panel` that the
+  screen's Content names (a HUD, a status bar, a toolbar, a transcript). An overlay that interrupts the surface until
+  dismissed is a `modal` (a pause menu, a confirmation, a command palette).
+- **Continuous input**: write the control scheme (movement, aim, scrubbing, pan and zoom, speech, gestures) in
+  Content and States. Write an Interactions row only for a trigger that advances a use case step or is a global
+  control (`global: <reason>`); the table does not list every input. Example:
+  `| Say "pause" | global: a voice command available in every mode | playing | paused | | | Playback stops |`.
+- **Modes**: when the surface has modes rather than data states (exploration and combat, idle and recording,
+  connected and degraded), the modes are the lower-case state names and the From and To cells; write `populated`,
+  `empty`, `loading` and `error` only where they apply.
+- **Transitions**: a change that replaces what the person sees (a scene, a level, another screen) is a row whose
+  Target is another UX document; a change of mode on the same surface is a row whose From and To differ with an
+  empty Target.
+- **Steps**: a step cites the element where its outcome is perceived; a long-running activity and a system
+  judgement follow `usecase-writing`.
+- **No task flow**: a surface no use case step reaches (free play, an ambient display) leaves `usecases` empty,
+  keeps Purpose, Content and States and keeps the Interactions header with the rows that apply (a `modal` keeps its
+  `close` or `back` row); `RULE-ux-links` and `RULE-ux-coverage` report nothing for it. A step that cites the
+  surface makes it a listed one: add the use case to `usecases` and name the step in a row.
+- **Mismatch**: if the surface still cannot be written under these criteria, record the document and the mismatch
+  as feedback instead of omitting the document or loosening the table; that record is the evidence a rule change
+  needs.
 
 ## Purpose and content
 

@@ -3,6 +3,8 @@ the UX review before code (SPEC-ux-documentation AC-11, AC-12, AC-14)."""
 
 from __future__ import annotations
 
+import re
+
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from distsupport.guidance import assert_rule
 from spec_support.bundle_text import DOCS, raw, text
@@ -73,3 +75,30 @@ def test_the_effort_table_and_acceptance_request_name_the_ux_review() -> None:
     assert_rule(raw("skills/spec/references/effort.md"), "UX review", "optional delegation", "not a stage", "gate")
     assert_rule(raw("workflows/sdd-proposal.md"), "`plan-accept`", "each `ux-review` round", "open findings")
     assert_rule(raw("skills/spec/references/planning.md"), "`ux-reviewer`", "open findings", "`plan-accept` request")
+
+
+def test_ux_writing_maps_surfaces_beyond_pages_and_forms_onto_the_contract() -> None:
+    """SPEC-ux-writing-non-page-surfaces AC-01 to AC-05, AC-07 and the template comment of AC-02."""
+    guide = raw("instructions/ux-writing.md")
+    description = re.search(r"^description: (.+)$", guide, re.MULTILINE)
+    assert description is not None and "surfaces beyond pages and forms" in description.group(1)
+    assert len(description.group(1)) <= 300
+    assert "\n## Surfaces beyond pages and forms\n" in guide
+    assert_rule(
+        guide, "**element**", "perceives as one place", "`screen`", "`panel`", "content names", "`modal`", "dismissed"
+    )
+    assert_rule(guide, "**continuous input**", "content and states", "advances a use case step", "global control")
+    assert_rule(guide, "**continuous input**", "does not list every input")
+    assert_rule(guide, "**modes**", "state names", "from and to cells", "`populated`", "only where they apply")
+    assert_rule(guide, "**transitions**", "replaces what the person sees", "target is another ux document")
+    assert_rule(guide, "**transitions**", "mode on the same surface", "from and to differ", "empty target")
+    assert_rule(guide, "**steps**", "outcome is perceived", "`usecase-writing`")
+    assert_rule(
+        guide, "**no task flow**", "`usecases` empty", "interactions header", "`rule-ux-links`", "`rule-ux-coverage`"
+    )
+    assert_rule(guide, "**mismatch**", "as feedback", "evidence a rule change needs")
+    usecase = raw("instructions/usecase-writing.md")
+    assert_rule(usecase, "long-running activity", "one step", "outcome is", "perceived")
+    assert_rule(usecase, "judgement the system makes", "reaches no element", "`off screen: <reason>`")
+    template = raw("templates/ux.md")
+    assert_rule(template, "one row per trigger that serves a step or is a global control", "continuous input")

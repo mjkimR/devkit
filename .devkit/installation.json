@@ -1680,11 +1680,11 @@
     },
     ".devkit/managed/docs/instructions/usecase-writing.md": {
       "mode": 420,
-      "sha256": "803c8e95f3ba927aa1b0713e5e13511928add6b437d7a0f5620362a1435af804"
+      "sha256": "433b8dd1ca53477ebfe8361f6084956c9be9a419ce3738eb25d92fa347b19849"
     },
     ".devkit/managed/docs/instructions/ux-writing.md": {
       "mode": 420,
-      "sha256": "f0ffc4dcd90ab87c677b20b80c5f839c2f2f29948853c8c818372be1975a5b65"
+      "sha256": "da0065fabdd8ad70a71ce1777bc8424df2b861bfdf88671dbed8835fe957f22e"
     },
     ".devkit/managed/docs/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -1792,7 +1792,7 @@
     },
     ".devkit/managed/docs/rules/ux_coverage/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "826361774e77e87509b3b7495a33384f12627541091fd087ecb8592c2508f92e"
+      "sha256": "6e52ad66fa5a749536cf54f99680a35dc2b7dd4f0cd429904f5739f3fb3551e7"
     },
     ".devkit/managed/docs/rules/ux_links/guide.md": {
       "mode": 420,
@@ -1804,7 +1804,7 @@
     },
     ".devkit/managed/docs/rules/ux_links/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "49496dd26a71a91e0e775d6671b7fc63759b0dc2bca8761dfd1ccdbf63182703"
+      "sha256": "c36bb9ac8f0216e1d0b07d38f7f9d0510da3d962015406d6b7f9d75a384379d3"
     },
     ".devkit/managed/docs/templates/capability.md": {
       "mode": 420,
@@ -1824,7 +1824,7 @@
     },
     ".devkit/managed/docs/templates/ux.md": {
       "mode": 420,
-      "sha256": "b1afac4af0589847daf2663c88c35ec4bf1b06da3f8ded8755ae301a478583a7"
+      "sha256": "510a33fcf50e6523a8dd98cbeccc7e34457b84d0bdea341bee2844a4e463d41a"
     },
     ".devkit/managed/harness/AGENTS.md": {
       "mode": 420,
