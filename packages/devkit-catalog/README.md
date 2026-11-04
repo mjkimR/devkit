@@ -49,9 +49,9 @@ An installation of the former `incubation` bundle from before the research split
 three moved roles on upgrade; sync removes their unmodified projections and announces the bundle once with
 `BUNDLE_UNSELECTED`. Before selecting it, move each customization of a moved role:
 
-- Rename an `incubation:<role>` key under `[subagents.roles]` to `deep-research:<role>`; sync fails until then.
-- Move `.devkit/overrides/incubation/subagents/<role>.md` to `.devkit/overrides/deep-research/subagents/`; the
-  override silently stops applying until then.
+- Remove research `incubation:<role>` and `deep-research:<role>` keys under `[subagents.roles]`; these roles are no longer registered subagents and stale keys fail sync.
+- Port role body customizations from `.devkit/overrides/incubation/subagents/<role>.md` or `.devkit/overrides/deep-research/subagents/<role>.md` into the skill override's `roles/<role>.md` through `devkit override`; remove obsolete subagent frontmatter.
+- Preserve host tool and sandbox restrictions through the invoking host; skill-local role files do not apply native execution settings.
 - Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
   refused until then.
 

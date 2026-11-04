@@ -70,7 +70,8 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     assert (research / "SKILL.md").is_file()
     assert yaml.safe_load((research / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
     for role in ROLES:
-        assert (consumer / f".codex/agents/{role}.toml").is_file()
+        assert not (consumer / f".codex/agents/{role}.toml").exists()
+        assert (research / f"roles/{role}.md").is_file()
 
     workspace_example = (research / "references/workspace.md").read_text().split("```sh\n", 1)[1].split("```", 1)[0]
     workspace_script = tmp_path / "research-workspace.sh"

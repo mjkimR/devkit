@@ -19,11 +19,12 @@ Run only when the user explicitly invokes this entry; never suggest or start it 
 1. Read the supplied question, sources and documents. Read an earlier run directory or retained material only when the user names it as an input source.
 2. Recover the goal, constraints, actual decisions and open questions; ask only a missing decision that changes the research target.
 3. Read `references/orchestration.md` before allocating an investigation or comparing candidate directions.
-4. Choose a bounded next investigation from the missing evidence; use optional roles only where separate context adds useful coverage. Read `references/workspace.md` before allocating scratch work or promoting its results.
-5. Validate actual role returns and source support, then revise, combine or stop assignments as findings change the decision.
-6. Read `references/synthesis.md` before creating or updating the retained material; read `uv run devkit get-context docs` and its relevant writing instructions before document work.
-7. Retain proportionate evidence and synthesis in one indexed material, inspect the written files and report the result and next decision.
-8. End with the research outcome; any implementation or follow-up work starts separately under the user's own request.
+4. When delegating, select one role file under `roles/` through the orchestration reference; send its absolute path to a general subagent and instruct it to read that file first.
+5. Choose a bounded next investigation from the missing evidence; use optional roles only where separate context adds useful coverage. Read `references/workspace.md` before allocating scratch work or promoting its results.
+6. Validate actual role returns and source support, then revise, combine or stop assignments as findings change the decision.
+7. Read `references/synthesis.md` before creating or updating the retained material; read `uv run devkit get-context docs` and its relevant writing instructions before document work.
+8. Retain proportionate evidence and synthesis in one indexed material, inspect the written files and report the result and next decision.
+9. End with the research outcome; any implementation or follow-up work starts separately under the user's own request.
 
 ## Completion
 
