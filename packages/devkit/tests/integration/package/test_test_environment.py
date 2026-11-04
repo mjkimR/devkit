@@ -15,7 +15,7 @@ SCRIPT = Path(__file__).resolve().parents[5] / "scripts/check_test_environment.p
 
 def test_permitted_environment_is_silent() -> None:
     command = runpy.run_path(str(SCRIPT))["main"]
-    result = CliRunner().invoke(command, ["--", "just", "test", "all"])
+    result = CliRunner().invoke(command, ["--test-path", "packages/devkit/tests", "--", "just", "test", "devkit"])
     assert result.exit_code == 0, result.output
     assert result.stdout == result.stderr == ""
 
@@ -102,3 +102,20 @@ def test_loopback_denial_reports_exact_retry_and_closes_socket(monkeypatch, bloc
         listener.__exit__.assert_called_once()
     if blocked_at == "bind":
         listener.listen.assert_not_called()
+
+
+def test_successful_tcp_probe_binds_listens_and_closes(monkeypatch) -> None:
+    namespace = runpy.run_path(str(SCRIPT))
+    pair = namespace["socket"].socketpair()
+    monkeypatch.setattr(namespace["socket"], "socketpair", lambda: pair)
+    listener = MagicMock()
+    listener.__enter__.return_value = listener
+    tcp = MagicMock(return_value=listener)
+    monkeypatch.setattr(namespace["socket"], "socket", tcp)
+    result = CliRunner().invoke(namespace["main"], ["--", "just", "test", "all"])
+    assert result.exit_code == 0, result.output
+    assert result.stdout == result.stderr == ""
+    tcp.assert_called_once_with(namespace["socket"].AF_INET, namespace["socket"].SOCK_STREAM)
+    listener.bind.assert_called_once_with(("127.0.0.1", 0))
+    listener.listen.assert_called_once_with(1)
+    listener.__exit__.assert_called_once()
