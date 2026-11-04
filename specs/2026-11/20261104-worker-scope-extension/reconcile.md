@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-worker-scope-extension
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
@@ -30,8 +30,8 @@ targets:
 The independent medium Code Reviewer found one P2 manifest omission. `review-01.yaml` records it and
 `reverify-01.yaml` closes it after package.json protection, the isolated failure-code regression (21 cases) and
 `just test-affected` (2314 passed, partial selector with full fallback retained). Both package lint and type checks
-passed; 22 cumulative CI rules and selected-bundle sync checks passed. Independent Reconcile Reviewer verification
-is required before this record becomes resolved. No required work is deferred.
+passed; 22 cumulative CI rules and selected-bundle sync checks passed. Independent medium Reconcile Reviewer verification passed without findings at `f65ea22f`;
+`reconcile-check-01.yaml` records coverage, feedback verification and unchanged snapshots. No required work is deferred.
 
 ## Entrypoints
 
