@@ -35,8 +35,8 @@ Required gaps block readiness. Exclusions do not count as verified coverage.
 
 State whether all selected retained items are verified and applicable required checks passed.
 Identify the ready report/source, selected SDD assets, exact approach change.
-Preserve an existing spec provider; list absent-provider configuration or project-to-spec as an explicit activation effect when necessary.
-Without authority for that necessary effect, report a mismatch rather than successful adoption.
+Integration provider selection is unnecessary; existing legacy provider values are ignored.
+Do not invent provider activation effects or a separate approval for them.
 Name the existing explicit user authority for those same effects, or state that the decision is pending.
 Record real versus simulated decisions in a test exercise.
 

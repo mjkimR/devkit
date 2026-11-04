@@ -86,7 +86,7 @@ def prepare(
     click.echo(
         f"[INTEGRATION_SCOPE: worktree_remove={yes_no(plan.worktree_identity is not None)} "
         f"delete_branch={yes_no(plan.delete_branch)} cleanup={cleanup} seeded={_seeded(result.seeded)} "
-        f"verification={result.verification}]"
+        f"verification={result.verification} landed_sha={result.landed_sha or '-'}]"
     )
     echo_notices(result.notices)
     exit_on_warnings(result.notices)

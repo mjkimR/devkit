@@ -22,3 +22,7 @@ Guidance assertions verify this ordering and failure procedure. External final-c
 `just test-affected --base main` selected `mode=full` because package metadata changed: 6566 passed, 15 skipped. Thirteen skips require a devkit-dist-only environment; two require Linux `/proc` and `os.waitid`, unavailable on this macOS host. Follow-up focused tests cover the final internal PR adapter signature cleanup. Both changed source packages passed lint/format and Pyright with zero errors. Staged governance rules passed with zero violations; bundle sync check reported no drift.
 
 The temporary-Git final-check recovery regression passes: independently passing source and target combine cleanly but fail a fresh check, cleanup is already complete, and a repair descendant passes without another merge.
+
+## Review round 1 recovery
+
+All three P1 failure conditions were reproduced before fixes: partial acceptance omitted its confirmed landing in JSON/text (two failing cases), a no-ff cleanup-only retry falsely returned recovery using the source SHA, and text prepare omitted the merge SHA of an already merged PR after target advancement. The fixes use the confirmed landing and construct authorized continuation before partial returns, preserve cleanup-first recovery, and add the prepare text field. The affected acceptance/output/template suite passed 27 tests after fixes; the effective-versus-requested mode test additionally covers policy narrowing without handoff authorization. A fresh review round is required because public output changed.

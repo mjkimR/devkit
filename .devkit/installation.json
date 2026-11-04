@@ -1896,7 +1896,7 @@
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
       "mode": 420,
-      "sha256": "2c7ff0eb041c33f31fcc01faf8ef1f68e3dedd9effd3004618808a152f884696"
+      "sha256": "fee294015fbf507e60390b816bedecfe7e8e8c6af9631756f1a18f4dfac113a4"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,

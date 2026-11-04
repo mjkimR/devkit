@@ -392,7 +392,7 @@ def accept_cmd(
             slug,
             result,
             bool(result.get("completed_steps")),
-            mode=mode,
+            mode=result.get("mode", mode),
             authority=result.get("acceptance_authority", "-"),
             completed=",".join(result.get("completed_steps", [])) or "-",
             **merged,

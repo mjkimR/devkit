@@ -366,9 +366,10 @@ class PlanAcceptUseCase(BaseUseCase):
             "completed_steps": completed,
             "source_sha": request.context.finish.source_sha,
             "acceptance_sha": lifecycle.acceptance_sha,
-            # The merged target and what was checked on the merged result (``ADR-moved-target-merge``).
+            # The Git build target is separate from the confirmed landing revision.
             "target_sha": result.build_target or result.request.context.finish.target_sha,
             "verification": result.verification,
+            "landed_sha": result.landed_sha,
             "mode": lifecycle.mode,
             "requested_mode": mode,
             "handoff_status": "not_started",
@@ -378,35 +379,39 @@ class PlanAcceptUseCase(BaseUseCase):
             "acceptance_authority": lifecycle.actor,
             "next_action": "Inspect completed effects and resolve the reported integration step",
         }
+        landed = result.landed_sha
+        if landed is not None:
+            continuation = {
+                "mode": lifecycle.mode,
+                "activity_effort": lifecycle.effort,
+                "unit": lifecycle.unit,
+                "landed_sha": landed,
+                "authority": authority,
+                "handoff_authorized": lifecycle.mode == "accept_and_handoff",
+            }
+            payload["continuation"] = continuation
+            payload["next_action"] = (
+                "Synchronize the landed environment in a fresh process and run required final checks"
+            )
+            if lifecycle.mode == "accept_and_handoff":
+                continuation["command"] = devkit_command(f"spec proposal handoff {slug} --effort {lifecycle.effort}")
+                payload["next_action"] += (
+                    f"; after they pass, run `{continuation['command']}` with the retained handoff authority; "
+                    "revalidate changed scope before any additional effects"
+                )
         if result.status != "completed":
             payload["status"] = "needs_recovery" if completed else "blocked"
+            if landed is not None:
+                payload["next_action"] = (
+                    "Inspect completed effects and resolve remaining cleanup without replaying the merge; then "
+                    + payload["next_action"]
+                )
             return payload
-        landed = result.result_sha or request.context.finish.source_sha
-        if run_git_text(self.root, "rev-parse", "HEAD") != landed:
+        if landed is None or run_git_text(self.root, "rev-parse", "HEAD") != landed:
             return {
                 **payload,
                 "status": "needs_recovery",
-                "landed_sha": landed,
-                "next_action": "Inspect the base and request fresh approval for remaining effects",
+                "next_action": "Inspect the base and revalidate remaining effects before continuing final verification",
             }
-        continuation = {
-            "mode": lifecycle.mode,
-            "activity_effort": lifecycle.effort,
-            "unit": lifecycle.unit,
-            "landed_sha": landed,
-            "authority": authority,
-            "handoff_authorized": lifecycle.mode == "accept_and_handoff",
-        }
-        payload.update(
-            status="accepted",
-            landed_sha=landed,
-            continuation=continuation,
-            next_action="Synchronize the landed environment in a fresh process and run required final checks",
-        )
-        if lifecycle.mode == "accept_and_handoff":
-            continuation["command"] = devkit_command(f"spec proposal handoff {slug} --effort {lifecycle.effort}")
-            payload["next_action"] += (
-                f"; after they pass, run `{continuation['command']}` with the retained handoff authority; "
-                "revalidate changed scope before any additional effects"
-            )
+        payload["status"] = "accepted"
         return payload

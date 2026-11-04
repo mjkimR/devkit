@@ -76,5 +76,8 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
     assert "uv run devkit workflow envelope" not in flat_body
     report = raw("playbooks/sdd-baseline/references/report-template.md")
     assert "<verified/gap/excluded>" in report
+    assert_rule(report, "provider selection is unnecessary", "legacy", "ignored")
+    assert "absent-provider configuration" not in report
+    assert "project-to-spec" not in report
     assert_rule(report, "actual", "policy/asset inspection", "after activation")
     assert_rule(report, "real", "simulated decisions")

@@ -105,7 +105,8 @@ def test_accept_cli_refuses_invalid_mode(pending):
     assert git(repo, "show-ref") == before and planning.exists()
 
 
-def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending):
+@pytest.mark.parametrize("output_format", ["json", "text"])
+def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending, output_format):
     repo, planning = pending
     config = repo / ".devkit/config.toml"
     config.write_text(config.read_text() + '\n[workflow.approvals]\nplan-accept = "auto"\ndev-integration = "ask"\n')
@@ -121,18 +122,25 @@ def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending):
             "--by",
             "policy",
             "--mode",
-            "accept_only",
+            "accept_and_handoff",
+            "--effort",
+            "high",
             "-w",
             str(repo),
             "--format",
-            "json",
+            output_format,
         ],
     )
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "accepted"
-    assert payload["acceptance_authority"] == "policy"
+    if output_format == "json":
+        payload = json.loads(result.stdout)
+        assert payload["status"] == "accepted" and payload["acceptance_authority"] == "policy"
+        assert payload["mode"] == "accept_only" and payload["requested_mode"] == "accept_and_handoff"
+        assert payload["continuation"]["handoff_authorized"] is False
+        assert "command" not in payload["continuation"]
+    else:
+        assert "mode=accept_only" in result.stdout and "mode=accept_and_handoff" not in result.stdout
 
 
 def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, tmp_path):
@@ -399,3 +407,98 @@ def test_the_composed_form_refuses_check_and_names_the_read_only_material(pendin
     assert direct.exit_code == 2 and "composed acceptance cannot use --direct" in direct.stderr
     assert git(repo, "show-ref") == before
     assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
+
+
+@pytest.fixture
+def cleanup_fails_once(monkeypatch):
+    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
+    from devkit_agt.features.worktree import RemoveFailedError
+
+    original = lifecycle._remove
+    attempts = []
+
+    def remove(root, path):
+        attempts.append(path)
+        if len(attempts) == 1:
+            raise RemoveFailedError("temporary cleanup refusal")
+        return original(root, path)
+
+    monkeypatch.setattr(lifecycle, "_remove", remove)
+    return attempts
+
+
+@pytest.mark.parametrize("output_format", ["json", "text"])
+def test_partial_acceptance_retains_landed_revision_and_authorized_continuation(
+    pending, cleanup_fails_once, output_format
+):
+    repo, planning = pending
+    result = CliRunner().invoke(
+        proposal_group,
+        [
+            "accept",
+            "idea",
+            "--by",
+            "user",
+            "--mode",
+            "accept_and_handoff",
+            "--effort",
+            "high",
+            "-w",
+            str(repo),
+            "--format",
+            output_format,
+        ],
+    )
+    assert result.exit_code == 1, result.output
+    landed = git(repo, "rev-parse", "HEAD")
+    assert planning.exists() and len(cleanup_fails_once) == 1
+    if output_format == "json":
+        payload = json.loads(result.stdout)
+        assert payload["status"] == "needs_recovery" and payload["landed_sha"] == landed
+        assert payload["verification"] == "pending" and payload["handoff_status"] == "not_started"
+        assert payload["requested_mode"] == payload["mode"] == "accept_and_handoff"
+        assert payload["continuation"] == {
+            "mode": "accept_and_handoff",
+            "activity_effort": "high",
+            "unit": "docs/proposals/PROP-idea",
+            "landed_sha": landed,
+            "authority": "host-conversation",
+            "handoff_authorized": True,
+            "command": "uv run devkit spec proposal handoff idea --effort high",
+        }
+        assert "remaining cleanup" in payload["next_action"] and "final checks" in payload["next_action"]
+    else:
+        assert f"landed_sha={landed}" in result.stdout
+        assert "verification=pending handoff=not_started" in result.stdout
+        assert "remaining cleanup" in result.stdout and "final checks" in result.stdout
+
+
+def test_cleanup_only_acceptance_retry_keeps_actual_no_ff_landing(pending, cleanup_fails_once):
+    repo, planning = pending
+    args = [
+        "accept",
+        "idea",
+        "--by",
+        "user",
+        "--mode",
+        "accept_and_handoff",
+        "--effort",
+        "high",
+        "-w",
+        str(repo),
+        "--format",
+        "json",
+    ]
+    first = CliRunner().invoke(proposal_group, args)
+    assert first.exit_code == 1, first.output
+    landed = git(repo, "rev-parse", "HEAD")
+    source = git(planning, "rev-parse", "HEAD")
+    assert landed != source and len(git(repo, "rev-list", "--parents", "-n", "1", landed).split()) == 3
+    second = CliRunner().invoke(proposal_group, args)
+    assert second.exit_code == 0, second.output
+    payload = json.loads(second.stdout)
+    assert payload["status"] == "accepted" and payload["landed_sha"] == landed
+    assert payload["integration"]["steps"]["merge"] == "skipped"
+    assert payload["continuation"]["landed_sha"] == landed and payload["continuation"]["activity_effort"] == "high"
+    assert git(repo, "rev-parse", "HEAD") == landed and not planning.exists()
+    assert len(cleanup_fails_once) == 2

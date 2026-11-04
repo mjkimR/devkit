@@ -377,9 +377,7 @@ def test_cleanup_only_confirmation_describes_only_remaining_operations(remote_se
     service, fake, base, _worktree = remote_service
     fake.pending = True
     pending = run(service)
-    fake.merge(
-        pending.request.repository, 12, pending.request.context.finish.source_sha, "dev-demo", "main"
-    )
+    fake.merge(pending.request.repository, 12, pending.request.context.finish.source_sha, "dev-demo", "main")
     restarted = IntegrationService(base)
     restarted.github = fake
     request = restarted.prepare("dev-demo", "pull-request").request

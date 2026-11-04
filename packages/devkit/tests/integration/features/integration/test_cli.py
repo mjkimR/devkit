@@ -273,7 +273,7 @@ def test_prepare_shows_the_approval_scope(repo):
     assert text[0].startswith("[INTEGRATION_PREPARED: ")
     assert f" target_sha={request['target']['sha']} " in text[0]
     assert text[1] == (
-        "[INTEGRATION_SCOPE: worktree_remove=yes delete_branch=yes cleanup=- seeded=- verification=not_started]"
+        "[INTEGRATION_SCOPE: worktree_remove=yes delete_branch=yes cleanup=- seeded=- verification=not_started landed_sha=-]"
     )
 
 
@@ -388,3 +388,35 @@ def test_removed_metadata_options_are_argument_errors(repo, command, option):
     result = CliRunner().invoke(cli, [command, "dev-demo", option, "unused", "-w", str(base)])
     assert result.exit_code == 2 and f"No such option '{option}'" in result.output
     assert worktree.exists()
+
+
+def test_prepare_json_and_text_name_existing_pr_landing_after_target_advance(repo, tmp_path, monkeypatch):
+    base, _worktree = repo
+    remote = tmp_path / "remote.git"
+    git(base, "init", "--bare", str(remote))
+    git(base, "remote", "add", "origin", str(remote))
+    git(base, "push", "-u", "origin", "main")
+    service = IntegrationService(base)
+    fake = FakeGitHub(base, remote)
+    service.github = fake
+    fake.pending = True
+    request = service.prepare("dev-demo", "pull-request").request
+    pending = service.execute_cli("dev-demo", "pull-request", expected_digest=request.digest)
+    assert pending.request.repository is not None
+    fake.merge(pending.request.repository, 12, pending.request.context.finish.source_sha, "dev-demo", "main")
+    assert fake.pr is not None
+    landed = fake.pr["mergeCommit"]["oid"]
+    advanced = git(
+        base, "commit-tree", git(base, "rev-parse", f"{landed}^{{tree}}"), "-p", landed, "-m", "later target"
+    )
+    git(base, "push", str(remote), f"{advanced}:refs/heads/main")
+    monkeypatch.setattr("devkit_agt.features.integration.cli.IntegrationService", lambda _root: service)
+    args = ["prepare", "dev-demo", "--route", "pull-request", "-w", str(base)]
+    json_result = CliRunner().invoke(cli, [*args, "--format", "json"])
+    assert json_result.exit_code == 0, json_result.output
+    payload = json.loads(json_result.stdout)
+    assert payload["verification"] == "pending" and payload["landed_sha"] == landed
+    text_result = CliRunner().invoke(cli, args)
+    assert text_result.exit_code == 0, text_result.output
+    assert f"target_sha={advanced}" in text_result.stdout
+    assert f"verification=pending landed_sha={landed}" in text_result.stdout
