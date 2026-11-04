@@ -110,6 +110,9 @@ We decided to adopt **Option 1**.
   integration state is an amendment, never an edit of the report file.
 - The publisher reads the local repository only (`git rev-parse`, `git status --porcelain`, a temporary index) and
   never writes the index, HEAD, refs or working tree outside the run directory.
+- Every history commit, the root included, carries the fixed devkit identity as author and committer with dates
+  pinned from the record, so the same content rebuilds to the same commit SHA on every machine; the person who
+  authorized the publication is named in the record's `authority` field, not in the commit.
 - GitHub is the only provider, reached through `gh api` behind an injectable runner that names the repository in
   every endpoint path and sets its own timeout per request class; `gh` owns authentication.
 - Option 3 replaces the publish step only when an official reference documents atomic `fileChanges`, a stable
@@ -124,8 +127,8 @@ We decided to adopt **Option 1**.
   publication; retries are safe by construction of the record path.
 - **Negative / Risks**: GitHub-only; the secondary rate limit binds bursts of runs; undocumented error texts need a
   labelled live exercise before the capability states them; a ruleset that restricts creation or updates of the
-  branch name blocks the publishing identity; the author and committer identity of the run commits is still open
-  (`q5`), and until it is fixed the reproducible-SHA property holds only per publishing identity.
+  branch name blocks the publishing identity; history commits are not attributed to a person on GitHub, so a
+  reader finds the person in the record's `authority` field.
 - **Follow-ups**: a non-GitHub provider starts a new proposal when a repository on another host needs history;
   the live exercise runs once in Development before the new `maintenance-history` capability states the error contract.
 - **Frozen root**: the root `README.md` bytes, the fixed identity, the fixed date and the resulting constant are

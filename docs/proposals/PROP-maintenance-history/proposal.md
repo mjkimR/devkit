@@ -115,9 +115,10 @@ index/<playbook>/<YYYY>.jsonl                       # one line per published run
   `integration_state`, `updated_at` and the amendment `path`. `list` merges lines by `run_id`, taking the line with
   the greatest `updated_at` (a run line counts as its `finished_at`; ties go to file order), and skips superseded
   runs unless `--include-superseded`.
-- Every published commit's message is `history: <playbook> <run-id>` (or `history: update <run-id>`); its author,
-  committer and dates are pinned from the record so a rebuilt commit for the same content has the same SHA. The
-  identity the run commits carry is open question `q5`. Source SHAs and history commit SHAs stay distinct fields.
+- Every published commit's message is `history: <playbook> <run-id>` (or `history: update <run-id>`); its author
+  and committer are the fixed devkit identity (name `devkit maintenance history`, a no-reply address) and its dates
+  are pinned from the record, so a rebuilt commit for the same content has the same SHA on every machine; the
+  record's `authority` field names the person. Source SHAs and history commit SHAs stay distinct fields.
 
 ### 3.3 Run record
 
@@ -279,12 +280,14 @@ or retention cleanup, a non-GitHub provider, publishing the retained diff by def
 
 - Publication mechanism: the Git Database API sequence (`PADR-history-branch-publication`); the Contents API and
   GraphQL `createCommitOnBranch` are rejected for now with the condition recorded in the PADR.
-- Code placement: a `devkit-agt` feature; the content-only catalog keeps the playbook text. Size moves from `M` to
-  `L` for the feature, its fakes and the capability work. This choice is open question `q1` until answered.
-- Publication authority: per run, explicit, for `init`, `publish` and `update`, with `pending` as the default
-  outcome; the configured repository and branch are inputs. Open question `q3` offers the alternative of a standing
-  opt-in, which needs a superseding ADR.
-- Inspected-state identity: `PADR-inspected-state-identity`; `source_sha` stays a commit (open question `q4`).
+- Code placement (user, `answer-01` q1): a `devkit-agt` feature; the content-only catalog keeps the playbook
+  text. Size moves from `M` to `L` for the feature, its fakes and the capability work.
+- Publication authority (user, `answer-01` q3): per run, explicit, for `init`, `publish` and `update`, with
+  `pending` as the default outcome; the configured repository and branch are inputs. A standing opt-in in
+  configuration was rejected because it would need a superseding ADR and would grant publication authority by
+  policy.
+- Inspected-state identity (user, `answer-01` q4): `PADR-inspected-state-identity`; `source_sha` stays a commit,
+  and the diff is published only when the run selects it.
 - Record layout: run directories, append-only amendments and a per-playbook index sharded by the run ID's year;
   size-based rollover, a recursive tree walk and a search endpoint are rejected (`materials/planning-options.md`
   set 5 and `envelopes/challenger-01.yaml` findings 1, 3 and 4).
@@ -297,9 +300,11 @@ or retention cleanup, a non-GitHub provider, publishing the retained diff by def
   1, challenger-03 finding 3). `publish` rechecks the frozen digests before sending (challenger-03 finding 4).
 - Outcome vocabulary: a common `outcome` field with three values and a playbook-specific `result` field, so the
   performance pass keeps its own values; integration state after `finish` is an amendment, never a record change.
-- Playbook coverage: all four maintenance playbooks (open question `q2`), each step guarded by the presence of
+- Playbook coverage (user, `answer-01` q2): all four maintenance playbooks, each step guarded by the presence of
   `devkit maintenance`.
-- Commit identity of the run commits: open question `q5` (challenger-01 finding 19); the root commit identity is fixed.
+- Commit identity (user, `answer-01` q5, challenger-01 finding 19): the run commits and the root commit carry the
+  fixed devkit identity; the publisher's git identity and the `gh` account identity were rejected because they make
+  the commit SHA reproducible only per publisher or cost a lookup per publication.
 - `dev_effort` stays `medium` (challenger-01 finding 18 waived): the race, retry and inspection paths are integration
   tests with the modelled runner, the mandatory `code-reviewer` pass covers them, and the implementer calls the
   reviewer again for uncertain correctness; the user may raise it at `plan-accept`.
