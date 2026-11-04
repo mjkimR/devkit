@@ -16,9 +16,10 @@ Checks every current document that is not a material (``rules.is_material``):
   (handoff removes the proposal, so the pair is an unfinished handoff or a reused slug);
 - identity checks over every targeted document, materials and completed specs included: a malformed ``aliases``
   field, and an alias that another document declares as its ID or that several documents declare;
-- in the ID-free steering files (the Markdown files directly in ``docs/steering/`` other than ``README.md``), every
-  backtick-quoted ID must resolve and must not be an alias, and the Owner cells of the five-column tables of
-  ``docs/steering/glossary.md`` likewise; neither is fixed or added to the reference graph;
+- in the ID-free steering files (the Markdown files directly in ``docs/steering/`` or in a registered namespace's
+  ``docs/packages/<name>/steering/``, other than ``README.md``), every backtick-quoted ID must resolve and must not be
+  an alias, and the Owner cells of the five-column tables of the root ``docs/steering/glossary.md`` likewise; neither
+  is added to the reference graph;
 - in the quick references (the ID-free Markdown files the ``quick_references`` setting matches, by default
   ``docs/development/``, ``guides/`` and the package and tool READMEs), every backtick-quoted ID must resolve, and one
   written with an alias is fixable; they are not added to the reference graph either.
@@ -32,7 +33,7 @@ documents and quick references only (within the targets, when the run names any)
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
@@ -43,8 +44,9 @@ from devkit_docs.features.documents.models.ids import ID_SOURCE, Kind
 from devkit_docs.features.documents.models.markdown import visible_lines
 from devkit_docs.features.documents.models.model import is_unit_anchor
 from devkit_docs.features.documents.services.dependencies import cycle_members, target_problem
+from devkit_docs.features.documents.services.namespaces import docs_roots
 from devkit_docs.features.documents.services.rewrite import rewrite
-from devkit_docs.features.governance import FIX_COMMAND, document_index, is_material, reportable
+from devkit_docs.features.governance import FIX_COMMAND, document_index, is_material, namespaces, reportable
 
 RULE_ID = "RULE-document-reference"
 STEERING = "docs/steering"
@@ -376,9 +378,8 @@ class DocumentReferenceRule(BaseRule):
     def _steering(self, ctx: RuleContext, index: DocumentIndex, examined: set[tuple[int, str]]) -> list[Violation]:
         """Resolve the backtick-quoted IDs of the ID-free steering files; aliases are fixable without graph edges."""
         found: list[Violation] = []
-        for file in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",)):
-            path = ctx.relative_path(file)
-            if path is None or not _is_steering(path) or not ctx.is_file_targeted(path):
+        for path in _steering_files(ctx):
+            if not ctx.is_file_targeted(path):
                 continue
             text = ctx.cache.read_text_strict(path)
             if text is None:
@@ -412,10 +413,11 @@ class DocumentReferenceRule(BaseRule):
         """The targeted quick references: Markdown files matching ``quick_references`` that are neither indexed
         documents (checked as documents) nor steering files (checked by ``_steering``)."""
         indexed = {document.path for document in index.documents}
+        steering = _steering_directories(ctx)
         paths: list[str] = []
         for file in ctx.cache.find_files(ctx.workspace_root, extensions=(".md",)):
             path = ctx.relative_path(file)
-            if path is None or path in indexed or _is_steering(path) or not ctx.is_file_targeted(path):
+            if path is None or path in indexed or _is_steering(path, steering) or not ctx.is_file_targeted(path):
                 continue
             settings: DocumentReferenceSettings = ctx.settings(self, path)
             if any(match_path(pattern, path) for pattern in settings.quick_references):
@@ -483,11 +485,7 @@ class DocumentReferenceRule(BaseRule):
             if updated != text:
                 ctx.cache.write_text(document.path, updated, dry_run=ctx.dry_run)
                 changed.append(document.path)
-        steering = [
-            path
-            for file in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",))
-            if (path := ctx.relative_path(file)) is not None and _is_steering(path) and ctx.is_file_targeted(path)
-        ]
+        steering = [path for path in _steering_files(ctx) if ctx.is_file_targeted(path)]
         for path in [*steering, *self._quick_references(ctx, index)]:
             text = ctx.cache.read_text_strict(path)
             if text is None:
@@ -543,9 +541,24 @@ def _rewrite_owners(text: str, index: DocumentIndex) -> str:
     return text
 
 
-def _is_steering(path: str) -> bool:
-    """Whether ``path`` is a steering file: Markdown directly in ``docs/steering/``, other than ``README.md``."""
-    return path.rsplit("/", 1)[0] == STEERING and path.endswith(".md") and not path.endswith("/README.md")
+def _steering_directories(ctx: RuleContext) -> list[str]:
+    """``docs/steering`` and the steering directory of every registered namespace."""
+    return [f"{root}/steering" for root in docs_roots(namespaces(ctx))]
+
+
+def _is_steering(path: str, directories: Sequence[str]) -> bool:
+    """Whether ``path`` is a steering file: Markdown directly in one of ``directories``, other than ``README.md``."""
+    return path.rsplit("/", 1)[0] in directories and path.endswith(".md") and not path.endswith("/README.md")
+
+
+def _steering_files(ctx: RuleContext) -> Iterator[str]:
+    """The steering files of the workspace, directory by directory, root first (in the cache's file order)."""
+    directories = _steering_directories(ctx)
+    for directory in directories:
+        for file in ctx.cache.find_files(ctx.workspace_root / directory, extensions=(".md",)):
+            path = ctx.relative_path(file)
+            if path is not None and _is_steering(path, directories):
+                yield path
 
 
 def _citations(text: str) -> Iterator[tuple[int, int, str]]:

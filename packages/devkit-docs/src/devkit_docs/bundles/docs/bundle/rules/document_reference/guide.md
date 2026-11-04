@@ -20,7 +20,8 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
   legacy tables are outside this extension. The header fixes the Owner column even when rows omit trailing cells or
   add surplus cells. The same prose masking, targeting, exclusions and snapshot cache apply.
 - **Steering files**: every backtick-quoted full ID in the visible text of the Markdown files directly in
-  `docs/steering/` (other than `README.md`), the glossary included, must resolve uniquely and must not be an alias.
+  `docs/steering/`, or in `docs/packages/<name>/steering/` of a namespace registered in `[[tool.docs.namespaces]]`
+  (other than `README.md`), the root glossary included, must resolve uniquely and must not be an alias.
   These files have no ID and stay out of the index; uniquely resolving code-span aliases are fixable without reference-graph edges. An ID already checked
   as a glossary Owner on the same line is reported once.
 - **Quick references**: every backtick-quoted full ID in the visible text of the ID-free Markdown files the

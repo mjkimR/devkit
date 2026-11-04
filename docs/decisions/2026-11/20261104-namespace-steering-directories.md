@@ -1,16 +1,16 @@
 ---
-id: PADR-namespace-steering-directories
+id: ADR-namespace-steering-directories
 title: Namespace steering directories listed by the working directory's namespace
 summary: For a registered namespace that needs package background, we check docs/packages/<name>/steering/ under the root steering contract and list it in a context through a devkit-docs provider selected by the working directory, to keep background visible at bounded cost, accepting one more entry point.
-proposal: PROP-namespace-steering
+proposal: SPEC-namespace-steering
 supersedes: [ADR-steering-documents]
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-namespace-steering-directories] Namespace steering directories listed by the working directory's namespace
+# [ADR-namespace-steering-directories] Namespace steering directories listed by the working directory's namespace
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 - **Involved Components/Capabilities**: `docs/steering/`, `docs/packages/<name>/steering/`, `CAP-GOV-spec-rules`,
   `CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`, `CAP-DIST-workspace-ownership`, `CAP-DOCS-namespaces`,
@@ -124,9 +124,9 @@ registers.
   the absolute `path` and `files` (the count of Markdown files other than `README.md`), existing directories only,
   sorted by path, `[]` when none. → `CAP-DIST-context-and-playbooks` 2 (MUST), `CAP-DIST-manifest-spec` Context documents (MAY)
 - A provider that fails to load, raises or returns anything but safe workspace-relative directories never fails the
-  context load: the context lists the declared directory alone, the JSON object carries the warning under `notices`
-  and stderr carries the advisory block `CONTEXT_DOCUMENTS_EXTENSION_FAILED` naming the entry point; the exit code is
-  `0`, `1` under `--strict`. `devkit-dist` reads no `[tool.docs]` and imports no application package for it. → `CAP-DIST-context-and-playbooks` 2 (MUST), `ARCH-05-2-components` entry-point groups
+  context load: the context lists the declared directory alone and the JSON object carries the warning
+  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` naming the entry point under `notices` (the command is JSON-only, so stderr
+  carries no advisory, `ARCH-08-1-agent-output`); the exit code is `0`, `1` under `--strict`. `devkit-dist` reads no `[tool.docs]` and imports no application package for it. → `CAP-DIST-context-and-playbooks` 2 (MUST), `ARCH-05-2-components` entry-point groups
 - The `devkit-docs` provider, for a `docs/`-rooted declared directory, returns to list the namespace mirror of the
   namespace the working directory selects (`CAP-DOCS-namespaces` 3.3, rule 3) and to mention the other registered
   namespaces' mirrors; when the working directory selects none, nothing to list and every registered namespace's

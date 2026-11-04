@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T02:53:20.441179Z'
+status: completed
+review: review-01.yaml
+summary: 'Both P3s of review-01 fixed by the implementer: the full to_dict equality assertion restored (test_context.py passes) and test_playbook_get.py added to Task 2.1''s boundary with its reason; self-verified per effort.md (minor fixes at the named locations, test-only and record-only)'
+findings:
+- issue: test_context.py narrowed the repeated-read assertion to constitution and instructions although both calls pass no working directory, so full to_dict equality still holds; the narrowing drops regression coverage of documents, documents_elsewhere and notices and its comment states a false reason
+  evidence: packages/devkit-dist/tests/integration/features/distribution/test_context.py:64-65; usecases/context.py:57-59
+  failure_condition: A later change making repeated GetContext.execute calls return different documents or notices (a provider-side cache, a mutated default) is not caught
+  suggested_action: Restore the full to_dict equality assertion and drop the comment
+  resolution: resolved
+  severity: P3
+- issue: test_playbook_get.py was changed outside Task 2.1's _Boundary (fixture keys documents_elsewhere and notices) without a stated reason
+  evidence: packages/devkit-dist/tests/integration/features/distribution/test_playbook_get.py:230-231; specs/2026-11/20261104-namespace-steering/tasks.md Task 2.1
+  failure_condition: The boundary check flags an unexplained out-of-scope path
+  suggested_action: Add the path to Task 2.1's _Boundary as a forced fixture update for the new ContextResult keys
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS pytest test_context.py 7 passed
+  lint: PASS ruff check
+diff_scope:
+  base: 2cf7879a74b50b687867e2184188dee6c29a2fbc
+  head: 8e9f269b4b303be60b853c998f8c23034ea95ebb
+activity_effort: medium

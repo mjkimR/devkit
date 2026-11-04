@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:02:18.728579Z'
+status: completed
+summary: 'Swept the Development session (specify, build-verify with two implementation subagents, review, reconcile): recorded FB-namespace-ux-objects-copy and FB-package-glossary-asymmetry (deferred work) and FB-entrypoints-derive-boundary-annotations (a _Boundary note parsed as a path); no duplicates'
+findings: []
+checks:
+  swept: PASS recorded=3 duplicates=0
