@@ -1,0 +1,30 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:10:33.175162Z'
+status: completed
+summary: Completed specify through final-change-report for AC-01–AC-06 and committed every stage. Rule-local opt-in budget, repository600, guide/reference/capability, ADR Confirmation, two source playbooks and tests verified. Tracked sync output only .devkit/installation.json; two managed playbook copies and transient local-render are ignored. Host retains integration/cleanup; no push/merge/base writes.
+findings: []
+assumptions:
+- 'Codex boundaries emulated: absolute cwd and paths, per-operation approvals for sibling/shared-Git mutations, and snapshot/diff verification; no native sandbox guarantee.'
+- Input premises matched accepted Planning; no new feature edge or settings/engine/document-model change.
+- Internal None disables optional setting; TOML uses omission. ADR alias selection deliberately permits repeated-rename false positives.
+unverified_areas:
+- Moved-base cumulative integration and exact cleanup are Host effects; no proactive base merge or integration performed.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS final test-affected3956 partial227 paths49.63s; rule/CLI139; spec content633; full fallback retained
+  lint: PASS Ruff lint/format, git diff --check and committed CI rules22 zero errors/warnings
+  types: PASS devkit and devkit-spec Pyright zero errors
+  build: PASS both affected wheels built offline in ignored probe directory
+  sync_final: PASS sync --check clean
+  review: PASS independent code-reviewer review-01; sole P3 internal-None wording finding fixed and verified by implementer in reverify-01
+  reconcile: PASS independent reconcile-reviewer reconcile-check-01 zero findings; all four docs targets covered
+  isolation: PASS reviewers kept HEAD/status and pre/post snapshots unchanged; no authored reads outside worktree
+  outcome: PASS same final files disabled/enabled in-memory; six named ADR findings removed; ADR-document-system601 and four unrelated findings retained
+  boundaries: PASS actual diff confined to declared source/docs/tests/unit paths and tracked receipt sync output
+diff_scope:
+  base: 5eb97c6e9fc430753d4ea2b7d333ce5a61077327
+  head: 748132d58305ea96a7c754f690c1679312c4fe2e
+activity_effort: medium
