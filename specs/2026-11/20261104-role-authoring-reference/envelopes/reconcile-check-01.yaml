@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:51:42.709454Z'
+status: completed
+summary: 'Self-verified all three document targets: conditional reference ownership and unchanged role semantics agree with the reviewed diff.'
+findings: []
+assumptions:
+- 'Medium self-check: one authoring bundle; all affected documents identified and no cross-component behavior. Pending docs included; existing harness entrypoints retained, support references rejected as new doorways.'
+checks:
+  contracts: PASS capability location and scoped ADR supersession match reference routing
+diff_scope:
+  base: 95d0e6ddae1584658ca4eb185e42349a11ba2dcf
+  head: 7754f6fcc27adf72006c798778fc7b372a81a6e3
