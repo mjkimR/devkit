@@ -1,0 +1,24 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:38:51.889167Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified P2 fix: safe live socketpair success no longer creates TCP; mocked TCP success proves bind/listen/closure and standalone real bind succeeds.'
+findings:
+- issue: The success regression introduces live TCP into an otherwise socketpair-only devkit selection.
+  evidence: test_test_environment.py:16 invokes main without --test-path; controlled TCP denial passed the module preflight but failed that regression with TEST_LOOPBACK_BLOCKED.
+  failure_condition: A host permits socketpair but denies TCP bind and runs just test devkit.
+  suggested_action: Use an explicit safe path in the live socketpair success regression, mock TCP success and closure, and retain standalone real-bind verification.
+  resolution: resolved
+  severity: P2
+assumptions:
+- Medium initial independent review completed; implementer reverified bounded test-only fixes without scope expansion.
+checks:
+  tests: PASS focused57 affected72; safe success under injected TCP denial
+  build: PASS Python compile and shell syntax
+  lint: PASS Ruff changed files
+diff_scope:
+  base: 82a8c0ab8db3d3f03d7743a25a05885715d5da90
+  head: 8c85ddf8e75ce1133f352202e25fc77666700dbd

@@ -8,7 +8,7 @@ target: scripts/affected_tests.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -56,3 +56,12 @@ Viewer socket.bind: PermissionError: [Errno 1] Operation not permitted
 Installed wheel builds: failed to lookup address information
 9 failed, 6451 passed, 15 skipped, 77 errors in 155.02s
 ```
+
+
+## Disposition
+
+- **Disposition**: `SPEC-test-host-preflight`: added selection-aware early loopback bind/listen validation and
+  `TEST_LOOPBACK_BLOCKED` with the exact caller retry command; documented conditional cold-cache wheel dependency
+  network needs without internet probes or automatic permission changes. Verified by focused57 and affected72
+  passing tests, existing selector e2e80 passing tests, controlled baseline denial comparison, real permitted bind,
+  and independent Code Review with its P2 regression finding fixed and reverified.
