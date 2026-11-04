@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T02:18:45.449126Z'
+status: completed
+summary: 'Per-namespace milestones under the namespace docs root: RULE-id-convention, RULE-spec-format and devkit spec proposal new --milestone validate a registered namespace''s milestone through living_path (milestone_path_valid unchanged); the MILESTONE kind row scans every docs root; the spec references, rule guides, milestone template, seed and package READMEs name the milestone''s own roadmap root; nine Living Spec documents restate the contract and the ledger ADR carries the two-clause pointer. Code review round 1 (4 findings, no P1) and reconcile check round 1 (3 findings, no P1) are closed.'
+findings: []
+assumptions:
+- 'Git policy: worktree=required (dev-namespace-roadmap worktree), pull_request=auto chose the local route (no platform review or CI needed), delete_branch=yes'
+- 'proposal-handoff (ask) authority: the user''s instruction to run Development of PROP-namespace-roadmap; dev_effort medium from the proposal'
+- 'Boundary extensions: tests/integration/features/governance/test_kind_table.py (remediation prefix assertion), the two package READMEs (reconcile-check-01 finding 2), CAP-DOCS-document-model, CAP-HARN-agent-guidance and UC-route-development-intent (review-01 drift findings)'
+- 'Deferred: FB-viewer-namespace-roadmap-roots (viewer roadmap roots, Non-Goal 5) and FB-padr-default-slug-from-long-title stay open'
+checks:
+  tests: PASS just test-affected 2219 passed (mode=partial base=main)
+  build: PASS uv run devkit generated check; just check devkit-docs, devkit-spec 0 errors
+  lint: PASS uv run devkit rules check --ci --base dbaf8f38 errors=0 warnings=0; just lint-check devkit-docs, devkit-spec
+diff_scope:
+  base: dbaf8f3812a2a01cb2254ddf8418349aba0517ce
+  head: 6d691dc39940f2c5f41547cf836cf203d3f3bb20
