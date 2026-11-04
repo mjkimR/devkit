@@ -19,7 +19,7 @@ def protected(path: str) -> bool:
         parts[0] in {".devkit", ".agents", ".claude", ".codex", ".github", "specs"}
         or path.startswith(("docs/proposals/", "docs/architecture/"))
         or "rules" in parts
-        or parts[-1] in {"AGENTS.md", "CLAUDE.md", "pyproject.toml", "uv.lock", "package-lock.json"}
+        or parts[-1] in {"AGENTS.md", "CLAUDE.md", "pyproject.toml", "package.json", "uv.lock", "package-lock.json"}
     )
 
 

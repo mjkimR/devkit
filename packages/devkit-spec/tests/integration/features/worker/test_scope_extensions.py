@@ -36,7 +36,8 @@ def commit(root: Path) -> str:
 
 def tasks(root: Path, *, path: str = PATH, reason: str = REASON, annotation: bool = True) -> None:
     note = f" (scope extension: {reason})" if annotation else ""
-    boundary = f", `{path}`{note}" if annotation else ""
+    boundary = f", `{PATH}`" if annotation and path != PATH else ""
+    boundary += f", `{path}`{note}" if annotation else ""
     write(
         root,
         f"{UNIT}/tasks.md",
@@ -136,6 +137,7 @@ def test_latest_record_wins_and_metadata_change_needs_new_record(repo: Path) -> 
         "src/bundle/rules/example/rule.py",
         ".github/workflows/ci.yml",
         "uv.lock",
+        "packages/devkit-viewer/frontend/package.json",
     ],
 )
 def test_protected_extension_fails_even_inside_derived_scope(repo: Path, path: str) -> None:
@@ -147,6 +149,8 @@ def test_protected_extension_fails_even_inside_derived_scope(repo: Path, path: s
     result = inspect(repo)
     assert result["checks"]["scope_extensions"]["status"] == "fail"
     assert any(issue["path"] == path for issue in result["checks"]["scope_extensions"]["issues"])
+    assert result["checks"]["scope"]["status"] == "pass"
+    assert [e["code"] for e in result["errors"]] == ["SPEC_WORKER_SCOPE_EXTENSION_INVALID"]
 
 
 def test_explicit_scope_and_scope_file_do_not_union_extensions(repo: Path, monkeypatch) -> None:
