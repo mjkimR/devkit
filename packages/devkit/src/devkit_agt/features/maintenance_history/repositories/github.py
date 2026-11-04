@@ -7,7 +7,7 @@ import subprocess
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from ..models.errors import Deferred, GhUnavailable
+from ..models.errors import GhUnavailable, TransportFailure
 from ..models.records import canonical
 
 
@@ -58,7 +58,7 @@ def run_gh(method: str, endpoint: str, payload: dict[str, Any] | None, timeout: 
     try:
         authenticated = subprocess.run(["gh", "auth", "status"], capture_output=True, timeout=15, check=False)
     except subprocess.TimeoutExpired as exc:
-        raise Deferred("Cannot verify gh authentication during a transport failure") from exc
+        raise TransportFailure("Cannot verify gh authentication during a transport failure") from exc
     if authenticated.returncode:
         raise GhUnavailable("gh is not authenticated", f"gh exit={completed.returncode}")
-    raise Deferred("Authenticated gh could not reach the GitHub API")
+    raise TransportFailure("Authenticated gh returned no HTTP response")

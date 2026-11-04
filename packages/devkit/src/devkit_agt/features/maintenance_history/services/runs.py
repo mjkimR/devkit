@@ -12,11 +12,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from devkit.advisory import AdvisoryError
 
-from devkit_agt.features.rules import RuleContext
-from devkit_agt.features.rules.services.builtins import SecretLeakRule
-
 from ..models.errors import EvidenceChanged, InputError, ReportMismatch, RunDrifted, SecretFound
-from ..models.records import PLAYBOOKS, HistoryResult, canonical, digest
+from ..models.records import PLAYBOOKS, HistoryResult, canonical, digest, published_record
 from ..repositories.local import read_record, write_record
 from ..repositories.snapshot import capture
 
@@ -55,6 +52,9 @@ def exclusions(root: Path, run: Path, report: Path) -> list[str]:
 
 
 def check_secrets(run: Path, files: dict[str, bytes]) -> None:
+    from devkit_agt.features.rules import RuleContext
+    from devkit_agt.features.rules.services.builtins import SecretLeakRule
+
     with tempfile.TemporaryDirectory(prefix=".secret-check-", dir=run) as name:
         scan = Path(name)
         for relative, data in files.items():
@@ -116,6 +116,7 @@ def start(
         "history_commit": None,
         "updates": [],
         "published_files": None,
+        "record_digest": None,
     }
     run.mkdir(parents=True, exist_ok=False)
     if diff is not None:
@@ -170,6 +171,7 @@ def finish(
     sources["record.json"] = canonical(record)
     check_secrets(run, sources)
     record["report"]["sha256"] = digest(report_bytes)
+    record["record_digest"] = digest(canonical(published_record(record)))
     write_record(run, record)
     notices: list[AdvisoryError] = (
         [RunDrifted("Inspected content changed before finish")] if record["drifted_at_finish"] else []
@@ -179,9 +181,15 @@ def finish(
     )
 
 
+def verify_record(record: dict[str, Any]) -> None:
+    if record.get("record_digest") != digest(canonical(published_record(record))):
+        raise EvidenceChanged("Canonical run record differs from its finish digest")
+
+
 def evidence(run: Path, record: dict[str, Any], selected: tuple[Path, ...]) -> dict[str, bytes]:
     if not record.get("finished_at"):
         raise InputError("Finish the run before publication")
+    verify_record(record)
     report = Path(record["report"]["path"])
     try:
         report_bytes = report.read_bytes()

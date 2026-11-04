@@ -37,7 +37,9 @@ def repo(tmp_path: Path) -> Path:
     return root
 
 
-def ready(repo: Path, tmp_path: Path, name: str = "one") -> Path:
+def ready(
+    repo: Path, tmp_path: Path, name: str = "one", *, year: str | None = None, supersedes: tuple[str, ...] = ()
+) -> Path:
     report = tmp_path / (name + ".md")
     result = start(
         repo,
@@ -47,10 +49,18 @@ def ready(repo: Path, tmp_path: Path, name: str = "one") -> Path:
         into=tmp_path / "runs",
         report=report,
         zone="UTC",
-        supersedes=(),
+        supersedes=supersedes,
         prior_runs=(),
     )
     run = Path(result.data["path"])
+    if year:
+        record = read_record(run)
+        identifier = record["run_id"].replace("-2026", "-" + year)
+        renamed = run.with_name(identifier)
+        run.rename(renamed)
+        record["run_id"] = identifier
+        write_record(renamed, record)
+        run = renamed
     report.write_text("safe report " + name)
     finish(run, outcome="completed", result="no findings", report=None, applied_commits=(), follow_ups=())
     return run
@@ -221,16 +231,8 @@ def test_amendment_unknown_retry_and_two_in_one_second(repo: Path, tmp_path: Pat
 def test_list_two_year_shards_and_supersession(repo: Path, tmp_path: Path) -> None:
     fake = FakeGitHub()
     history(fake).initialize("simulated")
-    one, two = ready(repo, tmp_path, "one"), ready(repo, tmp_path, "two")
-    old = read_record(one)
-    old_id = old["run_id"].replace("-2026", "-2025")
-    renamed = one.with_name(old_id)
-    one.rename(renamed)
-    old["run_id"] = old_id
-    write_record(renamed, old)
-    newer = read_record(two)
-    newer["supersedes"] = [old_id]
-    write_record(two, newer)
+    renamed = ready(repo, tmp_path, "one", year="2025")
+    two = ready(repo, tmp_path, "two", supersedes=(renamed.name,))
     publish(history(fake), renamed, "simulated", (), "owner/repo")
     publish(history(fake), two, "simulated", (), "owner/repo")
     assert len(history(fake).listing("weekly-report", None, None, True, 20).data["runs"]) == 2
@@ -316,3 +318,42 @@ def test_frozen_extra_selection_and_unregistered_file_refused_before_network(rep
     publish(history(fake), run, "simulated", (extra,), "owner/repo")
     assert fake.files()[run_path(run.name) + "/extra.txt"] == b"safe evidence"
     assert fake.indexes()[0]["outcome"] == "interrupted"
+
+
+def test_changed_finished_record_is_refused_before_first_publication(repo: Path, tmp_path: Path) -> None:
+    fake = FakeGitHub()
+    history(fake).initialize("simulated")
+    run = ready(repo, tmp_path)
+    record = read_record(run)
+    record["result"] = "accidentally edited after finish"
+    write_record(run, record)
+    count = len(fake.calls)
+    with pytest.raises(EvidenceChanged):
+        publish(history(fake), run, "simulated", (), "owner/repo")
+    assert len(fake.calls) == count
+    assert fake.head == ROOT_COMMIT
+
+
+def test_headerless_transport_failure_persists_unknown_and_retry_inspects(repo: Path, tmp_path: Path) -> None:
+    from devkit_agt.features.maintenance_history.models.errors import TransportFailure
+
+    fake = FakeGitHub()
+    history(fake).initialize("simulated")
+    run = ready(repo, tmp_path)
+
+    def lost(method: str, path: str, payload: dict | None) -> Response | None:
+        if method == "PATCH":
+            assert payload
+            fake.head = payload["sha"]
+            fake.hook = None
+            raise TransportFailure("Authenticated gh returned no response")
+        return None
+
+    fake.hook = lost
+    with pytest.raises(PublishUnknown):
+        publish(history(fake), run, "simulated", (), "owner/repo")
+    assert read_record(run)["publication"] == "unknown"
+    count = sum(call[0] in ("POST", "PATCH") for call in fake.calls)
+    publish(history(fake), run, "simulated", (), "owner/repo")
+    assert read_record(run)["publication"] == "published"
+    assert sum(call[0] in ("POST", "PATCH") for call in fake.calls) == count

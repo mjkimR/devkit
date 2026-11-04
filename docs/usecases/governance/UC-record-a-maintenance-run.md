@@ -7,6 +7,9 @@ primary_actor: AI coding agent
 supporting_actors: [human approver, GitHub]
 status: proposed
 capabilities: [CAP-DLV-maintenance-history]
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/maintenance_history/cli.py
+  - packages/devkit/src/devkit_agt/features/maintenance_history/usecases/operations.py
 ---
 
 # [UC-record-a-maintenance-run] Record a maintenance run

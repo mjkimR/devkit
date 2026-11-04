@@ -7,6 +7,9 @@ status: draft
 usecases:
   - UC-record-a-maintenance-run
   - UC-find-the-latest-maintenance-run
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/maintenance_history/cli.py
+  - packages/devkit/src/devkit_agt/features/maintenance_history/usecases/operations.py
 ---
 
 # [CAP-DLV-maintenance-history] Maintenance run history
@@ -41,19 +44,19 @@ Commands are under `devkit maintenance history`; each accepts `--workspace-root`
 
 | Command | Input and result |
 | --- | --- |
-| `init` | `--authority`, optional repository/branch; HISTORY_BRANCH_READY with root/head SHA and authority; no local file |
-| `start` | `--playbook`, `--scope`, `--into`, `--report`; optional IANA `--timezone`, repeated `--prior-run`, `--supersedes`; HISTORY_RUN_STARTED |
-| `finish` | `--run`, `--outcome`; optional `--result`, fixed `--report`, repeated `--file`, `--applied-commit`, `--follow-up`; HISTORY_RUN_FINISHED |
-| `publish` | `--run`, `--authority`, optional repository/branch and repeated `--file` selecting frozen files; HISTORY_PUBLISHED |
-| `update` | `--run`, `--authority`, `--integration-state`, optional repeated `--applied-commit`; HISTORY_RUN_UPDATED |
-| `list` | `--playbook`, optional `--source-sha`, `--outcome`, `--include-superseded`, positive `--limit` (20); HISTORY_LIST and HISTORY_RUN |
-| `get` | `--run-id`, optional `--file` (record.json); HISTORY_FILE with base64 content preserving arbitrary bytes |
+| `init` | `--authority`, optional repository/branch; `HISTORY_BRANCH_READY` with root/head SHA and authority; no local file |
+| `start` | `--playbook`, `--scope`, `--into`, `--report`; optional IANA `--timezone`, repeated `--prior-run`, `--supersedes`; `HISTORY_RUN_STARTED` |
+| `finish` | `--run`, `--outcome`; optional `--result`, fixed `--report`, repeated `--file`, `--applied-commit`, `--follow-up`; `HISTORY_RUN_FINISHED` |
+| `publish` | `--run`, `--authority`, optional repository/branch and repeated `--file` selecting frozen files; `HISTORY_PUBLISHED` |
+| `update` | `--run`, `--authority`, `--integration-state`, optional repeated `--applied-commit`; `HISTORY_RUN_UPDATED` |
+| `list` | `--playbook`, optional `--source-sha`, `--outcome`, `--include-superseded`, positive `--limit` (20); `HISTORY_LIST` and `HISTORY_RUN` |
+| `get` | `--run-id`, optional `--file` (record.json); `HISTORY_FILE` with base64 content preserving arbitrary bytes |
 
 Destination defaults: `[maintenance.history] repository`, else credential-free GitHub origin; branch defaults to `[maintenance.history] branch`, else maintenance-history. These values grant no publication authority.
 
-`finish --file evidence.txt` registers added evidence and freezes its digest. `publish --file evidence.txt` selects it; without file arguments only record/report are published. Unregistered selections fail before network mutation. Changed frozen evidence is HISTORY_EVIDENCE_CHANGED and needs a new run.
+`finish --file evidence.txt` registers added evidence and freezes its digest. `publish --file evidence.txt` selects it; without file arguments only record/report are published. Unregistered selections fail before network mutation. Changed frozen evidence is `HISTORY_EVIDENCE_CHANGED` and needs a new run.
 
-A run ID is `<playbook>-<YYYYMMDDTHHMMSSZ>-<8 hex>`. Local record.json contains identity, inspected state, frozen evidence, outcome and publication metadata; dirty content also retains inspected.diff. Canonical JSON has sorted keys, compact UTF-8 and a final newline. The published record excludes destination, authority, attempts, publication, history_commit, updates and published_files. The local authority identifies the authorizing person; history commits use a fixed devkit identity.
+A run ID is `<playbook>-<YYYYMMDDTHHMMSSZ>-<8 hex>`. Local record.json contains identity, inspected state, frozen evidence, outcome and publication metadata; dirty content also retains inspected.diff. Canonical JSON has sorted keys, compact UTF-8 and a final newline. The published record excludes destination, authority, attempts, publication, history_commit, updates, published_files and record_digest. The local authority identifies the authorizing person; history commits use a fixed devkit identity.
 
 Remote files are runs/<playbook>/<run-id>/record.json, report.md, selected files and updates/<UTC time>-<8 hex>.json, plus index/<playbook>/<run-ID year>.jsonl. Index lines include kind, run_id, source_sha, inspected_tree, outcome, result, finished_at, supersedes and path. Update lines add updated_at and integration_state. List merges the greatest update time per run (file order breaks ties), skips superseded runs by default and reads complete year shards newest-first until its limit is met.
 
@@ -63,14 +66,14 @@ The frozen root is `96eb369a841a26ca7094eb2bea25bbf8ccb5d95a`. Its README bytes,
 
 | Code | Exit | Meaning and action |
 | --- | --- | --- |
-| HISTORY_AUTHORITY_MISSING, HISTORY_INPUT_INVALID, HISTORY_REPORT_MISMATCH, HISTORY_SNAPSHOT_FAILED | 2 | Correct input; snapshot failure creates no run record |
-| HISTORY_BRANCH_FOREIGN, HISTORY_REPOSITORY_EMPTY | 2 | Choose a valid branch or initialize the repository first |
-| HISTORY_BRANCH_MISSING | 2 for publish/update | Publication pending; request separate initialization authority |
-| HISTORY_GH_UNAVAILABLE | 2 | Install or authenticate gh; pending |
-| HISTORY_DEFERRED | 1 | Rate limit, race exhaustion, temporary read/object failure; retry_after and pending |
-| HISTORY_PUBLISH_FAILED, HISTORY_RECORD_COLLISION | 1 | Permission/destination/ruleset failure or immutable collision; failed |
-| HISTORY_PUBLISH_UNKNOWN | 1 | Ref-update outcome cannot be confirmed; inspect before retry |
-| HISTORY_SECRET_FOUND, HISTORY_EVIDENCE_CHANGED, HISTORY_RUN_MISSING | 1 | Remove secret, create a run for changed bytes, or check run ID |
-| HISTORY_RUN_DRIFTED | 0 (strict: 1) | Source SHA or inspected tree changed; revalidate evidence |
+| `HISTORY_AUTHORITY_MISSING`, `HISTORY_INPUT_INVALID`, `HISTORY_REPORT_MISMATCH`, `HISTORY_SNAPSHOT_FAILED` | 2 | Correct input; snapshot failure creates no run record |
+| `HISTORY_BRANCH_FOREIGN`, `HISTORY_REPOSITORY_EMPTY` | 2 | Choose a valid branch or initialize the repository first |
+| `HISTORY_BRANCH_MISSING` | 2 for publish/update | Publication pending; request separate initialization authority |
+| `HISTORY_GH_UNAVAILABLE` | 2 | Install or authenticate gh; pending |
+| `HISTORY_DEFERRED` | 1 | Rate limit, race exhaustion, temporary read/object failure; retry_after and pending |
+| `HISTORY_PUBLISH_FAILED`, `HISTORY_RECORD_COLLISION` | 1 | Permission/destination/ruleset failure or immutable collision; failed |
+| `HISTORY_PUBLISH_UNKNOWN` | 1 | Ref-update outcome cannot be confirmed; inspect before retry |
+| `HISTORY_SECRET_FOUND`, `HISTORY_EVIDENCE_CHANGED`, `HISTORY_RUN_MISSING` | 1 | Remove secret, create a run for changed bytes, or check run ID |
+| `HISTORY_RUN_DRIFTED` | 0 (strict: 1) | Source SHA or inspected tree changed; revalidate evidence |
 
 Rate limits are checked before status mapping on every request: 429, or 403 with Retry-After or zero remaining. Other repository 401/403/404 responses fail; a missing ref at a readable repository stays pending. Root comparison accepts identical/ahead and rejects other/404 results. Error message text is never parsed. Read/object timeouts defer; lost ref-update responses become unknown.

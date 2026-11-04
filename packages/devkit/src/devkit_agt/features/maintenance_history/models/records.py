@@ -19,7 +19,16 @@ IDENTITY = {"name": "devkit maintenance history", "email": "maintenance-history@
 ROOT_DATE = "2000-01-01T00:00:00Z"
 ROOT_README = b"# devkit maintenance history\n\nHistory marker: devkit-maintenance-history-v1\nRuns: runs/<playbook>/<run-id>/; indexes: index/<playbook>/<year>.jsonl\nNever merge this branch into a code branch.\n"
 LOCAL_FIELDS = frozenset(
-    {"destination", "authority", "attempts", "publication", "history_commit", "updates", "published_files"}
+    {
+        "destination",
+        "authority",
+        "attempts",
+        "publication",
+        "history_commit",
+        "updates",
+        "published_files",
+        "record_digest",
+    }
 )
 
 

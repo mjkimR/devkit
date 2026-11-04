@@ -2,6 +2,14 @@
 reconcile_id: REC-maintenance-history
 status: pending
 targets:
+  - file: docs/architecture/ARCH-05-3-command-plugins.md
+    resolution: modified
+  - file: docs/capabilities/distribution/CAP-DIST-workspace-ownership.md
+    resolution: modified
+  - file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
+    resolution: modified
+  - file: docs/development/reference/distribution.md
+    resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-maintenance-history.md
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-weekly-report.md

@@ -67,3 +67,23 @@ def test_gh_runner_missing_logged_out_transport_and_timeout(tmp_path: Path, monk
     shim.write_text("#!/bin/sh\n/bin/sleep 1\n")
     with pytest.raises(subprocess.TimeoutExpired):
         run_gh("GET", "repos/owner/repo", None, 0.01)
+
+
+def test_headerless_authenticated_gh_maps_uncertainty_at_reference_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from devkit_agt.features.maintenance_history.models.errors import PublishUnknown
+    from devkit_agt.features.maintenance_history.services.publication import GitHubHistory
+
+    shim = tmp_path / "gh"
+    shim.write_text('#!/bin/sh\nif [ "$1" = "auth" ]; then exit 0; fi\nexit 1\n')
+    shim.chmod(0o755)
+    monkeypatch.setenv("PATH", str(tmp_path))
+    client = GitHubHistory("owner/repo", "maintenance-history")
+    with pytest.raises(Deferred):
+        client.request("GET", "git/ref/heads/maintenance-history")
+    with pytest.raises(Deferred):
+        client.request("POST", "git/blobs", {"content": "x"})
+    with pytest.raises(PublishUnknown):
+        client.request("PATCH", "git/refs/heads/maintenance-history", {"sha": "a" * 40}, reference=True)
+    assert [item["result"] for item in client.attempts] == ["deferred", "deferred", "unknown"]

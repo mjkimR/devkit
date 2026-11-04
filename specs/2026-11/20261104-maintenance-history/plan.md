@@ -46,3 +46,7 @@ Rate-limit mapping precedes status mapping on every request. Read and content-ob
 - `just lint-check devkit`, `just check devkit`, relevant catalog checks, `just test-affected --base c9f7c6d3a2674f95c345dc13bc89ab1874bcff23`, `uv run devkit rules check --ci --base main`, `uv run devkit sync --check`.
 
 No performance/count comparison is claimed; this adds behavior rather than changing an existing measured outcome.
+
+## Host-approved integration boundary clarification
+
+The new CLI/config family also updates only the name registrations in devkit-dist cli.py HARNESS_COMMANDS and distribution installation/config.py RESERVED_TABLES, their exact package-test expectations and the support lazy-import map. The Host authorized these necessary cross-package registrations after full-fallback failures, plus wording-only command/config lists in ARCH-05-3-command-plugins, CAP-DIST-workspace-ownership, CAP-DIST-sync-and-transactions and the distribution reference. No distribution behavior refactor or unrelated feature edge is introduced.

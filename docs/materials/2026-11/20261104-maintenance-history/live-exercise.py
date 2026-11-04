@@ -14,7 +14,7 @@ import tempfile
 from pathlib import Path
 from urllib.parse import quote
 
-from devkit_agt.features.maintenance_history.models.records import ROOT_COMMIT
+from devkit_agt.features.maintenance_history.models.records import IDENTITY, ROOT_COMMIT, ROOT_DATE, ROOT_README
 from devkit_agt.features.maintenance_history.repositories.config import destination
 from devkit_agt.features.maintenance_history.services.publication import GitHubHistory, publish, update
 from devkit_agt.features.maintenance_history.services.runs import finish, start
@@ -53,6 +53,24 @@ def main() -> None:
         second = client.ok("POST", "git/blobs", blob_payload)
         assert first["sha"] == second["sha"]
         observations["repeated_blob_post_same_sha"] = True
+        tree_payload = {
+            "tree": [{"path": "README.md", "mode": "100644", "type": "blob", "content": ROOT_README.decode()}]
+        }
+        tree_one = client.ok("POST", "git/trees", tree_payload)
+        tree_two = client.ok("POST", "git/trees", tree_payload)
+        assert tree_one["sha"] == tree_two["sha"]
+        observations["repeated_tree_post_same_sha"] = True
+        commit_payload = {
+            "message": "Initialize devkit maintenance history\n",
+            "tree": tree_one["sha"],
+            "parents": [],
+            "author": IDENTITY | {"date": ROOT_DATE},
+            "committer": IDENTITY | {"date": ROOT_DATE},
+        }
+        commit_one = client.ok("POST", "git/commits", commit_payload)
+        commit_two = client.ok("POST", "git/commits", commit_payload)
+        assert commit_one["sha"] == commit_two["sha"] == ROOT_COMMIT
+        observations["repeated_commit_post_same_sha"] = True
         report = root / "report.md"
         started = start(
             root,

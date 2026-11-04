@@ -24,6 +24,7 @@ from ..models.errors import (
     RecordCollision,
     RepositoryEmpty,
     RunMissing,
+    TransportFailure,
 )
 from ..models.records import (
     IDENTITY,
@@ -40,7 +41,7 @@ from ..models.records import (
 )
 from ..repositories.github import Response, Runner, run_gh
 from ..repositories.local import read_record, write_record
-from .runs import check_secrets, evidence, now
+from .runs import check_secrets, evidence, now, verify_record
 
 
 class GitHubHistory:
@@ -56,12 +57,12 @@ class GitHubHistory:
         timeout = 30.0 + (len(canonical(payload)) / 65536 if payload is not None else 0)
         try:
             response = self.runner(method, f"{self.prefix}/{path}", payload, timeout)
-        except subprocess.TimeoutExpired as exc:
+        except (subprocess.TimeoutExpired, TransportFailure) as exc:
             self.attempts.append(
                 {
                     "at": now(),
                     "request": f"{method} {path}",
-                    "status_class": "timeout",
+                    "status_class": "unconfirmed-response",
                     "result": "unknown" if reference else "deferred",
                 }
             )
@@ -171,7 +172,9 @@ class GitHubHistory:
             if response.status in (409, 422):
                 head = self.head()
                 if head is None:
-                    raise RepositoryEmpty("GitHub refused creating history in an empty or restricted repository")
+                    raise PublishFailed(
+                        "GitHub refused creating the history reference; check branch rules and permissions"
+                    )
             elif response.status != 201:
                 raise PublishFailed("GitHub refused creating the history branch", f"HTTP {response.status}")
             else:
@@ -382,6 +385,7 @@ def update(
     record = read_record(run)
     if record["publication"] != "published" or not integration_state.strip():
         raise InputError("An amendment requires a published run and nonempty integration state")
+    verify_record(record)
     changes = record["updates"]
     if changes and changes[-1]["state"] != "published":
         change = changes[-1]

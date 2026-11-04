@@ -15,11 +15,11 @@ plan: PLAN-maintenance-history
   - _Requirements: AC-01, AC-04, AC-05, AC-06, AC-07, AC-08_
   - **Verification**: `just test devkit tests/integration/features/maintenance_history`
 - [x] **Task 3**: Agent-first command family, config defaults and discovery with CLI tests
-  - **_Boundary**: `packages/devkit/src/devkit_agt/features/maintenance_history/`, `packages/devkit/pyproject.toml`, `packages/devkit/README.md`, `uv.lock`, `packages/devkit/tests/integration/features/maintenance_history/`
+  - **_Boundary**: `packages/devkit/src/devkit_agt/features/maintenance_history/`, `packages/devkit/pyproject.toml`, `packages/devkit/README.md`, `uv.lock`, `packages/devkit/tests/integration/features/maintenance_history/`, `packages/devkit-dist/src/devkit_dist/cli.py`, `packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config.py`, `packages/devkit/tests/integration/package/test_mounted_commands.py`, `packages/devkit/tests/integration/package/test_config_tables.py`, `packages/devkit/tests/support/testsupport/layering.py`
   - _Requirements: AC-09_
   - **Verification**: `uv run devkit maintenance history --help`
 - [x] **Task 4**: Four playbooks and durable contracts with catalog content checks
-  - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/maintenance/`, `packages/devkit-catalog/tests/`, `docs/capabilities/delivery/`, `docs/usecases/governance/`, `docs/development/reference/`, `docs/steering/glossary.md`, `docs/decisions/2026-11/20261104-history-branch-publication.md`, `docs/decisions/2026-11/20261104-inspected-state-identity.md`
+  - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/maintenance/`, `packages/devkit-catalog/tests/`, `docs/capabilities/delivery/`, `docs/usecases/governance/`, `docs/development/reference/`, `docs/steering/glossary.md`, `docs/decisions/2026-11/20261104-history-branch-publication.md`, `docs/decisions/2026-11/20261104-inspected-state-identity.md`, `docs/architecture/ARCH-05-3-command-plugins.md`, `docs/capabilities/distribution/CAP-DIST-workspace-ownership.md`, `docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md`
   - _Requirements: AC-09_
   - **Verification**: `just test devkit-catalog`
 - [ ] **Task 5**: Labelled live GitHub exercise and sanitized evidence

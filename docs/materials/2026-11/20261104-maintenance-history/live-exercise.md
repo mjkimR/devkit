@@ -13,6 +13,6 @@ uv run python docs/materials/2026-11/20261104-maintenance-history/live-exercise.
   --authority "<user authority for this exercise destination>"
 ```
 
-The script checks deterministic initialization, repeated blob POSTs, duplicate publication, amendment, same-SHA reference updates, non-fast-forward rejection, missing file/ref responses and retrieval. It prints sanitized JSON observations for retention as live-results.json after successful execution. No credentials or real project evidence enter the fixture. It does not infer access-denied private-repository behavior or simulate service rate limits as live evidence; injected integration tests cover those response classes.
+The script checks deterministic initialization, repeated blob/tree/commit POSTs, duplicate publication, amendment, same-SHA reference updates, non-fast-forward rejection, missing file/ref responses and retrieval. It prints sanitized JSON observations for retention as live-results.json after successful execution. No credentials or real project evidence enter the fixture. It does not infer access-denied private-repository behavior or simulate service rate limits as live evidence; injected integration tests cover those response classes.
 
 A failed exercise remains failed evidence: retain its observed status, fix the implementation within the agreed contract and rerun only the affected probes. After successful completion, confirm the documented root/error facts against the observations, mark AC-10's task complete and promote the capability/use cases from draft/proposed to active.

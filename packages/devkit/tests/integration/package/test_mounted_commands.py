@@ -48,6 +48,7 @@ def test_every_harness_command_keeps_its_name_and_target() -> None:
         "gate": "devkit_agt.features.gate.cli:cli",
         "generated": "devkit_agt.features.generated.cli:cli",
         "integration": "devkit_agt.features.integration.cli:cli",
+        "maintenance": "devkit_agt.features.maintenance_history.cli:cli",
         "rules": "devkit_agt.features.rules.cli:cli",
         "run": "devkit_agt.features.compact.cli:run_cmd",
         "workflow": "devkit_agt.features.workflow.cli:cli",

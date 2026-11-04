@@ -51,6 +51,10 @@ class Deferred(HistoryError):
     fix = "Retry later with the same run and inputs"
 
 
+class TransportFailure(Deferred):
+    """Authenticated gh ended without an HTTP response; the caller knows whether a ref may have moved."""
+
+
 class SnapshotFailed(HistoryError):
     code = "HISTORY_SNAPSHOT_FAILED"
     input_error = True
