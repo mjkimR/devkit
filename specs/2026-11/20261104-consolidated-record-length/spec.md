@@ -1,36 +1,23 @@
 ---
-id: PROP-consolidated-record-length
+id: SPEC-consolidated-record-length
 title: Line budgets for consolidated records
 summary: Lets the hygiene file-length check budget consolidated ADRs and feedback records by what they are instead of by per-file overrides, so consolidation runs stop producing warnings while an over-broad group still gets one.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: governance/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium                  # low | medium | high (hint for Planning)
-dev_effort: medium                       # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/rules/services/builtins/file_length/
-    - packages/devkit/tests/unit/features/rules/
-    - packages/devkit/tests/integration/features/rules/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/adr-consolidation/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/feedback-consolidation/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md
-    - docs/development/reference/rules.md
-    - .devkit/config.toml
-  excludes:
-    - docs/decisions/
-    - .devkit/managed/
-    - docs/capabilities/documents/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-04
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-consolidated-record-length] Line budgets for consolidated records
+# [SPEC-consolidated-record-length] Line budgets for consolidated records
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-consolidated-record-length on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-consolidated-record-length`
+
+### 1. Background & Hypothesis
 
 `RULE-file-length` warns above 400 lines for Markdown by default. The repository raises capabilities to 600.
 `ADR-decision-ledger` consolidates related ADRs so a reader finds a topic's decisions together; splitting a
@@ -39,7 +26,7 @@ appends closed feedback entries to an area/status record.
 
 The Planning baseline at source `2cf7879a74b50b687867e2184188dee6c29a2fbc` has eleven file-length warnings:
 seven consolidated ADRs, three capabilities and one use case. Six ADRs fall between 401 and 600 lines;
-`ADR-document-system` has 619. `materials/planning-evidence.md` records the command, exact counts and reproduction.
+`ADR-document-system` has 619. `docs/materials/2026-11/20261104-consolidated-record-length/planning-evidence.md` records the command, exact counts and reproduction.
 The initial draft's roadmap-record line count and feedback alias count were approximate; the measured values are
 407 lines and fifteen aliases for the longest 110-line feedback record.
 
@@ -47,7 +34,26 @@ A larger opt-in budget for alias-bearing ADRs and consolidated feedback removes 
 It remains a bounded warning budget; records above it still need a topic review. Alias history is a heuristic for
 ADRs, not proof of consolidation, and grants no authority to edit or consolidate records.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Line budgets for consolidated records so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — Where does selection live?** Rule-local `FileLengthSettings.consolidated_max_lines: int | None = None`.
   `SettingsResolver` already supports optional integers and validates rule-local constraints. The rule uses
@@ -74,11 +80,11 @@ ADRs, not proof of consolidation, and grants no authority to edit or consolidate
   The selected budget is `max(max_lines, consolidated_max_lines)`, so enabling it cannot reduce an existing
   higher path-specific limit. Omission disables the alternative budget; TOML has no null literal.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-`PADR-consolidated-record-budgets` records the alternatives and the chosen rule-local contract.
+`ADR-consolidated-record-budgets` records the alternatives and the chosen rule-local contract.
 
-### Rule and configuration
+#### Rule and configuration
 
 1. Add the optional positive integer to `FileLengthSettings` and its validation. No model or engine change and
    no feature dependency are needed.
@@ -99,7 +105,7 @@ ADRs, not proof of consolidation, and grants no authority to edit or consolidate
 A configured path override may replace `consolidated_max_lines` through the existing settings mechanism.
 A 900-line path budget remains 900 even when the consolidated budget is 600.
 
-### Guides and contracts
+#### Guides and contracts
 
 - The built-in rule guide and `docs/development/reference/rules.md` describe the option, exact eligibility,
   ADR rename false positives, one-entry feedback, selected-limit precedence and remediation.
@@ -110,7 +116,7 @@ A 900-line path budget remains 900 even when the consolidated budget is 600.
 - Development runs the synchronization implied by changed selected `spec` assets and records tracked sync
   outputs under the workflow's existing rules; no source asset is edited through its projection.
 
-### Verification contract
+#### Verification contract
 
 - **AC-01:** With the option omitted, default and path-specific checks produce the current findings, limits,
   line locations and ordinary remediation for the same files, including alias-bearing ADRs.
@@ -135,7 +141,7 @@ Development runs relevant lint, Pyright, tests, `just test-affected` with its fu
 hygiene comparison. The comparison disables only this option in an in-memory rules configuration through the
 existing testing/evaluation entrypoint; it never checks out an older commit or rewrites project policy for a probe.
 
-## Planning decisions
+### Planning decisions
 
 - Recommend rule-local opt-in selection rather than adding generic file-content matching to every rule.
 - Recommend 600 for both record kinds and preserve higher existing overrides with `max`.
@@ -145,7 +151,7 @@ existing testing/evaluation entrypoint; it never checks out an older commit or r
 - Planning and Development effort are `medium`: the selector changes a shipped consumer contract and the
   two playbook texts; mandatory review and reconciliation cover those boundaries.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning returns this committed recommendation, its PADR, evidence and challenger record for `plan-accept`.
 One feature spec implements AC-01 through AC-06 after acceptance and Development handoff.
@@ -155,3 +161,4 @@ same-head hygiene comparison; a warning-count claim alone does not prove complet
 Non-goals: changing the default 400-line consumer budget; generic override predicates; changing the document
 model or adding frontmatter fields; splitting, regrouping or editing existing ADRs or feedback records; making
 hygiene part of commits or CI; fixing the four existing non-ADR warnings; authoritative consolidation provenance.
+

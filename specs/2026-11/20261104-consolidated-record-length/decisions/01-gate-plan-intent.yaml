@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-consolidated-record-length: Proceed with Planning for consolidated record
+  line budgets; medium effort for the selector and consumer contract.'
+by: user
+at: '2026-11-04T03:52:41.702175Z'

@@ -1,15 +1,15 @@
 ---
-id: PADR-consolidated-record-budgets
+id: ADR-consolidated-record-budgets
 title: Rule-local budgets for alias-bearing records
 summary: "For long consolidated ADRs and feedback, we opt into a rule-local line budget selected by record ID and aliases, to keep settings resolution pure, accepting a documented alias-based heuristic for ADRs."
-proposal: PROP-consolidated-record-length
-status: draft
+proposal: SPEC-consolidated-record-length
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-consolidated-record-budgets] Rule-local budgets for alias-bearing records
+# [ADR-consolidated-record-budgets] Rule-local budgets for alias-bearing records
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 
 ## 1. Context & Problem Statement
