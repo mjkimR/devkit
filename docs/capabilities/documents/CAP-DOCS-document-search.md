@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-search
 title: Document Search
-summary: "Defines devkit docs search, which ranks spec documents for a free-text query, expands glossary synonyms through a required LibYAML safe parser, and narrows results by kind, history and namespace."
+summary: "Defines devkit docs search, which ranks spec documents for a free-text query, expands global and selected namespace glossary synonyms through a required LibYAML safe parser, and narrows results by kind, history and namespace."
 area: documents
 status: active
 usecases:
@@ -46,13 +46,18 @@ expansion. Going from a known ID to its path stays `devkit docs resolve` (`CAP-D
 3. **Pinning**: a query equal to a document's ID, one of its declared `aliases`, its workspace-relative path or file
    name (compared case-insensitively after trimming) MUST put that document first, whatever the ranking, with
    `score=-` (`null` in JSON) and `pinned=yes`. A pinned document is not repeated among the ranked hits.
-4. **Glossary expansion**: the optional, project-owned `docs/steering/glossary.yaml` expands the query through the shared `devkit_core.core.yaml` LibYAML safe parser. Terms and query are
+4. **Glossary expansion**: search MUST read optional project-owned `docs/steering/glossary.yaml` followed by the
+   selected registered namespaces' `docs/packages/<name>/steering/glossary.yaml` files in namespace-name order,
+   through the shared `devkit_core.core.yaml` LibYAML safe parser (`ADR-namespace-steering-registers`). Explicit or
+   detected namespace selection includes global and that namespace; `--namespace global` reads only global;
+   all-namespace selection reads global and all registered namespace files. Unselected and unregistered files MUST
+   NOT affect expansion or errors. Missing files contribute no terms. Terms and query are
    compared as the words of devkit's `tokenize` (casefolded, split on `-`, `_`, `.` and other non-word characters,
    Latin accents dropped), so `Work_Scope` matches the term `work-scope` and `cafe` the term `café`. When the query
    contains every word of a term of a cluster, consecutively and in order, the whole cluster (`primary` plus
    `synonyms`) is appended, minus terms whose words the query already contains. Useful for terms in another language.
    Terms of different clusters that tokenize to the same words (`C++` and `C#` are both `c`) expand to the union of
-   their clusters, in glossary order, so no cluster is lost. Without the file there is no expansion. If the PyYAML LibYAML binding is unavailable while reading the file, search MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`; it MUST NOT report `DOCS_GLOSSARY_INVALID` or fall back to Python parsing.
+   their clusters, in file and term order, so no cluster is lost. Without any selected file there is no expansion. If the PyYAML LibYAML binding is unavailable while reading the file, search MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`; it MUST NOT report `DOCS_GLOSSARY_INVALID` or fall back to Python parsing.
 5. **Modes**: `--mode auto` (default) is `hybrid` when devkit's search extra is installed
    (`uv add 'devkit-docs[search]'`, which adds `devkit-agt[search]`; `devkit-spec[search]` includes it), else
    `lexical`. `lexical`, `dense` and `hybrid`
@@ -112,13 +117,14 @@ terms:
     synonyms: [정합성, sync]
 ```
 
+The same optional file shape applies at `docs/packages/<name>/steering/glossary.yaml` of a registered namespace.
 `terms` is a list of mappings, each with a string `primary` and an optional list of string `synonyms`.
 
 ### 4.5 Error Codes
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `DOCS_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | `docs/steering/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`. |
+| `DOCS_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | A selected global or registered namespace `steering/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`; target and fix name that actual file. Exit `2`. |
 | `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | PyYAML has no usable LibYAML binding when a YAML read begins; exit `2`, before glossary validation. |
 
 devkit's `SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND` and `SEARCH_MODEL_INVALID` pass through for explicit dense
@@ -130,6 +136,8 @@ warnings `1` only under `--strict`.
 ### 4.6 Library
 
 `devkit_docs.features.documents.usecases.search.search_documents(index, query, kinds=..., history=..., mode=..., limit=..., min_similarity=...,
-accept=...)` returns `SpecSearchResult` (`query`, `expanded`, `mode`, `hits` of `SpecHit`: `document`, `score`,
+accept=..., glossary_paths=...)` returns `SpecSearchResult` (`query`, `expanded`, `mode`, `hits` of `SpecHit`: `document`, `score`,
 `pinned`); `accept` narrows candidates further (a namespace selection). `load_glossary`, `expand_query` and
-`metadata` (the embedded text) expose the policy steps.
+`metadata` (the embedded text) expose the policy steps. `load_glossary(root)` defaults to the global file;
+`load_glossary(root, paths)` merges the supplied paths. The search use case supplies paths from its existing
+namespace selection; a library caller selecting candidates with `accept` supplies matching glossary paths explicitly.

@@ -96,7 +96,9 @@ become graph edges.
    `summary` frontmatter and no `id`, so by rule 3 none is a document, and none is a search candidate. The glossary
    (`glossary.md`, with the search synonyms `glossary.yaml`) is its first member. A registered namespace keeps its
    package background in `docs/packages/<name>/steering/` under the same shape (`ADR-namespace-steering-directories`,
-   `CAP-DOCS-namespaces` 3.4), without a glossary file: a package glossary stays at `docs/packages/<name>/glossary.md`.
+   `CAP-DOCS-namespaces` 3.4), including optional `steering/glossary.md`, `steering/glossary.yaml` and
+   `steering/ux-objects.md` (`ADR-namespace-steering-registers`). Root and selected namespace registers are read
+   together; a package glossary definition applies only to that package.
    `devkit get-context docs` lists every root steering file's `title` and `summary` and, inside a package, that
    namespace's (`CAP-DIST-context-and-playbooks`); `RULE-steering-documents` bounds each directory and
    `RULE-document-reference` resolves the IDs they cite (`CAP-GOV-spec-rules`).

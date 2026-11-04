@@ -83,12 +83,20 @@ The rules treat `docs/packages/<name>/` like `docs/`: `RULE-id-convention`, `RUL
 check its `roadmap/` (with its flat `_archive/`) as they check `docs/roadmap/`, so a registered namespace keeps its
 own milestones there (`ADR-namespace-milestone-roots`; `CAP-GOV-spec-rules` Milestone validation contract); `RULE-ux-links` and `RULE-ux-coverage` read its UX
 documents and use cases as the global ones. `RULE-steering-documents` checks a registered namespace's
-`steering/` as it checks `docs/steering/`, per directory and without glossary files, and `RULE-document-reference`
-resolves the IDs its files cite (`CAP-GOV-spec-rules` 3.14; `ADR-namespace-steering-directories`); an unregistered
+`steering/` as it checks `docs/steering/`, per directory and including optional `glossary.md` and `ux-objects.md`;
+`glossary.yaml` is accepted in both. A registered namespace MAY keep these registers under its steering directory
+(`ADR-namespace-steering-registers`). `RULE-document-reference` resolves cited IDs and glossary Owner cells there
+(`CAP-GOV-spec-rules` 3.3 and 3.14); an unregistered
 `docs/packages/<name>/steering/` is a plain directory. `RULE-spec-format` also checks that a proposal's or
 spec's `namespace` names `global` or a registered namespace, and rechecks every one of them when a run targets
 `.devkit/config.toml`. Entrypoint paths of a namespace's documents stay workspace-relative, never package-relative
 (`CAP-TRACE-code-entrypoints`).
+
+Agents read the root glossary and UX object register with the selected namespace's files; local glossary definitions
+apply only to that namespace, and shared rows remain global. Search synonyms follow the search namespace selection
+(`CAP-DOCS-document-search` rule 4). Registers are optional. A legacy `docs/packages/<name>/glossary.md` receives a
+manual migration finding; move or merge its content into `steering/glossary.md` with title/summary frontmatter.
+No automated move or duplicate global register is created.
 
 ## 4. Interfaces & Data Contracts
 
