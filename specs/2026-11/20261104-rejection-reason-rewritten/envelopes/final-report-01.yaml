@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:48:02.048399Z'
+status: completed
+summary: 'The rejection path records a decision sentence, never a quote: sdd-proposal workflow Gate rule, feedback-hygiene playbook Step 4, proposal scaffold hint, CAP-DLV-proposal-planning rule 9 and UC-plan-and-hand-off-a-proposal 5a reworded; ADR-reject-ux-rules-path-exclusion restated without the quoted text; FB-rejection-reason-quoted-verbatim resolved; the wording pinned in the workflows guidance test. Review and reconcile check are the author''s at low effort.'
+findings: []
+assumptions:
+- Low effort per the user's instruction; worktree=required applied; pull_request=auto resolved to the local route; dev-integration=auto per .devkit/config.toml
+- UC-plan-and-hand-off-a-proposal 5a was edited beyond the tasks' _Boundary as the docs reflection the reconciliation required
+checks:
+  tests: PASS just test-affected 1592 passed (base main)
+  build: PASS devkit sync --check clean; devkit generated check stale=0; just check devkit-spec 0 errors
+  lint: PASS devkit rules check --ci --base 7e65ea40 errors=0 warnings=0; just lint-check devkit-spec
+diff_scope:
+  base: 7e65ea406a6d3060e274a016415081e8c91cf25c
+  head: e290e9e7a151d7a67f4778c6aca812b8c15ffbf4
