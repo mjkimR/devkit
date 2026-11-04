@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:42:09.519074Z'
+status: completed
+summary: 'Independent review: AC-01–05 pass; seed UX guidance still creates root register unconditionally.'
+findings:
+- issue: Seed UX guidance still directs unconditional root-register creation.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/seed/docs/ux/README.md:32 says the root register is created with the first UX document; other instructions require rows to be needed.
+  failure_condition: The first UX document contains only namespace-specific objects, causing an unnecessary root register.
+  suggested_action: Qualify root creation by shared rows, make existing registers optional and keep namespace rows local.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex isolation emulated with absolute cwd, no tracked writes and unchanged pre/post snapshot; no explicit outside-worktree source reads.
+checks:
+  tests: PASS affected2291; focused19; deployed steering/reference rules
+  lint: PASS both packages lint/format/Pyright; CI22zero
+diff_scope:
+  base: 4c6298983f5febeca7cfee8d27bc4708688551c7
+  head: 4d3cc5ec4d9c358298a3331a1cd6c5c38d2055dc
+activity_effort: medium
