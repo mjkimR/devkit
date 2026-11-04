@@ -95,8 +95,10 @@ identity, lifecycle and selection as they are.
   guidance that says `docs/roadmap/` in several references must say "the milestone's roadmap root". A reader of the
   global roadmap no longer sees every milestone without `--all-namespaces`.
 - **Follow-ups**: the local viewer's dashboard and roadmap tab read `docs/roadmap/` only (`CAP-VIEW-repository-viewer`
-  4.1); whether this proposal extends them is the user's decision in Planning (question q1). If excluded, a follow-up
-  is recorded as feedback and the viewer shows global milestones only until it lands.
+  4.1 and §5); whether this proposal extends them is the user's decision in Planning (question q1). While the viewer
+  does not know the namespace roots, it omits namespace milestones, renders a global milestone that depends on one as
+  an unknown dependency that is never ready, and shows a proposal that belongs to one in no roadmap card. If excluded,
+  those effects are recorded as follow-up feedback and stand until that work lands.
 
 ---
 
