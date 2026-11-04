@@ -8,17 +8,31 @@ topic. `devkit get-context spec` lists each file's `title` and `summary` in ever
 body before a decision its summary covers. This rule keeps that always-loaded list short and readable.
 
 - **Phase and severity**: `linter`, `error`.
-- **What is checked**: the files under the root `docs/steering/`, when at least one of them is targeted. There is no
-  namespace copy of the directory; package glossaries stay at `docs/packages/<name>/glossary.md`.
-- **What is not**: `README.md` is neither checked, counted nor listed. `glossary.yaml` (search synonyms) is allowed
-  and not checked here. The IDs a steering file cites are checked by `RULE-document-reference`.
+- **What is checked**: the files under the root `docs/steering/` and under `docs/packages/<name>/steering/` of each
+  namespace registered in `[[tool.docs.namespaces]]`, one directory at a time: a directory is checked when at least
+  one of its files is targeted, and `max_files` counts each directory on its own. A namespace steering directory
+  follows the root contract; its `glossary.md` and `glossary.yaml` are reported (see below), because the package
+  glossary lives at `docs/packages/<name>/glossary.md` and search synonyms are read from `docs/steering/glossary.yaml`
+  only.
+- **What is not**: `README.md` is neither checked, counted nor listed. The root `glossary.yaml` (search synonyms) is
+  allowed and not checked here. The steering directory of an unregistered `docs/packages/<name>/` is not checked.
+  The IDs a steering file cites are checked by `RULE-document-reference`.
 
 ## 2. Cause of Violation
 
-Each finding is reported at the file, on the line of the key concerned or line 1:
+Each finding is reported at the file, on the line of the key concerned or line 1. A message names the directory it
+concerns: `docs/steering/` below reads `docs/packages/<name>/steering/` in a namespace steering directory.
 
 - A file in a subdirectory: `steering documents live directly in docs/steering/, not in <dir>/`.
 - A file that is neither Markdown nor `glossary.yaml`: `docs/steering/ holds only Markdown files and glossary.yaml`.
+  In a namespace steering directory, where `glossary.yaml` is not allowed either: `docs/packages/<name>/steering/
+  holds only Markdown files`.
+- `glossary.md` in a namespace steering directory, at line 1: `the package glossary lives at
+  docs/packages/<name>/glossary.md, not in docs/packages/<name>/steering/`. Move it there; it does not count toward
+  `max_files`.
+- `glossary.yaml` in a namespace steering directory, at line 1: `docs/packages/<name>/steering/ holds only Markdown
+  files`. Remove it; search synonyms are read from `docs/steering/glossary.yaml` only, and it does not count toward
+  `max_files`.
 - A file that is not UTF-8: `steering document must be UTF-8`. `devkit get-context` would list it with null values.
 - Frontmatter that does not parse: `steering document frontmatter is invalid: <detail>`.
 - Frontmatter that closes after the first 4096 bytes, all `devkit get-context` reads of a file: `frontmatter ends at
@@ -30,9 +44,9 @@ Each finding is reported at the file, on the line of the key concerned or line 1
 - A summary longer than `max_summary_length`: `summary has <n> characters (<max> at most)`.
 - A body (the text after the frontmatter) larger than `max_body_bytes`: `body has <n> bytes; at most <max> are
   allowed`, at the first body line.
-- More than `max_files` Markdown files: `docs/steering/ has <n> Markdown files; at most <max> are allowed`, on each
-  file beyond the limit in sorted order. It is reported whenever any steering file is targeted, so the commit that
-  adds a file is refused even when the new file sorts first.
+- More than `max_files` Markdown files in one directory: `docs/steering/ has <n> Markdown files; at most <max> are
+  allowed`, on each file beyond the limit in sorted order. It is reported whenever any file of that directory is
+  targeted, so the commit that adds a file is refused even when the new file sorts first.
 
 ## 3. Remediation
 

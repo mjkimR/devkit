@@ -1644,7 +1644,7 @@
     },
     ".devkit/managed/docs/AGENTS.md": {
       "mode": 420,
-      "sha256": "4c3240fbb95e3d7790f7fb3384a61df10fbf941b2b16b32fe4a4805298baaaaa"
+      "sha256": "8ee0ab9dbc69d0fa7c524717909f72bab8b7d9bfbf3ebaa4ddcf6f7467fd1d3a"
     },
     ".devkit/managed/docs/bundle.toml": {
       "mode": 420,
@@ -1676,7 +1676,7 @@
     },
     ".devkit/managed/docs/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "dd403b19a66b482eb4ba46d75c182ddbcd573e3dcb5a61a542f2549b898e7123"
+      "sha256": "df0c7a43d029571754baf86d9596d581d768c26b0329d1aa0f4bf6b8f7472820"
     },
     ".devkit/managed/docs/instructions/usecase-writing.md": {
       "mode": 420,
@@ -1712,7 +1712,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "fefa369f131cbd6cfe6c16e736c9f797733e411bebd3d96f57e37ba3a9656641"
+      "sha256": "24c7c27b7b35360ad597b7d97056a90d6c8a7df5232c1f5fa442791c5db2a4cb"
     },
     ".devkit/managed/docs/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1720,7 +1720,7 @@
     },
     ".devkit/managed/docs/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "a6cce53247ecbc6c1fe477d2fdbfb6295c02ce572f1720aef5f89ff01c961d05"
+      "sha256": "e8a370fc0ed06c358d45b221f178ce6ffa0ecc589b273953cbbe164be42b1c63"
     },
     ".devkit/managed/docs/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1760,7 +1760,7 @@
     },
     ".devkit/managed/docs/rules/steering_documents/guide.md": {
       "mode": 420,
-      "sha256": "f52b6ac2b4f0974f6220c02ab96a8c087773e1692cce18b7fb23da6dfe2d468b"
+      "sha256": "2eb78780a72887ccaa4ed3f9545c98b46ff33dbe3e3c4f6b0a34a3595c33d999"
     },
     ".devkit/managed/docs/rules/steering_documents/rule.py": {
       "mode": 420,
@@ -1768,7 +1768,7 @@
     },
     ".devkit/managed/docs/rules/steering_documents/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "4ea376a217690f2892c8265046d827c6a96148f3f09f6a3d293bf7fcedf923b2"
+      "sha256": "551021e6ed35511d311665c27b0e13707c355cf367896a86c6cc88a14f522960"
     },
     ".devkit/managed/docs/rules/traceability_link/guide.md": {
       "mode": 420,

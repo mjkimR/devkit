@@ -51,6 +51,10 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 - `devkit get-context docs` lists every steering file's `title` and `summary`; keep each body short enough to read
   whole (`RULE-steering-documents` caps the count and size). Put behavior in capabilities and evidence in materials,
   never in a steering document.
+- Put package background in `docs/packages/<name>/steering/` of a registered namespace (`[[tool.docs.namespaces]]`),
+  under the same rules and caps; the context lists it when the working directory is inside that package. Keep the
+  package glossary at `docs/packages/<name>/glossary.md`: a namespace steering directory holds no `glossary.md` and
+  no `glossary.yaml`.
 
 ## Glossary
 

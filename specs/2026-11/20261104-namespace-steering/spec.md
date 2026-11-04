@@ -2,7 +2,7 @@
 id: SPEC-namespace-steering
 title: Namespace steering documents checked and listed beside the global ones
 summary: Recognizes docs/packages/<name>/steering/ as steering documents of a registered namespace, checked by the steering rule and listed in the context of the namespace an agent works in, within the bounded-context caps.
-status: planned
+status: in-progress
 created: 2026-11-04
 namespace: global
 related_capabilities:
@@ -132,8 +132,8 @@ of `docs/steering/` under `living_path`. "Registered" means listed in `[[tool.do
 - **When** `devkit get-context <bundle>` runs, then runs with `--strict`
 - **Then** stdout is one JSON object whose `documents` holds the declared directory's files only,
   `documents_elsewhere` is `[]` and `notices` holds one entry per failed provider with code
-  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` naming the entry point; stderr carries the matching advisory block; the exit
-  code is `0`, and `1` under `--strict`. A working provider beside a failing one is still listed. The
+  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` naming the entry point, with its directive text (the command is JSON-only, so
+  stderr carries no advisory, `ARCH-08-1-agent-output`); the exit code is `0`, and `1` under `--strict`. A working provider beside a failing one is still listed. The
   `devkit-dist` tests of AC-05 to AC-07 pass with `devkit-docs` and `devkit-agt` absent (`just test-dist`).
 
 ### [AC-08] The `devkit-docs` provider selects by the working directory's namespace

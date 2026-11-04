@@ -61,7 +61,8 @@ def test_progressive_disclosure_and_stateless_repeated_reads(project) -> None:
     assert "Use when writing tests" in str(result)
     instruction = result["instructions"][0]
     assert "BODY_ONLY_SENTINEL" in Path(instruction["path"]).read_text()
-    assert GetContext().execute(target, "team").to_dict() == result
+    from_root = GetContext().execute(target, "team").to_dict()  # documents may differ by working directory
+    assert (from_root["constitution"], from_root["instructions"]) == (result["constitution"], result["instructions"])
     cli_result = CliRunner().invoke(cli, ["get-context", "team", "--workspace-root", str(nested)])
     assert cli_result.exit_code == 0, cli_result.output
     assert "BODY_ONLY_SENTINEL" not in cli_result.output

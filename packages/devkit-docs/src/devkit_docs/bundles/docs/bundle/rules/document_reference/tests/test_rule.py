@@ -484,6 +484,34 @@ def test_ids_cited_in_steering_files_resolve_with_alias_fixes_without_edges(tmp_
     assert check(RULE, tmp_path, targets=["docs/a.md"]) == []
 
 
+def test_ids_cited_in_a_namespace_steering_file_resolve_with_alias_fixes(tmp_path: Path) -> None:
+    from devkit_docs.features.documents import DocumentIndex
+
+    steering = "docs/packages/api/steering/product.md"
+    product = "---\ntitle: Product\nsummary: Read before naming a feature.\n---\nSee `CAP-A-old` and `CAP-A-missing`.\n"
+    files = {
+        ".devkit/config.toml": '[[tool.docs.namespaces]]\nname = "api"\npath = "packages/api"\n',
+        steering: product,
+        "docs/packages/api/steering/README.md": "`CAP-A-readme`\n",
+        "docs/packages/other/steering/product.md": "`CAP-A-unregistered`\n",
+        "docs/a.md": _aliased("CAP-A-one", "CAP-A-old"),
+    }
+    found = check(RULE, tmp_path, files, targets=[steering])
+    assert [(v.file, v.line, v.column, v.message, v.fixable) for v in found] == [
+        (steering, 5, 5, "CAP-A-old is an alias of CAP-A-one; name `CAP-A-one`", True),
+        (steering, 5, 21, "no document has the ID CAP-A-missing", False),
+    ]
+    assert all(d.path != steering for d in DocumentIndex.load(tmp_path).documents)
+    fixed = check(RULE, tmp_path, targets=[steering], fix=True)
+    assert (tmp_path / steering).read_text() == product.replace("CAP-A-old", "CAP-A-one")
+    assert [v.fixed for v in fixed] == [True, False]
+    assert _found(check(RULE, tmp_path, targets=[steering], fix=True)) == [
+        (steering, 5, "no document has the ID CAP-A-missing")
+    ]
+    assert (tmp_path / steering).read_text() == product.replace("CAP-A-old", "CAP-A-one")
+    assert check(RULE, tmp_path, targets=["docs/packages/other/steering/product.md"]) == []
+
+
 _QUICK = ("docs/development/x.md", "guides/install/y.md", "packages/p/README.md", "tools/t/README.md")
 
 

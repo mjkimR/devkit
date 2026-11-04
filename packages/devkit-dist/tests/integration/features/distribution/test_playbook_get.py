@@ -227,6 +227,8 @@ def test_empty_context(tmp_path):
         "constitution": None,
         "instructions": [],
         "documents": [],
+        "documents_elsewhere": [],
+        "notices": [],
     }
     assert GetPlaybook().execute(root, "empty/run").to_dict()["context"]["policy"] == "once-per-agent-context"
 
