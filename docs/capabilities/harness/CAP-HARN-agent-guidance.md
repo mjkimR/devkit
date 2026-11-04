@@ -145,18 +145,25 @@ The constitution's sections:
 
 ### 4.3 Shared Instructions and Guidance Pointers
 
+Agents SHOULD read the global glossary and UX object register together with the selected registered namespace's
+`docs/packages/<name>/steering/glossary.md` and `ux-objects.md` when they exist. Local glossary definitions apply
+only to that namespace. Shared object rows stay global, local rows stay in that namespace, and registers are created
+only when their rows are needed; global content is never copied into every namespace (`ADR-namespace-steering-registers`).
+Agents SHOULD check object representations and calls to action against both registers during UX review; the link
+and coverage rules do not parse those registers or enforce their vocabulary semantics.
+
 The following instructions belong to docs:core. SDD decision supersession, completed-spec preservation and
 Planning-only UX timing belong to the spec constitution.
 
 | Asset | Read before |
 | --- | --- |
 | `contract-authoring` | Authoring or reviewing specifications, acceptance criteria, policies, instructions, rules or workflows: RFC 2119 wording, measurable contracts, Non-Goals, examples (policy exceptions are in the spec constitution). |
-| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, approach-owned retention boundaries, traceability, summaries, ID references, and terminology and the glossary: six domain-neutral naming rules in its Glossary section (`ADR-writing-and-terminology-guidance`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
+| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, approach-owned retention boundaries, traceability, summaries, ID references, and terminology and the global-plus-selected-namespace steering glossary: six domain-neutral naming rules in its Glossary section (`ADR-writing-and-terminology-guidance`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
 | `document-writing` | Writing or editing any document: the sentence-level baseline (one directive or claim per sentence, condition first, prohibitions with their alternative, one-clause reasons with background by ID, no hedges or emphatic capitals, one default, concrete examples); the per-kind instructions add to it. |
 | `decision-writing` | Writing an ADR or PADR: the admission criteria both share (costly to reverse, cross-area, weighed options, a changed contract; other choices stay in proposal or spec records), Y-statement `summary`, context, drivers, options, a Decision Outcome of declarative clauses where a restated clause ends with its trace (`→ <ID> <section or rule> (<keyword>)`; the restating document stays authoritative), consequences and the `Confirmation` section naming the check, test, review or restating IDs. |
 | `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
 | `usecase-writing` | Writing a use case: goal, main success scenario, extensions keyed to its steps, postconditions, Example Mapping to Given/When/Then scenarios, UX step citations (the screen a step happens on, `off screen: <reason>`, long-running activities and system judgements cited by perceived outcome). |
-| `ux-writing` | Writing a UX document (`docs/ux/`) or a Screens draft: one screen, modal or panel per document, purpose, content tree without character-cell layouts, states, interactions naming the served step, criteria for surfaces beyond pages and forms (element choice, continuous input in prose with `global:` rows, modes as states, transitions, task-less surfaces, mismatch recorded as feedback; `SPEC-ux-writing-non-page-surfaces`), contrasting candidates, the `docs/steering/ux-objects.md` register created with the first UX document, style and medium left to the project (`ADR-ux-screens`). |
+| `ux-writing` | Writing a UX document (`docs/ux/`) or a Screens draft: one screen, modal or panel per document, purpose, content tree without character-cell layouts, states, interactions naming the served step, criteria for surfaces beyond pages and forms (element choice, continuous input in prose with `global:` rows, modes as states, transitions, task-less surfaces, mismatch recorded as feedback; `SPEC-ux-writing-non-page-surfaces`), contrasting candidates, root and selected namespace `steering/ux-objects.md` registers created only for needed shared/local rows, style and medium left to the project (`ADR-ux-screens`). |
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 - **Instruction headers**: every writing instruction of the docs bundle and the `authoring` bundle's

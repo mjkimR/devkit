@@ -8,7 +8,7 @@ target: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/ux
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -46,3 +46,7 @@ a real namespace UX document demonstrates the need. The root register continues 
 ADR-namespace-steering-directories, section 5 Follow-ups: "A namespace copy of docs/steering/ux-objects.md for the
 UX rules work of MS-monorepo-namespace-support." SPEC-namespace-steering Non-Goals exclude it.
 ```
+
+## Disposition
+
+- **Disposition**: `SPEC-namespace-steering-registers`: Optional namespace UX object registers are read with global registers by writing, drafting, review and sync guidance; local rows remain local and empty registers are not forced. The original premise that RULE-ux-links parses the register was incorrect: link/coverage rules do not parse object vocabulary; semantics remain agent review. Verified by 2291 affected tests, deployed steering/reference rule tests, selected/cwd/global/all/invalid search regressions and 13 post-review guidance tests.

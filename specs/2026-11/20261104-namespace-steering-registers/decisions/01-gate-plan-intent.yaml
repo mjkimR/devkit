@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Unify glossary and UX objects with global plus selected namespace steering,
+  including namespace search synonyms, as agreed.
+by: user
+at: '2026-11-04T06:29:46.970272Z'

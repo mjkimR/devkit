@@ -15,6 +15,9 @@ aliases:
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
+- Superseded in part by `ADR-namespace-steering-registers`: root-only object-register location, unconditional root
+  creation with the first UX document and root-only `spec-sync` writes of drafted register rows become optional
+  shared root and namespace-local registers, created only when their rows are needed; other clauses remain.
 - Superseded in part by `ADR-explicit-ux-coverage-exception-notation`: in Step links and coverage, the coverage rule's
   "an interaction whose Step cell is empty" and "a step or extension that cites no UX ID" now exclude an item
   classified `global: <reason>` or `off screen: <reason>`, "only a step that truly happens off-screen cites none"

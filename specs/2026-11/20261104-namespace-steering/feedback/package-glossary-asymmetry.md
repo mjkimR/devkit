@@ -8,7 +8,7 @@ target: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/li
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -48,3 +48,7 @@ The nature of the observation: a layout asymmetry between the root and namespace
 ADR-namespace-steering-directories, section 5 Follow-ups: "The asymmetry between the root glossary
 (docs/steering/glossary.md) and package glossaries (docs/packages/<name>/glossary.md); namespace search synonyms."
 ```
+
+## Disposition
+
+- **Disposition**: `SPEC-namespace-steering-registers`: Namespace glossary.md and glossary.yaml use the canonical steering directory. Registered glossary Owner references receive root validation/fixes, legacy paths receive a manual move/merge remedy, and search reads global plus selected namespace synonyms with exact-file errors and deterministic cluster union. Verified by 2291 affected tests, deployed steering/reference rule tests, selected/cwd/global/all/invalid search regressions and 13 post-review guidance tests.

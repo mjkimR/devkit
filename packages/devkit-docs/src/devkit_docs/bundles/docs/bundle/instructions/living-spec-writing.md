@@ -53,22 +53,27 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   never in a steering document.
 - Put package background in `docs/packages/<name>/steering/` of a registered namespace (`[[tool.docs.namespaces]]`),
   under the same rules and caps; the context lists it when the working directory is inside that package. Keep the
-  package glossary at `docs/packages/<name>/glossary.md`: a namespace steering directory holds no `glossary.md` and
-  no `glossary.yaml`.
+  package glossary and optional search synonyms at `docs/packages/<name>/steering/glossary.md` and
+  `docs/packages/<name>/steering/glossary.yaml`, beside the other package background.
 
 ## Glossary
 
 - Terms are defined in `docs/steering/glossary.md`. A package's documents (`docs/packages/<name>/`) may keep
-  `docs/packages/<name>/glossary.md`, read together with the root glossary. A package redefinition applies to that
-  package's documents only.
+  `docs/packages/<name>/steering/glossary.md`, read together with the root glossary. A package redefinition applies
+  to that package's documents only; keep shared definitions in the root glossary.
+- If the package still has `docs/packages/<name>/glossary.md`, move its content into `steering/glossary.md` before
+  using it; merge with an existing canonical file and preserve `title` and an English `summary` frontmatter.
+- Keep registers optional: create a package glossary only when it has local terms; never copy the global glossary.
+- Search reads global plus selected namespace `steering/glossary.yaml` files; `--namespace global` reads only global,
+  while all-namespace selection adds registered namespaces in name order. Shared token clusters are merged.
 - Check the glossary while naming a domain concept or registering a term. No check enforces the rules below.
 
 1. Do not name a new domain concept with a bare generic noun (target, resource, scope, context, state, status,
    revision, data, item); add a qualifier that shows what it applies to, who owns it or where it ends. Project
    additions and exceptions live in a section of `docs/steering/glossary.md`.
 2. Use the full registered term in titles, headings, table cells and sentences meant to stand alone.
-3. One concept, one term. Record rejected synonyms in the Avoid column; where `docs/steering/glossary.yaml` exists, also add
-   each Avoid entry as a synonym of the term's cluster.
+3. One concept, one term. Record rejected synonyms in the Avoid column; where the owning synonyms file (`docs/steering/glossary.yaml` or the namespace's
+   `steering/glossary.yaml`) exists, also add each Avoid entry as a synonym of the term's cluster.
 4. Register the same spelling with a different owner or meaning separately, with its owner; never bulk-replace a word
    across contexts.
 5. Quote existing API fields, types, paths and JSON exactly and map them to the term ("approval subject (`target`

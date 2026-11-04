@@ -301,8 +301,9 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   `devkit spec scope compare`). Its body covers the capability ledger, use cases, architecture and decisions,
   conventions and governance, and a before/after comparison. Under use cases, a `Screens (docs/ux/)` subsection holds
   the drafted screens when the proposal changes what a person sees: one draft per screen, modal or panel in the `ux`
-  template's shape, with the use case step citations and `docs/steering/ux-objects.md` rows they need and new IDs in
-  plain text; `spec-specify` carries them into `spec.md` at handoff (`ADR-ux-screens`).
+  template's shape, with the use case step citations and root `docs/steering/ux-objects.md` or namespace
+  `docs/packages/<name>/steering/ux-objects.md` rows they need and new IDs in plain text; namespace UX reads both
+  registers when they exist; `spec-specify` carries them into `spec.md` at handoff (`ADR-ux-screens`).
 
 ### Milestone closure boundary
 

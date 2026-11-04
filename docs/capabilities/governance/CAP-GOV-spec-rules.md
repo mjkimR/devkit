@@ -62,7 +62,7 @@ commit.
 | `RULE-code-entrypoints` | Every `entrypoints` path of a capability or use case is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
-| `RULE-steering-documents` | `docs/steering/` and each registered namespace's `docs/packages/<name>/steering/` are flat and hold ID-free files with a `title` and a short English `summary`, within the per-directory file-count and body-size caps; a namespace directory holds no glossary file. | none |
+| `RULE-steering-documents` | `docs/steering/` and each registered namespace's `docs/packages/<name>/steering/` are flat and hold ID-free files with a `title` and a short English `summary`, within the per-directory file-count and body-size caps; optional namespace glossary and UX registers follow the root contract, and legacy package glossaries receive manual migration findings. | none |
 | `RULE-ux-links` | A UX document has a valid `element` and Interactions table; its Step cells (pairs, empty or `global: <reason>`), `usecases`, targets, exits and reachability agree with the use case steps that cite it. | none |
 | `RULE-ux-coverage` | The steps of a use case a UX document lists cite a UX document, and every interaction names its step, unless classified `off screen: <reason>` or `global: <reason>`; a classification without a reason or contradicting a citation is reported. | none |
 
@@ -105,7 +105,8 @@ Documents reference each other by exact, resolvable full IDs. Checks every curre
 A UX document's `usecases` take `UC` and its `capabilities` take `CAP` IDs, as on any document; the UX IDs a use case
 step or an Interactions Target cites in backticks are ordinary prose references.
 
-The root glossary `docs/steering/glossary.md` is an additional, ID-free input: in five-column tables headed
+The root glossary `docs/steering/glossary.md` and each registered namespace's
+`docs/packages/<name>/steering/glossary.md` are additional, ID-free inputs: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
 IDs in the Owner column MUST resolve to exactly one indexed document. Missing and ambiguous owners produce errors
 at their source line. WHEN an Owner names a uniquely resolved alias, the rule MUST report it as fixable and
@@ -113,15 +114,15 @@ at their source line. WHEN an Owner names a uniquely resolved alias, the rule MU
 layout. Empty cells and non-reference text are allowed. The header fixes the Owner column;
 rows may omit trailing cells or have surplus cells without moving that column. There are no mandatory owners,
 glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
-package glossaries and other ID-free files are outside the Owner check. Existing prose masking, file targeting,
+glossaries outside registered canonical steering directories and other ID-free files are outside the Owner check. Existing prose masking, file targeting,
 exclusions and snapshot cache rules apply.
 
 The steering files (the Markdown files directly in `docs/steering/` or in a registered namespace's
-`docs/packages/<name>/steering/` other than `README.md`, the root glossary included; `CAP-DOCS-namespaces` 3.4) are
+`docs/packages/<name>/steering/` other than `README.md`, the root and namespace glossaries included; `CAP-DOCS-namespaces` 3.4) are
 a second ID-free input: every backticked full ID in their visible text MUST resolve to exactly one indexed
 document, and one naming an alias is reported as fixable with `` <alias> is an alias of <ID>; name `<ID>` ``.
 WHEN a steering code-span alias resolves uniquely, `devkit rules fix` MUST replace only its ID with the canonical ID.
-An ID the Owner check already examined on the same line is not reported again. No indexing or graph edges.
+An ID the Owner check already examined in the same file and line is not reported again. No indexing or graph edges.
 The fix MUST retain existing masking, targeting and exclusion boundaries; missing or ambiguous references stay
 unchanged. A second fix MUST change no file.
 
@@ -341,9 +342,12 @@ checked.
   frontmatter) larger than `max_body_bytes` UTF-8 bytes; each Markdown file beyond `max_files` in sorted order,
   whenever any file of that directory is targeted, so a commit adding a file is refused even when the new file sorts
   first.
-- MUST report, in a namespace steering directory, a `glossary.md` (the package glossary lives at
-  `docs/packages/<name>/glossary.md`) and a `glossary.yaml` (search synonyms are read from `docs/steering/glossary.yaml`
-  only); neither counts toward `max_files`.
+- WHEN a registered namespace keeps optional `steering/glossary.md` or `steering/ux-objects.md`, the rule MUST
+  apply the same Markdown contract and count cap as root; `glossary.yaml` MUST be accepted in both directories and
+  excluded from the Markdown count (`ADR-namespace-steering-registers`). Search validates selected YAML contents.
+- WHEN a targeted legacy `docs/packages/<name>/glossary.md` exists for a registered namespace, the rule MUST
+  report its canonical `steering/glossary.md` destination and a manual move/merge remedy without modifying files.
+  This legacy-path check applies even when no steering file is targeted.
 - `README.md` is neither checked nor counted.
 - Settings: `max_files` (default `10`), `max_body_bytes` (default `24576`) and `max_summary_length` (default `300`),
   each a positive integer. Not fixable.

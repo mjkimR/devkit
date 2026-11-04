@@ -104,3 +104,17 @@ def test_ux_writing_maps_surfaces_beyond_pages_and_forms_onto_the_contract() -> 
     assert_rule(usecase, "judgement the system makes", "reaches no element", "`off screen: <reason>`")
     template = raw("templates/ux.md")
     assert_rule(template, "one row per trigger that serves a step or is a global control", "continuous input")
+
+
+def test_namespace_ux_register_consumers_read_global_and_local() -> None:
+    paths = (
+        "skills/spec-specify/SKILL.md",
+        "skills/spec-sync/SKILL.md",
+        "skills/spec-ux-review/SKILL.md",
+        "skills/spec-delegate/references/payload.md",
+    )
+    for path in paths:
+        guide = raw(path)
+        assert "docs/packages/<name>/steering/ux-objects.md" in guide, path
+    assert "read both" in raw("skills/spec-sync/SKILL.md")
+    assert "root and selected namespace" in raw("skills/spec-ux-review/SKILL.md")

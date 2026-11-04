@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:49:41.620111Z'
+status: completed
+summary: Implemented optional global-plus-selected namespace glossary and UX registers, selected search synonyms, canonical migration and reference checks; both direct source feedback items resolved. Code review and ten-target reconciliation passed after fixes.
+findings: []
+assumptions:
+- Host added ADR-ux-screens initial TierA annotation-only scope; no TierB extension.
+- Codex isolation emulated using absolute cwd, per-operation approvals, snapshots and committed-range checks; no native guarantee.
+checks:
+  tests: PASS affected2291 at4d3cc5ec; post-review13guidance at3576aee8; later changes only ADR/docs/records; deployed steering/reference rules passed
+  build: PASS offline devkit-docs and devkit-spec wheels including final seed contents
+  lint: PASS both packages Ruff/Pyright; final changed-test lint; cumulative CI22zero
+diff_scope:
+  base: 4c6298983f5febeca7cfee8d27bc4708688551c7
+  head: f830ff1ee9c09aa8612c709a7f9d82c64abb0ca8

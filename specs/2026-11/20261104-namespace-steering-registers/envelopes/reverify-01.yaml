@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:42:32.019487Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the P2 fix: seed creates root only for shared rows and local register only for needed local rows; new regression passes.'
+findings:
+- issue: Seed UX guidance still directs unconditional root-register creation.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/seed/docs/ux/README.md:32 says the root register is created with the first UX document; other instructions require rows to be needed.
+  failure_condition: The first UX document contains only namespace-specific objects, causing an unnecessary root register.
+  suggested_action: Qualify root creation by shared rows, make existing registers optional and keep namespace rows local.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 13 docs/spec UX guidance tests after fix; prior2291 affected pass retained for unchanged runtime
+diff_scope:
+  base: 4d3cc5ec4d9c358298a3331a1cd6c5c38d2055dc
+  head: 3576aee8ae66cce49c31110ded1d5e169cb21e27
+activity_effort: medium

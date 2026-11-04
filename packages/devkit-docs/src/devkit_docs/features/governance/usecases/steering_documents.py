@@ -15,9 +15,8 @@ that list short and readable:
 
 The same contract holds in the steering directory of every registered namespace, ``docs/packages/<name>/steering/``
 (``[[tool.docs.namespaces]]``), one directory at a time: targeting, the ``max_files`` count and the over-cap findings
-are per directory, and each message names its own directory. A namespace steering directory holds no glossary: its
-``glossary.md`` is reported as belonging at ``docs/packages/<name>/glossary.md`` and its ``glossary.yaml`` as not
-allowed (search synonyms are read from ``docs/steering/glossary.yaml`` only); neither counts toward ``max_files``. An
+are per directory, and each message names its own directory. Glossary Markdown and UX object registers follow
+that same contract; ``glossary.yaml`` is accepted in both directories and is validated by search when selected. An
 unregistered ``docs/packages/<name>/steering/`` is not checked. Not fixable: background is written, never generated.
 """
 
@@ -36,9 +35,7 @@ from devkit_docs.features.governance import field_line, namespaces
 from devkit_docs.utils.text import foreign_letters
 
 RULE_ID = "RULE-steering-documents"
-DIRECTORY = "docs/steering"
 SYNONYMS = "glossary.yaml"
-GLOSSARY = "glossary.md"
 INDEX = "README.md"
 # The header prefix ``devkit get-context`` reads of each file (devkit-dist ``context_documents.HEADER_LIMIT``).
 HEADER_LIMIT = 4096
@@ -75,13 +72,27 @@ class SteeringDocumentsRule(BaseRule):
         found: list[Violation] = []
         for root in docs_roots(namespaces(ctx)):
             found.extend(self._directory(ctx, root))
+            if root == "docs":
+                continue
+            legacy = f"{root}/glossary.md"
+            files = ctx.cache.find_files(ctx.workspace_root / root, extensions=(".md",))
+            if ctx.is_file_targeted(legacy) and ctx.workspace_root / legacy in files:
+                found.append(
+                    Violation(
+                        rule_id=self.id,
+                        file=legacy,
+                        line=1,
+                        message=f"the namespace glossary belongs in {root}/steering/glossary.md",
+                        remediation=f"Move or merge the glossary into {root}/steering/glossary.md; "
+                        "keep title and an English summary in its frontmatter",
+                    )
+                )
         return found
 
     def _directory(self, ctx: RuleContext, root: str) -> list[Violation]:
         """The findings of one steering directory, ``<root>/steering``: the root ``docs/steering`` or a registered
         namespace's ``docs/packages/<name>/steering``; targeting and the ``max_files`` cap apply to it alone."""
         directory = f"{root}/steering"
-        namespaced = directory != DIRECTORY
         files = [
             relative
             for path in ctx.cache.find_files(ctx.workspace_root / directory, extensions=None)
@@ -107,33 +118,17 @@ class SteeringDocumentsRule(BaseRule):
                     )
                 continue
             if name == SYNONYMS:
-                if namespaced and ctx.is_file_targeted(path):
-                    add(
-                        path,
-                        1,
-                        f"{directory}/ holds only Markdown files",
-                        f"Remove the file; search synonyms are read from {DIRECTORY}/{SYNONYMS} only",
-                    )
                 continue
             if not name.endswith(".md"):
                 if ctx.is_file_targeted(path):
                     add(
                         path,
                         1,
-                        f"{directory}/ holds only Markdown files" + ("" if namespaced else f" and {SYNONYMS}"),
+                        f"{directory}/ holds only Markdown files and {SYNONYMS}",
                         "Move the file out of the steering directory",
                     )
                 continue
             if name == INDEX:
-                continue
-            if namespaced and name == GLOSSARY:
-                if ctx.is_file_targeted(path):
-                    add(
-                        path,
-                        1,
-                        f"the package glossary lives at {root}/{GLOSSARY}, not in {directory}/",
-                        f"Move the file to {root}/{GLOSSARY}",
-                    )
                 continue
             documents.append(path)
             if ctx.is_file_targeted(path):
