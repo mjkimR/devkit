@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-consolidated-record-length
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md
     resolution: modified
@@ -39,7 +39,7 @@ fixed-total assertion was used. The ignored probe remains with the worktree.
 
 Independent code review verified the committed implementation; its sole P3 null wording finding is resolved in
 reverify-01. Rule/CLI139, spec content633 and affected selection3956 tests passed; lint/format, both affected
-package type checks, offline wheel builds, sync and CI rules passed. Independent reconcile verification follows.
+package type checks, offline wheel builds, sync and CI rules passed. Independent reconcile verification passed with zero findings; its unchanged pre/post snapshot is recorded in reconcile-check-01.
 
 ## Scope and retained boundaries
 

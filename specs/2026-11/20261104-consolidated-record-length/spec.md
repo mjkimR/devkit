@@ -2,7 +2,7 @@
 id: SPEC-consolidated-record-length
 title: Line budgets for consolidated records
 summary: "Adds an opt-in rule-local line budget for alias-bearing ADRs and consolidated feedback, preserving ordinary limits and bounded topic-review warnings."
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities:
   - CAP-GOV-evaluation-lifecycle
