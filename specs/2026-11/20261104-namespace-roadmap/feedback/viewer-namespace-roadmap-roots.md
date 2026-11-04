@@ -8,7 +8,7 @@ target: packages/devkit-viewer/src/devkit_viewer/features/browse/repositories/wo
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-04
 ---
 
@@ -58,3 +58,7 @@ CAP-VIEW-repository-viewer 4.1: "it MUST list frontmatter only for docs/roadmap/
 CAP-VIEW-repository-viewer: "A depends_on naming no milestone is shown as unknown and never counts as satisfied"
 challenger-01.yaml finding 1 (P2, Decision needed); answer-01.yaml q1 choice a (user)
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-viewer-namespace-roadmap` receives discovery, dependency and membership work as a standalone proposal without milestone membership. Implementation remains pending.
