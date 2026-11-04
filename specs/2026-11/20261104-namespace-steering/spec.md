@@ -5,181 +5,178 @@ summary: Recognizes docs/packages/<name>/steering/ as steering documents of a re
 status: planned
 created: 2026-11-04
 namespace: global
-related_capabilities: []
+related_capabilities:
+  - CAP-GOV-spec-rules
+  - CAP-DIST-context-and-playbooks
+  - CAP-DIST-manifest-spec
+  - CAP-DIST-workspace-ownership
+  - CAP-DOCS-namespaces
+  - CAP-DOCS-document-model
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-namespace-steering] Namespace steering documents checked and listed beside the global ones
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-namespace-steering on 2026-11-04.
-- **Preserved Materials**: `docs/materials/2026-11/20261104-namespace-steering`
+Handed off from proposal PROP-namespace-steering on 2026-11-04; the direction is `ADR-namespace-steering-directories`
+and the inventory, measurements and option tables are in
+`docs/materials/2026-11/20261104-namespace-steering/namespace-steering-design.md`.
 
-### 1. Background & Hypothesis
+`ADR-steering-documents` keeps project background in one flat `docs/steering/` directory, listed by `title` and
+`summary` in every agent context through the `docs` bundle's `context_documents` declaration, and rejected a
+per-namespace copy until a registered namespace needs package background its package glossary cannot hold. That
+condition is met by a monorepo of independent products keeping `docs/packages/<name>/steering/` per package. Today
+`RULE-steering-documents` checks only the root directory, `RULE-document-reference` resolves the IDs cited in the root
+files only, and `devkit get-context` lists one directory whatever the working directory, so package background passes
+no shape check and never reaches the agent working on that package.
 
-`ADR-steering-documents` chose one flat `docs/steering/` directory and rejected a per-namespace copy because "no
-registered namespace needs it today", recording the reopen condition: a registered namespace needs package background
-its package glossary cannot hold. `RULE-steering-documents` checks only the root directory ("there is no namespace
-copy", `steering_documents.py`), and the `docs` bundle lists one directory in every context through its
-`context_documents = "docs/steering"` manifest field (`CAP-DIST-context-and-playbooks`,
-`devkit_dist.features.distribution.services.bundles.context_documents`).
-
-The condition is met. g-sandbox keeps `docs/packages/<game>/steering/` for four games, two or three files each:
-`product.md` plus world setting and art direction. Nothing rejects these files, but nothing reads them either: they
-pass no shape check and never reach an agent's context, so the writing guidance that depends on steering (read the
-body before a wording, naming or content decision its summary covers) does not apply to them.
-
-Hypothesis: a namespace steering directory can follow the root contract unchanged (flat, ID-free, `title` and
-`summary`, the size caps) and be listed with the same progressive loading, if the list is narrowed to the namespace the
-agent works in. `living_path` already maps `docs/packages/<name>/steering/X` to `docs/steering/X`, and
-`CAP-DOCS-namespaces` 3.3 already defines the namespace of the current directory, so the selection rule exists; what is
-missing is applying it to the steering rule and to context assembly.
+The namespace layer already supplies the selection rule (`CAP-DOCS-namespaces` 3.3: the namespace of the working
+directory) and the path mapping (`living_path`, `docs_roots`). This spec applies them to the steering rule, the
+reference rule and context assembly, through a `devkit.context_documents` provider so that `devkit-dist` reads no
+`[tool.docs]` table and imports no application package (`ARCH-05-2-components`).
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Namespace steering documents checked and listed beside the global ones so that system capabilities are extended.
+- **US-1**: As an agent working inside a package of a monorepo, I want `devkit get-context docs` to list that
+  package's steering files beside the global ones, so that the read-before-deciding trigger covers package background.
+- **US-2**: As an agent at the repository root, I want the context to name the packages that keep steering
+  directories and a way to request one package's context without changing directory, so that package background is
+  discoverable at bounded cost.
+- **US-3**: As a maintainer of a registered namespace, I want `devkit rules check` to hold my steering directory to
+  the root contract and to resolve the IDs it cites, so that the always-loaded list stays short and current.
+- **US-4**: As a maintainer of `devkit-dist`, I want a failing or misbehaving provider to degrade the context to the
+  declared directory with a coded warning, so that a project document or extension never fails a context load.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: loading steering bodies by default; a steering directory for an unregistered
+   `docs/packages/<name>/`; moving package glossaries from `docs/packages/<name>/glossary.md`; changing the root
+   directory's contract or caps; a `--namespace` option on `devkit get-context` (the option takes a directory);
+   titles or summaries in the `documents_elsewhere` hint; a namespace copy of `docs/steering/ux-objects.md`;
+   namespace search synonyms (`glossary.yaml` is read from the root directory only); a mechanical citation of
+   namespace goals from a namespace milestone (`SPEC-namespace-roadmap` owns the roadmap ADR).
+2. **Scope Excluded**: a new feature edge in `.devkit/architecture.toml`. The provider lives in the `documents`
+   feature of `devkit-docs`, which already depends on `devkit_dist.features.project`; `devkit-dist` loads it
+   generically through the entry point.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+The namespace steering directory of a registered namespace `<name>` is `docs/packages/<name>/steering/`, the mirror
+of `docs/steering/` under `living_path`. "Registered" means listed in `[[tool.docs.namespaces]]` of
+`.devkit/config.toml`. Fixtures below use the rule test harness (`check(RULE, root, files, targets=...)`) and
+`devkit get-context` through the CLI or `GetContext.execute`.
 
-## 5. Carried Proposal Notes
+### [AC-01] The steering rule checks a registered namespace directory under the root contract
+- **Given** a workspace registering namespace `api` (source path `packages/api`) with `docs/packages/api/steering/`
+  holding a well-formed `product.md` (`title`, English `summary`, no `id`) and a `README.md`
+- **When** `RULE-steering-documents` runs targeting `docs/packages/api/steering/product.md`
+- **Then** it reports no violation; a Korean `title` with an English `summary` also passes; and each of a nested
+  file (`docs/packages/api/steering/sub/a.md`), a non-Markdown file, an `id` key, a missing `title`, a missing or
+  non-Latin `summary`, an oversized body and an eleventh Markdown file at the default caps is reported with the same
+  message as in the root directory, the message naming `docs/packages/api/steering/` where the root message names
+  `docs/steering/` (for example `docs/packages/api/steering/ has 11 Markdown files; at most 10 are allowed`).
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Glossary files in a namespace steering directory are reported
+- **Given** namespace `api` registered, `docs/packages/api/steering/glossary.md` and
+  `docs/packages/api/steering/glossary.yaml`
+- **When** the rule runs targeting both files
+- **Then** `glossary.md` is reported at line 1 with a message naming `docs/packages/api/glossary.md` as the place of
+  the package glossary, `glossary.yaml` is reported at line 1 as not allowed in a namespace steering directory
+  (synonyms are read from `docs/steering/glossary.yaml` only), neither counts toward `max_files`, and a root
+  `docs/steering/glossary.yaml` stays accepted.
 
-### 2. Technical Spike Questions
+### [AC-03] Caps and targeting apply per directory; an unregistered directory is skipped
+- **Given** `docs/steering/` holding 11 Markdown files, namespace `api` registered with
+  `docs/packages/api/steering/` holding 11 Markdown files, and `docs/packages/other/steering/` of an unregistered
+  `other` holding a file without frontmatter
+- **When** the rule runs targeting only `docs/steering/topic-00.md`
+- **Then** exactly one violation is reported, the root over-cap file, and none under `docs/packages/api/steering/`;
+  **and when** it runs targeting only `docs/packages/api/steering/topic-00.md`, exactly one violation is reported,
+  under `docs/packages/api/steering/`; **and when** it runs targeting `docs/packages/other/steering/a.md` alone,
+  nothing is reported.
 
-Settled in Planning; the inventory, measurements and option tables are in `docs/materials/2026-11/20261104-namespace-steering/namespace-steering-design.md`,
-the decision in `ADR-namespace-steering-directories`, the criticism in historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-namespace-steering/envelopes/challenger-01.yaml`.
+### [AC-04] The reference rule resolves the IDs cited in a namespace steering file
+- **Given** namespace `api` registered, a document with the fixture ID CAP-A-one and the alias CAP-A-old, and
+  `docs/packages/api/steering/product.md` citing CAP-A-old and CAP-A-missing in code spans
+- **When** `RULE-document-reference` runs targeting that steering file, then runs with `fix=True`
+- **Then** the first run reports the alias as fixable ("CAP-A-old is an alias of CAP-A-one; name CAP-A-one") and the
+  missing ID as not fixable, at their lines; the fix rewrites only the alias code span to CAP-A-one, leaves the
+  missing ID, and a second fix changes no file. The steering file is not indexed as a document.
 
-- **Q1**: How does the steering list stay bounded? The caps stay per directory (`max_files`, default 10, and the
-  summary length), and the context lists only the directories the working directory selects by the
-  `CAP-DOCS-namespaces` 3.3 default rule: inside a package, the global directory and that namespace's (at most
-  `2 × max_files` entries); outside every package (the repository root, `-w`), the global directory only, with the
-  registered namespaces' steering directories named as a hint (directory path and file count, one line each, no titles)
-  under a separate result key (q1, decided by the `user`: option c). `devkit get-context` gains a generic `--for <dir>`
-  option naming the working directory the context is for, so an agent at the repository root requests a package's
-  context (`uv run devkit get-context docs --for packages/<name>`) without changing directory; it takes a directory,
-  never a namespace name. Today the CLI hands `GetContext` only the resolved project root (`resolve_root`), so the
-  selection needs a second input: the CLI passes the working directory (`--for`, else the cwd, else the `-w` root)
-  beside the root, and the provider selects by it.
-- **Q2**: What declares the namespace directories to `devkit-dist`? A `devkit.context_documents` provider entry
-  point: `devkit-dist` asks the installed providers for the extra directories of a declared `context_documents`
-  directory, given the project root, the working directory and the declared directory, and lists each with the read
-  rules it already has; `devkit-docs` registers the provider that reads `[[tool.docs.namespaces]]` and applies
-  `detect` and returns two lists, the directories to list and the directories to mention. `devkit-dist` reads no
-  `[tool.docs]` and imports no application package, so `ARCH-05-2-components` holds;
-  the provider loader follows the `devkit.config_template` pattern (one warning per failed entry, never a failure),
-  and the warning reaches the agent as a `notices` entry of the JSON object and a stderr advisory block with the code
-  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` (exit `1` only under `--strict`). A manifest glob was rejected because it cannot
-  select by a package's source path and would list unregistered directories; a registry read in `devkit-dist` because
-  `[tool.*]` passes through unread; a sync-rendered list because the `user` chose run-time reading.
-- **Q3**: A namespace steering file MAY hold the package's goals as prose (g-sandbox's `product.md` files already do);
-  how a namespace milestone cites them is `SPEC-namespace-roadmap`'s decision, which owns the roadmap ADR, and a
-  namespace milestone may cite the global goals meanwhile, so neither proposal depends on the other. Package
-  glossaries stay at `docs/packages/<name>/glossary.md`: a namespace steering directory holds Markdown files only, and
-  a `glossary.md` or `glossary.yaml` in it is reported (the package glossary has its place; synonyms are read from the
-  root `docs/steering/glossary.yaml` only). The asymmetry with the root glossary is a recorded follow-up.
+### [AC-05] The context lists provider directories merged with the declared one and names the mentioned ones
+- **Given** a synchronized bundle declaring `context_documents = "docs/steering"`, `docs/steering/{a,b}.md`,
+  `docs/packages/api/steering/z.md`, `docs/packages/web/steering/{c,d}.md` plus a `README.md`, and a registered
+  `devkit.context_documents` provider returning `(["docs/packages/api/steering"], ["docs/packages/web/steering",
+  "docs/packages/gone/steering"])` for the call
+- **When** `devkit get-context <bundle>` runs
+- **Then** exit code is `0`; `documents` holds `docs/packages/api/steering/z.md` first, then `a.md` and `b.md`,
+  each with `path`, `title` and `summary` under the existing read rules and no duplicate; `documents_elsewhere`
+  is `[{"path": "<abs>/docs/packages/web/steering", "files": 2}]` (`README.md` not counted; the absent
+  `gone` directory dropped); and without any registered provider `documents` holds the declared directory's
+  files only and `documents_elsewhere` is `[]`.
 
-### 3. Proposed Design & Impact
+### [AC-06] The working directory reaches the provider: `--for`, the cwd, else the root
+- **Given** the fixture of AC-05 and a provider that records its `(root, working, directory)` arguments
+- **When** the CLI runs with `--for packages/api` from the project root, then from the subdirectory `packages/api`
+  without `--for`, then with `-w <root>` from a directory outside the project
+- **Then** the provider receives `(root, root/packages/api, "docs/steering")`, then `(root, root/packages/api,
+  "docs/steering")`, then `(root, root, "docs/steering")`; `--for` naming a directory outside the project, a
+  file, or a missing path exits `2` with `ARGUMENT_INVALID` targeting `--for` before any provider runs; and
+  `GetContext.execute(start, bundle)` without a working directory behaves as `--for <root>`.
 
-- **Rule**: `RULE-steering-documents` checks `docs/packages/<name>/steering/` of each registered namespace as it checks
-  `docs/steering/`, one directory at a time, each only when the run targets a file in it: flat, Markdown only (plus
-  `glossary.yaml` in the root directory only), UTF-8, closed frontmatter within 4096 bytes, no `id`, `title` and
-  Latin-script `summary`, `max_body_bytes`, `max_files` per directory with the over-cap files reported only for a
-  targeted directory, `README.md` neither checked nor counted; a `glossary.md` or `glossary.yaml` in a namespace
-  directory is reported with the package glossary's path as the remediation; messages name the directory checked. A
-  file under an unregistered `docs/packages/<name>/steering/` is not checked, as its other documents are not. The rule
-  iterates `docs_roots(registered)` (`devkit_docs.features.documents.services.namespaces`). `RULE-document-reference`
-  checks the IDs cited in a namespace steering file as it checks the root ones (`_is_steering` generalized over the
-  same roots).
-- **Listing**: `GetContext.execute` takes the working directory beside the project root; the CLI passes `--for <dir>`
-  (an existing directory inside the project), else the cwd, else the `-w` root. `devkit get-context <bundle>` lists,
-  under `documents`, the files of the declared directory and of the directories the `devkit.context_documents`
-  providers return to list for (root, working directory, declared directory), each with `path`, `title` and
-  `summary`, merged, de-duplicated and sorted by path (a namespace file sorts before the root ones); the directories
-  the providers return to mention appear under `documents_elsewhere` as `path` (absolute) and `files` (the count of
-  Markdown files other than `README.md`), sorted by path, `[]` when none. The `devkit-docs` provider lives in
-  `devkit_docs.features.documents.services` and is registered in `packages/devkit-docs/pyproject.toml`; for a
-  `docs/`-rooted declared directory it returns the namespace mirror of the namespace `detect` selects to list and the
-  other registered namespaces' mirrors to mention; when `detect` selects none, nothing to list and every registered
-  namespace's mirror to mention; nothing without registered namespaces. A mentioned directory that does not exist is
-  dropped.
-  A provider that fails to load, raises (`DOCS_CONFIG_INVALID` included) or returns an unsafe path is reported as a
-  warning: `ContextResult` gains `notices`, the JSON object carries them and the CLI prints the stderr advisory blocks
-  (`CONTEXT_DOCUMENTS_EXTENSION_FAILED`) as `sync` does; the context lists the declared directory alone and exits `0`
-  (`1` under `--strict`).
-- **Guidance**: the `docs` bundle's constitution line that names `docs/steering/` also names the namespace
-  directory with the same trigger and tells the agent to request a package's context with `--for <dir>` when
-  `documents_elsewhere` names it; `living-spec-writing` sends package background there and keeps package glossaries
-  where they are; the rule guide names both directories; the glossary row **Steering document** and
-  `CAP-DOCS-document-model` rule 9 drop "no namespace copy"; `CAP-DIST-workspace-ownership` 7 covers provider
-  directories as it covers the declared one. The `spec` bundle guidance test keeps asserting one constitution line
-  naming `docs/steering/`.
-- **Decision record**: the "no namespace copy" clause and the rejected namespace-copy option of
-  `ADR-steering-documents`, and its rejection of an entry-point provider, are superseded in part by
-  `ADR-namespace-steering-directories`; Development writes the pointer. `ARCH-05-2-components` adds the new group to
-  the public entry-point names. No new feature edge in `.devkit/architecture.toml`: the provider uses the documents
-  feature's existing dependency on `devkit_dist.features.project`, and `devkit-dist` loads it generically.
-- **Tests**: rule fixtures with a registered namespace directory (clean, nested file, over cap, missing summary,
-  non-Latin title with an English summary, a `glossary.md`, an over-cap root with an untargeted namespace directory)
-  and an unregistered one; `RULE-document-reference` fixtures with an alias ID cited in a namespace steering file;
-  `devkit-dist` tests with a provider test double (a nested working directory and `--for <dir>` reach the provider,
-  `--for` outside the project or a non-directory is `ARGUMENT_INVALID`, listed directories merged and sorted,
-  mentioned directories under `documents_elsewhere` with their counts, a failing provider yields the notice and exit
-  `0`, an unsafe path is dropped, no provider lists the declared directory only with `documents_elsewhere` empty, the
-  `documents` payload of a fixture with `N` namespaces at the default caps stays within `2 × 4096` bytes and
-  `documents_elsewhere` within `N` entries), passing without `devkit-docs` and `devkit-agt`; `devkit-docs` provider
-  tests from a package source directory, its docs root, the repository root, a directory outside every package, with
-  `--for` and with `-w`, without registered namespaces and with a malformed registry. `test_context.py` narrows its "nested equals root" assertion to
-  the constitution and instructions.
+### [AC-07] A provider failure degrades the context to the declared directory with a coded warning
+- **Given** the fixture of AC-05 and a provider that raises, or one that returns `(["../up"], [])`, or one whose
+  entry point does not load
+- **When** `devkit get-context <bundle>` runs, then runs with `--strict`
+- **Then** stdout is one JSON object whose `documents` holds the declared directory's files only,
+  `documents_elsewhere` is `[]` and `notices` holds one entry per failed provider with code
+  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` naming the entry point; stderr carries the matching advisory block; the exit
+  code is `0`, and `1` under `--strict`. A working provider beside a failing one is still listed. The
+  `devkit-dist` tests of AC-05 to AC-07 pass with `devkit-docs` and `devkit-agt` absent (`just test-dist`).
 
-Expected affected contracts: `CAP-GOV-spec-rules` (3.14, the steering pass of `RULE-document-reference`),
-`CAP-DIST-context-and-playbooks` (context documents, `notices`), `CAP-DIST-manifest-spec` (Context documents),
-`CAP-DIST-workspace-ownership` (7), `CAP-DOCS-namespaces` (3.4, 4.5), `CAP-DOCS-document-model` (rule 9),
-`ARCH-05-2-components` (entry-point groups), `ADR-steering-documents` (superseded in part).
+### [AC-08] The `devkit-docs` provider selects by the working directory's namespace
+- **Given** `[[tool.docs.namespaces]]` registering `api` (`packages/api`) and `web` (`apps/web`), with
+  `docs/packages/api/steering/` and `docs/packages/web/steering/` present
+- **When** the provider is called for `docs/steering` with the working directory `packages/api/src`, then
+  `docs/packages/api`, then the repository root, then `tools/other`
+- **Then** it returns `(["docs/packages/api/steering"], ["docs/packages/web/steering"])` for the first two calls and
+  `([], ["docs/packages/api/steering", "docs/packages/web/steering"])` for the last two; for a declared directory
+  not under `docs/` or in a workspace without registered namespaces it returns `([], [])`; and a malformed registry
+  raises `DOCS_CONFIG_INVALID`, which `devkit get-context` reports as the AC-07 warning with exit code `0`.
 
-### Planning decisions
+### [AC-09] A monorepo fixture is listed end to end through the installed provider
+- **Given** a project synchronized with the `docs` bundle, `N = 2` registered namespaces `api` and `web` each with
+  10 steering files at the default caps (60-character titles, 300-character summaries) and `docs/steering/` with 10
+- **When** `devkit get-context docs` runs from `packages/api`, then from the root with `--for packages/api`, then
+  from the root without `--for`
+- **Then** the first two runs list the 10 `api` files before the 10 root files and no `web` file, with
+  `documents_elsewhere` naming `docs/packages/web/steering` with `files: 10`; the third lists the 10 root files only
+  with `documents_elsewhere` naming both namespace directories; in every run the `documents` payload without its
+  `path` values is at most `2 × 4096` bytes and `documents_elsewhere` has at most `N` entries.
 
-- Root steering contract reused for the namespace directories with two deltas: Markdown only (no `glossary.yaml`) and
-  `glossary.md` reported; caps and targeting per directory (Host, within scope).
-- Selection by the working directory the CLI passes beside the root: `--for <dir>`, else the cwd, else the `-w` root
-  (Host for the input; the option's name and shape are the Host's recommendation the `user` accepted).
-- q1 (`user`, historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-namespace-steering/envelopes/answer-01.yaml`): outside every package the context lists the global directory only and
-  names the registered namespaces' steering directories as a hint (`documents_elsewhere`: path and file count); a
-  package's context is requested with `--for <dir>`. Chosen over listing every namespace at the root (cost
-  `max_files × (1 + N)` entries) and over a bare global list with no hint.
-- Mechanism: the `devkit.context_documents` provider entry point; failures surface as `notices` and
-  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` (`ADR-namespace-steering-directories`).
-- Goals as prose in a namespace steering file; citation and the roadmap ADR pointer left to `SPEC-namespace-roadmap`;
-  package glossaries unchanged (Host, within scope and non-goals).
-- The acceptance fixture is a monorepo fixture in this repository: g-sandbox has no `.devkit/config.toml` yet, so no
-  namespace is registered there today (assumption recorded for `plan-accept`).
-- Challenger round 1 (historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-namespace-steering/envelopes/challenger-01.yaml`) folded: the CLI selection input, the notices channel, the
-  `RULE-document-reference` pass, the glossary and document-model wording, the glossary files, per-directory
-  targeting and the payload bound; its `Decision needed` finding is q1.
-- `dev_effort` stays `medium`: two packages and one new entry-point contract, each covered by existing patterns.
+### [AC-10] The guidance names both directories and the `--for` request
+- **Given** the `docs` bundle sources
+- **When** the bundle guidance tests run
+- **Then** the constitution holds exactly one list item naming `docs/steering/`, and that item also names
+  `docs/packages/<name>/steering/`, `documents_elsewhere` and `--for`; `living-spec-writing` sends package
+  background to the namespace steering directory and keeps package glossaries at
+  `docs/packages/<name>/glossary.md`; the `RULE-steering-documents` guide names both directories and the glossary
+  findings of AC-02; and the `spec` bundle test asserting one constitution line naming `docs/steering/` passes.
 
-### 4. Lifecycle & Retirement Criteria
+## 5. Assumptions
 
-Planning settled Q1 to Q3; acceptance and handoff create one feature spec. Completion requires the rule, provider
-and context tests above, the synchronized guidance and a monorepo fixture whose `devkit get-context docs` from a
-package directory (and from the root with `--for` that directory) lists that package's steering files beside the
-global ones and no other package's, names the other packages' directories under `documents_elsewhere`, and from the
-root without `--for` lists the global ones only, with the payload bounds asserted.
-
-Non-goals: loading steering bodies by default; a steering directory for an unregistered package; moving package
-glossaries; changing the root directory's contract or caps; a `--namespace` option on `devkit get-context` (the
-option takes a directory); titles or summaries in the hint; a namespace copy of `docs/steering/ux-objects.md`;
-namespace search synonyms.
-
+- A provider's whole result is rejected, with one `CONTEXT_DOCUMENTS_EXTENSION_FAILED` warning, when any returned
+  item is not a safe workspace-relative directory in the seeded `target` grammar; the declared directory is still
+  listed (the decision's "returns anything but safe workspace-relative directories").
+- The provider contract: a callable registered under `devkit.context_documents`, called with the project root, the
+  working directory (both absolute `Path`s) and the declared directory (workspace-relative), returning a pair of
+  sequences of workspace-relative directories, the first to list and the second to mention. The exact signature and
+  the result types are fixed in `PLAN-namespace-steering`.
+- The default working directory is computed by the CLI: the cwd when it lies inside the resolved project root, else
+  the root; the use case validates only an explicit `--for` value. `GetContext.execute` keeps its two positional
+  parameters and gains an optional third, so the MCP and test callers are unchanged.
+- The acceptance fixture is a monorepo fixture in this repository's tests (g-sandbox registers no namespace yet).
+- `ADR-namespace-steering-directories` and the "Superseded in part" pointer in `ADR-steering-documents` were written
+  by the handoff; Development changes neither decision and adds the `ARCH-05-2-components` entry-point group name.
