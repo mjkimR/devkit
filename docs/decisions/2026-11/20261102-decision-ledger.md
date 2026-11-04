@@ -125,7 +125,7 @@ on what an offer authorizes.
 
 ## 4. Decision Outcome
 
-Decisions are immutable and decision records are editable and compactable without changing meaning, because that
+Decisions are immutable and decision records are editable and consolidable without changing meaning, because that
 keeps every decision change recorded while records stay current and consolidated. Consolidation groups are formed by
 topic, because each replacement stays one decision area while every replacement still states only clauses in effect.
 Playbooks are discovered at `spec`

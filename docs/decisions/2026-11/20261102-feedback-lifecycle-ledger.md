@@ -101,7 +101,7 @@ checks and evidence.
 - **Compact at a user-invoked run into one record per capability area and outcome, keeping retired IDs as aliases**
   (chosen in ADR-closed-feedback-compacts-into-per-area-records-with-aliases): ADR consolidation's model; existing
   terminal statuses stay true; misgrouping is cheap.
-- **One record per capability area with a new terminal status `consolidated`** (rejected in
+- **One record per capability area with a new terminal status `compacted`** (rejected in
   ADR-closed-feedback-compacts-into-per-area-records-with-aliases): fewer records, but changes the `feedback` kind's
   statuses in `devkit-docs` and `devkit-spec` and loses status filtering of past outcomes.
 
@@ -193,7 +193,7 @@ checks and evidence.
   **Response** (the outcome with its spec, proposal, rule, ADR or report destination) and **Reason**.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - The run deletes the originals, then runs `devkit rules fix`; completed spec history keeps the retired IDs.
-  Compacted terminal feedback resolves through aliases; deleted resolved feedback stays in Git history, which keeps the
+  Consolidated terminal feedback resolves through aliases; deleted resolved feedback stays in Git history, which keeps the
   full originals. A branch that merges a consolidated base runs
   `devkit rules fix` as after any base merge. (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - Fidelity: for every consolidated ID, its `status` at the base equals the `status` of the record that aliases it (a
@@ -203,7 +203,7 @@ checks and evidence.
 - The run lists entries whose reason reads as lasting policy (a reason repeated across entries, or a general rule of
   behavior) that no accepted ADR states, for the user's decision only; it writes no ADR and no feedback for them.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
-- Compacted terminal feedback resolves through aliases; deleted resolved feedback stays in Git history.
+- Consolidated terminal feedback resolves through aliases; deleted resolved feedback stays in Git history.
   (ADR-closed-feedback-compacts-into-per-area-records-with-aliases)
 - Unresolved historical feedback references are permitted, while ambiguity errors and strict active reference
   validation are retained. (ADR-resolved-feedback-retires-by-deletion)

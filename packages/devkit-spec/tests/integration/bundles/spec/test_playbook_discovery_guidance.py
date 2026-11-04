@@ -117,6 +117,17 @@ def test_playbook_entry_reads_invoked_or_confirmed(path: Path) -> None:
     assert "only on explicit invocation through `devkit-playbook`" not in body
 
 
+@pytest.mark.parametrize(
+    ("playbook", "former"),
+    [("adr-consolidation", "adr-compaction"), ("feedback-consolidation", "feedback-compaction")],
+)
+def test_renamed_playbooks_keep_their_former_id_as_alias(playbook: str, former: str) -> None:
+    """The record-merging playbooks were renamed from compaction; the old asset ID resolves through aliases."""
+    head = raw(f"playbooks/{playbook}/SKILL.md").split("---")[1]
+    assert f"name: {playbook}" in head
+    assert f"aliases:\n  - {former}\n" in head
+
+
 def test_adr_consolidation_confirmation_authorizes_deletions_at_session_depth() -> None:
     body = raw("playbooks/adr-consolidation/SKILL.md")
     assert_rule(body, "only when", "invoked or confirmed", "authorizes", "adr deletions", "`session` depth")
