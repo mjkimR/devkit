@@ -26,3 +26,15 @@ in the unit envelopes.
 The available Node runtime is v22.22.0; npm reports an engine warning because the package declares v22.22.2 or a
 supported newer major. The recorded frontend checks/build ran successfully on v22.22.0. Other Node versions were
 not separately exercised, and no dependency or engine declaration was changed.
+
+## Optional-root completion correction
+
+Host completion review found that direct optional `tree("docs")` treated absence by HTTP404 text, although only
+`blob` has that error-format contract. Two added regressions failed before the correction: absent docs with ENOENT
+was reported as an error, while advertised docs disappearing with HTTP404 was hidden. Root metadata now establishes
+absence, and every failed advertised-directory read remains an error. No host interface or error-text requirement
+was added. Existing dashboard fixtures now expose their real root directory entries without weakening assertions.
+
+The correction passed the complete frontend suite: 132 tests, lint and type checks, package generation and page
+build. Python165 and focused33 results are reused because no Python source changed. Fresh review, generated-asset
+and reconciliation evidence is recorded after this correction; earlier record history is retained.

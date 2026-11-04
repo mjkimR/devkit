@@ -40,7 +40,7 @@ function fixture(values = files): RepositoryDataSource {
 					const [name, ...rest] = file.slice(prefix.length).split('/');
 					children.set(name, rest.length ? 'tree' : 'blob');
 				}
-			if (!children.size) throw new Error('HTTP 404: Not Found');
+			if (!children.size && path) throw new Error('HTTP 404: Not Found');
 			return [...children].map(([name, type]) => ({ name, path: prefix + name, type }));
 		}),
 		blob: vi.fn(async (path: string) => {
@@ -297,6 +297,25 @@ describe('namespace milestone discovery', () => {
 		});
 		expect((await loadRoadmapDocuments(source, 'main', signal())).errors).toEqual([
 			'docs/proposals: HTTP 404: disappeared'
+		]);
+	});
+	it('discovers an absent docs root from parent metadata without requiring tree error text', async () => {
+		const source = fixture({});
+		source.tree = vi.fn(async (path: string) => {
+			if (path === '') return [];
+			throw new Error('ENOENT');
+		});
+		expect((await discoverMilestonePaths(source, 'main', signal())).errors).toEqual([]);
+		expect(vi.mocked(source.tree).mock.calls.map(([path]) => path)).toEqual(['']);
+	});
+	it('preserves a read failure of docs advertised by root metadata', async () => {
+		const source = fixture({});
+		source.tree = vi.fn(async (path: string) => {
+			if (path === '') return [{ name: 'docs', path: 'docs', type: 'tree' }];
+			throw new Error('HTTP 404: removed');
+		});
+		expect((await discoverMilestonePaths(source, 'main', signal())).errors).toEqual([
+			'docs: HTTP 404: removed'
 		]);
 	});
 });

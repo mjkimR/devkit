@@ -17,23 +17,26 @@ export async function discoverMilestonePaths(
 	signal: AbortSignal
 ): Promise<{ paths: string[]; errors: string[]; docsEntries: TreeItem[] }> {
 	const errors: string[] = [];
-	const list = async (path: string, optional = false): Promise<TreeItem[]> => {
+	const list = async (path: string): Promise<TreeItem[]> => {
 		if (signal.aborted) return [];
 		try {
+			const prefix = path ? `${path}/` : '';
 			return normalizeTree(await source.tree(path, ref, signal)).filter(
 				(item) =>
 					safePath(item.path) &&
-					item.path.startsWith(`${path}/`) &&
-					item.path.slice(path.length + 1).indexOf('/') < 0
+					item.path.startsWith(prefix) &&
+					item.path.slice(prefix.length).indexOf('/') < 0
 			);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			if (!signal.aborted && !(optional && /^HTTP 404(?:\b|:)/.test(message)))
-				errors.push(`${path}: ${message}`);
+			if (!signal.aborted) errors.push(`${path}: ${message}`);
 			return [];
 		}
 	};
-	const docs = await list('docs', true);
+	const root = await list('');
+	const docs = root.some((item) => item.type === 'tree' && item.path === 'docs')
+		? await list('docs')
+		: [];
 	const roots = docs
 		.filter((item) => item.type === 'tree' && item.path === 'docs/roadmap')
 		.map((item) => item.path);

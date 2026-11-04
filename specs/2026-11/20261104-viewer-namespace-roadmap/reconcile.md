@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-viewer-namespace-roadmap
-status: resolved
+status: pending
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
@@ -42,7 +42,7 @@ Actual baseline: one global path before, two including the namespace archived pa
 Backend discovery/worktree33 tests; affected partial14paths165 tests; frontend130 tests; exact selector frontend
 install/lint/check/test/pack/build chain; Python lint/Pyright and frontend lint/check; generated viewer-assets
 checked1stale0 all passed. Independent Code Review passed with no findings. Node22.22.0 engine warning and the
-unexercised supported-version matrix remain disclosed in the evidence and review. Independent seven-target Reconcile Review passed with no findings.
+unexercised supported-version matrix remain disclosed in the evidence and review. The prior seven-target review passed; root-metadata correction inputs await a fresh bounded check.
 
 ## Entrypoints
 

@@ -2,7 +2,7 @@
 id: SPEC-viewer-namespace-roadmap
 title: Show namespace milestones throughout the repository viewer
 summary: "Discovers global and namespace roadmap files in all viewer reading routes and resolves their combined milestone dependencies and proposal membership."
-status: completed
+status: in-progress
 created: 2026-11-04
 related_capabilities: [CAP-VIEW-repository-viewer]
 related_usecases: []

@@ -21,7 +21,8 @@ US-1 uses discovery; US-2 uses the combined graph and direct-member logic.
 ## 3. Component & Interface Design
 
 Keep `RepositoryDataSource` unchanged. Share a frontend function returning milestone paths and discovery errors;
-callers retain body loading and cache publication. Enumerate docs, optional packages, direct package directories,
+callers retain body loading and cache publication. Read root metadata before optional docs; advertised directory
+failures remain errors without any tree error-text requirement. Enumerate docs, optional packages, direct package directories,
 their roadmap and flat archive. Keep proposal discovery in the roadmap loader. The generic dashboard retains the
 six-request body scanner; optimized dashboard reads headers only. Python uses equivalent scenario tests.
 

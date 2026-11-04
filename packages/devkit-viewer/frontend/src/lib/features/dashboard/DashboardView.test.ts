@@ -12,6 +12,13 @@ describe('DashboardView', () => {
 		return {
 			info: vi.fn(async () => ({ default_branch: 'main' })),
 			tree: vi.fn(async (path: string) => {
+				if (path === '')
+					return {
+						items: [
+							{ name: 'docs', path: 'docs', type: 'tree' },
+							{ name: 'specs', path: 'specs', type: 'tree' }
+						]
+					};
 				if (path === 'docs') {
 					return {
 						items: [
