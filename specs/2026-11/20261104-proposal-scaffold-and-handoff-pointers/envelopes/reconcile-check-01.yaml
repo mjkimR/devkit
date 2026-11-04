@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:15:56.853798Z'
+status: completed
+summary: round 1; independent reconcile-reviewer (native subagent, effort medium) verified CAP-DLV-proposal-planning (rule 5, 4.1, 4.5 step 4, 4.10, entrypoints) and UC-plan-and-hand-off-a-proposal step 8 against handoff.py, scaffold.py, cli/proposals.py and RULE-decision-supersession; no-impact confirmed for CAP-DOCS-document-model, docs/decisions and the promoted sources; one P2 (4.10 JSON key list lacks pointers), one P3 (ADR-proposal-handoff link-rewriting consequence sentence)
+findings:
+- issue: CAP-DLV-proposal-planning 4.10's JSON key list for handoff omits the new pointers key (adr, path, line, by) that HandoffResult.to_dict emits and AC-03 requires
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-planning.md:580-585; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:279
+  failure_condition: An agent reading the 4.10 JSON contract does not learn that pointers exists and misses the ADR lines to refine at living-spec-draft
+  suggested_action: Add pointers (adr, path, line, by) to the 4.10 JSON list after decisions
+  resolution: open
+  severity: P2
+- issue: ADR-proposal-handoff's Link rewriting consequence says a pre-existing Markdown file changes only in links that pointed into the proposal; the handoff now also writes a pointer line into a pre-existing ADR
+  evidence: docs/decisions/2026-11/20261102-proposal-handoff.md:106-108
+  failure_condition: A reader cites the sentence as a handoff-wide invariant and judges the pointer write a contract violation
+  suggested_action: Either narrow the sentence to the rewriting step (a permitted wording edit) and add the ADR as a modified target, or waive with that reasoning in reconcile.md
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check --ci --base 5aecaef7 on a3d48343 errors=0
+diff_scope:
+  base: 5aecaef787214988e6bf81ae36aacca57f2634a3
+  head: a3d4834310252ca37d767fcf18493b072869b502

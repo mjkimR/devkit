@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-proposal-scaffold-and-handoff-pointers
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-planning.md
     resolution: modified
@@ -56,6 +56,14 @@ trigger and is not concrete work.
 `just test-affected --base 5aecaef7` (1651 passed), `just lint-check devkit-spec`, `just check devkit-spec` (pyright 0
 errors), `uv run devkit rules check --ci --base 5aecaef7` (errors=0) and `uv run devkit sync --check` (clean), and
 found one P3 (a commented `# ` line taken as the heading), fixed with a regression test and closed in `reverify-01`.
+
+Reconcile check round 1 (independent `reconcile-reviewer`, `reconcile-check-01`) confirmed the two targets and the
+no-impact claims and found one P2 and one P3. The P2 (the 4.10 JSON key list lacked `pointers`) is fixed in the same
+capability target and self-verified in `reconcile-check-02` (wording at the named location, the key list now matches
+`HandoffResult.to_dict`). The P3 is waived: the "Link rewriting" consequence of `ADR-proposal-handoff` describes the
+relocation plan of the rewriting step, not a handoff-wide invariant, 4.5 step 4 now states the one other edit the
+handoff makes to a pre-existing file, and `docs/decisions/` is outside this spec's agreed boundaries (the proposal
+excluded it); a later editorial narrowing of that sentence needs no ADR.
 
 ## Entrypoints
 

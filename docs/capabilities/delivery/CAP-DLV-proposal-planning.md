@@ -579,7 +579,8 @@ uv run devkit spec proposal check fast-engine                        # before an
   `[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]` per link or reference left as it was, `[SCOPE: ...]` when
   it registered the bundle, and `[NEXT_CMD: ...]` when `spec.md` is bound. JSON: `proposal`, `spec`, `dir`,
   `workflow`, `dev_effort` (`null` when absent), `target_docs`, `materials`, `materials_merged` (boolean),
-  `dropped_duplicates` (workspace-relative destination paths), `decisions` (`id`, `path`, `padr`), `dropped_records` (paths),
+  `dropped_duplicates` (workspace-relative destination paths), `decisions` (`id`, `path`, `padr`), `pointers` (`adr`,
+  `path`, `line`, `by`; 4.5, step 4), `dropped_records` (paths),
   `carried_gates` (`request`, `decision`), `rewritten_files`, `rewritten`
   (`path`, `line`, `kind`, `from`, `to`), `unresolved` (`path`, `line`, `kind`, `target`, `reason`), `next_command`,
   `notices`, `scope` (`record`, `token`, `namespace`, `shared_path`, or `null`).
