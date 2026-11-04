@@ -17,6 +17,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/roadmap.py
 ---
 
 # [CAP-DLV-proposal-planning] Proposal Planning and Handoff
