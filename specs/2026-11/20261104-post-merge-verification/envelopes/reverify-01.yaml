@@ -1,0 +1,40 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T08:37:16.180554Z'
+status: completed
+review: review-01.yaml
+summary: Closed round 1 findings with red/green regressions; fresh round 2 required because public output and acceptance recovery changed.
+findings:
+- issue: Preserve confirmed landing and handoff continuation when acceptance cleanup fails.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:381; read-only mocked partial execution omitted top-level landed_sha and continuation.
+  failure_condition: accept_and_handoff lands acceptance but worktree or scoped cleanup fails, losing AC-07/AC-09 continuation and text revision.
+  suggested_action: Populate landed_sha from result.landed_sha and preserve authorized continuation before partial return; keep remaining cleanup before final verification and handoff; add JSON/text tests.
+  resolution: resolved
+  severity: P1
+- issue: Use the confirmed landed SHA for cleanup-only acceptance retries.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:384; cleanup-only result has landed_sha but no result_sha.
+  failure_condition: A partial no-ff acceptance retries cleanup; source fallback reports the wrong revision and false fresh-approval recovery.
+  suggested_action: Use result.landed_sha without source fallback; add successful cleanup-only acceptance regression.
+  resolution: resolved
+  severity: P1
+- issue: Expose landed_sha in prepare text output.
+  evidence: packages/devkit/src/devkit_agt/features/integration/cli.py:89
+  failure_condition: Text prepare inspects a merged PR after target advance; pending verification lacks actual landing revision unlike JSON.
+  suggested_action: Include landed_sha in prepare text sentinel with dash when unconfirmed; test merged PR with later target in JSON/text.
+  resolution: resolved
+  severity: P1
+- issue: Remove obsolete provider activation requirements from the baseline report template.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/references/report-template.md:38
+  failure_condition: Provider-free SDD adoption follows template and invents provider configuration/approval requirement.
+  suggested_action: Replace two provider activation sentences with unnecessary selection and ignored legacy values; cover template in guidance regression.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS acceptance/output/template27, integration CLI26, policy mode2; P1 regressions failed before fixes
+  lint: PASS lint/types both packages, staged rules22, sync check
+diff_scope:
+  base: 91deafb5962ed2e3bb6369f59e06dc69e949e664
+  head: 43a9c7b7f353c51e9f40280cabbd68773a0ccebe
+activity_effort: high
