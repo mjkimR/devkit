@@ -168,13 +168,32 @@ class ContextDocument:
 
 
 @dataclass(frozen=True)
+class ContextElsewhere:
+    """A context document directory a provider mentioned without listing it: its absolute path and the number of
+    files ``documents`` would hold for it."""
+
+    path: str
+    files: int
+
+    def to_dict(self) -> dict[str, str | int]:
+        return {"path": self.path, "files": self.files}
+
+
+@dataclass(frozen=True)
 class ContextResult:
-    """``devkit get-context``: a bundle's constitution, instruction catalog and context documents."""
+    """``devkit get-context``: a bundle's constitution, instruction catalog and context documents.
+
+    ``documents`` merges the declared directory with the directories the providers list for the working directory;
+    ``documents_elsewhere`` names the directories they only mention; ``notices`` holds one
+    ``CONTEXT_DOCUMENTS_EXTENSION_FAILED`` warning per provider left out.
+    """
 
     bundle: str
     constitution: str | None
     instructions: list[Instruction]
     documents: list[ContextDocument] = field(default_factory=list)
+    documents_elsewhere: list[ContextElsewhere] = field(default_factory=list)
+    notices: list[AdvisoryError] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -182,6 +201,8 @@ class ContextResult:
             "constitution": self.constitution,
             "instructions": [item.to_dict() for item in self.instructions],
             "documents": [item.to_dict() for item in self.documents],
+            "documents_elsewhere": [item.to_dict() for item in self.documents_elsewhere],
+            "notices": [notice.to_dict() for notice in self.notices],
         }
 
 

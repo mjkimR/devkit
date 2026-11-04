@@ -9,6 +9,7 @@ usecases:
 entrypoints:
   - packages/devkit-docs/src/devkit_docs/features/documents/services/namespaces.py
   - packages/devkit-docs/src/devkit_docs/features/documents/repositories/config.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/services/context_documents.py
 created_at: 2026-10-13
 ---
 
@@ -81,7 +82,10 @@ The rules treat `docs/packages/<name>/` like `docs/`: `RULE-id-convention`, `RUL
 `ux/` and `architecture/` directories as they check those of `docs/`; `RULE-id-convention` and `RULE-spec-format`
 check its `roadmap/` (with its flat `_archive/`) as they check `docs/roadmap/`, so a registered namespace keeps its
 own milestones there (`ADR-namespace-milestone-roots`; `CAP-GOV-spec-rules` Milestone validation contract); `RULE-ux-links` and `RULE-ux-coverage` read its UX
-documents and use cases as the global ones. `RULE-spec-format` also checks that a proposal's or
+documents and use cases as the global ones. `RULE-steering-documents` checks a registered namespace's
+`steering/` as it checks `docs/steering/`, per directory and without glossary files, and `RULE-document-reference`
+resolves the IDs its files cite (`CAP-GOV-spec-rules` 3.14; `ADR-namespace-steering-directories`); an unregistered
+`docs/packages/<name>/steering/` is a plain directory. `RULE-spec-format` also checks that a proposal's or
 spec's `namespace` names `global` or a registered namespace, and rechecks every one of them when a run targets
 `.devkit/config.toml`. Entrypoint paths of a namespace's documents stay workspace-relative, never package-relative
 (`CAP-TRACE-code-entrypoints`).
@@ -127,3 +131,11 @@ every `docs/packages/<name>/`) and `docs_roots` (`docs` plus every namespace doc
 `devkit_docs.features.documents.models.namespace` holds `Namespace` (`name`, `path` and `docs`, the
 `docs/packages/<name>` root), `GLOBAL` and `PACKAGES_DIR`. The
 `devkit.config_template` entry point `docs` writes the commented `[tool.docs]` table for `devkit config template`.
+The `devkit.context_documents` entry point `docs`
+(`devkit_docs.features.documents.services.context_documents.provide(root, working, directory)`) answers
+`devkit get-context` for a `docs/`-rooted declared directory (`CAP-DIST-context-and-playbooks`): it MUST return
+the mirror `docs/packages/<name>/<rest>` of the namespace the working directory selects (rule 3.3, item 3) to list
+and the other registered namespaces' mirrors to mention; when the working directory selects none, nothing to list
+and every registered namespace's mirror to mention; and nothing without registered namespaces or for another
+directory. A malformed registry raises `DOCS_CONFIG_INVALID`, which the command reports as a
+`CONTEXT_DOCUMENTS_EXTENSION_FAILED` warning.

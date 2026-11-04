@@ -1,0 +1,35 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T02:53:02.054644Z'
+status: completed
+summary: 'round 1; PASS with two P3s: AC-01..AC-10 confirmed against the diff and by running the unit''s tests, both rule tests, the CI rules check and ruff; probes confirmed --for symlink escape and loop rejection, provider symlink skipping, de-duplication and per-directory cap isolation; the four implementer deviations judged correct'
+findings:
+- issue: test_context.py narrowed the repeated-read assertion to constitution and instructions although both calls pass no working directory, so full to_dict equality still holds; the narrowing drops regression coverage of documents, documents_elsewhere and notices and its comment states a false reason
+  evidence: packages/devkit-dist/tests/integration/features/distribution/test_context.py:64-65; usecases/context.py:57-59
+  failure_condition: A later change making repeated GetContext.execute calls return different documents or notices (a provider-side cache, a mutated default) is not caught
+  suggested_action: Restore the full to_dict equality assertion and drop the comment
+  resolution: open
+  severity: P3
+- issue: test_playbook_get.py was changed outside Task 2.1's _Boundary (fixture keys documents_elsewhere and notices) without a stated reason
+  evidence: packages/devkit-dist/tests/integration/features/distribution/test_playbook_get.py:230-231; specs/2026-11/20261104-namespace-steering/tasks.md Task 2.1
+  failure_condition: The boundary check flags an unexplained out-of-scope path
+  suggested_action: Add the path to Task 2.1's _Boundary as a forced fixture update for the new ContextResult keys
+  resolution: open
+  severity: P3
+assumptions:
+- Isolated native code-reviewer subagent (Claude Code); reviewed the committed range under packages and specs, docs/* handoff paths excluded
+- 'Implementer check results at the same head taken as current: just test-affected mode=full 6373 passed, just test-dist 1297 passed, just check 0 errors'
+unverified_areas:
+- Pyright and the full test-affected and test-dist runs were not repeated by the reviewer
+- No MCP caller of GetContext exists; positional-parameter compatibility rests on the devkit-dist tests
+checks:
+  tests: 'PASS 209 passed: devkit-dist context tests, devkit-docs provider and guidance tests, spec guidance test'
+  rule_tests: PASS devkit rules test RULE-steering-documents and RULE-document-reference
+  rules: PASS devkit rules check --ci --base 2cf7879a errors=0 warnings=0
+  lint: PASS ruff check and format on the changed sources
+diff_scope:
+  base: 2cf7879a74b50b687867e2184188dee6c29a2fbc
+  head: e97478a163b956dca5a9d1525ba544f96324ac0b
+activity_effort: medium

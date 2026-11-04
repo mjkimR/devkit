@@ -257,6 +257,17 @@ class ConfigTemplateExtensionFailedNotice(DistributionError):
     target_files = (".devkit/config.toml",)
 
 
+class ContextDocumentsExtensionFailedNotice(DistributionError):
+    """A ``devkit.context_documents`` extension failed to load, raised or returned anything but a pair of sequences
+    of safe workspace-relative directories; never raised.
+
+    Its directories are left out of the context and ``devkit get-context`` lists the declared directory.
+    """
+
+    code = "CONTEXT_DOCUMENTS_EXTENSION_FAILED"
+    level = Level.WARNING
+
+
 class UnprojectedNotice(SyncNotice):
     """A skill or subagent has no variant for a selected agent and was not projected for it (``brief``)."""
 

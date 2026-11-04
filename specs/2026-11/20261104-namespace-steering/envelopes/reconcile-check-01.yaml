@@ -1,0 +1,43 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:00:49.310525Z'
+status: completed
+summary: 'Isolated reconcile-reviewer: the eight targets agree with the implementation and ADR-namespace-steering-directories section 4; two documents outside the target list still state the old get-context result shape (CAP-HARN-agent-guidance 4.2, the distribution quick reference) plus two wording P3s'
+findings:
+- issue: CAP-HARN-agent-guidance 4.2 quotes the exact devkit get-context spec result without the always-present documents_elsewhere and notices keys; the file is not a reconcile target
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:128-129; packages/devkit-dist/src/devkit_dist/features/distribution/models/results.py to_dict
+  failure_condition: A reader taking the 4.2 sentence as the full result shape (key equality) is wrong for every synchronized project
+  suggested_action: Add the document as a modified target and extend the quoted object with the two keys
+  resolution: open
+  severity: P1
+- issue: 'docs/development/reference/distribution.md is not in step with CAP-DIST-context-and-playbooks 2: the get-context row lacks --for, documents_elsewhere and notices, and the code table lacks CONTEXT_DOCUMENTS_EXTENSION_FAILED'
+  evidence: docs/development/reference/distribution.md:64 and :195-215; models/errors.py ContextDocumentsExtensionFailedNotice
+  failure_condition: An agent reading the reference never learns the new warning code or the --for option
+  suggested_action: Add the file as a modified target; extend the row and add the code row
+  resolution: open
+  severity: P2
+- issue: ADR-namespace-steering-directories section 4 says stderr carries the CONTEXT_DOCUMENTS_EXTENSION_FAILED block, while the JSON-only command carries it in the object only (ARCH-08-1-agent-output, AC-07, CAP-DIST-context-and-playbooks 2)
+  evidence: docs/decisions/2026-11/20261104-namespace-steering-directories.md section 4 provider-failure clause; cli/context.py boundary(json_only=True)
+  failure_condition: A reader comparing the ADR to the capability sees a contradiction about the stderr channel
+  suggested_action: Wording repair of the ADR clause without changing the decision
+  resolution: open
+  severity: P3
+- issue: The RULE-steering-documents guide Overview still names devkit get-context spec as the lister; the listing moved to devkit get-context docs
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/steering_documents/guide.md:7
+  failure_condition: An agent following the guide loads the spec bundle expecting the steering list
+  suggested_action: Replace spec with docs in that sentence
+  resolution: open
+  severity: P3
+assumptions:
+- Native reconcile-reviewer subagent (Claude Code); handoff-transaction docs changes excluded from the reflection targets
+unverified_areas:
+- No test suite rerun by the reviewer; inbound reference lists scanned in their first page plus a text search
+checks:
+  cli_probe: PASS get-context --for outside the project is ARGUMENT_INVALID exit 2; --for a package directory exits 0 with the six keys
+  deferred_destinations: PASS FB-namespace-ux-objects-copy and FB-package-glossary-asymmetry exist
+diff_scope:
+  base: 2cf7879a74b50b687867e2184188dee6c29a2fbc
+  head: ea851d860d4e57dae36b6e7fbf1ae2f0f7add3a5
+activity_effort: medium

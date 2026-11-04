@@ -6,7 +6,10 @@ The devkit document system for AI coding agents, built on [devkit](../../README.
 - the `devkit docs` command group (`devkit.commands`): `resolve`, `refs`, `list` and `search`;
 - the auto-selected `docs` bundle and its document rules (`document-reference`, `id-convention`, `spec-format`,
   `traceability-link`, `document-summary`, `steering-documents`, `ux-links`, `ux-coverage`, `code-entrypoints`);
-- the `[tool.docs]` settings (document namespaces) and their config template.
+- the `[tool.docs]` settings (document namespaces) and their config template;
+- the `devkit.context_documents` provider (`features/documents/services/context_documents.py`): `devkit get-context`
+  lists a registered namespace's mirror of a `docs/`-rooted context directory (`docs/packages/<name>/steering/`)
+  when the working directory lies in that package, and names the other namespaces' under `documents_elsewhere`.
 
 It knows no delivery process. devkit-spec builds on it and adds proposals, spec bundles, workflows and the
 lifecycle rules; it registers how `devkit docs list` shows proposals under Planning through the
