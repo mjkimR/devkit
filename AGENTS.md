@@ -99,6 +99,7 @@ viewer frontend change selects no pytest test: run the command its `[FRONTEND_CH
 | devkit-dist without devkit-agt | `just test-dist` |
 | Coverage | `just test-cov [module] [area\|path...]` |
 | Governance rules | `just rules-check` / `just rules-fix` |
+| Bundle rule tests (run `uv run devkit sync` first after editing a bundle's `rules/<name>/tests/`; `devkit rules test` runs the deployed copy) | `just rules-test RULE-<id>` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
 | Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint\|check\|test\|build` |
 

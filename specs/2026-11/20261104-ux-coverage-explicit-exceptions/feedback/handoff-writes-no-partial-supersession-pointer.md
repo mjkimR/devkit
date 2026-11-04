@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-04
 ---
 
@@ -54,3 +54,5 @@ created_at: 2026-11-04
 [DETAIL] RULE-decision-supersession docs/decisions/<date>-<new>.md:6: supersedes target ADR-<existing> needs
          superseded status or a partial pointer naming ADR-<new>
 ```
+
+- **Disposition**: `PROP-proposal-scaffold-and-handoff-pointers`: the handoff writes the partial-supersession pointer for each target ADR that stays accepted.

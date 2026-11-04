@@ -8,7 +8,7 @@ target: devkit spec proposal new
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-04
 ---
 
@@ -48,3 +48,5 @@ drwxr-xr-x  materials
 $ cat > <worktree>/docs/proposals/PROP-<slug>/materials/notation-comparison.md
 no such file or directory: <worktree>/docs/proposals/PROP-<slug>/materials/notation-comparison.md
 ```
+
+- **Disposition**: `PROP-proposal-scaffold-and-handoff-pointers`: the scaffold creates no empty directories; the planning reference names on-demand creation.

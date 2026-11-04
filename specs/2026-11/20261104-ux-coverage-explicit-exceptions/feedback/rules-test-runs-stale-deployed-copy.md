@@ -8,7 +8,7 @@ target: devkit rules test
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -52,3 +52,5 @@ collected 3 items                                 # the source file held 9 tests
 $ uv run devkit sync
 [CHANGE: update .devkit/managed/docs/rules/ux_coverage/tests/test_rule.py]
 ```
+
+- **Disposition**: `AGENTS.md` Verification table: a row says to run `devkit sync` before `devkit rules test` after editing a bundle rule's tests, since the command runs the deployed copy; direct fix, verified by reading the table.
