@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Implement the agreed managed-output candidate filter from FB-entrypoints-derive-offers-managed-paths.
+by: user
+at: '2026-11-04T06:28:26.865958Z'
