@@ -17,6 +17,8 @@ aliases:
 
 # [ADR-roadmap-and-milestones-ledger] Repository-owned roadmap, milestone documents, merging and archive
 
+Superseded in part by `ADR-namespace-milestone-roots`: For a monorepo whose packages run on their own cadence, we let a registered namespace keep MS milestones under docs/packages/<name>/roadmap/ with the global lifecycle, identity and selection, to keep the global roadmap readable, accepting one more roadmap root per namespace to check.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @minjae, user, agent

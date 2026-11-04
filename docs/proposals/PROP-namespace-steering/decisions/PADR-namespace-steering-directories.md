@@ -137,7 +137,7 @@ registers.
   the agent to request a package's context with `--for <dir>` when `documents_elsewhere` names it; the glossary row
   **Steering document** and `CAP-DOCS-document-model` rule 9 name both directories. → `CAP-DOCS-document-model` 9
 - A namespace steering file MAY hold the package's goals as prose; how a namespace milestone cites them is
-  `PROP-namespace-roadmap`'s decision. Package glossaries stay at `docs/packages/<name>/glossary.md`.
+  `SPEC-namespace-roadmap`'s decision. Package glossaries stay at `docs/packages/<name>/glossary.md`.
 - Replaces in `ADR-steering-documents`: the Directory clause "no subdirectories and no namespace copy" and its
   rejected option "A per-namespace copy as well" (a registered namespace may now keep one); the Listing mechanism's
   rejection of an entry-point provider as beyond the need (a provider now supplies the namespace directories beside

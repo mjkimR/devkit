@@ -1,42 +1,24 @@
 ---
-id: PROP-namespace-roadmap
+id: SPEC-namespace-roadmap
 title: Per-namespace milestones under the namespace docs root
-summary: "Lets a registered namespace keep its own MS milestones under docs/packages/<name>/roadmap/ with the global lifecycle and selection, so packages on their own cadence stop crowding the global roadmap."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: documents/
+summary: Lets a registered namespace keep its own MS milestones under docs/packages/<name>/roadmap/ with the global lifecycle and selection, so packages on their own cadence stop crowding the global roadmap.
+status: planned
+created: 2026-11-04
 namespace: global
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-monorepo-namespace-support
-boundaries:
-  owns:
-    - packages/devkit-docs/src/devkit_docs/features/documents/models/
-    - packages/devkit-docs/src/devkit_docs/features/documents/services/
-    - packages/devkit-docs/src/devkit_docs/features/governance/usecases/
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/
-    - packages/devkit-docs/tests/
-    - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/documents/
-    - docs/capabilities/governance/
-    - docs/capabilities/delivery/
-    - docs/roadmap/README.md
-    - docs/architecture/ARCH-01-introduction-and-goals.md
-    - docs/decisions/2026-11/20261102-roadmap-and-milestones-ledger.md
-  excludes:
-    - .devkit/managed/
-    - packages/devkit-viewer/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-namespace-roadmap] Per-namespace milestones under the namespace docs root
+# [SPEC-namespace-roadmap] Per-namespace milestones under the namespace docs root
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-namespace-roadmap on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-namespace-roadmap`
+
+### 1. Background & Hypothesis
 
 `CAP-DOCS-namespaces` mirrors `docs/` under `docs/packages/<name>/` for capabilities, use cases, UX and architecture
 documents, but milestones are global only. `ADR-roadmap-and-milestones-ledger` §4 deferred per-namespace roadmaps
@@ -55,11 +37,30 @@ Hypothesis: the namespace layer already supplies what per-namespace milestones n
 and making the lifecycle checks namespace-aware is therefore a contained change; no new discovery command or ID scheme
 is needed. This is the first direct member of `MS-monorepo-namespace-support`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Per-namespace milestones under the namespace docs root so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which checks and commands hard-code the global roadmap root, and does each need the namespace root or only
   `living_path`?
-  - *Finding* (`materials/global-roadmap-root-inventory.md`): four code locations and none needs a new root
+  - *Finding* (`docs/materials/2026-11/20261104-namespace-roadmap/global-roadmap-root-inventory.md`): four code locations and none needs a new root
     parameter. `milestone_path_valid` stays as it is; its three callers validate the path mapped through
     `living_path(path, namespaces=registered)`: `RULE-id-convention` (which also drops the `docs_root == "docs"`
     condition and names both roots in its remediation), `RULE-spec-format` (whose `docs/roadmap/` prefix test guards the
@@ -93,9 +94,9 @@ is needed. This is the first direct member of `MS-monorepo-namespace-support`.
     the global ones; from the repository root, every namespace; `--namespace` and `--all-namespaces` as for the other
     kinds. Membership of a file under `docs/packages/<name>/roadmap/` is `<name>` by 3.2 rule 1 with no change.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-Decision record: `PADR-namespace-milestone-roots` (supersedes `ADR-roadmap-and-milestones-ledger` in part).
+Decision record: `ADR-namespace-milestone-roots` (supersedes `ADR-roadmap-and-milestones-ledger` in part).
 
 - **Placement**: a milestone of a registered namespace lives at `docs/packages/<name>/roadmap/MS-<slug>.md`
   (planned/active) or `docs/packages/<name>/roadmap/_archive/MS-<slug>.md` (done/dropped), the global layout under the
@@ -118,7 +119,7 @@ Decision record: `PADR-namespace-milestone-roots` (supersedes `ADR-roadmap-and-m
   `id_convention` and `spec_format` rule guides replace "milestones are global" and the literal `docs/roadmap/` of
   lifecycle moves with the two roots and "the milestone's roadmap root"; the `_archive/` move stays inside that root.
   The seeded introduction-and-goals architecture document of the `docs` bundle names the namespace root in its roadmap sentence.
-- **Decision record**: handoff promotes `PADR-namespace-milestone-roots` to an ADR; Development writes one
+- **Decision record**: handoff promotes `ADR-namespace-milestone-roots` to an ADR; Development writes one
   "Superseded in part by" line into `ADR-roadmap-and-milestones-ledger` naming both replaced clauses: "Milestones are
   global; per-namespace roadmaps are deferred until a repository needs them" (ADR-milestone-documents) and "live
   milestones remain at the global roadmap root `docs/roadmap/`" (ADR-archive-terminal-milestones-in-roadmap), as the
@@ -137,7 +138,7 @@ Expected affected contracts: `CAP-DOCS-namespaces` (3.4 and the kinds a namespac
 `CAP-DLV-proposal-planning` (`--milestone`), the roadmap section of `ARCH-01-introduction-and-goals`,
 `ADR-roadmap-and-milestones-ledger` (superseded in part). `CAP-VIEW-repository-viewer` is unchanged (answer-01, q1).
 
-### Planning decisions
+#### Planning decisions
 
 - Validation reuses `living_path` with the registered namespaces instead of a docs-root parameter on
   `milestone_path_valid`: the mapping exists, keeps unregistered directories misplaced and leaves the global function
@@ -150,7 +151,7 @@ Expected affected contracts: `CAP-DOCS-namespaces` (3.4 and the kinds a namespac
   q1): the viewer shows global milestones only and mis-renders cross-root edges until the follow-up
   `FB-viewer-namespace-roadmap-roots` is taken up; it would enumerate `docs/packages/*/roadmap(/_archive)/MS-*.md` by
   path pattern from the Git tree, since it reads no registry.
-- Challenger round 1 (`envelopes/challenger-01.yaml`): finding 2 (the two-clause supersession pointer) is folded in
+- Challenger round 1 (historical Git `dbaf8f3812a2a01cb2254ddf8418349aba0517ce:docs/proposals/PROP-namespace-roadmap/envelopes/challenger-01.yaml`): finding 2 (the two-clause supersession pointer) is folded in
   section 3 and closed in `reverify-01`; finding 1 (the viewer exclusion's cost) was the `Decision needed` behind q1,
   decided by the user in `answer-01` and closed in `reverify-02`.
 - `boundaries.owns` gains the `docs` bundle (rule guides, tests, template, seed), both test trees and the governance
@@ -158,7 +159,7 @@ Expected affected contracts: `CAP-DOCS-namespaces` (3.4 and the kinds a namespac
 - `dev_effort` stays `medium`: two packages and five documents change, every change is covered by rule or command
   tests and nothing is irreversible.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning settled Q1 to Q3 above; acceptance and handoff create one feature spec. Completion requires the rule and
 command tests above, synchronized references and a monorepo fixture in which `devkit rules check` reports no finding
@@ -168,3 +169,4 @@ it beside the global milestones.
 Non-goals: namespaced IDs or per-package ID spaces; per-namespace goals as ID-bearing documents; a namespace copy of
 `_archive/` semantics beyond the path; a rule that checks the goal citation; a namespace directory for proposals;
 external tracker synchronization of namespace roadmaps.
+

@@ -1,16 +1,16 @@
 ---
-id: PADR-namespace-milestone-roots
+id: ADR-namespace-milestone-roots
 title: Per-namespace milestones under the namespace docs root
 summary: For a monorepo whose packages run on their own cadence, we let a registered namespace keep MS milestones under docs/packages/<name>/roadmap/ with the global lifecycle, identity and selection, to keep the global roadmap readable, accepting one more roadmap root per namespace to check.
-proposal: PROP-namespace-roadmap
+proposal: SPEC-namespace-roadmap
 supersedes: [ADR-roadmap-and-milestones-ledger]
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-namespace-milestone-roots] Per-namespace milestones under the namespace docs root
+# [ADR-namespace-milestone-roots] Per-namespace milestones under the namespace docs root
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 
 ---

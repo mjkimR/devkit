@@ -143,7 +143,7 @@ Provider contract (Development writes the exact signature and code name):
   body can cite it only by path (`RULE-document-reference` forbids relative links to ID-bearing documents only).
 - Decision for this proposal: a namespace steering file MAY hold the package's goals as prose (g-sandbox's
   `product.md` files already do), and nothing in this proposal cites it mechanically. How a namespace milestone
-  cites a goal, and the "Superseded in part" pointer on the roadmap ADR, belong to `PROP-namespace-roadmap`, which owns
+  cites a goal, and the "Superseded in part" pointer on the roadmap ADR, belong to `SPEC-namespace-roadmap`, which owns
   that ADR; a namespace milestone may cite the global goals meanwhile, so neither proposal depends on the other.
 - A namespace steering directory holds Markdown files only: `glossary.yaml` is read from the root file alone
   (`search.py`), so a namespace copy would be silently unused, and a `steering/glossary.md` would be a second place
