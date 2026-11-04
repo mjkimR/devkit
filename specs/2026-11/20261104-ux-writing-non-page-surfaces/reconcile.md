@@ -4,6 +4,8 @@ status: pending
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
+  - file: docs/decisions/2026-11/20261104-explicit-ux-coverage-exception-notation.md
+    resolution: modified
 ---
 
 # Reconciliation: `SPEC-ux-writing-non-page-surfaces`
@@ -16,7 +18,11 @@ with `global:` rows, modes as states, transitions, task-less surfaces, mismatch 
 items it listed before, citing this spec. The row's one-owner rule holds: the step citation criterion for long-running
 activities and system judgements is written once, in `usecase-writing`, and `ux-writing`'s `Steps` bullet points to
 it; the `description` of both instructions starts with `Read before` and stays within 300 characters (290 and 200),
-which `test_writing_guidance.py` checks.
+which `test_writing_guidance.py` checks. The `usecase-writing` row names the UX step citations it owns (the screen a
+step happens on, `off screen: <reason>`, long-running activities and system judgements cited by perceived outcome), so
+the catalog shows where that criterion lives. `ADR-explicit-ux-coverage-exception-notation` keeps its decision; its
+clause counting the `global:` and `off screen:` examples in the instructions now reads "at least one example each",
+a wording repair, because `ux-writing` carries a second `global:` example in the surface criteria.
 
 The guidance changes no contract the rules enforce. `CAP-GOV-spec-rules` 3.15 and 3.16 are unchanged: the section
 maps surfaces onto the existing `element` kinds, the seven columns and the two classifications
@@ -49,6 +55,11 @@ warnings=0 (reviewer run on the build head); `just lint devkit-docs devkit-spec`
 Code review round 1 (`review-01`, native `code-reviewer`) found one P2 (the task-less bullet promised no report
 while `RULE-ux-coverage` warns on an empty Step cell) and one P3 (two defaults for `populated`); both wording fixes
 are applied, pinned by new assertions and the task-less modal rule test, and closed in `reverify-01`.
+
+Reconcile check round 1 (independent `reconcile-reviewer`, `reconcile-check-01`) confirmed the target and the
+no-impact statements and found two P3 wording items: the `usecase-writing` catalog row did not name the step
+citations it owns, and the ADR's example-count clause was stale. Both are applied at the named rows and
+self-verified in `reconcile-check-02` (one row and one clause, the contract's meaning unchanged).
 
 ## Entrypoints
 
