@@ -9,10 +9,13 @@ options weighed for the three spike questions. Function names refer to the Plann
 
 | Location | Today | Change the namespace copy needs |
 | --- | --- | --- |
-| `packages/devkit-docs/src/devkit_docs/features/governance/usecases/steering_documents.py` (`DIRECTORY`, `SteeringDocumentsRule.check`) | One literal `docs/steering`; messages, remediation and the `max_files` count name that directory; the module docstring states "there is no namespace copy" | Iterate `docs_roots(registered)` (`namespaces.py`) and check `<root>/steering/` per directory with the same checks and caps; messages name the actual directory. An unregistered `docs/packages/<name>/steering/` is skipped, as `living_path` skips it for the other rules. |
+| `packages/devkit-docs/src/devkit_docs/features/governance/usecases/steering_documents.py` (`DIRECTORY`, `SteeringDocumentsRule.check`) | One literal `docs/steering`; messages, remediation and the `max_files` count name that directory; the module docstring states "there is no namespace copy" | Iterate `docs_roots(registered)` (`namespaces.py`) and check `<root>/steering/` per directory with the same checks and caps, each directory only when a file in it is targeted (the early return and the over-cap report become per directory, challenger-01 #6); messages name the actual directory; `glossary.yaml` stays root-only and a `glossary.md` or `glossary.yaml` in a namespace directory is reported (challenger-01 #5). An unregistered `docs/packages/<name>/steering/` is skipped, as `living_path` skips it for the other rules. |
 | `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/steering_documents/` (`rule.py`, `guide.md`, `tests/test_rule.py`) | Loader, guide and fixtures for the root directory only | Guide gains the namespace directory; fixtures gain a registered namespace (clean, nested file, over cap, missing summary, Korean title with an English summary) and an unregistered one. |
 | `packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/context_documents.py` (`declared_directory`, `list_documents`) | Lists one declared directory; read rules of `ADR-steering-documents` (the listing mechanism) | Unchanged read rules; called once per directory. |
-| `packages/devkit-dist/src/devkit_dist/features/distribution/usecases/context.py` (`GetContext.execute`) | `start` is the working directory or `-w` (`cli/context.py`: `resolve_root(workspace_root)`); lists `list_documents(root, directory)` | Also collects the directories the `devkit.context_documents` providers return for `(root, start, directory)`, lists each, merges and sorts by path; a failing provider becomes a warning notice. |
+| `packages/devkit-dist/src/devkit_dist/features/distribution/usecases/context.py` (`GetContext.execute(start, bundle)`) | `start` is only used to find the project root; lists `list_documents(root, directory)` | Takes the working directory as a second input, collects the directories the `devkit.context_documents` providers return for `(root, working directory, directory)`, lists each, merges, de-duplicates and sorts by path; a failing provider becomes a `notices` entry. |
+| `packages/devkit-dist/src/devkit_dist/features/distribution/cli/context.py` (`context`) and `packages/devkit-dist/src/devkit_dist/adapters/cli.py` (`resolve_root`) | The CLI passes `resolve_root(workspace_root)`: the `-w` root, else `find_project_root(Path.cwd())`, the devkit root. The cwd never reaches the use case (challenger-01 #1) | Passes the working directory (`Path.cwd()`, or the `-w` root) beside the resolved root; the command is wired through `_json_command`, which prints only the result. |
+| `packages/devkit-dist/src/devkit_dist/features/distribution/models/results.py` (`ContextResult`) and `cli/output.py` (`_report`) | `ContextResult` has no `notices`; `_report` (sync) is the pattern that prints the result, then `echo_notices` and `exit_on_warnings` | `ContextResult` gains `notices`, carried in the JSON object; the CLI prints the stderr advisory blocks (`CONTEXT_DOCUMENTS_EXTENSION_FAILED`) and exits `1` only under `--strict`. |
+| `packages/devkit-docs/src/devkit_docs/features/governance/usecases/document_reference.py` (`STEERING`, `_is_steering`, the steering citation pass) | Checks the IDs cited in the root steering files only (`CAP-GOV-spec-rules`, steering files paragraph) | Generalized over `docs_roots(registered)`, so an alias or stale ID in a namespace steering file is reported and fixed as in the root ones (challenger-01 #4). |
 | `packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config_template.py` (`_load_templates`) | The entry-point loading pattern devkit-dist already uses: load, validate, one warning per failed entry | Reused as the pattern for the provider loader. |
 | `packages/devkit-docs/src/devkit_docs/features/documents/services/namespaces.py` (`detect`, `living_path`, `docs_roots`) | The selection rule of `CAP-DOCS-namespaces` 3.3 and the root mapping | Unchanged; the provider composes them (the inverse of `living_path` for the detected namespace). |
 | `packages/devkit-docs/src/devkit_docs/features/documents/repositories/config.py` (`read_docs_config`) | Reads `[[tool.docs.namespaces]]`; devkit passes `[tool.*]` through unread (`CAP-DIST-sync-and-transactions`) | Unchanged; the provider reads the registry through it. |
@@ -26,6 +29,9 @@ options weighed for the three spike questions. Function names refer to the Plann
 | `packages/devkit-dist/tests/integration/features/distribution/test_context_documents.py` | Field grammar, read rules, the bounded default size. Gains: provider directories listed and merged, a failing provider warns, a provider returning an unsafe path is ignored, no provider installed lists the declared directory only. Runs without `devkit-docs` and `devkit-agt` (`just test-dist`), so the provider is a test double registered through `importlib.metadata`. |
 | `packages/devkit-docs/tests/` | The provider: from a package source directory, from its docs root, from the repository root, from a directory outside every package, with `-w`, without registered namespaces, with a malformed `[tool.docs]`. |
 | `packages/devkit-spec/tests/integration/bundles/spec/test_steering_guidance.py` (`test_the_constitution_names_the_list_and_its_trigger`) | Asserts exactly one constitution line names `docs/steering/`; the extended line must keep that count. |
+| `packages/devkit-dist/tests/integration/features/distribution/test_context.py:58-64` | Asserts the result from a nested directory equals the root result; narrowed to the constitution and instructions once the working directory selects documents. |
+| `packages/devkit-dist/tests/integration/features/distribution/test_context_documents.py:176-185` | Asserts the `documents` payload at the default caps stays within 4096 bytes for one directory; gains the `(1 + N) × 4096` bound for a fixture of `N` namespaces (challenger-01 #7). |
+| `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/document_reference/tests/` | Gains an alias ID cited in a namespace steering file. |
 
 ### Documents and bundle text
 
@@ -39,6 +45,10 @@ options weighed for the three spike questions. Function names refer to the Plann
 | `docs/decisions/2026-11/20261102-steering-documents.md` | "Superseded in part by" pointers (Development writes them). |
 | `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/AGENTS.md` line "`docs/steering/` holds project-wide background" | Names the namespace directory in the same line. |
 | `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/living-spec-writing.md` (steering paragraph) | Package background goes to the namespace steering directory; package glossaries stay where they are. |
+| `docs/capabilities/governance/CAP-GOV-spec-rules.md` `RULE-document-reference` steering files paragraph (lines ~119-123) | The steering files whose IDs are checked include those of registered namespace directories. |
+| `docs/capabilities/documents/CAP-DOCS-document-model.md` rule 9 | "There is no namespace copy" becomes the registered namespace directory. |
+| `docs/capabilities/distribution/CAP-DIST-workspace-ownership.md` 7 | "a bundle's declared context document directory may list ..." also covers provider directories. |
+| `docs/steering/glossary.md` row **Steering document** | "directly in `docs/steering/`" names the namespace directory too. |
 
 ## 2. Evidence: the motivating repository
 
@@ -72,8 +82,8 @@ directory lists at most `max_files` entries. Options for the namespace directori
 
 | Option | Inside a package (source path or docs root) | Outside every package (repository root, `-w`) | Worst case per context | Consistency |
 | --- | --- | --- | --- | --- |
-| **a. The `CAP-DOCS-namespaces` 3.3 default selection** (recommended) | global + that namespace | global + every namespace | `max_files × (1 + N)` entries at the root; `2 × max_files` inside a package | Same rule as `devkit docs list` without options; no new concept |
-| b. Global only outside a package | global + that namespace | global only | `2 × max_files` | Tightest bound; an agent at the repository root (the usual Claude Code working directory) never sees package background unless it changes directory or reads `docs/packages/<name>/steering/` itself |
+| **a. The `CAP-DOCS-namespaces` 3.3 default selection** (recommended; q1 for the user) | global + that namespace | global + every namespace | `max_files × (1 + N)` entries at the root; `2 × max_files` inside a package | Same rule as `devkit docs list` without options; no new concept |
+| b. Global only outside a package (q1 alternative) | global + that namespace | global only | `2 × max_files` | Tightest bound; an agent at the repository root (the usual Claude Code working directory) never sees package background unless it changes directory or reads `docs/packages/<name>/steering/` itself |
 | c. Every namespace always | global + every namespace | global + every namespace | `max_files × (1 + N)` | The cost `ADR-steering-documents` rejected, paid even inside a package |
 
 For g-sandbox at the repository root, option a lists 9 namespace entries (about 2.3 KB locally) beside the root ones;
@@ -81,9 +91,10 @@ inside `caravan-trade`, two. A monorepo with many packages lowers `max_files` or
 package; the rule caps each directory, and the number of namespaces is the project's own choice. The cap stays a rule
 setting (`CAP-GOV-spec-rules` 3.14) because `devkit-dist` caps nothing itself (`ADR-steering-documents` (the listing mechanism)).
 
-**Override**: `devkit get-context` takes no `--namespace`. The selection follows the directory the command runs in
-(`start`), the same input `devkit docs list` uses; with `-w <root>` the start is the root, which is "outside every
-package". A namespace concept in the `devkit-dist` CLI would contradict the SDD-agnostic rule, and an agent working
+**Selection input**: `devkit get-context` takes no `--namespace`. The selection follows the working directory, the
+same input `devkit docs list` uses; today the CLI hands the use case only the resolved project root (`resolve_root`,
+challenger-01 #1), so the CLI passes the cwd (or the `-w` root, which is "outside every package") as a second input
+and `GetContext.execute` gains that parameter; its only production caller is the CLI. A namespace concept in the `devkit-dist` CLI would contradict the SDD-agnostic rule, and an agent working
 across packages runs the command from the repository root (option a) or reads the other directory by path.
 
 ## 4. Q2: who tells `devkit-dist` which directories to list
@@ -105,13 +116,16 @@ Provider contract (Development writes the exact signature and code name):
   `start` directory and the declared directory; returns a sequence of workspace-relative directories validated with
   the seeded `target` grammar (`manifest.seed_target`); an invalid item is dropped with a warning.
 - A provider that fails to load, raises (including `DOCS_CONFIG_INVALID`) or returns something else is reported as a
-  warning notice (one per provider, naming the entry point), and the context lists the declared directory alone.
+  warning (one per provider, naming the entry point): `ContextResult.notices`, carried in the JSON object, and a
+  stderr advisory block `CONTEXT_DOCUMENTS_EXTENSION_FAILED`, as `devkit sync` reports its notices; the context lists
+  the declared directory alone and exits `0` (`1` under `--strict`). `_json_command` prints only the result today,
+  so the `get-context` command adopts the `_report` pattern (challenger-01 #3).
 - The declared directory and the returned ones are listed with the same read rules, de-duplicated, and `documents`
   stays sorted by absolute path; entries keep `path`, `title` and `summary` only. `docs/packages/<name>/steering/X`
   sorts before `docs/steering/X`, which puts package background first.
 - The `devkit-docs` provider: without registered namespaces, or for a directory not under `docs/`, it returns
   nothing; otherwise it returns `docs/packages/<name>/<rest>` for the namespace `detect` selects, or for every
-  registered namespace when `detect` selects none (Q1 option a).
+  registered namespace when `detect` selects none under q1 option a (nothing under option b).
 
 ## 5. Q3: goals and the glossary
 
@@ -123,6 +137,9 @@ Provider contract (Development writes the exact signature and code name):
   `product.md` files already do), and nothing in this proposal cites it mechanically. How a namespace milestone
   cites a goal, and the "Superseded in part" pointer on the roadmap ADR, belong to `PROP-namespace-roadmap`, which owns
   that ADR; a namespace milestone may cite the global goals meanwhile, so neither proposal depends on the other.
+- A namespace steering directory holds Markdown files only: `glossary.yaml` is read from the root file alone
+  (`search.py`), so a namespace copy would be silently unused, and a `steering/glossary.md` would be a second place
+  for the package glossary; both are reported by the rule (challenger-01 #5).
 - The package glossary stays at `docs/packages/<name>/glossary.md` (`living-spec-writing`; a declared non-goal):
   moving it would change `living_path`'s mapping of `glossary.md` and every consumer's path, for no listing gain
   (the root glossary is listed only because it lives in `docs/steering/`). The asymmetry (root glossary in
