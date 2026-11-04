@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T00:01:12.824553Z'
+status: completed
+summary: 'Round 2 (implementer self-verification of the round 1 fixes): the three ADR traces now name MUST NOT (and SHOULD for the defective forms) as 3.16 does; the ux template comment is rewrapped and the managed copy regenerated; the ADR added as a modified target; reconcile.md resolved and the spec completed.'
+findings: []
+assumptions:
+- Self-verification covers only the two wording repairs; the contract comparison stands on reconcile-check-01
+checks:
+  rules: PASS uv run devkit rules check --staged at commit
+  sync: PASS devkit sync; devkit generated regen devkit-receipt
+diff_scope:
+  base: 4f8cc73225c79629195b5343bc3ca9d585888626
+  head: 84e5e55c15f435c1f2e753c33002daaa3c1ca3de
+activity_effort: medium
