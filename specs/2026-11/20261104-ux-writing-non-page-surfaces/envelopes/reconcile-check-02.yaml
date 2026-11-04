@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:23:16.586305Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; implementer self-verification: both P3 fixes are wording at the named row and clause (CAP-HARN-agent-guidance usecase-writing row, ADR-explicit-ux-coverage-exception-notation example count), the contract''s meaning unchanged, the edited text agrees with the diff, both files listed as modified targets; devkit rules check errors=0'
+findings: []
+checks:
+  lint: PASS devkit rules check on both documents and the bundle errors=0
+diff_scope:
+  base: 22aaef0dd1b6410e220267e50c1c8d62520139c8
+  head: f04669c50eafb7c321df3eb04f9e078c40abc210
