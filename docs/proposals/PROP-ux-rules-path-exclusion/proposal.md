@@ -2,7 +2,7 @@
 id: PROP-ux-rules-path-exclusion
 title: Path-scoped opt-out of the UX document rules
 summary: "Gives RULE-ux-links and RULE-ux-coverage an exclude setting so a monorepo can switch the screen contract off for a namespace whose domain it does not fit, while the identity, reference and traceability rules keep checking the same documents."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: governance/
 namespace: global
