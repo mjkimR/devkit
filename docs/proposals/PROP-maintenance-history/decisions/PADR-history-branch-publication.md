@@ -82,20 +82,26 @@ We decided to adopt **Option 1**.
   starts from a parentless root commit and is never merged into a code branch.
 - The root commit is deterministic (fixed `README.md` bytes, a fixed `devkit maintenance history` identity and a
   fixed date), so its SHA is a constant the capability records; an existing branch is used only when one compare
-  request against that root reports `identical` or `ahead`, otherwise the publisher refuses and updates nothing.
+  request against that root answers 200 with `identical` or `ahead`. A 200 with another status or a 404 on the
+  compare is a foreign branch, refused without any update; a rate limit is deferred and any other failure or
+  timeout is reported as unavailable, never as foreign.
 - The publication updates the branch reference without force. A rejected update re-reads the head, repeats the
   inspection, re-reads the index shard from that head and rebuilds on it, at most three times; exhaustion is a
   deferred publication whose outcome stays `pending`, never a confirmed failure.
 - The run ID in the record path is the idempotency key: before an attempt and after a lost response the publisher
-  reads the repository and the branch reference (a 404 there is a failed publication), then the record at the head,
+  reads the repository (a 401, 403 or 404 there is a failed publication), then the branch reference (a 404 there
+  is a missing branch that leaves the publication pending and names initialization), then the record at the head,
   resolves an identical canonical blob as published, refuses a different blob as a collision and never overwrites.
 - The published record is canonical JSON (sorted keys, compact separators, UTF-8, newline-terminated), so a retry
   from another machine produces the same blob.
 - Integration state that arrives after `finish` is an append-only amendment under the run's `updates/` directory
-  with its own index line; a published record's bytes never change.
+  with a file name fixed at the first attempt, the same read-before-write as the record and its own index line;
+  a published record's bytes never change, and listings take the amendment with the greatest update time.
 - Initialization, publication and amendment each need an explicit `--authority`; configuration supplies the
-  repository and branch only, and publication never initializes a branch implicitly.
-- Before sending, the publisher runs the installed `secret_leak` check over the files and refuses on a hit.
+  repository and branch only, publication never initializes a branch implicitly, and initialization writes no
+  local file.
+- The installed `secret_leak` rule runs at `finish` over the report and the record before the report digest is
+  computed, and at publication over added files only; a hit is an input error that names the path and line.
 - The publisher reads the local repository only (`git rev-parse`, `git status --porcelain`, a temporary index) and
   never writes the index, HEAD, refs or working tree outside the run directory.
 - GitHub is the only provider, reached through `gh api` behind an injectable runner that names the repository in
@@ -116,6 +122,9 @@ We decided to adopt **Option 1**.
   (`q5`), and until it is fixed the reproducible-SHA property holds only per publishing identity.
 - **Follow-ups**: a non-GitHub provider starts a new proposal when a repository on another host needs history;
   the live exercise runs once in Development before the new `maintenance-history` capability states the error contract.
+- **Frozen root**: the root `README.md` bytes, the fixed identity, the fixed date and the resulting constant are
+  frozen for good, because any change turns every existing history branch into a foreign branch. Changing them
+  needs a superseding ADR and a capability that accepts the set of known root constants.
 
 ---
 

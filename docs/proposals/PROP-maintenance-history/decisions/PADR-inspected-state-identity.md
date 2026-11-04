@@ -39,13 +39,16 @@ identity that a later run can compare and that keeps possibly sensitive diff byt
 
 ### Option 1: Source SHA, dirty paths, temporary-index tree hash and local diff digest (Selected)
 - **Overview**: `source_sha` is HEAD; `dirty_paths` comes from `git status --porcelain`; `inspected_tree` is the
-  `write-tree` of a per-run temporary index after `read-tree HEAD` and `add -A -- . ':!<run dir>'` (the
+  `write-tree` of a per-run temporary index after `read-tree HEAD` and `add -A` with the exclusion pathspec (the
   `spec-delegate` snapshot procedure); the retained diff file holds `git -c diff.noprefix=false
-  -c core.quotepath=false diff --no-ext-diff --no-textconv --no-renames --binary HEAD` followed by one
-  length-prefixed path and length-prefixed bytes per untracked path in byte order, and `diff_digest` is its SHA-256.
-- **Pros**: content identity (Driver 1) with no local Git change (Driver 2); the digest travels, the diff stays
-  (Driver 3); `source_sha` is untouched (Driver 4).
-- **Cons**: ignored files are outside `add -A`; a remote reader verifies the digest only where the diff is retained.
+  -c core.quotepath=false diff --no-ext-diff --no-textconv --no-renames --no-color --binary HEAD` with the same
+  pathspec, followed by one entry per untracked path in byte order (8-byte big-endian length and path, 8-byte
+  big-endian length and bytes), and `diff_digest` is its SHA-256.
+- **Pros**: `inspected_tree` is a content identity that is the same on every machine (Driver 1) with no local
+  Git change (Driver 2); the digest travels, the diff stays (Driver 3); `source_sha` is untouched (Driver 4).
+- **Cons**: ignored files are outside `add -A`; `diff_digest` depends on the machine's remaining diff settings, so
+  it is reproducible from the retained file, not across machines; a remote reader verifies it only where the diff
+  is retained.
 
 ### Option 2: Source SHA and the dirty path list only
 - **Overview**: what the playbooks record today.
@@ -65,11 +68,13 @@ We decided to adopt **Option 1**.
 
 - A run record identifies its inspected state by `source_sha`, `dirty`, `dirty_paths`, `inspected_tree` and, for a
   dirty run, `diff_digest` with the retained local diff path.
-- The comparison set excludes the run directory, the report path and the retained diff, so a run's own output
-  never counts as dirty content or as drift.
+- The comparison set is fixed at `start` and reused at `finish`: it excludes the run directory and the report path
+  named at `start`, through one pathspec applied to both the temporary index and the diff and only for paths inside
+  the worktree, so a run's own output never counts as dirty content or as drift.
+- `inspected_tree` is the content identity: the same content gives the same tree on every machine.
 - The retained diff file is the digest input, produced with the pinned diff options above and the length-prefixed
-  untracked entries, so two machines digest the same content to the same value and a reader with the file can
-  recompute the digest.
+  untracked entries; `diff_digest` binds the record to that file and a reader with the file recomputes it. The
+  digest makes no cross-machine claim.
 - A clean run records `inspected_tree` equal to `HEAD^{tree}` and null diff fields.
 - The identity is computed through a per-run temporary index file in the Git directory that is deleted after
   `write-tree`; the real index, HEAD, refs and working tree are unchanged, and loose objects the snapshot adds to
@@ -95,6 +100,7 @@ We decided to adopt **Option 1**.
 ## 6. Confirmation
 
 Tests of `devkit maintenance history start` on a temporary repository: identical content gives identical
-`inspected_tree` and `diff_digest` under different `diff.noprefix` settings, a changed file changes both, the run
-directory never counts as drift, and `git for-each-ref`, the index checksum and `git status --porcelain` outside
-the run directory are unchanged after the command. Restated by the new delivery capability `maintenance-history` (ID assigned at spec-sync).
+`inspected_tree` under different `diff.algorithm` and `diff.noprefix` settings, `diff_digest` is recomputed from
+the retained file alone, a changed file changes both, the run directory and the report path never count as drift
+inside or outside the worktree, and `git for-each-ref`, the index checksum and `git status --porcelain` outside the
+run directory are unchanged after the command. Restated by the new delivery capability `maintenance-history` (ID assigned at spec-sync).
