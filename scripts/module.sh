@@ -118,8 +118,36 @@ run_check() {
 # Fail before pytest starts when a sandbox blocks those writes; the caller owns approval and retry.
 case "$action" in
     test|test-cov|test-e2e)
-        uv run --no-active --no-sync python scripts/check_test_environment.py -- just "$action" "$requested_target" \
-            ${given[@]+"${given[@]}"}
+        preflight=()
+        if [ "$target" = all ]; then
+            # Leading selectors are pytest paths. With no leading path, keep full-suite requirements;
+            # option values (for example --basetemp) must not accidentally narrow a full run.
+            for arg in "$@"; do
+                [[ "$arg" == -* ]] && break
+                preflight+=(--test-path "$arg")
+            done
+            if [ ${#preflight[@]} -eq 0 ] && [ "$action" = test-e2e ]; then
+                for module in $modules; do
+                    mpath=$(resolve_module_path "$module")
+                    [ ! -d "$mpath/tests/e2e" ] || preflight+=(--test-path "$mpath/tests/e2e")
+                done
+            fi
+        elif [ ${#selected[@]} -gt 0 ]; then
+            for path in "${selected[@]}"; do preflight+=(--test-path "$path"); done
+        elif [ "$action" = test-e2e ]; then
+            preflight+=(--test-path "$module_path/tests/e2e")
+        else
+            preflight+=(--test-path "$module_path/tests" --test-path "$module_path/src")
+        fi
+        # Additional pytest paths after options can broaden an explicit/default module selection.
+        # Ignore flags are deliberately not parsed: a false positive keeps the check conservative.
+        if [ ${#preflight[@]} -gt 0 ]; then
+            for arg in "$@"; do
+                [ ! -e "${arg%%::*}" ] || preflight+=(--test-path "$arg")
+            done
+        fi
+        uv run --no-active --no-sync python scripts/check_test_environment.py ${preflight[@]+"${preflight[@]}"} \
+            -- just "$action" "$requested_target" ${given[@]+"${given[@]}"}
         ;;
 esac
 

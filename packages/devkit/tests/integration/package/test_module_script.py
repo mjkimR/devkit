@@ -54,6 +54,7 @@ def test_test_recipe_preserves_arguments_and_preflight(
         "--no-sync",
         "python",
         "scripts/check_test_environment.py",
+        *([] if target == "all" else ["--test-path", "packages/devkit/tests", "--test-path", "packages/devkit/src"]),
         "--",
         "just",
         "test",
@@ -238,3 +239,61 @@ def test_feature_selector_combines_categories(script_env: dict[str, str]) -> Non
         "packages/devkit-dist/tests/integration/features/search",
         "packages/devkit-dist/src/devkit_dist/features/search",
     ]
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        (
+            ("test", "viewer", "browse"),
+            [
+                "packages/devkit-viewer/tests/integration/features/browse",
+                "packages/devkit-viewer/src/devkit_viewer/features/browse",
+            ],
+        ),
+        (
+            ("test", "viewer", "tests/integration/features/browse/test_server.py::test_start"),
+            ["packages/devkit-viewer/tests/integration/features/browse/test_server.py::test_start"],
+        ),
+        (
+            ("test", "all", "packages/devkit-viewer/tests/integration/features/browse/test_server.py"),
+            ["packages/devkit-viewer/tests/integration/features/browse/test_server.py"],
+        ),
+        (("test", "all", "-k", "safe"), []),
+        (("test-e2e", "docs"), ["packages/devkit-docs/tests/e2e"]),
+    ],
+)
+def test_preflight_receives_effective_paths(
+    script_env: dict[str, str], args: tuple[str, ...], expected: list[str]
+) -> None:
+    result = run_module(script_env, *args)
+    assert result.returncode == 0, result.stderr
+    preflight = calls(script_env)[0]
+    options = preflight[preflight.index("scripts/check_test_environment.py") + 1 : preflight.index("--")]
+    actual = list(dict.fromkeys(options[1::2]))
+    assert options[::2] == ["--test-path"] * len(options[1::2])
+    assert actual == expected
+
+
+def test_preflight_failure_starts_no_pytest(script_env: dict[str, str]) -> None:
+    script_env["TOOL_EXIT"] = "2"
+    result = run_module(script_env, "test", "viewer")
+    assert result.returncode == 2
+    only = calls(script_env)
+    assert len(only) == 1
+    assert "scripts/check_test_environment.py" in only[0]
+
+
+def test_full_selection_is_not_narrowed_by_an_existing_option_value(script_env: dict[str, str], tmp_path: Path) -> None:
+    result = run_module(script_env, "test", "all", "--basetemp", str(tmp_path))
+    assert result.returncode == 0, result.stderr
+    preflight = calls(script_env)[0]
+    assert preflight[preflight.index("scripts/check_test_environment.py") + 1] == "--"
+
+
+def test_extra_pytest_path_after_options_broadens_module_preflight(script_env: dict[str, str]) -> None:
+    extra = "packages/devkit-viewer/tests/integration/features/browse/test_server.py"
+    result = run_module(script_env, "test", "devkit", "-n0", extra)
+    assert result.returncode == 0, result.stderr
+    preflight = calls(script_env)[0]
+    assert extra in preflight[: preflight.index("--")]

@@ -121,17 +121,29 @@ types and governance remain required:
   an undetected runtime dependency can leave a regression until complete CI runs. Full-suite fallback is preserved.
 
 
-Before starting pytest or its workers, both recipes run `scripts/check_test_environment.py` through the
-workspace Python environment. The check sends and receives one byte through a local socket pair, with
-one-second I/O timeouts. Python's asyncio uses local sockets to wake an event loop from another thread;
-blocking these writes can stall MCP initialization and async integration tests even when no internet access
-is needed.
+Before starting pytest or its workers, the test recipes run `scripts/check_test_environment.py` through the
+workspace Python environment. Every selection checks a one-byte local socketpair send/receive with one-second I/O
+timeouts: asyncio uses these sockets to wake event loops from other threads, even without internet access.
 
-When the check fails, it emits the `ASYNC_WAKEUP_BLOCKED` advisory on stderr and exits `2` before pytest starts.
-The advisory preserves the original recipe and pytest arguments in `[FIX]`. An agent uses its execution tool's
-approval mechanism to rerun that command in a permitted environment; the script never expands permissions or
-retries on its own. Tests are neither skipped nor counted as passed. A direct `pytest` invocation bypasses this
-recipe check; run `uv run python scripts/check_test_environment.py -- <exact-test-command>` first when using it.
+Full-suite selections and paths covering the viewer HTTP tests (`test_cli.py` or `test_server.py` under
+`packages/devkit-viewer/tests/integration/features/browse/`) also bind and listen on IPv4 `127.0.0.1`, port `0`, then
+close the socket. This creates no external traffic. Other selected paths do not need TCP binding. Recipes forward
+resolved module selectors, directory paths and node IDs with repeated `--test-path` options. For `all`, no leading
+positional test path conservatively keeps full-suite requirements; pytest expressions and ignore flags do not
+narrow the check. Existing path arguments after options can broaden an explicit selection.
+
+Socketpair failure emits `ASYNC_WAKEUP_BLOCKED`; loopback failure emits `TEST_LOOPBACK_BLOCKED`. Both advisories go
+to stderr and exit `2` before pytest starts, preserving the original recipe and arguments in `[FIX]`. The caller
+uses its execution tool's approval mechanism to rerun that exact command in a permitted environment; the script
+never expands permissions or retries. Tests are neither skipped nor counted as passed. A direct `pytest`
+invocation bypasses the recipe check: run `uv run python scripts/check_test_environment.py --test-path
+<resolved-test-path> -- <exact-test-command>` first, omitting `--test-path` for a full run.
+
+Installed-consumer tests build isolated wheels. On a cold dependency cache those builds may need network access
+to download their declared build dependencies; an adequately populated cache can satisfy them without network.
+Choose an environment permitting those downloads when needed. The preflight does not probe internet connectivity,
+require network unconditionally, or grant host permission. A download failure remains an environment failure to
+resolve before rerunning the same required verification, rather than a passing or skipped test.
 Nightly, manual and release CI run the complete suite through `just test`. Release publication requires CI success.
 
 ## 3. Release Automation
