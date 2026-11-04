@@ -78,8 +78,9 @@ Append a disposition line to each item, linking every destination for a cross-to
 
 - `[STALE_BRANCH: ...]`: offer resume or discard per the `spec` skill's
   [stale branches](../../skills/spec/references/branches.md#4-leftovers-and-stale-branches); do neither unasked.
-- `SPEC_PROPOSAL_REJECTED_PENDING`: once the user agrees, write the rejection ADR quoting the reason from the
-  rejection commit (`git log -1 --format='%H %B' -S'status: rejected' -- <proposal.md>`), preserve feedback by the
+- `SPEC_PROPOSAL_REJECTED_PENDING`: once the user agrees, write the rejection ADR stating the decision and reason
+  recorded in the rejection commit (`git log -1 --format='%H %B' -S'status: rejected' -- <proposal.md>`) as a decision
+  sentence, never as a quote, preserve feedback by the
   [feedback retirement procedure](../../skills/spec/references/feedback-retirement.md), and delete the proposal in the
   same commit.
 

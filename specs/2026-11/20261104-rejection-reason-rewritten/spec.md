@@ -2,7 +2,7 @@
 id: SPEC-rejection-reason-rewritten
 title: Rejection records carry a rewritten decision, not a quote
 summary: "Aligns the proposal rejection path with the records rule: the rejection commit, the rejection ADR and the contract state the user's decision and reason as a rewritten decision sentence instead of a verbatim conversation quote."
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: [CAP-DLV-proposal-planning]
 related_usecases: []

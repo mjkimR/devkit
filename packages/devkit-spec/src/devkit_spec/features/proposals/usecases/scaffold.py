@@ -412,8 +412,8 @@ size: M                               # S | M | L | XL (XL: would need two or mo
 - On acceptance (plan-accept): devkit spec proposal accept {slug} --by user records gate:plan-accept and status:
   accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
   without Planning. Development starts with devkit spec proposal handoff {slug}.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
+- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
+  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
 """
 
