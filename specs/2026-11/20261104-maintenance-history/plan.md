@@ -11,7 +11,7 @@ spec: SPEC-maintenance-history
 
 ## 2. Architecture Overview & Impact
 
-A `maintenance_history` feature in devkit-agt has CLI, typed BaseUseCase operations, services, repositories and models. The CLI adapts arguments and renders returned results. Local capture uses an isolated Git index; GitHub access uses an injected gh runner. The Host authorized adding maintenance_history to the devkit_agt features list and only its feature_dependencies entries. Feature edges to rules and project configuration support the secret check and defaults. Catalog changes remain content-only.
+A `maintenance_history` feature in devkit-agt has CLI, typed BaseUseCase operations, services, repositories and models. The CLI adapts arguments and renders returned results. Local capture uses an isolated Git index; GitHub access uses an injected gh runner. The Host authorized adding maintenance_history to the devkit_agt features list and only its feature_dependencies entries. Feature edges to rules and project configuration support the secret check and defaults. Catalog changes remain content-only: restore the four default playbooks, and verify that installed history causes no probe, lifecycle command or completion prerequisite. Optional composition is documented separately under `ADR-opt-in-maintenance-history`.
 
 ## 3. Component & Interface Design
 
@@ -41,8 +41,8 @@ Rate-limit mapping precedes status mapping on every request. Read and content-ob
 - Unit temporary-Git tests: AC-02, AC-03, AC-08 and canonical bytes/root constants.
 - Injected Git Database integration model: AC-01, AC-04 through AC-08, including interleaved writers and unknown publication inspection.
 - PATH-shim gh and Click boundary tests: AC-05, AC-09, bounded timeouts, output and command discovery.
-- Catalog content tests and sync check: AC-09.
-- A reproducible live exercise and sanitized evidence: AC-10; pending explicit Host destination/authority.
+- Catalog decoupling regression tests and sync check: AC-09; standalone command and publication tests remain required.
+- A reproducible live exercise and sanitized evidence: AC-10; completed on the user-authorized test-sandbox branch with retained success and first-failure evidence.
 - `just lint-check devkit`, `just check devkit`, relevant catalog checks, `just test-affected --base c9f7c6d3a2674f95c345dc13bc89ab1874bcff23`, `uv run devkit rules check --ci --base main`, `uv run devkit sync --check`.
 
 No performance/count comparison is claimed; this adds behavior rather than changing an existing measured outcome.

@@ -9,6 +9,8 @@ created_at: 2026-11-04
 
 # [ADR-history-branch-publication] History publication on a parentless GitHub branch through the Git Database API
 
+Superseded in part by `ADR-opt-in-maintenance-history`: section 4 first clause applies only to explicitly selected history runs; all publication, root and identity semantics remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-04
 - **Deciders**: repository owner

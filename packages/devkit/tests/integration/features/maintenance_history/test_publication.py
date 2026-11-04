@@ -357,3 +357,14 @@ def test_headerless_transport_failure_persists_unknown_and_retry_inspects(repo: 
     publish(history(fake), run, "simulated", (), "owner/repo")
     assert read_record(run)["publication"] == "published"
     assert sum(call[0] in ("POST", "PATCH") for call in fake.calls) == count
+
+
+def test_repository_probe_uses_canonical_endpoint_without_trailing_slash() -> None:
+    calls: list[str] = []
+
+    def runner(method: str, endpoint: str, payload: dict | None, timeout: float) -> Response:
+        calls.append(endpoint)
+        return Response(200 if endpoint == "repos/owner/repo" else 404, {}, {})
+
+    GitHubHistory("owner/repo", "maintenance-history", runner).repository()
+    assert calls == ["repos/owner/repo"]

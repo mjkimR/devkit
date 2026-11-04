@@ -78,10 +78,10 @@ depend on it. This draft is the direct member of `MS-maintenance-run-history`, w
 - **When** a history command runs.
 - **Then** missing authority, secrets and changed evidence are refused with the stated stable codes; configuration grants no authority and commands write local state only within the run directory.
 
-### [AC-09] Mount an agent-first command family and integrate four playbooks
+### [AC-09] Mount an agent-first command family with optional playbook composition
 - **Given** devkit-agt is installed with or without the maintenance catalog.
 - **When** commands or any of the four playbooks run.
-- **Then** commands expose text sentinels or one JSON result with advisories on stderr; playbooks conditionally start/finish records, request separate publication authority and amend later integration state; manual paths remain available.
+- **Then** commands expose text sentinels or one JSON result with advisories on stderr; default playbook procedures, report outcomes and completion stay independent of command availability. Only an explicit user request opts into companion history capture, freezing, separately authorized publication and amendments; installation or playbook invocation alone causes no history probe, lifecycle command or recurring offer.
 
 ### [AC-10] Confirm undocumented GitHub behavior through a labelled live exercise
 - **Given** a user-selected throwaway repository and explicit external mutation authority.
@@ -89,6 +89,8 @@ depend on it. This draft is the direct member of `MS-maintenance-run-history`, w
 - **Then** it confirms repeated object POSTs, same-SHA ref updates, rejected stale ref updates and 404 distinctions with retained sanitized evidence before the capability claims live verification.
 
 ## Assumptions
+
+- User refinement: keep standalone history optional and independent of default playbook execution. `ADR-opt-in-maintenance-history` records the composition boundary; root/publication/identity semantics remain unchanged.
 
 - Host clarification: repeatable `finish --file` registers added evidence and freezes its digest; `publish --file` selects only that frozen set, with no added files selected by default. This preserves the accepted immutable record contract despite late publication selection.
 
@@ -283,15 +285,7 @@ Codes, channels and exit codes (`ARCH-08-cross-cutting` §4; modes per `CAP-ADV-
 
 #### 3.5 Playbook changes
 
-Where `devkit maintenance` is installed, each of the four playbooks gains a run-record step at intake
-(`history start`), at completion (`history finish`) and an optional publication step that names the destination,
-the user's authority and `init` as a separately authorized action when the branch is absent. The review-refactor
-and performance-pass step that updates a report's outcome when a work item integrates or stops calls `history
-update` instead of editing the report file: the amendment replaces the in-file outcome update of
-`CAP-DLV-review-refactor` §5 and `CAP-DLV-performance-pass` §6, whose clauses change accordingly. Without `devkit maintenance`, each playbook keeps its current local record. The
-weekly report's companion record becomes this record; the drift playbook gains a run ID. The playbooks' review,
-decision and application procedures do not change (`MS-maintenance-run-history` non-goals). Only the Host or the
-playbook's own step runs the commands; subagents never write a run's records.
+The four default playbooks retain their pre-feature procedures and completion criteria. Installing commands or invoking a playbook never opts into history, probes its availability or creates a recurring offer. The separate maintenance-history reference documents explicit user composition: fix report path and start before inspection, freeze the selected history evidence on completion, publish only with destination authority, and append later integration state. Frozen evidence applies only to that selected history run; default local report/outcome handling remains independent. Only the Host or the explicitly selected companion workflow runs history commands; subagents never write a run's records (`ADR-opt-in-maintenance-history`).
 
 #### 3.6 Verification
 
@@ -319,13 +313,7 @@ playbook's own step runs the commands; subagents never write a run's records.
 - New: the delivery capability `maintenance-history` (its ID is assigned at spec-sync; the command family, record,
   branch layout, root constant and publication contract) and the use cases `record-a-maintenance-run` and
   `find-the-latest-maintenance-run` under `docs/usecases/governance/`.
-- Changed: `CAP-DLV-weekly-report` (the companion record and publication clauses cite the new capability; the scope
-  sentence names it as the separate history backend), `CAP-DLV-drift-reconciliation` (run ID),
-  `CAP-DLV-review-refactor` and `CAP-DLV-performance-pass` (run record, publication and amendment steps; the
-  in-file outcome update becomes an amendment), the
-  glossary (`playbook run`, `run record`, `publication destination`, `source SHA`), the `devkit_agt` feature edges
-  in `.devkit/architecture.toml`, the `devkit.commands` and config-table entries of `packages/devkit/pyproject.toml`,
-  `packages/devkit/README.md` and `docs/development/reference/`.
+- Changed: the four delivery capabilities clarify optional companion history without altering default report/outcome/completion procedures; `ADR-opt-in-maintenance-history` records explicit composition and partially supersedes only blanket per-run publication applicability. The glossary registers history terms. Feature edges, command/config registrations, package README and development reference describe the standalone commands.
 - Unchanged: `CAP-COLL-shared-artifacts` and `devkit_dist.features.shared` (the history branch is not a shared
   artifact and is not subject to its seven-day TTL), `ADR-local-and-pull-request-integration` (PR operations keep
   their protocol) and the `[integration]` and `pull_request` policies, which do not cover the history branch.
@@ -360,8 +348,7 @@ or retention cleanup, a non-GitHub provider, publishing the retained diff by def
   1, challenger-03 finding 3). `publish` rechecks the frozen digests before sending (challenger-03 finding 4).
 - Outcome vocabulary: a common `outcome` field with three values and a playbook-specific `result` field, so the
   performance pass keeps its own values; integration state after `finish` is an amendment, never a record change.
-- Playbook coverage (user, `answer-01` q2): all four maintenance playbooks, each step guarded by the presence of
-  `devkit maintenance`.
+- Playbook coverage: all four maintenance playbooks support explicitly requested companion history through the standalone reference; default procedures contain no history commands (`ADR-opt-in-maintenance-history`).
 - Commit identity (user, `answer-01` q5, challenger-01 finding 19): the run commits and the root commit carry the
   fixed devkit identity; the publisher's git identity and the `gh` account identity were rejected because they make
   the commit SHA reproducible only per publisher or cost a lookup per publication.

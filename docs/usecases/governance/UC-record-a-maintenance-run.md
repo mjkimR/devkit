@@ -18,8 +18,8 @@ entrypoints:
 
 - **Goal**: retain verifiable maintenance evidence independently of conversation and code history.
 - **Scope**: maintenance run history.
-- **Trigger**: a maintenance playbook begins with a fixed report path.
-- **Preconditions**: the agent has a bounded maintenance scope.
+- **Trigger**: the user explicitly requests a companion history run with a fixed report path.
+- **Preconditions**: the agent has a bounded maintenance scope and an explicit history request. Installing commands or invoking a playbook alone does not meet this precondition.
 
 ## 2. Main Success Scenario
 
@@ -81,3 +81,10 @@ entrypoints:
 - **Given** a readable repository without the history branch.
 - **When** publication starts.
 - **Then** HISTORY_BRANCH_MISSING preserves pending and creates no branch.
+
+
+### Scenario 7: Leave default playbook execution independent
+- **Covers**: opt-in precondition
+- **Given** installed history commands and no explicit history request.
+- **When** a maintenance playbook runs.
+- **Then** its default report and completion procedure runs without history probes, lifecycle commands or recurring offers.

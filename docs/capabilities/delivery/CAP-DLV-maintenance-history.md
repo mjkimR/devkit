@@ -16,11 +16,11 @@ entrypoints:
 
 ## 1. Summary
 
-The devkit-agt command family identifies inspected content, freezes run evidence and keeps durable history apart from code history. `ADR-history-branch-publication` and `ADR-inspected-state-identity` record the design. The injected Git Database model verifies local behavior; the labelled live exercise of `SPEC-maintenance-history` remains pending explicit destination authority.
+The devkit-agt command family identifies inspected content, freezes run evidence and keeps durable history apart from code history. `ADR-history-branch-publication` and `ADR-inspected-state-identity` record the design. The injected Git Database model verifies local behavior. The labelled exercise retained under `docs/materials/2026-11/20261104-maintenance-history/` confirms repeated object creation, same-SHA updates, stale non-forced rejection and missing file/ref responses on the user-authorized test-sandbox branch. `ADR-opt-in-maintenance-history` keeps composition explicit and default playbooks independent.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: local run capture, evidence freezing, dedicated history initialization, atomic publication, amendments and retrieval for four maintenance playbooks.
+- **In-Scope**: local run capture, evidence freezing, dedicated history initialization, atomic publication, amendments and retrieval for explicitly requested companion runs of four maintenance playbooks.
 - **Out-of-Scope**: scheduling and GitHub authentication (external systems), code integration (`CAP-DLV-delivery-workflows`), shared artifacts (`CAP-COLL-shared-artifacts`), retention cleanup and a web viewer.
 
 ## 3. Business Rules & Policies
@@ -37,6 +37,9 @@ The devkit-agt command family identifies inspected content, freezes run evidence
 10. **Amendments**: WHEN integration state changes after publication, the service MUST append a retry-stable amendment and index line without editing published evidence. Tests: `packages/devkit/tests/integration/features/maintenance_history/test_publication.py`.
 11. **Empty history**: WHEN the branch is absent, list MUST return zero with a notice while get returns `HISTORY_RUN_MISSING`. Tests: `packages/devkit/tests/integration/features/maintenance_history/test_publication.py`.
 12. **Agent output**: commands MUST follow `ARCH-08-1-agent-output`: sentinel facts or one JSON result, with the shared CLI boundary handling errors. Tests: `packages/devkit/tests/integration/features/maintenance_history/test_cli.py`.
+
+13. **Opt-in composition**: the agent MUST invoke history commands only when the user explicitly requests a history run; command installation and playbook invocation alone grant no opt-in and trigger no recurring offer. Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.
+14. **Independent defaults**: the four default maintenance playbooks MUST retain their report, outcome and completion procedures independently of history availability; frozen evidence and amendments apply only to the opted-in history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.
 
 ## 4. Interfaces & Data Contracts
 

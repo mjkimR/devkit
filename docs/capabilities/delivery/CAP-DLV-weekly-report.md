@@ -20,7 +20,7 @@ The opt-in maintenance bundle supplies weekly-report independently of drift/upke
 intake offer follows
 `CAP-DIST-context-and-playbooks`; selection/retrieval MUST NOT execute it. Generation SHOULD reuse available tools and
 artifacts. It MUST NOT automatically run checks, maintenance or fixes, or create follow-ups. No scheduler,
-detector or standalone skill is included. The separate runtime publisher and history backend belong to `CAP-DLV-maintenance-history`. Publication MUST have separate
+detector, runtime publisher, history backend or standalone skill is included. Publication MUST have separate
 authority. Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
 ## 2. Intake and Evidence
@@ -99,6 +99,7 @@ confirmed absence permits retry within authority. A mismatched destination MUST 
 publication failure MUST leave completed generation intact. Controlled exercises MUST label simulated
 authority/receipts and MUST NOT claim external publication.
 
-## Maintenance history integration
 
-WHERE `devkit maintenance history` is installed, the playbook MUST use the run identity and companion record of `CAP-DLV-maintenance-history`, starting after fixing the report path and finishing after report verification. Publication and amendments MUST retain separate explicit user authority. Without the command, this capability's local record procedure applies. The separate history backend belongs to `CAP-DLV-maintenance-history`.
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

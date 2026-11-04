@@ -169,10 +169,12 @@ measured, components attributed, candidates dropped below the noise floor, gaps)
 records, each change with its candidate, classification, differential inputs and count, verification, measured
 before and after and commit; decisions with provenance, follow-ups, counts and the final interleaved measurement
 against the intake revision; and the outcome (`stopped at decision round`, `applied` or `partially applied`) with the
-work items' integration state; WHERE a history run exists, later integration state MUST be an append-only amendment under `CAP-DLV-maintenance-history`, preserving the report; otherwise update the local report outcome when a work item integrates or stops. A run is complete when no decision is pending, every agreed change is committed or
+work items' integration state; a report written before a work item integrates MUST have its outcome updated when
+that work item integrates or stops. A run is complete when no decision is pending, every agreed change is committed or
 routed and the final measurement is recorded; a `survey` run that applied nothing is complete with its decisions
 recorded and outcome `stopped at decision round`.
 
-## Maintenance history integration
 
-WHERE `devkit maintenance history` is installed, the playbook MUST use the run identity and companion record of `CAP-DLV-maintenance-history`, starting after fixing the report path and finishing after report verification. Publication and amendments MUST retain separate explicit user authority. Without the command, this capability's local record procedure applies. The separate history backend belongs to `CAP-DLV-maintenance-history`.
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

@@ -24,13 +24,15 @@ class FakeGitHub:
     def __call__(self, method: str, endpoint: str, payload: dict[str, Any] | None, timeout: float) -> Response:
         self.calls.append((method, endpoint, payload, timeout))
         url = urlsplit(endpoint)
-        path = unquote(url.path.removeprefix("repos/owner/repo/")).rstrip("/")
+        path = unquote(url.path.removeprefix("repos/owner/repo")).lstrip("/")
         query = parse_qs(url.query)
         if self.hook:
             answer = self.hook(method, path, payload)
             if answer is not None:
                 return answer
-        if url.path.rstrip("/") == "repos/owner/repo":
+        if url.path == "repos/owner/repo/":
+            return Response(404, {}, {})
+        if url.path == "repos/owner/repo":
             return Response(200, {}, {"full_name": "owner/repo"})
         if method == "GET" and path.startswith("git/ref/heads/"):
             return Response(200, {}, {"object": {"sha": self.head}}) if self.head else Response(404, {}, {})

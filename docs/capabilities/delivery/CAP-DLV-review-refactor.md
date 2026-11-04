@@ -130,9 +130,11 @@ The report is an ordinary local Markdown file under the owning unit's materials 
 location. It records intake, coverage per batch (reviewed, excluded, gaps, dropped candidates), findings and changes
 as separate records (each change with its evidence, commit, delta and no-longer-accepted inputs), approved behavior
 changes in their own section, separate from the inputs no longer accepted, decisions with provenance, follow-ups,
-counts and the outcome. WHERE a history run exists, later integration state MUST be an append-only amendment under `CAP-DLV-maintenance-history`; the report stays frozen. Otherwise update the local outcome when a work item integrates or stops. Seeded exercises label decisions simulated and change only
+counts and the outcome. A report written before its work item integrates has its outcome updated with the
+integration state when the work item integrates or stops. Seeded exercises label decisions simulated and change only
 the fixture. Completion applies to a batch with no pending decision; a batch never claims the whole repository.
 
-## Maintenance history integration
 
-WHERE `devkit maintenance history` is installed, the playbook MUST use the run identity and companion record of `CAP-DLV-maintenance-history`, starting after fixing the report path and finishing after report verification. Publication and amendments MUST retain separate explicit user authority. Without the command, this capability's local record procedure applies. The separate history backend belongs to `CAP-DLV-maintenance-history`.
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

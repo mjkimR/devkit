@@ -56,7 +56,8 @@ class GitHubHistory:
     ) -> Response:
         timeout = 30.0 + (len(canonical(payload)) / 65536 if payload is not None else 0)
         try:
-            response = self.runner(method, f"{self.prefix}/{path}", payload, timeout)
+            endpoint = f"{self.prefix}/{path}" if path else self.prefix
+            response = self.runner(method, endpoint, payload, timeout)
         except (subprocess.TimeoutExpired, TransportFailure) as exc:
             self.attempts.append(
                 {

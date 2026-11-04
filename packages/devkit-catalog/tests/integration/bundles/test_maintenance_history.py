@@ -8,15 +8,15 @@ ROOT = Path(__file__).parents[3] / "src/devkit_catalog/maintenance/bundle/playbo
 @pytest.mark.parametrize(
     "relative", ["weekly-report.md", "drift-reconciliation.md", "review-refactor/SKILL.md", "performance-pass/SKILL.md"]
 )
-def test_history_steps_are_guarded_and_publication_remains_explicit(relative: str) -> None:
+def test_default_playbooks_are_independent_of_history_availability(relative: str) -> None:
     text = (ROOT / relative).read_text()
-    assert "If `devkit maintenance history --help` succeeds" in text
-    assert "--report <report-path>" in text
-    assert "history finish" in text and "history publish" in text and "history update" in text
-    assert "separate authority" in text
-    assert "configuration grants none" in text
-    assert "freeze its digest" in text
-    assert "--file <frozen-path>" in text
-    assert "Without that command" in text
-    assert "leave the report bytes unchanged" in text
+    # Installing history must not add probes, lifecycle commands, offers or completion gates.
+    assert "maintenance history" not in text
+    assert "history run" not in text
+    assert "History completion" not in text
+    assert "Recheck HEAD and dirty paths" in text or "captured SHA" in text
     assert len(text.encode()) <= 12288
+    if relative in ("review-refactor/SKILL.md", "performance-pass/SKILL.md"):
+        assert "Update it once each work item integrates or stops." in text
+    if relative == "weekly-report.md":
+        assert "Create a companion outcome record" in text

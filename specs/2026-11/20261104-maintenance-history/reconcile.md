@@ -32,10 +32,14 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-11/20261104-inspected-state-identity.md
     resolution: modified
+  - file: docs/decisions/2026-11/20261104-opt-in-maintenance-history.md
+    resolution: modified
 ---
 
 # Reconciliation: `SPEC-maintenance-history`
 
-The feature contract and four playbook integrations are drafted against the implementation. The capability/use cases remain draft/proposed until AC-10 receives the required live evidence. No scope criterion is waived. The two promoted decisions retain their accepted decisions; only confirmation/restatement traces are aligned.
+The standalone feature contract and explicit composition boundary are reflected against implementation. The capability/use cases remain draft/proposed until focused review and reconciliation complete. AC-10 passes without waiving a criterion. The two promoted decisions retain their root/publication/identity decisions; only the authorized per-run applicability trace changes.
 
-Local verification and the independent review/reconcile evidence are recorded in envelopes. The labelled live exercise is the remaining required verification, pending explicit throwaway destination authority; it is not deferred work or completion.
+The labelled live exercise passes with sanitized evidence in the preserved materials. A repository endpoint defect was reproduced and fixed before success. The refined opt-in composition and live confirmations await focused independent review/reconciliation before canonical activation and completion.
+
+The user-refined composition boundary is `ADR-opt-in-maintenance-history`: standalone history remains available only on explicit request. The four default catalog playbooks are restored to their pre-feature procedures. Installing commands does not add history probes, lifecycle actions, offers or completion prerequisites. The old publication ADR gains only the authorized partial-supersession applicability trace.
