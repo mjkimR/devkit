@@ -7,8 +7,8 @@ plan: PLAN-post-merge-verification
 # Task breakdown: post-merge verification
 
 - [x] **Task 1**: Reduce generic integration to approved Git effects, preserve guards and add regression coverage.
-  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/`, `packages/devkit/src/devkit_agt/features/worktree/`, `packages/devkit/pyproject.toml`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit/tests/e2e/features/integration/`, `packages/devkit/tests/integration/features/worktree/`, `packages/devkit/tests/integration/package/test_config_tables.py`, `.devkit/config.toml`, `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py` (scope extension: Host-authorized migration of installed consumer fixture for the reduced integration CLI and verification state)
-  - _Requirements: AC-02, AC-05, AC-06, AC-09_
+  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/`, `packages/devkit/src/devkit_agt/features/worktree/`, `packages/devkit/pyproject.toml`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit/tests/e2e/features/integration/`, `packages/devkit/tests/integration/features/worktree/`, `packages/devkit/tests/integration/package/test_config_tables.py`, `.devkit/config.toml`, `docs/architecture/ARCH-04-2-delivery-policy.md` (scope extension: Host-authorized alignment of CAP-INT-mcp-services readiness ownership with final Host checks and retained Git policy), `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py` (scope extension: Host-authorized migration of installed consumer fixture for the reduced integration CLI and verification state)
+  - _Requirements: AC-01, AC-02, AC-05, AC-06, AC-09_
   - **Verification**: Integration service, CLI and PR tests; lint and types.
 
 - [x] **Task 2**: Preserve proposal eligibility and yield acceptance before fresh-process handoff, with tests.

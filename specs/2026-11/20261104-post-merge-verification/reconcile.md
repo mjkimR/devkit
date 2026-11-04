@@ -2,6 +2,8 @@
 reconcile_id: REC-post-merge-verification
 status: pending
 targets:
+  - file: docs/architecture/ARCH-04-2-delivery-policy.md
+    resolution: modified
   - file: docs/architecture/ARCH-05-2-components.md
     resolution: modified
   - file: docs/architecture/ARCH-06-runtime-view.md
@@ -41,3 +43,5 @@ The adaptive-development capability is included because project-level readiness 
 No required work or concrete deferred work is moved to a follow-up. CLI success does not enforce or prove external final checks. The Host must perform final target verification after integration.
 
 Entrypoint candidates were derived and reviewed. Existing integration, delivery and proposal doorway entries remain accurate after removing the deleted readiness-provider entry. Broad cross-product directory, test, configuration and guide candidates were rejected because they do not provide document-specific code entrypoints.
+
+Inbound references to `CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows` and `ADR-post-merge-verification` were inspected. The Host authorized the exact additional `ARCH-04-2-delivery-policy` target because its premerge content-readiness clause contradicted the new integration ownership. Other inbound distribution, generated-artifact and host references retain their existing contracts.
