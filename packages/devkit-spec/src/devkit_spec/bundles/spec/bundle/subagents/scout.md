@@ -43,3 +43,5 @@ The fields of a `scout` envelope ("Return envelope" in `.devkit/managed/spec/ski
 - On a timeout, blocked network access or an unreadable file, return `failed` or `needs_input` naming the unreached scope.
 
 Use shell commands for queries only. Write nothing, except in the current proposal's `materials/` directory when the caller asks for a written artifact.
+In a written artifact, cite ID-bearing documents by their full backticked ID.
+Keep `path:line` evidence alongside the document ID.

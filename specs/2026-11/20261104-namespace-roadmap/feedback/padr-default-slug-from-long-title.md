@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/ref
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -46,3 +46,11 @@ created_at: 2026-11-04
 --slug TEXT  Slug of the PADR ID and file name; its first word needs a letter [default: the title's slug]
 planning.md step 2: Create it with `devkit spec proposal padr <slug> "<title>" --summary "<Y-statement>"` and read the scaffold before writing its body.
 ```
+
+## Disposition
+
+Resolved by the session change to
+`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`.
+The PADR example passes a short `--slug` explicitly and explains that handoff retains it in the ADR ID;
+the CLI's existing default is unchanged. CLI help confirmed the option, independent medium Code Review passed,
+and `just test-affected --base 6b24d5dd` passed 1,626 tests. Asset hygiene and sync checks passed.

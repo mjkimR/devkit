@@ -13,7 +13,7 @@ Read this when building a payload (`spec-delegate` step 2).
 
 | Role | `relevant_files` | Also pass |
 | --- | --- | --- |
-| `scout` | Starting points | The `materials/` path when an artifact is wanted |
+| `scout` | Starting points | The `materials/` path when an artifact is wanted; require full backticked IDs for ID-bearing documents cited there |
 | `challenger` | Proposal or spec, AC, non-goals, ADRs and capabilities as paths; at `high` the `scout` list | `activity-effort` |
 | `code-reviewer` | `spec.md`, `plan.md`, `tasks.md`, touched capabilities and ADRs | Your check results; `activity-effort`; an ignored probe path inside the worktree for throwaway probe tests, preparing one if none exists, and this round's own subdirectory of it (e.g. `<probe path>/review-NN/`) |
 | `ux-reviewer` | The Screens drafts (`spec.md` or `target-docs.md`), the use cases they list, `docs/steering/ux-objects.md` when it exists, the linked Evidence | The round number (at most two) and the earlier round's envelope; the last commit, stating any uncommitted draft |

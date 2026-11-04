@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/scout
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -47,3 +47,11 @@ created_at: 2026-11-04
 [DETAIL] RULE-id-convention docs/proposals/PROP-maintenance-history/materials/internal-constraints.md:115: Date- or number-based identifier reference "<number prefix of ARCH-08-1-agent-output>"
 [DETAIL] RULE-id-convention docs/proposals/PROP-maintenance-history/materials/internal-constraints.md:149: Date- or number-based identifier reference "<number prefix of ARCH-05-2-components>"
 ```
+
+## Disposition
+
+Resolved by the session changes to `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/scout.md`
+and `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md`.
+Written Scout artifacts now cite ID-bearing documents by full backticked IDs while retaining `path:line` evidence.
+Independent medium Code Review passed with no findings. `just test-affected --base 6b24d5dd` passed 1,626 tests;
+asset hygiene passed 25 rules without warnings, and `devkit sync --check` reported no changes.

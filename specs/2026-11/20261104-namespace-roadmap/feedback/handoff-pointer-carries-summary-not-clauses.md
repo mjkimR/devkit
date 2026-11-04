@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -37,3 +37,12 @@ handoff.py:14: writes one "Superseded in part by `ADR-<slug>`: <summary>" line b
 ledger ADR after handoff: Superseded in part by `ADR-namespace-milestone-roots`: For a monorepo whose packages run on their own cadence, we let ...
 docs/decisions/README.md: "the earlier ADR ... otherwise stays accepted with a 'Superseded in part by' line"
 ```
+
+## Disposition
+
+Resolved through the guidance alternative by the session change to
+`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/references/post-handoff.md`.
+The Host reviews partial-supersession pointers against the promoted ADR's Decision Outcome and commits any
+needed clause clarification before starting a worker, preserving the earlier ADR's other decisions.
+No PADR metadata or handoff API was added. Independent medium Code Review passed with no findings;
+`just test-affected --base 6b24d5dd` passed 1,626 tests, and asset hygiene and sync checks passed.
