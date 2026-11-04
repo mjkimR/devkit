@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T00:47:14.604060Z'
+status: completed
+summary: 'Round 2 (implementer self-verification of the round 1 fixes): docs/decisions/README.md added as a modified target; the record-naming clause no longer traces to a capability; clauses 1 and 3 cite the asset and playbook tables and the Consolidation groups paragraph and section 3.5 rule 5; the glossary identifiers are code spans and pass the reference rule; reconcile.md resolved and the spec completed.'
+findings: []
+assumptions:
+- Self-verification covers only the four reflection repairs; the contract comparison stands on reconcile-check-01
+checks:
+  rules: PASS uv run devkit rules check --staged at commit
+diff_scope:
+  base: 9e7cfb141854b488c2164f792bae31f30824a80d
+  head: 297d2472912bf9915c8362b6638fd77802ecb169
+activity_effort: medium

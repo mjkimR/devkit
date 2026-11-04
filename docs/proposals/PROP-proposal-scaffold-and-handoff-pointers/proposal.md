@@ -2,7 +2,7 @@
 id: PROP-proposal-scaffold-and-handoff-pointers
 title: Lean proposal scaffold and handoff supersession pointers
 summary: Make devkit spec proposal new create no empty directories and devkit spec proposal handoff write the Superseded in part by pointer for each partially superseded ADR, so a Planning worktree holds what it needs and the handoff commit passes its gate.
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: delivery/
 priority: high                        # critical | high | medium | low

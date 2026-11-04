@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-A permanent ledger recording critical technical and structural decisions, as well as architectural invariants. A decision is never changed in place: reversing, invalidating or changing a decision takes a new ADR that names the earlier one in `supersedes`; the earlier ADR becomes `superseded` with `superseded_by` only when all of its decisions are replaced, and otherwise stays `accepted` with a "Superseded in part by" line. The documents themselves may be edited without changing any decision's meaning: wording, format, stale names and references, metadata, and consolidation of related ADRs into one that lists their IDs in `aliases` (the `adr-compaction` playbook) (`ADR-immutable-decisions-editable-records`).
+A permanent ledger recording critical technical and structural decisions, as well as architectural invariants. A decision is never changed in place: reversing, invalidating or changing a decision takes a new ADR that names the earlier one in `supersedes`; the earlier ADR becomes `superseded` with `superseded_by` only when all of its decisions are replaced, and otherwise stays `accepted` with a "Superseded in part by" line. The documents themselves may be edited without changing any decision's meaning: wording, format, stale names and references, metadata, and consolidation of related ADRs into one that lists their IDs in `aliases` (the `adr-consolidation` playbook) (`ADR-immutable-decisions-editable-records`).
 
 ## Directory Layout & Naming Conventions
 

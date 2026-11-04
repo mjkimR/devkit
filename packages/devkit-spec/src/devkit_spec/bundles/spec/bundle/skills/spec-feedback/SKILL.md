@@ -30,7 +30,7 @@ One observation, one file, committed with the work. Capture writes `status: open
 2. Look up existing feedback of every status before writing:
    `devkit docs search "<symptom and asset words>" --kind feedback --history -n 5`. Read the hits; a hit is the same
    observation when it describes the same symptom of the same asset or behavior, whatever its `target` wording. No
-   search score decides sameness. On a compact record hit (an `FB-compacted-...` record), read only the entries that
+   search score decides sameness. On a consolidated record hit (an `FB-consolidated-...` record), read only the entries that
    match the observation's words; the matching entry decides. Act on the matched status:
 
    | Matched status | Action |
