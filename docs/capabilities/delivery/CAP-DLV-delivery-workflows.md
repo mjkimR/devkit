@@ -623,7 +623,7 @@ Task entry preserves source FB IDs and scope through handoff and drafting. Termi
 disposition or re-verification and do not implicitly authorize source writes. Completion of follow-up work never
 converts promoted sources to resolved.
 
-Before recording feedback, search existing feedback of every status and act on matching results. The user-invoked `feedback-compaction` playbook deletes eligible resolved feedback and its aliases, while retaining other terminal outcomes in compact records with aliases. Active references and incomplete or unmerged work protect feedback from deletion. A recurrence after deletion is recorded as a fresh observation; Git history retains the originals (`ADR-feedback-lifecycle-ledger`, `CAP-HARN-agent-guidance`).
+Before recording feedback, search existing feedback of every status and act on matching results. The user-invoked `feedback-consolidation` playbook deletes eligible resolved feedback and its aliases, while retaining other terminal outcomes in consolidated records with aliases. Active references and incomplete or unmerged work protect feedback from deletion. A recurrence after deletion is recorded as a fresh observation; Git history retains the originals (`ADR-feedback-lifecycle-ledger`, `CAP-HARN-agent-guidance`).
 
 At `living-spec-draft`, review only explicit open direct-fix sources against implementation and verification and
 record outcomes in `reconcile.md`. At `report-session`, do the same before committing and report outcomes without

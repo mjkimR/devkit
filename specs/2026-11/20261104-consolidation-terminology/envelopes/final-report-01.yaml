@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T00:48:46.705752Z'
+status: completed
+summary: 'SPEC-consolidation-terminology: the record-merging term compaction renamed to consolidation. Playbooks adr-consolidation and feedback-consolidation keep their former IDs as aliases; 25 FB-consolidated records keep their former IDs as aliases; bundle guidance, three capabilities, the glossary and three ledger ADRs reworded (no decision changed); ADR-consolidation-terminology records the rename. Compact output, the compact subagent level, context compaction, retired alias IDs and history untouched.'
+findings: []
+assumptions:
+- 'Git policy auto choice: local merge route (no platform review or CI requirement; base accepts direct pushes); worktree required by policy'
+- Completed spec bundles, envelopes and docs/materials keep the old wording as history; retired alias IDs stay spelled as before
+checks:
+  tests: PASS just test-affected 1580 passed; just test devkit-spec 1639; just test devkit-dist 1292
+  build: PASS uv run devkit generated check stale=0; devkit sync --check clean; devkit playbook get resolves both old and new IDs
+  lint: PASS uv run devkit rules check --ci --base 9e7cfb14 errors=0 warnings=0; just lint-check; just check
+diff_scope:
+  base: 9e7cfb141854b488c2164f792bae31f30824a80d
+  head: ba7c5f7332ed68a08955aa052ee75f2b3a881e64
+activity_effort: medium

@@ -28,7 +28,7 @@ def test_recording_searches_every_status_before_writing() -> None:
     assert LOOKUP in " ".join(procedure.split())
     assert_rule(procedure, "same observation", "same symptom of the same asset or behavior", "whatever its `target`")
     assert_rule(procedure, "no search score decides sameness")
-    assert_rule(procedure, "compact record hit", "only the entries that match", "matching entry decides")
+    assert_rule(procedure, "consolidated record hit", "only the entries that match", "matching entry decides")
 
 
 # AC-02
