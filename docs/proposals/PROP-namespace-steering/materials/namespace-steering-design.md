@@ -82,19 +82,22 @@ directory lists at most `max_files` entries. Options for the namespace directori
 
 | Option | Inside a package (source path or docs root) | Outside every package (repository root, `-w`) | Worst case per context | Consistency |
 | --- | --- | --- | --- | --- |
-| **a. The `CAP-DOCS-namespaces` 3.3 default selection** (recommended; q1 for the user) | global + that namespace | global + every namespace | `max_files × (1 + N)` entries at the root; `2 × max_files` inside a package | Same rule as `devkit docs list` without options; no new concept |
-| b. Global only outside a package (q1 alternative) | global + that namespace | global only | `2 × max_files` | Tightest bound; an agent at the repository root (the usual Claude Code working directory) never sees package background unless it changes directory or reads `docs/packages/<name>/steering/` itself |
-| c. Every namespace always | global + every namespace | global + every namespace | `max_files × (1 + N)` | The cost `ADR-steering-documents` rejected, paid even inside a package |
+| a. The `CAP-DOCS-namespaces` 3.3 default selection (Planning's first recommendation) | global + that namespace | global + every namespace | `max_files × (1 + N)` entries at the root; `2 × max_files` inside a package | Same rule as `devkit docs list` without options; no new concept |
+| b. Global only outside a package | global + that namespace | global only | `2 × max_files` | Tightest bound; an agent at the repository root (the usual Claude Code working directory) never sees package background unless it changes directory or reads `docs/packages/<name>/steering/` itself |
+| **c. Global plus a hint, with `--for <dir>`** (the `user`'s decision, `envelopes/answer-01.yaml`) | global + that namespace; the other namespaces' directories as path and file count | global only; every namespace's directory as path and file count | `2 × max_files` entries plus `N` hint lines of about 60 bytes | The `documents` list stays as small as b; the hint (`documents_elsewhere`) tells the agent what exists, and `uv run devkit get-context docs --for packages/<name>` fetches a package's list from the root; one more call for package background |
+| d. Every namespace always | global + every namespace | global + every namespace | `max_files × (1 + N)` | The cost `ADR-steering-documents` rejected, paid even inside a package |
 
-For g-sandbox at the repository root, option a lists 9 namespace entries (about 2.3 KB locally) beside the root ones;
-inside `caravan-trade`, two. A monorepo with many packages lowers `max_files` or keeps fewer steering files per
+For g-sandbox at the repository root, option a would list 9 namespace entries (about 2.3 KB locally) beside the root
+ones; option c lists none and names 4 directories (about 240 bytes); inside `caravan-trade`, both list two. A monorepo with many packages lowers `max_files` or keeps fewer steering files per
 package; the rule caps each directory, and the number of namespaces is the project's own choice. The cap stays a rule
 setting (`CAP-GOV-spec-rules` 3.14) because `devkit-dist` caps nothing itself (`ADR-steering-documents` (the listing mechanism)).
 
-**Selection input**: `devkit get-context` takes no `--namespace`. The selection follows the working directory, the
-same input `devkit docs list` uses; today the CLI hands the use case only the resolved project root (`resolve_root`,
-challenger-01 #1), so the CLI passes the cwd (or the `-w` root, which is "outside every package") as a second input
-and `GetContext.execute` gains that parameter; its only production caller is the CLI. A namespace concept in the `devkit-dist` CLI would contradict the SDD-agnostic rule, and an agent working
+**Selection input**: `devkit get-context` takes no `--namespace <name>` (a docs concept devkit-dist could not
+validate). The selection follows the working directory, the same input `devkit docs list` uses; today the CLI hands
+the use case only the resolved project root (`resolve_root`, challenger-01 #1), so the CLI passes a second input,
+`--for <dir>` (an existing directory inside the project, `ARGUMENT_INVALID` otherwise), else the cwd, else the `-w`
+root (which is "outside every package"), and `GetContext.execute` gains that parameter; its only production caller is
+the CLI. `--for` lets an agent at the repository root request a package's context without changing directory. A namespace concept in the `devkit-dist` CLI would contradict the SDD-agnostic rule, and an agent working
 across packages runs the command from the repository root (option a) or reads the other directory by path.
 
 ## 4. Q2: who tells `devkit-dist` which directories to list
@@ -113,8 +116,12 @@ unread) and imports no application package (`ARCH-05-2-components`). The registr
 Provider contract (Development writes the exact signature and code name):
 
 - Called for every bundle whose managed `bundle.toml` declares `context_documents`, with the project root, the
-  `start` directory and the declared directory; returns a sequence of workspace-relative directories validated with
-  the seeded `target` grammar (`manifest.seed_target`); an invalid item is dropped with a warning.
+  working directory and the declared directory; returns two sequences of workspace-relative directories, those to
+  list and those to mention, each validated with the seeded `target` grammar (`manifest.seed_target`); an invalid item
+  is dropped with a warning.
+- The directories to mention appear under a new result key `documents_elsewhere`: the absolute `path` and `files`
+  (the count of Markdown files other than `README.md`, by the same read rules), existing directories only, sorted by
+  path, `[]` when none (q1 option c).
 - A provider that fails to load, raises (including `DOCS_CONFIG_INVALID`) or returns something else is reported as a
   warning (one per provider, naming the entry point): `ContextResult.notices`, carried in the JSON object, and a
   stderr advisory block `CONTEXT_DOCUMENTS_EXTENSION_FAILED`, as `devkit sync` reports its notices; the context lists
@@ -124,8 +131,9 @@ Provider contract (Development writes the exact signature and code name):
   stays sorted by absolute path; entries keep `path`, `title` and `summary` only. `docs/packages/<name>/steering/X`
   sorts before `docs/steering/X`, which puts package background first.
 - The `devkit-docs` provider: without registered namespaces, or for a directory not under `docs/`, it returns
-  nothing; otherwise it returns `docs/packages/<name>/<rest>` for the namespace `detect` selects, or for every
-  registered namespace when `detect` selects none under q1 option a (nothing under option b).
+  nothing; otherwise it returns `docs/packages/<name>/<rest>` to list for the namespace `detect` selects and the other
+  registered namespaces' mirrors to mention; when `detect` selects none, nothing to list and every registered
+  namespace's mirror to mention (q1 option c).
 
 ## 5. Q3: goals and the glossary
 
