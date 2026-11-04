@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-viewer-namespace-roadmap
+by: user
+at: '2026-11-04T07:11:32.764457Z'

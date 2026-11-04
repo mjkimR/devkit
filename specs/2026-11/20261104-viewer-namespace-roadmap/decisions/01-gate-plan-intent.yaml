@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-viewer-namespace-roadmap: Use the agreed feedback-hygiene destination:
+  a standalone viewer proposal without milestone membership.'
+by: user
+at: '2026-11-04T07:11:32.763019Z'

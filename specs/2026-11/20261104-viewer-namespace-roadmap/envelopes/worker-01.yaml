@@ -1,0 +1,30 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:37:11.267814Z'
+status: completed
+summary: Completed structural namespace roadmap discovery, rebuilt app/library and seven-target reflection. Host optional-root P2 reproduced and fixed; fresh independent review/reconcile passed. No scope extensions or tracked sync outputs. Host owns integration and cleanup.
+findings: []
+assumptions:
+- Codex isolation emulated through explicit absolute cwd/read scope, per-operation approvals, unchanged reviewer snapshots and committed-range audit; no native guarantee.
+- Initial Code Reviewer read four explicitly authorized external runtime logs; other reviewers reported no outside-worktree source/document reads.
+- No new API, dependency, feature edge, screen, milestone or writer operation; promoted source feedback unchanged by worker.
+unverified_areas:
+- Host-owned integration/base movement and cleanup not performed.
+- Supported Node versions not separately exercised; checks succeeded on Node22.22.0 below declared22.22.2 with engine warning.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0 no outputs
+  tests: PASS corrected frontend132; Python165 partial14paths and focused33 reused unchanged
+  build: PASS corrected frontend package/export/page build and generated03dd6be7 checked1 stale0
+  lint: PASS frontend lint/check0 and unchanged Python Ruff/Pyright0
+  review: PASS review-01 original range plus fresh review-03 correction; Host P2 closedreverify-01
+  reconcile: PASS reconcile-check-02 fresh seven-target verification
+  ci: PASS cumulative22rules zero violations at71182e98; subsequent records/status only
+  baseline: PASS saved fixture global1 to global+namespacearchive2 errors0; optional-root2RED to GREEN
+  scope_extensions: PASS none used
+diff_scope:
+  base: d2f4f1c7f418fb657d385dfa7ff2ef6cdeaf5167
+  head: 737ab1fb1010e440834daa139fb1f3b20fec6424
+activity_effort: medium

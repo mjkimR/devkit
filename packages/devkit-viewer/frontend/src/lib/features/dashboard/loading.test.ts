@@ -15,12 +15,13 @@ function fixture(files: Record<string, string>): RepositoryDataSource {
 		info: async () => ({}),
 		tree: vi.fn(async (path: string) => {
 			const names = new Map<string, string>();
+			const prefix = path ? `${path}/` : '';
 			for (const file of Object.keys(files))
-				if (file.startsWith(`${path}/`)) {
-					const [name, ...rest] = file.slice(path.length + 1).split('/');
+				if (file.startsWith(prefix)) {
+					const [name, ...rest] = file.slice(prefix.length).split('/');
 					names.set(name, rest.length ? 'tree' : 'blob');
 				}
-			return [...names].map(([name, type]) => ({ name, path: `${path}/${name}`, type }));
+			return [...names].map(([name, type]) => ({ name, path: prefix + name, type }));
 		}),
 		blob: vi.fn(async (path: string) => ({ path, content: files[path], encoding: 'utf-8' }))
 	};
@@ -65,8 +66,9 @@ describe('dashboard loading', () => {
 	});
 	it('treats only missing optional roots as empty', async () => {
 		const source = fixture({});
-		source.tree = vi.fn(async () => {
-			throw new Error('HTTP 404: Not Found');
+		source.tree = vi.fn(async (path: string) => {
+			if (path === '') return [];
+			throw new Error('ENOENT');
 		});
 		expect((await loadDashboardSection(source, 'main', 'milestones', signal())).errors).toEqual([]);
 		source.tree = vi.fn(async () => {
@@ -395,7 +397,7 @@ it.each([false, true])(
 					.mocked(source.tree)
 					.mock.calls.map(([path]) => path)
 					.sort()
-			).toEqual(['docs/roadmap', 'docs/roadmap/_archive']);
+			).toEqual(['', 'docs', 'docs/roadmap', 'docs/roadmap/_archive']);
 		expect(await openDashboardPage(source, 'main', 'milestones', signal())).toBe(page);
 	}
 );

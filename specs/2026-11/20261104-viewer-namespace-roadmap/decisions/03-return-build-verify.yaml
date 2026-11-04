@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Host found optional docs discovery assumes HTTP404 from tree and suppresses
+  a listed docs disappearance; fix within AC-04 and unchanged host interface.
+at: '2026-11-04T07:30:19.193014Z'

@@ -1,15 +1,15 @@
 ---
-id: PADR-viewer-namespace-roadmap-discovery
+id: ADR-viewer-namespace-roadmap-discovery
 title: Discover viewer namespace roadmaps by structural paths
 summary: "For viewer roadmap discovery across local and library sources, we match global and namespace roadmap paths without reading the namespace registry, to preserve reader independence, accepting that unregistered directories can appear."
-proposal: PROP-viewer-namespace-roadmap
-status: draft
+proposal: SPEC-viewer-namespace-roadmap
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
+# [ADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
 
-- **Status**: Draft; recommended option pending proposal acceptance.
+- **Status**: Accepted.
 
 ## 1. Context & Problem Statement
 
@@ -27,7 +27,7 @@ repository's devkit and remains independent of its pinned document-system versio
 
 ## 3. Considered Options
 
-- **Structural roadmap paths** (recommended): one path policy for Python headers and frontend tree/blob readers;
+- **Structural roadmap paths** (selected): one path policy for Python headers and frontend tree/blob readers;
   no configuration parser, dependency or data-source method; unregistered directories can appear.
 - **Registered namespaces only**: closer registry parity with CLI discovery; both languages/hosts need a shared
   registry interpretation and error policy, which expands this file-reader change.
@@ -35,7 +35,7 @@ repository's devkit and remains independent of its pinned document-system versio
 
 ## 4. Decision Outcome
 
-The following clauses draft the recommended structural option; proposal acceptance settles them.
+Structural roadmap discovery is selected to keep local and library readers independent of namespace configuration.
 
 - Both dashboard routes and the roadmap loader discover global roadmap roots and the same roots directly under
   `docs/packages/<name>/`, including only the reserved flat `_archive/`. → `CAP-VIEW-repository-viewer` 4.1 and 5 (MUST).
@@ -67,8 +67,12 @@ working-tree reads, independent parsing and Planning-overlay clauses remain in f
 
 ## 6. Confirmation
 
-- Backend working-tree dashboard header tests cover structural roots, flat archives, untracked files and symlinks.
-- Frontend generic-dashboard and roadmap tests use the same path/registration scenario matrix.
-- Frontend graph tests cover cross-root readiness and proposal membership, including hidden archived prerequisites.
-- Existing cache/paging/cancellation tests remain passing; generated artifact verification matches the built page.
-- Development restates every traced clause in `CAP-VIEW-repository-viewer` before completing reconciliation.
+- `tests/integration/features/browse/test_namespace_roadmap.py` verifies global/two-package and configuration
+  matrices, saved untracked content, header-only reads, local symlinks and partial errors.
+- `frontend/src/lib/api/milestones.test.ts` verifies shared generic discovery, host-returned types, cross-root
+  readiness and proposal membership, optional/listed root errors, abort/refresh/expiry, six workers and optimized pages.
+- Existing dashboard, roadmap and view tests preserve paging, caches, Planning overlays and detail paths.
+- `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer pack`, `just viewer build` and
+  `devkit generated check viewer-assets` verify the source and committed application build.
+- `CAP-VIEW-repository-viewer` sections 2, 4.1, 5 and 6 restate the decision. The retained baseline and observed
+  implementation result live under `docs/materials/2026-11/20261104-viewer-namespace-roadmap/`.

@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:33:12.939120Z'
+status: completed
+review: review-02.yaml
+summary: Host optional-root P2 fixed by root metadata discovery; two regressions RED before and GREEN afterward; complete frontend132/lint/check/build passed.
+findings:
+- issue: Generic milestone discovery assumes HTTP404 for optional tree roots and suppresses a listed docs directory read failure.
+  evidence: api/milestones.ts list('docs', true) treats absence by tree error text; CAP-VIEW-repository-viewer section 6 constrains HTTP404 only for blob. Host valid source tree('')=[] and tree('docs')=ENOENT reports an error instead of empty success.
+  failure_condition: A source represents an absent docs root with a non-HTTP error, or advertises docs then its read rejects HTTP404; the former falsely errors and the latter falsely succeeds.
+  suggested_action: Discover docs existence from root metadata and report failures of advertised directories without imposing tree error-message requirements.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS complete frontend132 and two named optional-root regressions
+  build: PASS rebuilt frontend page and package
+diff_scope:
+  base: 39fb43eee275ead59e46881ce1e551ed6847c4da
+  head: 03dd6be70c896fed1870045afccc6b9e40cae03e

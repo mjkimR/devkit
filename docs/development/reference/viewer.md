@@ -61,6 +61,13 @@ error                                       {"error": {"code", "message"}}
 
 The dashboard loads each section independently: candidate frontmatter supplies sorted lists and counts; only visible pages fetch full bodies (6 milestones, 9 proposals, 6 feedback per page). Load more appends one page in the existing order. Cached lists and displayed pages remain reusable for 30 seconds from list completion; use Dashboard Refresh to reload saved changes and reset to the first page. Recursive tree reads list metadata only and omit symlinks and `.git`.
 
+Dashboard and roadmap milestone discovery covers global `docs/roadmap/` and direct
+`docs/packages/<name>/roadmap/` roots, including each flat `_archive/`. Both routes use structural paths without
+reading namespace registration, so unregistered directories can appear and namespace config errors do not change
+visibility. Cross-root archived prerequisites and direct proposal membership resolve over the complete set before
+history is filtered. Generic sources use host-returned types; only the local filesystem reader certifies symlink
+exclusion. Missing optional roots are empty; listed-root failures remain visible without erasing successful roots.
+
 The **Read** tab (view id `book`) opens `handbook/<lang>/README.md` where `handbook/manifest.json` exists, through the
 ordinary `blob` read: the manifest, `VERSION` and one page, nothing under `docs/` or `specs/`. Without a manifest it
 says so after that one read. The header orders the manifest tag against `v<VERSION>` and notes a snapshot behind the

@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:28:15.525876Z'
+status: completed
+summary: 'Independent medium reconciliation passed all seven targets: five reflected documents and two preserved baseline waivers, no findings.'
+findings: []
+assumptions:
+- Codex isolation emulated with absolute cwd/read boundaries, no writes and unchanged snapshota0adc8f8f41f; no native guarantee.
+- Reviewer reported no outside-worktree source/document reads; shared Git/runtime separate.
+unverified_areas:
+- Runtime checks reused from supplied verified evidence; supported Node versions not separately exercised.
+checks:
+  reflection: PASS approved structural discovery and generic/local guarantees match implementation
+  targets: PASS five modified and two substantively waived targets
+  scope: PASS unchanged interface, dependencies, screens and terminal feedback
+diff_scope:
+  base: d2f4f1c7f418fb657d385dfa7ff2ef6cdeaf5167
+  head: ec4ec4bdeb0aba907141b812f02c6c4fa1acee03
+activity_effort: medium

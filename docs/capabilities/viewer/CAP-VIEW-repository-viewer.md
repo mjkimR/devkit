@@ -1,7 +1,7 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local repository page and Svelte library with Planning overlays, paged dashboard lists, live and archived milestone roadmaps, document details and the release handbook before the on-demand Living Spec."
+summary: "A read-only local repository page and Svelte library with Planning overlays, paged dashboard lists, global and namespace milestone roadmaps, document details and the release handbook before the on-demand Living Spec."
 area: viewer
 status: active
 entrypoints:
@@ -117,7 +117,7 @@ The page is the viewer moved from autohub, with a repository picker and a label 
   Spec book: `docs/` grouped by chapter, with in-page links between documents by ID (§4.3).
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and `specs/<YYYY-MM>/<bundle>/spec.md`, with their
   bundle files, filters and task progress.
-- **로드맵**: the milestones under `docs/roadmap/` in the registered working tree (§5).
+- **로드맵**: global and namespace milestones in the registered working tree (§5).
 - **파일 탐색**: the repository working tree, with Markdown, frontmatter and Mermaid rendering.
 
 Documents are parsed in the browser, so the server never runs a repository's own devkit and repositories pinning
@@ -127,7 +127,7 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 
 ### 4.1 Dashboard loading and tab caches
 
-- **Selective reads**: WHEN a local dashboard section opens, it MUST list frontmatter only for `docs/roadmap/MS-*.md` and flat `docs/roadmap/_archive/MS-*.md` files, `docs/proposals/PROP-*/proposal.md` anchors, or non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Check: `tests/integration/features/browse/test_worktree.py`.
+- **Selective reads**: WHEN a local dashboard section opens, it MUST list frontmatter only for global and namespace milestone files matching §5, `docs/proposals/PROP-*/proposal.md` anchors, or non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Check: `tests/integration/features/browse/test_worktree.py` and `tests/integration/features/browse/test_namespace_roadmap.py`.
 - **Initial pages**: WHEN a section opens through a source with `dashboardList`, it MUST request full bodies only for its first 6 eligible milestones, 9 proposals or 6 feedback entries. All candidate headers are read once to determine global ordering and exact counts. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
 - **Page ordering**: WHEN Load more is selected, the section MUST append at most one page using the same ordered list. Milestones order by active then planned; proposals by review, draft then accepted; open feedback by critical, blocked, workaround then friction, followed by unknown severities. Each group sorts by ID, then path to resolve ties. Membership and sort metadata stay fixed until Refresh or a fresh tab load after expiry. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
 - **Page failure**: IF a body page fails, THEN the section MUST retain its previous cards and cursor and offer Retry for that page. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
@@ -231,6 +231,19 @@ The local source supports recursive metadata requests to avoid one HTTP call per
 
 ## 5. Roadmap
 
+- **Discovery**: The dashboard and roadmap MUST discover `docs/roadmap/MS-*.md`,
+  `docs/roadmap/_archive/MS-*.md`, `docs/packages/<name>/roadmap/MS-*.md` and
+  `docs/packages/<name>/roadmap/_archive/MS-*.md`, with one nonempty package-directory segment and a flat archive.
+  Check: `tests/integration/features/browse/test_namespace_roadmap.py` and
+  `frontend/src/lib/api/milestones.test.ts`.
+- **Registration independence**: Discovery MUST use structural paths without reading namespace registration;
+  unregistered package directories also appear, and absent or malformed namespace configuration does not affect
+  the candidate set. This visibility does not certify governance validity or exact CLI parity. Check:
+  `tests/integration/features/browse/test_namespace_roadmap.py` and `frontend/src/lib/api/milestones.test.ts`.
+- **Partial reads**: IF a listed directory or candidate cannot be read, THEN the loader MUST retain successful
+  results and name that failed path in its errors. Missing optional roots are empty; failed or aborted results do
+  not enter caches. Check: `tests/integration/features/browse/test_namespace_roadmap.py` and
+  `frontend/src/lib/api/milestones.test.ts`.
 - **Order**: `active`, then `planned`; `done` and `dropped` appear only with the history toggle. Within a status, by
   ID.
 - **Readiness**: a milestone is ready when every milestone in its `depends_on` is `done` or `dropped`. A `depends_on`
@@ -239,12 +252,14 @@ The local source supports recursive metadata requests to avoid one HTTP call per
   Planning overlay does not apply. Check: `frontend/src/lib/RoadmapView.test.ts`.
 - **Members**: direct PROP anchors whose `milestone` names the milestone in the registered working tree. Rejected proposals are not members.
   SPEC milestone metadata is ignored, including historical metadata; SPECs never replace proposals by slug.
-  The roadmap loader reads root/flat-archive milestone and proposal anchors only. It resolves the complete milestone set before filtering history, so hidden done/dropped prerequisites remain satisfied. Direct proposals do not certify completion.
+  The roadmap loader reads structural milestone and direct proposal anchors only. It resolves the complete global
+  and namespace milestone set before filtering history, so hidden done/dropped prerequisites remain satisfied across roots. Direct proposals do not certify completion.
   One member per slug is displayed.
 
 Archived milestone discovery MUST work through optimized dashboard headers and generic tree/blob sources,
 including post-load classification: done/dropped increase totalCount but not openCount. The generic dashboard and
-roadmap readers descend only into the reserved archive besides their existing directories. History/detail/deep
+roadmap readers share shallow discovery through docs, direct package directories, their roadmap and reserved flat
+archive directories; they do not scan unrelated package document bodies. History/detail/deep
 links retain archived paths; reopened active files return to root browsing. Checks: dashboard loading/extraction,
 roadmap and RoadmapView frontend tests; backend working-tree selective-header tests.
 
@@ -268,6 +283,11 @@ message starts with `HTTP 404`, as `httpDataSource` does; the reading tab treats
 (§4.3). A standalone `KnowledgeViews` takes an optional bindable `bookRequested` prop; a host binds it to keep the
 book request across mounts. autohub's Git browser and run and decision panels are not part of the
 library.
+
+Generic roadmap discovery uses the host-returned tree/blob types and cannot independently certify filesystem
+symlink identity; it adds no metadata field or host obligation. Local `WorkingTreeReader` retains the filesystem
+symlink exclusions of §2. Check: `frontend/src/lib/api/milestones.test.ts` and
+`tests/integration/features/browse/test_namespace_roadmap.py`.
 
 
 ## Immutable local proposal review page

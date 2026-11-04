@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: 'Use the agreed feedback-hygiene destination: a standalone viewer proposal without
-  milestone membership.'
-by: user
-at: '2026-11-04T06:30:50.536229Z'
