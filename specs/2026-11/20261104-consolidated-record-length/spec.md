@@ -1,14 +1,14 @@
 ---
 id: SPEC-consolidated-record-length
 title: Line budgets for consolidated records
-summary: Lets the hygiene file-length check budget consolidated ADRs and feedback records by what they are instead of by per-file overrides, so consolidation runs stop producing warnings while an over-broad group still gets one.
+summary: "Adds an opt-in rule-local line budget for alias-bearing ADRs and consolidated feedback, preserving ordinary limits and bounded topic-review warnings."
 status: planned
 created: 2026-11-04
-related_capabilities: []
+related_capabilities:
+  - CAP-GOV-evaluation-lifecycle
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-consolidated-record-length] Line budgets for consolidated records
 
@@ -36,18 +36,58 @@ ADRs, not proof of consolidation, and grants no authority to edit or consolidate
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Line budgets for consolidated records so that system capabilities are extended.
+- **US-1**: As a consumer agent, I want consolidated records to have an opt-in bounded budget while ordinary
+  documents and consumers keep their existing behavior.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: generic override predicates, settings-model or engine changes, new feature edges, document-model
+  fields, edits or regrouping of existing records, default budget changes, and hygiene in commit/CI phases.
+- **Scope Excluded**: fixing existing non-ADR warnings and proving authoritative consolidation provenance.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Consumer compatibility
+- **Given** the option is omitted and files include alias-bearing ADRs.
+- **When** the rule runs with defaults or path overrides.
+- **Then** findings, limits, locations, line counting, phase, severity and ordinary remediation remain unchanged.
+
+### [AC-02] Opt-in record budget
+- **Given** ordinary 400 and consolidated 600, with valid targeted Markdown ADRs having at least two distinct
+  nonempty string aliases or FB-consolidated-<area>-<status> records having at least one.
+- **When** the rule evaluates them.
+- **Then** 500 and 600 lines pass; 601 lines warn at 601 with topic-review remediation preserving decisions/outcomes.
+
+### [AC-03] Conservative eligibility
+- **Given** PADRs, other kinds, single-alias ADRs, insufficient distinct aliases, malformed alias values, absent or
+  malformed frontmatter, or invalid consolidated feedback IDs.
+- **When** the alternative budget is enabled.
+- **Then** these files retain the ordinary limit; a twice-renamed ADR with two valid aliases qualifies by heuristic.
+
+### [AC-04] Typed validation and precedence
+- **Given** configured consolidated budgets or ordinary/consolidated path overrides.
+- **When** the settings resolve.
+- **Then** booleans, strings, zero and negatives fail with RULES_SETTINGS_INVALID, the rule ID and CLI exit 2;
+  eligible records use max(max_lines, consolidated_max_lines), preserving a 900-line ordinary limit.
+
+### [AC-05] Fidelity and documentation
+- **Given** the guide, reference, capability, ADR and two consolidation playbooks.
+- **When** consumers read the option and grouping guidance.
+- **Then** eligibility, rename heuristic and precedence match the rule; fidelity and ordinary completion commands
+  remain; feedback splitting requires a separate grouping decision and no new document field appears.
+
+### [AC-06] Same-head outcome
+- **Given** the final head's files and configuration with only the option disabled versus 600 in memory.
+- **When** both evaluations are compared by document identity.
+- **Then** the six known 401–600-line ADR findings disappear and ADR-document-system remains; unrelated warnings
+  remain comparable by identity without assuming an invariant total.
+
+## 5. Assumptions and Premise Check
+
+At Development input 5eb97c6e, the rule, pure settings resolver and cached parser match the Planning evidence.
+The same-head comparison is the accepted baseline; no historical checkout is needed. Feedback IDs use terminal
+statuses resolved, promoted, dismissed or forwarded and allow namespace-qualified area slugs. Alias strings must
+be nonempty after stripping whitespace; duplicate strings count once. No new feature dependency is introduced.
 
 ## 5. Carried Proposal Notes
 
