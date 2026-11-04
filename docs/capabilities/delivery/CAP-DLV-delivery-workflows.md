@@ -502,7 +502,34 @@ instruction paths (a nested role's read from another checkout is a reported boun
 scratch files in an ignored path inside its worktree for removing the worktree to clean, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.
-A delegated change to a bundle source the project selects admits, as a class in the worker's write scope, every
+Development worker write admission has three tiers (`ADR-recorded-adjacent-path-extensions-for-development-workers`):
+
+- **Tier A, declared**: the initial payload's paths, task boundaries and reconcile targets. Literal files and narrow
+  directory prefixes are supported; globs are not expanded.
+- **Tier B, recorded extension**: a worker MAY add an exact adjacent file necessary for an existing task and AC
+  inside the approved goal. Same-feature documented ownership roots, project/plan-identified test mirrors, and exact
+  existing Living Spec documents restating the changed behavior qualify. Without a documented root use the declared
+  file's parent; never infer package-wide ownership. A Living Spec reason MUST name the affected contract ID.
+- **Tier C, denied**: explicit payload denies MUST prevail, including over a directory declaration. Other units,
+  `.devkit/`, host projections, governance-rule implementations, architecture/dependency declarations, CI/release
+  configuration, outside-repository paths, other packages/features and new feature edges MUST NOT self-admit.
+  Initial Tier A may expressly authorize protected-class work; an extension cannot grant that authority. Tests
+  MAY be strengthened or updated for approved behavior and MUST NOT be weakened to pass. Lockfiles and general
+  generated files require initial declared scope. A denied/non-adjacent path stops before writing with a problem.
+
+Before its first source commit, the worker MUST annotate the exact file on its owning `_Boundary:` as
+`(scope extension: <reason>)`, committing annotation and reason with that source change. The reason is one nonempty
+line without parentheses. The sole final/emergency `worker` envelope MUST mirror path, positive checklist scanner
+task ordinal, reason and owning AC IDs in `scope_extensions` (`CAP-DLV-workflow-envelopes`). Review MUST inspect
+annotation/task/AC before that record exists and judge adjacency, necessity, custom protected paths and test
+strength. Missing annotation/record evidence is P2 and repairable before final return; denied/non-adjacent/out-of-goal
+writes are P1 and block the range. The Host MUST compare final records with reviewed annotations; changed metadata
+requires re-verification. New unannotated boundary additions are checked against initial payload/task diff; derived
+scope alone proves no authority. No sealed original-boundary journal is required. Local and cloud share these
+obligations; optional inspect promises no Hub invocation or automatic semantic ownership enforcement. Git, sandbox,
+publication, approval and rejected-range recovery rules remain unchanged.
+
+Sync-output admission is an independent path class, not Tier B. A delegated change to a bundle source the project selects admits, as a class in the worker's write scope, every
 tracked path `devkit sync` writes in the worktree after the change (seeded and projected files,
 `.devkit/installation.json`, the managed `AGENTS.md` block), not only the files `devkit sync --check` lists before it.
 The worker records its starting `devkit sync --check` exit as the `sync_start` check (a nonzero exit is a problem),
@@ -565,7 +592,7 @@ When the worker record or emergency commit also cannot run, return `failed` with
 actual last SHA, dirty paths and absent/uncommitted records or commit; never invent a clean committed result or final
 HEAD containing it. The Host blocks failed dirty/uncommitted returns even without a worker record and owns a
 subsequent recovery run and its records. Successful acceptance still requires cumulative ancestry through final HEAD,
-strict allowed paths, clean worktree, the turn's own `worker` envelope (absent at the last accepted head) and checks.
+declared paths plus verified Tier B and sync-output admissions, clean worktree, the turn's own `worker` envelope (absent at the last accepted head) and checks.
 The one-shot lifecycle and stage gates remain.
 
 Actual generic native Planning and Development runs are recorded in `MAT-codex-native-worker-evidence` for the observed
@@ -664,6 +691,21 @@ compared with changed paths as they are. `N/A`/`none` boundaries and empty recon
 - Base checkout: the worktree's registered common-directory checkout; absent when run in the base itself. Its
   HEAD and dirty paths are information, not checks.
 
+Inspection MUST preserve `scope` entries and `outside_scope`, and add top-level `scope_extensions` plus
+`checks.scope_extensions`. Boundary entries add extension reason metadata without changing existing entry fields.
+The extension check MUST compare exact annotation/record paths, owning task ordinals, identical reasons and AC IDs
+owned by that task and declared by the spec. Committed prior-turn worker records remain relevant to retained
+annotations; the highest worker sequence supplies repeated-path metadata. A historical record alone MUST NOT add
+scope: its annotation must still exist. Missing/mismatched evidence or recognizable protected trees fail with
+`SPEC_WORKER_SCOPE_EXTENSION_INVALID` (exit 1; correct the record or obtain Host authority). Malformed annotation
+or input leaves the check not-run with `SPEC_WORKER_SCOPE_UNRESOLVED` or the envelope format cause; it never passes.
+Recognizable protected classes include `.devkit/`, agent projections, `.github/`, other unit/proposal trees,
+architecture documents, rule directories and known dependency manifests/lockfiles. Semantic adjacency, custom
+protected paths, explicit payload denies and test weakening remain reviewer judgments. With no extensions the list
+is empty and the added check passes. Host validation MUST verify this evidence before overriding scope, then name
+every admitted extension in the complete override. A narrower `--scope`/`--scope-file` still fails omitted paths;
+inspection MUST NOT union extensions into an explicit scope. Sync-output receipt checks remain independent.
+
 Checks report `pass`, `fail` or `not-run`: base ancestry, worktree HEAD equality, changed paths and outside-scope
 paths, worktree cleanliness, committed envelope validation (including unresolved problems and pending questions),
 cumulative `devkit rules check --ci --base <rules_base>` and `devkit workflow next`. Both old and new paths of renames are
@@ -672,7 +714,7 @@ worktree because the existing command reads disk; this prevents uncommitted reco
 Wrapped results retain their codes and actions.
 
 `--format json` emits one object containing `inputs` (value/source, including `rules_base`), `scope` entries, `base`, `rules_base`, `head`, `changed_paths`,
-optional `outside_scope` and `base_checkout`, `checks`, `errors` (one advisory per failed check), `notices` and
+`scope_extensions`, optional `outside_scope` and `base_checkout`, `checks`, `errors` (one advisory per failed check), `notices` and
 `exit_code`. Text output emits `[WORKER_INSPECTION: verdict=pass|fail base= head=]`, then `[INPUT: ...]`, `[SCOPE_ENTRY: <path> source= ...]`,
 changed-path and check sentinels; each failed check is an `[ERROR]` block on stderr after the notices. `-w` names
 the worktree to inspect instead of the current directory, and `--strict` exits `1` on a warning when no check
@@ -686,6 +728,7 @@ invalid Git inputs or unresolved required unit/head/base. A not-run check alone 
 | `SPEC_WORKER_HEAD_UNRESOLVED` | `INPUT_ERROR`: supply `--head` when there is no uniquely added latest worker envelope. |
 | `SPEC_WORKER_BASE_UNRESOLVED` | `INPUT_ERROR`: supply `--base` when previous blocked records or base branch do not determine it. |
 | `SPEC_WORKER_SCOPE_UNRESOLVED` | `INPUT_ERROR`: supply complete literal paths with `--scope` or `--scope-file`. |
+| `SPEC_WORKER_SCOPE_EXTENSION_INVALID` | `ERROR` (exit `1`): correct annotation/record/task/AC evidence or obtain Host authority for a protected path. |
 | `SPEC_WORKER_CHECK_NOT_RUN` | `NOTICE`: inspect the reported cause and rerun the named check after correcting it. |
 | `SPEC_WORKER_ANCESTRY_FAILED`, `SPEC_WORKER_HEAD_FAILED`, `SPEC_WORKER_SCOPE_OUTSIDE`, `SPEC_WORKER_WORKTREE_DIRTY`, `SPEC_WORKER_ENVELOPES_FAILED`, `SPEC_WORKER_RULES_FAILED`, `SPEC_WORKER_WORKFLOW_FAILED` (`SPEC_WORKER_CHECK_FAILED` is their class code) | `ERROR` (`INTERACTION`, exit `1`): the named check failed; `[TARGET]` names the outside or dirty paths, the flags or the `checks.<name>` entry. The Host decides acceptance. |
 

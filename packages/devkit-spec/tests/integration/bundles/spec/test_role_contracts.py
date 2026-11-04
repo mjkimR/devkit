@@ -226,7 +226,8 @@ def test_the_development_worker_commits_at_stage_boundaries_and_on_a_problem() -
     for tokens in (
         ("commit", "every stage boundary", "write-scope paths only"),
         ("emergency commit", "only", "`--no-verify`"),
-        ("one path outside the write scope", "rejects", "whole result"),
+        ("denied/non-adjacent/out-of-goal write", "blocks the range"),
+        ("tier b", "scope extension:", "--scope-extensions-file"),
         ("problem", "emergency commit"),
         (
             "do not",
@@ -339,7 +340,7 @@ def test_spec_delegate_passes_only_the_payload_to_a_projected_role() -> None:
 
 
 def test_tasks_name_the_docs_a_worker_must_write() -> None:
-    assert_rule(raw(TASKS), "`development-worker`", "names the `docs/` paths", "write scope")
+    assert_rule(raw(TASKS), "development worker", "name expected `docs/` paths initially", "authority")
 
 
 def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
@@ -350,7 +351,7 @@ def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
     for tokens in (
         ("range", "`<accepted>`", "`<returned>`", "passes when"),
         ("`<accepted>`", "`diff_scope.head`", "ancestors of `<returned>`"),
-        ("diff --name-only <accepted> <returned>`", "write scope"),
+        ("diff --name-only <accepted> <returned>`", "declared scope", "recorded adjacent extension"),
         ("`<returned>` adds this turn's `worker` envelope", "absent at `<accepted>`"),
         ("worktree's HEAD is `<returned>`",),
         ("the worktree is clean",),

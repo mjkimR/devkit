@@ -141,8 +141,14 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
     if not isinstance(workflow, str) or not workflow.startswith(SPEC_WORKFLOW_PREFIX):
         raise WorkerScopeUnresolvedError(f"Unsupported workflow: {workflow}")
     for task in parse_boundaries(read(root, tip, f"{unit}/tasks.md")):
+        extensions = {e.path: e.reason for e in task.extensions}
         entries.extend(
-            {"path": prefix(p), "source": "boundary", "task": task.index}
+            {
+                "path": prefix(p),
+                "source": "boundary",
+                "task": task.index,
+                **({"extension": {"reason": extensions[p]}} if p in extensions else {}),
+            }
             for p in task.values
             if p.strip().lower() not in NOT_APPLICABLE
         )

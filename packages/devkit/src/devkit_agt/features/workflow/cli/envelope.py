@@ -117,6 +117,7 @@ def _write(
     source: str | None = None,
     resolve: tuple[str, ...] = (),
     waive: tuple[str, ...] = (),
+    scope_extensions_file: str | None = None,
     questions_file: str | None = None,
     answers_to: str = "",
     answers_file: str | None = None,
@@ -129,6 +130,7 @@ def _write(
     """Translate CLI file/stdin options and render the envelope operation result."""
     content = (
         findings_file,
+        scope_extensions_file,
         source,
         resolve,
         waive,
@@ -142,10 +144,17 @@ def _write(
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
         (*content, recovery, resolves, effort)
     )
-    stdin = [flag for flag, value in _stdin_flags(findings_file, questions_file, answers_file) if value == "-"]
+    stdin = [
+        flag
+        for flag, value in (
+            *_stdin_flags(findings_file, questions_file, answers_file),
+            ("--scope-extensions-file", scope_extensions_file),
+        )
+        if value == "-"
+    ]
     if len(stdin) > 1:
         raise EnvelopeFlagError(
-            "only one of --findings-file, --questions-file and --answers-file can read stdin",
+            "only one item-file option can read stdin",
             target_files=stdin,
             fix=f"Pass {' and '.join(stdin[1:])} as a file",
         )
@@ -168,6 +177,7 @@ def _write(
         source=source,
         resolve=resolve,
         waive=waive,
+        scope_extensions_yaml=_read_items_file("--scope-extensions-file", scope_extensions_file, "scope extensions"),
         questions_yaml=_read_items_file("--questions-file", questions_file, "questions"),
         answers_to=answers_to,
         answers_yaml=_read_items_file("--answers-file", answers_file, "answers"),
@@ -235,6 +245,11 @@ def envelope_new_cmd(kind: str, **options: Any) -> None:
 
 @envelope_group.command(name="worker")
 @_common(stage_required=True)
+@click.option(
+    "--scope-extensions-file",
+    default=None,
+    help="YAML list of {path, task, reason, requirements} adjacent-file evidence (path, or - for stdin)",
+)
 @click.option(
     "--questions-file",
     default=None,

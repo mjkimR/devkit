@@ -28,7 +28,6 @@ from devkit_spec.base.errors import DEVKIT, EntrypointsInputInvalidError, Entryp
 
 _BOUNDARY_LINE = re.compile(r"^\s*(?:[-*+]\s+)?\**_Boundary\**\s*:\**\s*(.*)$")
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
-_PAREN_NOTE = re.compile(r"\([^)]*\)")
 _BOLD = re.compile(r"^\*\*(.+)\*\*$")
 
 
@@ -40,6 +39,14 @@ class Target:
     resolution: str
 
 
+@dataclass(frozen=True)
+class BoundaryExtension:
+    """An exact boundary path with its pre-final extension reason."""
+
+    path: str
+    reason: str
+
+
 @dataclass
 class TaskBoundary:
     """The ``_Boundary`` values declared under one task: ``index`` is its 1-based checklist position, ``0`` for
@@ -48,6 +55,9 @@ class TaskBoundary:
     index: int
     title: str = ""
     values: list[str] = field(default_factory=list)
+    extensions: list[BoundaryExtension] = field(default_factory=list)
+    requirements: list[str] = field(default_factory=list)
+    annotation_errors: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -74,6 +84,21 @@ def parse_boundaries(text: str) -> list[TaskBoundary]:
         nonlocal open_indent, value
         if open_indent is not None and current is not None:
             current.values.extend(split_boundary(value))
+            # Preserve existing values; notes are additional evidence, never a new path grammar.
+            matches = list(re.finditer(r"\(scope extension:([^)]*)\)", value))
+            if value.count("(scope extension:") != len(matches):
+                current.annotation_errors.append("Unclosed scope extension annotation")
+            start = 0
+            for note in matches:
+                reason = note[1].strip()
+                candidates = split_boundary(value[start : note.start()])
+                if not reason or "(" in reason or not candidates:
+                    current.annotation_errors.append(
+                        "Expected an exact path and one nonempty reason without parentheses"
+                    )
+                else:
+                    current.extensions.append(BoundaryExtension(candidates[-1], reason))
+                start = note.end()
         open_indent, value = None, ""
 
     for scanned in scan(text, frontmatter=True):
@@ -98,6 +123,8 @@ def parse_boundaries(text: str) -> list[TaskBoundary]:
             current = TaskBoundary(index=items, title=scanned.task.title)
             tasks.append(current)
             continue
+        if current is not None and re.match(r"^\s*(?:[-*+]\s+)?\**_Requirements:", line):
+            current.requirements.extend(re.findall(r"\bAC-\d{2,}(?![A-Za-z0-9-])", line))
         boundary = _BOUNDARY_LINE.match(line)
         if boundary is None:
             continue
@@ -113,15 +140,39 @@ def _indent(line: str) -> int:
     return len(line) - len(line.lstrip(" \t"))
 
 
+def _strip_notes(value: str) -> str:
+    """Strip balanced parenthetical prose, including calls/backticks/commas inside legacy notes."""
+    depth = 0
+    out = []
+    for character in value:
+        if character == "(":
+            depth += 1
+        elif character == ")" and depth:
+            depth -= 1
+        elif not depth:
+            out.append(character)
+    return "".join(out)
+
+
 def split_boundary(value: str) -> list[str]:
     """The entries of one ``_Boundary`` value."""
     entries = []
-    for part in _PAREN_NOTE.sub("", value).split(","):
+    for part in _strip_notes(value).split(","):
         part = part.replace("`", "").strip()
         part = _BOLD.sub(r"\1", part).strip()
         if part:
             entries.append(part)
     return entries
+
+
+def parse_acceptance_ids(text: str) -> set[str]:
+    """Acceptance IDs declared in spec headings, ignoring scanner-excluded examples and comments."""
+    return {
+        ac
+        for line in scan(text, frontmatter=True)
+        if line.kind is LineKind.PROSE and line.text.lstrip().startswith("### ")
+        for ac in re.findall(r"\[(AC-\d{2,})\]", line.text)
+    }
 
 
 def load_bundle(root: Path, directory: str) -> Bundle:

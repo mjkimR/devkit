@@ -46,3 +46,26 @@ The optional exact-marker-only alternative was considered. Retaining the inline 
 review evaluate necessity without an extra provisional journal or early worker envelope. A one-line reason
 without parentheses keeps the existing note grammar unambiguous; parser tests cover comma/colon text and reject
 unsupported parentheses. No anti-bypass baseline or sealed boundary snapshot is introduced.
+
+
+## Development outcome
+
+Input `6ff819cec61cec40589b3ed90a8ea6c09a9eb6d9` confirmed Planning's premises. A same-process API probe on that
+input returned `annotation_exposed=False`, `typed_record_exposed=False`, `values=['src/a.py']`. The identical
+probe after implementation returns both flags `True` with the same values; no checkout or disabled code was needed
+because the before measurement was recorded before edits. This measures evidence availability, not elapsed time
+or operator round trips.
+
+The Host additionally authorized `FB-entrypoints-derive-boundary-annotations`. Its multiline legacy note with
+`ContextResult.to_dict()` and a comma reproduced `['a/b.py', 'c/d.py  shape', 'so it gains keys)']`; balanced note
+stripping now yields `['a/b.py', 'c/d.py']`. The regression keeps unquoted literal paths and ordinary notes valid;
+new extension reasons still reject parentheses.
+
+Implementation uses the existing entrypoints scanner dependency to extract AC headings and the public workflow
+envelope API. No new feature edge or architecture declaration is needed. Semantic ownership, custom protected
+paths, test weakening and payload authority remain review judgments. No live Hub invocation is claimed.
+
+Starting sync check passed with exit 0. The selected bundle sync wrote one tracked output:
+`.devkit/installation.json`, recorded on Task 3 as `(sync output)`. Managed copies and host projections were
+synchronized by CLI only. Codex confinement is emulated through absolute cwd/paths, per-operation approvals and
+Host/diff review; no native path-enforcement guarantee is claimed.

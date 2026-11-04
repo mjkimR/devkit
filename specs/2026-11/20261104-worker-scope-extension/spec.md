@@ -2,7 +2,7 @@
 id: SPEC-worker-scope-extension
 title: Tiered write boundaries for delegated workers
 summary: Splits a delegated worker's write boundary into an extensible estimate and a hard deny list, so a worker records and justifies an adjacent-path extension instead of stopping or having its whole result rejected, in local and cloud runs alike.
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []
@@ -77,3 +77,9 @@ are independently owned and require no contract change. Feature-owned modules an
 The parser baseline probe at this input exposes neither annotations nor typed records; the identical head probe
 will demonstrate both. No timing or operator-cost outcome is claimed. Current Host write grants remain strict
 throughout this implementation; the new feature grants no retroactive authority to this run.
+
+## 6. Source feedback
+
+`FB-entrypoints-derive-boundary-annotations`: fix the shared boundary parser's legacy multiline parenthetical
+notes containing nested calls, backticks and commas. Preserve literal unquoted boundary support; do not add
+unrelated entrypoint filtering. The Host added this directly related compatibility repair during Development.

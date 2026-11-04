@@ -48,6 +48,7 @@ from devkit_agt.features.workflow.services.envelope.model import (
     parse_envelope_text,
     parse_finding,
     parse_question,
+    parse_scope_extensions,
     read_envelope,
     reference_error,
 )
@@ -442,6 +443,7 @@ def compose_envelope(
     source: str | None = None,
     resolve: Iterable[str] = (),
     waive: Iterable[str] = (),
+    scope_extensions_yaml: str | None = None,
     questions_yaml: str | None = None,
     answers_to: str = "",
     answers_yaml: str | None = None,
@@ -501,6 +503,18 @@ def compose_envelope(
             target_files=["--effort"],
             fix=f"Use one of {'|'.join(EFFORTS)}",
         )
+    extensions = ()
+    if scope_extensions_yaml is not None:
+        if kind != WORKER:
+            raise EnvelopeFlagError("--scope-extensions-file is worker-only", target_files=["--scope-extensions-file"])
+        try:
+            extensions = parse_scope_extensions(safe_load(scope_extensions_yaml))
+        except (yaml.YAMLError, EnvelopeFormatError) as exc:
+            raise EnvelopeItemsError(
+                f"--scope-extensions-file: {exc}",
+                target_files=["--scope-extensions-file"],
+                fix="Pass a YAML list of exact paths, positive task ordinals, reasons and AC requirements",
+            ) from exc
     draft = Envelope(
         kind=kind,
         status=status,
@@ -522,6 +536,7 @@ def compose_envelope(
         problem=Problem(problem, recovery, attempt_list) if problem else None,
         resolves=Path(resolves).name if resolves else "",
         activity_effort=effort,
+        scope_extensions=extensions,
     )
     _check_contract(draft, loaded if loaded is not None else envelopes)
     return draft
@@ -611,6 +626,8 @@ def render_envelope(draft: Envelope, created_at: str) -> str:
     data["checks"] = dict(draft.checks)
     if draft.diff_base or draft.diff_head:
         data["diff_scope"] = {"base": draft.diff_base, "head": draft.diff_head}
+    if draft.scope_extensions:
+        data["scope_extensions"] = [e.to_dict() for e in draft.scope_extensions]
     if draft.questions:
         data["questions"] = [q.to_dict() for q in draft.questions]
     if draft.answers_to:

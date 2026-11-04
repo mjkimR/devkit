@@ -67,8 +67,8 @@ this decision promises only the shared shipped worker/reviewer contract.
 
 ## 6. Confirmation
 
-- Envelope integration tests cover round trips, malformed inputs, kind restrictions and old records.
-- Worker inspection tests cover valid, missing/mismatched, denied, explicit-scope and subsequent-turn cases.
-- Boundary-parser tests retain existing values while exposing extension notes.
-- Bundle content tests cover workers, reviewer guidance and Host validation.
+- `packages/devkit/tests/integration/features/workflow/test_envelope_scope_extensions.py` covers round trips, malformed inputs, kind restrictions and old records.
+- `packages/devkit-spec/tests/integration/features/worker/test_scope_extensions.py` covers valid, missing/mismatched, denied, explicit-scope and subsequent-turn cases.
+- `packages/devkit-spec/tests/unit/features/entrypoints/test_boundary_extensions.py` retains existing values while exposing extension notes.
+- `packages/devkit-spec/tests/integration/bundles/spec/test_scope_extension_guidance.py` covers workers, reviewer guidance and Host validation for local/cloud.
 - Semantic adjacency, test weakening and custom protected paths: Review only.

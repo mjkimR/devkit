@@ -124,6 +124,19 @@ class Problem:
 
 
 @dataclass(frozen=True)
+class ScopeExtension:
+    """One recorded adjacent exact-file extension of a Development task boundary."""
+
+    path: str
+    task: int
+    reason: str
+    requirements: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"path": self.path, "task": self.task, "reason": self.reason, "requirements": list(self.requirements)}
+
+
+@dataclass(frozen=True)
 class Envelope:
     """One envelope. ``file`` and ``seq`` are empty for an envelope not yet written."""
 
@@ -150,6 +163,7 @@ class Envelope:
     problem: Problem | None = None  # worker: an execution problem
     resolves: str = ""  # resolution: the worker-NN.yaml whose problem it resolves
     activity_effort: str = ""  # low | medium | high: the effort the run applied
+    scope_extensions: tuple[ScopeExtension, ...] = ()  # worker-only adjacent-file evidence
 
     @property
     def name(self) -> str:
@@ -197,6 +211,7 @@ class Envelope:
             "problem": self.problem.to_dict() if self.problem else None,
             "resolves": self.resolves or None,
             "activity_effort": self.activity_effort or None,
+            **({"scope_extensions": [e.to_dict() for e in self.scope_extensions]} if self.kind == WORKER else {}),
         }
 
 
