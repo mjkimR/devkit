@@ -2,7 +2,7 @@
 
 1. Frame the decision and provisional criteria from the user's goal, constraints and known usage; keep implementation assumptions open.
 2. State the first wave's question, permitted research effort and stop condition before assigning work; use only resource limits the host can observe or enforce.
-3. Resolve the selected `roles/<role>.md` relative to the installed skill directory; pass its absolute path to the child without loading every role body into the coordinator.
+3. Resolve the selected `roles/<role>.md` from the directory containing the invoked `SKILL.md`, not the working directory or this reference's directory; if the skill location is unavailable, locate and verify it first. Verify the role file exists and pass its resolved absolute path to the child without loading every role body into the coordinator.
 4. Give each role one bounded goal and the assignment below; use absolute boundaries and identify raw sources by revision, digest or exact reference.
 5. When direction is open, develop materially distinct premises independently before sharing peer conclusions; give members common facts and user constraints rather than a preferred answer.
 6. Compare actual returns with the assignment and source evidence; inspect changed paths and relevant Git/index/HEAD state before retaining a role's result.
@@ -45,10 +45,11 @@ Use the host's actual tool and sandbox controls; role files supply behavioral in
 If required permissions or delegation are unavailable, report missing coverage rather than claim execution.
 A trust or permission refusal is not authority to change tool, path, process or settings.
 
-Example assignment prefix:
+Example assignment prefix when the invoked skill is `/workspace/project/.agents/skills/deep-research/SKILL.md`;
+derive the path from the loaded skill rather than assuming this installation location:
 
 ```text
-Read /absolute/installed/skill/roles/research-investigator.md before acting.
+Read /workspace/project/.agents/skills/deep-research/roles/research-investigator.md before acting.
 Answer only the question below within the supplied boundaries; return the role's required fields.
 ```
 

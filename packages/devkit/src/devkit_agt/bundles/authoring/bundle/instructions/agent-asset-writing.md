@@ -56,6 +56,10 @@ already knows, and cut every line that does not change its next action.
   not enforce tool permissions or sandbox boundaries.
 - For a skill-local role, route the task to one role file and tell a general subagent to read that file first;
   pass its absolute installed path without loading every role body into the coordinator.
+- Resolve `roles/<role>.md` from the directory containing the invoked `SKILL.md`, not the working directory or
+  the directory of a reference file; use the loaded skill's location rather than a hardcoded host directory.
+- If that location is unavailable, locate and verify the invoked skill before delegation; verify the selected
+  role file exists and pass its resolved absolute path to the child.
 - For a registered role, use the host's registered-role invocation so its execution settings apply.
 - Supply the child with its goal, relevant sources, read/write boundaries, permitted actions, stop condition and
   expected return; make its assigned role file readable within those boundaries.
@@ -64,8 +68,10 @@ already knows, and cut every line that does not change its next action.
 - When required delegation or permissions are unavailable, report missing coverage; never describe a prompt as
   native enforcement.
 
-Example assignment prefix: `Read /absolute/installed/skill/roles/critic.md first, then review the supplied draft
-within the assigned read boundaries and return the findings in that role's format.`
+Example: if the invoked skill is `/workspace/project/.agents/skills/review/SKILL.md`, the assignment starts with
+`Read /workspace/project/.agents/skills/review/roles/critic.md first, then review the supplied draft within the
+assigned read boundaries and return the findings in that role's format.` Derive the path from the invoked skill;
+the example directory is not a required installation location.
 
 ## Self-Containment
 
