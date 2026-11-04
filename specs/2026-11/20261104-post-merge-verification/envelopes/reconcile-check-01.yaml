@@ -1,0 +1,61 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T08:46:07.171519Z'
+status: completed
+summary: round 1; seven current-doc and target-inventory gaps remain; no implementation contradiction requires code changes.
+findings:
+- issue: Receipt-upgrade scenario still requires removed integration refusal.
+  evidence: docs/usecases/delivery/UC-drive-development-to-integration.md:296
+  failure_condition: Reader/schema upgrade expects INTEGRATION_RECEIPT_READER_CHANGED instead of approved landing pending final validation.
+  suggested_action: Replace Scenario17 with Git-authorized landing pending validation by synchronized landed runtime.
+  resolution: open
+  severity: P1
+- issue: Harness guidance still assigns content readiness to integration CLI.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:395
+  failure_condition: Host expects integration to rebuild content readiness from retained base.
+  suggested_action: Replace with Git/policy revalidation and Host source-runtime and landed-runtime checks.
+  resolution: open
+  severity: P1
+- issue: SDD baseline adoption lacks capability/use-case reflection.
+  evidence: docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md:55; docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md:45
+  failure_condition: Provider-free adoption still requires provider activation authority in current docs.
+  suggested_action: Remove provider activation requirements/refusal scenario; preserve approach-change authority and add both reconcile targets.
+  resolution: open
+  severity: P1
+- issue: Architecture ownership assigns deleted readiness provider to devkit-spec.
+  evidence: docs/architecture/ARCH-04-1-ecosystem-boundaries.md:126
+  failure_condition: Matrix identifies nonexistent devkit-spec readiness provider.
+  suggested_action: Describe Git effects/scoped cleanup, methodology responsibilities and Host branch/final verification; add target.
+  resolution: open
+  severity: P1
+- issue: Consumer bundle guidance requires removed integration claims.
+  evidence: guides/install/bundle-recommendations.md:83
+  failure_condition: Adaptive consumer follows claims requirement absent from reduced CLI.
+  suggested_action: Replace with independent Host branch checks, explicit branch/authority and landed-runtime final verification.
+  resolution: open
+  severity: P1
+- issue: Three changed Living Spec references missing from targets.
+  evidence: specs/2026-11/20261104-post-merge-verification/reconcile.md:4
+  failure_condition: Changed docs/development/ci-cd.md, reference/integration.md and workflow.md omitted from per-file inventory.
+  suggested_action: Add all three resolution modified targets.
+  resolution: open
+  severity: P1
+- issue: Accepted predecessor lacks partial supersession for removed provider clauses.
+  evidence: docs/decisions/2026-11/20261102-adaptive-development-and-research.md:227; docs/decisions/2026-11/20261104-post-merge-verification.md:6
+  failure_condition: Predecessor still requires project/session readiness, touched-Unit refusal and provider activation.
+  suggested_action: With Host authority add narrow partial supersession relationship and predecessor notice; preserve approach/source checks/history and unrelated decisions; add targets.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated with explicit worktree reads and caller snapshot comparison, not native confinement.
+unverified_areas:
+- Live GitHub and actual Host post-landing verification were not run.
+checks:
+  reconciliation: FAIL seven documented gaps
+  diff: PASS clean unchanged snapshot and diff check
+diff_scope:
+  base: 810adf730993710119ab351b4bbbdce7d716ad98
+  head: dba1f78b97212710128859773fddd2c576457701
+activity_effort: high
