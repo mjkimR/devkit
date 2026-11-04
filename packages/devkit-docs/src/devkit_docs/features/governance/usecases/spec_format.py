@@ -1,10 +1,10 @@
 """``RULE-spec-format``: capabilities, use cases and proposals carry a frontmatter block with ``id``, ``title`` and
 ``status``.
 
-Checks every document file (``documents.is_document_file``) under ``docs/capabilities/``, ``docs/usecases/`` and
-``docs/proposals/``, and under the ``capabilities/`` and ``usecases/`` of every namespace docs root
-(``docs/packages/<name>/``, registered in ``[[tool.docs.namespaces]]``), outside ``materials/`` directories, whether or
-not it declares a well-formed ID:
+Checks every document file (``documents.is_document_file``) under ``docs/capabilities/``, ``docs/usecases/``,
+``docs/proposals/`` and ``docs/roadmap/``, and under the ``capabilities/``, ``usecases/`` and ``roadmap/`` of every
+namespace docs root (``docs/packages/<name>/``, registered in ``[[tool.docs.namespaces]]``), outside ``materials/``
+directories, whether or not it declares a well-formed ID:
 
 - a file without a frontmatter block (fixable);
 - a frontmatter block that does not follow devkit's grammar (unclosed, invalid YAML, not a mapping);
@@ -53,6 +53,7 @@ from devkit_docs.features.documents import (
     is_document_file,
 )
 from devkit_docs.features.documents.models.namespace import GLOBAL, Namespace
+from devkit_docs.features.documents.services.namespaces import living_path
 from devkit_docs.features.governance import (
     FIX_COMMAND,
     document_index,
@@ -118,7 +119,8 @@ def _derived_id(path: str) -> str | None:
     return None
 
 
-def _problems(ctx: RuleContext, path: str) -> list[_Problem]:
+def _problems(ctx: RuleContext, path: str, registered: tuple[Namespace, ...]) -> list[_Problem]:
+    """The problems of the checked file at ``path``; ``registered`` maps a namespace roadmap to the global one."""
     try:
         data = ctx.cache.get_frontmatter(path)
     except FrontmatterError as exc:
@@ -161,7 +163,7 @@ def _problems(ctx: RuleContext, path: str) -> list[_Problem]:
                     line=field_line(ctx.cache.read_text(path), field),
                 )
             )
-    if path.startswith("docs/roadmap/"):
+    if living_path(path, namespaces=registered).startswith("docs/roadmap/"):
         status = data.get("status")
         if isinstance(status, str) and status.strip() and status not in {"planned", "active", "done", "dropped"}:
             problems.append(
@@ -187,12 +189,12 @@ def _directories(registered: tuple[Namespace, ...]) -> list[str]:
     ]
 
 
-def _scope(ctx: RuleContext) -> list[str]:
+def _scope(ctx: RuleContext, registered: tuple[Namespace, ...]) -> list[str]:
     """Workspace-relative paths of the targeted files the rule checks, by directory (``_directories``), then path."""
     root = ctx.workspace_root
     paths: list[str] = []
     historical = document_index(ctx).historical
-    for directory in _directories(namespaces(ctx)):
+    for directory in _directories(registered):
         if not (root / directory).is_dir():
             continue
         for path in ctx.cache.find_files(root / directory, extensions=(".md",)):
@@ -220,6 +222,7 @@ class SpecFormatRule(BaseRule):
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:
+        registered = namespaces(ctx)
         found = [
             Violation(
                 rule_id=self.id,
@@ -229,8 +232,8 @@ class SpecFormatRule(BaseRule):
                 remediation=problem.remediation,
                 fixable=problem.fixable,
             )
-            for path in _scope(ctx)
-            for problem in _problems(ctx, path)
+            for path in _scope(ctx, registered)
+            for problem in _problems(ctx, path, registered)
         ]
         return found + self._namespace_fields(ctx)
 
@@ -269,8 +272,9 @@ class SpecFormatRule(BaseRule):
     def fix(self, ctx: RuleContext) -> list[str]:
         changed: list[str] = []
         today = date.today().isoformat()
-        for path in _scope(ctx):
-            if not any(problem.fixable for problem in _problems(ctx, path)):
+        registered = namespaces(ctx)
+        for path in _scope(ctx, registered):
+            if not any(problem.fixable for problem in _problems(ctx, path, registered)):
                 continue
             text = ctx.cache.read_text_strict(path)
             if text is None:

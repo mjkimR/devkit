@@ -1,0 +1,35 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T02:16:04.864228Z'
+status: completed
+summary: 'round 1 (native reconcile-reviewer): nine targets verified against the diff and ADR-namespace-milestone-roots section 4; each target changed on the branch and agrees with id_convention.py, spec_format.py, kinds.py and roadmap.py; no contradiction, no missing target (no P1). Residues: a stale global-root storage sentence in CAP-HARN-agent-guidance (P2), the two package READMEs still state the global-only contract (P2), ARCH-01 omits the steering-file citation option (P3).'
+findings:
+- issue: CAP-HARN-agent-guidance still states the superseded storage rule (planned/active at the global roadmap root) two paragraphs below the reconciled roadmap paragraph
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:388-389
+  failure_condition: An agent following the storage/close paragraph moves a namespace milestone to the global root, which RULE-id-convention reports as misplaced
+  suggested_action: Reword to the milestone's roadmap root (global or a registered namespace's) and that root's flat _archive/
+  resolution: open
+  severity: P2
+- issue: The devkit-docs and devkit-spec package READMEs still state the global-only milestone contract
+  evidence: packages/devkit-docs/README.md:42; packages/devkit-spec/README.md:63-64
+  failure_condition: A reader of the package quick reference learns that milestones are global and --milestone takes a global MS ID, contrary to the shipped rules and capabilities
+  suggested_action: Restate both sentences with the two roots and mention the READMEs in reconcile.md
+  resolution: open
+  severity: P2
+- issue: ARCH-01 Repository roadmap restates the goal-citation clause without the ADR's third option (a namespace steering file named by path once it exists)
+  evidence: docs/architecture/ARCH-01-introduction-and-goals.md:55
+  failure_condition: A namespace milestone citing its package's steering file by path looks non-compliant to a reader of ARCH-01 alone
+  suggested_action: Add the steering-file option to the parenthesis
+  resolution: open
+  severity: P3
+assumptions:
+- Isolation native (reconcile-reviewer subagent); pre/post snapshot trees identical (d06beb5a)
+checks:
+  rules_ci: PASS uv run devkit rules check --ci --base dbaf8f38 errors=0 warnings=0
+  targets_modified: PASS all 9 targets in git diff dbaf8f38..0ba9065a -- docs/
+  feedback_resolve: PASS FB-viewer-namespace-roadmap-roots open in the bundle
+diff_scope:
+  base: dbaf8f3812a2a01cb2254ddf8418349aba0517ce
+  head: 0ba9065a2b0d8c3a536012d5546df0e2fe5ce3d8

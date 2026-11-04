@@ -83,7 +83,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   (`CAP-DLV-delivery-workflows`); the use case ends and `UC-plan-and-hand-off-a-proposal` continues.
 - **3c.** The request will not start now, or must be decomposed (it would need two or more specs or a different
   `task_kind`, `size: XL`): the agent keeps it as one or more draft proposals in
-  Backlog, a rough `XL` draft only until it is decomposed before `plan-intent`, optionally assigns an existing global milestone, and preserves the origin in `decomposed_from` or
+  Backlog, a rough `XL` draft only until it is decomposed before `plan-intent`, optionally assigns an existing milestone at the global or a namespace roadmap root, and preserves the origin in `decomposed_from` or
   `supersedes` through handoff, without an external tracker (`CAP-HARN-agent-guidance`); the use case ends.
 - **3d.** The change adds no behavior and restructures several areas at once (`overall-refactor`): the agent runs
   `sdd-overall-refactor` in `direct` mode with the user, without a Unit, proposal or spec bundle
@@ -192,7 +192,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Covers**: 3c
 - **Given**: a request will not start now, or a draft must be decomposed
 - **When**: the agent follows Backlog
-- **Then**: it creates draft proposals, optionally assigns existing global milestone IDs, and preserves
+- **Then**: it creates draft proposals, optionally assigns existing milestone IDs at the global or a namespace roadmap root, and preserves
   `decomposed_from` and `supersedes` through handoff without requiring an external tracker
 
 ### Scenario 7: A cross-area restructuring runs without a Unit

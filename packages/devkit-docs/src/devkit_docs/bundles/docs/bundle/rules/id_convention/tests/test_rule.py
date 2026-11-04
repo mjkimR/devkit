@@ -600,7 +600,11 @@ def test_misplaced_path_remediation_names_each_kinds_location(tmp_path: Path) ->
     }
     violations = check(RULE, tmp_path, files)
     remediations = {v.file: v.remediation for v in violations if v.message.startswith("Invalid partition path")}
-    milestone = "Rename or move the file to docs/roadmap/MS-{slug}.md for planned/active or docs/roadmap/_archive/MS-{slug}.md for done/dropped (the ID is the file stem), then run `uv run devkit rules fix`"
+    milestone = (
+        "Rename or move the file to MS-{slug}.md under docs/roadmap/ or docs/packages/<name>/roadmap/ of a registered"
+        " namespace for planned/active, or under its _archive/ for done/dropped (the ID is the file stem), then run"
+        " `uv run devkit rules fix`"
+    )
     dated = "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date, then run `uv run devkit rules fix`"
     living = (
         "Rename or move the file to the required path (the ID is the file stem), then run `uv run devkit rules fix`"
@@ -699,7 +703,16 @@ def test_fix_keeps_trailing_comments(tmp_path: Path) -> None:
         ("docs/roadmap", "dropped", False),
         ("docs/roadmap/2026", "done", False),
         ("docs/roadmap/_archive/2026", "done", False),
-        ("docs/packages/api/roadmap/_archive", "done", False),
+        ("docs/packages/api/roadmap", "planned", True),
+        ("docs/packages/api/roadmap", "active", True),
+        ("docs/packages/api/roadmap", "done", False),
+        ("docs/packages/api/roadmap", "dropped", False),
+        ("docs/packages/api/roadmap/_archive", "done", True),
+        ("docs/packages/api/roadmap/_archive", "dropped", True),
+        ("docs/packages/api/roadmap/_archive", "planned", False),
+        ("docs/packages/api/roadmap/_archive", "active", False),
+        ("docs/packages/api/roadmap/2026", "done", False),
+        ("docs/packages/web/roadmap", "planned", False),
     ],
 )
 def test_milestone_status_location_pairs(tmp_path: Path, directory: str, status: str, valid: bool) -> None:
@@ -731,3 +744,69 @@ def test_archived_metadata_repair_and_cross_location_identity_collision(tmp_path
         targets=[root, archive],
     )
     assert any("duplicated" in v.message for v in violations)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "docs/packages/api/roadmap/MS-example.md",
+        "docs/packages/api/roadmap/_archive/MS-example.md",
+        "docs/packages/api/roadmap/2026/MS-example.md",
+        "docs/packages/web/roadmap/MS-example.md",
+    ],
+)
+def test_misplaced_namespace_milestone_names_both_roots(tmp_path: Path, path: str) -> None:
+    status = "done" if path == "docs/packages/api/roadmap/MS-example.md" else "active"
+    original = f"---\nid: MS-example\nstatus: {status}\n---\n# [MS-example] Example\n"
+    files = {path: original, ".devkit/config.toml": _namespaces("api")}
+    violations = [v for v in check(RULE, tmp_path, files, targets=[path], fix=True) if not v.fixed]
+    assert [v.file for v in violations] == [path]
+    assert violations[0].message.startswith("Invalid partition path")
+    for text in (violations[0].message, violations[0].remediation):
+        assert "docs/roadmap/" in text and "docs/packages/<name>/roadmap/" in text and "_archive/" in text
+    assert violations[0].remediation == (
+        "Rename or move the file to MS-{slug}.md under docs/roadmap/ or docs/packages/<name>/roadmap/ of a registered"
+        " namespace for planned/active, or under its _archive/ for done/dropped (the ID is the file stem), then run"
+        " `uv run devkit rules fix`"
+    )
+    assert (tmp_path / path).read_text() == original
+
+
+def test_namespace_archived_metadata_repair_and_cross_location_identity_collision(tmp_path: Path) -> None:
+    config = {".devkit/config.toml": _namespaces("api")}
+    archive = "docs/packages/api/roadmap/_archive/MS-example.md"
+    check(
+        RULE,
+        tmp_path,
+        config | {archive: "---\nid: MS-wrong\nstatus: done\n---\n# [MS-wrong] Example\n"},
+        targets=[archive],
+        fix=True,
+    )
+    assert "id: MS-wrong" in (tmp_path / archive).read_text()  # Historical fix exclusion holds in a namespace.
+    (tmp_path / archive).write_text("---\nid: MS-example\nstatus: done\n---\n# [MS-example] Example\n")
+    root = "docs/roadmap/MS-example.md"
+    violations = check(
+        RULE,
+        tmp_path,
+        {root: "---\nid: MS-example\nstatus: active\n---\n# [MS-example] Example\n"},
+        targets=[root, archive],
+    )
+    assert any("duplicated" in v.message for v in violations)
+
+
+def _milestone(document_id: str, status: str, header: str = "") -> str:
+    return (
+        f"---\nid: {document_id}\ntitle: {document_id}\nstatus: {status}\ncreated_at: 2026-11-04\n"
+        f"summary: An English summary of {document_id}.\n{header}---\n# [{document_id}] {document_id}\n"
+    )
+
+
+def test_monorepo_namespace_milestones_pass_with_a_cross_namespace_edge(tmp_path: Path) -> None:
+    files = {
+        ".devkit/config.toml": _namespaces("api"),
+        "docs/packages/api/roadmap/MS-api-launch.md": _milestone("MS-api-launch", "planned"),
+        "docs/packages/api/roadmap/_archive/MS-api-done.md": _milestone("MS-api-done", "done"),
+        "docs/roadmap/MS-foundation.md": _milestone("MS-foundation", "planned", "depends_on: [MS-api-launch]\n"),
+    }
+    assert check(RULE, tmp_path, files) == []
+    assert check(RULE, tmp_path, targets=list(files)) == []

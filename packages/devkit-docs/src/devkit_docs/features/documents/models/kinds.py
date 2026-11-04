@@ -288,7 +288,7 @@ ROWS: tuple[KindDefinition, ...] = (
         "roadmap",
         living_spec=False,
         area_scoped=False,
-        format_scope=FormatScope.GLOBAL,
+        format_scope=FormatScope.EVERY_ROOT,
         heading_token=True,
         summary=Summary.ALWAYS,
         anchor="",

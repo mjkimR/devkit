@@ -307,3 +307,52 @@ def test_archive_format_fix_preserves_status_and_placement(tmp_path: Path) -> No
         assert f"status: {status}" in result and "created_at:" in result
         assert result.endswith("# Retained body\n")
         assert not (tmp_path / f"docs/roadmap/MS-{status}.md").exists()
+
+
+def test_namespace_milestones_are_checked_like_global_ones(tmp_path: Path) -> None:
+    path = "docs/packages/api/roadmap/MS-a.md"
+    files = {
+        CONFIG: _namespaces("api"),
+        path: "---\nid: MS-a\ntitle: A\nstatus: draft\n---\n",
+        "docs/packages/web/roadmap/MS-b.md": "# Unregistered\n",
+    }
+    found = check(RULE, tmp_path, files)
+    assert [v.file for v in found] == [path, path]
+    assert any(
+        v.message == "milestone status must be planned | active | done | dropped" and not v.fixable for v in found
+    )
+    assert any(v.message == "milestone is missing created_at" and v.fixable for v in found)
+    found = check(RULE, tmp_path, fix=True)
+    assert [(v.file, v.message) for v in found if not v.fixed] == [
+        (path, "milestone status must be planned | active | done | dropped")
+    ]
+    assert "created_at:" in (tmp_path / path).read_text()
+    assert (tmp_path / "docs/packages/web/roadmap/MS-b.md").read_text() == "# Unregistered\n"
+
+
+def test_namespace_archive_format_fix_preserves_status_and_placement(tmp_path: Path) -> None:
+    path = "docs/packages/api/roadmap/_archive/MS-done.md"
+    original = "---\nid: MS-done\ntitle: History\nstatus: done\n---\n# Retained body\n"
+    assert check(RULE, tmp_path, {CONFIG: _namespaces("api"), path: original}) == []
+    check(RULE, tmp_path, targets=[path], fix=True)
+    result = (tmp_path / path).read_text()
+    assert "status: done" in result and "created_at:" in result and result.endswith("# Retained body\n")
+    assert not (tmp_path / "docs/packages/api/roadmap/MS-done.md").exists()
+
+
+def _milestone(document_id: str, status: str, header: str = "") -> str:
+    return (
+        f"---\nid: {document_id}\ntitle: {document_id}\nstatus: {status}\ncreated_at: 2026-11-04\n"
+        f"summary: An English summary of {document_id}.\n{header}---\n# [{document_id}] {document_id}\n"
+    )
+
+
+def test_monorepo_namespace_milestones_pass_at_both_locations(tmp_path: Path) -> None:
+    files = {
+        CONFIG: _namespaces("api"),
+        "docs/packages/api/roadmap/MS-api-launch.md": _milestone("MS-api-launch", "planned"),
+        "docs/packages/api/roadmap/_archive/MS-api-done.md": _milestone("MS-api-done", "done"),
+        "docs/roadmap/MS-foundation.md": _milestone("MS-foundation", "planned", "depends_on: [MS-api-launch]\n"),
+    }
+    assert check(RULE, tmp_path, files) == []
+    assert check(RULE, tmp_path, targets=[path for path in files if path != CONFIG]) == []

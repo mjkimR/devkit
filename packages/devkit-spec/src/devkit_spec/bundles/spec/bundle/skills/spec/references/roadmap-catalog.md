@@ -1,8 +1,9 @@
 # Repository roadmap
 
-Milestones are global documents `MS-<slug>.md` with a word-led slug (for example `MS-release-1-0`); creation and
-placement follow [Backlog](backlog.md) Milestones. Discover them with `devkit docs list milestone` (`--history` adds
-done/dropped).
+Milestones are `MS-<slug>.md` documents with a word-led slug (for example `MS-release-1-0`) at the global roadmap root
+or a registered namespace's roadmap root; creation and placement follow [Backlog](backlog.md) Milestones. Discover
+them with `devkit docs list milestone`, which follows the current directory (`--all-namespaces` shows every root,
+`--history` adds done/dropped).
 
 ## Goal and membership
 

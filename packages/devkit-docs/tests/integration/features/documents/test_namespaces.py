@@ -171,6 +171,29 @@ def test_list_follows_the_current_directory(monorepo: Path, monkeypatch: pytest.
     assert len(_ids(_docs(monorepo, "list", "--format", "json"))) == 3
 
 
+def test_list_milestones_follows_the_current_directory(
+    monorepo: Path, write: Write, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def milestone(document_id: str) -> str:
+        return f"---\nid: {document_id}\nstatus: planned\ntitle: {document_id}\n---\n"
+
+    write("docs/packages/api/roadmap/MS-api-launch.md", milestone("MS-api-launch"))
+    write("docs/packages/web/roadmap/MS-web-launch.md", milestone("MS-web-launch"))
+    write("docs/roadmap/MS-foundation.md", milestone("MS-foundation"))
+
+    def listed(*args: str) -> dict[str, str]:
+        result = _docs(monorepo, "list", "milestone", *args, "--format", "json")
+        assert result.exit_code == 0, result.output
+        return {item["id"]: item["namespace"] for item in json.loads(result.stdout)["documents"]}
+
+    every = {"MS-api-launch": "api", "MS-foundation": "global", "MS-web-launch": "web"}
+    monkeypatch.chdir(monorepo / "services/api")
+    assert listed() == {"MS-api-launch": "api", "MS-foundation": "global"}
+    assert listed("--all-namespaces") == every
+    monkeypatch.chdir(monorepo)
+    assert listed() == every
+
+
 def test_list_text_shows_namespaces_only_when_configured(monorepo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(monorepo)
     first = _docs(monorepo, "list", "--namespace", "web", "--limit", "1").stdout.splitlines()

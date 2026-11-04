@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T02:17:08.931838Z'
+status: completed
+summary: 'Swept the whole Development session (specify, two parallel implementation workers, review, reconcile): recorded FB-handoff-pointer-carries-summary-not-clauses and FB-entrypoints-derive-offers-managed-paths; duplicates: none (FB-handoff-writes-no-partial-supersession-pointer covers the pointer''s absence, not its content).'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

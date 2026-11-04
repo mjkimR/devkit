@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from click.testing import CliRunner
+from click.testing import CliRunner, Result
 from devkit_core.core import ArgumentError
 from devkit_core.core.frontmatter import parse
 from devkit_dist.cli import cli
@@ -20,6 +20,25 @@ def milestone(root: Path) -> None:
     path = root / "docs/roadmap/MS-foundation.md"
     path.parent.mkdir(parents=True)
     path.write_text("---\nid: MS-foundation\nstatus: planned\n---\n")
+
+
+def register_api(root: Path) -> None:
+    """Register namespace ``api`` at ``services/api`` and create that source directory."""
+    (root / ".devkit/config.toml").write_text('[[tool.docs.namespaces]]\nname = "api"\npath = "services/api"\n')
+    (root / "services/api").mkdir(parents=True)
+
+
+def namespace_milestone(root: Path, location: str, status: str) -> Path:
+    path = root / location / "MS-api-launch.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\nid: MS-api-launch\nstatus: {status}\n---\n")
+    return path
+
+
+def new_member(workspace: Path, milestone_id: str) -> Result:
+    return CliRunner().invoke(
+        cli, ["spec", "proposal", "new", "member", "--milestone", milestone_id, "-w", str(workspace)]
+    )
 
 
 @pytest.mark.parametrize("value", ["Phase 1", "MS-missing", "", "PROP-parent"])
@@ -184,14 +203,75 @@ def test_inactive_milestone_cli_notice_is_nonblocking_under_strict(workspace: Pa
         ("docs/roadmap/_archive", "active"),
         ("docs/roadmap/nested", "done"),
         ("docs/roadmap/_archive/year", "dropped"),
+        ("docs/packages/api/roadmap", "done"),
+        ("docs/packages/api/roadmap/_archive", "active"),
+        ("docs/packages/web/roadmap", "active"),
     ],
 )
 def test_invalid_milestone_placement_never_writes(workspace: Path, location: str, status: str) -> None:
+    register_api(workspace)
     path = workspace / location / "MS-foundation.md"
     path.parent.mkdir(parents=True)
     path.write_text(f"---\nid: MS-foundation\nstatus: {status}\n---\n")
-    with pytest.raises(ArgumentError):
+    with pytest.raises(ArgumentError) as raised:
         create_proposal(workspace, "member", milestone="MS-foundation")
+    assert "global or a namespace roadmap root" in str(raised.value)
+    assert "docs list milestone --all-namespaces" in str(raised.value.advisory.fix)
+    assert not (workspace / "docs/proposals").exists()
+
+
+@pytest.mark.parametrize("from_package_dir", [False, True])
+@pytest.mark.parametrize(
+    ("milestone_id", "location"),
+    [("MS-api-launch", "docs/packages/api/roadmap"), ("MS-foundation", "docs/roadmap")],
+)
+def test_namespace_milestone_accepted_at_either_root(
+    workspace: Path, monkeypatch: pytest.MonkeyPatch, from_package_dir: bool, milestone_id: str, location: str
+) -> None:
+    register_api(workspace)
+    milestone(workspace)
+    namespace_milestone(workspace, "docs/packages/api/roadmap", "active")
+    path = workspace / location / f"{milestone_id}.md"
+    before = path.read_bytes()
+    if from_package_dir:
+        monkeypatch.chdir(workspace / "services/api")
+    result = new_member(workspace, milestone_id)
+    assert result.exit_code == 0, result.output
+    data = parse((workspace / "docs/proposals/PROP-member/proposal.md").read_text()).data
+    assert data is not None and data["milestone"] == milestone_id
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("status", ["done", "dropped"])
+def test_archived_namespace_milestone_notice_preserves_milestone(workspace: Path, status: str) -> None:
+    register_api(workspace)
+    path = namespace_milestone(workspace, "docs/packages/api/roadmap/_archive", status)
+    before = path.read_bytes()
+    result = create_proposal(workspace, "member", milestone="MS-api-launch")
+    data = parse((workspace / result.path).read_text()).data
+    assert data is not None and data["milestone"] == "MS-api-launch"
+    assert path.read_bytes() == before
+    notices = [notice.to_dict() for notice in result.notices if notice.code == "SPEC_PROPOSAL_MILESTONE_INACTIVE"]
+    assert len(notices) == 1 and notices[0]["level"] == "NOTICE"
+    assert "MS-api-launch" in notices[0]["message"] and status in notices[0]["message"]
+
+
+@pytest.mark.parametrize(
+    ("location", "status"),
+    [
+        ("docs/packages/api/roadmap", "done"),
+        ("docs/packages/api/roadmap/_archive", "active"),
+        ("docs/packages/web/roadmap", "active"),
+    ],
+)
+def test_invalid_namespace_placement_fails_cli_before_writes(workspace: Path, location: str, status: str) -> None:
+    register_api(workspace)
+    namespace_milestone(workspace, location, status)
+    result = new_member(workspace, "MS-api-launch")
+    assert result.exit_code == 2, result.output
+    assert "(ARGUMENT_INVALID)" in result.stderr
+    assert "global or a namespace roadmap root" in result.stderr
+    assert "docs list milestone --all-namespaces" in result.stderr
     assert not (workspace / "docs/proposals").exists()
 
 

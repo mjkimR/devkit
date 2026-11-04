@@ -39,6 +39,6 @@ The docs context owns shared writing instructions, steering discovery and templa
 assets. `uv run devkit remove spec` removes selected assets, not installed Python command extensions.
 A clean document-only runtime installs devkit-docs without devkit-spec.
 
-Global milestones use the roadmap root for planned/active and one flat `docs/roadmap/_archive/` for done/dropped.
+A milestone lives at one roadmap root, global `docs/roadmap/` or a registered namespace's `docs/packages/<name>/roadmap/`: planned/active at the root and done/dropped in that root's flat `_archive/`.
 The same IDs and aliases resolve in either location; history visibility remains status-derived.
 Document rules report invalid placement without moving files or changing lifecycle status.

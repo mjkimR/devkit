@@ -24,7 +24,7 @@ status: draft
 1. **Goal 1**: <!-- Most critical core goal -->
 2. **Goal 2**: <!-- Secondary business goal -->
 
-Roadmap milestones under `docs/roadmap/` cite these goals and state observable exit conditions. Unit anchors declare membership; milestones do not list work items.
+Roadmap milestones under `docs/roadmap/` or a registered namespace's `docs/packages/<name>/roadmap/` cite these goals and state observable exit conditions. Unit anchors declare membership; milestones do not list work items.
 
 ### 1.3 Non-Goals
 <!-- Explicitly exclude out-of-scope items with rationale and reconsideration conditions -->

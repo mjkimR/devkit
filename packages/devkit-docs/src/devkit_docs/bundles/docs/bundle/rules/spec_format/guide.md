@@ -8,8 +8,9 @@ present, non-blank strings; their values are checked by the other spec rules (`R
 
 - **Phase and severity**: `linter`, `error`.
 - **What is checked**: the targeted Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/proposals/` and
-  `docs/roadmap/`, and under `capabilities/` and `usecases/` of each namespace docs root (`docs/packages/<name>/`,
-  registered in `[[tool.docs.namespaces]]`), even when they declare no ID. Milestones (`docs/roadmap/`, including its flat `_archive/`) also need
+  `docs/roadmap/`, and under `capabilities/`, `usecases/` and `roadmap/` of each namespace docs root
+  (`docs/packages/<name>/`, registered in `[[tool.docs.namespaces]]`), even when they declare no ID. Milestones
+  (`docs/roadmap/` and a registered `docs/packages/<name>/roadmap/`, each including its flat `_archive/`) also need
   `created_at` and a lifecycle `status`; `done` and `dropped` milestones are history, checked only when named as
   explicit targets.
 - **What is not**: `README.md`, templates (`*-template.md`, `*_template.md`), directories starting with `.` and

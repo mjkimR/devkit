@@ -99,10 +99,15 @@ _PATH_REMEDIATIONS = {
     Kind.SPEC: _DATED_REMEDIATION,
     Kind.FEEDBACK: _DATED_REMEDIATION,
     Kind.MILESTONE: (
-        f"Rename or move the file to docs/roadmap/MS-{{slug}}.md for planned/active or docs/roadmap/_archive/MS-{{slug}}.md for done/dropped"
-        f" (the ID is the file stem), then run `{FIX_COMMAND}`"
+        f"Rename or move the file to MS-{{slug}}.md under docs/roadmap/ or docs/packages/<name>/roadmap/ of a registered"
+        f" namespace for planned/active, or under its _archive/ for done/dropped (the ID is the file stem), then run"
+        f" `{FIX_COMMAND}`"
     ),
 }
+_MILESTONE_PATH_ISSUE = (
+    "Milestone needs a word-led slug at MS-{slug}.md under docs/roadmap/ or docs/packages/<name>/roadmap/ of a"
+    " registered namespace (planned/active) or under its _archive/ (done/dropped)"
+)
 _LIVING_REMEDIATION = (
     f"Rename or move the file to the required path (the ID is the file stem), then run `{FIX_COMMAND}`"
 )
@@ -378,16 +383,14 @@ def _targets(ctx: RuleContext) -> list[_Target]:
             status = milestone_status.get(path)
             if status not in {"planned", "active", "done", "dropped"}:
                 status = None
-            valid = docs_root == "docs" and milestone_path_valid(path, status)
+            valid = milestone_path_valid(living_path(path, namespaces=registered), status)
             targets.append(
                 _Target(
                     path,
                     Kind.MILESTONE,
                     slug=slug,
                     expected_id=stem if valid else "",
-                    path_issue=""
-                    if valid
-                    else "Milestone needs a word-led slug at docs/roadmap/MS-{slug}.md (planned/active) or docs/roadmap/_archive/MS-{slug}.md (done/dropped)",
+                    path_issue="" if valid else _MILESTONE_PATH_ISSUE,
                 )
             )
     for docs_root in docs_roots(registered):
@@ -400,11 +403,7 @@ def _targets(ctx: RuleContext) -> list[_Target]:
     covered = {target.path for target in targets}
     for document in document_index(ctx).documents:
         if document.kind is Kind.MILESTONE and document.path not in covered:
-            targets.append(
-                _Target(
-                    document.path, Kind.MILESTONE, path_issue="Milestone must be stored at docs/roadmap/MS-{slug}.md"
-                )
-            )
+            targets.append(_Target(document.path, Kind.MILESTONE, path_issue=_MILESTONE_PATH_ISSUE))
     return targets
 
 

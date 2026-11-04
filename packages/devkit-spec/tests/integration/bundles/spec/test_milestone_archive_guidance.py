@@ -47,9 +47,24 @@ def test_archive_transition_instructions(environment: str) -> None:
         ("merge", "either supported location"),
     ):
         assert_rule(procedure, *rule)
+    assert_rule(procedure, "`status: done`", "`_archive/` of the milestone's roadmap root", "same commit")
     backlog = raw("skills/spec/references/backlog.md", environment)
     assert "docs/roadmap/_archive/MS-<slug>.md" in backlog
+    assert_rule(
+        backlog,
+        "`docs/roadmap/MS-<slug>.md`",
+        "`docs/packages/<name>/roadmap/MS-<slug>.md`",
+        "`docs/roadmap/_archive/MS-<slug>.md`",
+        "`docs/packages/<name>/roadmap/_archive/MS-<slug>.md`",
+        "lifecycle move stays inside the milestone's roadmap root",
+    )
+    assert_rule(backlog, "namespace milestone belongs to its namespace by path", "repository-wide")
     assert_rule(backlog, "reopen", "move back to the root", "reset both assertions to pending", "one approved commit")
+    catalog = raw("skills/spec/references/roadmap-catalog.md", environment)
+    assert_rule(catalog, "`MS-<slug>.md`", "global roadmap root", "namespace's roadmap root")
+    assert_rule(catalog, "`devkit docs list milestone`", "current directory", "`--all-namespaces`")
+    for text in (procedure, backlog, catalog):
+        assert "global documents" not in text and "global only" not in text
 
 
 def test_simulated_close_reopen_drop_and_history_merge(tmp_path: Path) -> None:

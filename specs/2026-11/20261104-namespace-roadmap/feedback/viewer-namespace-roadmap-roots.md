@@ -18,7 +18,7 @@ created_at: 2026-11-04
 
 - **Current Procedure**: the viewer's dashboard listing and roadmap tab enumerate milestones from `docs/roadmap` and
   `docs/roadmap/_archive` in the registered working tree (`CAP-VIEW-repository-viewer` 4.1 and §5), reading the Git
-  tree without the `[tool.docs]` namespace registry. `PROP-namespace-roadmap` (Planning question q1, answer-01) keeps
+  tree without the `[tool.docs]` namespace registry. `SPEC-namespace-roadmap` (Planning question q1, answer-01) keeps
   the viewer out of its scope on the user's decision, so once namespace milestones exist under
   `docs/packages/<name>/roadmap/`: they are missing from the roadmap tab and the dashboard milestone count; a global
   milestone whose `depends_on` names a namespace milestone renders as an unknown dependency and is never `ready`, even
@@ -44,10 +44,10 @@ created_at: 2026-11-04
   members are filtered over loaded milestones only.
 - **Versions**: the `plan-namespace-roadmap` worktree at the Planning head.
 - **Conditions**: a repository with registered namespaces and milestones under a namespace docs root, after
-  `PROP-namespace-roadmap` lands.
+  `SPEC-namespace-roadmap` lands.
 - **Workarounds Attempted**: not attempted; `devkit docs list milestone --all-namespaces` shows every milestone.
 - **Related Assets**: `CAP-VIEW-repository-viewer` 4.1 and §5; `packages/devkit-viewer/frontend/src/lib/api/roadmap.ts`;
-  `PROP-namespace-roadmap` envelopes `challenger-01.yaml` finding 1 and `answer-01.yaml`.
+  `SPEC-namespace-roadmap` envelopes `challenger-01.yaml` finding 1 and `answer-01.yaml`.
 
 ## Evidence
 

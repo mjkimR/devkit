@@ -129,6 +129,8 @@ def test_every_identifier_target_kind_outside_the_living_spec_has_a_path_remedia
 
 
 def test_a_target_kind_without_a_path_remediation_fails() -> None:
-    assert id_convention._path_remediation(Kind.MILESTONE).startswith("Rename or move the file to docs/roadmap/")
+    assert id_convention._path_remediation(Kind.MILESTONE).startswith(
+        "Rename or move the file to MS-{slug}.md under docs/roadmap/ or"
+    )
     with pytest.raises(KindTableError, match="kind material has no path remediation"):
         id_convention._path_remediation(Kind.MATERIAL)

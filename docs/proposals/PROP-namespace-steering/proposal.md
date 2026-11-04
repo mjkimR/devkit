@@ -86,7 +86,7 @@ the decision in `PADR-namespace-steering-directories`, the criticism in `envelop
   select by a package's source path and would list unregistered directories; a registry read in `devkit-dist` because
   `[tool.*]` passes through unread; a sync-rendered list because the `user` chose run-time reading.
 - **Q3**: A namespace steering file MAY hold the package's goals as prose (g-sandbox's `product.md` files already do);
-  how a namespace milestone cites them is `PROP-namespace-roadmap`'s decision, which owns the roadmap ADR, and a
+  how a namespace milestone cites them is `SPEC-namespace-roadmap`'s decision, which owns the roadmap ADR, and a
   namespace milestone may cite the global goals meanwhile, so neither proposal depends on the other. Package
   glossaries stay at `docs/packages/<name>/glossary.md`: a namespace steering directory holds Markdown files only, and
   a `glossary.md` or `glossary.yaml` in it is reported (the package glossary has its place; synonyms are read from the
@@ -162,7 +162,7 @@ Expected affected contracts: `CAP-GOV-spec-rules` (3.14, the steering pass of `R
   `max_files × (1 + N)` entries) and over a bare global list with no hint.
 - Mechanism: the `devkit.context_documents` provider entry point; failures surface as `notices` and
   `CONTEXT_DOCUMENTS_EXTENSION_FAILED` (`PADR-namespace-steering-directories`).
-- Goals as prose in a namespace steering file; citation and the roadmap ADR pointer left to `PROP-namespace-roadmap`;
+- Goals as prose in a namespace steering file; citation and the roadmap ADR pointer left to `SPEC-namespace-roadmap`;
   package glossaries unchanged (Host, within scope and non-goals).
 - The acceptance fixture is a monorepo fixture in this repository: g-sandbox has no `.devkit/config.toml` yet, so no
   namespace is registered there today (assumption recorded for `plan-accept`).

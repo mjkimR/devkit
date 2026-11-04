@@ -1,6 +1,9 @@
 # Repository roadmap
 
-Milestones are global documents named MS-<slug>.md, created from the deployed milestone template. User and agent
+Milestones are MS-<slug>.md documents created from the deployed milestone template, at the global roadmap root
+`docs/roadmap/` or, for a package registered in `[[tool.docs.namespaces]]`, at its namespace roadmap root
+`docs/packages/<name>/roadmap/` (`ADR-namespace-milestone-roots`); each root keeps its flat `_archive/` for done and
+dropped milestones, and a lifecycle move stays inside the milestone's root. IDs stay repository-wide. User and agent
 jointly review each theme and decompose it into direct proposal members. Proposal anchors declare membership;
 milestone bodies do not list work. Handoff does not carry milestone metadata into specs, and historical SPEC
 metadata is ignored. Inspect code/Git on demand for downstream outcomes; no delivery lineage is stored.
@@ -12,7 +15,8 @@ MS-only.
 
 Exit conditions are recommended to state observable phase-level outcomes and capability boundaries. Keep CLI flags, branch
 names, file layouts and scenario tests in proposals/specs. Use devkit docs list milestone to discover current
-milestones and --history to include done/dropped records. Close planned/active milestones through Backlog after reviewing decomposition, direct proposal work and the
+milestones (the current directory's namespace plus the global ones; --all-namespaces for every root) and --history
+to include done/dropped records. Close planned/active milestones through Backlog after reviewing decomposition, direct proposal work and the
 exit condition. Confirm both Completion review assertions with status done in one commit. Missing assertions
 are unconfirmed; disappearance or handoff alone proves no delivery. Actual semantic scope changes reset both to pending; normal handoff does not.
 Unchanged approval persists across interruption after rechecking facts; changed facts require reconfirmation.
