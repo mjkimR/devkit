@@ -1,0 +1,21 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:09:01.937662Z'
+status: completed
+summary: 'round 1; independent code-reviewer (native subagent, effort medium) confirmed AC-01..AC-09 by the range''s tests, the handoff pointer against the unchanged RULE-decision-supersession, the roll-back separation (edited list restored before roll_back) and the non-goals; one P3: a commented ''# '' line before the H1 is taken as the heading'
+findings:
+- issue: _insert_pointer identifies the H1 by the raw line text, so a '# '-prefixed line inside an HTML comment between the frontmatter and the real H1 is taken as the heading and the pointer lands inside the comment, invisible to the presence scan and to RULE-decision-supersession
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:773-776; probe scratch/review-01/test_probe_insert_pointer.py::test_comment_line_before_h1_is_taken_as_the_heading
+  failure_condition: A target ADR whose body opens with an HTML comment block containing a line starting with '# ' before its H1; the handoff reports a pointer the gate cannot see and the commit is refused
+  suggested_action: Test the visible text as well as the raw line (raw.startswith('# ') and line.text.strip()) and add a handoff test with a commented '# ' line before the H1
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected --base 5aecaef7 1651 passed
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base 5aecaef7 errors=0
+  types: PASS just check devkit-spec pyright 0 errors
+diff_scope:
+  base: 5aecaef787214988e6bf81ae36aacca57f2634a3
+  head: 0c2b1f7b66b95b1a2fa3c499d007c7a57ab3aa2c

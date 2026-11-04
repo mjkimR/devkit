@@ -765,7 +765,7 @@ def _insert_pointer(text: str, pointer: str) -> tuple[str, int]:
     at = start
     for line in visible_lines(text, start=start):
         raw = text[line.offset :].split("\n", 1)[0]
-        if raw.startswith("# "):
+        if raw.startswith("# ") and line.text.strip():  # a "# " line inside an HTML comment is no heading
             at = line.offset + len(raw.rstrip("\r"))
             break
     head, tail = text[:at], text[at:].lstrip("\r\n")

@@ -549,6 +549,19 @@ def test_a_padr_supersedes_reaches_the_adr_and_the_named_adr_gets_the_pointer(wo
     ]
 
 
+def test_a_commented_heading_line_before_the_h1_is_not_the_heading(workspace: Path, write: Write) -> None:
+    # review-01 P3: a "# " line inside an HTML comment must not receive the pointer, where no rule would see it.
+    commented = OLD_TEXT.replace("# [ADR-old] Old\n", "<!--\n# draft title, superseded\n-->\n\n# [ADR-old] Old\n", 1)
+    write(OLD_ADR, commented)
+    accept(_superseding(workspace, "commented", "Pick A", "[ADR-old]"))
+    result = handoff_proposal(workspace, "commented", today=TODAY)
+    text = (workspace / OLD_ADR).read_text(encoding="utf-8")
+    assert text == commented.replace(
+        "# [ADR-old] Old\n", f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n", 1
+    )
+    assert [(p.line, p.by) for p in result.pointers] == [(13, "ADR-pick-a")]
+
+
 def test_a_pointer_already_present_is_not_written_twice(workspace: Path, write: Write) -> None:
     present = OLD_TEXT.replace("The old decision.", "Superseded in part by `ADR-pick-a`: the parser choice.", 1)
     write(OLD_ADR, present)
