@@ -1,0 +1,37 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T02:12:01.856866Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer self-verified the four fixes (medium: text-only restatements applied as suggested in CAP-DOCS-document-model, CAP-HARN-agent-guidance and UC-route-development-intent, verified by devkit rules check; a test-only addition in spec_format tests, 21 passed) and recorded the three documents as discovered Living Spec targets in spec.md.'
+findings:
+- issue: CAP-DOCS-document-model still states the superseded global-only milestone contract (Milestone placement paragraph and the MS kind-table row), contradicting ADR-namespace-milestone-roots and the shipped rules
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:108-110, :194
+  failure_condition: An agent reading the canonical kind/path table places or rejects a registered namespace milestone against the old MUST while RULE-id-convention and RULE-spec-format accept it
+  suggested_action: Restate the placement paragraph and the MS row with both roots; add CAP-DOCS-document-model to spec.md related_capabilities
+  resolution: resolved
+  severity: P2
+- issue: CAP-HARN-agent-guidance roadmap paragraph still opens with 'Milestones are global MS documents'
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:386
+  failure_condition: The capability documenting the roadmap guidance contradicts the shipped roadmap-catalog.md and backlog.md
+  suggested_action: Drop 'global' or name both roots
+  resolution: resolved
+  severity: P3
+- issue: UC-route-development-intent still says a proposal optionally assigns an existing global milestone
+  evidence: docs/usecases/delivery/UC-route-development-intent.md:86, :195
+  failure_condition: Use case and CAP-DLV-proposal-planning disagree on what --milestone accepts
+  suggested_action: Replace 'global milestone' with a milestone at the global or a namespace roadmap root in both lines
+  resolution: resolved
+  severity: P3
+- issue: AC-07 names RULE-spec-format but the valid monorepo fixture is run only through RULE-id-convention and RULE-document-reference
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/id_convention/tests/test_rule.py:803-811; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/spec_format/tests/test_rule.py:312-340
+  failure_condition: A regression making RULE-spec-format report a well-formed namespace milestone would not be caught by an AC-07 test
+  suggested_action: Add a spec_format test running the same valid fixture with no violation by default and with the archived file as an explicit target
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: 38980b6be33d7c6a4131b4cb8ae01ce82d449fe8
