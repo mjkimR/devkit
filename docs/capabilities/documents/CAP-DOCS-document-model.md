@@ -105,9 +105,11 @@ into the spec; Host deletion without handoff preserves it in the month-level bac
 
 ### Milestone placement
 
-Global planned/active milestones MUST use the roadmap root; done/dropped MUST use its one flat `_archive/`
-directory with the same filename, ID and aliases (`ADR-roadmap-and-milestones-ledger`).
-Other nesting and namespace roadmaps are invalid. Placement creates no new status or registry.
+A milestone belongs to one roadmap root: `docs/roadmap/` or, for a registered namespace,
+`docs/packages/<name>/roadmap/` (`ADR-namespace-milestone-roots`). Planned/active milestones MUST use that root;
+done/dropped MUST use its one flat `_archive/` directory with the same filename, ID and aliases
+(`ADR-roadmap-and-milestones-ledger`). Other nesting and the roadmap directory of an unregistered
+`docs/packages/<name>/` are invalid. Placement creates no new status or registry.
 The index MUST retain invalid archived live documents so governance can report their placement.
 Existing lookup, alias, reference and status-derived history semantics apply across both locations.
 Checks: `RULE-id-convention`, `test_milestones.py`.
@@ -191,7 +193,7 @@ live; the index itself does not check it.
 | `SPEC`, `PLAN`, `TASKS`, `REC` | `spec`, `plan`, `tasks`, `reconcile` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/{spec,plan,tasks,reconcile}.md` |
 | `FB` | `feedback` | `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`, `specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`, `docs/proposals/PROP-<slug>/feedback/<slug>.md` |
 | `MAT` | `material` | `docs/materials/...` |
-| `MS` | `milestone` | `docs/roadmap/MS-<slug>.md` (planned/active) or `docs/roadmap/_archive/MS-<slug>.md` (done/dropped), global only |
+| `MS` | `milestone` | `<root>/MS-<slug>.md` (planned/active) or `<root>/_archive/MS-<slug>.md` (done/dropped), where `<root>` is `docs/roadmap/` or a registered namespace's `docs/packages/<name>/roadmap/` |
 
 The table order is the kind order: `devkit docs list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).

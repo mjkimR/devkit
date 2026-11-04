@@ -338,3 +338,21 @@ def test_namespace_archive_format_fix_preserves_status_and_placement(tmp_path: P
     result = (tmp_path / path).read_text()
     assert "status: done" in result and "created_at:" in result and result.endswith("# Retained body\n")
     assert not (tmp_path / "docs/packages/api/roadmap/MS-done.md").exists()
+
+
+def _milestone(document_id: str, status: str, header: str = "") -> str:
+    return (
+        f"---\nid: {document_id}\ntitle: {document_id}\nstatus: {status}\ncreated_at: 2026-11-04\n"
+        f"summary: An English summary of {document_id}.\n{header}---\n# [{document_id}] {document_id}\n"
+    )
+
+
+def test_monorepo_namespace_milestones_pass_at_both_locations(tmp_path: Path) -> None:
+    files = {
+        CONFIG: _namespaces("api"),
+        "docs/packages/api/roadmap/MS-api-launch.md": _milestone("MS-api-launch", "planned"),
+        "docs/packages/api/roadmap/_archive/MS-api-done.md": _milestone("MS-api-done", "done"),
+        "docs/roadmap/MS-foundation.md": _milestone("MS-foundation", "planned", "depends_on: [MS-api-launch]\n"),
+    }
+    assert check(RULE, tmp_path, files) == []
+    assert check(RULE, tmp_path, targets=[path for path in files if path != CONFIG]) == []

@@ -5,8 +5,8 @@ summary: Lets a registered namespace keep its own MS milestones under docs/packa
 status: in-progress
 created: 2026-11-04
 namespace: global
-related_capabilities: [CAP-DOCS-namespaces, CAP-GOV-spec-rules, CAP-DLV-proposal-planning]
-related_usecases: []
+related_capabilities: [CAP-DOCS-namespaces, CAP-DOCS-document-model, CAP-GOV-spec-rules, CAP-DLV-proposal-planning, CAP-HARN-agent-guidance]
+related_usecases: [UC-route-development-intent]
 workflow: sdd-spec-feature
 ---
 
@@ -146,6 +146,10 @@ None from Planning. The feedback carried in this bundle is deferred work, not in
 this change).
 
 ## 6. Assumptions
+
+- Discovered at review (review-01): `CAP-DOCS-document-model` (Milestone placement and the MS kind row),
+  `CAP-HARN-agent-guidance` (roadmap paragraph) and `UC-route-development-intent` (`--milestone`) restated the
+  global-only contract and are Living Spec targets of this spec.
 
 - The remediation strings of `RULE-id-convention` keep their current shape (one sentence naming the valid locations,
   then the fix command); only the location clause changes.
