@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:28:43.105703Z'
+status: completed
+summary: Implemented global and namespace roadmap discovery on all reader routes; full cross-root graph and membership preserved. Independent Code and Reconcile Reviews passed; no required work deferred.
+findings: []
+assumptions:
+- Local integration and cleanup remain Host effects; no push, merge or integration performed.
+- Existing entrypoints cover the implementation; new test-directory candidate rejected.
+unverified_areas:
+- Supported Node version matrix not separately exercised; successful checks used Node22.22.0 with engine warning.
+checks:
+  tests: PASS affected165 partial14paths with full fallback; frontend130; focused33
+  build: PASS exact frontend install/lint/check/test/pack/build chain and generated viewer-assets checked1 stale0
+  lint: PASS Python Ruff/Pyright0, frontend lint/check0 and cumulative CI22zero
+diff_scope:
+  base: d2f4f1c7f418fb657d385dfa7ff2ef6cdeaf5167
+  head: 6457b03929604d758cad308f8df5a1ca7f812de8
+activity_effort: medium
