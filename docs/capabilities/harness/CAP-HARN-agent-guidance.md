@@ -468,8 +468,8 @@ the separately available baseline procedure; this entry does not activate SDD or
 ## Deep research entry
 
 The opt-in `deep-research:core` catalog bundle supplies `/deep-research` with conditional orchestration, workspace
-and synthesis references and four optional role contracts (direction-explorer, discovery-critic, discovery-planner,
-research-investigator), with no guidance asset (`CAP-DLV-deep-research`). It installs with devkit-docs and
+and synthesis references and four optional skill-local role documents (direction-explorer, discovery-critic, discovery-planner,
+research-investigator), with no global research subagent registration or guidance asset (`CAP-DLV-deep-research`). It installs with devkit-docs and
 devkit-catalog under either approach without devkit-spec, and shares no role with and depends on no other bundle.
 The entry runs only on explicit user invocation: native projection disables implicit invocation and the skill body
 opens with the explicit-only guard; no skill, pointer, guide or role suggests it. It inspects no approach, writes only

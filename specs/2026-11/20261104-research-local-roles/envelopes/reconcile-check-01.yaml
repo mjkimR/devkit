@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:09:31.095376Z'
+status: completed
+summary: Self-verified all four reconciliation targets against the reviewed catalog-only change; role locality, general invocation and host-setting limitations agree.
+findings: []
+assumptions:
+- 'Medium self-verification: one package and capability behavior, no cross-component change; harness and ADR edits only reflect this change. Existing skill entrypoints retained; guide and test candidates rejected.'
+- Includes pending Living Spec reflection.
+checks:
+  contracts: PASS AC-01 through AC-03 matched with capability rules 1 and 11 and scoped ADR
+diff_scope:
+  base: ae9613f192ccf77f33743aef9180b15e3ce8eccd
+  head: 45f06ad468fdaf5728f9a0eb185a4aa623b089c2

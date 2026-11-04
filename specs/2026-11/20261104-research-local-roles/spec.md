@@ -2,7 +2,7 @@
 id: SPEC-research-local-roles
 title: Skill-local deep research roles
 summary: Load deep-research role instructions only within the explicitly invoked skill, without global subagent registration.
-status: planned
+status: completed
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []
