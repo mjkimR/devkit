@@ -43,10 +43,11 @@ status display fits it by these criteria, not by an exception to the rules.
   empty Target.
 - **Steps**: a step cites the element where its outcome is perceived; a long-running activity and a system
   judgement follow `usecase-writing`.
-- **No task flow**: a surface no use case step reaches (free play, an ambient display) leaves `usecases` empty,
-  keeps Purpose, Content and States and keeps the Interactions header with the rows that apply (a `modal` keeps its
-  `close` or `back` row); `RULE-ux-links` and `RULE-ux-coverage` report nothing for it. A step that cites the
-  surface makes it a listed one: add the use case to `usecases` and name the step in a row.
+- **No task flow**: a surface no use case step reaches (free play, an ambient display) leaves `usecases` empty and
+  keeps Purpose, Content, States and the Interactions header. Each row it keeps (a `modal`'s `close` or `back` row,
+  a mode change) is a global control with `global: <reason>`, because an empty Step cell is a coverage gap on any
+  document; then `RULE-ux-links` and `RULE-ux-coverage` report nothing for it. A step that cites the surface makes
+  it a listed one: add the use case to `usecases` and name the step in a row.
 - **Mismatch**: if the surface still cannot be written under these criteria, record the document and the mismatch
   as feedback instead of omitting the document or loosening the table; that record is the evidence a rule change
   needs.
@@ -59,8 +60,9 @@ status display fits it by these criteria, not by an exception to the rules.
   nodes name the glossary object and the representation they show, with each node's condition beside it.
 - Never draw a character-cell layout (ASCII boxes, aligned text art): it fixes geometry the contract does not own
   and reads badly to agents and people alike.
-- **States**: lower-case names; `populated` plus each of `empty`, `loading` and `error` that applies. Every state
-  offers a next action or says why none exists.
+- **States**: lower-case names; `populated` plus each of `empty`, `loading` and `error` that applies, or the modes
+  of a surface that has them (`Surfaces beyond pages and forms`). Every state offers a next action or says why none
+  exists.
 - **Feedback**: every interaction gives feedback; an irreversible one confirms or can be undone.
 
 ## Objects and the register

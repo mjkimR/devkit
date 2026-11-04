@@ -96,6 +96,8 @@ def test_ux_writing_maps_surfaces_beyond_pages_and_forms_onto_the_contract() -> 
     assert_rule(
         guide, "**no task flow**", "`usecases` empty", "interactions header", "`rule-ux-links`", "`rule-ux-coverage`"
     )
+    assert_rule(guide, "**no task flow**", "`close` or `back` row", "global control", "`global: <reason>`")
+    assert_rule(guide, "**states**", "`populated`", "modes of a surface", "`surfaces beyond pages and forms`")
     assert_rule(guide, "**mismatch**", "as feedback", "evidence a rule change needs")
     usecase = raw("instructions/usecase-writing.md")
     assert_rule(usecase, "long-running activity", "one step", "outcome is", "perceived")
