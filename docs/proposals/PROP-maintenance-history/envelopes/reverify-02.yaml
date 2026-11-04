@@ -1,0 +1,68 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T01:25:07.274451Z'
+status: completed
+review: challenger-02.yaml
+summary: 'Closes challenger-02: all nine findings folded into proposal §3 and both PADRs (diff_digest bound to the retained file with inspected_tree as the cross-machine identity, exclusion pathspec on both commands with the set fixed at start and only inside the worktree, 8-byte big-endian length prefixes; no local init record; repository 401/403/404 failed versus reference 404 pending; compare classes foreign, deferred or unavailable; secret check at finish as INPUT_ERROR with a rules feature edge; fixed amendment names with read-before-write and greatest-updated_at merge; frozen root recorded in PADR §5; list and get read an absent branch).'
+findings:
+- issue: 'recurs: envelopes/challenger-01.yaml #9; the pinned diff command leaves diff.algorithm, diff.context, diff.interHunkContext, diff.indentHeuristic, diff.orderFile, diff.suppressBlankEmpty, diff.submodule and the prefixes to config, so the cross-machine digest claim still fails; the length prefix encoding is unspecified and the diff command lacks the exclusion pathspec the index gets'
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:128-131; docs/proposals/PROP-maintenance-history/decisions/PADR-inspected-state-identity.md:41-45,70-72,97-100
+  failure_condition: 'Machine A has diff.algorithm=histogram in ~/.gitconfig and machine B does not: the same dirty content gives two diff_digest values; a tracked report path the run rewrites is excluded from inspected_tree but included in the diff'
+  suggested_action: Drop the cross-machine claim for diff_digest (inspected_tree carries content identity; diff_digest binds the record to the retained file), or pin the remaining options; give the diff command the same exclusion pathspec and name the length prefix
+  resolution: resolved
+  severity: P2
+- issue: init records its authority in a local init record beside the configuration, which writes the working tree outside any run directory and contradicts §3.4, PADR §4 and the unchanged-status test; .devkit/ is tracked
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:152-153,169-170; docs/proposals/PROP-maintenance-history/decisions/PADR-history-branch-publication.md:99-100; .devkit/.gitignore:3-5
+  failure_condition: init succeeds; git status --porcelain shows an untracked .devkit/ file; the unchanged-state test fails for init and the authority text may be committed by accident
+  suggested_action: Drop the local init record; the HISTORY_BRANCH_READY line carries the root and head SHAs and the authority text
+  resolution: resolved
+  severity: P2
+- issue: 'A 404 on the branch reference at publish has two outcomes: §3.4 and PADR §4 say failed, while the code table maps publish and update to HISTORY_BRANCH_MISSING with INTERACTION and the publication stays pending'
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:156-157,178,187; docs/proposals/PROP-maintenance-history/decisions/PADR-history-branch-publication.md:89-91
+  failure_condition: 'The first run in a repository whose branch was never initialized: one reading records failed with exit 1, the other pending with exit 2 and a directive to init'
+  suggested_action: Repository 404 or 401/403 is HISTORY_PUBLISH_FAILED; repository readable and ref 404 is HISTORY_BRANCH_MISSING (pending, INTERACTION naming init); update the PADR
+  resolution: resolved
+  severity: P2
+- issue: Branch validation treats anything other than identical or ahead as HISTORY_BRANCH_FOREIGN (BLOCKED), which swallows rate limits (403/429), 5xx and runner timeouts that CAP-ADV routes to DEFER or unknown
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:104-107,177; docs/proposals/PROP-maintenance-history/decisions/PADR-history-branch-publication.md:83-85; docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md:171-176,216-226
+  failure_condition: A secondary rate limit answers the compare with 403 and retry-after; init reports FOREIGN, the agent asks for a second branch name and history is split
+  suggested_action: Define FOREIGN as a 200 whose status is not identical or ahead, or a 404 on compare after the ref read succeeded; map 403/429 with retry-after to a deferred code and other non-2xx and timeouts to an unknown or unavailable class
+  resolution: resolved
+  severity: P2
+- issue: The secret_leak check runs at publish in BLOCKED mode with remove-or-deselect as the action, but report.md is mandatory and its SHA-256 was frozen at finish, so a hit in the report has no remedy short of a new run; CAP-ADV classes a correctable content check as INPUT_ERROR; the builtin checks changed_files relative to workspace_root, which a run directory outside the worktree cannot express
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:79,136,144,154-155,186; docs/capabilities/delivery/CAP-DLV-weekly-report.md:81,95-96; docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md:171-176; packages/devkit/src/devkit_agt/features/rules/services/builtins/secret_leak/rule.py:39,66-69
+  failure_condition: The weekly report quotes a token; finish records the report SHA; publish refuses; editing the report changes its SHA and the pre-send digest recheck fails, so only a new run remains
+  suggested_action: Run the check in finish before the report SHA is computed and in publish and update only for --file additions and the amendment; derive INPUT_ERROR with target_files; build a RuleContext rooted at the run directory and declare the maintenance_history to rules feature edge
+  resolution: resolved
+  severity: P2
+- issue: 'git add -A -- . :!<run dir> errors with ''is outside repository'' when --into points outside the worktree, and the report path is a finish argument, so start cannot exclude it: a report that exists at start is in start''s comparison set and outside finish''s'
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:78-79,123-127; docs/proposals/PROP-maintenance-history/decisions/PADR-inspected-state-identity.md:41-42,68-69
+  failure_condition: --into /tmp/history gives HISTORY_SNAPSHOT_FAILED on every start; a rerun appending to an existing materials report prints HISTORY_RUN_DRIFTED for its own output
+  suggested_action: Add the pathspec only when the run directory is inside the worktree; fix the exclusion set at start (accept --report at start) so both captures use one set
+  resolution: resolved
+  severity: P3
+- issue: The amendment path updates/<UTC second>.json has no read-before-write, list's later-line-wins is file order rather than updated_at, a retry after a lost response regenerates the time and duplicates, and whether an update line carries the run line's fields is unstated
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:81,98,108-110,140,163-164,189-190
+  failure_condition: Two sessions call update within one second; the second writer's rebuild replaces the first amendment at the same path and list shows whichever line is last
+  suggested_action: Name the amendment <UTC time>-<8 hex>.json fixed at the first attempt and stored locally for retry; apply the canonical-blob read-before-write; let list pick the greatest updated_at; state that an update line repeats the run line's fields plus integration_state and updated_at
+  resolution: resolved
+  severity: P3
+- issue: The constant root commit makes the README bytes, identity and date permanent, since any later edit turns every existing branch into HISTORY_BRANCH_FOREIGN; the PADR records the constant but not this consequence or the change procedure
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:94,104-107; docs/proposals/PROP-maintenance-history/decisions/PADR-history-branch-publication.md:83-85,113-118
+  failure_condition: A later README wording fix ships with a recomputed constant; publish on every repository initialized before it refuses
+  suggested_action: Add to PADR §5 that the root bytes, identity, date and constant are frozen; a change needs a superseding ADR and a capability that accepts the set of known root constants
+  resolution: resolved
+  severity: P3
+- issue: 'Optional: list and get on a repository whose history branch does not exist stop with HISTORY_BRANCH_MISSING, INTERACTION, exit 2, although reading needs no authority; an intake looking for prior runs in a fresh repository is interrupted to ask about initialization'
+  evidence: docs/proposals/PROP-maintenance-history/proposal.md:82-83,178,191
+  failure_condition: 'First weekly report in a repository: the intake''s list call returns exit 2 and a stop-and-ask directive before any report exists'
+  suggested_action: When the repository reads and the ref is 404, let list print count=0 with a NOTICE naming init and exit 0, and get print HISTORY_RUN_MISSING; keep HISTORY_BRANCH_MISSING for publish and update
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: 1169e8aac00e59689a4923c9b1f76127320c0ff2
+  head: ae598acb48a1f09e8af11034d9619a8760b83136
+activity_effort: high
