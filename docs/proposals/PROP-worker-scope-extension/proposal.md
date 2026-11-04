@@ -2,7 +2,7 @@
 id: PROP-worker-scope-extension
 title: Tiered write boundaries for delegated workers
 summary: Splits a delegated worker's write boundary into an extensible estimate and a hard deny list, so a worker records and justifies an adjacent-path extension instead of stopping or having its whole result rejected, in local and cloud runs alike.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: delivery/
 priority: high                        # critical | high | medium | low
