@@ -2,7 +2,7 @@
 id: PROP-post-merge-verification
 title: Verify integration after merging with the resulting runtime
 summary: Verify the landed result with its declared devkit runtime after branch checks, and simplify integration preparation, recovery and CLI usage.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: integration/
 priority: high                        # critical | high | medium | low
