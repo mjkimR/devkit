@@ -2,7 +2,7 @@
 id: PROP-namespace-steering
 title: Namespace steering documents checked and listed beside the global ones
 summary: "Recognizes docs/packages/<name>/steering/ as steering documents of a registered namespace, checked by the steering rule and listed in the context of the namespace an agent works in, within the bounded-context caps."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: governance/
 namespace: global
