@@ -1,0 +1,22 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T08:53:15.579285Z'
+status: completed
+summary: 'Branch implementation and verification complete: Git-only integration, confirmed-landing output, fresh acceptance continuation and23-file reconciliation passed independent review. Actual target integration and fresh landed-runtime final verification remain pending for the Host.'
+findings: []
+assumptions:
+- 15 skips are13 standalone-only cases with devkit-agt installed and2 Linux-only cases on macOS; no required feature check skipped.
+- 'No performance claim: static content-check call sites measured8 at accepted input and0 after, with after-behavior spies and regression fixtures.'
+unverified_areas:
+- Host must save target SHA, integrate, synchronize landed runtime in fresh processes, regenerate and commit artifacts, run final checks and name checked HEAD before delivery completion. Live GitHub uses fixture coverage here.
+checks:
+  tests: PASS just test-affected --base main -rs full fallback6566 passed15 expected skips; after review fixes focused acceptance/output/template27, integration CLI26, policy mode2 passed
+  build: PASS uv build --package devkit-agt --wheel and uv build --package devkit-spec --wheel; outputs in ignored scratch
+  lint: PASS both changed packages lint/format and Pyright zero errors, consumer-test lint, final rules --ci --base 810adf730993 zero violations22 rules, sync check clean
+  review: PASS independent code rounds2 and3; reconcile round2 closes all7 findings; no open findings
+diff_scope:
+  base: 810adf730993710119ab351b4bbbdce7d716ad98
+  head: 0c3a873aafe04cb340b353aecf8a2e032719a852
+activity_effort: high
