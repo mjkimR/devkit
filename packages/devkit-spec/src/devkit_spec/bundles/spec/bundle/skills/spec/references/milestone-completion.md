@@ -24,7 +24,7 @@ Direct proposal work: pending
 
 1. Present both assertions with the candidate. Missing or previously confirmed assertions authorize nothing.
 2. Immediately before writing, re-read scope and membership and recheck the evidence. If either changed, or the approved candidate cannot be re-established after a pause, present the candidate again; an interruption alone does not invalidate the user's confirmation.
-3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`; move the file from `docs/roadmap/` to `docs/roadmap/_archive/` in that same commit.
+3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`; move the file into the `_archive/` of the milestone's roadmap root in that same commit (`docs/roadmap/` to `docs/roadmap/_archive/`, or `docs/packages/<name>/roadmap/` to its `_archive/`).
 
 ## Later changes
 

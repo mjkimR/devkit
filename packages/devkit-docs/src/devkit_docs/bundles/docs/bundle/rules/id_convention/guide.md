@@ -39,7 +39,7 @@ The ID is the file stem:
 | Capability | `docs/capabilities/{area}/CAP-{AREA}-{slug}.md` | `{AREA}` upper-case letters and digits; `area: {area}` |
 | Use case | `docs/usecases/{area}/UC-{slug}.md` | `area: {area}`; only `README.md` directly under `docs/usecases/` |
 | Architecture | `docs/architecture/ARCH-{slug}.md` or `ARCH-{NN}[-{n}]-{slug}.md` | `{NN}` an arc42 chapter, `{n}` a sub-document (1-9) |
-| Milestone | `docs/roadmap/MS-{slug}.md` for planned/active; `docs/roadmap/_archive/MS-{slug}.md` for done/dropped | global only; no other nesting or namespace roadmap |
+| Milestone | `MS-{slug}.md` under `docs/roadmap/` or `docs/packages/<name>/roadmap/` of a registered namespace for planned/active; under that root's `_archive/` for done/dropped | no other nesting; an unregistered `docs/packages/<name>/roadmap/` is misplaced |
 
 The first segment of `{slug}` must contain a letter: `CAP-HARN-001-foo` and `UC-010-bar` are sequence numbers.
 `{NN}` is an arc42 chapter `01`-`11` in arc42's order (`05-1` containers, `05-2` components), except `09` (decisions
@@ -56,7 +56,8 @@ repository-wide, so a slug is unique across `docs/` and every package.
 
 - A path off the convention above (wrong depth, an undated or misdated partition, a non-kebab-case name, a dated
   feedback name inside a bundle, a slug whose first segment is a date or sequence number, chapter 09 or 12, a
-  capability or use case outside an area directory, a milestone outside `docs/roadmap/`): `Invalid partition path:
+  capability or use case outside an area directory, a milestone outside `docs/roadmap/` and every registered
+  `docs/packages/<name>/roadmap/`): `Invalid partition path:
   <what the path must be>`. Nothing else is reported for the file until it is moved.
 - No frontmatter (or one never closed): `Missing YAML frontmatter; expected <field>: <ID>`.
 - A frontmatter `id` (`reconcile_id` in `reconcile.md`) other than the path requires (fixable): `Frontmatter <field>

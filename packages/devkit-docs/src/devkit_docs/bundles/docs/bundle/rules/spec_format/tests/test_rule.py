@@ -307,3 +307,34 @@ def test_archive_format_fix_preserves_status_and_placement(tmp_path: Path) -> No
         assert f"status: {status}" in result and "created_at:" in result
         assert result.endswith("# Retained body\n")
         assert not (tmp_path / f"docs/roadmap/MS-{status}.md").exists()
+
+
+def test_namespace_milestones_are_checked_like_global_ones(tmp_path: Path) -> None:
+    path = "docs/packages/api/roadmap/MS-a.md"
+    files = {
+        CONFIG: _namespaces("api"),
+        path: "---\nid: MS-a\ntitle: A\nstatus: draft\n---\n",
+        "docs/packages/web/roadmap/MS-b.md": "# Unregistered\n",
+    }
+    found = check(RULE, tmp_path, files)
+    assert [v.file for v in found] == [path, path]
+    assert any(
+        v.message == "milestone status must be planned | active | done | dropped" and not v.fixable for v in found
+    )
+    assert any(v.message == "milestone is missing created_at" and v.fixable for v in found)
+    found = check(RULE, tmp_path, fix=True)
+    assert [(v.file, v.message) for v in found if not v.fixed] == [
+        (path, "milestone status must be planned | active | done | dropped")
+    ]
+    assert "created_at:" in (tmp_path / path).read_text()
+    assert (tmp_path / "docs/packages/web/roadmap/MS-b.md").read_text() == "# Unregistered\n"
+
+
+def test_namespace_archive_format_fix_preserves_status_and_placement(tmp_path: Path) -> None:
+    path = "docs/packages/api/roadmap/_archive/MS-done.md"
+    original = "---\nid: MS-done\ntitle: History\nstatus: done\n---\n# Retained body\n"
+    assert check(RULE, tmp_path, {CONFIG: _namespaces("api"), path: original}) == []
+    check(RULE, tmp_path, targets=[path], fix=True)
+    result = (tmp_path / path).read_text()
+    assert "status: done" in result and "created_at:" in result and result.endswith("# Retained body\n")
+    assert not (tmp_path / "docs/packages/api/roadmap/MS-done.md").exists()

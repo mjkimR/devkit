@@ -196,11 +196,11 @@ sequence numbers are forbidden (they collide across parallel branches).
 
 ### 3.5 `RULE-spec-format`
 
-Every capability, use case, UX document, proposal and global milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
+Every capability, use case, UX document, proposal and milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
 non-blank strings.
 
 - **Scope**: Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/ux/`, `docs/proposals/`, `docs/roadmap/`,
-  and `capabilities/`, `usecases/`, `ux/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
+  and `capabilities/`, `usecases/`, `ux/`, `roadmap/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
   `materials/`. Unlike the index, a file is checked even when it declares no ID.
 - MUST report: no block (`---` on the first line, closed by `---`); a malformed block (unclosed, invalid YAML,
   duplicate keys, not a mapping; fixed by hand); a missing, blank or non-string `id`, `title` or `status`; a
@@ -477,7 +477,7 @@ Warnings carry the milestone and member paths, deterministic remediation and the
 
 ### Milestone validation contract
 
-Milestones use global docs/roadmap/MS-<slug>.md for planned/active and docs/roadmap/_archive/MS-<slug>.md for done/dropped, with word-led kebab-case slugs and matching ID/H1. Other nesting and namespace roadmap locations are invalid. Placement checks never move files or change lifecycle status; invalid archived live documents remain indexed and reportable. Duplicate milestone identities across locations remain errors. Format requires id, title, status and created_at; summary follows the English summary rule. Status is planned/active/done/dropped. Safe fixes fill missing metadata with planned status and created_at; existing invalid statuses need correction by hand.
+A milestone lives at its roadmap root: `docs/roadmap/` or, for a registered namespace, `docs/packages/<name>/roadmap/` (`ADR-namespace-milestone-roots`). Within that root, MS-<slug>.md holds planned/active and _archive/MS-<slug>.md holds done/dropped, with word-led kebab-case slugs and matching ID/H1. `RULE-id-convention` validates the placement of a namespace milestone by mapping its path through `living_path` with the registered namespaces onto the global layout (`CAP-DOCS-namespaces` 4.5); other nesting, a file under the roadmap directory of an unregistered `docs/packages/<name>/`, and a milestone outside every roadmap root are invalid, and the remediation names both roots. Placement checks never move files or change lifecycle status; invalid archived live documents remain indexed and reportable. Duplicate milestone identities across locations remain errors. Format requires id, title, status and created_at; summary follows the English summary rule. Status is planned/active/done/dropped. Safe fixes fill missing metadata with planned status and created_at; existing invalid statuses need correction by hand.
 
 Milestone membership is a scalar existing MS ID on proposal anchors only; legacy SPEC metadata yields no membership edge. Depends_on is an MS-ID list on milestones and a PROP/SPEC-anchor-ID list on proposal/spec anchors. Wrong field locations/shapes/kinds, auxiliary targets, unresolved or duplicate targets and cycles (including self-cycles) are errors. A targeted run checks each typed graph through the complete index and reports participating targeted anchors even when other cycle members are untargeted. Completed SPEC anchors resolve as terminal targets and do not contribute outgoing cycle edges. Exact same-slug handoff fixes also rewrite live incoming depends_on references; they do not infer completion or successors. Decomposed_from/supersedes on anchors are scalar PROP provenance; deleted sources are valid. Done/dropped milestone history follows explicit targeting and is never rewritten automatically.
 

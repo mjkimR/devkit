@@ -662,3 +662,12 @@ def test_masked_first_cell_without_outer_pipe_does_not_shift_owner(tmp_path: Pat
     check(RULE, tmp_path, fix=True)
     assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary.replace("[CAP-A-old]", "[CAP-A-new]", 1)
     assert check(RULE, tmp_path, fix=True) == []
+
+
+def test_cross_namespace_milestone_dependency_resolves(tmp_path: Path) -> None:
+    files = {
+        ".devkit/config.toml": '[[tool.docs.namespaces]]\nname = "api"\npath = "packages/api"\n',
+        "docs/roadmap/MS-g.md": _doc("MS-g", header="depends_on: [MS-x]\n"),
+        "docs/packages/api/roadmap/MS-x.md": _doc("MS-x"),
+    }
+    assert check(RULE, tmp_path, files) == []

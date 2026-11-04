@@ -269,7 +269,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `namespace` | Optional (`--namespace`): `global` or a registered namespace (`CAP-DOCS-namespaces`); carried to `spec.md`. Every file of the bundle belongs to it. |
 | `priority` | `critical`, `high` (scaffolded), `medium`, `low`. |
 | `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL`: the work would produce two or more specs, or bundles deliverables of a different nature (work that would need separate specs or a different `task_kind`). `XL`: a new CLI command with a viewer redesign it does not need (two specs), or a parser bugfix with a new search feature (`bugfix` and `feature`); not `XL`: two agent contracts and the command checks that route work to them, in one `feature` spec. An `XL` draft is decomposed before Planning (rule 13). |
-| `milestone` | Optional (`--milestone`): one existing global MS ID at the root for planned/active or in its flat _archive/ for done/dropped, or one of its aliases (the canonical ID is written); canonical filename/identity and status/location are validated before writing and never carried to `spec.md`. A done or dropped milestone returns `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation or changing the milestone. |
+| `milestone` | Optional (`--milestone`): one existing MS ID at the global roadmap root or a registered namespace's roadmap root (`CAP-GOV-spec-rules` Milestone validation contract) for planned/active or in that root's flat _archive/ for done/dropped, or one of its aliases (the canonical ID is written); canonical filename/identity and status/location are validated before writing and never carried to `spec.md`. A done or dropped milestone returns `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation or changing the milestone. |
 | `boundaries` | `owns` (scaffolded: the target area) and `excludes` (scaffolded: `docs/decisions/`); carried to `plan.md` and `tasks.md`. |
 | `task_kind` | `feature` (scaffolded default) or `bugfix` (`--task-kind`): the provisional `task-kind`, confirmed at `plan-accept`; the spec follows `sdd-spec-<task_kind>`. |
 | `planning_effort` | `low`, `medium` (scaffolded default) or `high` (`--planning-effort`): non-authoritative Planning `activity-effort` hint, confirmed at `plan-intent`; not carried to `spec.md`. |
@@ -516,7 +516,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 | --- | --- | --- |
 | `--title/-t` | `new` | Title (default: the slug). |
 | `--target-area/-a` | `new` | Capability area the proposal targets (default `capabilities/<area>/`); also the owned boundary. |
-| `--milestone/-m` | `new` | One existing global MS ID or one of its aliases, written as the canonical ID; otherwise ARGUMENT_INVALID before writes. Proposal membership only; not carried to `spec.md`. |
+| `--milestone/-m` | `new` | One existing MS ID at the global or a namespace roadmap root, or one of its aliases, written as the canonical ID; otherwise ARGUMENT_INVALID before writes, with a fix naming `devkit docs list milestone --all-namespaces`. Proposal membership only; not carried to `spec.md`. |
 | `--decomposed-from` | `new` | Editable draft PROP ID; checks source existence, draft status and absence of a Planning branch before writing. |
 | `--task-kind` | `new` | Write `task_kind: feature\|bugfix` (default `feature`); anything else is `ARGUMENT_INVALID`. |
 | `--planning-effort` | `new` | Write `planning_effort: low\|medium\|high` (default `medium`); anything else is `ARGUMENT_INVALID`. |
