@@ -11,7 +11,7 @@ size: S                               # S | M | L | XL (XL: would need two or mo
 planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: low                       # low | medium | high (hint for Development)
 milestone: MS-monorepo-namespace-support
-depends_on: [PROP-ux-coverage-explicit-exceptions]
+depends_on: [SPEC-ux-coverage-explicit-exceptions]
 boundaries:
   owns:
     - packages/devkit-docs/src/devkit_docs/features/governance/usecases/
@@ -39,7 +39,7 @@ Today a project has three levers, none of which fits a namespace. `[rules] exclu
 every rule for the path, including `RULE-id-convention`, `RULE-document-reference` and `RULE-traceability-link`, which
 the same documents should keep. `[rules.phase_overrides]` and `[rules.severity_overrides]` are per rule and global, so
 one package cannot differ from another (`CAP-GOV-evaluation-lifecycle` 3 to 5). The two UX rules declare no settings.
-`PROP-ux-coverage-explicit-exceptions` (accepted 2026-11-04) covers the per-item gaps (`global:`, `off screen:`) and
+`SPEC-ux-coverage-explicit-exceptions` (accepted 2026-11-04) covers the per-item gaps (`global:`, `off screen:`) and
 leaves the contract itself in place.
 
 Hypothesis: a rule-owned `exclude` setting, the pattern `RULE-cli-contract` already uses (workspace-relative patterns
@@ -74,7 +74,7 @@ needs a real game UX document as evidence and is out of this proposal's scope.
   invalid pattern failing the run before evaluation.
 
 Expected affected contracts: `CAP-GOV-spec-rules` (3.1 table, 3.15, 3.16). The rule engine, `[rules] exclude`
-semantics and the shared UX model are unchanged. The prerequisite `PROP-ux-coverage-explicit-exceptions` edits the same
+semantics and the shared UX model are unchanged. The prerequisite `SPEC-ux-coverage-explicit-exceptions` edits the same
 rule modules and guides; this draft starts after its handoff spec is integrated.
 
 ## 4. Lifecycle & Retirement Criteria
