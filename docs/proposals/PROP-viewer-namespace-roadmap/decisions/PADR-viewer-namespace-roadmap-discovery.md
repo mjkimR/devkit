@@ -42,6 +42,9 @@ The following clauses draft the recommended structural option; proposal acceptan
 - Discovery does not read namespace registration, and matching unregistered paths are visible without a validity
   claim. Absent or malformed namespace configuration does not affect the candidate set.
   → `CAP-VIEW-repository-viewer` 4.1 and 5 (MUST).
+- Local filesystem symlink checks remain enforced by `WorkingTreeReader`. Generic discovery trusts the host
+  tree/blob representation and cannot independently certify filesystem symlink identity; the interface gains no
+  field or host obligation. → `CAP-VIEW-repository-viewer` 2 and 6 (MUST).
 - The full discovered milestone set resolves dependency readiness and proposal membership before history
   filtering; existing unknown/waiting and direct-proposal rules remain. → `CAP-VIEW-repository-viewer` 5 (MUST).
 - Local reads continue to use the saved checkout; generic hosts keep their existing tree/blob interface. The

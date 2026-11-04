@@ -1,0 +1,20 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T06:38:33.321282Z'
+status: completed
+review: challenger-01.yaml
+summary: Scoped symlink enforcement to the local filesystem reader; generic-source limitations and unchanged host interface are explicit in contract, AC4 and PADR.
+findings:
+- issue: AC4 overstates symlink exclusion for generic library sources.
+  evidence: proposal.md:84-86,106-110 promises unqualified exclusion; frontend api/repository.ts:1-7,68-82 has no required symlink identity and normalizeTree:129-135 preserves host types; local worktree.py:63-77,89-99 enforces filesystem checks.
+  failure_condition: A library host returns a milestone symlink as blob or a symlink directory as tree without distinguishing metadata, so generic discovery cannot enforce the unqualified exclusion.
+  suggested_action: Scope filesystem symlink enforcement to WorkingTreeReader; generic discovery uses host-returned types and cannot certify symlink identity. Preserve path guards without a new host obligation or method.
+  resolution: resolved
+  severity: P2
+checks:
+  reflection: PASS proposal and PADR identify observable per-route guarantees
+diff_scope:
+  base: cc9b81474b541b3941b5a626fca076536379132a
+  head: 3684e575b71f8c0fe135864ae75ee03ea9e098ce

@@ -82,8 +82,10 @@ selective full-document fallback. Do not recursively read arbitrary package docu
 - Match only `docs/roadmap/MS-*.md`, `docs/roadmap/_archive/MS-*.md`,
   `docs/packages/<name>/roadmap/MS-*.md`, and `docs/packages/<name>/roadmap/_archive/MS-*.md`.
 - `<name>` is one nonempty directory segment. No registry validity is inferred from that segment. Nested archive
-  directories, deeper roadmap directories, symlink paths, `.git`, traversal segments and non-milestone filenames
-  remain outside discovery.
+  directories, deeper roadmap directories, `.git`, traversal segments and non-milestone filenames remain outside
+  discovery. The local `WorkingTreeReader` continues to omit/refuse filesystem symlinks. Generic discovery uses
+  host-returned tree/blob types and cannot independently certify filesystem symlink identity; it adds no host
+  obligation or metadata field.
 - Under the recommended option, unregistered directories are displayed by path with no claim that they are valid
   namespace milestones. Namespace registration, file format and ID uniqueness remain repository rule concerns.
 - Resolve readiness and proposal membership over the complete discovered milestone set before history filtering.
@@ -104,8 +106,10 @@ selective full-document fallback. Do not recursively read arbitrary package docu
 3. A direct proposal naming a package milestone appears on that milestone once; rejected proposals and SPEC
    metadata do not become members. Planning overlay behavior remains as specified by `CAP-VIEW-repository-viewer`.
 4. Unregistered structural roots follow the accepted Q1 policy. Missing roots are empty; unreadable roots expose
-   errors without discarding successful roots. Symlink directories/files, deep nested archives and unrelated docs
-   are not enumerated as milestones. The optimized route reads headers only; bodies remain page-scoped.
+   errors without discarding successful roots. Local filesystem symlink directories/files, deep nested archives
+   and unrelated docs are not enumerated as milestones. Generic-source tests use host-returned tree/blob types
+   without claiming independent filesystem symlink detection. The optimized route reads headers only; bodies
+   remain page-scoped.
 5. Refresh/expiry/generation invalidation, cancellation, cache rejection on errors, fixed list ordering, exact counts,
    archived detail paths and page sizes retain existing behavior. Library sources need no added method or parser.
 6. Backend integration tests and frontend discovery/graph tests pass. Run `just lint-check devkit-viewer`,
@@ -117,7 +121,7 @@ selective full-document fallback. Do not recursively read arbitrary package docu
 One feature spec implements this outcome. Development updates `CAP-VIEW-repository-viewer` sections 4.1 and 5,
 `docs/development/reference/viewer.md`, the package README where its discovery description changes, the application
 source/tests, and the committed frontend artifact. The discovery PADR becomes an ADR. No new runtime dependency or
-feature edge is required by the recommended design. The README is inside the proposal's declared package root.
+feature edge is required by the recommended design. The README is an exact declared ownership path.
 
 No milestone groups this proposal, and completed namespace milestones stay closed. No writer endpoint, general
 namespace browser redesign, registration editor, per-namespace filter or automatic validity badge is included.
