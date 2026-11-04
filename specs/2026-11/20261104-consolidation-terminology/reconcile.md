@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-consolidation-terminology
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
@@ -17,6 +17,8 @@ targets:
   - file: docs/decisions/2026-11/20261102-decision-ledger.md
     resolution: modified
   - file: docs/decisions/2026-11/20261102-retire-native-approval-and-moved-ownership-clauses.md
+    resolution: modified
+  - file: docs/decisions/README.md
     resolution: modified
 ---
 
@@ -41,7 +43,7 @@ a former ID prints its alias.
 changed wording only (titles, summaries and clauses with the term replaced; the retired alias IDs, the historical
 proposal IDs and one rejected option's literal `compacted` kept as history); the review's word diff confirmed no
 clause was added, dropped or reordered. The glossary gains **Consolidation**, distinct from Compact output and from
-shortening; `Compact output`, the `compact` subagent level, `devkit_agt.features.compact`, context compaction and
+shortening; `docs/decisions/README.md` names the `adr-consolidation` playbook in its ledger paragraph; `Compact output`, the `compact` subagent level, `devkit_agt.features.compact`, context compaction and
 history compaction keep their wording (the review found and the implementer restored one context-compaction clause
 the bulk rename had caught).
 
@@ -64,3 +66,9 @@ capabilities; all rejected (content, records and tests, not doorways). Entrypoin
 `just test devkit-spec bundles` 731 passed after the review fixes; `uv run devkit rules check` errors=0 warnings=0;
 `uv run devkit sync --check` clean; `uv run devkit generated check` stale=0. Code review round 1 (REVISE: one P2,
 three P3) is closed in `reverify-01`.
+
+Reconcile check round 1 (independent `reconcile-reviewer`, `reconcile-check-01`) confirmed the targets and the
+no-impact claims and found two P2 and two P3 reflection gaps without contradiction: the changed `docs/decisions/README.md`
+was not a target, the new ADR's record-naming clause carried a trace to a table that does not restate it, two traces
+were imprecise, and two glossary identifiers lacked code spans. All four are applied by the implementer and
+self-verified in `reconcile-check-02`.

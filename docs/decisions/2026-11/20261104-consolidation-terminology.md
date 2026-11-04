@@ -51,13 +51,14 @@ Rename to consolidation with aliases, because it meets every driver at the cost 
 
 - The playbooks are `adr-consolidation` and `feedback-consolidation`; each lists its former ID in `aliases`, so
   `devkit playbook get spec/adr-compaction` and `spec/feedback-compaction` resolve. → `CAP-HARN-agent-guidance`
-  playbook table (MUST)
+  section 4.1 asset table and section 4.5 playbook table (no keyword)
 - Consolidated feedback records are `FB-consolidated-<area>-<status>` at
   `specs/<YYYY-MM>/feedback/<YYYYMMDD>-consolidated-<area>-<status>.md`; each existing record keeps its former ID
-  as an alias, and references in current documents name the new ID. → `CAP-HARN-agent-guidance` playbook table
-  (MUST)
+  as an alias, and references in current documents name the new ID. The naming contract lives in
+  `ADR-feedback-lifecycle-ledger` and the `feedback-consolidation` playbook; no capability restates it.
 - The ADR consolidation groups and pointer rules of `CAP-DOCS-document-model` keep their clauses with the term
-  replaced; the ledger ADRs are edited for wording only. → `CAP-DOCS-document-model` section 3 (MUST)
+  replaced; the ledger ADRs are edited for wording only. → `CAP-DOCS-document-model` Decision supersession,
+  Consolidation groups (MUST) and section 3.5 rule 5
 - Retired alias IDs that carry the old word (ADR-adr-compaction, ADR-group-compaction-by-topic,
   ADR-closed-feedback-compacts-into-per-area-records-with-aliases and feedback aliases) stay as written: aliases are
   history.
