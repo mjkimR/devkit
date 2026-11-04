@@ -63,8 +63,8 @@ commit.
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
 | `RULE-steering-documents` | `docs/steering/` is flat and holds ID-free files with a `title` and a short English `summary`, within the file-count and body-size caps. | none |
-| `RULE-ux-links` | A UX document has a valid `element` and Interactions table; its Step cells, `usecases`, targets, exits and reachability agree with the use case steps that cite it. | none |
-| `RULE-ux-coverage` | The steps of a use case a UX document lists cite a UX document, and every interaction names its step. | none |
+| `RULE-ux-links` | A UX document has a valid `element` and Interactions table; its Step cells (pairs, empty or `global: <reason>`), `usecases`, targets, exits and reachability agree with the use case steps that cite it. | none |
+| `RULE-ux-coverage` | The steps of a use case a UX document lists cite a UX document, and every interaction names its step, unless classified `off screen: <reason>` or `global: <reason>`; a classification without a reason or contradicting a citation is reported. | none |
 
 ### 3.2 Shared Behavior
 
@@ -352,8 +352,9 @@ otherwise.
 
 - MUST report on the UX document: a missing `element` or one other than `screen`, `modal` or `panel`; no
   `Interactions` H2, or one whose first table header is not `Trigger | Step | From | To | Target | Capability |
-  Feedback`; a Step cell that is neither empty (`-` counts) nor `` `UC-<slug>` <key> `` pairs separated by commas; a
-  Target cell that is neither empty, a UX document's ID, `close`, `back` nor `end`; a `modal` without a `close` or
+  Feedback`; a Step cell that is neither empty (`-` counts), `` `UC-<slug>` <key> `` pairs separated by commas nor a
+  `global: <reason>` classification (any case; the rest of the cell is opaque text, so a cell starting with pairs and
+  carrying `global:` later is invalid and its pairs are still checked); a Target cell that is neither empty, a UX document's ID, `close`, `back` nor `end`; a `modal` without a `close` or
   `back` row.
 - MUST report, on the UX document or, when only the use case is targeted, on the use case at the step's line: a Step
   pair naming a use case `usecases` does not list, a key the use case has no step for, or a step that does not cite
@@ -370,12 +371,23 @@ otherwise.
 ### 3.16 `RULE-ux-coverage`
 
 The gaps `RULE-ux-links` does not refuse: not every step happens on a screen, and a screen may carry global controls.
-devkit gives each rule one severity, so the hint is a rule of its own, as `RULE-spec-progress` is.
+devkit gives each rule one severity, so the hint is a rule of its own, as `RULE-spec-progress` is. An intended gap
+is classified with a reason, per item, so that it stops warning while every other gap keeps warning
+(`ADR-explicit-ux-coverage-exception-notation`); no heuristic on wording decides a classification.
 
 - SHOULD report (severity `warning`): for every use case a current UX document lists, each main-scenario step and
-  extension that cites no UX ID, once, on the first listing UX document the run targets (path order, at its
-  `usecases` entry), else on the use case at the step's line; each Interactions row whose Step cell is empty, on its
-  UX document. A use case no UX document lists is never reported. Not fixable.
+  extension that cites no UX ID and carries no `off screen:` phrase (`<UC> step <key> cites no UX document`); each
+  step whose phrase has no reason (`... is classified off screen without a reason`); each step that carries the
+  phrase and cites a UX ID (`... is classified off screen but cites <UX>`); each Interactions row whose Step cell is
+  empty (`interaction has no Step`); each row whose Step cell is `global:` with no reason (`interaction is classified
+  global without a reason`). A use case no UX document lists is never reported. Not fixable.
+- MUST NOT report a step with `off screen: <reason>` (`off-screen:`, any case; the reason is the rest of the line
+  without its closing `)` and sentence period, non-empty) that cites no UX ID, nor a row whose Step cell, stripped,
+  starts with `global:` (any case) followed by a non-empty reason. The reason is checked for presence only.
+- SHOULD place a step report on the use case at the step's line when the run targets it, else on the first listing
+  UX document the run targets (path order, at its `usecases` entry, the use case path appended), because the fix is
+  written in the use case (`ADR-ux-coverage-step-targeting`); `RULE-ux-links` keeps its UX-document-first placement
+  for the same two documents. A row report is placed on its UX document.
 
 ### 3.17 `RULE-decision-supersession`
 

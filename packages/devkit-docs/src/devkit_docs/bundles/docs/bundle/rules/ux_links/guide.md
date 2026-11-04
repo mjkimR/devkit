@@ -21,8 +21,10 @@ The document's own shape:
 - `element is missing; set screen, modal or panel`, or `element "<value>" is not screen, modal or panel`.
 - `no Interactions section`, or `Interactions has no table with the columns Trigger | Step | From | To | Target |
   Capability | Feedback` (the first table under the `Interactions` H2, its header compared case-insensitively).
-- `Step cell "<value>" is not `UC-<slug>` <key>`: a Step cell is empty (also `-`) or one or more pairs of a use case
-  ID in backticks and a step key (`3`, `2a`, `*a` or `\*a`), separated by commas.
+- `Step cell "<value>" is not `UC-<slug>` <key>`: a Step cell is empty (also `-`), one or more pairs of a use case
+  ID in backticks and a step key (`3`, `2a`, `*a` or `\*a`), separated by commas, or a global classification
+  `global: <reason>` (any case; the rest of the cell is the reason and is not read for pairs, `RULE-ux-coverage`).
+  A cell that starts with pairs and carries `global:` later is invalid, and its pairs are still checked below.
 - `Target "<value>" is not a UX document, close, back or end`: empty means the interaction stays on the element.
 - `modal has no close or back interaction`.
 
@@ -48,8 +50,8 @@ The flow, per listed use case whose steps cite the document (a `panel` is exempt
 
 ## 3. Remediation
 
-Fix the side that is wrong: cite the screen in the step it happens on, name the right step key in the Step cell, add
-the missing `usecases` entry, add the exit or the `close` row, or add the interaction that leads to the screen. A
+Fix the side that is wrong: cite the screen in the step it happens on, name the right step key in the Step cell (or
+classify a global control as `global: <reason>`), add the missing `usecases` entry, add the exit or the `close` row, or add the interaction that leads to the screen. A
 system step cites the screen its response appears on, so the screen after it is reached through an interaction. Not
 fixable automatically: which side is right is a decision.
 

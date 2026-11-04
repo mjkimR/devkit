@@ -23,7 +23,7 @@ plan: PLAN-ux-coverage-explicit-exceptions
 
 ## Phase 2: Guidance
 
-- [ ] **Task 4**: Rule guides, writing instructions, the `ux` template and `CAP-GOV-spec-rules`, then regenerate the managed copies
+- [x] **Task 4**: Rule guides, writing instructions, the `ux` template and `CAP-GOV-spec-rules`, then regenerate the managed copies
   - **_Boundary**: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_coverage/guide.md`, `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_links/guide.md`, `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/ux-writing.md`, `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/usecase-writing.md`, `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/ux.md`, `docs/capabilities/governance/CAP-GOV-spec-rules.md`, `.devkit/managed/docs/` (regenerated), `.devkit/installation.json`
   - _Requirements: AC-11_
   - **Verification**: the AC-11 `grep` lines; `uv run devkit sync --check`; `uv run devkit generated check`; `uv run devkit rules check docs/`

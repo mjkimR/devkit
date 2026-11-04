@@ -28,8 +28,11 @@ rely on. Start from the `usecase` template.
   stay in the capability; restate none of them here.
 - When the project has UX documents, a step may cite the UX ID of the screen it happens on, next to its capability
   citations; a system step cites the screen its response appears on. Only a step that truly happens off screen (a
-  mail sent, a background job) cites none. The screen holds the interface detail; the step stays an intent
-  (`ux-writing`).
+  mail sent, a background job) cites none, and says why with `off screen: <reason>` on the step, for example
+  `2. The system sends the confirmation mail (`CAP-ACC-mail`). Off screen: the mail leaves by SMTP and nothing of it
+  appears on a screen.` The reason names no screen; a step whose response appears on one cites that screen instead.
+  An uncited step without the phrase is a coverage gap `RULE-ux-coverage` keeps warning about. The screen holds the
+  interface detail; the step stays an intent (`ux-writing`).
 
 ## Extensions
 

@@ -15,7 +15,10 @@ UX document links both (`usecases`, `capabilities`). Start from the `ux` templat
 - One document per element. A modal or panel shown by several screens is its own document, cited by their Content.
 - Use case steps cite the screens they happen on, per `usecase-writing`.
 - Each Interactions row names the step it serves as `` `UC-<slug>` <key> `` (`3`, `2a`, `*a`). A global control
-  (navigation, help) may leave the Step cell empty. List every use case a Step cell names in `usecases`.
+  (navigation, help, a theme toggle) says why it serves no step in its Step cell, `global: <reason>`, for example
+  `| Toggle theme | global: a preference control that belongs to no task | populated | populated | | | Theme changes |`;
+  an empty Step cell is a coverage gap `RULE-ux-coverage` keeps warning about. List every use case a Step cell names
+  in `usecases`.
 - Every screen has an exit (a row targeting another element, `close`, `back` or `end`) unless the task ends on it;
   a modal has a `close` or `back` row. `RULE-ux-links` reports contradictions, `RULE-ux-coverage` the gaps.
 
