@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Explicit user instruction to run Planning for the proposal; size M, planning_effort
+  medium
+by: user
+at: '2026-11-04T00:44:54.623976Z'
