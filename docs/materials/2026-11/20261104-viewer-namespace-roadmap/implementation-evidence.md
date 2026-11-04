@@ -17,9 +17,11 @@ root metadata so the roadmap can distinguish absent proposal roots from a listed
 milestone bodies use at most six continuous workers. The Python reader and generic frontend both use shallow
 metadata discovery rather than recursive scans of unrelated package documents.
 
-Initial verification: backend discovery/worktree 33 passed; frontend 130 passed; Python Ruff/Pyright and frontend
-lint/check passed. The committed page was rebuilt successfully. Final selector, generated artifact and independent
-review evidence is recorded in the unit envelopes.
+Verification: backend discovery/worktree 33 passed; selector partial 14 paths, 165 tests passed, with full fallback
+retained; frontend 130 passed. The exact selector-named frontend install/lint/check/test/pack/build chain passed.
+Python Ruff/Pyright and frontend lint/check passed. The committed page was rebuilt, and generated viewer-assets
+verification reported checked=1, stale=0 at implementation commit 91a77226. Independent review evidence is recorded
+in the unit envelopes.
 
 The available Node runtime is v22.22.0; npm reports an engine warning because the package declares v22.22.2 or a
 supported newer major. The recorded frontend checks/build ran successfully on v22.22.0. Other Node versions were
