@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import re
-import tomllib
+import shutil
 from pathlib import Path
 
 import pytest
 import yaml
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.services.bundles import load_bundle
-from devkit_dist.features.distribution.services.bundles.subagents import read_contract
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.usecases.sync import sync_project
@@ -40,7 +39,7 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
     bundle = load_bundle(BUNDLE)
     assert not bundle.auto_select
     assert bundle.default_preset == "core"
-    assert set(bundle.presets["core"]) == {"deep-research", *ROLES}
+    assert set(bundle.presets["core"]) == {"deep-research"}
     update_config(tmp_path, agents=HOSTS)
     sync_project(tmp_path, _installed())
     assert not (tmp_path / ".devkit/managed/deep-research").exists()
@@ -53,13 +52,13 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
         "skills/deep-research/references/orchestration.md",
         "skills/deep-research/references/workspace.md",
         "skills/deep-research/references/synthesis.md",
-        *(f"subagents/{role}.md" for role in ROLES),
+        *(f"skills/deep-research/roles/{role}.md" for role in ROLES),
     }
     for role in ROLES:
-        projected = tomllib.loads((tmp_path / f".codex/agents/{role}.toml").read_text())
-        assert projected["sandbox_mode"] == "workspace-write"
-        assert (tmp_path / f".claude/agents/{role}.md").is_file()
-        assert (tmp_path / f".agents/agents/{role}.md").is_file()
+        assert (tmp_path / f".agents/skills/deep-research/roles/{role}.md").is_file()
+        assert (tmp_path / f".claude/skills/deep-research/roles/{role}.md").is_file()
+        for directory, suffix in ((".codex/agents", "toml"), (".claude/agents", "md"), (".agents/agents", "md")):
+            assert not (tmp_path / directory / f"{role}.{suffix}").exists()
     for absent in ("docs", "specs", ".devkit/adaptive-dev.md", ".devkit/managed/adaptive-dev", ".devkit/managed/spec"):
         assert not (tmp_path / absent).exists(), absent
 
@@ -104,9 +103,9 @@ def test_selection_beside_adaptive_dev_has_one_owner_per_role(tmp_path: Path) ->
     update_config(tmp_path, agents=["codex"], presets={"adaptive-dev": ["core"], "deep-research": ["core"]})
     sync_project(tmp_path, _installed(ADAPTIVE_DEV, BUNDLE))
     for role in MOVED:
-        assert (tmp_path / f".devkit/managed/deep-research/subagents/{role}.md").is_file()
+        assert (tmp_path / f".devkit/managed/deep-research/skills/deep-research/roles/{role}.md").is_file()
         assert not (tmp_path / f".devkit/managed/adaptive-dev/subagents/{role}.md").exists()
-        assert (tmp_path / f".codex/agents/{role}.toml").is_file()
+        assert not (tmp_path / f".codex/agents/{role}.toml").exists()
     assert not (tmp_path / ".devkit/managed/adaptive-dev/skills/deep-research").exists()
     assert (tmp_path / ".agents/skills/adaptive-dev/SKILL.md").is_file()
     assert (tmp_path / ".agents/skills/deep-research/SKILL.md").is_file()
@@ -125,21 +124,25 @@ def test_moved_role_policy_key_follows_the_bundle(tmp_path: Path, role: str) -> 
         sync_project(tmp_path, installed)
     assert _files(tmp_path) == before
     config.write_text(base + f'\n[subagents.roles."deep-research:{role}"]\nlevel = "deep"\n')
+    with pytest.raises(ConfigError, match=f"subagents.roles.deep-research:{role}"):
+        sync_project(tmp_path, installed)
+    config.write_text(base)
     sync_project(tmp_path, installed)
 
 
 def test_roles_keep_optional_execution_and_coordinator_material_ownership() -> None:  # AC-06
     for role in ROLES:
-        contract = read_contract((BUNDLE / f"subagents/{role}.md").read_bytes(), "deep-research", role)
-        assert contract.hosts["codex"].status == "emulated"
-        assert_rule(contract.body, "only", "coordinator", "writes", "retained material")
-        assert_rule(contract.body, "index", "HEAD", "unchanged")
-        assert_rule(contract.body, "return", "`status`", "source/artifact identity", "failure conditions")
-    investigator = (BUNDLE / "subagents/research-investigator.md").read_text()
+        body = (SKILL.parent / f"roles/{role}.md").read_text()
+        assert not body.startswith("---")
+        assert_rule(body, "only", "coordinator", "writes", "retained material")
+        assert_rule(body, "index", "HEAD", "unchanged")
+        assert_rule(body, "return", "`status`", "source/artifact identity", "failure conditions")
+    investigator = (SKILL.parent / "roles/research-investigator.md").read_text()
     assert_rule(investigator, "one question", "team investigation")
     assert_rule(investigator, "payload permits", "experiment", "only", "sandbox/prototype boundary", "assigned scratch")
     orchestration = (SKILL.parent / "references/orchestration.md").read_text()
-    assert_rule(orchestration, "effective contract", "`.devkit/managed/deep-research/subagents/`")
+    assert_rule(orchestration, "general subagent", "read the assigned role file before acting")
+    assert_rule(orchestration, "fresh context", "without parent conversation inheritance")
     assert_rule(orchestration, "research-investigator", "one question per instance")
 
 
@@ -215,8 +218,39 @@ def test_guides_name_the_add_command_and_migration_steps() -> None:  # AC-11
         text = path.read_text()
         assert_rule(text, "`incubation:<role>`", "`deep-research:<role>`")
         assert_rule(
-            text, "`.devkit/overrides/incubation/subagents/<role>.md`", "`.devkit/overrides/deep-research/subagents/`"
+            text,
+            "`.devkit/overrides/incubation/subagents/<role>.md`",
+            "`.devkit/overrides/deep-research/subagents/<role>.md`",
         )
         assert_rule(text, "`ORPHAN_LEFT`", "devkit add deep-research")
     row = next(line for line in recommendations.read_text().splitlines() if line.startswith("| `deep-research`"))
     assert "the user asks for an explicit research entry" in row.lower()
+
+
+def test_upgrade_removes_registered_roles(tmp_path: Path) -> None:
+    legacy = tmp_path / "legacy-bundle"
+    shutil.copytree(BUNDLE, legacy)
+    manifest = legacy / "bundle.toml"
+    content = manifest.read_text().replace(
+        'assets = ["deep-research"]',
+        'assets = ["deep-research", ' + ", ".join(f'"{role}"' for role in sorted(ROLES)) + "]",
+    )
+    (legacy / "subagents").mkdir()
+    for role in sorted(ROLES):
+        content += f'\n[[assets]]\nid = "{role}"\nkind = "subagent"\nsource = "subagents/{role}.md"\n'
+        (legacy / f"subagents/{role}.md").write_text(
+            f"---\nrole: {role}\ntitle: Research role\ndescription: Research role\nhosts:\n"
+            "  codex: {status: emulated}\n  claude-code: {status: native}\n  antigravity: {status: unverified}\n---\n\nResearch.\n"
+        )
+    manifest.write_text(content)
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    update_config(consumer, agents=HOSTS, presets={"deep-research": ["core"]})
+    sync_project(consumer, _installed(legacy))
+    for role in ROLES:
+        assert (consumer / f".codex/agents/{role}.toml").is_file()
+    sync_project(consumer, _installed())
+    for role in ROLES:
+        for directory, suffix in ((".codex/agents", "toml"), (".claude/agents", "md"), (".agents/agents", "md")):
+            assert not (consumer / directory / f"{role}.{suffix}").exists()
+        assert (consumer / f".agents/skills/deep-research/roles/{role}.md").is_file()

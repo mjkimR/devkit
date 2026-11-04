@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:10:25.506183Z'
+status: completed
+summary: Localized four research roles inside the explicit-only skill, removed global registrations, preserved bounded general-child invocation, and reconciled docs. Independent review passed.
+findings: []
+assumptions:
+- Medium effort; local integration chosen because no platform review or publication is needed. No installed consumers; compatibility checks kept to normal cleanup and settings validation.
+unverified_areas:
+- Model obedience and host runtime isolation are not established by asset tests.
+checks:
+  tests: PASS 112 affected tests
+  build: PASS installed-consumer e2e builds catalog and dependency wheels
+  lint: PASS catalog lint, Pyright and CI governance with zero warnings
+diff_scope:
+  base: ae9613f192ccf77f33743aef9180b15e3ce8eccd
+  head: eb3aeaeb0d2028106de05c12913d772753159a5f

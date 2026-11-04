@@ -2,7 +2,7 @@
 
 1. Frame the decision and provisional criteria from the user's goal, constraints and known usage; keep implementation assumptions open.
 2. State the first wave's question, permitted research effort and stop condition before assigning work; use only resource limits the host can observe or enforce.
-3. Read an invoked role's effective contract under `.devkit/managed/deep-research/subagents/` or its installed override, including native/emulated availability and permitted actions.
+3. Resolve the selected `roles/<role>.md` relative to the installed skill directory; pass its absolute path to the child without loading every role body into the coordinator.
 4. Give each role one bounded goal and the assignment below; use absolute boundaries and identify raw sources by revision, digest or exact reference.
 5. When direction is open, develop materially distinct premises independently before sharing peer conclusions; give members common facts and user constraints rather than a preferred answer.
 6. Compare actual returns with the assignment and source evidence; inspect changed paths and relevant Git/index/HEAD state before retaining a role's result.
@@ -37,10 +37,20 @@ Expected return:
 Research bound / stop condition:
 ```
 
-Use the host's supported role invocation. If native isolation is emulated, state that and compare actual
-boundaries; availability is not a native sandbox guarantee. If a role is unavailable, use only a permitted
-equivalent invocation with the effective contract, or report that coverage as missing. A trust or permission
-refusal is not authority to change tool, path, process or settings.
+Spawn a general subagent for the selected role; instruct it to read the assigned role file before acting.
+Use a fresh context without parent conversation inheritance when the host supports that choice; pass only the
+assignment and relevant sources. If inheritance cannot be disabled, report that context limitation.
+Keep the role file readable within the assignment's read boundaries.
+Use the host's actual tool and sandbox controls; role files supply behavioral instructions, not native settings.
+If required permissions or delegation are unavailable, report missing coverage rather than claim execution.
+A trust or permission refusal is not authority to change tool, path, process or settings.
+
+Example assignment prefix:
+
+```text
+Read /absolute/installed/skill/roles/research-investigator.md before acting.
+Answer only the question below within the supplied boundaries; return the role's required fields.
+```
 
 After independent first returns, direct member communication may clarify evidence when the host supports it.
 Messages do not change assignments, product decisions or permissions. Keep a structured return for fold-back;

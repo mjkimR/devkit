@@ -16,13 +16,13 @@ entrypoints:
 ## 1. Summary
 
 The opt-in `deep-research` catalog bundle supplies `/deep-research`, an explicitly invoked entry for a bounded
-research team, and four optional research roles. The invoking agent is the coordinator. It compares independent
+research team, and four optional skill-local research role instructions. The invoking agent is the coordinator. It compares independent
 directions with sourced evidence and retains the result as one indexed material under `docs/materials/` that
 proposals, specs, decisions and adaptive current context cite by its `MAT-<slug>` ID. The entry works under either
 development approach and neither reads nor changes it.
 
 `ADR-adaptive-development-and-research` owns the bundle split and role ownership, and the retained material and its
-citation.
+citation. `ADR-skill-local-research-roles` owns skill-local role distribution.
 
 ## 2. Scope and Boundary
 
@@ -38,8 +38,7 @@ citation.
 
 ## 3. Business Rules and Policies
 
-1. **Explicit selection**: WHERE `deep-research:core` is selected, sync MUST deploy the entry and its four roles
-   without seeding documents or context; no catalog bundle selects it automatically. Test:
+1. **Explicit selection**: WHERE `deep-research:core` is selected, sync MUST deploy the entry and its four role documents inside the skill, without registering research subagents or seeding documents or context; no catalog bundle selects it automatically. Test:
    `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py`.
 2. **Independent installation**: The bundle MUST install with docs and catalog without a devkit-spec distribution,
    under the default `sdd` approach. Test: `packages/devkit-catalog/tests/e2e/bundles/deep_research/test_installed_consumer.py`.
@@ -67,7 +66,7 @@ citation.
     no investigation requires all roles, a fixed team count or a role sequence.
 11. **Role boundaries**: WHEN a role is invoked, the coordinator MUST supply one goal, absolute boundaries,
     source/artifact identity, permitted actions, stop condition and expected output before verifying the actual
-    return. The role reports native or emulated availability truthfully. Test:
+    return. The coordinator MUST spawn a general subagent with the selected role file path and instruct it to read that file first. It MUST use a fresh context without parent conversation inheritance where supported and otherwise report that limitation. Role documents confer no native tool or sandbox settings; the role reports actual host limits. Test:
     `test_roles_keep_optional_execution_and_coordinator_material_ownership`.
 12. **Independent alternatives**: WHILE direction is open, the coordinator SHOULD develop materially different
     premises independently before sharing peer conclusions, then compare them under relevant common criteria.
@@ -113,7 +112,7 @@ of suggestion beyond the text checks are semantic agent contracts checked by rev
 ### Distribution and entry
 
 Install devkit-docs and devkit-catalog, then select `uv run devkit add deep-research` (`deep-research:core`, entry
-point `deep-research = "devkit_catalog.deep_research"`). The skill and four role contracts use existing projection
+point `deep-research = "devkit_catalog.deep_research"`). The skill directory, including its four role documents, uses existing skill projection
 mechanisms; Codex receives `allow_implicit_invocation: false` and Claude Code `disable-model-invocation: true`. The
 bundle ships no guidance asset and no constitution. No research runtime or CLI is added.
 
@@ -133,13 +132,14 @@ proportionate synthesis. It reads an earlier run directory or material only when
 Every role leaves the index and HEAD unchanged and commits or publishes nothing; only the coordinator writes the
 retained material. A result contains status (`completed`, `needs_input` or `failed`), summary, source/artifact
 identity, observations with evidence and failure conditions, recommendation or draft, assumptions and unverified
-areas; an experiment also returns actual changed paths, commands and outcomes. Effective contracts live under
-`.devkit/managed/deep-research/subagents/`.
+areas; an experiment also returns actual changed paths, commands and outcomes. Role instructions live under
+`skills/deep-research/roles/` inside the installed skill. The coordinator resolves the selected path, supplies
+only the relevant assignment and sources, and leaves unselected role bodies unread.
 
-The roles' policy keys are `deep-research:<role>` and their file overrides live under
-`.devkit/overrides/deep-research/subagents/`. For the three roles moved from the former `incubation` bundle, an earlier
-`incubation:<role>` key fails sync until renamed, and an override under `.devkit/overrides/incubation/subagents/`
-stops applying until moved (`CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`).
+Research roles have no `[subagents.roles]` policy keys or native execution settings. Remove obsolete
+`deep-research:<role>` or research `incubation:<role>` keys if present. Port any old subagent body customizations
+into the skill override's `roles/<role>.md`, without subagent frontmatter. Normal sync ownership safeguards apply
+to obsolete projections (`CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership`).
 
 ### Workspace
 

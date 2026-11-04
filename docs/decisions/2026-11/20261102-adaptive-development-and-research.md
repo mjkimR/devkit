@@ -17,6 +17,8 @@ aliases:
 
 # [ADR-adaptive-development-and-research] Adaptive development, SDD adoption and explicit deep research
 
+Superseded in part by `ADR-skill-local-research-roles`: registered research-role projection and role-policy migration clauses.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Involved Components/Capabilities**: `CAP-DLV-adaptive-development`, `CAP-DLV-sdd-baseline-adoption`,

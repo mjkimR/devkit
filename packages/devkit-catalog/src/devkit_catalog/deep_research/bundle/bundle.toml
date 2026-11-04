@@ -9,25 +9,5 @@ kind = "skill"
 source = "skills/deep-research"
 invocation = "user"
 
-[[assets]]
-id = "direction-explorer"
-kind = "subagent"
-source = "subagents/direction-explorer.md"
-
-[[assets]]
-id = "discovery-critic"
-kind = "subagent"
-source = "subagents/discovery-critic.md"
-
-[[assets]]
-id = "discovery-planner"
-kind = "subagent"
-source = "subagents/discovery-planner.md"
-
-[[assets]]
-id = "research-investigator"
-kind = "subagent"
-source = "subagents/research-investigator.md"
-
 [presets.core]
-assets = ["deep-research", "direction-explorer", "discovery-critic", "discovery-planner", "research-investigator"]
+assets = ["deep-research"]

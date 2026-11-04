@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Move deep-research roles into skill-local Markdown and remove global registration
+  while preserving bounded research behavior.
+by: user
+at: '2026-11-04T07:02:49.514097Z'
