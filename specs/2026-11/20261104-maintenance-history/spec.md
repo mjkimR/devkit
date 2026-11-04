@@ -2,7 +2,7 @@
 id: SPEC-maintenance-history
 title: Maintenance execution history on a GitHub orphan branch
 summary: "Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history."
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []

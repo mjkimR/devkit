@@ -3,7 +3,7 @@ id: CAP-DLV-maintenance-history
 title: Maintenance run history
 summary: "Captures immutable maintenance evidence and publishes authorized atomic history commits on a dedicated GitHub branch, with inspected retries and append-only integration amendments."
 area: delivery
-status: draft
+status: active
 usecases:
   - UC-record-a-maintenance-run
   - UC-find-the-latest-maintenance-run

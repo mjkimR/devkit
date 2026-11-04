@@ -5,7 +5,7 @@ summary: "A maintenance agent freezes inspected content and report evidence, the
 area: governance
 primary_actor: AI coding agent
 supporting_actors: [human approver, GitHub]
-status: proposed
+status: active
 capabilities: [CAP-DLV-maintenance-history]
 entrypoints:
   - packages/devkit/src/devkit_agt/features/maintenance_history/cli.py
