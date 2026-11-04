@@ -1,13 +1,13 @@
 ---
-id: PADR-viewer-namespace-roadmap-discovery
+id: ADR-viewer-namespace-roadmap-discovery
 title: Discover viewer namespace roadmaps by structural paths
 summary: "For viewer roadmap discovery across local and library sources, we match global and namespace roadmap paths without reading the namespace registry, to preserve reader independence, accepting that unregistered directories can appear."
-proposal: PROP-viewer-namespace-roadmap
-status: draft
+proposal: SPEC-viewer-namespace-roadmap
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
+# [ADR-viewer-namespace-roadmap-discovery] Discover viewer namespace roadmaps by structural paths
 
 - **Status**: Draft; recommended option pending proposal acceptance.
 
