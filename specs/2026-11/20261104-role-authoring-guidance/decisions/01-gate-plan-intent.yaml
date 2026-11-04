@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Add shared role-placement guidance and a conditional skill-authoring playbook
+  reference, resolving FB-skill-local-role-authoring.
+by: user
+at: '2026-11-04T07:20:34.143371Z'
