@@ -1,6 +1,6 @@
 # Exception notation comparison
 
-Evidence for `PROP-ux-coverage-explicit-exceptions` Q1 and Q2, gathered from the shared UX model
+Evidence for `SPEC-ux-coverage-explicit-exceptions` Q1 and Q2, gathered from the shared UX model
 (`governance.services.ux`), both UX rules, their guides and tests, the `ux-writing` and `usecase-writing`
 instructions and `ADR-ux-screens`.
 

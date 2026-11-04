@@ -1,16 +1,16 @@
 ---
-id: PADR-explicit-ux-coverage-exception-notation
+id: ADR-explicit-ux-coverage-exception-notation
 title: Explicit UX coverage exception notation
 summary: For recognizing legitimate UX coverage gaps, we add a reasoned inline classification (a global Step cell and an off-screen step phrase) that RULE-ux-coverage honors, to keep warnings actionable, accepting one more micro-syntax in two documents.
-proposal: PROP-ux-coverage-explicit-exceptions
+proposal: SPEC-ux-coverage-explicit-exceptions
 supersedes: [ADR-ux-screens]
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-explicit-ux-coverage-exception-notation] Explicit UX coverage exception notation
+# [ADR-explicit-ux-coverage-exception-notation] Explicit UX coverage exception notation
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 
 ---

@@ -15,6 +15,14 @@ aliases:
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
+- Superseded in part by `ADR-explicit-ux-coverage-exception-notation`: in Step links and coverage, the coverage rule's
+  "an interaction whose Step cell is empty" and "a step or extension that cites no UX ID" now exclude an item
+  classified `global: <reason>` or `off screen: <reason>`, "only a step that truly happens off-screen cites none"
+  gains that phrase, and the known limit "only the coverage warning on that step remains" no longer holds for a
+  classified step.
+- Superseded in part by `ADR-ux-coverage-step-targeting`: for the uncited-step report of the coverage rule only,
+  "it is reported on the UX document, or on the use case when only the use case is in the run" becomes the use case
+  when the run targets it, else the first listing UX document in the run.
 
 ---
 

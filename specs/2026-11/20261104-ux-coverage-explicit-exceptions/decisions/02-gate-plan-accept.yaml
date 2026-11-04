@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-ux-coverage-explicit-exceptions: Direction accepted: inline exception
+  notation (global: cell, off screen: phrase) and use-case-first targeting; dev_effort
+  medium'
+by: user
+at: '2026-11-03T23:40:21.745772Z'
