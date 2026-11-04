@@ -121,7 +121,9 @@ uv run devkit integration integrate <branch> [--route local|pull-request] [--exp
 
 Keep workspace, output and verbosity options. Keep the digest required under `ask` and optional under `auto`.
 Remove `--task-kind`, `--task-id`, `--unit` and `--claims` from these two commands. They currently feed readiness;
-they must not be replaced by heuristic inference or hidden session claims. Update callers and help together.
+they must not be replaced by heuristic inference or hidden session claims. PR creation bodies and merge messages
+use deterministic text derived directly from the explicit source branch. Test both publication calls without task
+metadata. Update callers and help together.
 
 Remove merge-time readiness-provider discovery, evidence comparison, source snapshot evaluation and mandatory
 `[integration] provider` selection from the integration path. Existing `provider` configuration may remain as an
@@ -142,6 +144,14 @@ Git conflict handling rather than a speculative runtime build. Full receipt vali
 Proposal `accept` retains direction eligibility, decision recording, report identity and its explicit authority.
 Decouple its acceptance-specific preview from generic integration readiness. Its resulting merge also receives
 Host-led final checks. No proposal-acceptance gate is silently dropped to simplify the merge CLI.
+
+For `accept_and_handoff`, acceptance and merge return with final verification pending; no handoff evaluator runs
+in that process after landing. The result retains requested mode, authorized handoff scope, selected effort and
+an actionable continuation: synchronize/check the landed head, then use the existing handoff command in a fresh
+process. Report acceptance and merge as completed effects and handoff as not started. The Host reuses existing
+handoff authority for unchanged scope; changed content/effects require the existing scope revalidation. Do not
+label handoff completed or emit its worktree/commit fields before it occurs. `accept_only` ends after acceptance
+and its final verification. Add a fixture proving no old-process handoff evaluation after landing.
 
 ### 3.4 Result and recovery contract
 
@@ -172,7 +182,8 @@ Cleanup may complete before a failing final check; the report must say both fact
 - **AC-06 CLI reduction:** Both integration commands accept the reduced invocation; removed arguments fail with
   normal argument errors. Shipped callers and help use no removed options. No readiness provider is required to merge.
 - **AC-07 Acceptance isolation:** Proposal acceptance still refuses unmet direction conditions and records the
-  accepted decision through its normal command. Generic integration changes do not bypass plan acceptance.
+  accepted decision through its normal command. A composed handoff waits for final verification and a fresh process,
+retains authorized mode/effort in its continuation, and never evaluates landed content in the old process.
 - **AC-08 Batch and repair:** Given several merges and generated-file/repair commits, one final affected run uses
   the saved batch-start SHA, covers the final HEAD and preserves full fallback. A failure keeps the batch unfinished.
 - **AC-09 Cleanup and output:** Given a confirmed merge, authorized cleanup still runs with identity checks; final

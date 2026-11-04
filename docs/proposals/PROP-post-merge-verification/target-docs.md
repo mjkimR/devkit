@@ -6,6 +6,8 @@ status: draft
 proposal: PROP-post-merge-verification
 created_at: 2026-11-04
 targets:
+  - file: docs/capabilities/delivery/CAP-DLV-proposal-planning.md
+  - file: docs/decisions/2026-10/20261022-proposal-acceptance.md
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
   - file: docs/capabilities/delivery/CAP-DLV-project-policy.md
@@ -31,6 +33,8 @@ targets:
   preserved scoped cleanup, provider decoupling, and local/PR partial recovery.
 - `CAP-DLV-delivery-workflows`: branch verification and mandatory Host-led final verification, in-scope target
   repair, proposal acceptance isolation, source workflow holds and delivery-completion reporting.
+- `CAP-DLV-proposal-planning`: composed acceptance yields before handoff, retaining authorized intent and effort;
+  the Host verifies the landed runtime before invoking handoff in a fresh process.
 - `CAP-DLV-project-policy`: remove mandatory integration provider selection and document legacy config migration;
   retain base authority and route policy.
 - `CAP-DLV-cli-and-output`: mirror affected integration/result references without adding a new workflow schema.
@@ -50,7 +54,7 @@ No composed product UI changes.
 
 `ARCH-05-2-components` updates the integration/provider ownership description; no dependency edge is added.
 `ARCH-06-runtime-view` reflects the Host-led post-land sequence and fresh runtime invocation.
-Promote `PADR-post-merge-verification` on handoff. Add partial-supersession pointers to its three named ADRs without
+Promote `PADR-post-merge-verification` on handoff. Add partial-supersession pointers to its four named ADRs without
 retiring their surviving authority, Git and CI clauses.
 
 ## 4. Guidance and quick references
