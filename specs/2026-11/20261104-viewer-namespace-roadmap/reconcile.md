@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-viewer-namespace-roadmap
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
@@ -42,7 +42,7 @@ Actual baseline: one global path before, two including the namespace archived pa
 Backend discovery/worktree33 tests; affected partial14paths165 tests; final frontend132 tests; exact selector frontend
 install/lint/check/test/pack/build chain; Python lint/Pyright and frontend lint/check; generated viewer-assets
 checked1stale0 at corrected source03dd6be7 all passed. Independent full and fresh narrow Code Reviews passed. Node22.22.0 engine warning and the
-unexercised supported-version matrix remain disclosed in the evidence and review. The prior seven-target review passed; root-metadata correction inputs await a fresh bounded check. Optional
+unexercised supported-version matrix remain disclosed in the evidence and review. Fresh bounded seven-target Reconcile Review passed after the root-metadata correction with no findings. Optional
 docs absence is established by parent metadata, while advertised directory failures remain errors regardless of
 tree error text. The Host P2 is closed by two regression tests after their failing baseline; no host contract changed.
 
