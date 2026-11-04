@@ -1,0 +1,28 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:42:19.906788Z'
+status: completed
+summary: Completed selection-aware loopback preflight, conditional build guidance and direct source-feedback resolution. Independent code-review P2 fixed/reverified; independent reconciliation passed. No scope extensions or tracked sync outputs. Host owns integration and cleanup.
+findings: []
+assumptions:
+- Codex emulated through absolute cwd/git scopes, operation-specific host approvals, scoped commits and unchanged independent reviewer snapshots; no native enforcement guarantee.
+- No explicit outside-worktree source/document reads by this worker or nested reviewers; normal runtimes/shared Git metadata used.
+- Known-loopback consumer list stays explicit; pytest ignore/expression flags do not weaken broad checks.
+- dev-integration passed policy=auto source=policy; Host owns moved-base preparation and cleanup.
+unverified_areas:
+- Cold-cache network download behavior documented from retained source evidence, not live-probed; no new external requests.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0; no outputs
+  tests: PASS focused57 affected72 selector-e2e80; baseline denied0/new2; real bind0
+  lint: PASS Ruff lint/format; script Pyright0; CI22 zero
+  build: PASS Python compile and shell syntax; no package wheel sources changed
+  review: PASS independent review-01 P2 fixed and closed by reverify-01
+  reconcile: PASS independent reconcile-check-01; sole target ci-cd.md
+  boundaries: PASS explicit initial allowed files only; no extensions or feature edges
+diff_scope:
+  base: e91c47ba2f8cd90083186b47f5295791912f84b6
+  head: f6bf776b48dd12ac3aeccedfe051d116b59efa7b
+activity_effort: medium
