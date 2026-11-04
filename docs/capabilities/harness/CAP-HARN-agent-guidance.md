@@ -174,6 +174,19 @@ Planning-only UX timing belong to the spec constitution.
   the per-kind instructions add to `document-writing` instead of restating it. Rationale:
   `ADR-writing-and-terminology-guidance`.
 
+The `authoring` bundle's `agent-asset-writing` instruction applies to skills, playbooks, instructions and
+subagents. Authors SHOULD keep a role used only within one skill in that skill's `roles/<role>.md`, unless
+independent selection or required role-specific host settings justify registering a subagent. Authors SHOULD
+separate procedural instructions from native settings and state that Markdown does not enforce tool or sandbox
+permissions. The skill-authoring playbook SHOULD reference this shared criterion when delegation is needed,
+without widening its trigger into native subagent configuration authoring (`ADR-shared-role-authoring`).
+
+For skill-local delegation, authors SHOULD route the child to its assigned absolute role path and first read,
+with a goal, relevant sources, read/write boundaries, permitted actions, stop condition and expected return.
+Authors SHOULD specify fresh context without parent conversation inheritance where supported and report the
+limitation otherwise. Unavailable delegation or permissions leave explicit missing coverage. Review checks these
+semantic criteria; authoring bundle tests check distribution, self-containment and size.
+
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
 before development work; start work with `/spec <intent>`, each new task intake running its intake step first (so
 the rule survives a lost skill body), orient with `/spec-next`; `docs/` is the current-state

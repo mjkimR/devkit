@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:24:00.873108Z'
+status: completed
+summary: Independent review found one invocation-scoping ambiguity for registered roles.
+findings:
+- issue: Scope general-subagent invocation to skill-local roles.
+  evidence: agent-asset-writing.md Role Placement general-subagent directive lacks a skill-local condition.
+  failure_condition: Required registered-role host settings are lost if the subsequent unconditional general-subagent directive is followed.
+  suggested_action: Limit general invocation to local roles and explicitly invoke registered roles through the host.
+  resolution: open
+  severity: P2
+checks:
+  tests: PASS 152 affected tests
+  lint: PASS package lint/types and CI governance
+diff_scope:
+  base: 5b724e65a7205e28d64c3b7ee963cbe6c42ef8f9
+  head: bbb8cf004802c214b78f6ca0ae3a44774179117c

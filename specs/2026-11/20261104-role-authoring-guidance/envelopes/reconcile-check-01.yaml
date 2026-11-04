@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:24:51.198751Z'
+status: completed
+summary: Self-verified shared instruction and conditional playbook pointer against both documentation targets; source feedback fully addressed.
+findings: []
+assumptions:
+- 'Medium self-check: single authoring bundle; capability and ADR are reflection only, with all affected contracts identified. Includes pending docs. Existing harness entrypoints retained; authoring candidates are supporting guidance.'
+checks:
+  contracts: PASS placement exceptions, scoped invocation, bounded assignment and no native enforcement claims
+diff_scope:
+  base: 5b724e65a7205e28d64c3b7ee963cbe6c42ef8f9
+  head: 1bbdd9d455c6a83b9a20833b5747426335e3ae5a
