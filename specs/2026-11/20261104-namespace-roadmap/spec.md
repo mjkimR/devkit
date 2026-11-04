@@ -2,7 +2,7 @@
 id: SPEC-namespace-roadmap
 title: Per-namespace milestones under the namespace docs root
 summary: Lets a registered namespace keep its own MS milestones under docs/packages/<name>/roadmap/ with the global lifecycle and selection, so packages on their own cadence stop crowding the global roadmap.
-status: in-progress
+status: completed
 created: 2026-11-04
 namespace: global
 related_capabilities: [CAP-DOCS-namespaces, CAP-DOCS-document-model, CAP-GOV-spec-rules, CAP-DLV-proposal-planning, CAP-HARN-agent-guidance]

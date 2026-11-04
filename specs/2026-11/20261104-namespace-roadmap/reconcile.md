@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-namespace-roadmap
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-namespaces.md
     resolution: modified
@@ -52,17 +52,19 @@ The Living Spec restates each clause where it lived:
   the global or a namespace roadmap root, with the `--all-namespaces` fix; `UC-route-development-intent` says the same
   in its Backlog step and its Then line (review-01 finding 3).
 - `CAP-HARN-agent-guidance`: the roadmap paragraph of the `spec` bundle's guidance names both roots, matching the
-  edited `backlog.md`, `roadmap-catalog.md` and `milestone-completion.md` (review-01 finding 2).
+  edited `backlog.md`, `roadmap-catalog.md` and `milestone-completion.md` (review-01 finding 2), and its milestone
+  storage sentence names the milestone's roadmap root (reconcile-check-01 finding 1).
 - `ARCH-01-introduction-and-goals` Repository roadmap: names the namespace root and the goal a namespace milestone
-  cites (this document or an architecture document under its namespace docs root), as the ADR's Q2 finding.
+  cites (this document, an architecture document under its namespace docs root or the package's steering file by
+  path), as the ADR's goal clause.
 - `ADR-roadmap-and-milestones-ledger`: the "Superseded in part by" line names the two replaced clauses
   (ADR-milestone-documents' global-only sentence and ADR-archive-terminal-milestones-in-roadmap's global-root wording)
   as `ADR-namespace-milestone-roots` section 4 lists them; every other clause stands.
 - `docs/roadmap/README.md`: the roadmap guide names the two roots, the in-root `_archive/` move and
   `--all-namespaces`.
 
-The `docs` and `spec` bundle text (rule guides, milestone template, seed, the three `spec` references) is the
-agent-facing copy of the same clauses; `devkit sync` regenerated this repository's deployed copies and
+The `docs` and `spec` bundle text (rule guides, milestone template, seed, the three `spec` references) and the
+`devkit-docs` and `devkit-spec` package READMEs are the agent-facing copies of the same clauses; `devkit sync` regenerated this repository's deployed copies and
 `.devkit/installation.json` is its receipt. No glossary term is introduced (`milestone`, `namespace` and `roadmap
 root` keep their meaning). `CAP-VIEW-repository-viewer` is unchanged on the user's Planning decision; the viewer's
 `docs/roadmap/`-only reading is the follow-up below.
@@ -88,4 +90,4 @@ concerns the Planning guidance's `--slug` example, unrelated to this change, and
 `just lint-check` and `just check` pass for `devkit-docs` and `devkit-spec`; `uv run devkit rules check --ci --base
 dbaf8f38` errors=0 warnings=0 on the build head (reviewer run); `uv run devkit generated check` passes. Code review
 round 1 (`review-01`, native `code-reviewer`) found one P2 and three P3, all Living Spec drift or a test gap; the
-fixes are applied and closed in `reverify-01`.
+fixes are applied and closed in `reverify-01`. Reconcile check round 1 (`reconcile-check-01`, native `reconcile-reviewer`) found two P2 (a stale storage sentence in `CAP-HARN-agent-guidance`, the two package READMEs) and one P3 (the steering-file citation option in `ARCH-01-introduction-and-goals`); the fixes are applied as suggested and self-verified by the implementer (text-only, each limited to the named location, checked by `devkit rules check`) in `reconcile-check-02`.
