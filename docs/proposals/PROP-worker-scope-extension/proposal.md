@@ -12,7 +12,7 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/development-worker.md.jinja
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md.jinja
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-tasks/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
@@ -30,8 +30,9 @@ boundaries:
     - packages/devkit/tests/integration/features/workflow/
     - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     - docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
+    - docs/decisions/2026-11/20261102-orchestration-workers.md  # partial-supersession annotation only at handoff
   excludes:
-    - docs/decisions/  # apart from handoff promotion and its partial-supersession annotation
+    - docs/decisions/  # except the exact annotation-only path above and standard PADR promotion
     - .devkit/managed/
     - packages/devkit-spec/src/devkit_spec/features/workflow/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -77,7 +78,7 @@ local checks.
   repository-relative file paths, positive task ordinals from the checklist scanner, nonempty reasons and AC IDs.
   Duplicate paths, absolute/parent/glob paths, missing values and use on another envelope kind are refused.
   Existing envelopes omit the field and remain valid. Keep the task annotation `(scope extension: <reason>)`;
-  the annotation and record use the same reason and task. The shared boundary parser exposes annotations
+  the annotation and record use the same reason and task. A reason is one nonempty line without parentheses, so the existing parenthesized-note grammar remains unambiguous. The shared boundary parser exposes annotations
   additively without changing `TaskBoundary.values` or existing callers.
 - **Q4 — Cloud verification**: ship the same worker/reviewer contract for local and cloud execution. `inspect` is
   informational and remains optional; this change does not claim that Hub calls it. The mandatory medium/high
@@ -98,7 +99,10 @@ local checks.
 | C, denied | No self-admission | `worker` problem naming the required path and recovery | Stop before writing the denied path; preserve partial work |
 
 A worker adds a Tier B path and its reason to the owning task before the source commit that first touches it;
-`tasks.md` and the file can be in that same commit. The worker lists every extension in its final record.
+`tasks.md` and the file can be in that same commit. The worker lists every extension in its final or emergency
+record; the turn still writes exactly one `worker` envelope. Code review reads the annotation, owning task and AC
+before that envelope exists. The final Host/inspect check compares the record with the reviewed annotation; a
+changed justification or extension after review is reverified like other changed review input.
 For example:
 
 ```markdown
@@ -124,8 +128,11 @@ as a directory declaration does not admit it. Sandbox, Git and publication permi
 Preserve `scope` as the existing list, its entry fields, `outside_scope`, and literal prefix matching.
 Add top-level `scope_extensions` and `checks.scope_extensions`. A boundary entry may carry additive extension
 metadata; the check compares the annotated exact paths and task ordinals with the worker records applicable to
-the audited cumulative range. Extension records from earlier accepted turns remain relevant to retained task
-annotations, so inspection reads the unit's committed records rather than only the latest run.
+the audited cumulative range. Extension records from earlier turns remain relevant to retained task annotations,
+so inspection reads the unit's committed records rather than only the latest run. For a path recorded again,
+the highest worker sequence supplies its current metadata. Historical records alone add no path to scope: the
+matching annotation must remain on the returned task. A task move or changed reason needs a current matching
+record; duplicate paths are forbidden within one envelope, not across successive turns.
 
 For a recorded extension, check that the file is named on its owning task, the reason agrees, each listed AC is
 owned by that task, and an extension annotated in the audited range has a matching record. Inspect rejects an
@@ -150,7 +157,7 @@ finding, not proof that the change was authorized merely because derived scope i
 ### 3.3 Review and result acceptance
 
 `spec-review` and the `code-reviewer` contract use the same checks: owning task and AC, necessary adjacent file,
-annotation/record agreement, absence of a deny and no weakened tests. A missing annotation/record for an adjacent
+annotation evidence before the final worker record exists, absence of a deny and no weakened tests. The final Host/inspect check enforces annotation/record agreement. A missing annotation/record for an adjacent
 file is P2 and can be repaired before the final return. A denied/non-adjacent write or a change outside the approved
 goal is P1 and blocks the range. The Host accepts an extension only after these checks and all existing ancestry,
 clean-worktree, envelope and cumulative-check conditions hold. A failed range is preserved and recovered through
@@ -162,7 +169,7 @@ the existing problem/resolution procedure.
   corresponding feature-owned integration tests. This is an existing feature, so no new feature edge is needed.
 - `devkit-spec` owns boundary annotation exposure, inspect reporting/checks, its tests, the Development worker and
   Code Reviewer contracts, `spec-tasks`, `spec-review`, delegation payload/validation and worker-record guidance.
-  Add `subagents/code-reviewer.md.jinja` to the implementation scope alongside the declared Development contract.
+  Add `subagents/code-reviewer.md` to the implementation scope alongside the declared Development contract.
 - Update `CAP-DLV-delivery-workflows` for tier admission, inspection evidence and review; update
   `CAP-DLV-workflow-envelopes` for the optional list and CLI flag. Keep gate names and authority unchanged.
 - The PADR partially supersedes `ADR-orchestration-workers` only where every unlisted path currently fails the

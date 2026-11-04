@@ -49,8 +49,10 @@ Option 3 is selected for bounded task continuity and proportionate verification.
 - Inspection preserves its existing scope list and full-replacement flags and adds structural extension evidence.
   Semantic adjacency and custom protected paths are reviewed rather than advertised as automatic enforcement.
   → `CAP-DLV-delivery-workflows` worker inspection (MUST).
-- A new annotation and its record are committed with the first source write; final validation preserves rejected
-  ranges and existing recovery instead of discarding commits.
+- A new task annotation and its reason are committed with the first source write. The typed list belongs to the
+  single final or emergency worker envelope at turn end. Review checks annotation, task and AC before that record
+  exists; Host validation and inspection subsequently enforce agreement. Rejected ranges retain existing recovery
+  instead of discarding commits.
   → `CAP-DLV-delivery-workflows` worker result validation (MUST).
 - This partially replaces `ADR-orchestration-workers` only for rejection of unlisted paths that satisfy recorded
   Tier B admission. Its remaining range, sync-output, worktree, Git and host-permission decisions remain in force.
