@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Explicit user instruction to proceed with the proposal; size S, planning_effort
-  low; direction settled, direct acceptance candidate
-by: user
-at: '2026-11-04T00:44:36.337910Z'

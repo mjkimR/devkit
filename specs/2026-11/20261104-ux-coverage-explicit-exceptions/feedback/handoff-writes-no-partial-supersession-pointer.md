@@ -55,4 +55,4 @@ created_at: 2026-11-04
          superseded status or a partial pointer naming ADR-<new>
 ```
 
-- **Disposition**: `PROP-proposal-scaffold-and-handoff-pointers`: the handoff writes the partial-supersession pointer for each target ADR that stays accepted.
+- **Disposition**: `SPEC-proposal-scaffold-and-handoff-pointers`: the handoff writes the partial-supersession pointer for each target ADR that stays accepted.

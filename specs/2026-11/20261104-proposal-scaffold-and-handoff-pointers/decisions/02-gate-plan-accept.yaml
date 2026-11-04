@@ -1,0 +1,12 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-proposal-scaffold-and-handoff-pointers: direct acceptance, Planning skipped:
+  direction settled in the proposal: scaffold writes no empty directory, handoff writes
+  partial-supersession pointers; no comparison or spike question, no PADR; Planning
+  skipped on the user''s decision, dev_effort medium selected by the user; task_kind
+  feature confirmed'
+by: user
+at: '2026-11-04T00:46:07.866450Z'

@@ -49,4 +49,4 @@ $ cat > <worktree>/docs/proposals/PROP-<slug>/materials/notation-comparison.md
 no such file or directory: <worktree>/docs/proposals/PROP-<slug>/materials/notation-comparison.md
 ```
 
-- **Disposition**: `PROP-proposal-scaffold-and-handoff-pointers`: the scaffold creates no empty directories; the planning reference names on-demand creation.
+- **Disposition**: `SPEC-proposal-scaffold-and-handoff-pointers`: the scaffold creates no empty directories; the planning reference names on-demand creation.
