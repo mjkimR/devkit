@@ -2,7 +2,7 @@
 id: SPEC-namespace-steering
 title: Namespace steering documents checked and listed beside the global ones
 summary: Recognizes docs/packages/<name>/steering/ as steering documents of a registered namespace, checked by the steering rule and listed in the context of the namespace an agent works in, within the bounded-context caps.
-status: in-progress
+status: completed
 created: 2026-11-04
 namespace: global
 related_capabilities:
