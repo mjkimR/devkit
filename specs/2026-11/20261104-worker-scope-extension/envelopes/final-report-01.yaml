@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:51:34.097214Z'
+status: completed
+summary: Recorded adjacent Development scope extensions are implemented with typed worker evidence, additive annotations, cumulative inspection, preserved explicit-scope replacement and shared local/cloud review guidance. Parser feedback resolved; independent medium review/reconcile complete.
+findings: []
+assumptions:
+- Initial strict Host grants used;no Tier B extension in this run;sole tracked sync output .devkit/installation.json is Task3(sync output).
+unverified_areas:
+- Live cloud/Hub execution and native Codex confinement are not claimed;semantic adjacency/custom protection/test weakening remain reviewer judgments.
+checks:
+  tests: PASS just test-affected --base 6ff819c;2314 passed;partial135 paths;full fallback retained;reused after records-only commits
+  build: PASS Pyright devkit and devkit-spec;CLI import and wiring regressions in affected suite
+  lint: PASS Ruff check/format both packages;22 cumulative CI rules zero;sync --check exit0
+diff_scope:
+  base: 6ff819cec61cec40589b3ed90a8ea6c09a9eb6d9
+  head: 5ebf3310f45d80698471a2d5b79899dd65f1b1ab
