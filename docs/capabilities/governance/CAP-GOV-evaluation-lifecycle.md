@@ -130,7 +130,7 @@ path = "docs/research/**"
 max_lines = 800
 ```
 
-- Every layer is validated before any rule runs: unknown keys, wrong types (`true` is not an integer, `"10"` is not a number), explicit nulls and unsupported patterns fail with the rule ID in the message, and so does a rejection by the rule's `validate_settings`. Settings for an unknown rule, or for a rule that declares none, are errors.
+- Every layer is validated before any rule runs: unknown keys, wrong types (`true` is not an integer, `"10"` is not a number), nulls for nonoptional fields and unsupported patterns fail with the rule ID in the message, and so does a rejection by the rule's `validate_settings`. Settings for an unknown rule, or for a rule that declares none, are errors.
 - Each override is validated applied to the base values. Overrides valid alone but invalid together (one sets `lo`, another `hi`) are detected only for a file both match: the run then fails with `RULES_SETTINGS_INVALID` (`RULE-id: <file>: the overrides matching this file (...) combine to invalid settings: ...`), exit code 2.
 - `path` is workspace-relative. A standalone `**` matches zero or more segments; `*`, `?` and character classes match within one segment. Overrides apply in declaration order to every file they match, so later matching overrides win; keys an override omits keep the earlier value. Arrays replace.
 - `ctx.settings(rule, path)` returns the effective dataclass for a file; `devkit rules explain <RULE-id>` prints the defaults, the configured values and each override.
@@ -153,7 +153,7 @@ max_lines = 800
 
 ADR selection is a heuristic: repeated renames can produce two aliases without consolidation. It grants no editing
 or consolidation authority. `ADR-consolidated-record-budgets` records the decision. The ordinary hygiene phase,
-severity, extension filtering, line counting and numeric message format remain unchanged. Boolean, string, null,
+severity, extension filtering, line counting and numeric message format remain unchanged. Internal `None` disables the option; TOML has no null literal, so omit the key to disable it. Boolean, string,
 zero and negative configured values fail with `RULES_SETTINGS_INVALID`, the rule ID and exit 2.
 
 ## 6. Git Snapshot Gates

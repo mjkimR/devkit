@@ -27,7 +27,7 @@ Selected bundle projections are produced only by sync and listed in the owning t
 
 ## 3. Error Handling & Edge Cases
 
-Existing typed validation rejects bool/string/null; local validation rejects nonpositive values with the existing
+Existing typed validation rejects bool/string; internal None disables the option and TOML uses omission. local validation rejects nonpositive values with the existing
 RULES_SETTINGS_INVALID and exit 2 contract. Invalid headers never suppress a length warning. Eligibility is only a
 heuristic for ADRs renamed twice. A path may override either budget; enabling the option never lowers max_lines.
 

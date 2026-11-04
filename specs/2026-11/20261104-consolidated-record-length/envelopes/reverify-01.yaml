@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:05:20.593285Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified P3 fix: docs now distinguish internal None disabling from invalid bool/string/nonpositive values; generic null statement limited to nonoptional fields. No production behavior changed.'
+findings:
+- issue: Documentation incorrectly promises rejection of null.
+  evidence: CAP-GOV-evaluation-lifecycle.md:156–157 and plan.md section 3 claim null rejection; unchanged optional-int settings resolver accepts None.
+  failure_condition: A consumer supplies None through the in-memory API; it disables the option successfully, contrary to the stated error contract.
+  suggested_action: Remove null rejection claims and explain internal None and TOML omission; preserve accepted implementation.
+  resolution: resolved
+  severity: P3
+checks:
+  docs: PASS compared corrected claims with existing optional-int resolver and reviewer None probe
+  rules: PASS targeted document and unit rules22 zero findings
+diff_scope:
+  base: 4795a4a4e1934c86af824e2f7f930d7c4aa381c5
+  head: 0705ff84bf840a8f86def958635db88300dd55c9
