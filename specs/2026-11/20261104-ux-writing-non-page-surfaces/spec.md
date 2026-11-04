@@ -2,7 +2,7 @@
 id: SPEC-ux-writing-non-page-surfaces
 title: UX writing guidance for surfaces beyond pages and forms
 summary: "Extends the ux-writing instruction with criteria for interfaces the page-and-form vocabulary describes poorly, such as real-time viewports, kiosks, voice and terminal surfaces, so a namespace keeps the screen contract and the UX rules instead of opting out."
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: [CAP-HARN-agent-guidance]
 related_usecases: []
