@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from devkit_docs.features.documents import Document, DocumentIndex
@@ -68,3 +69,20 @@ def fixture(write: Write) -> None:
 
 def documents(root: Path) -> dict[str, Document]:
     return {document.path: document for document in DocumentIndex.load(root).documents}
+
+
+def managed_receipt(write: Write, *paths: str, seeded: tuple[str, ...] = ()) -> None:
+    """Write a valid ownership receipt without installing unrelated assets."""
+    write(
+        ".devkit/installation.json",
+        json.dumps(
+            {
+                "schema": 1,
+                "packages": [],
+                "selection": {"agents": [], "presets": {}},
+                "assets": [],
+                "files": {path: {"sha256": "0" * 64, "mode": 0o644} for path in paths},
+                "seeded": [{"bundle": "docs", "id": "seed", "path": path} for path in seeded],
+            }
+        ),
+    )

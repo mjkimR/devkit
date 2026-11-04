@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:40:27.236215Z'
+status: completed
+summary: Managed derivation candidates filtered by typed installation ownership; selector synthesis guarded; source feedback resolved. Independent Code Review and reconcile verification passed; Host owns integration and cleanup.
+findings: []
+assumptions:
+- Tests reuse reviewed98d5a4ad; subsequent changes are contract reflection, source feedback disposition and lifecycle records.
+- Local integration route is appropriate under pull_request=auto; no platform review or remote publication requested.
+checks:
+  tests: PASS just test-affected --base00511ae1 full6550 passed15 skipped; focused98
+  build: PASS offline devkit-spec wheel in ignored scratch/build
+  lint: PASS Ruff lint/format, Pyright0, CI22 zero violations, sync check clean
+diff_scope:
+  base: 00511ae149771e6197b51ba52f706992ff272161
+  head: 22368654f0fec89e3c2b6afeaec76ec9ba7429d2

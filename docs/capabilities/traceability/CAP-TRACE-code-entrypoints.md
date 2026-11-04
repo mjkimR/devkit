@@ -1,7 +1,7 @@
 ---
 id: CAP-TRACE-code-entrypoints
 title: Code Entrypoints
-summary: Defines the entrypoints frontmatter of capabilities and use cases that anchors documents to code paths, its path contract, the RULE-code-entrypoints liveness check, the reverse lookup by path, and devkit spec entrypoints derive, which proposes and applies declarations from spec bundles.
+summary: "Defines code entrypoints, their liveness and reverse lookup, and derivation from spec bundles with managed outputs excluded using installation ownership."
 area: traceability
 status: active
 usecases:
@@ -101,7 +101,7 @@ joins them.
    value loses its `(...)` notes and is then split on commas; each entry loses backticks, and a value wrapped in
    `**...**` loses the markers.
 2. **Skipped entries** (`kind=boundary`): `not-a-path` (empty, `N/A`, `none`), `invalid-path` (section 3.1, globs
-   included) and `excluded-tree` (`.`, `docs/...`, `specs/...`).
+   included), `excluded-tree` (`.`, `docs/...`, `specs/...`) and `managed-output` (rule 6).
 3. **Candidates**: each path counts once per bundle, with the first task naming it. A candidate under another
    candidate of the same bundle is folded into the shortest such ancestor (`folded_into`).
 4. **Document side**: every `reconcile.md` target (the shape `RULE-reconcile-contract` checks: `targets` of `file`
@@ -110,6 +110,13 @@ joins them.
    an ID, with malformed frontmatter, a `README.md` or a template). Each document counts once per bundle.
 5. **Pairs**: every document is paired with every candidate. `state` is `declared` when an existing entrypoint equals
    the path or is a directory containing it, else `new`; `exists` tells whether the path is in the working tree.
+6. **Managed outputs**: derivation MUST skip `.devkit/managed`, every descendant and `.devkit/installation.json`,
+   even without an installation receipt. With a receipt, it MUST also skip exact paths owned by its `files` map
+   and directories having owned descendants whose current files and symlinks are all managed. Mixed directories,
+   authored host files, ignored authored code and project-owned `seeded` paths remain eligible. It MUST NOT traverse
+   an unowned directory symlink to infer ownership. The typed receipt reader raises `RECEIPT_INVALID` for a
+   malformed present receipt. This exclusion applies to derivation only: shared `classify_boundary` and work-scope
+   collection retain generated write paths. Tests: `packages/devkit-spec/tests/integration/features/entrypoints/test_managed_outputs.py`.
 
 The reusable `devkit_spec.features.entrypoints.repositories.bundle.parse_targets(text, relative)` function parses reconciliation text
 without reading files. Both disk bundle loading and committed worker-record inspection use it. It returns targets
@@ -131,7 +138,9 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
    path): folded pairs are left out, each merged pair carries `count` (the number of specs that produced it) and
    `specs`, and pairs below `--min-count` (default `1`) are dropped.
 3. **`--code <path>`** (repeatable) keeps only candidates equal to or under a path: the review's selection.
-   A `--code` path ending with `/` requires an existing workspace directory; candidate pairs under that directory
+   A managed-output `--code` selector MUST fail with `SPEC_ENTRYPOINTS_CODE_UNMATCHED` before target lookup,
+   directory-existence validation or apply; it cannot synthesize an excluded path from a retained ancestor.
+   Other `--code` paths ending with `/` require an existing workspace directory; candidate pairs under that directory
    are folded into a single directory pair, which `--apply` records with a trailing `/`.
    - A `--code` path that equals a folded candidate of a document unfolds it, so `--apply` can write it.
    - A `--code` path that contains no candidate of a document but lies under one becomes a candidate of that
@@ -206,8 +215,9 @@ Option conflicts fail with devkit's `ARGUMENT_INVALID`: `--spec` with `--all` or
 - `[SKIPPED_COUNT: <reason> kind= count=]` per kind and reason of the inputs or candidates left out. With
   `--skipped` instead one `[SKIPPED: <value> kind= spec= task= reason=]` per item; `spec=` and `task=` only when
   known. JSON `skipped` holds `{kind, reason, count}` entries, or the items with `--skipped`. A skipped input is left
-  out of the derivation, unlike `scope`'s `[UNRESOLVED]`, which counts an input as an unknown overlap; both use the
-  same reason names (`not-a-path`).
+  out of the derivation, unlike `scope`'s `[UNRESOLVED]`, which counts an input as an unknown overlap.
+  Shared input reason names include `not-a-path`. The derivation-only `managed-output` exclusion does not shrink
+  work scopes.
 - `[APPLIED: <doc-id> path= added=]` per document written (`added` comma-separated).
 - `[PAGE: total= offset= limit= count= next=]` over the documents, then `[NEXT_CMD: uv run devkit spec entrypoints
   derive ... --offset <next>]` when more follow; `--limit` (default `20`, `0` for all) and `--offset` page the
@@ -217,7 +227,7 @@ Option conflicts fail with devkit's `ARGUMENT_INVALID`: `--spec` with `--all` or
 
 | `kind` | Reasons |
 | --- | --- |
-| `boundary` | `not-a-path`, `invalid-path`, `excluded-tree`, `excluded` |
+| `boundary` | `not-a-path`, `invalid-path`, `excluded-tree`, `managed-output`, `excluded` |
 | `target` | `waived`, `not-entrypoint-bearing`, `missing-doc`, `not-a-document` |
 | `bundle` | `input-missing`, `invalid-input` |
 | `apply` | `folded`, `missing-path` |
@@ -242,7 +252,8 @@ could not be indexed are `DOCS_DOCUMENT_INVALID` warnings under `notices`.
 | `SPEC_ENTRYPOINTS_INPUT_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsInputInvalidError` | `--spec`: `tasks.md` or `reconcile.md` cannot be read, or `reconcile.md` has no frontmatter or malformed `targets`. |
 | `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsPathError` | A `--code` or `--exclude` path, or a `devkit docs list --file` path, breaks the path contract. |
 | `SPEC_ENTRYPOINTS_TARGET_UNKNOWN` | `ERROR` (`INPUT_ERROR`) | `EntrypointsTargetError` | A `--target` ID or alias names no document, or the document or path is not among the derived documents. |
-| `SPEC_ENTRYPOINTS_CODE_UNMATCHED` | `ERROR` (`INPUT_ERROR`) | `EntrypointsCodeUnmatchedError` | A `--code` path equals, contains and lies under no candidate of the derived documents (of the `--target` documents with `--apply`); `[TARGET]` lists them and nothing is written. |
+| `SPEC_ENTRYPOINTS_CODE_UNMATCHED` | `ERROR` (`INPUT_ERROR`) | `EntrypointsCodeUnmatchedError` | A `--code` path is a managed output or equals, contains and lies under no candidate of the derived documents (of the `--target` documents with `--apply`); `[TARGET]` lists them and nothing is written. |
+| `RECEIPT_INVALID` | `ERROR` (`MAINTENANCE`) | `devkit_dist.base.errors.ReceiptError` | The present installation receipt is unreadable or violates its schema; derivation retains the typed reader's remediation. |
 | `SPEC_ENTRYPOINTS_APPLY_FAILED` | `ERROR` (`MAINTENANCE`) | `EntrypointsApplyError` | `--apply` could not read or write some documents, or their `entrypoints` is not a list of strings; `[TARGET]` lists them, the documents listed as applied were written. |
 | `DOCS_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents, or no document has it as its ID and several declare it as an alias. |
 | `DOCS_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file could not be indexed; a malformed `spec.md` leaves its bundle out of `--all`. |

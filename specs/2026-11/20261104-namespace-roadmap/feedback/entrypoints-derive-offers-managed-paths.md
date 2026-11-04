@@ -8,7 +8,7 @@ target: devkit spec entrypoints derive
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -33,3 +33,12 @@ created_at: 2026-11-04
 [CANDIDATES: CAP-DLV-proposal-planning ... new=.claude,.devkit/installation.json,.devkit/managed,packages/... missing=- folded=- declared=-]
 tasks.md Task 3.1 _Boundary: `.devkit/managed/`, `.devkit/installation.json`, `.claude/`
 ```
+
+## Disposition
+
+- **Disposition**: `SPEC-entrypoint-generated-filter` filters known managed outputs and receipt-owned projections,
+  including generated-only directories, while retaining authored/ignored files and shared scope classification.
+  Explicit selectors cannot restore generated candidates. Verified by 98 focused integration tests, full affected
+  fallback (6550 passed,15 skipped), independent Code Review and the recorded namespace-roadmap comparison
+  (three generated candidate paths removed;17 authored candidates retained). Blanket gitignore exclusion was
+  intentionally not adopted because ignored files can be authored implementation.

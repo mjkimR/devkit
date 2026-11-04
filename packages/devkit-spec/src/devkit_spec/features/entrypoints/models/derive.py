@@ -20,6 +20,7 @@ class Reason(StrEnum):
     NOT_A_PATH = "not-a-path"
     INVALID_PATH = "invalid-path"
     EXCLUDED_TREE = "excluded-tree"
+    MANAGED_OUTPUT = "managed-output"
     EXCLUDED = "excluded"
     WAIVED = "waived"
     NOT_ENTRYPOINT_BEARING = "not-entrypoint-bearing"
