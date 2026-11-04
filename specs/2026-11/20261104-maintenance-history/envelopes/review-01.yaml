@@ -1,0 +1,42 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:32:19.907622Z'
+status: completed
+summary: 'REVISE: canonical record freeze, uncertain ref transport, distribution registration and documented codes require fixes; required live evidence remains pending.'
+findings:
+- issue: Finished canonical record bytes are not frozen or verified before publication.
+  evidence: services/runs.py:170-173 and services/publication.py:336-349; reviewer probe scratch/review-01/probes/test_review_evidence.py:34 reproduced a changed record.result accepted at publication.
+  failure_condition: An accidental post-finish record edit changes the published outcome or inspected identity without detection and bypasses the finish secret check.
+  suggested_action: Freeze and verify the canonical published-record digest, excluding mutable local metadata, and add a regression.
+  resolution: open
+  severity: P2
+- issue: Lost ref-update transport responses can remain pending instead of unknown.
+  evidence: repositories/github.py:58-64 raises Deferred without HTTP headers while services/publication.py:59 catches only TimeoutExpired; reviewer gh shim reproduced Deferred instead of PublishUnknown.
+  failure_condition: GitHub accepts PATCH but gh loses its response and exits while authenticated.
+  suggested_action: Preserve transport uncertainty and map unconfirmed reference mutation to PublishUnknown while reads/object creation defer.
+  resolution: open
+  severity: P2
+- issue: New command/config registration omits distribution registry entries and expected package declarations.
+  evidence: devkit-dist cli.py HARNESS_COMMANDS and distribution/services/installation/config.py RESERVED_TABLES omit maintenance; full fallback has five registration-related failures including CONFIG_TEMPLATE_EXTENSION_FAILED.
+  failure_condition: config template rejects the maintenance extension and a dist-only installation lacks the harness-install advisory.
+  suggested_action: Add authorized name-only entries, refresh package expectations/lazy support and rerun affected failures.
+  resolution: open
+  severity: P2
+- issue: Bare advisory codes fail the documented-code contract.
+  evidence: CAP-DLV-maintenance-history failure table and packages/devkit/tests/integration/package/test_documented_codes.py:40-41 report eleven missing HISTORY codes.
+  failure_condition: The cumulative documented-code test scans for individually backticked identifiers.
+  suggested_action: Backtick each advisory code in the owning capability.
+  resolution: open
+  severity: P3
+assumptions:
+- Codex isolation emulated; absolute paths, ignored-only probes and unchanged tracked snapshot verified; no native guarantee.
+unverified_areas:
+- AC-10 requires user-selected throwaway destination and explicit mutation authority; not executed.
+checks:
+  tests: FAIL full fallback 6357 passed 14 skipped 6 failed
+  ci_rules: PASS 0 violations
+diff_scope:
+  base: c9f7c6d3a2674f95c345dc13bc89ab1874bcff23
+  head: 3ac8be83a121c7bd0955155eec5f45a8c27ca60a
