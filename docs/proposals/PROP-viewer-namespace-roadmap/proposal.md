@@ -2,7 +2,7 @@
 id: PROP-viewer-namespace-roadmap
 title: Show namespace milestones throughout the repository viewer
 summary: "Extends dashboard and roadmap discovery to namespace milestones and resolves dependencies and proposal membership across roadmap roots."
-status: draft
+status: reviewing
 created_at: 2026-11-04
 target_area: capabilities/viewer/
 priority: high
