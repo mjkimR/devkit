@@ -350,12 +350,12 @@ target is a UX document (aliases and the bracket form count). An extension resum
 `resumes at [step] <key>` names (`resumes at the same step`: the step it branches from), and ends the use case
 otherwise.
 
-- MUST report on the UX document: a missing `element` or one other than `screen`, `modal` or `panel`; no
-  `Interactions` H2, or one whose first table header is not `Trigger | Step | From | To | Target | Capability |
-  Feedback`; a Step cell that is neither empty (`-` counts), `` `UC-<slug>` <key> `` pairs separated by commas nor a
-  `global: <reason>` classification (any case; the rest of the cell is opaque text, so a cell starting with pairs and
-  carrying `global:` later is invalid and its pairs are still checked); a Target cell that is neither empty, a UX document's ID, `close`, `back` nor `end`; a `modal` without a `close` or
-  `back` row.
+- MUST report on the UX document: a missing `element` or one other than `screen`, `modal` or `panel`; no `Interactions`
+  H2, or one whose first table header is not `Trigger | Step | From | To | Target | Capability | Feedback`; a Step cell
+  that is neither empty (`-` counts), `` `UC-<slug>` <key> `` pairs separated by commas nor a `global: <reason>`
+  classification (any case; the rest of the cell is opaque text, so a cell starting with pairs and carrying `global:`
+  later is invalid and its pairs are still checked); a Target cell that is neither empty, a UX document's ID, `close`,
+  `back` nor `end`; a `modal` without a `close` or `back` row.
 - MUST report, on the UX document or, when only the use case is targeted, on the use case at the step's line: a Step
   pair naming a use case `usecases` does not list, a key the use case has no step for, or a step that does not cite
   the document; a `usecases` entry no Step cell names; a use case step citing the document while its `usecases` does

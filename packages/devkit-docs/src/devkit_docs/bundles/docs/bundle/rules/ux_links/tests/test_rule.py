@@ -338,3 +338,21 @@ def test_a_global_classification_is_a_valid_step_cell_and_bypasses_nothing(tmp_p
         (path("nav"), "usecases lists UC-other, but no Step cell names it"),
     ]
     assert all("`global: <reason>`" in v.remediation for v in violations if v.message.startswith("Step cell"))
+
+
+def test_an_off_screen_phrase_changes_nothing_for_the_links(tmp_path: Path) -> None:
+    """A step's `off screen:` phrase is RULE-ux-coverage's: a citing step still cites, an uncited one still does not."""
+    files = {
+        UC: usecase(
+            [
+                "The person opens `UX-login`; off screen: the session is cached.",
+                "The system archives the attempt. Off screen: nothing of it appears on a screen.",
+                "The system shows `UX-done`.",
+            ]
+        ),
+        path("login"): ux("login", [("`UC-sign-in` 1", "`UX-done`"), ("`UC-sign-in` 2", "")]),
+        path("done"): ux("done", [("`UC-sign-in` 3", "")]),
+    }
+    assert found(check(RULE, tmp_path, files)) == [
+        (path("login"), "Step names UC-sign-in 2, which does not cite UX-login")
+    ]

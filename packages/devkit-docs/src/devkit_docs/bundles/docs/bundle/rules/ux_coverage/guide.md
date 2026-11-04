@@ -10,10 +10,10 @@ an intended gap is classified with a reason so that it stops warning; contradict
 - **Phase and severity**: `linter`, `warning` (devkit gives each rule one severity, the `RULE-spec-progress`
   precedent), so it never blocks a commit.
 - **What is checked**: every current use case some current UX document lists, and every current UX document.
-- **Targeting**: a step report lands on the use case at the step's line when the run targets it, else on the first
-  UX document listing the use case that the run targets (path order, at its `usecases` entry), because the fix (a
-  citation or an `off screen:` phrase) is written in the use case; `RULE-ux-links` keeps reporting on the UX document first, where its fixes mostly land. An interaction report lands on its UX
-  document.
+- **Targeting**: a step report lands on the use case at the step's line when the run targets it, else on the first UX
+  document listing the use case that the run targets (path order, at its `usecases` entry), because the fix (a citation
+  or an `off screen:` phrase) is written in the use case; `RULE-ux-links` keeps reporting on the UX document first,
+  where its fixes mostly land. An interaction report lands on its UX document.
 
 ## 2. Cause of Violation
 

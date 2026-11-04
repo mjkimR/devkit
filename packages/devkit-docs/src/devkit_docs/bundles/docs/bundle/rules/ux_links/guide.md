@@ -51,9 +51,9 @@ The flow, per listed use case whose steps cite the document (a `panel` is exempt
 ## 3. Remediation
 
 Fix the side that is wrong: cite the screen in the step it happens on, name the right step key in the Step cell (or
-classify a global control as `global: <reason>`), add the missing `usecases` entry, add the exit or the `close` row, or add the interaction that leads to the screen. A
-system step cites the screen its response appears on, so the screen after it is reached through an interaction. Not
-fixable automatically: which side is right is a decision.
+classify a global control as `global: <reason>`), add the missing `usecases` entry, add the exit or the `close` row, or
+add the interaction that leads to the screen. A system step cites the screen its response appears on, so the screen
+after it is reached through an interaction. Not fixable automatically: which side is right is a decision.
 
 ## 4. Configuration
 
