@@ -305,3 +305,36 @@ def test_an_extension_that_ends_needs_no_exit_but_one_resuming_on_a_screen_does(
 def test_a_step_cell_naming_an_unresolved_use_case_is_left_to_document_reference(tmp_path: Path) -> None:
     files = {**two_screens(), path("login"): ux("login", [("`UC-sign-in` 1", "`UX-done`"), ("`UC-gone` 1", "")])}
     assert check(RULE, tmp_path, files) == []
+
+
+def test_a_global_classification_is_a_valid_step_cell_and_bypasses_nothing(tmp_path: Path) -> None:
+    """AC-07, AC-08: `global: <reason>` is accepted (any case, a pair inside the reason included); a mixed or
+    misspelled cell stays the invalid-cell error with the new remediation; every other check reports as before."""
+    files = {
+        **two_screens(),
+        path("nav"): ux(
+            "nav",
+            [
+                ("global: a preference control that belongs to no task", ""),
+                ("GLOBAL: accessibility link on every screen", ""),
+                ("global: the small-screen menu, independent of `UC-sign-in` 2", ""),
+                ("`UC-sign-in` 1, global: also a shortcut", ""),
+                ("globl: typo", ""),
+                ("`UC-sign-in` 9", ""),
+                ("`UC-ghost` 1", ""),
+            ],
+            element="panel",
+            usecases=("UC-sign-in", "UC-other"),
+        ),
+        "docs/usecases/account/UC-other.md": usecase(["The person opens the page."], slug="other"),
+    }
+    violations = check(RULE, tmp_path, files)
+    assert found(violations) == [
+        (path("nav"), 'Step cell "`UC-sign-in` 1, global: also a shortcut" is not `UC-<slug>` <key>'),
+        (path("nav"), 'Step cell "globl: typo" is not `UC-<slug>` <key>'),
+        # The pair inside the mixed cell is still read and checked, as before this change.
+        (path("nav"), "Step names UC-sign-in 1, which does not cite UX-nav"),
+        (path("nav"), "Step names UC-sign-in 9, which is not a step of UC-sign-in"),
+        (path("nav"), "usecases lists UC-other, but no Step cell names it"),
+    ]
+    assert all("`global: <reason>`" in v.remediation for v in violations if v.message.startswith("Step cell"))

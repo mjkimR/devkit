@@ -76,8 +76,8 @@ Fixtures: a use case UC-sign-in listed by the UX documents UX-login and UX-nav (
   leaves by SMTP and nothing appears on a screen.` and extension 2a says `No mail (off-screen: the retry runs in the
   background); the use case ends.`
 - **When** `RULE-ux-coverage` runs with every document targeted
-- **Then** it reports nothing for step 2 or extension 2a (`Off screen:` and `off-screen:` both count; the trailing
-  `)` is not part of the reason)
+- **Then** it reports nothing for step 2 or extension 2a (`Off screen:` and `off-screen:` both count; a closing `)`
+  and the sentence period are not part of the reason)
 
 ### [AC-04] An unclassified uncited step still warns
 - **Given** UC-sign-in step 3 cites no UX document and holds no phrase
@@ -103,18 +103,20 @@ Fixtures: a use case UC-sign-in listed by the UX documents UX-login and UX-nav (
 - **Then** it reports `Step cell "..." is not `UC-<slug>` <key>` for each (severity `error`), with a remediation
   naming `global: <reason>` beside the empty cell, and `RULE-ux-coverage` reports nothing for those rows
 
-### [AC-08] Exceptions bypass no `RULE-ux-links` check
-- **Given** UX-nav holds a valid global row and a row whose Step cell is `` `UC-sign-in` 9 `` (no such step), and
-  UX-login lists UC-sign-in while no Step cell names it
+### [AC-08] Exceptions bypass no `RULE-ux-links` or `RULE-document-reference` check
+- **Given** UX-nav holds a valid global row, a row whose Step cell is `` `UC-sign-in` 9 `` (no such step) and a row
+  whose Step cell is `` `UC-ghost` 1 `` (no such document), and UX-login lists UC-sign-in while no Step cell names it
 - **When** `RULE-ux-links` runs
 - **Then** it reports `Step names UC-sign-in 9, which is not a step of UC-sign-in` and `usecases lists UC-sign-in,
-  but no Step cell names it` exactly as without the global row
+  but no Step cell names it` exactly as without the global row, and nothing for UC-ghost: an unresolved ID is
+  `RULE-document-reference`'s report (unchanged by this change) and `RULE-ux-links` skips it as before
 
-### [AC-09] Documents without markers keep their reports
+### [AC-09] Documents without markers keep their reports, except for their placement
 - **Given** the fixtures of the existing `RULE-ux-coverage` and `RULE-ux-links` tests, without any marker
 - **When** both rules run
-- **Then** every existing assertion of those tests still holds, except the lines the targeting of AC-10 moves, and
-  `uv run devkit rules check` on this repository's `docs/` reports no new violation
+- **Then** every report of those tests still occurs with the same message and severity; only the file and line of
+  the use-case-side `RULE-ux-coverage` reports change as AC-10 says, and `uv run devkit rules check` on this
+  repository's `docs/` reports no new violation
 
 ### [AC-10] An uncited step is reported on its use case first
 - **Given** UC-sign-in step 3 is uncited and UX-login and UX-nav both list UC-sign-in
@@ -184,8 +186,8 @@ Expected affected contracts: `CAP-GOV-spec-rules` (3.1 table, 3.15, 3.16) and `A
 1. A theme toggle or skip-to-content interaction whose Step cell is `global: <reason>` produces no missing-Step warning; an unclassified blank row on the same screen still warns.
 2. A genuine background-only step holding `off screen: <reason>` produces no missing-screen warning; an unclassified uncited step in the same use case still warns.
 3. `global:` or `off screen:` without a reason, and an off-screen phrase on a step that cites a UX ID, are each reported with their own `RULE-ux-coverage` warning; a Step cell that starts with pairs and carries `global:` later, or misspells `global:`, stays a `RULE-ux-links` error, while `GLOBAL: <reason>` and a reason that mentions a step pair are accepted classifications.
-4. A contradictory or nonexistent explicit UX/use-case link still fails its existing `RULE-ux-links` validation even when a coverage exception is present on the same document.
-5. Existing documents and severity settings retain their behavior until an explicit classification is added. No heuristic based on label words such as "theme" or "background" is used.
+4. A contradictory explicit UX/use-case link (a wrong step key, a step that does not cite the document, an unlisted use case) still fails its existing `RULE-ux-links` validation even when a coverage exception is present on the same document; a nonexistent ID stays `RULE-document-reference`'s report, which this change does not touch.
+5. Existing documents keep every warning they raise today, with its message and severity, until an explicit classification is added; only the placement of the use-case-side report changes (example 7). No heuristic based on label words such as "theme" or "background" is used.
 6. Focused rule tests cover both accepted exceptions and negative controls; `ux-writing` and `usecase-writing` each demonstrate one valid example of their classification.
 7. With every document in the run, the uncited step is reported on the use case at the step's line; with only the UX document in the run, on that document at its `usecases` entry.
 
