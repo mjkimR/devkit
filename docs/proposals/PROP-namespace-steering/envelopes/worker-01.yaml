@@ -1,0 +1,32 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T01:10:58.878205Z'
+status: needs_input
+summary: 'Planning turn 1 of PROP-namespace-steering: settled Q1 to Q3 (root contract reused per directory, a devkit.context_documents provider selected by the working directory the CLI now passes, goals as prose in a namespace steering file), recorded PADR-namespace-steering-directories and the materials, ran and folded challenger round 1 (P1 CLI selection input, P2 notices channel and inventory gaps, P3 glossary files, targeting, payload bound); q1 (what the repository root lists) waits for the user before plan-accept.'
+findings: []
+assumptions:
+- g-sandbox is not a devkit project yet (no .devkit/config.toml); the acceptance fixture is a monorepo fixture in this repository
+- GetContext's only production caller is the CLI, so adding the working-directory parameter is confined to devkit-dist
+unverified_areas:
+- Import-time cost of the devkit-docs provider inside each get-context call (Development measures it with the payload bound test)
+checks:
+  rules: PASS devkit rules check docs/proposals/PROP-namespace-steering/
+diff_scope:
+  base: ''
+  head: 0fb22f6084be972fb71c356f144dccb96e951c46
+questions:
+- id: q1
+  title: Root-level steering list
+  prompt: When devkit get-context runs outside every package (the repository root, or with -w), which namespace steering directories does it list beside the global docs/steering/?
+  context: 'Inside a package the context lists the global steering files plus that package''s (at most 2 x max_files entries); this is settled. Outside every package the choice is between showing every registered namespace''s steering files, as devkit docs list shows every namespace there, and showing none. Agents usually run from the repository root, so option a makes package background visible there at a cost of up to max_files x (1 + N) entries (g-sandbox today: 9 entries, about 2.3 KB); option b keeps the root list as small as today but an agent at the root must change directory or read docs/packages/<name>/steering/ itself. The PADR, the provider contract, the devkit-docs test list and the payload bound are written for option a and change under option b.'
+  options:
+  - id: a
+    description: Every registered namespace's steering directory plus the global one (the CAP-DOCS-namespaces 3.3 default selection; bounded by max_files per directory, asserted by a (1 + N) x 4096 byte test)
+    recommended: true
+  - id: b
+    description: The global directory only; a namespace's steering files appear only when the working directory is inside that package
+    recommended: false
+  allow_note: true
+activity_effort: medium
