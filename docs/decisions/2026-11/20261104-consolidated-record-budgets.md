@@ -59,6 +59,6 @@ already supports a rule-owned budget. Alias metadata does not establish consolid
 
 ## 6. Confirmation
 
-The rule's `file_length/tests/` and integration tests verify eligibility, defaults, malformed input, precedence,
+The rule's `file_length/tests/test_rule.py` and rules CLI integration tests verify eligibility, defaults, malformed input, precedence,
 limits and remediation. Content tests verify playbook fidelity wording. A same-head disabled/enabled comparison
 verifies the six affected ADR identities. `CAP-GOV-evaluation-lifecycle` section 5 restates the lasting contract.

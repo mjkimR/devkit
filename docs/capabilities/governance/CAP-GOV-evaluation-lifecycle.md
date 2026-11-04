@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-evaluation-lifecycle
 title: "Rule Evaluation Lifecycle"
-summary: "Single-pass repairs, target scoping, execution phases, and Git snapshot evaluation."
+summary: "Single-pass repairs, target scoping, execution phases, Git snapshot evaluation and typed rule settings, including opt-in consolidated-record budgets."
 area: governance
 status: active
 entrypoints:
@@ -134,6 +134,27 @@ max_lines = 800
 - Each override is validated applied to the base values. Overrides valid alone but invalid together (one sets `lo`, another `hi`) are detected only for a file both match: the run then fails with `RULES_SETTINGS_INVALID` (`RULE-id: <file>: the overrides matching this file (...) combine to invalid settings: ...`), exit code 2.
 - `path` is workspace-relative. A standalone `**` matches zero or more segments; `*`, `?` and character classes match within one segment. Overrides apply in declaration order to every file they match, so later matching overrides win; keys an override omits keep the earlier value. Arrays replace.
 - `ctx.settings(rule, path)` returns the effective dataclass for a file; `devkit rules explain <RULE-id>` prints the defaults, the configured values and each override.
+
+### Rule-local consolidated record budget
+
+1. **Opt-in budget.** WHERE `RULE-file-length.consolidated_max_lines` is configured, the rule MUST accept a
+   positive integer through the existing typed settings contract; omission defaults to `None` and preserves ordinary
+   limits and remediation. Rule-owned `file_length/tests/test_rule.py` and rules CLI integration tests enforce it.
+2. **Record selection.** WHERE the option is enabled, WHEN targeted Markdown exceeds its ordinary limit, the rule
+   MUST qualify a header with a nonempty string `id` and a list of nonempty string aliases only for an `ADR-` ID
+   with at least two distinct aliases or `FB-consolidated-<area>-<status>` with at least one.
+   Area is a lowercase alphanumeric slug with optional hyphenated namespace segments; terminal statuses are
+   `resolved`, `promoted`, `dismissed` and `forwarded`. Duplicates count once; whitespace-only aliases are empty.
+   Missing/malformed headers or aliases and other IDs retain ordinary limits (`file_length/tests/test_rule.py`).
+3. **Budget precedence.** WHEN a record qualifies, the rule MUST use
+   `max(max_lines, consolidated_max_lines)` after existing path overrides (`file_length/tests/test_rule.py`).
+4. **Bounded warning.** WHEN an eligible record exceeds its selected budget, the rule MUST warn at selected limit
+   plus one with topic-review remediation preserving retained decisions and outcomes (`file_length/tests/test_rule.py`).
+
+ADR selection is a heuristic: repeated renames can produce two aliases without consolidation. It grants no editing
+or consolidation authority. `ADR-consolidated-record-budgets` records the decision. The ordinary hygiene phase,
+severity, extension filtering, line counting and numeric message format remain unchanged. Boolean, string, null,
+zero and negative configured values fail with `RULES_SETTINGS_INVALID`, the rule ID and exit 2.
 
 ## 6. Git Snapshot Gates
 

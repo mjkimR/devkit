@@ -1046,3 +1046,15 @@ def test_cli_staged_with_files_targets_the_files_not_the_phase(tmp_path: Path) -
     phase = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "-p", "hygiene", "--format", "json"])
     advisory = json.loads(phase.stdout)["error"]["advisory"]
     assert advisory["target_files"] == ["--phase"] and advisory["fix"]
+
+
+@pytest.mark.parametrize("budget", ["true", "'600'", "0", "-1"])
+def test_cli_invalid_consolidated_budget_returns_settings_error(tmp_path: Path, budget: str) -> None:
+    _write_config(tmp_path, f"[rules.settings.RULE-file-length]\nconsolidated_max_lines = {budget}\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--format", "json"])
+    assert result.exit_code == 2
+    data = json.loads(result.stdout)
+    assert data["violations"] == []
+    assert [error["code"] for error in data["errors"]] == ["RULES_SETTINGS_INVALID"]
+    assert "RULE-file-length" in data["errors"][0]["message"]
+    assert "consolidated_max_lines" in data["errors"][0]["message"]
