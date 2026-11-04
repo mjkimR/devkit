@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-p
 origin: user
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -60,3 +60,5 @@ sdd-proposal.md:115: "sets `status: rejected` with the user's reason, unrewritte
 feedback-hygiene/SKILL.md:81: "write the rejection ADR quoting the reason from the rejection commit"
 CAP-DLV-proposal-planning.md:103-104: "sets `status: rejected` with the user's reason in the commit message"
 ```
+
+- **Disposition**: `SPEC-rejection-reason-rewritten`: the `sdd-proposal` workflow, the `feedback-hygiene` playbook, the proposal scaffold hint and `CAP-DLV-proposal-planning` rule 9 ask for the decision and reason as a decision sentence, never a quote; `ADR-reject-ux-rules-path-exclusion` restated accordingly; verified by the spec bundle guidance test and `devkit rules check`.

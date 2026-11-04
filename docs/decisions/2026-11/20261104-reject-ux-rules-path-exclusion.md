@@ -64,9 +64,9 @@ UX document of such a namespace.
 
 ## 4. Decision Outcome
 
-We decided to adopt **Option 1**. The user's reason, from the rejection commit, unrewritten: "2번으로 일단 기각하고
-지침 보강만 진행한 다음, 실제로 사용해보고 좀 안맞으면 그 때 해도 되나? ... 게임 국한하지는 말고 앱 말고 뭔가 특정 상황에서
-쓰는 방법에 대한 포괄적인 지침으로 구성 가능하면 그게 더 좋음".
+We decided to adopt **Option 1**. The user rejected the opt-out (commit `aa67659f`) because the current contract
+can be made to fit through writing guidance, and asked for that guidance to cover surfaces beyond apps in general
+rather than games alone, with an opt-out reconsidered only after real use shows a mismatch.
 
 - `RULE-ux-links` and `RULE-ux-coverage` declare no path-scoped `exclude` setting; `[rules] exclude` stays the only
   path-scoped exclusion and switches off every rule.

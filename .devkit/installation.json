@@ -1888,7 +1888,7 @@
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "686b54bf679c4c2dea667c9d12a261c467d7b3e940539c68ae0f146620b6fbc7"
+      "sha256": "129032ff29ff3d578c88475f938f508f7ca72286b9ed07f11d15ba4c435ea18f"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
       "mode": 420,
@@ -2200,7 +2200,7 @@
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,
-      "sha256": "cc7dc236487f9c285716a5ad098eb9d469ba1b3191d1a2f9a6dd0c6f553593bd"
+      "sha256": "6aab9df7eba9634b43e90077b779f4b0c629d514ea3ea3a6f5fa288667ffbb5c"
     },
     ".devkit/managed/spec/workflows/sdd-session-bugfix.md": {
       "mode": 420,

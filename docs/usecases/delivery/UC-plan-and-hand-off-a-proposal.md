@@ -94,7 +94,8 @@ capabilities:
   closes its open questions; the agent integrates the return, removes the Planning branch, and Backlog creates the
   child drafts once the proposal check passes on the base (`CAP-DLV-proposal-planning`); while the Planning branch
   exists, Backlog changes are refused with `SPEC_PROPOSAL_IN_PLANNING`; the use case ends.
-- **5a.** The user rejects the direction: the agent sets `status: rejected` with the user's reason in the commit
+- **5a.** The user rejects the direction: the agent sets `status: rejected` with the user's decision and reason, as a
+  decision sentence and never a quote, in the commit
   message, closes the open questions and merges the Planning branch per policy; a later hygiene pass, warned by
   `SPEC_PROPOSAL_REJECTED_PENDING`, writes the rejection ADR, preserves open feedback and deletes the proposal
   (`CAP-DLV-proposal-planning`); the use case ends.

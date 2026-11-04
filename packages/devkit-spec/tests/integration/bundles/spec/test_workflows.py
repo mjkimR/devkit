@@ -240,3 +240,21 @@ def test_proposal_sweep_controls_plan_accept(synced: Path, tmp_path: Path, case:
         case in {"zero", "requested-only", "off"}
     )
     assert (root / unit / "envelopes/feedback-01.yaml").exists() == (case in {"failed", "zero", "requested-only"})
+
+
+def test_a_rejection_records_a_decision_sentence_never_a_quote() -> None:
+    """SPEC-rejection-reason-rewritten AC-01, AC-02: the rejection path follows the records rule."""
+    workflow = raw("workflows/sdd-proposal.md")
+    assert_rule(
+        workflow, "`status: rejected`", "decision and its reason", "decision sentence", "never as a conversation quote"
+    )
+    assert "unrewritten" not in workflow
+    playbook = raw("playbooks/feedback-hygiene/SKILL.md")
+    assert_rule(
+        playbook,
+        "`spec_proposal_rejected_pending`",
+        "rejection adr",
+        "stating the decision and reason",
+        "never as a quote",
+    )
+    assert "quoting the reason" not in playbook

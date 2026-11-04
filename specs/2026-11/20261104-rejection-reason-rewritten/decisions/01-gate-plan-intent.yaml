@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Explicit user instruction: remove every verbatim-quote requirement from the
+  rejection path (workflow, playbook, contract) and resolve FB-rejection-reason-quoted-verbatim;
+  spec depth, task-kind feature, activity-effort low'
+by: user
+at: '2026-11-04T01:41:30.550596Z'

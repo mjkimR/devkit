@@ -101,9 +101,11 @@ removes it.
    materials directory first (4.5, step 5), except open feedback, which enters the spec's feedback directory.
    Operating-system junk and the unit's workflow records (rule 12) are excluded.
 9. **Rejection changes the status only**: the party that received the user's rejection sets `status: rejected`
-   with the user's reason in the commit message (kept through a squash) and merges the Planning branch; no worker
-   runs. A later hygiene pass writes a rejection ADR outside the proposal directory, referencing the proposal and the
-   rejection commit, preserves open feedback, and deletes the proposal in the same commit; no `archive/`
+   with the user's decision and its reason in the commit message (kept through a squash), rewritten as one English
+   decision sentence and never as a conversation quote (the records rule of the spec constitution), and merges the
+   Planning branch; no worker runs. A later hygiene pass writes a rejection ADR outside the proposal directory,
+   restating that decision and reason, referencing the proposal and the rejection commit, preserves open feedback,
+   and deletes the proposal in the same commit; no `archive/`
    directory is kept. Feedback remains with the rejected proposal until that cleanup; no new rejection sweep runs. A `rejected`
    proposal is never resumed, accepted or handed off, and the tools hold to it: its `plan-accept` is never answered,
    the attach check refuses it on `plan-` and `dev-` branches, and a
