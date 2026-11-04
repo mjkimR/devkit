@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Implement the agreed targeted host preflight and prerequisite guidance from
+  FB-full-suite-host-capabilities.
+by: user
+at: '2026-11-04T06:29:19.201944Z'
