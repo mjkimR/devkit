@@ -12,15 +12,26 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/development-worker.md.jinja
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md.jinja
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-tasks/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/worker-records.md
     - packages/devkit-spec/src/devkit_spec/features/worker/
+    - packages/devkit-spec/src/devkit_spec/features/entrypoints/repositories/bundle.py
+    - packages/devkit-spec/tests/unit/features/
+    - packages/devkit-spec/tests/unit/features/worker/
+    - packages/devkit-spec/tests/integration/features/worker/
+    - packages/devkit-spec/tests/integration/bundles/spec/
+    - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
+    - packages/devkit/src/devkit_agt/features/workflow/models/envelope.py
+    - packages/devkit/src/devkit_agt/features/workflow/services/envelope/
+    - packages/devkit/src/devkit_agt/features/workflow/usecases/envelopes.py
+    - packages/devkit/tests/integration/features/workflow/
     - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     - docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
   excludes:
-    - docs/decisions/
+    - docs/decisions/  # apart from handoff promotion and its partial-supersession annotation
     - .devkit/managed/
     - packages/devkit-spec/src/devkit_spec/features/workflow/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -31,114 +42,165 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-A delegated `development-worker` may write only the write scope its payload names: the unit directory, the tasks'
-`_Boundary:` paths and the reconcile targets. The contract says "one path outside the write scope rejects the whole
-result", and the Host's acceptance procedure (`spec-delegate/references/worker.md`) blocks the range, records a
-`problem` envelope and sends a recovery request. In practice `_Boundary:` is an estimate written before any code
-exists, and a task that needs one more file (a sibling module, a test helper, a fixture, a docs page a check demands)
-is common. Each such case costs a full round trip: block, re-delegate or widen, re-validate.
+`spec-tasks` treats `_Boundary:` as an estimate, but `development-worker` and its Host validation reject any
+unlisted write. A required sibling module, test helper or contract repair therefore causes an operator round trip.
+The existing `(sync output)` exception already admits a recorded class of change-caused paths.
 
-Three shipped documents already disagree on how strict that boundary is:
+The draft assumed that worker-envelope authoring belongs to `devkit-spec`. It belongs to
+`devkit_agt.features.workflow`; `devkit_spec.features.worker` reads that model. The evidence and rejected options
+are in `materials/implementation-evidence.md`. The decision is
+`PADR-recorded-adjacent-path-extensions-for-development-workers`.
 
-- `spec-tasks` calls `_Boundary:` an estimate: "a needed extra path is made and explained in the report".
-- The `development-worker` contract denies "everything else" and rejects the whole result on one outside path.
-- `spec-review` reports "changes outside `_Boundary:` without a stated reason" for a Developer's own work, but
-  "any change outside a delegated write scope" for a worker.
-
-Locally the gap is invisible because the Host (a main session) reads the situation and re-spawns with a wider
-scope. In an autohub cloud run there is no Host: the worker is the top-level agent, Hub verifies envelopes and
-holds the run on a `problem` or an unanswered question, and only the operator can move it. So in the cloud the strict
-reading turns every boundary miss into an operator intervention or a silently rejected result.
-
-Two existing mechanisms show the shape of the answer:
-
-- The `(sync output)` rule (`CAP-DLV-delivery-workflows`): a worker may add paths the payload did not list to the
-  owning task's `_Boundary:`, annotated `(sync output)`, and the Host accepts them against stated criteria rather
-  than blocking.
-- `devkit spec worker inspect` derives its scope from `_Boundary:` at the returned head (`derive_scope` in
-  `features/worker/usecases/inputs.py`), so a `tasks.md` amendment already passes the scope check. The contract
-  forbids what the tool permits.
-
-Hypothesis: the boundary should be three tiers, not one line. The declared `_Boundary:` is free; an adjacent path is
-an extension the worker makes itself, annotates in `_Boundary:` and records in its `worker` envelope, and the
-reviewer judges; a short deny list is the only hard line, and crossing it is the only case that stops the run. The
-judgment moves from the Host to the worker, the verification to the `code-reviewer` round and the inspect tool, and
-the final say to the gate the operator already holds. The same rule applies locally, so the Host stops being the
-mechanism that papers over the inconsistency.
+Hypothesis: permit a task-linked adjacent-path extension under the same approved goal, record it before its first
+source commit, and review its necessity. Retain explicit payload denies and protected classes as stop conditions.
+The change prevents accidental boundary misses; it does not attempt to make a repository owner unable to bypass
+local checks.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: What is the adjacent class a worker may extend into without stopping? Candidate definition: paths under
-  the same source ownership root as a declared `_Boundary:` path (the package, feature or `tests/` mirror
-  `ARCH-05-2-components` ties to it), the `docs/` paths a declared check reads, and project-level generated or lock
-  files the declared change forces. Planning decides whether the class is stated as prose, as a derivation rule
-  `derive_scope` can compute from the declared paths, or as a project setting in `.devkit/config.toml`.
-- **Q2**: What stays on the deny list? Starting point: the current Denied list (other spec bundles, `.devkit/` apart
-  from sync outputs, governance rules, weakening a test) plus architecture declarations and new feature edges, CI and
-  release configuration, and anything outside the repository. Planning confirms whether the deny list is the
-  contract's prose or a checkable pattern list, and whether a project may add to it.
-- **Q3**: How is an extension recorded so that every verifier reads the same evidence? Candidate: the path is
-  appended to the owning task's `_Boundary:` with `(scope extension: <reason>)`, mirroring `(sync output)`, and the
-  `worker` envelope gains a `scope_extensions` list (`path`, `task`, `reason`, `requirements`). Planning decides
-  whether `inspect` reports extensions as a distinct `scope` sub-result (`declared`, `extended`, `outside`) and
-  whether an undeclared extension is `fail` or a reviewer finding.
-- **Q4**: Who verifies in the cloud? Hub does not run `devkit spec worker inspect` today (no reference in
-  `autohub/modules/hub/app` or `autohub/docs`); scope is enforced by the worker's own contract and the nested
-  `code-reviewer`. Planning decides whether the proposal only needs `spec-review` to verify each recorded extension
-  (reason present, path in the adjacent class, not on the deny list; otherwise a P2 finding) or whether autohub should
-  also run inspect on the returned head. The latter is an autohub change outside this proposal and would be recorded
-  as a follow-up.
-- **Q5**: Does `_Boundary:` itself get looser? `spec-tasks` could allow directory or glob entries where
-  `CAP-COLL-work-scope-registry` and `CAP-TRACE-code-entrypoints` already parse them, lowering the extension rate.
-  Planning checks what `parse_boundaries` and the work-scope registry accept and whether a glob entry breaks either.
+- **Q1 — Adjacent class**: use project ownership contracts, checked by the reviewer, rather than infer a universal
+  ownership layout or add settings. An extension is a literal file within an already-declared feature ownership
+  root, its corresponding test mirror, or an exact existing Living Spec document that restates the changed
+  behavior. A project without a documented feature root uses the declared file's parent directory; no package-wide
+  root is inferred. A test mirror must be identified by project guidance or the plan. A Living Spec extension
+  names the affected contract ID in its reason. Other packages/features, a new feature edge and unrelated docs
+  are not adjacent. Forced sync outputs retain their existing separate procedure. Lockfiles and other generated
+  files need explicit initial scope; they are not a general extension class.
+- **Q2 — Hard denies**: retain a short prose contract and payload-specific exact paths/prefixes. Explicit payload
+  denies always win. For extensions, protected classes are other units/proposals, `.devkit/`, host projections,
+  governance-rule implementations, architecture/dependency declarations, CI/release configuration, and paths outside
+  the repository. A path deliberately included in initial Tier A scope may implement that task's governance or
+  architecture work; an extension cannot grant itself that authority. Tests may be strengthened or updated for
+  approved behavior, but never weakened to pass a check. No deny-list configuration is added.
+- **Q3 — Evidence**: add a typed worker-only `scope_extensions` list with `{path, task, reason, requirements}` and
+  `devkit workflow envelope worker --scope-extensions-file <file|->` in `devkit-agt`. The list contains exact
+  repository-relative file paths, positive task ordinals from the checklist scanner, nonempty reasons and AC IDs.
+  Duplicate paths, absolute/parent/glob paths, missing values and use on another envelope kind are refused.
+  Existing envelopes omit the field and remain valid. Keep the task annotation `(scope extension: <reason>)`;
+  the annotation and record use the same reason and task. The shared boundary parser exposes annotations
+  additively without changing `TaskBoundary.values` or existing callers.
+- **Q4 — Cloud verification**: ship the same worker/reviewer contract for local and cloud execution. `inspect` is
+  informational and remains optional; this change does not claim that Hub calls it. The mandatory medium/high
+  reviewer and the low-effort self-review judge adjacency, necessity, requirements and protected classes.
+  No autohub code is changed, and adding a Hub inspect invocation is not required or promised by this proposal.
+- **Q5 — Boundary syntax**: allow literal file and directory prefixes; both already work in `inspect`. Do not
+  recommend globs: `inspect.prefix` rejects them and entrypoint normalization rejects them too. Directory scope
+  stays narrow enough for independent verification; an extension annotation always names an exact file.
 
 ## 3. Proposed Design & Impact
 
-- **Tier A, declared**: the payload's write scope as today. No change in behaviour.
-- **Tier B, extension**: the worker may write an adjacent path (Q1) when a task needs it. Before the commit that
-  touches it, the worker appends the path to the owning task's `_Boundary:` with `(scope extension: <reason>)` and
-  commits `tasks.md` in the same commit. Its `worker` envelope lists the extension. `spec-review` Step 1 verifies each
-  recorded extension (reason, class, deny list) and reports an unjustified one as P2 and an unrecorded outside path
-  as P1; the Host's and Hub's acceptance rules treat a recorded, reviewed extension as inside scope.
-- **Tier C, denied**: the deny list (Q2). A task that cannot be completed without a denied path is a `problem` with
-  `--status needs_input` and a question that names the path, the reason and the options; this is the only boundary
-  case that stops the run, locally or in the cloud.
-- **Contracts**: `development-worker.md.jinja` "Write boundaries" and "On a problem" sections state the three tiers;
-  `spec-tasks` keeps `_Boundary:` as an estimate and names the extension annotation; `spec-review` Step 1 replaces the
-  two-rule sentence with the tiered check; `spec-delegate/references/worker.md` "Validate" accepts recorded extensions
-  and names the deny list as the blocking condition; `worker-records.md` documents the envelope field.
-  `CAP-DLV-delivery-workflows` (role table row and the write-scope paragraph next to the `(sync output)` rule) and
-  `CAP-DLV-workflow-envelopes` (envelope schema) carry the normative clauses.
-- **Tooling**: `devkit spec worker inspect` reports `scope` as `declared`, `extended` and `outside` entries and fails
-  only on `outside` or on a deny-list hit; `devkit workflow envelope worker` accepts the extension list. Both are in
-  `features/worker/`; the envelope schema change is in the envelope feature only if Planning finds no way to carry it
-  as an existing structured field.
-- **Local and cloud parity**: the Host follows the same acceptance rule as Hub, so an extension that passes review
-  passes in both environments. No autohub change is required for the proposal to hold (Q4); an inspect step in Hub
-  is recorded as a follow-up for autohub.
-- **Observability**: extensions are visible in `tasks.md` and the envelope, so a later pass can count them per
-  project and tune the adjacent class or widen `_Boundary:` guidance where extensions are routine.
+### 3.1 Three tiers
 
-Expected affected contracts: `CAP-DLV-delivery-workflows`, `CAP-DLV-workflow-envelopes`. The gate names, the
-`problem`/`resolution` mechanism, `(sync output)` handling and the git rules of the worker are unchanged.
+| Tier | Admission | Required evidence | Stop condition |
+| --- | --- | --- | --- |
+| A, declared | The Host's initial payload, the unit's task boundaries and reconciliation targets | Existing records and review | An explicit payload deny or a change beyond the approved goal still stops the run |
+| B, extension | An adjacent exact file necessary for an existing task and AC | Annotated owning `_Boundary:`, `scope_extensions` record, reviewer judgment | Missing justification is fixed within scope; a path outside the adjacent class needs Host authority |
+| C, denied | No self-admission | `worker` problem naming the required path and recovery | Stop before writing the denied path; preserve partial work |
+
+A worker adds a Tier B path and its reason to the owning task before the source commit that first touches it;
+`tasks.md` and the file can be in that same commit. The worker lists every extension in its final record.
+For example:
+
+```markdown
+- [ ] **Task 1**: Parse a worker record
+  - **_Boundary**: `src/app/records.py`, `tests/test_records.py`,
+    `src/app/record_validation.py` (scope extension: shares Task 1 parsing validation for AC-01)
+  - _Requirements: AC-01_
+```
+
+```yaml
+scope_extensions:
+  - path: src/app/record_validation.py
+    task: 1
+    reason: shares Task 1 parsing validation for AC-01
+    requirements: [AC-01]
+```
+
+An extension is not new scope authority for another task, feature or package. Rewriting a path from a denied class
+as a directory declaration does not admit it. Sandbox, Git and publication permissions remain independent.
+
+### 3.2 Inspection and compatibility
+
+Preserve `scope` as the existing list, its entry fields, `outside_scope`, and literal prefix matching.
+Add top-level `scope_extensions` and `checks.scope_extensions`. A boundary entry may carry additive extension
+metadata; the check compares the annotated exact paths and task ordinals with the worker records applicable to
+the audited cumulative range. Extension records from earlier accepted turns remain relevant to retained task
+annotations, so inspection reads the unit's committed records rather than only the latest run.
+
+For a recorded extension, check that the file is named on its owning task, the reason agrees, each listed AC is
+owned by that task, and an extension annotated in the audited range has a matching record. Inspect rejects an
+unrecorded extension, a mismatched record or an extension in a mechanically recognizable protected tree with
+`SPEC_WORKER_SCOPE_EXTENSION_INVALID` (exit 1, action: correct the record or obtain Host authority). Malformed
+input remains a not-run check with a stable input code; it never becomes a pass. The reviewer judges semantic
+adjacency, whether a custom project path is protected, whether tests were weakened, and whether work stays in the
+approved goal. Inspection does not claim to automate those judgments.
+
+A changed path outside the complete admitted scope still fails `SPEC_WORKER_SCOPE_OUTSIDE`. `--scope` and
+`--scope-file` continue to replace the entire derived scope; they are not silently unioned with extension paths.
+The Host validates the extension evidence first and includes admitted extensions in an explicit complete scope
+when overriding. Passing a narrower explicit scope still fails for its omitted extension. The tool never widens
+scope, writes records or grants approval. With no extensions, existing output and checks retain their meaning;
+the added list is empty and the added check passes. Existing `(sync output)` receipt checks stay independent.
+
+A new boundary added without an extension annotation is reviewed against the recorded payload and task diff.
+No sealed original-boundary journal is introduced: the task documents are already mutable and deliberate
+self-reclassification is outside this personal project's threat model. An omitted annotation is a material review
+finding, not proof that the change was authorized merely because derived scope includes it.
+
+### 3.3 Review and result acceptance
+
+`spec-review` and the `code-reviewer` contract use the same checks: owning task and AC, necessary adjacent file,
+annotation/record agreement, absence of a deny and no weakened tests. A missing annotation/record for an adjacent
+file is P2 and can be repaired before the final return. A denied/non-adjacent write or a change outside the approved
+goal is P1 and blocks the range. The Host accepts an extension only after these checks and all existing ancestry,
+clean-worktree, envelope and cumulative-check conditions hold. A failed range is preserved and recovered through
+the existing problem/resolution procedure.
+
+### 3.4 Implementation and Living Spec boundaries
+
+- `devkit-agt` owns the additive worker record model, parser, CLI authoring, validation and serialization. Add the
+  corresponding feature-owned integration tests. This is an existing feature, so no new feature edge is needed.
+- `devkit-spec` owns boundary annotation exposure, inspect reporting/checks, its tests, the Development worker and
+  Code Reviewer contracts, `spec-tasks`, `spec-review`, delegation payload/validation and worker-record guidance.
+  Add `subagents/code-reviewer.md.jinja` to the implementation scope alongside the declared Development contract.
+- Update `CAP-DLV-delivery-workflows` for tier admission, inspection evidence and review; update
+  `CAP-DLV-workflow-envelopes` for the optional list and CLI flag. Keep gate names and authority unchanged.
+- The PADR partially supersedes `ADR-orchestration-workers` only where every unlisted path currently fails the
+  worker result. Handoff promotes the PADR and adds the required partial-supersession annotation; remaining Git,
+  sync-output, range and permission decisions stay in effect.
+- Selected `spec` bundle source changes run `devkit sync`; tracked projections and the receipt are admitted and
+  recorded by the existing sync-output rule. `.devkit/managed/` is never edited directly.
+
+### 3.5 Planning decisions and limits
+
+Use the typed optional list rather than encode records into free-form checks, assumptions or findings. Those
+fields do not preserve path/task/AC structure across authoring and parsing. Use review for project-specific
+adjacency rather than create a generic ownership registry or add a scope-policy setting. Keep `size: M` and
+`dev_effort: medium`: this is one contract change across existing `devkit-agt` and `devkit-spec` features, with
+one mandatory Code Reviewer and a separate Reconcile Reviewer for the cross-package reflection.
+
+No live autohub inspection was performed. Its current invocation behavior is outside this repository and is not
+needed to establish the shared worker contract. No latency or operator-round-trip reduction is asserted as a
+measured outcome.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning settles Q1 to Q5 and records the tier definitions as a PADR; acceptance and handoff create one feature spec.
-Completion requires: the three contracts and two skills updated; `inspect` fixtures for a recorded extension (pass),
-an unrecorded outside path (fail) and a deny-list hit (fail); a `spec-review` fixture that reports an unjustified
-extension; and the role-contract test still passing.
+Acceptance and handoff create one feature spec. Completion requires these scenarios and their task trace:
 
-Non-goals: giving workers general freedom outside the unit; changing autohub's run or question model; a worker
-widening another task's or another unit's scope; removing `_Boundary:` from `tasks.md`; the `(sync output)` rule,
-which stays as the special case it is.
+1. A valid same-feature extension has the annotation and typed record, passes inspection and review, and is
+   admitted by Host validation without a new business approval.
+2. A missing/mismatched record or wrong task/AC fails extension inspection; a malformed CLI list writes nothing.
+3. An unlisted path outside admitted scope fails. A denied extension fails even when added to returned task
+   boundaries; custom/semantic deny cases are caught by review.
+4. A narrower explicit `--scope` still fails for an omitted extension; no flag silently widens it. Existing
+   envelopes without extensions, ordinary directory boundaries and sync-output verification remain compatible.
+5. A second accepted worker turn can retain earlier extension annotations without copying those records into its
+   latest envelope; inspection and cumulative blocked-range recovery use the applicable committed records.
+6. Contract/content tests exercise the same three-tier admission on local/cloud guidance, the Code Reviewer's
+   check and missing-evidence/denied-path findings. Existing role and parser tests pass.
+7. Run relevant lint/type checks, `just test-affected` with its full fallback, the envelope/inspect/parser/content
+   tests and `devkit sync --check`. Verify final contracts through the cross-package reconcile review.
 
-<!--
-- Preliminary decisions: devkit spec proposal padr worker-scope-extension "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept worker-scope-extension --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff worker-scope-extension.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
--->
+Non-goals: general write authority outside the approved goal; Planning-worker extensions; autohub changes;
+changing Git, sandbox, publication or approval gates; a new config setting or ownership registry; glob support;
+general generated/lockfile admission; changing another unit's scope; weakening tests; changing `(sync output)`.
