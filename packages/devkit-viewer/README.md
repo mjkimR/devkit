@@ -40,5 +40,8 @@ overlay) and `ADR-release-handbook` (reading tab). Command reference:
   vendors as an `npm pack` tarball. `just viewer <lint|check|test|build|pack>` runs its checks; only those changing
   the frontend need Node.
 
-Dashboard and roadmap discovery includes terminal milestones in the flat `docs/roadmap/_archive/`.
-Their history, prerequisite satisfaction, totals and detail paths remain available; open counts exclude done/dropped.
+Dashboard and roadmap discover global `docs/roadmap/` and direct `docs/packages/<name>/roadmap/` roots, including
+each flat `_archive/`. Discovery follows structural paths without a namespace registry, so unregistered directories
+also appear; it does not certify document validity. Cross-root dependencies and direct proposals resolve over the
+combined set before history filtering. History, totals and detail paths remain available; open counts exclude
+done/dropped. Missing optional roots are empty and failed roots retain errors alongside successful results.

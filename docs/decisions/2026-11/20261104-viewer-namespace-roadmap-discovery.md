@@ -67,8 +67,12 @@ working-tree reads, independent parsing and Planning-overlay clauses remain in f
 
 ## 6. Confirmation
 
-- Backend working-tree dashboard header tests cover structural roots, flat archives, untracked files and symlinks.
-- Frontend generic-dashboard and roadmap tests use the same path/registration scenario matrix.
-- Frontend graph tests cover cross-root readiness and proposal membership, including hidden archived prerequisites.
-- Existing cache/paging/cancellation tests remain passing; generated artifact verification matches the built page.
-- Development restates every traced clause in `CAP-VIEW-repository-viewer` before completing reconciliation.
+- `tests/integration/features/browse/test_namespace_roadmap.py` verifies global/two-package and configuration
+  matrices, saved untracked content, header-only reads, local symlinks and partial errors.
+- `frontend/src/lib/api/milestones.test.ts` verifies shared generic discovery, host-returned types, cross-root
+  readiness and proposal membership, optional/listed root errors, abort/refresh/expiry, six workers and optimized pages.
+- Existing dashboard, roadmap and view tests preserve paging, caches, Planning overlays and detail paths.
+- `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer pack`, `just viewer build` and
+  `devkit generated check viewer-assets` verify the source and committed application build.
+- `CAP-VIEW-repository-viewer` sections 2, 4.1, 5 and 6 restate the decision. The retained baseline and observed
+  implementation result live under `docs/materials/2026-11/20261104-viewer-namespace-roadmap/`.
