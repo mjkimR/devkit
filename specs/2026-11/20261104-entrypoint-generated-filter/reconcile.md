@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-entrypoint-generated-filter
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
     resolution: modified

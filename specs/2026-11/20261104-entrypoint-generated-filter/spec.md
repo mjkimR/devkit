@@ -2,7 +2,7 @@
 id: SPEC-entrypoint-generated-filter
 title: Exclude managed outputs from derived entrypoint candidates
 summary: "Derives authored code entrypoints while excluding known managed outputs and receipt-owned projected files."
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities: [CAP-TRACE-code-entrypoints]
 related_usecases: []
