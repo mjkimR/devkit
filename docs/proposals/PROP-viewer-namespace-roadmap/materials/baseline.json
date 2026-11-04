@@ -1,0 +1,18 @@
+{
+  "baseline_head": "4949c40c92082a095f2f93af2a5f278b53d5df80",
+  "fixture_files": {
+    "docs/roadmap/MS-global.md": "---\nid: MS-global\ntitle: Global delivery\nstatus: planned\ndepends_on: [MS-package]\n---\nGlobal body.\n",
+    "docs/packages/api/roadmap/_archive/MS-package.md": "---\nid: MS-package\ntitle: Package foundation\nstatus: done\n---\nPackage body.\n",
+    "docs/proposals/PROP-api/proposal.md": "---\nid: PROP-api\ntitle: Package delivery\nstatus: draft\nmilestone: MS-package\n---\nProposal body.\n",
+    ".devkit/config.toml": "[[tool.docs.namespaces]]\nname = \"api\"\npath = \"packages/api\"\n"
+  },
+  "observed_dashboard_candidate_paths": [
+    "docs/roadmap/MS-global.md"
+  ],
+  "observed_dashboard_errors": [],
+  "expected_after_candidate_paths": [
+    "docs/packages/api/roadmap/_archive/MS-package.md",
+    "docs/roadmap/MS-global.md"
+  ],
+  "measurement": "Actual current Python WorkingTreeReader.dashboard_headers, saved fixture files without Git initialization; not timing or frontend execution."
+}
