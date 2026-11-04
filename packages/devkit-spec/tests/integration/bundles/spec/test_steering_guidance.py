@@ -77,7 +77,7 @@ def test_no_bundle_source_names_the_old_glossary_path(source: str) -> None:
         "instructions/living-spec-writing.md",
         "instructions/architecture-writing.md",
         "skills/spec-sync/SKILL.md",
-        "playbooks/adr-compaction/SKILL.md",
+        "playbooks/adr-consolidation/SKILL.md",
         "playbooks/brownfield-adoption/references/migration.md",
         "rules/document_reference/guide.md",
         "rules/id_convention/guide.md",

@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:24:49.186192Z'
+status: completed
+summary: ux-writing gains a Surfaces beyond pages and forms section (element choice, continuous input, modes as states, transitions, task-less surfaces, mismatch feedback) and a wider description; usecase-writing gains the long-running and judged step criterion; the ux template's Interactions comment is clarified; guidance tests pin each criterion and both UX rule tests pin that a task-less screen, panel and global-close modal pass; CAP-HARN-agent-guidance 4.3 catalogs both; the exception-notation ADR's example count is repaired. Review round 1 (P2, P3) and reconcile check round 1 (two P3) closed.
+findings: []
+assumptions:
+- 'Git policy: worktree=required applied; pull_request=auto resolved to the local route (no platform review or CI needed, base accepts direct merges); dev-integration=auto per .devkit/config.toml'
+- The CAP-HARN usecase-writing row and the ADR example-count clause were edited beyond the tasks' _Boundary as the docs reflection the reconcile check required
+checks:
+  tests: PASS just test-affected 2177 passed (base main)
+  build: PASS devkit sync --check clean; devkit generated check stale=0; just check devkit-docs devkit-spec 0 errors
+  lint: PASS devkit rules check --ci --base 22aaef0d errors=0 warnings=0; just lint-check devkit-docs devkit-spec
+diff_scope:
+  base: 22aaef0dd1b6410e220267e50c1c8d62520139c8
+  head: 3a6ab3e34b267c19c71de0822dc91b36b1c9fa67

@@ -73,6 +73,7 @@ def test_lifecycle(workspace: Path) -> None:
     with pytest.raises(ProposalNotApprovedError) as raised:
         handoff_proposal(workspace, "fast-engine", today=TODAY)
     assert raised.value.advisory.mode == "INTERACTION"
+    (proposal.parent / "materials").mkdir()  # the scaffold writes no empty directory; the first material creates it
     (proposal.parent / "materials/survey.md").write_text("# Survey Report\nResearch content", encoding="utf-8")
     accept(proposal)
     with proposal.open("a", encoding="utf-8") as handle:
@@ -510,25 +511,138 @@ def test_promoted_adrs_keep_working_links(workspace: Path, write: Write) -> None
     assert result.unresolved == []
 
 
-def test_a_padr_supersedes_reaches_the_adr_and_leaves_the_named_adr_alone(workspace: Path, write: Write) -> None:
-    # SPEC-partial-adr-supersession: handoff carries supersedes; a partly replaced ADR keeps its status and text.
-    old = "docs/decisions/2026-09/20260901-old.md"
-    old_text = "---\nid: ADR-old\nstatus: accepted\ncreated_at: 2026-09-01\n---\n\n# [ADR-old] Old\n"
-    write(old, old_text)
-    proposal = _new(workspace, "partial")
-    CreateProposalDecisionUseCase().execute(workspace, "partial", "Pick A")
-    padr = proposal.parent / "decisions/PADR-pick-a.md"
+OLD_ADR = "docs/decisions/2026-09/20260901-old.md"
+OLD_TEXT = "---\nid: ADR-old\nstatus: accepted\ncreated_at: 2026-09-01\n---\n\n# [ADR-old] Old\n\nThe old decision.\n"
+Y = "For parsers, we pick A, to parse faster, accepting a rewrite."
+
+
+def _superseding(workspace: Path, slug: str, title: str, supersedes: str, *, summary: str | None = Y) -> Path:
+    """A PADR of the proposal ``slug`` whose ``supersedes`` is ``supersedes`` (the frontmatter value, as written);
+    returns the proposal.md."""
+    proposal = workspace / f"docs/proposals/PROP-{slug}/proposal.md"
+    if not proposal.exists():
+        proposal = _new(workspace, slug)
+    created = CreateProposalDecisionUseCase().execute(workspace, slug, title, summary=summary)
+    padr = workspace / created.path
     scaffolded = padr.read_text(encoding="utf-8")
     placeholder = next(line for line in scaffolded.splitlines() if line.startswith("# supersedes:"))
-    padr.write_text(scaffolded.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
-    accept(proposal)
+    padr.write_text(scaffolded.replace(placeholder, f"supersedes: {supersedes}"), encoding="utf-8")
+    return proposal
 
-    handoff_proposal(workspace, "partial", today=TODAY)
+
+def test_a_padr_supersedes_reaches_the_adr_and_the_named_adr_gets_the_pointer(workspace: Path, write: Write) -> None:
+    # SPEC-proposal-scaffold-and-handoff-pointers: the partly replaced ADR keeps its status and text and gains the one
+    # line RULE-decision-supersession needs, below its heading, so the handoff commit passes the gate.
+    write(OLD_ADR, OLD_TEXT)
+    accept(_superseding(workspace, "partial", "Pick A", "[ADR-old]"))
+
+    result = handoff_proposal(workspace, "partial", today=TODAY)
 
     adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
     meta = parse(adr).data
     assert meta is not None and meta["supersedes"] == ["ADR-old"]
-    assert (workspace / old).read_text(encoding="utf-8") == old_text
+    assert (workspace / OLD_ADR).read_text(encoding="utf-8") == OLD_TEXT.replace(
+        "# [ADR-old] Old\n", f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n", 1
+    )
+    assert [p.to_dict() for p in result.pointers] == [
+        {"adr": "ADR-old", "path": OLD_ADR, "line": 9, "by": "ADR-pick-a"}
+    ]
+
+
+def test_a_commented_heading_line_before_the_h1_is_not_the_heading(workspace: Path, write: Write) -> None:
+    # review-01 P3: a "# " line inside an HTML comment must not receive the pointer, where no rule would see it.
+    commented = OLD_TEXT.replace("# [ADR-old] Old\n", "<!--\n# draft title, superseded\n-->\n\n# [ADR-old] Old\n", 1)
+    write(OLD_ADR, commented)
+    accept(_superseding(workspace, "commented", "Pick A", "[ADR-old]"))
+    result = handoff_proposal(workspace, "commented", today=TODAY)
+    text = (workspace / OLD_ADR).read_text(encoding="utf-8")
+    assert text == commented.replace(
+        "# [ADR-old] Old\n", f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n", 1
+    )
+    assert [(p.line, p.by) for p in result.pointers] == [(13, "ADR-pick-a")]
+
+
+def test_a_pointer_already_present_is_not_written_twice(workspace: Path, write: Write) -> None:
+    present = OLD_TEXT.replace("The old decision.", "Superseded in part by `ADR-pick-a`: the parser choice.", 1)
+    write(OLD_ADR, present)
+    accept(_superseding(workspace, "rerun", "Pick A", "[ADR-old]"))
+    result = handoff_proposal(workspace, "rerun", today=TODAY)
+    assert (workspace / OLD_ADR).read_text(encoding="utf-8") == present and result.pointers == []
+
+
+def test_a_pointer_naming_an_alias_of_the_promoted_adr_counts(workspace: Path, write: Write) -> None:
+    present = OLD_TEXT.replace("The old decision.", "Superseded in part by `ADR-pick-first`: the parser choice.", 1)
+    write(OLD_ADR, present)
+    proposal = _superseding(workspace, "aliased", "Pick A", "[ADR-old]")
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    padr.write_text(
+        padr.read_text(encoding="utf-8").replace("status: draft\n", "status: draft\naliases: [PADR-pick-first]\n", 1)
+    )
+    accept(proposal)
+    result = handoff_proposal(workspace, "aliased", today=TODAY)
+    assert (workspace / OLD_ADR).read_text(encoding="utf-8") == present and result.pointers == []
+
+
+def test_targets_the_pointer_rule_does_not_need_are_left_alone(workspace: Path, write: Write) -> None:
+    done = "---\nid: ADR-done\nstatus: superseded\nsuperseded_by: ADR-other\n---\n\n# [ADR-done] Done\n"
+    write("docs/decisions/2026-09/20260901-done.md", done)
+    cap = "---\nid: CAP-X-thing\nstatus: active\n---\n\n# [CAP-X-thing] Thing\n"
+    write("docs/capabilities/x/CAP-X-thing.md", cap)
+    accept(_superseding(workspace, "skips", "Pick A", "[ADR-done, ADR-gone, CAP-X-thing]"))
+
+    result = handoff_proposal(workspace, "skips", today=TODAY)
+
+    assert result.pointers == []
+    assert (workspace / "docs/decisions/2026-09/20260901-done.md").read_text(encoding="utf-8") == done
+    assert (workspace / "docs/capabilities/x/CAP-X-thing.md").read_text(encoding="utf-8") == cap
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text(encoding="utf-8")
+    meta = parse(adr).data
+    assert meta is not None and meta["supersedes"] == ["ADR-done", "ADR-gone", "CAP-X-thing"]
+
+
+def test_a_pointer_without_a_summary_carries_the_title(workspace: Path, write: Write) -> None:
+    write(OLD_ADR, OLD_TEXT)
+    accept(_superseding(workspace, "titled", "Pick A", "ADR-old", summary=None))
+    handoff_proposal(workspace, "titled", today=TODAY)
+    assert "\nSuperseded in part by `ADR-pick-a`: Pick A.\n" in (workspace / OLD_ADR).read_text(encoding="utf-8")
+
+
+def test_two_superseders_of_one_adr_write_two_pointers_in_decision_order(workspace: Path, write: Write) -> None:
+    write(OLD_ADR, OLD_TEXT)
+    proposal = _superseding(workspace, "twice", "Pick A", "[ADR-old]")
+    _superseding(workspace, "twice", "Pick B", "[ADR-old]", summary="For B, we pick B, to be B, accepting B.")
+    accept(proposal)
+    result = handoff_proposal(workspace, "twice", today=TODAY)
+    text = (workspace / OLD_ADR).read_text(encoding="utf-8")
+    assert text == OLD_TEXT.replace(
+        "# [ADR-old] Old\n",
+        f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n\n"
+        "Superseded in part by `ADR-pick-b`: For B, we pick B, to be B, accepting B.\n",
+        1,
+    )
+    assert [(p.by, p.line) for p in result.pointers] == [("ADR-pick-a", 9), ("ADR-pick-b", 11)]
+
+
+def test_a_failed_write_restores_the_pointed_adr(workspace: Path, write: Write) -> None:
+    write(OLD_ADR, OLD_TEXT)
+    proposal = _superseding(workspace, "undo", "Pick A", "[ADR-old]")
+    write("docs/proposals/PROP-undo/materials/a.md", "# a\n")
+    accept(proposal)
+    write("docs/materials", "not a directory\n")  # the materials move, after the pointer write, fails
+    with pytest.raises(ProposalHandoffError):
+        handoff_proposal(workspace, "undo", today=TODAY)
+    assert (workspace / OLD_ADR).read_text(encoding="utf-8") == OLD_TEXT
+    assert proposal.is_file() and not (workspace / "specs" / MONTH).exists()
+
+
+def test_a_bundle_without_the_scaffold_directories_hands_off(workspace: Path) -> None:
+    # SPEC-proposal-scaffold-and-handoff-pointers: new writes no decisions/ or materials/; handoff needs neither.
+    proposal = _new(workspace, "bare-bundle")
+    assert [path.name for path in proposal.parent.iterdir()] == ["proposal.md"]
+    accept(proposal)
+    result = handoff_proposal(workspace, "bare-bundle", today=TODAY)
+    assert result.decisions == [] and result.materials is None and result.pointers == []
+    assert (spec_dir(workspace, "bare-bundle") / "spec.md").is_file() and not proposal.parent.exists()
 
 
 def test_an_unused_supersedes_placeholder_does_not_reach_the_adr(workspace: Path) -> None:
@@ -546,6 +660,7 @@ def test_an_unused_supersedes_placeholder_does_not_reach_the_adr(workspace: Path
 def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
     proposal = _new(workspace, "span-paths")
     CreateProposalDecisionUseCase().execute(workspace, "span-paths", "Pick A")
+    (proposal.parent / "materials").mkdir()
     (proposal.parent / "materials/notes.md").write_text("# Notes\n", encoding="utf-8")
     proposal.write_text(
         proposal.read_text(encoding="utf-8").replace(
@@ -941,6 +1056,7 @@ def test_never_moves_a_file_through_a_symlink_in_materials(
 ) -> None:
     outside = tmp_path_factory.mktemp("outside")
     proposal = _new(workspace, "linked")
+    (proposal.parent / "materials").mkdir()
     (proposal.parent / "materials/sub").symlink_to(outside, target_is_directory=True)
     write("docs/proposals/PROP-linked/sub/x.md", "# x\n")
     accept(proposal)
@@ -1010,7 +1126,6 @@ def test_never_writes_extras_through_a_symlinked_materials_directory(
     if not inside:
         (linked / "keep.md").write_text("# keep\n", encoding="utf-8")
     proposal = _new(workspace, "linky")
-    shutil.rmtree(proposal.parent / "materials", ignore_errors=True)
     (proposal.parent / "materials").symlink_to(linked, target_is_directory=True)
     write("docs/proposals/PROP-linky/notes.md", "# notes\n")
     accept(proposal)

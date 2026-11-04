@@ -104,8 +104,9 @@ clean committed input with one commit step that mirrors the composed acceptance.
   across file systems (`EXDEV`); directory creation records only directories the handoff created. Roll-back therefore
   never removes or moves a pre-existing path. (ADR-merge-proposal-materials-per-leaf-at-handoff)
 - **Link rewriting**: the relocation plan registers a file origin per moved leaf and a directory origin only for a
-  subtree the handoff created whole, so a pre-existing Markdown file changes only in links that pointed into the
-  proposal. (ADR-merge-proposal-materials-per-leaf-at-handoff)
+  subtree the handoff created whole, so the rewriting step changes a pre-existing Markdown file only in links that
+  pointed into the proposal; the handoff's one other edit to a pre-existing file is the partial-supersession pointer
+  of `CAP-DLV-proposal-planning` (4.5, step 4). (ADR-merge-proposal-materials-per-leaf-at-handoff)
 - **Concurrent changes**: no guarantee. A file written at a planned path between preflight and its move may be
   replaced, as for the ADR writes; the contract states this window. (ADR-merge-proposal-materials-per-leaf-at-handoff)
 - **Reporting**: the handoff result and its JSON output carry whether the materials merged into an existing directory

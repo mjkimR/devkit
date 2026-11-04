@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T01:03:36.406339Z'
+status: completed
+summary: Planning run 2 swept (answer fold, reverify of challenger-01 finding 1). Recorded FB-viewer-namespace-roadmap-roots (repo/change-request, workaround); no duplicates (viewer feedback hits were dismissed or forwarded items on other symptoms).
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

@@ -1,0 +1,20 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:09:33.468761Z'
+status: completed
+review: review-01.yaml
+summary: 'review-01 P3 fixed as suggested: the heading test requires a visible line and test_a_commented_heading_line_before_the_h1_is_not_the_heading reproduces the finding; self-verified (minor fix at the named location, test-only addition, no contract change), handoff tests 9 passed, lint clean'
+findings:
+- issue: _insert_pointer identifies the H1 by the raw line text, so a '# '-prefixed line inside an HTML comment between the frontmatter and the real H1 is taken as the heading and the pointer lands inside the comment, invisible to the presence scan and to RULE-decision-supersession
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:773-776; probe scratch/review-01/test_probe_insert_pointer.py::test_comment_line_before_h1_is_taken_as_the_heading
+  failure_condition: A target ADR whose body opens with an HTML comment block containing a line starting with '# ' before its H1; the handoff reports a pointer the gate cannot see and the commit is refused
+  suggested_action: Test the visible text as well as the raw line (raw.startswith('# ') and line.text.strip()) and add a handoff test with a commented '# ' line before the H1
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS pytest test_proposal_handoff.py -k pointer 9 passed
+diff_scope:
+  base: ''
+  head: 6697416af802a7ec5a2e08c86f33819cd6ad7ab2

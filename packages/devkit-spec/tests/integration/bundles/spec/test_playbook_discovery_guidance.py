@@ -18,8 +18,8 @@ CATALOG = Path(__file__).resolve().parents[5] / "devkit-catalog/src/devkit_catal
 PLAYBOOKS = [
     BUNDLE / "playbooks/brownfield-adoption/SKILL.md",
     BUNDLE / "playbooks/feedback-hygiene/SKILL.md",
-    BUNDLE / "playbooks/adr-compaction/SKILL.md",
-    BUNDLE / "playbooks/feedback-compaction/SKILL.md",
+    BUNDLE / "playbooks/adr-consolidation/SKILL.md",
+    BUNDLE / "playbooks/feedback-consolidation/SKILL.md",
     CATALOG / "drift-reconciliation.md",
     CATALOG / "weekly-report.md",
 ]
@@ -117,13 +117,24 @@ def test_playbook_entry_reads_invoked_or_confirmed(path: Path) -> None:
     assert "only on explicit invocation through `devkit-playbook`" not in body
 
 
-def test_adr_compaction_confirmation_authorizes_deletions_at_session_depth() -> None:
-    body = raw("playbooks/adr-compaction/SKILL.md")
+@pytest.mark.parametrize(
+    ("playbook", "former"),
+    [("adr-consolidation", "adr-compaction"), ("feedback-consolidation", "feedback-compaction")],
+)
+def test_renamed_playbooks_keep_their_former_id_as_alias(playbook: str, former: str) -> None:
+    """The record-merging playbooks were renamed from compaction; the old asset ID resolves through aliases."""
+    head = raw(f"playbooks/{playbook}/SKILL.md").split("---")[1]
+    assert f"name: {playbook}" in head
+    assert f"aliases:\n  - {former}\n" in head
+
+
+def test_adr_consolidation_confirmation_authorizes_deletions_at_session_depth() -> None:
+    body = raw("playbooks/adr-consolidation/SKILL.md")
     assert_rule(body, "only when", "invoked or confirmed", "authorizes", "adr deletions", "`session` depth")
 
 
-def test_adr_compaction_groups_by_topic_and_handles_crossing_supersessions() -> None:
-    body = raw("playbooks/adr-compaction/SKILL.md")
+def test_adr_consolidation_groups_by_topic_and_handles_crossing_supersessions() -> None:
+    body = raw("playbooks/adr-consolidation/SKILL.md")
     assert_rule(body, "group adrs by topic", "two or more members")
     assert_rule(body, "wholly superseded adr", "group of its superseder")
     assert_rule(body, "partial supersession", "may cross groups")

@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: direction-handoff
+note: 'User accepted the Planning direction after the plan-accept request: namespace
+  milestone roots under docs/packages/<name>/roadmap/, viewer excluded (answer-01
+  q1=a); dev_effort medium'
+by: user
+at: '2026-11-04T01:05:14.954408Z'

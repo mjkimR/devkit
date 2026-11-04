@@ -1,0 +1,25 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:17:18.132476Z'
+status: completed
+review: review-01.yaml
+summary: 'round 1 closed by the implementer: both findings are wording fixes at the named locations (ux-writing No task flow and States bullets), each pinned by a new assert_rule and the task-less modal rule test; guidance tests 7 passed, rule tests 38 passed, hygiene 0 warnings'
+findings:
+- issue: 'The No task flow bullet says the kept rows (a modal''s close or back row, a mode change) are reported by neither rule, but RULE-ux-coverage warns ''interaction has no Step'' on every row whose Step cell is empty regardless of usecases; only a row classified global: <reason> passes, and the bullet never says so.'
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/ux-writing.md:46-49; packages/devkit-docs/src/devkit_docs/features/governance/usecases/ux_coverage.py:59-68; probe scratch/review-01/test_probe_taskless_rows.py (empty-Step close row warned, global-classified row passes)
+  failure_condition: 'A UX document with usecases: [] whose table holds a row with an empty Step cell gets a RULE-ux-coverage warning (an error under --strict) while the instruction promises none.'
+  suggested_action: 'Reword the bullet so each kept row is a global control with global: <reason>; pin a task-less modal with a global close row in the rule tests and keep the guidance test tokens in step.'
+  resolution: resolved
+  severity: P2
+- issue: The Modes bullet makes populated conditional (only where they apply) while the States bullet of Purpose and content and the ux template's States comment keep populated unconditional, giving two defaults for one field.
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/ux-writing.md:38-40 versus :62-63; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/ux.md:40-41
+  failure_condition: An agent writing a surface with modes adds a populated state the surface does not have, or cannot tell which default wins.
+  suggested_action: 'Qualify the States bullet in place: a surface with modes names them instead, per Surfaces beyond pages and forms.'
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: d79242f05882f221fac758504cf891ba72cbc56f

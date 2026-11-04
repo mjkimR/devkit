@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:17:59.345998Z'
+status: completed
+summary: 'SPEC-proposal-scaffold-and-handoff-pointers: devkit spec proposal new writes proposal.md (and target-docs.md) only; devkit spec proposal handoff writes one Superseded-in-part-by line per partially superseded ADR (below its H1, once, PADR summary or title as the clause), restores it on roll-back and reports [SUPERSEDED_IN_PART: ...] / JSON pointers; CAP-DLV-proposal-planning, UC-plan-and-hand-off-a-proposal and the spec skill''s planning reference restate it. Review round 1 PASS with one P3 fixed (reverify-01); reconcile rounds 1-2 closed (one P2 fixed, one P3 waived in reconcile.md).'
+findings: []
+assumptions:
+- 'worktree=required (policy): Development ran in devkit-wt-dev-proposal-scaffold-and-handoff-pointers; pull_request=auto resolved to the local route (no platform review or CI needed, base accepts local merges)'
+- 'Boundary extensions: AC-08 is tested in the new tests/e2e/features/proposals/test_handoff_pointer.py (needs a synced workspace for the deployed rule) instead of test_proposal_handoff_worktree.py; test_proposal_summary.py and test_decomposition_fixture.py were adapted because they assumed the scaffolded empty directories'
+- 'The [SUPERSEDED_IN_PART: ...] sentinel replaces the proposal''s [REWRITTEN ...] suggestion so the new effect has its own stable kind'
+checks:
+  tests: PASS just test-affected --base 5aecaef7 mode=partial 1663 passed; just test devkit-spec 1648 passed at build
+  build: PASS just check devkit-spec pyright 0 errors; uv run devkit sync --check clean
+  lint: PASS just lint-check devkit-spec; uv run devkit rules check --ci --base 5aecaef7 errors=0
+diff_scope:
+  base: 5aecaef787214988e6bf81ae36aacca57f2634a3
+  head: 36e22aa6c0d2198ee223962d682be8991fbc292a

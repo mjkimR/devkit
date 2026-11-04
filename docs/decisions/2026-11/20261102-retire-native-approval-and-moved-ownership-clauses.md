@@ -33,7 +33,7 @@ ADRs still state them:
   lists templates, without distinguishing document templates, and the docs skeleton as devkit-spec methodology. `ADR-steering-documents` still says
   `devkit get-context spec` lists the steering documents.
 
-The ADR compaction found these clauses and kept them verbatim, because a compaction changes no decision
+The ADR consolidation found these clauses and kept them verbatim, because a consolidation changes no decision
 (`FB-native-approval-adrs-without-pointers`, `FB-adr-ownership-moves-without-pointers`).
 
 ---
@@ -52,7 +52,7 @@ The ADR compaction found these clauses and kept them verbatim, because a compact
 - **Overview**: One partial supersession of the four ADRs, naming each clause.
 - **Pros**: One record of one cleanup; pointer lines make the retirement visible where the clause stood.
 - **Cons**: One ADR touches four topics. Under `ADR-decision-ledger`, that does not bind them into one
-  compaction group.
+  consolidation group.
 
 ### Option 2: Add pointer lines only
 - **Overview**: Point each clause at the ADR that replaced it, without a new record.

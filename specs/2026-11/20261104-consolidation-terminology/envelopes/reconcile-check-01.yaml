@@ -1,0 +1,41 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T00:46:53.252957Z'
+status: completed
+summary: 'Round 1 (reconcile-reviewer, isolated): eight targets verified against the diff and contract, ledger ADR word diffs clean, no-impact claims confirmed. REVISE: docs/decisions/README.md changed but is not a target (P2); the new ADR''s record-naming clause traces to a CAP-HARN table that does not restate it (P2); trace precision and glossary code spans (P3).'
+findings:
+- issue: docs/decisions/README.md changed on the branch (playbook name in its ledger paragraph) but reconcile.md lists no target for it.
+  evidence: docs/decisions/README.md:4; reconcile.md targets
+  failure_condition: The record does not account for every Living Spec file the change touched.
+  suggested_action: Add it as a modified target and mention it in the comparison.
+  resolution: open
+  severity: P2
+- issue: The new ADR's second Decision Outcome clause traces the FB-consolidated naming pattern to the CAP-HARN playbook table, which restates neither the ID pattern nor the path; the pattern lives in ADR-feedback-lifecycle-ledger.
+  evidence: docs/decisions/2026-11/20261104-consolidation-terminology.md:55-58; docs/capabilities/harness/CAP-HARN-agent-guidance.md:329-337
+  failure_condition: A reader following the trace finds no restating clause and no MUST.
+  suggested_action: Drop the trace from that clause or split it.
+  resolution: open
+  severity: P2
+- issue: Clause 1 cites a keyword the CAP-HARN tables do not use; clause 3 cites section 3 where the restating text is the Consolidation groups paragraph under Decision supersession and section 3.5 rule 5.
+  evidence: docs/decisions/2026-11/20261104-consolidation-terminology.md:52-54,59-60
+  failure_condition: A reader cannot land on the restating clause from the trace alone.
+  suggested_action: Cite the tables without a keyword and the exact CAP-DOCS sections.
+  resolution: open
+  severity: P3
+- issue: The glossary row writes two identifier fragments as plain text while sibling rows use code spans.
+  evidence: docs/steering/glossary.md:69 versus :56
+  failure_condition: Inconsistent identifier formatting; no meaning change.
+  suggested_action: Wrap them in code spans.
+  resolution: open
+  severity: P3
+assumptions:
+- Native isolated claude-code subagent, read-only; pre- and post-run tree snapshots identical (082e846a)
+checks:
+  rules: PASS uv run devkit rules check --ci --base 9e7cfb14 errors=0 warnings=0
+  diffs: 'PASS ledger ADR word diffs: term-family words, file-name pattern and one restored literal only'
+diff_scope:
+  base: 9e7cfb141854b488c2164f792bae31f30824a80d
+  head: 829f53a27006b1392b10547f8ce5573cd040a12b
+activity_effort: medium

@@ -71,7 +71,8 @@ precedent.
   off-screen reason names no screen, since a code-span UX ID on the step's lines is a citation; a step whose response
   appears on a screen cites that screen.
 - An empty Step cell and an uncited step without a marker keep their current warnings; the `ux-writing` instruction
-  names the `global:` form for a global control and `usecase-writing` the `off screen:` phrase, with one example each.
+  names the `global:` form for a global control and `usecase-writing` the `off screen:` phrase, with at least one
+  example each.
 - This replaces, in part, two clauses of `ADR-ux-screens` (Step links and coverage): the coverage rule's "an
   interaction whose Step cell is empty" and "a step or extension that cites no UX ID" now exclude a classified item
   with a reason, "only a step that truly happens off-screen cites none" gains the phrase that says so, and the known

@@ -1,0 +1,40 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T00:42:28.173950Z'
+status: completed
+review: review-01.yaml
+summary: 'All four findings fixed by the implementer and self-verified: the context-compaction clause restored, the two ledger clauses and ''consolidable'' reworded, the rejected option''s historical literal restored, and a test pins each renamed playbook''s former ID as its alias; bundle tests and rules check rerun.'
+findings:
+- issue: 'Bulk-rewrite collateral: CAP-HARN-agent-guidance''s milestone clause ''unchanged authorization survives interruption or compaction'' (context compaction) became ''or consolidation'', which Non-Goal 1 excludes.'
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:386; source clause docs/decisions/2026-11/20261102-roadmap-and-milestones-ledger.md:297
+  failure_condition: An agent resuming after a context compaction cannot find the rule that authorization survives it; the word now points at the record-merging term.
+  suggested_action: Restore the word to context compaction in that clause.
+  resolution: resolved
+  severity: P2
+- issue: 'Record-merging wording left in the ledger ADRs'' in-force clauses: ''Compacted terminal feedback resolves through aliases'' twice and ''editable and compactable''.'
+  evidence: docs/decisions/2026-11/20261102-feedback-lifecycle-ledger.md:196,206; docs/decisions/2026-11/20261102-decision-ledger.md:128
+  failure_condition: The AC-04 residue check returns prose hits; readers meet both terms for one operation.
+  suggested_action: Replace with the consolidation wording.
+  resolution: resolved
+  severity: P3
+- issue: A rejected option's historical status literal `compacted` was rewritten to `consolidated` while sibling option titles kept the old wording.
+  evidence: docs/decisions/2026-11/20261102-feedback-lifecycle-ledger.md:104 versus :101 and 20261102-decision-ledger.md:109
+  failure_condition: The rejected option names a status value never proposed under that name.
+  suggested_action: Restore the literal as history.
+  resolution: resolved
+  severity: P3
+- issue: No test pins the renamed playbooks' frontmatter aliases; only the command verifies alias resolution.
+  evidence: packages/devkit-spec/tests/integration/bundles/spec/test_playbook_discovery_guidance.py:120-127; test_feedback_consolidation_guidance.py:42-51
+  failure_condition: A dropped or misspelled aliases entry keeps tests green while spec/adr-compaction stops resolving.
+  suggested_action: Assert each renamed playbook's aliases equal [<old id>].
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec bundles
+  lint: PASS uv run devkit rules check
+diff_scope:
+  base: 9e7cfb141854b488c2164f792bae31f30824a80d
+  head: 7aaf5bc41bf2e27b6a8615f245e130c65f3cc513
+activity_effort: medium

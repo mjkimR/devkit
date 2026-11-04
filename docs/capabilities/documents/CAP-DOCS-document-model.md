@@ -89,7 +89,7 @@ become graph edges.
    historical for browsing and search whatever bundle holds it: feedback `resolved`, `promoted`, `dismissed` and
    `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and
    search MUST hide it unless `--history` is passed (or `list --status` names its status, `CAP-DOCS-document-lookup`);
-   its ID stays resolvable and its references queryable while the document exists. Eligible resolved feedback may be deleted during compaction (`ADR-feedback-lifecycle-ledger`). Unlike rule 7, the rules keep checking it on every run.
+   its ID stays resolvable and its references queryable while the document exists. Eligible resolved feedback may be deleted during consolidation (`ADR-feedback-lifecycle-ledger`). Unlike rule 7, the rules keep checking it on every run.
 
 9. **Steering documents**: `docs/steering/` holds project-wide background that is neither a contract nor evidence
    (`ADR-steering-documents`): one Markdown file per topic directly in the directory, with only `title` and
@@ -146,12 +146,12 @@ in-force clauses, MUST NOT carry `superseded_by`, and gains one body line per pa
 or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."
 (`ADR-decision-ledger`).
 
-**Compaction groups**: an ADR compaction MUST form each group by topic, with two or more members, and MUST place a
+**Consolidation groups**: an ADR consolidation MUST form each group by topic, with two or more members, and MUST place a
 wholly superseded ADR in the group of its superseder. WHEN a partially superseding member and its target land in
 different groups, the target's replacement MUST leave out the replaced clauses, and the superseding replacement MUST
 state what it replaced and cite the target's replacement ID. An ADR kept outside the run whose `supersedes` names a
-compacted member MUST name the member's replacement instead, and that replacement MUST carry the matching
-"Superseded in part by" line. WHEN a compacted member partially supersedes an ADR kept outside the run, its
+consolidated member MUST name the member's replacement instead, and that replacement MUST carry the matching
+"Superseded in part by" line. WHEN a consolidated member partially supersedes an ADR kept outside the run, its
 replacement MUST list that ADR in `supersedes`, and the kept ADR's pointer MUST name the replacement
 (`ADR-decision-ledger`). On a decision, `supersedes` and `superseded_by` are metadata the index
 does not read (section 3.3 rule 6 covers Unit anchors), so they do not add reference-graph edges.
@@ -290,7 +290,7 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 5. **Renaming**: a document whose ID derives from its path (`CAP`, `UC`, `UX`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
    `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
-   `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-planning`) or, as a compaction
+   `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-planning`) or, as a consolidation
    replacement, lists the IDs of the ADRs it retires (`ADR-decision-ledger`). One `devkit rules fix` then moves current documents to the new ID.
    The current documents it rewrites include ADRs and PADRs (`ADR-decision-ledger`) and the
    `feedback/` files of every spec bundle, whatever the bundle's or the feedback's status (section 3.1, rules 7 and
