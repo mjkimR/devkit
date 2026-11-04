@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:47:09.228522Z'
+status: completed
+summary: Nine targets match; independent reconciliation found missing partial supersession of ADR-ux-screens root-register creation/location.
+findings:
+- issue: ADR-ux-screens retains replaced root-register requirements without partial supersession.
+  evidence: docs/decisions/2026-11/20261102-ux-screens.md:159-165 and 213 require root-register creation and writes; the new ADR supersedes only namespace steering.
+  failure_condition: Namespace UX with only local rows still receives root creation and root-write requirements from the accepted old ADR.
+  suggested_action: Partially supersede only the root-register creation/location clauses, annotate the old ADR and add its reconciliation target.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated read-only inspection; clean pre/post status and unchanged tree; no outside-worktree source reads.
+checks:
+  reflection: FAIL missing ADR-ux-screens annotation and target
+diff_scope:
+  base: 4c6298983f5febeca7cfee8d27bc4708688551c7
+  head: fc9310d19f885604e0097c3c63646b9dddea19ce
+activity_effort: medium
