@@ -55,22 +55,27 @@ downgrade or a heuristic on labels would hide the genuine gaps as well.
 Inline markers, because they alone meet the no-drift and no-boilerplate drivers and reuse the parser's phrase
 precedent.
 
-- A global interaction's Step cell is `global: <reason>`: lower-case `global`, a colon and a non-empty reason; the
-  row serves no step. → `CAP-GOV-spec-rules` 3.16 (SHOULD)
+- A global interaction's Step cell, stripped, starts with `global:` (any case) followed by a non-empty reason, an
+  opaque text from which no step pair is read; the row serves no step. → `CAP-GOV-spec-rules` 3.16 (SHOULD)
 - An off-screen main-scenario step or extension holds `off screen: <reason>` (`off-screen:` and any case count) in
   one of its lines; the reason is the rest of that line, a trailing `)` and whitespace dropped. → `CAP-GOV-spec-rules`
   3.16 (SHOULD)
-- The shared UX model parses both markers once; `RULE-ux-links` treats a classified Step cell as an empty one and a
-  cell mixing pairs and `global:` as invalid, through its existing cell check. → `CAP-GOV-spec-rules` 3.15 (MUST)
+- The shared UX model parses both markers once; `RULE-ux-links` treats a classified Step cell as an empty one, and
+  any other cell that is neither empty nor pairs, a cell starting with pairs and carrying `global:` later or a
+  misspelled `global` included, as invalid through its existing cell check. → `CAP-GOV-spec-rules` 3.15 (MUST)
 - `RULE-ux-coverage` does not report a row classified global with a reason or a step classified off screen with a
   reason. It reports, at its warning severity and with its own message, a classification without a reason and an
   off-screen classification on a step that cites a UX ID. → `CAP-GOV-spec-rules` 3.16 (SHOULD)
-- The reason is checked for presence only; no heuristic on trigger or step wording decides a classification.
+- The reason is checked for presence only; no heuristic on trigger or step wording decides a classification. An
+  off-screen reason names no screen, since a code-span UX ID on the step's lines is a citation; a step whose response
+  appears on a screen cites that screen.
 - An empty Step cell and an uncited step without a marker keep their current warnings; the `ux-writing` instruction
   names the `global:` form for a global control and `usecase-writing` the `off screen:` phrase, with one example each.
 - This replaces, in part, two clauses of `ADR-ux-screens` (Step links and coverage): the coverage rule's "an
   interaction whose Step cell is empty" and "a step or extension that cites no UX ID" now exclude a classified item
-  with a reason, and "only a step that truly happens off-screen cites none" gains the phrase that says so.
+  with a reason, "only a step that truly happens off-screen cites none" gains the phrase that says so, and the known
+  limit "only the coverage warning on that step remains" no longer holds for a classified step: it keeps the flow
+  effect of an uncited step (no exit needed before it, an entry after it) without a warning.
 
 ---
 
@@ -81,12 +86,14 @@ precedent.
   - The reason is reviewed where the gap is, by the owner, with no new document or field.
   - No change to `RULE-ux-links`, its errors or the flow graph.
 - **Negative / Risks**:
-  - One more Step cell form and one more step phrase for authors and the parser; a misspelled marker is silently a
-    non-marker and the gap keeps warning, which is the safe failure.
+  - One more Step cell form and one more step phrase for authors and the parser. The two documents fail differently
+    on a misspelling: a Step cell that is neither empty, pairs nor `global:` is a `RULE-ux-links` error, as any
+    invalid cell is today; a misspelled step phrase is a non-marker and the gap keeps warning.
   - A wrong but reasoned classification is accepted mechanically; only review catches it, as the proposal's threat
-    model accepts.
+    model accepts. For an off-screen step this also removes the warning that flagged the flow effect of an uncited
+    step (the screen before it exempt from the exit check, the screen after it an entry).
 - **Follow-ups**:
-  - A spelling check for near-miss markers (`offscreen:`, `Global`) if consumers report gaps that stay warned after a
+  - A spelling check for the near-miss step phrase (`offscreen:`) if consumers report gaps that stay warned after a
     classification was written.
 
 ---

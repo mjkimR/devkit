@@ -25,8 +25,9 @@ instructions and `ADR-ux-screens`.
 | Keep current state | empty cell | no citation | n/a | n/a | none; every intended gap warns |
 
 The inline marker adds information (the reason) that the rejected link marker did not, so the ADR's rejection does
-not apply to it. The `global:` cell is parsed where the pairs are, so `RULE-ux-links` keeps its invalid-cell error
-for a cell that mixes both, without a change to its module.
+not apply to it. The `global:` cell is recognized by its prefix before pairs are read, so a reason may mention a
+step pair; `RULE-ux-links` keeps its invalid-cell error for a cell that starts with pairs and carries `global:`
+later, without a change to its module.
 
 ## Defective forms and their reports
 
@@ -35,8 +36,11 @@ for a cell that mixes both, without a change to its module.
 | `global:` with no reason | `interaction is classified global without a reason` (warning) | `RULE-ux-coverage` |
 | `off screen:` with no reason | `<UC> step <key> is classified off screen without a reason` (warning) | `RULE-ux-coverage` |
 | `off screen:` on a step citing a UX ID | `<UC> step <key> is classified off screen but cites <UX>` (warning) | `RULE-ux-coverage` |
-| pairs and `global:` in one cell | `Step cell "<value>" is not `UC-<slug>` <key>` (error, existing) | `RULE-ux-links` |
-| `Global`, `offscreen:`, other spellings | not a marker; the existing gap warning stays | `RULE-ux-coverage` |
+| a cell starting with pairs and carrying `global:` later | `Step cell "<value>" is not `UC-<slug>` <key>` (error, existing) | `RULE-ux-links` |
+| a misspelled cell marker (`global nav`, `globl:`) | the same invalid-cell error (existing) | `RULE-ux-links` |
+| `GLOBAL: <reason>`, `global: not part of `UC-browse` 2` | accepted: the prefix is any case and the reason is opaque | none |
+| `offscreen:`, other step-phrase spellings | not a marker; the existing gap warning stays | `RULE-ux-coverage` |
+| a reason naming a screen in a code span | the step cites that screen: `classified off screen but cites <UX>` (warning) | `RULE-ux-coverage` |
 
 ## Consumer evidence mapping
 
