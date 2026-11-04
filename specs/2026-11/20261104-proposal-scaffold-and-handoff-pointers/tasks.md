@@ -8,7 +8,7 @@ plan: PLAN-proposal-scaffold-and-handoff-pointers
 
 ## Phase 1: Scaffold
 
-- [ ] **Task 1**: `new` writes no empty directory; the module docstring and the proposal template comment name
+- [x] **Task 1**: `new` writes no empty directory; the module docstring and the proposal template comment name
   on-demand creation; scaffold tests assert the layout and `padr` creating `decisions/`
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py`,
     `packages/devkit-spec/tests/integration/features/proposals/test_proposal_scaffold.py`
@@ -17,7 +17,7 @@ plan: PLAN-proposal-scaffold-and-handoff-pointers
 
 ## Phase 2: Handoff pointers
 
-- [ ] **Task 2**: pointer planning, writing, roll-back and `HandoffResult.pointers` in the handoff use case, with the
+- [x] **Task 2**: pointer planning, writing, roll-back and `HandoffResult.pointers` in the handoff use case, with the
   handoff tests for the fixture, presence, skipped targets, the title fallback, the roll-back and a bundle without
   directories
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py`,
@@ -25,7 +25,7 @@ plan: PLAN-proposal-scaffold-and-handoff-pointers
     `packages/devkit-spec/tests/integration/features/proposals/test_proposal_handoff.py`
   - _Requirements: AC-02, AC-03, AC-04, AC-05, AC-06, AC-07_
   - **Verification**: `just test devkit-spec tests/integration/features/proposals/test_proposal_handoff.py`
-- [ ] **Task 3**: the `[SUPERSEDED_IN_PART: ...]` text line and the CLI docstring, with the CLI text and JSON tests
+- [x] **Task 3**: the `[SUPERSEDED_IN_PART: ...]` text line and the CLI docstring, with the CLI text and JSON tests
   and the `dev-<slug>` staging test
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py`,
     `packages/devkit-spec/tests/integration/features/proposals/test_proposal_cli.py`,
@@ -35,7 +35,7 @@ plan: PLAN-proposal-scaffold-and-handoff-pointers
 
 ## Phase 3: Guidance
 
-- [ ] **Task 4**: the planning reference says `materials/` is created with its first file; the managed and projected
+- [x] **Task 4**: the planning reference says `materials/` is created with its first file; the managed and projected
   copies are regenerated; a guidance test asserts the sentence
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md`,
     `packages/devkit-spec/tests/integration/bundles/spec/test_writing_guidance.py`, `.devkit/installation.json`

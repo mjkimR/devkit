@@ -90,7 +90,7 @@ def test_empty_or_non_english_summary_is_an_argument_error(workspace: Path, summ
     create_proposal(workspace, "c", today=TODAY)
     with pytest.raises(ArgumentError):
         CreateProposalDecisionUseCase().execute(workspace, "c", "Use JWT", summary=summary, today=TODAY)
-    assert not any((workspace / "docs/proposals/PROP-c/decisions").iterdir())
+    assert not (workspace / "docs/proposals/PROP-c/decisions").exists()  # the scaffold writes no directory
 
 
 def test_cli_summary_option(workspace: Path) -> None:
@@ -125,9 +125,7 @@ def test_cli_summary_option(workspace: Path) -> None:
 def test_summary_length_boundary(workspace: Path, command: str, use_cli: bool, length: int) -> None:
     summary = "Defines " + "a" * (length - len("Defines ") - 1) + "."
     if command == "padr":
-        create_proposal(workspace, "existing", today=TODAY)
-        # A refused PADR must not recreate even its output directory.
-        (workspace / "docs/proposals/PROP-existing/decisions").rmdir()
+        create_proposal(workspace, "existing", today=TODAY)  # a refused PADR must not create even its directory
     before = {
         path.relative_to(workspace): path.read_bytes() if path.is_file() else None for path in workspace.rglob("*")
     }

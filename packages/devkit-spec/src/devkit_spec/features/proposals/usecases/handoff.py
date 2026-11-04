@@ -11,7 +11,11 @@ path it would create), then:
 2. copies ``target-docs.md`` into the spec bundle;
 3. promotes each ``decisions/PADR-<slug>.md`` to ``docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`` as an accepted
    ``ADR-<slug>`` (its frontmatter, ``summary`` included, is kept, except the scaffold's unchanged commented
-   ``supersedes`` line);
+   ``supersedes`` line), and writes one "Superseded in part by ``ADR-<slug>``: <summary>" line below the heading of
+   each ADR its ``supersedes`` names that is not ``superseded`` and does not carry the pointer yet
+   (``_plan_pointers``), so the partial replacement passes ``RULE-decision-supersession`` at the handoff commit;
+   Development replaces the summary with the replaced clauses. A target that does not resolve to one ADR is left
+   to ``RULE-document-reference``;
 4. moves open proposal ``feedback/*.md`` into the spec feedback directory; settled feedback follows generic extras.
    Moves ``materials/`` to ``docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/`` when it holds a file other than
    operating-system junk (``JUNK_FILES``), together with every other file of the bundle that steps 1 to 3 do not
@@ -31,7 +35,7 @@ carries it), not on ``status: accepted`` alone (``ProposalAcceptanceUnrecordedEr
 proposal, which can carry no gate record, and one bound to another workflow keep the status-only rule.
 
 A legacy proposal or PADR whose slug starts with a number (``PROP-2024-budget``) is refused: the ID it would become
-breaks ``RULE-id-convention``. A failure of any kind in steps 1 to 4 removes what they wrote, moves what they moved
+breaks ``RULE-id-convention``. A failure of any kind in steps 1 to 4 removes what they wrote, restores the ADRs step 3 edited, moves what they moved
 back and keeps the proposal; a directory still holding something that could not be moved back is kept and reported.
 Across file systems step 4 copies and removes the sources only after every write succeeded. A single-file proposal
 ``docs/proposals/PROP-<slug>.md`` gets the plain skeleton (its body is not carried) and has no PADRs, materials or
@@ -65,7 +69,7 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate, parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 from devkit_docs.features.documents import DocumentIndex, parse_document
-from devkit_docs.features.documents.models.ids import is_legacy_id
+from devkit_docs.features.documents.models.ids import ID_SOURCE, is_legacy_id
 from devkit_docs.features.documents.models.markdown import visible_lines
 from devkit_docs.features.documents.models.model import Document
 from devkit_docs.features.documents.models.namespace import GLOBAL
@@ -180,6 +184,9 @@ _DRAFT_STATUS = re.compile(
     re.MULTILINE,
 )
 _DRAFT_BODY_STATUS = re.compile(r"(- \*\*Status\*\*:[ \t]*)(?:Draft|Proposed)[ \t]*")
+# The partial-supersession pointer ``RULE-decision-supersession`` reads in an ADR body (``CAP-DOCS-document-model``).
+_PARTIAL_POINTER = re.compile(rf"Superseded in part by `({ID_SOURCE})`")
+SUPERSEDED_IN_PART = "Superseded in part by"
 
 
 @dataclass(frozen=True)
@@ -206,6 +213,20 @@ class CarriedGate:
         return {"request": self.request, "decision": self.decision}
 
 
+@dataclass(frozen=True)
+class SupersessionPointer:
+    """A "Superseded in part by" line the handoff wrote: into the ADR ``adr`` at ``path`` (workspace-relative), on
+    1-based ``line``, naming the promoted ADR ``by``."""
+
+    adr: str
+    path: str
+    line: int
+    by: str
+
+    def to_dict(self) -> dict[str, object]:
+        return {"adr": self.adr, "path": self.path, "line": self.line, "by": self.by}
+
+
 @dataclass
 class HandoffResult:
     """What a handoff wrote, moved and rewrote; paths are workspace-relative.
@@ -216,8 +237,9 @@ class HandoffResult:
     could not be mapped. ``materials_merged`` says whether the materials went into a ``materials`` directory that
     already existed, ``dropped_duplicates`` the files kept there whose byte-identical proposal copy was dropped.
     ``dropped_records`` are the proposal unit's workflow records removed with it, ``carried_gates`` the proposal's own
-    approvals recorded in the spec under their names. ``notices`` are the warnings and notices the caller reports
-    with the result.
+    approvals recorded in the spec under their names, ``pointers`` the partial-supersession lines written into the
+    ADRs the promoted decisions supersede in part. ``notices`` are the warnings and notices the caller reports with
+    the result.
     """
 
     proposal: str
@@ -230,6 +252,7 @@ class HandoffResult:
     materials_merged: bool = False
     dropped_duplicates: list[str] = field(default_factory=list)
     decisions: list[PromotedDecision] = field(default_factory=list)
+    pointers: list[SupersessionPointer] = field(default_factory=list)
     dropped_records: list[str] = field(default_factory=list)
     carried_gates: list[CarriedGate] = field(default_factory=list)
     rewritten_files: list[str] = field(default_factory=list)
@@ -253,6 +276,7 @@ class HandoffResult:
             "materials_merged": self.materials_merged,
             "dropped_duplicates": self.dropped_duplicates,
             "decisions": [decision.to_dict() for decision in self.decisions],
+            "pointers": [pointer.to_dict() for pointer in self.pointers],
             "dropped_records": self.dropped_records,
             "carried_gates": [gate.to_dict() for gate in self.carried_gates],
             "rewritten_files": self.rewritten_files,
@@ -271,6 +295,20 @@ class _Decision:
     adr_id: str
     text: str
     aliases: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class _Pointer:
+    """A pointer planned for the ADR at ``target`` (absolute): its ``adr_id``, the promoted ADR ``by``, the file's
+    ``original`` text (restored on roll-back), its ``text`` after this and every earlier pointer of the same file, and
+    the pointer's 1-based ``line`` in that text."""
+
+    target: Path
+    adr_id: str
+    by: str
+    original: str
+    text: str
+    line: int
 
 
 @dataclass(frozen=True)
@@ -422,6 +460,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             " handoff",
         )
     _check_targets(root, index, targets, decisions, [f"SPEC-{slug}", *spec_aliases])
+    pointers = _plan_pointers(root, index, decisions)
     # Merge conflicts first: a symbolic link inside an existing materials directory is a conflict, not a path outside.
     materials = (
         _plan_materials(root, materials_dir, materials_target, move_materials, extras)
@@ -471,6 +510,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
 
     written: list[Path] = []
     moved: list[tuple[Path, Path]] = []
+    edited: list[tuple[Path, str]] = []  # pre-existing ADRs given a pointer, with their original text
     leftovers: list[Path] = []  # sources copied across file systems, removed once every write succeeded
     promoted: dict[str, str] = {}
     try:
@@ -482,6 +522,9 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             written.append(decision.target)
             decision.target.write_text(decision.text, encoding="utf-8")
             promoted[str(decision.padr)] = str(decision.target)
+        for target, (original, final) in _pointer_texts(pointers).items():
+            edited.append((target, original))
+            target.write_text(final, encoding="utf-8")
         # Every destination was absent in preflight: no pre-existing path enters written or moved.
         for source, destination in materials.moves:
             make_dirs(destination.parent, written)
@@ -491,7 +534,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             make_dirs(destination.parent, written)
             move_path(source, destination, written, moved, leftovers)
     except Exception as exc:
-        problems = roll_back(written, moved)
+        problems = _restore(edited) + roll_back(written, moved)
         if isinstance(exc, AdvisoryError) and not problems:
             raise
         what = (
@@ -551,6 +594,9 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         root, slug, target_dir, binding, unbound, target_docs_text, materials_target, decisions, report, notices
     )
     result.dev_effort = dev_effort
+    result.pointers = [
+        SupersessionPointer(p.adr_id, p.target.relative_to(root).as_posix(), p.line, p.by) for p in pointers
+    ]
     result.materials_merged = materials.merged
     result.dropped_duplicates = sorted(path.relative_to(root).as_posix() for _, path in materials.duplicates)
     result.dropped_records = [path.relative_to(root).as_posix() for path in records]
@@ -683,6 +729,95 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
             )
         )
     return planned
+
+
+def _supersedes_ids(value: object) -> list[str]:
+    """The IDs a frontmatter ``supersedes`` names: one string or a list of strings; anything else names none (the
+    rule reports its shape)."""
+    if isinstance(value, str):
+        return [value.strip()]
+    return [item.strip() for item in value if isinstance(item, str)] if isinstance(value, list) else []
+
+
+def _pointer_names(text: str) -> list[str]:
+    """The IDs the visible "Superseded in part by" lines of ``text`` name."""
+    return [match.group(1) for line in visible_lines(text) for match in _PARTIAL_POINTER.finditer(line.text)]
+
+
+def _clause(meta: dict[str, Any], decision: _Decision) -> str:
+    """The clause text of a pointer: the promoted ADR's ``summary``, else its ``title``, else its slug, as one line
+    ending in a sentence mark. Development replaces it with the replaced clauses."""
+    for key in ("summary", "title"):
+        value = meta.get(key)
+        if isinstance(value, str) and value.strip():
+            text = " ".join(value.split())
+            break
+    else:
+        text = decision.adr_id.removeprefix("ADR-")
+    return text if text.endswith((".", "!", "?")) else text + "."
+
+
+def _insert_pointer(text: str, pointer: str) -> tuple[str, int]:
+    """``text`` with ``pointer`` as a paragraph of its own below the first H1 heading after the frontmatter (right
+    after the frontmatter when there is none), and the pointer's 1-based line number."""
+    block = locate(text)
+    start = block.end if block is not None else 0
+    at = start
+    for line in visible_lines(text, start=start):
+        raw = text[line.offset :].split("\n", 1)[0]
+        if raw.startswith("# "):
+            at = line.offset + len(raw.rstrip("\r"))
+            break
+    head, tail = text[:at], text[at:].lstrip("\r\n")
+    gap = "\n\n" if head and not head.endswith("\n") else "\n"
+    return head + gap + pointer + "\n" + (f"\n{tail}" if tail else ""), head.count("\n") + len(gap) + 1
+
+
+def _plan_pointers(root: Path, index: DocumentIndex, decisions: list[_Decision]) -> list[_Pointer]:
+    """The "Superseded in part by" lines the promoted ``decisions`` need in the ADRs their ``supersedes`` name: one
+    per (target, superseder) pair whose target resolves to one ADR that is not ``superseded`` and does not yet carry a
+    visible pointer naming the promoted ADR (by its ID or an alias), as one paragraph each below the target's heading
+    in decision order. Targets that resolve to nothing, to several documents or to a non-ADR are left to
+    ``RULE-document-reference``. Nothing is written here; a target that cannot be read is ``ProposalInvalidError``."""
+    wanted: dict[Path, tuple[str, str, list[tuple[str, str]]]] = {}  # target -> (original, adr_id, [(by, line)])
+    for decision in decisions:
+        meta: dict[str, Any] = parse(decision.text).data or {}
+        for written in _supersedes_ids(meta.get("supersedes")):
+            found = index.canonical(written) if written.startswith("ADR-") else None
+            if found is None or not found[0].id.startswith("ADR-") or found[0].status.lower() == "superseded":
+                continue
+            target = root / found[0].path
+            if target not in wanted:
+                wanted[target] = (_read(target, root), found[0].id, [])
+            original, _, lines = wanted[target]
+            names = {decision.adr_id, *decision.aliases}
+            present = [by for by, _ in lines] + _pointer_names(original)
+            if any(name in names or index.canonical_id(name) == decision.adr_id for name in present):
+                continue
+            lines.append((decision.adr_id, f"{SUPERSEDED_IN_PART} `{decision.adr_id}`: {_clause(meta, decision)}"))
+    planned = []
+    for target, (original, adr_id, lines) in wanted.items():
+        if not lines:
+            continue
+        text, first = _insert_pointer(original, "\n\n".join(line for _, line in lines))
+        planned += [_Pointer(target, adr_id, by, original, text, first + 2 * i) for i, (by, _) in enumerate(lines)]
+    return planned
+
+
+def _pointer_texts(pointers: list[_Pointer]) -> dict[Path, tuple[str, str]]:
+    """Each pointer target with its original text and the text holding every planned pointer (the last plan wins)."""
+    return {pointer.target: (pointer.original, pointer.text) for pointer in pointers}
+
+
+def _restore(edited: list[tuple[Path, str]]) -> list[str]:
+    """Write each edited file's original text back, newest first; returns what could not be restored."""
+    problems = []
+    for target, original in reversed(edited):
+        try:
+            target.write_text(original, encoding="utf-8")
+        except OSError as exc:
+            problems.append(f"{target} could not be restored to its text before the handoff: {exc}")
+    return problems
 
 
 def _drop_supersedes_placeholder(text: str) -> str:

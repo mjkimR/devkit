@@ -76,6 +76,8 @@ def test_the_decision_guide_and_template_mark_normative_outcome_clauses() -> Non
     assert_rule(guide, "meets none of them", "planning decisions", "`plan.md`")
     planning = raw("skills/spec/references/planning.md")
     assert_rule(planning, "new padr", "admission criteria", "planning decisions")
+    # SPEC-proposal-scaffold-and-handoff-pointers: the scaffold leaves no materials/ for the worktree to inherit.
+    assert_rule(planning, "`materials/`", "created with its first file")
     template = raw("templates/decision.md")
     assert_rule(template, "<declarative clause>. → `cap-<area>-<slug>` <section or rule> (<must|should|may>)")
     assert_rule(template, "`arch-<id>`", "rationale clause carries no trace")

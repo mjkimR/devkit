@@ -63,7 +63,9 @@ def test_create_proposal_bundle(workspace: Path) -> None:
         "Make sdd-proposal available (uv run devkit sync with its bundle selected), then bind it with "
         "`uv run devkit workflow bind --unit docs/proposals/PROP-fast-engine --workflow sdd-proposal`"
     )
-    assert (bundle / "decisions").is_dir() and (bundle / "materials").is_dir()
+    # SPEC-proposal-scaffold-and-handoff-pointers: only files are scaffolded; Git would not carry empty directories
+    # into a Planning worktree, so padr creates decisions/ and the first material creates materials/.
+    assert sorted(path.name for path in bundle.iterdir()) == ["proposal.md", "target-docs.md"]
     meta = parse((bundle / "proposal.md").read_text(encoding="utf-8")).data
     assert meta is not None
     assert meta["id"] == "PROP-fast-engine"
@@ -146,6 +148,7 @@ def test_create_proposal_without_target_docs(workspace: Path) -> None:
     created = create_proposal(workspace, "lean")
     assert created.target_docs is None
     assert not (workspace / "docs/proposals/PROP-lean/target-docs.md").exists()
+    assert [path.name for path in (workspace / "docs/proposals/PROP-lean").iterdir()] == ["proposal.md"]
     meta = parse((workspace / created.path).read_text(encoding="utf-8")).data
     assert meta is not None and meta["title"] == "lean"
 
@@ -215,6 +218,11 @@ def test_create_padr(workspace: Path) -> None:
     assert "\n# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part;" in text
     assert "- **Status**: Draft\n" in text
     assert text.endswith("## 5. Consequences\n\n## 6. Confirmation\n")
+    # padr created decisions/ itself: the scaffold leaves no empty directory behind.
+    assert sorted(path.name for path in (workspace / "docs/proposals/PROP-fast-engine").iterdir()) == [
+        "decisions",
+        "proposal.md",
+    ]
     with pytest.raises(ProposalDecisionExistsError):
         CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "use go ast parser")
 
