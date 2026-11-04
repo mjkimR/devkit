@@ -27,7 +27,7 @@ instructions and `ADR-ux-screens`.
 The inline marker adds information (the reason) that the rejected link marker did not, so the ADR's rejection does
 not apply to it. The `global:` cell is recognized by its prefix before pairs are read, so a reason may mention a
 step pair; `RULE-ux-links` keeps its invalid-cell error for a cell that starts with pairs and carries `global:`
-later, without a change to its module.
+later, without a change to its logic.
 
 ## Defective forms and their reports
 

@@ -32,7 +32,7 @@ downgrade or a heuristic on labels would hide the genuine gaps as well.
 - A reason stays beside the item so the owner reviews it where the gap is.
 - No key that drifts when steps are renumbered or a trigger is renamed.
 - Ordinary linked rows and steps carry no new boilerplate.
-- `RULE-ux-links` keeps every contradiction error, and its module stays unchanged.
+- `RULE-ux-links` keeps every contradiction error, and its logic stays unchanged.
 - A defective classification is as visible as the gap it covers.
 
 ---
@@ -84,7 +84,8 @@ precedent.
 - **Positive**:
   - Intended gaps stop recurring; the remaining warnings are candidates again.
   - The reason is reviewed where the gap is, by the owner, with no new document or field.
-  - No change to `RULE-ux-links`, its errors or the flow graph.
+  - No change to `RULE-ux-links` logic, its errors or the flow graph; only its docstring and invalid-cell remediation
+    name the classified cell.
 - **Negative / Risks**:
   - One more Step cell form and one more step phrase for authors and the parser. The two documents fail differently
     on a misspelling: a Step cell that is neither empty, pairs nor `global:` is a `RULE-ux-links` error, as any
