@@ -43,8 +43,9 @@ it.
 
 The spec has no source feedback. The guidance's `Mismatch` criterion is the handoff for any surface the criteria
 cannot describe: the agent records the document and the mismatch as feedback, which is the evidence a later rule
-change (a relaxed `element` kind, a path-scoped opt-out) needs; `PROP-ux-rules-path-exclusion` was rejected on that
-basis and nothing of its scope is deferred here.
+change (a relaxed `element` kind, a path-scoped opt-out) needs; ~~`PROP-ux-rules-path-exclusion`~~ (rejected in
+commit `aa67659f`; `ADR-reject-ux-rules-path-exclusion`) was rejected on that basis and nothing of its scope is
+deferred here.
 
 ## Verification and retained work
 

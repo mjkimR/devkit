@@ -24,7 +24,8 @@ status display finds no guidance on how that surface maps onto the vocabulary: w
 a live view share one surface, where continuous input (movement, aim, scrubbing, speech) goes when no use case step
 owns it, whether a mode change is a state or a transition, and what a surface with no task flow still writes. The
 agent then either forces the surface into rows it does not have or concludes the contract does not fit and asks for
-an opt-out. The Planning of the rejected proposal `PROP-ux-rules-path-exclusion` found the rules compatible with such
+an opt-out. The Planning of the rejected proposal ~~`PROP-ux-rules-path-exclusion`~~ (rejected in commit `aa67659f`;
+`ADR-reject-ux-rules-path-exclusion`) found the rules compatible with such
 surfaces once the explicit coverage exceptions exist, and that the missing piece is writing guidance, not a rule
 setting. This spec adds that guidance, generic across domains, so a namespace keeps the screen contract and every UX
 rule.
@@ -45,7 +46,8 @@ rule.
 
 1. **Scope Excluded**: a new or relaxed `element` kind, or any change to the Interactions columns, the cell grammar or
    the two UX rules. **When to Reconsider**: a recorded mismatch (US-3) that the guidance cannot resolve.
-2. **Scope Excluded**: a path-scoped opt-out setting for the UX rules; `PROP-ux-rules-path-exclusion` was rejected
+2. **Scope Excluded**: a path-scoped opt-out setting for the UX rules; ~~`PROP-ux-rules-path-exclusion`~~ (rejected in
+   commit `aa67659f`; `ADR-reject-ux-rules-path-exclusion`) was rejected
    in favor of this guidance.
 3. **Scope Excluded**: new sections of the `ux` template or changes to the seeded `docs/ux/README.md`; the
    instruction owns the criteria and the template keeps its five sections.
