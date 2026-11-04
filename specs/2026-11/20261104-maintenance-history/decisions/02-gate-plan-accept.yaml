@@ -1,0 +1,11 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-maintenance-history: User accepted the Planning direction: devkit-agt
+  command family on a parentless GitHub history branch via the Git Database API, per-run
+  publication authority, fixed devkit commit identity; dev_effort medium; Development
+  not started now'
+by: user
+at: '2026-11-04T03:02:47.043899Z'

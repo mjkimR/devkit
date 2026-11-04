@@ -18,7 +18,7 @@ unneeded code, guidance, options and commands.
 | --- | --- | --- | --- |
 | A. User-selected scope (surfaces and roots) at intake, split into batches of one surface each, with one decision round per batch; a cross-surface finding cites both sides and belongs to the batch of the surface where its change lands (recommended; chosen by `user`) | Proven drift-reconciliation pattern (drift-reconciliation.md:12-17) | Low; reuses the shared wording | Batch size is agent judgment |
 | B. All three surfaces with a top-N candidate cap | weekly-report ranks by impact (weekly-report.md:51-52) | Medium; needs a ranking rule | Arbitrary cap; incomparable criteria; large mixed diffs |
-| C. Diff-driven since the last run or a named ref | weekly-report snapshot capture | Low only with history | Misses accumulated debt; coupled to `PROP-maintenance-history` |
+| C. Diff-driven since the last run or a named ref | weekly-report snapshot capture | Low only with history | Misses accumulated debt; coupled to `SPEC-maintenance-history` |
 
 ## O3. Removing commands, options and public interfaces (user direction 3; user question)
 

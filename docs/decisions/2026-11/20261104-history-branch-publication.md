@@ -1,15 +1,15 @@
 ---
-id: PADR-history-branch-publication
+id: ADR-history-branch-publication
 title: History publication on a parentless GitHub branch through the Git Database API
 summary: "For durable maintenance run history, we publish each run's record as one commit on a dedicated parentless GitHub branch through the Git Database API with non-forced reference updates, to keep history atomic per run and apart from code history, accepting GitHub-only support and API rate limits."
-proposal: PROP-maintenance-history
-status: draft
+proposal: SPEC-maintenance-history
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-history-branch-publication] History publication on a parentless GitHub branch through the Git Database API
+# [ADR-history-branch-publication] History publication on a parentless GitHub branch through the Git Database API
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 - **Deciders**: repository owner
 - **Involved Components/Capabilities**: `capabilities/delivery/`, `packages/devkit/src/devkit_agt/features/`, the maintenance playbooks
@@ -43,7 +43,7 @@ safely after a lost response and leave the local checkout untouched.
 ### Option 1: Git Database API sequence on a parentless branch (Selected)
 - **Overview**: `POST git/blobs`, `POST git/trees` with `base_tree`, `POST git/commits`, then one
   `PATCH git/refs/heads/<branch>` with `force` omitted; the branch starts from a root commit with no parents
-  (`materials/github-publication-api.md` §1-3).
+  (`docs/materials/2026-11/20261104-maintenance-history/github-publication-api.md` §1-3).
 - **Pros**:
   - The single ref update is the publication point, so several files land atomically (Driver 1).
   - A non-fast-forward update is refused, so a stale writer rebuilds on the new head instead of overwriting (Driver 2).

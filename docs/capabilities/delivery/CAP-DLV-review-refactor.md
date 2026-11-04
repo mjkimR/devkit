@@ -33,7 +33,7 @@ matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforc
   recorded evidence; application of agreed behavior-preserving changes as direct-mode refactors, in parallel
   isolated checkouts where their write scopes are disjoint.
 - **Out of scope**: a scheduler or trigger (external runners, `ADR-playbook-retrieval`), a history store
-  (`PROP-maintenance-history`), contract drift (`CAP-DLV-drift-reconciliation`), rule adoption
+  (`SPEC-maintenance-history`), contract drift (`CAP-DLV-drift-reconciliation`), rule adoption
   (`CAP-GOV-rule-authoring`), detector tools as dependencies, cosmetic churn and behavior-changing feature work.
 
 ## 3. Run Contract

@@ -1,15 +1,15 @@
 ---
-id: PADR-inspected-state-identity
+id: ADR-inspected-state-identity
 title: Inspected-state identity for maintenance runs
 summary: "For runs that inspect uncommitted changes, we identify the inspected state by the source SHA, the dirty path list, a temporary-index tree hash and a local diff digest, to make a record reproducible without exposing the diff, accepting that only a retained local diff verifies the digest."
-proposal: PROP-maintenance-history
-status: draft
+proposal: SPEC-maintenance-history
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-inspected-state-identity] Inspected-state identity for maintenance runs
+# [ADR-inspected-state-identity] Inspected-state identity for maintenance runs
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 - **Deciders**: repository owner
 - **Involved Components/Capabilities**: `capabilities/delivery/`, the maintenance playbooks, `packages/devkit/src/devkit_agt/features/`

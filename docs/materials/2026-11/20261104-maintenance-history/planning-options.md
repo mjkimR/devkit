@@ -46,7 +46,7 @@ Recommendation: 3a. The configured repository and branch are default inputs, nev
 | 4c. 4b plus a SHA-256 digest of the local diff (`git diff --binary HEAD` and untracked file bytes) with the diff retained locally | `CAP-DLV-weekly-report` §2 requires a preserved diff or artifact reference for selected uncommitted content | One diff file per dirty run | The diff may hold secrets; it stays local unless the run selects it | None |
 | 4d. `git stash create` as a commit-shaped identity | Not in repository evidence | A dangling commit per run | Needs retention; tracked changes only; must not be used as `source_sha` | Unverified |
 
-Recommendation: 4c, recorded as `PADR-inspected-state-identity`. `source_sha` stays a commit.
+Recommendation: 4c, recorded as `ADR-inspected-state-identity`. `source_sha` stays a commit.
 
 ## Set 5: record layout and retrieval
 

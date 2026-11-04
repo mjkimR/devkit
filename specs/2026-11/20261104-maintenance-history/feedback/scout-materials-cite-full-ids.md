@@ -19,7 +19,7 @@ created_at: 2026-11-04
 - **Current Procedure**: The scout contract asks for `path:line` citations internally and lets the scout write one
   file under the proposal's `materials/`. It says nothing about document IDs. A scout wrote two architecture
   documents by their number prefix alone (the first two segments of the ID, without the slug) in prose inside
-  `materials/internal-constraints.md`; `RULE-id-convention` refused the fold commit with `GATE_RULES_FAILED`, and
+  `docs/materials/2026-11/20261104-maintenance-history/internal-constraints.md`; `RULE-id-convention` refused the fold commit with `GATE_RULES_FAILED`, and
   the Host edited the scout's file by hand before committing.
 - **Proposed Procedure**: Add one line to the scout contract's write rule (and to the `spec-delegate` scout payload
   row): a written artifact cites documents by their full ID in backticks (`ARCH-08-1-agent-output`, never its

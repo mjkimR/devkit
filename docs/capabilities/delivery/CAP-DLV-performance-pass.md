@@ -36,7 +36,7 @@ latency, subprocess count or peak memory of operations the user selects; mainten
   - a bundled timing script; the run uses an installed benchmark tool or the agent's own loop
     (`ADR-performance-pass`);
   - a scheduler or trigger (external runners, `ADR-playbook-retrieval`) and a history store
-    (`PROP-maintenance-history`);
+    (`SPEC-maintenance-history`);
   - the direct-mode overall-refactor route, which stays granted to `CAP-DLV-review-refactor` runs only;
   - a contract-changing speedup inside the behavior-preserving work item; it is its own work item through the
     repository's normal development workflow (`ADR-performance-pass`).

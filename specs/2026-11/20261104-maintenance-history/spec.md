@@ -1,38 +1,23 @@
 ---
-id: PROP-maintenance-history
+id: SPEC-maintenance-history
 title: Maintenance execution history on a GitHub orphan branch
-summary: "Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-22
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-maintenance-run-history
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/
-    - packages/devkit-catalog/tests/
-    - packages/devkit/src/devkit_agt/features/
-    - packages/devkit/tests/
-    - packages/devkit/pyproject.toml
-    - packages/devkit/README.md
-    - .devkit/architecture.toml
-    - docs/capabilities/delivery/
-    - docs/usecases/governance/
-    - docs/development/reference/
-    - docs/steering/glossary.md
-  excludes:
-    - docs/decisions/
-    - packages/devkit-dist/src/devkit_dist/features/shared/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Persists maintenance playbook execution records on a dedicated GitHub orphan branch through gh api, linked to the inspected source revision, without touching the local checkout or code history.
+status: planned
+created: 2026-11-04
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-maintenance-history] Maintenance execution history on a GitHub orphan branch
+# [SPEC-maintenance-history] Maintenance execution history on a GitHub orphan branch
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-maintenance-history on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-maintenance-history`
+
+### 1. Background & Hypothesis
 
 Maintenance playbooks (`weekly-report`, `drift-reconciliation`, `review-refactor`, `performance-pass`) produce
 findings and decisions that later runs and reports need, but nothing keeps them beyond the run. Recording each run
@@ -41,26 +26,45 @@ without switching branches, staging files, creating local commits or pushing. Ma
 depend on it. This draft is the direct member of `MS-maintenance-run-history`, which took this scope over from
 `MS-maintenance-operations`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Maintenance execution history on a GitHub orphan branch so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which GitHub Contents or Git Database endpoints give atomic multi-file publication and non-forced,
   retry-safe branch updates under concurrent writers?
-  Answer (`materials/github-publication-api.md`): only the Git Database sequence (blobs, a tree with `base_tree`,
+  Answer (`docs/materials/2026-11/20261104-maintenance-history/github-publication-api.md`): only the Git Database sequence (blobs, a tree with `base_tree`,
   a commit, one `PATCH git/refs/heads/<branch>` with `force` omitted) publishes several files in one commit and
   refuses a non-fast-forward update. The Contents API writes one commit per file. GraphQL `createCommitOnBranch`
   carries an expected head but its atomicity, branch creation and orphan behavior are undocumented. API-level
   idempotency and exact error texts are unverified; Development confirms them in a labelled live exercise.
 - **Q2**: How does a run that inspected uncommitted changes identify that state, given a commit SHA alone does not?
-  Answer (`materials/internal-constraints.md` §4): by the source SHA, the dirty path list, a tree hash from a
-  temporary index and a SHA-256 digest of the retained local diff (`PADR-inspected-state-identity`).
+  Answer (`docs/materials/2026-11/20261104-maintenance-history/internal-constraints.md` §4): by the source SHA, the dirty path list, a tree hash from a
+  temporary index and a SHA-256 digest of the retained local diff (`ADR-inspected-state-identity`).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-The comparison behind each choice is `materials/planning-options.md`; the decisions are
-`PADR-history-branch-publication` and `PADR-inspected-state-identity`. The challenger findings of
-`envelopes/challenger-01.yaml` are folded into this section.
+The comparison behind each choice is `docs/materials/2026-11/20261104-maintenance-history/planning-options.md`; the decisions are
+`ADR-history-branch-publication` and `ADR-inspected-state-identity`. The challenger findings of
+historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-maintenance-history/envelopes/challenger-01.yaml` are folded into this section.
 
-### 3.1 Command family
+#### 3.1 Command family
 
 `devkit maintenance history` is a new feature of `devkit-agt` (`packages/devkit/src/devkit_agt/features/
 maintenance_history/`) with `cli`, `usecases`, `services` and `repositories` layers, mounted through the
@@ -88,7 +92,7 @@ read with `git remote get-url origin`; `--branch` defaults to `[maintenance.hist
 `update` are the only commands that mutate GitHub; each refuses without `--authority`, and `publish` never
 initializes a branch.
 
-### 3.2 History branch layout
+#### 3.2 History branch layout
 
 ```
 README.md                                           # fixed bytes: history marker, layout, "never merge into a code branch"
@@ -103,7 +107,7 @@ index/<playbook>/<YYYY>.jsonl                       # one line per published run
   sort by time, two runs never share a path and `get` derives the playbook from the ID.
 - The root commit is deterministic: fixed `README.md` bytes, a fixed `devkit maintenance history` identity and a
   fixed date give one constant root commit SHA, computed once in Development and recorded in the capability. The
-  bytes, identity, date and constant are frozen for good (`PADR-history-branch-publication` §5). `init`, `publish`
+  bytes, identity, date and constant are frozen for good (`ADR-history-branch-publication` §5). `init`, `publish`
   and `update` validate an existing branch with one `GET compare/<root>...<head>?per_page=1` request after the
   reference read succeeded: a 200 with status `identical` or `ahead` passes; a 200 with any other status, or a 404
   on the compare, is `HISTORY_BRANCH_FOREIGN` and the branch is never updated. Every request is tested for a rate
@@ -120,14 +124,14 @@ index/<playbook>/<YYYY>.jsonl                       # one line per published run
   are pinned from the record, so a rebuilt commit for the same content has the same SHA on every machine; the
   record's `authority` field names the person. Source SHAs and history commit SHAs stay distinct fields.
 
-### 3.3 Run record
+#### 3.3 Run record
 
 One record type serves the four playbooks and is the companion record that `CAP-DLV-weekly-report` §4 defines:
 
 - Identity: `run_id`, `playbook`, `repository` (credential-free `owner/repo`), `scope`, `timezone` (the IANA name
   from `--timezone`, else the system zone marked `source: system`), `started_at` and `finished_at` as UTC and local
   time with offset, `supersedes` (run IDs this run replaces) and `prior_runs` (earlier run IDs the playbook compared).
-- Inspected state (`PADR-inspected-state-identity`): `source_sha` (HEAD at intake), `dirty`, `dirty_paths`,
+- Inspected state (`ADR-inspected-state-identity`): `source_sha` (HEAD at intake), `dirty`, `dirty_paths`,
   `inspected_tree`, `diff_digest` and `diff_path`. The comparison set is fixed at `start` and reused by `finish`: it
   excludes the run directory and the report path given with `--report`, which are left out of `dirty_paths`, of the
   temporary index and of the retained diff, so a run's own output never counts as drift. The exclusion is a
@@ -158,7 +162,7 @@ A run with no findings records `outcome: completed` with zero counts and stays d
 by its index line and record. The record's bytes never change after `finish`; later integration state goes into an
 amendment, and a publication outcome changes only the local publication fields.
 
-### 3.4 Publication contract
+#### 3.4 Publication contract
 
 - Publication is a separately authorized step per run: `init`, `publish` and `update` refuse without
   `--authority`, and the playbook obtains that authority from the user in the conversation for a destination the
@@ -221,7 +225,7 @@ Codes, channels and exit codes (`ARCH-08-cross-cutting` §4; modes per `CAP-ADV-
 | `HISTORY_RUN` | `list` | stdout | 0 | one line per run |
 | `HISTORY_RUN_MISSING` | `get` | `[ERROR]` | 1 | `INPUT_ERROR`: check the run ID with `list`; also the result on an absent branch |
 
-### 3.5 Playbook changes
+#### 3.5 Playbook changes
 
 Where `devkit maintenance` is installed, each of the four playbooks gains a run-record step at intake
 (`history start`), at completion (`history finish`) and an optional publication step that names the destination,
@@ -233,7 +237,7 @@ weekly report's companion record becomes this record; the drift playbook gains a
 decision and application procedures do not change (`MS-maintenance-run-history` non-goals). Only the Host or the
 playbook's own step runs the commands; subagents never write a run's records.
 
-### 3.6 Verification
+#### 3.6 Verification
 
 - Integration tests with an injected `gh` runner that models the Git Database, contents, commits and compare
   endpoints in memory: initialization against an empty, absent, matching and foreign branch; multi-file
@@ -254,7 +258,7 @@ playbook's own step runs the commands; subagents never write a run's records.
 - A live exercise against a throwaway repository, labelled as such, confirms the unverified API facts (exact error
   responses, repeated POST behaviour, same-sha reference update, 404 semantics) before the capability states them.
 
-### 3.7 Living Spec impact
+#### 3.7 Living Spec impact
 
 - New: the delivery capability `maintenance-history` (its ID is assigned at spec-sync; the command family, record,
   branch layout, root constant and publication contract) and the use cases `record-a-maintenance-run` and
@@ -270,15 +274,15 @@ playbook's own step runs the commands; subagents never write a run's records.
   artifact and is not subject to its seven-day TTL), `ADR-local-and-pull-request-integration` (PR operations keep
   their protocol) and the `[integration]` and `pull_request` policies, which do not cover the history branch.
 
-### 3.8 Non-goals
+#### 3.8 Non-goals
 
 Scheduler or trigger design, the maintenance procedures themselves, records on the default code branch, merging
 the history branch, automatic code changes or integration, a general-purpose store, destructive history compaction
 or retention cleanup, a non-GitHub provider, publishing the retained diff by default, and a web view of the history.
 
-## Planning decisions
+### Planning decisions
 
-- Publication mechanism: the Git Database API sequence (`PADR-history-branch-publication`); the Contents API and
+- Publication mechanism: the Git Database API sequence (`ADR-history-branch-publication`); the Contents API and
   GraphQL `createCommitOnBranch` are rejected for now with the condition recorded in the PADR.
 - Code placement (user, `answer-01` q1): a `devkit-agt` feature; the content-only catalog keeps the playbook
   text. Size moves from `M` to `L` for the feature, its fakes and the capability work.
@@ -286,11 +290,11 @@ or retention cleanup, a non-GitHub provider, publishing the retained diff by def
   `pending` as the default outcome; the configured repository and branch are inputs. A standing opt-in in
   configuration was rejected because it would need a superseding ADR and would grant publication authority by
   policy.
-- Inspected-state identity (user, `answer-01` q4): `PADR-inspected-state-identity`; `source_sha` stays a commit,
+- Inspected-state identity (user, `answer-01` q4): `ADR-inspected-state-identity`; `source_sha` stays a commit,
   and the diff is published only when the run selects it.
 - Record layout: run directories, append-only amendments and a per-playbook index sharded by the run ID's year;
-  size-based rollover, a recursive tree walk and a search endpoint are rejected (`materials/planning-options.md`
-  set 5 and `envelopes/challenger-01.yaml` findings 1, 3 and 4).
+  size-based rollover, a recursive tree walk and a search endpoint are rejected (`docs/materials/2026-11/20261104-maintenance-history/planning-options.md`
+  set 5 and historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-maintenance-history/envelopes/challenger-01.yaml` findings 1, 3 and 4).
 - Branch validation: a constant, frozen root commit and one compare request whose error classes follow the
   advisory modes (challenger-01 finding 5, challenger-02 findings 4 and 8).
 - Secret check: at `finish` over the report and record, at `publish` and `update` over added files, as an
@@ -311,10 +315,12 @@ or retention cleanup, a non-GitHub provider, publishing the retained diff by def
 - Terminology: playbook run, run record, report, publication destination, source SHA; bare "artifact", "receipt"
   and "revision" are avoided for history objects.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr maintenance-history "<title>" --summary "<Y-statement>" records a PADR in decisions/.
 - On acceptance (plan-accept): devkit spec proposal accept maintenance-history --by user, then the Planning branch is merged.
   Development starts with devkit spec proposal handoff maintenance-history.
 - On rejection: change only status: rejected, with the user's reason in the commit message.
 -->
+

@@ -85,7 +85,7 @@ external consumers. Deferring every such removal leaves reductions as unworked f
     `drift-reconciliation` pattern; more rounds per run. (Chosen.)
   - All surfaces with a top-N cap ranked by maintenance cost: an arbitrary cap over incomparable criteria and large
     mixed diffs (rejected in `ADR-bound-review-refactor-runs-by-surface-batch`).
-  - Diff-driven since a named ref or the last run: misses accumulated debt; needs `PROP-maintenance-history` without
+  - Diff-driven since a named ref or the last run: misses accumulated debt; needs `SPEC-maintenance-history` without
     a named ref (rejected in `ADR-bound-review-refactor-runs-by-surface-batch`).
 - **Preservation evidence**:
   - Reachability (static plus dynamic reach) with verification before and after and a characterization test only
@@ -268,7 +268,7 @@ external consumers. Deferring every such removal leaves reductions as unworked f
   - An external consumer outside the repository breaks after a contract removal; the contract work item and the named
     inputs make the break traceable.
 - **Follow-ups**:
-  - When `PROP-maintenance-history` lands, a diff-driven scope may be offered as an intake option; that change needs
+  - When `SPEC-maintenance-history` lands, a diff-driven scope may be offered as an intake option; that change needs
     its own decision.
   - The `spec` bundle's classification criteria name no maintenance-playbook case; when this PADR is promoted, the
     Host records the alignment of `packages/devkit-spec` classification text as feedback, since this proposal's
