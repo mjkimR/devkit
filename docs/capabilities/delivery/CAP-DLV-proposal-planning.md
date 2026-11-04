@@ -16,6 +16,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py
 ---
 
 # [CAP-DLV-proposal-planning] Proposal Planning and Handoff
@@ -81,8 +82,8 @@ removes it.
    (`PROP-<YYYYMMDD>-<x>`) is `SPEC_PROPOSAL_INVALID`; a legacy proposal or PADR slug whose first segment has no letter is
    `SPEC_PROPOSAL_SLUG_INVALID`.
 5. **Roll back a failed write**: any failure while writing the spec bundle, the blueprint, the ADRs or moving the
-   materials and carried files removes what was written, moves them back and keeps the proposal, so the handoff can
-   be rerun. The roll-back MUST NOT remove a directory that still holds something it could not move back, and MUST
+   materials and carried files removes what was written, restores the text of every ADR it gave a pointer
+   (4.5, step 4), moves them back and keeps the proposal, so the handoff can be rerun. The roll-back MUST NOT remove a directory that still holds something it could not move back, and MUST
    NOT move, remove or record a path that existed before the handoff: no pre-existing file or directory of a merged
    materials directory is recorded as written or moved, on one file system or across file systems. An advisory
    error (such as `FRONTMATTER_INVALID` binding `spec.md`) is reported with its own code after a complete roll-back,
@@ -230,6 +231,11 @@ docs/proposals/PROP-<slug>/
 └── materials/        # research, benchmarks, surveys
 ```
 
+`new` writes only the files (`proposal.md`, and `target-docs.md` with `--with-target-docs`): Git tracks no empty
+directory, so a `plan-<slug>` worktree would not hold one. Each directory is created by the command that first writes
+into it: `decisions/` by `padr` or devkit's first gate record, `envelopes/` by the first envelope, `feedback/` by the
+first feedback file and `materials/` by its first file (`SPEC-proposal-scaffold-and-handoff-pointers`).
+
 A single-file proposal `docs/proposals/PROP-<slug>.md` can be handed off too; it has no PADRs, materials or
 blueprint, and its body is not carried (the spec gets the plain skeleton). `target-docs.md` is recommended for
 `size: M` or `L` or when Living Spec structural changes are expected: `proposal.md` says why, `target-docs.md`
@@ -337,8 +343,17 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    replaced by `ADR-`, so the own-prefix rule holds after the rename. Only the IDs of the PADRs this handoff promotes
    change, and never inside a file name (`PADR-<slug>.md` in a link is left to step 6). Other files under
    `decisions/` are not promoted. A `supersedes` reaches the ADR unchanged, and the scaffold's commented
-   `# supersedes:` line, left unchanged, is dropped; handoff edits no ADR a `supersedes` names, whose
-   `status: superseded` or "Superseded in part by" line is written in Development.
+   `# supersedes:` line, left unchanged, is dropped. For each `supersedes` entry that resolves to one ADR whose
+   status is not `superseded`, the handoff MUST write one body line "Superseded in part by `ADR-<new>`: <clause>"
+   below that ADR's first H1 heading (after the frontmatter when it has none), as a paragraph of its own, in
+   promotion order when several PADRs name the same ADR, and MUST NOT write it when a visible line of that ADR
+   already names the promoted ADR by its ID or an alias; `<clause>` is the PADR's `summary`, else its `title`, as
+   one sentence, and Development replaces it with the replaced clauses at `living-spec-draft`. The pointer is the
+   line `RULE-decision-supersession` requires, so the handoff commit passes the gate; each line is reported as
+   `[SUPERSEDED_IN_PART: <adr> path= line= by=]` (JSON `pointers`). The handoff writes no `status: superseded` or
+   `superseded_by` (a whole supersession is the author's edit), and an entry that resolves to nothing, to several
+   documents or to a non-ADR is left to `RULE-document-reference`
+   (`SPEC-proposal-scaffold-and-handoff-pointers`).
 5. **Feedback and materials**: open `feedback/*.md` files move into the new spec's feedback directory;
    settled feedback follows the generic extras route. `materials/` moves to `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` when it holds a file other
    than operating-system junk (`.DS_Store`, `Thumbs.db`, `desktop.ini`) or a symbolic link. Every other bundle file the
@@ -528,6 +543,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 [TARGET_DOCS: specs/2026-10/20261013-fast-engine/target-docs.md]
 [MATERIALS: docs/materials/2026-10/20261013-fast-engine]
 [PROMOTED_ADR: ADR-use-ast-parser path=docs/decisions/2026-10/20261013-use-ast-parser.md padr=PADR-use-ast-parser]
+[SUPERSEDED_IN_PART: ADR-regex-rules path=docs/decisions/2026-09/20260901-regex-rules.md line=9 by=ADR-use-ast-parser]
 [DROPPED_RECORD: docs/proposals/PROP-fast-engine/decisions/01-gate-plan-intent.yaml]
 [DROPPED_RECORD: docs/proposals/PROP-fast-engine/decisions/02-gate-plan-accept.yaml]
 [CARRIED_GATE: gate:plan-intent decision=specs/2026-10/20261013-fast-engine/decisions/01-gate-plan-intent.yaml]
@@ -556,7 +572,8 @@ uv run devkit spec proposal check fast-engine                        # before an
 - `handoff`: `[HANDOFF: ...]` (`workflow=-`: unbound; `dev_effort=<effort>` when the proposal declared `dev_effort`), `[TARGET_DOCS: ...]` and `[MATERIALS: ...]` when the bundle had
   them (`[MATERIALS: <dir> merged=yes]` when merged into an existing directory), one
   `[DROPPED_DUPLICATE: <path>]` per kept destination file whose identical proposal copy was dropped, one
-  `[PROMOTED_ADR: ...]` per PADR, one `[DROPPED_RECORD: <path>]` per workflow record of the proposal
+  `[PROMOTED_ADR: ...]` per PADR, one `[SUPERSEDED_IN_PART: <adr> path=<path> line=<n> by=<promoted ADR>]` per
+  "Superseded in part by" line written into an ADR (4.5, step 4), one `[DROPPED_RECORD: <path>]` per workflow record of the proposal
   unit, one `[CARRIED_GATE: <request> decision=<path>]` per approval carried by name (rule 12),
   one `[REWRITTEN: <path>:<line> kind=link|id|path from= to=]` per rewrite, one
   `[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]` per link or reference left as it was, `[SCOPE: ...]` when
