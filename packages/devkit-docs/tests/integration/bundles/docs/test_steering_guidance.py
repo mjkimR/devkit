@@ -49,3 +49,9 @@ def test_ux_objects_are_optional_local_rows_read_with_global_rows() -> None:
     assert_rule(guide, "namespace-specific object rows", "namespace register", "shared object rows", "root register")
     assert_rule(guide, "only when local rows are needed", "never copy")
     assert_rule(guide, "link and coverage rules do not parse", "object registers")
+
+
+def test_seed_ux_creates_only_registers_with_needed_rows() -> None:
+    guide = (BUNDLE / "seed/docs/ux/README.md").read_text()
+    assert_rule(guide, "`docs/steering/ux-objects.md`", "created only when shared rows are needed")
+    assert_rule(guide, "existing root", "`docs/packages/<name>/steering/ux-objects.md`", "only for needed local rows")

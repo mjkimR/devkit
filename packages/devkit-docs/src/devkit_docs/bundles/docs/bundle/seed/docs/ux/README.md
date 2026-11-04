@@ -29,8 +29,9 @@ ux/
 2. **Text contract**: content is written as prose regions and a content tree, never as a character-cell layout; the
    wireframe medium stays the project's, linked from the optional Evidence section.
 3. **Objects**: name objects by glossary terms; their representations and calls to action per role live in the
-   steering file `docs/steering/ux-objects.md`, created with the first UX document. For namespace UX, read it
-   together with `docs/packages/<name>/steering/ux-objects.md` and put namespace-specific rows there when needed.
+   root steering file `docs/steering/ux-objects.md` for shared rows, created only when shared rows are needed.
+   For namespace UX, read the existing root and `docs/packages/<name>/steering/ux-objects.md` registers together;
+   create the namespace register only for needed local rows and put namespace-specific rows there.
 
 ---
 
