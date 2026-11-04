@@ -30,10 +30,12 @@ from devkit_spec.features.entrypoints import (
     exclude,
     fold_by_directory_selectors,
     load_bundle,
+    normalize,
     select,
     unmatched_selectors,
 )
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
+from devkit_spec.features.entrypoints.repositories.managed import load_managed_outputs
 
 DEFAULT_STATUS = "completed,in-progress"
 
@@ -141,8 +143,23 @@ class DeriveEntrypointsUseCase(BaseUseCase):
                 skipped += bundle_skipped
             pairs = aggregate(per_bundle, 1 if min_count is None else min_count)
 
+        managed = load_managed_outputs(root)
+        generated_codes = [code for code in dict.fromkeys(codes) if managed.contains(normalize(code))]
+        if generated_codes:
+            raise EntrypointsCodeUnmatchedError(
+                f"{len(generated_codes)} --code path(s) match no authored candidate",
+                *(f"--code {code}" for code in generated_codes),
+                target_files=generated_codes,
+            )
         pairs = fold_by_directory_selectors(root, pairs, codes, documents)
         pairs = adopt_nested_selectors(root, pairs, codes, documents)
+        authored: list[Pair] = []
+        for pair in pairs:
+            if managed.contains(pair.code):
+                skipped.append(Skipped(SkipKind.BOUNDARY, pair.code, Reason.MANAGED_OUTPUT, pair.spec, pair.task))
+            else:
+                authored.append(pair)
+        pairs = authored
         derived = {pair.doc_path for pair in pairs}
         only = _resolve_targets(index, targets, derived) if write else None
         pairs = select(pairs, codes)

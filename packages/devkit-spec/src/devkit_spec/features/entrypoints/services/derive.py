@@ -1,7 +1,8 @@
 """Derivation: join a bundle's ``_Boundary`` code paths with its reconciled capability and use case documents.
 
 Document side: each ``reconcile.md`` target that is not ``waived`` and is entrypoint-bearing (``paths``), once.
-Code side: each ``_Boundary`` entry that is a literal path outside ``docs/`` and ``specs/``, once per bundle; one
+Code side: each authored ``_Boundary`` path outside ``docs/`` and ``specs/``, once per bundle; managed outputs
+are skipped using installation ownership. One
 under another candidate of the same bundle is folded into the shortest such ancestor. Every (document, code) pair
 is reported with ``state`` (``declared`` when an equal or ancestor entrypoint exists, else ``new``) and ``exists``
 (the path is in the working tree). What is not turned into a pair is ``Skipped`` with a reason. A pair is a
@@ -27,6 +28,7 @@ from devkit_docs.features.governance.services.entrypoint_paths import (
 
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
 from devkit_spec.features.entrypoints.repositories.bundle import Bundle
+from devkit_spec.features.entrypoints.repositories.managed import load_managed_outputs
 
 NOT_APPLICABLE = ("n/a", "none")
 EXCLUDED_TREES = ("docs", "specs")
@@ -107,6 +109,7 @@ def derive(root: Path, bundle: Bundle, documents: Mapping[str, Document]) -> tup
         else:
             skip(Reason.NOT_A_DOCUMENT if (root / file).is_file() else Reason.MISSING_DOC)
 
+    managed = load_managed_outputs(root)
     candidates: list[_Candidate] = []
     seen_code: set[str] = set()
     for task in bundle.tasks:
@@ -114,6 +117,8 @@ def derive(root: Path, bundle: Bundle, documents: Mapping[str, Document]) -> tup
             code, reason = classify_boundary(raw)
             if code is None:
                 skipped.append(Skipped(SkipKind.BOUNDARY, raw, reason or Reason.NOT_A_PATH, bundle.spec_id, task.index))
+            elif managed.contains(code):
+                skipped.append(Skipped(SkipKind.BOUNDARY, raw, Reason.MANAGED_OUTPUT, bundle.spec_id, task.index))
             elif code not in seen_code:
                 seen_code.add(code)
                 candidates.append(_Candidate(code, task.index))

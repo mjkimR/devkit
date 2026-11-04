@@ -42,3 +42,9 @@ and write refusal for AC-03. Shared-classifier regressions prove AC-05. Repeat t
 Run `just lint-check devkit-spec`, `just check devkit-spec`, focused entrypoint tests and `just test-affected --base
 00511ae149771e6197b51ba52f706992ff272161` with its full fallback preserved. Run cumulative CI rules against
 700c339bba8e89b4d70f63c5628d14d25bd3ffdd. No wheel contract changes require a separate packaging build.
+
+## 7. Measured Outcome
+
+The recorded library derivation of `SPEC-namespace-roadmap` now offers none of [.claude,
+.devkit/installation.json, .devkit/managed]; all three inputs carry managed-output skips. Seventeen unique authored
+candidate paths remain. No baseline checkout, runtime timing claim or remote operation was used.

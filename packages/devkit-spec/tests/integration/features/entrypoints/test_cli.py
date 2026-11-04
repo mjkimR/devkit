@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from devkit_dist.cli import cli as devkit_cli
+from spec_support.entrypoints import managed_receipt
 from spec_support.types import Write
 
 CAP = "docs/capabilities/x/CAP-X-one.md"
@@ -303,3 +304,69 @@ def test_derive_pages_documents_and_counts_missing_apart(bundles: Path) -> None:
     data = json.loads(_derive(bundles, "--all", "--format", "json").stdout)
     assert {"new", "missing", "folded"} <= set(data["summary"])
     assert all(set(item) == {"kind", "reason", "count"} for item in data["skipped"])
+
+
+@pytest.mark.parametrize("code", [".agents/generated.md", ".agents/generated/"])
+@pytest.mark.parametrize("apply", [False, True])
+def test_generated_selectors_cannot_be_synthesized_from_authored_ancestor(
+    bundles: Path, write: Write, code: str, apply: bool
+) -> None:
+    managed_receipt(write, ".agents/generated.md", ".agents/generated/skill.md")
+    write(".agents/generated.md", "generated")
+    write(".agents/generated/skill.md", "generated")
+    write(".agents/authored.md", "authored")
+    write("specs/2026-10/20261001-one/tasks.md", "- [x] t\n  - _Boundary: .agents/\n")
+    before = (bundles / CAP).read_text()
+    args = ["--apply", "--target", "CAP-X-one"] if apply else []
+    result = _derive(bundles, "--spec", "specs/2026-10/20261001-one", "--code", code, *args, "--format", "json")
+    assert result.exit_code == 2, result.output
+    assert _code(result) == "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
+    assert (bundles / CAP).read_text() == before
+    authored = _derive(
+        bundles, "--spec", "specs/2026-10/20261001-one", "--code", ".agents/authored.md", "--format", "json"
+    )
+    assert authored.exit_code == 0, authored.output
+    assert [pair["code"] for pair in json.loads(authored.stdout)["pairs"]] == [".agents/authored.md"]
+
+
+def test_generated_outputs_have_stable_skip_reason(bundles: Path, write: Write) -> None:
+    write("specs/2026-10/20261001-one/tasks.md", "- [x] t\n  - _Boundary: .devkit/managed/, src/pkg/\n")
+    result = _derive(bundles, "--spec", "specs/2026-10/20261001-one", "--skipped", "--format", "json")
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["pairs"][0]["code"] == "src/pkg"
+    assert payload["skipped"] == [
+        {"kind": "boundary", "value": ".devkit/managed/", "reason": "managed-output", "spec": "SPEC-one", "task": 1}
+    ]
+
+
+def test_malformed_receipt_is_coded_cli_error(bundles: Path, write: Write) -> None:
+    write(".devkit/installation.json", "{}")
+    result = _derive(bundles, "--spec", "specs/2026-10/20261001-one", "--format", "json")
+    assert result.exit_code == 2, result.output
+    assert _code(result) == "RECEIPT_INVALID"
+
+
+@pytest.mark.parametrize("code", [".devkit/managed/", ".devkit/installation.json"])
+def test_only_generated_candidates_remain_unmatched_before_target_or_directory_validation(
+    bundles: Path, write: Write, code: str
+) -> None:
+    write(
+        "specs/2026-10/20261001-one/tasks.md", "- [x] t\n  - _Boundary: .devkit/managed/, .devkit/installation.json\n"
+    )
+    before = (bundles / CAP).read_text()
+    result = _derive(
+        bundles,
+        "--spec",
+        "specs/2026-10/20261001-one",
+        "--code",
+        code,
+        "--apply",
+        "--target",
+        "CAP-X-one",
+        "--format",
+        "json",
+    )
+    assert result.exit_code == 2, result.output
+    assert _code(result) == "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
+    assert (bundles / CAP).read_text() == before
