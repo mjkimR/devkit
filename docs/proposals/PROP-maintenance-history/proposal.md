@@ -75,8 +75,8 @@ advisories on stderr with a stable `UPPER_SNAKE` code and an `[ACTION]`, one JSO
 | Command | Effect |
 | --- | --- |
 | `init --authority "<text>" [--repository <owner/repo>] [--branch <name>]` | Creates the deterministic root commit and the branch, or validates an existing branch against the constant root (§3.2); refuses a foreign branch without updating it; prints the root SHA, the head SHA and the authority text on its result line and writes no local file |
-| `start --playbook <id> --scope "<text>" --into <dir> [--report <path>] [--timezone <IANA name>] [--supersedes <run-id>]... [--prior-run <run-id>]...` | Captures the inspected state (§3.3) and writes the local run directory `<dir>/<run-id>/` with `record.json`; `--report` fixes the report path that the comparison set excludes |
-| `finish --run <dir> --outcome completed\|failed\|interrupted [--result "<text>"] [--report <file>] [--applied-commit <sha>]... [--follow-up <ID>]...` | Recaptures the inspected state with the set fixed at `start`, warns on drift, runs the secret check over the report and the record, computes the report SHA-256, closes the record; `--report` must equal the path given at `start` when both are present |
+| `start --playbook <id> --scope "<text>" --into <dir> --report <path> [--timezone <IANA name>] [--supersedes <run-id>]... [--prior-run <run-id>]...` | Captures the inspected state (§3.3) and writes the local run directory `<dir>/<run-id>/` with `record.json` and, for a dirty run, `inspected.diff`; `--report` is the report path the playbook recorded at intake and fixes the comparison set |
+| `finish --run <dir> --outcome completed\|failed\|interrupted [--result "<text>"] [--report <file>] [--applied-commit <sha>]... [--follow-up <ID>]...` | Recaptures the inspected state with the set fixed at `start`, warns on drift, runs the secret check over the report and the record, computes the report SHA-256, closes the record; `--report` is optional and must equal the path given at `start`, otherwise `finish` refuses with an input error |
 | `publish --run <dir> --authority "<text>" [--repository] [--branch] [--file <path>]...` | Publishes the record, the report and the named files as one commit on the history branch; writes the publication fields into the local record |
 | `update --run <dir> --authority "<text>" --integration-state "<text>" [--applied-commit <sha>]...` | Publishes an append-only amendment `updates/<UTC time>-<8 hex>.json` for a run whose work items integrated or stopped after `finish`; the name is fixed at the first attempt and kept in the local record so a retry reuses it |
 | `list --playbook <id> [--source-sha <sha>] [--outcome <value>] [--include-superseded] [--limit <n>]` | Reads the index shards newest year first until `--limit` is met and prints one `[HISTORY_RUN: ...]` line per run; an absent branch is an empty result with a notice, never a refusal |
@@ -106,8 +106,10 @@ index/<playbook>/<YYYY>.jsonl                       # one line per published run
   bytes, identity, date and constant are frozen for good (`PADR-history-branch-publication` §5). `init`, `publish`
   and `update` validate an existing branch with one `GET compare/<root>...<head>?per_page=1` request after the
   reference read succeeded: a 200 with status `identical` or `ahead` passes; a 200 with any other status, or a 404
-  on the compare, is `HISTORY_BRANCH_FOREIGN` and the branch is never updated; a 403 or 429 with `retry-after` is
-  `HISTORY_DEFERRED`; any other non-2xx response or a timeout is `HISTORY_GH_UNAVAILABLE`.
+  on the compare, is `HISTORY_BRANCH_FOREIGN` and the branch is never updated. Every request is tested for a rate
+  limit before any status mapping: a 429, or a 403 with `retry-after` or `x-ratelimit-remaining: 0`, is
+  `HISTORY_DEFERRED` with `retry_after` taken from `retry-after` or `x-ratelimit-reset`; a 5xx or a timeout on any
+  read is `HISTORY_DEFERRED` with a default `retry_after`.
 - An index line is `{"kind":"run"|"update","run_id","source_sha","inspected_tree","outcome","result",
   "finished_at","supersedes","path"}`; an `update` line repeats the run line's fields and adds
   `integration_state`, `updated_at` and the amendment `path`. `list` merges lines by `run_id`, taking the line with
@@ -132,12 +134,13 @@ One record type serves the four playbooks and is the companion record that `CAP-
   run directory outside the worktree needs no exclusion. Each command uses its own temporary index file in the Git
   directory and deletes it after `write-tree`; growth of the object store is accepted and is not a checkout change.
   A failing clean filter is `HISTORY_SNAPSHOT_FAILED`, and no record is written.
-  `inspected_tree` is the content identity: it is the same on every machine for the same content. `diff_digest`
+  `inspected_tree` is the content identity: the same content under the same ignore rules and clean filters gives
+  the same tree, and its consumer is the start-versus-finish comparison in one checkout. `diff_digest`
   binds the record to the retained diff file and is reproducible from that file alone, not across machines. The
   file holds `git -c diff.noprefix=false -c core.quotepath=false diff --no-ext-diff --no-textconv --no-renames
   --no-color --binary HEAD` with the exclusion pathspec, followed by one entry per untracked path in byte order:
   an 8-byte big-endian length and the path bytes, then an 8-byte big-endian length and the file bytes;
-  `diff_digest` is the SHA-256 of the whole file. A clean run records `inspected_tree` equal to `HEAD^{tree}` and
+  `diff_digest` is the SHA-256 of the whole file, which lives in the run directory as `inspected.diff`. A clean run records `inspected_tree` equal to `HEAD^{tree}` and
   null diff fields. `finish` adds `drifted_at_finish` when HEAD or the inspected tree changed and prints
   `HISTORY_RUN_DRIFTED` as a warning.
 - Outcome: `outcome` (`completed`, `failed` or `interrupted`, the same for every playbook) and `result` (the
@@ -161,13 +164,17 @@ amendment, and a publication outcome changes only the local publication fields.
   user selected (`CAP-DLV-weekly-report` §4, `ADR-mcp-runtime-and-shared-artifacts`). Invocation and
   `[maintenance.history]` settings grant none; a run's publication stays `pending` until `publish` succeeds. `init`
   writes no local file: its result line carries the authority text, and every publication record carries its own.
-- The secret check runs where the content can still change: `finish` runs the installed `secret_leak` rule over the
+- The secret check runs where the content can still change: `finish` runs the `secret_leak` builtin over the
   report and the record before the report SHA-256 is computed, and `publish` and `update` run it over the `--file`
-  additions and the amendment only. A hit is `HISTORY_SECRET_FOUND` (`INPUT_ERROR`, naming the path and line); the
-  check builds its rule context rooted at the run directory, and `maintenance_history` declares a feature edge to
-  `rules` for it.
-- `publish` reads the repository first: a 401, 403 or 404 there is `HISTORY_PUBLISH_FAILED` (outcome `failed`:
-  destination or permission). With the repository readable, a 404 on the branch reference is
+  additions and the amendment only. A hit is `HISTORY_SECRET_FOUND` (`INPUT_ERROR`, naming the path and line). The
+  commands call `SecretLeakRule.check` directly with a rule context rooted at the run directory whose changed files
+  are the targets and whose exclude list is empty, independent of the project's `[rules]` settings;
+  `maintenance_history` declares a feature edge to `rules` for it.
+- Before sending, `publish` recomputes the SHA-256 of the report and of each `--file` and refuses a mismatch with
+  the digests frozen at `finish` as `HISTORY_EVIDENCE_CHANGED` (`INPUT_ERROR`): changed content is a new run, and
+  integration state after `finish` goes into an amendment, never into the report file.
+- `publish` reads the repository first: after the rate-limit test, a 401, 403 or 404 there is
+  `HISTORY_PUBLISH_FAILED` (outcome `failed`: destination or permission). With the repository readable, a 404 on the branch reference is
   `HISTORY_BRANCH_MISSING` (outcome `pending`; the action names `init`). With the reference read, the root check of
   §3.2 runs. `publish` then reads `runs/<playbook>/<run-id>/record.json` at that head: an identical blob SHA of the
   canonical bytes resolves `published` without resending and looks up `history_commit` with
@@ -179,10 +186,11 @@ amendment, and a publication outcome changes only the local publication fields.
   without force. On a rejected update it re-reads the head and repeats the inspection and build, at most three
   attempts; exhaustion is `HISTORY_DEFERRED` with the outcome `pending`.
 - Failure classes map onto the existing outcomes: a missing or logged-out `gh` is `HISTORY_GH_UNAVAILABLE` and
-  leaves `pending`; authentication, permission, ruleset and collision failures are `failed`; a rate limit, a
-  `retry-after`, race exhaustion or a 5xx or timeout on a read is `HISTORY_DEFERRED` and leaves `pending`; a lost
-  response on the reference update is `HISTORY_PUBLISH_UNKNOWN` (`unknown`) until an inspection resolves it. Every
-  outcome is distinct from the run's own `outcome`.
+  leaves `pending`; authentication, permission, ruleset and collision failures are `failed`; a rate limit, race
+  exhaustion, or a 5xx or timeout on any read or on any content-creating request before the reference update is
+  `HISTORY_DEFERRED` and leaves `pending`, because blobs, trees and commits are content-addressed and unreferenced
+  until the update; only a lost response on the reference update itself is `HISTORY_PUBLISH_UNKNOWN` (`unknown`)
+  until an inspection resolves it. Every outcome is distinct from the run's own `outcome`.
 - The commands never write the local index, refs, HEAD or working tree outside the run directory. Tests compare
   `git for-each-ref`, the index checksum and `git status --porcelain` outside `<dir>` before and after each
   command, `init` included.
@@ -196,13 +204,15 @@ Codes, channels and exit codes (`ARCH-08-cross-cutting` §4; modes per `CAP-ADV-
 | `HISTORY_BRANCH_MISSING` | `publish`, `update` | `[ERROR]` | 2 | `INTERACTION`: run `init` once the user authorizes it; the publication stays `pending` |
 | `HISTORY_REPOSITORY_EMPTY` | `init` | `[ERROR]` | 2 | `BLOCKED`: the repository needs an initial commit first |
 | `HISTORY_AUTHORITY_MISSING` | `init`, `publish`, `update` | `[ERROR]` | 2 | `INPUT_ERROR`: pass `--authority` after the user's decision |
-| `HISTORY_GH_UNAVAILABLE` | all GitHub commands | `[ERROR]` | 2 | `INTERACTION`: install or log in `gh`, or retry when GitHub answers; the local record stays `pending` |
-| `HISTORY_DEFERRED` | all GitHub commands | `[ERROR]` | 1 | `DEFER` with `retry_after`: rate limit, race exhaustion or a 5xx on a read; rerun later with the same inputs |
+| `HISTORY_GH_UNAVAILABLE` | all GitHub commands | `[ERROR]` | 2 | `INTERACTION`: install or log in `gh`; only a missing or logged-out `gh`; the local record stays `pending` |
+| `HISTORY_DEFERRED` | all GitHub commands | `[ERROR]` | 1 | `DEFER` with `retry_after`: rate limit, race exhaustion, or a 5xx or timeout on any read or any request before the reference update; rerun later with the same inputs |
 | `HISTORY_RUN_STARTED`, `HISTORY_RUN_FINISHED`, `HISTORY_RUN_UPDATED` | `start`, `finish`, `update` | stdout | 0 | result line with the run ID and path |
 | `HISTORY_RUN_DRIFTED` | `finish` | `[WARN]` | 0 (`--strict`: 1) | `CONTINUE`: revalidate the evidence as the playbook says |
 | `HISTORY_SNAPSHOT_FAILED` | `start`, `finish` | `[ERROR]` | 2 | `INPUT_ERROR`: fix the clean filter or exclude the path |
+| `HISTORY_REPORT_MISMATCH` | `finish` | `[ERROR]` | 2 | `INPUT_ERROR`: `--report` differs from the path given at `start` |
 | `HISTORY_PUBLISHED` | `publish` | stdout | 0 | result line with the history commit SHA |
 | `HISTORY_SECRET_FOUND` | `finish`, `publish`, `update` | `[ERROR]` | 1 | `INPUT_ERROR` with the path and line: remove the secret from the report or record (`finish`) or deselect the file (`publish`, `update`), then rerun |
+| `HISTORY_EVIDENCE_CHANGED` | `publish` | `[ERROR]` | 1 | `INPUT_ERROR` naming the file: the report or a selected file no longer matches the digest frozen at `finish`; changed content is a new run |
 | `HISTORY_PUBLISH_FAILED` | `publish`, `update` | `[ERROR]` | 1 | `INTERACTION`: fix credentials, permission or ruleset, then rerun with the same run |
 | `HISTORY_RECORD_COLLISION` | `publish`, `update` | `[ERROR]` | 1 | `BLOCKED`: the path holds different content; a changed record is a new run |
 | `HISTORY_PUBLISH_UNKNOWN` | `publish`, `update` | `[ERROR]` | 1 | `INTERACTION`: inspect the destination; a rerun resolves it by inspection, never by blind resend |
@@ -216,7 +226,8 @@ Where `devkit maintenance` is installed, each of the four playbooks gains a run-
 (`history start`), at completion (`history finish`) and an optional publication step that names the destination,
 the user's authority and `init` as a separately authorized action when the branch is absent. The review-refactor
 and performance-pass step that updates a report's outcome when a work item integrates or stops calls `history
-update` for a published run. Without `devkit maintenance`, each playbook keeps its current local record. The
+update` instead of editing the report file: the amendment replaces the in-file outcome update of
+`CAP-DLV-review-refactor` §5 and `CAP-DLV-performance-pass` §6, whose clauses change accordingly. Without `devkit maintenance`, each playbook keeps its current local record. The
 weekly report's companion record becomes this record; the drift playbook gains a run ID. The playbooks' review,
 decision and application procedures do not change (`MS-maintenance-run-history` non-goals). Only the Host or the
 playbook's own step runs the commands; subagents never write a run's records.
@@ -227,14 +238,17 @@ playbook's own step runs the commands; subagents never write a run's records.
   endpoints in memory: initialization against an empty, absent, matching and foreign branch; multi-file
   publication; a no-finding run; a failed run; a duplicate retry; two interleaved writers whose final head holds
   both run directories and both index lines; a lost response resolved by inspection; a collision; a rate-limited
-  attempt and a rate-limited compare; a 404 on a private repository; an absent branch on `publish`, `list` and
+  attempt, a 403 with `x-ratelimit-remaining: 0` on the repository read and a 502 on a blob upload, each deferred;
+  a report edited after `finish` refused at `publish`; a 404 on a private repository; an absent branch on `publish`, `list` and
   `get`; an amendment and its retry after a lost response; `list` across two year shards; `get`; and unchanged local
   Git state outside the run directory for every command. A PATH-shim `gh` covers a missing or unauthenticated `gh` and the runner's
   timeouts.
 - Unit tests on a temporary repository: identical dirty content gives identical `inspected_tree` under different
-  `diff.algorithm` and `diff.noprefix` settings, `diff_digest` is recomputed from the retained file alone, a changed
-  file changes both, the run directory and the report path never count as drift inside or outside the worktree, two
-  amendments in one second get distinct paths, and canonical JSON bytes are stable across key order.
+  `diff.algorithm` and `diff.noprefix` settings and under the same global excludes file, a global excludes file that
+  hides an untracked path changes it, `diff_digest` is recomputed from the retained file alone, a changed file
+  changes both, the run directory and the report path never count as drift inside or outside the worktree, a
+  `finish --report` that differs from `start` is refused, two amendments in one second get distinct paths, and
+  canonical JSON bytes are stable across key order.
 - Content tests keep each playbook self-contained and within budget.
 - A live exercise against a throwaway repository, labelled as such, confirms the unverified API facts (exact error
   responses, repeated POST behaviour, same-sha reference update, 404 semantics) before the capability states them.
@@ -246,7 +260,8 @@ playbook's own step runs the commands; subagents never write a run's records.
   `find-the-latest-maintenance-run` under `docs/usecases/governance/`.
 - Changed: `CAP-DLV-weekly-report` (the companion record and publication clauses cite the new capability; the scope
   sentence names it as the separate history backend), `CAP-DLV-drift-reconciliation` (run ID),
-  `CAP-DLV-review-refactor` and `CAP-DLV-performance-pass` (run record, publication and amendment steps), the
+  `CAP-DLV-review-refactor` and `CAP-DLV-performance-pass` (run record, publication and amendment steps; the
+  in-file outcome update becomes an amendment), the
   glossary (`playbook run`, `run record`, `publication destination`, `source SHA`), the `devkit_agt` feature edges
   in `.devkit/architecture.toml`, the `devkit.commands` and config-table entries of `packages/devkit/pyproject.toml`,
   `packages/devkit/README.md` and `docs/development/reference/`.
@@ -277,8 +292,9 @@ or retention cleanup, a non-GitHub provider, publishing the retained diff by def
   advisory modes (challenger-01 finding 5, challenger-02 findings 4 and 8).
 - Secret check: at `finish` over the report and record, at `publish` and `update` over added files, as an
   `INPUT_ERROR` (challenger-02 finding 5); `init` writes no local file (finding 2).
-- Digest claims: `inspected_tree` is the cross-machine content identity; `diff_digest` binds the record to the
-  retained file (challenger-02 finding 1).
+- Digest claims: `inspected_tree` is the content identity under the same ignore rules and clean filters, consumed
+  by the start-versus-finish comparison; `diff_digest` binds the record to the retained file (challenger-02 finding
+  1, challenger-03 finding 3). `publish` rechecks the frozen digests before sending (challenger-03 finding 4).
 - Outcome vocabulary: a common `outcome` field with three values and a playbook-specific `result` field, so the
   performance pass keeps its own values; integration state after `finish` is an amendment, never a record change.
 - Playbook coverage: all four maintenance playbooks (open question `q2`), each step guarded by the presence of

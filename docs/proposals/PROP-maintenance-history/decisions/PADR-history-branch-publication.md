@@ -83,13 +83,15 @@ We decided to adopt **Option 1**.
 - The root commit is deterministic (fixed `README.md` bytes, a fixed `devkit maintenance history` identity and a
   fixed date), so its SHA is a constant the capability records; an existing branch is used only when one compare
   request against that root answers 200 with `identical` or `ahead`. A 200 with another status or a 404 on the
-  compare is a foreign branch, refused without any update; a rate limit is deferred and any other failure or
-  timeout is reported as unavailable, never as foreign.
+  compare is a foreign branch, refused without any update. Every request is tested for a rate limit (a 429, or a
+  403 with `retry-after` or `x-ratelimit-remaining: 0`) before any status mapping; a rate limit, a 5xx or a timeout
+  on a read or on a content-creating request before the reference update is deferred with a retry time, never
+  foreign and never failed; unavailable means only a missing or logged-out `gh`.
 - The publication updates the branch reference without force. A rejected update re-reads the head, repeats the
   inspection, re-reads the index shard from that head and rebuilds on it, at most three times; exhaustion is a
   deferred publication whose outcome stays `pending`, never a confirmed failure.
 - The run ID in the record path is the idempotency key: before an attempt and after a lost response the publisher
-  reads the repository (a 401, 403 or 404 there is a failed publication), then the branch reference (a 404 there
+  reads the repository (after the rate-limit test, a 401, 403 or 404 there is a failed publication), then the branch reference (a 404 there
   is a missing branch that leaves the publication pending and names initialization), then the record at the head,
   resolves an identical canonical blob as published, refuses a different blob as a collision and never overwrites.
 - The published record is canonical JSON (sorted keys, compact separators, UTF-8, newline-terminated), so a retry
@@ -100,8 +102,12 @@ We decided to adopt **Option 1**.
 - Initialization, publication and amendment each need an explicit `--authority`; configuration supplies the
   repository and branch only, publication never initializes a branch implicitly, and initialization writes no
   local file.
-- The installed `secret_leak` rule runs at `finish` over the report and the record before the report digest is
-  computed, and at publication over added files only; a hit is an input error that names the path and line.
+- The `secret_leak` builtin runs at `finish` over the report and the record before the report digest is computed,
+  and at publication over added files only, called directly with a rule context rooted at the run directory and an
+  empty exclude list; a hit is an input error that names the path and line.
+- Before sending, the publisher recomputes the digests of the report and the selected files and refuses a
+  mismatch with the digests frozen at `finish` as an input error; changed content is a new run, and later
+  integration state is an amendment, never an edit of the report file.
 - The publisher reads the local repository only (`git rev-parse`, `git status --porcelain`, a temporary index) and
   never writes the index, HEAD, refs or working tree outside the run directory.
 - GitHub is the only provider, reached through `gh api` behind an injectable runner that names the repository in

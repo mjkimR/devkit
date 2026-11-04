@@ -44,8 +44,8 @@ identity that a later run can compare and that keeps possibly sensitive diff byt
   -c core.quotepath=false diff --no-ext-diff --no-textconv --no-renames --no-color --binary HEAD` with the same
   pathspec, followed by one entry per untracked path in byte order (8-byte big-endian length and path, 8-byte
   big-endian length and bytes), and `diff_digest` is its SHA-256.
-- **Pros**: `inspected_tree` is a content identity that is the same on every machine (Driver 1) with no local
-  Git change (Driver 2); the digest travels, the diff stays (Driver 3); `source_sha` is untouched (Driver 4).
+- **Pros**: `inspected_tree` is a content identity that is the same for the same content under the same ignore
+  rules and clean filters (Driver 1) with no local Git change (Driver 2); the digest travels, the diff stays (Driver 3); `source_sha` is untouched (Driver 4).
 - **Cons**: ignored files are outside `add -A`; `diff_digest` depends on the machine's remaining diff settings, so
   it is reproducible from the retained file, not across machines; a remote reader verifies it only where the diff
   is retained.
@@ -68,10 +68,12 @@ We decided to adopt **Option 1**.
 
 - A run record identifies its inspected state by `source_sha`, `dirty`, `dirty_paths`, `inspected_tree` and, for a
   dirty run, `diff_digest` with the retained local diff path.
-- The comparison set is fixed at `start` and reused at `finish`: it excludes the run directory and the report path
-  named at `start`, through one pathspec applied to both the temporary index and the diff and only for paths inside
+- The comparison set is fixed at `start` and reused at `finish`: it excludes the run directory (where the retained
+  diff lives) and the report path required at `start`, through one pathspec applied to both the temporary index and the diff and only for paths inside
   the worktree, so a run's own output never counts as dirty content or as drift.
-- `inspected_tree` is the content identity: the same content gives the same tree on every machine.
+- `inspected_tree` is the content identity: the same content under the same ignore rules and clean filters gives
+  the same tree; its consumer is the start-versus-finish comparison in one checkout, and a comparison across
+  checkouts holds only under the same ignore rules and filters.
 - The retained diff file is the digest input, produced with the pinned diff options above and the length-prefixed
   untracked entries; `diff_digest` binds the record to that file and a reader with the file recomputes it. The
   digest makes no cross-machine claim.
@@ -100,7 +102,8 @@ We decided to adopt **Option 1**.
 ## 6. Confirmation
 
 Tests of `devkit maintenance history start` on a temporary repository: identical content gives identical
-`inspected_tree` under different `diff.algorithm` and `diff.noprefix` settings, `diff_digest` is recomputed from
-the retained file alone, a changed file changes both, the run directory and the report path never count as drift
+`inspected_tree` under different `diff.algorithm` and `diff.noprefix` settings and under the same global excludes
+file, a global excludes file that hides an untracked path changes it, `diff_digest` is recomputed from the
+retained file alone, a changed file changes both, the run directory and the report path never count as drift
 inside or outside the worktree, and `git for-each-ref`, the index checksum and `git status --porcelain` outside the
 run directory are unchanged after the command. Restated by the new delivery capability `maintenance-history` (ID assigned at spec-sync).
