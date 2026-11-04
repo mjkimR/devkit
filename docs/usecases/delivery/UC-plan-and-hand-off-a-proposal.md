@@ -62,7 +62,8 @@ capabilities:
 7. The agent integrates the Planning branch under `plan-accept`'s authority; the workflow reports the proposal unit
    complete (`CAP-DLV-delivery-workflows`).
 8. With `proposal-handoff` authority, the agent starts `dev-<slug>` and hands the proposal off: the system creates the
-   spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs, moves materials and open
+   spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs and writes the "Superseded in
+   part by" line into each ADR a PADR's `supersedes` names that is not `superseded`, moves materials and open
    feedback, carries the `plan-intent` and `plan-accept` records by name, rewrites what pointed into the proposal and
    removes it (`CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`).
 9. The agent rereads the rewritten references and fixes unresolved links: after the composed handoff, which committed

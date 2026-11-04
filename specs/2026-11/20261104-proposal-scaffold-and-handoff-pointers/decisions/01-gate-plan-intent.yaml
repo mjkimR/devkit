@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-proposal-scaffold-and-handoff-pointers: Explicit user instruction to proceed
+  with the proposal; size S, planning_effort low; direction settled, direct acceptance
+  candidate'
+by: user
+at: '2026-11-04T00:46:07.864618Z'

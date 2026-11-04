@@ -160,6 +160,7 @@ def test_handoff_json(workspace: Path) -> None:
     assert payload["workflow"] is None and payload["next_command"] is None
     assert [notice["code"] for notice in payload["notices"]] == ["SPEC_PROPOSAL_UNBOUND"]
     assert set(payload) >= {"decisions", "rewritten", "rewritten_files", "unresolved", "materials", "target_docs"}
+    assert payload["pointers"] == []
     assert payload["dropped_records"] == [] and payload["carried_gates"] == []
     assert payload["materials_merged"] is False and payload["dropped_duplicates"] == []
 
@@ -233,3 +234,40 @@ def test_handoff_reports_dropped_records_and_carried_gates(workspace: Path) -> N
         f"[CARRIED_GATE: gate:plan-accept decision={spec_dir}/decisions/01-gate-plan-accept.yaml]",
     ]
     assert result.stderr == ""
+
+
+def test_handoff_reports_the_supersession_pointers_it_wrote(workspace: Path, write: Write) -> None:
+    # SPEC-proposal-scaffold-and-handoff-pointers: one line per "Superseded in part by" line written into an ADR.
+    old = "docs/decisions/2026-09/20260901-old.md"
+    write(old, "---\nid: ADR-old\nstatus: accepted\n---\n\n# [ADR-old] Old\n")
+    _proposal(workspace, "new", "pointed")
+    _proposal(workspace, "padr", "pointed", "Pick", "--summary", "For X, we pick, to win, accepting Y.")
+    padr = workspace / "docs/proposals/PROP-pointed/decisions/PADR-pick.md"
+    text = padr.read_text(encoding="utf-8")
+    placeholder = next(line for line in text.splitlines() if line.startswith("# supersedes:"))
+    padr.write_text(text.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
+    _accept(workspace, "pointed")
+
+    result = _proposal(workspace, "handoff", "pointed")
+
+    assert result.exit_code == 0, result.output
+    lines = result.stdout.splitlines()
+    promoted = next(i for i, line in enumerate(lines) if line.startswith("[PROMOTED_ADR: ADR-pick "))
+    assert lines[promoted + 1] == f"[SUPERSEDED_IN_PART: ADR-old path={old} line=8 by=ADR-pick]"
+    assert (
+        (workspace / old)
+        .read_text(encoding="utf-8")
+        .endswith("# [ADR-old] Old\n\nSuperseded in part by `ADR-pick`: For X, we pick, to win, accepting Y.\n")
+    )
+
+    write(old, "---\nid: ADR-old\nstatus: accepted\n---\n\n# [ADR-old] Old\n")
+    _proposal(workspace, "new", "pointed-json")
+    _proposal(workspace, "padr", "pointed-json", "Pick Again")
+    padr = workspace / "docs/proposals/PROP-pointed-json/decisions/PADR-pick-again.md"
+    text = padr.read_text(encoding="utf-8")
+    placeholder = next(line for line in text.splitlines() if line.startswith("# supersedes:"))
+    padr.write_text(text.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
+    _accept(workspace, "pointed-json")
+    result = _proposal(workspace, "handoff", "pointed-json", "--format", "json")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["pointers"] == [{"adr": "ADR-old", "path": old, "line": 8, "by": "ADR-pick-again"}]

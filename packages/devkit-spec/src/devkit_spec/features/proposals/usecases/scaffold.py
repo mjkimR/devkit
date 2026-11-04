@@ -1,7 +1,9 @@
 """Scaffold proposals: a bundle ``docs/proposals/PROP-<slug>/`` and the PADRs inside it.
 
 A bundle holds ``proposal.md``, ``decisions/`` (``PADR-<slug>.md`` preliminary decisions), ``materials/`` and,
-optionally, ``target-docs.md`` (the Living Spec blueprint). A proposal and a spec never share a slug, so a
+optionally, ``target-docs.md`` (the Living Spec blueprint). ``new`` writes only the files: ``decisions/`` is created by
+the first ``padr`` (or gate record), ``materials/`` with its first file, because Git tracks no empty directory and a
+Planning worktree would not hold them. A proposal and a spec never share a slug, so a
 handed-off ``PROP-<slug>`` maps to exactly one ``SPEC-<slug>``.
 
 ``proposal.md`` is the anchor of a devkit workflow unit: a new proposal is bound to workflow ``sdd-proposal`` when the
@@ -406,7 +408,7 @@ size: M                               # S | M | L | XL (XL: would need two or mo
 ## 4. Lifecycle & Retirement Criteria
 <!--
 - Preliminary decisions: devkit spec proposal padr {slug} "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/.
+- Research: collect benchmarks and references in materials/ (created with its first file).
 - On acceptance (plan-accept): devkit spec proposal accept {slug} --by user records gate:plan-accept and status:
   accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
   without Planning. Development starts with devkit spec proposal handoff {slug}.
@@ -599,8 +601,9 @@ class CreateProposalUseCase(BaseUseCase):
         )
 
         created = (today or date.today()).isoformat()
-        (bundle / DECISIONS).mkdir(parents=True)
-        (bundle / MATERIALS).mkdir()
+        # Only files are scaffolded: Git tracks no empty directory, so a Planning worktree would lack them anyway.
+        # ``padr`` creates ``decisions/`` and the first material ``materials/``; devkit's record writers create their own.
+        bundle.mkdir(parents=True)
         proposal = bundle / PROPOSAL_FILE
         text = _proposal(
             slug,

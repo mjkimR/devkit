@@ -95,7 +95,7 @@ def test_a_split_keeps_provenance_rewires_the_edge_and_retires_the_feedback(tmp_
     target.parent.mkdir(parents=True)
     source.rename(target)
     git(root, "rm", "-q", "-r", "docs/proposals/PROP-wide")
-    shutil.rmtree(root / "docs/proposals/PROP-wide")  # the emptied feedback/ directory
+    shutil.rmtree(root / "docs/proposals/PROP-wide", ignore_errors=True)  # a directory git rm left, if any
 
     assert _meta(later)["depends_on"] == ["PROP-wide-core"]
     assert _docs(root, "resolve", "PROP-wide-core").exit_code == 0

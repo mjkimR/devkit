@@ -25,6 +25,8 @@ Text output (paths are relative to the workspace root):
   ``[MATERIALS: <dir>]`` (``merged=yes`` when the materials were merged into an existing directory), one
   ``[DROPPED_DUPLICATE: <path>]`` per kept file whose byte-identical proposal copy was dropped, one
   ``[PROMOTED_ADR: <id> path= padr=]`` per promoted decision, one
+  ``[SUPERSEDED_IN_PART: <adr> path= line= by=]`` per "Superseded in part by" line written into an ADR a promoted
+  decision supersedes in part, one
   ``[DROPPED_RECORD: <path>]`` per workflow record of the proposal unit removed with it, one
   ``[CARRIED_GATE: <request> decision=<path>]`` per approval of the proposal (``gate:plan-intent``,
   ``gate:plan-accept``) recorded in the spec under its name, one
@@ -484,6 +486,8 @@ def handoff_cmd(slug: str, effort: str | None, workspace_root: str | None, outpu
             click.echo(sentinel("DROPPED_DUPLICATE", path))
         for decision in result.decisions:
             click.echo(sentinel("PROMOTED_ADR", decision.id, path=decision.path, padr=decision.padr))
+        for pointer in result.pointers:
+            click.echo(sentinel("SUPERSEDED_IN_PART", pointer.adr, path=pointer.path, line=pointer.line, by=pointer.by))
         for path in result.dropped_records:
             click.echo(sentinel("DROPPED_RECORD", path))
         for gate in result.carried_gates:

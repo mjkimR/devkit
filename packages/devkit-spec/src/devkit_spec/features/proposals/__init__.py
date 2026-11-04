@@ -19,6 +19,7 @@ from devkit_spec.features.proposals.usecases.handoff import (
     TASK_KIND,
     CarriedGate,
     HandoffResult,
+    SupersessionPointer,
     handoff_proposal,
 )
 from devkit_spec.features.proposals.usecases.prune import prune_proposals
@@ -48,6 +49,7 @@ __all__ = [
     "CreatedSpec",
     "HandoffResult",
     "Rewritten",
+    "SupersessionPointer",
     "Unresolved",
     "accept_proposal",
     "carry_proposal_body",

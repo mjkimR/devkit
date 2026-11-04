@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:16:25.226896Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; self-verification by the implementer: the P2 wording fix is at the named location (4.10 JSON list now names pointers with adr, path, line, by, matching HandoffResult.to_dict) and the P3 is waived in reconcile.md (the ADR sentence scopes the rewriting step; docs/decisions/ outside the agreed boundary); both targets reflected, reconcile.md resolved, spec completed'
+findings: []
+checks:
+  rules: PASS devkit rules check on the bundle and capability errors=0
+diff_scope:
+  base: 5aecaef787214988e6bf81ae36aacca57f2634a3
+  head: 3a943025f97eb8c6d551d4807cd83831dafa6d87
