@@ -37,6 +37,7 @@
       "kind": "playbook",
       "paths": [
         ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md",
+        ".devkit/managed/authoring/playbooks/skill-authoring/references/roles.md",
         ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md"
       ]
     },
@@ -1540,11 +1541,15 @@
     },
     ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
       "mode": 420,
-      "sha256": "0ecdcadfe3f7b58204f6c26f8709bb54380a3ab5044cc51251a29bb72946f9a7"
+      "sha256": "4c0db2550b1e633384c4b6a1bb0305ad8065324714ad2b2fa20ee929ed03ada1"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,
-      "sha256": "e9268adb1efac401c80f4245c14c23233276c43dcadd22f05c93b17819c64a46"
+      "sha256": "70e5142a4bcfbeb11ff93a25bd137388f360f6c66f37a4ac3ef58c5aa57764a5"
+    },
+    ".devkit/managed/authoring/playbooks/skill-authoring/references/roles.md": {
+      "mode": 420,
+      "sha256": "3ec6ae20cbda7ee3070ec17e6223c33e932d84a387481db2963202cf8af8a3cf"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
       "mode": 420,

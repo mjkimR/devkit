@@ -8,6 +8,8 @@ created_at: 2026-11-04
 
 # [ADR-shared-role-authoring] Own role placement in shared asset authoring guidance
 
+Superseded in part by `ADR-role-authoring-reference`: placement of detailed role guidance and the direction of its conditional pointers.
+
 ## 1. Context & Problem Statement
 
 Skill-only registered roles expose metadata beyond their invoking procedure. Shared asset writing already owns

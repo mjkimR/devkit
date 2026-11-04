@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T07:52:20.434470Z'
+status: completed
+summary: Moved role placement, delegation and path authoring into the conditional skill-authoring reference; preserved all existing directives and examples, with independent review PASS.
+findings: []
+assumptions:
+- Medium effort; local integration chosen because no platform review or publication needed. No role behavior or template variable changes.
+checks:
+  tests: PASS 153 affected tests including installed reference retrieval
+  build: PASS asset loading and sync deployment; no compiled artifacts changed
+  lint: PASS lint, types, hygiene and CI governance
+diff_scope:
+  base: 95d0e6ddae1584658ca4eb185e42349a11ba2dcf
+  head: 0b95818a6ff71d9b59c280dfcda996048d445d86
