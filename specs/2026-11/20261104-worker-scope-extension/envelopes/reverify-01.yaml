@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:46:41.350094Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer reverified the medium independent review fix: package.json is protected; matching annotations/records now fail only SPEC_WORKER_SCOPE_EXTENSION_INVALID while ordinary scope passes.'
+findings:
+- issue: package.json is accepted as a Tier B extension despite being a recognizable dependency declaration.
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/services/extensions.py:22; independent parsed-record probe for packages/devkit-viewer/frontend/package.json returned protected=False and extension pass.
+  failure_condition: A matching annotation and typed worker record names package.json; structural inspection passes contrary to AC-04.
+  suggested_action: Protect package.json and add an inspection regression with matching evidence.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS targeted21;just test-affected2314 partial135 paths with full fallback retained
+  lint: PASS devkit-spec Ruff/Pyright;22 cumulative CI rules;sync check0
+diff_scope:
+  base: 6ff819cec61cec40589b3ed90a8ea6c09a9eb6d9
+  head: 7137f4cc811f2084b336edaf2cd3a5c32ee3cff2
