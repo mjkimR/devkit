@@ -39,9 +39,10 @@ identity that a later run can compare and that keeps possibly sensitive diff byt
 
 ### Option 1: Source SHA, dirty paths, temporary-index tree hash and local diff digest (Selected)
 - **Overview**: `source_sha` is HEAD; `dirty_paths` comes from `git status --porcelain`; `inspected_tree` is the
-  `write-tree` of a temporary index after `read-tree HEAD` and `add -A` (the `spec-delegate` snapshot procedure);
-  `diff_digest` is the SHA-256 of `git diff --binary HEAD` followed by untracked file bytes in path order, and the
-  diff is retained beside the record.
+  `write-tree` of a per-run temporary index after `read-tree HEAD` and `add -A -- . ':!<run dir>'` (the
+  `spec-delegate` snapshot procedure); the retained diff file holds `git -c diff.noprefix=false
+  -c core.quotepath=false diff --no-ext-diff --no-textconv --no-renames --binary HEAD` followed by one
+  length-prefixed path and length-prefixed bytes per untracked path in byte order, and `diff_digest` is its SHA-256.
 - **Pros**: content identity (Driver 1) with no local Git change (Driver 2); the digest travels, the diff stays
   (Driver 3); `source_sha` is untouched (Driver 4).
 - **Cons**: ignored files are outside `add -A`; a remote reader verifies the digest only where the diff is retained.
@@ -64,9 +65,16 @@ We decided to adopt **Option 1**.
 
 - A run record identifies its inspected state by `source_sha`, `dirty`, `dirty_paths`, `inspected_tree` and, for a
   dirty run, `diff_digest` with the retained local diff path.
+- The comparison set excludes the run directory, the report path and the retained diff, so a run's own output
+  never counts as dirty content or as drift.
+- The retained diff file is the digest input, produced with the pinned diff options above and the length-prefixed
+  untracked entries, so two machines digest the same content to the same value and a reader with the file can
+  recompute the digest.
 - A clean run records `inspected_tree` equal to `HEAD^{tree}` and null diff fields.
-- The identity is computed through a temporary index file in the Git directory; the real index, HEAD, refs and
-  working tree are unchanged.
+- The identity is computed through a per-run temporary index file in the Git directory that is deleted after
+  `write-tree`; the real index, HEAD, refs and working tree are unchanged, and loose objects the snapshot adds to
+  the object store are accepted. A failing clean filter stops the command with `HISTORY_SNAPSHOT_FAILED` and no
+  record.
 - The diff bytes are published only when the run selects the diff as a published file.
 - `source_sha` always names a commit; no tree hash or stash object is placed there.
 - Option 1 satisfies all four drivers; Option 2 fails Driver 1 and Option 3 fails Drivers 3 and 4.
@@ -87,5 +95,6 @@ We decided to adopt **Option 1**.
 ## 6. Confirmation
 
 Tests of `devkit maintenance history start` on a temporary repository: identical content gives identical
-`inspected_tree` and `diff_digest`, a changed file changes both, and `git for-each-ref`, the index checksum and
-`git status --porcelain` are unchanged after the command. Restated by the new delivery capability `maintenance-history` (ID assigned at spec-sync).
+`inspected_tree` and `diff_digest` under different `diff.noprefix` settings, a changed file changes both, the run
+directory never counts as drift, and `git for-each-ref`, the index checksum and `git status --porcelain` outside
+the run directory are unchanged after the command. Restated by the new delivery capability `maintenance-history` (ID assigned at spec-sync).

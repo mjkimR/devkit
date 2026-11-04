@@ -80,16 +80,26 @@ We decided to adopt **Option 1**.
 
 - Each maintenance run publishes its record, report and selected files as one commit on a dedicated branch that
   starts from a parentless root commit and is never merged into a code branch.
-- The publication updates the branch reference without force; a rejected update re-reads the head and rebuilds on
-  it, at most three times, before reporting a publication failure.
+- The root commit is deterministic (fixed `README.md` bytes, a fixed `devkit maintenance history` identity and a
+  fixed date), so its SHA is a constant the capability records; an existing branch is used only when one compare
+  request against that root reports `identical` or `ahead`, otherwise the publisher refuses and updates nothing.
+- The publication updates the branch reference without force. A rejected update re-reads the head, repeats the
+  inspection, re-reads the index shard from that head and rebuilds on it, at most three times; exhaustion is a
+  deferred publication whose outcome stays `pending`, never a confirmed failure.
 - The run ID in the record path is the idempotency key: before an attempt and after a lost response the publisher
-  reads the record at the head, resolves an identical digest as published, refuses a different digest as a
-  collision and never overwrites.
+  reads the repository and the branch reference (a 404 there is a failed publication), then the record at the head,
+  resolves an identical canonical blob as published, refuses a different blob as a collision and never overwrites.
+- The published record is canonical JSON (sorted keys, compact separators, UTF-8, newline-terminated), so a retry
+  from another machine produces the same blob.
+- Integration state that arrives after `finish` is an append-only amendment under the run's `updates/` directory
+  with its own index line; a published record's bytes never change.
+- Initialization, publication and amendment each need an explicit `--authority`; configuration supplies the
+  repository and branch only, and publication never initializes a branch implicitly.
+- Before sending, the publisher runs the installed `secret_leak` check over the files and refuses on a hit.
 - The publisher reads the local repository only (`git rev-parse`, `git status --porcelain`, a temporary index) and
-  never writes the index, HEAD, refs or working tree.
-- An existing branch is used only when its root commit has no parents and its `README.md` carries the history
-  marker; otherwise the publisher refuses and updates nothing.
-- GitHub is the only provider, reached through `gh api` behind an injectable runner; `gh` owns authentication.
+  never writes the index, HEAD, refs or working tree outside the run directory.
+- GitHub is the only provider, reached through `gh api` behind an injectable runner that names the repository in
+  every endpoint path and sets its own timeout per request class; `gh` owns authentication.
 - Option 3 replaces the publish step only when an official reference documents atomic `fileChanges`, a stable
   stale-head error and branch creation; Option 1 then remains for initialization.
 - Option 1 satisfies Drivers 1 to 4 with documented semantics and Driver 5 through the existing runner pattern.
@@ -102,7 +112,8 @@ We decided to adopt **Option 1**.
   publication; retries are safe by construction of the record path.
 - **Negative / Risks**: GitHub-only; the secondary rate limit binds bursts of runs; undocumented error texts need a
   labelled live exercise before the capability states them; a ruleset that restricts creation or updates of the
-  branch name blocks the publishing identity.
+  branch name blocks the publishing identity; the author and committer identity of the run commits is still open
+  (`q5`), and until it is fixed the reproducible-SHA property holds only per publishing identity.
 - **Follow-ups**: a non-GitHub provider starts a new proposal when a repository on another host needs history;
   the live exercise runs once in Development before the new `maintenance-history` capability states the error contract.
 
@@ -111,5 +122,6 @@ We decided to adopt **Option 1**.
 ## 6. Confirmation
 
 Integration tests of the `devkit maintenance history` commands with an injected runner (multi-file publication,
-interleaved writers, lost response, collision, unchanged local Git state) and the restating clauses of
+interleaved writers with both index lines at the final head, lost response, collision, foreign branch, 404 on a
+private repository, amendment, unchanged local Git state) and the restating clauses of
 the new delivery capability `maintenance-history` (ID assigned at spec-sync).

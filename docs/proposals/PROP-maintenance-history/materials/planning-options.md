@@ -52,8 +52,8 @@ Recommendation: 4c, recorded as `PADR-inspected-state-identity`. `source_sha` st
 
 | Option | Evidence | Cost | Risk | Open |
 | --- | --- | --- | --- | --- |
-| 5a. `runs/<playbook>/<run-id>/` holding `record.json` and `report.md`, plus `index/<playbook>.jsonl` with one line per published run | `github-publication-api.md` §4: the contents GET reads one file up to 1 MB; no server-side filter by revision exists | One index line per run in the same commit | Concurrent writers both append to the index; the non-fast-forward retry rebuilds on the new head, so no line is lost | Index roll-over above 1 MB |
+| 5a. `runs/<playbook>/<run-id>/` holding `record.json`, `report.md` and `updates/`, plus `index/<playbook>/<YYYY>.jsonl` sharded by the run ID's year with one line per published run or amendment | `github-publication-api.md` §4: the contents GET reads one file up to 1 MB; no server-side filter by revision exists | One index line per run in the same commit | Concurrent writers both append to the index; the retry re-reads the shard from the new head before appending, so no line is lost (challenger-01 finding 3) | None |
 | 5b. `runs/<playbook>/<source-sha>/<run-id>/` and a recursive tree walk | §4: recursive tree capped at 100,000 entries or 7 MB | No index | Listing by playbook walks every run; slow after thousands of runs | None |
 | 5c. One record per run and a GitHub search | No endpoint searches file contents on a branch | None | Not available | Rejected |
 
-Recommendation: 5a, with the index rolled over per calendar year when a file passes 1 MB.
+Recommendation: 5a. Size-based rollover was dropped after challenger-01 finding 4: the year shard is fixed by the run ID, so concurrent writers never disagree on the file.
