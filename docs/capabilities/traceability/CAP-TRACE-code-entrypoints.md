@@ -215,8 +215,8 @@ Option conflicts fail with devkit's `ARGUMENT_INVALID`: `--spec` with `--all` or
 - `[SKIPPED_COUNT: <reason> kind= count=]` per kind and reason of the inputs or candidates left out. With
   `--skipped` instead one `[SKIPPED: <value> kind= spec= task= reason=]` per item; `spec=` and `task=` only when
   known. JSON `skipped` holds `{kind, reason, count}` entries, or the items with `--skipped`. A skipped input is left
-  out of the derivation, unlike `scope`'s `[UNRESOLVED]`, which counts an input as an unknown overlap; both use the
-  shared input reason names include `not-a-path`; the derivation-only `managed-output` exclusion does not shrink
+  out of the derivation, unlike `scope`'s `[UNRESOLVED]`, which counts an input as an unknown overlap.
+  Shared input reason names include `not-a-path`. The derivation-only `managed-output` exclusion does not shrink
   work scopes.
 - `[APPLIED: <doc-id> path= added=]` per document written (`added` comma-separated).
 - `[PAGE: total= offset= limit= count= next=]` over the documents, then `[NEXT_CMD: uv run devkit spec entrypoints

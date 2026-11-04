@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T06:38:51.882964Z'
+status: completed
+summary: Independent reconcile verified the capability and source-feedback disposition; one P3 sentence repair remains.
+findings:
+- issue: Shared-reason explanation contains a malformed sentence.
+  evidence: docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md:218-220
+  failure_condition: A reader distinguishes shared reasons from the derivation-only managed-output filter.
+  suggested_action: Replace the malformed sentence with clear shared-reason and scope-preservation sentences.
+  resolution: open
+  severity: P3
+assumptions:
+- Codex isolation emulated through explicit cwd, scoped reads and snapshot comparison; reviewer reported no authored reads outside the worktree.
+checks:
+  reflection: PASS sole CAP target and feedback verified
+  isolation: PASS snapshot215235c89e020 unchanged
+diff_scope:
+  base: 00511ae149771e6197b51ba52f706992ff272161
+  head: 124cad2485f1af30e6bc690294625f36f456fdba
