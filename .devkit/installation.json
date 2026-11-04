@@ -1760,7 +1760,7 @@
     },
     ".devkit/managed/docs/rules/steering_documents/guide.md": {
       "mode": 420,
-      "sha256": "2eb78780a72887ccaa4ed3f9545c98b46ff33dbe3e3c4f6b0a34a3595c33d999"
+      "sha256": "8ae9926f2ef761a943117675e378f6ede72b99f973af5a773405d1f12a4c24a2"
     },
     ".devkit/managed/docs/rules/steering_documents/rule.py": {
       "mode": 420,

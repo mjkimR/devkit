@@ -4,7 +4,7 @@
 
 `docs/steering/` holds project-wide background that applies to every piece of work but is neither a contract nor
 evidence: the glossary, the product's purpose, a tone or style guide, a domain overview. One Markdown file covers one
-topic. `devkit get-context spec` lists each file's `title` and `summary` in every agent context, and an agent reads a
+topic. `devkit get-context docs` lists each file's `title` and `summary` in every agent context, and an agent reads a
 body before a decision its summary covers. This rule keeps that always-loaded list short and readable.
 
 - **Phase and severity**: `linter`, `error`.

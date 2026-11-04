@@ -18,6 +18,12 @@ targets:
     resolution: modified
   - file: docs/steering/glossary.md
     resolution: modified
+  - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+    resolution: modified
+  - file: docs/development/reference/distribution.md
+    resolution: modified
+  - file: docs/decisions/2026-11/20261104-namespace-steering-directories.md
+    resolution: modified
 ---
 
 # Reconcile: SPEC-namespace-steering
@@ -37,8 +43,13 @@ targets:
   steering directory without a glossary file; the `docs` package registers the provider.
 - `ARCH-05-2-components`: `devkit.context_documents` joins the public entry-point groups.
 - `docs/steering/glossary.md` **Steering document**: both directories, both ADRs and the entry-point group.
+- `CAP-HARN-agent-guidance` 4.2: the quoted `devkit get-context spec` result carries the two new keys
+  (reconcile-check-01 P1).
+- `docs/development/reference/distribution.md`: the `get-context` row and the `CONTEXT_DOCUMENTS_EXTENSION_FAILED`
+  code row (reconcile-check-01 P2).
 - `ADR-namespace-steering-directories` (accepted) and the "Superseded in part" pointer in `ADR-steering-documents`
-  were written by the handoff transaction; no decision changed in Development.
+  were written by the handoff transaction; no decision changed in Development. One wording repair of the ADR's
+  provider-failure clause (the JSON-only channel; reconcile-check-01 P3) without changing its decision.
 
 ## Deferred work
 
