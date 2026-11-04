@@ -392,8 +392,9 @@ opt-in docs seeding and discovery in the installed package.
 ### Host-approved CLI integration
 
 After checks, review, reconcile and the final report, the agent asks the Host for conversational approval and then
-runs `devkit integration integrate`. The CLI rebuilds readiness from the retained task base and derives automatic
-authority only from that base's policy. It does not accept an approval token or persist a lifecycle request. Local
+runs `devkit integration integrate`. The CLI revalidates Git identities and retained approval policy and derives automatic
+authority only from that base's policy. The Host runs branch checks with the source runtime and final checks after
+synchronizing the landed runtime in fresh processes. It does not accept an approval token or persist a lifecycle request. Local
 and pull-request routes are explicit; after interruption, inspect Git or remote PR state and rerun only against
 the observed state. Approval is never inferred from a successful prepare or a prior process result.
 

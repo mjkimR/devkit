@@ -8,6 +8,7 @@ supersedes:
   - ADR-delivery-approval-and-lifecycle-authority
   - ADR-test-selection-and-ci
   - ADR-proposal-acceptance
+  - ADR-adaptive-development-and-research
 status: accepted
 created_at: 2026-11-04
 ---
@@ -61,6 +62,12 @@ verification policy. A personal project's deliberate owner bypass is outside the
 - This replaces `ADR-proposal-acceptance` optional same-process acceptance/merge/handoff composition only.
   `accept_and_handoff` preserves the authorized intended effects but yields to Host final verification before a
   fresh handoff invocation. Acceptance eligibility, decisions and report identity remain.
+
+- This replaces `ADR-adaptive-development-and-research` premerge project/session readiness, touched-Unit
+  integration refusal and provider-activation requirements only. The Host retains independent branch checks;
+  approach policy, explicit SDD artifact checks, existing history and unrelated adoption/research decisions remain.
+  Provider-free adoption preserves authority for actual approach and asset changes. → `CAP-DLV-adaptive-development`
+  and `CAP-DLV-sdd-baseline-adoption` integration and activation contracts (MUST).
 
 ## 5. Consequences
 

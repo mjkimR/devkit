@@ -82,7 +82,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **1a.** The task is `session` depth: the agent implements, tests and reviews it at the same effort levels, with the
   `code-reviewer` returning a message, writes no spec, envelope, gate record file or reconcile document, commits before
   approval and reports the change, effort, review result and verification in its final response or PR body
-  (`CAP-DLV-delivery-workflows`); resumes at step 7 with the session's declared claims in place of a Unit.
+  (`CAP-DLV-delivery-workflows`); resumes at step 7 with the session's recorded check outcomes and no Unit metadata in the integration command.
 - **1b.** The user instructs `local-orchestrated` mode: a `development-worker` runs the turn in its own `dev-`
   worktree from the stage the workflow names up to the final change report, nests the reviewers and commits at every
   stage boundary; the agent validates the cumulative committed range, and a range it rejects becomes a problem in its
@@ -242,7 +242,7 @@ The integration executor's coded refusals this section does not name, and their 
 
 ### Scenario 10: Policy authorizes local integration and scoped cleanup
 - **Covers**: 7a
-- **Given**: a completed task branch satisfying every readiness check under `[workflow.approvals]
+- **Given**: a completed task branch whose required source checks passed, under `[workflow.approvals]
   dev-integration = "auto"` in the shared base
 - **When**: the agent runs `devkit integration integrate dev-<slug> --route local`
 - **Then**: no form is shown, the result reports `authority: policy`, the base is advanced without fetch or push, the
@@ -293,13 +293,11 @@ The integration executor's coded refusals this section does not name, and their 
   reported target, such as `devkit spec proposal prune <slug>`
 - **Then**: only that scoped cleanup runs and the merge is not repeated
 
-### Scenario 17: A changed receipt reader refuses CLI integration
+### Scenario 17: A changed receipt reader is verified after landing
 - **Covers**: 7f
-- **Given**: a `dev-<slug>` branch whose range changes a receipt reader module and whose committed receipt only the
-  changed reader accepts, under a retained service built from the target
-- **When**: the agent runs `devkit integration integrate`
-- **Then**: it refuses with `INTEGRATION_RECEIPT_READER_CHANGED`, the target is unchanged, and the agent resolves the
-  receipt mismatch before obtaining fresh Host authority and retrying
+- **Given**: a verified `dev-<slug>` branch that changes the receipt reader and commits a receipt accepted only by that reader
+- **When**: the Host integrates the explicit branch under retained Git authority
+- **Then**: Git effects land with `verification=pending`, and the Host validates the receipt with the synchronized landed runtime before reporting completion
 
 ### Scenario 18: A receipt upgrade waits for landed verification
 - **Covers**: 7f

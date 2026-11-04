@@ -80,8 +80,8 @@ approach = "adaptive-dev"
 Inspect `uv run devkit config show`; the absent approach defaults to `sdd`. Local/environment overrides are not
 supported. Document checks and the project's run/build/lint/test commands remain active. Package or bundle selection
 does not activate either approach. Installed spec extensions reject new SDD lifecycle records in adaptive development while
-retaining existing SDD artifact checks. Independent project integration uses explicit passing review/tests/lint
-claims and the ordinary approval/route/cleanup checks. Select `adaptive-dev:core` from devkit-catalog for `/adaptive-dev`;
+retaining existing SDD artifact checks. The Host independently verifies the branch, integrates its explicit name under
+ordinary approval/route/cleanup safeguards, then verifies the synchronized landed runtime before completion. Select `adaptive-dev:core` from devkit-catalog for `/adaptive-dev`;
 all three support roles are optional. The coordinator maintains project-owned
 `.devkit/adaptive-dev.md`; sync and re-selection preserve it. Baseline adoption is a separate explicit procedure;
 installing assets or changing this setting does not establish a verified SDD baseline.

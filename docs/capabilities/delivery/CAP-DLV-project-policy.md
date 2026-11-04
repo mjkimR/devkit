@@ -25,7 +25,7 @@ devkit already models stays in devkit's tables
 (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[integration]`); devkit-spec adds only what is specific to spec-driven
 development, under the `[tool.spec]` extension table that devkit passes through unread. Agents read the effective
 policy with one command, `devkit spec policy`, before routing, gate and Git decisions. Rationale:
-`ADR-document-system`; the Git policy levels: `ADR-worktrees-and-scope`; integration readiness and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
+`ADR-document-system`; the Git policy levels: `ADR-worktrees-and-scope`; integration authority and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
 
 ## 2. Scope & Boundary
 
