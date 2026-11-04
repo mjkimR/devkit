@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-worker-scope-extension
+by: user
+at: '2026-11-04T04:24:47.995097Z'

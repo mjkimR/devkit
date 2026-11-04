@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-worker-scope-extension: Plan tiered write boundaries for delegated workers
+  at medium effort within the proposal scope'
+by: user
+at: '2026-11-04T04:24:47.993649Z'

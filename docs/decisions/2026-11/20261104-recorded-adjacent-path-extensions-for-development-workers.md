@@ -1,15 +1,15 @@
 ---
-id: PADR-recorded-adjacent-path-extensions-for-development-workers
+id: ADR-recorded-adjacent-path-extensions-for-development-workers
 title: Recorded adjacent-path extensions for development workers
 summary: "For estimated worker write boundaries, we allow task-linked adjacent-path extensions and retain explicit hard denies, to avoid operator round trips, accepting semantic review of adjacency."
-proposal: PROP-worker-scope-extension
+proposal: SPEC-worker-scope-extension
 supersedes:
   - ADR-orchestration-workers
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-recorded-adjacent-path-extensions-for-development-workers] Recorded adjacent-path extensions for development workers
+# [ADR-recorded-adjacent-path-extensions-for-development-workers] Recorded adjacent-path extensions for development workers
 
 ## 1. Context & Problem Statement
 

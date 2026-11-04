@@ -1,47 +1,24 @@
 ---
-id: PROP-worker-scope-extension
+id: SPEC-worker-scope-extension
 title: Tiered write boundaries for delegated workers
 summary: Splits a delegated worker's write boundary into an extensible estimate and a hard deny list, so a worker records and justifies an adjacent-path extension instead of stopping or having its whole result rejected, in local and cloud runs alike.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/development-worker.md.jinja
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-tasks/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/worker-records.md
-    - packages/devkit-spec/src/devkit_spec/features/worker/
-    - packages/devkit-spec/src/devkit_spec/features/entrypoints/repositories/bundle.py
-    - packages/devkit-spec/tests/unit/features/
-    - packages/devkit-spec/tests/unit/features/worker/
-    - packages/devkit-spec/tests/integration/features/worker/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
-    - packages/devkit/src/devkit_agt/features/workflow/models/envelope.py
-    - packages/devkit/src/devkit_agt/features/workflow/services/envelope/
-    - packages/devkit/src/devkit_agt/features/workflow/usecases/envelopes.py
-    - packages/devkit/tests/integration/features/workflow/
-    - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
-    - docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
-    - docs/decisions/2026-11/20261102-orchestration-workers.md  # partial-supersession annotation only at handoff
-  excludes:
-    - docs/decisions/  # except the exact annotation-only path above and standard PADR promotion
-    - .devkit/managed/
-    - packages/devkit-spec/src/devkit_spec/features/workflow/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-04
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-worker-scope-extension] Tiered write boundaries for delegated workers
+# [SPEC-worker-scope-extension] Tiered write boundaries for delegated workers
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-worker-scope-extension on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-worker-scope-extension`
+- Target Docs Blueprint: `PROP-worker-scope-extension-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `spec-tasks` treats `_Boundary:` as an estimate, but `development-worker` and its Host validation reject any
 unlisted write. A required sibling module, test helper or contract repair therefore causes an operator round trip.
@@ -49,15 +26,34 @@ The existing `(sync output)` exception already admits a recorded class of change
 
 The draft assumed that worker-envelope authoring belongs to `devkit-spec`. It belongs to
 `devkit_agt.features.workflow`; `devkit_spec.features.worker` reads that model. The evidence and rejected options
-are in `materials/implementation-evidence.md`. The decision is
-`PADR-recorded-adjacent-path-extensions-for-development-workers`.
+are in `docs/materials/2026-11/20261104-worker-scope-extension/implementation-evidence.md`. The decision is
+`ADR-recorded-adjacent-path-extensions-for-development-workers`.
 
 Hypothesis: permit a task-linked adjacent-path extension under the same approved goal, record it before its first
 source commit, and review its necessity. Retain explicit payload denies and protected classes as stop conditions.
 The change prevents accidental boundary misses; it does not attempt to make a repository owner unable to bypass
 local checks.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Tiered write boundaries for delegated workers so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — Adjacent class**: use project ownership contracts, checked by the reviewer, rather than infer a universal
   ownership layout or add settings. An extension is a literal file within an already-declared feature ownership
@@ -88,9 +84,9 @@ local checks.
   recommend globs: `inspect.prefix` rejects them and entrypoint normalization rejects them too. Directory scope
   stays narrow enough for independent verification; an extension annotation always names an exact file.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Three tiers
+#### 3.1 Three tiers
 
 | Tier | Admission | Required evidence | Stop condition |
 | --- | --- | --- | --- |
@@ -123,7 +119,7 @@ scope_extensions:
 An extension is not new scope authority for another task, feature or package. Rewriting a path from a denied class
 as a directory declaration does not admit it. Sandbox, Git and publication permissions remain independent.
 
-### 3.2 Inspection and compatibility
+#### 3.2 Inspection and compatibility
 
 Preserve `scope` as the existing list, its entry fields, `outside_scope`, and literal prefix matching.
 Add top-level `scope_extensions` and `checks.scope_extensions`. A boundary entry may carry additive extension
@@ -154,7 +150,7 @@ No sealed original-boundary journal is introduced: the task documents are alread
 self-reclassification is outside this personal project's threat model. An omitted annotation is a material review
 finding, not proof that the change was authorized merely because derived scope includes it.
 
-### 3.3 Review and result acceptance
+#### 3.3 Review and result acceptance
 
 `spec-review` and the `code-reviewer` contract use the same checks: owning task and AC, necessary adjacent file,
 annotation evidence before the final worker record exists, absence of a deny and no weakened tests. The final Host/inspect check enforces annotation/record agreement. A missing annotation/record for an adjacent
@@ -163,7 +159,7 @@ goal is P1 and blocks the range. The Host accepts an extension only after these 
 clean-worktree, envelope and cumulative-check conditions hold. A failed range is preserved and recovered through
 the existing problem/resolution procedure.
 
-### 3.4 Implementation and Living Spec boundaries
+#### 3.4 Implementation and Living Spec boundaries
 
 - `devkit-agt` owns the additive worker record model, parser, CLI authoring, validation and serialization. Add the
   corresponding feature-owned integration tests. This is an existing feature, so no new feature edge is needed.
@@ -178,7 +174,7 @@ the existing problem/resolution procedure.
 - Selected `spec` bundle source changes run `devkit sync`; tracked projections and the receipt are admitted and
   recorded by the existing sync-output rule. `.devkit/managed/` is never edited directly.
 
-### 3.5 Planning decisions and limits
+#### 3.5 Planning decisions and limits
 
 Use the typed optional list rather than encode records into free-form checks, assumptions or findings. Those
 fields do not preserve path/task/AC structure across authoring and parsing. Use review for project-specific
@@ -190,7 +186,7 @@ No live autohub inspection was performed. Its current invocation behavior is out
 needed to establish the shared worker contract. No latency or operator-round-trip reduction is asserted as a
 measured outcome.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Acceptance and handoff create one feature spec. Completion requires these scenarios and their task trace:
 
@@ -211,3 +207,4 @@ Acceptance and handoff create one feature spec. Completion requires these scenar
 Non-goals: general write authority outside the approved goal; Planning-worker extensions; autohub changes;
 changing Git, sandbox, publication or approval gates; a new config setting or ownership registry; glob support;
 general generated/lockfile admission; changing another unit's scope; weakening tests; changing `(sync output)`.
+
