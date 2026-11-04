@@ -2,7 +2,7 @@
 id: PROP-consolidated-record-length
 title: Line budgets for consolidated records
 summary: Lets the hygiene file-length check budget consolidated ADRs and feedback records by what they are instead of by per-file overrides, so consolidation runs stop producing warnings while an over-broad group still gets one.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: governance/
 priority: medium                      # critical | high | medium | low
