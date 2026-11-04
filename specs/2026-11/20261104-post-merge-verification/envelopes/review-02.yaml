@@ -1,0 +1,19 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T08:39:36.697063Z'
+status: completed
+summary: 'round 2; PASS: prior findings are resolved; no new findings in the fixes or affected behavior.'
+findings: []
+assumptions:
+- 'Codex emulated: worktree-scoped read-only commands and matching before/after snapshots; no native confinement guarantee or outside reads.'
+unverified_areas:
+- Live GitHub and actual Host final verification after landing remain outside branch review.
+checks:
+  tests: PASS acceptance/output/template27, integration CLI26, policy mode2; prior full fallback6566 passed15 expected skips
+  lint: PASS package lint/types, staged rules22, sync clean, diff check
+diff_scope:
+  base: 91deafb5962ed2e3bb6369f59e06dc69e949e664
+  head: 6cf611c08956445e345745ca0d7ed6421553709c
+activity_effort: high
