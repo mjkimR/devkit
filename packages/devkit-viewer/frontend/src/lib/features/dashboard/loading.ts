@@ -1,4 +1,4 @@
-import { isMilestonePath } from '../../api/roadmap';
+import { isMilestonePath, loadMilestoneDocuments } from '../../api/milestones';
 import { extractDashboardData } from './dashboard';
 import {
 	parseBlob,
@@ -29,16 +29,7 @@ export async function loadDashboardSection(
 	const generation = cacheGeneration(source);
 	const result =
 		section === 'milestones'
-			? await scanDocuments(
-					source,
-					ref,
-					signal,
-					['docs/roadmap'],
-					(item) => isMilestonePath(item.path),
-					(item) => item.path === 'docs/roadmap/_archive',
-					true,
-					false
-				)
+			? await loadMilestoneDocuments(source, ref, signal)
 			: section === 'proposals'
 				? await scanDocuments(
 						source,

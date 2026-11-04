@@ -146,42 +146,37 @@ class WorkingTreeReader:
         """Discover dashboard candidates and return only their frontmatter."""
         if section not in ("milestones", "proposals", "feedback"):
             raise path_invalid(section)
-        roots = (
-            ["docs/roadmap", "docs/roadmap/_archive"]
-            if section == "milestones"
-            else ["docs/proposals"]
-            if section == "proposals"
-            else ["docs", "specs"]
-        )
         paths: list[str] = []
         errors: list[str] = []
-        for root in roots:
-            if not (self.root / root).exists():
-                continue
-            try:
-                entries = self.tree(root, recursive=section == "feedback")
-                if section == "proposals":
-                    paths.extend(
-                        f"{item.path}/proposal.md"
-                        for item in entries
-                        if item.type == "tree"
-                        and re.fullmatch(r"docs/proposals/PROP-[^/]+", item.path)
-                        and not (self.root / item.path / "proposal.md").is_symlink()
-                        and (self.root / item.path / "proposal.md").is_file()
-                    )
-                else:
-                    paths.extend(
-                        item.path
-                        for item in entries
-                        if item.type == "blob"
-                        and (
-                            re.fullmatch(r"docs/roadmap/(?:_archive/)?MS-[^/]+\.md", item.path)
-                            if section == "milestones"
-                            else "/feedback/" in item.path and item.name.endswith(".md") and item.name != "README.md"
+        if section == "milestones":
+            paths = self._milestone_paths(errors)
+        else:
+            roots = ["docs/proposals"] if section == "proposals" else ["docs", "specs"]
+            for root in roots:
+                if not (self.root / root).exists():
+                    continue
+                try:
+                    entries = self.tree(root, recursive=section == "feedback")
+                    if section == "proposals":
+                        paths.extend(
+                            f"{item.path}/proposal.md"
+                            for item in entries
+                            if item.type == "tree"
+                            and re.fullmatch(r"docs/proposals/PROP-[^/]+", item.path)
+                            and not (self.root / item.path / "proposal.md").is_symlink()
+                            and (self.root / item.path / "proposal.md").is_file()
                         )
-                    )
-            except ReadError as exc:
-                errors.append(f"{root}: {exc}")
+                    else:
+                        paths.extend(
+                            item.path
+                            for item in entries
+                            if item.type == "blob"
+                            and "/feedback/" in item.path
+                            and item.name.endswith(".md")
+                            and item.name != "README.md"
+                        )
+                except ReadError as exc:
+                    errors.append(f"{root}: {exc}")
         items: list[dict[str, str]] = []
         for path in sorted(set(paths)):
             try:
@@ -189,3 +184,36 @@ class WorkingTreeReader:
             except (ReadError, OSError, ValueError) as exc:
                 errors.append(f"{path}: {exc}")
         return {"items": items, "errors": errors}
+
+    def _milestone_paths(self, errors: list[str]) -> list[str]:
+        """Discover only structural roadmap roots, without registry or document-body reads."""
+
+        def listing(path: str) -> list[TreeItem]:
+            try:
+                return self.tree(path)
+            except ReadError as exc:
+                errors.append(f"{path}: {exc}")
+                return []
+
+        if not (self.root / "docs").exists():
+            return []
+        docs = listing("docs")
+        roots = [item.path for item in docs if item.type == "tree" and item.name == "roadmap"]
+        if any(item.type == "tree" and item.name == "packages" for item in docs):
+            for package in listing("docs/packages"):
+                if package.type == "tree":
+                    roots.extend(
+                        item.path for item in listing(package.path) if item.type == "tree" and item.name == "roadmap"
+                    )
+        paths: list[str] = []
+        for root in roots:
+            entries = listing(root)
+            if any(item.type == "tree" and item.name == "_archive" for item in entries):
+                entries += listing(f"{root}/_archive")
+            paths.extend(
+                item.path
+                for item in entries
+                if item.type == "blob"
+                and re.fullmatch(r"docs/(?:packages/[^/]+/)?roadmap/(?:_archive/)?MS-[^/]+\.md", item.path)
+            )
+        return paths

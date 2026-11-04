@@ -1,4 +1,6 @@
 import { cachedResult, cacheGeneration, cacheResult } from './cache';
+import { isMilestonePath, loadMilestoneDocuments } from './milestones';
+export { isMilestonePath } from './milestones';
 import { parseBlob, type RepositoryDocument } from './documents';
 import { normalizeTree, type RepositoryDataSource } from './repository';
 
@@ -34,8 +36,6 @@ export interface BranchDocuments {
 
 const FINISHED = new Set(['done', 'dropped']);
 const ORDER = ['active', 'planned', 'done', 'dropped'];
-export const isMilestonePath = (path: string) =>
-	/^docs\/roadmap\/(?:_archive\/)?MS-[^/]+\.md$/.test(path);
 const PROPOSAL = /^docs\/proposals\/PROP-[^/]+\/proposal\.md$/;
 
 /** Local branches whose Units the roadmap reads besides the selected branch. */
@@ -129,34 +129,23 @@ export async function loadRoadmapDocuments(
 	);
 	if (cached && !signal.aborted) return cached;
 	const generation = cacheGeneration(source);
-	const errors: string[] = [];
-	const list = async (path: string) => {
-		try {
-			return normalizeTree(await source.tree(path, ref, signal));
-		} catch (error) {
-			if (!signal.aborted)
-				errors.push(`${path}: ${error instanceof Error ? error.message : error}`);
-			return [];
-		}
-	};
-	const root = await list('');
-	const docs = root.some((i) => i.path === 'docs' && i.type === 'tree') ? await list('docs') : [];
-	const has = (path: string) => docs.some((i) => i.path === path && i.type === 'tree');
+	const milestones = await loadMilestoneDocuments(source, ref, signal);
+	const errors = milestones.errors;
 	const paths: string[] = [];
-	if (has('docs/roadmap')) {
-		const roadmap = await list('docs/roadmap');
-		const archived = roadmap.some(
-			(item) => item.path === 'docs/roadmap/_archive' && item.type === 'tree'
-		)
-			? await list('docs/roadmap/_archive')
-			: [];
-		for (const item of [...roadmap, ...archived])
-			if (item.type === 'blob' && isMilestonePath(item.path)) paths.push(item.path);
+	if (
+		!signal.aborted &&
+		milestones.docsEntries.some((item) => item.type === 'tree' && item.path === 'docs/proposals')
+	) {
+		try {
+			for (const item of normalizeTree(await source.tree('docs/proposals', ref, signal)))
+				if (item.type === 'tree' && /^docs\/proposals\/PROP-[^/]+$/.test(item.path))
+					paths.push(`${item.path}/proposal.md`);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			if (!signal.aborted) errors.push(`docs/proposals: ${message}`);
+		}
 	}
-	if (has('docs/proposals'))
-		for (const item of await list('docs/proposals'))
-			if (item.type === 'tree' && /^PROP-/.test(item.name)) paths.push(`${item.path}/proposal.md`);
-	const documents: RepositoryDocument[] = [];
+	const documents: RepositoryDocument[] = [...milestones.documents];
 	for (let i = 0; i < paths.length && !signal.aborted; i += 6)
 		await Promise.all(
 			paths.slice(i, i + 6).map(async (path) => {

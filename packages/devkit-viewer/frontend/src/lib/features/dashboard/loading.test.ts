@@ -395,7 +395,7 @@ it.each([false, true])(
 					.mocked(source.tree)
 					.mock.calls.map(([path]) => path)
 					.sort()
-			).toEqual(['docs/roadmap', 'docs/roadmap/_archive']);
+			).toEqual(['docs', 'docs/roadmap', 'docs/roadmap/_archive']);
 		expect(await openDashboardPage(source, 'main', 'milestones', signal())).toBe(page);
 	}
 );
