@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Proceed with Planning for consolidated record line budgets; medium effort for
-  the selector and consumer contract.
-by: user
-at: '2026-11-04T03:02:11.692717Z'

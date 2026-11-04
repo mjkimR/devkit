@@ -219,7 +219,7 @@ executes, with the rule ID in the message.
 | Rule | Module | Phase, severity | Checks | Guide |
 | --- | --- | --- | --- | --- |
 | `RULE-markdown-link` | `rules.markdown_link` | linter, error | relative Markdown links point at existing files and no link uses a `file:` URL (never fixable); autofix rewrites a broken link when exactly one Markdown file has its basename | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/markdown_link/guide.md) |
-| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`) | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/file_length/guide.md) |
+| `RULE-file-length` | `rules.file_length` | hygiene, warning | files above `max_lines` (settings `max_lines`, `extensions`, optional `consolidated_max_lines`) | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/file_length/guide.md) |
 | `RULE-secret-leak` | `rules.secret_leak` | linter, error | credential file names and private key or token patterns in explicit targets | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/secret_leak/guide.md) |
 | `RULE-clean-artifacts` | `rules.clean_artifacts` | linter, error | compiled binaries, database files and logs above 1 MiB in explicit targets | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/clean_artifacts/guide.md) |
 | `RULE-cli-contract` | `rules.cli_contract` | linter, error | `devkit` invocations in Markdown code name commands and options the running command line has, plugins included (settings `exclude`, `unchecked_commands`) | [guide.md](../../../packages/devkit/src/devkit_agt/features/rules/services/builtins/cli_contract/guide.md) |
@@ -334,3 +334,20 @@ they are results on stdout and never affect `--strict`.
   timeout expired as it exited.
 - Phase overrides can only move a rule to `hygiene`; promoting a rule to
   `linter` is done by editing its declared phase.
+
+
+### Consolidated Markdown budgets
+
+`RULE-file-length` accepts optional positive integer `consolidated_max_lines` (omitted by default, internally `None`).
+A targeted Markdown header qualifies with a nonempty string `id` and a valid list of nonempty string aliases:
+`ADR-` needs two distinct aliases; `FB-consolidated-<area>-<status>` needs one. The area is a lowercase alphanumeric
+slug with optional hyphenated namespace segments; status is `resolved`, `promoted`, `dismissed` or `forwarded`.
+Duplicates count once. Whitespace-only aliases, malformed/absent headers or aliases, PADRs and other kinds keep the
+ordinary limit. Repeated ADR renames can qualify: alias history is a documented heuristic, not provenance.
+
+The selected limit is `max(max_lines, consolidated_max_lines)` after path overrides. A path may replace either
+setting, so enabling 600 preserves an ordinary override of 900. Omit the option to disable it; TOML has no null.
+Wrong types (including booleans), zero and negatives fail with `RULES_SETTINGS_INVALID`, the rule ID and exit 2.
+Eligible records over the selected limit warn at limit plus one and advise reviewing the group by topic while
+preserving retained decisions/outcomes. Existing phase, severity, counting and numeric formatting remain unchanged.
+See `CAP-GOV-evaluation-lifecycle` section 5 and the built-in guide for the contract.

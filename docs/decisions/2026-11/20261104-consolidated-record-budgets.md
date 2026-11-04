@@ -1,15 +1,15 @@
 ---
-id: PADR-consolidated-record-budgets
+id: ADR-consolidated-record-budgets
 title: Rule-local budgets for alias-bearing records
 summary: "For long consolidated ADRs and feedback, we opt into a rule-local line budget selected by record ID and aliases, to keep settings resolution pure, accepting a documented alias-based heuristic for ADRs."
-proposal: PROP-consolidated-record-length
-status: draft
+proposal: SPEC-consolidated-record-length
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-consolidated-record-budgets] Rule-local budgets for alias-bearing records
+# [ADR-consolidated-record-budgets] Rule-local budgets for alias-bearing records
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 
 ## 1. Context & Problem Statement
@@ -59,6 +59,6 @@ already supports a rule-owned budget. Alias metadata does not establish consolid
 
 ## 6. Confirmation
 
-The rule's `file_length/tests/` and integration tests verify eligibility, defaults, malformed input, precedence,
+The rule's `file_length/tests/test_rule.py` and rules CLI integration tests verify eligibility, defaults, malformed input, precedence,
 limits and remediation. Content tests verify playbook fidelity wording. A same-head disabled/enabled comparison
 verifies the six affected ADR identities. `CAP-GOV-evaluation-lifecycle` section 5 restates the lasting contract.

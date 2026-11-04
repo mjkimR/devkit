@@ -82,6 +82,10 @@ aliases:
   original title. Take the Response from the original's disposition line or section, its `disposition:` field or,
   when needed, its resolving `reconcile.md`.
 - Write no dates and no evidence in an entry.
+- If `RULE-file-length` configures `consolidated_max_lines`, use the larger of that budget and the resolved
+  `max_lines` to review an over-budget record by topic while preserving every retained outcome and disposition.
+  Treat the warning as a signal for a separate authorized grouping decision; never split or discard entries to
+  meet the budget during this run.
 
 ## Step 4: Apply and verify
 

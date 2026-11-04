@@ -24,6 +24,9 @@ provider = "spec"
 # own verification checks its citations at refresh (CAP-DLV-release-handbook).
 exclude = ["docs/decisions/**", "docs/proposals/**", "docs/materials/**", "specs/**", "handbook/**"]
 
+[rules.settings.RULE-file-length]
+consolidated_max_lines = 600
+
 # Capabilities carry full contracts, interfaces and code tables; they are long by nature (RULE-file-length guide §5).
 [[rules.settings.RULE-file-length.overrides]]
 path = "docs/capabilities/**"
