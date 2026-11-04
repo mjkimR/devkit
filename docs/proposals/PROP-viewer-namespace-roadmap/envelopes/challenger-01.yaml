@@ -1,0 +1,24 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T06:38:33.134238Z'
+status: completed
+summary: Structural discovery is coherent; generic library sources cannot independently guarantee filesystem symlink identity through the unchanged interface.
+findings:
+- issue: AC4 overstates symlink exclusion for generic library sources.
+  evidence: proposal.md:84-86,106-110 promises unqualified exclusion; frontend api/repository.ts:1-7,68-82 has no required symlink identity and normalizeTree:129-135 preserves host types; local worktree.py:63-77,89-99 enforces filesystem checks.
+  failure_condition: A library host returns a milestone symlink as blob or a symlink directory as tree without distinguishing metadata, so generic discovery cannot enforce the unqualified exclusion.
+  suggested_action: Scope filesystem symlink enforcement to WorkingTreeReader; generic discovery uses host-returned types and cannot certify symlink identity. Preserve path guards without a new host obligation or method.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex isolation emulated with explicit cwd, read-only role, no outside-worktree source reads and identical pre/post snapshot aad7924b9121875902c9e4538cdf13eba92436d0; no native guarantee.
+unverified_areas:
+- Implementation/frontend execution and external library host implementations await Development.
+checks:
+  integrity: PASS unchanged HEAD, clean status and identical snapshots
+diff_scope:
+  base: cc9b81474b541b3941b5a626fca076536379132a
+  head: 3684e575b71f8c0fe135864ae75ee03ea9e098ce
+activity_effort: medium

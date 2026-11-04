@@ -2,7 +2,7 @@
 id: PROP-viewer-namespace-roadmap
 title: Show namespace milestones throughout the repository viewer
 summary: "Extends dashboard and roadmap discovery to namespace milestones and resolves dependencies and proposal membership across roadmap roots."
-status: draft
+status: accepted
 created_at: 2026-11-04
 target_area: capabilities/viewer/
 priority: high
@@ -11,6 +11,7 @@ planning_effort: medium
 dev_effort: medium
 boundaries:
   owns:
+    - packages/devkit-viewer/README.md
     - packages/devkit-viewer/src/devkit_viewer/features/browse/
     - packages/devkit-viewer/tests/integration/features/browse/
     - packages/devkit-viewer/frontend/src/lib/
@@ -31,53 +32,117 @@ workflow: sdd-proposal
 ## 1. Background & Hypothesis
 
 `SPEC-namespace-roadmap` supports milestone roots in registered namespace directories. The viewer dashboard and
-roadmap loaders enumerate only `docs/roadmap/` and its flat `_archive/`. A namespace milestone is therefore absent
-from their lists, and a dependency or proposal membership targeting it cannot resolve in the loaded graph.
-`CAP-VIEW-repository-viewer` specifies the current global-only discovery contract.
+roadmap loaders enumerate only `docs/roadmap/` and its flat `_archive/`. A namespace milestone is absent from their
+lists, and a dependency or proposal membership targeting it cannot resolve in the loaded graph.
+`CAP-VIEW-repository-viewer` specifies the global-only discovery contract.
 
-Discovering namespace roadmap roots in both loaders will make these views cover the same milestone graph, while
-retaining the read-only working-tree model, independent dashboard sections, caching and paging behavior.
+Ordinary local reads use saved working-tree files, including uncommitted and untracked files. They do not read Git
+objects or select another branch. Library hosts supply their own `RepositoryDataSource`; the shared frontend cannot
+assume a Python environment or a local server. `ADR-repository-viewer` keeps parsing independent of the repository's
+installed devkit version.
+
+Extending structural discovery in the backend, generic dashboard fallback and roadmap loader covers the combined
+milestone graph without introducing a namespace configuration parser or a mandatory data-source method.
 
 ## Source feedback
 
 - `FB-viewer-namespace-roadmap-roots`: namespace milestone discovery, cross-root dependencies and proposal membership.
+  Its source stays promoted; Planning and eventual implementation do not change that terminal status.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: Should discovery require namespace registration, or follow structural roadmap paths and identify
-  unregistered roots? Compare reader-only configuration access with the viewer's existing package boundaries and
-  browser data sources. Recommend one default with explicit behavior for malformed or absent registration.
-- **Q2**: How can the dashboard and roadmap tab apply one discovery policy without duplicate hard-coded path rules,
-  while preserving data-source compatibility, optional-root handling, symlink guards and per-root error reporting?
+### Q1: Namespace registration policy — recommendation for acceptance
+
+Recommendation: discover structural paths without consulting `[[tool.docs.namespaces]]`.
+
+| Option | Result | Cost and limitation |
+| --- | --- | --- |
+| Structural paths (recommended) | Display every matching global or package roadmap file. Missing or malformed namespace configuration does not affect discovery. | Unregistered package directories also appear; the viewer does not claim registry validation or exact CLI parity. |
+| Registered namespaces only | Display global and registry-listed namespace roots. | Needs a shared registration interpretation for Python and library hosts, plus malformed-config behavior; a backend-only filter leaves generic sources inconsistent. |
+| Global roots only | Keep the existing viewer contract. | Namespace milestones and cross-root graph edges remain missing; does not satisfy the requested outcome. |
+
+The recommendation follows the existing book's structural package-directory handling and keeps the viewer a file
+reader rather than a governance validator. This guarantee is part of the proposal's direction acceptance and is drafted
+in `PADR-viewer-namespace-roadmap-discovery`.
+
+### Q2: Consistent discovery across reading routes — Planning recommendation
+
+Use one frontend roadmap discovery helper and path predicate for the generic dashboard and roadmap loader. The
+Python dashboard header reader implements the same explicit path contract and is verified with the same scenario
+matrix. Sharing a policy across languages does not require a runtime policy file or a new endpoint.
+
+Enumerate `docs/`, optional `docs/packages/`, direct package directories, and each discovered `roadmap/` and flat
+`_archive/`. Read only candidate frontmatter on the optimized dashboard route. Generic sources retain their existing
+selective full-document fallback. Do not recursively read arbitrary package document bodies to discover milestones.
 
 ## 3. Proposed Design & Impact
 
-The implementation covers global `docs/roadmap/MS-*.md` and `_archive/MS-*.md`, plus namespace equivalents under
-`docs/packages/<name>/roadmap/`. Keep milestone IDs repository-wide. Resolve dependencies and proposal membership
-over the combined set, including archived done/dropped milestones. Preserve unknown-target behavior for genuinely
-missing milestones. The selected registration policy must be explicit; path matching alone does not prove CLI parity.
+### Discovery contract
 
-No milestone groups this proposal. Existing completed namespace milestones remain closed. No viewer write actions,
-proposal lifecycle changes or general namespace browser redesign are included. No new feature dependency is assumed;
-Planning identifies any architecture declaration required before Development.
+- Match only `docs/roadmap/MS-*.md`, `docs/roadmap/_archive/MS-*.md`,
+  `docs/packages/<name>/roadmap/MS-*.md`, and `docs/packages/<name>/roadmap/_archive/MS-*.md`.
+- `<name>` is one nonempty directory segment. No registry validity is inferred from that segment. Nested archive
+  directories, deeper roadmap directories, `.git`, traversal segments and non-milestone filenames remain outside
+  discovery. The local `WorkingTreeReader` continues to omit/refuse filesystem symlinks. Generic discovery uses
+  host-returned tree/blob types and cannot independently certify filesystem symlink identity; it adds no host
+  obligation or metadata field.
+- Under the recommended option, unregistered directories are displayed by path with no claim that they are valid
+  namespace milestones. Namespace registration, file format and ID uniqueness remain repository rule concerns.
+- Resolve readiness and proposal membership over the complete discovered milestone set before history filtering.
+  Done or dropped archived milestones satisfy prerequisites. A truly missing dependency remains unknown.
+- Preserve the server's working-tree source, existing `RepositoryDataSource` signatures, proposal Planning overlay
+  boundaries, 30-second cache expiry and generation rules, page sizes and ordering, six-request frontend concurrency,
+  cancellation and no-cache-on-error behavior.
+- Missing optional roots are empty. Listed roots that fail to read report their paths in existing errors and retain
+  successfully read roots. A failed discovery must not become a successful empty list.
 
-### Expected acceptance checks
+### Acceptance scenarios
 
-1. Global and namespace live/archive milestones appear in both the dashboard and roadmap tab under the chosen policy.
-2. A global milestone depending on a completed namespace milestone becomes ready; the reverse direction and
-   namespace-to-namespace dependencies also resolve without changing genuinely unknown or unfinished dependencies.
-3. Proposals targeting namespace milestones appear in the correct roadmap cards without duplication.
-4. Missing optional roots, invalid entries and symlinks retain bounded, explicit handling; unreadable roots do not
-   silently erase successful roots. Cache invalidation, paging, cancellation and read-only guarantees remain intact.
-5. Backend integration and frontend tests exercise discovery and graph behavior; frontend lint, type checks, tests
-   and build pass, and the committed bundled page matches the frontend source.
+1. Global and two package roadmap roots, with live and archived milestones, produce the same candidate path set in
+   backend header discovery, generic dashboard discovery and the roadmap loader. Uncommitted/untracked local files
+   are included. The registration-policy matrix covers present, absent and malformed configuration.
+2. Global-to-package, package-to-global and package-to-package dependencies on done/dropped archived prerequisites
+   are ready even with history hidden. Known unfinished prerequisites remain waiting; missing IDs remain unknown.
+3. A direct proposal naming a package milestone appears on that milestone once; rejected proposals and SPEC
+   metadata do not become members. Planning overlay behavior remains as specified by `CAP-VIEW-repository-viewer`.
+4. Unregistered structural roots follow the accepted Q1 policy. Missing roots are empty; unreadable roots expose
+   errors without discarding successful roots. Local filesystem symlink directories/files, deep nested archives
+   and unrelated docs are not enumerated as milestones. Generic-source tests use host-returned tree/blob types
+   without claiming independent filesystem symlink detection. The optimized route reads headers only; bodies
+   remain page-scoped.
+5. Refresh/expiry/generation invalidation, cancellation, cache rejection on errors, fixed list ordering, exact counts,
+   archived detail paths and page sizes retain existing behavior. Library sources need no added method or parser.
+6. Backend integration tests and frontend discovery/graph tests pass. Run `just lint-check devkit-viewer`,
+   `just check devkit-viewer`, the selector's frontend checks, `just viewer lint`, `just viewer check`,
+   `just viewer test`, `just viewer build`, and `devkit generated check viewer-assets`; commit the rebuilt page.
 
-Planning records a reproducible baseline fixture in `materials/`: one global milestone, one namespace milestone,
-a cross-root dependency and a member proposal. Development measures the same fixture with the change disabled and
-enabled in its worktree; it need not check out the base to measure the difference.
+### Delivery and limits
 
-## 4. Lifecycle & Retirement Criteria
+One feature spec implements this outcome. Development updates `CAP-VIEW-repository-viewer` sections 4.1 and 5,
+`docs/development/reference/viewer.md`, the package README where its discovery description changes, the application
+source/tests, and the committed frontend artifact. The discovery PADR becomes an ADR. No new runtime dependency or
+feature edge is required by the recommended design. The README is an exact declared ownership path.
 
-Planning refines the discovery policy and records the independent challenger result. Acceptance needs the user's
-`plan-accept` decision; Development starts only after authorized handoff. On handoff, this proposal becomes one
-feature spec and any retained PADRs become ADRs. Rejection keeps its reason through the existing proposal lifecycle.
+No milestone groups this proposal, and completed namespace milestones stay closed. No writer endpoint, general
+namespace browser redesign, registration editor, per-namespace filter or automatic validity badge is included.
+No screen layout or interaction changes are proposed, so there are no screen drafts or optional UX review request.
+
+The controlled baseline fixture and observations live in `materials/baseline.md` and `materials/baseline.json`.
+Development reruns the same fixture in its own worktree with the discovery change disabled and enabled; no checkout
+of a different commit is needed. The baseline is a count/path observation, not a performance measurement.
+
+## 4. Planning Decisions
+
+- Keep `task_kind: feature`, `size: M`, and Development effort `medium`; a behavior extension changes the viewer's
+  current global-only contract rather than repairing a promise it already makes.
+- Keep the viewer independent of `devkit-docs` and the repository's installed environment.
+- Recommend Q1's structural discovery as part of accepting this proposal. No additional preference question is
+  needed before that direction review. Q2 is an implementation recommendation within the requested scope.
+
+
+## 5. Lifecycle & Retirement Criteria
+
+Planning returns the proposal in `reviewing` with its challenger evidence and recommended direction. Acceptance
+needs the user's `plan-accept` decision; the Host owns acceptance and Planning integration. Development
+starts only after authorized handoff. Handoff moves this proposal into one feature spec and promotes its retained
+PADR to an ADR. Rejection keeps its reason through the existing lifecycle. Planning changes no production source.
