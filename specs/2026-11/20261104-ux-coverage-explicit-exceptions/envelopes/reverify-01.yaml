@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-03T23:56:22.519050Z'
+status: completed
+review: review-01.yaml
+summary: 'Both P3 improvements applied by the implementer and self-verified: a RULE-ux-links test for off screen: phrases on citing and uncited steps, and the three paragraphs rewrapped with managed copies regenerated; rule tests, package tests and rules check rerun.'
+findings:
+- issue: 'No RULE-ux-links test exercises a step carrying off screen: while citing a screen, or one classified without a citation; the links-side invariance rests on the model''s unchanged screens field.'
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_links/tests/test_rule.py:310-340
+  failure_condition: A later change makes the phrase alter Step.screens or the flow graph; no RULE-ux-links test would fail.
+  suggested_action: 'Add a ux_links test with a step `Opens `UX-login`; off screen: cached.` expecting the same reports as without the phrase.'
+  resolution: resolved
+  severity: P3
+- issue: Three newly written prose lines run far past the 120-column wrap of the surrounding text.
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:357; bundles/docs/bundle/rules/ux_coverage/guide.md:15; bundles/docs/bundle/rules/ux_links/guide.md:54
+  failure_condition: Cosmetic only; no rule or lint fails.
+  suggested_action: Rewrap at 120 columns and regenerate the managed copies.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS uv run devkit rules test RULE-ux-coverage RULE-ux-links passed=2; pytest packages/devkit-docs
+  lint: PASS uv run devkit rules check --staged
+diff_scope:
+  base: 4f8cc73225c79629195b5343bc3ca9d585888626
+  head: 7b61a8dff008630212a701fb6a5f5a3eaa90aa41
+activity_effort: medium
