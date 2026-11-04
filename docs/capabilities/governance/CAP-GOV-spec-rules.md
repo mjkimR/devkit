@@ -62,7 +62,7 @@ commit.
 | `RULE-code-entrypoints` | Every `entrypoints` path of a capability or use case is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
-| `RULE-steering-documents` | `docs/steering/` is flat and holds ID-free files with a `title` and a short English `summary`, within the file-count and body-size caps. | none |
+| `RULE-steering-documents` | `docs/steering/` and each registered namespace's `docs/packages/<name>/steering/` are flat and hold ID-free files with a `title` and a short English `summary`, within the per-directory file-count and body-size caps; a namespace directory holds no glossary file. | none |
 | `RULE-ux-links` | A UX document has a valid `element` and Interactions table; its Step cells (pairs, empty or `global: <reason>`), `usecases`, targets, exits and reachability agree with the use case steps that cite it. | none |
 | `RULE-ux-coverage` | The steps of a use case a UX document lists cite a UX document, and every interaction names its step, unless classified `off screen: <reason>` or `global: <reason>`; a classification without a reason or contradicting a citation is reported. | none |
 
@@ -116,8 +116,9 @@ glossary indexing or graph edges. Other columns, surrounding prose, legacy table
 package glossaries and other ID-free files are outside the Owner check. Existing prose masking, file targeting,
 exclusions and snapshot cache rules apply.
 
-The steering files (the Markdown files directly in `docs/steering/` other than `README.md`, the glossary included)
-are a second ID-free input: every backticked full ID in their visible text MUST resolve to exactly one indexed
+The steering files (the Markdown files directly in `docs/steering/` or in a registered namespace's
+`docs/packages/<name>/steering/` other than `README.md`, the root glossary included; `CAP-DOCS-namespaces` 3.4) are
+a second ID-free input: every backticked full ID in their visible text MUST resolve to exactly one indexed
 document, and one naming an alias is reported as fixable with `` <alias> is an alias of <ID>; name `<ID>` ``.
 WHEN a steering code-span alias resolves uniquely, `devkit rules fix` MUST replace only its ID with the canonical ID.
 An ID the Owner check already examined on the same line is not reported again. No indexing or graph edges.
@@ -326,15 +327,23 @@ A proposal's boundary is copied into its spec at handoff, so it names real paths
 
 ### 3.14 `RULE-steering-documents`
 
-Steering documents are listed in every agent context (`ADR-steering-documents`), so the directory stays
-small and each entry readable. Only the root `docs/steering/` is checked, and only when the run targets a file in it.
+Steering documents are listed in every agent context (`ADR-steering-documents`), so each directory stays
+small and each entry readable. The rule checks the root `docs/steering/` and the `docs/packages/<name>/steering/` of
+every registered namespace (`ADR-namespace-steering-directories`, `CAP-DOCS-namespaces` 3.4), one directory at a
+time: each directory is checked, and its over-cap files reported, only when the run targets a file in it, and every
+message names the directory it concerns. A `steering/` directory of an unregistered `docs/packages/<name>/` is not
+checked.
 
-- MUST report: a file in a subdirectory of `docs/steering/`; a file that is neither `*.md` nor `glossary.yaml`;
+- MUST report: a file in a subdirectory of a steering directory; a file that is neither `*.md` nor `glossary.yaml`;
   a file that is not UTF-8; frontmatter that does not parse or that closes after the first 4096 bytes (what
   `devkit get-context` reads); an `id` key; a missing or empty `title`; a missing or empty `summary`, a letter
   outside the Latin script in it, or one longer than `max_summary_length` characters; a body (the text after the
   frontmatter) larger than `max_body_bytes` UTF-8 bytes; each Markdown file beyond `max_files` in sorted order,
-  whenever any steering file is targeted, so a commit adding a file is refused even when the new file sorts first.
+  whenever any file of that directory is targeted, so a commit adding a file is refused even when the new file sorts
+  first.
+- MUST report, in a namespace steering directory, a `glossary.md` (the package glossary lives at
+  `docs/packages/<name>/glossary.md`) and a `glossary.yaml` (search synonyms are read from `docs/steering/glossary.yaml`
+  only); neither counts toward `max_files`.
 - `README.md` is neither checked nor counted.
 - Settings: `max_files` (default `10`), `max_body_bytes` (default `24576`) and `max_summary_length` (default `300`),
   each a positive integer. Not fixable.

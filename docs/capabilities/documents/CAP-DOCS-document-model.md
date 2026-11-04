@@ -94,10 +94,12 @@ become graph edges.
 9. **Steering documents**: `docs/steering/` holds project-wide background that is neither a contract nor evidence
    (`ADR-steering-documents`): one Markdown file per topic directly in the directory, with only `title` and
    `summary` frontmatter and no `id`, so by rule 3 none is a document, and none is a search candidate. The glossary
-   (`glossary.md`, with the search synonyms `glossary.yaml`) is its first member. There is no namespace copy; a
-   package glossary stays at `docs/packages/<name>/glossary.md`. `devkit get-context spec` lists every steering file's
-   `title` and `summary` (`CAP-DIST-context-and-playbooks`), `RULE-steering-documents` bounds the directory and
-   `RULE-document-reference` resolves the IDs it cites (`CAP-GOV-spec-rules`).
+   (`glossary.md`, with the search synonyms `glossary.yaml`) is its first member. A registered namespace keeps its
+   package background in `docs/packages/<name>/steering/` under the same shape (`ADR-namespace-steering-directories`,
+   `CAP-DOCS-namespaces` 3.4), without a glossary file: a package glossary stays at `docs/packages/<name>/glossary.md`.
+   `devkit get-context docs` lists every root steering file's `title` and `summary` and, inside a package, that
+   namespace's (`CAP-DIST-context-and-playbooks`); `RULE-steering-documents` bounds each directory and
+   `RULE-document-reference` resolves the IDs they cite (`CAP-GOV-spec-rules`).
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
@@ -378,7 +380,8 @@ file selection.
 
 The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eight writing instructions,
 ten document rule assets, five shared templates and the docs-pointer. Only docs declares the `docs/steering`
-context directory. `devkit get-context docs` lists steering summaries and document instructions.
+context directory and registers the `devkit.context_documents` provider that adds a registered namespace's steering
+directory for the working directory. `devkit get-context docs` lists steering summaries and document instructions.
 `docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.
 The bundle introduces no SDD entry, approval, immutable ADR history or completed-artifact retention obligations.
 The selected development approach owns those policies (`ADR-document-system`).
