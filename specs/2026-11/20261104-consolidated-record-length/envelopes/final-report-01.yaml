@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:10:02.172002Z'
+status: completed
+summary: Implemented and verified the opt-in consolidated record budget, repository600 and fidelity-preserving guidance. Independent code review P3 wording finding resolved; independent reconciliation passed. Integration remains with Host.
+findings: []
+assumptions:
+- Default consumers keep ordinary limits; ADR aliases are a documented heuristic including repeated renames.
+- Code and reconciliation isolation emulated with absolute worktree paths and identical pre/post snapshots, not a native guarantee.
+- No base merge performed; Host integration prepare handles moved main.
+checks:
+  tests: PASS final just test-affected --base 5eb97c6e:3956 passed49.63s partial227 paths, full fallback retained; rule/CLI139 and spec content633 also passed
+  build: PASS devkit-agt and devkit-spec wheels built offline
+  lint: PASS changed Python Ruff lint/format; final CI rules22 zero errors/warnings; git diff --check
+  types: PASS Pyright devkit and devkit-spec zero errors
+  sync: PASS final sync --check clean; tracked sync output .devkit/installation.json
+  outcome: PASS same-files in-memory disabled/enabled removes six named ADR findings; document-system stays601; four unrelated findings unchanged
+diff_scope:
+  base: 5eb97c6e9fc430753d4ea2b7d333ce5a61077327
+  head: bfab201d66723b0ac47ccdb5cd215a1f7ce1721e
+activity_effort: medium
