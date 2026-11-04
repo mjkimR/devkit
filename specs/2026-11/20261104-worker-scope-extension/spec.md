@@ -4,7 +4,9 @@ title: Tiered write boundaries for delegated workers
 summary: Splits a delegated worker's write boundary into an extensible estimate and a hard deny list, so a worker records and justifies an adjacent-path extension instead of stopping or having its whole result rejected, in local and cloud runs alike.
 status: in-progress
 created: 2026-11-04
-related_capabilities: []
+related_capabilities:
+  - CAP-DLV-delivery-workflows
+  - CAP-DLV-workflow-envelopes
 related_usecases: []
 workflow: sdd-spec-feature
 ---
