@@ -163,7 +163,8 @@ registers.
   - `GetContext.execute` gains a parameter and `devkit get-context` an option and a result key; the use case's only
     production caller is the CLI.
 - **Follow-ups**:
-  - A namespace copy of `docs/steering/ux-objects.md` for the UX rules work of `MS-monorepo-namespace-support`.
+  - A namespace copy of `docs/steering/ux-objects.md` remains deferred under `FB-namespace-ux-objects-copy`;
+    reconsider it when a real namespace UX document demonstrates the need for a local register.
   - The asymmetry between the root glossary (`docs/steering/glossary.md`) and package glossaries
     (`docs/packages/<name>/glossary.md`); namespace search synonyms.
 

@@ -14,8 +14,9 @@ created_at: 2026-11-04
 
 # [FB-namespace-ux-objects-copy] A registered namespace has no UX object register beside its steering directory
 
-Deferred work of `SPEC-namespace-steering` (`ADR-namespace-steering-directories`, Follow-ups): the UX rules work of
-`MS-monorepo-namespace-support` decides it.
+Deferred work of `SPEC-namespace-steering` (`ADR-namespace-steering-directories`, Follow-ups), outside the completed
+scope of `MS-monorepo-namespace-support`. This feedback remains open; reconsider the namespace-local register when
+a real namespace UX document demonstrates the need. The root register continues to serve namespaces meanwhile.
 
 ## 2. Suggestion / Change Request (suggestion, change-request)
 
