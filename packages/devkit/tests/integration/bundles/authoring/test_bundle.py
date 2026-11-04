@@ -87,6 +87,15 @@ def test_add_deploys_both_presets_and_the_playbooks_are_searchable(consumer: Pat
         assert found["results"][0]["name"] == name
 
 
+def test_role_reference_is_readable_from_the_installed_playbook(consumer: Path) -> None:
+    result = json.loads(_run("playbook", "get", "authoring/skill-authoring", "--workspace-root", str(consumer)))
+    references = re.findall(r"\[[^\]]+\]\((references/[^)]+)\)", result["body"])
+    assert "references/roles.md" in references
+    directory = Path(result["source"]["path"]).parent
+    for reference in references:
+        assert (directory / reference).read_bytes() == (BUNDLE / "playbooks/skill-authoring" / reference).read_bytes()
+
+
 def test_deployed_rules_run_from_the_receipt(consumer: Path) -> None:
     # Each rule's behaviour is tested in its folder (rules/<name>/tests/); this checks the deployed copies load.
     write(consumer, ".agents/skills/demo/SKILL.md", "x" * 13000)

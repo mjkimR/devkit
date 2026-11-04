@@ -2,7 +2,7 @@
 id: SPEC-role-authoring-reference
 title: Load role authoring through a playbook reference
 summary: Move role placement, delegation and path-resolution guidance into the skill-authoring reference with conditional routing.
-status: planned
+status: in-progress
 created: 2026-11-04
 related_capabilities: []
 related_usecases: []
