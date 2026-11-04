@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-post-merge-verification
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-04-1-ecosystem-boundaries.md
     resolution: modified

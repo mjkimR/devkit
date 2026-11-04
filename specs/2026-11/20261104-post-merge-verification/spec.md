@@ -2,7 +2,7 @@
 id: SPEC-post-merge-verification
 title: Verify integration after merging with the resulting runtime
 summary: Verify the landed result with its declared devkit runtime after branch checks, and simplify integration preparation, recovery and CLI usage.
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities: [CAP-INT-mcp-services, CAP-DLV-delivery-workflows, CAP-DLV-proposal-planning]
 related_usecases: [UC-drive-development-to-integration, UC-plan-and-hand-off-a-proposal]

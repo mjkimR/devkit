@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T08:51:56.582337Z'
+status: completed
+summary: round 2; closes reconcile-check-01; PASS all seven findings resolved without recurrence; all23 changed docs and exact Host-authorized scope metadata verified.
+findings: []
+assumptions:
+- Codex emulated read-only review with explicit worktree scope and matching snapshots; not native confinement.
+unverified_areas:
+- Live GitHub and actual Host final verification after landing remain pending; documentation-only batch reused production test evidence.
+checks:
+  reconciliation: PASS implementation alignment, retained authority/history/source checks,23 targets with no omissions or waivers
+  scope_metadata: PASS exact authorized ARCH-04-1 and predecessor ADR extensions with owned ACs and unchanged decision scope
+  diff: PASS no writes, unchanged HEAD/tree, diff check
+diff_scope:
+  base: dba1f78b97212710128859773fddd2c576457701
+  head: c93986d6ef82fe6bdfc34294ec33168a15ed9226
+activity_effort: high
