@@ -1,10 +1,12 @@
 ---
 reconcile_id: REC-ux-coverage-explicit-exceptions
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
     resolution: modified
   - file: docs/decisions/2026-11/20261102-ux-screens.md
+    resolution: modified
+  - file: docs/decisions/2026-11/20261104-explicit-ux-coverage-exception-notation.md
     resolution: modified
 ---
 
@@ -51,6 +53,13 @@ scope is deferred.
 `just test-affected` 2171 passed at build; `uv run devkit rules check --ci --base 4f8cc732` errors=0 warnings=0;
 `uv run devkit generated check` stale=0; `uv run devkit sync --check` clean. Code review round 1 passed with two P3
 improvements, applied and closed in `reverify-01`.
+
+Reconcile check round 1 (independent `reconcile-reviewer`, `reconcile-check-01`) confirmed the reflection and found
+one P2 and one P3: the Decision Outcome traces of `ADR-explicit-ux-coverage-exception-notation` named `SHOULD` for
+clauses 3.16 restates as `MUST NOT`, and the `ux` template's Interactions comment ran past the wrap. Both are wording
+repairs (the ADR's decision is unchanged, a permitted ADR edit), applied by the implementer and self-verified in
+`reconcile-check-02`: the three traces now carry the keyword 3.16 uses, the comment is rewrapped and the managed copy
+regenerated.
 
 ## Entrypoints
 

@@ -2,7 +2,7 @@
 id: SPEC-ux-coverage-explicit-exceptions
 title: Recognize explicit global and off-screen UX coverage exceptions
 summary: Recognize reasoned global-control and off-screen exceptions in UX coverage without weakening missing-reference warnings or contradictory-link errors.
-status: in-progress
+status: completed
 created: 2026-11-04
 related_capabilities:
   - CAP-GOV-spec-rules
