@@ -1,18 +1,19 @@
 ---
-id: PADR-post-merge-verification
+id: ADR-post-merge-verification
 title: Complete integration after verifying the landed runtime
 summary: "For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target."
-proposal: PROP-post-merge-verification
+proposal: SPEC-post-merge-verification
 supersedes:
   - ADR-local-and-pull-request-integration
   - ADR-delivery-approval-and-lifecycle-authority
   - ADR-test-selection-and-ci
   - ADR-proposal-acceptance
-status: draft
+  - ADR-adaptive-development-and-research
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-post-merge-verification] Complete integration after verifying the landed runtime
+# [ADR-post-merge-verification] Complete integration after verifying the landed runtime
 
 ## 1. Context & Problem Statement
 
@@ -61,6 +62,12 @@ verification policy. A personal project's deliberate owner bypass is outside the
 - This replaces `ADR-proposal-acceptance` optional same-process acceptance/merge/handoff composition only.
   `accept_and_handoff` preserves the authorized intended effects but yields to Host final verification before a
   fresh handoff invocation. Acceptance eligibility, decisions and report identity remain.
+
+- This replaces `ADR-adaptive-development-and-research` premerge project/session readiness, touched-Unit
+  integration refusal and provider-activation requirements only. The Host retains independent branch checks;
+  approach policy, explicit SDD artifact checks, existing history and unrelated adoption/research decisions remain.
+  Provider-free adoption preserves authority for actual approach and asset changes. → `CAP-DLV-adaptive-development`
+  and `CAP-DLV-sdd-baseline-adoption` integration and activation contracts (MUST).
 
 ## 5. Consequences
 

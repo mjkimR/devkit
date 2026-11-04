@@ -665,13 +665,15 @@ authority comes only from the retained base policy.
 `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user` (`--effort` selects the
 Development effort of `accept_and_handoff`) validates
 the reviewed `plan-<slug>`, records `status: accepted` and `gate:plan-accept`, commits the exact acceptance delta,
-and executes the checked local Planning integration. `accept_only` stops after acceptance. The combined mode also
-starts Development using the selected `--effort low|medium|high`. WHEN `plan-<slug>` does not contain the base
-HEAD, the preparation builds the prospective merge and the preview MUST run the delivery provider's result checks
-on it (the CI rules on the merged result and a base change to the proposal directory since the merge base) before
-the acceptance commit, refusing with `SPEC_PROPOSAL_APPROVAL_NOT_READY`; a conflict refuses with
-`WORKTREE_MERGE_CONFLICT`. A conflict-free moved base needs no merge into `plan-<slug>`: the landed merge has the
-moved base as first and the acceptance commit as second parent (`ADR-local-and-pull-request-integration`).
+and executes approved local Planning integration. Both modes return acceptance and merge effects with
+`verification=pending`; `accept_and_handoff` MUST leave handoff not started. Its continuation retains requested and
+selected mode, activity effort, authorized handoff scope, authority and landed SHA. The Host synchronizes dependencies
+and runs final checks in fresh processes, then invokes the existing handoff command under unchanged authority.
+Changed scope/effects require revalidation. `accept_only` completes only after its accepted landing passes final checks.
+WHEN a moved target changed the reviewed proposal directory, preparation MUST refuse before the acceptance commit
+with `SPEC_PROPOSAL_APPROVAL_NOT_READY`. Git conflicts refuse with `WORKTREE_MERGE_CONFLICT`. No old-runtime merged
+content rules or receipt checks run. A conflict-free moved target becomes the first parent and the exact acceptance
+commit the second parent (`ADR-post-merge-verification`).
 
 `devkit spec proposal handoff <slug> --effort low|medium|high` validates an already accepted
 proposal on the retained base, creates or validates `dev-<slug>`, runs setup and sync, then performs proposal handoff
@@ -695,17 +697,15 @@ uncommitted in `dev-<slug>`; nothing is rolled back. The Host fixes the cause th
 dirty worktree (`SPEC_HANDOFF_WORKTREE_CONFLICT`). The plain `devkit spec proposal handoff <slug>` stays write-only:
 it commits nothing, and its writes are committed with the post-handoff link fixes.
 
-Both composed commands print one outcome (`ARCH-08-1-agent-output`). A completed one is `[ACCEPTED: PROP-<slug>
-status=accepted|handed_off mode= authority= completed= target_sha= landed_sha= disclosure=]` (`target_sha=`, the merged
-target, and `disclosure=`, the delivery provider's disclosure, once the integration ran; `landed_sha=` once its
-result landed; also in JSON as `target_sha`, `disclosure` and `landed_sha`) or `[HANDOFF: PROP-<slug> status=handed_off
-spec= dir= worktree=dev-<slug> effort= authority= commit=]` (`accept_and_handoff` adds `commit=` to `[ACCEPTED: ...]`
-after those fields; `-` when no handoff commit landed), followed by `[NEXT_CMD: ...]` when a next command exists, and exits `0`
-(`1` under `--strict` with a warning). One that stopped after some effects prints `[ACCEPTED_STOPPED: ...]` or
-`[HANDOFF_STOPPED: ...]` with the same fields, then `[NEXT_CMD: ...]` or `[NEXT_ACTION: "..."]`, renders its errors
-(the handoff's included, each once, with every advisory field) after the warnings and notices, and exits `1`; JSON
-prints the whole result. One that did nothing is the refusal itself: every error on stderr, the decisive one
-last; `{"error": <last>, "errors": [<the others>], "notices": [...]}` under `--format json`; always exit `2`. The status decides the exit code before `--strict` is applied.
+Both commands print one outcome (`ARCH-08-1-agent-output`). Acceptance prints
+`[ACCEPTED: PROP-<slug> status=accepted mode= authority= completed= target_sha= landed_sha= verification=pending handoff=not_started]`
+and `[NEXT_ACTION: "..."]` naming synchronization, final checks and the authorized fresh handoff continuation.
+Acceptance MUST NOT emit handoff worktree or commit fields before handoff occurs. JSON includes the continuation's
+mode, effort, unit, landed SHA, authority and handoff-authorized flag. The separate handoff command prints
+`[HANDOFF: PROP-<slug> status=handed_off spec= dir= worktree= effort= authority= commit=]` and its next command.
+Successful Git effects exit `0` (`1` under strict warnings); this is not a final-test pass. A failure after effects
+prints the corresponding `_STOPPED` sentinel, completed effects, next action and errors, exiting `1`. A refusal
+before effects exits `2` with its errors. JSON returns one result or error document.
 
 This composed handoff and `accept --mode accept_and_handoff` read the `proposal-handoff` policy. The plain
 `devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff`
@@ -718,8 +718,7 @@ remaining cleanup. `ADR-delivery-approval-and-lifecycle-authority` defines Host 
 The composed `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` is the
 single Planning acceptance route, and the Host runs it itself: it already includes the integration and cleanup, so
 no git-operator job precedes or follows it, and git-operator has no acceptance operation. A refusal raised in
-preparation leaves nothing written. WHEN a refusal comes after the acceptance commit (a conflict, the CI rules or
-receipts on the built merge, or a target that moved between the preparations), THEN the result is
+preparation leaves nothing written. WHEN a refusal comes after the acceptance commit (a Git conflict or a target that moved between preparations), THEN the result is
 `needs_recovery` with `completed_steps` and the accepted, unmerged `plan-<slug>` returns to the Host with the
 reported code; the Host prepares the source on that branch (a base merge and `devkit rules fix` when the code
 calls for them) and only then reruns the same command, which continues from the acceptance commit. A rerun that
@@ -738,24 +737,21 @@ planning effort/support, open decisions/waivers and unverified areas.
 Proposal reports are not stored as shared artifacts; acceptance operates directly on the committed proposal files and git HEAD.
 
 `devkit spec proposal accept` requires the Host to present the findings and effects before an `ask` invocation.
-Its result includes acceptance, integration and optional handoff progress: `accept_and_handoff` records `handoff`
-in `completed_steps` whenever the handoff writes landed and `handoff_commit` when its commit landed, carries `commit`,
-and on a refused handoff commit takes the handoff's next action. `--by user` records decision provenance;
-it is not an authenticated credential. Required-PR refuses this local combined route.
+Its result separates completed acceptance/integration from pending final verification and unstarted handoff.
+`--by user` records decision provenance; it is not an authenticated credential. Required-PR refuses this local route.
 
 The invocation binds exact source/base commits, Git and extension identities, effective configuration, environment,
 and cleanup targets. The common-directory integration lock covers acceptance and
 integration. Only the service-created acceptance record/status delta and its direct-child commit are permitted;
-normal commit gates and the complete integration readiness provider still run. The base cannot advance during the
+normal commit gates and retained Git/authority checks still run. The base cannot advance during the
 invocation; a base that moved before it is merged by the integration itself. Cleanup
 revisions equal to the source SHA may follow only that exact verified acceptance child with identical targets.
-`accept_only` stops after accepted merge/cleanup; combined pins the landed result before setup/handoff. No final
+Both modes yield after accepted merge/cleanup; combined mode pins the landed result in its continuation. No final
 Development merge is authorized. If the Host conversation is declined, canceled or unavailable, the Host does not
 invoke the CLI and no lifecycle state changes.
 
 Partial progress returns completed steps, source/acceptance/landed SHAs, integration progress, worktree results and
-a next action. No authority survives a return or restart. Fresh reviews and Host decisions cover only remaining
-effects: accepted Planning commits are never replayed, and strictly matched clean pinned worktrees can retry
+a next action. No executable credential survives a return or restart. The Host retains its existing decision for unchanged authorized handoff scope; changed effects need revalidation. Fresh decisions cover only additional effects: accepted Planning commits are never replayed, and strictly matched clean pinned worktrees can retry
 setup/handoff. Dirty or mismatched partial state requires inspection; it is never rolled back or treated as completed
 merely because a branch exists. The one exception is the acceptance commit itself: when the commit gate refuses
 it, nothing has landed, so the service withdraws its own two acceptance writes (the status change and the gate
@@ -773,7 +769,7 @@ reported as a dirty tree.
 | `SPEC_REPORT_WRONG_CHECKOUT` | `INPUT_ERROR` | `report`: neither `plan-<slug>` with a proposal in review or accepted, nor the retained base with an accepted proposal. | Run it in the `plan-<slug>` worktree. |
 | `SPEC_REPORT_SOURCE_INVALID` | `INPUT_ERROR` | `report`: a committed record (`[TARGET]`) is not a regular file, a PADR's ID differs from its file name, an envelope is not a mapping, the proposal declares another ID, or an effort is not `low`, `medium` or `high`. | Correct and commit the record. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `INPUT_ERROR` | `report`: the proposal is not in the source commit. | Pass the slug of a committed proposal. |
-| `SPEC_PROPOSAL_APPROVAL_NOT_READY` | `INTERACTION` | The composed acceptance: Planning on `plan-<slug>` has unmet checks, problems, open questions or holds, needs decomposition, is not in review at `direction-handoff`, or `plan-<slug>` does not exist; or the prospective merge with a moved base fails its result checks; `[DETAIL]` lists each condition and `[TARGET]` the proposal or branch. | After the user agrees, finish Planning there and rerun; for a failing result check, merge the base into `plan-<slug>`, run `devkit rules fix` on the proposal, commit and rerun. |
+| `SPEC_PROPOSAL_APPROVAL_NOT_READY` | `INTERACTION` | The composed acceptance: Planning on `plan-<slug>` has unmet checks, problems, open questions or holds, needs decomposition, is not in review at `direction-handoff`, or `plan-<slug>` does not exist; or the moved target changes the reviewed proposal directory; `[DETAIL]` lists each condition and `[TARGET]` the proposal or branch. | After the user agrees, finish Planning there and rerun; for a changed proposal scope, merge the base into `plan-<slug>`, run `devkit rules fix` on the proposal, commit and rerun. |
 | `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` | `INPUT_ERROR` | The composed acceptance: the commit gate refused the acceptance commit on `plan-<slug>` (`[TARGET]`); the writes were withdrawn and `[DETAIL]` carries the gate's output. | Run `uv run devkit rules check` there, fix and commit, then rerun. |
 | `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` | `INPUT_ERROR` | The requested or confirmed mode is not `accept_only` or `accept_and_handoff`, `accept_and_handoff` has no `low`, `medium` or `high` effort, or a reply widens `accept_only`; `[TARGET]` is `--mode` and `--effort`. | The caller corrects the mode or effort and reruns. |
 | `SPEC_PROPOSAL_APPROVAL_STALE` | `INTERACTION` | Reviewed scope or exact acceptance delta changed. | Report what changed and the completed effects; after the user approves again, rerun for the remaining scope. |
@@ -785,10 +781,9 @@ reported as a dirty tree.
 CLI acceptance binds the source and base commits, configuration, environment and setup.
 Owning `plan-accept=auto` authorizes checked acceptance and the Planning merge regardless of Development's final-result
 policy. Source-only auto cannot grant authority, and prospective revocation refuses execution. With handoff auto it
-continues into Development using the accepted `dev_effort`; with handoff ask it leaves the accepted proposal waiting
+returns an authorized continuation using the accepted `dev_effort`, run only after Host final verification; with handoff ask it leaves the accepted proposal waiting
 for its separate start decision. The CLI `mode` is `accept_only` or `accept_and_handoff`; `accept_only` never starts Development even when both policies are auto, and cannot widen that requested scope.
-Handoff runs under Host-carried authority for `ask` or base policy authority for `auto`. Snapshot checks,
-readiness and partial-effect recovery apply under either authority. Internal worker sequencing, review,
+Handoff runs under Host-carried authority for `ask` or base policy authority for `auto`. Eligibility, Git identity and partial-effect recovery apply under either authority. Internal worker sequencing, review,
 retries and fixes inside the approved scope are delegated to the Host, rather than additional user approval gates.
 
 

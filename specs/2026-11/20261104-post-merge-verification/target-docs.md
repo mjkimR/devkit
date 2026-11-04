@@ -3,7 +3,7 @@ id: PROP-post-merge-verification-target
 title: Post-merge verification Living Spec targets
 summary: "Move final content verification to the landed runtime and simplify integration inputs while retaining Git authority and recovery."
 status: draft
-proposal: PROP-post-merge-verification
+proposal: SPEC-post-merge-verification
 created_at: 2026-11-04
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-planning.md
@@ -54,7 +54,7 @@ No composed product UI changes.
 
 `ARCH-05-2-components` updates the integration/provider ownership description; no dependency edge is added.
 `ARCH-06-runtime-view` reflects the Host-led post-land sequence and fresh runtime invocation.
-Promote `PADR-post-merge-verification` on handoff. Add partial-supersession pointers to its four named ADRs without
+Promote `ADR-post-merge-verification` on handoff. Add partial-supersession pointers to its four named ADRs without
 retiring their surviving authority, Git and CI clauses.
 
 ## 4. Guidance and quick references

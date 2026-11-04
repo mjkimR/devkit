@@ -13,7 +13,6 @@ from devkit_agt.features.integration.models.contracts import (
     IntegrationContext,
     IntegrationRequest,
     Readiness,
-    Task,
 )
 from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.workflow import Workspace
@@ -182,31 +181,23 @@ class _Acceptance:
                 target_files=[anchor],
                 fix=f"Set dev_effort to low, medium or high in {anchor} on plan-{self.slug}, commit it, then rerun",
             )
-        self._check_result(context, anchor)
+        if context.result_sha is not None:
+            merge_base = run_git_text(self.root, "merge-base", plan.target_sha, plan.source_sha)
+            if run_git_text(self.root, "diff", "--name-only", merge_base, plan.target_sha, "--", self.unit):
+                raise ProposalApprovalNotReadyError(
+                    f"the target changed {self.unit} after the reviewed source branched",
+                    f"the target changed {self.unit}",
+                    target_files=[anchor],
+                    fix=f"Merge the target into plan-{self.slug}, review the changed direction and rerun acceptance",
+                )
         self.meta = meta
         self.snapshot = self._snapshot()
         return Readiness(
             plan.source_sha,
             plan.target_sha,
             (Evidence("PROPOSAL", plan.source_sha),),
-            disclosure="Validate completed acceptance and all integration readiness before merge",
+            disclosure="Validate proposal direction eligibility before acceptance",
         )
-
-    def _check_result(self, context: IntegrationContext, anchor: str) -> None:
-        """Refuse before the acceptance commit when the prospective merge with a moved target fails the delivery
-        provider's result-dependent checks (``ADR-moved-target-merge``); nothing to check without one."""
-        from devkit_spec.features.delivery.usecases.integration import result_reasons
-
-        reasons = result_reasons(context)
-        if reasons:
-            raise ProposalApprovalNotReadyError(
-                f"the merge of plan-{self.slug} with the moved target {context.finish.target_sha[:12]} fails its checks",
-                *reasons,
-                target_files=[anchor],
-                fix=f"Merge the target into plan-{self.slug} in its worktree, run "
-                f"`{devkit_command(f'rules fix {self.unit}')}` and commit its repairs, re-verify what the merge changed, "
-                "then rerun the same command",
-            )
 
     def _snapshot(self) -> tuple:
         assert self.source is not None
@@ -325,8 +316,6 @@ class PlanAcceptUseCase(BaseUseCase):
         self, slug: str, *, mode: str = "accept_and_handoff", effort: str | None = None, by: str = "user"
     ) -> dict[str, Any]:
         """Accept and integrate a reviewed proposal after Host-carried approval."""
-        from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
-
         require_sdd(self.root)
         self.root = self.root.resolve()
         slug = require_slug(slug)
@@ -342,7 +331,6 @@ class PlanAcceptUseCase(BaseUseCase):
         try:
             request = integration._prepare(
                 f"plan-{slug}",
-                Task("unit", f"PROP-{slug}", lifecycle.unit),
                 lifecycle=lifecycle,
                 approval_gate=lifecycle.approval_gate,
             ).request
@@ -378,52 +366,52 @@ class PlanAcceptUseCase(BaseUseCase):
             "completed_steps": completed,
             "source_sha": request.context.finish.source_sha,
             "acceptance_sha": lifecycle.acceptance_sha,
-            # The merged target and what was checked on the merged result (``ADR-moved-target-merge``).
+            # The Git build target is separate from the confirmed landing revision.
             "target_sha": result.build_target or result.request.context.finish.target_sha,
-            "disclosure": result.request.readiness.disclosure,
+            "verification": result.verification,
+            "landed_sha": result.landed_sha,
+            "mode": lifecycle.mode,
+            "requested_mode": mode,
+            "handoff_status": "not_started",
             "integration": result.compact_dict(),
             "errors": [_proposal_error(error).to_dict() for error in result.errors],
             "activity_effort": lifecycle.effort,
             "acceptance_authority": lifecycle.actor,
             "next_action": "Inspect completed effects and resolve the reported integration step",
         }
+        landed = result.landed_sha
+        if landed is not None:
+            continuation = {
+                "mode": lifecycle.mode,
+                "activity_effort": lifecycle.effort,
+                "unit": lifecycle.unit,
+                "landed_sha": landed,
+                "authority": authority,
+                "handoff_authorized": lifecycle.mode == "accept_and_handoff",
+            }
+            payload["continuation"] = continuation
+            payload["next_action"] = (
+                "Synchronize the landed environment in a fresh process and run required final checks"
+            )
+            if lifecycle.mode == "accept_and_handoff":
+                continuation["command"] = devkit_command(f"spec proposal handoff {slug} --effort {lifecycle.effort}")
+                payload["next_action"] += (
+                    f"; after they pass, run `{continuation['command']}` with the retained handoff authority; "
+                    "revalidate changed scope before any additional effects"
+                )
         if result.status != "completed":
             payload["status"] = "needs_recovery" if completed else "blocked"
+            if landed is not None:
+                payload["next_action"] = (
+                    "Inspect completed effects and resolve remaining cleanup without replaying the merge; then "
+                    + payload["next_action"]
+                )
             return payload
-        landed = result.result_sha or request.context.finish.source_sha
-        if run_git_text(self.root, "rev-parse", "HEAD") != landed:
+        if landed is None or run_git_text(self.root, "rev-parse", "HEAD") != landed:
             return {
                 **payload,
                 "status": "needs_recovery",
-                "landed_sha": landed,
-                "next_action": "Inspect the base and request fresh approval for remaining effects",
+                "next_action": "Inspect the base and revalidate remaining effects before continuing final verification",
             }
-        payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
-        if lifecycle.mode == "accept_only":
-            return payload
-        try:
-            preview = prepare(self.root, slug)
-            if preview.head != landed:
-                raise ProposalApprovalStaleError("base changed between integration and handoff")
-            handed = HandoffUseCase(self.root)._execute(preview, lifecycle.effort)
-            payload.update(
-                status=handed["status"],
-                handoff=handed,
-                commit=handed.get("commit"),
-                next_action=handed.get("next_command")
-                or handed.get("next_action")
-                or "Inspect preserved handoff effects",
-            )
-            if handed.get("handoff"):  # the handoff writes landed, committed or not
-                payload["completed_steps"] += ["worktree_setup", "handoff"]
-                if handed.get("scope_token"):
-                    payload["completed_steps"].append("scope_registration")
-                if handed.get("commit"):
-                    payload["completed_steps"].append("handoff_commit")
-            elif handed.get("worktree", {}).get("created"):
-                payload["completed_steps"].append("worktree_setup")
-            payload["errors"] = handed.get("errors", [])
-            payload["notices"] = handed.get("notices", [])
-        except AdvisoryError as exc:
-            payload.update(status="needs_recovery", errors=[exc.to_dict()], next_action=exc.fix)
+        payload["status"] = "accepted"
         return payload

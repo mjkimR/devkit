@@ -1,45 +1,23 @@
 ---
-id: PROP-post-merge-verification
+id: SPEC-post-merge-verification
 title: Verify integration after merging with the resulting runtime
 summary: Verify the landed result with its declared devkit runtime after branch checks, and simplify integration preparation, recovery and CLI usage.
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: integration/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: high                      # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/integration/
-    - packages/devkit/src/devkit_agt/features/worktree/
-    - packages/devkit/pyproject.toml
-    - packages/devkit/tests/
-    - packages/devkit-spec/src/devkit_spec/
-    - packages/devkit-spec/pyproject.toml
-    - packages/devkit-spec/tests/
-    - docs/capabilities/integration/
-    - docs/capabilities/delivery/
-    - docs/capabilities/governance/
-    - docs/capabilities/worktree/
-    - docs/capabilities/harness/
-    - docs/usecases/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/development/
-    - AGENTS.md
-    - .devkit/config.toml
-    - guides/
-  excludes:
-    - packages/devkit-dist/src/
-    - packages/devkit-mcp/src/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: completed
+created: 2026-11-04
+related_capabilities: [CAP-INT-mcp-services, CAP-DLV-delivery-workflows, CAP-DLV-proposal-planning]
+related_usecases: [UC-drive-development-to-integration, UC-plan-and-hand-off-a-proposal]
+workflow: sdd-spec-feature
 ---
 
-# [PROP-post-merge-verification] Verify integration after merging with the resulting runtime
+# [SPEC-post-merge-verification] Verify integration after merging with the resulting runtime
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-post-merge-verification on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-post-merge-verification`
+- Target Docs Blueprint: `PROP-post-merge-verification-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Integration evaluates source rules and workflow content with the target checkout's installed devkit. A branch can
 pass its own checks but fail integration because that runtime lacks its CLI, rule imports or receipt reader.
@@ -53,7 +31,67 @@ target is an accepted operational trade-off. Its frequency has not been measured
 This is one lifecycle change delivered by one spec, including CLI simplification, failure recovery and guidance.
 The local base at Planning start is `main` at `675f31df`; this proposal has no prerequisites.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a Host, I want approved Git effects to land without interpreting source content through an older runtime, so upgrades can be verified with their declared runtime.
+- **US-2**: As a user, I want delivery completion to identify passing final checks and the checked landed HEAD, so a successful merge cannot hide an unfinished verification or handoff.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: No test runner, runtime installer, verification ledger, automatic rollback, merge replay, new feature dependency, CI/release redesign or unrelated worktree finish redesign.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Landed runtime and completion
+- **Given** a passing source branch with unchanged tool dependencies.
+- **When** the Host integrates it and synchronizes the landed environment.
+- **Then** final required checks run in fresh processes and the completion report names their commands, outcomes and checked target HEAD.
+
+### [AC-02] Consumer upgrades and dogfood
+- **Given** passing source content whose CLI, rule imports or receipt schema the target runtime cannot interpret.
+- **When** Git approval conditions hold and integration runs.
+- **Then** integration invokes no content readiness, rule runtime, receipt validation or content finish guards; final checks use the landed runtime.
+
+### [AC-03] Failure after landing
+- **Given** a confirmed merge followed by a failing final check.
+- **When** the Host recovers within the agreed scope.
+- **Then** delivery stays unfinished until target repair and recheck pass, preserving landed history without automatic rollback or merge replay.
+
+### [AC-04] Environment failure
+- **Given** setup or tool imports fail after landing.
+- **When** final verification cannot run.
+- **Then** the Host reports unfinished verification, repairs setup or tooling and reruns required checks; missing checks never count as passed or skipped successes.
+
+### [AC-05] Git authority and concurrency
+- **Given** stale source or digest, disallowed route, dirty target, revoked authority or an unknown PR outcome.
+- **When** integration attempts further effects.
+- **Then** retained Git and approval protections refuse unsafe effects; unknown PR landing preserves recovery state without another merge request or cleanup.
+
+### [AC-06] Reduced CLI
+- **Given** an explicit source branch and optional route and digest.
+- **When** prepare or integrate runs without task metadata or provider configuration.
+- **Then** the command is accepted; removed task-kind, task-id, unit and claims options produce argument errors, PR text derives from the branch, and unknown integration configuration keys produce actionable diagnostics.
+
+### [AC-07] Acceptance and fresh handoff
+- **Given** a proposal whose direction conditions and explicit acceptance authority hold.
+- **When** accept_and_handoff merges its acceptance.
+- **Then** acceptance records remain validated, verification is pending, handoff is not started, requested mode and authorized scope and effort remain in its continuation, and no old-process handoff evaluator runs after landing.
+
+### [AC-08] Batches and generated changes
+- **Given** several landed units and generated-file or repair commits.
+- **When** the Host runs final verification.
+- **Then** affected tests use the saved premerge target SHA against the final HEAD with full fallback and required frontend checks; all units remain pending until that head passes.
+
+### [AC-09] Cleanup and honest effects
+- **Given** confirmed, partial or unknown Git effects.
+- **When** integration returns JSON or text.
+- **Then** confirmed landing reports verification=pending and its actual revision; unperformed or unknown landing reports verification=not_started, scoped cleanup retains identity checks, and partial failure preserves exact effects and exit semantics.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — Verification owner:** The Host runs existing project commands after landing. Devkit adds no test runner,
   runtime installer, verification database or pass-token protocol.
@@ -66,11 +104,11 @@ The local base at Planning start is `main` at `675f31df`; this proposal has no p
 - **Q4 — CLI:** Remove merge-time readiness-provider inputs and checks. Keep explicit approval preparation, Git
   identities, route controls and honest partial-effect results. Proposal acceptance remains a separate operation.
 
-Scout evidence and compared alternatives are in `materials/integration-options.md`.
+Scout evidence and compared alternatives are in `docs/materials/2026-11/20261104-post-merge-verification/integration-options.md`.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Selected procedure
+#### 3.1 Selected procedure
 
 1. The Host verifies the source branch with its own runtime: project tests, lint/types as required, rules, review
    and SDD completion checks. Existing checks and unresolved-question/problem handling still apply here.
@@ -92,7 +130,7 @@ A missing dependency, setup failure or broken devkit import is unfinished verifi
 Use the repository's direct test commands when the devkit wrapper is itself broken; repair the tool before required
 rule/workflow checks can pass. Do not replay a completed merge to retry a final check.
 
-### 3.2 Verification policy and batching
+#### 3.2 Verification policy and batching
 
 Use each client repository's required checks; do not prescribe this repository's `just` recipes to clients.
 For this repository, record the target SHA before the first merge and run `just test-affected --base <that SHA>` on
@@ -110,7 +148,7 @@ Synchronize the local target to the observed landed commit under the existing ro
 or a clearly reported descendant including subsequent changes. Unknown merge outcomes preserve recovery state and
 never trigger another merge request or cleanup. No force push, admin bypass or implicit publication is introduced.
 
-### 3.3 CLI and implementation simplification
+#### 3.3 CLI and implementation simplification
 
 Proposed public invocation (normative target, not available in the existing CLI):
 
@@ -153,7 +191,7 @@ handoff authority for unchanged scope; changed content/effects require the exist
 label handoff completed or emit its worktree/commit fields before it occurs. `accept_only` ends after acceptance
 and its final verification. Add a fixture proving no old-process handoff evaluation after landing.
 
-### 3.4 Result and recovery contract
+#### 3.4 Result and recovery contract
 
 The CLI returns stable machine-readable Git-effect state and the actual landed revision. Add an explicit
 `verification: pending` result field on known successful landings; an unknown/unperformed landing has
@@ -166,30 +204,7 @@ Retain warning/strict behavior and exact completed-effect reporting. A partial c
 cleanup without asking to remerge. Final-check failures are reported by the actual check command and the Host.
 Cleanup may complete before a failing final check; the report must say both facts explicitly.
 
-### 3.5 Acceptance scenarios
-
-- **AC-01 Ordinary client:** Given unchanged tool dependencies and a passing branch, when it lands, final checks
-  use the landed environment and report the checked HEAD before delivery is reported complete.
-- **AC-02 Upgrade and dogfood:** Given a branch with new CLI/rule imports or receipt content unsupported by the
-  base runtime, when its own checks pass and Git approval conditions hold, integration does not invoke old-runtime
-  content validation. Final checks use the new environment; no scratch source-built judge is required.
-- **AC-03 Landed failure:** Given a successful merge and a failing final check, the merge remains observable,
-  delivery is unfinished, and in-scope repair plus recheck completes it without replaying merge or losing history.
-- **AC-04 Runtime failure:** Given setup or tool import fails after landing, the Host reports unfinished checks,
-  repairs setup/tooling, and reruns required checks without treating them as skipped successes.
-- **AC-05 Approval and concurrency:** Given stale source/digest, disallowed route, dirty target or unknown PR
-  outcome, the existing corresponding Git/authority refusal or recovery remains effective.
-- **AC-06 CLI reduction:** Both integration commands accept the reduced invocation; removed arguments fail with
-  normal argument errors. Shipped callers and help use no removed options. No readiness provider is required to merge.
-- **AC-07 Acceptance isolation:** Proposal acceptance still refuses unmet direction conditions and records the
-  accepted decision through its normal command. A composed handoff waits for final verification and a fresh process,
-retains authorized mode/effort in its continuation, and never evaluates landed content in the old process.
-- **AC-08 Batch and repair:** Given several merges and generated-file/repair commits, one final affected run uses
-  the saved batch-start SHA, covers the final HEAD and preserves full fallback. A failure keeps the batch unfinished.
-- **AC-09 Cleanup and output:** Given a confirmed merge, authorized cleanup still runs with identity checks; final
-  verification is pending in both JSON and text. Partial or unknown effects never become a false completion report.
-
-### 3.6 Boundaries and verification
+#### 3.6 Boundaries and verification
 
 Development changes the integration/worktree paths needed for this lifecycle, their tests, devkit-spec delivery
 and agent assets, package entry-point declarations, integration configuration and the Living Spec targets. The broad
@@ -203,10 +218,15 @@ final-check failure and recovery in temporary Git repositories. Validate the Hos
 and a recorded end-to-end walkthrough; do not claim the CLI enforces external test completion. Run lint, types,
 `just test-affected --base <base>` and rules on the implementation. No performance or failure-rate claim is made.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
-`PADR-post-merge-verification` partially supersedes integration/content-readiness and deferred-final-testing clauses
+`ADR-post-merge-verification` partially supersedes integration/content-readiness and deferred-final-testing clauses
 of the named ADRs. It preserves approval authority, Git identities, publication limits and partial-effect recovery.
 Planning acceptance authorizes the detailed direction and CLI removals. Development effort is high because the
 public command and integration contracts change. Handoff produces one implementation spec; completion requires
 implementation, review, Living Spec reconciliation and final verification evidence.
+
+
+## 6. Development assumptions and baseline
+
+The accepted input is `810adf730993710119ab351b4bbbdce7d716ad98`; inspecting its integration path confirms the Planning premise: preparation and landing call readiness providers, rule/receipt checks and content finish guards. No scope-breaking base change was found. Measure direct content-check call sites in the accepted input and implementation without checking out the base; regression spies verify the after behavior. The expected after count is zero. The Host owns external final test execution, not the merge CLI.

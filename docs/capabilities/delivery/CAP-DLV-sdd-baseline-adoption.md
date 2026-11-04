@@ -51,8 +51,8 @@ adaptive development.
 6. **Current choices**: WHEN drafting retained-choice documents, the agent MUST state current known reasons without
    invented past alternatives or approvals. Existing accurate documents and SDD history are preserved.
 7. **Exact activation effects**: WHEN the ready source, retained scope and policy effects are presented, the agent
-   MUST obtain or reuse explicit user authority bound to those same effects before activation. An existing spec
-   integration provider remains; configuring a missing spec provider or a necessary project-to-spec provider change is presented and authorized explicitly.
+   MUST obtain or reuse explicit user authority bound to those same approach and asset effects before activation.
+   Integration requires no provider selection; legacy provider values are ignored and require no activation effect.
 8. **Evidence freshness**: IF relevant source or dirty content changes before activation, THEN the agent MUST
    revalidate affected evidence before claiming readiness.
 9. **Partial failure**: IF installation, policy update or sync fails, THEN the agent MUST report actual partial
@@ -79,8 +79,8 @@ no filename or schema parser is required. Synthetic exercises identify simulated
 
 Approach inspection uses `uv run devkit config show`: `configuration.development.approach` and
 `sources["development.approach"]`. Authorized activation edits the shared `.devkit/config.toml` development
-table and, when required and explicitly authorized, its integration provider. Existing approval/worktree/other
-integration/project-check settings remain unchanged unless their change was authorized.
+table. No integration-provider edit is required. Existing approval/worktree/project-check settings remain unchanged
+unless their change was authorized.
 
 Completion checks run `uv run devkit sync`, `uv run devkit config show`, `uv run devkit spec policy` and
 `uv run devkit sync --check`. Actual observations, not an expected result, establish completion. Subsequent

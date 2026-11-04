@@ -20,7 +20,6 @@ from devkit_dist.adapters.cli import (
 
 from devkit_agt.features.integration.models.contracts import (
     SeededArtifact,
-    Task,
     integrate_command,
     prepare_command,
 )
@@ -54,40 +53,25 @@ def cli() -> None:
 @cli.command()
 @click.argument("branch")
 @click.option(
-    "--task-kind",
-    required=True,
-    type=click.Choice(["unit", "session"]),
-    help="Whether the work is a spec unit or a session",
-)
-@click.option("--task-id", required=True, help="The unit or session id the integration belongs to")
-@click.option("--unit", default=None, help="Workspace-relative unit directory; required with --task-kind unit only")
-@click.option(
     "--route",
     default="local",
     show_default=True,
     type=click.Choice(["local", "pull-request"]),
     help="Merge locally, or land through a pull request",
 )
-@click.option(
-    "--claims", default="{}", help="Provider-specific caller declarations as JSON; exclude secrets and transcripts"
-)
 @workspace_option()
 @FORMAT_OPTION
 @boundary
 def prepare(
     branch: str,
-    task_kind: str,
-    task_id: str,
-    unit: str | None,
     route: str,
-    claims: str,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
     """Validate committed BRANCH and show its exact integration scope without performing integration effects."""
-    root, task = resolve_root(workspace_root), Task(task_kind, task_id, unit, claims)
-    with _rerun_on_base(root, lambda workspace: prepare_command(branch, task, route, workspace=workspace)):
-        result = PrepareIntegrationUseCase(IntegrationService(root)).execute(branch, task, route)
+    root = resolve_root(workspace_root)
+    with _rerun_on_base(root, lambda workspace: prepare_command(branch, route, workspace=workspace)):
+        result = PrepareIntegrationUseCase(IntegrationService(root)).execute(branch, route)
     if is_json(output_format):
         echo_json(result.compact_dict())
         exit_on_warnings(result.notices)
@@ -102,7 +86,7 @@ def prepare(
     click.echo(
         f"[INTEGRATION_SCOPE: worktree_remove={yes_no(plan.worktree_identity is not None)} "
         f"delete_branch={yes_no(plan.delete_branch)} cleanup={cleanup} seeded={_seeded(result.seeded)} "
-        f"disclosure={json.dumps(request.readiness.disclosure, ensure_ascii=False)}]"
+        f"verification={result.verification} landed_sha={result.landed_sha or '-'}]"
     )
     echo_notices(result.notices)
     exit_on_warnings(result.notices)
@@ -111,22 +95,11 @@ def prepare(
 @cli.command()
 @click.argument("branch")
 @click.option(
-    "--task-kind",
-    required=True,
-    type=click.Choice(["unit", "session"]),
-    help="Whether the work is a spec unit or a session",
-)
-@click.option("--task-id", required=True, help="The unit or session id the integration belongs to")
-@click.option("--unit", default=None, help="Workspace-relative unit directory; required with --task-kind unit only")
-@click.option(
     "--route",
     default="local",
     show_default=True,
     type=click.Choice(["local", "pull-request"]),
     help="Merge locally, or land through a pull request",
-)
-@click.option(
-    "--claims", default="{}", help="Provider-specific caller declarations as JSON; exclude secrets and transcripts"
 )
 @click.option(
     "--expected-digest",
@@ -138,23 +111,15 @@ def prepare(
 @boundary
 def integrate(
     branch: str,
-    task_kind: str,
-    task_id: str,
-    unit: str | None,
     route: str,
-    claims: str,
     expected_digest: str | None,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
     """Integrate committed BRANCH after Host-carried approval; auto policy is read from the retained base."""
-    root, task = resolve_root(workspace_root), Task(task_kind, task_id, unit, claims)
-    with _rerun_on_base(
-        root, lambda workspace: integrate_command(branch, task, route, expected_digest, workspace=workspace)
-    ):
-        result = IntegrateUseCase(IntegrationService(root)).execute(
-            branch, task, route, expected_digest=expected_digest
-        )
+    root = resolve_root(workspace_root)
+    with _rerun_on_base(root, lambda workspace: integrate_command(branch, route, expected_digest, workspace=workspace)):
+        result = IntegrateUseCase(IntegrationService(root)).execute(branch, route, expected_digest=expected_digest)
     payload = result.compact_dict()
     if is_json(output_format):
         echo_json(payload)
@@ -167,7 +132,7 @@ def integrate(
             f"target_sha={plan.target_sha} build_target={result.build_target or '-'} result={result.result_sha or '-'} "
             f"route={route} authority={result.authority or '-'} failed={result.failing_operation or '-'} "
             f"codes={','.join(error.code for error in result.errors) or '-'} seeded={_seeded(result.seeded)} "
-            f"disclosure={json.dumps(result.request.readiness.disclosure, ensure_ascii=False)} effects={effects}]"
+            f"verification={result.verification} landed_sha={result.landed_sha or '-'} effects={effects}]"
         )
         echo_notices(result.notices)
         for error in result.errors:  # errors last, so the decisive block ends the output

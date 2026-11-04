@@ -268,3 +268,11 @@ A successful explicit commit MUST print exactly one line:
 ```
 
 JSON success contains `unit`, `file`, `outcome`, `head`, `subject` and `notices`. `head` is the actual final HEAD after hooks. For `committed`, `subject` is `chore(workflow): record <slug> <kind>-<NN>`; the body names workflow, segment and stage. For a clean exact existing record, `outcome` is `already_committed` and `subject` is null; it MUST NOT claim the existing commit's message. Failures MUST follow the advisory boundary above, with no success sentinel. Eligibility and Git postconditions belong to `CAP-DLV-workflow-envelopes`.
+
+## Integration verification boundary
+
+The integration CLI reports confirmed Git landing and cleanup separately from final project verification.
+`verification=pending` with `landed_sha` identifies confirmed landing; unperformed or unknown landing reports
+`verification=not_started`. The Host synchronizes the landed runtime and runs required final checks before delivery
+completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). Standalone
+`devkit worktree finish --merge` retains its existing guards.

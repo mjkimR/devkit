@@ -64,13 +64,13 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
 6. The agent re-verifies only what docs reflection changed and runs the cumulative check; a base that moved since the
    branch was cut needs no merge into the branch (`CAP-DLV-delivery-workflows`, `CAP-INT-mcp-services`).
 7. The agent reads the effective policy, prepares the scope, which checks the merge with a moved base, presents the
-   verified report, the merged target SHA, the readiness disclosure and the exact merge/cleanup effects, receives the
+   verified report, the merged target SHA, the pending final-verification boundary and exact merge/cleanup effects, receives the
    user's conversational approval under `ask`, then requests integration pinned to the prepared scope (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`).
 8. The system builds the result commit outside the base checkout, fast-forwards the base onto it without network
    operations, removes the task worktree, deletes the local branch as the policy selects and runs the scoped
    post-finish cleanup (`CAP-INT-mcp-services`, `CAP-WT-task-worktrees`).
-9. The agent declares the approval and the runner checks to the workflow and reports the result with its authority
-   (`CAP-DLV-delivery-workflows`).
+9. The Host synchronizes the landed runtime, commits generated changes, runs final required checks on the resulting
+   target head and reports delivery completion with checked head and authority (`CAP-DLV-delivery-workflows`).
 
 ---
 
@@ -82,7 +82,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **1a.** The task is `session` depth: the agent implements, tests and reviews it at the same effort levels, with the
   `code-reviewer` returning a message, writes no spec, envelope, gate record file or reconcile document, commits before
   approval and reports the change, effort, review result and verification in its final response or PR body
-  (`CAP-DLV-delivery-workflows`); resumes at step 7 with the session's declared claims in place of a Unit.
+  (`CAP-DLV-delivery-workflows`); resumes at step 7 with the session's recorded check outcomes and no Unit metadata in the integration command.
 - **1b.** The user instructs `local-orchestrated` mode: a `development-worker` runs the turn in its own `dev-`
   worktree from the stage the workflow names up to the final change report, nests the reviewers and commits at every
   stage boundary; the agent validates the cumulative committed range, and a range it rejects becomes a problem in its
@@ -94,7 +94,7 @@ The integration executor's coded refusals this section does not name, and their 
   (integrated, blocked with its problem recorded, waiting for a user decision or continued in `direct`) and no worker
   turn is running, the Host runs `devkit generated check` on the base branch HEAD, regenerates and commits any stale
   artifact (`devkit generated regen <ids>`), then runs the repository's integrated-content tests once on that head
-  from the batch start and reports the tested head, command and result; a failure becomes feedback and nothing is reverted
+  from the batch start and reports the tested head, command and result; a failure keeps every landed unit pending until in-scope target repair and recheck pass
   (`CAP-HARN-agent-guidance`); resumes at step 6.
 - **3a.** The effort is `low`: the author reviews the change and self-checks the reconcile, still recorded as review
   and reconcile-check envelopes (`CAP-DLV-delivery-workflows`); resumes at step 5.
@@ -129,31 +129,16 @@ The integration executor's coded refusals this section does not name, and their 
 - **7d.** Ask execution lacks a prepared digest or its scope changed: the system refuses before integration effects
   with `INTEGRATION_AUTHORITY_REQUIRED` or `INTEGRATION_REQUEST_STALE`; the agent prepares the current scope and
   obtains a fresh conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
-- **7e.** A Unit the branch changed holds an unresolved problem, an unanswered question or a malformed worker
-  envelope: the gate is held and the merge is refused with `WORKTREE_BLOCKED` (`CAP-DLV-workflow-envelopes`); the use
-  case ends and `UC-handle-delivery-problems-and-exceptions` continues.
-- **7f.** The source changes the receipt reader and commits a receipt only that reader accepts: the system refuses
-  with `INTEGRATION_RECEIPT_READER_CHANGED` and changes nothing; restarting the service does not help, and the agent
-  never changes the route itself but, with separately granted authority, finishes the branch through the local CLI
-  path run from the source's code (`CAP-INT-mcp-services`); resumes at step 9.
+- **7e.** A Unit the branch changed holds a problem, pending question or malformed record: the Host detects the hold with the source runtime before approval and stops integration (`CAP-DLV-workflow-envelopes`); the use case ends and `UC-handle-delivery-problems-and-exceptions` continues.
+- **7f.** The source upgrades its receipt schema beyond the old runtime: approved Git integration proceeds and reports pending final verification; the Host synchronizes the landed runtime before receipt validation (`CAP-INT-mcp-services`); resumes at step 9.
 - **7g.** The CLI runtime is inside the worktree that integration would remove: the system refuses with
   `INTEGRATION_RUNTIME_IN_WORKTREE`; the agent uses a retained runtime outside that worktree, prepares the scope and
   obtains any required conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
-- **7h.** A synchronized rule of the source, or of the prospective or built result, imports a module or name the running runtime
-  does not provide, such as the implementation module of a rule the branch adds: the system refuses with
-  `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness (after 7f and 7g) and changes nothing; the source needs no change, and the agent,
-  with separately granted authority, runs integration from the base checkout with a runtime built from the source's
-  code outside the worktree (`CAP-INT-mcp-services`); resumes at step 7.
-- **7i.** Preparation of a moved base refuses: its merge conflicts with the branch in a file no generated artifact
-  settles (`WORKTREE_MERGE_CONFLICT`, one detail per such file), the
-  merged result fails a CI rule, or the base changed the unit directory since the merge base
-  (`INTEGRATION_NOT_READY`), or the merge leaves a receipt record inconsistent (`INTEGRATION_RECEIPT_CONFLICT`), and
-  nothing changes. The agent merges the base into the branch, then resolves the conflict, runs `devkit rules fix`
-  after a CI-rule reason or `devkit sync` after a receipt conflict, commits and re-verifies what the merge changed
-  (`CAP-INT-mcp-services`); resumes at step 6.
+- **7h.** The source requires rule imports or CLI APIs absent from the old runtime: integration executes no source-content validation; the Host synchronizes the landed runtime and runs final checks (`CAP-INT-mcp-services`); resumes at step 9.
+- **7i.** The prospective Git merge conflicts in a path no understood generated artifact settles: preparation refuses with `WORKTREE_MERGE_CONFLICT`, changing nothing. The Host merges the base into the branch, resolves conflicts and refreshes affected checks (`CAP-INT-mcp-services`); resumes at step 6.
 - **7j.** Every conflict of the merge with a moved base is in a file a generated artifact owns, such as
   `.devkit/installation.json`, and no artifact to regenerate reads another conflict: preparation keeps each file at
-  its artifact's seed side, runs the checks on that result and discloses the artifacts (`generated`,
+  its artifact's seed side, validates its Git/policy effects and discloses the artifacts (`generated`,
   `INTEGRATION_GENERATED_SEEDED`); the agent presents them with the scope, and after landing runs the disclosed
   `devkit generated regen <ids>` on the base and commits, or leaves it to the batch completion of a
   `local-orchestrated` run (`CAP-INT-mcp-services`, `CAP-GEN-tracked-artifacts`); resumes at step 7.
@@ -168,11 +153,13 @@ The integration executor's coded refusals this section does not name, and their 
 - **8c.** The command outcome is unknown: the agent inspects Git, worktree and PR state, then authorizes only the
   remaining effects whose source and cleanup identities can be verified (`CAP-INT-mcp-services`); resumes at step 8.
 
+- **9a.** Setup, imports or final checks fail: delivery stays unfinished while the Host repairs the target and rechecks; no merge replay or automatic rollback occurs (`CAP-DLV-delivery-workflows`); resumes at step 9.
+
 ---
 
 ## 4. Postconditions
 
-- **Success guarantee**: The base branch contains the verified change with its Living Spec reflection, a resolved
+- **Success guarantee**: Required final checks passed on the reported target HEAD using the landed runtime, and the base branch contains the verified change with its Living Spec reflection, a resolved
   `reconcile.md` and a completed spec (a session: its final report), the task worktree is removed, the local branch is
   deleted or kept as `delete_branch` selects, and the report names the authority: Host-carried conversational
   approval or retained-base `policy`, with publication authority for the pull-request route.
@@ -197,7 +184,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: a verified `dev-<slug>` branch whose final change report holds, under `dev-integration = "ask"`,
   `pull_request = "auto"` and the default `merge = "no-ff"` and `delete_branch = true`
 - **When**: the Host presents the verified report and cleanup scope, the user approves in conversation, and the agent
-  runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>`
+  runs `devkit integration integrate dev-<slug> --route local --expected-digest <request.digest>`
 - **Then**: the base holds the merge commit `chore(merge): integrate dev-<slug> into <base>`, no fetch or push ran,
   the task worktree and the local `dev-<slug>` branch are gone, the scoped post-finish cleanup ran, and the agent
   passes `--given dev-integration` to later `devkit workflow next` calls
@@ -255,9 +242,9 @@ The integration executor's coded refusals this section does not name, and their 
 
 ### Scenario 10: Policy authorizes local integration and scoped cleanup
 - **Covers**: 7a
-- **Given**: a completed task branch satisfying every readiness check under `[workflow.approvals]
+- **Given**: a completed task branch whose required source checks passed, under `[workflow.approvals]
   dev-integration = "auto"` in the shared base
-- **When**: the agent runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local`
+- **When**: the agent runs `devkit integration integrate dev-<slug> --route local`
 - **Then**: no form is shown, the result reports `authority: policy`, the base is advanced without fetch or push, the
   task worktree is removed, the local `dev-<slug>` branch is deleted and the scoped post-finish cleanup runs, and
   `devkit workflow next` lists `[GATE_PASSED: dev-integration ... source=policy]`
@@ -306,20 +293,17 @@ The integration executor's coded refusals this section does not name, and their 
   reported target, such as `devkit spec proposal prune <slug>`
 - **Then**: only that scoped cleanup runs and the merge is not repeated
 
-### Scenario 17: A changed receipt reader refuses CLI integration
+### Scenario 17: A changed receipt reader is verified after landing
 - **Covers**: 7f
-- **Given**: a `dev-<slug>` branch whose range changes a receipt reader module and whose committed receipt only the
-  changed reader accepts, under a retained service built from the target
-- **When**: the agent runs `devkit integration integrate`
-- **Then**: it refuses with `INTEGRATION_RECEIPT_READER_CHANGED`, the target is unchanged, and the agent resolves the
-  receipt mismatch before obtaining fresh Host authority and retrying
+- **Given**: a verified `dev-<slug>` branch that changes the receipt reader and commits a receipt accepted only by that reader
+- **When**: the Host integrates the explicit branch under retained Git authority
+- **Then**: Git effects land with `verification=pending`, and the Host validates the receipt with the synchronized landed runtime before reporting completion
 
-### Scenario 18: An unknown result is inspected before retry
-- **Covers**: 8c
-- **Given**: the CLI result is unknown after a local merge or pull-request mutation
-- **When**: the agent inspects Git, `devkit worktree status` and the pull request state
-- **Then**: it invokes only a remaining operation whose target and cleanup identity are verified, and never repeats an
-  unknown mutation or removes an unrelated worktree
+### Scenario 18: A receipt upgrade waits for landed verification
+- **Covers**: 7f
+- **Given**: a source receipt unsupported by the retained runtime
+- **When**: the Host integrates the verified branch under existing authority
+- **Then**: Git effects land with verification pending and receipt validation runs only after landed runtime synchronization
 
 ### Scenario 19: A worktree-owned runtime cannot remove itself
 - **Covers**: 7g
@@ -335,14 +319,11 @@ The integration executor's coded refusals this section does not name, and their 
   retries with the new digest
 - **Then**: remote deletion completes before local worktree and branch deletion, and the PR is not merged again
 
-### Scenario 21: A rule that needs the source's code is named before readiness
+### Scenario 21: Source rule imports use the landed runtime
 - **Covers**: 7h
-- **Given**: a `dev-<slug>` branch whose committed receipt lists a synchronized rule importing a module the branch adds,
-  under a retained runtime built from the target
-- **When**: the Host runs `devkit integration prepare` or `integrate`
-- **Then**: it refuses with `INTEGRATION_RULE_RUNTIME_MISMATCH` naming the rule file and the missing import, the
-  readiness provider does not run, the target is unchanged, and the Host retries with a runtime built from the source's
-  code after separately granted authority
+- **Given**: source rules importing a module absent from the retained runtime
+- **When**: the Host integrates the branch
+- **Then**: integration performs no old-runtime rule evaluation and reports pending verification; the Host synchronizes dependencies and runs final checks in fresh processes
 
 ### Scenario 22: Local orchestration reuses its lifecycle executor
 - **Covers**: 1b
@@ -418,3 +399,9 @@ The integration executor's coded refusals this section does not name, and their 
 - **Then**: preparation and integration complete with `seeded=devkit-receipt` and an `INTEGRATION_GENERATED_SEEDED`
   warning naming `uv run devkit generated regen devkit-receipt`, the landed tree keeps the base's receipt and equals
   the prepared result, and the branch received no base merge
+
+### Scenario 32: Final failure is repaired on the target
+- **Covers**: 9a
+- **Given**: confirmed landing and cleanup followed by a failing final check
+- **When**: the Host repairs the target within scope and reruns required checks
+- **Then**: only the passing resulting HEAD is reported complete, and the merge is neither replayed nor automatically rolled back

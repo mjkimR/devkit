@@ -1,0 +1,52 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T08:54:04.457589Z'
+status: completed
+summary: Completed authorized Development through final change report, with Git-only integration, confirmed landing output and fresh proposal-handoff continuation. Independent code and reconcile reviews passed; tracked sync output is .devkit/installation.json. Host integration and actual landed-runtime final verification remain pending; no main writes, merges or pushes performed.
+findings: []
+assumptions:
+- 'Codex confinement was emulated: absolute worktree/cwd scope, separate per-operation write/Git approvals and independent reviewer before/after snapshots; no native guarantee claimed.'
+- All four recorded exact scope extensions were separately Host-authorized; protected documentation scope was not inferred from adjacency.
+- 'Expected skips: 13 standalone-only cases because devkit-agt is installed; 2 Linux-only cases on macOS.'
+unverified_areas:
+- 'Actual target verification is pending: Host saves premerge target SHA, integrates, uses fresh landed setup/sync, regenerates and commits artifacts, then runs final checks and reports checked HEAD. Live GitHub was covered through fixtures only.'
+checks:
+  sync_start: PASS exit=0
+  tests: PASS full affected fallback 6566 passed, 15 expected environment skips; post-review focused 27 + 26 + 2 passed
+  build: PASS devkit-agt and devkit-spec wheels built
+  lint: PASS package lint/types, 22 final committed-range rules, sync clean
+  review: PASS code round 2 and exact-scope round 3; no open findings
+  reconcile: PASS round 2 closes all 7 findings; 23 changed docs exactly covered and new scope metadata verified
+  baseline: PASS accepted-input static content-check call sites 8 to 0; after-behavior spies and missing-runtime/schema fixtures pass
+diff_scope:
+  base: 810adf730993710119ab351b4bbbdce7d716ad98
+  head: c4500273a95bd3866595da51206a13df65de2599
+scope_extensions:
+- path: docs/architecture/ARCH-04-1-ecosystem-boundaries.md
+  task: 1
+  reason: Host-authorized alignment of CAP-INT-mcp-services ownership with removed readiness provider and retained acceptance cleanup
+  requirements:
+  - AC-02
+  - AC-07
+- path: docs/decisions/2026-11/20261102-adaptive-development-and-research.md
+  task: 1
+  reason: Host-authorized partial supersession of CAP-DLV-adaptive-development provider readiness and activation clauses
+  requirements:
+  - AC-02
+  - AC-06
+- path: docs/architecture/ARCH-04-2-delivery-policy.md
+  task: 1
+  reason: Host-authorized alignment of CAP-INT-mcp-services readiness ownership with final Host checks and retained Git policy
+  requirements:
+  - AC-01
+  - AC-02
+  - AC-05
+- path: packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py
+  task: 1
+  reason: Host-authorized migration of installed consumer fixture for the reduced integration CLI and verification state
+  requirements:
+  - AC-06
+  - AC-09
+activity_effort: high

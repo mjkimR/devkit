@@ -1,20 +1,7 @@
-"""Prepare, confirm and execute an exact local request; retain partial progress only in this process.
-
-The request is immutable and binds the confirmation target. When the source does not contain that target (a moved
-target), preparation builds the prospective merge in the object store and runs the guards on the merge base, the
-readiness provider, the receipt check and the prospective policy on it before the scope is presented; the request
-keeps the approved context and no prospective commit lands (``ADR-moved-target-merge``). The approving call absorbs target commits that landed
-since the confirmation in one build: the target must descend from the confirmation target, the result commit is built
-outside the base checkout (``devkit_agt.features.worktree.services.merging``), the guards and the readiness provider run again with the
-execution context (source, build target, result), the result's effective policy must equal the prospected one and
-the merge must leave no receipt record inconsistent; the base then fast-forwards onto the result only while it still
-points at the build target. A later CLI invocation observes current Git and PR state and requires fresh authority
-for remaining effects. See ``ADR-target-advance-readiness``.
-"""
+"""Prepare and execute approved Git effects; the Host verifies content with the landed runtime."""
 
 from __future__ import annotations
 
-import json
 import sys
 import threading
 from dataclasses import dataclass, field, replace
@@ -26,11 +13,9 @@ from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import GitError
 from devkit_core.core import LockHeldError
 from devkit_core.core.git import run_git_text
-from devkit_core.core.paths import normalize_relpath
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
 
-import devkit_agt.features.integration.repositories.receipts as receipts
 import devkit_agt.features.integration.services.providers as providers
 from devkit_agt.features.integration.models.contracts import (
     CleanupResult,
@@ -38,7 +23,6 @@ from devkit_agt.features.integration.models.contracts import (
     IntegrationRequest,
     IntegrationResult,
     Readiness,
-    Task,
     integrate_command,
     prepare_command,
 )
@@ -67,7 +51,6 @@ from devkit_agt.features.worktree import (
     plan_finish,
     pull_request_policy_fix,
     read_worktree_config,
-    run_finish_guards,
     validate_finish,
 )
 
@@ -88,8 +71,7 @@ def _prospective(root: Path, commit: str, other: str) -> tuple[str, dict[str, An
 class AcceptanceLifecycle(Protocol):
     """Trusted package composition, never a serialized credential or public approval API.
 
-    Preview supplies package-owned pre-acceptance evidence. The normal readiness provider
-    remains mandatory after acceptance and at execution. Implementations validate the
+    Preview supplies package-owned pre-acceptance evidence. Implementations validate the
     precise acceptance content and must not mutate outside their disclosed scope.
     """
 
@@ -124,13 +106,12 @@ class IntegrationService:
         self.github = GitHub(self.root)
         self._records: dict[str, _Record] = {}
 
-    def prepare(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
-        return self._prepare(branch, task, route)
+    def prepare(self, branch: str, route: str = "local") -> IntegrationResult:
+        return self._prepare(branch, route)
 
     def _prepare(
         self,
         branch: str,
-        task: Task,
         route: str = "local",
         *,
         lifecycle: AcceptanceLifecycle | None = None,
@@ -138,35 +119,6 @@ class IntegrationService:
         settle_generated: bool = True,
     ) -> IntegrationResult:
         guard_execution()
-        if (
-            task.kind not in {"unit", "session"}
-            or not isinstance(task.id, str)
-            or not task.id.strip()
-            or len(task.id) > 256
-        ):
-            raise IntegrationConfigError(
-                "task requires kind unit|session and a nonempty id of at most 256 characters",
-                target_files=["--task-kind", "--task-id"],
-                fix="Pass --task-kind unit or session and a --task-id of 1 to 256 characters",
-            )
-        if (task.kind == "unit") != (task.unit is not None):
-            raise IntegrationConfigError(
-                "unit tasks require a unit path; session tasks must not invent one",
-                target_files=["--unit"],
-                fix="Pass --unit with --task-kind unit only",
-            )
-        if task.unit is not None:
-            normalize_relpath(task.unit, canonical=True)
-        try:
-            claims = json.loads(task.claims_json)
-            if not isinstance(claims, dict) or len(task.claims_json.encode()) > 16384:
-                raise ValueError("invalid claims")
-        except (ValueError, UnicodeError) as exc:
-            raise IntegrationConfigError(
-                "task claims must be a JSON object of at most 16 KiB",
-                target_files=["--claims"],
-                fix="Pass --claims a JSON object of at most 16 KiB, such as '{}'",
-            ) from exc
         if len(self._records) >= 128:
             retired = next(
                 (
@@ -194,12 +146,12 @@ class IntegrationService:
         if route == "pull-request":
             from devkit_agt.features.integration.usecases.pull_request import prepare
 
-            result = prepare(self, branch, task)
+            result = prepare(self, branch)
             self._records[result.request.id] = _Record(result)
             return result
         if route != "local":
             raise IntegrationConfigError("route must be local or pull-request")
-        name, policy_digest = providers.policy(self.root)
+        policy_digest = providers.policy(self.root)
         config = read_worktree_config(self.root)
         position = locate(self.root)
         method = merge_method(self.root, config.merge, f"refs/heads/{branch}")
@@ -246,35 +198,19 @@ class IntegrationService:
                 fix=pull_request_policy_fix(branch),
             )
         plan = replace(plan, delete_branch=config.delete_branch and worktree_policy.get("delete_branch", True))
-        context = IntegrationContext(plan, task)
+        context = IntegrationContext(plan)
         # The prospective context adds the unlanded merge; cleanup is planned from the approved context.
         checked = replace(context, result_sha=result_sha) if result_sha is not None else context
-        ident, provider = providers.provider(name)
-        ready = lifecycle.preview(checked) if lifecycle is not None else providers.check(provider, checked)
-        guard_identities = providers.guards()
-        # The guard base is the merge base: the target, the source itself for a cleanup-only request, or their merge
-        # base for a moved target.
-        if plan.already_merged:
-            guard_base = plan.source_sha
-        elif result_sha is None:
-            guard_base = plan.target_sha
-        else:
-            guard_base = run_git_text(self.root, "merge-base", plan.target_sha, plan.source_sha)
-        run_finish_guards(self.root, branch, guard_base, plan.source_sha)
-        if result_sha is not None:
-            receipts.check_merge(self.root, result_sha, (plan.target_sha, plan.source_sha))
+        acceptance = lifecycle.preview(checked) if lifecycle is not None else None
         cleanup = providers.cleanup_scopes(context, providers.cleanup_extensions())
         validate_finish(plan)
         request = IntegrationRequest(
             uuid4().hex,
             context,
-            name,
-            ident,
             policy_digest,
             post_digest,
-            guard_identities,
-            ready,
             cleanup,
+            acceptance=acceptance,
             approval_policy=approval_policy,
             approval_gate=approval_gate,
         )
@@ -284,6 +220,7 @@ class IntegrationService:
             result.steps["worktree_remove"] = "skipped"
         if plan.already_merged:
             result.steps["merge"] = "skipped"
+            result.landed_sha = plan.target_sha
         result.cleanup_steps = {scope.extension: "not_run" for scope in cleanup}
         if seeding is not None and seeding.seeded:
             result.seeded = seeding.seeded
@@ -298,7 +235,7 @@ class IntegrationService:
         return record
 
     def execute_cli(
-        self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
+        self, branch: str, route: str = "local", *, expected_digest: str | None = None
     ) -> IntegrationResult:
         """Execute one CLI invocation after Host-carried conversational approval.
 
@@ -306,20 +243,20 @@ class IntegrationService:
         approval assertion. Under ``ask``, invoking this operation is the Host's act
         after it has presented the prepared scope and received the user's decision.
         The complete request is prepared again here, then all normal source, target,
-        policy, provider, readiness, lock and cleanup checks run before effects.
+        policy, lock and cleanup checks run before effects.
         Under ask, expected_digest pins the presented scope across the separate
         prepare and execute calls; it is a concurrency precondition, not approval.
         """
         guard_execution()
-        result = self.prepare(branch, task, route)
+        result = self.prepare(branch, route)
         request = result.request
         if expected_digest is not None and expected_digest != request.digest:
             raise StaleRequestError(
-                "the source, target, policy, readiness or cleanup scope differs from the prepared scope",
-                f"after the user approves the scope prepare shows: {integrate_command(branch, task, route, request.digest)}",
+                "the source, target, policy or cleanup scope differs from the prepared scope",
+                f"after the user approves the scope prepare shows: {integrate_command(branch, route, request.digest)}",
                 guardrail=False,
                 actor=Actor.USER,
-                fix=prepare_command(branch, task, route),
+                fix=prepare_command(branch, route),
                 what_to_report="The integration scope changed after it was approved. Present the current scope "
                 "([FIX] shows it) and ask the user to approve it again",
             )
@@ -330,10 +267,10 @@ class IntegrationService:
                 raise AuthorityError(
                     "ask integration requires the digest of the scope presented for conversational approval",
                     f"after the user approves the scope prepare shows: "
-                    f"{integrate_command(branch, task, route, request.digest)}",
+                    f"{integrate_command(branch, route, request.digest)}",
                     guardrail=False,
                     actor=Actor.USER,
-                    fix=prepare_command(branch, task, route),
+                    fix=prepare_command(branch, route),
                     what_to_report="Integration needs the user's approval of its exact scope. Present the scope "
                     "([FIX] shows it) and ask whether to integrate",
                 )
@@ -345,7 +282,7 @@ class IntegrationService:
     def _compose_execute(
         self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, ui_action: str
     ) -> IntegrationResult:
-        """Hold the operation lock across acceptance, readiness and exact-target execution."""
+        """Hold the operation lock across acceptance and exact-target execution."""
         before = request.context.finish
         with integration_lock(Path(before.common_dir), timeout=LOCK_WAIT):
             # Bind the acceptance to the prepared Git, policy, provider, guard and cleanup identities.
@@ -357,9 +294,7 @@ class IntegrationService:
                 and run_git_text(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
             ):
                 raise StaleRequestError("acceptance must produce the exact direct child of the displayed source")
-            fresh = self._prepare(
-                before.branch, request.context.task, approval_gate=request.approval_gate, settle_generated=False
-            )
+            fresh = self._prepare(before.branch, approval_gate=request.approval_gate, settle_generated=False)
             after = fresh.request.context.finish
             if after.source_sha != accepted:
                 raise StaleRequestError("the source differs from the service-created acceptance commit")
@@ -388,7 +323,7 @@ class IntegrationService:
                 fresh.request,
                 id=request.id,
                 context=replace(fresh.request.context, finish=replace(after, source_sha=before.source_sha)),
-                readiness=request.readiness,
+                acceptance=request.acceptance,
                 cleanup=cleanup,
             )
             if normalized != request:
@@ -468,8 +403,6 @@ class IntegrationService:
             )
         if not merged:
             providers.policy(self.root)
-        if providers.guards() != request.guards:
-            raise StaleRequestError("finish guard registrations changed")
         context = context or request.context
         try:
             validate_finish(
@@ -479,9 +412,6 @@ class IntegrationService:
             if getattr(exc, "code", "") == "WORKTREE_CONFLICT":
                 raise StaleRequestError(exc.message) from exc
             raise
-        ident, _ = providers.provider(request.provider)
-        if ident != request.provider_identity:
-            raise StaleRequestError("readiness provider installation changed")
         extensions = providers.cleanup_extensions()
         if {name: ident for name, (ident, _) in extensions.items()} != {
             scope.extension: scope.identity for scope in request.cleanup
@@ -513,7 +443,7 @@ class IntegrationService:
                 exc.fix = (
                     "Wait for the other devkit integration to finish, inspect Git state and rerun `uv run devkit integration integrate` after Host approval"
                     if result.observed.get("target_sha") == plan.target_sha
-                    else "Inspect the moved target and source, rerun readiness and obtain Host approval for a new `uv run devkit integration integrate` invocation"
+                    else "Inspect the moved target and source, verify the branch and obtain Host approval for a new `uv run devkit integration integrate` invocation"
                 )
                 result.errors[:] = [exc]
                 result.failing_operation = "lock"
@@ -661,7 +591,7 @@ class IntegrationService:
         if not approving:
             if head != plan.target_sha:
                 raise StaleRequestError(
-                    "the target moved since the last invocation; inspect current Git state, rerun readiness and obtain"
+                    "the target moved since the last invocation; inspect current Git state, verify the branch and obtain"
                     " Host approval for a new `uv run devkit integration integrate` invocation"
                 )
         elif head is None or not is_ancestor(self.root, plan.target_sha, head):
@@ -686,17 +616,11 @@ class IntegrationService:
         if seeding is not None and seeding.seeded:
             result.seeded = seeding.seeded
             result.notices.append(seeded_warning(seeding.seeded))
-        context = self._context(result)
-        merge_base = run_git_text(self.root, "merge-base", head, plan.source_sha)
-        run_finish_guards(self.root, plan.branch, merge_base, plan.source_sha)
-        _, provider = providers.provider(request.provider)
-        ready = providers.check(provider, context)
-        if ready.comparable() != request.readiness.comparable():
-            raise StaleRequestError("completion evidence changed; prepare a new request")
-        if result.result_sha != plan.source_sha:
-            if _prospective(self.root, result.result_sha, head)[0] != request.post_policy_digest:
-                raise StaleRequestError("the merged result changes the effective integration policy")
-            receipts.check_merge(self.root, result.result_sha, (head, plan.source_sha))
+        if (
+            result.result_sha != plan.source_sha
+            and _prospective(self.root, result.result_sha, head)[0] != request.post_policy_digest
+        ):
+            raise StaleRequestError("the merged result changes the effective integration policy")
         if run_git_text(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}") != head:
             raise TargetMovedError("the base branch moved after the build; nothing changed on the target")
         self._validate(request, merged=False, removed=removed, finalized=False, cleanup_done=cleanup_done, target=head)
@@ -717,3 +641,4 @@ class IntegrationService:
                 raise StaleRequestError("the landed commit differs from the checked result tree or ordered parents")
             result.result_sha = landed
         result.steps["merge"] = "completed"
+        result.landed_sha = landed

@@ -7,7 +7,7 @@ from pathlib import Path
 import devkit_agt.features.integration.services.providers as providers
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit_agt.features.integration import AuthorityError, CleanupResult, CleanupTarget, IntegrationService, Task
+from devkit_agt.features.integration import AuthorityError, CleanupResult, CleanupTarget, IntegrationService
 from devkit_agt.features.worktree import integration_lock
 from devkit_core.core import LockHeldError
 from testsupport.rules import git, write
@@ -54,7 +54,7 @@ def compose(service, lifecycle, between=None):
     ``between`` runs after preparation, before the composition takes the operation lock. A refusal before execution
     raises its advisory, which the CLI reports as blocked.
     """
-    request = service._prepare("dev-demo", Task("session", "fixture"), lifecycle=lifecycle).request
+    request = service._prepare("dev-demo", lifecycle=lifecycle).request
     lifecycle.validate(request)
     lifecycle.select({})
     if between is not None:
@@ -110,19 +110,12 @@ def test_composition_partial_result_retains_no_authority(repo, ready_provider, m
     assert retained_authority(service, result) is False
 
 
-def test_composition_rechecks_real_provider_after_acceptance(repo, ready_provider):
+def test_composition_checks_eligibility_only_before_acceptance(repo, ready_provider):
     base, worktree = repo
-    service = IntegrationService(base)
     lifecycle = Lifecycle(worktree, ready_provider)
-    before = git(base, "rev-parse", "HEAD")
-
-    def refuse():
-        ready_provider.allowed = False
-
-    with pytest.raises(AdvisoryError):
-        compose(service, lifecycle, refuse)
-    assert lifecycle.accepted
-    assert git(base, "rev-parse", "HEAD") == before and worktree.exists()
+    result = compose(IntegrationService(base), lifecycle)
+    assert result.status == "completed" and result.verification == "pending"
+    assert len(ready_provider.calls) == 1 and lifecycle.accepted
 
 
 def test_composition_refuses_target_move_after_reprepare(repo, ready_provider, monkeypatch):

@@ -45,9 +45,9 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
 
 Report in the conversation; integration writes no envelope (a file written after the merge would need another commit):
 
-1. The result of `devkit rules check --ci --base <ref>`.
-2. The base integrated, the conflicts resolved and what was re-verified.
-3. That code review completed and that integration completed, as two separate facts.
+1. Confirmed Git effects, actual landed revision, authority and remaining cleanup.
+2. The synchronized runtime, generated or repair commits, saved premerge target SHA, checked target HEAD and final commands with outcomes.
+3. Review completion, Git completion and final verification as separate facts. A pending or failed final check leaves delivery unfinished; report successful completion only after required checks pass.
 
 ## 4. Where envelopes live
 

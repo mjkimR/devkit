@@ -208,7 +208,5 @@ instructions, document rule wrappers, templates and steering context; `devkit_sp
 lifecycle assets. No asset has two owners (`ADR-document-system`).
 
 
-The project feature owns typed shared development approach inspection in devkit-dist. Integration in devkit-agt
-reuses the rule engine for independent adaptive-development readiness; SDD rule applicability and mutation judgments remain
-in devkit-spec. The common committed-ownership repository reads workflow anchor frontmatter without importing the
+The project feature owns typed shared development approach inspection in devkit-dist. Integration in devkit-agt owns approved Git effects and scoped cleanup, without content readiness. The Host runs branch checks and fresh-process final checks after synchronizing landed dependencies. SDD rule applicability and mutation judgments remain in devkit-spec. The common committed-ownership repository reads workflow anchor frontmatter without importing the
 workflow engine or optional SDD tooling. `RULE-architecture` enforces these dependency edges.

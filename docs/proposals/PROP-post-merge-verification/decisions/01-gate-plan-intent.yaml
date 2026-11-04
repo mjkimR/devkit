@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Prepare a proposal for branch verification followed by post-merge verification
-  with the resulting runtime, including proportionate procedure and CLI simplification.
-by: user
-at: '2026-11-04T07:28:03.719122Z'

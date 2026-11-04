@@ -92,8 +92,10 @@ flowchart TD
 ```
 
 - When `pull_request = "required"`, local integration commands (`finish --merge`, `devkit integration integrate --route local`) MUST fail closed with `WORKTREE_PR_POLICY`.
-- The `devkit integration integrate` CLI MUST rebuild readiness and policy from the retained base after Host
-  conversational approval. Automatic authority MUST come only from that base's policy. Its `local` route MUST exclude
+- The `devkit integration integrate` CLI MUST revalidate Git identities and retained approval policy after Host
+  conversational approval. It MUST NOT evaluate source content through the premerge runtime. The Host checks the
+  source branch with its runtime and runs final checks after synchronizing the landed runtime in fresh processes.
+  Automatic authority MUST come only from the retained base's policy. Its `local` route MUST exclude
   fetch and push, and it triggers scoped cleanup (`CAP-INT-mcp-services`). The separate `devkit worktree finish --merge` command pushes base upstream.
 
 ---

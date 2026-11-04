@@ -13,21 +13,13 @@ import json
 from pathlib import Path
 
 import pytest
-from devkit.advisory import Actor, AdvisoryError
-from devkit_agt.features.integration import IntegrationService, ReadinessError, Task
+from devkit_agt.features.integration import IntegrationService
 from spec_support.delivery import _make_synced_repo, _start_worktree
 from spec_support.scope import git, write
 
 RECEIPT = ".devkit/installation.json"
 RULE = ".devkit/managed/spec/rules/needs_new_code/rule.py"
 MISSING = "devkit_spec.features.governance.usecases.not_in_this_runtime"
-SESSION = Task(
-    kind="session",
-    id="newrule",
-    claims_json=json.dumps(
-        {"task_kind": "feature", "effort": "low", "review": "passed", "tests": "PASS pytest", "lint": True}
-    ),
-)
 
 
 def _add_rule(worktree: Path, source: str) -> None:
@@ -41,31 +33,31 @@ def _add_rule(worktree: Path, source: str) -> None:
     git(worktree, "commit", "-q", "-m", "add a synchronized rule")
 
 
-def test_rule_needing_source_code_is_named_before_readiness(tmp_path: Path, synced_template: Path) -> None:
+@pytest.mark.parametrize(
+    "source",
+    [
+        f"from {MISSING} import NeedsNewCodeRule\n",
+        "import not_an_installed_distribution_xyz\n",
+    ],
+)
+def test_upgrade_merges_without_importing_source_rules(tmp_path: Path, synced_template: Path, source: str) -> None:
     repo = _make_synced_repo(tmp_path, synced_template)
     worktree = _start_worktree(repo, "dev-newrule", tmp_path / "wt-newrule")
-    _add_rule(
-        worktree,
-        f"from {MISSING} import NeedsNewCodeRule as _Implementation\n\n\nclass Rule(_Implementation):\n    pass\n",
-    )
-
-    with pytest.raises(AdvisoryError) as raised:
-        IntegrationService(repo).prepare("dev-newrule", SESSION)
-
-    assert raised.value.code == "INTEGRATION_RULE_RUNTIME_MISMATCH"
-    assert raised.value.actor is Actor.USER
-    assert MISSING in raised.value.message
-    assert raised.value.target_files == (RULE,)
-    assert "build a runtime from the source's code" in (raised.value.fix or "")
+    _add_rule(worktree, source)
+    service = IntegrationService(repo)
+    request = service.prepare("dev-newrule").request
+    result = service.execute_cli("dev-newrule", expected_digest=request.digest)
+    assert result.status == "completed" and result.verification == "pending"
+    assert not worktree.exists()
 
 
-def test_rule_importing_an_uninstalled_package_keeps_rules_load_failed(tmp_path: Path, synced_template: Path) -> None:
+def test_future_receipt_schema_does_not_require_old_reader(tmp_path: Path, synced_template: Path) -> None:
     repo = _make_synced_repo(tmp_path, synced_template)
-    worktree = _start_worktree(repo, "dev-newrule", tmp_path / "wt-newrule")
-    _add_rule(worktree, "import not_an_installed_distribution_xyz\n")
-
-    with pytest.raises(ReadinessError) as raised:
-        IntegrationService(repo).prepare("dev-newrule", SESSION)
-
-    assert raised.value.code == "INTEGRATION_NOT_READY"
-    assert any("RULES_LOAD_FAILED" in detail or "RULES_RUN_FAILED" in detail for detail in raised.value.details)
+    worktree = _start_worktree(repo, "dev-future", tmp_path / "wt-future")
+    write(worktree, RECEIPT, '{"schema": "future", "unsupported": true}\n')
+    git(worktree, "add", "-A")
+    git(worktree, "commit", "-qm", "upgrade receipt")
+    service = IntegrationService(repo)
+    result = service.execute_cli("dev-future", expected_digest=service.prepare("dev-future").request.digest)
+    assert result.status == "completed" and result.verification == "pending"
+    assert json.loads((repo / RECEIPT).read_text())["schema"] == "future"

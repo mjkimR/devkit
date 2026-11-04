@@ -56,8 +56,8 @@ def test_pr_operations_bind_repository_and_merge_cannot_enqueue(tmp_path):
     port = GitHub(tmp_path, runner)
     port.find(REPOSITORY, "dev-demo")
     port.view(REPOSITORY, 42)
-    port.create(REPOSITORY, "dev-demo", "main", "SPEC-demo")
-    response = port.merge(REPOSITORY, 42, "a" * 40, "dev-demo", "main", "SPEC-demo")
+    port.create(REPOSITORY, "dev-demo", "main")
+    response = port.merge(REPOSITORY, 42, "a" * 40, "dev-demo", "main")
     port.dependents(REPOSITORY, "dev-demo")
     assert response.http_status == 405
     for args in calls:

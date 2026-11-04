@@ -28,11 +28,6 @@ spec = "devkit_spec.cli:cli"
 spec = "devkit_spec.features.delivery.usecases.cleanup:after_finish"
 
 # Integration readiness provider: `devkit integration` checks SDD completion readiness at the source SHA before approval and merge.
-[project.entry-points."devkit.integration.readiness"]
-spec = "devkit_spec.features.delivery.usecases.integration"
-
-# Attach check: `devkit worktree start <branch> --existing-branch ... --unit <dir>` refuses a unit that is not the one of
-# the activity branch (plan-<slug>: the proposal; dev-<slug>: the spec, or the accepted proposal before its handoff).
 [project.entry-points."devkit.attach_check"]
 spec = "devkit_spec.features.delivery.usecases.attach:attach_check"
 

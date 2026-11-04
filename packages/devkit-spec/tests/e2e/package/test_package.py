@@ -53,13 +53,12 @@ def test_the_entry_points_are_installed() -> None:
     (bundle,) = entry_points(group="devkit.bundles", name="spec")
     (command,) = entry_points(group="devkit.commands", name="spec")
     (template,) = entry_points(group="devkit.config_template", name="spec")
-    (readiness,) = entry_points(group="devkit.integration.readiness", name="spec")
+    assert not entry_points(group="devkit.integration.readiness", name="spec")
     (post_finish,) = entry_points(group="devkit.post_finish", name="spec")
-    assert (bundle.value, command.value, template.value, readiness.value, post_finish.value) == (
+    assert (bundle.value, command.value, template.value, post_finish.value) == (
         "devkit_spec.bundles.spec",
         "devkit_spec.cli:cli",
         "devkit_spec.features.policy.services.config:template",
-        "devkit_spec.features.delivery.usecases.integration",
         "devkit_spec.features.delivery.usecases.cleanup:after_finish",
     )
 

@@ -84,11 +84,7 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 
 Run lint, type checks and relevant tests before completing code changes. Use `just test-affected` for
 development, review and the final integration content (keep its `mode=full` fallback); no separate local
-full-suite run is required. Integration merges a conflict-free moved base itself and runs only CI rules on the
-merged result, so merge the base and rerun tests only after a reported conflict or failing check. After a
-local-orchestrated run, run `devkit generated check` on `main` (regenerate stale artifacts with `devkit generated
-regen <ids>` and commit them), then `just test-affected --base <batch start>` once on `main`; otherwise a later batch run or
-nightly CI tests the combined head. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
+full-suite run is required. Integration merges a conflict-free moved base itself with Git/authority checks. Save the target SHA before the first merge. After landing, synchronize dependencies with `just init`, use fresh processes for `devkit sync` and `devkit generated check`, regenerate stale artifacts with `devkit generated regen <ids>` and commit them, then run `just test-affected --base <saved-target-sha>` on the final target HEAD with required lint/types/rules. A local-orchestrated batch may verify once after selected merges and repairs; every landed unit stays pending until the combined head passes. Repair a failing target and recheck without merge replay or automatic rollback. Report the checked HEAD, commands and outcomes; never compare main to itself or substitute nightly CI for final checks. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
 viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names.
 
 | Target | Command |

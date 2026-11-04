@@ -123,7 +123,7 @@ Review only.
 | **Workspace Isolation** | Worktree creation, cleanup, stale branch checks | Unit binding, scope registration, attach verification | Ephemeral cloud runner checkouts |
 | **Delegation** | Envelope contracts and request parsing | Subagent role system prompts and handoff inputs | Remote agent dispatch and admission |
 | **Decision Handling** | Question and answer serialization | Question consolidation and rewrite procedures | Web UI cards and approval webhooks |
-| **Integration** | Fast-forward merge, base push, MCP integration | Readiness provider, Living Spec sync, cleanup hooks | CI observation and PR merge |
+| **Integration** | Approved CLI Git effects and scoped cleanup | Methodology, proposal acceptance, Living Spec sync and cleanup hooks; Host guidance for source-runtime branch checks and fresh landed-runtime final checks | CI observation and PR merge |
 
 ---
 

@@ -1,13 +1,11 @@
-"""Explicit project provider selection and local-only post-finish extensions; all checks fail closed."""
+"""Git policy normalization and local-only scoped post-finish extensions."""
 
 from __future__ import annotations
 
-import re
 from importlib import metadata
 from pathlib import Path
 from typing import Any, cast
 
-from devkit.advisory import AdvisoryError
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project import development_approach
 from devkit_dist.features.project.repositories.project import commit_config as committed_config
@@ -17,40 +15,35 @@ from devkit_agt.features.integration.models.contracts import (
     CleanupScope,
     CleanupTarget,
     IntegrationContext,
-    Readiness,
-    ReadinessProvider,
     ScopedCleanup,
     digest,
 )
 from devkit_agt.features.integration.models.errors import (
     CleanupContractError,
     IntegrationConfigError,
-    ProviderError,
-    ReadinessError,
 )
-from devkit_agt.features.integration.repositories.receipts import check_reader
-from devkit_agt.features.integration.repositories.rule_runtime import check_rule_runtime
 
 CONFIG_PATH = ".devkit/config.toml"
-DISCLOSURE_LIMIT = 200
-PROVIDER_GROUP = "devkit.integration.readiness"
 POST_FINISH_GROUP = "devkit.post_finish"
-GUARD_GROUP = "devkit.finish_guard"
-CODE = re.compile(r"[A-Z][A-Z0-9_]*\Z")
-NAME = re.compile(r"[a-z][a-z0-9-]*\Z")
 
 
 def effective(config: dict[str, Any]) -> dict[str, Any]:
     """The integration policy devkit owns, normalized with its defaults (``ADR-effective-policy-digest``).
 
-    Asset hashes, the receipt and keys other packages own are not part of it; a provider binds its own policy through
-    its evidence.
+    Asset hashes, the receipt and keys other packages own are not part of Git approval policy.
     """
 
     def table(value: object, key: str) -> dict[str, Any]:
         found = value.get(key) if isinstance(value, dict) else None
         return found if isinstance(found, dict) else {}
 
+    legacy = config.get("integration", {})
+    if not isinstance(legacy, dict) or set(legacy) - {"provider"}:
+        raise IntegrationConfigError(
+            "integration accepts only the ignored legacy provider key",
+            target_files=[CONFIG_PATH],
+            fix="Remove unknown keys from [integration]; provider selection is no longer required",
+        )
     approvals = table(table(config, "workflow"), "approvals")
     worktree = table(config, "worktree")
     return {
@@ -58,7 +51,6 @@ def effective(config: dict[str, Any]) -> dict[str, Any]:
         "pull_request": worktree.get("pull_request", "auto"),
         "delete_branch": worktree.get("delete_branch", True),
         "merge": worktree.get("merge", "no-ff"),
-        "provider": table(config, "integration").get("provider"),
         "development_approach": development_approach(config).approach,
     }
 
@@ -93,125 +85,17 @@ def commit_config(root: Path, sha: str) -> dict[str, Any] | None:
         raise IntegrationConfigError(f"commit {sha[:12]} contains an invalid integration policy") from exc
 
 
-def policy(root: Path) -> tuple[str, str]:
-    """The configured provider name and the effective policy digest of the base checkout at ``root``."""
+def policy(root: Path) -> str:
+    """Validate merge policy; provider is accepted only as an ignored legacy key."""
     config = read_project_config(root)
-    table = config.get("integration")
-    if (
-        not isinstance(table, dict)
-        or set(table) != {"provider"}
-        or not isinstance(table["provider"], str)
-        or not NAME.fullmatch(table["provider"])
-    ):
-        raise IntegrationConfigError(
-            "integration requires exactly one configured provider name; there is no permissive fallback"
-        )
-    workflow = config.get("workflow", {})
-    approvals = workflow.get("approvals", {}) if isinstance(workflow, dict) else None
-    if not isinstance(approvals, dict) or approvals.get("dev-integration", "ask") not in ("ask", "auto"):
-        raise IntegrationConfigError(
-            "integration requires dev-integration=ask or auto",
-            fix="Use the existing integration path for the configured policy; do not change project approval policy to bypass this refusal",
-        )
-    return table["provider"], current_policy(root)
+    approval(config, "dev-integration")
+    return current_policy(root)
 
 
 def identity(entry: metadata.EntryPoint) -> str:
     dist = entry.dist
     package = f"{dist.name}=={dist.version}" if dist is not None else "unversioned"
     return f"{entry.name}:{entry.value}@{package}"
-
-
-def guards() -> tuple[str, ...]:
-    return tuple(sorted(identity(entry) for entry in metadata.entry_points(group=GUARD_GROUP)))
-
-
-def provider(name: str) -> tuple[str, ReadinessProvider]:
-    entries = list(metadata.entry_points(group=PROVIDER_GROUP, name=name))
-    if len(entries) != 1:
-        raise ProviderError(f"provider {name} requires exactly one installed {PROVIDER_GROUP} entry point")
-    try:
-        value = entries[0].load()
-        if not callable(getattr(value, "check", None)):
-            raise TypeError("provider must expose check(context)")
-        return identity(entries[0]), cast(ReadinessProvider, value)
-    except Exception as exc:
-        raise ProviderError(f"provider {name} could not load ({type(exc).__name__})") from exc
-
-
-def check(value: ReadinessProvider, context: IntegrationContext) -> Readiness:
-    """Run the provider; fail closed on a malformed result, refuse on reasons.
-
-    The result must bind the context's source, target and result commits, carry nonempty coded evidence, declare its
-    target-bound codes and a one-line result-check disclosure of 1 to ``DISCLOSURE_LIMIT`` characters. A source that
-    changes the receipt reader and carries a receipt only that reader accepts is refused first
-    (``INTEGRATION_RECEIPT_READER_CHANGED``), then a source or result whose synchronized rules import code this
-    runtime does not provide (``INTEGRATION_RULE_RUNTIME_MISMATCH``).
-    """
-    base = Path(context.finish.base)
-    check_reader(base, context.finish.source_sha, context.finish.target_sha)
-    worktree = Path(context.finish.path)
-    sources = (worktree, base) if worktree.is_dir() else (base,)
-    for commit in (context.finish.source_sha, context.result_sha):
-        if commit is not None:
-            check_rule_runtime(base, commit, sources)
-    try:
-        result = value.check(context)
-        if (
-            not isinstance(result, Readiness)
-            or result.source_sha != context.finish.source_sha
-            or result.target_sha != context.finish.target_sha
-            or result.result_sha != context.result_sha
-        ):
-            raise TypeError("readiness must bind the requested source, target and result SHAs")
-        if not isinstance(result.target_bound, tuple) or not all(
-            isinstance(code, str) and CODE.fullmatch(code) for code in result.target_bound
-        ):
-            raise TypeError("readiness must declare its target-bound evidence codes")
-        if (
-            not isinstance(result.disclosure, str)
-            or not result.disclosure.strip()
-            or len(result.disclosure) > DISCLOSURE_LIMIT
-            or any(not char.isprintable() for char in result.disclosure)
-        ):
-            raise TypeError("readiness requires a one-line result-check disclosure of at most 200 characters")
-        if (
-            not isinstance(result.evidence, tuple)
-            or not result.evidence
-            or any(
-                not CODE.fullmatch(item.code)
-                or not isinstance(item.value, str)
-                or not item.value
-                or len(item.value) > 4096
-                for item in result.evidence
-            )
-        ):
-            raise TypeError("readiness requires nonempty coded evidence")
-        if not isinstance(result.reasons, tuple) or not all(
-            isinstance(reason, str) and reason for reason in result.reasons
-        ):
-            raise TypeError("readiness reasons must be a tuple of strings")
-        if result.reasons:
-            claims_invalid = any(item.code == "SESSION_CLAIMS_INVALID" for item in result.evidence)
-            raise ReadinessError(
-                "the configured provider refused integration",
-                *result.reasons,
-                target_files=(
-                    ["--claims"] if claims_invalid else [context.finish.path] if context.finish.path else None
-                ),
-                fix=(
-                    "Correct --claims with the required session fields and passing verification results, then retry"
-                    " the same `uv run devkit integration prepare` or `uv run devkit integration integrate` command"
-                    " with --claims supplied explicitly; resolve any other reported readiness conditions before retrying"
-                    if claims_invalid
-                    else ReadinessError.fix
-                ),
-            )
-        return result
-    except AdvisoryError:
-        raise
-    except Exception as exc:
-        raise ProviderError(f"readiness verification failed ({type(exc).__name__})") from exc
 
 
 def cleanup_extensions() -> dict[str, tuple[str, ScopedCleanup]]:

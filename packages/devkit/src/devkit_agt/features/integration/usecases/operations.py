@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from devkit_core.base.usecase import BaseUseCase
 
-from devkit_agt.features.integration.models.contracts import IntegrationResult, Task
+from devkit_agt.features.integration.models.contracts import IntegrationResult
 from devkit_agt.features.integration.usecases.service import IntegrationService
 
 
@@ -14,8 +14,8 @@ class PrepareIntegrationUseCase(BaseUseCase):
     def __init__(self, service: IntegrationService) -> None:
         self.service = service
 
-    def execute(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
-        return self.service.prepare(branch, task, route)
+    def execute(self, branch: str, route: str = "local") -> IntegrationResult:
+        return self.service.prepare(branch, route)
 
 
 class IntegrateUseCase(BaseUseCase):
@@ -24,7 +24,5 @@ class IntegrateUseCase(BaseUseCase):
     def __init__(self, service: IntegrationService) -> None:
         self.service = service
 
-    def execute(
-        self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
-    ) -> IntegrationResult:
-        return self.service.execute_cli(branch, task, route, expected_digest=expected_digest)
+    def execute(self, branch: str, route: str = "local", *, expected_digest: str | None = None) -> IntegrationResult:
+        return self.service.execute_cli(branch, route, expected_digest=expected_digest)

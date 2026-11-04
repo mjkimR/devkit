@@ -11,7 +11,6 @@ from devkit_agt.features.integration import (
     CleanupTarget,
     IntegrationContext,
     StaleRequestError,
-    Task,
 )
 from devkit_agt.features.worktree import FinishPlan, FinishResult
 from devkit_dist.cli import cli as devkit_cli
@@ -56,7 +55,7 @@ def _context(repo: Path, worktree: Path, *, branch: str = "dev-s") -> Integratio
         markers=("true", "main", ""),
         delete_branch=True,
     )
-    return IntegrationContext(finish=plan, task=Task(kind="unit", id="SPEC-s", unit=SPEC))
+    return IntegrationContext(finish=plan)
 
 
 def _finish_result(context: IntegrationContext) -> FinishResult:

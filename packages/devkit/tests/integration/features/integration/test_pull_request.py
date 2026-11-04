@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit_agt.features.integration import IntegrationService, Task
+from devkit_agt.features.integration import IntegrationService
 from devkit_agt.features.worktree import MergeNotFastForwardError
 from devkit_agt.features.worktree.models.pull_request import Repository
 from devkit_agt.features.worktree.repositories.pull_request import CommandResult, GitHub
 from testsupport.rules import git, write
-
-TASK = Task("session", "fixture-task")
 
 
 class FakeGitHub(GitHub):
@@ -41,7 +37,7 @@ class FakeGitHub(GitHub):
     def checks(self, repository, number):
         return [{"name": "ci", "bucket": "fail" if self.failed else "pending" if self.pending else "pass"}]
 
-    def create(self, repository, branch, target, task_id):
+    def create(self, repository, branch, target):
         self.pr = {
             "number": 12,
             "url": "https://github.example/owner/repo/pull/12",
@@ -58,7 +54,7 @@ class FakeGitHub(GitHub):
         }
         return CommandResult(0)
 
-    def merge(self, repository, number, source, branch, target, task_id):
+    def merge(self, repository, number, source, branch, target):
         self.merge_calls += 1
         if self.mode == "queue-added":
             return CommandResult(1, http_status=405)
@@ -98,10 +94,6 @@ class FakeGitHub(GitHub):
 @pytest.fixture
 def remote_service(repo, ready_provider, monkeypatch, tmp_path):
     base, worktree = repo
-    original = ready_provider.check
-    monkeypatch.setattr(
-        ready_provider, "check", lambda context: replace(original(context), landed_check="devkit rules check")
-    )
     remote = tmp_path / "remote.git"
     git(base, "init", "--bare", str(remote))
     git(base, "remote", "add", "origin", str(remote))
@@ -121,9 +113,9 @@ def fresh(service):
 
 def run(service):
     """One Host-approved CLI invocation of the pull-request route after presenting the prepared scope."""
-    request = service.prepare("dev-demo", TASK, "pull-request").request
+    request = service.prepare("dev-demo", "pull-request").request
     assert request.approval_scope()["network_operations"] == "approved-pull-request"
-    return service.execute_cli("dev-demo", TASK, "pull-request", expected_digest=request.digest)
+    return service.execute_cli("dev-demo", "pull-request", expected_digest=request.digest)
 
 
 def test_checked_merge_and_ordered_cleanup(remote_service):
@@ -158,7 +150,7 @@ def test_unchecked_landing_continues_cleanup(remote_service, mode):
     result = run(service)
     assert result.status == "completed", result.to_dict()
     assert result.landing["reason"] == mode and not result.landing["checked"]
-    assert [n.code for n in result.notices] == ["INTEGRATION_LANDED_UNCHECKED"]
+    assert result.verification == "pending"
     assert not worktree.exists()
 
 
@@ -237,8 +229,8 @@ def test_fresh_cli_retry_preserves_source_until_remote_cleanup_completes(remote_
     service, fake, base, worktree = remote_service
     source = git(worktree, "rev-parse", "HEAD")
     fake.block_delete = True
-    digest = service.prepare("dev-demo", TASK, "pull-request").request.digest
-    result = service.execute_cli("dev-demo", TASK, "pull-request", expected_digest=digest)
+    digest = service.prepare("dev-demo", "pull-request").request.digest
+    result = service.execute_cli("dev-demo", "pull-request", expected_digest=digest)
     assert result.status == "partial", result.to_dict()
     assert result.errors[0].code == "INTEGRATION_REMOTE_DELETE_BLOCKED"
     assert result.steps["merge"] == "completed"
@@ -249,8 +241,8 @@ def test_fresh_cli_retry_preserves_source_until_remote_cleanup_completes(remote_
     fake.block_delete = False
     restarted = IntegrationService(base)
     restarted.github = fake
-    digest = restarted.prepare("dev-demo", TASK, "pull-request").request.digest
-    recovered = restarted.execute_cli("dev-demo", TASK, "pull-request", expected_digest=digest)
+    digest = restarted.prepare("dev-demo", "pull-request").request.digest
+    recovered = restarted.execute_cli("dev-demo", "pull-request", expected_digest=digest)
     assert recovered.status == "completed", recovered.to_dict()
     assert fake.merge_calls == 1 and git(base, "rev-parse", "HEAD") == landed
     assert not worktree.exists() and not git(base, "branch", "--list", "dev-demo")
@@ -262,7 +254,7 @@ def test_restart_cleanup_reports_no_recorded_landing(remote_service):
     fake.pending = True
     result = run(service)
     fake.pending = False
-    fake.merge(result.request.repository, 12, result.request.context.finish.source_sha, "dev-demo", "main", TASK.id)
+    fake.merge(result.request.repository, 12, result.request.context.finish.source_sha, "dev-demo", "main")
     restarted = IntegrationService(base)
     restarted.github = fake
     result = run(restarted)
@@ -305,7 +297,7 @@ def test_missing_target_upstream_has_actionable_code(remote_service):
     service, _fake, base, worktree = remote_service
     git(base, "branch", "--unset-upstream", "main")
     with pytest.raises(AdvisoryError) as error:
-        service.prepare("dev-demo", TASK, "pull-request")
+        service.prepare("dev-demo", "pull-request")
     assert error.value.code == "INTEGRATION_TARGET_UPSTREAM" and worktree.exists()
 
 
@@ -315,7 +307,7 @@ def test_remote_source_divergence_refuses_before_approval(remote_service):
     divergent = git(base, "commit-tree", f"{parent}^{{tree}}", "-p", parent, "-m", "remote work")
     git(base, "push", "origin", f"{divergent}:refs/heads/dev-demo")
     with pytest.raises(AdvisoryError) as error:
-        service.prepare("dev-demo", TASK, "pull-request")
+        service.prepare("dev-demo", "pull-request")
     assert error.value.code == "INTEGRATION_REMOTE_BRANCH_DIVERGED"
     assert fake.merge_calls == 0 and worktree.exists()
 
@@ -344,19 +336,12 @@ def test_source_change_after_remote_merge_blocks_local_fast_forward(remote_servi
     assert git(base, "rev-parse", "HEAD") == before and worktree.exists()
 
 
-def test_failed_build_then_manual_merge_remains_unchecked(remote_service, ready_provider):
+def test_pr_ignores_content_provider_and_reports_pending(remote_service, ready_provider):
     service, fake, _base, _worktree = remote_service
-    original = ready_provider.check
-    ready_provider.check = lambda context: replace(
-        original(context), reasons=("build failed",) if context.result_sha else ()
-    )
+    ready_provider.allowed = False
     result = run(service)
-    assert result.errors and not result.build_checked and result.result_sha
-    fake.merge(result.request.repository, 12, result.request.context.finish.source_sha, "dev-demo", "main", TASK.id)
-    result = fresh(service)
-    assert result.status == "completed" and result.landing["reason"] == "not-recorded"
-    assert not result.landing["checked"]
-    assert any(n.code == "INTEGRATION_LANDED_UNCHECKED" for n in result.notices)
+    assert result.status == "completed" and result.verification == "pending"
+    assert fake.merge_calls == 1 and ready_provider.calls == []
 
 
 @pytest.mark.parametrize("deletion", [False, True])
@@ -381,8 +366,8 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     monkeypatch.setattr(adapter, "run_git", original)
     restarted = IntegrationService(base)
     restarted.github = fake
-    digest = restarted.prepare("dev-demo", TASK, "pull-request").request.digest
-    recovered = restarted.execute_cli("dev-demo", TASK, "pull-request", expected_digest=digest)
+    digest = restarted.prepare("dev-demo", "pull-request").request.digest
+    recovered = restarted.execute_cli("dev-demo", "pull-request", expected_digest=digest)
     assert recovered.status == "completed", recovered.to_dict()
     assert fake.merge_calls == 1 and not worktree.exists()
     assert fake.ref(recovered.request.repository, "refs/heads/dev-demo") is None
@@ -392,11 +377,11 @@ def test_cleanup_only_confirmation_describes_only_remaining_operations(remote_se
     service, fake, base, _worktree = remote_service
     fake.pending = True
     pending = run(service)
-    fake.merge(pending.request.repository, 12, pending.request.context.finish.source_sha, "dev-demo", "main", TASK.id)
+    fake.merge(pending.request.repository, 12, pending.request.context.finish.source_sha, "dev-demo", "main")
     restarted = IntegrationService(base)
     restarted.github = fake
-    request = restarted.prepare("dev-demo", TASK, "pull-request").request
+    request = restarted.prepare("dev-demo", "pull-request").request
     scope = request.approval_scope()
     assert request.context.finish.already_merged
     assert scope["already_merged"] is True and scope["pull_request"] == 12
-    assert "devkit rules check" in request.readiness.landed_check
+    assert "readiness" not in scope

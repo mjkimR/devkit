@@ -17,6 +17,8 @@ aliases:
 
 # [ADR-adaptive-development-and-research] Adaptive development, SDD adoption and explicit deep research
 
+Superseded in part by `ADR-post-merge-verification`: premerge project/session readiness, touched-Unit integration refusal and provider-activation clauses only; approach policy, Host branch checks, explicit SDD artifact checks and unrelated adoption/research decisions remain.
+
 Superseded in part by `ADR-skill-local-research-roles`: registered research-role projection and role-policy migration clauses.
 
 - **Status**: Accepted

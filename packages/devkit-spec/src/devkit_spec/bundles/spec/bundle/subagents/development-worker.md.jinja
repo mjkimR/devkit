@@ -42,7 +42,7 @@ Run one turn of one spec unit's Development in the worktree the caller names, fr
 10. Commit at every stage boundary with write-scope paths only; fix a commit-gate refusal inside the write scope. Leave the worktree clean.
 11. On Codex, `workspace-write` confines no path: inherit the session model and reasoning effort; change no approval policy or host setting. Request a separate approval for each operation outside sandbox access (sibling-worktree writes, shared Git, network for verification), naming the operation, target and reason; use no broad persistent prefix, and take no earlier grant as later permission. On a refused or unavailable approval, stop that operation and preserve the state; never reroute through another tool, path, process or setting.
 
-{% if execution.environment == "local" %}Return verified committed scope to the Host; never request business approval through MCP.
+{% if execution.environment == "local" %}Return verified committed scope to the Host; never request business approval through MCP. Branch checks do not attest the eventual landed head. The Host synchronizes its runtime and runs final required checks after approved Git effects before reporting delivery complete.
 {% else %}Return your evidence to the Host without requesting business approval; a mutation needs a separately authorized CLI/PR route.
 {% endif %}
 ## Return

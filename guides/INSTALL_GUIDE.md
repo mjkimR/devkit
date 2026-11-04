@@ -129,8 +129,6 @@ no devkit-spec requirement is needed. Set shared `.devkit/config.toml` policy ex
 [development]
 approach = "adaptive-dev"
 
-[integration]
-provider = "project"
 ```
 
 Select `uv run devkit add adaptive-dev`, then inspect `uv run devkit config show` and
@@ -233,3 +231,7 @@ auto-selects docs:core: shared writing instructions, document rules, templates a
 `uv run devkit add docs` to restore docs after an explicit opt-out. `uv run devkit remove spec` removes lifecycle
 assets and routing guidance, but installed devkit-spec extensions remain active. A clean document-only runtime
 omits devkit-spec. Bundle selection does not define a runtime lifecycle bypass.
+
+After approved integration lands, synchronize the target environment from its landed dependency declarations and
+run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
+report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.

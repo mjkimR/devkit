@@ -20,13 +20,12 @@ entrypoints:
 ## 1. Summary
 
 A project decides how delivery runs: which approval gates wait for a person, which stages are switched off, whether
-worktrees and pull requests are used when a task needs them or always, which integration readiness provider
-`devkit_agt.features.integration` calls, and how repository-first feedback is recorded. Policy
+worktrees and pull requests are used when a task needs them or always, and how repository-first feedback is recorded. Policy
 devkit already models stays in devkit's tables
 (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[integration]`); devkit-spec adds only what is specific to spec-driven
 development, under the `[tool.spec]` extension table that devkit passes through unread. Agents read the effective
 policy with one command, `devkit spec policy`, before routing, gate and Git decisions. Rationale:
-`ADR-document-system`; the Git policy levels: `ADR-worktrees-and-scope`; integration readiness and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
+`ADR-document-system`; the Git policy levels: `ADR-worktrees-and-scope`; integration authority and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
 
 ## 2. Scope & Boundary
 
@@ -37,7 +36,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
   - Document namespaces, the `[[tool.docs.namespaces]]` table devkit-docs reads and validates: `CAP-DOCS-namespaces`.
   - The meaning of `[tool.spec.scope]`: `CAP-COLL-work-scope-registry`. This capability owns their validation only.
   - How gates and stage switches act on a workflow: `CAP-DLV-delivery-workflows` and devkit's workflow engine.
-  - Executing worktree and integration steps (`CAP-HARN-agent-guidance`): devkit's `devkit worktree`, `devkit_agt.features.integration` (`[integration] provider = "spec"`), and the `spec`
+  - Executing worktree and integration steps (`CAP-HARN-agent-guidance`): devkit's `devkit worktree`, `devkit_agt.features.integration`, and the `spec`
     skill's worktree procedure.
 - **Non-Goals**:
   - **Scope Excluded**: writing policy. The command only reads; the project edits `.devkit/config.toml`.
@@ -48,10 +47,10 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
 1. **Read through the command**: agents MUST read policy through `devkit spec policy`, never by parsing
    `.devkit/config.toml`; a policy command error stops policy-dependent work.
 2. **devkit tables first**: a policy devkit models (approvals, stage switches, pull requests, branch cleanup, merge method, worktree
-   setup, integration readiness provider) MUST live in devkit's table; `[tool.spec]` holds only keys devkit has no table for.
+   setup) MUST live in devkit's table; `[tool.spec]` holds only keys devkit has no table for.
 3. **Defaults**: a gate the project does not set is `ask` with `source=default` (devkit's default for every gate);
    `[tool.spec] worktree` and `depth_escalation` default to `"auto"`; `[worktree]` values are devkit's defaults (`pull_request = "auto"`,
-   `delete_branch = true`, `merge = "no-ff"`, no `setup`); `[integration] provider = "spec"` selects `devkit_spec.features.delivery.usecases.integration` for `IntegrationService`.
+   `delete_branch = true`, `merge = "no-ff"`, no `setup`); integration needs no provider selection. Legacy `[integration] provider` is ignored; unknown integration keys retain actionable diagnostics (`CAP-INT-mcp-services`).
 4. **Decision boundaries and task intent**: `plan-accept`, `proposal-handoff`, and `dev-integration` are the three
    main decision boundaries, followed in policy output by `plan-intent` and configured custom gates. Each boundary
    and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
@@ -162,9 +161,6 @@ pull_request = "required"   # always integrate through pull requests (default "a
 delete_branch = true        # delete the merged local branch; also select leased remote deletion on the native PR route
 merge = "no-ff"             # a merge commit per task (default); "ff-only" keeps linear history
 setup = "uv sync"           # run in each new worktree
-
-[integration]
-provider = "spec"           # devkit_agt.features.integration.readiness entry point for approval-bound local integration
 
 [tool.spec]
 worktree = "required"       # direct mode: spec and proposal activities always run in a worktree (default "auto")

@@ -1,75 +1,26 @@
-"""Real project provider accepts independent adaptive-dev work and preserves Unit ownership."""
+"""Integration delegates source workflow validation to the Host's branch runtime."""
 
 from pathlib import Path
 
 import pytest
-from devkit_agt.features.integration import IntegrationService, Task
-from devkit_agt.features.integration.models.errors import (
-    ApproachMismatchError,
-    LifecycleValidationRequiredError,
-    ReadinessError,
-)
+from devkit_agt.features.integration import IntegrationService
 from devkit_agt.features.worktree import locate, start
 from testsupport.rules import git, init_repo, write
 
-CLAIMS = '{"review":"PASS source review","tests":"PASS project tests","lint":"PASS lint"}'
 
-
-def project(tmp_path: Path, approach="adaptive-dev", retained=False):
+@pytest.mark.parametrize("approach", ["adaptive-dev", "sdd"])
+@pytest.mark.parametrize("legacy", ["", '[integration]\nprovider="missing-provider"\n'])
+def test_merge_needs_no_readiness_provider_or_claims(tmp_path: Path, approach, legacy):
     base = init_repo(tmp_path / "base")
-    write(base, ".devkit/config.toml", f'[development]\napproach="{approach}"\n[integration]\nprovider="project"\n')
-    if retained:
-        write(base, "docs/unit/anchor.md", "---\nworkflow: sdd-spec-feature\n---\n# Retained\n")
-        write(base, "docs/unit/tasks.md", "Retained companion\n")
+    write(base, ".devkit/config.toml", f'[development]\napproach="{approach}"\n' + legacy)
     git(base, "add", ".")
     git(base, "commit", "-qm", "configure")
     worktree = start(locate(base), "dev-demo").path
     write(worktree, "app.py", "value = 1\n")
     git(worktree, "add", ".")
     git(worktree, "commit", "-qm", "implement")
-    return base, worktree
-
-
-def test_real_project_readiness_without_sdd_records(tmp_path):
-    base, _ = project(tmp_path, retained=True)
-    result = IntegrationService(base).prepare("dev-demo", Task("session", "demo", claims_json=CLAIMS))
-    evidence = {e.code: e.value for e in result.request.readiness.evidence}
-    assert evidence["LIFECYCLE"] == "omitted:adaptive-dev"
-    assert evidence["CI_RULES"] == "pass"
-    assert "VERIFICATION_CLAIMS" in evidence
-    landed = IntegrationService(base).execute_cli(
-        "dev-demo", Task("session", "demo", claims_json=CLAIMS), expected_digest=result.request.digest
-    )
-    assert landed.status == "completed"
-
-
-def test_missing_claims_refuse(tmp_path):
-    base, _ = project(tmp_path)
-    with pytest.raises(ReadinessError):
-        IntegrationService(base).prepare("dev-demo", Task("session", "demo"))
-
-
-def test_sdd_target_cannot_use_project_provider(tmp_path):
-    base, worktree = project(tmp_path, approach="sdd")
-    write(
-        worktree, ".devkit/config.toml", '[development]\napproach="adaptive-dev"\n[integration]\nprovider="project"\n'
-    )
-    git(worktree, "add", ".")
-    git(worktree, "commit", "-qm", "propose approach")
-    with pytest.raises(ApproachMismatchError):
-        IntegrationService(base).prepare("dev-demo", Task("session", "demo", claims_json=CLAIMS))
-
-
-@pytest.mark.parametrize("change", ["companion", "remove_binding", "delete_anchor"])
-def test_retained_unit_requires_lifecycle_validator_even_session(tmp_path, change):
-    base, worktree = project(tmp_path, retained=True)
-    if change == "companion":
-        write(worktree, "docs/unit/tasks.md", "Changed companion\n")
-    elif change == "remove_binding":
-        write(worktree, "docs/unit/anchor.md", "# Unbound now\n")
-    else:
-        (worktree / "docs/unit/anchor.md").unlink()
-    git(worktree, "add", ".")
-    git(worktree, "commit", "-qm", "change retained artifact")
-    with pytest.raises(LifecycleValidationRequiredError):
-        IntegrationService(base).prepare("dev-demo", Task("session", "demo", claims_json=CLAIMS))
+    service = IntegrationService(base)
+    request = service.prepare("dev-demo").request
+    assert "task" not in request.approval_scope() and "readiness" not in request.approval_scope()
+    result = service.execute_cli("dev-demo", expected_digest=request.digest)
+    assert result.status == "completed" and result.verification == "pending"
