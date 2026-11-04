@@ -49,5 +49,7 @@ both package Ruff/Pyright, offline wheel builds and cumulative CI rules passed. 
 
 ## Entrypoints
 
-Existing search, namespace, governance and guidance entrypoints already cover these modifications; review the
-mechanically derived candidates and retain authored source owners only. No new public operation was added.
+The mechanical derivation returned 112 pairs with 98 new candidates. Rejected receipt, test, README and broad
+cross-product directory candidates: they are outputs, verification or unrelated owners, not new reading doorways.
+Existing search, namespace, governance and guidance entrypoints already cover these modifications. No new public
+operation or entrypoint was added.
