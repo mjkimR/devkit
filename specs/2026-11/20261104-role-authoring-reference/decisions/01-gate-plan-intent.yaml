@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Move Role Placement and role path authoring guidance into skill-authoring references;
+  retain only conditional routing in the common instruction.
+by: user
+at: '2026-11-04T07:47:46.065245Z'
