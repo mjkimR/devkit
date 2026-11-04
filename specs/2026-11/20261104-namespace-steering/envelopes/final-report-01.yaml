@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:06:33.837286Z'
+status: completed
+summary: 'RULE-steering-documents and RULE-document-reference check docs/packages/<name>/steering/ of every registered namespace per directory (glossary files reported, unregistered directories skipped); devkit get-context gains --for <dir>, the devkit.context_documents provider group, documents_elsewhere and notices (CONTEXT_DOCUMENTS_EXTENSION_FAILED, exit 1 only under --strict); devkit-docs registers the provider selecting the namespace by the working directory. Living Spec: 11 targets reflected, reconcile resolved, spec completed. Limits: no MCP caller exercises GetContext; the acceptance fixture is a test monorepo (g-sandbox registers no namespace yet).'
+findings: []
+assumptions:
+- 'Code review: one native code-reviewer round at medium (review-01 PASS with two P3s, fixed and self-verified in reverify-01); reconcile: one native reconcile-reviewer check (reconcile-check-01: P1, P2, two P3s fixed and self-verified in reconcile-check-02)'
+- 'Spec AC-07 reworded during build-verify: the JSON-only command carries the provider warning under notices with no stderr advisory (ARCH-08-1-agent-output); the ADR''s provider-failure clause received the same wording repair'
+- A provider's whole result is dropped with one warning when any returned item is unsafe (spec.md section 5)
+- 'Git policy auto choices: worktree required by policy; local merge route under dev-integration=auto (pull_request=auto, no platform review needed)'
+checks:
+  tests: PASS just test-affected mode=full 6373 passed 14 skipped; just test-dist 1297 passed
+  build: PASS just check pyright 0 errors in 12 modules; devkit generated check stale=0; devkit sync --check matches
+  lint: PASS just lint-check 24 runs passed; devkit rules check --ci --base main errors=0 warnings=0
+diff_scope:
+  base: 2cf7879a74b50b687867e2184188dee6c29a2fbc
+  head: abe0b41814750456fe9e49d93850cb807f675138
