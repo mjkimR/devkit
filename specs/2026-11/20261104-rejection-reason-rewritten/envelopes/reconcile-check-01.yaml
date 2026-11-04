@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T01:46:40.075169Z'
+status: completed
+summary: 'round 1; implementer self-check at low effort: four targets (CAP-DLV-proposal-planning rule 9, ADR-reject-ux-rules-path-exclusion, FB-rejection-reason-quoted-verbatim resolved, UC-plan-and-hand-off-a-proposal 5a) each changed on the branch and matching the bundle wording; records rule, answer grammar and hygiene warning unchanged; entrypoints unchanged'
+findings: []
+checks:
+  lint: PASS devkit rules check on the targets and the bundle errors=0
+diff_scope:
+  base: 7e65ea406a6d3060e274a016415081e8c91cf25c
+  head: 9623613b2493f57fd88822fa887f7748f8faf000
