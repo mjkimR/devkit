@@ -59,6 +59,7 @@ def _agt_entries() -> dict[str, str]:
 def test_devkit_agt_registers_the_gates_workflow_and_worktree_templates() -> None:
     assert _agt_entries() == {
         "gates": "devkit_agt.features.gate.usecases.hooks.local_config:config_tables",
+        "maintenance": "devkit_agt.features.maintenance_history.repositories.config:config_tables",
         "workflow": "devkit_agt.features.workflow.repositories.project.config:config_tables",
         "worktree": "devkit_agt.features.worktree.repositories.config:config_tables",
     }

@@ -1,0 +1,25 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:07:18.215134Z'
+status: completed
+summary: Standalone maintenance history is explicit opt-in; all four default playbooks remain unchanged and root/publication/identity contracts are retained. Actual authorized AC-10 GitHub exercise passed after fixing the canonical repository endpoint; independent review-03 and reconcile-check-02 pass; no integration performed.
+findings: []
+assumptions:
+- User explicitly refined composition to separate opt-in history from default playbooks; ADR-opt-in-maintenance-history supersedes only blanket per-run applicability.
+- 'Reviewed behavior baseline: new canonical-endpoint regression failed before fix and passed after; default playbooks exactly match c9f7c6d3. No performance claim.'
+- Integration remains Host-owned; dev-integration auto policy is authority only after Host validates final committed scope and readiness on moved main.
+unverified_areas:
+- Private repository denial and rate-limit responses are injected-tested, not live-confirmed. Host must prepare against moved main; worker did not merge integrate or push.
+checks:
+  tests: PASS just test-affected --base c94eb4fc mode=full 6368 passed 15 skipped; focused integration20 and reviewer catalog4 passed
+  build: PASS uv build --offline --package devkit-agt; sdist and wheel retained in ignored tmp/maintenance-history-build
+  lint: PASS devkit and devkit-catalog lint-check; cumulative CI rules against c9f7c6d3 22 rules zero violations
+  types: PASS devkit Pyright 0 errors
+  live: PASS retained live-results.json; same-SHA PATCH200 stale PATCH422 missing file/ref404; dedicated sanitized branch retained
+  sync: PASS final check exit0 no tracked sync outputs
+  ci_continuation_range: FAIL post-activation CI against c94 omitted six prior target changes; corrected cumulative c9f7c6d3 range passes without waiver
+diff_scope:
+  base: c9f7c6d3a2674f95c345dc13bc89ab1874bcff23
+  head: cf9954f94a4ddb0e0baab0b5fe562d7656cd496a

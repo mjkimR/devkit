@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:41:12.143273Z'
+status: completed
+summary: 'PASS independent medium reconcile: all 15 Living Spec targets match implementation and agreed contracts; no omitted reflection or contradictory completion claim. Required live AC-10 remains pending.'
+findings: []
+unverified_areas:
+- AC-10 live GitHub exercise unexecuted; independent review inspected committed test evidence and made no remote calls.
+checks:
+  target_coverage: PASS all 15 modified Living Spec targets
+  reflection: PASS commands evidence freezing publication states retries amendments retrieval playbooks and registrations
+  isolation: PASS absolute cwd read-only review and unchanged HEAD/index/worktree; emulated not native
+diff_scope:
+  base: c9f7c6d3a2674f95c345dc13bc89ab1874bcff23
+  head: e62f544d6250b80651674f9c396f628e67331fdc

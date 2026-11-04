@@ -66,7 +66,16 @@ COMMANDS: dict[str, str] = {
 
 # The command names devkit-agt mounts through devkit.commands. Names only, consulted last: an installed command of
 # the name always wins, and the list is never shown by ``--help``.
-HARNESS_COMMANDS: tuple[str, ...] = ("rules", "workflow", "gate", "worktree", "generated", "integration", "run")
+HARNESS_COMMANDS: tuple[str, ...] = (
+    "rules",
+    "workflow",
+    "gate",
+    "worktree",
+    "generated",
+    "integration",
+    "run",
+    "maintenance",
+)
 # The command names an optional extra mounts, by command name: the extra that provides it. Consulted the same way.
 EXTRA_COMMANDS: dict[str, str] = {"mcp": "mcp"}
 

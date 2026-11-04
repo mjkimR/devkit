@@ -150,7 +150,7 @@ option = "on"
 
 A selection command that creates the file, and `devkit config template`, write commented managed-scope and update-policy keys,
 the tables installed engines register for the reserved top-level names (`devkit.config_tables`, entry point named
-after the table: devkit-agt registers `workflow` and `worktree`), and the registered `[tool.<name>]` tables of
+after the table: devkit-agt registers `workflow`, `worktree` and `maintenance`), and the registered `[tool.<name>]` tables of
 installed tools (`devkit.config_template`). Values show defaults, or marked examples when unset by default
 (`CAP-DIST-sync-and-transactions`). A template extension that fails is left out
 with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning (`ConfigTemplateExtensionFailedNotice`: it failed to load, raised,
@@ -158,7 +158,7 @@ has a name that is not a `[tool.<name>]` name, or for `devkit.config_tables` not
 valid tables; `what_to_report` names the entry point), in the command's `notices`, or in the sync result's when a
 selection command created the file.
 
-`devkit sync` passes the reserved tables `[rules]`, `[workflow]`, `[gates]`, `[worktree]` and `[integration]` through
+`devkit sync` passes the reserved tables `[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]` and `[maintenance]` through
 untouched, whether or not `devkit-agt` is installed; see the
 [Rules Reference](rules.md#project-configuration), the
 [Workflow Reference](workflow.md#configuration) and the

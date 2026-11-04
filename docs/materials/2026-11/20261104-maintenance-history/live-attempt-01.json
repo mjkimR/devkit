@@ -1,0 +1,17 @@
+{
+  "kind": "failed live GitHub exercise",
+  "repository": "mjkimR/test-sandbox",
+  "branch": "devkit-history-exercise-20261104-c94eb4fc",
+  "observed": [
+    {
+      "request": "GET repos/mjkimR/test-sandbox/",
+      "status": 404
+    },
+    {
+      "request": "GET repos/mjkimR/test-sandbox",
+      "status": 200
+    }
+  ],
+  "failure": "Repository endpoint contained a trailing slash; initialized no branch and published no content.",
+  "fix": "Omit the slash for the empty repository-relative request path; strict regression failed before fix and passed after fix."
+}

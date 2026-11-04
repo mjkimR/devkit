@@ -1,0 +1,40 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:41:57.837598Z'
+status: needs_input
+summary: Implemented seven maintenance history commands, immutable evidence, atomic publication, amendments, retrieval and four guarded playbooks. Independent Code Review and 15-target Reconcile Review pass; six full-fallback failures were fixed and affected scopes passed. AC-10 alone remains pending exact throwaway destination and authority; no external mutation or integration; sync wrote no tracked outputs.
+findings: []
+assumptions:
+- Host-approved exact CLI/config registry and wording-only Living Spec scope additions are recorded in plan/tasks. finish --file registers digests before publish selection; no unrelated feature edges.
+- 'Codex boundaries are emulated: absolute cwd, per-operation approvals, strict paths, independent snapshots and committed-range audit substitute for native enforcement.'
+unverified_areas:
+- Required AC-10 live GitHub exercise has not run; prepared fixture is not live evidence; task5/spec/reconcile/capability remain unchecked/in-progress/pending/draft.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS create=0 update=0 remove=0 seed=0
+  tests: PASS 66 affected agt tests plus 1 spec config-template e2e; 33 catalog tests; 1284 dist-only tests
+  full_fallback: 'FAIL earlier head 3ac8be83: 6357 passed 14 skipped 6 failed in 139.05s; all 6 failing scopes fixed and retested PASS, no redundant full rerun'
+  lint: PASS devkit devkit-dist devkit-catalog
+  types: PASS devkit and devkit-dist 0 errors
+  ci_rules: PASS reviewer-run fixed-head 22 rules zero violations
+  code_review: PASS independent review-02 resolves all four original findings
+  reconcile: PASS independent review all 15 targets
+diff_scope:
+  base: c9f7c6d3a2674f95c345dc13bc89ab1874bcff23
+  head: e62f544d6250b80651674f9c396f628e67331fdc
+questions:
+- id: live-destination-authority
+  title: Live GitHub verification destination
+  prompt: Select an existing nonempty throwaway owner/repo and a devkit-history-exercise-<suffix> branch, and authorize the prepared sanitized live exercise on that exact destination.
+  context: Local implementation, tests, Code Review and Living Spec reconciliation pass. Required AC-10 still needs actual GitHub evidence. The prepared script creates and retains a dedicated history branch with sanitized root/run/report/amendment commits, repeats identical blob/tree/commit POSTs, probes non-forced same-SHA and stale ref updates, and checks missing file/ref responses. It creates no repository, deletes no remote resource, performs no force update and publishes no real project content.
+  options:
+  - id: authorize-existing
+    description: Supply the exact existing throwaway owner/repo, dedicated branch and authority; execute the fixture and retain sanitized results. Without those inputs the operation remains pending.
+    recommended: true
+  - id: defer-live
+    description: Keep the committed unit incomplete and unintegrated until a destination and authority are available; required verification is not waived.
+    recommended: false
+  allow_note: true
+activity_effort: medium

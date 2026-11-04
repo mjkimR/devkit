@@ -36,7 +36,7 @@ latency, subprocess count or peak memory of operations the user selects; mainten
   - a bundled timing script; the run uses an installed benchmark tool or the agent's own loop
     (`ADR-performance-pass`);
   - a scheduler or trigger (external runners, `ADR-playbook-retrieval`) and a history store
-    (`PROP-maintenance-history`);
+    (`CAP-DLV-maintenance-history`);
   - the direct-mode overall-refactor route, which stays granted to `CAP-DLV-review-refactor` runs only;
   - a contract-changing speedup inside the behavior-preserving work item; it is its own work item through the
     repository's normal development workflow (`ADR-performance-pass`).
@@ -173,3 +173,8 @@ work items' integration state; a report written before a work item integrates MU
 that work item integrates or stops. A run is complete when no decision is pending, every agreed change is committed or
 routed and the final measurement is recorded; a `survey` run that applied nothing is complete with its decisions
 recorded and outcome `stopped at decision round`.
+
+
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

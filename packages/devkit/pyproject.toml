@@ -24,6 +24,7 @@ search = ["devkit-dist[search]"]
 gate = "devkit_agt.features.gate.cli:cli"
 generated = "devkit_agt.features.generated.cli:cli"
 integration = "devkit_agt.features.integration.cli:cli"
+maintenance = "devkit_agt.features.maintenance_history.cli:cli"
 rules = "devkit_agt.features.rules.cli:cli"
 run = "devkit_agt.features.compact.cli:run_cmd"
 workflow = "devkit_agt.features.workflow.cli:cli"
@@ -36,6 +37,7 @@ harness = "devkit_agt.bundles.harness"
 # Commented templates of the reserved harness tables in .devkit/config.toml, rendered by `devkit config template`.
 [project.entry-points."devkit.config_tables"]
 gates = "devkit_agt.features.gate.usecases.hooks.local_config:config_tables"
+maintenance = "devkit_agt.features.maintenance_history.repositories.config:config_tables"
 workflow = "devkit_agt.features.workflow.repositories.project.config:config_tables"
 worktree = "devkit_agt.features.worktree.repositories.config:config_tables"
 

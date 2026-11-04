@@ -1,0 +1,38 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T03:35:55.857535Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified all four findings: canonical record digest, contextual transport uncertainty, exact registry/test updates and code documentation; regressions pass. Expanded cross-package scope receives focused independent followup.'
+findings:
+- issue: Finished canonical record bytes are not frozen or verified before publication.
+  evidence: services/runs.py:170-173 and services/publication.py:336-349; reviewer probe scratch/review-01/probes/test_review_evidence.py:34 reproduced a changed record.result accepted at publication.
+  failure_condition: An accidental post-finish record edit changes the published outcome or inspected identity without detection and bypasses the finish secret check.
+  suggested_action: Freeze and verify the canonical published-record digest, excluding mutable local metadata, and add a regression.
+  resolution: resolved
+  severity: P2
+- issue: Lost ref-update transport responses can remain pending instead of unknown.
+  evidence: repositories/github.py:58-64 raises Deferred without HTTP headers while services/publication.py:59 catches only TimeoutExpired; reviewer gh shim reproduced Deferred instead of PublishUnknown.
+  failure_condition: GitHub accepts PATCH but gh loses its response and exits while authenticated.
+  suggested_action: Preserve transport uncertainty and map unconfirmed reference mutation to PublishUnknown while reads/object creation defer.
+  resolution: resolved
+  severity: P2
+- issue: New command/config registration omits distribution registry entries and expected package declarations.
+  evidence: devkit-dist cli.py HARNESS_COMMANDS and distribution/services/installation/config.py RESERVED_TABLES omit maintenance; full fallback has five registration-related failures including CONFIG_TEMPLATE_EXTENSION_FAILED.
+  failure_condition: config template rejects the maintenance extension and a dist-only installation lacks the harness-install advisory.
+  suggested_action: Add authorized name-only entries, refresh package expectations/lazy support and rerun affected failures.
+  resolution: resolved
+  severity: P2
+- issue: Bare advisory codes fail the documented-code contract.
+  evidence: CAP-DLV-maintenance-history failure table and packages/devkit/tests/integration/package/test_documented_codes.py:40-41 report eleven missing HISTORY codes.
+  failure_condition: The cumulative documented-code test scans for individually backticked identifiers.
+  suggested_action: Backtick each advisory code in the owning capability.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS 66 affected agt tests and 1 spec config e2e; original full fallback failure retained
+  dist_isolation: PASS 1284 tests without devkit-agt
+  lint: PASS agt dist catalog
+  types: PASS agt dist 0 errors

@@ -98,3 +98,8 @@ matching receipt resolves published without resending; unverifiable stays unknow
 confirmed absence permits retry within authority. A mismatched destination MUST be treated as a collision. A
 publication failure MUST leave completed generation intact. Controlled exercises MUST label simulated
 authority/receipts and MUST NOT claim external publication.
+
+
+## Optional maintenance history
+
+The default procedure and completion criteria are independent of history command availability. WHERE the user explicitly requests a companion history run, the agent MUST follow `CAP-DLV-maintenance-history` for that opted-in run. Installing the command or invoking this playbook alone MUST NOT start history capture or prompt for it. The default local report and outcome handling remain unchanged; frozen evidence and amendments apply only to the separately selected history run (`ADR-opt-in-maintenance-history`). Tests: `packages/devkit-catalog/tests/integration/bundles/test_maintenance_history.py`.

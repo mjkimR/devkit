@@ -24,5 +24,6 @@ LAZY_IMPORT_AREAS: dict[str, set[str]] = {
     "compact": set(),
     "worktree": set(),
     "generated": {"compact"},
+    "maintenance_history": {"rules"},
 }
 DATA_AREAS = {"bundles/authoring", "bundles/harness"}

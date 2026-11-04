@@ -71,3 +71,8 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **Agent advisory** | Structured error, warning, or notice adhering to the Agent Advisory Protocol (`[ERROR]`, `[WARN]`, `[NOTICE]`) with machine-actionable directives. | `CAP-ADV-agent-advisory-protocol` |  |  |
 | **Host hook** | Mechanized execution resource registering an installed service at a native host event (`kind = "hook"`). | `CAP-HOST-lifecycle-observation` |  | `kind = "hook"` |
 | **Scoped CLI integration** | The Host-authorized `devkit integration prepare` and `integrate` commands that land committed work through the local or pull-request route after revalidating policy, readiness, source identity and cleanup scope; no MCP tool performs integration. | `CAP-INT-mcp-services` | Integration MCP | `devkit integration` |
+
+| **Playbook run** | One bounded maintenance playbook execution, independent of its report or publication. | `CAP-DLV-maintenance-history` | bare run | `run_id`, `playbook` |
+| **Run record** | Canonical maintenance evidence, outcome and local publication metadata; excludes report bytes. | `CAP-DLV-maintenance-history` | receipt, artifact | `record.json` |
+| **Publication destination** | Credential-free repository and dedicated history branch selected for run publication. | `CAP-DLV-maintenance-history` | bare destination | `destination`, `repository`, `branch` |
+| **Source SHA** | HEAD commit inspected at intake; excludes content trees and history commit SHAs. | `CAP-DLV-maintenance-history` | revision | `source_sha` |

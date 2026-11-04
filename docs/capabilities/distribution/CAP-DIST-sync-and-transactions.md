@@ -130,7 +130,7 @@ devkit = false                          # opt out of an auto-selected bundle
 ```
 
 - **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `worktree`,
-  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`, `subagents`, `development`; anything else is `CONFIG_INVALID`. The list is
+  `integration`, `maintenance`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`, `subagents`, `development`; anything else is `CONFIG_INVALID`. The list is
   the same whether or not `devkit-agt` is installed, so a configuration reads the same in both installations and
   typos are still caught.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
@@ -147,8 +147,8 @@ devkit = false                          # opt out of an auto-selected bundle
 - **`override_drift`**: `"warn"` (default) or `"block"`; see
   `CAP-DIST-workspace-ownership`.
 - **`[playbooks]`**: search defaults; see `CAP-DIST-context-and-playbooks`.
-- **`[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]`**: reserved names owned by `devkit_agt.features.rules`,
-  `devkit_agt.features.workflow`, `devkit_agt.features.gate`, `devkit_agt.features.worktree` and `devkit_agt.features.integration` (`devkit-agt`); passed through
+- **`[rules]`, `[workflow]`, `[gates]`, `[worktree]`, `[integration]`, `[maintenance]`**: reserved names owned by `devkit_agt.features.rules`,
+  `devkit_agt.features.workflow`, `devkit_agt.features.gate`, `devkit_agt.features.worktree` `devkit_agt.features.integration` and `devkit_agt.features.maintenance_history` (`devkit-agt`); passed through
   untouched, never read by distribution.
 - **`[tool.<name>]`**: the extension namespace, as in `pyproject.toml`. A tool built on devkit keeps its own policy
   there and reads it itself; devkit only checks that `<name>` matches `[a-z][a-z0-9_-]*` and the value is a table,
