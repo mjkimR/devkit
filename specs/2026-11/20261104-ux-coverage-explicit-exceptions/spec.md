@@ -4,41 +4,149 @@ title: Recognize explicit global and off-screen UX coverage exceptions
 summary: Recognize reasoned global-control and off-screen exceptions in UX coverage without weakening missing-reference warnings or contradictory-link errors.
 status: planned
 created: 2026-11-04
-related_capabilities: []
+related_capabilities:
+  - CAP-GOV-spec-rules
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-ux-coverage-explicit-exceptions] Recognize explicit global and off-screen UX coverage exceptions
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-ux-coverage-explicit-exceptions on 2026-11-04.
+Handed off from proposal PROP-ux-coverage-explicit-exceptions on 2026-11-04; its decisions are
+`ADR-explicit-ux-coverage-exception-notation` and `ADR-ux-coverage-step-targeting`, both superseding `ADR-ux-screens`
+in part.
 - **Preserved Materials**: `docs/materials/2026-11/20261104-ux-coverage-explicit-exceptions`
 
-### 1. Background & Hypothesis
-
-UX writing permits a global control to omit its use-case Step and an off-screen use-case step to omit a screen citation. RULE-ux-coverage still warns for each omission, including intentionally unlinked controls and background work. Its guide provides no per-item exception mechanism. Repeated expected warnings compete with genuine missing links and encourage invented references merely to make a check quiet.
-
-Consumer evidence: resource-indexer at commit `09f1a8df0dffcf047da5efe2305dd3f6c7fc1058` reported 40 coverage warnings: 27 uncited use-case steps and 13 interactions without Step cells. Those are candidates for review, not 40 confirmed documentation defects. The navigation document intentionally leaves theme switching, skip-to-content and small-screen menu controls unlinked. The installed coverage tests also expect an off-screen mail-sending step to warn. These examples reproduce the mismatch between allowed writing and persistent warnings.
-
-Hypothesis: narrowly scoped, explicit classifications with a substantive reason can recognize legitimate exceptions while preserving useful traceability checks. The owner can review the reason alongside the action; broad suppression and inferred exceptions are unnecessary for this personal-tool threat model.
+`ux-writing` lets a global control leave its Step cell empty and `usecase-writing` lets a step that happens off
+screen cite no UX document, but `RULE-ux-coverage` (`CAP-GOV-spec-rules` 3.16) cannot tell an intended gap from a
+forgotten one, so every intended gap warns on every run. In the consumer evidence (resource-indexer at commit
+`09f1a8df0dffcf047da5efe2305dd3f6c7fc1058`) that is 40 warnings at once, 13 stepless interactions and 27 uncited
+steps, of which the navigation document's theme, skip-to-content and small-screen menu rows and the background steps
+are intended. The warnings stop separating defects from decisions, and the cheap way to silence one is an invented
+citation that `RULE-ux-links` cannot tell from a true one. The uncited-step warnings also land on the first UX
+document that lists the use case, so one navigation panel appears to own every workflow gap.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Recognize explicit global and off-screen UX coverage exceptions so that system capabilities are extended.
+- **US-1**: As an author of a UX document, I want to classify one interaction as a global control with a reason, so
+  that `RULE-ux-coverage` stops warning for it while an unclassified empty Step cell still warns.
+- **US-2**: As an author of a use case, I want to classify one step as happening off screen with a reason, so that
+  the step stops warning while an unclassified uncited step still warns.
+- **US-3**: As the owner reviewing a document, I want a classification without a reason, or one that contradicts a
+  screen citation, reported as visibly as the gap it covers, so that no gap disappears silently.
+- **US-4**: As an agent fixing coverage warnings, I want an uncited step reported on the use case I must edit, so
+  that a navigation panel no longer carries unrelated workflow gaps.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: changing the logic of `RULE-ux-links` (only the docstring and the invalid-cell remediation
+   text of `ux_links.py` change); any `RULE-ux-links` error stays an error.
+2. **Scope Excluded**: a global disable of coverage, a severity change of `RULE-ux-coverage`, or a document-level
+   exception list; the severity override to `error` keeps raising every report, classified-without-reason reports
+   included.
+3. **Scope Excluded**: any heuristic on trigger or step wording ("theme", "background") and any judgment of a
+   reason's content; the reason is checked for presence only.
+4. **Scope Excluded**: changes to consumer repositories; the consumer evidence is reproduced by rule-test fixtures.
+5. **Scope Excluded**: a spelling check for near-miss step phrases (`offscreen:`); a follow-up of
+   `ADR-explicit-ux-coverage-exception-notation` if consumers report it.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+Fixtures: a use case UC-sign-in listed by the UX documents UX-login and UX-nav (both current, both in `docs/`);
+`check(RULE, tmp_path, files, targets=...)` of `devkit_agt.features.rules.services.testing` runs a rule. Every
+`RULE-ux-coverage` report is severity `warning`; every `RULE-ux-links` report is severity `error`.
+
+### [AC-01] A global interaction with a reason is not reported
+- **Given** UX-nav has the rows `| Toggle theme | global: a preference control that belongs to no task | ...`,
+  `| Skip to content | GLOBAL: accessibility link on every screen | ...` and `| Open menu | global: the small-screen
+  menu, independent of `UC-sign-in` 2 | ...` and one row whose Step cell is `` `UC-sign-in` 1 ``
+- **When** `RULE-ux-coverage` runs with every document targeted
+- **Then** it reports nothing for those three rows (`GLOBAL:` is accepted as any case; the pair inside the third
+  reason is not read), and `RULE-ux-links` reports nothing for UX-nav
+
+### [AC-02] An unclassified empty Step cell still warns
+- **Given** UX-nav also has a row whose Step cell is `-`
+- **When** `RULE-ux-coverage` runs
+- **Then** it reports exactly one `interaction has no Step` on UX-nav at that row's line
+
+### [AC-03] An off-screen step with a reason is not reported
+- **Given** UC-sign-in step 2 is `The system sends the confirmation mail (`CAP-ACC-mail`). Off screen: the mail
+  leaves by SMTP and nothing appears on a screen.` and extension 2a says `No mail (off-screen: the retry runs in the
+  background); the use case ends.`
+- **When** `RULE-ux-coverage` runs with every document targeted
+- **Then** it reports nothing for step 2 or extension 2a (`Off screen:` and `off-screen:` both count; the trailing
+  `)` is not part of the reason)
+
+### [AC-04] An unclassified uncited step still warns
+- **Given** UC-sign-in step 3 cites no UX document and holds no phrase
+- **When** `RULE-ux-coverage` runs with every document targeted
+- **Then** it reports exactly one `UC-sign-in step 3 cites no UX document`
+
+### [AC-05] A classification without a reason keeps the gap reported
+- **Given** a UX-nav row whose Step cell is `global:` and a UC-sign-in step 4 that ends with `off screen:`
+- **When** `RULE-ux-coverage` runs
+- **Then** it reports `interaction is classified global without a reason` on UX-nav at the row's line and
+  `UC-sign-in step 4 is classified off screen without a reason`, both severity `warning`, and no other report for
+  those two items
+
+### [AC-06] An off-screen phrase on a citing step is reported as contradictory
+- **Given** UC-sign-in step 5 is `Opens `UX-login`; off screen: the result is cached.`
+- **When** `RULE-ux-coverage` runs
+- **Then** it reports `UC-sign-in step 5 is classified off screen but cites UX-login` (severity `warning`) and no
+  `cites no UX document` report for step 5; `RULE-ux-links` treats step 5 as citing UX-login as before
+
+### [AC-07] Invalid cells stay `RULE-ux-links` errors
+- **Given** UX-nav rows whose Step cells are `` `UC-sign-in` 1, global: also a shortcut `` and `globl: typo`
+- **When** `RULE-ux-links` runs
+- **Then** it reports `Step cell "..." is not `UC-<slug>` <key>` for each (severity `error`), with a remediation
+  naming `global: <reason>` beside the empty cell, and `RULE-ux-coverage` reports nothing for those rows
+
+### [AC-08] Exceptions bypass no `RULE-ux-links` check
+- **Given** UX-nav holds a valid global row and a row whose Step cell is `` `UC-sign-in` 9 `` (no such step), and
+  UX-login lists UC-sign-in while no Step cell names it
+- **When** `RULE-ux-links` runs
+- **Then** it reports `Step names UC-sign-in 9, which is not a step of UC-sign-in` and `usecases lists UC-sign-in,
+  but no Step cell names it` exactly as without the global row
+
+### [AC-09] Documents without markers keep their reports
+- **Given** the fixtures of the existing `RULE-ux-coverage` and `RULE-ux-links` tests, without any marker
+- **When** both rules run
+- **Then** every existing assertion of those tests still holds, except the lines the targeting of AC-10 moves, and
+  `uv run devkit rules check` on this repository's `docs/` reports no new violation
+
+### [AC-10] An uncited step is reported on its use case first
+- **Given** UC-sign-in step 3 is uncited and UX-login and UX-nav both list UC-sign-in
+- **When** `RULE-ux-coverage` runs with every document targeted
+- **Then** it reports `UC-sign-in step 3 cites no UX document` once, on UC-sign-in at step 3's line
+- **When** it runs with only UX-nav targeted
+- **Then** it reports `UC-sign-in step 3 cites no UX document (<UC path>)` once, on UX-nav at its `usecases` entry
+  line
+- **When** it runs with only UC-sign-in targeted
+- **Then** it reports it on UC-sign-in at step 3's line; the classified-without-reason and contradictory step
+  reports of AC-05 and AC-06 follow the same placement, and `interaction has no Step` stays on the UX document
+
+### [AC-11] Guidance and contracts demonstrate the notation
+- **Given** the `docs` bundle sources
+- **When** `grep -n "global:" packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/ux-writing.md
+  packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/ux.md
+  packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_coverage/guide.md
+  packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_links/guide.md docs/capabilities/governance/CAP-GOV-spec-rules.md`
+  and `grep -n -i "off screen:" packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/usecase-writing.md
+  packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/ux_coverage/guide.md docs/capabilities/governance/CAP-GOV-spec-rules.md`
+  run
+- **Then** each named file has at least one hit, `ux-writing` and `usecase-writing` each contain one complete
+  example row or step, and `uv run devkit generated check` and `uv run devkit sync --check` exit 0 after the
+  managed copies are regenerated
+
+## Assumptions
+
+- A marker inside an inline code span of a step line counts like plain text (the line reader keeps code spans);
+  nobody writes `` `off screen:` `` as prose, and the ADR's follow-up covers near misses.
+- Two `off screen:` phrases in one step: the first found decides and its reason is read; no report.
+- A `global:` cell on a `modal` or `panel` is accepted like on a `screen`.
+- The targeting of AC-10 uses the run's `reportable()` set as today; `--staged` and `--ci` runs only narrow it.
 
 ## 5. Carried Proposal Notes
 
