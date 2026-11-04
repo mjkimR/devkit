@@ -31,7 +31,9 @@ plan: PLAN-namespace-steering
     `packages/devkit-dist/src/devkit_dist/features/distribution/usecases/context.py`,
     `packages/devkit-dist/src/devkit_dist/features/distribution/cli/context.py`,
     `packages/devkit-dist/tests/integration/features/distribution/test_context_documents.py`,
-    `packages/devkit-dist/tests/integration/features/distribution/test_context.py`
+    `packages/devkit-dist/tests/integration/features/distribution/test_context.py`,
+    `packages/devkit-dist/tests/integration/features/distribution/test_playbook_get.py` (its fixture asserts the exact
+    `ContextResult.to_dict()` shape, so it gains the new keys)
   - _Requirements: AC-05, AC-06, AC-07_
   - **Verification**: `just test devkit-dist tests/integration/features/distribution/test_context_documents.py tests/integration/features/distribution/test_context.py && just test-dist`
 
