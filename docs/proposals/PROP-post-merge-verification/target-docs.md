@@ -1,51 +1,72 @@
 ---
 id: PROP-post-merge-verification-target
-title: Target Living Spec Structure for PROP-post-merge-verification
+title: Post-merge verification Living Spec targets
+summary: "Move final content verification to the landed runtime and simplify integration inputs while retaining Git authority and recovery."
 status: draft
 proposal: PROP-post-merge-verification
 created_at: 2026-11-04
-# The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
-# devkit spec scope compare reads them to find overlaps with other work.
-targets: []
+targets:
+  - file: docs/capabilities/delivery/CAP-DLV-proposal-planning.md
+  - file: docs/decisions/2026-10/20261022-proposal-acceptance.md
+  - file: docs/capabilities/integration/CAP-INT-mcp-services.md
+  - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
+  - file: docs/capabilities/delivery/CAP-DLV-project-policy.md
+  - file: docs/capabilities/delivery/CAP-DLV-cli-and-output.md
+  - file: docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md
+  - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
+  - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+  - file: docs/usecases/delivery/UC-drive-development-to-integration.md
+  - file: docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md
+  - file: docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md
+  - file: docs/architecture/ARCH-05-2-components.md
+  - file: docs/architecture/ARCH-06-runtime-view.md
+  - file: docs/decisions/2026-11/20261102-local-and-pull-request-integration.md
+  - file: docs/decisions/2026-11/20261102-delivery-approval-and-lifecycle-authority.md
+  - file: docs/decisions/2026-11/20261102-test-selection-and-ci.md
 ---
 
-# [Blueprint] PROP-post-merge-verification: Target Living Spec Structure for Verify integration after merging with the resulting runtime
+# Post-merge verification Living Spec targets
 
-This document defines the target blueprint of how the docs/ backbone (Living Spec) will evolve if proposal PROP-post-merge-verification is accepted. It represents a hypothesis plan subject to adjustment during implementation. Upon handoff, it is copied into specs/ to serve as a baseline for plan.md boundaries and reconcile.md targets.
+## 1. Capabilities
 
----
+- `CAP-INT-mcp-services`: reduced prepare/integrate interface, Git-only checks, pending verification output,
+  preserved scoped cleanup, provider decoupling, and local/PR partial recovery.
+- `CAP-DLV-delivery-workflows`: branch verification and mandatory Host-led final verification, in-scope target
+  repair, proposal acceptance isolation, source workflow holds and delivery-completion reporting.
+- `CAP-DLV-proposal-planning`: composed acceptance yields before handoff, retaining authorized intent and effort;
+  the Host verifies the landed runtime before invoking handoff in a fresh process.
+- `CAP-DLV-project-policy`: remove mandatory integration provider selection and document legacy config migration;
+  retain base authority and route policy.
+- `CAP-DLV-cli-and-output`: mirror affected integration/result references without adding a new workflow schema.
+- `CAP-GOV-evaluation-lifecycle`: snapshots still use their invoking runtime; integration no longer uses the target
+  runtime as a source-content judge. Standalone rules retain their normal validation.
+- `CAP-WT-task-worktrees`: retain cleanup safety and explain that Git completion precedes final project verification.
+- `CAP-HARN-agent-guidance`: final checks for direct work and batches; a failed batch needs repair and recheck.
 
-## 1. System Capabilities Plan (docs/capabilities/)
+## 2. Use cases
 
-<Specify new, modified, or deprecated CAP documents, rationale, and key changes.>
+`UC-drive-development-to-integration` adds runtime synchronization, final checks and target repair after Git effects.
+`UC-plan-and-hand-off-a-proposal` keeps acceptance eligibility while adapting the composed merge and final checks.
+`UC-handle-delivery-problems-and-exceptions` distinguishes a failed merge, failed final check and failed cleanup.
+No composed product UI changes.
 
----
+## 3. Architecture and decisions
 
-## 2. Use Cases Plan (docs/usecases/)
+`ARCH-05-2-components` updates the integration/provider ownership description; no dependency edge is added.
+`ARCH-06-runtime-view` reflects the Host-led post-land sequence and fresh runtime invocation.
+Promote `PADR-post-merge-verification` on handoff. Add partial-supersession pointers to its four named ADRs without
+retiring their surviving authority, Git and CI clauses.
 
-<Specify new or modified UC documents, their scenarios and updated acceptance criteria.>
+## 4. Guidance and quick references
 
-### Screens (docs/ux/)
+Update spec-integrate, completion/worktree references, git-operator, orchestration, Development and Planning worker
+contracts and affected workflows in the spec bundle. Inspect adaptive-dev guidance and update affected callers
+within its owning bundle if present; any such source requires its context and an explicit task boundary.
+Update docs/development/ci-cd.md, docs/development/workflow.md, relevant reference pages, consumer guides and AGENTS.md.
+Regenerate projections/receipt through devkit sync; never edit projected assets by hand.
 
-<Only when the proposal changes what a person sees: one draft per screen, modal or panel in the ux template's shape
-(ux-writing), with the use case step citations and root docs/steering/ux-objects.md or namespace
-  docs/packages/<name>/steering/ux-objects.md rows they need; read both registers for namespace UX. Write IDs this proposal
-creates as plain text. Drop this subsection otherwise.>
+## 5. Before and after
 
----
-
-## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
-
-<Specify impacted ARCH documents and candidate ADRs (PADRs).>
-
----
-
-## 4. Development Conventions & Governance (docs/development/ & .devkit/)
-
-<Specify new rules, workflows, skills, or CLI changes.>
-
----
-
-## 5. System Before & After Comparison (Before & After)
-
-<Compare As-Is and To-Be structures, optionally with Mermaid diagrams.>
+Before: branch checks -> old-runtime content readiness -> merge/cleanup -> optional later integrated tests.
+After: branch checks -> approved Git merge/cleanup -> synchronize landed runtime -> final checks -> delivery complete.
+A failure after landing leads to target repair and recheck, with landed Git effects preserved.

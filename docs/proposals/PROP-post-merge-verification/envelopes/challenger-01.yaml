@@ -1,0 +1,27 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T07:40:41.266534Z'
+status: completed
+summary: round 1; Host-led verification and immediate scoped cleanup are supported; PR publication text and composed handoff need explicit runtime boundaries.
+findings:
+- issue: Removed task metadata also supplies PR publication text.
+  evidence: proposal.md section 3.3; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:347,413 and worktree/repositories/pull_request.py:359,384
+  failure_condition: The reduced PR invocation removes the task ID still required for PR body and merge message.
+  suggested_action: Specify deterministic publication text derived from the explicit branch, with no inferred Unit/session, and cover both publication calls.
+  resolution: open
+  severity: P2
+- issue: The fresh-runtime boundary for composed proposal acceptance and handoff is unspecified.
+  evidence: proposal.md sections 3.1 and 3.3; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:404-408 and native_handoff.py:206-208
+  failure_condition: accept_and_handoff evaluates landed content in the old process before synchronization and final checks.
+  suggested_action: Sequence acceptance/merge, pending verification, Host synchronization/checks, then the existing handoff command in a fresh process; preserve authorized mode/effort and test that old-process handoff evaluation does not run.
+  resolution: open
+  severity: P2
+assumptions:
+- Emulated read-only review; unchanged HEAD and tree 0082709ab154a1ebcec872aacf8c7038f656569a.
+checks: {}
+diff_scope:
+  base: 675f31df8e8efd632b8f49041fbdefd721348941
+  head: b9436945b3045bb210a34c7ae91f47750797968a
+activity_effort: high

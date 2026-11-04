@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-04T07:42:56.879733Z'
+status: completed
+summary: Swept Planning discussion, runtime investigation, CLI inventory, reviews and fixes. The scoped runtime mismatch is covered by this proposal and the existing historical feedback; no additional out-of-scope observation requires capture.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
