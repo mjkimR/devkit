@@ -54,8 +54,9 @@ already knows, and cut every line that does not change its next action.
   a general subagent invocation cannot supply, such as model, tool or sandbox settings.
 - Keep role procedures and return requirements separate from host execution settings; Markdown instructions do
   not enforce tool permissions or sandbox boundaries.
-- In the skill, route each delegated task to one role file and tell a general subagent to read that file first;
+- For a skill-local role, route the task to one role file and tell a general subagent to read that file first;
   pass its absolute installed path without loading every role body into the coordinator.
+- For a registered role, use the host's registered-role invocation so its execution settings apply.
 - Supply the child with its goal, relevant sources, read/write boundaries, permitted actions, stop condition and
   expected return; make its assigned role file readable within those boundaries.
 - Where the host supports it, spawn with a fresh context without parent conversation inheritance; otherwise
