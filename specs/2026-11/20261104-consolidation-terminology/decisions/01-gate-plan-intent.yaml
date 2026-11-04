@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Explicit user instruction: replace the compaction term with consolidation'
+by: user
+at: '2026-11-04T00:30:14.891941Z'

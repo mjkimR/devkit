@@ -230,14 +230,14 @@ kind = "playbook"
 source = "playbooks/feedback-hygiene"
 
 [[assets]]
-id = "adr-compaction"
+id = "adr-consolidation"
 kind = "playbook"
-source = "playbooks/adr-compaction"
+source = "playbooks/adr-consolidation"
 
 [[assets]]
-id = "feedback-compaction"
+id = "feedback-consolidation"
 kind = "playbook"
-source = "playbooks/feedback-compaction"
+source = "playbooks/feedback-consolidation"
 
 [[assets]]
 id = "templates"
@@ -287,6 +287,6 @@ assets = [
     "brownfield-adoption",
     "sdd-baseline",
     "feedback-hygiene",
-    "adr-compaction",
-    "feedback-compaction",
+    "adr-consolidation",
+    "feedback-consolidation",
 ]
