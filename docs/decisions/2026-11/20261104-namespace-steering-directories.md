@@ -1,16 +1,16 @@
 ---
-id: PADR-namespace-steering-directories
+id: ADR-namespace-steering-directories
 title: Namespace steering directories listed by the working directory's namespace
 summary: For a registered namespace that needs package background, we check docs/packages/<name>/steering/ under the root steering contract and list it in a context through a devkit-docs provider selected by the working directory, to keep background visible at bounded cost, accepting one more entry point.
-proposal: PROP-namespace-steering
+proposal: SPEC-namespace-steering
 supersedes: [ADR-steering-documents]
-status: draft
+status: accepted
 created_at: 2026-11-04
 ---
 
-# [PADR-namespace-steering-directories] Namespace steering directories listed by the working directory's namespace
+# [ADR-namespace-steering-directories] Namespace steering directories listed by the working directory's namespace
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-04
 - **Involved Components/Capabilities**: `docs/steering/`, `docs/packages/<name>/steering/`, `CAP-GOV-spec-rules`,
   `CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`, `CAP-DIST-workspace-ownership`, `CAP-DOCS-namespaces`,

@@ -1,44 +1,24 @@
 ---
-id: PROP-namespace-steering
+id: SPEC-namespace-steering
 title: Namespace steering documents checked and listed beside the global ones
-summary: "Recognizes docs/packages/<name>/steering/ as steering documents of a registered namespace, checked by the steering rule and listed in the context of the namespace an agent works in, within the bounded-context caps."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: governance/
+summary: Recognizes docs/packages/<name>/steering/ as steering documents of a registered namespace, checked by the steering rule and listed in the context of the namespace an agent works in, within the bounded-context caps.
+status: planned
+created: 2026-11-04
 namespace: global
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-monorepo-namespace-support
-boundaries:
-  owns:
-    - packages/devkit-docs/src/devkit_docs/features/governance/usecases/
-    - packages/devkit-docs/src/devkit_docs/features/documents/services/
-    - packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/
-    - packages/devkit-docs/pyproject.toml
-    - packages/devkit-docs/tests/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/models/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/cli/
-    - packages/devkit-dist/tests/
-    - packages/devkit-spec/tests/integration/bundles/spec/test_steering_guidance.py
-    - docs/capabilities/governance/
-    - docs/capabilities/distribution/
-    - docs/capabilities/documents/
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/decisions/2026-11/20261102-steering-documents.md
-    - docs/steering/glossary.md
-  excludes:
-    - .devkit/managed/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-namespace-steering] Namespace steering documents checked and listed beside the global ones
+# [SPEC-namespace-steering] Namespace steering documents checked and listed beside the global ones
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-namespace-steering on 2026-11-04.
+- **Preserved Materials**: `docs/materials/2026-11/20261104-namespace-steering`
+
+### 1. Background & Hypothesis
 
 `ADR-steering-documents` chose one flat `docs/steering/` directory and rejected a per-namespace copy because "no
 registered namespace needs it today", recording the reopen condition: a registered namespace needs package background
@@ -58,10 +38,29 @@ agent works in. `living_path` already maps `docs/packages/<name>/steering/X` to 
 `CAP-DOCS-namespaces` 3.3 already defines the namespace of the current directory, so the selection rule exists; what is
 missing is applying it to the steering rule and to context assembly.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Settled in Planning; the inventory, measurements and option tables are in `materials/namespace-steering-design.md`,
-the decision in `PADR-namespace-steering-directories`, the criticism in `envelopes/challenger-01.yaml`.
+- **US-1**: As a developer/agent, I want to implement Namespace steering documents checked and listed beside the global ones so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Settled in Planning; the inventory, measurements and option tables are in `docs/materials/2026-11/20261104-namespace-steering/namespace-steering-design.md`,
+the decision in `ADR-namespace-steering-directories`, the criticism in historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-namespace-steering/envelopes/challenger-01.yaml`.
 
 - **Q1**: How does the steering list stay bounded? The caps stay per directory (`max_files`, default 10, and the
   summary length), and the context lists only the directories the working directory selects by the
@@ -92,7 +91,7 @@ the decision in `PADR-namespace-steering-directories`, the criticism in `envelop
   a `glossary.md` or `glossary.yaml` in it is reported (the package glossary has its place; synonyms are read from the
   root `docs/steering/glossary.yaml` only). The asymmetry with the root glossary is a recorded follow-up.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - **Rule**: `RULE-steering-documents` checks `docs/packages/<name>/steering/` of each registered namespace as it checks
   `docs/steering/`, one directory at a time, each only when the run targets a file in it: flat, Markdown only (plus
@@ -129,7 +128,7 @@ the decision in `PADR-namespace-steering-directories`, the criticism in `envelop
   naming `docs/steering/`.
 - **Decision record**: the "no namespace copy" clause and the rejected namespace-copy option of
   `ADR-steering-documents`, and its rejection of an entry-point provider, are superseded in part by
-  `PADR-namespace-steering-directories`; Development writes the pointer. `ARCH-05-2-components` adds the new group to
+  `ADR-namespace-steering-directories`; Development writes the pointer. `ARCH-05-2-components` adds the new group to
   the public entry-point names. No new feature edge in `.devkit/architecture.toml`: the provider uses the documents
   feature's existing dependency on `devkit_dist.features.project`, and `devkit-dist` loads it generically.
 - **Tests**: rule fixtures with a registered namespace directory (clean, nested file, over cap, missing summary,
@@ -150,28 +149,28 @@ Expected affected contracts: `CAP-GOV-spec-rules` (3.14, the steering pass of `R
 `CAP-DIST-workspace-ownership` (7), `CAP-DOCS-namespaces` (3.4, 4.5), `CAP-DOCS-document-model` (rule 9),
 `ARCH-05-2-components` (entry-point groups), `ADR-steering-documents` (superseded in part).
 
-## Planning decisions
+### Planning decisions
 
 - Root steering contract reused for the namespace directories with two deltas: Markdown only (no `glossary.yaml`) and
   `glossary.md` reported; caps and targeting per directory (Host, within scope).
 - Selection by the working directory the CLI passes beside the root: `--for <dir>`, else the cwd, else the `-w` root
   (Host for the input; the option's name and shape are the Host's recommendation the `user` accepted).
-- q1 (`user`, `envelopes/answer-01.yaml`): outside every package the context lists the global directory only and
+- q1 (`user`, historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-namespace-steering/envelopes/answer-01.yaml`): outside every package the context lists the global directory only and
   names the registered namespaces' steering directories as a hint (`documents_elsewhere`: path and file count); a
   package's context is requested with `--for <dir>`. Chosen over listing every namespace at the root (cost
   `max_files × (1 + N)` entries) and over a bare global list with no hint.
 - Mechanism: the `devkit.context_documents` provider entry point; failures surface as `notices` and
-  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` (`PADR-namespace-steering-directories`).
+  `CONTEXT_DOCUMENTS_EXTENSION_FAILED` (`ADR-namespace-steering-directories`).
 - Goals as prose in a namespace steering file; citation and the roadmap ADR pointer left to `SPEC-namespace-roadmap`;
   package glossaries unchanged (Host, within scope and non-goals).
 - The acceptance fixture is a monorepo fixture in this repository: g-sandbox has no `.devkit/config.toml` yet, so no
   namespace is registered there today (assumption recorded for `plan-accept`).
-- Challenger round 1 (`envelopes/challenger-01.yaml`) folded: the CLI selection input, the notices channel, the
+- Challenger round 1 (historical Git `2cf7879a74b50b687867e2184188dee6c29a2fbc:docs/proposals/PROP-namespace-steering/envelopes/challenger-01.yaml`) folded: the CLI selection input, the notices channel, the
   `RULE-document-reference` pass, the glossary and document-model wording, the glossary files, per-directory
   targeting and the payload bound; its `Decision needed` finding is q1.
 - `dev_effort` stays `medium`: two packages and one new entry-point contract, each covered by existing patterns.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning settled Q1 to Q3; acceptance and handoff create one feature spec. Completion requires the rule, provider
 and context tests above, the synchronized guidance and a monorepo fixture whose `devkit get-context docs` from a
@@ -183,3 +182,4 @@ Non-goals: loading steering bodies by default; a steering directory for an unreg
 glossaries; changing the root directory's contract or caps; a `--namespace` option on `devkit get-context` (the
 option takes a directory); titles or summaries in the hint; a namespace copy of `docs/steering/ux-objects.md`;
 namespace search synonyms.
+
