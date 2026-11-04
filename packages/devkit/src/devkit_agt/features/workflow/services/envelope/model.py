@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterable, Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import yaml
@@ -28,6 +28,7 @@ from devkit_agt.features.workflow.models.envelope import (
     Option,
     Problem,
     Question,
+    ScopeExtension,
     Settle,
 )
 from devkit_agt.features.workflow.models.errors import EnvelopeFormatError, EnvelopeKindError
@@ -130,6 +131,9 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
     effort = as_text(data.get("activity_effort"))
     if effort and effort not in EFFORTS:
         raise EnvelopeFormatError(f"activity_effort {effort!r} not in {'|'.join(EFFORTS)}")
+    if "scope_extensions" in data and kind != WORKER:
+        raise EnvelopeFormatError("scope_extensions: only worker envelopes carry scope extensions")
+    extensions = parse_scope_extensions(data["scope_extensions"]) if "scope_extensions" in data else ()
     questions = _questions(data.get("questions"))
     answers = _answers(data.get("answers"))
     settles = _settles(data.get("settles"))
@@ -165,6 +169,7 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         problem=problem,
         resolves=resolves,
         activity_effort=effort,
+        scope_extensions=extensions,
     )
 
 
@@ -182,6 +187,47 @@ def _required_text(item: dict[str, Any], key: str, where: str) -> str:
     if not value:
         raise EnvelopeFormatError(f"{where}: missing required key {key}")
     return value
+
+
+def parse_scope_extensions(value: Any) -> tuple[ScopeExtension, ...]:
+    """Validate optional worker exact-file evidence without interpreting project ownership."""
+    if not isinstance(value, list):
+        raise EnvelopeFormatError("scope_extensions: expected a list")
+    extensions = []
+    for index, raw in enumerate(value):
+        where = f"scope_extensions[{index}]"
+        item = _mapping(raw, where, ("path", "task", "reason", "requirements"))
+        path = item.get("path")
+        if (
+            not isinstance(path, str)
+            or not path.strip()
+            or path != path.strip()
+            or PurePosixPath(path).is_absolute()
+            or re.match(r"^[A-Za-z]:", path) is not None
+            or ".." in PurePosixPath(path).parts
+            or path == "."
+            or PurePosixPath(path).as_posix() != path
+            or any(c in path for c in "*?[]\\\x00\r\n")
+        ):
+            raise EnvelopeFormatError(f"{where}.path: expected an exact literal repository-relative file path")
+        task = item.get("task")
+        if not isinstance(task, int) or isinstance(task, bool) or task < 1:
+            raise EnvelopeFormatError(f"{where}.task: expected a positive scanner task ordinal")
+        reason = item.get("reason")
+        if not isinstance(reason, str) or not reason.strip() or any(c in reason for c in "()\r\n"):
+            raise EnvelopeFormatError(f"{where}.reason: expected one nonempty line without parentheses")
+        requirements = item.get("requirements")
+        if (
+            not isinstance(requirements, list)
+            or not requirements
+            or any(not isinstance(ac, str) or re.fullmatch(r"AC-\d{2,}", ac) is None for ac in requirements)
+            or len(set(requirements)) != len(requirements)
+        ):
+            raise EnvelopeFormatError(f"{where}.requirements: expected a nonempty list of unique AC IDs")
+        extensions.append(ScopeExtension(path, task, reason, tuple(requirements)))
+    if len({e.path for e in extensions}) != len(extensions):
+        raise EnvelopeFormatError("scope_extensions: duplicate paths")
+    return tuple(extensions)
 
 
 def _flag(item: dict[str, Any], key: str, where: str, default: bool) -> bool:

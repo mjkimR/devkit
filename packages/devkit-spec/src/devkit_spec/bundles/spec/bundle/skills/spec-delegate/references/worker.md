@@ -22,7 +22,19 @@ The range from `<accepted>` to the returned final HEAD `<returned>` (the commit 
 
 - `<accepted>` and the envelope's `diff_scope.head` are ancestors of `<returned>`, and the worktree's HEAD is `<returned>`.
 - `<returned>` adds this turn's `worker` envelope, absent at `<accepted>`: a turn committed in the base checkout fails here, since inspection derives its head from the branch's latest envelope.
-- Every path of `git -C <worktree> diff --name-only <accepted> <returned>` is in the write scope, the worker's records included; envelopes you committed since `<accepted>` are exempt only while unchanged since your commit.
+- Every path of `git -C <worktree> diff --name-only <accepted> <returned>` is in declared scope, an admitted recorded adjacent extension or the independent sync-output class, the worker's records included; envelopes you committed since `<accepted>` are exempt only while unchanged since your commit.
+- For each recorded adjacent extension, compare `(scope extension: <reason>)`, its owning positive checklist task
+  ordinal and AC with `scope_extensions` in committed worker records. Prior-turn records support retained
+  annotations; the highest worker sequence wins repeated paths. Historical records alone add no scope: the
+  annotation must still exist. Confirm the annotation/reason accompanies the first source commit and that review
+  covered necessity, documented same-feature ownership/test mirror or the exact affected existing Living Spec
+  document, explicit denies, protected classes and test strength. Missing evidence is P2, denied/non-adjacent/
+  out-of-goal writes are P1 and block the range. Changed metadata after review needs re-verification. New unannotated
+  boundaries are checked against the payload/task diff; no sealed boundary journal is required.
+- `checks.scope_extensions` must pass with the additive top-level list. It checks structural annotation/record/task/
+  AC agreement and recognizable protected trees, not semantic adjacency or custom protected paths. Inspect remains
+  optional locally and in cloud; no Hub invocation is promised. Validate evidence before an explicit scope override,
+  then include admitted extensions in the complete scope: `--scope`/`--scope-file` still replace it, never union it.
 - The worktree is clean.
 - The unit's checks pass on `<returned>`, confirmed by CI or a rerun; for a run that stopped on a problem, validate its paths only.
 - Each `(sync output)` entry `tasks.md` gained between `<accepted>` and `<returned>` passes only when you confirm all of these (`devkit spec worker inspect` derives its scope from `_Boundary:` at `<returned>`, so its scope pass is no evidence for that entry):

@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/entrypoints/repositories/b
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -46,3 +46,14 @@ created_at: 2026-11-04
 ```text
 [CANDIDATES: CAP-GOV-spec-rules path=docs/capabilities/governance/CAP-GOV-spec-rules.md new=... missing="packages/devkit-dist/tests/integration/features/distribution/test_playbook_get.py  shape,so it gains the new keys)" folded=- declared=...]
 ```
+
+
+## Disposition
+
+Resolved by `SPEC-worker-scope-extension`. The shared boundary parser now strips balanced parenthetical prose,
+including nested `ContextResult.to_dict()` calls, embedded backticks and commas, while retaining quoted and
+unquoted literal boundary paths. The focused legacy-note regression in
+`packages/devkit-spec/tests/unit/features/entrypoints/test_boundary_extensions.py` verifies exactly
+`['a/b.py', 'c/d.py', 'plain/e.py', 'f/g.py']`; the previous probe emitted prose fragments. Independent medium Code
+Review covered this change at `62e62672718159b9b46882a87a5830e67a266736`, and the post-fix affected selector
+passed 2314 tests at `7137f4cc811f2084b336edaf2cd3a5c32ee3cff2`. No managed-path filtering was added.

@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:44:34.940900Z'
+status: completed
+summary: 'Independent medium Code Reviewer found one P2: recognizable dependency manifest package.json omitted from extension protection.'
+findings:
+- issue: package.json is accepted as a Tier B extension despite being a recognizable dependency declaration.
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/services/extensions.py:22; independent parsed-record probe for packages/devkit-viewer/frontend/package.json returned protected=False and extension pass.
+  failure_condition: A matching annotation and typed worker record names package.json; structural inspection passes contrary to AC-04.
+  suggested_action: Protect package.json and add an inspection regression with matching evidence.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex boundaries emulated via absolute worktree scope and unchanged before/after tree20ca077d6eb9; reviewer reported no outside-worktree source reads.
+checks:
+  tests: PASS just test-affected partial135 paths;2313 tests;full fallback retained
+  lint: PASS lint-check devkit and devkit-spec;both Pyright;22 CI rules
+diff_scope:
+  base: 6ff819cec61cec40589b3ed90a8ea6c09a9eb6d9
+  head: 62e62672718159b9b46882a87a5830e67a266736

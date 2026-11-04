@@ -19,6 +19,6 @@ targets:
   additive inspection evidence and explicit-scope compatibility.
 - `CAP-DLV-workflow-envelopes`: optional typed worker list and its authoring flag, validation and compatibility.
 - `ADR-orchestration-workers`: only the partial-supersession annotation introduced by promoting
-  `PADR-recorded-adjacent-path-extensions-for-development-workers` at handoff; do not rewrite its remaining decisions.
+  `ADR-recorded-adjacent-path-extensions-for-development-workers` at handoff; do not rewrite its remaining decisions.
 
 The promoted ADR restates its new clauses through the two capability IDs. No UI or Screens draft is needed.

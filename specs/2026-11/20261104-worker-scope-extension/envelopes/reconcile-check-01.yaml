@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:50:34.337407Z'
+status: completed
+summary: Independent medium Reconcile Reviewer verified both delivery capabilities, the promoted ADR confirmation and implementation evidence; confirmed old ADR waiver and exact parser-feedback resolution.
+findings: []
+assumptions:
+- Boundaries emulated with absolute cwd, scoped reads, git -C and unchanged snapshots; no native guarantee; no outside-worktree source reads or writes reported.
+unverified_areas:
+- Live cloud/Hub execution not exercised; shipped local/cloud obligations and supplied runtime evidence verified.
+checks:
+  reconciliation: PASS all four changed docs targets cover behavior and constraints
+  waiver: PASS old ADR annotation present at input;remaining decisions unchanged
+  contracts: PASS typed list,cumulative records,timing,scope replacement,optional inspect,independent sync
+  feedback: PASS legacy nested calls/backticks/commas and quoted/unquoted literal regression;no unrelated filtering
+  review: PASS independent parser review;package.json fix closed
+  tests: PASS reused2314 tests at7137f4cc;later records-only changes
+  checks: PASS supplied Ruff/Pyright,CI22zero,sync0
+  snapshot: PASS HEADf65ea22f/tree92528a21 clean and unchanged;diff-check0
+diff_scope:
+  base: 6ff819cec61cec40589b3ed90a8ea6c09a9eb6d9
+  head: f65ea22f2256bf97b93ed3c87a67cd93d705f04c

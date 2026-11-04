@@ -16,10 +16,13 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError, run_git, run_git_text
 
 from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice, WorkerScopeUnresolvedError
+from devkit_spec.features.worker.services.extensions import inspect_extensions
 from devkit_spec.features.worker.usecases.inputs import (
     derive_scope,
+    files,
     inputs,
     prefix,
+    read,
     records,
 )
 
@@ -52,6 +55,13 @@ def _failure(name: str, check: dict[str, Any], result: dict[str, Any]) -> Worker
             f"{len(outside)} changed paths lie outside the authorized scope",
             code="SPEC_WORKER_SCOPE_OUTSIDE",
             target_files=paths(outside),
+        )
+    if name == "scope_extensions":
+        return WorkerCheckFailedError(
+            "Scope extension annotations and records disagree or name a protected path",
+            code="SPEC_WORKER_SCOPE_EXTENSION_INVALID",
+            target_files=paths([issue["path"] for issue in check.get("issues", [])]),
+            fix="Correct the extension record or obtain Host authority before writing a denied path",
         )
     if name == "worktree":
         dirty = check.get("dirty_paths", [])
@@ -196,6 +206,28 @@ class InspectWorkerUseCase(BaseUseCase):
         dirty = dirty_paths(root)
         checks["worktree"] = {"status": "fail" if dirty else "pass", "dirty_paths": dirty}
         loaded = records(root, tip, unit)
+        result["scope_extensions"] = []
+        try:
+            if loaded.errors:
+                checks["scope_extensions"] = {"status": "not-run", "cause": loaded.errors[0].to_dict()}
+            else:
+                paths = set(files(root, tip))
+                if f"{unit}/spec.md" in paths:
+                    if f"{unit}/tasks.md" not in paths:
+                        raise WorkerScopeUnresolvedError("Required tasks.md is missing")
+                    evidence, extension_check = inspect_extensions(
+                        read(root, tip, f"{unit}/tasks.md"),
+                        read(root, tip, f"{unit}/spec.md"),
+                        loaded,
+                        paths | set(files(root, base)),
+                    )
+                    result["scope_extensions"] = evidence
+                    checks["scope_extensions"] = extension_check
+                else:
+                    checks["scope_extensions"] = {"status": "pass"}
+        except (AdvisoryError, FrontmatterError, UnicodeError) as exc:
+            cause = exc.to_dict() if isinstance(exc, AdvisoryError) else WorkerScopeUnresolvedError(str(exc)).to_dict()
+            checks["scope_extensions"] = {"status": "not-run", "cause": cause}
         checks["envelopes"] = {
             "status": "fail" if loaded.errors or loaded.unresolved_problems() or loaded.pending_questions() else "pass",
             "result": loaded.inspection_dict(details=details),

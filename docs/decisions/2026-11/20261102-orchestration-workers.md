@@ -19,6 +19,8 @@ aliases:
 
 # [ADR-orchestration-workers] Orchestration workers deliver committed, recorded and inspectable runs
 
+Superseded in part by `ADR-recorded-adjacent-path-extensions-for-development-workers`: For estimated worker write boundaries, we allow task-linked adjacent-path extensions and retain explicit hard denies, to avoid operator round trips, accepting semantic review of adjacency.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR (user)

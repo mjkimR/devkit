@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Plan tiered write boundaries for delegated workers at medium effort within the
-  proposal scope
-by: user
-at: '2026-11-04T03:03:25.596848Z'

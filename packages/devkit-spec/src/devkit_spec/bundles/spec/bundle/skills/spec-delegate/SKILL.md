@@ -15,7 +15,7 @@ not prohibit its expressly authorized guarded lifecycle effects.
 ## Constraints
 
 - Read the contract frontmatter first: `x-git-actions` and `hosts.<host>.status` decide how you call the role. The contract is the `contract=` path of `[DELEGATE: ...]`, else `.devkit/managed/spec/subagents/<role>.md`.
-- Fill `allowed_boundaries` with the task's actual declared paths; the post-run diff, not the prompt, enforces them.
+- Fill `allowed_boundaries` with the task's initial declared paths and explicit denies; validate Development Tier B evidence by [worker](references/worker.md). The post-run diff, not the prompt, checks admitted scope.
 - A support role never touches the index or HEAD; a worker commits only on its activity branch.
 - Zero findings is a valid result.
 - A `session` task's role returns a message: no envelope, no worker. A Backlog role (`triage`, `decomposer`) also returns a message: no envelope; the Backlog commit body names the role used.
@@ -35,7 +35,7 @@ not prohibit its expressly authorized guarded lifecycle effects.
 
    The temporary index lives in the Git directory; the real index and `git status` stay unchanged.
 3. **Validate the return**: `status` is `completed | needs_input | failed`, and each finding has `evidence` and `failure_condition`. A `failed` result or a stale `diff_scope` is not evidence; re-invoke only after the input or cause changed.
-4. **Check the diff**: a support role leaves HEAD unchanged, and `git diff --name-only <before> <after>` between the snapshots taken before and after the run lists nothing, except a Scout's agreed `materials/` path. For a worker, validate the committed range per [worker](references/worker.md). On a path outside `allowed_boundaries`, report and revert it (block a worker's range instead) and discard earlier check results.
+4. **Check the diff**: a support role leaves HEAD unchanged, and `git diff --name-only <before> <after>` between the snapshots taken before and after the run lists nothing, except a Scout's agreed `materials/` path. For a worker, validate the committed range per [worker](references/worker.md). On a path outside the admitted scope (including validated Development extensions), report and revert it (block a worker's range instead) and discard earlier check results.
 5. **Fold back**:
    - Record a read-only role's return with `devkit workflow envelope new --unit <dir> --kind scout|challenger|review|reconcile-check --stage <stage> ...` (`envelope review` for a review), then run `devkit workflow envelope check --unit <dir>`; flags and closing a round: the `spec` skill's `references/envelope.md`, Where envelopes live. A proposal spike's unit is `docs/proposals/PROP-<slug>`.
    - Scout or Challenger: put the comparison and recommendation into the proposal bundle; keep `unverified_areas` visible for `plan-accept`.

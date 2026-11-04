@@ -1,0 +1,30 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T04:52:36.690310Z'
+status: completed
+summary: Completed approved adjacent-scope record/parser/inspect/guidance contract and resolved FB-entrypoints-derive-boundary-annotations; independent Code Review P2 fixed and Reconcile Review passed. Sole tracked sync output .devkit/installation.json is recorded on Task3 as (sync output). Final report complete; Host owns policy-authorized integration and cleanup.
+findings: []
+assumptions:
+- Current strict Host grants preserved;no Tier B extension used;scope_extensions is empty by schema default.
+- Codex boundaries emulated using absolute cwd/paths,per-operation approvals,strict diff audit and unchanged reviewer snapshots;no native confinement guarantee.
+- Existing feature edges reused;old ADR partial-supersession trace was already committed by accepted handoff;no base merge performed.
+unverified_areas:
+- Live cloud/Hub execution and performance/operator-cost reductions are not claimed;semantic adjacency,custom protected paths and test weakening remain reviewer judgments.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected2314 at7137f4cc;partial135 paths;full fallback retained;later records-only commits reuse valid results
+  lint: PASS Ruff check/format devkit and devkit-spec
+  types: PASS Pyright devkit and devkit-spec
+  code_review: PASS independent medium review01;P2 package.json fix closed by reverify01;targeted21 tests
+  reconcile: PASS independent medium reconcile-check01;zero findings;source feedback disposition verified
+  scope: PASS cumulative exact-path audit against current Host grant;sole receipt sync output;no outside paths
+  baseline: PASS same API probe beforeFalse/False afterTrue/True with unchanged values;legacy nested-note paths repaired
+  ci: PASS 22 cumulative CI rules zero atd8dd56a2 against6ff819c
+  sync_end: PASS exit=0
+  workflow: PASS completed spec,resolved reconcile,final-report01;integrate stage;dev-integration auto source=policy
+diff_scope:
+  base: 6ff819cec61cec40589b3ed90a8ea6c09a9eb6d9
+  head: d8dd56a26dc2739bd49b62c6466fcf667f5e2a39
+activity_effort: medium
