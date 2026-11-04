@@ -45,3 +45,10 @@ tests cover AC-01–AC-06. Capture RED before source changes, GREEN afterward. R
 both affected wheels, just test-affected --base 4c6298983f5febeca7cfee8d27bc4708688551c7 with full fallback,
 sync --check, cumulative CI rules against 700c339bba8e89b4d70f63c5628d14d25bd3ffdd, and wheel builds offline.
 Independent medium code and reconcile reviews verify the final diff and all reflected targets.
+
+## Host-authorized reflection boundary
+
+The Host added `docs/decisions/2026-11/20261102-ux-screens.md` to initial Tier A scope for a partial-supersession
+annotation and link repair only. Its historical decision text remains intact. The new ADR precisely supersedes the
+root-only object-register location, unconditional creation and root-only sync-write clauses; all other UX decisions
+remain. This is an initial grant, not an adjacent Development extension.

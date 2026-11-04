@@ -20,6 +20,8 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-11/20261104-namespace-steering-registers.md
     resolution: modified
+  - file: docs/decisions/2026-11/20261102-ux-screens.md
+    resolution: modified
 ---
 
 # Reconciliation: `SPEC-namespace-steering-registers`
@@ -29,8 +31,9 @@ targets:
 Namespace/model/rule contracts name optional canonical steering registers and explicit legacy migration. Search
 specifies the existing namespace selection, deterministic union and actual-file diagnostics. Agent and delivery
 contracts read global with selected local vocabulary, create only needed registers and retain agent-only object
-semantics. The accepted ADR partially supersedes only the earlier glossary/register decisions; the old ADR stays
-accepted with its partial-supersession annotation. No milestone or globally unique identity changed.
+semantics. The accepted ADR partially supersedes the earlier namespace glossary/register decisions and `ADR-ux-screens`
+root-only register location, unconditional creation and root-only drafted-row sync writes. Both old ADRs stay
+accepted with precise partial-supersession annotations; their other clauses remain intact. No milestone or globally unique identity changed.
 
 ## Source feedback
 

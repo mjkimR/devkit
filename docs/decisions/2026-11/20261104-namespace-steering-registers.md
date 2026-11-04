@@ -4,7 +4,7 @@ title: Namespace vocabulary registers follow shared and local steering
 summary: "For namespace vocabulary, we place optional glossary and UX object registers in steering and read global plus selected local files, to keep one layout and scoped search, accepting explicit legacy glossary migration."
 status: accepted
 created_at: 2026-11-04
-supersedes: [ADR-namespace-steering-directories]
+supersedes: [ADR-namespace-steering-directories, ADR-ux-screens]
 ---
 
 # [ADR-namespace-steering-registers] Namespace vocabulary registers follow shared and local steering
@@ -42,6 +42,11 @@ local steering convention from applying to vocabulary.
   Markdown contract; `glossary.yaml` is accepted there. This replaces the glossary-exclusion and package-glossary-
   location clauses of `ADR-namespace-steering-directories`; its other decisions remain in force.
   → `CAP-DOCS-namespaces` 3.4 (MAY), `CAP-GOV-spec-rules` 3.14 (MUST).
+- This decision replaces only `ADR-ux-screens` clauses requiring one root-only register, unconditional root
+  creation with the first UX document, and root-only writes of drafted register rows by `spec-sync`. Shared rows
+  stay in the root register, namespace rows stay in its local register, and either file is created only when its rows
+  are needed. Its screen format, register contents and caps, review rubric, timing and link/coverage rules remain.
+  → `CAP-HARN-agent-guidance` 4.3 (SHOULD), `CAP-DLV-delivery-workflows` rule 9 (MUST).
 - Agents read the root glossary/register with the selected namespace files, keep shared rows global, and put local
   rows in the namespace; a local glossary definition applies only to that namespace. No empty register is seeded.
   → `CAP-HARN-agent-guidance` Shared writing instructions (SHOULD).
