@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T23:31:06.920271Z'
+status: completed
+summary: Opt-in command-design bundle and native setup examples implemented; independent code and reconciliation reviews passed. Local integration awaits user release of base checkout.
+findings: []
+assumptions:
+- No actual pilot repository supplied; example fixture verification is not pilot validation
+checks:
+  tests: 'PASS combined verification: full fallback 6589 passed 15 skipped; sole parser failure fixed, then all 16 affected tests passed'
+  build: PASS catalog sdist/wheel and packaged manifest/instruction/entrypoint verified
+  lint: PASS catalog lint-check/types, rules CI/hygiene, Node example and justfile parsing
+diff_scope:
+  base: 22141f429f8d8c235ccae85a0be170d2bd3313ec
+  head: 2ffb948aeb5b7ce64793a7b9de3192d8b53b372b
