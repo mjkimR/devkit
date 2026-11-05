@@ -7,7 +7,7 @@ later and nothing else: standard library only, no entry points, no CLI.
 It is a part of devkit that other repositories import at runtime (with `devkit-cli` for their click tools), so it
 ships on its own: a service or
 library depends on `devkit-advisory`, and its development tooling on `devkit-dist` or `devkit-agt`, which depend on
-the same version of this package (released in lockstep; see `ARCH-07-deployment`). `devkit` is a namespace package shared by
+the exact selected version of this package (see `ARCH-07-deployment`). `devkit` is a namespace package shared by
 these distributions, so the import is `from devkit.advisory import AdvisoryError` either way.
 
 ## Install

@@ -43,7 +43,7 @@ devkit-core = { workspace = true }
 devkit-agt = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

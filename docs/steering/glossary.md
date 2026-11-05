@@ -14,6 +14,9 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
+| **Release version** | One human-selected X.Y.Z assigned to changed distributions and their exact-pin dependents; excludes unchanged package and bundle identities. | `ADR-selective-package-versions` |  | `VERSION`, `release` |
+| **Package version** | A distribution's actual static version, retained when its shipped payload is unchanged; excludes the newest release number. | `ADR-selective-package-versions` |  | `project.version`, `version` |
+| **Release inventory** | Completed artifact provenance and compatible actual package versions for one release; excludes an unpublished preparation plan. | `ARCH-07-deployment` |  | `release-inventory.json` |
 | **devkit bundle** | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |  | `bundle.toml` |
 | **Bundle source snapshot** | Repository-committed source copy of a complete supported content provider, with provenance and explicit refresh through an ordinary local package; excludes governance Snapshot run evaluation and runtime-package vendoring. | `CAP-DIST-in-repo-bundles` |  | `snapshot.json`, `bundle snapshot`, `bundle refresh` |
 | **Subagent model level** | Distribution-owned preset (minimal, compact, lean, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` | model profile | `level`, `SubagentPolicy`, `ModelSettings`, `[subagents]` |

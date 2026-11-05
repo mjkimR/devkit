@@ -1,7 +1,7 @@
 ---
 id: ADR-package-ownership-and-release-version
 title: Package ownership, namespaces and the single release version
-summary: "For the workspace wheels, we put the foundation in devkit-core, the devkit executable, config and receipt in devkit-dist, harness commands behind devkit.commands, a regular package per wheel and one root VERSION, to keep ownership explicit, accepting import churn and lockstep releases."
+summary: "For the workspace wheels, we put the foundation in devkit-core, the devkit executable, config and receipt in devkit-dist, harness commands behind devkit.commands, a regular package per wheel and one root VERSION, to keep ownership explicit, accepting import churn and exact dependency pins."
 status: accepted
 created_at: 2026-11-02
 aliases:
@@ -99,7 +99,7 @@ regular package.
   CLI/MCP transport and external IO.
 - Check layer direction and package isolation without adding CRUD or transaction abstractions.
 - Preserve the externally consumed advisory API and existing command and plugin discovery contracts.
-- One human-edited version value for every workspace distribution.
+- One human-edited release version, assigned to changed workspace distributions.
 - Preserve standalone wheel and source distribution builds and exact internal dependency pins.
 - Keep the existing Hatchling backend and avoid additional build dependencies.
 
@@ -118,7 +118,7 @@ regular package.
 - **Foundation in `devkit-core`, `mcp` extra on `devkit-agt`** (selected in ADR-foundation-and-mcp-package-ownership):
   `devkit-core` owns the foundation, `devkit-dist` owns the executable and standalone distribution, `devkit-agt[mcp]`
   requires `devkit-mcp`; the foundation cannot import an application wheel or the MCP SDK and `devkit-dist` stays free
-  of the SDK, at the cost of one more wheel released in lockstep.
+  of the SDK, at the cost of one more wheel in the release inventory.
 
 ### Python namespace and module boundaries
 
@@ -209,10 +209,10 @@ regular package.
 - **Foundation**: `devkit-core` MUST own the shared foundation as the `devkit_core` package, with `base` (shared
   errors and SDK-free MCP contracts, never importing `core`) and `core` (generic implementations). It depends only on
   `devkit-advisory` and PyYAML and MUST NOT import application packages or the MCP SDK. `devkit-dist`, `devkit-agt`
-  and `devkit-mcp` depend on it at the same version. (ADR-foundation-and-mcp-package-ownership)
+  and `devkit-mcp` pin its selected actual version. (ADR-foundation-and-mcp-package-ownership)
 - **MCP runtime**: the MCP transport ships as `devkit-mcp`, which depends on `devkit-core`, `devkit-dist` and the MCP
-  SDK. `devkit-agt` declares the `mcp` extra requiring `devkit-mcp` at the same version for agt-only installs.
-  `devkit-spec` requires `devkit-mcp` at the same version because its native handoff tools are part of the Spec
+  SDK. `devkit-agt` declares the `mcp` extra requiring the selected actual `devkit-mcp` version for agt-only installs.
+  `devkit-spec` pins the selected actual `devkit-mcp` version because its native handoff tools are part of the Spec
   package's default capability. `devkit-dist` declares no `mcp` extra and never imports `devkit_agt` or the MCP SDK.
   (ADR-foundation-and-mcp-package-ownership)
 - Project configuration, receipts and execution binding stay in the distribution's project feature, and the namespace,
@@ -242,7 +242,7 @@ regular package.
   boundary through existing entry-point groups. No compatibility wrappers are introduced for application module paths
   that have no external consumers. (ADR-independent-package-namespaces-and-feature-layout)
 - `devkit-agt` keeps the rules, workflow, gate, worktree, generated, integration and compact (`devkit run`) areas, the
-  `authoring` bundle area and the data-only `harness` bundle area, and depends on `devkit-dist` at the same version.
+  `authoring` bundle area and the data-only `harness` bundle area, and pins the selected actual `devkit-dist` version.
   (ADR-dist-module-split)
 - The source tree of `devkit-dist` is `packages/devkit-dist/`; `devkit-agt` stays in `packages/devkit/`, so the
   documented Git dependency URL (`#subdirectory=packages/devkit`) keeps working. (ADR-dist-module-split)
@@ -356,19 +356,23 @@ regular package.
   `devkit:all` keeps working but no longer deploys `devkit-run` and `run-pointer`. Both are accepted in place (no alias
   preset, no migration reader, no special-cased directive; the release notes and guides name both). A cross-bundle
   preset hint in `SELECTION_INVALID` is a non-goal. (ADR-dist-bundles-compatibility)
-- `devkit-dist`, `devkit-agt` and `devkit-advisory` MUST be released in lockstep from one tag at one version;
-  `devkit-agt` pins `devkit-dist` to that exact version. (ADR-dist-bundles-compatibility)
+- Root `VERSION` remains the single human-selected release number. The release assignment, actual-version pins,
+  bundle versions, inventory and immutable artifact reuse follow `ADR-selective-package-versions` and
+  `ARCH-07-deployment` section 1.1. These clauses supersede this subsection's all-package equality policy.
   Extended by `ADR-document-system`: the `devkit-docs` wheel (package `devkit_docs`) holds the document system and
   devkit-spec depends on it.
 - `devkit-spec` keeps depending on `devkit-agt`; `devkit-catalog` and `devkit-starter` switch their development
   dependency to `devkit-dist`. (ADR-dist-bundles-compatibility)
 - Non-goals: renaming `packages/devkit`; shim modules, alias distributions or alias presets; a smaller third-party
   dependency set for `devkit-dist` (click, pyyaml, jinja2, tomlkit). (ADR-dist-bundles-compatibility)
+- The `devkit` executable continues to report installed `devkit-dist` through importlib.metadata.
+- Static package metadata remains buildable without a root `VERSION` file.
 
 ### Single release version
 
 - Root `VERSION` and `just version-sync` serve every workspace package, including repository tools. Synchronization
-  covers project and bundle manifest versions and versioned internal requirements, then regenerates `uv.lock` with uv.
+  assigns the release number only to changed distributions and exact-pin dependents, advances changed bundles, and
+  regenerates `uv.lock` with uv. Unchanged package and bundle versions remain at their published identities.
   Unversioned extra pass-throughs stay unchanged. Consistency is checked before release building. The separately
   built model and frontend npm library keep their own versions. `ARCH-07-deployment` defines the deployment boundary.
   (ADR-single-release-version)
@@ -437,7 +441,7 @@ regular package.
 - `packages/devkit-dist/tests/unit/architecture/test_layering.py` (`test_distribution_never_imports_the_harness`) and
   `just test-dist`. (ADR-foundation-and-mcp-package-ownership)
 - `packages/devkit/tests/integration/package/test_lockstep.py` (`test_devkit_agt_extras_pass_through_to_devkit_dist`,
-  the version pins between the wheels) checks every workspace version against VERSION.
+  the version pins between the wheels) checks internal pins against the actual dependency versions.
   (ADR-foundation-and-mcp-package-ownership, ADR-single-release-version)
 - `devkit-dist` per-wheel layering test (module references, top-level CLI files and string constants) and the
   `devkit-agt` entry point layering test; `devkit-dev` structure rules and feature graph tests.

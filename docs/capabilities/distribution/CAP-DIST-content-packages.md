@@ -76,12 +76,12 @@ from optional local onboarding (`ADR-configuration-language-and-rendering`).
 ## 2. Installation and Lifecycle
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v<version>
-uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
-  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
-  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
-  "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
+# Read each URL from the chosen release-inventory.json or copy its generated release-note command.
+uv add --dev "devkit-dist @ <devkit-dist-inventory-wheel-url>" \
+  "devkit-core @ <devkit-core-inventory-wheel-url>" \
+  "devkit-cli @ <devkit-cli-inventory-wheel-url>" \
+  "devkit-advisory @ <devkit-advisory-inventory-wheel-url>" \
+  "devkit-starter @ <devkit-starter-inventory-wheel-url>"
 uv run devkit sync               # deploys auto-selected bundles with their default preset
 uv run devkit add starter        # a bundle without auto_select: records the selection and synchronizes
 ```
@@ -120,18 +120,17 @@ A consumer that does not want an auto-selected bundle opts it out with `[presets
 
 ## 4. The devkit Wheels and Their Built-in Bundles
 
-The CLI ships in two wheels released in lockstep with `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp`
-(`ADR-package-ownership-and-release-version`):
+The CLI ships in independently versioned `devkit-dist` and `devkit-agt` wheels. Exact internal pins select a complete inventory-compatible set (`ADR-selective-package-versions`):
 
 - **`devkit-dist`** owns the `devkit` executable, distribution (this capability area), native host hooks, context
   loading and playbooks. Installed alone, it deploys every asset kind and runs none of the harness.
-- **`devkit-agt`** depends on `devkit-dist` at the same version and adds the harness engines (rules, workflows,
+- **`devkit-agt`** pins the selected actual version of `devkit-dist` and adds the harness engines (rules, workflows,
   commit gates, task worktrees, generated files, integration, `devkit run`), mounted as `devkit.commands` plugins
   (`ARCH-05-3-command-plugins`).
 
 A project declares exactly one of them as its devkit requirement, `devkit-agt` when it uses the harness; a
 release-wheel installation of `devkit-agt` also names the `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory`
-wheels of the same release,
+wheels selected by the release inventory, using their original URLs,
 because no index serves them.
 Bundles registered by either wheel are built in (`builtin` in `devkit list` and `devkit status`), so the
 `BUNDLE_AUTO_SELECTED` notice never names them:

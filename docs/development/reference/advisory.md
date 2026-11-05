@@ -11,7 +11,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 
 ## Contents
 
-- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-dist` and `devkit-agt` depend on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`, `ArgumentError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level (`ARCH-08-cross-cutting`).
+- **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-dist` and `devkit-agt` pin the selected actual version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`, `ArgumentError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level (`ARCH-08-cross-cutting`).
 - **Bundle** `advisory` (`devkit_dist.bundles.advisory`, `bundle/`, `default_preset = "core"`), built into `devkit-dist` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default. Its `python` preset's rule runs where `devkit-agt` is installed; a distribution-only installation deploys it with a `HARNESS_ENGINE_MISSING` warning:
 
 | Preset | Assets | For |
@@ -56,7 +56,7 @@ preset of the guide, which `devkit-dist` ships:
 ```bash
 # Runtime: devkit.advisory, standard library only
 uv add "devkit-advisory @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-advisory"
-# Tooling (instead of the runtime-only install): requires the same advisory version
+# Tooling (instead of the runtime-only install): requires the inventory-selected advisory version
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 uv run devkit add advisory:python
 ```
@@ -77,5 +77,5 @@ Opt out with `[presets] advisory = false` in `.devkit/config.toml` (or `devkit r
 
 `devkit-advisory` is the one devkit API other repositories run in production, so it is a versioned contract: within
 `0.x` a breaking change to a name in the [library table](#library), a field, a mode derivation, an `[ACTION]` text or
-the `to_dict` and RFC 7807 shapes needs a minor version bump, released in lockstep with `devkit` (devkit pins the
+the `to_dict` and RFC 7807 shapes needs a minor version bump, selected through the shared release version when this wheel changes (devkit pins the
 exact version). Adding a field or a name is not breaking.

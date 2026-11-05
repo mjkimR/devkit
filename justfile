@@ -88,17 +88,17 @@ model-build:
     uv build --wheel models/devkit-embed --out-dir dist/model
 
 # Synchronize package versions and internal pins from root VERSION, then refresh uv.lock
-version-sync:
-    python3 scripts/version.py
+version-sync *args:
+    uv run --no-active python scripts/version.py "$@"
 
 # Check release metadata against root VERSION without writing files
-version-check:
-    python3 scripts/version.py --check
+version-check *args:
+    uv run --no-active python scripts/version.py --check "$@"
 
 # Refresh tooling of the release handbook: status, stamp PAGE..., generate [--preview], verify [--preview], release-check TAG
 handbook *args:
     uv run --no-active python scripts/handbook.py "$@"
 
 # Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/
-release-build tag:
-    bash scripts/release.sh "$1"
+release-build tag *args:
+    bash scripts/release.sh "{{tag}}" "$@"

@@ -1,7 +1,7 @@
 # Release on a pushed vX.Y.Z tag.
 #
 # The full CI (ci.yml) runs first against the tagged commit. The release job
-# then checks that the commit is on main, builds every workspace package's wheel
+# then checks that the commit is on main, builds changed workspace package wheels
 # with scripts/release.sh (which also checks the tag against the devkit version)
 # and publishes a GitHub Release with the wheels, SHA256SUMS and install commands
 # for the tag. Consumers install the wheels by URL; there is no package index.
@@ -38,13 +38,21 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          version: "0.12.8"
       - uses: extractions/setup-just@v2
-      - run: uv python install 3.12
-      - run: just release-build "$GITHUB_REF_NAME"
+      - run: uv python install 3.12.8
+      - name: Read the explicitly verified completed baseline
+        run: |
+          mkdir -p dist/baseline
+          python3 - <<'PYTHON'
+          import json
+          from pathlib import Path
+          baseline = json.loads(Path("scripts/releases/pending.json").read_text())["baseline"]
+          Path("dist/baseline/release-inventory.json").write_text(json.dumps(baseline))
+          PYTHON
+      - run: just release-build "$GITHUB_REF_NAME" --baseline dist/baseline/release-inventory.json
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/release/* \
-            --verify-tag --title "$GITHUB_REF_NAME" \
-            --notes-file dist/release-notes.md --generate-notes
+          uv run --no-active python scripts/releases/cli.py publish "$GITHUB_REF_NAME"

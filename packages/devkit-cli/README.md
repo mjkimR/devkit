@@ -7,19 +7,18 @@ object under `--format json`, errors, warnings and notices as Agent Advisory Pro
 or later, `click` and `devkit-advisory`; it imports nothing else, so it adds only click's own import time.
 
 `devkit-dist` builds the `devkit` command line on it, and tools in other repositories depend on it at runtime, so it
-is a semver contract released in lockstep with the other devkit wheels (`ARCH-07-deployment`). The behavior is
+is a semver contract versioned when its shipped payload or exact internal pins change (`ARCH-07-deployment`). The behavior is
 specified in `CAP-CLI-agent-cli-toolkit`; the opt-in `cli-tool` bundle of `devkit-catalog` is the structure guide
 and rules for a tool built on it.
 
 ## Install
 
-No package index hosts the wheel; install it by URL from a GitHub Release (with the `devkit-advisory` wheel of the
-same release), or from Git with `subdirectory = "packages/devkit-cli"`:
+No package index hosts the wheel; install it by URL from a GitHub Release (with the `devkit-advisory` wheel selected by the same release inventory, using its original URL), or from Git with `subdirectory = "packages/devkit-cli"`:
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v<version>
-uv add "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl"
+# Read each URL from the chosen release-inventory.json.
+uv add "devkit-cli @ <devkit-cli-inventory-wheel-url>" \
+  "devkit-advisory @ <devkit-advisory-inventory-wheel-url>"
 ```
 
 ## Use

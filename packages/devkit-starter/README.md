@@ -6,12 +6,12 @@ package is the starter example bundle's only copy:
 [`src/devkit_starter/bundle`](src/devkit_starter/bundle).
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v<version>
-uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
-  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
-  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
-  "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
+# Read each URL from the chosen release-inventory.json.
+uv add --dev "devkit-dist @ <devkit-dist-inventory-wheel-url>" \
+  "devkit-core @ <devkit-core-inventory-wheel-url>" \
+  "devkit-cli @ <devkit-cli-inventory-wheel-url>" \
+  "devkit-advisory @ <devkit-advisory-inventory-wheel-url>" \
+  "devkit-starter @ <devkit-starter-inventory-wheel-url>"
 uv run devkit add starter   # records starter = "daily" (the default preset)
 ```
 

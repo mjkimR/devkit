@@ -468,9 +468,11 @@ def test_a_release_that_did_not_refresh_skips_and_writes_nothing(script, repo, w
 
 def test_the_release_build_checks_the_handbook_before_building_wheels():
     release = (ROOT / "scripts/release.sh").read_text()
-    check = release.index('scripts/handbook.py release-check "$tag"')
-    assert check < release.index("uv build")
-    assert release.index("does not match VERSION") < check
+    assert 'scripts/releases/cli.py build "$@"' in release
+    build = (ROOT / "scripts/releases/release.py").read_text()
+    body = build[build.index("def release(") :]
+    check = body.index('"scripts/handbook.py", "release-check", tag')
+    assert body.index("does not match VERSION") < check < body.index("compute(root, baseline_path)")
 
 
 # --- repository rules (AC-09) ----------------------------------------------------------------------------------------

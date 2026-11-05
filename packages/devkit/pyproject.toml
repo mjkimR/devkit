@@ -7,8 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "devkit-core==0.1.6",
     "click>=8.1.7",
-    "devkit-advisory==0.1.6",  # released in lockstep with the other devkit wheels, from the same tag
-    "devkit-dist==0.1.6",  # the devkit executable and distribution, released in lockstep from the same tag
+    "devkit-advisory==0.1.6",  # exact actual version selected by the release inventory
+    "devkit-dist==0.1.6",  # the devkit executable and distribution, pinned to its selected version
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",
 ]
@@ -70,7 +70,7 @@ devkit-advisory = { workspace = true }
 devkit-dist = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
