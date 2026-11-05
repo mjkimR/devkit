@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T14:52:02.129427Z'
+status: completed
+summary: Host reverified extension-key formatting repair after independent reconcile; actual use-case parser test and full affected selection now pass.
+findings: []
+checks:
+  reconciliation: PASS same contract and targets; parseable extension keys
+  tests: PASS 144 affected tests
+diff_scope:
+  base: 35e57600ddb2541cf945bb9e591fa097fb2a7570
+  head: 0014a36086743ab57d55da971f6b35e7bce3f228
