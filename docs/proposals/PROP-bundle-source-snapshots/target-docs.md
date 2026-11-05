@@ -22,12 +22,15 @@ targets:
 
 Extend `CAP-DIST-in-repo-bundles` with a snapshot section: the ordinary package wrapper, supported static content
 package source and rule/helper dependency subset, whole-provider replacement, provenance schema, explicit
-create/preview/apply, local edit refusal and unchanged-input idempotence. State that devkit/runtime/build dependencies
+create/preview/apply, local edit refusal and unchanged-input idempotence. Specify nonrecursive provenance hashes
+and derived bytecode exclusions shared by inventories and drift checks. Validate declarative runtime references
+including hooks alongside Python imports, without executing either. State that devkit/runtime/build dependencies
 remain separately installed. Add the command entrypoints and test references.
 
 In `CAP-DIST-content-packages`, state that a local wrapper uses unchanged discovery and bundle identities; no
 selected-provider precedence is added. Describe multi-bundle replacement and refusal of mixed runtime providers.
-Preserve global duplicate-provider errors. Link the snapshot use case without changing release-version policy.
+Preserve global duplicate-provider errors. Require explicit editable-package reinstall after changed entry-point
+metadata and explicit deselection of removed selected bundles. Link the snapshot use case without changing release-version policy.
 
 In `CAP-DIST-workspace-ownership`, distinguish snapshot-owned package sources from project overrides: refresh
 refuses source edits; adaptations use existing overrides; subsequent sync retains their upstream drift behavior.
@@ -55,8 +58,8 @@ The handoff promotes `PADR-bundle-source-snapshots`; its clauses are restated by
 | `packages/devkit-dist/src/devkit_dist/features/distribution/repositories/` | Source inspection and staged local package writes/rollback. |
 | `packages/devkit-dist/src/devkit_dist/features/distribution/models/` | Request/result values and stable errors/actions. |
 | `packages/devkit-dist/tests/unit/features/distribution/` | Deterministic hash/diff/import-support policy where isolation is useful. |
-| `packages/devkit-dist/tests/integration/features/distribution/` | Real source packages, files/modes, path safety, local drift, idempotence and injected failure rollback. |
-| `packages/devkit-dist/tests/e2e/cli/` | Built local-package consumer, no private-origin dependency, multi-bundle selection and harness-equipped rule fixture. |
+| `packages/devkit-dist/tests/integration/features/distribution/` | Real source packages, files/modes, path safety, local drift, idempotence after editable discovery, nonrecursive hashes, external declarative handler refusal and injected failure rollback. |
+| `packages/devkit-dist/tests/e2e/cli/` | Built local-package consumer, no private-origin dependency, multi-bundle add/remove metadata reinstallation and harness-equipped rule fixture. |
 | `packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/instructions/in-repo-bundle.md` | Source snapshot commands, supported boundaries and exact provider replacement steps. |
 | `docs/development/reference/distribution.md` | CLI/schema quick reference matching capability. |
 | `guides/install/existing-repository.md` | Private content-package snapshot bootstrap and explicit refresh. |

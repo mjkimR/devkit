@@ -69,7 +69,10 @@ its relative imports stay within the copied plugin/helper tree and its absolute 
 or documented devkit runtime APIs. Preflight checks Python ASTs for imports outside that set, original-package
 absolute imports and syntactically dynamic imports; those cases report unsupported input before destination writes.
 This supports the ordinary dependency-free rule case without claiming to prove arbitrary Python behavior.
-No source Python is executed during inspection. Shell/helper tools and agent instructions retain their declared
+Declarative runtime references receive the same check: hook handler service IDs and workflow check/plugin
+references must resolve to documented capabilities of the explicitly required devkit runtime or copied local
+assets. An external handler or unknown runtime reference is an unsupported-input refusal naming the requirement.
+No source Python or hook handler is executed during inspection. Shell/helper tools and agent instructions retain their declared
 consumer environment requirements; copying them does not install a runtime or make an offline execution guarantee.
 
 The generated wrapper declares no dependency on the upstream package. A consumer supplies devkit and, for
@@ -93,9 +96,12 @@ bytes remain unchanged; generated entry points target the wrapper's distinct mod
 colliding or invalid normalized wrapper module names is refused. The destination must be a new directory inside
 the consumer repository and must not overlap the source, Git/devkit/agent state or another snapshot.
 
-The provenance records source identity and the full owned output inventory, including generated packaging files.
-The digest covers canonical relative paths, bytes and normalized executable modes; it excludes the digest field
-itself. Version-only source changes are observable provenance updates. No local version bump is needed for an
+The payload inventory records every owned source and generated packaging file, excluding `snapshot.json` itself.
+The aggregate digest covers canonical provenance metadata and this ordered path/byte-hash/normalized-mode
+inventory, with the aggregate digest field omitted. Refresh structurally validates `snapshot.json`, recomputes its
+aggregate and checks payload entries; no recursive self-file hash exists. Both inventory and drift checks exclude
+only derived `__pycache__` trees and `*.pyc` files, following existing source-file conventions. Other unexpected
+files remain authored drift. Editable discovery must not block a later refresh merely by writing bytecode. Version-only source changes are observable provenance updates. No local version bump is needed for an
 editable repository package. A refresh with the same metadata/content writes nothing.
 
 Creation and refresh stage and validate the complete candidate before touching the destination. Refresh compares
@@ -111,7 +117,11 @@ local package installation and upstream dependency replacement instructions. Bef
 removes the original content-only provider and installs the wrapper in the dev dependency group. If another
 requirement keeps the original provider installed, the existing duplicate-name error must be resolved explicitly;
 no import/package precedence is invented. All original bundles are in the wrapper, so unrelated selections from
-that provider remain available. Normal `devkit sync` then updates receipts and keeps project overrides under
+that provider remain available. If refresh changes generated packaging metadata or bundle entry points, its result requires reinstalling the
+editable local package with an explicit `uv sync --reinstall-package <wrapper-package>` action before normal
+discovery/sync. A removed bundle that is still selected must be explicitly deselected with `devkit remove <bundle>`;
+refresh reports each affected selection and never silently removes it. Installed-consumer verification covers
+bundle additions and removals, not just changed asset bytes. Normal `devkit sync` then updates receipts and keeps project overrides under
 `CAP-DIST-workspace-ownership`, including upstream drift notices. Snapshot refresh alone does not sync.
 
 ### Alternatives and impact
@@ -146,11 +156,13 @@ Development acceptance checks:
 - **AC1:** Given a supported multi-bundle content package, creation preserves all manifest/variant/template/helper
   bytes and executable modes, emits valid importable wrapper entry points and credential-free matching provenance.
   A self-contained rule fixture using the documented devkit APIs is included, not categorically rejected as Python.
+  Dynamic Python imports and a declarative external hook handler produce explicit unsupported-input refusals.
 - **AC2:** Given a fresh consumer with declared runtime/build dependencies available and private origin inaccessible,
   installing only the committed local wrapper and running locked sync reproduces its selected assets. No private
   origin requirement remains in the consumer dependency graph. A built-wheel consumer test proves this boundary.
 - **AC3:** Given changed upstream bytes, modes, manifest metadata or deletions, preview lists the complete diff.
-  Applying the reviewed source/current digests updates coherently; identical input writes nothing. An injected
+  Applying the reviewed source/current digests updates coherently; identical input after editable installation and
+  discovery writes nothing despite bytecode. Provenance hashes round-trip without self-reference. An injected
   recoverable write failure leaves the previous package/provenance usable and unchanged.
 - **AC4:** Given local source edits/additions, stale digests, unknown schemas, unsupported imports/layout/dependencies
   or conflicting bundle providers, the relevant command returns a stable actionable condition and never silently
@@ -159,6 +171,7 @@ Development acceptance checks:
   upstream drift using existing ownership behavior. The snapshot operation leaves overrides and receipt untouched.
 - **AC6:** Given a source package providing several bundles or runtime command entry points, preflight reports the
   complete replacement set or refuses the mixed runtime package; it never silently removes a still-needed provider.
+  Refreshed entry-point additions/removals request reinstallation and explicit deselection where necessary.
 
 Use real filesystem/inventory tests for hashing, safety and rollback, CLI result tests for codes/actions, and
 installed-consumer tests for discovery, fresh clone bootstrap and supported rule assets. Run `just test-dist` to

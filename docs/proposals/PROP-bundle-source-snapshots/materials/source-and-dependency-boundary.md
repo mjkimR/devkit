@@ -21,3 +21,10 @@ cannot be proved statically; the command supports a documented inspectable subse
 Options: manual copy (small but no refresh safety), ordinary wrapper (chosen), second loader (duplicates ownership),
 partial bundle extraction/provider precedence (changes discovery), arbitrary wheel/runtime copy (breaks bounded
 private-content promise). Provider replacement is deliberately separate from source copying and normal sync.
+
+## Challenger disposition
+
+`envelopes/challenger-01.yaml` identified four P2 gaps. The proposal now defines the exact derived-bytecode
+exclusion, editable metadata reinstall/removal steps, declarative runtime-reference preflight and a nonrecursive
+payload/provenance digest. Each fix implements the suggested action; no supported asset class or chosen packaging
+direction changed. Required Development fixtures now cover each failure condition.

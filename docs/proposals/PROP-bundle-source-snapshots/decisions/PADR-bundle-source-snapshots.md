@@ -39,14 +39,14 @@ Choose the ordinary local package with complete supported provider replacement.
   it remains a normal dev dependency with distinct wrapper modules and unchanged bundle names. →
   `CAP-DIST-in-repo-bundles` snapshot packaging (MUST).
 - Self-contained bundle Python assets remain supported within the declared devkit/stdlib/relative import subset;
-  non-content providers and unsupported dependency closure are refused before writes. →
+  non-content providers and unsupported dependency closure, including declarative external handlers, are refused before writes. →
   `CAP-DIST-in-repo-bundles` supported inputs (MUST).
 - Credential-free source identity, optional verified commit and canonical byte/mode hashes identify an adoption;
-  unchanged inputs leave local package/version bytes unchanged. → `CAP-DIST-in-repo-bundles` provenance (MUST).
+  unchanged inputs leave local package/version bytes unchanged; provenance excludes its own file hash and derived bytecode is not source drift. → `CAP-DIST-in-repo-bundles` provenance (MUST).
 - Refresh is explicit, reports changes and requires matching reviewed/current digests; local drift is refused and
   reported write failures restore the prior package. → `CAP-DIST-in-repo-bundles` refresh (MUST).
 - Discovery preserves its global duplicate-name refusal, so installation replaces the complete original provider
-  explicitly rather than shadowing selected bundles. → `CAP-DIST-content-packages` snapshot providers (MUST).
+  explicitly rather than shadowing selected bundles; changed entry-point metadata requires reinstall and removed selections require explicit deselection. → `CAP-DIST-content-packages` snapshot providers (MUST).
 - Normal sync still owns receipts/projections and project overrides; source snapshot refresh is a separate
   operation. → `CAP-DIST-sync-and-transactions` snapshot boundary (MUST),
   `CAP-DIST-workspace-ownership` snapshot sources and overrides (MUST).
