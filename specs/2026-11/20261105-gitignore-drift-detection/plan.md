@@ -2,23 +2,31 @@
 id: PLAN-gitignore-drift-detection
 spec: SPEC-gitignore-drift-detection
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-gitignore-drift-detection` Git Tracking Diagnostics for Projected Assets
+# Technical Plan: SPEC-gitignore-drift-detection
 
-## 1. Architecture Overview & Impact
-- Target Area: governance/
-- Target Docs Blueprint: `PROP-gitignore-drift-detection-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+No conflict: CAP-DIST-workspace-ownership keeps ignore/index mutation out of sync. No new feature dependency,
+package dependency or ADR is needed. Native paths come from inventory/receipt files outside `.devkit/`.
 
-### Planned Boundaries:
-- `packages/devkit-dist/src/devkit_dist/features/distribution/`
-- `docs/capabilities/distribution/`
-- `docs/usecases/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `docs/decisions/`
+Add a distribution repository helper for read-only Git queries and notice construction. Call it from the sync
+planner after ownership conflicts are checked, before applying changes. Use existing SyncNotice subclasses
+with warning levels and stable codes. No schema change.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 3. Component & Interface Design
+
+`projection_git_notices(root, desired, previous)` returns advisory objects. Read tracked paths once with
+`git ls-files -z`, intersect with known projection paths, and query effective ignores in one NUL-delimited
+`git check-ignore --no-index --stdin -z` call. Use exact literal pathspecs and shell quoting in untracking advice.
+Keep warnings bounded to ten targets each and include the full category count. Removed untracked files need
+no ignore advice. Query errors become a warning; non-repositories return no findings.
+
+## 6. Verification & Test Plan
+
+Real temporary Git repositories cover AC-01 through AC-04, including nested ignore negation, tracked ignored
+files, previous ownership, shell-special names, dry-run, strict JSON and locked mode. Check byte-identical index
+and ignore files. Run `just test-affected`, `just lint-check dist`, `just check dist`, `just test-dist`, and
+`uv run devkit rules check`. Reconcile the two existing distribution capabilities.

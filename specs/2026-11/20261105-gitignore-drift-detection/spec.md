@@ -1,80 +1,56 @@
 ---
 id: SPEC-gitignore-drift-detection
 title: Git Tracking Diagnostics for Projected Assets
-summary: Detects missing ignore coverage and tracked devkit projections during sync without modifying project ignore rules or the Git index.
-status: planned
+summary: "Reports unignored and tracked native projections without modifying project ignore rules or the Git index."
+status: active
 created: 2026-11-05
-related_capabilities: []
+related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-gitignore-drift-detection] Git Tracking Diagnostics for Projected Assets
 
-## 1. Problem Statement & Motivation
+## 1. Problem and User Stories
 
-Handed off from proposal PROP-gitignore-drift-detection on 2026-11-05.
-- Target Docs Blueprint: `PROP-gitignore-drift-detection-target` (Living Spec targets for this plan and reconcile.md)
+As a consumer agent, I need sync to identify native projections that may accidentally enter Git, with exact
+paths to repair while preserving project-owned neighboring files. The accepted scope keeps root ignore rules
+and the Git index under project control.
 
-### 1. Background & Hypothesis
+## 2. Non-Goals
 
-Pilot adoption exposed generated native agent files in Git status and accidental tracking. Native projection
-roots also contain project-owned settings and instructions. CAP-DIST-workspace-ownership leaves root ignore
-rules and the Git index under project ownership; sync already seeds ignores for managed and transient content
-inside `.devkit/.gitignore`.
+- **Scope Excluded**: automatic ignore/index edits, blanket directory ignores, commit-blocking rules, new settings,
+  runtime adapters and a general Git doctor.
 
-The retained scope is a read-only diagnostic during sync. It should identify the actual devkit-deployed native
-paths that lack effective ignore coverage or are already tracked, then give precise remediation.
+## 3. Acceptance Criteria
 
-## 2. User Stories
+### [AC-01] Effective ignore coverage
+- **Given** native files in the desired installation and a Git workspace.
+- **When** sync plans a successful operation, including dry-run or check.
+- **Then** untracked files without effective ignore coverage produce one `PROJECTION_NOT_IGNORED` warning;
+  ignored files and unrelated project files produce no projection finding. Nested rules and negations follow Git.
 
-- **US-1**: As a developer/agent, I want to implement Git Tracking Diagnostics for Projected Assets so that system capabilities are extended.
+### [AC-02] Tracked projections
+- **Given** desired or previously owned native files present in the index.
+- **When** sync succeeds or previews their removal.
+- **Then** one `PROJECTION_TRACKED` warning lists only tracked owned paths even if ignored; previous untracked
+  paths being removed do not receive missing-ignore warnings. Neither index nor root ignore files are modified.
 
-## 3. Non-Goals
+### [AC-03] Bounded actionable output
+- **Given** more than ten findings in either category.
+- **When** notices are rendered as text or JSON.
+- **Then** each category reports its total and at most ten sorted path targets with safe exact-path repair
+  instructions, including an omitted count. Normal sync succeeds; `--strict` promotes warnings as usual.
 
-1. **Scope Excluded**: <what this change will not do>
+### [AC-04] Git and mode boundaries
+- **Given** a non-Git workspace, a Git query failure, or a locked sync.
+- **When** sync runs.
+- **Then** non-Git workspaces skip diagnostics, a failed diagnostic query returns `PROJECTION_GIT_CHECK_FAILED`
+  without aborting otherwise successful sync, and successful locked sync reports findings without extra writes.
+  Existing stale-receipt and conflict refusals keep precedence.
 
-## 4. Acceptance Criteria & Behavioral Contracts
+## 4. Assumptions
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
-
-## 5. Carried Proposal Notes
-
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
-
-### 2. Technical Spike Questions
-
-- Which receipt and planned projection records identify the deployed paths without including neighboring
-  project-owned files, including removed or changed projections?
-- How should Git ignore checks distinguish missing coverage from already tracked files, including negations,
-  nested ignore files and a workspace without Git?
-- How can sync return bounded notices with stable codes and actionable paths without repeating every generated
-  file in the output? Planning must settle dry-run, check and locked-mode behavior.
-
-### 3. Proposed Design & Impact
-
-- Check only actual devkit-owned native projection paths, using installation records and the sync plan.
-- Distinguish missing effective ignore coverage from files already in the Git index.
-- Return notices with the relevant paths and precise ignore or untracking instructions. Preserve the standard
-  notice and `--strict` behavior defined by ARCH-08-1-agent-output.
-- Keep the implementation in distribution so distribution-only installations receive the diagnostic.
-- Preserve the existing `.devkit/.gitignore` behavior.
-
-#### Non-Goals
-
-- No automatic root `.gitignore` edits, managed ignore block or new opt-out setting.
-- No Git index writes or automatic `git rm --cached` fixer.
-- No blanket ignore of `.agents/`, `.claude/` or `.codex/`.
-- No default commit-blocking rule or parallel governance implementation.
-
-### 4. Validation & Priority
-
-Implement this diagnostic before broader onboarding conveniences. Verify an ignored untracked projection,
-a projection without ignore coverage, an already tracked projection and a neighboring project-owned file.
-Include nested/negated ignore cases and a workspace without Git. Assert that root ignore files and the Git
-index remain unchanged, and that notice output stays bounded.
-
+Use the desired native file set for ignore coverage and the union of previous and desired native file sets for
+index tracking. Inspect actual Git rules, including repository-local exclusions. Batch queries rather than
+launching Git per file. These diagnostics extend the existing agent advisory format, with no interactive UI.
