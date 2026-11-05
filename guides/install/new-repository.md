@@ -114,3 +114,32 @@ history.
 After approved integration lands, synchronize the target environment from its landed dependency declarations and
 run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
 report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.
+
+## 6. Optional task recipes
+
+Keep an existing task interface. When the project needs a justfile, add only recipes for real commands.
+For a Node project that already defines `test`, `format` and `lint` scripts, this is one possible composition;
+verify those scripts and their prerequisites first:
+
+```just
+# Run the project's tests
+test:
+    npm test
+
+# Apply the project's formatter
+fix:
+    npm run format
+
+# Run full local verification
+verify:
+    npm run lint
+    npm test
+    uv run devkit rules check
+```
+
+`test`, `fix` and `verify` are examples, not required names. Omit recipes the project does not need. If it uses
+rules autofixes, add `uv run devkit rules fix` to its repair task explicitly. Run these examples from the Git
+root. The full local `verify` recipe includes rules for a manual run; commit gates already run `rules-check`,
+so select only suitable fast native checks there as shown in
+[Existing Repository, native verification](existing-repository.md#reuse-native-verification-commands).
+Selecting a recipe for a gate is explicit and independent of the presence of a justfile.

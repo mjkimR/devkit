@@ -85,6 +85,24 @@ Ask; do not choose for them:
   The commands run in order with `sh -c` from the Git top level. Call tools through `uv run` or a recipe runner,
   because Git hooks do not have `.venv/bin` on `PATH`.
 
+### Reuse native verification commands
+
+Use existing commands before adding a task runner or wrapper. For example, a Node repository with an existing
+`lint` script can configure the following after verifying that `npm run lint` works from the Git root and is
+fast enough for each commit:
+
+```toml
+[gates.settings.verify-commands]
+commands = ["npm run lint"]
+```
+
+Install its dependencies using the project's existing lockfile and package manager; ensure that command is on
+the hook's `PATH`. In a nested project, use its existing root command or specify the directory explicitly,
+for example `cd web && npm run lint`. A `package.json` alone does not prove a `lint` script exists.
+The gate runs native commands as written; no runtime adapter or Python wrapper is needed. Keep full test suites
+in the existing full verification/CI command. Do not add `devkit rules check` here: the enabled `rules-check`
+gate already checks the staged tree. Do not select `just verify` merely because a justfile exists.
+
 ## 4. Install
 
 In a monorepo, or when asked to install into a subdirectory, first follow
