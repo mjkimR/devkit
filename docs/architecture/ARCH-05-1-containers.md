@@ -98,8 +98,8 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
 - **Contents**: The developer harness: rules engine, delivery workflows, commit gates, task worktrees, tracked
   generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
   `harness` (auto-selected).
-- **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-dist` and `devkit-advisory` (all locked to the same
-  version); its `search` extra requires `devkit-dist[search]`; `mcp` requires the selected actual-version `devkit-mcp`.
+- **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-dist` and `devkit-advisory` (internal wheels pinned to their selected actual
+  versions); its `search` extra requires `devkit-dist[search]`; `mcp` requires the selected actual-version `devkit-mcp`.
 
 ### 2.3 `devkit-advisory` (`packages/devkit-advisory`)
 - **Distribution Wheel**: `devkit_advisory-<version>-py3-none-any.whl`
