@@ -2,7 +2,7 @@
 id: SPEC-cloud-research-handoff
 title: Cloud research request and result handoff
 summary: "Extend deep research with inspectable user-mediated cloud requests, readable report intake and durable partial-material resume without a provider runtime."
-status: in-progress
+status: completed
 created: 2026-11-05
 related_capabilities:
   - CAP-DLV-deep-research

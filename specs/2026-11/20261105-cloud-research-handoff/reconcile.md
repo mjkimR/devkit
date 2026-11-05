@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-cloud-research-handoff
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-deep-research.md
     resolution: modified
