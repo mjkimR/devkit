@@ -29,8 +29,8 @@ entrypoints:
 
 ## 3. Extensions
 
-- **3a. Existing command suffices**: The agent reuses it and proceeds to verification in step 4 without adding a wrapper.
-- **3b. Removing a public command is proposed**: The agent separates that compatibility decision from creation;
+- **3a.** Existing command suffices: The agent reuses it and proceeds to verification in step 4 without adding a wrapper.
+- **3b.** Removing a public command is proposed: The agent separates that compatibility decision from creation;
   this use case ends without removing the command.
 
 ## 4. Postconditions
