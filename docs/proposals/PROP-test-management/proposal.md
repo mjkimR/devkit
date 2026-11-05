@@ -2,7 +2,7 @@
 id: PROP-test-management
 title: Evidence-based test management playbook
 summary: "Evaluate a reusable test-management playbook for consumer repositories using findings from an unreviewed implementation draft. Establish evidence, scope and verification criteria before adopting runner, tiering or integration guidance."
-status: reviewing
+status: accepted
 created_at: 2026-11-05
 target_area: capabilities/delivery/
 priority: medium
