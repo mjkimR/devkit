@@ -1,11 +1,11 @@
 ---
 id: PROP-multi-runtime-project-harness
-title: Multi-Runtime Project Harness and Verification Adapters
-summary: Extends devkit verification gates, toolchains, and environment detection to seamlessly support Node, Go, Rust, Godot, and hybrid projects.
+title: Deferred Runtime Discovery and External Rule Integration
+summary: "Defers runtime discovery and external rule integration until pilot evidence shows a need beyond existing command gates and onboarding guidance."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: harness/
-priority: high                        # critical | high | medium | low
+priority: low                        # critical | high | medium | low
 size: L                               # S | M | L | XL
 planning_effort: high                 # low | medium | high
 dev_effort: high                      # low | medium | high
@@ -23,61 +23,40 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-multi-runtime-project-harness] Multi-Runtime Project Harness and Verification Adapters
+# [PROP-multi-runtime-project-harness] Deferred Runtime Discovery and External Rule Integration
 
-## 1. Background & Hypothesis
+## 1. Background & Disposition
 
-devkit was initially designed and implemented in Python, leveraging `uv` for dependency isolation and CLI execution. However, software projects adopting devkit span diverse runtime environments:
-- Game engines: Godot (GDScript, C#)
-- Web/Backend: Node.js/TypeScript, Go, Rust
-- Polyglot monorepos: Hybrid Python + TypeScript or Go + Rust services
+This draft is deferred. CAP-GATE-commit-gates already runs arbitrary project shell commands from the repository
+root, and the installation guide covers non-Python repositories. Native command execution does not require a
+RuntimeAdapter. The concrete onboarding examples are owned by PROP-justfile-standard-templates.
 
-Currently, when devkit is used in a non-Python repository, significant friction occurs:
-1. **Toolchain Discovery & Doctor**: devkit has no built-in knowledge of non-Python toolchains (e.g., verifying whether Node, pnpm, Go, Cargo, or Godot headless binary are installed).
-2. **Verification Gates**: The `verify-commands` pre-commit gate requires manual hardcoding of commands in `.devkit/config.toml`, without runtime-aware templates or environment health checks.
-3. **Custom Rule Plugins**: Rule extensions are limited to Python modules in `.devkit/rules`. Non-Python teams cannot write custom domain linters in TypeScript, Go, or shell scripts without wrapping them in Python harnesses.
+The pilot concerns do not yet justify built-in adapters for Python, Node, Go, Rust and Godot, composite runtime
+detection, or a new external-rule protocol. No implementation or toolchain installation is planned here.
 
-**Hypothesis**:
-devkit should define an extensible **Runtime Adapter** interface that detects project runtime(s) (Node, Go, Rust, Godot, Python, Generic), wires environment verification commands, and supports external JSON-based rule execution. This makes devkit a first-class companion for polyglot software engineering while keeping the core devkit CLI lightweight and consistent.
+## 2. Remaining Questions
 
-## 2. Technical Spike Questions
+- Do repeated pilot failures remain after explicit native commands, their working directories and prerequisites
+  are documented? Capture the repository, command, failure and why guidance cannot solve it.
+- Does a consumer need individual external linter findings inside devkit rule results, rather than a command's
+  pass/fail result in a commit gate? Capture the required finding fields and staged-file behavior.
 
-- **Q1 — Scope of Runtime Management**: Should devkit install non-Python language toolchains (e.g. download Node or Cargo)?
-  - *Decision*: **No**. Installing compilers and runtimes belongs to Host/OS package managers or project bootstrap scripts (e.g. `setup.sh`). devkit's role is detection, diagnostic reporting (`devkit doctor`), and orchestration.
-- **Q2 — Extensible Rule IPC Schema**: How should non-Python custom rules communicate with `devkit rules check`?
-  - *Approach*: Define a lightweight JSON-over-stdio protocol:
-    ```json
-    // Input to rule executable (stdin):
-    {"files": ["src/main.ts"], "workspace_root": "/path/to/repo"}
+Runtime discovery and external-rule integration are separate needs. Re-scope this draft to the evidenced need
+before Planning; do not accept the original combined framework by default.
 
-    // Output from rule executable (stdout):
-    [{"rule_id": "RULE-custom-ts", "file": "src/main.ts", "line": 12, "severity": "error", "message": "..."}]
-    ```
-- **Q3 — Hybrid/Multi-Runtime Repositories**: How to handle monorepos with multiple languages?
-  - *Approach*: Composite adapter pattern. `detect()` can identify multiple runtimes in separate subdirectories or combined (e.g. Rust backend + TypeScript frontend).
+## 3. Restart Conditions & Acceptance Checks
 
-## 3. Proposed Design & Impact
+Resume runtime discovery only when repeated concrete failures establish a benefit beyond setup examples.
+A future proposal must identify the supported stack and verify diagnostics for its actual missing prerequisites
+without guessing a test framework or installing toolchains.
 
-1. **Runtime Adapter Architecture**:
-   - `RuntimeAdapter` ABC:
-     - `detect(workspace: Path) -> bool`
-     - `name: str`
-     - `recommended_verify_commands() -> list[str]`
-     - `check_toolchain() -> list[Diagnostic]`
-   - Built-in adapters: `PythonAdapter` (`uv`, `ruff`, `pytest`), `NodeAdapter` (`npm`/`pnpm`/`yarn`, `eslint`, `vitest`), `RustAdapter` (`cargo clippy`, `cargo test`), `GoAdapter` (`go vet`, `go test`), `GodotAdapter` (`godot`, `gdlint`, `gdformat`).
-2. **External Rule Plugin Provider**:
-   - Allows configuring command-line linters in `.devkit/config.toml`:
-     ```toml
-     [[rules.external]]
-     id = "RULE-eslint"
-     command = ["npx", "eslint", "--format=json"]
-     extensions = [".ts", ".tsx", ".js"]
-     adapter = "eslint-json"
-     ```
-3. **Enhanced Diagnostics**:
-   - `devkit doctor` reports toolchain status across all detected project runtimes.
+Resume external-rule integration only when a consumer requires structured findings that the existing gate
+cannot provide. A future proposal must define and test its output contract, failure and timeout behavior,
+and interaction with staged-file evaluation.
 
-## 4. Lifecycle & Retirement Criteria
+## 4. Excluded Scope
 
-- Acceptance: SDD proposal review and alignment with workbench multi-repo ecosystem.
-- Success Metrics: Seamless execution of `devkit rules check` and `just verify` across Godot, Node, and Go projects without Python-specific boilerplate.
+- No runtime adapter ABC, built-in language adapter suite or automatic gate configuration.
+- No toolchain installer or multi-runtime doctor expansion.
+- No external JSON rule provider or linter-format converter without the finding-level use case above.
+- No requirement for PROP-justfile-standard-templates to wait for this draft.

@@ -1,7 +1,7 @@
 ---
 id: PROP-gitignore-drift-detection
-title: Automatic .gitignore Configuration and Drift Detection for Projected Assets
-summary: Ensures projected agent assets (.agents/, .claude/, .codex/) are properly excluded from Git tracking during devkit sync.
+title: Git Tracking Diagnostics for Projected Assets
+summary: "Detects missing ignore coverage and tracked devkit projections during sync without modifying project ignore rules or the Git index."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: governance/
@@ -12,9 +12,6 @@ dev_effort: medium                    # low | medium | high
 boundaries:
   owns:
     - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit/src/devkit_agt/features/rules/
-    - packages/devkit-docs/src/devkit_docs/features/governance/
-    - docs/capabilities/governance/
     - docs/capabilities/distribution/
     - docs/usecases/
   excludes:
@@ -23,50 +20,46 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-gitignore-drift-detection] Automatic .gitignore Configuration and Drift Detection for Projected Assets
+# [PROP-gitignore-drift-detection] Git Tracking Diagnostics for Projected Assets
 
 ## 1. Background & Hypothesis
 
-`devkit sync` projects agent configurations, subagent instructions, skills, and runtime manifests into `.agents/`, `.claude/`, `.codex/`, `.devkit/managed/`, and `.devkit/transient/`. These projected assets total dozens to hundreds of generated files.
+Pilot adoption exposed generated native agent files in Git status and accidental tracking. Native projection
+roots also contain project-owned settings and instructions. CAP-DIST-workspace-ownership leaves root ignore
+rules and the Git index under project ownership; sync already seeds ignores for managed and transient content
+inside `.devkit/.gitignore`.
 
-When establishing devkit in brownfield repositories or updating agent configurations, repositories frequently lack exclusion patterns for `.agents/`, `.claude/`, and `.codex/` in the root `.gitignore`. Consequently:
-1. Git index and status are polluted with hundreds of generated markdown and TOML files.
-2. Developers unintentionally stage and commit generated assets, resulting in merge conflicts and noisy commit histories.
-3. Untracking these files after the fact requires error-prone manual `git rm --cached` operations.
-
-**Hypothesis**:
-`devkit sync` should inspect the repository's `.gitignore` and automatically manage a delimited block (e.g., `# BEGIN devkit managed ignore` ... `# END devkit managed ignore`) ensuring all projected agent asset roots are ignored by Git. Additionally, `devkit rules check` and pre-commit gates should detect if projected paths are currently tracked by Git (`git ls-files`), raising an immediate actionable violation with an automated fixer.
+The retained scope is a read-only diagnostic during sync. It should identify the actual devkit-deployed native
+paths that lack effective ignore coverage or are already tracked, then give precise remediation.
 
 ## 2. Technical Spike Questions
 
-- **Q1 — Managed Block Format**: How should `.gitignore` modifications be scoped to avoid overwriting user patterns?
-  - *Approach*: Use explicit boundary comments:
-    ```gitignore
-    # BEGIN devkit managed ignore
-    .agents/
-    .claude/
-    .codex/
-    .devkit/transient/
-    # END devkit managed ignore
-    ```
-  - `devkit sync` treats only lines between these sentinels as managed. User-defined patterns before or after remain untouched.
-- **Q2 — Detection of Tracked Generated Assets**: How should Git tracking drift be detected?
-  - *Approach*: A new hygiene/linter rule RULE-git-projected-untracked executes `git ls-files -- .agents .claude .codex .devkit/transient`. Any matches produce an error violation with remediation instructions (`git rm -r --cached <paths>`).
-- **Q3 — Configuration & Opt-out**: What if a repository explicitly wishes to version-control agent projections?
-  - *Approach*: Provide `[git.ignore] auto_manage = false` in `.devkit/config.toml` to disable automatic `.gitignore` synchronization.
+- Which receipt and planned projection records identify the deployed paths without including neighboring
+  project-owned files, including removed or changed projections?
+- How should Git ignore checks distinguish missing coverage from already tracked files, including negations,
+  nested ignore files and a workspace without Git?
+- How can sync return bounded notices with stable codes and actionable paths without repeating every generated
+  file in the output? Planning must settle dry-run, check and locked-mode behavior.
 
 ## 3. Proposed Design & Impact
 
-1. **`devkit sync` Enhancement**:
-   - During projection deployment, compute the list of target projection roots (`.agents/`, `.claude/`, `.codex/`, `.devkit/transient/`).
-   - Check the root `.gitignore`. If the managed block is absent or drifting, create/update the block idempotently.
-2. **Hygiene Rule (RULE-git-projected-untracked)**:
-   - Runs during `devkit rules check` and `--staged` pre-commit gate.
-   - Ensures no projected or transient files are tracked in the Git index.
-3. **CLI Diagnostic / Fixer**:
-   - `devkit rules fix` applies `git rm -r --cached` to staged/tracked projected assets automatically.
+- Check only actual devkit-owned native projection paths, using installation records and the sync plan.
+- Distinguish missing effective ignore coverage from files already in the Git index.
+- Return notices with the relevant paths and precise ignore or untracking instructions. Preserve the standard
+  notice and `--strict` behavior defined by ARCH-08-1-agent-output.
+- Keep the implementation in distribution so distribution-only installations receive the diagnostic.
+- Preserve the existing `.devkit/.gitignore` behavior.
 
-## 4. Lifecycle & Retirement Criteria
+### Non-Goals
 
-- Acceptance: `devkit spec proposal accept gitignore-drift-detection --by user` transitions this proposal to planning upon consensus.
-- Validation: End-to-end integration tests verifying that `devkit sync` creates/updates `.gitignore` cleanly without breaking existing user ignore rules.
+- No automatic root `.gitignore` edits, managed ignore block or new opt-out setting.
+- No Git index writes or automatic `git rm --cached` fixer.
+- No blanket ignore of `.agents/`, `.claude/` or `.codex/`.
+- No default commit-blocking rule or parallel governance implementation.
+
+## 4. Validation & Priority
+
+Implement this diagnostic before broader onboarding conveniences. Verify an ignored untracked projection,
+a projection without ignore coverage, an already tracked projection and a neighboring project-owned file.
+Include nested/negated ignore cases and a workspace without Git. Assert that root ignore files and the Git
+index remain unchanged, and that notice output stays bounded.

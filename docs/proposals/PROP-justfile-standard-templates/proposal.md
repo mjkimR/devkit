@@ -1,19 +1,23 @@
 ---
 id: PROP-justfile-standard-templates
-title: Standard Justfile Scaffolding and Verification Recipes
-summary: Provides standard justfile templates and verification recipes (test, fix, verify) for consumer repositories adopting devkit.
+title: Minimal Command Setup Guidance
+summary: "Improves onboarding examples and proposes opt-in catalog instructions for creating only the justfile, CLI and MCP entry points a project needs."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: harness/
 priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL
+size: S                               # S | M | L | XL
 planning_effort: medium               # low | medium | high
 dev_effort: medium                    # low | medium | high
 boundaries:
   owns:
-    - packages/devkit-starter/src/devkit_starter/
-    - packages/devkit-cli/src/devkit_cli/
+    - guides/install/
+    - packages/devkit-catalog/src/devkit_catalog/
+    - packages/devkit-catalog/tests/
+    - packages/devkit-catalog/pyproject.toml
+    - packages/devkit-catalog/README.md
     - docs/capabilities/harness/
+    - docs/capabilities/distribution/
     - docs/usecases/
   excludes:
     - docs/decisions/
@@ -21,58 +25,66 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-justfile-standard-templates] Standard Justfile Scaffolding and Verification Recipes
+# [PROP-justfile-standard-templates] Minimal Command Setup Guidance
 
 ## 1. Background & Hypothesis
 
-devkit provides rigorous rule validation, pre-commit gates, and spec workflows. However, human developers and AI coding agents interact with repositories primarily through task runners like `just`.
+Pilot adoption found friction choosing verification entry points. The existing installation guide already
+inspects justfile, Makefile, package scripts and CI and connects selected fast commands to `verify-commands`.
+CAP-GATE-commit-gates already runs project commands independently of their language.
 
-In consumer repositories adopting devkit, there is significant friction when setting up the command interface:
-1. `justfile` recipes are authored inconsistently across repositories (`just check`, `just test`, `just lint`, `just all`).
-2. Agents struggle when guessing the verification command or rely on slow trial-and-error discovery.
-3. Pre-commit gates (`[gates.settings.verify-commands]`) require a fast, unified verification recipe, but bootstrapping this recipe is currently an undocumented manual chore.
+The retained onboarding scope is concrete examples that reuse those commands and optionally show a small
+justfile for a project without a command interface. Non-Python setup examples from
+PROP-multi-runtime-project-harness belong here.
 
-**Hypothesis**:
-devkit should offer a standard `devkit scaffold justfile` command (and brownfield adoption playbook support) that generates a clean, concise, standard English `justfile` containing the 3 canonical recipes:
-- `test`: Run project unit and integration tests.
-- `fix`: Run code formatters and `devkit rules fix`.
-- `verify`: Run code format check, linting, tests, and `devkit rules check`.
+A related design candidate is an opt-in instruction bundle in `devkit-catalog` for creating or extending
+justfile, CLI and MCP interfaces. Its primary purpose is to prevent unnecessary commands and registrations
+at creation time. The existing `maintenance` review-refactor playbook handles cleanup of existing interfaces.
 
 ## 2. Technical Spike Questions
 
-- **Q1 — Recipe Customization vs Standardization**: How to support diverse project tech stacks without bloated recipes?
-  - *Approach*: Scaffold produces clean, unbloated boilerplate with detected commands based on project files (e.g. `uv run pytest`, `cargo test`, `npm test`, or Godot runner) and appends `devkit rules check`.
-- **Q2 — Safe Non-Destructive Scaffolding**: How to handle existing justfiles?
-  - *Approach*: If `justfile` already exists, `devkit scaffold justfile` will not overwrite. It can output a recommended diff, append missing recipes, or write to a target file like `justfile.template`.
-- **Q3 — Language of Comments**:
-  - *Approach*: Follow workbench/devkit standard: English for all code and command declarations. Comments are concise and imperative.
+- Which pilot repository and native verification command provide the first representative onboarding example?
+- What is the smallest instruction set that controls new entry points without duplicating `cli-tool`'s Python
+  implementation rules, `harness` consumption guidance or the review-refactor playbook?
+- Should the catalog candidate use one conditional instruction or separate justfile, CLI and MCP instructions?
+  Select a bundle name and asset layout in Planning; do not add an always-loaded command inventory.
 
 ## 3. Proposed Design & Impact
 
-1. **CLI Scaffolding Command**:
-   - `devkit scaffold justfile [--runtime <python|node|rust|go|godot>]`
-   - Automatically detects runtime if flag omitted.
-2. **Canonical Recipe Schema**:
-   ```just
-   # Run all automated tests
-   test:
-       {{ test_command }}
+### Retained onboarding scope
 
-   # Format code and apply deterministic rule repairs
-   fix:
-       {{ format_command }}
-       uv run devkit rules fix
+- Reuse existing repository commands and document their working directory and prerequisites.
+- Provide an optional `test`, `fix`, `verify` example only where a project needs a new task interface.
+  These names are examples, not a required recipe schema.
+- Keep per-commit verification fast; leave slow suites in the project's full verification path.
+- Avoid repeating checks already run by existing hooks or the built-in `rules-check` gate.
+- Explain non-Python onboarding using native project commands through the existing gate.
 
-   # Run complete verification (lint, format check, tests, rules)
-   verify:
-       {{ lint_command }}
-       @just test
-       uv run devkit rules check
-   ```
-3. **Integration with Pre-Commit Gates**:
-   - `[gates.settings.verify-commands]` defaults to `["just verify"]` when a justfile is present.
+### Catalog instruction candidate
 
-## 4. Lifecycle & Retirement Criteria
+- Start with the concrete operations and callers a project needs, then add only entry points serving them.
+- Prefer an existing command over another wrapper or alias with the same purpose. Add a separate entry point
+  when it has a distinct caller, execution constraint or useful task-level composition.
+- Register MCP tools only for operations that need MCP access; do not mirror every CLI command automatically.
+- Keep common help and setup guidance short; make specialized details discoverable when the task needs them.
+- Load the instruction when creating, configuring or extending these interfaces, not on every task.
+- Treat removal of an existing public command as a compatibility decision; use review-refactor for cleanup.
 
-- Acceptance: Consensus through SDD proposal review.
-- Testing: Golden template generation tests for each supported tech stack.
+Planning settles whether the catalog candidate warrants a bundle and defines its final scope.
+
+### Non-Goals
+
+- No scaffold CLI, runtime detector, adapter framework or justfile merge engine.
+- No mandatory task runner or fixed recipe names.
+- No automatic `just verify` gate selection based on the presence of a justfile.
+- No automatic command deletion, MCP filtering engine or usage telemetry.
+
+## 4. Validation
+
+Walk through a repository with existing commands and one without a task interface. Confirm that the selected
+commands exist, execute from the documented directory and do not duplicate hook checks. Verify a representative
+non-Python example without adding a runtime adapter.
+
+For the catalog candidate, review creation scenarios for justfile, CLI and MCP: each exposed operation must
+have an identified use, existing commands must be reused where suitable, and instructions must not prescribe
+unsupported framework-specific behavior. Run catalog manifest checks if that candidate is retained.
