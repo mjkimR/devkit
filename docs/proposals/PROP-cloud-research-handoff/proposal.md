@@ -2,7 +2,7 @@
 id: PROP-cloud-research-handoff
 title: Cloud research request and result handoff
 summary: "Extend deep research with user-mediated cloud research requests, resumable result intake and evidence-aware synthesis without adding a research runtime."
-status: reviewing
+status: accepted
 created_at: 2026-11-05
 target_area: docs/capabilities/delivery/
 priority: medium
