@@ -2,7 +2,7 @@
 id: PROP-ux-design-exploration
 title: Add an explicitly invoked UI/UX improvement skill
 summary: "Add an optional skill-local team that improves interface design and user flows through proportionate diagnosis, reference discovery, design, implementation and verification within the user's requested scope."
-status: draft
+status: reviewing
 created_at: 2026-11-05
 target_area: capabilities/delivery/
 priority: medium
@@ -28,6 +28,7 @@ boundaries:
 task_kind: feature
 planning_effort: medium
 dev_effort: medium
+workflow: sdd-proposal
 ---
 
 # [PROP-ux-design-exploration] Add an explicitly invoked UI/UX improvement skill
