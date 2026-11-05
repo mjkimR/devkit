@@ -2,7 +2,7 @@
 id: PROP-design-solution-exploration
 title: Add an explicitly invoked general design ideation skill
 summary: "Add a skill-local team that reframes general design problems, explores materially different solution mechanisms and returns useful directions with tradeoffs without a mandatory validation program."
-status: draft
+status: reviewing
 created_at: 2026-11-05
 target_area: capabilities/delivery/
 priority: medium
@@ -27,6 +27,7 @@ boundaries:
 task_kind: feature
 planning_effort: medium
 dev_effort: medium
+workflow: sdd-proposal
 ---
 
 # [PROP-design-solution-exploration] Add an explicitly invoked general design ideation skill
