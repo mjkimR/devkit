@@ -2,29 +2,25 @@
 id: PLAN-test-management
 spec: SPEC-test-management
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-test-management` Evidence-based test management playbook
+# Technical Plan: test management
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
-- Target Docs Blueprint: `PROP-test-management-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+None of the architecture or accepted policy invariants change. Preserve `ARCH-05-2-components`,
+`ADR-post-merge-verification`, `CAP-DLV-performance-pass` and `CAP-DLV-maintenance-history`.
 
-### Planned Boundaries:
-- `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/`
-- `packages/devkit-catalog/tests/integration/bundles/test_bundles.py`
-- `packages/devkit-catalog/README.md`
-- `docs/capabilities/delivery/`
-- `docs/usecases/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit/src/`
-- `.devkit/config.toml`
-- `.github/workflows/`
-- `justfile`
-- `scripts/`
+Implement `SPEC-test-management` as content in the maintenance catalog bundle: one router and two conditional
+references, manifest registration and testing preset. Existing selection/deployment/retrieval APIs suffice.
+Update existing integration tests and catalog README. No runtime code, new package/layer/test tier or dependency
+edge is introduced. Consumer changes remain separately authorized work.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 6. Verification & Test Plan
+
+Extend actual sync/search/retrieval integration tests for all/testing, existing presets and unselected consumers.
+Check reference resolution, self-containment and byte budgets. Record expected/observed walkthrough actions for
+prerequisite ordering, unattended decisions, the three repositories, a non-pytest example and inconclusive tuning.
+Run `just test-affected --base 297f727d`, `just lint-check catalog`, `just check catalog` and rules. Existing
+Planning evidence is context only; no application-suite or performance claim is made.
