@@ -3,7 +3,7 @@ id: PROP-selective-package-releases-target
 title: Target Living Spec changes for selective package releases
 summary: "Proposed release-version, inventory and installation contract targets for selective package releases."
 status: draft
-proposal: PROP-selective-package-releases
+proposal: SPEC-selective-package-releases
 created_at: 2026-11-05
 targets:
   - file: docs/architecture/ARCH-07-deployment.md
@@ -15,7 +15,7 @@ targets:
 # Target Living Spec changes for selective package releases
 
 These are proposed Development targets, not current contracts. The proposal and
-`PADR-selective-package-versions` hold the direction pending acceptance.
+`ADR-selective-package-versions` hold the direction pending acceptance.
 
 | Document | Planned change | Verification |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ These are proposed Development targets, not current contracts. The proposal and
 | `CAP-DIST-in-repo-bundles` | Remove same-version rationale while retaining one top-level Git devkit requirement and existing workspace/path loading | Git consumer install and documentation review |
 | `ADR-package-ownership-and-release-version` | Add partial supersession for release/version clauses and same-version dependency qualifiers, preserving all other decisions | ADR review against promoted decision and architecture |
 
-Promote `PADR-selective-package-versions` only through the normal handoff. Keep the old ADR accepted because it
+Promote `ADR-selective-package-versions` only through the normal handoff. Keep the old ADR accepted because it
 continues to own unrelated decisions. No new capability, document kind, use case, feature edge or UX screen is needed.
 
 Keep README, distribution/advisory references and installation guides in step. Review every concrete install command

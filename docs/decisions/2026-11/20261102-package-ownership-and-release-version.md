@@ -18,6 +18,8 @@ aliases:
 
 # [ADR-package-ownership-and-release-version] Package ownership, namespaces and the single release version
 
+Superseded in part by `ADR-selective-package-versions`: For independently consumed workspace wheels, we advance changed distributions and exact-pin dependents under one release number, to reduce version churn, accepting mixed versions and release inventories.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @minjae

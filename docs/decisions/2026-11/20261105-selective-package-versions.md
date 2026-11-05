@@ -1,17 +1,17 @@
 ---
-id: PADR-selective-package-versions
+id: ADR-selective-package-versions
 title: Selective package versions and immutable release inventories
 summary: "For independently consumed workspace wheels, we advance changed distributions and exact-pin dependents under one release number, to reduce version churn, accepting mixed versions and release inventories."
-proposal: PROP-selective-package-releases
+proposal: SPEC-selective-package-releases
 supersedes:
   - ADR-package-ownership-and-release-version
-status: draft
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-selective-package-versions] Selective package versions and immutable release inventories
+# [ADR-selective-package-versions] Selective package versions and immutable release inventories
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-05
 
 ## 1. Context & Problem Statement
