@@ -2,7 +2,7 @@
 id: SPEC-design-solution-exploration
 title: Add an explicitly invoked general design ideation skill
 summary: "Add an opt-in general solution design skill with optional local roles, distinct mechanisms and conversation-first results."
-status: planned
+status: in-progress
 created: 2026-11-05
 related_capabilities: []
 related_usecases: []
