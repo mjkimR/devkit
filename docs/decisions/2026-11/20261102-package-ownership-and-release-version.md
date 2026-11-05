@@ -18,7 +18,9 @@ aliases:
 
 # [ADR-package-ownership-and-release-version] Package ownership, namespaces and the single release version
 
-Superseded in part by `ADR-selective-package-versions`: For independently consumed workspace wheels, we advance changed distributions and exact-pin dependents under one release number, to reduce version churn, accepting mixed versions and release inventories.
+Superseded in part by `ADR-selective-package-versions` for the Single release version clauses and the same-version
+dependency qualifiers in the foundation, MCP runtime and harness dependency clauses. Package ownership, dependency
+direction, imports, configuration, bundle assignment and CLI version-source decisions remain in force.
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
