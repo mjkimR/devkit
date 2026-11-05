@@ -17,7 +17,9 @@ new capability after reconciliation. The implementation creates no product UI.
 Add `devkit_catalog/uiux_improve/bundle/` with one user-invoked skill and core preset. Register it through the
 existing devkit.bundles entrypoint. Keep the initializer empty and the catalog version/dependencies unchanged.
 The source contains the entry, four local roles and two conditional references. No sibling assets are imported.
-The repository's currently selected bundle set remains unchanged.
+The repository's currently selected bundle set remains unchanged. The Host authorized the exact
+`.devkit/architecture.toml` catalog data_roots addition required by the existing architecture rule; no dependency
+edge, policy or declaration schema changes.
 
 The entry owns intake, authority, implementation/verification continuity and completion. The orchestration
 reference owns payload construction, path resolution, independent first passes, fallback and return validation.
