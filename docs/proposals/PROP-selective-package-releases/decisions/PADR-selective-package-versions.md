@@ -45,8 +45,9 @@ Choose selective versions with exact pins for version stability without expandin
   changes take that number. Bundles advance only for their own source changes. → `ARCH-07-deployment` section 1.1
   (MUST, proposed restatement).
 - A normalized wheel comparison ignores only the owning version fields and derived container records. Dependency
-  metadata remains significant, and exact-pin dependents advance to a fixed point. → `ARCH-07-deployment` section
-  1.1 (MUST, proposed restatement).
+  metadata remains significant after recorded generated preparation edits are logically unwound; bundle
+  enumeration retains its existing byproduct exclusions. Exact-pin dependents advance to a fixed point.
+  → `ARCH-07-deployment` section 1.1 (MUST, proposed restatement).
 - A complete release inventory records actual package versions and original artifact URLs and digests. Unchanged
   published wheels retain their original bytes and location. → `ARCH-07-deployment` section 1.1 (MUST, proposed
   restatement).

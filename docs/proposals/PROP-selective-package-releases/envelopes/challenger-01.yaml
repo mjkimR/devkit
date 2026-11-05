@@ -1,0 +1,28 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-05T04:08:29.385495Z'
+status: completed
+summary: round 1; exact-pin inventories meet the goal, but pending generated pins must be unwound before reseeding and bundle hashes must exclude editing byproducts.
+findings:
+- issue: Repreparation can retain generated dependency pins as authored change seeds after the originating source change is reverted.
+  evidence: proposal.md:95-109,165-167,207-215; packages/devkit/pyproject.toml:11; packages/devkit-mcp/pyproject.toml:9
+  failure_condition: Prepare a dist-only change for 0.1.7 against 0.1.6, revert the dist source change, then prepare again; retained generated requirements leave unnecessary dependent releases or inconsistent pins.
+  suggested_action: Record exact before/after generated edits in the pending plan, logically unwind only still-matching generated mutations before reseeding against the completed baseline, preserve authored metadata, and add a prepare-revert-prepare fixture.
+  resolution: open
+  severity: P1
+- issue: Bundle source hashing includes editing byproducts that the existing bundle contract forbids hashing.
+  evidence: proposal.md:100-102,207-209; docs/capabilities/distribution/CAP-DIST-manifest-spec.md:167-168; packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/manifest.py:222-237
+  failure_condition: Rule tests, imports or Finder create __pycache__, pyc or DS_Store files; bundle hash/version changes for non-content.
+  suggested_action: Reuse manifest content enumeration and its editing-byproduct exclusions, normalize only generated top-level version, and add a byproduct fixture.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated read-only role; caller before/after snapshot 1fd99f143221c7049595e88fdbfa1cc64ff8d460 is unchanged.
+unverified_areas:
+- Historical artifacts, actual builds, external installs and publication retry remain Development/bootstrap checks.
+checks: {}
+diff_scope:
+  base: 948992e6344599aaddaf81b759cb522c884f6d63
+  head: 08aa5e5ea1869d698e69f5740110a6c888abb36d

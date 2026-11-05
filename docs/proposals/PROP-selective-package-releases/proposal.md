@@ -89,23 +89,30 @@ build all workspace wheels; the optimization is version and publication stabilit
 1. Load the previous completed release inventory and verify its schema, release identity and digest. It supplies
    the latest released package identities and normalized payload fingerprints. Refuse an absent or inconsistent
    baseline except during the explicit bootstrap described below.
-2. Build comparison wheels from the candidate checkout using one recorded release build recipe. Pin the backend
-   and interpreter/tool versions used for comparisons. A recipe change is explicit input; unexplained build drift
+2. When a pending plan already exists for this release and baseline, read its exact before/after generated
+   package, bundle and internal requirement edits. Before seeding changes, logically unwind only mutations whose
+   generated after-value still matches the candidate. Preserve unrelated authored edits and removed requirements;
+   never blindly restore worktree files. Reject an ambiguous or mismatched plan/baseline before writing. This
+   logical authored input prevents a reverted source change from retaining its generated dependent pins as seeds.
+3. Build comparison wheels from that logical candidate input using one recorded release build recipe. Pin the
+   backend and interpreter/tool versions used for comparisons. A recipe change is explicit input; unexplained build drift
    is not accepted as an unchanged artifact.
-3. Canonicalize each wheel to sorted member paths plus content hashes. Ignore ZIP timestamps, ordering and
+4. Canonicalize each wheel to sorted member paths plus content hashes. Ignore ZIP timestamps, ordering and
    compression, and omit the derived `RECORD`. Normalize only the owning distribution's dist-info identity and
    `METADATA` Version, and the top-level version fields in its registered bundle manifests. Keep requirements,
    entry points, Python code, resource files, permissions affecting execution, and other metadata significant.
    No global replacement of version-looking strings is permitted. Reject an unsupported normalization shape.
-4. Compare each bundle's source tree separately, excluding only that manifest's generated top-level version.
-   Included support files must be inside its declared resource boundary; changed source content advances its
-   bundle version. Bundle additions and removals change the owning package fingerprint.
-5. Seed changed packages from the normalized content comparison. Compute a fixed point over every versioned
+5. Fingerprint each bundle through the existing manifest content enumeration, including required support files
+   within its declared resource boundary. Apply its `CAP-DIST-manifest-spec` editing-byproduct exclusions:
+   `.DS_Store`, `__pycache__/` and `*.pyc` are never hashed. Within that content normalize only the manifest's
+   generated top-level version. Bundle additions and removals change the owning package fingerprint.
+6. Seed changed packages from the normalized content comparison. Compute a fixed point over every versioned
    internal requirement in runtime dependencies and optional extras, preserving markers and extras. When the
    required package's version changes, update the requirement to its actual new version and include the dependent.
    Preserve existing unversioned pass-through requirements. Development-group changes alone do not propagate.
-6. Assign the release number to the final changed set and update each affected exact pin to its dependency's
-   selected version. Build the final changed wheels and verify their normalized content against the prepared
+7. Assign the release number to the final changed set and update each affected exact pin to its dependency's
+   selected version, including restoring no-longer-needed generated advances to their baseline values. Build the
+   final changed wheels and verify their normalized content against the prepared
    plan. Resolve `uv.lock`, run normal sync and commit the resulting metadata and receipt together.
 
 An internal requirement policy change, including a range edit, is significant metadata. The released set is the
@@ -117,7 +124,8 @@ requirements participate even when their marker or extra is inactive on the rele
 Keep tracked release preparation data under `scripts/releases/`, within the existing release-tooling boundary.
 The pending plan is deterministic JSON, keyed by normalized distribution name. It contains a schema version,
 release tag, baseline inventory identity and SHA256, build recipe, package path and selected version, bundle
-versions, normalized fingerprints, changed/reused disposition, dependency closure and original artifact provenance.
+versions, normalized fingerprints, changed/reused disposition, dependency closure, exact before/after generated
+metadata edits and original artifact provenance.
 It does not embed its own eventual Git commit ID.
 
 The release build validates the committed plan against the tagged tree and emits a completed
@@ -211,11 +219,14 @@ Candidate Development acceptance checks:
   internal requirement resolves to its inventory package version, preserving markers/extras and unversioned
   pass-throughs. Clean wheel consumers and Git consumers install outside the workspace.
 - **AC3:** Given unchanged inputs, repeated preparation produces the same plan and versions. Given changed input
-  after preparation, recomputation uses the completed baseline. Published reused identities retain original URLs
-  and bytes; missing/mismatched artifacts and mismatched retry assets refuse rather than overwrite.
+  after preparation, recomputation uses the completed baseline and unwinds only recorded, still-matching generated
+  mutations. A prepare → revert originating source change → prepare fixture leaves no unnecessary package or
+  bundle advances and every requirement matches its selected package version. Published reused identities retain
+  original URLs and bytes; missing/mismatched artifacts and mismatched retry assets refuse rather than overwrite.
 - **AC4:** Given packaged README/metadata/resource changes, additions/removals, bundle-only changes or a changed
   build recipe, detection includes the affected distributions. Only owned generated version fields and derived
-  wheel container fields are ignored. Changed code containing a version-looking literal remains significant.
+  wheel container fields are ignored. Creating or changing bundle editing byproducts leaves fingerprints and
+  selected versions unchanged. Changed code containing a version-looking literal remains significant.
 - **AC5:** Given the complete inventory, generated wheel commands cover every existing installation variant with
   per-package URLs. Advisory-only installation preserves its standard-library-only dependency and import checks;
   dist-only installation still passes without agt. The executable reports the dist package version.
