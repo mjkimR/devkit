@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T04:33:58.989574Z'
+status: completed
+summary: Swept Development tools, asset instructions and review flow; recorded FB-unselected-source-bundle-context; no duplicates or uncovered session areas.
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
