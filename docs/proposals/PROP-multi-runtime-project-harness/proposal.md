@@ -29,7 +29,7 @@ workflow: sdd-proposal
 
 This draft is deferred. CAP-GATE-commit-gates already runs arbitrary project shell commands from the repository
 root, and the installation guide covers non-Python repositories. Native command execution does not require a
-RuntimeAdapter. The concrete onboarding examples are owned by PROP-justfile-standard-templates.
+RuntimeAdapter. The concrete onboarding examples are owned by SPEC-justfile-standard-templates.
 
 The pilot concerns do not yet justify built-in adapters for Python, Node, Go, Rust and Godot, composite runtime
 detection, or a new external-rule protocol. No implementation or toolchain installation is planned here.
@@ -59,4 +59,4 @@ and interaction with staged-file evaluation.
 - No runtime adapter ABC, built-in language adapter suite or automatic gate configuration.
 - No toolchain installer or multi-runtime doctor expansion.
 - No external JSON rule provider or linter-format converter without the finding-level use case above.
-- No requirement for PROP-justfile-standard-templates to wait for this draft.
+- No requirement for SPEC-justfile-standard-templates to wait for this draft.

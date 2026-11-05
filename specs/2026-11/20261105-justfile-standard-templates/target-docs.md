@@ -2,7 +2,7 @@
 id: PROP-justfile-standard-templates-target
 title: Target Living Spec Structure for PROP-justfile-standard-templates
 status: draft
-proposal: PROP-justfile-standard-templates
+proposal: SPEC-justfile-standard-templates
 created_at: 2026-11-04
 targets: []
 ---

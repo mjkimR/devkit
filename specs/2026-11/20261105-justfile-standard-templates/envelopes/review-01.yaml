@@ -1,0 +1,17 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T23:28:35.209308Z'
+status: completed
+summary: 'Independent medium review PASS: AC-01 through AC-03, conditional opt-in packaging, creation-time guidance, native examples and scope verified.'
+findings: []
+assumptions:
+- Codex emulated read-only reviewer; snapshot unchanged
+checks:
+  tests: PASS full fallback 6589 pass 15 skipped; exact failure fixed and all 16 affected tests pass
+  lint: PASS catalog lint/types and rules CI/hygiene
+  build: PASS wheel resources and entry point
+diff_scope:
+  base: 22141f429f8d8c235ccae85a0be170d2bd3313ec
+  head: 0cfc3e5ca8cf5b86fe89d7b1bc9912130a873ce9

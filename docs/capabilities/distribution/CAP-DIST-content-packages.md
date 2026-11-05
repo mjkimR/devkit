@@ -230,3 +230,10 @@ performance passes over user-selected operations and the application of agreed b
 sections as reference text without running it
 (`ADR-performance-pass`). No playbook requires running another;
 none adds a history backend.
+
+## Command design catalog bundle
+
+The content-only `command-design` bundle MUST remain opt-in. Its default `core` preset deploys one conditional
+instruction for creating or extending justfile, CLI and MCP entry points, with no always-loaded guidance or
+native skill projection. CAP-HARN-command-design owns the instruction's behavior; catalog manifest and deployment
+tests verify its packaging. It requires only devkit-dist to distribute and adds no runtime dependency.

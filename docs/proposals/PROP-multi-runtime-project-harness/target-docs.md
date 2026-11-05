@@ -12,7 +12,7 @@ targets: []
 ## 1. Deferred Blueprint
 
 No Living Spec, architecture or runtime change is scheduled for this draft. CAP-GATE-commit-gates remains the
-native command execution boundary. PROP-justfile-standard-templates owns the retained onboarding examples.
+native command execution boundary. SPEC-justfile-standard-templates owns the retained onboarding examples.
 
 ## 2. Conditions for a New Blueprint
 

@@ -10,6 +10,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
+| `command-design` | `core` | Creation-time guidance for necessary justfile, CLI and MCP entry points; one conditional instruction, no always-loaded pointer |
 | `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for the feature layout, layer imports, command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
 
 ```bash
@@ -56,6 +57,14 @@ three moved roles on upgrade; sync removes their unmodified projections and anno
   refused until then.
 
 See `CAP-DLV-deep-research`.
+
+## Command design
+
+`uv run devkit add command-design` selects one instruction for creating, configuring or extending justfile,
+CLI and MCP interfaces. It asks for the operation and caller before adding an entry point, reuses suitable
+commands and keeps detailed help conditional. It adds no runtime generator, automatic cleanup or guidance
+pointer. `cli-tool` separately covers Python CLI implementation; `maintenance:refactoring` covers requested
+cleanup of existing interfaces. See `CAP-HARN-command-design`.
 
 ## Adding a bundle
 

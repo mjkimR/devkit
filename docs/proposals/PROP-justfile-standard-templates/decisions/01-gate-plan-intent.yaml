@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Implement onboarding examples and opt-in catalog guidance for creating necessary
-  command entry points.
-by: user
-at: '2026-11-04T23:11:03.879652Z'

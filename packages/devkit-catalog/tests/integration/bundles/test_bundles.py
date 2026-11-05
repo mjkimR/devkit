@@ -305,3 +305,29 @@ def test_cli_tool_guide_preset_has_no_rules() -> None:
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["cli-tool"]))
     assert bundle.default_preset == "all"
     assert tuple(bundle.presets["guide"]) == ("cli-tool-structure",)
+
+
+def test_command_design_is_conditional_instruction_only(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.services.installation.config import update_config
+    from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+    from devkit_dist.features.distribution.usecases.context import GetContext
+    from devkit_dist.features.distribution.usecases.sync import sync_project
+
+    bundle = load_bundle(_bundle_root(ENTRY_POINTS["command-design"]))
+    installed = [InstalledBundle("devkit-catalog", PROJECT["version"], bundle)]
+    update_config(tmp_path, agents=["codex", "claude-code"])
+    initial = sync_project(tmp_path, installed)
+    assert not any(asset.bundle == "command-design" for asset in initial.assets)
+    update_config(tmp_path, presets={"command-design": ["core"]})
+    result = sync_project(tmp_path, installed)
+    assets = [asset for asset in result.assets if asset.bundle == "command-design"]
+    assert [(asset.id, asset.kind) for asset in assets] == [("command-design", "instruction")]
+    assert all(path.startswith(".devkit/managed/") for asset in assets for path in asset.paths)
+    context = GetContext().execute(tmp_path, "command-design")
+    assert context.constitution is None
+    assert len(context.instructions) == 1
+    instruction = context.instructions[0]
+    assert "description:" in instruction.header
+    assert "# Design command entry points" not in instruction.header
+    assert Path(instruction.path).is_file()
+    assert not (tmp_path / ".agents/skills/command-design").exists()

@@ -1,0 +1,12 @@
+schema = 1
+name = "command-design"
+version = "0.1.5"
+default_preset = "core"
+
+[[assets]]
+id = "command-design"
+kind = "instruction"
+source = "instructions/command-design.md"
+
+[presets.core]
+assets = ["command-design"]
