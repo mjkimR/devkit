@@ -2,7 +2,7 @@
 id: PROP-selective-package-releases
 title: Selective package releases under a shared release version
 summary: "Keep unchanged package versions stable while assigning one shared release version to changed packages and required dependency updates."
-status: reviewing
+status: accepted
 created_at: 2026-11-05
 target_area: docs/capabilities/distribution/
 priority: high
