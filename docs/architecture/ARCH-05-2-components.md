@@ -84,7 +84,10 @@ bundles under `devkit_catalog/adaptive_dev/bundle/` and `devkit_catalog/deep_res
 role contracts and context template add no runtime module or dependency, and neither bundle depends on or shares an
 asset with the other. The opt-in `uiux-improve` content bundle lives under
 `devkit_catalog/uiux_improve/bundle/`; its user-invoked entry and local design roles add no runtime dependency or
-shared orchestration module (`CAP-DLV-uiux-improvement`). `CAP-DLV-adaptive-development` and `CAP-DLV-deep-research` own the agent behavior. `tools/devkit-dev` owns the repository's
+shared orchestration module (`CAP-DLV-uiux-improvement`). The opt-in `design-explore` bundle lives under
+`devkit_catalog/design_explore/bundle/`; its user-invoked skill, local solution-explorer/researcher/critic roles
+and references are content only, with no runtime dependency, shared orchestration module or companion asset import
+(`CAP-DLV-design-exploration`). `CAP-DLV-adaptive-development` and `CAP-DLV-deep-research` own the agent behavior. `tools/devkit-dev` owns the repository's
 structure and layering rules and the release handbook playbook (`CAP-DLV-release-handbook`) in a development bundle;
 its initial layout is bundle-only.
 

@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T00:52:20.526079Z'
+status: completed
+summary: Implemented the explicit opt-in general solution exploration bundle with three local optional roles, original concise guidance, focused distribution tests and six reconciled documentation targets. Code and reconcile reviewers passed with zero findings; Host owns integration and final landed-head verification.
+findings: []
+assumptions:
+- Only design_explore was added to catalog data_roots under explicit initial Host authority; no Tier B extension, dependency, lockfile or runtime change.
+- 'Availability measurement at accepted handoff versus source head: design-explore entrypoints 0 to 1, local roles 0 to 3, source absent to present; installed lifecycle passes.'
+unverified_areas:
+- No claim of model obedience, creativity or team superiority; no comparative-effectiveness experiment. Integration and synchronized landed-head checks remain Host-owned.
+checks:
+  tests: 'PASS just test-affected --base 5401115e19a09cdbe3d1a9e1a1ae7b85569b753d mode=full: 6612 passed, 15 skipped; focused 6 passed'
+  build: PASS real dist/catalog built-wheel consumer without agt/docs/spec; selection, user-only metadata, local roles, independent removal and re-addition
+  lint: 'PASS just lint-check catalog; just check catalog; rules --ci --base 5401115e19a09cdbe3d1a9e1a1ae7b85569b753d: 22 rules zero errors warnings infos'
+  sync: PASS final sync --check exit=0; no tracked sync outputs
+diff_scope:
+  base: 5401115e19a09cdbe3d1a9e1a1ae7b85569b753d
+  head: 17b9284a1716bc7125aae0c7cc91b87cd9752faa

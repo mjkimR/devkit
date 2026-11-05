@@ -2,7 +2,7 @@
 id: PROP-design-solution-exploration-target
 title: Target Living Spec Structure for PROP-design-solution-exploration
 status: draft
-proposal: PROP-design-solution-exploration
+proposal: SPEC-design-solution-exploration
 created_at: 2026-11-05
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-design-exploration.md
@@ -38,7 +38,7 @@ Update `ARCH-05-2-components` at its existing catalog layout paragraph to includ
 `devkit_catalog/design_explore/bundle/` module. It contains content only, no runtime dependency or cross-feature
 edge, and no assets imported from deep-research or another bundle.
 
-`PADR-explicit-solution-exploration` becomes an ADR at handoff. The capability restates its invocation, local-role
+`ADR-explicit-solution-exploration` becomes an ADR at handoff. The capability restates its invocation, local-role
 and output-authority clauses. The implementation reconciles those trace references after creating the documents.
 
 ## 3. Exact implementation paths

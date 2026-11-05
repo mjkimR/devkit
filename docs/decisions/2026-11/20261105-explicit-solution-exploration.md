@@ -1,14 +1,13 @@
 ---
-id: PADR-explicit-solution-exploration
+id: ADR-explicit-solution-exploration
 title: Keep general solution exploration explicitly invoked and self-contained
 summary: "For general solution design, we ship an independent user-invoked skill with local optional roles, to explore distinct mechanisms without ambient role guidance, accepting repeated coordination text."
-proposal: PROP-design-solution-exploration
-# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in Decision Outcome
-status: draft
+proposal: SPEC-design-solution-exploration
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-explicit-solution-exploration] Keep general solution exploration explicitly invoked and self-contained
+# [ADR-explicit-solution-exploration] Keep general solution exploration explicitly invoked and self-contained
 
 ## 1. Context & Problem Statement
 
@@ -34,14 +33,16 @@ provides a distribution precedent but governs research roles, not this independe
 
 - General solution exploration has one independent `design-explore` entry and opt-in content-only catalog bundle.
   It does not invoke or depend on deep-research, UI/UX improvement or adaptive-dev.
+  → `CAP-DLV-design-exploration` rules 1–2 (MUST) and section 2.
 - The skill loads selected local role documents and passes bounded assignments to general children with fresh
   contexts where supported. It registers no specialist subagents or always-loaded guidance.
+  → `CAP-DLV-design-exploration` rules 1, 3 (MUST), 4 (SHOULD) and 5 (MUST).
 - The result explains useful solution mechanisms, tradeoffs and decision-changing assumptions. It returns in
   conversation unless the user requests another destination; coordinator-owned retention confers no implementation,
   commit, delivery approval or publication authority.
+  → `CAP-DLV-design-exploration` rules 6–9 (MUST) and 11 (SHOULD).
 
-The capability planned in `PROP-design-solution-exploration-target` section 1 restates these clauses when created;
-Development adds its final clause traces during reconciliation. This decision changes no existing research ADR.
+This decision changes no existing research ADR.
 
 ## 5. Consequences
 
@@ -54,5 +55,5 @@ when unavailable, inline passes disclose that limitation.
 
 Catalog integration and installed-consumer tests verify opt-in selection, user-only metadata, local role packaging,
 no global role projection and independent removal. Review checks the goal, role payloads, inline fallback and
-retention authority. No test measures creativity or proves team benefit. Final contract traces are completed during
-Development reconciliation against `PROP-design-solution-exploration-target`.
+retention authority. No test measures creativity or proves team benefit. `CAP-DLV-design-exploration` restates the retained contracts;
+`UC-explore-a-design-problem` maps their observable outcomes.

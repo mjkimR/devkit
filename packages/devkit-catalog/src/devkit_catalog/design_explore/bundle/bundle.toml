@@ -1,0 +1,13 @@
+schema = 1
+name = "design-explore"
+version = "0.1.5"
+default_preset = "core"
+
+[[assets]]
+id = "design-explore"
+kind = "skill"
+source = "skills/design-explore"
+invocation = "user"
+
+[presets.core]
+assets = ["design-explore"]

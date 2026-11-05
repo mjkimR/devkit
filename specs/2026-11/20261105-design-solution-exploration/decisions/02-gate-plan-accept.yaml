@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-design-solution-exploration
+by: user
+at: '2026-11-05T00:37:33.956087Z'
