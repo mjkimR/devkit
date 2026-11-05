@@ -1,138 +1,85 @@
 ---
 id: SPEC-design-explore-counterarguments
 title: Optional counterargument and response in design exploration
-summary: Extend the existing design critic with a bounded optional response and refinement exchange for consequential design disagreements.
+summary: "Make one optional author response and coordinator disposition explicit within the existing design critique pass, preserving evidence limits and exploration authority."
 status: planned
 created: 2026-11-05
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-DLV-design-exploration
+related_usecases:
+  - UC-explore-a-design-problem
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
-# [SPEC-design-explore-counterarguments] Optional counterargument and response in design exploration
+# [SPEC-design-explore-counterarguments] Optional design critique responses
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-design-explore-counterarguments on 2026-11-05.
-- **Preserved Materials**: `docs/materials/2026-11/20261105-design-explore-counterarguments`
-- Target Docs Blueprint: `PROP-design-explore-counterarguments-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-`CAP-DLV-design-exploration` already supplies independent solution exploration and an optional `design-critic`.
-The orchestration reference normally allows one critique/refinement pass. The critic returns supported findings,
-failure conditions and surviving benefits; zero findings is valid.
-
-The missing explicit procedure is a response from the candidate's author to a concrete counterargument before the
-coordinator makes a recommendation. A bounded exchange could expose unsupported objections and improve a design
-without adding a permanent red/blue team or requiring consensus.
+`CAP-DLV-design-exploration` permits optional criticism and one refinement pass, but the shipped role instructions
+omit the candidate author's response and the coordinator's disposition of each objection. Make that exchange
+explicit under `ADR-optional-design-critique-response` without adding a role or execution runtime.
+The retained Planning comparison is in `docs/materials/2026-11/20261105-design-explore-counterarguments/`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Optional counterargument and response in design exploration so that system capabilities are extended.
+- **US-1:** As a developer choosing a design, I want a consequential objection tested against the author's actual
+  response so a mistaken or answered objection does not silently determine the recommendation.
+- **US-2:** As a coordinator, I want a bounded optional exchange with honest missing-response and evidence handling
+  so simple questions stay simple and unresolved disagreements remain visible.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded:** mandatory red/blue teams, fixed casts or objection quotas, voting/scoring, consensus,
+  new global roles, runtime orchestration, automatic companion invocation, implementation authority and experiments
+  required to prove team superiority.
+- **Scope Excluded:** changes to deep-research, delivery workflow policy, manifests, package dependencies or interfaces.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Simple questions and zero findings need no exchange
 
-## 5. Carried Proposal Notes
+- **Given** a small design question or no supported decision-changing critic finding.
+- **When** the coordinator chooses useful work.
+- **Then** the instructions permit inline exploration and zero findings without requiring a critic, author reply,
+  fixed cast, debate or objection quota.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] A supported objection receives an actual response and disposition
 
-### 2. Technical Spike Questions
+- **Given** independent initial candidates and an objection that can change feasibility, a consequential tradeoff
+  or recommendation against the goal or hard constraints.
+- **When** the coordinator selects it for the existing optional critique/refinement pass.
+- **Then** the explorer receives the actual candidate, objection, evidence, failure condition, affected choice and
+  preserved constraints; it accepts and revises, rebuts with labeled support, or names a bounded unknown.
+- **Then** synthesis identifies each selected objection, its actual response/revision and reasoned coordinator
+  disposition, with no required serialized schema or retained document.
 
-- **Q1 — Trigger:** Which unresolved assumptions or competing mechanisms warrant an exchange beyond the existing
-  critique/refinement pass? Identify an example where a reply could change the choice.
-- **Q2 — Role reuse:** Can solution-explorer and design-critic cover the exchange with explicit assignments, or is
-  any additional role needed? Prefer role reuse unless a distinct responsibility is demonstrated.
-- **Q3 — Independence:** What information is shared only after independent first passes to preserve distinct
-  mechanisms and prevent the coordinator's preferred answer from becoming every role's premise?
-- **Q4 — Stop condition:** What bounds a useful response, and how are unresolved disagreements returned without
-  forced consensus, repeated persuasion or a mandatory minimum number of objections?
+### [AC-03] The normal exchange is bounded
 
-### 3. Proposed Design & Impact
+- **Given** a disagreement after one critic pass and at most one author response per affected candidate.
+- **When** the coordinator completes synthesis or selects further work.
+- **Then** it returns the unresolved assumption unless a concrete decision-changing question and finite pass/time
+  bound are named before another pass; the critic receives no automatic reply and no implementation starts.
 
-Planning recommendation for direction acceptance:
+### [AC-04] Missing returns and shared contexts remain explicit
 
-1. Keep small questions inline and existing independent exploration as the default.
-2. When a consequential disagreement remains, give the critic the actual candidate and decision criteria. Require
-   the objection's evidence, failure condition and effect on the choice.
-3. Give the candidate's explorer one opportunity to accept the objection and revise, rebut it with evidence, or
-   identify a bounded unknown. Treat the exchange as the existing critique/refinement pass made explicit.
-4. Have the coordinator compare the actual response against the objection. Return the surviving alternatives,
-   resolved issues and decision-changing uncertainties rather than votes or a manufactured winner.
-5. Default to one exchange. An additional pass needs a specific unresolved question that can change the choice
-   and an explicit effort bound; absence of disagreement requires no exchange.
+- **Given** an unavailable author response or no independent child contexts.
+- **When** the coordinator analyzes an objection inline or synthesizes available returns.
+- **Then** it discloses missing coverage or shared context and invents no independent finding, author reply or
+  agreement; inline analysis is identified as the coordinator's own.
 
-Illustrative exchange: a critic identifies a stale-cache failure in a proposed ownership model; the explorer
-supplies an invalidation mechanism or narrows the consistency promise; the coordinator judges that revised
-mechanism against the user's latency and correctness requirements.
+### [AC-05] A response cannot manufacture evidence
 
-Changes are limited to design-explore's skill-local contracts, examples and their verification. Preserve its
-conversation-first output, explicit invocation, optional roles and lack of implementation authority. No new feature
-edge, shared subagent registration or runtime orchestration engine is proposed.
+- **Given** a rebuttal based on an uninspected claim, unavailable citation or inference.
+- **When** the coordinator judges it against the objection.
+- **Then** it distinguishes inspected support, inference and unknowns and retains the consequential evidence limit
+  instead of declaring the objection refuted solely because a role asserted it.
 
-**Scope excluded:** mandatory red/blue teams, an adversarial debate for every design, voting/scoring, forced
-consensus, experiments required to prove team superiority, and redesign of deep-research or SDD review roles.
+## 5. Assumptions and Verification Limits
 
-#### Planning decisions
-
-- **Necessity and smaller alternative:** retain the existing three roles and one critique/refinement pass. The
-  change makes the missing author response and per-objection coordinator disposition explicit. A permanent red/blue
-  team adds a cast without filling another responsibility. Keeping only the existing wording leaves no instruction
-  to let an author rebut a mistaken objection or mark a missing response.
-- **Trigger:** use the exchange only when a supported objection can change a candidate's feasibility, tradeoff or
-  recommendation against the actual goal or a hard constraint. Mere preference, a fixed objection quota and zero
-  supported findings do not trigger it. A simple question remains inline.
-- **Response packet:** after independent initial exploration, the coordinator passes the actual candidate,
-  objection, evidence, failure condition, affected decision and unchanged constraints to its original explorer
-  when available. Reuse the existing role with an explicit response assignment. If that explorer cannot return,
-  the coordinator may analyze the response inline and discloses the limitation; it invents no author's return.
-- **Response and judgment:** for each selected objection, the responder accepts and revises, rebuts with inspected
-  evidence or an explicit inference, or names a bounded unknown. The coordinator returns the objection, actual
-  response/revision, its own reasoned disposition and remaining decision-changing uncertainty. There is no required
-  serialized schema, retained document, scoring or consensus.
-- **Bound:** one critic pass and at most one author response per affected candidate in the normal exchange, followed
-  by coordinator synthesis. The critic does not automatically get another reply. Before any further pass, name a
-  concrete unresolved question that can change the recommendation and a finite pass/time bound. If there is no
-  such check or the bound is reached, return the unresolved question and stop.
-- **Failure and evidence:** unavailable sources, failed roles and unavailable fresh contexts stay visible. A response
-  unsupported by inspected evidence is an inference or unknown, not a refutation proved by the role label.
-- **Decision record:** `ADR-optional-design-critique-response` records this lasting capability refinement. It does
-  not replace `ADR-explicit-solution-exploration`: invocation, role locality and output authority remain in force.
-- **Delivery surface:** the intended contract drafts and exact source/test paths are in `target-docs.md`. No runtime,
-  CLI, shared subagent metadata, package dependency, manifest asset, architecture edge or product screen is added.
-
-### 4. Lifecycle & Retirement Criteria
-
-This proposal is in Planning with `medium` Planning and Development effort and estimated size `M`. Priority is
-`low` because the existing critic already addresses part of the need. It has no prerequisite proposal.
-
-The direction is ready for acceptance after Challenger findings are folded or presented with their disposition.
-The concrete gap, trigger, response packet and stop condition are specified above; no user fact is needed to
-choose the proposed local instruction refinement.
-
-Candidate Development acceptance checks:
-
-- **AC1:** Given a simple design question or zero supported critic findings, the flow returns useful results
-  without creating a debate or requiring extra roles.
-- **AC2:** Given a decision-changing objection, one exchange records the evidence, the author's response or
-  revision, and the coordinator's disposition of that specific objection.
-- **AC3:** Given disagreement after the normal exchange, the coordinator returns the unresolved assumption; any
-  additional pass starts only with a named decision-changing question and finite bound, and no implementation
-  starts from exploration authority.
-- **AC4:** Given no independent child contexts or an unavailable author response, inline passes and missing
-  coverage are disclosed; the result contains no invented independent finding, author reply or agreement.
-- **AC5:** Given an objection whose response is an unsupported inference or whose evidence is inaccessible, the
-  synthesis retains that evidence limit instead of declaring the objection refuted.
-
-Acceptance, rejection and handoff follow the existing proposal lifecycle.
-
+- Existing solution-explorer and design-critic roles cover the response; their initial independent pass remains
+  separate from the later response assignment. No accepted invocation, source-access or output-authority clause changes.
+- This work ships instructions. Integration and wheel-consumer checks establish content, optionality and packaging;
+  semantic review walks the scenarios. They do not measure model obedience or improved design quality.
+- No product screen changes or before/after performance/count claim is proposed.
+- Design-explore is not selected in the authoring checkout. Read its source contract and test opt-in deployment in
+  isolated consumers; keep the project's selection unchanged. Initial `devkit sync --check` passed.
