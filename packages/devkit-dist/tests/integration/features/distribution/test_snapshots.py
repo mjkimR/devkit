@@ -307,3 +307,70 @@ def test_edit_during_candidate_preparation_is_preserved(checkout, monkeypatch: p
     assert local.read_text() == "authored during refresh"
     assert not (destination / "src/team_copy/alpha/bundle/extra.txt").exists()
     assert sorted(destination.parent.iterdir()) == [destination]
+
+
+def test_source_commit_is_bound_to_the_captured_head(checkout, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit_dist.features.distribution.repositories import snapshots as repository
+
+    _, source, destination = checkout
+    for args in (
+        ("init", "-q"),
+        ("add", "."),
+        ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "first"),
+    ):
+        subprocess.run(["git", "-C", str(source), *args], check=True, capture_output=True)
+    guide = source / "src/private_content/alpha/bundle/guide.md.jinja"
+    guide.write_text(guide.read_text().replace("alpha body.", "new copied bytes."))
+    real_run = subprocess.run
+    advanced = False
+
+    def advance_head(args, **kwargs):
+        nonlocal advanced
+        if "ls-tree" in args and not advanced:
+            advanced = True
+            real_run(
+                [
+                    "git",
+                    "-C",
+                    str(source),
+                    "-c",
+                    "user.name=Fixture",
+                    "-c",
+                    "user.email=fixture@example.invalid",
+                    "commit",
+                    "-qam",
+                    "second",
+                ],
+                check=True,
+                capture_output=True,
+            )
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(repository.subprocess, "run", advance_head)
+    create(checkout)
+    assert advanced
+    assert json.loads((destination / "snapshot.json").read_text())["source"]["commit"] is None
+
+
+def test_source_path_spelling_does_not_change_provenance(checkout) -> None:
+    root, source, destination = checkout
+    for args in (
+        ("init", "-q"),
+        ("add", "."),
+        ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "source"),
+    ):
+        subprocess.run(["git", "-C", str(source), *args], check=True, capture_output=True)
+    first = create(checkout)
+    alias = root / ".." / source.name
+    preview = RefreshBundleSnapshot().execute(root, destination, alias, check=True)
+    assert preview.candidate_digest == first.candidate_digest
+    assert preview.changes == {"added": [], "modified": [], "removed": []}
+
+
+def test_source_symlink_stays_rejected_before_canonicalization(checkout) -> None:
+    root, source, destination = checkout
+    link = source.parent / "source-link"
+    link.symlink_to(source, target_is_directory=True)
+    with pytest.raises(SnapshotInvalidError):
+        CreateBundleSnapshot().execute(root, link, destination, "team-copy")
+    assert not destination.exists()

@@ -142,7 +142,7 @@ def prepare_candidate(source: Path, package: str) -> SnapshotCandidate:
     module = package_module(package)
     if source.is_symlink() or not source.is_dir():
         raise SnapshotInvalidError("source must be an accessible unlinked checkout directory")
-    source = source.absolute()
+    source = source.resolve()
     project, raw = _project(source)
     source_name = project["name"]
     if re.sub(r"[-_.]+", "-", package).lower() == re.sub(r"[-_.]+", "-", source_name).lower():

@@ -60,9 +60,10 @@ def source_commit(root: Path, originals: Mapping[Path, Content]) -> str | None:
         if top.returncode or head.returncode:
             return None
         repository = Path(top.stdout.decode().strip())
+        captured_head = head.stdout.decode().strip()
         for path, content in originals.items():
             rel = path.relative_to(repository).as_posix()
-            indexed = git("ls-tree", "HEAD", "--", rel)
+            indexed = git("ls-tree", captured_head, "--", rel)
             fields = indexed.stdout.split(b"\t", 1)[0].split()
             if indexed.returncode or len(fields) != 3 or fields[1] != b"blob":
                 return None
@@ -71,7 +72,7 @@ def source_commit(root: Path, originals: Mapping[Path, Content]) -> str | None:
                 return None
             if (fields[0] == b"100755") != (content.mode == 0o755):
                 return None
-        return head.stdout.decode().strip()
+        return captured_head
     except (OSError, ValueError, UnicodeError, subprocess.TimeoutExpired):
         return None
 

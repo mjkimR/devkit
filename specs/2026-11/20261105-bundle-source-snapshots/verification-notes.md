@@ -28,3 +28,16 @@ moves the current tree to backup, compares that captured tree before installing 
 CONFLICT on mismatch. Transaction validation exceptions become WRITE_FAILED after rollback; preflight validation
 remains outside the transaction. Regression tests cover edits during candidate preparation and both OSError and
 the validator's actual SnapshotInvalidError. Focused filesystem/installed-consumer checks pass 34 cases.
+
+## Verified commit and path spelling
+
+Fresh reviewer independently passed seven transaction probes and found a new provenance defect: source_commit
+captured one SHA but queried mutable HEAD. A real-Git retained regression failed before the fix, returning an old
+commit that lacked copied bytes. All ls-tree lookups now use the once-captured immutable SHA. This is the reviewer's
+concrete suggested correction, with no changed decision or API.
+
+The Host's ordinary sibling-path case also reproduced: ../source yielded unknown commit and a different digest
+from the canonical source. Source roots are now canonicalized after existing source symlink/directory validation,
+before Git-relative identity checks. Its regression and explicit source-symlink rejection pass. Both failing
+provenance regressions are retained; the complete focused filesystem/installed consumer set passed36 before adding
+the third symlink guard regression, which also passed. Fresh fixed-content broader checks run before final report.
