@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-05T00:10:39.302724Z'
+status: completed
+summary: 'Swept this Planning turn: no new repository or upstream defect; repaired the proposal''s initial unbound state through the documented bind command. No comparative validation or unrelated follow-up added.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
