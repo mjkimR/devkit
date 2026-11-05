@@ -189,7 +189,7 @@ class InspectWorkerUseCase(BaseUseCase):
             entries = (
                 [{"path": p, "source": "argument"} for p in scope]
                 if scope is not None
-                else derive_scope(root, tip, unit)
+                else derive_scope(root, tip, unit, base)
             )
             result["scope"] = entries
             outside = [

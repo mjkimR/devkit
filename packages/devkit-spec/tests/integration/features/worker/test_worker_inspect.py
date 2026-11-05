@@ -269,7 +269,9 @@ def test_feedback_and_marker(repo: Path, source: str, identifier: str) -> None:
     } in result["scope"]
 
 
-@pytest.mark.parametrize("source", ["specs/earlier/feedback/observation.md", "specs/2026-10/feedback/20261028-observation.md"])
+@pytest.mark.parametrize(
+    "source", ["specs/earlier/feedback/observation.md", "specs/2026-10/feedback/20261028-observation.md"]
+)
 @pytest.mark.parametrize("explicit_base", [False, True])
 def test_resolved_source_keeps_scope_from_audit_base(repo: Path, source: str, explicit_base: bool) -> None:
     write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
@@ -298,7 +300,9 @@ def test_resolved_source_keeps_scope_from_audit_base(repo: Path, source: str, ex
     assert source in later["outside_scope"]
 
 
-@pytest.mark.parametrize("initial", ["promoted", "resolved", "dismissed", "forwarded", "unknown", "missing", "other-id"])
+@pytest.mark.parametrize(
+    "initial", ["promoted", "resolved", "dismissed", "forwarded", "unknown", "missing", "other-id"]
+)
 def test_resolved_source_needs_same_open_identity_at_audit_base(repo: Path, initial: str) -> None:
     source = "specs/earlier/feedback/observation.md"
     write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
@@ -307,7 +311,7 @@ def test_resolved_source_needs_same_open_identity_at_audit_base(repo: Path, init
         status = "open" if initial == "other-id" else initial
         write(repo, source, f"---\nid: {identifier}\nstatus: {status}\n---\n")
     accepted = worker(repo, 1)
-    write(repo, source, "---\nid: FB-observation\nstatus: resolved\n---\n")
+    write(repo, source, "---\nid: FB-observation\nstatus: resolved\n---\n\nChanged resolution text.\n")
     worker(repo, 2)
     result = inspect(repo, base=accepted, runner=passed)
     assert source in result["outside_scope"]
