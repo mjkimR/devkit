@@ -130,7 +130,7 @@ def derive_base(
     return bases[0], "branch-merge-base"
 
 
-def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
+def derive_scope(root: Path, tip: str, unit: str, base: str) -> list[dict[str, Any]]:
     paths = files(root, tip)
     anchor = f"{unit}/spec.md" if f"{unit}/spec.md" in paths else f"{unit}/{PROPOSAL_FILE}"
     text = read(root, tip, anchor)
@@ -159,6 +159,7 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
         for target in parse_targets(read(root, tip, reconcile), reconcile):
             if target.file.strip():
                 entries.append({"path": prefix(target.file.strip()), "source": "reconcile"})
+    base_paths = set(files(root, base))
     section = re.search(r"(?im)^## [^\n]*Source feedback[^\n]*\n(.*?)(?=^## |\Z)", text, re.DOTALL)
     for identifier in sorted(set(re.findall(r"\bFB-[a-z0-9-]+", section[1] if section else ""))):
         matches = []
@@ -175,8 +176,14 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
                 matches.append(path)
         if len(matches) != 1:
             raise WorkerScopeUnresolvedError(f"{identifier} resolves to {len(matches)} feedback files")
-        if (parse(read(root, tip, matches[0])).data or {}).get("status") == "open":
-            entries.append({"path": matches[0], "source": "source-feedback", "id": identifier})
+        path = matches[0]
+        status = (parse(read(root, tip, path)).data or {}).get("status")
+        completed_source = False
+        if status == "resolved" and path in base_paths:
+            original = parse(read(root, base, path)).data or {}
+            completed_source = original.get("id") == identifier and original.get("status") == "open"
+        if status == "open" or completed_source:
+            entries.append({"path": path, "source": "source-feedback", "id": identifier})
     return entries
 
 

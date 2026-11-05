@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD workflows define stages, gates, verification and run records with deterministic single-envelope commits. One-shot workers deliver committed turns; reusable lean git-operator executes Host-authorized lifecycle jobs with Git identity and recovery checks."
+summary: "SDD stages, gates and run records govern delivery. Worker inspection retains audit-base source completion scope; reusable git-operator executes Host-authorized lifecycle jobs with Git identity and recovery checks."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -695,8 +695,12 @@ compared with changed paths as they are. `N/A`/`none` boundaries and empty recon
   base checkout branch, independently of previous workers and `--base`. Without a recorded base branch or registered
   checkout, the audit base is used with source `audit-base-fallback`. Invalid recorded references remain errors.
 - Scope: a Planning proposal directory; for Development, the unit directory, literal task boundaries, materials
-  directory, reconciliation targets and explicitly linked Source feedback files whose committed status is `open`.
-  Terminal or unknown statuses add no implicit source scope; explicit task boundaries remain independent. Entries retain their source,
+  directory, reconciliation targets and explicitly linked Source feedback files whose returned-head status is `open`.
+  WHEN a linked source is `resolved` at returned head and the same exact path and ID was `open` at the audit base,
+  inspection MUST retain its `source-feedback` scope entry for that completion transition. Already terminal,
+  unknown, missing or different-ID base sources add no implicit completion scope. Other returned-head terminal
+  statuses remain excluded. Explicit task boundaries and full-replacement scope overrides remain independent.
+  Entries retain their source,
   task number or feedback ID. Absent optional reconciliation adds no scope; malformed present reconciliation or
   missing required anchor/tasks leave the scope check not-run. Workflow stage requirements remain unchanged.
 - Base checkout: the worktree's registered common-directory checkout; absent when run in the base itself. Its

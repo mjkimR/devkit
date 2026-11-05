@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-04T23:04:54.758589Z'
+status: completed
+summary: Git-backed completion scope regression fails before the fix.
+findings: []
+assumptions:
+- Reproduction ran on uncommitted regression tests; implementation unchanged.
+checks:
+  reproduced: PASS four dated/undated and explicit/derived base cases fail on missing source-feedback scope.
+diff_scope:
+  base: aedabc4a0d2dbb42465d69b35bd404545d66a41f
+  head: ''

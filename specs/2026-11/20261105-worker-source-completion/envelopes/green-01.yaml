@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-04T23:07:12.328905Z'
+status: completed
+summary: Completion scope retained with terminal-source exclusions preserved.
+findings: []
+assumptions:
+- Green ran on uncommitted implementation and fixture correction; one resolved fixture needed a real text change to exercise outside_scope.
+checks:
+  resolved: PASS 64 worker inspection tests, including four red regressions; historical feedback range now includes its completed source.
+  preserved: 'PASS just test-affected --base aedabc4a0d2dbb42465d69b35bd404545d66a41f: 1665 passed; Ruff, Pyright and 22 CI rules pass.'
+diff_scope:
+  base: aedabc4a0d2dbb42465d69b35bd404545d66a41f
+  head: ''

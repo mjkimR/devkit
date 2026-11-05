@@ -269,6 +269,66 @@ def test_feedback_and_marker(repo: Path, source: str, identifier: str) -> None:
     } in result["scope"]
 
 
+@pytest.mark.parametrize(
+    "source", ["specs/earlier/feedback/observation.md", "specs/2026-10/feedback/20261028-observation.md"]
+)
+@pytest.mark.parametrize("explicit_base", [False, True])
+def test_resolved_source_keeps_scope_from_audit_base(repo: Path, source: str, explicit_base: bool) -> None:
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
+    write(repo, source, "---\nid: FB-observation\nstatus: open\n---\n")
+    accepted = worker(repo, 1)
+    write(repo, source, "---\nid: FB-observation\nstatus: resolved\n---\n\n## Disposition\nVerified direct fix.\n")
+    returned = worker(repo, 2)
+    before = git(repo, "status", "--porcelain")
+    result = inspect(repo, base=accepted if explicit_base else None, runner=passed)
+    assert result["base"] == accepted
+    assert {"path": source, "source": "source-feedback", "id": "FB-observation"} in result["scope"]
+    assert source not in result["outside_scope"]
+    assert result["exit_code"] == 0
+    assert git(repo, "rev-parse", "HEAD") == returned
+    assert git(repo, "status", "--porcelain") == before
+
+    # An explicit override replaces completion scope too.
+    narrowed = inspect(repo, base=accepted, scope=[UNIT], runner=passed)
+    assert source in narrowed["outside_scope"]
+
+    # The next audit starts after resolution and cannot infer permission for later edits.
+    write(repo, source, (repo / source).read_text() + "Later edit.\n")
+    worker(repo, 3)
+    later = inspect(repo, runner=passed)
+    assert later["base"] == returned
+    assert source in later["outside_scope"]
+
+
+@pytest.mark.parametrize(
+    "initial", ["promoted", "resolved", "dismissed", "forwarded", "unknown", "missing", "other-id"]
+)
+def test_resolved_source_needs_same_open_identity_at_audit_base(repo: Path, initial: str) -> None:
+    source = "specs/earlier/feedback/observation.md"
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
+    if initial != "missing":
+        identifier = "FB-other" if initial == "other-id" else "FB-observation"
+        status = "open" if initial == "other-id" else initial
+        write(repo, source, f"---\nid: {identifier}\nstatus: {status}\n---\n")
+    accepted = worker(repo, 1)
+    write(repo, source, "---\nid: FB-observation\nstatus: resolved\n---\n\nChanged resolution text.\n")
+    worker(repo, 2)
+    result = inspect(repo, base=accepted, runner=passed)
+    assert source in result["outside_scope"]
+    assert not any(e["source"] == "source-feedback" for e in result["scope"])
+
+
+@pytest.mark.parametrize("status", ["promoted", "dismissed", "forwarded", "unknown"])
+def test_open_source_other_terminal_transition_gains_no_scope(repo: Path, status: str) -> None:
+    source = "specs/earlier/feedback/observation.md"
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
+    write(repo, source, "---\nid: FB-observation\nstatus: open\n---\n")
+    accepted = worker(repo, 1)
+    write(repo, source, f"---\nid: FB-observation\nstatus: {status}\n---\n")
+    worker(repo, 2)
+    assert source in inspect(repo, base=accepted, runner=passed)["outside_scope"]
+
+
 def test_empty_reconcile_target_and_not_applicable_boundary_are_skipped(repo: Path) -> None:
     write(repo, f"{UNIT}/tasks.md", "- [x] implement\n  - _Boundary: `src/`\n- [x] review\n  - _Boundary: N/A\n")
     write(repo, f"{UNIT}/reconcile.md", '---\ntargets:\n  - file: ""\n    resolution: waived\n---\n')

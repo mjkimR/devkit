@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-11-04T23:10:17.459972Z'
+status: completed
+summary: Worker source completion scope fixed, independently reviewed and reconciled; ready for policy-authorized local integration and final target verification.
+findings: []
+assumptions:
+- Task-kind bugfix; planning-depth spec; Development effort medium; code review independent and reconciliation self-verified under the single-component exception.
+- 'pull_request=auto selects local route: no platform review or publication is required; dev-integration=auto supplies local merge and cleanup authority.'
+unverified_areas:
+- Final target checks remain pending until after merge, environment setup and fresh-process verification.
+checks:
+  tests: PASS 1665 affected tests; 64 focused tests; four expected pre-fix failures retained as regressions.
+  build: PASS uv build --wheel --package devkit-spec --out-dir /tmp/devkit-worker-source-completion-dist.
+  lint: PASS Ruff format/lint, Pyright zero errors, 22 CI rules, no sync drift.
