@@ -33,10 +33,10 @@ created_at: 2026-11-05
 
 ## 3. Extensions
 
-- **2a. Required prerequisite unavailable or unknown**: leave the affected check not_run with an unmet gate;
+- **2a.** Required prerequisite unavailable or unknown: leave the affected check not_run with an unmet gate;
   continue assessment of safe available evidence at step 3.
-- **3a. Inconclusive tuning comparison**: retain current settings and report the evidence limit; continue at step 4.
-- **4a. Unattended or unanswered decision**: report pending candidates with nothing applied; the assessment ends.
+- **3a.** Inconclusive tuning comparison: retain current settings and report the evidence limit; continue at step 4.
+- **4a.** Unattended or unanswered decision: report pending candidates with nothing applied; the assessment ends.
 
 ## 4. Postconditions
 
