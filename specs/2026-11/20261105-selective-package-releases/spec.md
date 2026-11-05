@@ -2,7 +2,7 @@
 id: SPEC-selective-package-releases
 title: Selective package releases under a shared release version
 summary: Keep unchanged package versions stable while assigning one shared release version to changed packages and required dependency updates.
-status: in-progress
+status: completed
 created: 2026-11-05
 related_capabilities: [CAP-DIST-content-packages, CAP-DIST-in-repo-bundles]
 related_usecases: []

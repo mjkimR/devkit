@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-selective-package-releases
-status: pending
+status: resolved
 targets:
   - file: README.md
     resolution: modified
