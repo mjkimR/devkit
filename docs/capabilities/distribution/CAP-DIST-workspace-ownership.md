@@ -9,6 +9,8 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py
 created_at: 2026-10-17
+usecases:
+  - UC-snapshot-bundle-sources
 ---
 
 # [CAP-DIST-workspace-ownership] Workspace Ownership and Overrides
@@ -249,3 +251,13 @@ warning, and source metadata; see `CAP-DIST-sync-and-transactions`.
 Canonical asset planning MUST use shared preferences; eligible personal rendering uses effective preferences and local
 ledger evidence. The preference MUST NOT authorize a tracked output write, a forbidden asset difference or execution.
 Explicit bundle-variable values MUST override inherited presentation defaults, regardless of which layer supplied them.
+
+## Generated Snapshot Sources and Overrides
+
+`CAP-DIST-in-repo-bundles` owns generated snapshot sources inside local content packages.
+WHEN refresh encounters authored snapshot changes, it MUST refuse rather than adopt or overwrite them; consumer
+adaptations SHOULD use project overrides. Snapshot operations MUST NOT edit config, dependency metadata, lock,
+receipt, projections, overrides or Git. Later ordinary sync retains existing override preservation and drift notices.
+Hand-authored local bundles keep their source-edit lifecycle; generated snapshots use explicit upstream refresh.
+Tests: packages/devkit-dist/tests/integration/features/distribution/test_snapshots.py and
+packages/devkit-dist/tests/e2e/cli/test_snapshots.py.

@@ -15,6 +15,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
 | **devkit bundle** | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |  | `bundle.toml` |
+| **Bundle source snapshot** | Repository-committed source copy of a complete supported content provider, with provenance and explicit refresh through an ordinary local package; excludes governance Snapshot run evaluation and runtime-package vendoring. | `CAP-DIST-in-repo-bundles` |  | `snapshot.json`, `bundle snapshot`, `bundle refresh` |
 | **Subagent model level** | Distribution-owned preset (minimal, compact, lean, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` | model profile | `level`, `SubagentPolicy`, `ModelSettings`, `[subagents]` |
 | **Preset** | A named asset selection of a bundle (e.g. `core`, `default`). | `CAP-DIST-manifest-spec` |  |  |
 | **Managed files** | Pristine synchronized copies under `.devkit/managed/<bundle>/`; never edited by hand. | `CAP-DIST-workspace-ownership` |  | `.devkit/managed/<bundle>/` |

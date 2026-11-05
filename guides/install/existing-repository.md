@@ -277,3 +277,26 @@ projections and announces the separate research bundle once with `BUNDLE_UNSELEC
 After approved integration lands, synchronize the target environment from its landed dependency declarations and
 run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
 report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.
+
+## Private content without recurring origin access
+
+Obtain an authorized local supported content checkout and create its complete local copy:
+
+    uv run devkit bundle snapshot /checkout/team-assets --to tools/team-assets-copy --package team-assets-copy
+
+Review returned actions and the replacement set. Remove a direct original-provider requirement from its actual
+dependency group (--dev only for the dev group); skip removal when absent and resolve transitive origin requirements
+separately. Install the wrapper as an editable dev dependency and run normal selection/sync. Keep required devkit,
+harness and build dependencies separately installed. Unsupported source closure or a mixed runtime provider refuses.
+
+Commit copied sources, provenance and deliberate bootstrap changes. The wrapper stays 0.0.0; original versions,
+digest and adoption commit identify its sources. Keep adaptations in project overrides, not edited generated sources.
+
+For an explicit update, preview and inspect before applying the two reported identities:
+
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --check
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
+
+Follow any returned reinstall and explicit deselection actions, then sync. Refresh itself changes no dependency
+files, selection, overrides, receipt or Git. Verify a fresh consumer can install/sync without the private content
+origin given runtime/build prerequisites; copying content does not promise an all-network-free bootstrap.

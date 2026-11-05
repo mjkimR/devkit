@@ -9,6 +9,8 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/
   - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
 created_at: 2026-10-17
+usecases:
+  - UC-snapshot-bundle-sources
 ---
 
 # [CAP-DIST-sync-and-transactions] Synchronization and Transactions
@@ -632,3 +634,10 @@ config template shows its default.
 Libraries import `DevelopmentApproach`, `read_development_approach(root)` and `development_approach(config)` from
 `devkit_dist.features.project`; the pure parsed-config form supports committed snapshots without another reader.
 Document namespaces and document operations retain their own configuration contracts.
+
+## Source snapshot boundary
+
+Source snapshot creation/refresh under `CAP-DIST-in-repo-bundles` MUST change only its generated package,
+using staged validation and guarded replacement, leaving selection/receipt unchanged. Dependency replacement,
+metadata reinstall, removed-bundle deselection and normal sync remain explicit subsequent consumer actions.
+Test: packages/devkit-dist/tests/e2e/cli/test_snapshots.py.

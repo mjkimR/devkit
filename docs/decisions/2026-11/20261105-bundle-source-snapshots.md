@@ -1,13 +1,13 @@
 ---
-id: PADR-bundle-source-snapshots
+id: ADR-bundle-source-snapshots
 title: Local content packages for bundle snapshots
 summary: "For private bundle reuse, we copy complete supported content providers into repository-owned packages with provenance and explicit refresh, to avoid private-origin fetches, accepting explicit provider replacement."
-proposal: PROP-bundle-source-snapshots
-status: draft
+proposal: SPEC-bundle-source-snapshots
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-bundle-source-snapshots] Local content packages for bundle snapshots
+# [ADR-bundle-source-snapshots] Local content packages for bundle snapshots
 
 ## 1. Context & Problem Statement
 

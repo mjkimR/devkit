@@ -24,7 +24,7 @@ private-content promise). Provider replacement is deliberately separate from sou
 
 ## Challenger disposition
 
-`envelopes/challenger-01.yaml` identified four P2 gaps. The proposal now defines the exact derived-bytecode
+historical Git `2fd08f816e5c10991b92ba026c797eeb552aad02:docs/proposals/PROP-bundle-source-snapshots/envelopes/challenger-01.yaml` identified four P2 gaps. The proposal now defines the exact derived-bytecode
 exclusion, editable metadata reinstall/removal steps, declarative runtime-reference preflight and a nonrecursive
 payload/provenance digest. Each fix implements the suggested action; no supported asset class or chosen packaging
 direction changed. Required Development fixtures now cover each failure condition.

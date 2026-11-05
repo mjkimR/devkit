@@ -1,0 +1,25 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T05:24:13.115572Z'
+status: completed
+review: review-02.yaml
+summary: Author verified captured-SHA ls-tree correction exactly as suggested; real-Git Red-to-Green regressions cover HEAD advance and canonical path identity; lexical symlink checks preserved.
+findings:
+- issue: Source provenance can record a commit that does not contain the copied files.
+  evidence: repositories/snapshots.py:59,65,74; .probe/review-02/test_commit_capture.py:41 recorded captured old SHA despite copied new bytes after HEAD advance
+  failure_condition: Source working changes are committed after rev-parse HEAD but before ls-tree HEAD; validation reads the new commit while provenance returns the old SHA.
+  suggested_action: Decode captured SHA once and use it for every ls-tree lookup; add retained HEAD-advancement regression.
+  resolution: resolved
+  severity: P1
+assumptions:
+- Medium author self-verification of concrete suggested fix; previous fresh independent transaction probes passed7
+unverified_areas:
+- Final broader checks run before final report; private source remains untested
+checks:
+  tests: PASS focused38 including captured HEAD, path spelling, direct and ancestor symlink regressions
+  scope: PASS literal provenance correction and canonicalization after original lexical metadata validation; no API or decision change
+diff_scope:
+  base: 3f2c64ed1d686a4dc41d1f47fb5ecd640afd6514
+  head: 2ff0849825599993255b08c560e9d9a2c1459715

@@ -3,7 +3,7 @@ id: PROP-bundle-source-snapshots-target
 title: Target contracts for bundle source snapshots
 summary: "Exact distribution capability, use case, architecture and consumer guidance changes for local bundle snapshot creation and explicit refresh."
 status: draft
-proposal: PROP-bundle-source-snapshots
+proposal: SPEC-bundle-source-snapshots
 created_at: 2026-11-05
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md
@@ -46,7 +46,7 @@ dependencies and rollback. Link it both ways with the capability. No product scr
 
 Update `ARCH-05-2-components`' distribution summary with source snapshot use cases. Keep CLI/usecase/service/
 repository layering, normal source layout and dependency graph. No new cross-feature edge or loader is allowed.
-The handoff promotes `PADR-bundle-source-snapshots`; its clauses are restated by the capabilities above.
+The handoff promotes `ADR-bundle-source-snapshots`; its clauses are restated by the capabilities above.
 
 ## Exact implementation and verification paths
 
