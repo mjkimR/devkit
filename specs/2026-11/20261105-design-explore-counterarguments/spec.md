@@ -1,33 +1,24 @@
 ---
-id: PROP-design-explore-counterarguments
+id: SPEC-design-explore-counterarguments
 title: Optional counterargument and response in design exploration
-summary: "Extend the existing design critic with a bounded optional response and refinement exchange for consequential design disagreements."
-status: accepted
-created_at: 2026-11-05
-target_area: docs/capabilities/delivery/
-priority: low
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/design_explore/
-    - packages/devkit-catalog/tests/integration/bundles/test_design_explore.py
-    - packages/devkit-catalog/tests/e2e/bundles/design_explore/
-    - docs/capabilities/delivery/CAP-DLV-design-exploration.md
-    - docs/usecases/delivery/UC-explore-a-design-problem.md
-    - docs/decisions/
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit-dist/
-    - packages/devkit-catalog/src/devkit_catalog/deep_research/
-task_kind: feature
-workflow: sdd-proposal
+summary: Extend the existing design critic with a bounded optional response and refinement exchange for consequential design disagreements.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-explore-counterarguments] Optional counterargument and response in design exploration
+# [SPEC-design-explore-counterarguments] Optional counterargument and response in design exploration
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-explore-counterarguments on 2026-11-05.
+- **Preserved Materials**: `docs/materials/2026-11/20261105-design-explore-counterarguments`
+- Target Docs Blueprint: `PROP-design-explore-counterarguments-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-DLV-design-exploration` already supplies independent solution exploration and an optional `design-critic`.
 The orchestration reference normally allows one critique/refinement pass. The critic returns supported findings,
@@ -37,7 +28,26 @@ The missing explicit procedure is a response from the candidate's author to a co
 coordinator makes a recommendation. A bounded exchange could expose unsupported objections and improve a design
 without adding a permanent red/blue team or requiring consensus.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Optional counterargument and response in design exploration so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 — Trigger:** Which unresolved assumptions or competing mechanisms warrant an exchange beyond the existing
   critique/refinement pass? Identify an example where a reply could change the choice.
@@ -48,7 +58,7 @@ without adding a permanent red/blue team or requiring consensus.
 - **Q4 — Stop condition:** What bounds a useful response, and how are unresolved disagreements returned without
   forced consensus, repeated persuasion or a mandatory minimum number of objections?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Planning recommendation for direction acceptance:
 
@@ -73,7 +83,7 @@ edge, shared subagent registration or runtime orchestration engine is proposed.
 **Scope excluded:** mandatory red/blue teams, an adversarial debate for every design, voting/scoring, forced
 consensus, experiments required to prove team superiority, and redesign of deep-research or SDD review roles.
 
-### Planning decisions
+#### Planning decisions
 
 - **Necessity and smaller alternative:** retain the existing three roles and one critique/refinement pass. The
   change makes the missing author response and per-objection coordinator disposition explicit. A permanent red/blue
@@ -96,12 +106,12 @@ consensus, experiments required to prove team superiority, and redesign of deep-
   such check or the bound is reached, return the unresolved question and stop.
 - **Failure and evidence:** unavailable sources, failed roles and unavailable fresh contexts stay visible. A response
   unsupported by inspected evidence is an inference or unknown, not a refutation proved by the role label.
-- **Decision record:** `PADR-optional-design-critique-response` records this lasting capability refinement. It does
+- **Decision record:** `ADR-optional-design-critique-response` records this lasting capability refinement. It does
   not replace `ADR-explicit-solution-exploration`: invocation, role locality and output authority remain in force.
 - **Delivery surface:** the intended contract drafts and exact source/test paths are in `target-docs.md`. No runtime,
   CLI, shared subagent metadata, package dependency, manifest asset, architecture edge or product screen is added.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 This proposal is in Planning with `medium` Planning and Development effort and estimated size `M`. Priority is
 `low` because the existing critic already addresses part of the need. It has no prerequisite proposal.
@@ -125,3 +135,4 @@ Candidate Development acceptance checks:
   synthesis retains that evidence limit instead of declaring the objection refuted.
 
 Acceptance, rejection and handoff follow the existing proposal lifecycle.
+

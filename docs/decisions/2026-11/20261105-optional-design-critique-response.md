@@ -1,13 +1,13 @@
 ---
-id: PADR-optional-design-critique-response
+id: ADR-optional-design-critique-response
 title: Make optional design critique responses explicit
 summary: "For consequential design objections, we reuse the optional critique pass for one author response and coordinator disposition, to clarify the choice, accepting a small coordination cost."
-proposal: PROP-design-explore-counterarguments
-status: draft
+proposal: SPEC-design-explore-counterarguments
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-optional-design-critique-response] Make optional design critique responses explicit
+# [ADR-optional-design-critique-response] Make optional design critique responses explicit
 
 ## 1. Context & Problem Statement
 

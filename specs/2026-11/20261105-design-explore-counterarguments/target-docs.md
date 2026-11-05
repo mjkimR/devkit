@@ -3,7 +3,7 @@ id: PROP-design-explore-counterarguments-target
 title: Target contracts for optional design critique responses
 summary: "Drafts the optional author-response and coordinator-disposition refinement and its exact delivery paths without adding a role or runtime."
 status: draft
-proposal: PROP-design-explore-counterarguments
+proposal: SPEC-design-explore-counterarguments
 created_at: 2026-11-05
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-design-exploration.md
@@ -12,7 +12,7 @@ targets:
 
 # [Blueprint] Optional design critique responses
 
-These are intended contract edits for Development. The proposal and `PADR-optional-design-critique-response`
+These are intended contract edits for Development. The proposal and `ADR-optional-design-critique-response`
 contain the reasons; this blueprint does not change current contracts.
 
 ## 1. Capability draft
@@ -56,7 +56,7 @@ are selected. Preserve the existing extensions for shared-context passes and mis
 | `packages/devkit-catalog/tests/e2e/bundles/design_explore/test_installed_consumer.py` | Verify built-wheel deployment includes the response instructions in existing local role/reference assets. |
 
 No manifest, package initializer, README, architecture, dependency or global-role change is planned. The ADR promoted
-from `PADR-optional-design-critique-response` is the sole new decision file; existing ADRs are unchanged. No product
+from `ADR-optional-design-critique-response` is the sole new decision file; existing ADRs are unchanged. No product
 screen changes, so UX drafts/review are inapplicable. Development must load authoring context before asset edits.
 
 Development runs focused catalog integration and installed-consumer checks, required lint/types/rules and the
