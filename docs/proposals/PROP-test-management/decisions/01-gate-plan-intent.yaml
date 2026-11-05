@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Review devkit, autohub and resource-indexer test setups and settle the reusable
+  playbook direction without implementing repository changes.
+by: user
+at: '2026-11-05T10:21:10.193135Z'
