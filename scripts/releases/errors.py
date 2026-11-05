@@ -21,3 +21,9 @@ class ArtifactError(ReleaseError):
     code = "RELEASE_ARTIFACT_INVALID"
     input_error = False
     fix = "Restore the original immutable artifact and its verified checksum; never rebuild or overwrite that published identity."
+
+
+class PreparationConflictError(ReleaseError):
+    code = "RELEASE_PREPARATION_CONFLICT"
+    input_error = False
+    fix = "Keep the authored metadata edit and rerun just version-sync --baseline FILE after editing finishes."

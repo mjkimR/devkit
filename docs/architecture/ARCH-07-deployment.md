@@ -61,6 +61,15 @@ closure reasons, original artifact provenance and exact generated field edits. R
 only recorded changes whose generated after-value still matches, before comparing with the same completed
 baseline. It preserves removed requirements and unrelated authored edits; ambiguous generated fields or a changed
 baseline MUST fail before writes. A prepare/revert-source/prepare cycle MUST remove unnecessary generated advances.
+Before generated writes, preparation MUST recheck captured metadata bytes and refuse with
+`RELEASE_PREPARATION_CONFLICT` if an authored edit arrived during comparison. It preserves that edit and asks for
+repreparation after editing finishes. No global lock or unrelated source-file snapshot is promised.
+
+Existing package versions after logical unwind MUST match the supplied baseline; an older archive cannot silently
+downgrade a current package. For the next release, a retained prior plan is superseded only when the supplied
+completed inventory proves its origin, selected identities and exact committed plan at its source SHA. Published
+generated edits become baseline inputs and MUST NOT be unwound. An unpublished mismatched plan still refuses.
+
 The plan remains incomplete until `uv lock` and normal sync succeed. Failed preparation emits no success sentinel.
 
 `just version-check --baseline FILE` recomputes the plan read-only. `just release-build vX.Y.Z --baseline FILE`

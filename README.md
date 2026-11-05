@@ -172,7 +172,10 @@ originals block bootstrap. Commit the verified baseline, `VERSION`, generated pa
 and `scripts/releases/pending.json` together. Only changed distributions and exact-pin reverse dependents take the
 release version; unchanged packages and bundles retain their versions. Repeated preparation compares with the same
 completed baseline and logically unwinds recorded generated edits. Lock or sync failure leaves an incomplete plan
-and no success sentinel. Resolve the failure and rerun the same command.
+and no success sentinel. Resolve the failure and rerun the same command. For the next release, pass that release's completed inventory;
+tooling verifies and supersedes its retained committed plan without unwinding published metadata. An older baseline
+that disagrees with current package versions refuses. Metadata edited during comparison is preserved and preparation
+refuses before generated writes; rerun after editing finishes.
 
 After the metadata reaches `main`, the maintainer authorizes the matching tag. CI verifies main ancestry and the
 committed complete plan, builds changed publication wheels, verifies reused originals, then publishes a completed

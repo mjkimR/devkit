@@ -52,7 +52,11 @@ Validate schema, digest, normalized names, filename/version identities, source i
 Reject duplicate/unsupported wheel shapes. Canonicalize only owning dist-info path, METADATA Version,
 registered bundle top-level version and RECORD; preserve everything else and executable modes.
 Repreparation logically unwinds still-matching edits in copied metadata before comparisons; preserve unrelated
-changes and removed requirements. A changed baseline or mismatched generated field refuses. An incomplete plan
+changes and removed requirements. A changed baseline or mismatched generated field refuses, except that a completed inventory can prove the retained
+prior complete plan through its origin digest, selected identities and exact plan in its source SHA. That plan is
+superseded without unwinding published edits. Logical current package versions must match the completed baseline.
+Preparation captures consumed metadata bytes and refuses any comparison-time edit before generated writes with
+RELEASE_PREPARATION_CONFLICT; it preserves authored comments, tool fields and dependencies without global locking. An incomplete plan
 can be repaired by rerunning preparation. Retry publication hashes remote bytes; upload only missing assets,
 with inventory last. Never overwrite. Newly added packages enter closure; removed packages leave the inventory.
 

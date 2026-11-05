@@ -13,7 +13,7 @@ from pathlib import Path
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
-from .errors import StalePlanError
+from .errors import PreparationConflictError, StalePlanError
 from .identity import RECIPE, VERSION, bundles, consistent, inventory, require, save, seal, sha, wheel, workspace
 from .metadata import generated, selected, unwind
 
@@ -109,9 +109,47 @@ def pending(root: Path, baseline: dict, release: str) -> dict | None:
         data["schema"] == 1 and data["kind"] == "pending" and data["digest"] == seal(data)["digest"],
         "invalid pending plan",
     )
+    if data["release"] == baseline["release"] and data["state"] == "complete":
+        require(
+            baseline.get("baseline_digest") == data["baseline_digest"],
+            "completed baseline does not prove prior plan origin",
+        )
+        require(
+            data["recipe"] == baseline["recipe"] and data["packages"].keys() == baseline["packages"].keys(),
+            "completed baseline does not match prior plan package set/recipe",
+        )
+        fields = ("path", "version", "fingerprint", "requires", "bundles")
+        require(
+            all(
+                all(entry[field] == baseline["packages"][name][field] for field in fields)
+                for name, entry in data["packages"].items()
+            ),
+            "completed baseline does not match prior planned identities",
+        )
+        require(
+            data["extras"].keys() == baseline["extras"].keys(), "completed baseline extra set differs from prior plan"
+        )
+        for name, entry in data["extras"].items():
+            actual = baseline["extras"][name]
+            require(
+                entry["version"] == actual["version"]
+                and all(entry["artifact"][key] == actual["artifact"][key] for key in ("filename", "sha256")),
+                "completed baseline extra identity differs from prior plan",
+            )
+        source_plan = subprocess.run(
+            ["git", "-C", str(root), "show", baseline["source_sha"] + ":scripts/releases/pending.json"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+        )
+        require(
+            source_plan.returncode == 0 and json.loads(source_plan.stdout) == data,
+            "completed baseline source does not prove the prior plan; retain it and supply the matching completed inventory/source",
+        )
+        return None  # Published generated edits are authored baseline input for the next cycle.
     require(
         data["baseline_digest"] == baseline["digest"] and data["release"] == release,
-        "pending release/baseline mismatch; resolve the existing plan before preparing another release",
+        "pending release/baseline mismatch; resolve the unpublished plan before preparing another release",
     )
     return data
 
@@ -153,6 +191,16 @@ def compute(root: Path, baseline_path: Path, *, builder=build) -> tuple[dict, di
     paths = workspace(root)
     old_plan = pending(root, baseline, release)
     logical = unwind(root, old_plan)
+    projects = {
+        name: tomllib.loads(logical.get(path.relative_to(root).as_posix(), path.read_text()))["project"]
+        for name, path in paths.items()
+    }
+    for name, project in projects.items():
+        if name in baseline["packages"]:
+            require(
+                project["version"] == baseline["packages"][name]["version"],
+                f"{name}: baseline package version does not match logical current version; supply the previous completed inventory",
+            )
     candidate, _ = describe(root, paths, logical, builder)
     changed = {
         name
@@ -160,10 +208,6 @@ def compute(root: Path, baseline_path: Path, *, builder=build) -> tuple[dict, di
         if name not in baseline["packages"]
         or entry["fingerprint"] != baseline["packages"][name]["fingerprint"]
         or build_recipe != baseline["recipe"]
-    }
-    projects = {
-        name: tomllib.loads(logical.get(path.relative_to(root).as_posix(), path.read_text()))["project"]
-        for name, path in paths.items()
     }
     for project in projects.values():
         from .identity import requirements
@@ -213,8 +257,41 @@ def compute(root: Path, baseline_path: Path, *, builder=build) -> tuple[dict, di
     return seal(plan), texts, built
 
 
+def preparation_inputs(root: Path, baseline_path: Path) -> dict[Path, bytes | None]:
+    """Capture only consumed release metadata, including recorded generated-edit destinations."""
+    paths = workspace(root)
+    files = {
+        root / "VERSION",
+        root / "pyproject.toml",
+        baseline_path,
+        root / "scripts/releases/pending.json",
+        *paths.values(),
+    }
+    for path in paths.values():
+        project = tomllib.loads(path.read_text())["project"]
+        for module in project.get("entry-points", {}).get("devkit.bundles", {}).values():
+            files.add(path.parent / "src" / module.replace(".", "/") / "bundle/bundle.toml")
+    plan_path = root / "scripts/releases/pending.json"
+    if plan_path.exists():
+        for edit in json.loads(plan_path.read_text()).get("edits", []):
+            relative = Path(edit["path"])
+            require(not relative.is_absolute() and ".." not in relative.parts, "unsafe generated edit path")
+            files.add(root / relative)
+    return {path: path.read_bytes() if path.exists() else None for path in files}
+
+
+def verify_preparation_inputs(captured: dict[Path, bytes | None]) -> None:
+    for path, before in captured.items():
+        if (path.read_bytes() if path.exists() else None) != before:
+            raise PreparationConflictError("metadata changed during preparation: " + str(path))
+
+
 def prepare(root: Path, baseline_path: Path, *, check: bool = False, builder=build) -> dict:
-    plan, texts, _ = compute(root, baseline_path, builder=builder)
+    captured = preparation_inputs(root, baseline_path)
+    try:
+        plan, texts, _ = compute(root, baseline_path, builder=builder)
+    finally:
+        verify_preparation_inputs(captured)
     plan_path = root / "scripts/releases/pending.json"
     if check:
         if not plan_path.exists() or json.loads(plan_path.read_text()) != plan:
