@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-1-containers
 title: Building Block View - Containers
-summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt, devkit-docs, devkit-spec, devkit-advisory, devkit-cli and devkit-mcp wheels released in lockstep, and external content packages."
+summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt, devkit-docs, devkit-spec, devkit-advisory, devkit-cli and devkit-mcp wheels selected through release inventories, and external content packages."
 status: active
 created_at: 2026-10-17
 ---
@@ -69,15 +69,14 @@ graph TD
 
 `devkit-core` owns shared contracts in `devkit_core.base` and implementations in `devkit_core.core`.
 Base never imports core. The package depends only on PyYAML and
-`devkit-advisory`. It is released at the same version as dist and agt. Generic primitives no longer live
+`devkit-advisory`. Its version follows its shipped payload and exact-pin dependency changes. Generic primitives no longer live
 in the dist wheel; project configuration, receipts and CLI support remain there.
 
 Application wheels own independent regular packages: `devkit_dist`, `devkit_agt`, `devkit_docs`,
 `devkit_spec`, `devkit_mcp` and `devkit_viewer`. `devkit_core` owns the shared foundation and `devkit_cli` the command-line boundary. Only `devkit-advisory`
 continues to ship the PEP 420 `devkit.advisory` API; it never ships `devkit/__init__.py`.
-No installed file belongs to two wheels. Foundation and application distributions are released in
-lockstep from one tag, pinning workspace runtime dependencies to that exact version
-(`ADR-package-ownership-and-release-version`).
+No installed file belongs to two wheels. Foundation and application distributions retain unchanged versions and pin workspace runtime dependencies to
+their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deployment`).
 
 ### 2.1 `devkit-dist` (`packages/devkit-dist`)
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
@@ -87,7 +86,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
   (`devkit_dist.features.host`), immutable expiring artifacts (`devkit_dist.features.shared`, importing only core/advisory), asset distribution (`devkit_dist.features.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit_dist.cli`, `devkit_dist.__main__`) and the built-in bundles `devkit`, `advisory` and
   `git-commits` (`ADR-package-ownership-and-release-version`).
-- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` and `devkit-advisory` (locked to the same version);
+- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` and `devkit-advisory` (internal wheels pinned to selected actual versions);
   extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
   run in an environment without it (`just test-dist`).
 
@@ -112,9 +111,9 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Distribution Wheel**: `devkit_cli-<version>-py3-none-any.whl`
 - **Contents**: `devkit_cli`, the agent-first output contract of `ARCH-08-1-agent-output` for any click command:
   `Boundary`, the output helpers, `LazyGroup` and the `devkit_cli.testing` helper (`CAP-CLI-agent-cli-toolkit`).
-- **Dependencies**: `click` and `devkit-advisory` (same version); nothing else is imported.
+- **Dependencies**: `click` and `devkit-advisory` (selected actual version); nothing else is imported.
 - **Role**: The runtime dependency of click tools in other repositories and the base of `devkit_dist.adapters.cli`.
-  A semver contract like `devkit-advisory`, released at the same version.
+  A semver contract like `devkit-advisory`, advanced when its payload or exact internal pins change.
 
 ### 2.4 `devkit-docs` (`packages/devkit-docs`)
 - **Distribution Wheel**: `devkit_docs-<version>-py3-none-any.whl`
@@ -125,7 +124,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
   contract (`devkit_docs.features.governance`); the `DOCS_` codes and the proposal layout and effort vocabulary (`devkit_docs.base`).
   It ships no bundle and knows no delivery process: the `devkit.docs.status_overlay` entry-point group lets a
   delivery package change how `devkit docs list` shows a document's status.
-- **Dependencies**: `devkit-agt`, `devkit-core` and `click` (same version); its `search` extra requires
+- **Dependencies**: `devkit-agt`, `devkit-core` and `click` (internal wheels pinned to selected actual versions); its `search` extra requires
   `devkit-agt[search]`. It never imports `devkit_spec` (`ADR-document-system`).
 - **Contracts**: `CAP-DOCS-document-model`.
 
@@ -138,7 +137,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
   rules, templates and opt-in docs skeleton. The bundle ships every rule asset, including the document rules,
   whose wrappers import `devkit_docs`. It registers the `spec` status overlay that shows a draft proposal under
   Planning as `reviewing`.
-- **Dependencies**: `devkit-docs`, `devkit-agt`, `devkit-core` and `click` (same version); its `search` extra
+- **Dependencies**: `devkit-docs`, `devkit-agt`, `devkit-core` and `click` (internal wheels pinned to selected actual versions); its `search` extra
   requires `devkit-docs[search]`. Its proposal acceptance and handoff run through the `devkit spec proposal` CLI,
   and the base harness remains SDD-agnostic (`ADR-document-system`).
 - **Generic first**: a generic capability that devkit-spec needs MUST be added to the base packages
@@ -173,7 +172,7 @@ acquires Python behavior. Its rules and playbook are separate from the reusable 
 ### Optional MCP runtime
 
 `packages/devkit-mcp` ships `devkit_mcp` and mounts `devkit mcp` through `devkit.commands`. It is a
-lockstep application wheel, depending on the exact dist release, `fastmcp>=4.0.3,<5`, `mcp-types>=2,<3` and
+selectively versioned application wheel, depending on the selected exact dist version, `fastmcp>=4.0.3,<5`, `mcp-types>=2,<3` and
 `jsonschema`. It owns transport,
 form adaptation and `devkit.host.services` discovery; integration and handoff remain domain services. Dist imports
 no runtime module and keeps the executable, receipts, hooks and narrow project-registration reconciler.

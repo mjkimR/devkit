@@ -1,0 +1,40 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T06:19:40.054521Z'
+status: completed
+summary: 'round 1; REVISE: three P1 findings in release entrypoint, bootstrap optional identities and subprocess output.'
+findings:
+- issue: The normal release-build entrypoint passes the tag twice.
+  evidence: justfile:104 explicitly passes tag followed by positional $@; documented invocation reproduced ARGUMENT_INVALID unexpected extra v0.1.6.
+  failure_condition: Any documented just release-build TAG --baseline FILE invocation including CI.
+  suggested_action: Change justfile to bash scripts/release.sh "$@" and add an entrypoint regression verifying exactly one tag reaches the adapter.
+  resolution: open
+  severity: P1
+- issue: Bootstrap accepts original wheels missing source-declared optional dependencies.
+  evidence: scripts/releases/artifacts.py:113-123 only checks present optional specifiers; in-memory probe source search required-helper==0.1.0 and empty wheel Requires-Dist succeeded.
+  failure_condition: Source optional is missing or names/extras/markers differ while specifiers match.
+  suggested_action: Compare complete expected runtime and optional requirement identities including extra markers; reject missing extra or mismatched names extras markers URLs and specifiers; add missing-optional and wrong-name regressions.
+  resolution: open
+  severity: P1
+- issue: Release helpers leak subprocess output outside the agent output protocol.
+  evidence: scripts/releases/release.py:24 inherits uv lock --check output; artifacts.py gh create/upload/edit inherit stdout and stderr.
+  failure_condition: Build lock check or gh mutation emits raw diagnostics or URL alongside result.
+  suggested_action: Capture stdout/stderr at child boundaries including downloads; keep failure diagnostics for protocol rendering and add successful build/publish output tests.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex role isolation emulated with absolute same-worktree reads and before/after snapshot978b1457; no outside reads or role writes.
+- Four later Host-admitted version-restatement documents are not part of this round.
+unverified_areas:
+- Real historical assets and live publication remain first-use checks.
+checks:
+  tests: PASS mode=full 6659 passed 15 skipped 152.10s
+  entrypoint: FAIL duplicate tag
+  bootstrap: FAIL missing source optional accepted
+  output: FAIL raw subprocess output
+diff_scope:
+  base: 0e17cd72d96d5111e39731291241472d7cd3f87b
+  head: 324a51547a44460a3f1adefd6732a9df49095211
+activity_effort: high

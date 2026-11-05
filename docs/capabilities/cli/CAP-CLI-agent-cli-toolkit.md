@@ -63,9 +63,10 @@ tool around it and checks the structure with five rules.
    target is not a click command, THEN it MUST raise `TypeError` naming the target.
 9. **Argument errors**: a semantic argument check MUST raise `devkit.advisory.ArgumentError` (`ARGUMENT_INVALID`), or
    a subclass of it; no other class declares that code (`RULE-advisory-unique-code`).
-10. **Semver contract**: `devkit-cli` MUST be released at the version of `devkit-dist`, `devkit-agt` and
-    `devkit-advisory`, and a removed or renamed public name MUST bump the minor version within `0.x`
-    (`packages/devkit/tests/integration/package/test_lockstep.py` for the version, and the pinned public names in
+10. **Semver contract**: `devkit-cli` MUST take the shared release version when its shipped payload or exact internal
+    pins change and MUST retain its version otherwise (`ADR-selective-package-versions`). A removed or renamed public
+    name MUST bump the minor version within `0.x`
+    (`packages/devkit/tests/integration/package/test_lockstep.py` for actual-version pins, and the pinned public names in
     `packages/devkit-cli/tests/integration/test_lazy_and_package.py`).
 11. **Opt-in bundle**: the `cli-tool` bundle MUST deploy nothing until a project selects it; its default preset deploys
     the instruction and the five rules, and its `guide` preset the instruction only

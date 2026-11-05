@@ -101,4 +101,4 @@ handbook *args:
 
 # Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/
 release-build tag *args:
-    bash scripts/release.sh "{{tag}}" "$@"
+    bash scripts/release.sh "$@"

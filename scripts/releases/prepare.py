@@ -22,7 +22,7 @@ def recipe(root: Path) -> dict:
     value = json.loads((root / "scripts/releases/recipe.json").read_text())
     require(value == RECIPE, "unsupported build recipe; update tooling and recipe together")
     require(sys.version.split()[0] == value["python"], "run with recipe Python " + value["python"])
-    actual = subprocess.check_output(["uv", "--version"], cwd=root, text=True).split()[1]
+    actual = subprocess.check_output(["uv", "--version"], cwd=root, text=True, stderr=subprocess.PIPE).split()[1]
     require(actual == value["uv"], "run with recipe uv " + value["uv"])
     return value
 

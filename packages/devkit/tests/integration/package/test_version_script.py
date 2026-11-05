@@ -56,3 +56,13 @@ def test_invalid_cli_options_never_reach_release_effects(tmp_path, monkeypatch, 
     for effect in effects.values():
         effect.assert_not_called()
     assert not (tmp_path / "baseline.json").exists()
+
+
+def test_just_release_build_passes_tag_once():
+    result = subprocess.run(
+        ["just", "release-build", "v99.0.0", "--baseline", "fixture.json"], cwd=ROOT, capture_output=True, text=True
+    )
+    assert result.returncode == 2
+    assert "RELEASE_TAG_MISMATCH" in result.stderr
+    assert "ARGUMENT_INVALID" not in result.stderr
+    assert result.stdout == ""

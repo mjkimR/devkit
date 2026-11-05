@@ -21,12 +21,13 @@ def release(root: Path, tag: str, baseline_path: Path, repository: str) -> dict:
     source = git(root, "rev-parse", tag + "^{commit}")
     require(git(root, "rev-parse", "HEAD") == source, "build HEAD must match authorized tag")
     require(not git(root, "status", "--porcelain", "--untracked-files=normal"), "release tree must be clean")
-    subprocess.run(["uv", "lock", "--check"], cwd=root, check=True)
+    subprocess.run(["uv", "lock", "--check"], cwd=root, check=True, capture_output=True, text=True)
     subprocess.run(
         ["uv", "run", "--no-active", "python", "scripts/handbook.py", "release-check", tag],
         cwd=root,
         check=True,
-        stdout=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
     plan, texts, built = compute(root, baseline_path)
     require(committed == plan, "tagged plan stale")

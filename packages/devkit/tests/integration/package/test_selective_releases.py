@@ -436,7 +436,7 @@ def test_clean_wheel_git_and_tool_consumers(repo, tmp_path, monkeypatch):
     assert len(sources) == 5 and all(commit in source for source in sources)
 
 
-def test_partial_upload_retry_checks_every_existing_asset_before_upload(repo, tmp_path, monkeypatch):
+def test_partial_upload_retry_checks_every_existing_asset_before_upload(repo, tmp_path, monkeypatch, capfd):
     root, baseline, originals = repo
     data = identity.inventory(baseline)
     data["release"] = "0.1.1"
@@ -460,6 +460,18 @@ def test_partial_upload_retry_checks_every_existing_asset_before_upload(repo, tm
     def invoke(args, **kwargs):
         if args[:3] == ["gh", "release", "view"]:
             return subprocess.CompletedProcess(args, 0, json.dumps({"assets": [{"name": n} for n in existing]}), "")
+        if args[:3] in (["gh", "release", "upload"], ["gh", "release", "edit"]) or args[0] == "git":
+            actual_run(
+                [
+                    sys.executable,
+                    "-c",
+                    'import sys; print("raw tool stdout"); print("raw tool stderr", file=sys.stderr)',
+                ],
+                cwd=kwargs["cwd"],
+                capture_output=kwargs.get("capture_output", False),
+                text=True,
+                check=True,
+            )
         if args[:3] == ["gh", "release", "upload"]:
             p = Path(args[4])
             uploads.append(p.name)
@@ -473,6 +485,11 @@ def test_partial_upload_retry_checks_every_existing_asset_before_upload(repo, tm
 
     def output(args, **kwargs):
         if args[0] == "gh":
+            actual_check(
+                [sys.executable, "-c", 'import sys; print("raw download stderr", file=sys.stderr)'],
+                cwd=kwargs["cwd"],
+                stderr=kwargs.get("stderr"),
+            )
             return existing[args[args.index("--pattern") + 1]]
         return actual_check(args, **kwargs)
 
@@ -489,9 +506,11 @@ def test_partial_upload_retry_checks_every_existing_asset_before_upload(repo, tm
     with pytest.raises(AdvisoryError, match="remote asset mismatch"):
         artifacts.publish(directory, "v0.1.1", root=root)
     assert uploads == []
+    captured = capfd.readouterr()
+    assert captured.out == captured.err == ""
 
 
-def test_tagged_build_publishes_changed_wheels_and_reuses_originals(repo, monkeypatch):
+def test_tagged_build_publishes_changed_wheels_and_reuses_originals(repo, monkeypatch, capfd):
     from scripts.releases.release import release
 
     root, baseline, _ = repo
@@ -505,7 +524,17 @@ def test_tagged_build_publishes_changed_wheels_and_reuses_originals(repo, monkey
 
     def invoke(args, **kwargs):
         if args == ["uv", "lock", "--check"] or "scripts/handbook.py" in args:
-            return subprocess.CompletedProcess(args, 0)
+            return actual(
+                [
+                    sys.executable,
+                    "-c",
+                    'import sys; print("raw child result"); print("raw child diagnostic", file=sys.stderr)',
+                ],
+                cwd=kwargs["cwd"],
+                capture_output=kwargs.get("capture_output", False),
+                text=True,
+                check=True,
+            )
         return actual(args, **kwargs)
 
     monkeypatch.setattr(subprocess, "run", invoke)
@@ -517,6 +546,8 @@ def test_tagged_build_publishes_changed_wheels_and_reuses_originals(repo, monkey
         identity.inventory(root / "dist/release/release-inventory.json")["source_sha"]
         == run(root, "git", "rev-parse", "HEAD").strip()
     )
+    captured = capfd.readouterr()
+    assert captured.out == captured.err == ""
 
 
 def test_explicit_recipe_change_and_inconsistent_baseline(repo):
@@ -529,3 +560,38 @@ def test_explicit_recipe_change_and_inconsistent_baseline(repo):
     identity.save(baseline, data)
     with pytest.raises(AdvisoryError, match="actual version"):
         prepare.compute(root, baseline)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "wrong-name"])
+def test_bootstrap_refuses_source_optional_metadata_mismatch(repo, tmp_path, mutation):
+    import io
+
+    root, _, originals = repo
+    (root / "VERSION").write_text("0.1.0\n")
+    run(root, "git", "init", "-q")
+    run(root, "git", "add", ".")
+    run(root, "git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "original")
+    run(root, "git", "tag", "v0.1.0")
+    path = next(originals.glob("devkit_agt-*.whl"))
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(path) as before, zipfile.ZipFile(buffer, "w") as after:
+        for info in before.infolist():
+            raw = before.read(info)
+            if info.filename.endswith("/METADATA"):
+                lines = raw.decode().splitlines(keepends=True)
+                matching = [line for line in lines if line.startswith("Requires-Dist: devkit-dist[search]")]
+                assert len(matching) == 1
+                raw = "".join(
+                    ("" if mutation == "missing" else line.replace("devkit-dist[search]", "wrong-helper[search]"))
+                    if line in matching
+                    else line
+                    for line in lines
+                ).encode()
+            after.writestr(info, raw)
+    path.write_bytes(buffer.getvalue())
+    (originals / "SHA256SUMS").write_text(
+        "".join(f"{identity.sha(p)}  {p.name}\n" for p in sorted(originals.glob("*.whl")))
+    )
+    with pytest.raises(AdvisoryError, match="complete dependency mismatch"):
+        artifacts.bootstrap(root, "v0.1.0", "HEAD", originals, tmp_path / "invalid.json", "fixture/repo")
+    assert not (tmp_path / "invalid.json").exists()

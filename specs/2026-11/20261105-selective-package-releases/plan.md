@@ -11,6 +11,10 @@ spec: SPEC-selective-package-releases
 workspace sources and model/npm policies remain. `ARCH-05-2-components` permits repository tooling and its existing
 package integration test mirror. No new application feature or dependency edge is introduced.
 
+Host admission during Development adds exact Tier A version-restatement targets ARCH-01-introduction-and-goals,
+ARCH-05-1-containers, ARCH-05-3-command-plugins and CAP-CLI-agent-cli-toolkit rule 10. These preserve ownership,
+layers, dependency directions, public names, semver and the CLI version source. They are not Tier B extensions.
+
 ## 2. Architecture Overview & Impact
 
 Split repository release tooling into Python modules under scripts/releases; version.py and release.sh stay entry

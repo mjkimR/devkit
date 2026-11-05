@@ -10,6 +10,7 @@ import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
 
+from packaging.markers import Marker
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name, parse_wheel_filename
 from packaging.version import Version
@@ -30,7 +31,7 @@ def obtain(artifact: dict, directory: Path) -> Path:
 
 
 def git(root: Path, *args: str) -> str:
-    return subprocess.check_output(["git", "-C", str(root), *args], cwd=root, text=True).strip()
+    return subprocess.check_output(["git", "-C", str(root), *args], cwd=root, text=True, stderr=subprocess.PIPE).strip()
 
 
 def bootstrap(root: Path, tag: str, source: str, artifacts: Path, output: Path, repository: str) -> dict:
@@ -108,19 +109,14 @@ def bootstrap(root: Path, tag: str, source: str, artifacts: Path, output: Path, 
         for value in bundle_data.values():
             require(value["version"] == release, "original/source bundle identity mismatch")
         # Compare all source runtime/optional requirements, even inactive ones, with wheel metadata.
-        from .identity import requirements
-
-        source_reqs = {str(Requirement(r)) for r in requirements(project)}
-        wheel_reqs = {str(Requirement(r)) for r in requires}
-        # Optional requirements add an extra marker in core metadata; verify their pins through consistent().
-        for raw in project.get("dependencies", []):
-            require(str(Requirement(raw)) in wheel_reqs, "original/source dependency mismatch")
-        require(
-            all(
-                str(Requirement(r).specifier) in {str(Requirement(s).specifier) for s in source_reqs} for r in requires
-            ),
-            "original/source optional dependency mismatch",
-        )
+        expected = {Requirement(raw) for raw in project.get("dependencies", [])}
+        for extra, values in project.get("optional-dependencies", {}).items():
+            extra = canonicalize_name(extra)
+            for raw in values:
+                req = Requirement(raw)
+                req.marker = Marker(f'({req.marker}) and extra == "{extra}"' if req.marker else f'extra == "{extra}"')
+                expected.add(req)
+        require(expected == {Requirement(raw) for raw in requires}, "original/source complete dependency mismatch")
         packages[name] = {
             "path": parent,
             "version": release,
@@ -138,7 +134,9 @@ def bootstrap(root: Path, tag: str, source: str, artifacts: Path, output: Path, 
 
             name, version, _, _ = parse_wheel_filename(filename)
             # The historical source's committed model bytes must match the original release artifact.
-            original_bytes = subprocess.check_output(["git", "-C", str(root), "show", f"{source}:{relative}"], cwd=root)
+            original_bytes = subprocess.check_output(
+                ["git", "-C", str(root), "show", f"{source}:{relative}"], cwd=root, stderr=subprocess.PIPE
+            )
 
             require(hashlib.sha256(original_bytes).hexdigest() == artifact["sha256"], "model source/artifact mismatch")
             extras[name] = {"version": str(version), "artifact": artifact}
@@ -164,7 +162,11 @@ def publish(directory: Path, tag: str, *, root: Path) -> None:
     require(tag == "v" + data["release"], "publish tag/inventory mismatch")
     require(git(root, "rev-parse", tag + "^{commit}") == data["source_sha"], "publish tag/source mismatch")
     subprocess.run(
-        ["git", "-C", str(root), "merge-base", "--is-ancestor", data["source_sha"], "origin/main"], cwd=root, check=True
+        ["git", "-C", str(root), "merge-base", "--is-ancestor", data["source_sha"], "origin/main"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
     )
     expected = {
         a["artifact"]["filename"]: a["artifact"]["sha256"]
@@ -209,6 +211,8 @@ def publish(directory: Path, tag: str, *, root: Path) -> None:
             ],
             cwd=root,
             check=True,
+            capture_output=True,
+            text=True,
         )
         assets = []
     else:
@@ -217,7 +221,7 @@ def publish(directory: Path, tag: str, *, root: Path) -> None:
     require(not (existing.keys() - expected.keys()), "unexpected remote release assets")
     for filename in existing:
         result = subprocess.check_output(
-            ["gh", "release", "download", tag, "--pattern", filename, "--output", "-"], cwd=root
+            ["gh", "release", "download", tag, "--pattern", filename, "--output", "-"], cwd=root, stderr=subprocess.PIPE
         )
 
         require(hashlib.sha256(result).hexdigest() == expected[filename], "existing remote asset mismatch: " + filename)
@@ -225,12 +229,22 @@ def publish(directory: Path, tag: str, *, root: Path) -> None:
     order = [*sorted(set(expected) - {"release-inventory.json"}), "release-inventory.json"]
     for filename in order:
         if filename not in existing:
-            subprocess.run(["gh", "release", "upload", tag, str(directory / filename)], cwd=root, check=True)
+            subprocess.run(
+                ["gh", "release", "upload", tag, str(directory / filename)],
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             uploaded = subprocess.check_output(
-                ["gh", "release", "download", tag, "--pattern", filename, "--output", "-"], cwd=root
+                ["gh", "release", "download", tag, "--pattern", filename, "--output", "-"],
+                cwd=root,
+                stderr=subprocess.PIPE,
             )
             require(
                 hashlib.sha256(uploaded).hexdigest() == expected[filename],
                 "uploaded asset checksum mismatch: " + filename,
             )
-    subprocess.run(["gh", "release", "edit", tag, "--draft=false"], cwd=root, check=True)
+    subprocess.run(
+        ["gh", "release", "edit", tag, "--draft=false"], cwd=root, check=True, capture_output=True, text=True
+    )
