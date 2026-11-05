@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: User authorizes Planning for bundle source snapshots at medium effort.
+by: user
+at: '2026-11-05T03:58:25.979290Z'
