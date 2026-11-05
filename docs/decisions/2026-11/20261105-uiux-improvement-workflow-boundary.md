@@ -1,13 +1,13 @@
 ---
-id: PADR-uiux-improvement-workflow-boundary
+id: ADR-uiux-improvement-workflow-boundary
 title: Keep UI/UX improvement opt-in and within the project delivery workflow
 summary: "For reusable UI/UX improvement, we ship an explicitly invoked skill with local roles and reuse the consumer delivery workflow, to carry changes through existing checks, accepting host-dependent tools and implementation boundaries."
-proposal: PROP-ux-design-exploration
-status: draft
+proposal: SPEC-ux-design-exploration
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
+# [ADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
 
 ## 1. Context & Problem Statement
 

@@ -1,39 +1,23 @@
 ---
-id: PROP-ux-design-exploration
+id: SPEC-ux-design-exploration
 title: Add an explicitly invoked UI/UX improvement skill
-summary: "Add an optional skill-local team that improves interface design and user flows through proportionate diagnosis, reference discovery, design, implementation and verification within the user's requested scope."
-status: accepted
-created_at: 2026-11-05
-target_area: capabilities/delivery/
-priority: medium
-size: M
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/
-    - packages/devkit-catalog/pyproject.toml
-    - packages/devkit-catalog/README.md
-    - packages/devkit-catalog/tests/integration/bundles/
-    - packages/devkit-catalog/tests/e2e/bundles/
-    - docs/capabilities/delivery/
-    - docs/usecases/delivery/
-    - docs/architecture/ARCH-05-2-components.md
-    - guides/install/bundle-recommendations.md
-  excludes:
-    - packages/devkit/src/
-    - packages/devkit-dist/src/
-    - packages/devkit-spec/src/
-    - packages/devkit-viewer/
-    - .devkit/managed/
-    - .agents/skills/
-task_kind: feature
-planning_effort: medium
-dev_effort: medium
-workflow: sdd-proposal
+summary: Add an optional skill-local team that improves interface design and user flows through proportionate diagnosis, reference discovery, design, implementation and verification within the user's requested scope.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-ux-design-exploration] Add an explicitly invoked UI/UX improvement skill
+# [SPEC-ux-design-exploration] Add an explicitly invoked UI/UX improvement skill
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-ux-design-exploration on 2026-11-05.
+- Target Docs Blueprint: `PROP-ux-design-exploration-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 The user wants better UI/UX results than the ordinary suggestions produced by a single agent. They prefer an
 explicitly invoked skill with local Markdown roles, including design, unconventional suggestions, references
@@ -49,7 +33,7 @@ Hypothesis: one coordinator can select useful independent perspectives, combine 
 changes and carry the requested improvement through the project's normal delivery process. The skill should
 address flow quality and visual quality together, while keeping the work focused on the supplied product goal.
 
-### User choices and evidence limits
+#### User choices and evidence limits
 
 - Explicit invocation and skill-local roles are the selected packaging direction.
 - The user explicitly broadened the objective from making improvement alternatives to improving UI/UX overall.
@@ -58,7 +42,26 @@ address flow quality and visual quality together, while keeping the work focused
 - This draft provides direct references and a self-contained rationale. It does not require the separate
   research material or its transient execution records to be understood.
 
-## 2. Planning Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Add an explicitly invoked UI/UX improvement skill so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 - **Public entry:** `uiux-improve` is both the bundle and skill name. Its description names overall interface and
   user-flow improvement; `invocation = "user"` prevents implicit invocation through supported projections.
@@ -80,15 +83,15 @@ address flow quality and visual quality together, while keeping the work focused
 - **Retention:** honor an explicitly requested destination; otherwise report in conversation. Product changes and
   design artifacts follow the consumer's ownership conventions. No new persistent memory or document kind is added.
 
-`PADR-uiux-improvement-workflow-boundary` records the lasting delivery and local-role boundary. Public naming,
+`ADR-uiux-improvement-workflow-boundary` records the lasting delivery and local-role boundary. Public naming,
 reference selection and role assignments remain reversible implementation choices. No runtime spike, further
 literature survey, product usability experiment or agent-team comparison is needed for this content delivery.
 There are no unresolved product decisions for this Planning turn. Development remains `medium` for packaging,
 instruction review and consumer-workflow compatibility.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Goal and representative use
+#### Goal and representative use
 
 Improve the interface and experience serving a supplied user goal. This can include navigation and information
 architecture, task steps, feedback and recovery, interaction details, hierarchy, typography, spacing, responsive
@@ -100,7 +103,7 @@ landing page more character, simplifying onboarding or improving a product's UI/
 surfaces. The coordinator can suggest an initial focus for a broad request without turning it into a mandatory
 research project. Preserve supplied design-system and product constraints unless the user authorizes changing them.
 
-### Packaging and ownership
+#### Packaging and ownership
 
 Add an opt-in content bundle to `devkit-catalog`, following the existing content-only bundle layout in
 `ARCH-05-2-components`. Register its entry through the existing `devkit.bundles` mechanism and declare user-only
@@ -108,7 +111,7 @@ invocation. No auto-selection, global specialist registration, runtime module or
 
 Use the skill-local-role approach illustrated by `ADR-skill-local-research-roles`: general subagents read the
 selected role file and receive a self-contained assignment, with fresh context where supported. That ADR owns
-the existing research-specific decision. `PADR-uiux-improvement-workflow-boundary` records this bundle’s decision.
+the existing research-specific decision. `ADR-uiux-improvement-workflow-boundary` records this bundle’s decision.
 
 Selected skill layout inside `devkit_catalog/uiux_improve/bundle/skills/`, to be created in Development:
 
@@ -130,7 +133,7 @@ design artifacts. Parallel source edits are unnecessary for the first version; t
 accepted elements without creating another specialist. Role text is behavioral guidance, not host-enforced
 permission or filesystem isolation. Only selected role bodies are loaded.
 
-### Improvement process
+#### Improvement process
 
 1. Recover the target, user goal, current artifacts and constraints from the request and available project context.
    Ask only for missing information that changes the work. Inspect the running UI when available; identify
@@ -152,7 +155,7 @@ A normal improvement request finishes with the changed interface or flow and its
 an idea list. If execution is blocked by a missing product choice, artifact or tool, preserve useful partial work
 and identify that specific blocker. Do not substitute a generic design report for requested implementation.
 
-### Role behavior and references to adapt
+#### Role behavior and references to adapt
 
 - [Agency Agents design roles](https://github.com/msitarzewski/agency-agents/tree/main/design) provide examples
   of separating UI design, UX concerns and distinctive expression into role files.
@@ -170,7 +173,7 @@ Do not copy automatic first-pass failure, fixed issue quotas, mandatory revision
 experience or unsupported success percentages. Keep upstream attribution and license obligations when copying.
 These repositories are reusable instruction references, not proof that this composition improves every result.
 
-### Context and delivery boundaries
+#### Context and delivery boundaries
 
 Keep the bundle independent from deep-research and adaptive-dev. It should not automatically invoke either entry,
 change the selected development approach or import private instructions from another bundle. Reuse the distribution
@@ -183,7 +186,7 @@ stronger separation from later work. Do not introduce persistent role memory or 
 Formal adoption of the deep-research improvement proposal is not a prerequisite. This bundle can implement its
 own concise delegation and usefulness checks without waiting for another work unit to land.
 
-### Expected scope and acceptance examples
+#### Expected scope and acceptance examples
 
 The boundary parents accommodate files that do not exist yet. Development is limited to these additions and
 shared registration/document edits:
@@ -215,7 +218,7 @@ skill rather than a concrete product interface.
 - Distribution/installation checks verify packaging and invocation behavior. Review checks instruction semantics;
   neither kind of check claims proven aesthetic quality or superiority to a single agent.
 
-### Scope excluded
+#### Scope excluded
 
 - General business-idea discovery, market validation or a standalone problem-solving ideation skill.
 - Mandatory multi-agent casts, debate rounds, numeric design scores or benchmark programs.
@@ -223,10 +226,11 @@ skill rather than a concrete product interface.
 - Wholesale repository installation or mandatory external services such as Figma.
 - Changing a consumer's workflow, bypassing its approvals or implementing a consumer product in this skill-delivery task.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning leaves the proposal `reviewing`, with a committed challenger round, folded findings, target-document
 blueprint and worker return. The Host reviews that committed source for `plan-accept`; acceptance and
 `proposal-handoff` remain separate authorities under the effective policy. Neither is recorded by this worker.
 After authorized handoff, one feature spec delivers the bundle, focused checks and Living Spec reflection.
 The Planning proposal is retired by the normal handoff lifecycle, with the PADR promoted to an ADR.
+

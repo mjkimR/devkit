@@ -3,7 +3,7 @@ id: PROP-ux-design-exploration-target
 title: Target Living Spec Structure for PROP-ux-design-exploration
 summary: "Planned UI/UX improvement capability, use case, bundle layout and installation guidance for the explicitly invoked uiux-improve skill."
 status: draft
-proposal: PROP-ux-design-exploration
+proposal: SPEC-ux-design-exploration
 created_at: 2026-11-05
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -40,7 +40,7 @@ Update `ARCH-05-2-components` §1.1 to place the opt-in content-only bundle at
 `devkit_catalog/uiux_improve/bundle/` with its entry and local roles. Preserve the existing runtime dependency
 graph and other bundle ownership.
 
-Promote `PADR-uiux-improvement-workflow-boundary` at handoff. The capability will restate its explicit invocation,
+Promote `ADR-uiux-improvement-workflow-boundary` at handoff. The capability will restate its explicit invocation,
 local-role and existing-workflow clauses. The planned ADR path assumes handoff on 2026-11-05; use the actual
 promoted path if it differs.
 
