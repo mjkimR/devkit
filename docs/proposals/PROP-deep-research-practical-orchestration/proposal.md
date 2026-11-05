@@ -14,6 +14,7 @@ boundaries:
     - packages/devkit-catalog/tests/e2e/bundles/deep_research/
     - docs/capabilities/delivery/CAP-DLV-deep-research.md
     - docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md
+    - docs/decisions/
   excludes:
     - packages/devkit/src/
     - packages/devkit-dist/src/
@@ -54,27 +55,28 @@ The current contracts in `CAP-DLV-deep-research` and `UC-research-an-idea-and-sh
 
 ### User constraints and evidence status
 
-The user requests this proposal as a future improvement draft. Implementation, Planning acceptance and handoff
-are not requested. Keep the explicitly invoked skill with skill-local Markdown roles and optional delegation.
+The requested work proceeds through Planning of this bounded improvement. Plan acceptance and Development
+handoff remain separate Host decisions. Keep the explicitly invoked skill with skill-local Markdown roles and optional delegation.
 Do not require same-task comparisons, blind scoring or proof of team benefit before adopting a useful pattern.
 
-The observations above come directly from the pilot conversation and returned assignments. The research record
-is retained separately. This proposal is self-contained and does not require a material citation or access to
-the transient run directory.
+The observations above come from the pilot conversation and returned assignments retained in
+`MAT-agent-team-design-pilot`. This proposal needs no access to the transient run directory.
 
-## 2. Technical Spike Questions
+## 2. Planning Decisions
 
-No runtime spike, benchmark or further literature review is required to refine this draft.
-Planning should settle these wording and placement questions:
+Planning used `low` activity-effort: the direction is already concrete and needs no additional research or critic
+pass. No essential user question remains. Development remains `medium` because agent-facing instructions and
+retained behavior contracts need independent review.
 
-- **Q1:** Which minimum deliverable fields belong in the orchestration assignment, and which remain optional
-  examples? Prefer a concise result shape and user constraints over another mandatory intake form.
-- **Q2:** Should the coordinator's final usefulness check remain inline, with discovery-critic receiving the same
-  criteria only when invoked? Prefer this option so every run does not require another agent.
-- **Q3:** How should roles distinguish permission refusal from ordinary retrieval failure when tool responses
-  are ambiguous? Preserve permission boundaries; uncertainty about authorization must not permit a workaround.
-- **Q4:** Which existing distribution checks need updating, and which behaviors need semantic review examples?
-  Avoid brittle text assertions that purport to prove research usefulness.
+| Question | Settled direction | Consequence |
+| --- | --- | --- |
+| Brief and assignment | Put requested deliverable, intended use, known constraints and an observable stop condition in the existing brief; each assignment names its contribution and expected return. | Infer the fields from supplied context; add no mandatory intake form or universal output template. |
+| Usefulness check | Keep a coordinator-owned final check before retention; give the same criteria to discovery-critic only when it is invoked. | Check the requested artifact, next action and unwanted prerequisites without a compulsory reviewer call. |
+| Retrieval classification | A definite refusal stops access to that resource. An ordinary technical retrieval failure permits bounded authorized recovery. Ambiguous authorization stops that resource while unrelated permitted work can continue. | Failed retrieval and actual replacement evidence remain visible; recovery consumes the original assignment bound. |
+| Verification | Retain installation and authority checks; use concrete semantic review examples for instruction behavior. | No test claims to measure creativity, usefulness or cost superiority, and no comparison experiment is required. |
+
+`PADR-deliverable-driven-research` records the lasting instruction choice and tradeoffs. `target-docs.md` identifies
+the exact expected source and Living Spec reflection. No new package, runtime behavior or feature edge is needed.
 
 ## 3. Proposed Design & Impact
 
@@ -140,7 +142,7 @@ changed behavior into the capability and use case. Update existing bundle checks
 contract changes. Managed and projected copies remain generated through normal synchronization.
 No new cross-feature dependency or package edge is in scope.
 
-### Acceptance examples for later implementation
+### Acceptance examples for Development
 
 - A practical-reference request produces concrete repositories/files and reuse guidance in its first retained
   answer, rather than only research about whether the approach works.
@@ -158,13 +160,14 @@ No new cross-feature dependency or package edge is in scope.
 - Benchmarks, same-task A/B/C comparisons, blind human scoring or validation until team superiority is proved.
 - A research runtime, new tool permissions, automated retry service, scheduler or persistent role memory.
 - Changes to Git/worktree lifecycle, research material immutability, citation policy or publication authority.
-- Implementation in this drafting task, or mandatory additional research/review rounds.
+- Implementation during Planning, or mandatory additional research/review rounds.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal in `draft` until the user chooses to take it into Planning or explicitly accepts an eligible
-direction. The work remains pending; creating this document is not plan acceptance or a Development handoff.
+This proposal remains `reviewing` for the Host's committed-source review and `plan-accept` decision. Planning
+has settled the direction; it claims neither acceptance nor a Development handoff.
 
-On acceptance, use the proposal workflow and hand off one bounded source-bundle/documentation change. Retire
-the proposal through the normal handoff. On rejection, record the user's reason and use the normal rejection
-lifecycle. No delivery approval or implementation result is claimed by this draft.
+On acceptance, hand off one bounded source-bundle/documentation change at `medium` Development effort. Include the
+promoted decision in the declared Development scope. Retirement follows the normal handoff lifecycle. On rejection,
+record the decision and follow the normal rejection lifecycle. No comparative-benefit study gates either adoption
+or completion of the implementation checks.
