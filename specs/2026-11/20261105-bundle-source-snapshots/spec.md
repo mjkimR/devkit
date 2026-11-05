@@ -1,195 +1,99 @@
 ---
 id: SPEC-bundle-source-snapshots
 title: Repository-committed bundle source snapshots
-summary: Copy reusable bundle sources into a local content package with provenance and explicit updates so consumer repositories can install private bundle content without upstream credentials.
+summary: "Copy complete supported content providers into local packages with credential-free provenance and guarded explicit refresh, retaining normal discovery and sync."
 status: planned
 created: 2026-11-05
-related_capabilities: []
+related_capabilities: [CAP-DIST-in-repo-bundles, CAP-DIST-content-packages, CAP-DIST-workspace-ownership, CAP-DIST-sync-and-transactions]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-bundle-source-snapshots] Repository-committed bundle source snapshots
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-bundle-source-snapshots on 2026-11-05.
-- **Preserved Materials**: `docs/materials/2026-11/20261105-bundle-source-snapshots`
-- Target Docs Blueprint: `PROP-bundle-source-snapshots-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-Private content packages shared through uv Git dependencies require upstream credentials in each consumer
-environment. `CAP-DIST-in-repo-bundles` already supports ordinary content packages installed from local paths or a
-workspace. `CAP-DIST-content-packages` discovers them through the same bundle entry points as installed wheels.
-The bundle CLI exposes validation and planning, but no source snapshot or upstream refresh operation.
-
-A repository-committed copy of upstream bundle sources could remove recurring private-content fetches while
-retaining normal selection, synchronization, receipts and overrides. The hypothesis applies to private bundle
-content; the devkit runtime and other Python dependencies still need their own installation path.
+Private content-package Git dependencies require upstream authentication in every consumer. An accessible source
+checkout can instead become a committed local content package, using the existing loader and ownership contract.
+`ADR-bundle-source-snapshots` settles whole-provider replacement, bounded dependency support and explicit refresh.
+The retained source/Planning evidence and `PROP-bundle-source-snapshots-target` constrain this implementation.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Repository-committed bundle source snapshots so that system capabilities are extended.
+- **US-1**: As a maintainer, I can snapshot all bundles of an accessible content provider and install that local
+  package without retaining a dependency on the private origin.
+- **US-2**: As a maintainer, I can review upstream differences and explicitly adopt them without losing authored
+  snapshot changes or project overrides.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+**Scope Excluded**: runtime-package vendoring, arbitrary builds/import execution, upstream access and credentials,
+automatic Git commits, dependency/config/receipt edits, automatic sync, partial-provider shadowing, a second loader,
+automatic merges of local edits and an all-network-free bootstrap promise. No new feature dependency is admitted.
+Static import support is an inspectable subset, not a proof of arbitrary Python behavior.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Copy complete supported sources without execution
 
-## 5. Carried Proposal Notes
+- **Given** a static content-only `src/` checkout with only resource-module `devkit.bundles` entry points, no runtime
+  dependencies, and empty/docstring-only resource initializers.
+- **When** `bundle snapshot SOURCE --to DEST --package NAME` runs within a consumer root.
+- **Then** it returns one JSON result and exit 0, creates an ordinary version `0.0.0` local package with every bundle,
+  preserves original names/versions, bytes, executable modes, variants, templates, bundle-local helpers and named
+  license/notice files, and writes schema-1 `snapshot.json` with matching ordered hashes and no source paths, URLs,
+  credentials or timestamps. Self-contained rule/gate code using stdlib, documented devkit APIs and in-tree relative
+  imports is supported. Unsupported imports, dynamic import syntax, external declarative handlers, mixed entry points,
+  dependencies, unsafe resources and unsupported build mappings return `BUNDLE_SNAPSHOT_UNSUPPORTED` or
+  `BUNDLE_SNAPSHOT_INVALID` (exit 2) before destination writes. Inspection executes no provider code/build.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Install the committed local wrapper independently
 
-### 2. Planning Decisions
+- **Given** a fresh consumer with devkit/build dependencies available and the private origin unavailable.
+- **When** it replaces the original provider with the committed editable wrapper and runs normal locked sync.
+- **Then** entry points reproduce selected sources without importing or fetching the original provider. A built-wheel
+  consumer test verifies this with multi-bundle fixtures, and a harness-equipped fixture executes a supported rule.
+  Dist-only checks still pass without devkit-agt; runtime/build availability remains a prerequisite.
 
-The comparison and code evidence are in `docs/materials/2026-11/20261105-bundle-source-snapshots/source-and-dependency-boundary.md`.
-`ADR-bundle-source-snapshots` records the packaging and refresh choice.
+### [AC-03] Review and apply an idempotent coherent refresh
 
-| Question | Settled direction | Consequence |
-| --- | --- | --- |
-| Source | An explicit accessible local content-package checkout, with static `pyproject.toml` metadata and ordinary `src/` resource modules. | No cloning, credentials, installed-module import or arbitrary build execution in the snapshot command. |
-| Granularity | Copy every bundle entry point of that content-only package into one generated local wrapper. | Existing package-level installation can replace the original without stranding its other bundles. No provider precedence or partial shadowing. |
-| Assets | Preserve original manifests, all variants, constitutions, declared source trees, templates and bundle-local helper files. | Rule/gate Python assets are supported when their dependencies satisfy the boundary below; copying rendered projections is excluded. |
-| Provenance | Source package/version, each bundle/version, optional verified source commit, ordered file hashes/modes and aggregate digest. | Record a commit only when copied source files match that commit; otherwise use null. Never persist source paths, remote URLs, credentials or timestamps. |
-| Local identity | Generated distribution/module names come from an explicit unique package name; local package version remains `0.0.0`. | Git adoption commit plus source digest identifies updates; unchanged input is byte-for-byte idempotent. |
-| Update | Explicit source-to-snapshot refresh, inspectable diff and expected-current digest before applying. | No background fetch, automatic Git commit or silent overwrite. |
-| Loader | Normal installed content-package discovery, selection and sync. | Existing duplicate-name errors remain; replacing dependencies is an explicit consumer step. |
+- **Given** an intact snapshot and changed upstream files, executable modes, metadata or removed/added bundles.
+- **When** `bundle refresh DEST --source SOURCE --check` previews, then apply supplies both `--expect` current digest
+  and `--candidate` reviewed candidate digest.
+- **Then** preview writes nothing and returns deterministic added/modified/removed paths plus digests. Matching apply
+  coherently replaces payload and provenance; unchanged inputs write nothing, including after editable discovery has
+  created bytecode. The nonrecursive aggregate excludes its own digest and provenance-file hash. A recoverable
+  injected write/validation failure returns `BUNDLE_SNAPSHOT_WRITE_FAILED` (exit 2) and preserves the previous package.
 
-#### Supported dependency boundary
+### [AC-04] Refuse drift and unsupported state without content loss
 
-The initial supported source package has only `devkit.bundles` entry points, static name/version metadata,
-no project runtime dependencies, and resource-module initializers containing only a docstring or no statements.
-It may provide several bundles. `devkit-starter` and the content-only catalog demonstrate these shapes.
-A mixed application/command-provider package is refused with its offending metadata named.
+- **Given** authored snapshot edits/additions, stale current/candidate digests, invalid/unknown provenance, symlinks,
+  overlapping/protected/out-of-root destinations or duplicate installed bundle providers.
+- **When** creation, preview, apply or ordinary discovery encounters that state.
+- **Then** the snapshot command returns `BUNDLE_SNAPSHOT_CONFLICT` (exit 2), `BUNDLE_SNAPSHOT_INVALID` (exit 2), or
+  `BUNDLE_SNAPSHOT_UNSUPPORTED` (exit 2), and normal discovery retains `BUNDLE_PACKAGE_INVALID` for duplicates.
+  No authored content is silently overwritten; only `__pycache__` and `*.pyc` are excluded from local drift.
 
-A bundle-owned rule, gate or helper Python module is not an application package. Preserve it unchanged when
-its relative imports stay within the copied plugin/helper tree and its absolute imports use the standard library
-or documented devkit runtime APIs. Preflight checks Python ASTs for imports outside that set, original-package
-absolute imports and syntactically dynamic imports; those cases report unsupported input before destination writes.
-This supports the ordinary dependency-free rule case without claiming to prove arbitrary Python behavior.
-Declarative runtime references receive the same check: hook handler service IDs and workflow check/plugin
-references must resolve to documented capabilities of the explicitly required devkit runtime or copied local
-assets. An external handler or unknown runtime reference is an unsupported-input refusal naming the requirement.
-No source Python or hook handler is executed during inspection. Shell/helper tools and agent instructions retain their declared
-consumer environment requirements; copying them does not install a runtime or make an offline execution guarantee.
+### [AC-05] Keep overrides and synchronization ownership separate
 
-The generated wrapper declares no dependency on the upstream package. A consumer supplies devkit and, for
-rules/gates/workflows, its required harness through the existing installation mechanism. License/notice files
-explicitly named by source package metadata are retained. Inputs needing nonstandard build mapping, omitted
-resource helpers or unavailable runtime code are refused; no successful partial snapshot is emitted.
+- **Given** a consumer project override and an intact snapshot.
+- **When** it refreshes sources and then runs ordinary sync.
+- **Then** refresh changes only the snapshot directory and returns subsequent actions; project config, lock, receipt,
+  projections, overrides and Git stay untouched by that operation. Normal sync preserves the override and reports
+  upstream drift through the existing ownership protocol.
 
-#### Command and transaction shape
+### [AC-06] Explain complete provider replacement and metadata changes
 
-Proposed public CLI (names settle here; final result models/error codes belong in the feature spec):
+- **Given** multiple source bundle entry points or a refresh adding/removing bundles.
+- **When** snapshot/refresh completes or rejects a mixed runtime provider.
+- **Then** JSON names the complete replacement set and exact install/provider-removal actions. Changed packaging
+  metadata requires `uv sync --reinstall-package NAME`; selected removed bundles require explicit `devkit remove`.
+  It neither silently removes selections nor invents discovery precedence. Unsupported metadata names its cause.
 
-```bash
-uv run devkit bundle snapshot /checkout/team-assets --to tools/team-assets-snapshot --package team-assets-snapshot
-uv run devkit bundle refresh tools/team-assets-snapshot --source /checkout/team-assets --check
-uv run devkit bundle refresh tools/team-assets-snapshot --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-source-digest>
-```
+## 5. Assumptions & Verification Limits
 
-Creation writes a generated package with `src/team_assets_snapshot/<bundle_module>/bundle/`, empty resource
-initializers, `pyproject.toml` and a schema-versioned `snapshot.json`. Original bundle names, versions and content
-bytes remain unchanged; generated entry points target the wrapper's distinct module namespace. A package with
-colliding or invalid normalized wrapper module names is refused. The destination must be a new directory inside
-the consumer repository and must not overlap the source, Git/devkit/agent state or another snapshot.
-
-The payload inventory records every owned source and generated packaging file, excluding `snapshot.json` itself.
-The aggregate digest covers canonical provenance metadata and this ordered path/byte-hash/normalized-mode
-inventory, with the aggregate digest field omitted. Refresh structurally validates `snapshot.json`, recomputes its
-aggregate and checks payload entries; no recursive self-file hash exists. Both inventory and drift checks exclude
-only derived `__pycache__` trees and `*.pyc` files, following existing source-file conventions. Other unexpected
-files remain authored drift. Editable discovery must not block a later refresh merely by writing bytecode. Version-only source changes are observable provenance updates. No local version bump is needed for an
-editable repository package. A refresh with the same metadata/content writes nothing.
-
-Creation and refresh stage and validate the complete candidate before touching the destination. Refresh compares
-all owned files and unexpected additions against `snapshot.json` and refuses local changes, unknown provenance
-schemas and an expected-current digest mismatch. Its result lists additions, modifications, mode changes and
-removals deterministically; `--check` writes nothing. Apply uses a guarded staged replacement with rollback on
-reported write/validation failure. Never merge local edits automatically. Source drift between preview and apply
-is exposed through the candidate digest in both results; apply requires `--candidate <reviewed-source-digest>` in addition to `--expect`. Creation is explicit without a
-preview; refresh apply always requires both digests. The feature spec defines the conflict code.
-
-The command does not edit consumer `pyproject.toml`, `uv.lock`, config, overrides, receipt or Git. It returns exact
-local package installation and upstream dependency replacement instructions. Before installation, the consumer
-removes the original content-only provider and installs the wrapper in the dev dependency group. If another
-requirement keeps the original provider installed, the existing duplicate-name error must be resolved explicitly;
-no import/package precedence is invented. All original bundles are in the wrapper, so unrelated selections from
-that provider remain available. If refresh changes generated packaging metadata or bundle entry points, its result requires reinstalling the
-editable local package with an explicit `uv sync --reinstall-package <wrapper-package>` action before normal
-discovery/sync. A removed bundle that is still selected must be explicitly deselected with `devkit remove <bundle>`;
-refresh reports each affected selection and never silently removes it. Installed-consumer verification covers
-bundle additions and removals, not just changed asset bytes. Normal `devkit sync` then updates receipts and keeps project overrides under
-`CAP-DIST-workspace-ownership`, including upstream drift notices. Snapshot refresh alone does not sync.
-
-#### Alternatives and impact
-
-- **Manual source copy:** viable today, but has no shared inventory, local-edit refusal or refresh diff. Keep it as
-  an escape hatch, not the repeatable command's implementation contract.
-- **A `.devkit/local/` source loader:** avoids wrapper packaging but duplicates discovery/ownership. Rejected in
-  `CAP-DIST-in-repo-bundles`; this proposal preserves that decision.
-- **Installed-package or arbitrary wheel vendoring:** convenient input but importing/building runtime code and
-  dependency closure would broaden the authentication promise. The first command reads an accessible checkout.
-- **Selected-bundle extraction while leaving its package installed:** conflicts with global duplicate discovery.
-  Whole content-package replacement is the first scope; partial extraction needs a demonstrated consumer case.
-
-Implementation remains within the distribution feature: CLI calls typed use cases, services decide source/package
-support, repositories read/write source snapshots, and models carry results/errors. No new feature edge is
-admitted. `target-docs.md` names exact future paths and retained contracts. No production or Living Spec edit is
-part of this Planning turn. Development effort remains `medium`; estimated size remains `L` (one spec with creation,
-refresh and installed-consumer verification).
-
-**Scope excluded:** devkit runtime copying, arbitrary executable-package vendoring, dependency/build execution,
-automatic upstream access, credentials, all-network-free bootstrap, automatic Git commits, provider precedence,
-a second loader and automatic three-way merging of locally edited sources.
-
-### 3. Verification and Evidence Limits
-
-No private source package was supplied. The design is grounded in the public starter/catalog layouts and existing
-loader contracts, not a measured fix in a private consumer. That limit does not prevent specifying a supported
-class; unsupported real inputs will name the needed dependency/layout rather than claim success.
-
-Development acceptance checks:
-
-- **AC1:** Given a supported multi-bundle content package, creation preserves all manifest/variant/template/helper
-  bytes and executable modes, emits valid importable wrapper entry points and credential-free matching provenance.
-  A self-contained rule fixture using the documented devkit APIs is included, not categorically rejected as Python.
-  Dynamic Python imports and a declarative external hook handler produce explicit unsupported-input refusals.
-- **AC2:** Given a fresh consumer with declared runtime/build dependencies available and private origin inaccessible,
-  installing only the committed local wrapper and running locked sync reproduces its selected assets. No private
-  origin requirement remains in the consumer dependency graph. A built-wheel consumer test proves this boundary.
-- **AC3:** Given changed upstream bytes, modes, manifest metadata or deletions, preview lists the complete diff.
-  Applying the reviewed source/current digests updates coherently; identical input after editable installation and
-  discovery writes nothing despite bytecode. Provenance hashes round-trip without self-reference. An injected
-  recoverable write failure leaves the previous package/provenance usable and unchanged.
-- **AC4:** Given local source edits/additions, stale digests, unknown schemas, unsupported imports/layout/dependencies
-  or conflicting bundle providers, the relevant command returns a stable actionable condition and never silently
-  overwrites consumer content or claims a complete snapshot.
-- **AC5:** Given a project override, explicit refresh followed by ordinary sync preserves the adaptation and reports
-  upstream drift using existing ownership behavior. The snapshot operation leaves overrides and receipt untouched.
-- **AC6:** Given a source package providing several bundles or runtime command entry points, preflight reports the
-  complete replacement set or refuses the mixed runtime package; it never silently removes a still-needed provider.
-  Refreshed entry-point additions/removals request reinstallation and explicit deselection where necessary.
-
-Use real filesystem/inventory tests for hashing, safety and rollback, CLI result tests for codes/actions, and
-installed-consumer tests for discovery, fresh clone bootstrap and supported rule assets. Run `just test-dist` to
-retain dist's runtime independence from the harness; rule execution belongs only in a harness-equipped consumer
-fixture. No performance improvement is claimed, so no timing baseline is required.
-
-### 4. Lifecycle & Retirement Criteria
-
-This proposal is in Planning at `medium` effort. It has no prerequisite proposal, including
-`PROP-selective-package-releases`: source package version, bundle version and digest work under either release
-policy. Acceptance decides the explicit source/whole-provider replacement and dependency boundary above.
-Handoff starts one feature spec and promotes the PADR. Reject the proposal if private-content reuse does not justify
-explicit provenance/refresh beyond manual local-package creation. Implementation and integration remain pending
-until their lifecycle authorities and verification hold.
-
+The first supported input is an accessible local static Hatch-style content checkout; no private sample was supplied.
+The public starter/catalog layouts establish input shape, while fixtures establish the exact dependency subset.
+`--workspace-root` uses the existing consumer-root contract. No product screen changes. No performance claim.
+Codex projection is emulated: absolute workdirs, per-operation approval, range audits and reviewer snapshots replace
+native confinement. The Host verifies final landed content separately.
