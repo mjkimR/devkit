@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/workspace.py
   - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py
 created_at: 2026-10-17
 ---
 

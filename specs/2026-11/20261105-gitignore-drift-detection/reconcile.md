@@ -23,3 +23,6 @@ untracking advice from a different repository. No additional interpretation or c
 The proposed new use case is unnecessary: diagnostics extend the existing sync operation and are fully covered
 by its two capabilities. No delivery behavior is deferred. Framework expansion remains in
 PROP-multi-runtime-project-harness and is outside this spec.
+
+Entrypoints: retain sync.py for both capabilities; reject model, repository-directory and test candidates because
+they are implementation details rather than operation entry points.
