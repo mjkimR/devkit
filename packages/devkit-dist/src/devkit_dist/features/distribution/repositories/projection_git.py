@@ -62,7 +62,7 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
         return [
             ProjectionGitCheckFailedNotice(
                 "Git could not inspect native projection tracking and ignore coverage",
-                fix="Check Git access and repository health, then rerun devkit sync",
+                fix="Check Git access and repository health, then rerun uv run devkit sync",
             )
         ]
     notices: list[AdvisoryError] = []
