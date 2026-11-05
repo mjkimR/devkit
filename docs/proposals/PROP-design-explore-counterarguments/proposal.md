@@ -15,7 +15,7 @@ boundaries:
     - packages/devkit-catalog/tests/integration/bundles/test_design_explore.py
     - packages/devkit-catalog/tests/e2e/bundles/design_explore/
     - docs/capabilities/delivery/CAP-DLV-design-exploration.md
-    - docs/usecases/delivery/
+    - docs/usecases/delivery/UC-explore-a-design-problem.md
     - docs/decisions/
   excludes:
     - packages/devkit-spec/
@@ -50,7 +50,7 @@ without adding a permanent red/blue team or requiring consensus.
 
 ## 3. Proposed Design & Impact
 
-Recommended starting direction, subject to Planning:
+Planning recommendation for direction acceptance:
 
 1. Keep small questions inline and existing independent exploration as the default.
 2. When a consequential disagreement remains, give the critic the actual candidate and decision criteria. Require
@@ -73,14 +73,42 @@ edge, shared subagent registration or runtime orchestration engine is proposed.
 **Scope excluded:** mandatory red/blue teams, an adversarial debate for every design, voting/scoring, forced
 consensus, experiments required to prove team superiority, and redesign of deep-research or SDD review roles.
 
+### Planning decisions
+
+- **Necessity and smaller alternative:** retain the existing three roles and one critique/refinement pass. The
+  change makes the missing author response and per-objection coordinator disposition explicit. A permanent red/blue
+  team adds a cast without filling another responsibility. Keeping only the existing wording leaves no instruction
+  to let an author rebut a mistaken objection or mark a missing response.
+- **Trigger:** use the exchange only when a supported objection can change a candidate's feasibility, tradeoff or
+  recommendation against the actual goal or a hard constraint. Mere preference, a fixed objection quota and zero
+  supported findings do not trigger it. A simple question remains inline.
+- **Response packet:** after independent initial exploration, the coordinator passes the actual candidate,
+  objection, evidence, failure condition, affected decision and unchanged constraints to its original explorer
+  when available. Reuse the existing role with an explicit response assignment. If that explorer cannot return,
+  the coordinator may analyze the response inline and discloses the limitation; it invents no author's return.
+- **Response and judgment:** for each selected objection, the responder accepts and revises, rebuts with inspected
+  evidence or an explicit inference, or names a bounded unknown. The coordinator returns the objection, actual
+  response/revision, its own reasoned disposition and remaining decision-changing uncertainty. There is no required
+  serialized schema, retained document, scoring or consensus.
+- **Bound:** one critic pass and at most one author response per affected candidate in the normal exchange, followed
+  by coordinator synthesis. The critic does not automatically get another reply. Before any further pass, name a
+  concrete unresolved question that can change the recommendation and a finite pass/time bound. If there is no
+  such check or the bound is reached, return the unresolved question and stop.
+- **Failure and evidence:** unavailable sources, failed roles and unavailable fresh contexts stay visible. A response
+  unsupported by inspected evidence is an inference or unknown, not a refutation proved by the role label.
+- **Decision record:** `PADR-optional-design-critique-response` records this lasting capability refinement. It does
+  not replace `ADR-explicit-solution-exploration`: invocation, role locality and output authority remain in force.
+- **Delivery surface:** the intended contract drafts and exact source/test paths are in `target-docs.md`. No runtime,
+  CLI, shared subagent metadata, package dependency, manifest asset, architecture edge or product screen is added.
+
 ## 4. Lifecycle & Retirement Criteria
 
-This is a queued draft with `medium` Planning and Development effort and estimated size `M`. Priority is `low`
-because the existing critic already addresses part of the need. It has no prerequisite proposal.
+This proposal is in Planning with `medium` Planning and Development effort and estimated size `M`. Priority is
+`low` because the existing critic already addresses part of the need. It has no prerequisite proposal.
 
-Planning is ready for acceptance when one concrete gap in the existing procedure, the optional trigger, response
-contract and stopping condition are settled. If the existing wording already suffices, narrow this proposal to
-examples or reject it rather than adding redundant orchestration.
+The direction is ready for acceptance after Challenger findings are folded or presented with their disposition.
+The concrete gap, trigger, response packet and stop condition are specified above; no user fact is needed to
+choose the proposed local instruction refinement.
 
 Candidate Development acceptance checks:
 
@@ -88,9 +116,12 @@ Candidate Development acceptance checks:
   without creating a debate or requiring extra roles.
 - **AC2:** Given a decision-changing objection, one exchange records the evidence, the author's response or
   revision, and the coordinator's disposition of that specific objection.
-- **AC3:** Given disagreement after the bound, the result names the unresolved assumption without claiming
-  consensus or initiating unrequested implementation.
-- **AC4:** Given no independent child contexts, inline passes are disclosed and never presented as independently
-  produced agent findings.
+- **AC3:** Given disagreement after the normal exchange, the coordinator returns the unresolved assumption; any
+  additional pass starts only with a named decision-changing question and finite bound, and no implementation
+  starts from exploration authority.
+- **AC4:** Given no independent child contexts or an unavailable author response, inline passes and missing
+  coverage are disclosed; the result contains no invented independent finding, author reply or agreement.
+- **AC5:** Given an objection whose response is an unsupported inference or whose evidence is inaccessible, the
+  synthesis retains that evidence limit instead of declaring the objection refuted.
 
 Acceptance, rejection and handoff follow the existing proposal lifecycle.
