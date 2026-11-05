@@ -2,7 +2,7 @@
 id: PROP-deep-research-practical-orchestration
 title: Make deep-research deliverable-driven and proportionate
 summary: "Align deep-research assignments and criticism with the requested deliverable, reduce duplicate verification and distinguish recoverable retrieval failures from permission refusals."
-status: reviewing
+status: accepted
 created_at: 2026-11-05
 target_area: capabilities/delivery/
 priority: medium
