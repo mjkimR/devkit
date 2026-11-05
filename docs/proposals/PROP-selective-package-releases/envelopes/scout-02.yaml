@@ -1,0 +1,25 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-05T04:04:46.587205Z'
+status: completed
+summary: Completed all seven inbound-reference queries without pagination and inspected all workspace build configurations; canonical wheel comparison and explicit build recipe remain the recommended boundary.
+findings:
+- issue: Complete inbound-reference evidence covers all seven relevant release/distribution documents.
+  evidence: materials/release-evidence.md Complete reverse-reference discovery table
+  suggested_action: Supply the table to Challenger and retain the precise target-docs list.
+  resolution: open
+- issue: Actual wheel content captures committed viewer assets and avoids treating tooling-only paths as shipped changes.
+  evidence: packages/devkit-viewer/pyproject.toml:33-35; packages/devkit-spec/pyproject.toml:59-64; .github/workflows/release.yml:38-43
+  suggested_action: Use canonical member hashing and an explicit pinned comparison recipe; verify representative builds in Development.
+  resolution: open
+assumptions:
+- Codex route is emulated; read-only scopes and caller Git checks substitute for native isolation.
+unverified_areas:
+- Historical artifacts and canonical hash stability across build-tool versions were not exercised.
+checks:
+  references: PASS seven complete -n 0 queries
+diff_scope:
+  base: 948992e6344599aaddaf81b759cb522c884f6d63
+  head: aaaa949b489f2404ecd0e64bcea1bfbe3d0aac79

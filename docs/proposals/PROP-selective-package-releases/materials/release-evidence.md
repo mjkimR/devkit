@@ -32,3 +32,25 @@ Development/release-bootstrap checks. Comparison builds are intentionally permit
 Codex support-role isolation is emulated. Absolute worktree read scopes, read-only role instructions and before/after
 Git observations substitute for native enforcement. The worker created the PADR scaffold while Scout research was
 in progress; its own authored paths are accounted separately. The Scout reports no writes or Git mutations.
+
+## Complete reverse-reference discovery
+
+The Scout reran each inbound query with `-n 0`, removing the first-pass pagination limit. Counts are recorded
+for review discovery, not as a claim that every inbound document needs a change.
+
+| Target ID | Inbound references | Relevant linked contracts |
+| --- | --- | --- |
+| `ADR-package-ownership-and-release-version` | 33 | `ARCH-07-deployment`, `CAP-DIST-content-packages`, `CAP-DIST-in-repo-bundles`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership` |
+| `ARCH-07-deployment` | 32 | `ADR-package-ownership-and-release-version`, `CAP-DIST-in-repo-bundles`, `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions` |
+| `CAP-DIST-content-packages` | 51 | `ADR-package-ownership-and-release-version`, `CAP-DIST-in-repo-bundles`, `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions` |
+| `CAP-DIST-workspace-ownership` | 28 | `ADR-package-ownership-and-release-version`, `CAP-DIST-content-packages`, `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions` |
+| `CAP-DIST-manifest-spec` | 38 | `ADR-package-ownership-and-release-version`, `CAP-DIST-content-packages`, `CAP-DIST-in-repo-bundles`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-ownership` |
+| `CAP-DIST-sync-and-transactions` | 72 | `ADR-package-ownership-and-release-version`, `CAP-DIST-content-packages`, `CAP-DIST-in-repo-bundles`, `CAP-DIST-manifest-spec`, `CAP-DIST-workspace-ownership` |
+| `CAP-DIST-in-repo-bundles` | 6 | `ADR-package-ownership-and-release-version`, `CAP-DIST-content-packages` |
+
+The Scout inspected every workspace member's build configuration. All select package roots under `src/`.
+The viewer ships its committed static page (`packages/devkit-viewer/pyproject.toml:33-35`), while frontend sources
+are outside that wheel. Its frontend changes affect the wheel only through the normal committed-page rebuild.
+Unbounded `hatchling` build requirements and floating uv setup (`.github/workflows/release.yml:38-43`) mean the
+release recipe must be made explicit before relying on canonical fingerprints. No remote artifact availability
+or cross-tool fingerprint stability was experimentally established in Planning.
