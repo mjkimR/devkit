@@ -1,0 +1,40 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T07:00:31.380758Z'
+status: completed
+summary: 'round 2; consolidated audit: prior equality fixes pass; new version qualifiers in two accepted ADR outcomes and stale cache-driver rationale require exact admitted repairs.'
+findings:
+- issue: ADR-document-system still requires unconditional root-version advancement and equal dependency versions.
+  evidence: docs/decisions/2026-11/20261102-document-system.md:343-344 Decision Outcome; absent from reconcile targets.
+  failure_condition: Spec changes while docs remains unchanged; old outcome requires docs root VERSION and equality.
+  suggested_action: Replace only unconditional VERSION/equality qualifiers, add bounded partial-supersession notice/new-ADR traces and reconcile target; preserve subsystem decisions.
+  resolution: open
+  severity: P1
+- issue: ADR-mcp-runtime-and-shared-artifacts still requires foundation-lockstep MCP.
+  evidence: docs/decisions/2026-11/20261102-mcp-runtime-and-shared-artifacts.md:131 Decision Outcome; no version-specific partial notice or reconcile target.
+  failure_condition: MCP payload advances while unchanged dist retains its selected version.
+  suggested_action: Replace only foundation-lockstep qualifier with selected actual-version wording, add bounded partial notice/new-ADR traces and reconcile target; preserve runtime and registration decisions.
+  resolution: open
+  severity: P1
+- issue: Cache ADR explains its retained no-shim decision through obsolete lockstep rationale.
+  evidence: docs/decisions/2026-11/20261102-rules-run-workspace-cache.md:76 Decision Driver5.
+  failure_condition: Dist and agt are selectively released but present-tense rationale says lockstep.
+  suggested_action: Keep only No compatibility shim no external consumer exists in Driver5 and add reconcile target; no cache decision supersession.
+  resolution: open
+  severity: P2
+assumptions:
+- Same-round addendum at unchanged tree1049c01d; no outside reads, writes or Git effects.
+- Host explicitly admitted exact three ADR repairs and trace-only new-ADR extensions; no changed subsystem decision.
+unverified_areas:
+- Real originals and live publication remain first-use checks.
+checks:
+  prior_finding: PASS named diagram/harness/README qualifiers fixed
+  adr_audit: PASS complete relevant current assertions inspected; no further equality qualifier found
+  reflection: FAIL two version outcome qualifiers and one stale rationale
+  tests: PASS inspected review03 full6668 passed15skipped; no code changed
+diff_scope:
+  base: 3c7a9739e76a54274a94fc4b18350534eb128768
+  head: 2a6ca9f6ae5ed4c4e06d413bfdd7a6acf10f81d1
+activity_effort: high

@@ -38,6 +38,12 @@ targets:
     resolution: modified
   - file: packages/devkit/README.md
     resolution: modified
+  - file: docs/decisions/2026-11/20261102-document-system.md
+    resolution: modified
+  - file: docs/decisions/2026-11/20261102-mcp-runtime-and-shared-artifacts.md
+    resolution: modified
+  - file: docs/decisions/2026-11/20261102-rules-run-workspace-cache.md
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-selective-package-releases`
@@ -63,6 +69,11 @@ Root and package READMEs and distribution/advisory quick references use selected
 Existing installation guides and shipped source instructions already use one Git source and contain no conflicting
 same-version assertion; no source bundle asset changed. They need no sync output or contract rewrite.
 The model artifact and viewer npm policies remain independent.
+
+The Host-admitted `ADR-document-system` and `ADR-mcp-runtime-and-shared-artifacts` version qualifiers are partially
+superseded by `ADR-selective-package-versions`, with exact notices and outcome traces; all subsystem/approval
+choices remain. `ADR-rules-run-workspace-cache` retains its no-shim/no-consumer/cache decisions and drops only the
+obsolete trailing lockstep rationale. The accepted-ADR audit found no further current equality requirement.
 
 ## Verification
 

@@ -14,6 +14,9 @@ package integration test mirror. No new application feature or dependency edge i
 Host admission during Development adds exact Tier A version-restatement targets ARCH-01-introduction-and-goals,
 ARCH-05-1-containers, ARCH-05-3-command-plugins and CAP-CLI-agent-cli-toolkit rule 10. These preserve ownership,
 layers, dependency directions, public names, semver and the CLI version source. They are not Tier B extensions.
+Host also admits exact ADR-document-system and ADR-mcp-runtime-and-shared-artifacts release-qualifier/partial-notice
+repairs and matching trace-only ADR-selective-package-versions extensions. ADR-rules-run-workspace-cache Driver5
+loses only its stale trailing lockstep rationale. Subsystem/approval/cache decisions remain; these are Tier A.
 
 ## 2. Architecture Overview & Impact
 

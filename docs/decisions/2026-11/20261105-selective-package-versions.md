@@ -5,6 +5,8 @@ summary: "For independently consumed workspace wheels, we advance changed distri
 proposal: SPEC-selective-package-releases
 supersedes:
   - ADR-package-ownership-and-release-version
+  - ADR-document-system
+  - ADR-mcp-runtime-and-shared-artifacts
 status: accepted
 created_at: 2026-11-05
 ---
@@ -55,6 +57,11 @@ Choose selective versions with exact pins for version stability without expandin
 - This decision replaces the old ADR's Single release version clauses and only the same-version qualifiers in
   its foundation, MCP runtime and harness dependency clauses. All package ownership, dependency direction, import,
   configuration, bundle assignment and CLI version-source decisions remain in force. The old ADR stays accepted with a partial-supersession notice.
+
+- This decision also replaces only `ADR-document-system`'s root-version and same-version qualifiers in its
+  Document package and bundles Package clause, and `ADR-mcp-runtime-and-shared-artifacts`'s foundation-lockstep
+  qualifier in its first MCP runtime outcome. Their document/SDD/MCP ownership, dependency directions, registration,
+  approval and runtime decisions remain. → `ARCH-07-deployment` section 1.1 (MUST).
 
 ## 5. Consequences
 

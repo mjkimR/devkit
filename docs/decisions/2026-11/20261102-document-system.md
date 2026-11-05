@@ -24,6 +24,9 @@ aliases:
 
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the spec bundle's rule-asset distribution clause and the document templates and the docs skeleton in the devkit-spec methodology list (its lifecycle templates stay).
 
+Superseded in part by `ADR-selective-package-versions`: only the root-version advancement and same-version
+qualifiers in the Document package and bundles Package clause; document and SDD ownership remain.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR
@@ -340,8 +343,8 @@ place per kind fact.
 
 - **Package**: `devkit-docs` with the regular package `devkit_docs` owns `features/documents`, the document rules'
   implementations and services (`features/governance`), the entrypoint path contract, the `DOCS_` errors and the
-  document layout vocabulary. Its version follows root `VERSION` (`ADR-package-ownership-and-release-version`). devkit-spec depends
-  on it at the same version and keeps the delivery process and the lifecycle rules. This extends the wheel list of
+  document layout vocabulary. Its version advances only for changed payload or exact-pin dependencies
+  (`ADR-selective-package-versions`). devkit-spec pins its selected actual version and keeps the delivery process and the lifecycle rules. This extends the wheel list of
   `ADR-package-ownership-and-release-version`. (ADR-document-package)
 - **Kind vocabulary**: every document kind, the delivery kinds included, stays in the document package's kind table.
   The formats and path grammars of proposals, spec bundles, feedback and milestones are document structure. What a
