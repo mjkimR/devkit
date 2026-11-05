@@ -31,6 +31,7 @@ from devkit_dist.features.distribution.models.errors import (
 )
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
+from devkit_dist.features.distribution.repositories.projection_git import projection_git_notices
 from devkit_dist.features.distribution.services.bundles.subagents import SUBAGENT_DIRS
 from devkit_dist.features.distribution.services.bundles.templates import Scalar
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
@@ -1200,6 +1201,7 @@ def commit_locked(
             raise _receipt_stale(previous, receipt, actions, deployed)
     require_writable(root, changes)
     local_render.unchanged(root, captured)
+    notices.extend(projection_git_notices(root, effective.files, old_files))
     seen = _read_seen_bundles(root)
     if not dry_run:
         apply_changes(root, changes)

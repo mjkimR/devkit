@@ -129,7 +129,11 @@ See `CAP-HOST-lifecycle-observation`.
    - `.devkit/managed/` and `.devkit/transient/` are ignored by `.devkit/.gitignore`. A writing sync seeds it when
      it is absent (a `seed` action, so `sync --check` exits `1` until then) and preserves project comments/rules afterwards. Every writing sync MUST manage exactly `/config.local.toml`, appending it when absent; other existing entries are not rewritten. A deleted file is seeded again. The receipt never records it.
    - Native copies (`.agents/`, `.codex/`, `.claude/`) live beside project-owned files, so ignoring them is left to
-     the repository's own `.gitignore`; devkit MUST NOT modify the repository's `.gitignore` or the Git index.
+     the repository's own `.gitignore`; devkit MUST NOT modify the repository's `.gitignore` or the Git index. Sync MUST
+     diagnose native files from its desired installation that are untracked and not effectively ignored
+     (`PROJECTION_NOT_IGNORED`), and desired or previously owned native files present in the index
+     (`PROJECTION_TRACKED`). These warnings identify only actual owned files, never neighboring project files.
+     Removed untracked projections need no ignore warning. See CAP-DIST-sync-and-transactions for output limits.
 
 ## 3. Project Overrides and Drift Review
 

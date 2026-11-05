@@ -446,6 +446,20 @@ Provider absence requires no installation. Checks are enforced by
 `packages/devkit-dist/tests/integration/features/distribution/test_status_checks.py` and
 `packages/devkit/tests/integration/features/gate/test_project_status.py`; `just test-dist` checks harness isolation.
 
+### Projection Git diagnostics
+
+WHEN sync can complete its plan in a Git workspace, it MUST return `PROJECTION_NOT_IGNORED` for desired native
+files that are untracked and lack effective ignore coverage, and `PROJECTION_TRACKED` for indexed native files
+owned by the desired or previous installation. Git evaluates nested rules and negations. The same diagnostics
+apply to dry-run, check and successful locked sync; conflict and stale-receipt refusals keep precedence.
+Each warning MUST report its total and at most ten sorted targets, with the omitted count and exact-file repair
+advice. Tracked-file advice uses literal pathspecs and shell quoting; it never executes the command. Ignore
+patterns are root-anchored and escape wildcard characters. Normal success stays exit `0`; `--strict` promotes
+warnings through ARCH-08-1-agent-output. No root ignore file or Git index is modified.
+Non-Git workspaces skip this check. IF a Git inspection query fails, THEN sync MUST return
+`PROJECTION_GIT_CHECK_FAILED` without aborting an otherwise successful sync.
+Verified by `packages/devkit-dist/tests/integration/features/distribution/test_projection_git.py`.
+
 ### Engine Notice
 
 Rule, gate and workflow assets are deployed and recorded like any other kind, but only `devkit-agt` runs them.

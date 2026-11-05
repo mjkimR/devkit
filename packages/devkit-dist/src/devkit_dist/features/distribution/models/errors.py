@@ -212,6 +212,28 @@ class SyncNotice(DistributionError):
     level = Level.NOTICE
 
 
+class ProjectionNotIgnoredNotice(SyncNotice):
+    """Desired native projections without effective Git ignore coverage."""
+
+    code = "PROJECTION_NOT_IGNORED"
+    level = Level.WARNING
+
+
+class ProjectionTrackedNotice(SyncNotice):
+    """Native projections from the current or previous installation in Git's index."""
+
+    code = "PROJECTION_TRACKED"
+    level = Level.WARNING
+    actor = Actor.USER
+
+
+class ProjectionGitCheckFailedNotice(SyncNotice):
+    """Git inspection could not establish projection tracking or ignore coverage."""
+
+    code = "PROJECTION_GIT_CHECK_FAILED"
+    level = Level.WARNING
+
+
 class OrphanLeftNotice(SyncNotice):
     """Files devkit no longer uses, left on disk untouched: a hand-edited managed file (or guidance block) that is no
     longer desired, dropped from the receipt; or a project file under an override that ``override remove`` keeps."""
