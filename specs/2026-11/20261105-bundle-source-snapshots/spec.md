@@ -1,37 +1,24 @@
 ---
-id: PROP-bundle-source-snapshots
+id: SPEC-bundle-source-snapshots
 title: Repository-committed bundle source snapshots
-summary: "Copy reusable bundle sources into a local content package with provenance and explicit updates so consumer repositories can install private bundle content without upstream credentials."
-status: accepted
-created_at: 2026-11-05
-target_area: docs/capabilities/distribution/
-priority: high
-size: L
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/tests/
-    - docs/capabilities/distribution/
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/decisions/
-    - docs/usecases/
-    - docs/development/reference/distribution.md
-    - guides/install/existing-repository.md
-    - packages/devkit-dist/src/devkit_dist/bundles/devkit/
-  excludes:
-    - packages/devkit-core/
-    - packages/devkit-spec/
-    - .github/workflows/release.yml
-    - scripts/release.sh
-task_kind: feature
-workflow: sdd-proposal
+summary: Copy reusable bundle sources into a local content package with provenance and explicit updates so consumer repositories can install private bundle content without upstream credentials.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-bundle-source-snapshots] Repository-committed bundle source snapshots
+# [SPEC-bundle-source-snapshots] Repository-committed bundle source snapshots
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-bundle-source-snapshots on 2026-11-05.
+- **Preserved Materials**: `docs/materials/2026-11/20261105-bundle-source-snapshots`
+- Target Docs Blueprint: `PROP-bundle-source-snapshots-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Private content packages shared through uv Git dependencies require upstream credentials in each consumer
 environment. `CAP-DIST-in-repo-bundles` already supports ordinary content packages installed from local paths or a
@@ -42,10 +29,29 @@ A repository-committed copy of upstream bundle sources could remove recurring pr
 retaining normal selection, synchronization, receipts and overrides. The hypothesis applies to private bundle
 content; the devkit runtime and other Python dependencies still need their own installation path.
 
-## 2. Planning Decisions
+## 2. User Stories
 
-The comparison and code evidence are in `materials/source-and-dependency-boundary.md`.
-`PADR-bundle-source-snapshots` records the packaging and refresh choice.
+- **US-1**: As a developer/agent, I want to implement Repository-committed bundle source snapshots so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
+
+The comparison and code evidence are in `docs/materials/2026-11/20261105-bundle-source-snapshots/source-and-dependency-boundary.md`.
+`ADR-bundle-source-snapshots` records the packaging and refresh choice.
 
 | Question | Settled direction | Consequence |
 | --- | --- | --- |
@@ -57,7 +63,7 @@ The comparison and code evidence are in `materials/source-and-dependency-boundar
 | Update | Explicit source-to-snapshot refresh, inspectable diff and expected-current digest before applying. | No background fetch, automatic Git commit or silent overwrite. |
 | Loader | Normal installed content-package discovery, selection and sync. | Existing duplicate-name errors remain; replacing dependencies is an explicit consumer step. |
 
-### Supported dependency boundary
+#### Supported dependency boundary
 
 The initial supported source package has only `devkit.bundles` entry points, static name/version metadata,
 no project runtime dependencies, and resource-module initializers containing only a docstring or no statements.
@@ -80,7 +86,7 @@ rules/gates/workflows, its required harness through the existing installation me
 explicitly named by source package metadata are retained. Inputs needing nonstandard build mapping, omitted
 resource helpers or unavailable runtime code are refused; no successful partial snapshot is emitted.
 
-### Command and transaction shape
+#### Command and transaction shape
 
 Proposed public CLI (names settle here; final result models/error codes belong in the feature spec):
 
@@ -124,7 +130,7 @@ refresh reports each affected selection and never silently removes it. Installed
 bundle additions and removals, not just changed asset bytes. Normal `devkit sync` then updates receipts and keeps project overrides under
 `CAP-DIST-workspace-ownership`, including upstream drift notices. Snapshot refresh alone does not sync.
 
-### Alternatives and impact
+#### Alternatives and impact
 
 - **Manual source copy:** viable today, but has no shared inventory, local-edit refusal or refresh diff. Keep it as
   an escape hatch, not the repeatable command's implementation contract.
@@ -145,7 +151,7 @@ refresh and installed-consumer verification).
 automatic upstream access, credentials, all-network-free bootstrap, automatic Git commits, provider precedence,
 a second loader and automatic three-way merging of locally edited sources.
 
-## 3. Verification and Evidence Limits
+### 3. Verification and Evidence Limits
 
 No private source package was supplied. The design is grounded in the public starter/catalog layouts and existing
 loader contracts, not a measured fix in a private consumer. That limit does not prevent specifying a supported
@@ -178,7 +184,7 @@ installed-consumer tests for discovery, fresh clone bootstrap and supported rule
 retain dist's runtime independence from the harness; rule execution belongs only in a harness-equipped consumer
 fixture. No performance improvement is claimed, so no timing baseline is required.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 This proposal is in Planning at `medium` effort. It has no prerequisite proposal, including
 `PROP-selective-package-releases`: source package version, bundle version and digest work under either release
@@ -186,3 +192,4 @@ policy. Acceptance decides the explicit source/whole-provider replacement and de
 Handoff starts one feature spec and promotes the PADR. Reject the proposal if private-content reuse does not justify
 explicit provenance/refresh beyond manual local-package creation. Implementation and integration remain pending
 until their lifecycle authorities and verification hold.
+
