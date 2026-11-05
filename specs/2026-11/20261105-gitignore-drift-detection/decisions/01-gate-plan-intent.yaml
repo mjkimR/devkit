@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-gitignore-drift-detection: Implement the agreed projection diagnostic
+  scope.'
+by: user
+at: '2026-11-04T23:12:53.484713Z'

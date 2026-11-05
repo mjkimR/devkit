@@ -2,7 +2,7 @@
 id: PROP-gitignore-drift-detection-target
 title: Target Living Spec Structure for PROP-gitignore-drift-detection
 status: draft
-proposal: PROP-gitignore-drift-detection
+proposal: SPEC-gitignore-drift-detection
 created_at: 2026-11-04
 targets: []
 ---
