@@ -2,30 +2,37 @@
 id: PLAN-deep-research-practical-orchestration
 spec: SPEC-deep-research-practical-orchestration
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-deep-research-practical-orchestration` Make deep-research deliverable-driven and proportionate
+# Technical Plan: `SPEC-deep-research-practical-orchestration`
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
-- Target Docs Blueprint: `PROP-deep-research-practical-orchestration-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+`ADR-deliverable-driven-research` authorizes the lasting instruction refinement. The explicit-only entry,
+local-role placement, source qualification, material ownership and no-commit boundaries in `CAP-DLV-deep-research`
+remain intact. No architecture, dependency, policy or runtime changes are needed.
 
-### Planned Boundaries:
-- `packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/`
-- `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py`
-- `packages/devkit-catalog/tests/e2e/bundles/deep_research/`
-- `docs/capabilities/delivery/CAP-DLV-deep-research.md`
-- `docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md`
-- `docs/decisions/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit/src/`
-- `packages/devkit-dist/src/`
-- `packages/devkit-spec/src/`
-- `.devkit/managed/`
-- `.agents/skills/`
+Update the existing entry, orchestration/synthesis references and four roles inside the deep-research bundle.
+Use the existing brief and assignment rather than adding intake machinery. Keep the final usefulness check inline;
+an optional critic receives the same task criteria. Distinguish technical retrieval failure from refused or
+ambiguous authority in both coordinator and role instructions. Recovery consumes the existing bound.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+The coordinator reviews source-specific returns and reopens only consequential gaps; the retained result contains
+the requested artifact and a useful next action with optional investigations clearly conditional. A practical repo
+request is an example, not a universal research output schema. No listed file needs a test change merely to prove
+wording. Existing real sync/projection/removal and wheel-consumer tests retain the distribution contract.
+
+Reflect the same behavior in `CAP-DLV-deep-research` and `UC-research-an-idea-and-shape-a-roadmap`; complete exact ADR
+rule traces during reconciliation. Only actual tracked sync outputs may extend the declared file list.
+
+## 6. Verification & Test Plan
+
+- Review each AC-01 through AC-06 against the changed source and the target blueprint's semantic examples.
+- Run `just test-affected --base 94cd340e166d0714788c185f514923268e6d0b2a`, preserving the selector's full fallback.
+- Run the deep-research installed-consumer e2e when not selected already; its built wheel must preserve packaging and material ownership (AC-07).
+- Run `just lint-check catalog`, `just check catalog`, bundle hygiene and CI rules against the retained base.
+- Run `devkit sync`, inspect every generated tracked path, then `devkit sync --check` with exit 0.
+- Use one nested code review at medium effort. Reconcile all identified contract deltas and independently verify them if interpretation remains uncertain.
+
+The implementer commits each stage; the Host alone integrates and checks the final combined base HEAD.

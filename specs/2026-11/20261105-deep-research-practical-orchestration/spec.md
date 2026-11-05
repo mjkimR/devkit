@@ -1,181 +1,82 @@
 ---
 id: SPEC-deep-research-practical-orchestration
 title: Make deep-research deliverable-driven and proportionate
-summary: Align deep-research assignments and criticism with the requested deliverable, reduce duplicate verification and distinguish recoverable retrieval failures from permission refusals.
+summary: "Refine research assignments, synthesis and retrieval recovery around the requested deliverable while preserving opt-in roles and existing research authority."
 status: planned
 created: 2026-11-05
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-deep-research]
+related_usecases: [UC-research-an-idea-and-shape-a-roadmap]
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-deep-research-practical-orchestration] Make deep-research deliverable-driven and proportionate
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-deep-research-practical-orchestration on 2026-11-05.
-- Target Docs Blueprint: `PROP-deep-research-practical-orchestration-target` (Living Spec targets for this plan and reconcile.md)
-
-### 1. Background & Hypothesis
-
-A user invoked deep-research both to pilot its operation and to find reusable agent-team configurations for
-UI/UX improvement and unconventional ideation. The first response emphasized empirical team-performance
-literature and recommended a same-task comparison before adopting a configuration. Concrete repository and
-file references arrived only after the user asked again. The user explicitly rejected the cost of comparative
-validation and preferred adapting existing role instructions, then refining them during ordinary use.
-
-The pilot successfully dispatched three fresh-context investigators, collected their actual returns, used a
-subsequent critic and retained a material. The following observations identify improvements to that operation:
-
-- The requested practical output was not sufficiently represented in the first assignments and final answer.
-- The critic found no consequential evidence problems in the supplied qualified proposal, but did not catch
-  that the proposed next step imposed unwanted work. It reviewed the supplied proposal, not the final material.
-- The coordinator reopened several sources already inspected by investigators. Some verification was useful;
-  repeated broad coverage also duplicated investigation effort. No token or latency saving was measured.
-- One role stopped fulltext verification after timeout, 404 and unreadable-page results. Its partial return was
-  truthful, but the role boundary used the same stop-and-no-reroute wording for refused and unavailable operations.
-  That wording can cause ordinary retrieval failures to be treated as authorization refusals.
-
-Hypothesis: small changes to intake framing, delegation, criticism and retrieval recovery can make the existing
-research team produce more directly useful results at proportionate effort. No new runtime or role is needed.
-The current contracts in `CAP-DLV-deep-research` and `UC-research-an-idea-and-shape-a-roadmap` remain the foundation.
-
-#### User constraints and evidence status
-
-The requested work proceeds through Planning of this bounded improvement. Plan acceptance and Development
-handoff remain separate Host decisions. Keep the explicitly invoked skill with skill-local Markdown roles and optional delegation.
-Do not require same-task comparisons, blind scoring or proof of team benefit before adopting a useful pattern.
-
-The observations above come from the pilot conversation and returned assignments retained in
-`MAT-agent-team-design-pilot`. This proposal needs no access to the transient run directory.
+A source-supported research answer can still omit the practical artifact the user requested or impose unwanted
+follow-up work. The pilot recorded in `MAT-agent-team-design-pilot` also exposed duplicate source investigation
+and wording that conflated a technical retrieval failure with a permission refusal. `ADR-deliverable-driven-research`
+settles the bounded instruction changes. `UC-research-an-idea-and-shape-a-roadmap` owns the affected user journey.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Make deep-research deliverable-driven and proportionate so that system capabilities are extended.
+- **US-1**: As a research requester, I want assignments and synthesis to deliver the artifact I can use next.
+- **US-2**: As a coordinator, I want selective verification and bounded recovery without relaxing access authority.
+- **US-3**: As a consumer, I want optional skill-local roles and proportionate follow-up without an adoption benchmark.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+- **Scope Excluded**: new roles, team counts, runtimes, automatic retries, package dependencies or feature edges.
+- **Scope Excluded**: comparative-effectiveness experiments, measured token savings or proof of team superiority.
+- **Scope Excluded**: changes to material retention, explicit invocation, Git or publication authority, or consumer implementation.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Frame the useful deliverable
 
-## 5. Carried Proposal Notes
+- **Given** a request for reusable repository configurations and supplied cost constraints.
+- **When** the coordinator frames the run and assignments.
+- **Then** the brief names the requested artifact, intended use, constraints and stop condition; each assignment names its contribution, and synthesis supplies repository/file references and reuse guidance without a mandatory form.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Review usefulness before retention
 
-### 2. Planning Decisions
+- **Given** a supported draft that omits the requested artifact or imposes an unwanted prerequisite.
+- **When** the coordinator checks it or invokes discovery-critic.
+- **Then** the check identifies the output gap or burden against the supplied goal and constraints, with a concrete repair; a critic can return zero findings and is not required on every run.
 
-Planning used `low` activity-effort: the direction is already concrete and needs no additional research or critic
-pass. No essential user question remains. Development remains `medium` because agent-facing instructions and
-retained behavior contracts need independent review.
+### [AC-03] Verify consequential gaps selectively
 
-| Question | Settled direction | Consequence |
-| --- | --- | --- |
-| Brief and assignment | Put requested deliverable, intended use, known constraints and an observable stop condition in the existing brief; each assignment names its contribution and expected return. | Infer the fields from supplied context; add no mandatory intake form or universal output template. |
-| Usefulness check | Keep a coordinator-owned final check before retention; give the same criteria to discovery-critic only when it is invoked. | Check the requested artifact, next action and unwanted prerequisites without a compulsory reviewer call. |
-| Retrieval classification | A definite refusal stops access to that resource. An ordinary technical retrieval failure permits bounded authorized recovery. Ambiguous authorization stops that resource while unrelated permitted work can continue. | Failed retrieval and actual replacement evidence remain visible; recovery consumes the original assignment bound. |
-| Verification | Retain installation and authority checks; use concrete semantic review examples for instruction behavior. | No test claims to measure creativity, usefulness or cost superiority, and no comparison experiment is required. |
+- **Given** a role return with inspected source identity, relevant location or finding and limits.
+- **When** the coordinator validates it.
+- **Then** it reviews that evidence without repeating the whole investigation by default; consequential gaps, contradictions or suspect support trigger targeted reopening or an explicit unverified claim.
 
-`ADR-deliverable-driven-research` records the lasting instruction choice and tradeoffs. `target-docs.md` identifies
-the exact expected source and Living Spec reflection. No new package, runtime behavior or feature edge is needed.
+### [AC-04] Recover from an ordinary retrieval failure
 
-### 3. Proposed Design & Impact
+- **Given** a public-source timeout, broken link or unreadable result without an access refusal.
+- **When** permitted retrieval remains within the original assignment bound.
+- **Then** a bounded retry or legitimately accessible primary source is allowed, the failed retrieval and actual inspected replacement are reported, and a replacement that does not support the claim leaves it unverified.
 
-#### 3.1 Frame the requested output before allocating research
+### [AC-05] Stop denied or ambiguous access
 
-Record the requested deliverable, intended use, known constraints and research stopping point in the run brief.
-Infer these from the request where possible; ask only when a missing choice changes the research target.
-Each delegated question should explain which part of that output it supplies.
+- **Given** a permission, sandbox, trust or access refusal, or ambiguous authorization.
+- **When** the coordinator or a role classifies the result.
+- **Then** access to that resource stops without another tool, path, process, identity or setting bypass; independently useful permitted work can continue with the missing coverage explicit.
 
-For a request for reusable configurations, the output should include repository/file references, what to borrow,
-what to omit and a recommended starting composition. Empirical evidence can qualify that recommendation without
-becoming a separate effectiveness study. For a factual research question, use the appropriate factual output;
-repository discovery is not a universal requirement.
+### [AC-06] Keep follow-up proportionate
 
-#### 3.2 Review usefulness as well as factual support
+- **Given** a small inquiry or a user who declines comparative validation.
+- **When** the result and conditional roadmap are prepared.
+- **Then** the request can finish inline, optional checks remain optional, and uncertain benefits are disclosed without making a comparison or further research an adoption prerequisite.
 
-Before retaining the result, the coordinator should check whether the requested artifact is present, whether the
-recommendation supports the user's intended next action and whether it introduces unnecessary prerequisites.
-When discovery-critic is useful, its payload should include those criteria and the user's cost constraints.
+### [AC-07] Preserve deployed authority and ownership
 
-A finding should name the missing or burdensome output, the relevant user constraint and a concrete repair.
-Zero supported findings remains valid. Do not mandate criticism, consensus, a fixed issue count or extra rounds.
-Do not add an independent reviewer to every research run.
+- **Given** an installed consumer that explicitly selects deep-research.
+- **When** sync and existing bundle/consumer checks run.
+- **Then** the user-only entry and four local roles deploy with their references, no global research roles appear, removal preserves materials, and coordinator-only retention and no-commit authority remain intact.
 
-#### 3.3 Verify consequential claims selectively
+## 5. Assumptions and Verification Limits
 
-Investigators should return the inspected source identity, the relevant location or finding and its limitations.
-The coordinator should inspect those returns and selectively reopen sources where a claim changes the
-recommendation, provenance is missing, sources conflict or the returned evidence is otherwise suspect.
-
-A clear, adequately sourced return should not trigger a complete repeat of its investigation by default.
-Selective verification does not mean accepting every role claim without review. Keep observation, vendor claim,
-inference and unavailable evidence distinct in the retained result.
-
-#### 3.4 Separate retrieval recovery from authorization refusal
-
-Preserve the prohibition on bypassing an actual permission or sandbox refusal. Do not use another tool, path,
-process, identity or setting to obtain access to the same denied resource.
-
-For an ordinary timeout, broken public link or unreadable result without an authorization refusal, allow a
-bounded retry or another legitimately accessible primary source within the existing research assignment.
-An author-hosted manuscript or another relevant public source can be a valid alternative. Do not route around
-an access control or paywall. If another source does not support the same claim, retain that claim as unverified.
-If classification is ambiguous, report the uncertainty and stop access to that resource; unrelated permitted
-research may continue. The return should identify the failed retrieval and what was actually inspected instead.
-
-Use the role's existing observable research bound; no new automatic retry engine or expanding budget is proposed.
-
-#### 3.5 Keep follow-up work proportional
-
-Separate optional investigations from prerequisites. A roadmap should connect directly to the user's intended
-use and avoid turning every unknown into more research. When the user declines comparative validation, keep
-uncertain benefits explicit while recommending a usable starting point without a comparison gate.
-
-Retain the existing fresh-context dispatch, one-question assignments, source qualification, coordinator-owned
-material and explicit separation between behavioral instructions and host enforcement. Adjust the existing
-skill and references rather than adding personas, a framework or a fixed team size.
-
-#### Expected scope
-
-Edit the source bundle's entry, orchestration/synthesis references and affected role wording. Reconcile the
-changed behavior into the capability and use case. Update existing bundle checks only where the instruction
-contract changes. Managed and projected copies remain generated through normal synchronization.
-No new cross-feature dependency or package edge is in scope.
-
-#### Acceptance examples for Development
-
-- A practical-reference request produces concrete repositories/files and reuse guidance in its first retained
-  answer, rather than only research about whether the approach works.
-- A proposed next step that conflicts with a supplied cost constraint is revised or identified as optional
-  before retention; it is not silently made an adoption prerequisite.
-- A source-supported return is reviewed without automatically repeating its whole investigation; a decisive
-  unsupported claim still receives targeted verification or remains unverified.
-- An ordinary public-source timeout or 404 can lead to a bounded authorized recovery. A permission refusal
-  never authorizes alternate access to the denied resource. Missing coverage remains visible.
-- A simple request can complete without discovery-critic or additional roles. Criticism can return zero findings.
-
-#### Scope excluded
-
-- A new UI/UX or ideation-team skill, installation of referenced repositories or copying their entire workflows.
-- Benchmarks, same-task A/B/C comparisons, blind human scoring or validation until team superiority is proved.
-- A research runtime, new tool permissions, automated retry service, scheduler or persistent role memory.
-- Changes to Git/worktree lifecycle, research material immutability, citation policy or publication authority.
-- Implementation during Planning, or mandatory additional research/review rounds.
-
-### 4. Lifecycle & Retirement Criteria
-
-This proposal remains `reviewing` for the Host's committed-source review and `plan-accept` decision. Planning
-has settled the direction; it claims neither acceptance nor a Development handoff.
-
-On acceptance, hand off one bounded source-bundle/documentation change at `medium` Development effort. Include the
-promoted decision in the declared Development scope. Retirement follows the normal handoff lifecycle. On rejection,
-record the decision and follow the normal rejection lifecycle. No comparative-benefit study gates either adoption
-or completion of the implementation checks.
-
+The approved proposal's premises still hold at handoff HEAD. This is a content-only change in one catalog feature;
+no product screens change. Semantic review walks the six examples in `PROP-deep-research-practical-orchestration-target`.
+Distribution tests verify installation and authority wording, not model obedience, research usefulness or superiority.
+No before/after performance measurement is requested or claimed.
