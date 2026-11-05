@@ -1,0 +1,31 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T05:11:05.434461Z'
+status: completed
+summary: Independent medium review found a concurrent authored-edit loss window and transaction-validation error-code mismatch.
+findings:
+- issue: Refresh can silently discard authored snapshot edits made during candidate preparation.
+  evidence: usecases/snapshots.py:51-69; repositories/snapshots.py:130-157; .probe/review-01/test_refresh_ordering.py::test_edit_during_candidate_preparation_is_preserved failed DID NOT RAISE
+  failure_condition: An ordinary editor changes snapshot files after initial provenance validation while candidate preparation or staging runs.
+  suggested_action: Pass the verified previous inventory into the transaction; compare the actual previous tree after backup rename and restore/refuse with BUNDLE_SNAPSHOT_CONFLICT on mismatch; add regression.
+  resolution: open
+  severity: P1
+- issue: Transaction validation failure returns INVALID rather than WRITE_FAILED after successful rollback.
+  evidence: repositories/snapshots.py:134,148-149; .probe/review-01/test_refresh_ordering.py::test_validation_failure_uses_write_failure_code failed with SnapshotInvalidError
+  failure_condition: Final validation raises its normal SnapshotInvalidError after installing the candidate.
+  suggested_action: Preserve preflight/conflict errors but translate replacement validation failure to SnapshotWriteError after rollback; test actual validator exception.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex isolation emulated; HEAD/tree snapshot unchanged, no explicit reads outside assigned worktree
+unverified_areas:
+- Living Spec reconciliation and private provider applicability remain separate
+checks:
+  tests: PASS filesystem30 consumer2 dist-only1338 full-fallback6647 skipped15
+  lint: PASS dist lint/types and CIrules22
+  probes: FAIL two executable reviewer probes
+diff_scope:
+  base: a3367f0d94a8ecb9762bbf35b5d0d3f89a621fe0
+  head: 2d47aef3e0767252ed11cbc31a8c9c4bef98c809
