@@ -1021,7 +1021,7 @@
     },
     ".agents/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "629e2b22d4c3b03c1e281daf3d878c6816c84730d8a2b836fb7d167abe860ad2"
+      "sha256": "6e531c14d95c3adfcef9b1edbd2a9f07f491c6948c7876b8dc71b681c72b9ea5"
     },
     ".agents/skills/deep-research/agents/openai.yaml": {
       "mode": 420,
@@ -1029,11 +1029,11 @@
     },
     ".agents/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "1795d72ecfcd8aa20a01787a8e7d6817f5fffb37e44210fd9c7b76d476e1d8cb"
+      "sha256": "71a6e814aef96f1c2d223fd7b716c56c8ae11a2305f2e397a0fd6f05c7481dcd"
     },
     ".agents/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "89d9119663bed63235c78dcd1e75155c774f2ec26a0f387fc69be6d5da7e76b9"
+      "sha256": "6fb36007ac3678d57e3881afc21d1ebfd6571f8193653fa790ae3b4131dd3c12"
     },
     ".agents/skills/deep-research/references/workspace.md": {
       "mode": 420,
@@ -1041,19 +1041,19 @@
     },
     ".agents/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "549294d2b0d08d7cff1413ea4da8fa1aa0339c32137393ed659cc48f5932f1f2"
+      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
     },
     ".agents/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "cb806c0535a9f267211356ee1a5b0f80403ea569ba142340f308b5240a543890"
+      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
     },
     ".agents/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "d88b235308848802e89bedc845368d816810e69394e4b474a3bd7994b9f9a1fe"
+      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
     },
     ".agents/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "6ac9711aa753ee6bdaef75f15e6a1bda056229d2ec60b59b1cfe0b64105ab2a7"
+      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1313,15 +1313,15 @@
     },
     ".claude/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "4b424deeb990c49cb6fcdda9aaa6fc14cc78869bb0f0ece45927ad72634f5d42"
+      "sha256": "3e31e66b7f698e2d403b2bcd849f26c80eb0d7560883f099273414d4208c09bf"
     },
     ".claude/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "1795d72ecfcd8aa20a01787a8e7d6817f5fffb37e44210fd9c7b76d476e1d8cb"
+      "sha256": "71a6e814aef96f1c2d223fd7b716c56c8ae11a2305f2e397a0fd6f05c7481dcd"
     },
     ".claude/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "89d9119663bed63235c78dcd1e75155c774f2ec26a0f387fc69be6d5da7e76b9"
+      "sha256": "6fb36007ac3678d57e3881afc21d1ebfd6571f8193653fa790ae3b4131dd3c12"
     },
     ".claude/skills/deep-research/references/workspace.md": {
       "mode": 420,
@@ -1329,19 +1329,19 @@
     },
     ".claude/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "549294d2b0d08d7cff1413ea4da8fa1aa0339c32137393ed659cc48f5932f1f2"
+      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
     },
     ".claude/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "cb806c0535a9f267211356ee1a5b0f80403ea569ba142340f308b5240a543890"
+      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
     },
     ".claude/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "d88b235308848802e89bedc845368d816810e69394e4b474a3bd7994b9f9a1fe"
+      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
     },
     ".claude/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "6ac9711aa753ee6bdaef75f15e6a1bda056229d2ec60b59b1cfe0b64105ab2a7"
+      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1685,15 +1685,15 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "629e2b22d4c3b03c1e281daf3d878c6816c84730d8a2b836fb7d167abe860ad2"
+      "sha256": "6e531c14d95c3adfcef9b1edbd2a9f07f491c6948c7876b8dc71b681c72b9ea5"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "1795d72ecfcd8aa20a01787a8e7d6817f5fffb37e44210fd9c7b76d476e1d8cb"
+      "sha256": "71a6e814aef96f1c2d223fd7b716c56c8ae11a2305f2e397a0fd6f05c7481dcd"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "89d9119663bed63235c78dcd1e75155c774f2ec26a0f387fc69be6d5da7e76b9"
+      "sha256": "6fb36007ac3678d57e3881afc21d1ebfd6571f8193653fa790ae3b4131dd3c12"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/workspace.md": {
       "mode": 420,
@@ -1701,19 +1701,19 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "549294d2b0d08d7cff1413ea4da8fa1aa0339c32137393ed659cc48f5932f1f2"
+      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "cb806c0535a9f267211356ee1a5b0f80403ea569ba142340f308b5240a543890"
+      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "d88b235308848802e89bedc845368d816810e69394e4b474a3bd7994b9f9a1fe"
+      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "6ac9711aa753ee6bdaef75f15e6a1bda056229d2ec60b59b1cfe0b64105ab2a7"
+      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,

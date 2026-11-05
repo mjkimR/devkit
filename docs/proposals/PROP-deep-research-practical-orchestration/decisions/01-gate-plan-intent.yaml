@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Proceed with Planning of the existing deliverable-driven research improvement
-  proposal.
-by: user
-at: '2026-11-05T00:07:17.974947Z'

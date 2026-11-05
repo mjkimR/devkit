@@ -2,7 +2,7 @@
 id: PROP-deep-research-practical-orchestration-target
 title: Target Living Spec for practical deep-research orchestration
 status: draft
-proposal: PROP-deep-research-practical-orchestration
+proposal: SPEC-deep-research-practical-orchestration
 created_at: 2026-11-05
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-deep-research.md
@@ -12,7 +12,7 @@ targets:
 
 # Planned source and Living Spec reflection
 
-This is a Planning target list for `PROP-deep-research-practical-orchestration`; it describes proposed behavior.
+This is a Planning target list for `SPEC-deep-research-practical-orchestration`; it describes proposed behavior.
 No source or current contract changes are made by this Planning turn. The prospective ADR path assumes handoff
 on 2026-11-05; use the actual promoted path if handoff occurs on another date.
 
@@ -42,7 +42,7 @@ choice in its plan and review evidence.
 - `UC-research-an-idea-and-shape-a-roadmap`: reflect output framing in step 3 and selective checking in steps 5–7.
   Add extensions and acceptance scenarios for a practical repository-reference request, a declined validation
   program, a supported role return, ordinary retrieval failure, permission refusal and ambiguous authorization.
-- `PADR-deliverable-driven-research`: promote through handoff to the decision under `docs/decisions/`; no existing
+- `ADR-deliverable-driven-research`: promote through handoff to the decision under `docs/decisions/`; no existing
   ADR decision is replaced. The exact promoted document belongs to the Development reconciliation targets.
 
 ## Semantic review examples

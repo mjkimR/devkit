@@ -1,13 +1,13 @@
 ---
-id: PADR-deliverable-driven-research
+id: ADR-deliverable-driven-research
 title: Keep research oriented to the requested deliverable
 summary: "For bounded research, we align assignments and synthesis with the requested deliverable and use selective verification, accepting semantic review instead of a mandatory effectiveness benchmark."
-proposal: PROP-deep-research-practical-orchestration
-status: draft
+proposal: SPEC-deep-research-practical-orchestration
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-deliverable-driven-research] Keep research oriented to the requested deliverable
+# [ADR-deliverable-driven-research] Keep research oriented to the requested deliverable
 
 ## 1. Context & Problem Statement
 
@@ -38,15 +38,15 @@ Choose deliverable-driven assignments and coordinator-owned checks because they 
 adding a required role or experiment.
 
 - The run brief names the requested deliverable, intended use, known constraints and stop condition; assignments
-  identify their contribution. → `CAP-DLV-deep-research` proposed deliverable-framing rule (SHOULD).
+  identify their contribution. → `CAP-DLV-deep-research` rule 25, Deliverable framing (SHOULD).
 - The coordinator checks requested artifacts, intended next action and unnecessary prerequisites before retention;
-  an optional critic receives these criteria when relevant. → `CAP-DLV-deep-research` proposed usefulness rule (SHOULD).
+  an optional critic receives these criteria when relevant. → `CAP-DLV-deep-research` rule 26, Usefulness (SHOULD).
 - Source reopening targets consequential gaps, conflicts or suspect support rather than repeating every
-  investigation. → `CAP-DLV-deep-research` proposed selective-verification rule (SHOULD).
+  investigation. → `CAP-DLV-deep-research` rule 27, Selective verification (SHOULD).
 - An ordinary retrieval failure permits bounded authorized recovery; definite refusal or ambiguous authorization
-  stops access to that resource. → `CAP-DLV-deep-research` proposed retrieval-recovery rule (MUST).
+  stops access to that resource. → `CAP-DLV-deep-research` rule 28, Retrieval recovery (MAY), rule 29, Access refusal (MUST), and rule 31, Recovery provenance (MUST).
 - Declined comparative validation is not an adoption prerequisite; uncertain benefits remain explicit.
-  → `CAP-DLV-deep-research` proposed proportionate-follow-up rule (MUST).
+  → `CAP-DLV-deep-research` rule 30, Proportionate follow-up (MUST).
 
 These clauses refine research operation; they replace no earlier ADR decision and change no material immutability,
 citation, implementation, Git or publication authority.
@@ -62,7 +62,7 @@ citation, implementation, Git or publication authority.
 
 ## 6. Confirmation
 
-Review only for output usefulness and selective research judgment: review the semantic examples in the proposal's
+Review only for output usefulness and selective research judgment: review the semantic examples in `SPEC-deep-research-practical-orchestration`'s
 `target-docs.md` against the changed source instructions and `CAP-DLV-deep-research`.
 
 Run the existing integration and installed-consumer checks under
