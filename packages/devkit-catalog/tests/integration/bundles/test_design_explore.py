@@ -132,3 +132,52 @@ def test_optional_local_assignments_and_evidence_boundaries() -> None:  # AC-03,
         content = (SKILL / f"roles/{role}.md").read_text()
         assert_rule(content, "product source", "retained files", "index and HEAD unchanged")
         assert_rule(content, "no native sandbox or permission boundary")
+
+
+# SPEC-design-explore-counterarguments AC-01..05
+def test_optional_author_response_has_evidence_disposition_and_stop_contracts() -> None:
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(
+        orchestration,
+        "supported objections",
+        "goal or hard constraints",
+        "zero supported findings",
+        "no author response",
+    )
+    assert_rule(
+        orchestration,
+        "after independent first passes",
+        "actual candidate",
+        "evidence",
+        "failure conditions",
+        "preserved constraints",
+    )
+    assert_rule(orchestration, "one critic pass", "at most one author response per affected candidate")
+    assert_rule(
+        orchestration, "cannot return", "missing author coverage", "coordinator's own", "invent no author reply"
+    )
+    assert_rule(orchestration, "accept and revise", "rebut", "bounded unknown", "uninspected claims", "does not prove")
+    assert_rule(
+        orchestration,
+        "each selected objection",
+        "actual response or revision",
+        "reasoned disposition",
+        "no serialized schema",
+    )
+    assert_rule(
+        orchestration,
+        "no automatic further reply",
+        "before another pass",
+        "finite pass/time bound",
+        "stop without starting implementation",
+    )
+    explorer = (SKILL / "roles/solution-explorer.md").read_text()
+    assert_rule(explorer, "response after initial exploration", "otherwise use initial exploration")
+    assert_rule(explorer, "without reading peer conclusions", "first pass")
+    assert_rule(
+        explorer, "each selected objection", "accept and revise", "rebut", "labeled inference", "bounded unknown"
+    )
+    assert_rule(explorer, "inaccessible evidence", "uninspected claims", "does not prove")
+    assert_rule(explorer, "stop after the assigned response", "no further critique", "implementation")
+    critic = (SKILL / "roles/design-critic.md").read_text()
+    assert_rule(critic, "no automatic further critic reply", "decision-changing", "finite pass/time bound")

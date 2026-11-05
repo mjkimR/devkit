@@ -2,7 +2,7 @@
 id: SPEC-design-explore-counterarguments
 title: Optional counterargument and response in design exploration
 summary: "Make one optional author response and coordinator disposition explicit within the existing design critique pass, preserving evidence limits and exploration authority."
-status: planned
+status: in-progress
 created: 2026-11-05
 related_capabilities:
   - CAP-DLV-design-exploration

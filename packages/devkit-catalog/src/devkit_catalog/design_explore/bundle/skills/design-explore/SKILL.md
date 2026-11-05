@@ -32,7 +32,8 @@ Help choose a useful way to solve the supplied design problem while preserving i
    Do not count product brands, renamed components or role labels as materially different mechanisms.
 5. Preserve an unconventional plausible mechanism and its benefit instead of averaging candidates into a generic
    feature list. Use bounded criticism when it can change a consequential choice; zero findings is valid.
-   Normally use one useful critique/refinement pass, with no consensus or score threshold.
+   When a supported objection can change the choice, use the optional response exchange in
+   `references/orchestration.md` within the normal one critique/refinement pass, with no consensus or score threshold.
 6. Return useful directions with their distinguishing mechanism, benefit, main tradeoff and decision-changing
    assumption. Add a sketch, data shape, sequence or example when it explains the mechanism; label it illustrative.
    Recommend a direction when justified and name any unresolved choice. Suggest a next check only for a concrete
