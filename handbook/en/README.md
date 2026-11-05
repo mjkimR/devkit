@@ -1,20 +1,25 @@
 ---
 sources:
-  ARCH-01-introduction-and-goals: 9057d8c207781509028fb8f0335905634db97a9c
+  ARCH-01-introduction-and-goals: 7a3fa0c4fe2fa8e15079c1e2dfc84d2a493c5994
   ARCH-03-context: da101a47ee997b3705720a96951abc661301ea62
-  ARCH-05-1-containers: cb3b0e165eb94c1f1bff13af613ae3864be8a451
-  CAP-DIST-content-packages: 71d426703b854a24bdce4cd0c44b130ed8a106dc
-  CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
-  CAP-DLV-idea-incubation: c1ff3be1b056ec9d5746689d189c17fdde8bee89
-  CAP-DLV-incubation-sdd-baseline: 8899fda9b8975eb5cf9848c226df2ee8f43abc14
-  CAP-DLV-release-handbook: ef9a59be9a4712194710b04969671a12582c28d7
+  ARCH-05-1-containers: b09cdc2808ae238f39238113503afd97e7ef23e3
+  CAP-DIST-content-packages: 2d99bc80b78d361bb4cad5caa3df90ad9e1a936f
+  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
+  CAP-DLV-adaptive-development: 120b77c7814f67b082a728d0fdbec0108b852b00
+  CAP-DLV-deep-research: 08c383e1a9a76e3e47679db645eeb7a751126b8e
+  CAP-DLV-design-exploration: 4fad9083aa058047d39e6956ff63b76f8232bd10
+  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
+  CAP-DLV-release-handbook: 9d4b4799c61ab2d689d741f3df61323b9cd6689a
+  CAP-DLV-sdd-baseline-adoption: bb6fc66abb97dd0113a4864be4a8dbeca761c704
+  CAP-DLV-uiux-improvement: 5b4b328d5933e2bcd67b719eff3c78a10e2386f4
+  CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
 title: devkit handbook
 ---
 
 # devkit handbook
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 devkit is a developer toolkit for repositories where AI coding agents (Codex, Claude Code, Antigravity) do much of
@@ -29,7 +34,7 @@ links to the documents it draws on; when a page and the Living Spec disagree, th
 ## What devkit gives you
 
 devkit is one command, `devkit`, shipped as Python wheels released together at one version
-([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-05-1-containers.md)):
+([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-05-1-containers.md)):
 
 - **Distribution** (`devkit-dist`): packages agent assets into bundles, deploys the ones your project selects with
   `devkit sync`, projects skills and subagents into each agent's native directories, and loads guidance on demand.
@@ -46,17 +51,17 @@ devkit is one command, `devkit`, shipped as Python wheels released together at o
 - **Libraries for other repositories**: `devkit-advisory` (the `devkit.advisory` advisory protocol, standard
   library only) and `devkit-cli` (the agent-first output contract for any click tool).
 - **Optional extras**: `devkit-mcp` (MCP transport), `devkit-viewer` (a local read-only page over your
-  repositories), `devkit-catalog` (opt-in bundles such as `incubation`, `maintenance` and `response-style`) and the
+  repositories), `devkit-catalog` (opt-in bundles such as `adaptive-dev`, `maintenance` and `response-style`) and the
   `search` extra for dense and hybrid document search.
 
 The goals behind these pieces, deterministic results, transactional sync, strict layering and POSIX-only
 operation, are set out in
-[`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-01-introduction-and-goals.md).
+[`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-01-introduction-and-goals.md).
 
 ## The overall model
 
 devkit sits between three parties
-([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-03-context.md)):
+([`ARCH-03-context`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-03-context.md)):
 
 - **You** configure project policy in `.devkit/config.toml`, confirm what the agent proposes and make the
   decisions devkit reserves for a person, such as approving an integration.
@@ -68,24 +73,24 @@ devkit sits between three parties
 
 ### Two development approaches
 
-Every project makes one shared choice of **development approach**, `sdd` (the default) or `incubation`, recorded
+Every project makes one shared choice of **development approach**, `sdd` (the default) or `adaptive-dev`, recorded
 as `[development] approach` in `.devkit/config.toml`. `uv run devkit config show` reports the effective value and
 where it comes from. Installing a package or selecting a bundle never changes it; only an explicit edit you agree to
-does ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
+does ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md)).
 
 - **SDD** (spec-driven development) is the full delivery procedure. `devkit sync` deploys guidance; the agent reads
   it with `devkit get-context <bundle>`; a development request is classified and bound to one workflow; the agent
   follows `devkit workflow next` stage by stage, recording reviews and questions as envelopes; rules and commit
   gates keep the repository consistent; and finished work lands on the base branch through `devkit integration`
   once you approve it.
-- **Incubation** is for an idea whose product is still taking shape. The opt-in `incubation` bundle's `/incubate`
+- **Adaptive development** is for an idea whose product is still taking shape. The opt-in `adaptive-dev` bundle's `/adaptive-dev`
   entry advances the next useful product action (a question, a bounded experiment, an implementation, a usage
-  check) and keeps only the current facts needed to resume in `.devkit/incubation.md`, with no spec bundles,
+  check) and keeps only the current facts needed to resume in `.devkit/adaptive-dev.md`, with no spec bundles,
   envelopes or approvals per change. Document checks and your project's own checks still apply
-  ([`CAP-DLV-idea-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-idea-incubation.md)).
-  A small app can stay in incubation for good; when you want later changes to go through SDD, the `sdd-baseline`
+  ([`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)).
+  A small app can stay in adaptive development for good; when you want later changes to go through SDD, the `sdd-baseline`
   playbook verifies what you keep and switches the approach only on your decision
-  ([`CAP-DLV-incubation-sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md)).
+  ([`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md)).
 
 [Concepts](concepts.md) explains each of these pieces and how they connect.
 
@@ -94,12 +99,12 @@ does ([`CAP-DIST-sync-and-transactions`](https://github.com/mjkimR/devkit/blob/v
 1. Read [Concepts](concepts.md) for the vocabulary used everywhere else.
 2. Install devkit. You can give your agent the installation guide and let it propose a plan, or install the release
    wheels yourself and run `uv run devkit sync`
-   ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md)
+   ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)
    describes which wheels bring which bundles).
 3. Pick your starting point:
    - a repository that already has code and documents: [Adopt in an existing repository](journeys/adopt-in-an-existing-repository.md);
-   - a new idea you want to explore before committing to specs: [Incubate an idea](journeys/incubate-an-idea.md),
-     and later, if you want, [Adopt SDD from incubation](journeys/adopt-sdd-from-incubation.md);
+   - a new idea you want to explore before committing to specs: [Advance an idea](journeys/advance-an-idea.md),
+     and later, if you want, [Adopt SDD from adaptive development](journeys/adopt-sdd-from-adaptive-development.md);
    - otherwise, the SDD journeys below, starting with [Route development intent](journeys/route-development-intent.md).
 
 ## Journeys
@@ -109,12 +114,12 @@ Getting oriented:
 - [Find the right documents](journeys/find-the-right-documents.md)
 
 Exploring an idea:
-- [Incubate an idea](journeys/incubate-an-idea.md)
-- [Adopt SDD from incubation](journeys/adopt-sdd-from-incubation.md)
+- [Advance an idea](journeys/advance-an-idea.md)
+- [Adopt SDD from adaptive development](journeys/adopt-sdd-from-adaptive-development.md)
 
 Delivering work:
 - [Route development intent](journeys/route-development-intent.md)
-- [Incubate and hand off a proposal](journeys/incubate-and-hand-off-a-proposal.md)
+- [Plan and hand off a proposal](journeys/plan-and-hand-off-a-proposal.md)
 - [Drive development to integration](journeys/drive-development-to-integration.md)
 - [Handle delivery problems and exceptions](journeys/handle-delivery-problems-and-exceptions.md)
 - [Run parallel work safely](journeys/run-parallel-work-safely.md)
@@ -138,7 +143,7 @@ Reporting progress:
 | [cli](areas/cli.md) | The agent-first output contract for click tools |
 | [collaboration](areas/collaboration.md) | Shared report artifacts and the work scope registry |
 | [compact](areas/compact.md) | Bounded command output with full logs on disk |
-| [delivery](areas/delivery.md) | Development approaches, incubation, workflows, proposals, spec bundles, envelopes, policy and maintenance playbooks |
+| [delivery](areas/delivery.md) | Development approaches, adaptive development, workflows, proposals, spec bundles, envelopes, policy and maintenance playbooks |
 | [distribution](areas/distribution.md) | Bundles, sync, receipts, projections, context and playbooks |
 | [documents](areas/documents.md) | The document model, lookup, search and namespaces |
 | [gate](areas/gate.md) | Commit hooks and layered gate policy |
@@ -157,3 +162,18 @@ Reporting progress:
 
 [Decisions](decisions.md) lists the accepted architecture decisions, [Changes](changes.md) what is new in this
 snapshot, and the [Glossary](glossary.md) the ubiquitous terms of devkit.
+
+## Research, design and maintenance history
+
+The catalog also offers user-only entries for sourced research, general solution exploration and UI/UX improvement.
+Selecting them starts no activity and changes no approach. Their walkthroughs are:
+
+- [Research an idea and shape a roadmap](journeys/research-an-idea-and-shape-a-roadmap.md)
+- [Explore a design problem](journeys/explore-a-design-problem.md)
+- [Improve an interface and user flow](journeys/improve-an-interface-and-user-flow.md)
+- [Design necessary command entry points](journeys/design-command-entrypoints.md)
+- [Record a maintenance run](journeys/record-a-maintenance-run.md)
+- [Find the latest maintenance run](journeys/find-the-latest-maintenance-run.md)
+
+Maintenance history is a separately requested companion, not an automatic step in those playbooks.
+Integration separates confirmed Git landing from final target checks; see [Integration](areas/integration.md).

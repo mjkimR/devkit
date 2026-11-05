@@ -1,9 +1,9 @@
 ---
 sources:
-  CAP-DOCS-document-lookup: f16d8d88730261a376acc66ccb8e11ce209d4b49
-  CAP-DOCS-document-model: 89280a2bb6003fe052fa7ee3ed50e368270bf9c6
-  CAP-DOCS-document-search: 60fc2aff10caad2a5b56dc61ad347369aafa2634
-  CAP-DOCS-namespaces: ee66025d062f5c547b58bd25964db7bef2f8c39e
+  CAP-DOCS-document-lookup: 047987d53dc77f859357a545cfb01a2e161f80a1
+  CAP-DOCS-document-model: 016e923f03d861ba71b8fe6a4a88fed61a07ff6a
+  CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
+  CAP-DOCS-namespaces: c30311a1b0b7bcf09517a9ec71e6b395569b6512
   UC-find-the-right-documents: fbfaa41c0802e14b1f363c666a5b4de450716895
 title: Find the right documents
 ---
@@ -11,22 +11,28 @@ title: Find the right documents
 # Find the right documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -61,7 +67,7 @@ asks `devkit docs` for exactly the documents that matter. Everything on this pag
 file.
 
 The use case is
-[`UC-find-the-right-documents`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/documents/UC-find-the-right-documents.md).
+[`UC-find-the-right-documents`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/documents/UC-find-the-right-documents.md).
 For what a document, an ID and the Living Spec are, see [Concepts](../concepts.md) and the
 [Documents](../areas/documents.md) area.
 
@@ -82,7 +88,7 @@ uv run devkit docs resolve CAP-DOCS-document-model
 
 You get one `[DOCUMENT: <id> kind= status= path=]` line with the workspace-relative path. An alias resolves to its
 canonical document and the line says `alias=`. You can pass several IDs at once. How IDs and kinds are defined is in
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md).
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md).
 
 ## 2. Follow the references
 
@@ -93,7 +99,7 @@ uv run devkit docs refs CAP-DOCS-document-model                  # what it cites
 
 Each `[REF: ...]` line names a document on the other side and the fields that hold the reference. Results come one
 page at a time: a `[PAGE: ...]` line follows, and `[NEXT_CMD: ...]` gives the exact command for the next page
-([`CAP-DOCS-document-lookup`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-lookup.md)).
+([`CAP-DOCS-document-lookup`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-lookup.md)).
 
 ## 3. Read and cite
 
@@ -112,7 +118,7 @@ The ranking uses each document's ID and English summary, plus the title, area an
 when bodies are written in another language. A query that equals an ID, alias, path or file name puts that document
 first with `score=-`. With the optional search extra (`uv add 'devkit-docs[search]'`, which `devkit-spec[search]`
 includes) the ranking is hybrid; without it, lexical
-([`CAP-DOCS-document-search`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-search.md)).
+([`CAP-DOCS-document-search`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md)).
 Continue at step 2 with the hit you choose.
 
 **By code path.** `uv run devkit docs list capability --file src/<package>/engine.py` lists documents whose
@@ -123,7 +129,7 @@ Continue at step 2 with the hit you choose.
 `devkit docs search` show the current directory's namespace plus the global documents, each line with `namespace=`.
 `--namespace <name>` picks another one and `--all-namespaces` shows all. A namespace narrows browsing only:
 `resolve` and `refs` stay repository-wide, so an ID from another package still resolves
-([`CAP-DOCS-namespaces`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-namespaces.md)).
+([`CAP-DOCS-namespaces`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-namespaces.md)).
 
 ## History stays out unless you ask
 

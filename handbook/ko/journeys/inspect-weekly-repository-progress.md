@@ -4,28 +4,34 @@ sources:
   UC-inspect-weekly-repository-progress: null
   UC-publish-a-weekly-report: null
 title: 주간 저장소 진행 상황 점검하기
-translated_from: en/journeys/inspect-weekly-repository-progress.md@8e63b9a5de337b57
+translated_from: en/journeys/inspect-weekly-repository-progress.md@ed2be2e71610c9bb
 ---
 
 # 주간 저장소 진행 상황 점검하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -62,8 +68,8 @@ translated_from: en/journeys/inspect-weekly-repository-progress.md@8e63b9a5de337
 작업은 별도의 권한과 승인이 필요한 독립된 단계로 분리되어 있습니다.
 
 유스케이스는
-[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-inspect-weekly-repository-progress.md) (영어 원문)이며,
-[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)를
+[`UC-inspect-weekly-repository-progress`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-inspect-weekly-repository-progress.md) (영어 원문)이며,
+[`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문)를
 바탕으로 합니다. 플레이북의 기본 개념은 [개념](../concepts.md)에서 설명합니다.
 
 ## 시작하기 전에
@@ -136,6 +142,6 @@ uv run devkit playbook get maintenance/weekly-report
 ## 다음 단계
 
 검증된 보고서를 사용자가 선택한 외부 대상에 공식 게시하는 절차는
-[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)이며,
+[`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문)이며,
 [주간 보고서 게시하기](publish-a-weekly-report.md)에서 다룹니다. 관련 영역: [전달](../areas/delivery.md) 및
 [거버넌스 규칙](../areas/governance.md).

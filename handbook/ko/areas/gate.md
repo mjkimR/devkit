@@ -3,29 +3,35 @@ sources:
   CAP-GATE-commit-gates: null
   UC-keep-the-living-spec-consistent: null
 title: 커밋 게이트
-translated_from: en/areas/gate.md@80d667bcbcbbd643
+translated_from: en/areas/gate.md@7dff3ce982fbccfb
 ---
 
 # 커밋 게이트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -183,8 +189,8 @@ assets = ["staged-file-limit"]
 
 ## 관련 자료
 
-- [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문):
+- [CAP-GATE-commit-gates](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문):
   훅 래퍼, 내장 게이트, 게이트 인터페이스 규약, 배포 및 설정 계층.
-- [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/gate.md): 명령어, 종료 코드 및
+- [Gate reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/gate.md) (영어 원문): 명령어, 종료 코드 및
   오류 코드 레퍼런스.
 - 커밋 게이트는 [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md) 여정의 일상적인 개발 루프에 포함되어 있습니다.

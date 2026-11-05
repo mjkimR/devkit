@@ -6,28 +6,34 @@ sources:
   CAP-TRACE-code-entrypoints: null
   UC-keep-the-living-spec-consistent: null
 title: Living Spec 일관성 유지하기
-translated_from: en/journeys/keep-the-living-spec-consistent.md@de85e56bda890404
+translated_from: en/journeys/keep-the-living-spec-consistent.md@9e984de0464dee84
 ---
 
 # Living Spec 일관성 유지하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -66,7 +72,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)에서 다룹니다. 본 문서에서 사용되는 핵심 개념(Living Spec,
 거버넌스 규칙, 커밋 게이트(commit gate) 등)은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
+출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
 
 ## 시작하기 전에
 
@@ -110,8 +116,8 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 
 ## 주요 스펙 규칙과 검사 항목
 
-14가지 규칙(`docs`가 제공하는 문서 규칙 9개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
+15가지 규칙(`docs`가 제공하는 문서 규칙 10개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
 정리되어 있습니다. 가장 자주 접하게 되는 규칙은 다음과 같습니다.
 
 | 규칙 | 감지되는 위반 상황 | 자동 수정 지원 |
@@ -125,11 +131,11 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 | `RULE-steering-documents` | `docs/steering/`의 파일에 `id`가 있거나 `title`·`summary`가 없거나, 디렉터리가 상한을 넘음 | 수동 수정 필요 |
 | `RULE-ux-links` | UX 문서와 그 문서를 인용하는 유스케이스 단계가 서로 맞지 않음 | 수동 수정 필요 |
 
-프로젝트의 개발 방식이 인큐베이션인 동안에도 문서 규칙은 평소와 같이 판정하지만, 수명 주기 규칙은 SDD 워크플로에 명시적으로 바인딩된
+프로젝트의 개발 방식이 적응형 개발인 동안에도 문서 규칙은 평소와 같이 판정하지만, 수명 주기 규칙은 SDD 워크플로에 명시적으로 바인딩된
 유닛에만 적용됩니다. 적용할 유닛이 없으면 검사 성공이 아니라 누락 증거로 `SDD_LIFECYCLE_INACTIVE`를 보고합니다.
 
 문서가 ID를 부여받는 체계와 참조가 해석되는 원리는 문서 모델인
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
 정의되어 있습니다([문서](../areas/documents.md) 영역 참고).
 
 ## 문제 해결
@@ -144,7 +150,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
   있던 코드를 삭제하거나 다른 위치로 이동했기 때문입니다. `RULE-code-entrypoints`는 유효하지 않은 경로를 선언하고 있는 모든 문서를 즉시
   감지합니다. 해당 코드를 복원하거나, 문서의 엔트리포인트 선언을 이동된 새 코드 경로로 갱신하거나, 불필요한 선언을 제거한 뒤 다시 커밋하십시오.
   코드 경로 추적성 계약에 대한 자세한 내용은
-  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
+  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
   정의되어 있습니다([추적성](../areas/traceability.md) 영역 참고).
 - **`reconcile.md` 관련 오류로 커밋이 거부되는 경우:** 이번 커밋에서 실제로 수정하지 않은 문서를 `modified` 대상으로 지정한 채 reconcile
   기록을 `resolved` 상태로 표시했기 때문입니다. Living Spec 문서의 실제 수정 내용을 해당 reconcile 기록과 반드시 함께 스테이징하여 커밋하십시오.
@@ -152,7 +158,7 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
   자동 수정이 가능한 경우 `fix:` 힌트가 함께 제공됩니다. 만약 `RULES_RUN_FAILED`가 발생했다면 규칙 검사 엔진 자체가 정상 실행되지 못했음을
   의미합니다 (예: 새로운 작업 워크트리 환경에 관리 파일인 규칙 파일들이 아직 배포되지 않은 상태이며, 이 경우 `devkit sync`를 먼저 실행해야 합니다).
   커밋 게이트 메커니즘은
-  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
+  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
   ([커밋 게이트](../areas/gate.md) 영역 참고)에 정의되어 있습니다.
 
 ## 기대 효과 및 완료 상태
@@ -160,3 +166,11 @@ Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리�
 지정된 대상 파일과 커밋된 트리 전체가 모든 문서 규칙과 수명 주기 규칙을 완벽히 통과하며, 문서 간 링크와 생명주기 상태는 각 파일 고유의 서식
 스타일에 맞추어 단정하게 정리됩니다. 이미 완료된 스펙 번들은 안전하게 보존됩니다. 규칙 검사에서 거부된 커밋은 Git 이력에 아예 생성되지
 않으므로, 불완전하게 검증된 변경 사항이 저장소에 섞여 들어갈 위험이 사전에 완벽히 차단됩니다.
+
+## 네임스페이스 목록과 대체 기록
+
+등록된 네임스페이스는 `docs/packages/<name>/` 아래 스티어링 용어집·동의어·UX 객체 목록과 로드맵 마일스톤을 둘 수 있습니다.
+루트와 선택된 네임스페이스 목록을 함께 읽습니다.
+`RULE-decision-supersession`은 전체·부분 ADR 대체 메타데이터의 상호 참조를 검사하고 의미적 범위는 리뷰로 판단합니다.
+별칭 수리는 보이는 스티어링 참조, 용어집 Owner 셀과 설정된 빠른 참조도 다룹니다.
+진입점 도출은 설치 기록 소유 생성 출력을 제외하지만 범위 관찰에는 그 쓰기 경로가 남습니다.

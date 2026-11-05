@@ -6,29 +6,35 @@ sources:
   CAP-MCP-runtime-registration: null
   UC-drive-development-to-integration: null
 title: MCP
-translated_from: en/areas/mcp.md@c8130ad29347978e
+translated_from: en/areas/mcp.md@14946dc153763df5
 ---
 
 # MCP
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -89,7 +95,7 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 `devkit status`는 MCP 등록을 전혀 검사하지 않습니다. locked sync가 원래 했을 등록 쓰기를 보류하면
 `uv run devkit sync --registrations-only`를 해결 방법으로 하는 `MCP_REGISTRATION_PENDING`을 보고합니다. 실제 등록 계획은
 `devkit mcp status`, `mcp setup`, 그리고 두 가지 sync 모드에서 진단합니다. 호스트별 상세 설정 절차는
-[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.5/guides/install/mcp.md) (영어 원문) 가이드를 참고하세요.
+[MCP setup](https://github.com/mjkimR/devkit/blob/v0.1.6/guides/install/mcp.md) (영어 원문) 가이드를 참고하세요.
 
 ## 등록 작업의 파일 변경 원칙
 
@@ -156,9 +162,9 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 
 ## 출처
 
-- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문):
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문):
   런타임 계약, 등록, Host 워크플로와 공유 아티팩트 서비스.
-- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/host/CAP-HOST-lifecycle-observation.md)
+- [CAP-HOST-lifecycle-observation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/host/CAP-HOST-lifecycle-observation.md) (영어 원문)
   (프로젝트 MCP 등록 경계)과
-  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/host.md#mcp-services).
+  [host quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/host.md#mcp-services) (영어 원문).
 - 관련 문서: [호스트](host.md), [협업](collaboration.md), [통합](integration.md).

@@ -1,15 +1,15 @@
 ---
 sources:
-  CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
+  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
   CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
-  CAP-GEN-tracked-artifacts: 17bfdf1f5ddc90d9ec2653cd5a8589db07041202
+  CAP-GEN-tracked-artifacts: ff8539b14d3af5890ba656e23b0e43c1d0d05fc8
 title: Generated Files
 ---
 
 # Generated Files
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own receipt
@@ -17,7 +17,7 @@ Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own
 each regenerated one conflict even when their inputs merge cleanly, and a textual merge is rarely what the generator
 would write. `devkit generated` (from `devkit-agt`) settles such conflicts by regenerating instead of merging, and
 checks that committed copies are up to date. The contract is
-[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md).
+[CAP-GEN-tracked-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/generated/CAP-GEN-tracked-artifacts.md).
 
 Nothing runs automatically. You, or your agent, run `resolve` when a merge, rebase or cherry-pick stops, and CI runs
 `check`. Where this fits in the life of a branch is described in [Concepts](../concepts.md).
@@ -103,3 +103,10 @@ the merged inputs. Two commands cover that:
 
 How the receipt itself is written and kept in step across clones is described in [Distribution](distribution.md)
 and `CAP-DIST-sync-and-transactions`.
+
+## Regeneration after integration
+
+`uv run devkit generated regen <ids>` runs the selected artifacts and their downstream artifacts in place and
+stages nothing. Unmerged index paths refuse with `GENERATED_UNMERGED`; resolve those conflicts first.
+When integration kept declared seed sides for known generated conflicts, synchronize the landed runtime first,
+regenerate and commit the named outputs, then run the final target checks.

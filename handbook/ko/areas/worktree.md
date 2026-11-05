@@ -10,29 +10,35 @@ sources:
   UC-route-development-intent: null
   UC-run-parallel-work-safely: null
 title: 워크트리
-translated_from: en/areas/worktree.md@cf91e8fda0493a85
+translated_from: en/areas/worktree.md@450be376e2d3a5a6
 ---
 
 # 워크트리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -193,10 +199,20 @@ stale_after = "14d"     # "<N>d" 또는 "<N>w"
 완료 후 정리)입니다. 확장 로직이 비정상 동작하는 경우, 검사 및 가드 단계에서는 안전을 위해 작업을 즉시 차단(fail closed)하며,
 완료 후 단계에서는 경고만 출력합니다.
 
+## 로컬 설정과 반영 후 검사
+
+새 워크트리는 설치 전에 베이스에 존재하는 `.devkit/config.local.toml`을 독립적인 로컬 스냅샷으로 복사합니다.
+워크트리를 재사용하면 기존 파일이나 파일 부재를 유지하고 이후 편집·삭제도 서로 전파하지 않습니다.
+직접 실행한 `git worktree add`와 독립 clone은 이 복사를 수행하지 않습니다.
+워크트리 추가·삭제는 독립 프로세스 세션에서 실행해 중단 시 자식 프로세스도 멈출 수 있게 합니다.
+
+통합은 확인된 반영과 최종 검증을 별도로 보고합니다.
+Host가 반영된 런타임을 동기화하고 최종 대상을 검사하며 성공한 Git finish만으로 콘텐츠 검사가 증명되지는 않습니다.
+
 ## 출처
 
-- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문):
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문):
   경로, start 변형, finish 단계, status, 설정과 오래된 브랜치.
-- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/worktree.md):
+- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md) (영어 원문):
   명령과 오류 코드.
 - 관련 문서: [통합](integration.md), [협업](collaboration.md).

@@ -1,7 +1,8 @@
 ---
 sources:
-  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
-  CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
+  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
+  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
 title: Reconcile Living Spec drift
 ---
@@ -9,22 +10,28 @@ title: Reconcile Living Spec drift
 # Reconcile Living Spec drift
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -62,8 +69,8 @@ Structural consistency is the separate journey [Keep the Living Spec consistent]
 Per-feature reconciliation during delivery is `spec-sync`; this playbook catches what accumulates between features.
 See [Concepts](../concepts.md) for the Living Spec and playbooks.
 
-Source: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-reconcile-living-spec-drift.md),
-contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md).
+Source: [`UC-reconcile-living-spec-drift`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-reconcile-living-spec-drift.md),
+contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md).
 
 ## Before you start
 
@@ -77,7 +84,7 @@ contract [`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/
 1. **Invoke the playbook.** Run `/devkit-playbook` and pick `drift-reconciliation`, or confirm it when the `spec`
    skill offers it in one line for a request such as "reconcile the Living Spec with the code". Playbooks never run
    on ordinary wording alone; your confirmation is the explicit invocation
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md),
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md),
    [distribution area](../areas/distribution.md)).
 2. **Intake.** The agent records the repository, `HEAD` and dirty paths, the selected contracts or area, the
    permitted roots, any prior reports and where the report goes. It then lists the candidates of one bounded batch.
@@ -121,3 +128,11 @@ The report is ordinary Markdown under the owning unit's `materials/`, or the rep
 A report you can audit: every finding with evidence and your decision, applied corrections with their verification,
 and explicit gaps. The report authorizes nothing by itself, a passing check is never presented as semantic
 consistency, and a batch is never presented as the whole repository.
+
+## Optional history stays separate
+
+The default local report and completion procedure work without maintenance history.
+Only an explicit companion-history request starts capture; command installation and this playbook's invocation
+start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
+later integration changes append amendments rather than rewrite the published report.
+See [Record a maintenance run](record-a-maintenance-run.md).

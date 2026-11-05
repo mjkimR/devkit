@@ -1,36 +1,42 @@
 ---
 sources:
-  ADR-host-owned-scope-observation: c9a162208f45dcad00a16fce1a1f447a27afda54
-  CAP-COLL-shared-artifacts: 83dfa43f60f67f8a6eab85414d90c95ba27e2982
-  CAP-COLL-work-scope-registry: 23990ff536e67c96f25dff1857c08cbd0c4c8838
-  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
-  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
-  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
-  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
-  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
+  ADR-worktrees-and-scope: ecad544c26d52a22f31c234456778e116ac7345e
+  CAP-COLL-shared-artifacts: 48963f805ec2282098d1adc9598100983283bacd
+  CAP-COLL-work-scope-registry: 648447161142a20d42839609f502b027f5c7d403
+  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
+  CAP-MCP-runtime-registration: bdabf0119ad4adf8f41d31806748d3c717338f6a
+  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
+  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
+  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
 title: Collaboration
 ---
 
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -67,7 +73,7 @@ each other. It has two parts:
 - **Shared artifacts** (`CAP-COLL-shared-artifacts`): an immutable, seven-day store for regenerable Markdown reports
   (for example a proposal review), addressed by an exact URI that every linked worktree of the repository can read.
 
-Both live next to the repository's Git data, so every [task worktree](worktree.md) shares them without
+Both are discovered through the repository's common Git identity, so every [task worktree](worktree.md) shares them without
 configuration. The end-to-end story is the journey [Run parallel work safely](../journeys/run-parallel-work-safely.md)
 (`UC-run-parallel-work-safely`); the terms used here (worktree, spec bundle, proposal) are explained in
 [Concepts](../concepts.md).
@@ -200,14 +206,27 @@ CLI operation.
 helper; authentication, namespace provisioning and cross-host consistency remain theirs. No remote backend ships in
 this release.
 
+## Current and future overlap
+
+`scope collect` labels each evidence entry `horizon=current|future` and reports pair counts plus
+`summary.current_overlapping`. Observed Planning writes are current; its declared document/code/candidate scope is future.
+Other observations are current. All overlaps stay listed, and horizon grants no write authority.
+Current overlaps serialize running activities; future-only overlaps order handoff and integration while Planning can proceed independently.
+Missing inputs, including lifecycle-normal absent blueprints or reconcile files, remain explicit coverage gaps.
+
+Scope records live in the Git common directory; shared reports live under the retained main checkout's
+`.devkit/.shared/artifacts`. The common Git identity lets linked worktrees find the same store.
+Local-orchestrated callers verify connected project tools before dependent shared operations; a missing connection
+needs repair rather than an automatic CLI fallback. An explicitly authorized CLI choice remains possible.
+
 ## Sources
 
-- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md):
+- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md):
   scope inputs, comparison, registry, commands, output and codes.
-- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
+- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
   artifact identity, retention, storage and adapter extensions.
-- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
+- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
   the parallel-work scenario.
-- [ADR-host-owned-scope-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261025-host-owned-scope-observation.md):
+- [ADR-worktrees-and-scope](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-worktrees-and-scope.md):
   why the Host observes and workers publish nothing.
 - Related: [Worktree](worktree.md) (`CAP-WT-task-worktrees`), [MCP](mcp.md).

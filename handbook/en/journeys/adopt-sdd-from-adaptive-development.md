@@ -1,30 +1,36 @@
 ---
 sources:
-  CAP-DLV-incubation-sdd-baseline: 8899fda9b8975eb5cf9848c226df2ee8f43abc14
-  CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
-  UC-adopt-sdd-from-incubation: 84cab126d6e7b0c498c33f38a07531ed16c0c6d3
-title: Adopt SDD from incubation
+  CAP-DLV-sdd-baseline-adoption: bb6fc66abb97dd0113a4864be4a8dbeca761c704
+  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
+  UC-adopt-sdd-from-adaptive-development: 50f14a785badd6a92574145079875b05eca9eede
+title: Adopt SDD from adaptive development
 ---
 
-# Adopt SDD from incubation
+# Adopt SDD from adaptive development
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -53,20 +59,20 @@ title: Adopt SDD from incubation
 - [Glossary](../glossary.md)
 <!-- /handbook:generated -->
 
-An incubated product can stay in incubation for as long as it is useful. When you decide the part you want to keep
+A product developed adaptively can stay in adaptive development for as long as it is useful. When you decide the part you want to keep
 should change under spec-driven development (SDD) from now on, the `sdd-baseline` playbook gets it there honestly:
 your agent checks the retained product against its implementation, current documents and checks that really ran,
 fixes the documents, and switches the approach only after you approve the exact effects. No retrospective proposals,
 spec Units or decisions are invented for past experiments.
 
-Source: [`UC-adopt-sdd-from-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-adopt-sdd-from-incubation.md),
-contract [`CAP-DLV-incubation-sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md),
-playbook [`sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.5/packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md).
-For a repository that never used incubation, see [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md).
+Source: [`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md),
+contract [`CAP-DLV-sdd-baseline-adoption`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md),
+playbook [`sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md).
+For a repository that never used adaptive development, see [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md).
 
 ## Before you start
 
-- The repository's approach is `incubation` ([Incubate an idea](incubate-an-idea.md)). If it is already `sdd`, there is
+- The repository's approach is `adaptive-dev` ([Advance an idea](advance-an-idea.md)). If it is already `sdd`, there is
   nothing to graduate: drift goes through [Reconcile Living Spec drift](reconcile-living-spec-drift.md).
 - You can say which behavior, flows, structure and choices you want to keep, and what to leave out.
 - The agent can run the repository's build, lint, test and usage checks.
@@ -76,11 +82,11 @@ For a repository that never used incubation, see [Adopt devkit in an existing re
 ## Step by step
 
 1. **Start without switching.** The agent loads the procedure (`uv run devkit playbook get spec/sdd-baseline`, or
-   through `/devkit-playbook`). The approach stays `incubation` throughout preparation. If `devkit-spec` or its assets
+   through `/devkit-playbook`). The approach stays `adaptive-dev` throughout preparation. If `devkit-spec` or its assets
    are missing, it presents the installation and `uv run devkit add spec` effects; installing them prepares adoption
    but neither activates nor proves anything.
 2. **Fix the scope.** It records the repository, exact `HEAD`, relevant dirty paths and the effective approach from
-   `uv run devkit config show`, reads `.devkit/incubation.md` and current documents as input, and agrees with you on
+   `uv run devkit config show`, reads `.devkit/adaptive-dev.md` and current documents as input, and agrees with you on
    the retained items and the exclusions.
 3. **Compare.** For each retained item it links the implementation, the current document (or where one is missing)
    and the evidence, and marks it `verified`, `gap` or `excluded`. Excluded items never count as verified. It writes
@@ -90,8 +96,7 @@ For a repository that never used incubation, see [Adopt devkit in an existing re
    each command, source identity, environment and outcome. A passing document-format check proves only what it
    checks, not that the product is ready.
 5. **Present readiness.** With no gap left, it presents the report, the retained scope, the check outcomes and the
-   exact activation effects: `[development] approach = "sdd"` in `.devkit/config.toml` and, when the integration
-   provider is missing or `project`, setting it to `spec`. Other settings stay unless you authorize a change.
+   exact activation effects: `[development] approach = "sdd"` in `.devkit/config.toml` with no integration-provider selection. Other settings stay unless you authorize a change.
 6. **You decide.** You authorize those same effects for that same source and scope, or the agent reuses an explicit
    decision you already gave for exactly them.
 7. **Activate and confirm.** The agent edits the shared configuration, then runs `uv run devkit sync`,
@@ -104,13 +109,13 @@ evidence location). It is an ordinary material with no workflow binding or statu
 
 ## When it goes wrong
 
-- **You never asked.** Ordinary incubation continues; this journey does not start.
+- **You never asked.** Ordinary adaptive development continues; this journey does not start.
 - **A check is missing, failed or skipped, or a document disagrees with the code.** The gap is recorded and you
   choose: correct the document, authorize a behavior fix separately, narrow the retained scope, or defer adoption and
-  stay in incubation. A required item is never waived into readiness.
+  stay in adaptive development. A required item is never waived into readiness.
 - **The source changes before activation.** The affected observations are invalidated and rechecked; stale evidence
   never activates SDD.
-- **You do not authorize an effect**, such as the needed provider change. Adoption stays unactivated and the mismatch
+- **You do not authorize an effect**, such as the shared approach change. Adoption stays unactivated and the mismatch
   is reported.
 - **Installation, the policy edit or sync fails part way.** The agent reports the actual partial state and the
   supported recovery, and claims neither success nor a rollback; completion waits for revalidation.

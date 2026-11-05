@@ -5,20 +5,20 @@ sources:
   CAP-SRCH-document-search: null
   UC-find-the-right-documents: null
 title: 검색
-translated_from: en/areas/search.md@ece317be47783ab8
+translated_from: en/areas/search.md@4da1699e3a1980aa
 ---
 
 # 검색
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 검색(search) 기능은 `devkit playbook search` 및 `devkit docs search` 명령을 지원하는 랭킹 엔진입니다. 문서를
 문서 ID, 메타데이터 텍스트, 선택적인 본문으로만 인식하며, 검색 질의에 대해 어휘적(lexical) 방식, 의미적(semantic) 방식,
 또는 두 방식을 결합하여 순위를 매깁니다. 어떤 문서를 검색 후보로 삼을지, 정확히 일치하는 문서를 맨 앞에 고정할지는
 랭킹 엔진을 호출하는 상위 명령이 결정합니다. 상세 계약은
-[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/search/CAP-SRCH-document-search.md) (영어 원문)에 정의되어 있습니다.
+[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/search/CAP-SRCH-document-search.md) (영어 원문)에 정의되어 있습니다.
 
 ## 관련 명령 및 대상
 
@@ -72,3 +72,10 @@ extra 의존성은 별도의 독립적인 요구사항으로 추가하지 말고
 배치한 데이터 전용 Python 패키지입니다. 다른 이름의 패키지를 설치하면 라이브러리에서 해당 모델을 선택하여 사용할 수 있습니다. 기본
 패키지는 `models/devkit-embed`에 위치하며, `just model-build`로 빌드된 재현 가능한 wheel 파일이 커밋되어 있어 작업 공간 명령과 테스트가
 오프라인에서도 완전하게 동작합니다. 모델 패키지가 손상된 경우 모든 검색 모드에서 `SEARCH_MODEL_INVALID` 오류로 실패합니다.
+
+## 네임스페이스 동의어
+
+문서 검색은 전역 `docs/steering/glossary.yaml` 다음 선택된 등록 네임스페이스의
+`docs/packages/<name>/steering/glossary.yaml`을 네임스페이스 이름순으로 확장합니다.
+선택하지 않았거나 미등록인 파일은 확장·오류에 영향을 주지 않습니다.
+정규 ID·별칭·경로·파일명과 일치하는 질의는 순위 계산과 무관하게 해당 문서를 맨 앞에 고정합니다.

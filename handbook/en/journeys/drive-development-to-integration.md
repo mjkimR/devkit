@@ -1,34 +1,40 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
-  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
-  CAP-DLV-workflow-envelopes: ba3e36ff09f879615ad60389b433b58cdf4097ee
-  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
-  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
-  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
-  UC-drive-development-to-integration: ede0ca1f9647c2e9e1a520d97818d09fa7bcb5e4
+  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
+  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
+  CAP-DLV-workflow-envelopes: d9930340d63dab836aa1938f2e6cd2a8c4a23230
+  CAP-INT-mcp-services: 6978ff46427e1a1091c65b488ca9c76734b4a4c0
+  CAP-MCP-runtime-registration: bdabf0119ad4adf8f41d31806748d3c717338f6a
+  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
+  UC-drive-development-to-integration: 9eeb5fda80dba7727d7680c91f2989a521c3fd69
 title: Drive development to integration
 ---
 
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -57,137 +63,90 @@ title: Drive development to integration
 - [Glossary](../glossary.md)
 <!-- /handbook:generated -->
 
-The intent is agreed and the work has a branch. This journey follows the agent from implementation through review,
-the Living Spec update and verification, to the moment the change lands on the base branch. Your part as the user is
-small but decisive: under the default policy, nothing lands until you approve it in the conversation.
+After the intent is agreed, Development follows the branch's workflow through implementation, review,
+Living Spec reflection and final reporting. The Host then authorizes Git integration and verifies the landed target.
+See [Concepts](../concepts.md) for Units, gates and envelopes.
 
-The use case is
-[`UC-drive-development-to-integration`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-drive-development-to-integration.md).
-It starts after [Route development intent](route-development-intent.md) or
-[Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md). Workflows, stages, gates, envelopes and
-worktrees are explained in [Concepts](../concepts.md).
-
-## Where you start
-
-A spec Unit is on its `dev-<slug>` activity branch, in a task worktree or the current checkout. The walkthrough below
-uses the defaults: `activity-effort` `medium`, `direct` mode, `dev-integration` policy `ask`, local route.
-
-## 1. Ask the workflow where you are
+## 1. Follow the source workflow
 
 ```bash
 uv run devkit workflow next --unit specs/<YYYY-MM>/<YYYYMMDD>-<slug>
 ```
 
-The agent states the effort and its reason, then follows what `next` reports: the current stage, unmet checks and the
-skill to run. The stage order of each workflow lives only in its definition (`devkit workflow show <id>`); see
-[`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md).
+The agent states effort and follows the reported stages, checks and skills.
+It writes the spec, plan and task boundaries before code, implements within them, runs the affected checks and
+commits at stage boundaries. A bugfix records characterization, a reproduction (Red) and the fix (Green).
+Screen drafts precede code, with an optional UX review; reconciliation retains them under `docs/ux/`.
 
-## 2. Specify, build and verify
+## 2. Review, reconcile and report
 
-The agent writes `spec.md`, `plan.md` and `tasks.md`, implements each task within its `_Boundary:`, runs the affected
-tests and commits at every stage boundary.
+Medium effort requires an initial independent code-reviewer. The implementer fixes findings and checks the fixes;
+expanded scope or uncertain correctness can need another review. High uses bounded rounds; low allows self-review.
+The implementer updates the Living Spec and resolves `reconcile.md`, with reconcile-check evidence at every effort.
+An independent reconcile reviewer is required at high; medium can self-check only when all affected contracts
+and diff agreement are clear and there is no cross-component interpretation.
 
-When `spec.md` has a Screens section, the agent may first delegate an optional UX review: a read-only `ux-reviewer`
-walks the linked use cases through the drafted screens before any code is written. It is not a stage or a gate, its
-findings carry no severity, and a Unit has at most two rounds; the implementer later closes the last round by marking
-each finding resolved or waived.
+Sweep feedback when the stage is enabled and write the final change report. Questions, problems, unresolved
+reconciliation and incomplete checks remain visible. The Host checks the committed source with its own runtime;
+integration does not evaluate these content conditions on its behalf.
 
-## 3. Review
+## 3. Prepare and authorize
 
-An initial `code-reviewer` pass checks the diff against the requirements and the check results. The agent records the
-findings as a review envelope, fixes them, verifies the fixes and closes the round with a reverify envelope
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
-
-How much review runs depends on the effort:
-
-| Effort | Code review | Reconcile verification |
-| --- | --- | --- |
-| `low` | The author reviews, still recorded as an envelope | Self-check, recorded |
-| `medium` | An initial `code-reviewer` | An independent `reconcile-reviewer`, or a recorded self-check when every affected contract is identified and no cross-component impact remains |
-| `high` | Bounded rounds of fresh reviewers until a round finds nothing or only minor fixes remain | The same bounded loop |
-
-## 4. Update the Living Spec
-
-The agent reflects the change in `docs/` and writes `reconcile.md`; the reconcile verification is recorded as a
-`reconcile-check` envelope. Drafted screens, when the spec has them, are written to `docs/ux/` as part of the same
-reflection. Then it resolves the reconcile and marks the spec completed.
-
-## 5. Sweep feedback and report
-
-The agent records observations about tools and assets, then the final change report with its test, build and lint
-results.
-
-## 6. Bring in the base
-
-The agent merges the moved base into the branch, re-verifies only what the conflict resolution and docs reflection
-changed, rechecks the reconcile targets and runs the cumulative check (`devkit rules check --ci --base <ref>`).
-
-## 7. Approve
-
-The agent reads the effective policy with `uv run devkit spec policy`
-([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md)),
-then prepares the integration:
+Save the premerge target SHA for final affected-test selection. From the retained base checkout:
 
 ```bash
-uv run devkit integration prepare dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local
+uv run devkit integration prepare dev-<slug> --route local
 ```
 
-It shows you the verified report and the exact merge and cleanup effects. You approve in the conversation. Only then
-does it run:
+The request pins source/target SHAs, policy, Git identities and exact cleanup effects.
+Under `dev-integration=ask`, the Host presents the verified report and those effects for your conversational decision.
+Under shared-base `auto`, verified local integration is delegated by policy.
 
 ```bash
-uv run devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> \
-  --route local --expected-digest <request.digest>
+uv run devkit integration integrate dev-<slug> --route local --expected-digest <digest>
 ```
 
-The digest pins the scope you saw. It is a concurrency check, not proof of approval: the command cannot authenticate
-your conversation, which is why the agent never runs it without your decision. If `integrate` is run under `ask`
-without a digest, or with one that no longer matches, devkit refuses and names the `prepare` command that shows the
-current scope again
-([`CAP-INT-mcp-services`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/integration/CAP-INT-mcp-services.md)).
+A changed digest requires fresh preparation and authority. Local `no-ff` integration can merge a conflict-free
+moved target itself. `ff-only` and PR routes still need the source to contain the target.
+A content conflict returns to source preparation and the affected checks.
 
-## 8. Integration lands
+## 4. Land, synchronize and verify
 
-devkit builds the merge commit outside the base checkout, fast-forwards the base onto it without fetch or push,
-removes the task worktree, deletes the local branch as policy selects and runs the scoped cleanup
-([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
-The base now holds `chore(merge): integrate dev-<slug> into <base>`. The agent passes `--given dev-integration` to
-later `devkit workflow next` calls and reports the result with its authority.
+Local integration constructs the result outside the target checkout, fast-forwards the base and performs the
+scoped worktree/branch cleanup without fetch or push. `landed_sha` confirms landing;
+`status=completed` describes Git effects and `verification=pending` leaves delivery verification to the Host.
+
+Synchronize the landed dependencies, then use fresh processes for asset sync, generated checks and required
+lint/type/rule/affected-test commands. Regenerate and commit stale artifacts before the final checks.
+Compare affected tests with the saved premerge target, and report the final checked HEAD and actual outcomes.
+A local-orchestrated batch can verify its combined target once after selected merges and repairs.
+A failure keeps delivery pending while the target is repaired and checked again; there is no merge replay or automatic rollback.
 
 ## Variations
 
-- **Session depth.** A small task has no spec, envelopes or reconcile document. The agent still tests and reviews,
-  commits, and reports the change, effort, review and verification in its final response or PR body. Integration
-  takes these results as explicit `--claims` on both `prepare` and `integrate`; missing or invalid claims refuse with
-  `INTEGRATION_NOT_READY` and evidence `SESSION_CLAIMS_INVALID`, and correcting the claims needs no source change.
-- **Local-orchestrated mode.** On your instruction a `development-worker` runs the turn in its own worktree. The agent
-  inspects the returned range with `uv run devkit spec worker inspect`, which audits the turn's writes against the
-  accepted range and runs the cumulative rules check against the base branch's merge base (`--rules-base` overrides
-  it); a range it rejects becomes a problem that blocks the Unit.
-- **Policy `auto`.** When the shared base sets `dev-integration = "auto"`, the gate passes by policy once review,
-  reconcile and checks hold; the report says `authority: policy`.
-- **Required pull requests.** Under `[worktree] pull_request = "required"`, the local route is refused with
-  `WORKTREE_PR_POLICY`; the agent uses `--route pull-request`, which merges once required checks and reviews pass.
+- **Session:** no Unit, envelope or reconcile record; report the change, effort, review and checks in conversation or
+  the PR body. Integration still takes only the explicit source branch, not claims or task labels.
+- **Local-orchestrated:** the Host inspects the worker's committed turn and cumulative rules, and can reuse
+  git-operator for exact authorized lifecycle jobs while retaining decisions, semantic conflict handling and acceptance.
+- **Required PR:** use `--route pull-request`; required platform checks/reviews and source pinning remain mandatory.
+  A published but unmerged PR with pending checks needs fresh preparation and authority for the merge.
+- **Generated conflict seeds:** `INTEGRATION_GENERATED_SEEDED` names seed/regeneration choices. The Host regenerates
+  after synchronization; integration itself ran no generator.
 
-The optional MCP runtime is not part of this path: lifecycle operations run through the CLI, and the runtime serves
-shared artifacts only
-([`CAP-MCP-runtime-registration`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/mcp/CAP-MCP-runtime-registration.md)).
+## Recover from partial effects
 
-## When it goes wrong
+Inspect Git/worktree/PR state before replaying an uncertain operation. A confirmed merge with remaining cleanup
+uses guarded already-merged finish or the exact extension command; normal integration already includes cleanup.
+`INTEGRATION_TARGET_MOVED` calls for fresh preparation; `INTEGRATION_REQUEST_STALE` means the presented scope changed.
+An unanswered question or unresolved problem is handled through [Problems and exceptions](handle-delivery-problems-and-exceptions.md).
+Full route and recovery details are in [Integration](../areas/integration.md).
 
-| What you see | What to do |
-| --- | --- |
-| You object to the change | Nothing is integrated. The agent returns with `devkit workflow return --unit <dir> --to review-refine --note "..."`. |
-| `INTEGRATION_AUTHORITY_REQUIRED` or `INTEGRATION_REQUEST_STALE` | The digest is missing or the scope changed. Prepare again and approve the current scope. |
-| `INTEGRATION_TARGET_MOVED` | The base moved after the result was built; nothing changed. Merge the base into the branch and request a new integration. |
-| `WORKTREE_BLOCKED` | A Unit holds an unresolved problem or unanswered question. See [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md). |
-| `INTEGRATION_RUNTIME_IN_WORKTREE` | The CLI runs from inside the worktree it would remove. Use a runtime outside it, then prepare and approve again. |
-| `WORKTREE_RUN_FROM_BASE` | The command runs inside the worktree it would remove. Rerun it with `-w` naming the devkit project in the base checkout. |
-| `INTEGRATION_RULE_RUNTIME_MISMATCH` | A synchronized rule of the branch imports code the running runtime lacks, typically a rule the branch adds. Nothing changed and the source needs no change; with your separate authority the agent runs integration from the base checkout with a runtime built from the branch's code, never by editing the rules or skipping readiness. |
-| `INTEGRATION_RECEIPT_READER_CHANGED` | The branch changes the receipt reader its own receipt depends on. Nothing changed; resolve the mismatch before retrying. |
-| A cleanup step stayed incomplete after the merge | Inspect `devkit worktree status` and Git. Rerun `devkit worktree finish <branch> --merge --local-only` while the marked branch remains, or the owning command, such as `devkit spec proposal prune <slug>`. The merge is never repeated. |
-| The outcome is unknown | Inspect Git, worktree and pull request state first; run only the remaining effects you can verify. |
-| A retry cap is exceeded or a tool fails | The agent enters the `exception` stage with cause and evidence, never a new task to bypass the cap. |
+## Sources
 
-The full list of integration codes is in `CAP-INT-mcp-services`. Areas: [Delivery](../areas/delivery.md),
-[Integration](../areas/integration.md), [Worktree](../areas/worktree.md).
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)
+- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md)
+- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/integration/CAP-INT-mcp-services.md)
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md)
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md)

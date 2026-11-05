@@ -1,31 +1,38 @@
 ---
 sources:
+  CAP-DLV-maintenance-history: null
   CAP-DLV-weekly-report: null
   UC-inspect-weekly-repository-progress: null
   UC-publish-a-weekly-report: null
 title: 주간 보고서 게시하기
-translated_from: en/journeys/publish-a-weekly-report.md@08e4e68031de0e4e
+translated_from: en/journeys/publish-a-weekly-report.md@511f52fa5f7ad127
 ---
 
 # 주간 보고서 게시하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -58,8 +65,8 @@ translated_from: en/journeys/publish-a-weekly-report.md@08e4e68031de0e4e
 
 보고서 생성은 별도의 단계(`UC-inspect-weekly-repository-progress`)에서 진행됩니다. 두 작업 모두 선택형 `maintenance` 카탈로그 번들의 `weekly-report` 플레이북에 포함되어 있습니다. 자세한 내용은 [전달 영역](../areas/delivery.md)을 참고하고, 플레이북 전반에 관한 내용은 [개념](../concepts.md)을 참고하십시오.
 
-출처: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문),
-계약 [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+출처: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md) (영어 원문),
+계약 [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md) (영어 원문).
 
 ## 시작하기 전에
 
@@ -102,3 +109,11 @@ translated_from: en/journeys/publish-a-weekly-report.md@08e4e68031de0e4e
 ## 최종 결과
 
 수신 확인을 직접 점검할 수 있는 `published` 기록을 얻거나, 모든 시도 이력이 보존된 명확한 `pending`, `failed`, `unknown` 상태를 얻게 됩니다. 보고서 바이트와 생성 결과는 결코 임의로 변경되지 않으며, 권한에 명시되지 않은 기존 콘텐츠는 덮어쓰지 않습니다. 또한 `unknown` 상태의 게시는 사전 확인 없이 맹목적으로 재시도되지 않습니다.
+
+## 선택적 이력은 별개입니다
+
+기본 로컬 보고서와 완료 절차는 유지보수 이력 없이 동작합니다.
+명시적인 동반 이력 요청이 있어야 수집하며 명령 설치나 이 플레이북 호출만으로 이력을 시작하거나 반복 제안하지 않습니다.
+요청된 이력은 근거를 동결하고 별도 게시 권한을 사용합니다.
+이후 통합 변경은 게시된 보고서를 고치지 않고 추가 기록으로 남깁니다.
+[유지보수 실행 기록하기](record-a-maintenance-run.md)를 참고하십시오.

@@ -1,6 +1,6 @@
 ---
 sources:
-  ARCH-08-1-agent-output: 6b76bd19787465ed1e7ec7aee1904077cc75042c
+  ARCH-08-1-agent-output: 86a790e9a7ff89af5e69e19a19746d3e0cde4f85
   CAP-ADV-agent-advisory-protocol: 572af49f008a71f993b3b82c2d457b7610529192
 title: Advisories
 ---
@@ -8,23 +8,29 @@ title: Advisories
 # Advisories
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -143,9 +149,9 @@ To give a click tool this output contract for free, see [Agent-first CLI toolkit
 
 ## Sources
 
-- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
+- [CAP-ADV-agent-advisory-protocol](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md):
   levels, block format, fields, mode derivation, the canonical action texts and the authoring checklist.
-- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/architecture/ARCH-08-1-agent-output.md):
+- [ARCH-08-1-agent-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-08-1-agent-output.md):
   how advisories sit among a command's stdout, stderr and exit codes.
-- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/advisory.md): the
+- [Advisory reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/advisory.md): the
   `devkit.advisory` Python API.

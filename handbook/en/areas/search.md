@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
-  CAP-DOCS-document-search: 60fc2aff10caad2a5b56dc61ad347369aafa2634
-  CAP-SRCH-document-search: c77c202fd04e0cdec4687133cbef9637642eb0ca
+  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
+  CAP-SRCH-document-search: eb4e6c025f094a2252a888ed1bc00a428fb917ca
   UC-find-the-right-documents: fbfaa41c0802e14b1f363c666a5b4de450716895
 title: Search
 ---
@@ -10,14 +10,14 @@ title: Search
 # Search
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 The search area is the ranking engine behind `devkit playbook search` and `devkit docs search`. It knows documents
 only as an ID, some metadata text and an optional body, and it ranks them against a query lexically, by meaning or
 both. Which documents are candidates, and pinning an exact match first, is left to the command that calls it. The
 contract is
-[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/search/CAP-SRCH-document-search.md).
+[CAP-SRCH-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/search/CAP-SRCH-document-search.md).
 
 ## Where you meet it
 
@@ -74,3 +74,10 @@ A model is a data-only Python package registering its module under the `devkit.e
 it selectable from the library. The default package lives in `models/devkit-embed` with a committed, reproducible
 wheel built by `just model-build`, so workspace commands and tests run offline. A broken model package fails with
 `SEARCH_MODEL_INVALID` in every mode.
+
+## Namespace synonyms
+
+Document search expands the global `docs/steering/glossary.yaml`, then the selected registered namespaces'
+`docs/packages/<name>/steering/glossary.yaml` in namespace-name order.
+Unselected or unregistered files do not affect expansion or errors. A query equal to a canonical ID, alias,
+path or file name still pins the matching document first, independently of ranking.

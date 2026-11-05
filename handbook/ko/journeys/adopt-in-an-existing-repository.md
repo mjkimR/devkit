@@ -5,28 +5,34 @@ sources:
   CAP-HARN-command-mount: null
   UC-adopt-in-an-existing-repository: null
 title: 기존 저장소에 devkit 도입하기
-translated_from: en/journeys/adopt-in-an-existing-repository.md@2299327ca7e2b38b
+translated_from: en/journeys/adopt-in-an-existing-repository.md@abe32f468ef7849e
 ---
 
 # 기존 저장소에 devkit 도입하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -61,12 +67,12 @@ translated_from: en/journeys/adopt-in-an-existing-repository.md@2299327ca7e2b38b
 향후 관련 작업을 진행할 때 점진적으로 이관하도록 남겨 둡니다.
 
 이 페이지의 바탕이 되는 유스케이스는
-[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
+[`UC-adopt-in-an-existing-repository`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/harness/UC-adopt-in-an-existing-repository.md) (영어 원문)입니다.
 번들, 동기화(sync), Living Spec 같은 핵심 개념은 [개념](../concepts.md)을 참고하십시오.
 
-이 경로는 레거시 규칙 위반을 격리해 두고 점진적으로 이관하는 방법입니다. 아이디어를 인큐베이션해 왔고 그렇게 유지해 온 제품에서
-스펙 주도 전달을 도입하려 한다면, 인큐베이션 베이스라인을 요청하십시오. 이 경우
-[`UC-adopt-sdd-from-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-adopt-sdd-from-incubation.md) (영어 원문)을
+이 경로는 레거시 규칙 위반을 격리해 두고 점진적으로 이관하는 방법입니다. 아이디어를 적응형 개발해 왔고 그렇게 유지해 온 제품에서
+스펙 주도 전달을 도입하려 한다면, 적응형 개발 베이스라인을 요청하십시오. 이 경우
+[`UC-adopt-sdd-from-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-adopt-sdd-from-adaptive-development.md) (영어 원문)을
 따르며, SDD를 활성화하기 전에 제품을 검증하고 레거시 문서는 이동하지 않습니다.
 
 ## 시작하기 전에
@@ -84,10 +90,10 @@ uv run devkit sync
 devkit-spec을 설치하면 devkit-docs도 함께 설치됩니다. 두 패키지 모두 자체 실행 파일을 따로 제공하지 않습니다. 엔트리 포인트를 통해
 `spec`·`docs` 번들과 `devkit spec`·`devkit docs` 명령어 그룹을 등록하므로, 모든 작업은 프로젝트 환경에 설치된 단일 `devkit`
 실행 파일 하나로 실행됩니다
-([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문)).
+([`CAP-HARN-command-mount`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문)).
 
 이어서 `devkit sync`를 실행하면 다음 세 가지 작업이 진행됩니다
-([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)):
+([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)):
 
 - 두 번들의 `core` 프리셋을 `.devkit/managed/spec/`와 `.devkit/managed/docs/` 디렉터리로 복사합니다. `docs`에는 공유 문서
   지침, 템플릿, 문서 규칙이, `spec`에는 전달 수명 주기가 담겨 있습니다.
@@ -114,8 +120,8 @@ uv run devkit rules check
 
 이제 문서 규칙과 스펙 거버넌스 규칙이 `docs/` 및 `specs/` 디렉터리에 이미 존재하는 Markdown 문서들을 검사합니다. 기존 저장소(brownfield)에서는
 대개 위반 사항이 보고됩니다. 예를 들어 ADR-0001과 같은 번호 기반 ID, 필수 프론트매터 누락, Living Spec 레이아웃 표준과 맞지 않는 경로
-등이 감지됩니다. 검사 결과는 위반 규칙, 대상 파일, 해결 조치 사항을 담은 `[VIOLATION: ...]` 형태로 출력됩니다. 14가지 규칙(`docs`가 제공하는 문서 규칙 9개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
-[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
+등이 감지됩니다. 검사 결과는 위반 규칙, 대상 파일, 해결 조치 사항을 담은 `[VIOLATION: ...]` 형태로 출력됩니다. 15가지 규칙(`docs`가 제공하는 문서 규칙 10개, `spec`이 제공하는 수명 주기 규칙 5개) 목록은
+[`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
 있으며, `uv run devkit rules explain <RULE-id>`로 개별 규칙의 가이드를 확인할 수 있습니다.
 
 ## 4. 에이전트를 통한 레거시 문서 격리

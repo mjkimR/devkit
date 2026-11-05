@@ -1,36 +1,40 @@
 ---
 sources:
-  ADR-handbook-first-book-on-request: null
-  ADR-handbook-staleness-from-version: null
-  ADR-viewer-planning-proposal-overlay: null
-  ADR-viewer-working-tree: null
+  ADR-release-handbook: null
+  ADR-repository-viewer: null
   CAP-COLL-shared-artifacts: null
   CAP-GEN-tracked-artifacts: null
   CAP-VIEW-repository-viewer: null
 title: 뷰어
-translated_from: en/areas/viewer.md@80872106fbe4d455
+translated_from: en/areas/viewer.md@191d011265cabefc
 ---
 
 # 뷰어
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -87,7 +91,7 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 - **Read**: `handbook/manifest.json`이 있으면 저장소의 릴리스 핸드북을 선택한 언어(브라우저에 기억됨)로 보여 주고,
   태그와 함께 체크아웃의 `VERSION`이 핸드북보다 앞서면 안내를 표시합니다. 핸드북이 없으면 짧은 안내만 보여 줍니다.
   **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 Overview, Architecture, Capabilities, Use Cases, UX,
-  Steering, Decisions, Development 장(chapter)으로 분류되고 문서 간 링크를 ID 기반으로 연결합니다(`ADR-handbook-first-book-on-request`, `ADR-handbook-staleness-from-version`).
+  Steering, Decisions, Development 장(chapter)으로 분류되고 문서 간 링크를 ID 기반으로 연결합니다(`ADR-release-handbook`, `ADR-release-handbook`).
 - **Proposals** 및 **Specs**: `docs/proposals/PROP-*/proposal.md` 파일과 `specs/` 하위의 스펙 번들 목록을 파일 구성, 필터링 옵션,
   작업 진행 상황과 함께 제공합니다.
 - **로드맵**: `docs/roadmap/` 하위의 마일스톤을 active, planned 순서로 정렬하여 표시하며, `depends_on`을 바탕으로 준비 상태를 보여
@@ -96,7 +100,7 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 - **파일 탐색**: 작업 트리의 파일들을 표시하며, Markdown, frontmatter 메타데이터, Mermaid 다이어그램을 렌더링합니다.
 
 뷰어는 현재 체크아웃된 브랜치를 기준으로, 커밋되지 않은 파일과 추적되지 않는 파일까지 포함하여 등록된 작업 트리의 저장된 파일들을
-실시간으로 보여 줍니다(`ADR-viewer-working-tree`). 브랜치를 자동으로 전환하지는 않습니다. 문서는 브라우저에서 직접 파싱되므로,
+실시간으로 보여 줍니다(`ADR-repository-viewer`). 브랜치를 자동으로 전환하지는 않습니다. 문서는 브라우저에서 직접 파싱되므로,
 고정된 devkit-docs 버전이 서로 다른 여러 저장소도 모두 정상 렌더링되며, frontmatter 형식이 잘못된 문서는 읽을 수 없음으로 표시되면서
 다른 정상 문서는 계속 열람할 수 있습니다.
 
@@ -109,7 +113,7 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 
 Planning을 진행 중인 제안서는 전용 `plan-<slug>` 브랜치에서 편집되므로, 베이스 체크아웃에는 이전 버전의 파일이 남아 있을 수 있습니다.
 Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참조하여, 다음 우선순위에 따라 Planning 버전의 제안서를 최신 내용으로
-덧씌워(overlay) 표시합니다(`ADR-viewer-planning-proposal-overlay`).
+덧씌워(overlay) 표시합니다(`ADR-repository-viewer`).
 
 1. `plan-<slug>` 브랜치를 체크아웃한 다른 워크트리 (디스크에 저장된 최신 파일)
 2. 로컬의 `plan-<slug>` 브랜치
@@ -148,12 +152,19 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
 - 컴포넌트 라이브러리 `devkit-viewer`: autohub가 벤더링하여 사용하는 tarball 아카이브 형태로 패키징됩니다. 호스트 애플리케이션은 자체
   `RepositoryDataSource`를 구현하여 연동하고 인증 처리를 자체적으로 담당합니다. 공개 패키지 레지스트리에 별도로 배포되지는 않습니다.
 
+## 네임스페이스 로드맵
+
+로드맵과 대시보드는 전역 `docs/roadmap/` 및 등록된 네임스페이스의 `docs/packages/<name>/roadmap/` 마일스톤을 포함합니다.
+이력을 선택하면 각 평면 `_archive/`도 포함합니다.
+대시보드 절은 후보 헤더를 한 번 읽고 본문은 첫 페이지만 불러오며 펼친 페이지를 30초 캐시에 유지합니다.
+다음 페이지가 실패하면 기존 카드를 유지하고 Retry를 제공합니다. Refresh는 해당 소스의 캐시를 무효화합니다.
+
 ## 출처
 
-- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
+- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md) (영어 원문):
   서비스, 엔드포인트, Planning 출처, 페이지 동작, 로드맵, 라이브러리와 리뷰 페이지.
-- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/viewer.md).
-- [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261024-viewer-working-tree.md),
-  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
-  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
-  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).
+- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/viewer.md) (영어 원문).
+- [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md) (영어 원문),
+  [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md) (영어 원문),
+  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md) (영어 원문),
+  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md) (영어 원문).

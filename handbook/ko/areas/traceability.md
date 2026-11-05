@@ -6,13 +6,13 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-run-parallel-work-safely: null
 title: 추적성
-translated_from: en/areas/traceability.md@9ace858586f2f773
+translated_from: en/areas/traceability.md@2c4bd237e269314a
 ---
 
 # 추적성
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 추적성(traceability)은 Living Spec 문서와 코드를 연결합니다. capability나 use case 문서는 해당 기능의 구현이
@@ -20,7 +20,7 @@ translated_from: en/areas/traceability.md@9ace858586f2f773
 코드 경로에서 관련 문서로 쉽게 추적할 수 있으며, 문서에 연결된 코드가 삭제되었을 때 커밋 게이트(commit gate)가 이를 즉시
 감지할 수 있습니다. 경로 계약, 규칙, 역방향 조회는 devkit-docs가 맡고, devkit-spec은 스펙 번들에서 선언을 도출하는 기능을
 더합니다. 상세 사양 계약은
-[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)을 참고하세요.
+[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)을 참고하세요.
 
 엔트리포인트는 코드 탐색을 시작하는 진입점일 뿐이며, 전체 구현 파일 목록이나 문서의 명세대로 코드가 동작함을 보증하는 증거는
 아닙니다. 테스트 범위와 코드의 정확성은 테스트와 코드 리뷰를 통해 검증해야 합니다. Living Spec과 문서 체계에 대한 기본 개념은
@@ -107,3 +107,10 @@ uv run devkit spec entrypoints derive --spec <bundle-dir> \
 
 과거 문서를 일괄 보완할 때는 `--all`과 `--min-count` 옵션을 함께 사용하세요. 여러 스펙에서 반복적으로 도출된 쌍일수록 신뢰할 수
 있는 강력한 후보입니다. 상세 오류 코드와 전체 옵션 목록은 관련 사양 계약에서 확인할 수 있습니다.
+
+## 파생 진입점에서 생성 경로 제외하기
+
+진입점 도출은 작업 범위가 지목해도 `.devkit/managed/`, `.devkit/installation.json`과 설치 기록 소유 출력을 건너뜁니다.
+전체가 관리 대상인 디렉터리는 제외하고 혼합 디렉터리, 무시된 작성 소스와 프로젝트 소유 seeded 경로는 후보로 유지합니다.
+이 제외는 진입점 도출에만 적용하며 생성 출력도 작업 범위 관찰에는 남습니다.
+존재하는 설치 기록이 잘못되면 `RECEIPT_INVALID`입니다. 관리 출력의 명시적 `--code` 선택도 후보로 인정하지 않습니다.

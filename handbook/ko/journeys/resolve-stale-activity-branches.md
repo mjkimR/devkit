@@ -5,29 +5,35 @@ sources:
   CAP-WT-task-worktrees: null
   UC-resolve-stale-activity-branches: null
 title: 오래된 활동 브랜치 정리하기
-translated_from: en/journeys/resolve-stale-activity-branches.md@42d1931fc65cad67
+translated_from: en/journeys/resolve-stale-activity-branches.md@f8ea6f0e62893897
 ---
 
 # 오래된 활동 브랜치 정리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](run-parallel-work-safely.md)
@@ -59,8 +65,8 @@ translated_from: en/journeys/resolve-stale-activity-branches.md@42d1931fc65cad67
 
 활동 브랜치와 작업 워크트리에 대한 배경 설명은 [개념](../concepts.md) 및 [워크트리 영역](../areas/worktree.md)을 참고하십시오.
 
-출처: [`UC-resolve-stale-activity-branches`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-resolve-stale-activity-branches.md) (영어 원문),
-계약 [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md)
+출처: [`UC-resolve-stale-activity-branches`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-resolve-stale-activity-branches.md) (영어 원문),
+계약 [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)
 ("Stale Branches" 절).
 
 ## 시작하기 전에
@@ -80,7 +86,7 @@ translated_from: en/journeys/resolve-stale-activity-branches.md@42d1931fc65cad67
    ```
 
    `feedback-hygiene` 플레이북을 통해서도 실행할 수 있습니다. 위생 확장 검사는 `hygiene` 페이즈에 속합니다
-   ([`CAP-GOV-evaluation-lifecycle`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md) (영어 원문),
+   ([`CAP-GOV-evaluation-lifecycle`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md) (영어 원문),
    [거버넌스 영역](../areas/governance.md)).
 2. **결과 확인.** 로컬 브랜치 또는 원격 추적 브랜치 중 마지막 활동(마지막 커밋 시점과 PR의 최종 갱신 시점 중 더 최근 시각)이 `stale_after` 기준을 넘긴 `plan-*` 또는 `dev-*` 브랜치 목록이 유휴 기간이 긴 순서대로 한 줄씩 출력됩니다.
 
@@ -117,7 +123,7 @@ translated_from: en/journeys/resolve-stale-activity-branches.md@42d1931fc65cad67
   GitHub 원격 저장소가 있는 저장소에서는 `WORKTREE_STALE_PR_UNKNOWN` 알림도 표시되며, GitHub 원격이 없어 조회가 매번 실패하는
   저장소에서는 로그에만 남깁니다.
 - **기본 브랜치에 머지된 승인 제안이 걸려 있는 브랜치인 경우:** 이 브랜치를 폐기하는 것은 작업 종료(close) 절차에 해당합니다. 대체(supersede)할지 폐기(abandon)할지 사용자가 결정하면, 에이전트가 종료 작업(폐기의 경우 기각 ADR 작성 및 승인 제안 삭제)을 Backlog 작업으로서 기본 브랜치에 먼저 커밋한 후 브랜치를 폐기합니다
-  ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
+  ([`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 - **원격 저장소에만 존재하는 브랜치인 경우:** `[FIX]` 지시문에 로컬 폐기 명령 없이 `git -C <base> push origin --delete dev-<slug>` 명령만 제시됩니다. 원격 브랜치가 삭제되면 모든 정리가 완료됩니다.
 - **`WORKTREE_DIRTY` 오류가 발생하는 경우:** 해당 작업 워크트리에 커밋되지 않았거나 추적되지 않는 변경 사항이 남아 있습니다. devkit은 어떤 변경도 하기 전에 이를 확인하며, 워크트리를 강제로 삭제하지 않습니다. 변경 사항을 어떻게 처리할지 결정한 뒤 다시 실행하십시오.
 - **`WORKTREE_BASE_ON_BRANCH` 오류가 발생하는 경우:** 해당 브랜치가 `--no-worktree` 옵션으로 시작되었으며, 기본 체크아웃이 여전히 그 브랜치에 머물러 있습니다. 안내되는 `[FIX]` 지시문에 따라 기본 체크아웃을 원래 시작 브랜치로 전환한 후 다시 실행하십시오.

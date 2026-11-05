@@ -1,32 +1,38 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
-  CAP-DLV-workflow-envelopes: ba3e36ff09f879615ad60389b433b58cdf4097ee
-  CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
-  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
-  UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
+  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
+  CAP-DLV-workflow-envelopes: d9930340d63dab836aa1938f2e6cd2a8c4a23230
+  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
+  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
+  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
 title: Handle delivery problems and exceptions
 ---
 
 # Handle delivery problems and exceptions
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -61,13 +67,13 @@ This journey shows how the agent tells them apart, how a problem holds the work 
 work recovers or closes cleanly.
 
 The use case is
-[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md).
+[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md).
 Envelopes, Units and the `exception` stage are explained in [Concepts](../concepts.md).
 
 ## 1. Is it a problem?
 
 The executor, a worker or the agent itself, checks the obstacle against the agreement
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
 
 | The obstacle is | The executor |
 | --- | --- |
@@ -86,7 +92,7 @@ uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <ef
 ```
 
 It commits the unfinished work together with the envelope and ends the run without integrating
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
+([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
 
 ## 3. The Unit is held
 
@@ -134,8 +140,8 @@ Unit stood. Gates passed before the problem stay passed.
   ```
 
   The result says `merged=no discarded=yes`. It never removes a worktree with uncommitted changes (`WORKTREE_DIRTY`)
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md),
-  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md),
+  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)).
 - **The record itself cannot be written.** If the host denies the envelope or the emergency commit, the worker
   returns `failed` with the cause, the commands it tried, the actual last commit, the dirty paths and the missing
   records, never an invented result. The agent treats that return as blocked and runs the recovery itself.

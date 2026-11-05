@@ -6,28 +6,34 @@ sources:
   CAP-DOCS-namespaces: null
   UC-find-the-right-documents: null
 title: 알맞은 문서 찾기
-translated_from: en/journeys/find-the-right-documents.md@8fcbc9dcb661bfab
+translated_from: en/journeys/find-the-right-documents.md@ecea50d17c89b0da
 ---
 
 # 알맞은 문서 찾기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -62,7 +68,7 @@ translated_from: en/journeys/find-the-right-documents.md@8fcbc9dcb661bfab
 이 페이지에서 소개하는 모든 명령어는 읽기 전용이며, 기존 파일을 변경하지 않습니다.
 
 유스케이스는
-[`UC-find-the-right-documents`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/documents/UC-find-the-right-documents.md) (영어 원문)입니다.
+[`UC-find-the-right-documents`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/documents/UC-find-the-right-documents.md) (영어 원문)입니다.
 문서, ID, Living Spec의 기본 개념은 [개념](../concepts.md)과 [문서](../areas/documents.md) 영역 문서를
 참고하십시오.
 
@@ -84,7 +90,7 @@ uv run devkit docs resolve CAP-DOCS-document-model
 워크스페이스 루트 기준 상대 경로가 포함된 `[DOCUMENT: <id> kind= status= path=]` 단일 라인이 출력됩니다. 별칭(alias)을 조회한 경우
 정식 표준 문서로 자동 해석되며 해당 줄에 `alias=`가 함께 표시됩니다. 여러 ID를 공백으로 구분하여 한 번에 전달할 수도 있습니다.
 지원하는 문서 ID 체계와 종류는
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
 정의되어 있습니다.
 
 ## 2. 참조 관계 추적 (References)
@@ -96,7 +102,7 @@ uv run devkit docs refs CAP-DOCS-document-model                  # what it cites
 
 `[REF: ...]` 라인마다 연결된 대상 문서와 해당 참조를 포함하는 프론트매터 필드가 출력됩니다. 조회 결과는 페이지 단위로 제공되며,
 하단에 `[PAGE: ...]` 라인과 함께 다음 페이지를 조회할 수 있는 정확한 명령어가 담긴 `[NEXT_CMD: ...]` 라인이 표시됩니다
-([`CAP-DOCS-document-lookup`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-lookup.md) (영어 원문)).
+([`CAP-DOCS-document-lookup`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-lookup.md) (영어 원문)).
 
 ## 3. 문서 확인 및 명세 인용
 
@@ -115,7 +121,7 @@ uv run devkit docs search "keep references between documents valid"
 다른 언어로 작성되어 있어도 유효하게 동작합니다. 질의어가 특정 문서의 ID, 별칭, 경로, 파일 이름과 정확히 일치하면 해당 문서가
 `score=-`와 함께 최우선으로 배치됩니다. 선택 패키지(`uv add 'devkit-docs[search]'`, `devkit-spec[search]`에도 포함)가 설치되어 있으면 벡터 임베딩이 결합된 하이브리드
 검색을 수행하며, 미설치 시 어휘(BM25 기반) 랭킹으로 동작합니다
-([`CAP-DOCS-document-search`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)).
+([`CAP-DOCS-document-search`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)).
 검색 결과에서 적합한 문서를 확인한 후 2단계(참조 추적)로 이어가십시오.
 
 **코드 파일 경로로 찾기:** `uv run devkit docs list capability --file src/<package>/engine.py` 명령은 문서 프론트매터의 `entrypoints`에
@@ -127,7 +133,7 @@ uv run devkit docs search "keep references between documents valid"
 `--namespace <name>` 옵션으로 특정 네임스페이스를 지정하거나, `--all-namespaces` 옵션으로 전체 문서를 조회할 수 있습니다.
 네임스페이스 필터는 목록 탐색 범위를 좁히는 용도로만 동작합니다. `resolve` 및 `refs` 명령어는 항상 저장소 전역을 대상으로 수행되므로,
 다른 패키지에 선언된 문서 ID도 정상적으로 해석됩니다
-([`CAP-DOCS-namespaces`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-namespaces.md) (영어 원문)).
+([`CAP-DOCS-namespaces`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-namespaces.md) (영어 원문)).
 
 ## 완료 및 종료된 이력 문서 제외
 

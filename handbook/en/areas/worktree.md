@@ -1,37 +1,43 @@
 ---
 sources:
   CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
-  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
-  CAP-MCP-runtime-registration: ca1255fabbc01ec9870ba8e18410df23ab554d0c
-  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
-  UC-drive-development-to-integration: ede0ca1f9647c2e9e1a520d97818d09fa7bcb5e4
-  UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
+  CAP-INT-mcp-services: 6978ff46427e1a1091c65b488ca9c76734b4a4c0
+  CAP-MCP-runtime-registration: bdabf0119ad4adf8f41d31806748d3c717338f6a
+  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
+  UC-drive-development-to-integration: 9eeb5fda80dba7727d7680c91f2989a521c3fd69
+  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
-  UC-route-development-intent: b3ee3ac9c76d14a4b97f0645eef8954f339330d5
-  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
+  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
+  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
 title: Worktree
 ---
 
 # Worktree
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -186,10 +192,20 @@ Packages hook into the lifecycle through entry points: `devkit.attach_check` (ve
 `devkit.finish_guard` (refuse to integrate) and `devkit.post_finish` (clean up after a successful finish). An extension
 that misbehaves fails closed for checks and guards, and only warns after a finish.
 
+## Local configuration and landed checks
+
+A newly created worktree copies the base's present `.devkit/config.local.toml` into an independent local snapshot
+before setup. Reusing a worktree preserves its existing file, including absence; later edits or deletion do not propagate.
+Direct `git worktree add` and independent clones do not perform this copy.
+Worktree add/remove run in their own process sessions so interruption can stop descendants.
+
+Integration reports confirmed landing separately from final verification. The Host synchronizes the landed runtime
+and checks the final target; a successful Git finish alone proves no content check.
+
 ## Sources
 
-- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md):
   paths, start variants, finish steps, status, configuration and stale branches.
-- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/worktree.md):
+- [Worktree quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/worktree.md):
   commands and error codes.
 - Related: [Integration](integration.md), [Collaboration](collaboration.md).

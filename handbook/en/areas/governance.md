@@ -1,10 +1,10 @@
 ---
 sources:
-  CAP-GOV-evaluation-lifecycle: 3e13fc27305e7933a1876ea9879a7423b5a771e0
-  CAP-GOV-rule-authoring: 021370486fb2490d8cfe8e1e7df20da1260a990c
-  CAP-GOV-rules-engine: fc9db7b9335944c5ef2c6554f65533f2149e07c6
-  CAP-GOV-spec-rules: d6966cab23d742d0782429acf8acaba4bcbca90d
-  UC-adopt-in-an-existing-repository: 37265d4dcac0d34967bb003908a49d0df4a036a8
+  CAP-GOV-evaluation-lifecycle: 254b7bb7cb4a21a547aa489868a4f1f62cc3a6f4
+  CAP-GOV-rule-authoring: 9157cd98c901c85839403748ffff93271586940c
+  CAP-GOV-rules-engine: 114f633a9af2f4a675d6ce0cc37291384ce1b5b7
+  CAP-GOV-spec-rules: acbf3761f19f3d39c667de232c2808e62d18c23e
+  UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
 title: Governance rules
@@ -13,23 +13,29 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -139,8 +145,8 @@ file rule, such as stale `plan-*` and `dev-*` branches (see
 
 ## The document and lifecycle rules
 
-Fourteen `linter` rules keep the Living Spec and feature specs consistent. The `docs` bundle's `core` preset (from
-`devkit-docs`) deploys the nine document rules; the `spec` bundle's `core` preset deploys the five rules of the
+Fifteen `linter` rules keep the Living Spec and feature specs consistent. The `docs` bundle's `core` preset (from
+`devkit-docs`) deploys the ten document rules; the `spec` bundle's `core` preset deploys the five rules of the
 spec-driven lifecycle. All are errors except `RULE-spec-progress`, `RULE-proposal-boundaries` and
 `RULE-ux-coverage`, which are warnings.
 
@@ -155,13 +161,14 @@ spec-driven lifecycle. All are errors except `RULE-spec-progress`, `RULE-proposa
 | `RULE-steering-documents` | `docs` | `docs/steering/` stays flat and small, each file with a `title` and short English `summary` | by hand |
 | `RULE-ux-links` | `docs` | a UX document and the use case steps that cite it agree | by hand |
 | `RULE-ux-coverage` | `docs` | the steps of a use case with screens each cite one | by hand |
+| `RULE-decision-supersession` | `docs` | whole and partial ADR replacement pointers are reciprocal and uniquely resolved | by hand |
 | `RULE-task-coverage` | `spec` | every acceptance criterion has a task and every task reference exists | by hand |
 | `RULE-spec-lifecycle` | `spec` | spec status, task checklist and reconcile status agree | sets `completed` |
 | `RULE-spec-progress` | `spec` | a spec with checked tasks is `in-progress` | sets `in-progress` |
 | `RULE-reconcile-contract` | `spec` | `reconcile.md` is well formed and its modified targets changed | by hand |
 | `RULE-proposal-boundaries` | `spec` | a proposal's owned paths exist | by hand |
 
-When a project's development approach is incubation (`[development] approach` in `.devkit/config.toml`), the document
+When a project's development approach is adaptive development (`[development] approach` in `.devkit/config.toml`), the document
 rules judge as before, but the lifecycle rules apply only to documents still bound to a spec-driven workflow; with
 nothing to check they report an `SDD_LIFECYCLE_INACTIVE` omission instead of a pass.
 
@@ -209,15 +216,26 @@ The `spec-rule` skill walks an agent through the whole procedure.
 Rules that pull per-file Python facts reuse them across runs from a local memo under `.devkit/transient/`; this is
 derived state, so a missing or corrupt memo only costs time, never changes findings.
 
+## Retained ownership and document checks
+
+Docs ships ten rules, including `RULE-decision-supersession` for reciprocal ADR replacement records.
+Steering checks apply per root or registered namespace directory, including optional glossaries and UX registers.
+Reference fixes also canonicalize uniquely resolved aliases in steering prose, glossary Owner cells and configured quick references.
+
+During adaptive development, unbound documents acquire no SDD lifecycle duty. Retained workflow-bound Units keep
+theirs even when an anchor or binding is deleted; a skipped lifecycle check reports `SDD_LIFECYCLE_INACTIVE`, not a clean check.
+Branch content is checked with its runtime before integration. Final target checks run after landed-runtime
+synchronization; integration performs no content-readiness or rule-import evaluation.
+
 ## Sources
 
-- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-rules-engine.md):
+- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md):
   the engine, rule sources and per-file facts.
-- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
   targets, scoping, phases, policy and snapshot gates.
-- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
+- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
   the rule protocol, workspace cache API and rule tests.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md):
   the document and lifecycle rules in full.
-- [Rules reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/rules.md): commands,
+- [Rules reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md): commands,
   output, exit codes and the built-in rule catalog.

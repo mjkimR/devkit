@@ -1,32 +1,38 @@
 ---
 sources:
   CAP-DLV-delivery-workflows: null
-  CAP-DLV-proposal-incubation: null
+  CAP-DLV-proposal-planning: null
   CAP-DLV-spec-bundles: null
-  UC-incubate-and-hand-off-a-proposal: null
-title: 제안 숙성 후 넘기기
-translated_from: en/journeys/incubate-and-hand-off-a-proposal.md@1b05d616f7f3ccd7
+  UC-plan-and-hand-off-a-proposal: null
+title: 제안 계획 후 넘기기
+translated_from: en/journeys/plan-and-hand-off-a-proposal.md@86ac8c82f9bdcfa3
 ---
 
-# 제안 숙성 후 넘기기
+# 제안 계획 후 넘기기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -62,12 +68,12 @@ translated_from: en/journeys/incubate-and-hand-off-a-proposal.md@1b05d616f7f3ccd
 정식 이관(handoff)되며, 본격적인 개발(Development) 단계는 일관성 있는 Living Spec을 토대로 시작됩니다.
 
 유스케이스는
-[`UC-incubate-and-hand-off-a-proposal`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-incubate-and-hand-off-a-proposal.md) (영어 원문)입니다.
+[`UC-plan-and-hand-off-a-proposal`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md) (영어 원문)입니다.
 제안, PADR, Planning과 Development, 게이트(gate) 등의 개념은 [개념](../concepts.md)에서 설명합니다.
 
-제안은 스펙 주도 개발(SDD)에 속하는 절차입니다. 저장소의 개발 방식(development approach)이 인큐베이션(incubation)이면
+제안은 스펙 주도 개발(SDD)에 속하는 절차입니다. 저장소의 개발 방식(development approach)이 적응형 개발(adaptive development)이면
 제안의 생성, 수락, 핸드오프는 아무것도 바꾸기 전에 `SPEC_LIFECYCLE_INACTIVE`로 거부되며, 기존 제안을 읽는 것은 그대로
-가능합니다. 인큐베이션 작업은 [아이디어 인큐베이션하기](incubate-an-idea.md)를 따릅니다.
+가능합니다. 적응형 개발 작업은 [아이디어 발전시키기](advance-an-idea.md)를 따릅니다.
 
 ## 1. 제안 초안(Draft) 작성
 
@@ -78,7 +84,7 @@ uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Rep
 ```
 
 생성된 초안과 제안된 Planning 작업 강도(effort)에 대한 사용자의 확인을 `plan-intent` 게이트 레코드로 기록합니다
-([`CAP-DLV-proposal-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-proposal-incubation.md) (영어 원문)).
+([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md) (영어 원문)).
 `--milestone`에는 계획·진행 중인 마일스톤뿐 아니라 완료되거나 중단된 마일스톤도 지정할 수 있습니다. 완료·중단된
 마일스톤이면 소속을 다시 검토하라는 `SPEC_PROPOSAL_MILESTONE_INACTIVE` 알림만 추가됩니다.
 
@@ -89,7 +95,7 @@ uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Rep
 고치지 않습니다. 사용자의 결정에 따라 초안을 분할하거나(`devkit spec proposal new <child> --decomposed-from
 PROP-<parent>`, 부모의 마일스톤 유지) 하위 초안을 담는 마일스톤으로 승격하며, 필요하면 읽기 전용 `decomposer` 역할에
 분할안을 요청합니다
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
 
 ## 2. 기획 및 설계 (Planning)
 
@@ -110,25 +116,20 @@ uv run devkit spec proposal padr fast-engine "Use AST parser"
 에이전트는 모든 질문을 취합하여 한 라운드에 사용자에게 전달합니다. 답변을 제안 본문과 PADR에 반영하고 Development 작업
 강도 힌트를 구체화합니다. 사용자에게 돌아갈 때마다 그 전에 최신 피드백 정리(feedback sweep) 범위를 기록합니다.
 
-## 4. 제안 검토 및 승인 수락 (Accept)
+## 4. 제안 검토 및 수락
 
-마지막 Planning 커밋 후 에이전트는 제안, PADR, 엔벨로프를 검토하고 결과를 제시합니다. 사용자는 커밋된 `plan-<slug>`
-상태에서 읽기 전용으로 출력되는 같은 브리핑을 직접 볼 수 있습니다.
-
-```bash
-uv run devkit spec proposal report fast-engine
-```
-
-사용자가 방향을 수락하면, 에이전트는 수락 기록과 수락 상태를 한 단계로 기록합니다.
+최종 Planning 커밋 후 Host가 제안·PADR·엔벨로프를 검토하고 브리핑을 제시합니다.
+`uv run devkit spec proposal report <slug>`로 공유 산출물 게시 없이 읽을 수 있습니다.
+사용자의 방향 결정 후 유지되는 베이스 체크아웃에서 실행합니다.
 
 ```bash
-uv run devkit spec proposal accept fast-engine --by user --note "<your decision>"
+uv run devkit spec proposal accept <slug> --by user --mode accept_only
 ```
 
-유지된 기본 체크아웃에서 `--mode accept_and_handoff --effort <level>`로 실행하면 같은 호출이 Development까지 시작하며,
-`accept_only`는 수락 후 멈춥니다. 이후 에이전트가 Planning 브랜치를 통합하고, 워크플로는 제안 유닛이 완료되었다고
-보고합니다. 합성 호출이 일부 효과를 적용한 뒤 멈추면 `[ACCEPTED_STOPPED: ...]`를 출력하고 종료 코드 `1`로 다음 명령이나
-조치를 알려 주며, 아무것도 바꾸지 않은 호출은 오류와 함께 종료 코드 `2`로 끝납니다.
+수락을 기록하고 Planning을 통합합니다. 이동한 베이스와 충돌이 없으면 `plan-<slug>`에 먼저 병합할 필요가 없습니다.
+제안 범위 변경이나 Git 충돌은 재검토·수리 후 진행합니다.
+`accept_and_handoff --effort <level>`는 handoff 권한도 필요하지만 Planning 병합 후 최종 검증 대기·handoff 미시작으로 반환합니다.
+Host가 반영된 런타임을 동기화·검사하고 승인된 범위와 강도를 유지해 새 프로세스에서 handoff를 실행합니다.
 
 ## 5. 개발 스펙 번들로 핸드오프 (Handoff)
 
@@ -141,7 +142,7 @@ uv run devkit spec proposal handoff fast-engine --effort medium
 
 이 명령은 `dev-<slug>` 브랜치와 워크트리를 생성하거나 검증하고, 설정과 동기화를 실행한 뒤 그곳으로 핸드오프합니다.
 핸드오프는 `sdd-spec-<task_kind>`에 연결된 스펙 번들을 만들고
-([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)),
+([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)),
 PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 옮기고, `plan-intent`와 `plan-accept` 기록을 이름 그대로
 승계하고, 제안을 가리키던 참조를 다시 쓴 뒤 제안을 제거합니다. 출력 라인이 옮겨진 내용을 알려 줍니다:
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, 그리고
@@ -175,7 +176,7 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 
 | 코드 | 의미 | 해야 할 일 |
 | --- | --- | --- |
-| `SPEC_LIFECYCLE_INACTIVE` | 개발 방식이 인큐베이션이어서 제안 생성, 수락, 핸드오프를 쓸 수 없습니다. | `uv run devkit config show`를 확인하십시오. SDD로 전환할지는 사용자의 명시적 선택입니다([인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)). |
+| `SPEC_LIFECYCLE_INACTIVE` | 개발 방식이 적응형 개발이어서 제안 생성, 수락, 핸드오프를 쓸 수 없습니다. | `uv run devkit config show`를 확인하십시오. SDD로 전환할지는 사용자의 명시적 선택입니다([적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)). |
 | `SPEC_PROPOSAL_NOT_ELIGIBLE` | 직접 수락 조건을 충족하지 못했습니다(예: `size: XL`, 누락된 `plan-intent`). 각 조건과 해결 명령이 나열됩니다. | 조건을 해결하거나 Planning을 진행하십시오. |
 | `SPEC_PROPOSAL_GATE_NOT_OPEN` | 워크플로가 `plan-accept`를 열지 않았습니다(예: 피드백 정리 누락). 상태는 복원됩니다. | 나열된 검사를 충족한 뒤 다시 수락하십시오. |
 | `SPEC_PROPOSAL_APPROVAL_NOT_READY` | 합성 수락에서 Planning이 끝나지 않았습니다: 미충족 검사, 열린 질문, 보류, 또는 `plan-<slug>` 없음. | 그곳에서 Planning을 마친 뒤 다시 실행하십시오. |
@@ -187,8 +188,19 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 | `SPEC_HANDOFF_BASE_DIRTY` | 유지된 기본 체크아웃에 커밋되지 않은 변경이 있습니다(목록 표시). | 그 변경의 처리를 정한 뒤 다시 실행하십시오. |
 | `SPEC_HANDOFF_WORKTREE_CONFLICT` | 이 수락된 기준을 위해 devkit이 만들지 않은 `dev-<slug>` 워크트리가 있거나, 변경 또는 다른 커밋을 담고 있습니다. 재사용하거나 제거하지 않습니다. | 그 워크트리를 직접 확인하고 정리하십시오. |
 | `SPEC_PROPOSAL_WRONG_WORKTREE` | 핸드오프가 `dev-<slug>` 밖에서 실행되었거나, 합성 명령이 유지된 기본 체크아웃 밖에서 실행되었습니다. | `[TARGET]`과 `[FIX]`가 가리키는 곳에서 실행하십시오. |
-| `SPEC_PROPOSAL_HANDOFF_FAILED` | 쓰기가 실패했습니다. 모든 변경이 롤백되고 제안은 보존됩니다. | 원인을 고치고 다시 실행하십시오. |
+| `SPEC_PROPOSAL_HANDOFF_FAILED` | 쓰기가 실패해 롤백을 시도하지만 일부 복구가 실패할 수 있습니다. | 보고된 롤백 결과와 남은 경로를 확인한 뒤 수리·재시도하십시오. |
 | `SPEC_HANDOFF_STALE` | 점검 후 효과 적용 전에 기본 브랜치, 수락된 계획, 정책이 바뀌었습니다(종료 코드 `2`). 또는 새 워크트리가 검토한 기본 커밋을 더 이상 담고 있지 않아 `status=needs_recovery`로 보존되었습니다(종료 코드 `1`). | 현재 상태를 검토하고 다시 승인하십시오. 보존된 워크트리를 점검하십시오. |
 
-거부된 수락이나 핸드오프는 아무것도 쓰지 않습니다. 버그 수정 제안은 `spec.md`만 담은 `sdd-spec-bugfix` 번들로
+사전 조건 거부는 아무것도 쓰지 않습니다. 효과가 발생한 뒤의 실패는 워크트리나 쓰기를 남길 수 있으므로 보고된 상태를 먼저 확인합니다. 버그 수정 제안은 `spec.md`만 담은 `sdd-spec-bugfix` 번들로
 핸드오프됩니다. 관련 영역: [전달](../areas/delivery.md).
+
+## Handoff 커밋과 복구
+
+복합 handoff는 검토한 베이스의 깨끗한 직접 자식으로 트랜잭션을 한 번 커밋하고 `commit`을 보고합니다.
+커밋 게이트가 거부하면 `SPEC_HANDOFF_COMMIT_REFUSED`, `status=needs_recovery`와 함께
+`dev-<slug>`에 쓰기를 staged 상태로 남깁니다. 원인을 고치고 그곳에서 커밋하며 수정된 워크트리에 handoff를 재실행하지 않습니다.
+커밋 후 미커밋 파일이나 이력 변경도 현재 위치에서 확인·복구합니다.
+
+로컬 오케스트레이션에서는 git-operator가 관찰한 `head`, `dirty_paths`를 `checks.worker_input`으로 반환합니다.
+Host는 Git과 대조하고 해당 깨끗한 HEAD 또는 자신이 추가한 링크 수정 자식 커밋에서 워커를 시작합니다.
+재작성한 참조를 다시 읽고 별도 후속 커밋으로 고쳐 handoff 트랜잭션 SHA를 유지합니다.

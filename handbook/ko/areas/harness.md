@@ -4,35 +4,42 @@ sources:
   CAP-DLV-delivery-workflows: null
   CAP-GOV-spec-rules: null
   CAP-HARN-agent-guidance: null
+  CAP-HARN-command-design: null
   CAP-HARN-command-mount: null
   UC-adopt-in-an-existing-repository: null
   UC-handle-delivery-problems-and-exceptions: null
   UC-resolve-stale-activity-branches: null
   UC-route-development-intent: null
 title: 하네스
-translated_from: en/areas/harness.md@c4842d20d765a319
+translated_from: en/areas/harness.md@ac806783b311623f
 ---
 
 # 하네스
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -78,20 +85,20 @@ approach)을 확인하게 합니다. SDD라면 이어서 `uv run devkit get-cont
 | 프리셋 | 선택 방식 | 제공 구성 요소 |
 | --- | --- | --- |
 | `spec:core` | 자동 활성화 | 생명주기 지침, `AGENTS.md` 포인터, 5개 생명주기 규칙, 제안 템플릿, 스킬, 워크플로, 역할 계약, 플레이북 |
-| `docs:core` | 자동 활성화 | 공통 작성 지침, 문서 템플릿, 9개 문서 규칙 |
+| `docs:core` | 자동 활성화 | 공통 작성 지침, 문서 템플릿, 10개 문서 규칙 |
 | `docs:docs-skeleton` | `devkit add docs:docs-skeleton` | 초기 골격이 갖춰진 `docs/` 트리 (미존재 시 1회 생성) |
 
 비활성화하려면 `.devkit/config.toml`에 `[presets] spec = false`를 설정하십시오. 관리 파일(managed files)이나 프로젝션된
 파일은 직접 편집하지 마십시오. 필요한 변경은 `devkit override create`나 프로젝트 고유의 번들을 통해 적용해야 합니다.
 
-## SDD와 인큐베이션
+## SDD와 적응형 개발
 
 `.devkit/config.toml`의 `[development] approach`는 프로젝트가 공유하는 선택으로, `sdd`(값이 없을 때의 기본값) 또는
-`incubation`입니다. 번들을 설치하거나 선택해도 이 값은 바뀌지 않습니다. 인큐베이션에서는 `spec` 지침이 물러납니다. 일반
-작업은 프로젝트의 인큐베이션 지침과 독립적인 검사를 따르며, 암묵적인 유닛, 엔벨로프, 작업 분류를 만들지 않습니다. 이미 SDD
-워크플로에 묶인 문서는 기존 검사를 그대로 유지합니다. 그 지침과 `/incubate` 진입점은 `devkit-catalog`의 선택형 `incubation`
-번들이 제공합니다. [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)를 참고하십시오. 인큐베이션으로 키운 결과물을
-SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)에서
+`adaptive-dev`입니다. 번들을 설치하거나 선택해도 이 값은 바뀌지 않습니다. 적응형 개발에서는 `spec` 지침이 물러납니다. 일반
+작업은 프로젝트의 적응형 개발 지침과 독립적인 검사를 따르며, 암묵적인 유닛, 엔벨로프, 작업 분류를 만들지 않습니다. 이미 SDD
+워크플로에 묶인 문서는 기존 검사를 그대로 유지합니다. 그 지침과 `/adaptive-dev` 진입점은 `devkit-catalog`의 선택형 `adaptive-dev`
+번들이 제공합니다. [아이디어 발전시키기](../journeys/advance-an-idea.md)를 참고하십시오. 적응형 개발으로 키운 결과물을
+SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)에서
 설명합니다.
 
 ## 작업 시작하기
@@ -133,9 +140,9 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [인큐베이션�
 | `spec-entrypoints` | 스펙 번들로부터 기능 및 유스케이스 진입점 도출 |
 
 각 스킬은 현재 수행 단계에 필요한 지침과 참고 자료만을 선별 로드하며, 각 참고 자료에는 참조해야 하는 적절한 시점이
-명시되어 있습니다. 작업 위임을 위해 9가지 역할 계약이 배포됩니다. 검사용 `challenger`, `scout`, `code-reviewer`,
+명시되어 있습니다. 작업 위임을 위해 10가지 역할 계약이 배포됩니다. 검사용 `challenger`, `scout`, `code-reviewer`,
 `reconcile-reviewer`, `ux-reviewer`, Backlog용 `triage`, `decomposer`(열린 피드백 묶기, 초안 분할), 그리고
-`planning-worker`, `development-worker`입니다. 각 역할은 스스로 `devkit get-context spec`을 실행합니다. 역할이 어떤 모델로
+`planning-worker`, `development-worker`, `git-operator`입니다. 각 역할은 스스로 `devkit get-context spec`을 실행합니다. 역할이 어떤 모델로
 실행될지는 하네스가 아니라 배포 쪽 설정입니다([배포](distribution.md)).
 
 ## 규칙 준수 문서 작성법
@@ -159,7 +166,7 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [인큐베이션�
 devkit은 이미 존재하는 `docs/` 트리에 임의로 템플릿을 덮어쓰지 않습니다. `brownfield-adoption` 플레이북을 실행하면
 안전하게 devkit을 설치하고 기준선을 설정한 뒤, 기존 레거시 Markdown 문서를 `docs/materials/_legacy/` 아래로 격리하고
 사용자가 결정한 보류 사항들을 기록합니다. 자세한 내용은
-[기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)를 참고하십시오. 인큐베이션으로 성장한
+[기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)를 참고하십시오. 적응형 개발으로 성장한
 프로젝트는 대신 `sdd-baseline`을 사용합니다. 번들에는 `feedback-hygiene`(열린 피드백 일괄 분류)과 `adr-compaction`(결정 변경
 없이 관련 ADR 통합 정리) 플레이북이 추가로 제공됩니다.
 
@@ -204,14 +211,24 @@ devkit 자체 버전을 출력).
 
 ## 관련 자료
 
-- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문):
+- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문):
   번들의 프리셋, 헌장, 스킬, 역할 계약, 플레이북, 템플릿 및 정책 규약.
-- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-command-mount.md):
+- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md) (영어 원문):
   `devkit spec`과 `devkit docs` 마운트 방식 및 하위 명령어 공통 규약.
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md):
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문):
   스킬이 실행하는 워크플로 및 역할 계약 정의.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문):
   번들이 배포하는 거버넌스 규칙 명세.
-- [CAP-DLV-idea-incubation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-idea-incubation.md)
-  및 [CAP-DLV-incubation-sdd-baseline](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md):
-  인큐베이션 방식과 SDD로의 전환.
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문)
+  및 [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md) (영어 원문):
+  적응형 개발 방식과 SDD로의 전환.
+
+## 수명 주기 실행자와 명령 설계
+
+열 개 SDD 역할에는 현재 Host가 승인한 정확한 수명 주기 작업을 반복 수행하는 git-operator가 포함됩니다.
+결정·일정·결과 수용은 Host가 맡습니다. Git Operator는 lean, scout는 compact를 쓰고 나머지는 별도 설정이 없으면 상속합니다.
+자원 수준이 activity-effort나 쓰기 권한을 바꾸지 않습니다.
+
+`command-design`은 필요한 justfile·CLI·MCP 진입점을 위한 선택형 카탈로그 지침입니다.
+동작·호출자를 확인하고 적절한 기존 경로를 재사용하며 문서에 적힌 실행 컨텍스트에서 추가를 검증합니다.
+[필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)를 참고하십시오.

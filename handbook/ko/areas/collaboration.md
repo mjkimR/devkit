@@ -1,6 +1,6 @@
 ---
 sources:
-  ADR-host-owned-scope-observation: null
+  ADR-worktrees-and-scope: null
   CAP-COLL-shared-artifacts: null
   CAP-COLL-work-scope-registry: null
   CAP-DLV-project-policy: null
@@ -9,29 +9,35 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 협업
-translated_from: en/areas/collaboration.md@e3d213dde5537819
+translated_from: en/areas/collaboration.md@3cb70669c57ecf8c
 ---
 
 # 협업
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -197,14 +203,27 @@ devkit shared list --kind proposal-review --slug example --format json
 오류와 함께 즉시 실패합니다. 어댑터 개발자는 재사용 가능한 `assert_conformance` 헬퍼로 적합성을 검증할 수 있으며, 사용자 인증,
 네임스페이스 프로비저닝, 분산 호스트 간의 정합성 보장은 어댑터 개발자의 책임입니다. 현재 릴리스에는 기본 원격 백엔드가 포함되어 있지 않습니다.
 
+## 현재 겹침과 미래 겹침
+
+`scope collect`는 각 근거를 `horizon=current|future`로 표시하고 쌍별 개수와 `summary.current_overlapping`을 보고합니다.
+Planning에서 실제 관찰한 쓰기는 current, 선언한 문서·코드·후보 범위는 future이며 그 밖의 관찰은 current입니다.
+모든 겹침은 목록에 남고 horizon이 쓰기 권한을 주지는 않습니다.
+현재 겹침은 실행 중 활동을 직렬화합니다. 미래만 겹치면 Planning은 병행할 수 있고 handoff·통합 순서를 정합니다.
+생명주기상 아직 없는 청사진·조정 파일을 포함해 빠진 입력은 관찰 공백으로 남습니다.
+
+범위 기록은 Git 공통 디렉터리, 공유 보고서는 유지되는 주 체크아웃의 `.devkit/.shared/artifacts`에 있습니다.
+공통 Git 식별 정보로 연결된 워크트리가 같은 저장소를 찾습니다.
+로컬 오케스트레이션에서는 연결된 프로젝트 도구를 먼저 확인합니다. 연결이 없으면 자동 CLI 대체 없이 복구가 필요합니다.
+명시적으로 승인된 CLI 선택은 가능합니다.
+
 ## 출처
 
-- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문):
+- [CAP-COLL-work-scope-registry](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문):
   작업 범위 입력 요소, 비교 알고리즘, 레지스트리 아키텍처, CLI 명령어, 출력 규격 및 어드바이저리 코드.
-- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md):
+- [CAP-COLL-shared-artifacts](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md) (영어 원문):
   아티팩트 식별 체계, 보존 주기 정책, 로컬 저장소 구조 및 어댑터 확장 규격.
-- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md):
+- [UC-run-parallel-work-safely](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md) (영어 원문):
   안전한 병렬 작업 시나리오.
-- [ADR-host-owned-scope-observation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261025-host-owned-scope-observation.md) (영어 원문):
+- [ADR-worktrees-and-scope](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-worktrees-and-scope.md) (영어 원문):
   Host가 관찰하고 워커는 아무것도 게시하지 않는 이유.
 - 관련 문서: [워크트리](worktree.md)(`CAP-WT-task-worktrees`), [MCP](mcp.md).

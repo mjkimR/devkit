@@ -1,6 +1,7 @@
 ---
 sources:
-  CAP-DLV-weekly-report: 0499a11d003f2b19a0ead794315b96ab8a09c22f
+  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
+  CAP-DLV-weekly-report: ad32dcc4519c5757150443dcb6079f919578d2a4
   UC-inspect-weekly-repository-progress: 4678537a309b3defe8a1a7c2e41d5842b3ac03af
   UC-publish-a-weekly-report: 9e5de0abff784fa43c00851d8b03cf8b59d60129
 title: Publish a weekly report
@@ -9,22 +10,28 @@ title: Publish a weekly report
 # Publish a weekly report
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -61,8 +68,8 @@ Generating the report is a separate step (`UC-inspect-weekly-repository-progress
 playbook of the opt-in `maintenance` catalog bundle; see the [delivery area](../areas/delivery.md) and, for playbooks
 in general, [Concepts](../concepts.md).
 
-Source: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-publish-a-weekly-report.md),
-contract [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
+Source: [`UC-publish-a-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md),
+contract [`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md).
 
 ## Before you start
 
@@ -123,3 +130,11 @@ explicit authority for a destination you chose.
 Either a `published` record whose receipt you can check, or a clear `pending`, `failed` or `unknown` state with every
 attempt preserved. The report bytes and its generation outcome never change, nothing is replaced without authority
 naming it, and an `unknown` publication is never retried blindly.
+
+## Optional history stays separate
+
+The default local report and completion procedure work without maintenance history.
+Only an explicit companion-history request starts capture; command installation and this playbook's invocation
+start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
+later integration changes append amendments rather than rewrite the published report.
+See [Record a maintenance run](record-a-maintenance-run.md).

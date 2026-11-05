@@ -1,6 +1,6 @@
 ---
 sources:
-  ADR-package-split-and-namespaces: null
+  ADR-package-ownership-and-release-version: null
   CAP-DIST-agent-projections: null
   CAP-DIST-content-packages: null
   CAP-DIST-context-and-playbooks: null
@@ -11,29 +11,35 @@ sources:
   UC-reconcile-living-spec-drift: null
   UC-route-development-intent: null
 title: 배포
-translated_from: en/areas/distribution.md@dc4ecbab9acd239a
+translated_from: en/areas/distribution.md@5b4c708fa7959bff
 ---
 
 # 배포
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -77,7 +83,7 @@ translated_from: en/areas/distribution.md@dc4ecbab9acd239a
 
 프로젝트의 개발(dev) 의존성에는 devkit 패키지를 정확히 하나만 선언해야 합니다. 단순 자산 배포 기능만 필요한 경우에는 `devkit-dist`를,
 거버넌스 하네스(규칙, 워크플로, 커밋 게이트, 워크트리, 통합 등)까지 필요한 경우에는 `devkit-agt`를 선언합니다. `devkit-agt`는 동일한 버전의
-`devkit-dist`에 이미 의존하므로 두 패키지를 동시에 선언하지 마십시오(`ADR-package-split-and-namespaces`). CLI 명령어는 항상 프로젝트
+`devkit-dist`에 이미 의존하므로 두 패키지를 동시에 선언하지 마십시오(`ADR-package-ownership-and-release-version`). CLI 명령어는 항상 프로젝트
 가상환경 내에서 `uv run devkit ...` 형태로 실행하십시오. 시스템에 전역(global)으로 설치된 devkit은 프로젝트의 로컬 콘텐츠 패키지를
 인식하지 못합니다. 기존 코드베이스에 devkit을 처음 도입하는 단계별 가이드는
 [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)를 참고하십시오.
@@ -102,7 +108,7 @@ uv run devkit remove starter     # deselects; unchanged deployed files are remov
 
 내장 번들(`devkit`, `advisory`, `git-commits`, `harness`, `authoring`)과 `devkit-catalog`의 선택형 번들(`response-style`,
 `maintenance`)은
-[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)에
+[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)에
 콘텐츠 패키지 간의 계층형 의존성 규칙과 함께 정리되어 있습니다. 방법론 계층도 같은 방식으로 자동 선택 번들을 추가합니다.
 `devkit-docs`는 `docs`를, `devkit-spec`은 `spec`을 제공합니다([하네스](harness.md)).
 
@@ -123,7 +129,7 @@ devkit은 설치 기록(receipt)에 등록된 파일만 안전하게 관리합�
 관리해야 하는 파일을 사용자가 임의로 수정한 경우에도 `SYNC_CONFLICT` 오류가 발생하며, 배포 대상에서 제외된 이전 파일은 디스크에 고아
 파일(orphan)로 보존됩니다(`ORPHAN_LEFT`). devkit은 `CLAUDE.md`를 직접 생성하거나 덮어쓰지 않으므로, 필요한 경우 사용자가 직접
 `AGENTS.md`를 참조하도록 설정하십시오. 자세한 내용은
-[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영어 원문)에
+[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md) (영어 원문)에
 있습니다.
 
 ## 클론, 워크트리, CI 환경의 정합성 유지하기
@@ -156,7 +162,7 @@ devkit은 설치 기록(receipt)에 등록된 파일만 안전하게 관리합�
 | `HARNESS_ENGINE_MISSING` | `devkit-agt` 없이 규칙, 게이트, 워크플로 자산이 배포됨 | 해당 기능을 실행하려면 `devkit-agt`를 의존성에 추가 |
 
 전체 트랜잭션 단계, 알림 목록 및 sync 후 확장 훅은
-[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)을
+[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md) (영어 원문)을
 참고하십시오.
 
 ## 포크 없이 업스트림 자산 수정하기
@@ -183,7 +189,7 @@ uv run devkit override remove starter:development   # 오버라이드를 제거�
 ## 컨텍스트 로드와 플레이북 탐색
 
 초기 로딩 파일의 크기는 작게 유지하고 세부 지침은 단계별로 로드합니다
-([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
+([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
 
 - 루트 `AGENTS.md` 블록에는 오리엔테이션 안내만 담깁니다: 설치된 번들 목록, 컨텍스트 로딩 규칙, 진입 스킬, 핵심 지침 포인터.
 - `uv run devkit get-context <bundle>`은 번들의 헌장(constitution)과 지침 헤더를 반환하며, 번들이 컨텍스트 문서 디렉터리를
@@ -207,7 +213,7 @@ uv run devkit override remove starter:development   # 오버라이드를 제거�
 `.codex/agents/`, `.agents/agents/`에 배치됩니다. `invocation = "user"`로 선언된 스킬은 각 에이전트 플랫폼 고유의 "명시적 사용자 호출 전용"
 설정이 자동 적용됩니다. 서브에이전트는 에이전트별 전용 네이티브 파일로 배포되거나, 호스트 중립적인 단일 역할 계약(role contract)으로부터
 에이전트별 형식으로 렌더링되어 배포됩니다. 지원 매트릭스와 역할 계약 규격은
-[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-agent-projections.md) (영어 원문)을
+[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md) (영어 원문)을
 참고하십시오.
 
 기본적으로 역할 계약은 호스트가 부여하는 모델과 추론 강도로 실행됩니다. 직접 정하려면 서브에이전트 모델 수준(subagent model
@@ -228,7 +234,7 @@ level = "standard"
 ## 로컬 체크아웃 전용 개인 설정
 
 `config.toml`의 두 테이블은 개인 취향이 아니라 공유 정책입니다. 위의 `[subagents]`, 그리고 프로젝트 전체의 개발
-방식(development approach)을 스펙 주도 전달(`sdd`, 기본값)과 `incubation` 중에서 고르는 `[development] approach`입니다
+방식(development approach)을 스펙 주도 전달(`sdd`, 기본값)과 `adaptive-dev` 중에서 고르는 `[development] approach`입니다
 ([하네스](harness.md) 참고). `uv run devkit config show`가 둘 다 보여 줍니다.
 
 `.devkit/config.local.toml`은 현재 로컬 작업 환경(체크아웃)에만 적용되며 Git 추적에서 제외(무시)되는 설정 파일입니다. 이 파일은 지정된 일부
@@ -244,7 +250,7 @@ level = "standard"
 번들 매니페스트는 자산을 `(kind, id, source)` 형식으로 선언하고, 프리셋과 선택적 템플릿 변수를 정의합니다. 소스 디렉터리를 정식 설치하기
 전에 `uv run devkit bundle validate <source>`와 `uv run devkit bundle plan <source> --agent <name>` 명령어로 유효성을 사전에
 검증하십시오.
-[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-manifest-spec.md) (영어 원문)의
+[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-manifest-spec.md) (영어 원문)의
 핵심 사항은 다음과 같습니다.
 
 - 매니페스트 스키마는 엄격하게 검증됩니다. 정의되지 않은 알 수 없는 키는 오류로 처리되며, 슬러그(slug), 버전, 소스 파일 경로의 유효성을 엄밀히 검사합니다.
@@ -264,7 +270,7 @@ level = "standard"
 실행하고, 소스 코드 변경과 함께 갱신된 설치 기록을 반드시 한 커밋으로 묶어 커밋하십시오. 설치 기록이 최신 상태가 아니면 Git 스냅샷 게이트
 검사에서 실패하므로, 규칙 변경은 항상 설치 기록과 함께 동기화되어야 합니다. 패키지 디렉터리 레이아웃, `pyproject.toml` 설정 예시 및 오버라이드와
 저장소 내 번들 간의 선택 기준은
-[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)에
+[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md) (영어 원문)에
 기술되어 있습니다.
 
 ## 이 영역의 주요 기능 명세
@@ -278,3 +284,16 @@ level = "standard"
 | `CAP-DIST-agent-projections` | 에이전트별 프로젝션 경로, 호출 모드 설정, 역할 계약 규격, 서브에이전트 모델 수준 |
 | `CAP-DIST-context-and-playbooks` | `get-context` 프로토콜, 플레이북 검색 및 정확한 조회 |
 | `CAP-DIST-in-repo-bundles` | 저장소 자체 자산의 패키징 및 배포 |
+
+## 네임스페이스 컨텍스트와 프로젝션 진단
+
+`uv run devkit get-context docs --for <directory>`는 루트 스티어링 문서와 해당 디렉터리가 선택하는 등록된 네임스페이스 문서를 나열합니다.
+`documents_elsewhere`는 다른 네임스페이스의 스티어링 디렉터리를 안내합니다.
+디렉터리는 프로젝트 안에 존재해야 하며 지침 본문은 필요할 때 읽습니다.
+
+서브에이전트 수준(subagent model level) `lean`은 Claude Code의 Sonnet/medium, Codex의 gpt-6.1-terra/medium,
+Antigravity의 추론 강도 덮어쓰기 없는 Flash에 대응합니다. 자원 매핑이 권한이나 전달 activity-effort를 바꾸지는 않습니다.
+
+sync는 무시 규칙이 없는 미추적 프로젝션에 `PROJECTION_NOT_IGNORED`, 추적된 프로젝션에 `PROJECTION_TRACKED`를 경고합니다.
+정확한 수정 안내를 제공하되 루트 ignore 파일이나 Git index를 편집하지 않습니다.
+`PROJECTION_GIT_CHECK_FAILED`는 나머지 동기화를 실패시키지 않고 진단 불가를 보고합니다.

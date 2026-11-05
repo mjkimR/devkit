@@ -7,29 +7,35 @@ sources:
   CAP-MCP-runtime-registration: null
   CAP-WT-task-worktrees: null
   UC-drive-development-to-integration: null
-title: 개발부터 통합까지 진행하기
-translated_from: en/journeys/drive-development-to-integration.md@e29c4909c8cba283
+title: 개발에서 통합까지 진행하기
+translated_from: en/journeys/drive-development-to-integration.md@f213520ed0b5f1b5
 ---
 
-# 개발부터 통합까지 진행하기
+# 개발에서 통합까지 진행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -58,138 +64,90 @@ translated_from: en/journeys/drive-development-to-integration.md@e29c4909c8cba28
 - [용어집](../glossary.md)
 <!-- /handbook:generated -->
 
-작업 목표(intent)가 합의되고 전용 활동 브랜치가 마련되었습니다. 이 여정은 에이전트가 기능 구현부터 코드 리뷰,
-Living Spec 갱신, 검증을 거쳐 최종 변경 사항이 기본(base) 브랜치에 안전하게 병합되는 전 과정을 안내합니다.
-사용자의 개입은 최소화되지만 결정적인 역할을 합니다. 기본 정책에서는 사용자가 대화창에서 직접 승인하기 전까지
-어떠한 변경 사항도 기본 브랜치에 통합되지 않습니다.
+의도가 합의되면 Development는 브랜치의 워크플로에 따라 구현, 리뷰, Living Spec 반영과 최종 보고를 진행합니다.
+Host가 Git 통합 권한을 확인하고 반영된 대상을 검증합니다.
+유닛·게이트·엔벨로프는 [개념](../concepts.md)을 참고하십시오.
 
-유스케이스는
-[`UC-drive-development-to-integration`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-drive-development-to-integration.md) (영어 원문)입니다.
-이 여정은 [개발 요청 라우팅하기](route-development-intent.md)나
-[제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md) 단계 이후에 시작됩니다. 워크플로, 단계(stage),
-게이트, 엔벨로프, 워크트리 등의 개념은 [개념](../concepts.md)에서 설명합니다.
-
-## 출발점
-
-스펙 유닛(Unit)이 작업 워크트리 또는 현재 체크아웃 트리의 `dev-<slug>` 활동 브랜치에 위치합니다.
-아래 안내는 기본 설정을 기준으로 진행합니다 (`activity-effort`: `medium`, 실행 모드: `direct`, `dev-integration` 정책: `ask`, 통합 경로: 로컬).
-
-## 1. 워크플로에 현재 위치 확인
+## 1. 소스 워크플로 따르기
 
 ```bash
 uv run devkit workflow next --unit specs/<YYYY-MM>/<YYYYMMDD>-<slug>
 ```
 
-에이전트는 작업 강도(effort)와 산정 사유를 밝힌 뒤, `next` 명령어가 보고하는 현재 단계, 미충족 검사 항목, 다음에 실행할 스킬을
-순서대로 따릅니다. 각 워크플로의 단계 진행 순서는 고정되어 있지 않고 개별 워크플로 정의에 명시되어 있습니다(`devkit workflow show <id>`로 확인).
-자세한 내용은
-[`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)를
-참고하십시오.
+에이전트가 강도와 이유를 밝히고 보고된 단계·검사·스킬을 따릅니다.
+코드 전에 스펙·계획·작업 범위를 작성하고 범위 안에서 구현하며 영향 검사를 실행하고 단계마다 커밋합니다.
+bugfix는 특성화, 재현(Red), 수정(Green) 근거를 남깁니다.
+화면 초안은 코드보다 먼저 작성하며 선택적으로 UX 리뷰를 받고, 조정에서 `docs/ux/`에 유지합니다.
 
-## 2. 명세, 구현 및 검증
+## 2. 리뷰, 조정과 보고
 
-에이전트는 `spec.md`, `plan.md`, `tasks.md`를 순서대로 작성하고, 각 태스크에 지정된 `_Boundary:` 파일 범위 내에서 기능을 구현하며, 영향받는
-테스트를 실행하고 각 단계 경계마다 커밋을 생성합니다.
+medium은 최초 독립 code-reviewer 검토가 필요합니다. 구현자가 발견 사항을 고치고 수정 결과를 검증합니다.
+범위가 늘거나 정확성이 불확실하면 재검토할 수 있습니다. high는 제한된 반복, low는 자체 리뷰를 사용합니다.
+구현자는 Living Spec을 갱신하고 `reconcile.md`를 해결하며 모든 강도에서 reconcile-check 근거를 기록합니다.
+high는 독립 조정 리뷰가 필요합니다. medium은 영향 계약과 diff의 일치가 명확하고 구성 요소 간 해석이 없을 때만 자체 검증할 수 있습니다.
 
-`spec.md`에 Screens 섹션이 있으면, 에이전트는 코드를 작성하기 전에 선택적인 UX 리뷰를 먼저 위임할 수 있습니다. 읽기 전용
-`ux-reviewer`가 연결된 유스케이스를 초안 화면에 따라 하나씩 짚어 봅니다. 이 리뷰는 단계도 게이트도 아니며, 지적 사항에는 심각도가
-붙지 않고, 한 유닛에서 최대 두 라운드까지만 진행합니다. 마지막 라운드는 이후 구현 에이전트가 각 지적 사항을 해결(resolved) 또는
-면제(waived)로 표시하여 마무리합니다.
+활성화된 피드백 단계를 수행하고 최종 변경 보고서를 작성합니다.
+질문·문제·미해결 조정·미완료 검사는 명시적으로 남습니다.
+Host가 소스 자체의 런타임으로 커밋된 내용을 확인하며 통합이 이 콘텐츠 검사를 대신 수행하지 않습니다.
 
-## 3. 코드 리뷰
+## 3. 준비와 승인
 
-먼저 `code-reviewer` 서브에이전트가 요구사항 명세와 검사 결과를 바탕으로 Git diff를 엄밀히 검토합니다. 에이전트는 지적 사항을 리뷰 엔벨로프로
-기록한 뒤 수정하고, 수정 사항을 검증한 다음 reverify 엔벨로프를 작성하여 해당 라운드를 마무리합니다
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
-
-리뷰 진행 범위와 심도는 작업 강도에 따라 결정됩니다.
-
-| 작업 강도 | 코드 리뷰 | Living Spec 반영 검증 |
-| --- | --- | --- |
-| `low` | 작성 에이전트가 자체 리뷰 수행 (엔벨로프 기록) | 자체 점검 후 엔벨로프 기록 |
-| `medium` | 독립된 `code-reviewer`를 통한 초기 리뷰 1회 | 독립된 `reconcile-reviewer` 검증, 또는 영향받는 모든 계약이 식별되고 컴포넌트 간 파급 영향이 없는 경우 기록을 동반한 자체 점검 |
-| `high` | 지적 사항이 없거나 경미한 수정만 남을 때까지 새 리뷰어를 투입하여 지정된 횟수 한도 내에서 반복 검토 | 동일한 한도 내에서 반복 검증 |
-
-## 4. Living Spec 갱신
-
-에이전트는 변경 내용을 `docs/`의 Living Spec에 반영하고 `reconcile.md`를 작성합니다. Living Spec 반영 검증 결과는 `reconcile-check`
-엔벨로프로 기록됩니다. 스펙에 초안 화면이 있으면 같은 반영 과정에서 `docs/ux/`에 함께 기록합니다. 검증을 마치면 reconcile 상태를 해결(resolve) 처리하고 스펙을 완료(`completed`) 상태로 전환합니다.
-
-## 5. 피드백 정리 및 최종 보고
-
-에이전트는 개발 과정에서 사용한 도구 및 에셋에 대한 관찰 피드백을 기록한 뒤, 테스트·빌드·린트 검증 결과를 모두 포함한 최종 변경 보고서를 작성합니다.
-
-## 6. 기본 브랜치 변경 사항 반영
-
-에이전트는 작업 중 최신 변경 사항이 반영된 기본 브랜치를 작업 브랜치로 병합(merge)합니다. 충돌 해결 및 문서 동기화로 변경된 영역만 선별적으로
-재검증하고, reconcile 대상 문서를 재확인한 뒤 누적 차분 검사(`devkit rules check --ci --base <ref>`)를 실행합니다.
-
-## 7. 사용자 승인
-
-에이전트는 `uv run devkit spec policy`로 현재 적용되는 프로젝트 정책을 확인하고
-([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)),
-통합을 준비합니다.
+최종 영향 테스트 선택을 위해 병합 전 대상 SHA를 저장합니다. 유지되는 베이스 체크아웃에서 실행합니다.
 
 ```bash
-uv run devkit integration prepare dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local
+uv run devkit integration prepare dev-<slug> --route local
 ```
 
-에이전트는 검증 완료 보고서와 함께 병합 및 워크트리 정리로 발생할 구체적인 변경 사항을 사용자에게 제시합니다. 사용자가 대화창에서 명시적으로 승인하면,
-비로소 실제 통합 명령을 실행합니다.
+요청은 소스·대상 SHA, 정책, Git 식별 정보와 정확한 정리 효과를 고정합니다.
+`dev-integration=ask`에서는 Host가 검증 보고와 효과를 제시하고 대화에서 결정을 받습니다.
+공유 베이스의 `auto`에서는 검증된 로컬 통합이 정책으로 위임됩니다.
 
 ```bash
-uv run devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> \
-  --route local --expected-digest <request.digest>
+uv run devkit integration integrate dev-<slug> --route local --expected-digest <digest>
 ```
 
-다이제스트(digest)는 사용자가 확인하고 승인한 변경 범위를 확정(pin)하는 역할을 합니다. 이는 변경 범위가 중간에 바뀌지 않았는지 확인하는
-동시성 검사 장치일 뿐, 그 자체로 승인을 증명하는 것은 아닙니다. CLI 명령어는 대화 세션의 승인 여부를 직접 인증할 수 없으므로,
-에이전트는 사용자의 명시적인 승인 결정 없이는 이 명령을 임의로 실행하지 않습니다. `ask` 정책에서 다이제스트 없이, 또는 현재
-범위와 맞지 않는 다이제스트로 `integrate`를 실행하면 devkit은 이를 거부하고, 현재 범위를 다시 보여 주는 `prepare` 명령을 알려 줍니다
-([`CAP-INT-mcp-services`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/integration/CAP-INT-mcp-services.md) (영어 원문)).
+digest가 바뀌면 새 준비와 권한 확인이 필요합니다. 로컬 `no-ff` 통합은 충돌 없는 이동한 대상을 직접 병합합니다.
+`ff-only`와 PR 경로는 소스가 대상을 포함해야 합니다.
+콘텐츠 충돌은 소스 준비와 영향 검사로 돌아갑니다.
 
-## 8. 최종 통합 완료
+## 4. 반영, 동기화와 검증
 
-devkit은 기본 체크아웃 바깥에서 안전하게 병합 커밋을 생성하고, 원격 통신(fetch나 push) 없이 로컬 기본 브랜치를 해당 커밋으로 fast-forward합니다.
-이어서 작업 워크트리를 정리하고, 프로젝트 정책에 따라 로컬 브랜치를 삭제하며 지정된 정리 작업을 완료합니다
-([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
-이제 기본 브랜치에는 `chore(merge): integrate dev-<slug> into <base>` 커밋이 기록됩니다. 에이전트는 이후
-`devkit workflow next` 호출 시 `--given dev-integration` 옵션을 전달하고, 승인 권한 근거(authority)와 함께 최종 결과를 사용자에게 보고합니다.
+로컬 통합은 대상 체크아웃 밖에서 결과를 구성하고 베이스를 fast-forward하며 fetch·push 없이 정해진 워크트리·브랜치를 정리합니다.
+`landed_sha`가 반영을 확인합니다. `status=completed`는 Git 효과를 뜻하고
+`verification=pending`은 Host의 전달 검증이 남았음을 나타냅니다.
 
-## 다양한 작업 변형
+반영된 의존성을 동기화한 뒤 새 프로세스에서 자산 동기화, 생성물 검사와 필수 lint·타입·규칙·영향 테스트를 실행합니다.
+오래된 생성물은 최종 검사 전에 재생성·커밋합니다.
+영향 테스트는 저장한 병합 전 대상을 기준으로 선택하고 최종 검사 HEAD와 실제 결과를 보고합니다.
+로컬 오케스트레이션 배치는 선택한 병합·수리 후 결합 대상을 한 번 검증할 수 있습니다.
+실패하면 전달은 대기 상태이며 대상을 수리하고 재검사합니다. 병합 재실행이나 자동 롤백은 하지 않습니다.
 
-- **세션 깊이(Session depth):** 경미한 작업의 경우 별도의 스펙, 엔벨로프, reconcile 문서를 생성하지 않습니다. 하지만 이 경우에도
-  테스트 실행, 코드 리뷰, 단계별 커밋은 철저히 진행되며, 최종 응답이나 PR 본문에 변경 내역, 작업 강도, 리뷰 및 검증 결과를 명확히 보고합니다. 통합 시에는 이 결과를
-  `prepare`와 `integrate` 양쪽에 명시적인 `--claims`로 전달합니다. 클레임이 없거나 유효하지 않으면 `INTEGRATION_NOT_READY`와
-  증거 `SESSION_CLAIMS_INVALID`로 거부되며, 클레임만 바로잡으면 되고 소스를 바꿀 필요는 없습니다.
-- **로컬 오케스트레이션 모드:** 사용자의 지시에 따라 `development-worker` 서브에이전트가 격리된 작업 워크트리에서 구현 턴을 수행합니다.
-  호스트 에이전트는 반환된 변경 범위를 `uv run devkit spec worker inspect`로 검사합니다. 이 명령은 해당 턴의 쓰기를 승인된 범위와
-  대조하고, 누적 규칙 검사는 기본 브랜치와의 merge base를 기준으로 실행합니다(`--rules-base`로 바꿀 수 있습니다). 반려된 변경 사항은
-  유닛 진행을 차단하는 문제(problem) 레코드로 등록됩니다.
-- **정책 기반 자동 승인(`auto`):** 공유 기본 설정에서 `dev-integration = "auto"`로 구성된 경우, 코드 리뷰, Living Spec 반영,
-  필수 검사가 모두 충족되면 게이트가 정책에 따라 자동 승인되며 보고서에 `authority: policy`가 명시됩니다.
-- **풀 리퀘스트 필수 정책:** `[worktree] pull_request = "required"` 설정 환경에서는 로컬 통합 경로가 `WORKTREE_PR_POLICY` 오류로
-  거부됩니다. 에이전트는 `--route pull-request` 옵션을 사용하며, 원격 CI 검사와 필수 리뷰가 통과된 후 최종 병합됩니다.
+## 변형
 
-선택 구성 요소인 MCP 런타임은 이 핵심 통합 경로에 필수적이지 않습니다. 워크플로 수명 주기 제어는 전적으로 CLI를 통해 이루어지며, 런타임은
-공유 아티팩트(shared artifact) 조회에만 활용됩니다
-([`CAP-MCP-runtime-registration`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문)).
+- **Session:** 유닛·엔벨로프·조정 기록 없이 대화나 PR 본문에 변경·강도·리뷰·검사를 보고합니다.
+  통합은 claims나 작업 식별 인자 없이 명시적 소스 브랜치만 받습니다.
+- **Local-orchestrated:** Host가 워커의 커밋된 턴과 누적 규칙을 검사하고, 정확히 승인된 수명 주기 작업에 git-operator를 재사용할 수 있습니다.
+  결정·의미적 충돌 처리·결과 수용은 Host에 남습니다.
+- **PR 필수:** `--route pull-request`를 사용하며 플랫폼 필수 검사·리뷰와 소스 고정을 유지합니다.
+  검사 대기 중인 미병합 PR은 새 준비와 권한 확인 후 병합합니다.
+- **생성물 충돌 seed:** `INTEGRATION_GENERATED_SEEDED`가 seed·재생성 대상을 알려 줍니다.
+  Host가 동기화 후 재생성하며 통합 자체는 생성기를 실행하지 않습니다.
 
-## 문제 해결
+## 부분 효과 복구
 
-| 보이는 상황 | 해야 할 일 |
-| --- | --- |
-| 제안된 변경 사항에 동의하지 않는 경우 | 기본 브랜치에 아무것도 병합되지 않습니다. 에이전트는 `devkit workflow return --unit <dir> --to review-refine --note "..."` 명령을 실행하여 검토·수정 단계로 워크플로를 되돌립니다. |
-| `INTEGRATION_AUTHORITY_REQUIRED` 또는 `INTEGRATION_REQUEST_STALE` | 다이제스트가 누락되었거나 승인 이후 변경 범위가 바뀌었습니다. 준비 명령을 다시 실행하고 현재 범위를 승인하십시오. |
-| `INTEGRATION_TARGET_MOVED` | 통합 대상 커밋을 생성한 뒤 기본 브랜치에 새로운 변경이 발생한 경우입니다. 기존 코드는 변경되지 않습니다. 기본 브랜치의 최신 변경을 작업 브랜치로 병합한 후 다시 통합을 준비하십시오. |
-| `WORKTREE_BLOCKED` | 유닛에 미해결 문제(problem)나 미답변 질문이 남아 있는 상태입니다. [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)를 참고하십시오. |
-| `INTEGRATION_RUNTIME_IN_WORKTREE` | 정리 대상인 작업 워크트리 내부에서 CLI 명령어가 실행된 경우입니다. 워크트리 외부의 런타임 환경에서 다시 준비 명령을 실행하고 승인하십시오. |
-| `WORKTREE_RUN_FROM_BASE` | 명령을 정리 대상 워크트리 안에서 실행한 경우입니다. 기본 체크아웃의 devkit 프로젝트를 `-w`로 지정하여 다시 실행하십시오. |
-| `INTEGRATION_RULE_RUNTIME_MISMATCH` | 브랜치의 동기화된 규칙이 실행 중인 런타임에 없는 코드를 import합니다. 대개 브랜치가 새로 추가한 규칙입니다. 아무것도 변경되지 않았고 소스도 고칠 필요가 없습니다. 에이전트는 사용자가 별도로 권한을 준 경우에만 브랜치 코드로 빌드한 런타임을 사용해 기본 체크아웃에서 통합을 실행하며, 규칙을 수정하거나 준비 검사를 건너뛰지 않습니다. |
-| `INTEGRATION_RECEIPT_READER_CHANGED` | 작업 브랜치가 자체 설치 기록(receipt)을 해석하는 리더 로직 자체를 변경한 경우입니다. 아무것도 병합되지 않으므로, 불일치 원인을 먼저 해소한 후 재시도하십시오. |
-| 병합 후 정리 단계가 미완료 상태로 남은 경우 | `devkit worktree status` 및 Git 상태를 확인하십시오. 브랜치가 남아 있다면 `devkit worktree finish <branch> --merge --local-only`를 다시 실행하거나, `devkit spec proposal prune <slug>` 등 해당 정리 명령을 직접 실행합니다. 병합 작업 자체가 중복 실행되지는 않습니다. |
-| 작업 결과를 즉시 확정하기 어려운 경우 | Git, 워크트리, 풀 리퀘스트 상태를 먼저 점검한 뒤, 아직 완료되지 않은 것으로 명확히 확인된 정리 작업만 선별하여 실행하십시오. |
-| 재시도 한도를 초과했거나 도구 실행이 실패한 경우 | 에이전트는 원인 분석과 명확한 증거를 첨부하여 `exception` 단계로 진입하며, 한도를 우회하기 위해 임의로 신규 태스크를 생성하지 않습니다. |
+불명확한 작업을 반복하기 전에 Git·워크트리·PR 상태를 확인합니다.
+확인된 병합 뒤 정리만 남으면 이미 병합된 상태를 확인하는 finish나 정확한 확장 명령을 사용합니다.
+정상 통합에는 이미 정리가 포함됩니다.
+`INTEGRATION_TARGET_MOVED`는 새 준비가 필요하고 `INTEGRATION_REQUEST_STALE`은 제시한 범위가 바뀌었다는 뜻입니다.
+미응답 질문·미해결 문제는 [문제와 예외 처리](handle-delivery-problems-and-exceptions.md)를 따릅니다.
+경로와 복구의 자세한 설명은 [통합](../areas/integration.md)에 있습니다.
 
-전체 통합 오류 코드 목록은 `CAP-INT-mcp-services`를 참고하십시오. 관련 영역: [전달](../areas/delivery.md),
-[통합](../areas/integration.md), [워크트리](../areas/worktree.md).
+## 출처
+
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)
+- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)
+- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/integration/CAP-INT-mcp-services.md) (영어 원문)
+- [CAP-MCP-runtime-registration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/mcp/CAP-MCP-runtime-registration.md) (영어 원문)
+- [CAP-WT-task-worktrees](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md) (영어 원문)

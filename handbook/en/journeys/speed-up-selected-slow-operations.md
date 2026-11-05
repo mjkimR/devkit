@@ -1,8 +1,9 @@
 ---
 sources:
-  CAP-DIST-content-packages: 71d426703b854a24bdce4cd0c44b130ed8a106dc
-  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
-  CAP-DLV-performance-pass: b37939e6d8e45835bae34bf596322b6bdc5d74b3
+  CAP-DIST-content-packages: 2d99bc80b78d361bb4cad5caa3df90ad9e1a936f
+  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
+  CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
   UC-speed-up-selected-slow-operations: 894ab77ba693970784eb66025a03e2a4b955e452
 title: Speed up selected slow operations
 ---
@@ -10,23 +11,29 @@ title: Speed up selected slow operations
 # Speed up selected slow operations
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -59,9 +66,9 @@ next try. The `performance-pass` playbook makes the work measurable: you pick th
 unprofiled and interleaved, uses a profiler only to find where the time goes, and applies only the speedups you agree
 to, each committed with its before and after numbers and evidence that behavior did not change.
 
-Source: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-speed-up-selected-slow-operations.md),
-contract [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-performance-pass.md),
-playbook [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.5/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md).
+Source: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-speed-up-selected-slow-operations.md),
+contract [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md),
+playbook [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md).
 Maintenance cost is a different job: [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md),
 whose application procedure this playbook reuses.
 
@@ -69,7 +76,7 @@ whose application procedure this playbook reuses.
 
 - The opt-in `maintenance` catalog bundle is selected with `all` (`uv run devkit add maintenance`) or
   `maintenance:performance`. Both also deploy `review-refactor`, which this playbook needs
-  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
+  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
 - Know which operations matter: the exact command, its working directory and environment, and the metric (wall time,
   subprocess count or peak memory). A goal is optional.
 - Keep the machine quiet while it measures. No timing script ships with the playbook; the agent uses an installed
@@ -80,7 +87,7 @@ whose application procedure this playbook reuses.
 1. **Invoke.** Run `/devkit-playbook` and pick `performance-pass`, fetch it with
    `uv run devkit playbook get maintenance/performance-pass`, or confirm it when `/spec` offers it. It loads on demand
    and never runs because it is installed
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
 2. **Intake.** The agent records the run ID, repository, `HEAD`, dirty paths, earlier reports, the report destination
    and the environment (machine, operating system, runtime versions, current load). You name each target. The run is
    in `survey` mode (find and rank, apply nothing) or `targeted` mode (measure and apply what you approve).
@@ -146,3 +153,11 @@ Every applied change was agreed, preserves behavior, and is committed alone with
 differential evidence, reviewed and integrated under its own approval. Every reported saving comes from unprofiled,
 interleaved runs in one session, ending with a final comparison against the intake revision. Invoking or measuring
 alone changes nothing, and `review-refactor`'s own intake and decision rounds never start.
+
+## Optional history stays separate
+
+The default local report and completion procedure work without maintenance history.
+Only an explicit companion-history request starts capture; command installation and this playbook's invocation
+start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
+later integration changes append amendments rather than rewrite the published report.
+See [Record a maintenance run](record-a-maintenance-run.md).

@@ -1,42 +1,49 @@
 ---
 sources:
-  ARCH-08-1-agent-output: 6b76bd19787465ed1e7ec7aee1904077cc75042c
-  CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
-  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
-  CAP-DLV-idea-incubation: c1ff3be1b056ec9d5746689d189c17fdde8bee89
-  CAP-DLV-incubation-sdd-baseline: 8899fda9b8975eb5cf9848c226df2ee8f43abc14
-  CAP-GOV-spec-rules: d6966cab23d742d0782429acf8acaba4bcbca90d
-  CAP-HARN-agent-guidance: 3e6c66d7ea068a580cc1ee82308708d407dab6bd
-  CAP-HARN-command-mount: ca46e4fab66858d2ee2a89c4a8cd676ad6b0a717
-  UC-adopt-in-an-existing-repository: 37265d4dcac0d34967bb003908a49d0df4a036a8
-  UC-adopt-sdd-from-incubation: 84cab126d6e7b0c498c33f38a07531ed16c0c6d3
-  UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
-  UC-incubate-an-idea: ba73c68267ca32979313705291d52f89febb5985
+  ARCH-08-1-agent-output: 86a790e9a7ff89af5e69e19a19746d3e0cde4f85
+  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
+  CAP-DLV-adaptive-development: 120b77c7814f67b082a728d0fdbec0108b852b00
+  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
+  CAP-DLV-sdd-baseline-adoption: bb6fc66abb97dd0113a4864be4a8dbeca761c704
+  CAP-GOV-spec-rules: acbf3761f19f3d39c667de232c2808e62d18c23e
+  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
+  CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
+  CAP-HARN-command-mount: 644fbd5907cc45cd5ea5e2c30d63c381e68c9457
+  UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
+  UC-adopt-sdd-from-adaptive-development: 50f14a785badd6a92574145079875b05eca9eede
+  UC-advance-an-idea: 0ce93e70e07d5a6a3d120257d9e318f680aec3e1
+  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
-  UC-route-development-intent: b3ee3ac9c76d14a4b97f0645eef8954f339330d5
+  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
 title: Harness
 ---
 
 # Harness
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -83,21 +90,21 @@ the root `AGENTS.md` block. The `spec` pointer tells every session to check the 
 | Preset | How it is selected | What it brings |
 | --- | --- | --- |
 | `spec:core` | automatically | lifecycle guidance, the `AGENTS.md` pointer, the five lifecycle rules, the proposal template, skills, workflows, role contracts, playbooks |
-| `docs:core` | automatically | the shared writing instructions, document templates and the nine document rules |
+| `docs:core` | automatically | the shared writing instructions, document templates and the ten document rules |
 | `docs:docs-skeleton` | `devkit add docs:docs-skeleton` | a seeded `docs/` tree, written once where absent |
 
 Opt out with `[presets] spec = false` in `.devkit/config.toml`. Never edit managed or projected files: change
 them through `devkit override create` or your project's own bundle.
 
-## SDD or incubation
+## SDD or adaptive development
 
 `[development] approach` in `.devkit/config.toml` is the project's shared choice: `sdd` (the default when it is
-absent) or `incubation`. Installing or selecting bundles never changes it. Under incubation the `spec` guidance
-steps aside: ordinary work follows the project's incubation guidance and its independent checks, without implicit
+absent) or `adaptive-dev`. Installing or selecting bundles never changes it. Under adaptive development the `spec` guidance
+steps aside: ordinary work follows the project's adaptive development guidance and its independent checks, without implicit
 Units, envelopes or classification, while documents already bound to an SDD workflow keep their checks. The opt-in
-`incubation` bundle of `devkit-catalog` supplies that guidance and its `/incubate` entry; see
-[Incubate an idea](../journeys/incubate-an-idea.md). Moving a retained incubation product to SDD is the
-`sdd-baseline` playbook, described in [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md).
+`adaptive-dev` bundle of `devkit-catalog` supplies that guidance and its `/adaptive-dev` entry; see
+[Advance an idea](../journeys/advance-an-idea.md). Moving a retained adaptive development product to SDD is the
+`sdd-baseline` playbook, described in [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md).
 
 ## Start a piece of work
 
@@ -109,7 +116,7 @@ Units, envelopes or classification, while documents already bound to an SDD work
    `devkit playbook search` and offers a playbook only when it names the exact operation you asked for; nothing runs
    until you confirm.
 3. The skill reads `devkit spec policy` and proposes a classification for you to confirm: `task-kind` (feature,
-   bugfix, refactor), `planning-depth` (`session`, `spec` or `proposal`, chosen by what must be settled before
+   bugfix, overall-refactor), `planning-depth` (`session`, `spec` or `proposal`, chosen by what must be settled before
    implementation, not by size) and per activity a mode and `activity-effort`.
 4. It drives the matching workflow `sdd-<planning-depth>[-<task-kind>]` (`CAP-DLV-delivery-workflows`). Unit
    depths write `spec.md`, `plan.md` and `tasks.md` before production code; a `session` task writes no Unit.
@@ -138,9 +145,9 @@ stays a draft until it is split. The full walk-through is
 | `spec-entrypoints` | derive capability and use case entrypoints from spec bundles |
 
 Skills load only the instructions and references of the current phase, and each reference says when to read it.
-Nine role contracts are deployed for delegation: `challenger`, `scout`, `code-reviewer`, `reconcile-reviewer` and
+Ten role contracts are deployed for delegation: `challenger`, `scout`, `code-reviewer`, `reconcile-reviewer` and
 `ux-reviewer` for checks, `triage` and `decomposer` for Backlog (grouping open feedback, splitting a draft), and
-`planning-worker` and `development-worker`. Each runs `devkit get-context spec` itself. Which model a role runs on is
+`planning-worker`, `development-worker` and `git-operator`. Each runs `devkit get-context spec` itself. Which model a role runs on is
 distribution's setting, not the harness's ([Distribution](distribution.md)).
 
 ## Write documents the way the rules expect
@@ -164,7 +171,7 @@ The bundles' rules check what these instructions describe; see the document and 
 devkit never seeds an existing `docs/` tree on its own. The `brownfield-adoption` playbook installs, takes a
 baseline, contains legacy Markdown under `docs/materials/_legacy/` and records any deferral you decide; see
 [Adopt in an existing repository](../journeys/adopt-in-an-existing-repository.md). A project that grew under
-incubation uses `sdd-baseline` instead. Two more playbooks ship with the bundle: `feedback-hygiene` (triage open
+adaptive development uses `sdd-baseline` instead. Two more playbooks ship with the bundle: `feedback-hygiene` (triage open
 feedback in one batch) and `adr-compaction` (consolidate related ADRs without changing a decision).
 
 ## Policies the guidance follows
@@ -194,7 +201,7 @@ point only when it runs. `devkit spec --version` and `devkit docs --version` pri
 | Commands | For |
 | --- | --- |
 | `devkit docs resolve`, `refs`, `list`, `search` | finding documents |
-| `devkit spec new`, `devkit spec proposal new`, `accept`, `handoff` | creating spec bundles and incubating proposals |
+| `devkit spec new`, `devkit spec proposal new`, `accept`, `handoff` | creating spec bundles and planning proposals |
 | `devkit spec policy` | reading project policy |
 | `devkit spec entrypoints` | deriving code entrypoints |
 | `devkit spec scope collect`, `compare`, `register`, `query`, `release` | observing and comparing work scopes |
@@ -206,16 +213,26 @@ or one JSON object as `ARCH-08-1-agent-output` describes, and raises `SPEC_`- or
 `[NEXT_CMD: ...]` line gives the exact command for the next page. Exit `0` is success with or without notices, `1` a
 warning under `--strict`, `2` a command that could not run or refused.
 
+## Lifecycle executor and command design
+
+Ten SDD roles include git-operator, a reusable executor for exact current Host-authorized lifecycle jobs.
+The Host keeps decisions, scheduling and result acceptance. Git Operator uses lean; scout uses compact;
+other role settings inherit unless overridden. Resource levels never change activity-effort or write authority.
+
+`command-design` is an opt-in catalog instruction for necessary justfile, CLI and MCP entry points.
+It identifies operation/caller, reuses suitable paths and checks additions from their documented execution context.
+See [Design necessary command entry points](../journeys/design-command-entrypoints.md).
+
 ## Sources
 
-- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md):
+- [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md):
   the bundle's presets, constitution, skills, role contracts, playbooks, templates and policies.
-- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-command-mount.md):
+- [CAP-HARN-command-mount](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-command-mount.md):
   how `devkit spec` and `devkit docs` mount and the conventions their subcommands share.
-- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md):
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md):
   the workflows and role contracts the skills drive.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md):
   the rules the bundles deploy.
-- [CAP-DLV-idea-incubation](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-idea-incubation.md)
-  and [CAP-DLV-incubation-sdd-baseline](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md):
-  the incubation approach and the move to SDD.
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
+  and [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md):
+  the adaptive development approach and the move to SDD.

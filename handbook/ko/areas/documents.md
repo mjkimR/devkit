@@ -1,8 +1,8 @@
 ---
 sources:
   ADR-document-id-aliases: null
-  ADR-document-package: null
-  ADR-steering-documents-directory: null
+  ADR-document-system: null
+  ADR-steering-documents: null
   ADR-terminal-statuses-are-historical: null
   CAP-DOCS-document-lookup: null
   CAP-DOCS-document-model: null
@@ -11,29 +11,35 @@ sources:
   UC-find-the-right-documents: null
   UC-keep-the-living-spec-consistent: null
 title: 문서
-translated_from: en/areas/documents.md@8de6296737b9df86
+translated_from: en/areas/documents.md@c7b672b9fe70d7ef
 ---
 
 # 문서
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -62,7 +68,7 @@ translated_from: en/areas/documents.md@8de6296737b9df86
 <!-- /handbook:generated -->
 
 문서(documents) 영역은 devkit이 무엇을 Living Spec 문서로 인식하고 사용자가 이를 어떻게 찾는지 정의합니다. 이 영역은
-`devkit-docs` 패키지가 맡으며(`ADR-document-package`), 스펙 기반 전달 패키지인 `devkit-spec` 없이도 동작합니다. 모든 기능,
+`devkit-docs` 패키지가 맡으며(`ADR-document-system`), 스펙 기반 전달 패키지인 `devkit-spec` 없이도 동작합니다. 모든 기능,
 유스케이스, UX 문서, 결정, 제안, 스펙, 피드백 기록은 프런트매터에 ID가 선언된 Markdown 파일입니다. devkit은 호출할 때마다
 색인을 생성하며, 이를 기반으로 `devkit docs resolve`, `refs`, `list`, `search` 네 가지 명령을 제공합니다. Living Spec 자체는
 [개념](../concepts.md)에서 소개하며, 변경 작업에 필요한 문서를 찾는 엔드투엔드 과정은
@@ -71,7 +77,7 @@ translated_from: en/areas/documents.md@8de6296737b9df86
 ## 문서의 판별 기준
 
 다음 조건을 모두 만족해야 문서로 취급됩니다
-([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)).
+([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)).
 
 - `docs/` 또는 `specs/` 디렉터리 아래의 `*.md` 파일이어야 하며, `README.md`, 템플릿, 심볼릭 링크가 아니고 숨김(dot) 디렉터리 아래에
   있지 않아야 합니다.
@@ -94,7 +100,7 @@ ID 접두사는 문서의 종류를 나타냅니다. `CAP`은 기능(capability)
 ### 스티어링 문서
 
 `docs/steering/`에는 계약도 증거도 아닌 프로젝트 전반의 배경 지식, 예컨대 용어집이 들어갑니다
-(`ADR-steering-documents-directory`). 스티어링 문서(steering document)는 `title`과 `summary` 프런트매터만 있고 ID가 없으므로
+(`ADR-steering-documents`). 스티어링 문서(steering document)는 `title`과 `summary` 프런트매터만 있고 ID가 없으므로
 색인 대상 문서도, 검색 후보도 아닙니다. `devkit get-context docs`가 모든 스티어링 파일의 제목과 요약을 나열하므로, 에이전트는
 작업과 관련 있을 때만 해당 파일을 읽습니다. 문서 규칙은 이 디렉터리의 범위를 제한하고 파일이 인용하는 ID를 검사합니다.
 
@@ -129,7 +135,7 @@ ID 접두사는 문서의 종류를 나타냅니다. `CAP`은 기능(capability)
 `DOCS_ID_DUPLICATE`와 함께 종료 코드 `2`로 끝납니다. `refs`와 `list`는 결과를 페이지 단위로 나누어 출력하므로, 안내되는
 `[NEXT_CMD: ...]` 명령을 실행하여 다음 페이지를 조회할 수 있습니다. 모든 명령은 `--format json`을 지원합니다. 세부 옵션,
 출력 필드, JSON 키는
-[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-lookup.md) (영어 원문)에서
+[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-lookup.md) (영어 원문)에서
 확인할 수 있습니다.
 
 ### 이력 문서는 기본적으로 숨겨집니다
@@ -159,7 +165,7 @@ uv run devkit docs search "cache policy" --kind decision --kind capability --his
 `docs/steering/glossary.yaml`에 용어 동의어를 등록해 두면 검색어가 확장되어 다른 언어로 작성된 용어를 검색할 때 유용합니다.
 search 엑스트라 패키지가 설치되지 않은 경우 어휘 기반으로만 순위가 매겨지며, `uv add 'devkit-docs[search]'`(`devkit-spec[search]`에 포함됨)를 설치하면
 하이브리드 검색 순위를 활용할 수 있습니다. 자세한 내용은
-[CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)를
+[CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md) (영어 원문)를
 참고하십시오. 순위 산정 엔진 자체의 동작 원리는 [검색](search.md)에서 설명합니다.
 
 ## 네임스페이스를 활용한 모노레포 지원
@@ -177,7 +183,7 @@ path = "services/api"
 `DOCS_CONFIG_INVALID`로 실패시킵니다.
 
 네임스페이스는 문서를 *탐색(browse)*하는 범위를 좁혀줄 뿐, 존재하는 문서 자체를 제한하지는 않습니다
-([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-namespaces.md) (영어 원문)).
+([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-namespaces.md) (영어 원문)).
 
 - `list`와 `search`는 기본적으로 현재 작업 디렉터리의 네임스페이스 문서와 전역 문서를 함께 보여줍니다. `--namespace <NAME>`으로
   특정 네임스페이스를 지정하거나, `--namespace global`로 전역 문서만 조회하거나, `--all-namespaces`로 모든 네임스페이스의 문서를
@@ -195,3 +201,15 @@ path = "services/api"
 | `CAP-DOCS-document-lookup` | `resolve`, `refs`, `list` 명령의 세부 옵션, 출력 형식, 반환 코드 |
 | `CAP-DOCS-document-search` | `devkit docs search`의 후보 선정, 최상단 고정, 용어집, 검색 모드 |
 | `CAP-DOCS-namespaces` | 모노레포 네임스페이스 구성 및 범위 선택 |
+
+## 네임스페이스 스티어링과 안정적인 별칭
+
+등록된 네임스페이스는 `docs/packages/<name>/` 아래 선택적으로 `steering/glossary.md`, `steering/glossary.yaml`,
+`steering/ux-objects.md`를 둘 수 있습니다. 에이전트는 전역 목록과 해당 로컬 목록을 함께 읽으며 로컬 용어는 그 네임스페이스에만 적용합니다.
+기존 패키지 루트 용어집은 수동 이동·병합이 필요합니다.
+검색은 전역 동의어 다음 선택된 네임스페이스 동의어를 확장하며 선택하지 않은 네임스페이스는 영향을 주지 않습니다.
+
+네임스페이스 마일스톤은 `docs/packages/<name>/roadmap/`, done·dropped 기록은 그 `_archive/`에 둡니다.
+문서 ID는 저장소 전체에서 유일합니다. 별칭 수리는 현재 색인 문서, 스티어링 코드 스팬,
+용어집 Owner 셀과 설정된 빠른 참조에 적용합니다. 과거 기록과 자료는 이전 표기를 유지합니다.
+`RULE-decision-supersession`이 ADR 전체·부분 대체의 상호 참조를 검사하며 의미적 범위는 리뷰가 필요합니다.

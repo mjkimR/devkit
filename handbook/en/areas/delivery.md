@@ -1,52 +1,62 @@
 ---
 sources:
-  CAP-DLV-cli-and-output: c4938daef997d6a15c536fe496279442cf5ce5a5
-  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
-  CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
-  CAP-DLV-human-interaction: 8e7d688916e7c8dea4d0f26e562191a4a6c423cc
-  CAP-DLV-idea-incubation: c1ff3be1b056ec9d5746689d189c17fdde8bee89
-  CAP-DLV-incubation-sdd-baseline: 8899fda9b8975eb5cf9848c226df2ee8f43abc14
-  CAP-DLV-performance-pass: b37939e6d8e45835bae34bf596322b6bdc5d74b3
-  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
-  CAP-DLV-proposal-incubation: d1a2660dea8664dd37171ac723f4d54305ae72be
-  CAP-DLV-release-handbook: ef9a59be9a4712194710b04969671a12582c28d7
-  CAP-DLV-review-refactor: a8eac89c524a4351fd3e5044fb3972beee3014c3
-  CAP-DLV-spec-bundles: b743cb4567d0a510097b1dc902a9a066f962c6cc
-  CAP-DLV-weekly-report: 0499a11d003f2b19a0ead794315b96ab8a09c22f
-  CAP-DLV-workflow-definitions: 3e9e99925c9eb336af9bab4dd7d06d0468d70851
-  CAP-DLV-workflow-envelopes: ba3e36ff09f879615ad60389b433b58cdf4097ee
-  CAP-DLV-workflow-orchestration: 7617520b7cd6028e8eda909cf6b3171822ad02c1
-  CAP-INT-mcp-services: ee8088a63e89abb3519c1744c540c41e95352ea2
-  UC-drive-development-to-integration: ede0ca1f9647c2e9e1a520d97818d09fa7bcb5e4
-  UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
-  UC-incubate-and-hand-off-a-proposal: 725298a4a0f09bb0316fe05459aad3097bcc2a4e
+  CAP-DLV-adaptive-development: 120b77c7814f67b082a728d0fdbec0108b852b00
+  CAP-DLV-cli-and-output: 172b26ced058b74e1e73cbf864296df07af9c2a6
+  CAP-DLV-deep-research: 08c383e1a9a76e3e47679db645eeb7a751126b8e
+  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
+  CAP-DLV-design-exploration: 4fad9083aa058047d39e6956ff63b76f8232bd10
+  CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
+  CAP-DLV-human-interaction: 7926c28e1951896774e56bd201fbd5e3a474a673
+  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
+  CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
+  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
+  CAP-DLV-proposal-planning: 65becdbbd5615d0f69c7fae14d1a0c91d91204d1
+  CAP-DLV-release-handbook: 9d4b4799c61ab2d689d741f3df61323b9cd6689a
+  CAP-DLV-review-refactor: 80b523a1ee09e2cff326ff4114c3c83c5461a666
+  CAP-DLV-sdd-baseline-adoption: bb6fc66abb97dd0113a4864be4a8dbeca761c704
+  CAP-DLV-spec-bundles: 4920f894d479c8c4a54379c07ed130d81356bec3
+  CAP-DLV-uiux-improvement: 5b4b328d5933e2bcd67b719eff3c78a10e2386f4
+  CAP-DLV-weekly-report: ad32dcc4519c5757150443dcb6079f919578d2a4
+  CAP-DLV-workflow-definitions: e2258d0a57c60d8b5ce18f32edcde3748b85afeb
+  CAP-DLV-workflow-envelopes: d9930340d63dab836aa1938f2e6cd2a8c4a23230
+  CAP-DLV-workflow-orchestration: a84a1b608390b8b2c825c2be5d8ff5a8f101e828
+  CAP-INT-mcp-services: 6978ff46427e1a1091c65b488ca9c76734b4a4c0
+  UC-drive-development-to-integration: 9eeb5fda80dba7727d7680c91f2989a521c3fd69
+  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
+  UC-plan-and-hand-off-a-proposal: e2ddba8f64ed51705b1f02682e562b20f0d34e37
   UC-publish-a-weekly-report: 9e5de0abff784fa43c00851d8b03cf8b59d60129
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-review-and-refactor-accumulated-slop: acbb724a9d06093b139e8d8c22682ae7d7f408b2
-  UC-route-development-intent: b3ee3ac9c76d14a4b97f0645eef8954f339330d5
+  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
 title: Delivery
 ---
 
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -74,296 +84,181 @@ title: Delivery
 - [Glossary](../glossary.md)
 <!-- /handbook:generated -->
 
-Delivery is how a piece of work travels from "I want this" to a merged change. devkit offers two development
-approaches for it: spec-driven development (SDD), where the procedure is kept as data (workflow definitions declare
-the stages, checks and gates, and a CLI tells you or your agent where a unit of work stands and what comes next), and
-incubation, a lighter loop for a product that is still being discovered. This page starts with the choice, walks
-through SDD in the order you meet it, then covers incubation, the move from incubation to SDD and the maintenance
-playbooks. For the vocabulary, see [Concepts](../concepts.md).
+Choose a development approach before selecting a delivery procedure. A project shares
+`[development] approach = "sdd"` (the default) or `"adaptive-dev"` in `.devkit/config.toml`.
+`uv run devkit config show` reports the effective value and its source. Installing a package or selecting a bundle
+never changes it. [Concepts](../concepts.md) explains the vocabulary.
 
-## Choosing an approach
+## SDD: classify the work
 
-The approach is one shared project setting, `[development] approach = "sdd" | "incubation"` in
-`.devkit/config.toml`, `sdd` when absent. `uv run devkit config show` reports it and its source, and
-`uv run devkit spec policy` starts with a `[DEVELOPMENT_APPROACH: approach=... source=...]` line
-([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md)).
-Installing `devkit-spec` or selecting the `incubation` bundle changes nothing here: the agent reads the setting
-before it routes work, and it never switches the approach on its own.
+SDD classifies work by `task-kind` (feature, bugfix, overall-refactor), `planning-depth` (session, spec, proposal)
+and `activity-effort` (low, medium, high). Depth describes what needs settling before implementation:
 
-| | SDD | Incubation |
-| --- | --- | --- |
-| Suits | Work whose requirements and contracts deserve a written record | An idea whose product is still taking shape |
-| Entry | `/spec <intent>` | `/incubate` |
-| Leaves behind | Spec bundles or proposals, envelopes, decision records and a reconciled Living Spec | `.devkit/incubation.md` (current facts only), the code and any current documents you keep |
-| Approvals | Gates (`plan-intent`, `plan-accept`, `dev-integration`) | Your direction when the goal or constraints change; integration approval as usual |
+- **Session:** no open direction or contract question; no Unit, envelope or reconcile document.
+- **Spec:** a clear direction with a contract to write before code.
+- **Proposal:** the direction itself needs Planning and acceptance before Development.
 
-While the approach is incubation, the SDD lifecycle commands (`devkit spec new`, `devkit spec proposal new`,
-`accept` and `handoff`) refuse before changing anything with `SPEC_LIFECYCLE_INACTIVE`. Generic workflows, policy,
-scope and worker inspection and document lookup stay usable, and SDD records that already exist keep their checks
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)).
-The sections up to [Orchestration and integration](#orchestration-and-integration) describe SDD;
-[Incubation](#incubation) describes the other approach.
+A bugfix reproduces a defect against an agreed contract and records Red then Green evidence.
+Overall-refactor is a project-wide structural change with no new behavior and no Unit; a local refactor follows
+the feature route. Medium effort requires an initial independent code review. High effort uses bounded review
+rounds; low permits self-review. Effort never removes a required check or gate.
 
-## The delivery model
+At each new intake, `/spec` searches once for a playbook matching the requested operation and scope.
+A matching candidate is offered before edits and runs only on your confirmation. Follow-ups within the same task
+and explicit entries skip discovery. A topic match alone does not select a playbook.
 
-Under SDD, every task gets a `task-kind` (`feature`, `bugfix` or `overall-refactor`) and a `planning-depth` before work starts:
+## Plan a proposal
 
-| Depth | When | What it leaves behind |
-| --- | --- | --- |
-| `session` | A small change with no lasting design or contract change | Nothing on disk: the result is reported in the conversation or PR body |
-| `spec` | The change needs a written requirement, plan and Living Spec reflection | A spec bundle under `specs/` |
-| `proposal` | The direction itself must be decided first | A proposal under `docs/proposals/`, later handed off to a spec |
+Backlog creates `docs/proposals/PROP-<slug>/proposal.md`, bound to `sdd-proposal`, and records the agreed intent.
+`size: XL` means more than one deliverable/spec or mixed task kinds and is decomposed before Planning.
+Run `uv run devkit spec proposal check <slug>` before changing a draft; an existing `plan-<slug>` owns it.
 
-Each combination maps to exactly one workflow: `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`,
-`sdd-spec-bugfix`, `sdd-proposal` and `sdd-overall-refactor`. There are no conditional stages: if the work turns out
-bigger, the depth is raised (a new Unit) rather than a stage switched on. The catalog and the reasoning are in
-[`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md).
-Classification is the journey [Route development intent](../journeys/route-development-intent.md) (`UC-route-development-intent`).
+Planning runs on `plan-<slug>` with the proposal, PADRs, evidence and `target-docs.md` blueprint.
+The agent gathers your questions in one round and presents the final committed proposal and review briefing.
+`uv run devkit spec proposal report <slug>` reads that briefing without shared-artifact publication.
 
-A separate dial, `activity-effort` (`low`, `medium`, `high`), sets how thorough review and verification are for one
-activity. It never removes a gate or a required check: at `low` the author self-reviews, at `medium` a
-`code-reviewer` and a `reconcile-reviewer` check the work once, and at `high` both run in bounded review rounds.
-
-## The engine underneath
-
-The generic engine lives in `devkit workflow`
-([`CAP-DLV-workflow-orchestration`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)).
-A **work unit** is a directory with an anchor file (`spec.md`, `proposal.md`) whose frontmatter records the bound
-workflow. `devkit workflow next --unit <dir>` evaluates each stage's exit checks in order and reports the first
-unmet stage, so agents never re-derive it from prose; a changed definition applies to in-flight work at once.
-
-Definitions are Markdown files with a YAML frontmatter of `stages[]`; their schema, check primitives (`file-exists`,
-`frontmatter`, `envelope-check-pass`, ...) and binding rules are in
-[`CAP-DLV-workflow-definitions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-definitions.md).
-The commands, exit codes and the `[STAGE]`, `[WAITING]`, `[REQUEST]`, `[DELEGATE]` sentinels you see from `next`
-are in [`CAP-DLV-cli-and-output`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-cli-and-output.md).
-
-## Proposals: deciding the direction
-
-A proposal incubates an idea whose direction is not settled
-([`CAP-DLV-proposal-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-proposal-incubation.md)).
-It is a bundle `docs/proposals/PROP-<slug>/` with `proposal.md`, optional preliminary decisions (PADRs), materials,
-feedback and an optional `target-docs.md` blueprint of the intended Living Spec changes. Its lifecycle:
-
-1. **Backlog**: `uv run devkit spec proposal new <slug>` scaffolds a `draft`. Before you edit, split or delete a draft
-   by hand, run `uv run devkit spec proposal check <slug>`; it refuses while Planning is running on `plan-<slug>`.
-   A rough draft may carry `size: XL` (work that would need two or more specs or a different `task_kind`), but it
-   is split (`new --decomposed-from`) or promoted to a milestone before Planning: until then its `plan-intent` is
-   never asked, and nobody edits the size to get past it. The read-only `decomposer` role can propose the split for
-   your decision.
-2. **Planning** runs on the `plan-<slug>` branch: questions, evidence (`scout`) and criticism (`challenger`) as the
-   Planning effort asks, folded into the proposal and its PADRs.
-3. **Acceptance** (`plan-accept`): `uv run devkit spec proposal accept <slug> --by user` records `status: accepted`
-   and the gate in one step. A small, eligible draft can skip Planning with `--direct --note "<reason>"` on the base
-   checkout; run it with `--check` first to see every eligibility condition at once. From the base checkout,
-   `uv run devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user` composes acceptance,
-   integration of `plan-<slug>` and, with `--effort`, the handoff below, once you have approved those effects.
-4. **Handoff**: `uv run devkit spec proposal handoff <slug>` on the `dev-<slug>` branch creates the spec bundle,
-   carries the body, promotes PADRs to ADRs, moves materials and open feedback, rewrites links and removes the
-   proposal. A failed write rolls back and keeps the proposal so you can rerun. This plain form is the Host-run step
-   after the `proposal-handoff` decision and reads no policy itself; from the base checkout,
-   `uv run devkit spec proposal handoff <slug> --effort <level>` reads the policy, prepares `dev-<slug>` and hands off
-   there.
-
-A rejected proposal only changes status; a later hygiene pass records a rejection ADR and deletes it. List active
-proposals with `uv run devkit docs list proposal`; a draft under Planning shows as `reviewing`. The full journey is
-[Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md) (`UC-incubate-and-hand-off-a-proposal`).
-
-## Specs and Units
-
-A spec bundle is the Unit of `spec`-depth work and of every handed-off proposal
-([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)):
-`specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with `spec.md` (the anchor), `plan.md`, `tasks.md`, `reconcile.md`, and the
-`envelopes/` and `decisions/` records. You create one directly with:
+From the retained base checkout, composed acceptance integrates the reviewed Planning result:
 
 ```bash
-uv run devkit worktree start dev-login-flow --no-worktree   # specs live on their dev- branch
-uv run devkit spec new login-flow --summary "Defines how users sign in with email and password."
-uv run devkit spec new crash-on-save --workflow sdd-spec-bugfix   # spec.md only; plan and tasks come later
+uv run devkit spec proposal accept <slug> --by user --mode accept_only
 ```
 
-Each file starts with a `<!-- devkit:skeleton -->` marker; the stage stays open until the `spec-specify`,
-`spec-plan` and `spec-tasks` skills write the real content and remove it. A proposal and a spec never share a slug.
+`accept_and_handoff` also requires handoff authority and a selected `--effort`; after Planning lands it yields with
+verification pending and handoff unstarted. The Host synchronizes and checks the landed runtime, then invokes
+handoff in a fresh process with unchanged authorized scope and effort.
+A conflict-free moved base needs no merge into Planning; a changed proposal scope needs review again.
 
-## Workflow stages
+```bash
+uv run devkit spec proposal handoff <slug> --effort medium
+```
 
-`devkit workflow show <id>` is the authoritative order. In outline:
+The composed handoff prepares `dev-<slug>` and commits its transaction once as a clean child of the reviewed base.
+It turns the proposal into a spec, promotes PADRs, preserves materials and feedback, carries approvals by name and
+rewrites references. A refused handoff commit leaves writes staged in that worktree for repair and commit;
+rerunning the handoff is not the recovery. An eligible settled draft can use direct acceptance on the base after
+an explicit decision. See [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md).
 
-- **Session** (`sdd-session-*`): intent, (reproduce), execute and verify, report, approval, commit, merge; no records.
-- **Spec feature**: `intent`, `specify`, `build-verify`, `review-refine`, `living-spec-draft`, `collect-feedback`,
-  `final-change-report`, `integration-approval`, `integrate`, `merge`.
-- **Spec bugfix**: replaces `specify` and `build-verify` with `characterize`, `plan-tasks`, `reproduce` (a `red`
-  envelope proving the defect) and `fix-verify` (a `green` envelope proving the fix and preserved behavior).
-- **Proposal**: `intent-proposal`, `spike`, `collect-feedback`, `direction-handoff`, `handoff`.
+## Develop a spec
 
-Two stages deserve attention. `living-spec-draft` is where the implementer reflects the change into `docs/`
-(the `spec-sync` skill) and resolves `reconcile.md`; it must finish before integration is approved.
-`collect-feedback` sweeps observations about the repository's own tools into feedback files.
+`uv run devkit spec new <slug>` creates a bundle on `dev-<slug>` under `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`.
+`spec.md`, `plan.md` and `tasks.md` precede production code. For a defect, use `--workflow sdd-spec-bugfix`.
+`uv run devkit workflow next --unit <dir>` reports the authoritative stage and unmet checks;
+`uv run devkit workflow show <id>` shows its full definition.
 
-When a change alters what a person sees, its screens are drafted under `docs/ux/` before code, and an optional,
-read-only `ux-reviewer` can walk the linked use cases through the drafts and score each screen (at most two rounds,
-recorded as `ux-review` envelopes during Planning or before the plan). It is a delegation, never a stage or a gate;
-the implementer later marks each finding `resolved` or `waived`. Every workflow also
-has an out-of-band `exception` stage for a retry cap, a tool failure or an unresolved semantic conflict; see
-[Handle delivery problems](../journeys/handle-delivery-problems-and-exceptions.md)
-(`UC-handle-delivery-problems-and-exceptions`). Driving a spec through these stages is the journey
-[Drive development to integration](../journeys/drive-development-to-integration.md)
-(`UC-drive-development-to-integration`).
+The feature path covers specification, build/verification, review, Living Spec reflection, feedback and a final report
+before integration. The bugfix path adds characterization and Red/Green evidence.
+Screens are drafted in the proposal or spec before code; optional `ux-reviewer` findings are recorded there.
+The retained screens and use-case citations enter `docs/ux/` during reconciliation.
 
-## Gates and approvals
+`reconcile.md` maps the change to durable contracts in `docs/`. Every effort records a reconcile check.
+At medium, a self-check can replace an independent reconcile reviewer only when every affected contract and its
+agreement with the diff is unambiguous and no cross-component interpretation remains. High requires independence.
 
-Gates are where a person (or explicit policy) decides. There are four:
+## Decisions and records
 
-| Gate | Decides | How you answer |
-| --- | --- | --- |
-| `plan-intent` | Goal, scope, verification, kind and depth of a task | `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user` |
-| `plan-accept` | A proposal's direction | `devkit spec proposal accept <slug> --by user` |
-| `proposal-handoff` | Starting Development from an accepted proposal | the Host presents effects, then runs `devkit spec proposal handoff <slug> --effort <level>` (or `accept --mode accept_and_handoff`); no workflow stage checks it |
-| `dev-integration` | Landing one integration unit (one pull request) | `--given dev-integration` on later `next` runs, or PR ready state |
+| Boundary | Decision |
+| --- | --- |
+| `plan-intent` | Goal and scope; an explicit task instruction supplies it. |
+| `plan-accept` | Proposal direction. |
+| `proposal-handoff` | Start Development and its setup/worktree effects. |
+| `dev-integration` | Land the verified change and perform scoped cleanup. |
 
-There is deliberately no gate inside Development: choices within the agreed intent are the executor's, and only a
-problem that would change the agreed goal, scope or contract stops the work.
+Each boundary is `ask` or `auto`; delegation is reported as policy, never as user consent.
+`uv run devkit spec policy` reports approvals, stage switches and Git/feedback policy.
+Within the agreement, the executor makes implementation choices. A change to goal, scope or constraints needs your decision.
 
-Each gate is `ask` (default) or `auto` in `[workflow.approvals]`; `auto` is reported as policy, never as user
-consent, and never skips checks. Stages can be switched off in `[workflow.stages]`. Read the effective policy, as
-agents must, with `uv run devkit spec policy`
-([`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md)).
-The same command reports the Git policy (`[tool.spec] worktree` `auto` or `required`, `[worktree] pull_request`),
-routing (`depth_escalation`) and feedback capture settings.
-
-Request kinds (`approve`, `choose`), decision records and how `devkit workflow return` voids later approvals are
-in [`CAP-DLV-human-interaction`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-human-interaction.md).
-
-## Envelopes and records
-
-An envelope is a YAML file `<unit>/envelopes/<kind>-NN.yaml` that records what a stage or role returned: review
-findings with `P1`/`P2`/`P3` severity, `reverify` closing a review round, `red`/`green` bugfix evidence,
-`feedback` sweeps, `final-report` test/build/lint results, `reconcile-check`, and a `worker` record per run. Files
-are never overwritten; the highest number is current
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)).
-
-Envelopes also **hold** a unit: a `worker` envelope's `problem` that no `resolution` names blocks it, and a
-question without an `answer` envelope makes it wait. While held, no gate passes, no handoff happens and
-`devkit worktree finish --merge` refuses with `WORKTREE_BLOCKED`; `uv run devkit workflow envelope check --unit <dir>`
-shows the hold. Only whoever actually fixed the problem writes the `resolution`.
+Unit envelopes record reviews, rechecks, feedback, final reports, questions and problems without overwriting history.
+An unanswered question or unresolved problem holds the workflow. Only the actor who fixed a problem records its resolution.
+For one fully authored envelope as the sole pending file, `uv run devkit workflow envelope commit --unit <dir>
+--file envelopes/<name>.yaml` keeps normal hooks; source changes and multi-record transactions use ordinary combined commits.
+Session tasks report in conversation or the PR body and create none of these records.
 
 ## Orchestration and integration
 
-In `direct` mode your main agent session (the Host) runs every stage itself. In `local-orchestrated` mode, invoked
-per activity, the Host hands one turn to a one-shot worker in that activity's worktree: a `planning-worker` takes a
-draft proposal on `plan-<slug>` toward `plan-accept`, and a `development-worker` runs a spec Unit on `dev-<slug>`
-up to the final change report, committing at every stage boundary. Workers are the only roles that commit; they
-never push, merge, rebase or amend. Read-only roles (`code-reviewer`, `reconcile-reviewer`, `challenger`, `scout`,
-`ux-reviewer`) return findings that the caller records as envelopes; in Backlog, `triage` groups open feedback and
-`decomposer` proposes a draft's split, both returning a message you decide on.
+In direct mode the Host performs the work. Local-orchestrated work uses one-shot Planning or Development workers
+in their worktrees. Read-only support roles return evidence; workers commit only on their activity branches.
+A reusable `git-operator` executes exact currently authorized lifecycle jobs. The Host retains scheduling,
+semantic choices and result acceptance. Scout defaults to compact; git-operator uses lean, with medium effort where supported.
+These resource levels do not change delivery effort or authority.
 
-When a worker returns, the Host runs `uv run devkit spec worker inspect`, which derives unit, base, head and scope
-from committed records and reports ancestry, outside-scope paths, cleanliness, holds, cumulative rules (against a
-rules base you can set with `--rules-base`) and the next stage; it never repairs or widens scope, and a failed check
-is an error for the Host to decide on. Role contracts and per-host support (Claude Code native, Codex emulated) are
-in section 4.6 of `CAP-DLV-delivery-workflows`. Roles carry no reasoning-effort preset: they inherit the
-session's model, except `scout`, which defaults to a compact model level, and the project can set levels per role
-in `[subagents]`.
+Scope observations distinguish current writes from future Planning scope. Current overlap serializes running work;
+future-only overlap orders handoff/integration without serializing Planning. Partial coverage never proves independence.
+`uv run devkit spec worker inspect` audits the returned turn and cumulative rules against the intended base.
 
-At `integrate`, the work is merged with the base, conflicts are resolved within the approved intent, and only what
-that changed is re-verified. The `spec` readiness provider checks the committed head in an isolated snapshot: stage
-completion, no hold, `spec.md` completed, `reconcile.md` resolved and cumulative CI rules clean. Under
-`pull_request = "required"` every task goes through a pull request; otherwise a local merge via
-`devkit worktree finish --merge` is allowed.
+The Host checks content using the source runtime, then prepares and executes the explicit branch integration.
+After landing, it synchronizes dependencies and assets, regenerates stale tracked artifacts and runs final checks
+in fresh processes. A confirmed Git merge remains `verification=pending` until those checks pass.
+See [Integration](integration.md) and [Drive development to integration](../journeys/drive-development-to-integration.md).
 
-## Incubation
+## Adaptive development
 
-Incubation is delivered by the opt-in `incubation` catalog bundle: install `devkit-docs` and `devkit-catalog`, then
-`uv run devkit add incubation`; `devkit-spec` is not needed. Selecting the bundle deploys `/incubate`, three
-optional support roles and a template, and changes no approach: `/incubate` reads the effective approach first and,
-if it is not `incubation`, stops and shows the configuration change instead of doing product work
-([`CAP-DLV-idea-incubation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-idea-incubation.md)).
+Install docs/catalog and select `uv run devkit add adaptive-dev`. `/adaptive-dev` advances useful clarification,
+bounded experiments, representative implementation and real usage checks without per-change SDD records.
+It checks that the shared approach is `adaptive-dev` before product work. Optional roles are product-clarifier,
+product-researcher and usage-reviewer. The coordinator keeps mutable current facts in `.devkit/adaptive-dev.md`:
+goals, retained choices versus assumptions, checks, unknowns and the next action. A product can keep this approach indefinitely.
 
-Each session advances the next useful product action rather than a fixed sequence:
+The former incubation approach, bundle and entry are not accepted, and the old context file is not a fallback.
+On your request, `spec/sdd-baseline` maps the retained product to code, current documents and actual evidence.
+Preparation keeps `adaptive-dev`; only readiness and your exact-effects decision activate SDD. No retrospective
+Unit or integration-provider edit is needed. See [Advance an idea](../journeys/advance-an-idea.md) and
+[Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md).
 
-- **Clarify** only the missing product decision, reusing answers you already gave; no complete backlog or
-  architecture is required first.
-- **Research or experiment** within a stated write boundary and stop condition, keeping observations, assumptions
-  and limits apart.
-- **Implement** a representative flow, with instructions to run and check it.
-- **Verify** by actually running it; a skipped or unavailable check is reported as unverified, not as a pass.
+## Optional catalog entries
 
-The optional roles, `product-clarifier`, `incubation-researcher` and `usage-reviewer`, are delegated only when a
-separable question warrants it; they return evidence and never edit the current context or commit. While the goal
-and constraints hold, the agent may rework code, tests and documents freely, with no Units, approvals or envelopes;
-when the goal or constraints change, it asks for your direction first.
+- `deep-research` supplies a user-invoked, approach-neutral investigation, retained as one `MAT-<slug>` material.
+  It grants no implementation, commit or publication authority.
+- `design-explore` explores mechanisms for architecture, models or workflows and returns directions in conversation
+  unless you request a destination. It grants no implementation authority.
+- `uiux-improve` improves an interface or user flow and carries requested implementation through the consumer's
+  workflow. A review-only request returns findings without edits.
 
-The **incubation current context**, `.devkit/incubation.md`, is the one record that persists between sessions. It is
-project-owned Markdown holding current facts only: the goal, users and constraints, the choices you made versus the
-agent's assumptions, run and check commands with what they actually showed, open questions and the next useful
-action. Superseded experiments are removed rather than logged, `devkit sync` never overwrites the file, and a later
-session rechecks what changed instead of trusting stale entries. The journey is
-[Incubate an idea](../journeys/incubate-an-idea.md) (`UC-incubate-an-idea`).
+These entries use optional skill-local perspectives without a fixed cast or scoring requirement.
+Their selection starts no work and changes no approach. Each runs only when you explicitly invoke it.
 
-Integration works as for an SDD `session` task: `devkit integration prepare` and `integrate` with your approval. The
-project readiness provider binds the review, test and lint results the agent reports, runs the repository's rules
-on the result and refuses a change that touches a retained SDD Unit until that Unit's own validation has run
-([`CAP-INT-mcp-services`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/integration/CAP-INT-mcp-services.md)).
+## Maintenance and release preparation
 
-### Adopting SDD from incubation
+The opt-in maintenance bundle offers drift reconciliation, weekly reporting, review-refactor and a performance pass.
+They run only on invocation or confirmation; corrections, publication and integration keep their own authority.
+Weekly reports preserve immutable report bytes and a separate local publication record.
+Review-refactor and performance work compare old/new behavior and keep contract changes as separate work.
 
-Nothing moves a project to SDD automatically: not its size, its age or the number of experiments. When you ask for
-it, the agent runs the `spec/sdd-baseline` playbook (`uv run devkit playbook get spec/sdd-baseline`), which comes
-with the `spec` bundle
-([`CAP-DLV-incubation-sdd-baseline`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-incubation-sdd-baseline.md)):
+Maintenance history is a separate opt-in companion: installing its commands or invoking a maintenance playbook
+starts no history run and triggers no recurring offer. Requested capture freezes evidence; authorized publication
+uses a dedicated history branch, and later integration changes append amendments.
+See [Record a maintenance run](../journeys/record-a-maintenance-run.md) and
+[Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md).
 
-1. The approach stays `incubation` throughout preparation, even after `devkit-spec` is installed and its bundle
-   selected, so you can keep developing in incubation while the baseline is incomplete.
-2. You choose what the product retains. Each retained behavior, structure, choice and verification method is mapped
-   to implementation, current documents and actual evidence and marked `verified`, `gap` or `excluded` (with a
-   reason; an exclusion never counts as coverage).
-3. Missing current-state documents are written as they are now, with known reasons and no invented history.
-4. A report under `docs/materials/<YYYY-MM>/<YYYYMMDD>-sdd-baseline/` records the source, scope, evidence, gaps and
-   the exact activation effects.
-5. Only when no gap remains does the agent present those effects (the `[development]` change and any integration
-   provider change) for your explicit decision; changed sources are revalidated first.
-6. After activation it checks `uv run devkit sync`, `uv run devkit config show`, `uv run devkit spec policy` and
-   `uv run devkit sync --check`; from then on new work follows the ordinary SDD route. The baseline creates no
-   historical spec bundle or envelope, and a partial failure is reported as such, with no claimed rollback.
+The release handbook is derived from the Living Spec and refreshed on request with `devkit-dev/handbook`.
+It is never a reconciliation target; `docs/` prevails when the two disagree.
 
-The journey is [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md) (`UC-adopt-sdd-from-incubation`).
+## Sources
 
-## Maintenance playbooks
-
-Four opt-in playbooks in the `maintenance` catalog bundle run only when you invoke them (through `devkit-playbook`,
-their exact ID, or by confirming an offer from `/spec`). None adds a stage or a scheduler.
-
-- **Drift reconciliation** reviews a bounded batch of Living Spec, code and guidance for accumulated drift, records
-  each mismatch with evidence, and applies only the corrections you decide
-  ([`CAP-DLV-drift-reconciliation`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md);
-  journey [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md), `UC-reconcile-living-spec-drift`).
-- **Weekly report** builds an immutable, revision-bound report of delivered work, repository health and prioritized
-  actions; publishing it is a separate, explicitly authorized step
-  ([`CAP-DLV-weekly-report`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-weekly-report.md);
-  journey [Publish a weekly report](../journeys/publish-a-weekly-report.md), `UC-publish-a-weekly-report`).
-- **Review and refactor** reviews the code, guidance or CLI surfaces you select, one batch and one decision round per
-  surface, and applies only the consolidations and reductions you agree to as evidenced, behavior-preserving
-  refactors (`sdd-overall-refactor` in direct mode). Changes with disjoint write scopes can run in parallel isolated
-  checkouts, each committed alone; a replaced parser or similar function is compared old against new on the same
-  inputs, and no change may relax the repository's checks to pass. An approved contract removal becomes its own
-  work item
-  ([`CAP-DLV-review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-review-refactor.md);
-  journey [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md),
-  `UC-review-and-refactor-accumulated-slop`).
-- **Performance pass** (`maintenance:performance`, which also deploys `review-refactor`) measures the operations you
-  select, each as an exact command with a metric (wall time, subprocess count or peak memory). Timings are
-  unprofiled and interleaved in one session, with a warm-up, at least five repetitions and a noise floor below which
-  a difference counts as no change; profiling only attributes cost. Candidates are decided in one round: a change
-  counts as behavior-preserving only if outputs, exit codes, written files and error behavior stay identical, and
-  anything else (new caching between runs, parallelism, changed defaults) is a separate contract-change work item.
-  Agreed changes form one work item on the repository's feature workflow, applied through `review-refactor`'s
-  application and evidence sections, with old and new measured per change and a final measurement against the
-  starting revision. A `survey` run stops at the decision round with nothing applied
-  ([`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-performance-pass.md);
-  journey [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md),
-  `UC-speed-up-selected-slow-operations`).
-
-The handbook you are reading is itself a delivery artifact: a derived snapshot of the Living Spec refreshed on
-request during release preparation with the repository-only `devkit-dev/handbook` playbook and `just handbook`
-commands ([`CAP-DLV-release-handbook`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-release-handbook.md)).
-Where it and `docs/` disagree, `docs/` wins.
+- [CAP-DLV-cli-and-output](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-cli-and-output.md)
+- [CAP-DLV-delivery-workflows](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)
+- [CAP-DLV-drift-reconciliation](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md)
+- [CAP-DLV-human-interaction](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-human-interaction.md)
+- [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
+- [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md)
+- [CAP-DLV-performance-pass](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md)
+- [CAP-DLV-project-policy](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md)
+- [CAP-DLV-proposal-planning](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)
+- [CAP-DLV-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-release-handbook.md)
+- [CAP-DLV-review-refactor](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-review-refactor.md)
+- [CAP-DLV-spec-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)
+- [CAP-DLV-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-weekly-report.md)
+- [CAP-DLV-workflow-definitions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-definitions.md)
+- [CAP-DLV-workflow-envelopes](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md)
+- [CAP-DLV-workflow-orchestration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)
+- [CAP-INT-mcp-services](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/integration/CAP-INT-mcp-services.md)
+- [UC-drive-development-to-integration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-drive-development-to-integration.md)
+- [UC-handle-delivery-problems-and-exceptions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md)
+- [UC-plan-and-hand-off-a-proposal](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md)
+- [UC-publish-a-weekly-report](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-publish-a-weekly-report.md)
+- [UC-reconcile-living-spec-drift](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-reconcile-living-spec-drift.md)
+- [UC-review-and-refactor-accumulated-slop](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md)
+- [UC-route-development-intent](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-route-development-intent.md)
+- [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md)
+- [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md)
+- [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md)
+- [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-maintenance-history.md)

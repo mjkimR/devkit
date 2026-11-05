@@ -8,29 +8,35 @@ sources:
   UC-keep-the-living-spec-consistent: null
   UC-resolve-stale-activity-branches: null
 title: 거버넌스 규칙
-translated_from: en/areas/governance.md@6830f5ac61740f8a
+translated_from: en/areas/governance.md@a4b1d358b229d632
 ---
 
 # 거버넌스 규칙
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](../journeys/adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](../journeys/incubate-an-idea.md)
-- [제안 숙성 후 넘기기](../journeys/incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
@@ -147,7 +153,7 @@ max_lines = 800
 
 ## 문서 규칙과 생명주기 규칙
 
-14가지 `linter` 규칙이 Living Spec과 기능 스펙의 일관성을 유지합니다. `docs` 번들(`devkit-docs` 제공)의 `core` 프리셋이 9가지
+15가지 `linter` 규칙이 Living Spec과 기능 스펙의 일관성을 유지합니다. `docs` 번들(`devkit-docs` 제공)의 `core` 프리셋이 10가지
 문서 규칙을, `spec` 번들의 `core` 프리셋이 스펙 주도 생명주기의 5가지 규칙을 배포합니다. `RULE-spec-progress`,
 `RULE-proposal-boundaries`, `RULE-ux-coverage`만 경고(warning) 수준이고 나머지는 모두 오류(error) 수준입니다.
 
@@ -162,13 +168,14 @@ max_lines = 800
 | `RULE-steering-documents` | `docs` | `docs/steering/`이 평평하고 작게 유지되며, 각 파일에 `title`과 짧은 영문 `summary`가 있어야 함 | 수동 조치 |
 | `RULE-ux-links` | `docs` | UX 문서와 그 문서를 인용하는 유스케이스 단계가 서로 일치해야 함 | 수동 조치 |
 | `RULE-ux-coverage` | `docs` | 화면이 있는 유스케이스의 각 단계가 UX 문서를 인용해야 함 | 수동 조치 |
+| `RULE-decision-supersession` | `docs` | ADR 전체·부분 대체의 상호 참조가 유일하게 해석되고 일치함 | 수동 조치 |
 | `RULE-task-coverage` | `spec` | 모든 수락 기준에 대응하는 구현 작업이 존재해야 하며, 작업에 명시된 참조가 유효해야 함 | 수동 조치 |
 | `RULE-spec-lifecycle` | `spec` | 스펙 상태, 작업 체크리스트 완료 여부, 리콘사일(reconcile) 상태가 상호 일치해야 함 | `completed` 상태 자동 설정 |
 | `RULE-spec-progress` | `spec` | 완료 체크된 작업이 하나라도 있는 스펙은 반드시 `in-progress` 상태여야 함 | `in-progress` 상태 자동 설정 |
 | `RULE-reconcile-contract` | `spec` | `reconcile.md`의 형식이 올바르고, 수정 대상 문서들이 실제로 변경되어야 함 | 수동 조치 |
 | `RULE-proposal-boundaries` | `spec` | 제안 문서에 명시된 소유 대상 경로들이 실제로 존재해야 함 | 수동 조치 |
 
-프로젝트의 개발 방식(development approach, `.devkit/config.toml`의 `[development] approach`)이 인큐베이션이면, 문서 규칙은
+프로젝트의 개발 방식(development approach, `.devkit/config.toml`의 `[development] approach`)이 적응형 개발이면, 문서 규칙은
 이전과 똑같이 판정하지만 생명주기 규칙은 여전히 스펙 주도 워크플로에 묶인 문서에만 적용됩니다. 검사할 대상이 없으면 통과 대신
 `SDD_LIFECYCLE_INACTIVE` 생략(omission)을 보고합니다.
 
@@ -220,13 +227,25 @@ rules/doc_heading/
 
 ## 관련 자료
 
-- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
+- [CAP-GOV-rules-engine](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rules-engine.md) (영어 원문):
   규칙 엔진 아키텍처, 규칙 소스 및 파일별 팩트.
-- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md):
+- [CAP-GOV-evaluation-lifecycle](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md) (영어 원문):
   검사 대상 선정, 스코핑, 규칙 페이즈, 정책 계층 및 스냅샷 게이트.
-- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-rule-authoring.md):
+- [CAP-GOV-rule-authoring](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-rule-authoring.md) (영어 원문):
   규칙 프로토콜 규약, 워크스페이스 캐시 API, 규칙 단위 테스트 작성법.
-- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/governance/CAP-GOV-spec-rules.md):
+- [CAP-GOV-spec-rules](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문):
   문서 규칙과 생명주기 규칙 상세 명세.
-- [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/rules.md): 명령어, 출력 형식, 종료
+- [규칙 레퍼런스](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/rules.md) (영어 원문): 명령어, 출력 형식, 종료
   코드, 내장 규칙 카탈로그.
+
+## 보존된 소유권과 문서 검사
+
+docs는 상호 ADR 대체 기록을 확인하는 `RULE-decision-supersession`을 포함해 열 개 규칙을 제공합니다.
+스티어링 검사는 루트·등록된 네임스페이스별로 선택형 용어집과 UX 목록에도 적용합니다.
+참조 수리는 스티어링 본문, 용어집 Owner 셀과 설정된 빠른 참조의 유일하게 해석된 별칭도 정규 ID로 바꿉니다.
+
+적응형 개발의 미연결 문서는 SDD 생명주기 의무를 얻지 않습니다.
+보존된 워크플로 유닛은 anchor·binding이 삭제되어도 기존 의무를 유지합니다.
+생략된 생명주기 검사는 깨끗한 검사 대신 `SDD_LIFECYCLE_INACTIVE`를 보고합니다.
+브랜치는 자신의 런타임으로 통합 전에 검사하고 최종 대상은 반영된 런타임을 동기화한 뒤 검사합니다.
+통합 자체는 콘텐츠 준비 상태나 규칙 임포트를 평가하지 않습니다.

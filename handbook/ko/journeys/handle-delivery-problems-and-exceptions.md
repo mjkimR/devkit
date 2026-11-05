@@ -6,28 +6,34 @@ sources:
   CAP-WT-task-worktrees: null
   UC-handle-delivery-problems-and-exceptions: null
 title: 전달 문제와 예외 처리하기
-translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@8c658d5762921c08
+translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@795951bb01ea86f1
 ---
 
 # 전달 문제와 예외 처리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -63,13 +69,13 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@8c658d57
 코드가 기본 브랜치에 통합되지 않도록 방지하는지, 그리고 작업을 어떻게 안전하게 복구하거나 정상 종료하는지 살펴봅니다.
 
 유스케이스는
-[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)입니다.
+[`UC-handle-delivery-problems-and-exceptions`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-handle-delivery-problems-and-exceptions.md) (영어 원문)입니다.
 엔벨로프(envelope), 유닛(Unit), `exception` 단계 등의 개념은 [개념](../concepts.md)에서 설명합니다.
 
 ## 1. 문제(Problem) 여부 판단
 
 작업 실행자(워커 또는 에이전트 자신)는 마주한 장애물을 기 합의된 명세와 대조하여 분류합니다
-([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
+([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
 
 | 장애물 유형 | 실행자의 조치 |
 | --- | --- |
@@ -87,7 +93,7 @@ uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <ef
 ```
 
 미완료된 작업 상태와 작성한 엔벨로프를 함께 작업 브랜치에 커밋하고, 기본 브랜치로 통합하지 않은 채 해당 실행 턴을 안전하게 종료합니다
-([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
+([`CAP-DLV-workflow-envelopes`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md) (영어 원문)).
 
 ## 3. 유닛의 보류(Hold) 상태 전환
 
@@ -137,8 +143,8 @@ uv run devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yam
 
   명령어 실행 결과로 `merged=no discarded=yes`가 확인됩니다. 작업 트리에 커밋되지 않은 변경 사항이 남아 있는 경우 워크트리를
   임의로 삭제하지 않습니다 (`WORKTREE_DIRTY`)
-  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문),
-  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
+  ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문),
+  [`CAP-HARN-agent-guidance`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md) (영어 원문)).
 - **엔벨로프 기록 자체를 작성할 수 없는 환경적 장애:** 호스트 환경 권한 등으로 인해 엔벨로프 작성이나 비상 커밋이 거부되는 경우,
   워커는 원인, 시도한 명령어 내역, 실제 마지막 커밋, 변경된 경로, 누락된 기록 항목을 정직하게 담아 `failed` 상태로 반환하며
   결과를 꾸며내지 않습니다. 메인 에이전트는 이 반환을 보류 상태로 취급하고 자체적으로 복구 절차를 직접 수행합니다.

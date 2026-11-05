@@ -2,32 +2,39 @@
 sources:
   CAP-DIST-content-packages: null
   CAP-DIST-context-and-playbooks: null
+  CAP-DLV-maintenance-history: null
   CAP-DLV-performance-pass: null
   UC-speed-up-selected-slow-operations: null
 title: 선택한 느린 작업 빠르게 하기
-translated_from: en/journeys/speed-up-selected-slow-operations.md@6f240ccd54bce0e2
+translated_from: en/journeys/speed-up-selected-slow-operations.md@3c84dfa4406b90ab
 ---
 
 # 선택한 느린 작업 빠르게 하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -57,22 +64,22 @@ translated_from: en/journeys/speed-up-selected-slow-operations.md@6f240ccd54bce0
 
 명령이 느리게 느껴질 때 원인을 짐작하고 한 번만 시간을 재면, 다음 시도에서 사라지는 절감 효과를 보고하기 쉽습니다. `performance-pass` 플레이북은 이 작업을 측정 가능하게 만듭니다. 사용자가 작업을 고르면, 에이전트가 프로파일러 없이 교차(interleaved) 반복으로 측정하고, 프로파일러는 시간이 어디에 쓰이는지 찾는 데만 쓰며, 사용자가 동의한 속도 개선만 적용합니다. 각 개선은 전후 수치와 동작이 바뀌지 않았다는 증거와 함께 커밋됩니다.
 
-출처: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-speed-up-selected-slow-operations.md) (영어 원문),
-계약 [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-performance-pass.md) (영어 원문),
-플레이북 [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.5/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md) (영어 원문).
+출처: [`UC-speed-up-selected-slow-operations`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-speed-up-selected-slow-operations.md) (영어 원문),
+계약 [`CAP-DLV-performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-performance-pass.md) (영어 원문),
+플레이북 [`performance-pass`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/performance-pass/SKILL.md) (영어 원문).
 유지보수 비용은 별개의 일입니다: [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)이며, 이 플레이북은 그 적용 절차를 재사용합니다.
 
 ## 시작하기 전에
 
 - 선택형 `maintenance` 카탈로그 번들을 `all`(`uv run devkit add maintenance`) 또는 `maintenance:performance`로 선택합니다. 둘 다 이 플레이북이 필요로 하는 `review-refactor`도 배포합니다
-  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)).
+  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md) (영어 원문)).
 - 중요한 작업을 정해 둡니다: 정확한 명령, 작업 디렉터리와 환경, 지표(실행 시간, 서브프로세스 수, 최대 메모리). 목표는 선택 사항입니다.
 - 측정하는 동안 기계를 조용히 둡니다. 플레이북에는 타이밍 스크립트가 없으며, 에이전트는 `hyperfine` 같은 설치된 도구를 쓰거나 짧은 루프를 작성합니다.
 
 ## 단계별 진행
 
 1. **호출.** `/devkit-playbook`을 실행해 `performance-pass`를 고르거나, `uv run devkit playbook get maintenance/performance-pass`로 가져오거나, `/spec`이 제안할 때 확인합니다. 필요할 때 로드되며, 설치되어 있다는 이유로 실행되지 않습니다
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md) (영어 원문)).
 2. **작업 접수(Intake).** 에이전트가 실행 ID, 저장소, `HEAD`, 수정 경로, 이전 보고서, 보고서 위치, 환경(기계, 운영체제, 런타임 버전, 현재 부하)을 기록합니다. 사용자가 각 대상을 지정합니다. 실행은 `survey` 모드(찾아서 순위만 매기고 적용하지 않음) 또는 `targeted` 모드(측정하고 승인된 것을 적용)입니다.
 3. **기준선.** 각 대상을 정확한 인자로 실제 프로세스로 측정합니다: 워밍업 실행 한 번은 버리고, 최소 다섯 번의 교차 반복, 종료 코드와 출력 다이제스트 확인, 중앙값·최솟값·범위 보고, warm/cold 상태 표시, 측정 전후 부하 기록.
 4. **비용 귀속.** 프로파일러는 비용 위치를 찾을 뿐 절감을 보고하지 않습니다. 각 핫스폿의 비중은 프로파일러 없이 확인하고, 서브프로세스는 따로 세고 측정하며, 복합 대상은 구성 요소를 측정해 합이 전체와 맞는지 확인합니다.
@@ -101,3 +108,11 @@ stdout, stderr, 종료 코드, 쓰인 파일과 그 바이트, 저장 형식, �
 ## 최종 결과
 
 적용된 모든 변경은 합의되었고, 동작을 보존하며, 측정된 전후 수치와 차등 증거와 함께 단독으로 커밋되고, 각자의 승인으로 검토·통합됩니다. 보고된 모든 절감은 한 세션 안의 프로파일러 없는 교차 실행에서 나오며, 접수 시점 리비전과의 최종 비교로 끝납니다. 호출이나 측정만으로는 아무것도 바뀌지 않으며, `review-refactor` 자체의 접수와 결정 라운드는 시작되지 않습니다.
+
+## 선택적 이력은 별개입니다
+
+기본 로컬 보고서와 완료 절차는 유지보수 이력 없이 동작합니다.
+명시적인 동반 이력 요청이 있어야 수집하며 명령 설치나 이 플레이북 호출만으로 이력을 시작하거나 반복 제안하지 않습니다.
+요청된 이력은 근거를 동결하고 별도 게시 권한을 사용합니다.
+이후 통합 변경은 게시된 보고서를 고치지 않고 추가 기록으로 남깁니다.
+[유지보수 실행 기록하기](record-a-maintenance-run.md)를 참고하십시오.

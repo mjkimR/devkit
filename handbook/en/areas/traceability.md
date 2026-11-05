@@ -1,17 +1,17 @@
 ---
 sources:
-  CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
-  CAP-DOCS-document-lookup: f16d8d88730261a376acc66ccb8e11ce209d4b49
-  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
+  CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
+  CAP-DOCS-document-lookup: 047987d53dc77f859357a545cfb01a2e161f80a1
+  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
-  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
+  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
 title: Traceability
 ---
 
 # Traceability
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Traceability links Living Spec documents to code. A capability or use case can declare `entrypoints`: the files
@@ -19,7 +19,7 @@ and directories where its implementation starts. That one field lets you go from
 code path back to its documents, and lets the commit gate notice when code disappears under a document. devkit-docs
 owns the path contract, the rule and the reverse query; devkit-spec adds the derivation from spec bundles. The
 contract is
-[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md).
+[CAP-TRACE-code-entrypoints](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md).
 
 An entrypoint is where reading starts, not a complete list of the implementation and not proof that the code does
 what the document says. Coverage and correctness stay with tests and review. The Living Spec and its documents are
@@ -106,3 +106,10 @@ How to use it well:
 
 Use `--all` with `--min-count` to backfill older documents: a pair produced by several specs is a stronger
 candidate. Error codes and the full option list are in the contract.
+
+## Keep generated paths out of derived entrypoints
+
+Derivation skips `.devkit/managed/`, `.devkit/installation.json` and receipt-owned outputs, even when a task boundary
+names them. Fully managed directories are excluded; mixed directories, ignored authored code and project-owned seeded
+paths stay eligible. Managed outputs still belong to work-scope observation: this exclusion affects entrypoint derivation only.
+A malformed present receipt raises `RECEIPT_INVALID`. An explicit managed `--code` selection is unmatched, not admitted.

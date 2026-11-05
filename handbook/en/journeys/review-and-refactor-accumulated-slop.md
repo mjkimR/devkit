@@ -1,11 +1,12 @@
 ---
 sources:
-  CAP-DIST-content-packages: 71d426703b854a24bdce4cd0c44b130ed8a106dc
-  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
-  CAP-DLV-delivery-workflows: 936dff28b6c106fdcc568a677db096421e174f9c
-  CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
-  CAP-DLV-performance-pass: b37939e6d8e45835bae34bf596322b6bdc5d74b3
-  CAP-DLV-review-refactor: a8eac89c524a4351fd3e5044fb3972beee3014c3
+  CAP-DIST-content-packages: 2d99bc80b78d361bb4cad5caa3df90ad9e1a936f
+  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
+  CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
+  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
+  CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
+  CAP-DLV-review-refactor: 80b523a1ee09e2cff326ff4114c3c83c5461a666
   UC-review-and-refactor-accumulated-slop: acbb724a9d06093b139e8d8c22682ae7d7f408b2
 title: Review and refactor accumulated slop
 ---
@@ -13,23 +14,29 @@ title: Review and refactor accumulated slop
 # Review and refactor accumulated slop
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
@@ -69,16 +76,16 @@ the agent records it as a deferred finding for [Reconcile Living Spec drift](rec
 [Speed up selected slow operations](speed-up-selected-slow-operations.md) reuses this playbook's application and
 evidence procedure as reference text. See [Concepts](../concepts.md) for playbooks and workflows.
 
-Source: [`UC-review-and-refactor-accumulated-slop`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md),
-contract [`CAP-DLV-review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-review-refactor.md),
-playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.5/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor/SKILL.md).
+Source: [`UC-review-and-refactor-accumulated-slop`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md),
+contract [`CAP-DLV-review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-review-refactor.md),
+playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor/SKILL.md).
 
 ## Before you start
 
 - The opt-in `maintenance` catalog bundle is selected and synchronized: `uv run devkit add maintenance` (all four
   playbooks), `maintenance:upkeep` (with drift reconciliation), `maintenance:refactoring` (this playbook alone) or
   `maintenance:performance` (with `performance-pass`)
-  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
+  ([`CAP-DIST-content-packages`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md)).
 - Good moments are before a release, after a stretch of feature growth, or whenever a part of the repository feels
   heavier than it should.
 - Decide which surfaces (`code`, `guidance`, `cli`) and which roots of each you want reviewed. You will be asked.
@@ -89,7 +96,7 @@ playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.5/packag
 1. **Invoke the playbook.** Run `/devkit-playbook` and pick `review-refactor`, fetch it with
    `uv run devkit playbook get maintenance/review-refactor`, or confirm it when `/spec` offers it. It loads on demand
    and never runs because it is installed or because your wording sounds similar
-   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
+   ([`CAP-DIST-context-and-playbooks`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)).
 2. **Intake.** The agent records a run ID, the repository, `HEAD`, dirty paths, earlier reports and where the report
    goes. You name the surfaces and roots, and the run is split into one batch per surface.
 3. **Review one batch.** The agent inventories the roots and asks each surface's review questions: duplicated
@@ -108,7 +115,7 @@ playbook [`review-refactor`](https://github.com/mjkimR/devkit/blob/v0.1.5/packag
 6. **Edit in parallel.** The agreed behavior-preserving changes become one work item on its own branch. Across several
    modules it follows `sdd-overall-refactor` in direct mode, with no Unit or workers; inside one feature or module it
    follows that feature workflow at its own depth
-   ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md),
+   ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md),
    [delivery area](../areas/delivery.md)). Where the host supports subagents, changes with disjoint write scopes are
    edited at the same time, each in its own isolated checkout created at the branch's current commit and prepared
    like a fresh checkout (dependency installation, managed-asset sync). Subagents edit only their scope and leave
@@ -181,3 +188,11 @@ evidence, reviewed and integrated under its own approval, and a report that keep
 approved behavior changes, and names its coverage, gaps, follow-ups and integration state. Invoking the playbook
 alone changes nothing, no contract change is passed off as refactoring, no governance check is relaxed to make a
 change pass, and a batch never claims the whole repository reviewed.
+
+## Optional history stays separate
+
+The default local report and completion procedure work without maintenance history.
+Only an explicit companion-history request starts capture; command installation and this playbook's invocation
+start no history run or recurring offer. Requested history freezes evidence and uses separate publication authority;
+later integration changes append amendments rather than rewrite the published report.
+See [Record a maintenance run](record-a-maintenance-run.md).

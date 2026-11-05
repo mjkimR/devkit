@@ -1,33 +1,39 @@
 ---
 sources:
-  CAP-COLL-work-scope-registry: 23990ff536e67c96f25dff1857c08cbd0c4c8838
-  CAP-DLV-project-policy: 2af5b2fde75faecfa8260244a614fa796525de03
-  CAP-TRACE-code-entrypoints: 71c9a300749a114f5dd4141e70aee300dcafd4ee
-  CAP-WT-task-worktrees: 2ea80d46ab9cf19504182e73b6f2bcc301e8f7db
-  UC-run-parallel-work-safely: f60eea1f7ddb44d8d4d47058e2777990f1a50d64
+  CAP-COLL-work-scope-registry: 648447161142a20d42839609f502b027f5c7d403
+  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
+  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
+  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
+  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
 title: Run parallel work safely
 ---
 
 # Run parallel work safely
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](advance-an-idea.md)
+- [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Explore a design problem](explore-a-design-problem.md)
+- [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](incubate-an-idea.md)
-- [Incubate and hand off a proposal](incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
+- [Record a maintenance run](record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
@@ -63,15 +69,15 @@ scope is still unknown, so you decide what runs in parallel and in which order i
 Task worktrees and activity branches are explained in [Concepts](../concepts.md); the registry itself in the
 [collaboration area](../areas/collaboration.md).
 
-Source: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md),
-contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md).
+Source: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md),
+contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md).
 
 ## Before you start
 
 - The repository is a Git repository with `devkit-spec` installed.
 - Each task declares its scope in its bundle: `target-docs.md` or `reconcile.md` targets, the `_Boundary` entries of
   `tasks.md`, and the `entrypoints` of the documents it targets. Entrypoints turn a document into code paths
-  ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
+  ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
   A `_Boundary` entry under `specs/` is skipped, except the exact path of another spec bundle's feedback file
   (`specs/**/feedback/<name>.md`): it is collected as code, so two tasks that resolve the same feedback file overlap
   on it.
@@ -85,7 +91,7 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    uv run devkit spec policy     # look at [GIT_POLICY: worktree=...]
    ```
 
-   See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md).
+   See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md).
 2. **Compare the planned scopes** before anything starts. This reads declarations only and writes nothing:
 
    ```sh
@@ -97,7 +103,7 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    `[SUMMARY: sets=2 pairs=1 overlapping=1]`.
 3. **Start the tasks** you decided to run in parallel, each on its activity branch in its own task worktree
    (`uv run devkit worktree start dev-<slug>`;
-   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
+   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
    When `devkit spec new` or `devkit spec proposal handoff` creates the unit in a linked worktree, it records an
    initial scope snapshot in the registry on its own. That registration is best effort: if it fails, creation still
    succeeds and nobody has to repair it.
@@ -151,3 +157,10 @@ each missing source with its reason. Pairs that were not computed never count as
 You know every pair's shared documents and code, where each observation came from and how much coverage is missing,
 no task was ever blocked or given extra bookkeeping, and finished tasks leave no records behind. Overlap evidence is
 a join of declarations and Git observations: it proves neither a merge conflict nor independence.
+
+## Read overlap horizons before scheduling
+
+`scope collect` distinguishes observed current writes from a Planning proposal's declared future scope.
+Serialize current overlap. Future-only overlap can keep Planning parallel while ordering handoff and integration.
+Read `horizon`, pair `current`/`future` counts and `current_overlapping` alongside partial-coverage evidence.
+Unknown inputs and unavailable sources never establish independence.

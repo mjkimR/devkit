@@ -1,38 +1,44 @@
 ---
 sources:
-  ADR-package-split-and-namespaces: a098e6f78c36f83d9c0f0665cd365616f678f7a2
-  CAP-DIST-agent-projections: a80245135911b3cc82c894d3d4bac7acd895cab4
-  CAP-DIST-content-packages: 71d426703b854a24bdce4cd0c44b130ed8a106dc
-  CAP-DIST-context-and-playbooks: 73e324739a17d8af4b885dce3d6cdf2593762fc0
-  CAP-DIST-in-repo-bundles: 54b713a2bf73ff8a6684acb70990956e401585c5
-  CAP-DIST-manifest-spec: 44c8ec1792cd306367a6cb09a3e7ef580ee7c2c9
-  CAP-DIST-sync-and-transactions: 2759dc504dc98f758acf3b168122c97f35bd1dd6
-  CAP-DIST-workspace-ownership: 11ecf337d2748f5d3f69272dfaf004bd8c83d9ba
+  ADR-package-ownership-and-release-version: 1d01af1c73f10da6f5c913d0b84d6287861d84e9
+  CAP-DIST-agent-projections: d3811102c439ab16edeb87f4c7b0de4868ae1d4f
+  CAP-DIST-content-packages: 2d99bc80b78d361bb4cad5caa3df90ad9e1a936f
+  CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
+  CAP-DIST-in-repo-bundles: 0b6247e85e653c3110c0a8d8ca2cfc301bc58fcc
+  CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
+  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
+  CAP-DIST-workspace-ownership: d23d1e146e4a38ea8021b4ed5f52c39e529a80cd
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
-  UC-route-development-intent: b3ee3ac9c76d14a4b97f0645eef8954f339330d5
+  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
 title: Distribution
 ---
 
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -76,7 +82,7 @@ presets, projects skills and subagents for each agent, and records every file it
 
 You declare exactly one devkit requirement in your dev dependencies: `devkit-dist` for distribution only, or
 `devkit-agt` when you want the harness (rules, workflows, commit gates, worktrees, integration). `devkit-agt`
-depends on `devkit-dist` at the same version, so never declare both (`ADR-package-split-and-namespaces`). Always run
+depends on `devkit-dist` at the same version, so never declare both (`ADR-package-ownership-and-release-version`). Always run
 the tool as `uv run devkit ...` from the project environment; a globally installed tool cannot see your project's
 content packages. Setting devkit up in a repository that already has code is the journey
 [Adopt in an existing repository](../journeys/adopt-in-an-existing-repository.md).
@@ -101,7 +107,7 @@ Things worth knowing when you choose:
 
 The built-in bundles (`devkit`, `advisory`, `git-commits`, `harness`, `authoring`) and the opt-in
 `response-style` and `maintenance` bundles of `devkit-catalog` are listed in
-[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-content-packages.md),
+[CAP-DIST-content-packages](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-content-packages.md),
 together with the dependency rules for layering one content package on another. Methodology layers add their own
 auto-selected bundles the same way: `devkit-docs` ships `docs` and `devkit-spec` ships `spec`
 ([Harness](harness.md)).
@@ -122,7 +128,7 @@ devkit only touches files the receipt records. A planned write onto an unrecorde
 before any byte is written (`SYNC_CONFLICT`), unless the file is already identical. A file you edited that devkit
 still wants to deploy is also a `SYNC_CONFLICT`; one it no longer wants is left on disk as an orphan
 (`ORPHAN_LEFT`). `CLAUDE.md` is never written: point it at `AGENTS.md` yourself. Details are in
-[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md).
+[CAP-DIST-workspace-ownership](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-workspace-ownership.md).
 
 ## Keep clones, worktrees and CI in step
 
@@ -153,7 +159,7 @@ leaves a half-written workspace.
 | `HARNESS_ENGINE_MISSING` | rule, gate or workflow assets deployed without `devkit-agt` | add `devkit-agt` if you want them run |
 
 The full transaction steps, the notice list and post-sync extensions are in
-[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md).
+[CAP-DIST-sync-and-transactions](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md).
 
 ## Change an upstream asset without forking it
 
@@ -178,7 +184,7 @@ To change a distributed rule's settings, use `[rules]` in `config.toml` instead 
 ## Load context and find playbooks
 
 Startup files stay small; guidance is loaded in stages
-([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)):
+([CAP-DIST-context-and-playbooks](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md)):
 
 - The root `AGENTS.md` block holds orientation only: installed bundles, the context rule, entry skills and short
   guidance pointers.
@@ -203,7 +209,7 @@ narrows the list, `uv run devkit sync --agent <name>` sets it and `--no-agents` 
 `.agents/agents/`. A skill declared `invocation = "user"` gets each agent's native "explicit invocation only"
 setting. A subagent ships either native files per agent or one host-neutral role contract rendered per agent. The
 matrix and the role-contract format are in
-[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-agent-projections.md).
+[CAP-DIST-agent-projections](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-agent-projections.md).
 
 By default a role contract runs on whatever model and effort the host would give it. To choose, set a subagent
 model level: `inherit`, `minimal`, `compact`, `standard`, `deep` or `maximal`, each mapped to a native model and
@@ -223,7 +229,7 @@ your account still decide what actually runs.
 ## Personal preferences in one checkout
 
 Two tables of `config.toml` are shared policy rather than preference: `[subagents]` above, and `[development]
-approach`, which chooses between spec-driven delivery (`sdd`, the default) and `incubation` for the whole project
+approach`, which chooses between spec-driven delivery (`sdd`, the default) and `adaptive-dev` for the whole project
 (see [Harness](harness.md)). `uv run devkit config show` reports both.
 
 `.devkit/config.local.toml` is an ignored file for this checkout only. It accepts a short list of keys:
@@ -239,7 +245,7 @@ bytes of skills, instructions, subagents and playbooks at ignored destinations; 
 A bundle manifest declares assets by `(kind, id, source)`, presets, and optional template variables. Run
 `uv run devkit bundle validate <source>` and `uv run devkit bundle plan <source> --agent <name>` on a source
 directory before it is installed. Key points from
-[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-manifest-spec.md):
+[CAP-DIST-manifest-spec](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-manifest-spec.md):
 
 - The schema is strict: unknown keys are errors, and slugs, versions and source paths are validated.
 - `default_preset` is what `devkit add <bundle>` selects; `auto_select` deploys the bundle as soon as its package is
@@ -258,7 +264,7 @@ and add it to the dev dependency group next to your devkit requirement; there is
 Edit its sources, run `uv run devkit sync`, and commit the source change together with the updated receipt. A stale
 receipt fails Git snapshot gates, so rule edits always travel with their receipt. The layout, the `pyproject.toml`
 and the decision table for overrides versus in-repository bundles are in
-[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md).
+[CAP-DIST-in-repo-bundles](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md).
 
 ## Capabilities in this area
 
@@ -271,3 +277,16 @@ and the decision table for overrides versus in-repository bundles are in
 | `CAP-DIST-agent-projections` | per-agent destinations, invocation settings, role contracts, subagent model levels |
 | `CAP-DIST-context-and-playbooks` | `get-context`, playbook search and exact retrieval |
 | `CAP-DIST-in-repo-bundles` | packaging a repository's own assets |
+
+## Namespace context and projection diagnostics
+
+`uv run devkit get-context docs --for <directory>` lists root steering documents plus the registered namespace
+selected by that directory; `documents_elsewhere` points to other namespace steering directories.
+The directory has to exist inside the project. Instruction bodies remain on-demand reads.
+
+Subagent levels include `lean`: Sonnet/medium on Claude Code, gpt-6.1-terra/medium on Codex and Flash without an
+effort override on Antigravity. These resource mappings confer no authority and do not set delivery activity-effort.
+
+Sync warns about untracked native projections without ignore coverage (`PROJECTION_NOT_IGNORED`) and tracked
+projections (`PROJECTION_TRACKED`). It gives exact repair advice but edits neither root ignore files nor the Git index.
+`PROJECTION_GIT_CHECK_FAILED` reports unavailable diagnostics without aborting an otherwise successful sync.

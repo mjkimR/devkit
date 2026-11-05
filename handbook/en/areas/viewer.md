@@ -1,35 +1,39 @@
 ---
 sources:
-  ADR-handbook-first-book-on-request: 07e5e9b99ca797eb88d8b1c822e867787b467d60
-  ADR-handbook-staleness-from-version: 131d31e3a445b2b224f4e69911e5578b564f6fef
-  ADR-viewer-planning-proposal-overlay: 9846db226f8b490434bf16f96ec8214b3771f855
-  ADR-viewer-working-tree: a30f877468912cf550d6214ce4d1e219b2192950
-  CAP-COLL-shared-artifacts: 83dfa43f60f67f8a6eab85414d90c95ba27e2982
-  CAP-GEN-tracked-artifacts: 17bfdf1f5ddc90d9ec2653cd5a8589db07041202
-  CAP-VIEW-repository-viewer: 90dd40df3d3961de3fa328ce3f459c5cfba6e7ef
+  ADR-release-handbook: e3e8ebe1591bba2371628761d8af35a69ba685b7
+  ADR-repository-viewer: 4cb9669212aa58f1abeefed1c5715adcb3305324
+  CAP-COLL-shared-artifacts: 48963f805ec2282098d1adc9598100983283bacd
+  CAP-GEN-tracked-artifacts: ff8539b14d3af5890ba656e23b0e43c1d0d05fc8
+  CAP-VIEW-repository-viewer: 06eb3b29916d53305a91274860cad22fc5661d55
 title: Viewer
 ---
 
 # Viewer
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -81,7 +85,7 @@ for one request log line per request on stderr.
 
 ## What you see
 
-The page has a repository picker, a label for the checked-out branch and these tabs (labels as shown in the UI):
+The page has a repository picker, a label for the checked-out branch and these tabs (English descriptions of the UI labels):
 
 - **Dashboard**: milestones, proposals and feedback, each section loading on its own and paging with
   Load more.
@@ -89,17 +93,17 @@ The page has a repository picker, a label for the checked-out branch and these t
   (remembered in the browser), with its tag and a note when the checkout's `VERSION` has moved past it; otherwise a
   short absence note. The **Living Spec book** control computes the book of `docs/`, grouped into the chapters
   Overview, Architecture, Capabilities, Use Cases, UX, Steering, Decisions and Development, with links between
-  documents by ID, only when you ask for it (`ADR-handbook-first-book-on-request`,
-  `ADR-handbook-staleness-from-version`).
+  documents by ID, only when you ask for it (`ADR-release-handbook`,
+  `ADR-release-handbook`).
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and the bundles under `specs/`, with their files,
   filters and task progress.
-- **로드맵**: the milestones under `docs/roadmap/`, ordered active then planned, with readiness from `depends_on`.
+- **Roadmap**: the milestones under global and registered namespace roadmap roots, ordered active then planned, with readiness from `depends_on`.
   `done` and `dropped` milestones, kept in `docs/roadmap/_archive/`, appear with the history toggle; a hidden finished
   prerequisite still counts as satisfied.
-- **파일 탐색**: the working tree, rendering Markdown, frontmatter and Mermaid.
+- **File browser**: the working tree, rendering Markdown, frontmatter and Mermaid.
 
 The viewer shows the saved files of the registered working tree, including uncommitted and untracked ones, on the
-branch currently checked out (`ADR-viewer-working-tree`). It never switches branches. Documents are parsed in the
+branch currently checked out (`ADR-repository-viewer`). It never switches branches. Documents are parsed in the
 browser, so repositories that pin different devkit-docs versions all render, and a document with malformed
 frontmatter is listed as unreadable while the rest still show.
 
@@ -112,7 +116,7 @@ or reload the browser page. There is no file watching.
 
 A proposal under Planning is edited on its own `plan-<slug>` branch, so the base checkout may hold an older copy. The
 Dashboard proposal section and the Proposals tab overlay the Planning version, read from local sources only, in this
-order (`ADR-viewer-planning-proposal-overlay`):
+order (`ADR-repository-viewer`):
 
 1. another worktree on `plan-<slug>` (its saved files);
 2. the local branch `plan-<slug>`;
@@ -150,12 +154,19 @@ The frontend under `packages/devkit-viewer/frontend/` is one Svelte source with 
 - the component library `devkit-viewer`, packed as a tarball that autohub vendors. A host supplies its own
   `RepositoryDataSource` and keeps authentication on its side. Nothing is published to a registry.
 
+## Namespace roadmaps
+
+The roadmap and dashboard include milestones from global `docs/roadmap/` and each registered namespace's
+`docs/packages/<name>/roadmap/`, including their flat `_archive/` directories when history is selected.
+Dashboard sections read candidate headers once, load only their first page of bodies and retain expanded pages
+in the 30-second cache. A failed next page preserves prior cards and offers Retry; Refresh invalidates that source's cache.
+
 ## Sources
 
-- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md):
+- [CAP-VIEW-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/viewer/CAP-VIEW-repository-viewer.md):
   serving, endpoints, Planning sources, page behaviour, roadmap, library and the review page.
-- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/development/reference/viewer.md).
-- [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261024-viewer-working-tree.md),
-  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
-  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
-  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).
+- [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/development/reference/viewer.md).
+- [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md),
+  [ADR-repository-viewer](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-repository-viewer.md),
+  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md),
+  [ADR-release-handbook](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/decisions/2026-11/20261102-release-handbook.md).

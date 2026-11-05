@@ -6,29 +6,35 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 병렬 작업 안전하게 실행하기
-translated_from: en/journeys/run-parallel-work-safely.md@7c75b2c93ff4b023
+translated_from: en/journeys/run-parallel-work-safely.md@4101bcda74d211e0
 ---
 
 # 병렬 작업 안전하게 실행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `18b834c35c0c` 기준 devkit `v0.1.5` 스냅숏이며 2026-10-29에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit 핸드북](../README.md)
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
-- [인큐베이션에서 SDD 도입하기](adopt-sdd-from-incubation.md)
-- [개발부터 통합까지 진행하기](drive-development-to-integration.md)
+- [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [아이디어 발전시키기](advance-an-idea.md)
+- [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
+- [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [설계 문제 탐색하기](explore-a-design-problem.md)
+- [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
-- [아이디어 인큐베이션하기](incubate-an-idea.md)
-- [제안 숙성 후 넘기기](incubate-and-hand-off-a-proposal.md)
+- [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
+- [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
+- [유지보수 실행 기록하기](record-a-maintenance-run.md)
+- [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
@@ -60,13 +66,13 @@ translated_from: en/journeys/run-parallel-work-safely.md@7c75b2c93ff4b023
 
 작업 워크트리와 활동 브랜치에 관한 개념은 [개념](../concepts.md)을, 작업 범위 레지스트리 자체에 관한 내용은 [협업 영역](../areas/collaboration.md)을 참고하십시오.
 
-출처: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/usecases/collaboration/UC-run-parallel-work-safely.md) (영어 원문),
-계약 [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문).
+출처: [`UC-run-parallel-work-safely`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/collaboration/UC-run-parallel-work-safely.md) (영어 원문),
+계약 [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md) (영어 원문).
 
 ## 시작하기 전에
 
 - `devkit-spec`이 설치된 Git 저장소여야 합니다.
-- 각 작업은 자신의 스펙 번들에 작업 범위를 선언해 둡니다. 구체적으로는 `target-docs.md` 또는 `reconcile.md`의 대상 문서, `tasks.md`의 `_Boundary` 항목, 그리고 대상 문서에 정의된 `entrypoints`입니다. 진입점(`entrypoints`) 정보를 통해 문서를 실제 코드 경로로 변환할 수 있습니다([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)). `specs/` 하위의 `_Boundary` 항목은 비교 대상에서 제외되지만, 다른 스펙 번들의 피드백 파일을 가리키는 특정 경로(`specs/**/feedback/<name>.md`)는 예외적으로 코드 경로로 수집됩니다. 따라서 동일한 피드백 파일을 처리하는 두 작업은 해당 파일에서 겹치는 것으로 감지됩니다.
+- 각 작업은 자신의 스펙 번들에 작업 범위를 선언해 둡니다. 구체적으로는 `target-docs.md` 또는 `reconcile.md`의 대상 문서, `tasks.md`의 `_Boundary` 항목, 그리고 대상 문서에 정의된 `entrypoints`입니다. 진입점(`entrypoints`) 정보를 통해 문서를 실제 코드 경로로 변환할 수 있습니다([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)). `specs/` 하위의 `_Boundary` 항목은 비교 대상에서 제외되지만, 다른 스펙 번들의 피드백 파일을 가리키는 특정 경로(`specs/**/feedback/<name>.md`)는 예외적으로 코드 경로로 수집됩니다. 따라서 동일한 피드백 파일을 처리하는 두 작업은 해당 파일에서 겹치는 것으로 감지됩니다.
 - 작업 범위 레지스트리는 Git 공통 디렉터리(`.git/`)에 저장되므로, 저장소 내의 모든 작업 워크트리가 추가 설정 없이 동일한 레지스트리를 공유합니다.
 
 ## 단계별 진행
@@ -77,7 +83,7 @@ translated_from: en/journeys/run-parallel-work-safely.md@7c75b2c93ff4b023
    uv run devkit spec policy     # look at [GIT_POLICY: worktree=...]
    ```
 
-   자세한 내용은 [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)를 참고하십시오.
+   자세한 내용은 [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)를 참고하십시오.
 2. **계획된 범위 비교.** 실제 작업을 시작하기 전에 계획된 작업 범위를 비교합니다. 이 단계에서는 선언된 명세만 읽으며 어떠한 변경도 기록하지 않습니다.
 
    ```sh
@@ -88,7 +94,7 @@ translated_from: en/journeys/run-parallel-work-safely.md@7c75b2c93ff4b023
    비교 대상 쌍마다 `[EVIDENCE: <path> ... kind=doc|code ...]` 증거가 포함된 `[PAIR: ... docs=N ...]` 센티널이 출력되고, 마지막에 `[SUMMARY: sets=2 pairs=1 overlapping=1]`이 표시됩니다.
 3. **작업 착수.** 병렬로 진행하기로 결정한 각 작업을 고유한 활동 브랜치와 독립된 작업 워크트리에서 시작합니다
    (`uv run devkit worktree start dev-<slug>`,
-   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
+   [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
    `devkit spec new`나 `devkit spec proposal handoff`가 연결된 워크트리(linked worktree)에서 유닛을 만들면, 초기 범위 스냅샷이
    레지스트리에 자동으로 기록됩니다. 이 등록은 최선 노력(best effort) 방식이어서, 실패하더라도 생성 자체는 성공하며 누구도 이를
    복구할 필요가 없습니다.
@@ -134,3 +140,10 @@ translated_from: en/journeys/run-parallel-work-safely.md@7c75b2c93ff4b023
 ## 최종 결과
 
 각 작업 쌍이 공유하는 문서와 코드 경로, 각 관찰의 출처, 그리고 누락된 커버리지가 얼마나 되는지 명확히 파악할 수 있습니다. 어떤 작업도 차단되거나 추가 기록 부담을 지지 않으며, 완료된 작업은 잔여 기록을 남기지 않습니다. 범위 중첩 증거는 선언된 명세와 Git의 관찰 결과를 종합한 분석일 뿐, 실제 Git 병합 충돌이나 완벽한 독립성을 단정하는 것은 아닙니다.
+
+## 일정 전에 겹침의 시점 읽기
+
+`scope collect`는 실제 관찰한 현재 쓰기와 Planning 제안이 선언한 미래 범위를 구분합니다.
+현재 범위가 겹치면 직렬화합니다. 미래만 겹치면 Planning은 병행하고 handoff·통합 순서를 정할 수 있습니다.
+`horizon`, 쌍별 `current`·`future` 개수, `current_overlapping`을 부분 관찰 근거와 함께 읽습니다.
+알 수 없는 입력이나 접근할 수 없는 소스로 독립성을 판단하지 않습니다.

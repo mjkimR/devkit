@@ -1,13 +1,13 @@
 ---
 sources:
-  ADR-document-id-aliases: 3e599afa8857afa9256843680e8ed264f56faa6b
-  ADR-document-package: 0160b060aa43c940edb5c3af25f4b96a4444698e
-  ADR-steering-documents-directory: f37962558ebd8e15985df6f217330c322b389e97
+  ADR-document-id-aliases: 68ed33481221e7501d97a98e78bfc8d0021e6ab0
+  ADR-document-system: 27416096ece2ddae00f9716d18e228863485ca80
+  ADR-steering-documents: 8456accd3516a1f33e6ccd3a93c7a58c05de0fd3
   ADR-terminal-statuses-are-historical: 5883cd244a53a90dc71cc9dc9c6520ef7cc97093
-  CAP-DOCS-document-lookup: f16d8d88730261a376acc66ccb8e11ce209d4b49
-  CAP-DOCS-document-model: 89280a2bb6003fe052fa7ee3ed50e368270bf9c6
-  CAP-DOCS-document-search: 60fc2aff10caad2a5b56dc61ad347369aafa2634
-  CAP-DOCS-namespaces: ee66025d062f5c547b58bd25964db7bef2f8c39e
+  CAP-DOCS-document-lookup: 047987d53dc77f859357a545cfb01a2e161f80a1
+  CAP-DOCS-document-model: 016e923f03d861ba71b8fe6a4a88fed61a07ff6a
+  CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
+  CAP-DOCS-namespaces: c30311a1b0b7bcf09517a9ec71e6b395569b6512
   UC-find-the-right-documents: fbfaa41c0802e14b1f363c666a5b4de450716895
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
 title: Documents
@@ -16,23 +16,29 @@ title: Documents
 # Documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.5` at source commit `18b834c35c0c`, generated 2026-10-29. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
 - [devkit handbook](../README.md)
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
-- [Adopt SDD from incubation](../journeys/adopt-sdd-from-incubation.md)
+- [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
+- [Advance an idea](../journeys/advance-an-idea.md)
+- [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Explore a design problem](../journeys/explore-a-design-problem.md)
+- [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
-- [Incubate an idea](../journeys/incubate-an-idea.md)
-- [Incubate and hand off a proposal](../journeys/incubate-and-hand-off-a-proposal.md)
+- [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
+- [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
+- [Record a maintenance run](../journeys/record-a-maintenance-run.md)
+- [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
@@ -61,7 +67,7 @@ title: Documents
 <!-- /handbook:generated -->
 
 The documents area is how devkit knows what a Living Spec document is and how you find one. It is owned by the
-`devkit-docs` package (`ADR-document-package`), which works without the spec-driven delivery package `devkit-spec`.
+`devkit-docs` package (`ADR-document-system`), which works without the spec-driven delivery package `devkit-spec`.
 Every capability, use case, UX document, decision, proposal, spec and feedback record is a Markdown file with an ID
 in its frontmatter. devkit builds an index of them on every call and gives you four commands over it:
 `devkit docs resolve`, `refs`, `list` and `search`.
@@ -72,7 +78,7 @@ for a change is the journey [Find the right documents](../journeys/find-the-righ
 ## What counts as a document
 
 A file is a document when all of these hold
-([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-model.md)):
+([CAP-DOCS-document-model](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-model.md)):
 
 - it is a `*.md` file under `docs/` or `specs/`, not a `README.md`, a template, a symlink or under a dot directory;
 - its frontmatter declares a well-formed ID in `id` (or `reconcile_id` for a reconcile record).
@@ -94,7 +100,7 @@ language.
 ### Steering documents
 
 `docs/steering/` holds project-wide background that is neither a contract nor evidence, such as the glossary
-(`ADR-steering-documents-directory`). Each file has only `title` and `summary` frontmatter and no ID, so it is not
+(`ADR-steering-documents`). Each file has only `title` and `summary` frontmatter and no ID, so it is not
 a document and not a search candidate. `devkit get-context docs` lists every steering file's title and summary, so
 an agent reads one only when it concerns the work; the document rules bound the directory and check the IDs it cites.
 
@@ -128,7 +134,7 @@ argument is accepted, and `uv run devkit rules fix` then rewrites current refere
 `resolve` prints one `[DOCUMENT: ...]` line per ID and exits `2` with `DOCS_ID_UNRESOLVED` or `DOCS_ID_DUPLICATE`
 for the ones it cannot settle. `refs` and `list` page their output: follow the `[NEXT_CMD: ...]` line for the next
 page. Every command accepts `--format json`. Options, line fields and JSON keys are in
-[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-lookup.md).
+[CAP-DOCS-document-lookup](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-lookup.md).
 
 ### History is hidden by default
 
@@ -157,7 +163,7 @@ by the ID and English summary (lexically and by meaning) and by title, area and 
 project-owned `docs/steering/glossary.yaml` expands query terms with synonyms, useful for terms in another language.
 Without the search extra the ranking is lexical; install it with `uv add 'devkit-docs[search]'` (included in
 `devkit-spec[search]`) for hybrid ranking. Details
-are in [CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-document-search.md);
+are in [CAP-DOCS-document-search](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-document-search.md);
 the ranking engine itself is described in [Search](search.md).
 
 ## Work in a monorepo with namespaces
@@ -175,7 +181,7 @@ The `[tool.docs]` table holds only `namespaces`; a malformed table fails every c
 run, with `DOCS_CONFIG_INVALID`.
 
 A namespace narrows what you *browse*, never what exists
-([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.5/docs/capabilities/documents/CAP-DOCS-namespaces.md)):
+([CAP-DOCS-namespaces](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/documents/CAP-DOCS-namespaces.md)):
 
 - `list` and `search` show the current directory's namespace plus the global documents by default;
   `--namespace NAME` picks one, `--namespace global` only global documents, `--all-namespaces` everything.
@@ -192,3 +198,15 @@ A namespace narrows what you *browse*, never what exists
 | `CAP-DOCS-document-lookup` | `resolve`, `refs` and `list`: options, output, codes |
 | `CAP-DOCS-document-search` | `devkit docs search`: candidates, pinning, glossary, modes |
 | `CAP-DOCS-namespaces` | monorepo namespaces and their selection |
+
+## Namespace steering and stable aliases
+
+A registered namespace can keep optional `steering/glossary.md`, `steering/glossary.yaml` and `steering/ux-objects.md`
+under `docs/packages/<name>/`. The agent reads applicable local registers with the global ones;
+local terms apply only to that namespace. A legacy package-level glossary needs a manual move or merge.
+Search expands global synonyms followed by the selected namespace synonyms; unselected namespaces do not affect it.
+
+Namespace milestones live under `docs/packages/<name>/roadmap/`, with done/dropped records in its `_archive/`.
+Document IDs remain unique across the repository. Alias repairs cover current indexed documents, steering code spans,
+glossary Owner cells and configured quick references. Historical records and materials retain their earlier spelling.
+Reciprocal whole/partial ADR supersession is checked by `RULE-decision-supersession`; semantic scope still needs review.
