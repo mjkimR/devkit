@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T00:29:46.269763Z'
+status: completed
+summary: Implemented requested-artifact framing, usefulness checking, selective source verification and bounded technical retrieval recovery while preserving access refusal, local roles and coordinator-only retention. Independent code review passed; reconcile P2 was fixed and all three contracts resolved.
+findings: []
+assumptions:
+- Local integration is the Host responsibility; policy auto supplies dev-integration only after required evidence, not publication authority.
+- No textual test was added to mirror prose; semantic review covers six examples and existing real deployment checks preserve packaging.
+unverified_areas:
+- No comparative experiment, measured quality/token claim or real research outcome evaluation was requested or performed.
+checks:
+  tests: PASS just test-affected --base 94cd340e166d0714788c185f514923268e6d0b2a; 126 passed; existing installed-consumer e2e 1 passed
+  build: PASS existing installed-consumer builds wheels and exercises selection/removal without spec dependency; 1 passed
+  lint: PASS catalog lint/format and Pyright; 22 CI rules; sync --check exit0; diff clean
+diff_scope:
+  base: 5d1555938181f2365c0d672e9fa0554bd01c8505
+  head: 076ab8336c14c945c4f49a6e5e3ff95f7bc2bcfc
