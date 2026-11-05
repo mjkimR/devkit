@@ -1,13 +1,13 @@
 ---
-id: PADR-user-mediated-cloud-research
+id: ADR-user-mediated-cloud-research
 title: Keep cloud research user mediated and resumable
 summary: "For cloud research in an explicit investigation, we use inspectable user-mediated requests and result intake in the existing partial material, to reuse cloud evidence without a runtime, accepting manual transfer and verification limits."
-proposal: PROP-cloud-research-handoff
-status: draft
+proposal: SPEC-cloud-research-handoff
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-user-mediated-cloud-research] Keep cloud research user mediated and resumable
+# [ADR-user-mediated-cloud-research] Keep cloud research user mediated and resumable
 
 ## 1. Context & Problem Statement
 

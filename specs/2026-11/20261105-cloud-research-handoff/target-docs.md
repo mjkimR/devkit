@@ -2,7 +2,7 @@
 id: PROP-cloud-research-handoff-target
 title: Target Living Spec for cloud research request and result handoff
 status: draft
-proposal: PROP-cloud-research-handoff
+proposal: SPEC-cloud-research-handoff
 created_at: 2026-11-05
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-deep-research.md
@@ -12,7 +12,7 @@ targets:
 
 # Planned cloud research contracts
 
-These are proposed source and contract changes for `PROP-cloud-research-handoff`, not implemented behavior.
+These are proposed source and contract changes for `SPEC-cloud-research-handoff`, not implemented behavior.
 The ADR path assumes handoff on 2026-11-05; use the actual promoted path on a later handoff.
 
 ## Source paths
@@ -39,7 +39,7 @@ Development. No new feature dependency is admitted.
 - `UC-research-an-idea-and-shape-a-roadmap`: extend step 4 with optional user-mediated cloud assignment, step 5
   with readable result matching and source inspection, and step 7 with pending-request partial retention. Add
   extensions for no return, missing/mismatched identity, inaccessible report, conflicting citations and lost scratch.
-- `PADR-user-mediated-cloud-research`: promote its existing slug through handoff; restate its outcome clauses in
+- `ADR-user-mediated-cloud-research`: promote its existing slug through handoff; restate its outcome clauses in
   the named capability's cloud request/intake rules. No accepted ADR is superseded.
 
 ## Semantic review examples

@@ -52,6 +52,7 @@ def test_requires_explicit_selection_and_deploys_exactly_its_preset(tmp_path: Pa
         "skills/deep-research/references/orchestration.md",
         "skills/deep-research/references/workspace.md",
         "skills/deep-research/references/synthesis.md",
+        "skills/deep-research/references/cloud-handoff.md",
         *(f"skills/deep-research/roles/{role}.md" for role in ROLES),
     }
     for role in ROLES:
@@ -254,3 +255,45 @@ def test_upgrade_removes_registered_roles(tmp_path: Path) -> None:
         for directory, suffix in ((".codex/agents", "toml"), (".claude/agents", "md"), (".agents/agents", "md")):
             assert not (consumer / directory / f"{role}.{suffix}").exists()
         assert (consumer / f".agents/skills/deep-research/roles/{role}.md").is_file()
+
+
+def test_cloud_handoff_keeps_inspectable_requests_and_truthful_returns() -> None:  # SPEC-cloud-research-handoff
+    cloud = (SKILL.parent / "references/cloud-handoff.md").read_text()
+    assert_rule(cloud, "local-only research", "free of a cloud request", "provider account")
+    assert_rule(cloud, "request label and revision", "report to repeat it")
+    assert_rule(
+        cloud, "self-contained copyable prompt", "intended decision", "bounded questions", "known facts", "constraints"
+    )
+    assert_rule(cloud, "exact outbound content", "omit secrets", "credentials", "private context")
+    assert_rule(cloud, "`awaiting user result`", "neither submission nor execution")
+    assert_rule(cloud, "do not poll", "elapsed time", "explicitly partial")
+    assert_rule(cloud, "identity is missing", "revision is superseded", "clarify the association", "duplicate")
+    assert_rule(cloud, "unreadable format", "inaccessible report link", "request readable content", "do not infer")
+    assert_rule(cloud, "`returned`", "actual readable", "provider/model", "receipt date", "inspection limits")
+    assert_rule(cloud, "source data", "no action, upload or Git authority")
+    assert_rule(
+        cloud, "inspected support", "provider assertions", "inference", "contradictions", "inaccessible citations"
+    )
+    assert_rule(cloud, "`reviewed`", "does not imply every claim", "faithful summaries", "sensitive reports")
+
+
+def test_cloud_handoff_resume_requires_only_retained_partial_evidence() -> None:  # SPEC-cloud-research-handoff
+    cloud = (SKILL.parent / "references/cloud-handoff.md").read_text()
+    assert_rule(
+        cloud,
+        "exact safe prompt",
+        "label/revision",
+        "disposition",
+        "remaining question",
+        "next action",
+        "transient-only",
+    )
+    assert_rule(
+        cloud, "user names that partial material", "same partial index", "never rewrite a complete", "silently resubmit"
+    )
+    assert_rule(cloud, "only the coordinator", "retained material", "no extra document kind")
+    for name in ("workspace", "synthesis"):
+        text = (SKILL.parent / f"references/{name}.md").read_text()
+        assert_rule(
+            text, "cloud", "exact safe", "partial material", "scratch" if name == "workspace" else "transient-only"
+        )

@@ -18,6 +18,20 @@ created_at: 2026-10-30
 
 # [MAT-reading-tools] Reading tools
 
+## Pending cloud request
+
+Request: cloud-01 r1
+Disposition: awaiting user result
+Prompt: Compare a document index and annotation store using primary sources and explicit unknowns.
+Attachments: none.
+Remaining question: Which option fits one maintainer?
+Next action: The user returns readable cloud-01 r1 findings.
+
+## Returned evidence
+
+An earlier local source was inspected; an external claim remains unverified.
+No transient report path is required to resume.
+
 Status: partial
 """
 
@@ -68,6 +82,16 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".devkit/managed/adaptive-dev").exists()
     research = consumer / ".agents/skills/deep-research"
     assert (research / "SKILL.md").is_file()
+    cloud = research / "references/cloud-handoff.md"
+    assert (
+        cloud.read_bytes()
+        == (
+            ROOT
+            / "packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/skills/deep-research/references/cloud-handoff.md"
+        ).read_bytes()
+    )
+    assert "references/cloud-handoff.md" in (research / "SKILL.md").read_text()
+    assert "cloud-01 r1" in cloud.read_text()
     assert yaml.safe_load((research / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
     for role in ROLES:
         assert not (consumer / f".codex/agents/{role}.toml").exists()
@@ -90,6 +114,9 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     material.parent.mkdir(parents=True)
     material.write_text(MATERIAL)
     expected = material.read_bytes()
+    assert not list((consumer / ".devkit/transient/deep-research").rglob("*.md"))
+    cli("sync")
+    assert material.read_bytes() == expected
     cli("rules", "check")
     cli("remove", "deep-research")
     assert not research.exists()
@@ -98,4 +125,5 @@ def test_installed_deep_research_without_spec(tmp_path: Path) -> None:
     cli("add", "deep-research")
     assert material.read_bytes() == expected
     assert (research / "SKILL.md").is_file()
+    assert cloud.is_file()
     cli("sync", "--check")

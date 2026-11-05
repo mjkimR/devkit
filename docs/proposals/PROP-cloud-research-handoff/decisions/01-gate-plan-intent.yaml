@@ -1,8 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: User authorizes Planning for cloud research handoff at medium effort.
-by: user
-at: '2026-11-05T03:56:29.031242Z'

@@ -5,6 +5,7 @@
 3. In a project without Git, report that ignore/index checks are unavailable; the run is still temporary project-owned scratch, not a durable artifact store.
 4. Give each writing assignment its own absolute task directory inside the run; other task directories and retained product files are outside that write boundary.
 5. Record the run question, input identities, assignments, stopping conditions and in-flight state in the run brief; keep role outputs, source notes and experiment files in their assigned directories.
+   Keep optional cloud request/report scratch in this run; before pausing, preserve the exact safe request and required return evidence in the partial material, not only a scratch pointer.
 6. Give a role scratch write permission only in its payload and effective contract; otherwise keep it read-only. Existing experiment permission is separate from scratch-note permission.
 7. Compare actual changed paths and relevant source/index/HEAD state before accepting results; reject writes outside assigned boundaries without discarding another actor's state.
 8. Before retaining results, select the useful synthesis, supporting evidence, experiment outcomes and important rejected alternatives; do not copy the whole run by default.

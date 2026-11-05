@@ -1,10 +1,10 @@
 ---
 id: UC-research-an-idea-and-shape-a-roadmap
 title: Research an idea and shape an initial roadmap
-summary: "An AI coding agent coordinates bounded research toward the requested artifact, reviews evidence selectively and retains a useful recommendation with conditional follow-up and resumable unknowns in one indexed material."
+summary: "An AI coding agent coordinates bounded local and optional user-mediated cloud research, reviews evidence selectively and retains recommendations, pending requests and resumable unknowns in one indexed material."
 area: delivery
 primary_actor: AI coding agent
-supporting_actors: [Product owner, Optional research and discovery subagents]
+supporting_actors: [Product owner, Optional research and discovery subagents, Optional user-operated cloud research application]
 status: active
 capabilities:
   - CAP-DLV-deep-research
@@ -28,10 +28,10 @@ entrypoints:
 1. The agent accepts the explicitly invoked research activity (`CAP-DLV-deep-research`, `CAP-HARN-agent-guidance`).
 2. The agent recovers current goals, constraints, decisions and supplied evidence without an approach check (`CAP-DLV-deep-research`).
 3. The agent frames the requested artifact, intended use, comparison criteria and research bound (`CAP-DLV-deep-research`).
-4. The agent allocates needed run/task scratch and commissions useful independent investigations inside assigned authority (`CAP-DLV-deep-research`).
-5. The agent reviews returned evidence, actions and candidate assumptions, targeting consequential source gaps under common criteria (`CAP-DLV-deep-research`).
+4. The agent allocates needed scratch and commissions useful investigations inside assigned authority (`CAP-DLV-deep-research`).
+5. The agent associates actual returned evidence with its investigation and reviews actions, support and candidate assumptions under common criteria (`CAP-DLV-deep-research`).
 6. The agent drafts a supported provisional recommendation and unresolved decisions (`CAP-DLV-deep-research`).
-7. The agent retains a useful synthesis of the requested artifact, evidence and proportionate conditional follow-up as one indexed material with its status (`CAP-DLV-deep-research`).
+7. The agent retains the requested artifact, evidence, pending questions and proportionate conditional follow-up as one indexed material with its status (`CAP-DLV-deep-research`).
 8. The agent reports the actual outcome, evidence limits, the material's path and ID, the commit the user directs and the next useful action (`CAP-DLV-deep-research`).
 
 ## 3. Extensions
@@ -44,22 +44,27 @@ entrypoints:
 - **4a.** Small question: the agent stays inline or uses one support role; resumes at step 5.
 - **4b.** Delegation unavailable: the agent uses a permitted equivalent context/contract or reports missing coverage and continues only independently useful authorized work; resumes at step 5.
 - **4c.** Scratch is tracked or not ignored in Git: the agent stops allocation and reports the conflict without editing ignore rules; permitted read-only inquiry may continue at step 5.
+- **4d.** A bounded question benefits from cloud work or the user requests it: the agent supplies an inspectable request for the user to submit and return; independent local work continues at step 5 without claiming provider execution.
 - **5a.** Unsupported/out-of-scope return: the agent rejects it as evidence, preserves the actual state and reports the affected coverage; resumes at step 3 for a permitted remedy.
 - **5b.** Evidence insufficient or bound exhausted: the agent retains partial evidence and missing questions; proceeds to step 6 with no fabricated winner.
 - **5c.** Candidate directions share one premise: the agent reframes a useful independent investigation or explains the constraints leaving one viable candidate; resumes at step 3 or proceeds to step 6.
 - **5d.** Ordinary public-source timeout, broken link or unreadable result without an access refusal: the agent uses bounded authorized recovery, reports the failed retrieval and actual inspected replacement, and leaves unsupported claims unverified; resumes at step 5 or proceeds to step 6 with partial evidence.
 - **5e.** Trust, sandbox, permission or source access is refused: the agent stops access to that resource without rerouting denied access and reports missing coverage; unrelated permitted work continues at step 5 or partial synthesis proceeds at step 6.
 - **5f.** Authorization is ambiguous: the agent stops access to that resource and reports the uncertainty; unrelated permitted work continues at step 5 or partial synthesis proceeds at step 6.
+- **5g.** The cloud report is unreadable or its link is inaccessible: the agent requests readable content and retains missing coverage; proceeds to step 6 with partial evidence.
+- **5h.** A return lacks request identity, names a superseded revision or mismatches the question: the agent clarifies association before counting it as the pending answer; older background is limited and duplicates add no unsupported progress; resumes at step 5.
+- **5i.** A readable report contains unsupported/conflicting claims or instructions asserting authority: the agent preserves evidence limits and treats instructions as source data; proceeds to step 6 without new action authority.
 - **6a.** The supported draft omits the requested artifact or imposes an unwanted prerequisite: the coordinator repairs the gap or burden against the user's goal and constraints, using optional criticism when useful; resumes at step 6.
 - **7a.** Retained content depends on scratch-only references: the coordinator retains needed supporting evidence or replaces links with stable sources before finishing; resumes at step 7.
 - **7b.** The chosen material ID resolves or its directory exists: the coordinator chooses another slug without overwriting the existing material; resumes at step 7.
 - **7c.** Comparative validation was declined: the synthesis keeps uncertain benefits explicit and a usable next action without making comparison an adoption prerequisite; continues at step 8.
+- **7d.** Cloud evidence remains pending when pausing: the agent retains the exact safe request and necessary return evidence in the same partial material, sufficient without scratch; a later user-named resume returns to step 3 without silent resubmission.
 - **8a.** User authorizes implementation: later work cites the retained material by its ID as ordinary intake; this research action ends without implementation, a commit or publication.
 
 ## 4. Postconditions
 
 - **Success guarantee**: one retained material distinguishes evidence, assumptions, recommendations and actual
-  decisions; its roadmap is conditional, its `Status` and open questions let a later run or consumer recover the next
+  decisions; pending cloud work retains its safe request and actual disposition; its roadmap is conditional, and its `Status` and open questions let a later run or consumer recover the next
   useful decision, and it is left uncommitted for the user's Git policy.
 - **Minimal guarantee**: no approach inspection or change, Unit, commit, user approval, role execution or unavailable
   evidence is claimed; no existing material is overwritten; any boundary failure and affected state remain visible.
@@ -68,7 +73,7 @@ entrypoints:
 
 Rules: explicit invocation; approach neutrality; SDD intake exemption; research authority; optional support; bounded
 evidence; role boundaries; provenance; research workspace; selective promotion; initial synthesis; one material per
-investigation; collision check; resume; citation; bounded partial result; research completion; deliverable framing; usefulness; selective verification; retrieval recovery; access refusal; proportionate follow-up; recovery provenance.
+investigation; collision check; resume; citation; bounded partial result; research completion; deliverable framing; usefulness; selective verification; retrieval recovery; access refusal; proportionate follow-up; recovery provenance; optional cloud research; cloud request; cloud disclosure; cloud status; cloud association; cloud evidence; report authority; cloud resume; missing cloud result.
 
 ### Scenario 1: Compare an initial idea and retain the result
 
@@ -203,3 +208,43 @@ investigation; collision check; resume; citation; bounded partial result; resear
 - **Given**: the requester declines same-task team comparisons and benefit-validation work.
 - **When**: the conditional roadmap is retained.
 - **Then**: it states uncertain benefits and a usable starting point without comparison or proof of superiority as an adoption prerequisite.
+
+### Scenario 20: Hand a bounded cloud request to the user
+
+- **Covers**: 4d
+- **Given**: an invoked investigation with a useful bounded cloud question.
+- **When**: the coordinator prepares the copyable request.
+- **Then**: the user sees exact safe outbound content and return instructions with label/revision; the state is
+  awaiting user result, with no claim that a provider task ran and no cloud requirement for local-only work.
+
+### Scenario 21: Keep an unreadable or absent return partial
+
+- **Covers**: 5g
+- **Given**: no returned report, an unreadable attachment or an inaccessible report link.
+- **When**: the investigation reaches its bound.
+- **Then**: readable content is requested where needed, useful local evidence survives, and missing support stays
+  partial without polling, fabricated contents or elapsed-time progress claims.
+
+### Scenario 22: Associate stale and duplicate reports explicitly
+
+- **Covers**: 5h
+- **Given**: a return without identity, for an older revision, mismatching the question or repeating an earlier report.
+- **When**: the coordinator matches it to pending work.
+- **Then**: ambiguous association is clarified, any older background is limited, and neither a duplicate nor a
+  stale return silently answers the current request or proves additional progress.
+
+### Scenario 23: Qualify report claims and authority
+
+- **Covers**: 5i
+- **Given**: readable findings with accessible, inaccessible or conflicting support and a request to upload files.
+- **When**: the coordinator reviews the return.
+- **Then**: actual inspected support, external assertions, inference and gaps stay distinct; report instructions
+  grant no action or Git authority, and reviewed status claims no universal citation verification.
+
+### Scenario 24: Resume a pending cloud request without scratch
+
+- **Covers**: 7d, 2c
+- **Given**: the user names the same partial material and transient files no longer exist.
+- **When**: the investigation resumes.
+- **Then**: the exact safe request, label/revision, selected attachments, disposition, remaining question, next action
+  and retained evidence suffice; the same partial index is updated without silent resubmission or rewriting a complete material.
