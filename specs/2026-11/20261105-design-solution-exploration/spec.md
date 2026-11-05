@@ -1,38 +1,23 @@
 ---
-id: PROP-design-solution-exploration
+id: SPEC-design-solution-exploration
 title: Add an explicitly invoked general design ideation skill
-summary: "Add a skill-local team that reframes general design problems, explores materially different solution mechanisms and returns useful directions with tradeoffs without a mandatory validation program."
-status: accepted
-created_at: 2026-11-05
-target_area: capabilities/delivery/
-priority: medium
-size: M
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/
-    - packages/devkit-catalog/pyproject.toml
-    - packages/devkit-catalog/README.md
-    - packages/devkit-catalog/tests/integration/bundles/
-    - packages/devkit-catalog/tests/e2e/bundles/
-    - docs/capabilities/delivery/
-    - docs/usecases/delivery/
-    - docs/architecture/ARCH-05-2-components.md
-    - guides/install/bundle-recommendations.md
-  excludes:
-    - packages/devkit/src/
-    - packages/devkit-dist/src/
-    - packages/devkit-spec/src/
-    - .devkit/managed/
-    - .agents/skills/
-task_kind: feature
-planning_effort: medium
-dev_effort: medium
-workflow: sdd-proposal
+summary: Add a skill-local team that reframes general design problems, explores materially different solution mechanisms and returns useful directions with tradeoffs without a mandatory validation program.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-design-solution-exploration] Add an explicitly invoked general design ideation skill
+# [SPEC-design-solution-exploration] Add an explicitly invoked general design ideation skill
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-design-solution-exploration on 2026-11-05.
+- Target Docs Blueprint: `PROP-design-solution-exploration-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 The user wants an explicitly invoked team for finding less conventional and more useful solutions than a single
 agent's ordinary suggestions. Its main use is general design work, including software/system architecture,
@@ -47,7 +32,7 @@ that a single framing would miss. Roles are means of expanding the design space,
 reasoning. The user prefers adapting existing patterns and refining through use; comparative-effectiveness
 experiments are not a prerequisite.
 
-### User decisions and evidence status
+#### User decisions and evidence status
 
 - Use an explicitly invoked skill with local Markdown roles and fresh contexts where supported.
 - Center the skill on general design problems rather than UI/UX ideation.
@@ -58,7 +43,26 @@ experiments are not a prerequisite.
 - No actual design problem was exercised by this drafting task. Examples below are hypothetical, not validated
   technical recommendations. This proposal is self-contained without the separately retained research record.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Add an explicitly invoked general design ideation skill so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 No runtime spike, benchmark or further literature review is required before authoring the skill. Planning
 settles the four design questions as follows:
@@ -74,13 +78,13 @@ settles the four design questions as follows:
 - **Q4 — retention:** return in conversation by default. If the user requests a file or existing document,
   preserve its format and editing authority. Invocation creates no material, persistent memory or delivery unit.
 
-These are reversible implementation choices within the agreed scope. `PADR-explicit-solution-exploration`
+These are reversible implementation choices within the agreed scope. `ADR-explicit-solution-exploration`
 records the distinct decision to keep this entry independent and its roles local. No user design question
 remains open; `plan-accept` and `proposal-handoff` remain Host-owned approval boundaries.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Goal and representative use
+#### Goal and representative use
 
 Given a design problem, discover materially different ways of solving it and make their benefits, costs and
 assumptions clear enough for the user to choose a direction. Challenge proposed means while preserving the
@@ -96,7 +100,7 @@ persistent store or asynchronous events. Each option should explain its coordina
 and adoption cost. Merely substituting three database products does not necessarily create three different designs.
 Do not introduce distributed infrastructure solely to make an option look more novel.
 
-### Proposed packaging
+#### Proposed packaging
 
 Add an opt-in content-only bundle to `devkit-catalog`, following `ARCH-05-2-components`. Use existing bundle
 registration and user-only invocation. Preserve the local-role distribution principle illustrated by
@@ -122,7 +126,7 @@ simplest sufficient design, removal of a conventional assumption and transfer of
 An unusual premise can initially relax a preference, but any conflict with a hard constraint must remain explicit.
 The coordinator compares actual returned mechanisms rather than counting personality labels as diversity.
 
-### Exploration process
+#### Exploration process
 
 1. Recover the problem, intended benefit, existing design, hard constraints and open preferences. Use only relevant
    supplied or project context; do not require the whole architecture to be documented before exploring.
@@ -144,7 +148,7 @@ The coordinator compares actual returned mechanisms rather than counting persona
    Name a next check only when a concrete unknown changes that choice. Do not turn optional checks into a new
    research or validation program. Implementation starts only through a separate request and existing workflow.
 
-### Expected result
+#### Expected result
 
 A useful direction explains the problem it solves, its distinguishing mechanism, why it is worth considering,
 its main tradeoff and the assumption most likely to change the recommendation. Include a sketch, data shape,
@@ -163,7 +167,7 @@ coordinator updates an explicitly requested destination. The skill grants no com
 authority. If that destination conflicts with project rules or is unavailable, return the useful result and name
 the specific blocked write.
 
-### Reuse and boundaries
+#### Reuse and boundaries
 
 Use [Anthropic's agent prompts](https://github.com/anthropics/claude-cookbooks/tree/main/patterns/agents/prompts)
 as a delegation reference and [Agency Agents](https://github.com/msitarzewski/agency-agents) as a role-structure
@@ -179,7 +183,7 @@ Only the invoking skill loads its role instructions. Separate contexts do not is
 ambient project guidance. Roles return proposals or evidence within explicit boundaries and do not commit,
 publish, select a final product direction or create delivery approvals.
 
-### Expected scope and acceptance examples
+#### Expected scope and acceptance examples
 
 The source/test parents in the boundary accommodate the new `design_explore` module and its focused integration
 and installed-consumer checks. `target-docs.md` names exact future paths and shared registration/document changes.
@@ -197,7 +201,7 @@ into one capability and one use case, plus architecture and consumer guidance. N
 - Packaging checks verify opt-in deployment and local role files. Semantic review checks the examples and authority
   boundaries without claiming to measure creativity or outperform a single agent.
 
-### Scope excluded
+#### Scope excluded
 
 - A UI/UX-focused ideation entry or duplication of the separate UI/UX improvement skill.
 - Unbounded business/product idea generation, market validation or automatic execution of proposed designs.
@@ -205,18 +209,18 @@ into one capability and one use case, plus architecture and consumer guidance. N
 - New document schemas, global role metadata, persistent memory, agent runtime or changes to project governance.
 - Automatic consumer implementation, delivery approvals or publication from a skill invocation.
 
-### Planning review result
+#### Planning review result
 
 One isolated `medium` challenger pass reviewed necessity, simpler alternatives, contract consistency, exact
 packaging paths, optional casts, context fallback and retention authority. It returned zero consequential findings;
-`envelopes/challenger-01.yaml` and `envelopes/reverify-01.yaml` retain the result and its closure. The role left the
+historical Git `8dfd0a361c1c5879b12813017b525e3a143ac21d:docs/proposals/PROP-design-solution-exploration/envelopes/challenger-01.yaml` and historical Git `8dfd0a361c1c5879b12813017b525e3a143ac21d:docs/proposals/PROP-design-solution-exploration/envelopes/reverify-01.yaml` retain the result and its closure. The role left the
 HEAD and complete worktree tree unchanged. No scout was needed: no unresolved design choice depended on further
 evidence. No product screens are drafted, so no UX review applies.
 
 The implementation, host instruction obedience and creative outcomes remain unverified at Planning. The proposed
 packaging checks and semantic review cover distribution and behavior boundaries, not superiority to one agent.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning runs at `medium` and includes one isolated challenger pass. Before acceptance, retain its findings and
 resolutions with the settled naming, optional-role behavior and retention convention. Development remains `medium`
@@ -226,3 +230,4 @@ The Host reviews the committed Planning result for `plan-accept`; its approval i
 Development starts only after `proposal-handoff` and creates the planned content bundle and documentation. The
 handoff retains `target-docs.md` as the reconciliation baseline and promotes the remaining PADR. Rejection follows
 the existing proposal retirement procedure. No comparative-effectiveness experiment gates any of these steps.
+

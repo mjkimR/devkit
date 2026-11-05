@@ -1,14 +1,13 @@
 ---
-id: PADR-explicit-solution-exploration
+id: ADR-explicit-solution-exploration
 title: Keep general solution exploration explicitly invoked and self-contained
 summary: "For general solution design, we ship an independent user-invoked skill with local optional roles, to explore distinct mechanisms without ambient role guidance, accepting repeated coordination text."
-proposal: PROP-design-solution-exploration
-# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in Decision Outcome
-status: draft
+proposal: SPEC-design-solution-exploration
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-explicit-solution-exploration] Keep general solution exploration explicitly invoked and self-contained
+# [ADR-explicit-solution-exploration] Keep general solution exploration explicitly invoked and self-contained
 
 ## 1. Context & Problem Statement
 
