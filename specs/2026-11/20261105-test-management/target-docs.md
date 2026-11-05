@@ -2,7 +2,7 @@
 id: PROP-test-management-target
 title: Test-management target Living Spec
 status: draft
-proposal: PROP-test-management
+proposal: SPEC-test-management
 created_at: 2026-11-05
 targets: []
 ---

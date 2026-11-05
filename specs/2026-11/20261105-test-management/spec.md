@@ -1,44 +1,53 @@
 ---
-id: PROP-test-management
+id: SPEC-test-management
 title: Evidence-based test management playbook
-summary: "Evaluate a reusable test-management playbook for consumer repositories using findings from an unreviewed implementation draft. Establish evidence, scope and verification criteria before adopting runner, tiering or integration guidance."
-status: accepted
-created_at: 2026-11-05
-target_area: capabilities/delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/
-    - packages/devkit-catalog/tests/integration/bundles/test_bundles.py
-    - packages/devkit-catalog/README.md
-    - docs/capabilities/delivery/
-    - docs/usecases/
-  excludes:
-    - packages/devkit/src/
-    - .devkit/config.toml
-    - .github/workflows/
-    - justfile
-    - scripts/
-task_kind: feature
-workflow: sdd-proposal
+summary: Evaluate a reusable test-management playbook for consumer repositories using findings from an unreviewed implementation draft. Establish evidence, scope and verification criteria before adopting runner, tiering or integration guidance.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-test-management] Evidence-based test management playbook
+# [SPEC-test-management] Evidence-based test management playbook
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-test-management on 2026-11-05.
+- **Preserved Materials**: `docs/materials/2026-11/20261105-test-management`
+- Target Docs Blueprint: `PROP-test-management-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Devkit, Auto Hub and Resource Indexer use different test ownership, resource boundaries and completion gates.
 A reusable assessment procedure can find concrete coverage, isolation and runner-cost problems without imposing
 one test layout or worker count. The implementation-shaped draft was removed; its review observations remain in
-[review notes](materials/README.md). No source snapshots are retained.
+[review notes](../../../docs/materials/2026-11/20261105-test-management/README.md). No source snapshots are retained.
 
-The [repository assessment](materials/repository-assessment.md) records actual commands and constraints from all
+The [repository assessment](../../../docs/materials/2026-11/20261105-test-management/repository-assessment.md) records actual commands and constraints from all
 three repositories. These were read-only inspections, not application test runs or performance measurements.
 
-## 2. Planning Decisions and Alternatives
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Evidence-based test management playbook so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions and Alternatives
 
 | Option | Benefit | Cost/risk | Recommendation |
 | --- | --- | --- | --- |
@@ -53,7 +62,7 @@ report details, and `references/pytest.md` only for pytest/xdist consumers. No f
 fixture templates, branch-promotion instructions, runtime command or new feature dependency edge is needed.
 These bounded asset choices require no change to accepted architecture/integration policy and no separate PADR.
 
-### Procedure
+#### Procedure
 
 1. Record user-selected roots, HEAD/dirty paths, native commands, ownership and required gates. Inspect collection
    hooks, credentials, services and data boundaries before running tests; collection itself can execute code.
@@ -68,7 +77,7 @@ These bounded asset choices require no change to accepted architecture/integrati
 6. Report actual commands/outcomes, unresolved checks and decisions. Do not start another playbook automatically,
    require a history service, publish evidence or retain raw/source snapshots as part of routine assessment.
 
-### Recommended repository settings
+#### Recommended repository settings
 
 - **Devkit:** retain package tiers, affected selection/full fallback, capped worksteal runner and final landed-HEAD
   verification; preserve frontend instructions. Nightly checks are additional coverage.
@@ -79,13 +88,13 @@ These bounded asset choices require no change to accepted architecture/integrati
 
 The sibling repositories are read-only references. Consumer configuration changes require separate work there.
 
-## 3. Development Scope and Verification
+### 3. Development Scope and Verification
 
 Add the three-file playbook, manifest/preset registration and catalog README entry. Extend existing catalog
 integration checks. Document one delivery capability and one reciprocal use case. Keep shipped text self-contained
 and apply the authoring bundle's router guidance. No consumer-specific document IDs belong in shipped assets.
 
-### Candidate acceptance criteria
+#### Candidate acceptance criteria
 
 - **AC-01:** `testing` and implicit `all` deploy the complete asset; individual presets keep their selections;
   unselected consumers receive nothing. Availability never invokes assessment.
@@ -108,14 +117,15 @@ requested. Compare node-ID multisets, outcomes and cleanup. Keep raw logs outsid
 short conclusion. Inconclusive evidence means retain current settings, not introduce a benchmark framework.
 No performance claim or default promotion is made in this Planning.
 
-### Non-goals
+#### Non-goals
 
 Consumer edits, test relayout, new affected selectors, application bug fixes, CI/branch policy redesign, benchmark
 frameworks, raw evidence archives and mandatory history services. This unit ships assessment guidance only.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Keep `status: reviewing` on `plan-test-management` while presenting the committed direction and independent
 Challenger evidence. Current policy requires user direction acceptance and separate Development handoff authority.
 No consumer edits, source snapshots or automatic draft restoration are authorized. On acceptance, carry the
 assessment and chosen design through the normal feature-spec handoff. Rejection follows normal retirement.
+
