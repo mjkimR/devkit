@@ -136,7 +136,7 @@ evidence, compares directions and retains a useful proportionate synthesis. It r
 | research-investigator | Sourced evidence for one question of the investigation, or one bounded experiment (including actual usage of an existing flow) | Read-only by default; assigned scratch notes or experiment writes only |
 | direction-explorer | One distinct premise with its users and problem, intended usage, trade-offs, critical assumptions and discriminating evidence | Product read-only; assigned scratch notes only; no production implementation or winner declaration |
 | discovery-critic | Cross-candidate framing, evidence and output-usefulness findings with failure conditions, or zero findings | Product read-only; assigned scratch notes only; no decision or demanded consensus |
-| discovery-planner | Draft research brief, research and architecture notes and a conditional roadmap | Product read-only; assigned scratch notes only; no retained-material writes |
+| discovery-planner | Requested artifact with supporting framing, alternatives, architecture notes or conditional roadmap only where useful | Product read-only; assigned scratch notes only; no retained-material writes |
 
 Every role leaves the index and HEAD unchanged and commits or publishes nothing; only the coordinator writes the
 retained material. A result contains status (`completed`, `needs_input` or `failed`), summary, source/artifact
@@ -163,7 +163,7 @@ user names one.
 | --- | --- |
 | Directory | `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` |
 | Index | `<YYYYMMDD>-<slug>.md` with frontmatter `id: MAT-<slug>` and `created_at`, H1 `# [MAT-<slug>] <title>` |
-| Contents | Research brief, research and alternatives, direction and architecture, initial roadmap, in the index or linked notes; no fixed file count |
+| Contents | Requested artifact in the index or linked notes, with supporting framing, alternatives, architecture or roadmap only where useful; factual results need no universal template or fixed file count |
 | Status | A `Status:` line (`complete` or `partial`), open questions and the next investigation |
 | Linked notes | Relative links from the index; a note carries its own `MAT-` ID only when cited alone |
 | Citation | `MAT-<slug>` in a code span, which `RULE-document-reference` resolves; proposal handoff leaves it unchanged |

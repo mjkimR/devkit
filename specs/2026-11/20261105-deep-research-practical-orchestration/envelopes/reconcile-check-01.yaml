@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T00:28:12.750669Z'
+status: completed
+summary: Independent reconcile review confirmed all three targets and source contract coverage; one P2 requires deliverable-dependent planner/material output descriptions.
+findings:
+- issue: Capability output descriptions incompletely reflect deliverable-dependent synthesis.
+  evidence: CAP-DLV-deep-research role table and retained-material Contents row list generic architecture/roadmap outputs without the qualifications in discovery-planner.md and synthesis.md.
+  failure_condition: A narrow factual or practical-artifact inquiry can be read as requiring generic architecture notes and a roadmap.
+  suggested_action: Qualify both descriptions around the requested artifact and include supporting content only where useful.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex read-only scope and parent snapshot audit are emulated substitutes, not native enforcement.
+unverified_areas:
+- Model obedience, empirical usefulness and comparative effectiveness remain unmeasured.
+checks:
+  boundaries: PASS identical before/after HEAD and tree; no outside reads or writes
+diff_scope:
+  base: 5d1555938181f2365c0d672e9fa0554bd01c8505
+  head: 959f3432234c901722def9278566f6d00bd90420
+activity_effort: medium
