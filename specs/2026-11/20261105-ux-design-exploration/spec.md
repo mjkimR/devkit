@@ -2,7 +2,7 @@
 id: SPEC-ux-design-exploration
 title: Add an explicitly invoked UI/UX improvement skill
 summary: "Ship uiux-improve as an opt-in content-only skill that carries requested interface and flow improvements through the consumer workflow with optional local perspectives."
-status: in-progress
+status: completed
 created: 2026-11-05
 related_capabilities: []
 related_usecases: []
