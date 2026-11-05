@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T06:53:16.238912Z'
+status: completed
+summary: round 1; closes reconcile-check-01; exact suggested diagram/README/prose qualifier fixes applied and multiline equality scan empty; fresh round2 follows.
+findings: []
+assumptions:
+- Wording-only repair preserves accepted selective-version contract; no production code/API/schema changed.
+checks:
+  reflection: PASS exact suggested actions applied only at named documents/entries
+  scan: PASS same-version space/hyphen/line-wrap scan empty in active docs references guides READMEs and relevant source guidance
+  rules: PASS 22 zero violations
+diff_scope:
+  base: 3c7a9739e76a54274a94fc4b18350534eb128768
+  head: bd016ff8bb39a00fab309ea1d782d35bb1847e5b
+activity_effort: high
