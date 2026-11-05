@@ -2,7 +2,7 @@
 id: PROP-justfile-standard-templates
 title: Minimal Command Setup Guidance
 summary: "Improves onboarding examples and proposes opt-in catalog instructions for creating only the justfile, CLI and MCP entry points a project needs."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: harness/
 priority: medium                      # critical | high | medium | low

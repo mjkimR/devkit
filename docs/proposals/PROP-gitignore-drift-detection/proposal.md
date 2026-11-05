@@ -2,7 +2,7 @@
 id: PROP-gitignore-drift-detection
 title: Git Tracking Diagnostics for Projected Assets
 summary: "Detects missing ignore coverage and tracked devkit projections during sync without modifying project ignore rules or the Git index."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-04
 target_area: governance/
 priority: high                        # critical | high | medium | low
