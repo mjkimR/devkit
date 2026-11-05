@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-design-explore-counterarguments: User authorizes Planning for design exploration
+  counterarguments at medium effort.'
+by: user
+at: '2026-11-05T04:21:19.311168Z'

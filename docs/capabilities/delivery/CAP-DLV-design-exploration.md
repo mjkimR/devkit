@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-design-exploration
 title: General solution exploration
-summary: "An opt-in user-invoked skill explores general design mechanisms and tradeoffs through optional local roles, returning conversation-first directions without implementation authority."
+summary: "An opt-in user-invoked skill explores design mechanisms through optional local roles and a bounded author-response exchange, returning evidence-aware directions without implementation authority."
 area: delivery
 status: active
 entrypoints:
@@ -17,12 +17,13 @@ usecases:
 
 The design-explore catalog bundle helps choose useful mechanisms for architecture, data models, module boundaries
 and processing or development workflows. `ADR-explicit-solution-exploration` records its independent entry,
-skill-local roles and output authority.
+skill-local roles and output authority. `ADR-optional-design-critique-response` records the optional response
+within the existing critique/refinement pass.
 
 ## 2. Scope and Boundary
 
 - **In-Scope**: bounded problem framing, distinct mechanisms, optional premise exploration, relevant references,
-  consequential criticism and synthesis of useful directions with tradeoffs.
+  consequential criticism, optional author responses and synthesis of useful directions with tradeoffs.
 - **Out-of-Scope**: runtime projection (`CAP-DIST-agent-projections`), implementation and delivery authority
   (the consumer's workflow), sourced research investigations (`CAP-DLV-deep-research`) and interface improvement
   (`CAP-DLV-uiux-improvement`).
@@ -43,7 +44,8 @@ skill-local roles and output authority.
    SHOULD withhold peer conclusions from their first-pass assignments.
    Review: `test_optional_local_assignments_and_evidence_boundaries`.
 5. **Honest fallback**: IF fresh children or role returns are unavailable, THEN the coordinator MUST disclose
-   shared-context passes or missing coverage without inventing independence or agreement.
+   shared-context passes or missing coverage, including an unavailable author response, without inventing
+   independence, an author reply or agreement; inline analysis is labeled as the coordinator's own.
    Review: `test_optional_local_assignments_and_evidence_boundaries`.
 6. **Output authority**: WHEN exploration finishes, the coordinator MUST return in conversation unless a destination
    is explicitly requested. Review: `test_general_design_and_output_authority_contracts`.
@@ -67,13 +69,33 @@ skill-local roles and output authority.
     Review: `test_general_design_and_output_authority_contracts`.
 14. **Bounded uncertainty**: WHEN reporting evidence or critique, the coordinator SHOULD separate inspected support,
     inference and unknowns, permit zero criticism findings and normally use one useful refinement pass.
-    Review: local researcher/critic instructions and semantic review.
+    Review: local researcher/critic instructions and semantic review of `SPEC-design-explore-counterarguments`.
 15. **Refused operation**: IF access or a requested destination is refused, THEN the coordinator MUST stop that
     operation without bypassing the refusal and name the blocked work alongside the useful result.
     Review: entry procedure and local role boundaries.
 16. **Independent lifecycle**: WHEN the bundle is removed or reselected, sync MUST preserve user artifacts and other
     selected bundles. Test: integration removal check and
     `packages/devkit-catalog/tests/e2e/bundles/design_explore/test_installed_consumer.py`.
+
+17. **Optional response exchange**: WHEN a supported objection can change feasibility, a consequential tradeoff or
+    the recommendation against the goal or hard constraints, the coordinator SHOULD use one critic pass and at
+    most one author response per affected candidate within the existing optional refinement pass.
+    Review: `test_optional_author_response_has_evidence_disposition_and_stop_contracts` and semantic review.
+18. **Response assignment**: WHEN selecting an objection for response after independent initial passes, the
+    coordinator SHOULD supply the original explorer with the actual candidate, objection, evidence, failure
+    condition, affected choice and preserved constraints.
+    Review: the orchestration and solution-explorer instructions and the response-contract test.
+19. **Response handling**: WHEN answering a selected objection, the explorer SHOULD accept and revise, rebut with
+    inspected support or labeled inference, or identify a bounded unknown without presenting uninspected claims
+    or inaccessible support as proof of refutation.
+    Review: the response-contract test and semantic review of accept/revise, rebuttal and unknown examples.
+20. **Objection disposition**: WHEN synthesizing a response exchange, the coordinator SHOULD report the actual
+    response/revision and its reasoned disposition per selected objection with remaining decision-changing uncertainty.
+    Review: the response-contract test and installed-consumer coverage; no schema or retained document is required.
+21. **Further-pass bound**: WHEN a further pass could change the recommendation, the coordinator SHOULD name the
+    concrete unresolved question and finite pass/time bound before starting it, otherwise return the unresolved
+    assumption after the normal exchange without an automatic critic reply or implementation.
+    Review: the response-contract test and semantic unresolved-disagreement example.
 
 Checks establish instruction and packaging consistency. They do not measure model obedience, creativity or team
 superiority. Fresh context and Markdown role boundaries provide no native filesystem or permission isolation.
@@ -89,4 +111,7 @@ Local role files are solution-explorer, reference-researcher and design-critic; 
 Explorers return a premise, concrete mechanism/example, benefit, tradeoff, evidence/inference and unknowns.
 Researchers return supported findings with sources, transfer limits and gaps. Critics return supported findings
 with evidence, failure conditions and the smallest useful refinement; zero findings is valid.
+After initial exploration, the same explorer can receive a bounded response assignment. Its return is an actual
+acceptance/revision, evidence-qualified rebuttal or bounded unknown for each selected objection. The coordinator
+judges each response against preserved constraints and discloses absent returns or inline fallback.
 Only actual returns inform synthesis. No result schema, fixed option count or retained document kind is required.

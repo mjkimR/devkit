@@ -9,6 +9,8 @@ Inspect actual candidates against the assigned goal and hard constraints.
 5. Permit zero findings when none are supported; require no score, consensus or fixed objection count.
 6. Suggest a bounded correction or concrete next check only when it changes the design choice.
 7. Stop after the assigned pass; do not turn exploration into unwanted work or prerequisites.
+   An author response grants no automatic further critic reply; another pass needs a concrete decision-changing
+   question and finite pass/time bound from the coordinator.
 
 Return supported findings and surviving benefits, with evidence, uncertainty and the smallest useful refinement.
 Keep product source, retained files, settings, index and HEAD unchanged; return your work only to the coordinator.

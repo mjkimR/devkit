@@ -1,7 +1,7 @@
 ---
 id: UC-explore-a-design-problem
 title: Explore a design problem
-summary: "An AI coding agent explores materially different general design mechanisms and presents useful directions with tradeoffs so the developer can choose an approach."
+summary: "An AI coding agent explores design mechanisms and optionally tests consequential criticism through an author response before presenting useful directions, tradeoffs and uncertainty."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Developer, Optional exploration and evidence subagents]
@@ -39,8 +39,16 @@ entrypoints:
   resumes at step 4 without claiming independent exploration.
 - **3b.** Research or a role return is incomplete: the agent identifies inspected support, inference and missing
   coverage; resumes at step 4 using only actual returns.
-- **4a.** Criticism can change a consequential choice: the agent uses a bounded pass, permits zero findings and
-  normally refines once; resumes at step 4 without a score or consensus quota.
+- **4a.** Supported criticism can change a consequential choice: after independent initial passes, the coordinator
+  supplies the actual candidate and objection to its explorer for one optional response, then judges the actual
+  response per objection; resumes at step 4 without a score or consensus quota. Zero findings needs no response.
+- **4b.** The candidate's author cannot return: the coordinator discloses missing author coverage and labels any
+  inline analysis as its own without inventing a reply or agreement; resumes at step 4 with that limit.
+- **4c.** A disagreement survives the normal exchange: the coordinator returns the unresolved assumption, or first
+  names a concrete decision-changing question and finite bound for another pass; resumes at step 4 without an
+  automatic critic reply or implementation.
+- **4d.** A rebuttal depends on inference, an uninspected claim or inaccessible evidence: the coordinator preserves
+  that support limit and judges what the actual response establishes; resumes at step 4 without false refutation.
 - **5a.** An output destination was explicitly requested: only the coordinator writes the authorized result in
   that destination's existing format; the use case ends with that result.
 - **5b.** The requested destination is unavailable or refused: the agent keeps the useful conversation result and
@@ -56,7 +64,8 @@ entrypoints:
 ## 5. Acceptance Criteria
 
 Rules: preserved goal, local assignments, independent first passes, honest fallback, output authority, optional
-support, preserved differences, bounded uncertainty and refused operation (`CAP-DLV-design-exploration`).
+support, preserved differences, bounded uncertainty, optional response exchange, response assignment, response
+handling, objection disposition, further-pass bound and refused operation (`CAP-DLV-design-exploration`).
 
 ### Scenario 1: Explain architecture mechanisms
 
@@ -114,3 +123,40 @@ support, preserved differences, bounded uncertainty and refused operation (`CAP-
 - **Given**: the requested destination write is refused.
 - **When**: the coordinator reaches that action.
 - **Then**: it returns the useful directions in conversation and identifies the blocked write without bypass.
+
+### Scenario 9: Accept an objection and revise
+
+- **Covers**: 4a
+- **Given**: the critic identifies stale cached ownership after a worker crash.
+- **When**: the original explorer accepts the objection and adds a concrete lease-expiry mechanism.
+- **Then**: the coordinator reports that actual revision and judges whether expiry satisfies the latency constraint;
+  no extra role or permanent red/blue team is created.
+
+### Scenario 10: Rebut with inspected support
+
+- **Covers**: 4a
+- **Given**: a critic assumes ownership never expires, but inspected store behavior already expires its lease.
+- **When**: the explorer returns that evidence in its one assigned response.
+- **Then**: the coordinator explains how the actual support addresses the failure condition rather than treating
+  role labels or agreement as proof.
+
+### Scenario 11: Disclose a missing author response
+
+- **Covers**: 4b
+- **Given**: the original explorer cannot return after receiving an objection.
+- **When**: the coordinator sketches lease expiry inline.
+- **Then**: it labels the sketch as its own analysis, names missing author coverage and invents no author reply.
+
+### Scenario 12: End a bounded unresolved exchange
+
+- **Covers**: 4c
+- **Given**: one critic pass and one author response leave uncertainty about expiry latency.
+- **When**: no concrete further question and finite bound are selected, or the selected bound is reached.
+- **Then**: synthesis retains that unresolved assumption and starts no automatic further critic pass or implementation.
+
+### Scenario 13: Preserve an unsupported rebuttal's limit
+
+- **Covers**: 4d
+- **Given**: the explorer infers expiry behavior from an inaccessible reference without inspecting it.
+- **When**: the coordinator judges that response.
+- **Then**: the synthesis identifies the inference and consequential unknown instead of claiming the objection refuted.

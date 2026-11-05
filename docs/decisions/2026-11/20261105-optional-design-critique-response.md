@@ -1,13 +1,13 @@
 ---
-id: PADR-optional-design-critique-response
+id: ADR-optional-design-critique-response
 title: Make optional design critique responses explicit
 summary: "For consequential design objections, we reuse the optional critique pass for one author response and coordinator disposition, to clarify the choice, accepting a small coordination cost."
-proposal: PROP-design-explore-counterarguments
-status: draft
+proposal: SPEC-design-explore-counterarguments
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-optional-design-critique-response] Make optional design critique responses explicit
+# [ADR-optional-design-critique-response] Make optional design critique responses explicit
 
 ## 1. Context & Problem Statement
 
@@ -38,15 +38,15 @@ Choose the optional author response within the existing pass because it clarifie
 
 - A supported objection that can change feasibility, tradeoffs or recommendation can receive one author response
   before coordinator disposition, within the normal critique/refinement pass.
-  → `CAP-DLV-design-exploration` bounded uncertainty rule (SHOULD).
+  → `CAP-DLV-design-exploration` optional response exchange rule (SHOULD).
 - The response accepts/revises, rebuts with evidence or labeled inference, or identifies a bounded unknown; the
   coordinator judges the actual response and retains material uncertainty.
-  → `CAP-DLV-design-exploration` bounded uncertainty rule (SHOULD).
+  → `CAP-DLV-design-exploration` response handling and objection disposition rules (SHOULD).
 - Missing responses remain missing coverage; inline analysis is labeled without inventing an author's return.
   → `CAP-DLV-design-exploration` honest fallback rule (MUST).
 - Further passes name a decision-changing question and a finite bound before work starts; otherwise synthesis
   returns the unresolved disagreement without consensus or implementation.
-  → `CAP-DLV-design-exploration` bounded uncertainty rule (SHOULD).
+  → `CAP-DLV-design-exploration` further-pass bound rule (SHOULD).
 
 This decision refines the capability without superseding `ADR-explicit-solution-exploration` or changing its
 invocation, local role and output authority clauses.

@@ -57,6 +57,14 @@ def test_installed_design_exploration_without_delivery_packages(tmp_path: Path) 
         assert not (consumer / absent).exists()
     for relative in ("references/exploration-methods.md", "references/orchestration.md"):
         assert (skill / relative).is_file()
+    # The response procedure and local author assignment ship in the built wheel without a new role.
+    orchestration = (skill / "references/orchestration.md").read_text()
+    assert "Optional critique response" in orchestration
+    assert "at most one author response per affected candidate" in orchestration
+    assert "missing author coverage" in orchestration
+    assert "reasoned disposition" in orchestration
+    assert "Response assignment" in (skill / "roles/solution-explorer.md").read_text()
+    assert "no automatic further critic reply" in (skill / "roles/design-critic.md").read_text()
     cli("add", "command-design")
     other = consumer / ".devkit/managed/command-design"
     assert other.is_dir()
