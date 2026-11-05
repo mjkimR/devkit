@@ -9,6 +9,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | `adaptive-dev` | `core` | Adaptive product iteration, optional support and mutable current context without SDD delivery records |
 | `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
 | `uiux-improve` | `core` | User-invoked overall UI/UX improvement with optional local perspectives and implementation through the consumer workflow |
+| `design-explore` | `core` | User-invoked general solution design with optional local premise exploration, mechanisms and tradeoffs; conversation-first result |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
 | `command-design` | `core` | Creation-time guidance for necessary justfile, CLI and MCP entry points; one conditional instruction, no always-loaded pointer |
@@ -67,6 +68,16 @@ unconventional-designer, reference-researcher and critic instructions stay insid
 global specialists. The coordinator carries requested implementation and actual checks through the consumer's
 existing workflow; review-only requests stay read-only. Selection starts no work and changes no development policy.
 No fixed team, design score, research report or comparison experiment is required. See `CAP-DLV-uiux-improvement`.
+
+## General solution exploration
+
+`uv run devkit add design-explore` selects the content-only bundle; dist and catalog suffice.
+Explicitly invoke `/design-explore <problem>` for architecture, data models, module boundaries or workflows.
+Optional solution-explorer instances use different premises; reference-researcher and design-critic serve concrete
+questions. Local roles stay out of global specialist lists. Small questions can stay inline, with no required cast,
+option count, score, research report or comparative-benefit experiment. The result stays in conversation unless a
+destination is requested; only the coordinator writes it. Exploration grants no implementation, commit, approval
+or publication authority. Selection starts no work and changes no development approach. See `CAP-DLV-design-exploration`.
 
 ## Command design
 
