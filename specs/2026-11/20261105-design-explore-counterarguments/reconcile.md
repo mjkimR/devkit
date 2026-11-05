@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-explore-counterarguments
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-design-exploration.md
     resolution: modified
