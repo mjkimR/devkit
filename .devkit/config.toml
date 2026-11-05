@@ -7,6 +7,7 @@ spec = "core"
 authoring = "skill-authoring"
 response-style = "all"
 devkit-dev = ["structure", "handbook"]
+deep-research = "core"
 
 [workflow.approvals] 
 dev-integration = "auto"

@@ -70,6 +70,38 @@
       ]
     },
     {
+      "bundle": "deep-research",
+      "id": "deep-research",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/deep-research/SKILL.md",
+        ".agents/skills/deep-research/agents/openai.yaml",
+        ".agents/skills/deep-research/references/orchestration.md",
+        ".agents/skills/deep-research/references/synthesis.md",
+        ".agents/skills/deep-research/references/workspace.md",
+        ".agents/skills/deep-research/roles/direction-explorer.md",
+        ".agents/skills/deep-research/roles/discovery-critic.md",
+        ".agents/skills/deep-research/roles/discovery-planner.md",
+        ".agents/skills/deep-research/roles/research-investigator.md",
+        ".claude/skills/deep-research/SKILL.md",
+        ".claude/skills/deep-research/references/orchestration.md",
+        ".claude/skills/deep-research/references/synthesis.md",
+        ".claude/skills/deep-research/references/workspace.md",
+        ".claude/skills/deep-research/roles/direction-explorer.md",
+        ".claude/skills/deep-research/roles/discovery-critic.md",
+        ".claude/skills/deep-research/roles/discovery-planner.md",
+        ".claude/skills/deep-research/roles/research-investigator.md",
+        ".devkit/managed/deep-research/skills/deep-research/SKILL.md",
+        ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md",
+        ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md",
+        ".devkit/managed/deep-research/skills/deep-research/references/workspace.md",
+        ".devkit/managed/deep-research/skills/deep-research/roles/direction-explorer.md",
+        ".devkit/managed/deep-research/skills/deep-research/roles/discovery-critic.md",
+        ".devkit/managed/deep-research/skills/deep-research/roles/discovery-planner.md",
+        ".devkit/managed/deep-research/skills/deep-research/roles/research-investigator.md"
+      ]
+    },
+    {
       "bundle": "devkit",
       "id": "consumption",
       "kind": "instruction",
@@ -987,6 +1019,42 @@
       "mode": 420,
       "sha256": "ad79599ccb54fb443711321c952cea33300393f8eeb927980018f2991e5a3f5c"
     },
+    ".agents/skills/deep-research/SKILL.md": {
+      "mode": 420,
+      "sha256": "629e2b22d4c3b03c1e281daf3d878c6816c84730d8a2b836fb7d167abe860ad2"
+    },
+    ".agents/skills/deep-research/agents/openai.yaml": {
+      "mode": 420,
+      "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94"
+    },
+    ".agents/skills/deep-research/references/orchestration.md": {
+      "mode": 420,
+      "sha256": "1795d72ecfcd8aa20a01787a8e7d6817f5fffb37e44210fd9c7b76d476e1d8cb"
+    },
+    ".agents/skills/deep-research/references/synthesis.md": {
+      "mode": 420,
+      "sha256": "89d9119663bed63235c78dcd1e75155c774f2ec26a0f387fc69be6d5da7e76b9"
+    },
+    ".agents/skills/deep-research/references/workspace.md": {
+      "mode": 420,
+      "sha256": "71f2e42a6a1d34a0e6a1fa4b3aeb0e2317e778bac0f5efef2a635285d0f473ab"
+    },
+    ".agents/skills/deep-research/roles/direction-explorer.md": {
+      "mode": 420,
+      "sha256": "549294d2b0d08d7cff1413ea4da8fa1aa0339c32137393ed659cc48f5932f1f2"
+    },
+    ".agents/skills/deep-research/roles/discovery-critic.md": {
+      "mode": 420,
+      "sha256": "cb806c0535a9f267211356ee1a5b0f80403ea569ba142340f308b5240a543890"
+    },
+    ".agents/skills/deep-research/roles/discovery-planner.md": {
+      "mode": 420,
+      "sha256": "d88b235308848802e89bedc845368d816810e69394e4b474a3bd7994b9f9a1fe"
+    },
+    ".agents/skills/deep-research/roles/research-investigator.md": {
+      "mode": 420,
+      "sha256": "6ac9711aa753ee6bdaef75f15e6a1bda056229d2ec60b59b1cfe0b64105ab2a7"
+    },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
       "sha256": "e16a1d53e1c49821f6ebc5c241a71239ddc22319c647d3fb33ae32a4d90b64b1"
@@ -1242,6 +1310,38 @@
     ".claude/agents/ux-reviewer.md": {
       "mode": 420,
       "sha256": "c4a0e149b55246900468aef81587421fb535f225b336898aa92d9e0873d13149"
+    },
+    ".claude/skills/deep-research/SKILL.md": {
+      "mode": 420,
+      "sha256": "4b424deeb990c49cb6fcdda9aaa6fc14cc78869bb0f0ece45927ad72634f5d42"
+    },
+    ".claude/skills/deep-research/references/orchestration.md": {
+      "mode": 420,
+      "sha256": "1795d72ecfcd8aa20a01787a8e7d6817f5fffb37e44210fd9c7b76d476e1d8cb"
+    },
+    ".claude/skills/deep-research/references/synthesis.md": {
+      "mode": 420,
+      "sha256": "89d9119663bed63235c78dcd1e75155c774f2ec26a0f387fc69be6d5da7e76b9"
+    },
+    ".claude/skills/deep-research/references/workspace.md": {
+      "mode": 420,
+      "sha256": "71f2e42a6a1d34a0e6a1fa4b3aeb0e2317e778bac0f5efef2a635285d0f473ab"
+    },
+    ".claude/skills/deep-research/roles/direction-explorer.md": {
+      "mode": 420,
+      "sha256": "549294d2b0d08d7cff1413ea4da8fa1aa0339c32137393ed659cc48f5932f1f2"
+    },
+    ".claude/skills/deep-research/roles/discovery-critic.md": {
+      "mode": 420,
+      "sha256": "cb806c0535a9f267211356ee1a5b0f80403ea569ba142340f308b5240a543890"
+    },
+    ".claude/skills/deep-research/roles/discovery-planner.md": {
+      "mode": 420,
+      "sha256": "d88b235308848802e89bedc845368d816810e69394e4b474a3bd7994b9f9a1fe"
+    },
+    ".claude/skills/deep-research/roles/research-investigator.md": {
+      "mode": 420,
+      "sha256": "6ac9711aa753ee6bdaef75f15e6a1bda056229d2ec60b59b1cfe0b64105ab2a7"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1578,6 +1678,42 @@
     ".devkit/managed/authoring/rules/skill_document_size/tests/test_rule.py": {
       "mode": 420,
       "sha256": "95fcffe1459c5e066ce7ff9c780bd32e181afa38b559409412ce8d43b4b406fa"
+    },
+    ".devkit/managed/deep-research/bundle.toml": {
+      "mode": 420,
+      "sha256": "24091b72847b7980d09bfc1c0bd28cb9d24565dd0187fceefbdd8ef494c33037"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/SKILL.md": {
+      "mode": 420,
+      "sha256": "629e2b22d4c3b03c1e281daf3d878c6816c84730d8a2b836fb7d167abe860ad2"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md": {
+      "mode": 420,
+      "sha256": "1795d72ecfcd8aa20a01787a8e7d6817f5fffb37e44210fd9c7b76d476e1d8cb"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md": {
+      "mode": 420,
+      "sha256": "89d9119663bed63235c78dcd1e75155c774f2ec26a0f387fc69be6d5da7e76b9"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/references/workspace.md": {
+      "mode": 420,
+      "sha256": "71f2e42a6a1d34a0e6a1fa4b3aeb0e2317e778bac0f5efef2a635285d0f473ab"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/roles/direction-explorer.md": {
+      "mode": 420,
+      "sha256": "549294d2b0d08d7cff1413ea4da8fa1aa0339c32137393ed659cc48f5932f1f2"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/roles/discovery-critic.md": {
+      "mode": 420,
+      "sha256": "cb806c0535a9f267211356ee1a5b0f80403ea569ba142340f308b5240a543890"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/roles/discovery-planner.md": {
+      "mode": 420,
+      "sha256": "d88b235308848802e89bedc845368d816810e69394e4b474a3bd7994b9f9a1fe"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/roles/research-investigator.md": {
+      "mode": 420,
+      "sha256": "6ac9711aa753ee6bdaef75f15e6a1bda056229d2ec60b59b1cfe0b64105ab2a7"
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
@@ -2224,7 +2360,7 @@
       "sha256": "8db37cd52112ae7ca819427e1dc799718b8a96ceddb980ae075640e21c5f880a"
     }
   },
-  "guidance_block": "7ebc1f0c91474a51e1b0986010bfa00ead054a879872a9225768a3cb26bada0f",
+  "guidance_block": "44d37071f47671198a7e1f1523e3590f04c391719f492faa69a68e405140f6ce",
   "packages": [
     {
       "bundle": "advisory",
@@ -2236,6 +2372,12 @@
       "bundle": "authoring",
       "bundle_version": "0.1.5",
       "package": "devkit-agt",
+      "package_version": "0.1.5"
+    },
+    {
+      "bundle": "deep-research",
+      "bundle_version": "0.1.5",
+      "package": "devkit-catalog",
       "package_version": "0.1.5"
     },
     {
@@ -2385,6 +2527,9 @@
       ],
       "authoring": [
         "skill-authoring"
+      ],
+      "deep-research": [
+        "core"
       ],
       "devkit": [
         "core"
