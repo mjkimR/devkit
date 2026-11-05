@@ -1,33 +1,23 @@
 ---
-id: PROP-justfile-standard-templates
+id: SPEC-justfile-standard-templates
 title: Minimal Command Setup Guidance
-summary: "Improves onboarding examples and proposes opt-in catalog instructions for creating only the justfile, CLI and MCP entry points a project needs."
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-11-04
-target_area: harness/
-priority: medium                      # critical | high | medium | low
-size: S                               # S | M | L | XL
-planning_effort: medium               # low | medium | high
-dev_effort: medium                    # low | medium | high
-boundaries:
-  owns:
-    - guides/install/
-    - packages/devkit-catalog/src/devkit_catalog/
-    - packages/devkit-catalog/tests/
-    - packages/devkit-catalog/pyproject.toml
-    - packages/devkit-catalog/README.md
-    - docs/capabilities/harness/
-    - docs/capabilities/distribution/
-    - docs/usecases/
-  excludes:
-    - docs/decisions/
-task_kind: feature
-workflow: sdd-proposal
+summary: Improves onboarding examples and proposes opt-in catalog instructions for creating only the justfile, CLI and MCP entry points a project needs.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-justfile-standard-templates] Minimal Command Setup Guidance
+# [SPEC-justfile-standard-templates] Minimal Command Setup Guidance
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-justfile-standard-templates on 2026-11-05.
+- Target Docs Blueprint: `PROP-justfile-standard-templates-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Pilot adoption found friction choosing verification entry points. The existing installation guide already
 inspects justfile, Makefile, package scripts and CI and connects selected fast commands to `verify-commands`.
@@ -41,7 +31,26 @@ A related design candidate is an opt-in instruction bundle in `devkit-catalog` f
 justfile, CLI and MCP interfaces. Its primary purpose is to prevent unnecessary commands and registrations
 at creation time. The existing `maintenance` review-refactor playbook handles cleanup of existing interfaces.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Minimal Command Setup Guidance so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - Which pilot repository and native verification command provide the first representative onboarding example?
 - What is the smallest instruction set that controls new entry points without duplicating `cli-tool`'s Python
@@ -49,9 +58,9 @@ at creation time. The existing `maintenance` review-refactor playbook handles cl
 - Should the catalog candidate use one conditional instruction or separate justfile, CLI and MCP instructions?
   Select a bundle name and asset layout in Planning; do not add an always-loaded command inventory.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Retained onboarding scope
+#### Retained onboarding scope
 
 - Reuse existing repository commands and document their working directory and prerequisites.
 - Provide an optional `test`, `fix`, `verify` example only where a project needs a new task interface.
@@ -60,7 +69,7 @@ at creation time. The existing `maintenance` review-refactor playbook handles cl
 - Avoid repeating checks already run by existing hooks or the built-in `rules-check` gate.
 - Explain non-Python onboarding using native project commands through the existing gate.
 
-### Catalog instruction candidate
+#### Catalog instruction candidate
 
 - Start with the concrete operations and callers a project needs, then add only entry points serving them.
 - Prefer an existing command over another wrapper or alias with the same purpose. Add a separate entry point
@@ -72,14 +81,14 @@ at creation time. The existing `maintenance` review-refactor playbook handles cl
 
 Planning settles whether the catalog candidate warrants a bundle and defines its final scope.
 
-### Non-Goals
+#### Non-Goals
 
 - No scaffold CLI, runtime detector, adapter framework or justfile merge engine.
 - No mandatory task runner or fixed recipe names.
 - No automatic `just verify` gate selection based on the presence of a justfile.
 - No automatic command deletion, MCP filtering engine or usage telemetry.
 
-## 4. Validation
+### 4. Validation
 
 Walk through a repository with existing commands and one without a task interface. Confirm that the selected
 commands exist, execute from the documented directory and do not duplicate hook checks. Verify a representative
@@ -88,3 +97,4 @@ non-Python example without adding a runtime adapter.
 For the catalog candidate, review creation scenarios for justfile, CLI and MCP: each exposed operation must
 have an identified use, existing commands must be reused where suitable, and instructions must not prescribe
 unsupported framework-specific behavior. Run catalog manifest checks if that candidate is retained.
+

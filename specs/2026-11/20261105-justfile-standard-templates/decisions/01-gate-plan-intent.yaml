@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-justfile-standard-templates: Implement onboarding examples and opt-in
+  catalog guidance for creating necessary command entry points.'
+by: user
+at: '2026-11-04T23:15:51.166531Z'

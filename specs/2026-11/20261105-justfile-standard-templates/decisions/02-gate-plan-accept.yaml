@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-justfile-standard-templates: direct acceptance, Planning skipped: User
+  selected creation-time guidance in an opt-in catalog bundle; use one short instruction
+  and native command examples.; task_kind feature confirmed'
+by: user
+at: '2026-11-04T23:15:51.168652Z'
