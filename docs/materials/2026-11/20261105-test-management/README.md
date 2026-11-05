@@ -2,7 +2,7 @@
 
 ## Context and evidence limits
 
-These observations support `PROP-test-management`. The supplied context says research occurred outside the
+These observations support `SPEC-test-management`. The supplied context says research occurred outside the
 devkit agent environment and was intended to produce a proposal. The inspected working-tree changes contained
 a four-file playbook, bundle registration and tests. No research transcript, bibliography or reference-repository
 identity was supplied. No external research or tool-version validation was performed during this review.

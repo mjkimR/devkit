@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T14:52:02.369586Z'
+status: completed
+summary: 'Supersedes final-report-01 after final docs added a parser check: extension formatting repaired, 144 affected tests pass; asset and independent reviews remain valid.'
+findings: []
+unverified_areas:
+- No live application or performance validation; consumers unchanged.
+checks:
+  tests: PASS 144 affected tests against saved base 297f727d
+  build: PASS offline wheel includes exact three-file asset
+  lint: PASS catalog lint/types and document rules
+diff_scope:
+  base: 297f727d06dff02470a6dd8382f293014a0268ee
+  head: 0014a36086743ab57d55da971f6b35e7bce3f228

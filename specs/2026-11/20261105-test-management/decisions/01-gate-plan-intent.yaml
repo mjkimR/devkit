@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-test-management: Review devkit, autohub and resource-indexer test setups
+  and settle the reusable playbook direction without implementing repository changes.'
+by: user
+at: '2026-11-05T14:41:37.234293Z'
