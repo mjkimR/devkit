@@ -1,7 +1,7 @@
 ---
 id: UC-research-an-idea-and-shape-a-roadmap
 title: Research an idea and shape an initial roadmap
-summary: "An AI coding agent coordinates an explicitly invoked bounded investigation under either development approach, compares early product or architecture directions and retains one indexed research material with supported findings, a conditional roadmap and resumable unknowns."
+summary: "An AI coding agent coordinates bounded research toward the requested artifact, reviews evidence selectively and retains a useful recommendation with conditional follow-up and resumable unknowns in one indexed material."
 area: delivery
 primary_actor: AI coding agent
 supporting_actors: [Product owner, Optional research and discovery subagents]
@@ -27,11 +27,11 @@ entrypoints:
 
 1. The agent accepts the explicitly invoked research activity (`CAP-DLV-deep-research`, `CAP-HARN-agent-guidance`).
 2. The agent recovers current goals, constraints, decisions and supplied evidence without an approach check (`CAP-DLV-deep-research`).
-3. The agent frames the decision, comparison criteria and research bound (`CAP-DLV-deep-research`).
+3. The agent frames the requested artifact, intended use, comparison criteria and research bound (`CAP-DLV-deep-research`).
 4. The agent allocates needed run/task scratch and commissions useful independent investigations inside assigned authority (`CAP-DLV-deep-research`).
-5. The agent validates returned sources, actions and candidate assumptions under common criteria (`CAP-DLV-deep-research`).
+5. The agent reviews returned evidence, actions and candidate assumptions, targeting consequential source gaps under common criteria (`CAP-DLV-deep-research`).
 6. The agent drafts a supported provisional recommendation and unresolved decisions (`CAP-DLV-deep-research`).
-7. The agent retains selected documents, evidence and a conditional roadmap as one indexed material with its status (`CAP-DLV-deep-research`).
+7. The agent retains a useful synthesis of the requested artifact, evidence and proportionate conditional follow-up as one indexed material with its status (`CAP-DLV-deep-research`).
 8. The agent reports the actual outcome, evidence limits, the material's path and ID, the commit the user directs and the next useful action (`CAP-DLV-deep-research`).
 
 ## 3. Extensions
@@ -40,14 +40,20 @@ entrypoints:
 - **2b.** Adaptive-development project: the agent reads no current-context file; after the user commits the material, the current context links it by its ID; continues at step 3.
 - **2c.** The user names an earlier run or material: the agent reads it as an input source; a named `partial` material of the same investigation is updated at step 7 instead of creating a new one; continues at step 3.
 - **3a.** Consequential user decision is missing: the agent reuses known facts and asks only the missing decision; dependent work waits, then resumes at step 3.
+- **3b.** The requested artifact is a reusable configuration reference: assignments contribute concrete repository/file references, borrow/omit guidance and a starting composition; continues at step 4.
 - **4a.** Small question: the agent stays inline or uses one support role; resumes at step 5.
 - **4b.** Delegation unavailable: the agent uses a permitted equivalent context/contract or reports missing coverage and continues only independently useful authorized work; resumes at step 5.
 - **4c.** Scratch is tracked or not ignored in Git: the agent stops allocation and reports the conflict without editing ignore rules; permitted read-only inquiry may continue at step 5.
 - **5a.** Unsupported/out-of-scope return: the agent rejects it as evidence, preserves the actual state and reports the affected coverage; resumes at step 3 for a permitted remedy.
 - **5b.** Evidence insufficient or bound exhausted: the agent retains partial evidence and missing questions; proceeds to step 6 with no fabricated winner.
 - **5c.** Candidate directions share one premise: the agent reframes a useful independent investigation or explains the constraints leaving one viable candidate; resumes at step 3 or proceeds to step 6.
+- **5d.** Ordinary public-source timeout, broken link or unreadable result without an access refusal: the agent uses bounded authorized recovery, reports the failed retrieval and actual inspected replacement, and leaves unsupported claims unverified; resumes at step 5 or proceeds to step 6 with partial evidence.
+- **5e.** Trust, sandbox, permission or source access is refused: the agent stops access to that resource without rerouting denied access and reports missing coverage; unrelated permitted work continues at step 5 or partial synthesis proceeds at step 6.
+- **5f.** Authorization is ambiguous: the agent stops access to that resource and reports the uncertainty; unrelated permitted work continues at step 5 or partial synthesis proceeds at step 6.
+- **6a.** The supported draft omits the requested artifact or imposes an unwanted prerequisite: the coordinator repairs the gap or burden against the user's goal and constraints, using optional criticism when useful; resumes at step 6.
 - **7a.** Retained content depends on scratch-only references: the coordinator retains needed supporting evidence or replaces links with stable sources before finishing; resumes at step 7.
 - **7b.** The chosen material ID resolves or its directory exists: the coordinator chooses another slug without overwriting the existing material; resumes at step 7.
+- **7c.** Comparative validation was declined: the synthesis keeps uncertain benefits explicit and a usable next action without making comparison an adoption prerequisite; continues at step 8.
 - **8a.** User authorizes implementation: later work cites the retained material by its ID as ordinary intake; this research action ends without implementation, a commit or publication.
 
 ## 4. Postconditions
@@ -62,7 +68,7 @@ entrypoints:
 
 Rules: explicit invocation; approach neutrality; SDD intake exemption; research authority; optional support; bounded
 evidence; role boundaries; provenance; research workspace; selective promotion; initial synthesis; one material per
-investigation; collision check; resume; citation; bounded partial result; research completion.
+investigation; collision check; resume; citation; bounded partial result; research completion; deliverable framing; usefulness; selective verification; retrieval recovery; access refusal; proportionate follow-up; recovery provenance.
 
 ### Scenario 1: Compare an initial idea and retain the result
 
@@ -154,3 +160,46 @@ investigation; collision check; resume; citation; bounded partial result; resear
 - **Given**: the chosen slug's material ID already resolves.
 - **When**: the coordinator creates the material.
 - **Then**: it chooses another slug and the existing material is unchanged.
+
+
+### Scenario 14: Deliver practical configuration references
+
+- **Covers**: 3b
+- **Given**: a request for reusable agent configurations rather than a team-effectiveness study.
+- **When**: the coordinator frames assignments and retains the synthesis.
+- **Then**: the first retained artifact includes repository/file references, borrow/omit guidance and a starting composition, and it adds no mandatory intake form.
+
+### Scenario 15: Repair a useful-output gap
+
+- **Covers**: 6a
+- **Given**: a supported draft lacks the requested artifact or imposes an unwanted prerequisite.
+- **When**: the coordinator checks usefulness or uses an optional critic.
+- **Then**: the gap or burden is identified against the user's constraints and repaired; zero supported findings remains valid and no critic is required on every run.
+
+### Scenario 16: Review supported evidence selectively
+
+- **Covers**: main success scenario step 5
+- **Given**: a role return identifies an inspected source, relevant location or finding and limitations.
+- **When**: the coordinator validates it.
+- **Then**: adequately supported work is not repeated by default; a consequential gap, contradiction or suspect claim gets targeted verification or remains unverified.
+
+### Scenario 17: Recover within the original retrieval bound
+
+- **Covers**: 5d
+- **Given**: a public source times out or has a broken link without an access refusal.
+- **When**: the original assignment still permits research.
+- **Then**: a bounded retry or another legitimately accessible primary source may supply evidence, the failed retrieval and actual replacement are named, and a replacement supporting a different claim leaves the original claim unverified.
+
+### Scenario 18: Stop refused or ambiguous resource access
+
+- **Covers**: 5e, 5f
+- **Given**: a tool or source refuses access, or authorization is unclear.
+- **When**: the coordinator or role classifies that result.
+- **Then**: access to that resource stops without a tool, path, process, identity or setting bypass; missing coverage is reported while unrelated permitted work may continue.
+
+### Scenario 19: Respect declined comparative validation
+
+- **Covers**: 7c
+- **Given**: the requester declines same-task team comparisons and benefit-validation work.
+- **When**: the conditional roadmap is retained.
+- **Then**: it states uncertain benefits and a usable starting point without comparison or proof of superiority as an adoption prerequisite.

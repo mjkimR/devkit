@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-deep-research
 title: Deep Research
-summary: "An opt-in, approach-neutral catalog bundle supplies an explicitly invoked research team that compares directions with sourced evidence and retains each investigation as one indexed material under docs/materials/, cited by its MAT ID; it never implements, commits or creates delivery records."
+summary: "An opt-in, explicitly invoked research skill delivers useful sourced artifacts in one indexed material, using optional local roles, selective verification and bounded retrieval recovery without implementation or delivery authority."
 area: delivery
 status: active
 created_at: 2026-10-30
@@ -23,6 +23,7 @@ development approach and neither reads nor changes it.
 
 `ADR-adaptive-development-and-research` owns the bundle split and role ownership, and the retained material and its
 citation. `ADR-skill-local-research-roles` owns skill-local role distribution.
+`ADR-deliverable-driven-research` owns deliverable framing, selective verification and proportionate recovery/follow-up.
 
 ## 2. Scope and Boundary
 
@@ -71,10 +72,10 @@ citation. `ADR-skill-local-research-roles` owns skill-local role distribution.
 12. **Independent alternatives**: WHILE direction is open, the coordinator SHOULD develop materially different
     premises independently before sharing peer conclusions, then compare them under relevant common criteria.
 13. **Research provenance**: WHEN a claim informs a direction, the investigation MUST retain its inspected source,
-    material date or version and limits while distinguishing vendor claims, inference, contradictions and unknowns
+    material date or version, relevant inspected location or finding and limits while distinguishing vendor claims, inference, contradictions and unknowns
     from observation. Synthetic users and fixtures are scenario input.
 14. **Optional criticism**: WHEN shared assumptions or unsupported convergence need examination, the coordinator MAY
-    use discovery-critic; zero supported findings is a valid return.
+    use discovery-critic for evidence, framing or output usefulness; zero supported findings is a valid return.
 15. **Initial synthesis**: WHEN retaining research documents and a roadmap, the coordinator MUST distinguish
     recommendations, actual user decisions, assumptions and proposed behavior rather than claim implemented
     capability or a delivery commitment.
@@ -104,6 +105,14 @@ citation. `ADR-skill-local-research-roles` owns skill-local role distribution.
     `test_reselection_preserves_retained_material` and
     `packages/devkit-catalog/tests/e2e/bundles/deep_research/test_installed_consumer.py`.
 
+25. **Deliverable framing**: WHEN framing a run, the coordinator SHOULD record its requested deliverable, intended use, known constraints and stop condition in the existing brief, with each assignment identifying its contribution.
+26. **Usefulness**: BEFORE retention, the coordinator SHOULD check the requested artifact, intended next action and unwanted prerequisites; an optional critic receives those criteria and the relevant user constraints.
+27. **Selective verification**: WHEN validating a return, the coordinator SHOULD review its inspected evidence and reopen sources for consequential gaps, contradictions or suspect support rather than repeat a supported investigation by default.
+28. **Retrieval recovery**: IF a public-source timeout, broken link or unreadable result occurs without an access refusal, THEN the coordinator or assigned role MAY retry or inspect another legitimately accessible primary source within the original assignment bound.
+29. **Access refusal**: IF trust, sandbox, permission or source access is refused, or authorization is ambiguous, THEN the coordinator and roles MUST stop access to that resource without another tool, path, process, identity or setting bypass; unrelated permitted work may continue.
+30. **Proportionate follow-up**: WHEN the user declines comparative validation, the synthesis MUST keep uncertain benefits explicit without making a same-task comparison or proof of superiority an adoption prerequisite; other checks remain optional unless a consequential choice depends on them.
+31. **Recovery provenance**: WHEN retrieval recovery is used, the return MUST identify the failed retrieval and actual inspected replacement, leaving a claim unverified when that replacement does not support it.
+
 Distribution checks enforce file and metadata contracts. Evidence comparison, optionality, synthesis and the absence
 of suggestion beyond the text checks are semantic agent contracts checked by review.
 
@@ -117,8 +126,8 @@ mechanisms; Codex receives `allow_implicit_invocation: false` and Claude Code `d
 bundle ships no guidance asset and no constitution. No research runtime or CLI is added.
 
 `/deep-research <question or decision>` accepts natural-language goals and existing documents. The coordinator
-frames a question and bound, commissions useful assignments, validates evidence, compares directions and retains a
-proportionate synthesis. It reads an earlier run directory or material only when the user names it as an input.
+frames the requested artifact, intended use and bound, commissions useful assignments, selectively validates
+evidence, compares directions and retains a useful proportionate synthesis. It reads an earlier run directory or material only when the user names it as an input.
 
 ### Optional roles
 
@@ -126,7 +135,7 @@ proportionate synthesis. It reads an earlier run directory or material only when
 | --- | --- | --- |
 | research-investigator | Sourced evidence for one question of the investigation, or one bounded experiment (including actual usage of an existing flow) | Read-only by default; assigned scratch notes or experiment writes only |
 | direction-explorer | One distinct premise with its users and problem, intended usage, trade-offs, critical assumptions and discriminating evidence | Product read-only; assigned scratch notes only; no production implementation or winner declaration |
-| discovery-critic | Cross-candidate framing and evidence findings with failure conditions, or zero findings | Product read-only; assigned scratch notes only; no decision or demanded consensus |
+| discovery-critic | Cross-candidate framing, evidence and output-usefulness findings with failure conditions, or zero findings | Product read-only; assigned scratch notes only; no decision or demanded consensus |
 | discovery-planner | Draft research brief, research and architecture notes and a conditional roadmap | Product read-only; assigned scratch notes only; no retained-material writes |
 
 Every role leaves the index and HEAD unchanged and commits or publishes nothing; only the coordinator writes the
@@ -145,7 +154,7 @@ to obsolete projections (`CAP-DIST-sync-and-transactions`, `CAP-DIST-workspace-o
 
 The coordinator allocates a collision-free run and per-task directories under `.devkit/transient/deep-research/`.
 Git-backed runs verify exact ignored and untracked paths before scratch writes; absent Git is reported. The run brief
-holds in-flight state. Earlier `.devkit/transient/incubation-research/` runs stay in place and are read only when the
+holds in-flight state, requested deliverable, intended use, known constraints and stop condition. Earlier `.devkit/transient/incubation-research/` runs stay in place and are read only when the
 user names one.
 
 ### Retained material
