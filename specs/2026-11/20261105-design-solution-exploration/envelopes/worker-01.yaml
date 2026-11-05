@@ -1,0 +1,28 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T00:52:59.271591Z'
+status: completed
+summary: Completed one Development turn from specify through final pre-integration report. Added only authorized design-explore content, metadata/data-root registration, focused tests and six reconciled targets; independent code and reconcile reviews found zero issues. No scope extensions, tracked sync outputs or lockfile changes; Host owns integration and landed verification.
+findings: []
+assumptions:
+- 'Codex boundaries emulated: absolute scoped cwd, explicit Tier A paths, separate escalated mutations/shared-Git operations, read-only reviewers and pre/post temporary-index snapshots; no native isolation guarantee.'
+- Existing research/UIUX paths preserved; exact design_explore architecture data-root addition was initial Host-authorized scope, no new feature edges/dependencies.
+- No upstream text copied; ignored authored probe area remains in the worktree. Pytest suite fixtures used isolated system --basetemp.
+unverified_areas:
+- Instruction/package consistency is verified; model obedience, creativity and comparative superiority are not evaluated. Host still integrates and checks the synchronized landed head.
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS just test-affected --base 5401115e19a09cdbe3d1a9e1a1ae7b85569b753d with full fallback: 6612 passed 15 skipped; focused integration/wheel consumer 6 passed'
+  build: PASS five real wheels; dist/catalog consumer excludes agt/docs/spec, user-only selection and independent removal/re-add
+  lint: PASS just lint-check catalog; Ruff check and format
+  types: PASS just check catalog; zero errors warnings
+  rules_base: PASS uv run devkit rules check --ci --base 5401115e19a09cdbe3d1a9e1a1ae7b85569b753d; rules22 zero errors warnings infos
+  sync_end: PASS sync --check exit=0; tracked outputs=[]
+  measurement: PASS accepted-handoff disabled baseline entrypoints=0 local_roles=0 source=absent; source head entrypoints=1 local_roles=3 source=present; installed lifecycle PASS
+  reviews: PASS code-reviewer and reconcile-reviewer completed zero findings; pre/post HEAD and complete-tree snapshots equal for both; outside source reads=[]
+diff_scope:
+  base: 5401115e19a09cdbe3d1a9e1a1ae7b85569b753d
+  head: 4223def4b4d05a23144691546bbb66136ecbdaca
+activity_effort: medium
