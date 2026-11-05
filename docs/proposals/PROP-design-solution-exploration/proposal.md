@@ -17,7 +17,7 @@ boundaries:
     - docs/capabilities/delivery/
     - docs/usecases/delivery/
     - docs/architecture/ARCH-05-2-components.md
-    - guides/
+    - guides/install/bundle-recommendations.md
   excludes:
     - packages/devkit/src/
     - packages/devkit-dist/src/
@@ -60,17 +60,23 @@ experiments are not a prerequisite.
 
 ## 2. Technical Spike Questions
 
-No runtime spike, benchmark or further literature review is required before authoring the skill. Planning should
-settle the following:
+No runtime spike, benchmark or further literature review is required before authoring the skill. Planning
+settles the four design questions as follows:
 
-- **Q1:** Confirm the public name. `design-explore` is the working recommendation; its description should name
-  general solution design explicitly so it is not mistaken for a visual-design-only entry.
-- **Q2:** Set the minimum input framing and output shape without requiring a formal brief or fixed idea count.
-  Infer the problem from supplied context and ask only when a missing constraint changes the exploration.
-- **Q3:** Choose a small set of exploration heuristics and role instructions. Prefer one reusable explorer with
-  different premise assignments over a large catalog of specialist personas.
-- **Q4:** Define how to retain a useful result in the consumer's requested destination without introducing a new
-  document kind, permanent memory, approval record or automatic delivery workflow.
+- **Q1 — public entry:** use `design-explore` for the bundle and skill, and `design_explore` for its catalog
+  module. The description names general solution design, with architecture, models and workflows as examples.
+- **Q2 — framing and return:** infer the problem, intended benefit, hard constraints and open preferences from
+  available context. Ask only for missing facts that change the useful directions. Return mechanisms, benefits,
+  tradeoffs and decision-changing assumptions without a required brief, scorecard or number of options.
+- **Q3 — exploration:** reuse one `solution-explorer` role with different premise assignments. Keep
+  `reference-researcher` and `design-critic` optional. Use simplification, premise removal and mechanism transfer
+  as starting heuristics, selecting only the lenses that serve the problem.
+- **Q4 — retention:** return in conversation by default. If the user requests a file or existing document,
+  preserve its format and editing authority. Invocation creates no material, persistent memory or delivery unit.
+
+These are reversible implementation choices within the agreed scope. `PADR-explicit-solution-exploration`
+records the distinct decision to keep this entry independent and its roles local. No user design question
+remains open; `plan-accept` and `proposal-handoff` remain Host-owned approval boundaries.
 
 ## 3. Proposed Design & Impact
 
@@ -78,7 +84,7 @@ settle the following:
 
 Given a design problem, discover materially different ways of solving it and make their benefits, costs and
 assumptions clear enough for the user to choose a direction. Challenge proposed means while preserving the
-actual goal and hard constraints. A supplied solution is not automatically a requirement.
+actual goal and hard constraints. A supplied solution is not automatically a requirement. Preserve a solution the user explicitly fixes as a hard constraint.
 
 Representative requests include deciding how components coordinate work, simplifying a data model, reconsidering
 module ownership, changing a processing pipeline or avoiding complexity in a planned feature. Explorers may
@@ -97,7 +103,7 @@ registration and user-only invocation. Preserve the local-role distribution prin
 `ADR-skill-local-research-roles` without assuming that research-specific decision automatically governs this bundle.
 No new package, runtime, dependency, global specialist registration or automatic bundle selection is proposed.
 
-Proposed layout, not final public naming or created assets:
+Planned skill subtree under `devkit_catalog/design_explore/bundle/skills/`; Planning creates no bundle assets:
 
 ```text
 design-explore/
@@ -122,9 +128,12 @@ The coordinator compares actual returned mechanisms rather than counting persona
    supplied or project context; do not require the whole architecture to be documented before exploring.
 2. Choose independent questions or premises. Keep small questions inline. Where separate context is useful,
    dispatch fresh general agents with the selected role path, self-contained facts, scope, expected return and
-   observable stop condition. Initial explorers should not see one another's conclusions.
+   observable stop condition. Pass only task-relevant facts and artifacts, rather than the coordinator's complete
+   conversation. Initial explorers should not see one another's conclusions. If fresh children are unavailable,
+   perform the selected passes inline and disclose that they were not independent contexts.
 3. Use reference research when an external mechanism, implementation precedent or technical uncertainty could
-   change the options. Research supports design exploration; no exhaustive survey or web search quota is required.
+   change the options. Research supports design exploration; no exhaustive survey or web search quota is required. Separate inspected
+   support from inference and missing evidence; stop on an access or permission refusal without bypassing it.
 4. Compare directions on how they solve the problem, added and removed complexity, coupling, failure behavior,
    migration/adoption cost and consequences relevant to the user's constraints. Select relevant criteria rather
    than scoring every option across a universal checklist.
@@ -149,6 +158,10 @@ preserve important differences instead of averaging candidates into a generic fe
 No source edits, benchmark suite, market study, mandatory prototype or formal design document are implied by
 invoking this exploration skill. Honor a requested output destination; otherwise return the result in conversation.
 Read-only source inspection and relevant public research may support the result within the assigned boundaries.
+Delegated roles write no product source or retained artifact; they return their work to the coordinator. Only the
+coordinator updates an explicitly requested destination. The skill grants no commit, workflow approval or publication
+authority. If that destination conflicts with project rules or is unavailable, return the useful result and name
+the specific blocked write.
 
 ### Reuse and boundaries
 
@@ -168,9 +181,10 @@ publish, select a final product direction or create delivery approvals.
 
 ### Expected scope and acceptance examples
 
-The source/test parents in the boundary accommodate the new bundle, registration and focused installation checks.
-Reconcile the behavior into a capability and use case and keep architecture/consumer guidance aligned. Do not
-change other catalog bundles or add application runtime behavior.
+The source/test parents in the boundary accommodate the new `design_explore` module and its focused integration
+and installed-consumer checks. `target-docs.md` names exact future paths and shared registration/document changes.
+The broad existing parents authorize only those additions, not unrelated catalog edits. Reconcile the behavior
+into one capability and one use case, plus architecture and consumer guidance. No runtime feature edge is added.
 
 - A general architecture or data-design question produces relevant solution mechanisms, not a UI redesign.
 - A feature request can be reframed to question whether a new feature/component is necessary while preserving
@@ -189,11 +203,15 @@ change other catalog bundles or add application runtime behavior.
 - Unbounded business/product idea generation, market validation or automatic execution of proposed designs.
 - A mandatory research report, fixed brainstorming cast, benchmark program or iteration until benefit is proved.
 - New document schemas, global role metadata, persistent memory, agent runtime or changes to project governance.
-- Implementation or plan acceptance during this drafting task.
+- Automatic consumer implementation, delivery approvals or publication from a skill invocation.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep the proposal in `draft`. The user requested recording the direction, not accepting Planning or starting
-Development. The public name, concise role behavior and retention convention remain Planning choices.
-The intended implementation fits one content-bundle and documentation change. Use the normal proposal
-acceptance, handoff and retirement lifecycle if the user chooses to proceed.
+Planning runs at `medium` and includes one isolated challenger pass. Before acceptance, retain its findings and
+resolutions with the settled naming, optional-role behavior and retention convention. Development remains `medium`
+for focused distribution checks, independent code review and Living Spec reconciliation.
+
+The Host reviews the committed Planning result for `plan-accept`; its approval integrates the Planning branch.
+Development starts only after `proposal-handoff` and creates the planned content bundle and documentation. The
+handoff retains `target-docs.md` as the reconciliation baseline and promotes the remaining PADR. Rejection follows
+the existing proposal retirement procedure. No comparative-effectiveness experiment gates any of these steps.
