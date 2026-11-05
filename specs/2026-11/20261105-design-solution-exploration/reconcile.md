@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-design-solution-exploration
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-design-exploration.md
     resolution: modified
@@ -29,3 +29,6 @@ targets:
   not suitable code doorways for either new document.
 - No product screens, durable domain terms, runtime APIs or deferred required work are introduced.
 - Verification covers packaging and stated instruction consistency, not obedience, creativity or comparative benefit.
+
+Independent medium reconcile review passed with zero findings at 81c6b619d5769ffb0d849e6471521260470eab09.
+The caller verified unchanged HEAD and complete worktree tree before recording the check.
