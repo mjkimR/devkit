@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-test-management
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-test-management.md
     resolution: modified

@@ -2,7 +2,7 @@
 id: SPEC-test-management
 title: Evidence-based test management playbook
 summary: "An opt-in maintenance playbook assesses consumer test coverage, resource isolation and runner configuration while preserving native verification and approval boundaries."
-status: in-progress
+status: completed
 created: 2026-11-05
 related_capabilities: [CAP-DLV-test-management]
 related_usecases: [UC-assess-test-management]
