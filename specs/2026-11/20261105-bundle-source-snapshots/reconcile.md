@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-bundle-source-snapshots
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md
     resolution: modified
@@ -33,7 +33,7 @@ Quick reference and consumer instructions are kept aligned.
 The Host expressly admitted one glossary row for Bundle source snapshot, distinct from governance Snapshot run.
 It adds no capability or synonym mapping. The promoted ADR decision is unchanged and needs no source edit.
 No implementation work is deferred; runtime vendoring and automatic source access remain excluded.
-Entry-point candidate review and independent reconciliation verification follow before resolving this record.
+Entry-point candidate review and independent reconciliation verification passed without findings.
 
 Chosen doorways are distribution CLI bundles.py and typed usecases/snapshots.py for the local-package capability
 and new use case. Existing discovery, workspace and sync doorways remain for their owning contracts.

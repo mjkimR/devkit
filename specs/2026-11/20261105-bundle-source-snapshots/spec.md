@@ -2,7 +2,7 @@
 id: SPEC-bundle-source-snapshots
 title: Repository-committed bundle source snapshots
 summary: "Copy complete supported content providers into local packages with credential-free provenance and guarded explicit refresh, retaining normal discovery and sync."
-status: in-progress
+status: completed
 created: 2026-11-05
 related_capabilities: [CAP-DIST-in-repo-bundles, CAP-DIST-content-packages, CAP-DIST-workspace-ownership, CAP-DIST-sync-and-transactions]
 related_usecases: [UC-snapshot-bundle-sources]
