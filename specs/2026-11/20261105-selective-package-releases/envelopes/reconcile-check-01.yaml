@@ -1,0 +1,28 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T06:51:34.926452Z'
+status: completed
+summary: 'round 1; REVISE: residual same-version diagram and MCP qualifiers in containers and harness README; all18 targets and entrypoints otherwise verified.'
+findings:
+- issue: Current architecture and harness documentation still require same-version dependencies.
+  evidence: docs/architecture/ARCH-05-1-containers.md:43-52 seven Same-version edges and101-102 harness/MCP equality; packages/devkit/README.md:11 same-version MCP; reconcile.md:80 overstates scan coverage.
+  failure_condition: Selective releases retain a dependency while its dependent advances; docs require equality contrary to actual pins.
+  suggested_action: Replace seven edges with Exact actual-version dependency; replace harness paragraph equality qualifiers and README same-version with selected actual-version; rerun broader equality scan and correct reconcile assertion.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated read-only role with unchanged pre/post tree768e6fc7; no outside reads, writes or Git effects.
+unverified_areas:
+- Real historical assets and live publication remain first-use checks.
+checks:
+  targets: PASS all18 targets present
+  entrypoints: PASS broad87 candidates rejected with unchanged runtime doorways
+  rules: PASS committed branch22zero
+  tests: PASS inspected review03 full6668 passed15skipped
+  reflection: FAIL residual same-version qualifiers
+diff_scope:
+  base: 0e17cd72d96d5111e39731291241472d7cd3f87b
+  head: 3c7a9739e76a54274a94fc4b18350534eb128768
+activity_effort: high

@@ -40,16 +40,16 @@ graph TD
     end
 
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
-    PkgCore -->|Same-version dependency| PkgAdv
-    PkgCli -->|Same-version dependency| PkgAdv
+    PkgCore -->|Exact actual-version dependency| PkgAdv
+    PkgCli -->|Exact actual-version dependency| PkgAdv
     PkgCli -.->|Runtime dependency of click tools| Runtime
-    PkgDist -->|Same-version dependency| PkgCli
-    PkgDist -->|Same-version dependency| PkgCore
-    PkgDist -->|Same-version dependency| PkgAdv
-    PkgMcp -->|Same-version dependency| PkgDist
+    PkgDist -->|Exact actual-version dependency| PkgCli
+    PkgDist -->|Exact actual-version dependency| PkgCore
+    PkgDist -->|Exact actual-version dependency| PkgAdv
+    PkgMcp -->|Exact actual-version dependency| PkgDist
     PkgMcp -.->|MCP transport| DevTools
     PkgDevkit -.->|Optional mcp extra| PkgMcp
-    PkgDevkit -->|Same-version dependency| PkgDist
+    PkgDevkit -->|Exact actual-version dependency| PkgDist
     PkgDist -.->|Dev dependency (asset distribution only)| DevTools
     PkgDevkit -.->|Dev dependency (CLI harness)| DevTools
     ModelEmbed -.->|Optional search extra| PkgDist
@@ -99,7 +99,7 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
   generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
   `harness` (auto-selected).
 - **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-dist` and `devkit-advisory` (all locked to the same
-  version); its `search` extra requires `devkit-dist[search]`; `mcp` requires the same-version `devkit-mcp`.
+  version); its `search` extra requires `devkit-dist[search]`; `mcp` requires the selected actual-version `devkit-mcp`.
 
 ### 2.3 `devkit-advisory` (`packages/devkit-advisory`)
 - **Distribution Wheel**: `devkit_advisory-<version>-py3-none-any.whl`

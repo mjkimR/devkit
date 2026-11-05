@@ -77,7 +77,7 @@ The model artifact and viewer npm policies remain independent.
   packages; a dist bundle change selects two and retains advisory/core/CLI. No latency improvement is claimed.
 - Clean wheel, Git and tool fixtures resolve exact selected versions outside the workspace with optional extras;
   the existing full suite retains advisory standard-library and dist-without-agt checks.
-- The active-doc scan has no remaining release-equality assertion. Historical bootstrap terminology and the
+- The active-doc scan covers space-separated and hyphenated equality wording in prose and diagrams and has no remaining release-equality assertion. Historical bootstrap terminology and the
   retained test filename test_lockstep.py are intentional.
 
 ## Entrypoint review and limits
