@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T23:24:12.458192Z'
+status: completed
+summary: Read-only projection diagnostics implemented; independent review findings resolved and distribution contracts reconciled.
+findings: []
+checks:
+  tests: PASS affected 2952 passed 1 skipped; fixes 7 targeted passed; dist-only 1305 passed
+  build: PASS dist-only environment installation and execution
+  lint: PASS lint-check dist, check dist, rules check --ci
+diff_scope:
+  base: 22141f429f8d8c235ccae85a0be170d2bd3313ec
+  head: b98fcdf45ee0201c1dc5be5445336fb75c1420ac
