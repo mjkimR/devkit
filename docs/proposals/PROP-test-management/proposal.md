@@ -2,7 +2,7 @@
 id: PROP-test-management
 title: Evidence-based test management playbook
 summary: "Evaluate a reusable test-management playbook for consumer repositories using findings from an unreviewed implementation draft. Establish evidence, scope and verification criteria before adopting runner, tiering or integration guidance."
-status: draft
+status: accepted
 created_at: 2026-11-05
 target_area: capabilities/delivery/
 priority: medium
@@ -13,6 +13,7 @@ boundaries:
   owns:
     - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/
     - packages/devkit-catalog/tests/integration/bundles/test_bundles.py
+    - packages/devkit-catalog/README.md
     - docs/capabilities/delivery/
     - docs/usecases/
   excludes:
@@ -29,89 +30,92 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-Research about test practices for devkit and other reference repositories produced an implementation-shaped
-playbook instead of the requested proposal. The available input contains four playbook files, bundle registration
-and integration-test edits. It contains no source bibliography, reference-repository inventory, measured baseline
-or trial report. Use its review findings to frame a candidate design without treating its directives as accepted policy.
+Devkit, Auto Hub and Resource Indexer use different test ownership, resource boundaries and completion gates.
+A reusable assessment procedure can find concrete coverage, isolation and runner-cost problems without imposing
+one test layout or worker count. The implementation-shaped draft was removed; its review observations remain in
+[review notes](materials/README.md). No source snapshots are retained.
 
-The hypothesis is that an opt-in test-management playbook can help agents assess test boundaries, isolation and
-runner costs across consumer repositories, then propose changes grounded in the consumer's own contracts.
-The existing draft combines these concerns with branch promotion and verification policy; Planning must decide
-whether that latter scope belongs in the same playbook.
+The [repository assessment](materials/repository-assessment.md) records actual commands and constraints from all
+three repositories. These were read-only inspections, not application test runs or performance measurements.
 
-The [review observations](materials/README.md) identify assumptions that need validation. The implementation
-draft, registration and test additions have been removed from the distributable bundle. No source snapshot is
-retained in this proposal; existing bundle behavior is unchanged.
+## 2. Planning Decisions and Alternatives
 
-## 2. Technical Spike Questions
+| Option | Benefit | Cost/risk | Recommendation |
+| --- | --- | --- | --- |
+| Existing performance-pass/review-refactor only | No additional asset | Neither inventories test coverage, resource isolation and completion gates as its primary operation | Reuse for applicable follow-ups |
+| Bounded test-management assessment playbook | One entry point for test-specific diagnosis | One opt-in asset and its contract | Select |
+| Uniform tier/worker/branch policy | Consistent configuration | Conflicts with consumer contracts; unsupported defaults | Reject |
 
-- **Q1 — Scope and reuse:** Which assessment steps are independent of Python, pytest, `just` and devkit?
-  Should pytest guidance be a conditional reference? Does integration-policy design belong here or in separate
-  future work? Compare overlap with `CAP-DLV-performance-pass` and `CAP-DLV-review-refactor`.
-- **Q2 — Repository contracts:** How does the playbook discover and preserve the consumer's existing test-tier,
-  affected-selection and integration requirements? Compare the draft against `ARCH-05-2-components` and
-  `ADR-post-merge-verification` as devkit-specific counterexamples, not universal consumer rules.
-- **Q3 — Evidence:** What measurements justify parallel execution, worker count, recipe separation and duration
-  thresholds? Validate tool-specific commands and examples against official documentation for the tested versions.
-  Record startup/collection cost and resource isolation before recommending configuration changes.
-- **Q4 — Safe execution:** How can baseline measurement avoid contacting live services or modifying shared data?
-  Define preflight discovery, unavailable-environment handling and the boundary between assessment and authorized
-  changes. Avoid classifying all integration tests as necessarily in-memory or all subprocess tests as e2e.
-- **Q5 — Transfer:** Which actual reference repositories motivated the draft, and can they be inspected?
-  Obtain their identities and research sources before claiming cross-repository validation. If unavailable,
-  record that limitation and use explicitly labelled examples.
+Ship `maintenance/test-management` with a `testing` preset. Include it in the existing implicit `all` selection;
+selection or an upgrade of `all` makes it available, never invoked. Existing individual presets retain their sets.
+Use `SKILL.md` for trigger/constraints/procedure/completion, `references/assessment.md` for coverage/resource and
+report details, and `references/pytest.md` only for pytest/xdist consumers. No fixed time thresholds, database
+fixture templates, branch-promotion instructions, runtime command or new feature dependency edge is needed.
+These bounded asset choices require no change to accepted architecture/integration policy and no separate PADR.
 
-## 3. Proposed Design & Impact
+### Procedure
 
-### Candidate direction
+1. Record user-selected roots, HEAD/dirty paths, native commands, ownership and required gates. Inspect collection
+   hooks, credentials, services and data boundaries before running tests; collection itself can execute code.
+2. Inventory coverage and resources separately from directory/marker tiers. Preserve native labels and layouts;
+   distinguish Python, frontend/browser, native/storage and provider coverage.
+3. Run only bounded safe native commands within the assessment scope. Missing required prerequisites remain
+   `not_run` with an unmet gate; preserve documented optional skips without treating them as executed coverage.
+4. Report evidence, retained settings, proposed changes and limitations. Read pytest guidance only when applicable.
+   Tuning is optional and needs current measurements before claiming a speedup or promoting a runner default.
+5. Present one decision round. Invocation authorizes assessment, not edits. An unattended run applies nothing.
+   Route approved changes through the consumer's development workflow, preserving its review and integration gates.
+6. Report actual commands/outcomes, unresolved checks and decisions. Do not start another playbook automatically,
+   require a history service, publish evidence or retain raw/source snapshots as part of routine assessment.
 
-Retain an explicitly invoked or confirmed maintenance playbook as the initial candidate. Its core would inspect
-repository contracts and commands, establish a bounded baseline, report evidence and uncertainties, and present
-proposed changes for a decision. Load runner-specific references only when the inspected repository uses them.
-Planning may revise this structure or choose narrower additions to existing assets.
+### Recommended repository settings
 
-Treat the draft's fifteen-second split, two-second serial threshold, eight-worker cap, automatic marker mapping,
-blanket e2e exclusion and database/environment fixtures as hypotheses. Do not carry them into adopted guidance
-without evidence and conditions. Existing consumer requirements take precedence over illustrative recipes.
+- **Devkit:** retain package tiers, affected selection/full fallback, capped worksteal runner and final landed-HEAD
+  verification; preserve frontend instructions. Nightly checks are additional coverage.
+- **Auto Hub:** retain serial unit/SDK/PostgreSQL and capped automatic SQLite worksteal execution. Preserve DB,
+  migrations, frontend, SDK and isolated SDD gates; CI is manual. Shared DB safeguards are fixture-specific.
+- **Resource Indexer:** retain source-owned marker tiers and serial `just check`. Eight-worker `test-parallel`
+  remains optional; fast/tier recipes do not replace completion. Preserve native/storage, web and browser checks.
 
-The integration-policy reference requires separate scope review. Nightly verification cannot replace a required
-check of the integrated result, and passing a full suite cannot guarantee a permanently stable branch. This
-proposal does not authorize changes to devkit's branch model, CI cadence or final verification policy.
+The sibling repositories are read-only references. Consumer configuration changes require separate work there.
 
-### Expected scope if accepted
+## 3. Development Scope and Verification
 
-- A bounded opt-in catalog asset, with its registration/preset chosen during Planning.
-- Packaging and behavior-oriented checks for selection, conditional loading and authorization boundaries.
-  The draft's string-presence tests indicated intended coverage, not evidence of procedural correctness.
-- A capability and linked use case for retained behavior; related documentation updates only where necessary.
-- No new feature dependency edges or runtime implementation are proposed.
+Add the three-file playbook, manifest/preset registration and catalog README entry. Extend existing catalog
+integration checks. Document one delivery capability and one reciprocal use case. Keep shipped text self-contained
+and apply the authoring bundle's router guidance. No consumer-specific document IDs belong in shipped assets.
 
-### Candidate acceptance evidence for Development
+### Candidate acceptance criteria
 
-Planning must refine these into verifiable spec criteria before implementation:
+- **AC-01:** `testing` and implicit `all` deploy the complete asset; individual presets keep their selections;
+  unselected consumers receive nothing. Availability never invokes assessment.
+- **AC-02:** a scenario with collection hooks, shared services or unavailable sockets determines prerequisites
+  before execution. Missing required checks remain incomplete, independently of a test's tier label.
+- **AC-03:** an unattended walkthrough reports findings and changes nothing; an approved change names exact scope
+  and follows the consumer workflow without inferring authority for CI or integration-policy changes.
+- **AC-04:** read-only walkthroughs for all three repositories preserve the gates/resource boundaries recorded in
+  the assessment. A labelled non-pytest example uses native commands without installing pytest.
+- **AC-05:** a tuning example compares collected identities, outcomes/skips, cleanup and elapsed time; unexecuted
+  work is `not_run`. No universal worker/time default or application fixture is prescribed.
+- **AC-06:** deployment/conditional-loading checks and author-led procedural walkthrough records support the
+  contract. Phrase presence alone is insufficient. Relevant affected tests, lint, types and rules pass and the
+  capability/use-case references resolve.
 
-- With the asset unselected, bundle resolution and deployment remain unchanged.
-- On assessment, the agent identifies the repository's actual commands and policies before executing tests;
-  unavailable prerequisites or unsafe external-resource configuration produce an explicit limitation.
-- Before an authorized change, the report separates observations, measured results, proposed changes and
-  unresolved assumptions; an unattended run applies no changes.
-- A walkthrough in devkit preserves its affected-test selection, full fallback and final integrated-head checks.
-- A contrasting non-pytest example avoids imposing pytest, `just` or devkit-specific document IDs.
-- Runner-specific recommendations have versioned primary references and measured applicability; synthetic
-  examples are labelled and never reported as validation of an unidentified reference repository.
-- Bundle checks and relevant affected tests pass; claimed performance improvements include comparable evidence.
+Walkthroughs record expected versus observed agent actions; they are not live application or performance evidence.
+Consumer tuning uses one revision, lockfile and selected set; inspect prerequisites first, then compare serial and
+existing parallel commands with one warmup and three interleaved timed repetitions each if a tuning change is
+requested. Compare node-ID multisets, outcomes and cleanup. Keep raw logs outside versioned docs and retain a
+short conclusion. Inconclusive evidence means retain current settings, not introduce a benchmark framework.
+No performance claim or default promotion is made in this Planning.
 
 ### Non-goals
 
-Installing or activating this draft; rewriting the repository's test layout or runner; repairing application
-bugs; changing branch promotion, CI or verification policy; adding runtime frameworks or defensive governance
-layers. Any independent integration-policy redesign requires separately scoped work before implementation.
+Consumer edits, test relayout, new affected selectors, application bug fixes, CI/branch policy redesign, benchmark
+frameworks, raw evidence archives and mandatory history services. This unit ships assessment guidance only.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal in `draft` until Planning resolves the scope and evidence questions. The draft review grants
-no direction acceptance or Development handoff. Continue with `/spec-next` for `PROP-test-management` when selected.
-
-On acceptance, use the proposal lifecycle to record the chosen direction and hand off to a feature spec before
-changing shipped assets. Carry the review findings through handoff. If rejected, retain the user's reason
-through the normal proposal retirement process. Implementation requires a verified spec and normal Development checks.
+Keep `status: reviewing` on `plan-test-management` while presenting the committed direction and independent
+Challenger evidence. Current policy requires user direction acceptance and separate Development handoff authority.
+No consumer edits, source snapshots or automatic draft restoration are authorized. On acceptance, carry the
+assessment and chosen design through the normal feature-spec handoff. Rejection follows normal retirement.

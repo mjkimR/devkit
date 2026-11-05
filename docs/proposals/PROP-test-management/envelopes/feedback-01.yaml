@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-05T10:28:00.404979Z'
+status: completed
+summary: Swept Planning design, reference inspection, role findings and tooling; no new reusable repository or upstream asset feedback beyond in-scope proposal findings.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
