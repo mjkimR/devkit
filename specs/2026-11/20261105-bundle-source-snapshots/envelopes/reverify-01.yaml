@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T05:12:56.619213Z'
+status: completed
+review: review-01.yaml
+summary: Author verified both review findings fixed by captured-backup comparison and transaction validation error normalization; fresh independent fix review follows.
+findings:
+- issue: Refresh can silently discard authored snapshot edits made during candidate preparation.
+  evidence: usecases/snapshots.py:51-69; repositories/snapshots.py:130-157; .probe/review-01/test_refresh_ordering.py::test_edit_during_candidate_preparation_is_preserved failed DID NOT RAISE
+  failure_condition: An ordinary editor changes snapshot files after initial provenance validation while candidate preparation or staging runs.
+  suggested_action: Pass the verified previous inventory into the transaction; compare the actual previous tree after backup rename and restore/refuse with BUNDLE_SNAPSHOT_CONFLICT on mismatch; add regression.
+  resolution: resolved
+  severity: P1
+- issue: Transaction validation failure returns INVALID rather than WRITE_FAILED after successful rollback.
+  evidence: repositories/snapshots.py:134,148-149; .probe/review-01/test_refresh_ordering.py::test_validation_failure_uses_write_failure_code failed with SnapshotInvalidError
+  failure_condition: Final validation raises its normal SnapshotInvalidError after installing the candidate.
+  suggested_action: Preserve preflight/conflict errors but translate replacement validation failure to SnapshotWriteError after rollback; test actual validator exception.
+  resolution: resolved
+  severity: P2
+unverified_areas:
+- Fresh independent fix review and full-fallback source checks pending
+checks:
+  tests: PASS focused34 including concurrent-edit and actual validation exception regressions
+  fixes: PASS suggested actions applied; no scope or AC change
+diff_scope:
+  base: 2d47aef3e0767252ed11cbc31a8c9c4bef98c809
+  head: 6b090187a1f1be54b4e2c703b97a61b75bd8a45a
