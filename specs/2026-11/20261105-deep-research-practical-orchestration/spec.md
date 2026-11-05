@@ -1,35 +1,23 @@
 ---
-id: PROP-deep-research-practical-orchestration
+id: SPEC-deep-research-practical-orchestration
 title: Make deep-research deliverable-driven and proportionate
-summary: "Align deep-research assignments and criticism with the requested deliverable, reduce duplicate verification and distinguish recoverable retrieval failures from permission refusals."
-status: accepted
-created_at: 2026-11-05
-target_area: capabilities/delivery/
-priority: medium
-size: M
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/
-    - packages/devkit-catalog/tests/integration/bundles/test_deep_research.py
-    - packages/devkit-catalog/tests/e2e/bundles/deep_research/
-    - docs/capabilities/delivery/CAP-DLV-deep-research.md
-    - docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md
-    - docs/decisions/
-  excludes:
-    - packages/devkit/src/
-    - packages/devkit-dist/src/
-    - packages/devkit-spec/src/
-    - .devkit/managed/
-    - .agents/skills/
-task_kind: feature
-planning_effort: low
-dev_effort: medium
-workflow: sdd-proposal
+summary: Align deep-research assignments and criticism with the requested deliverable, reduce duplicate verification and distinguish recoverable retrieval failures from permission refusals.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-deep-research-practical-orchestration] Make deep-research deliverable-driven and proportionate
+# [SPEC-deep-research-practical-orchestration] Make deep-research deliverable-driven and proportionate
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-deep-research-practical-orchestration on 2026-11-05.
+- Target Docs Blueprint: `PROP-deep-research-practical-orchestration-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 A user invoked deep-research both to pilot its operation and to find reusable agent-team configurations for
 UI/UX improvement and unconventional ideation. The first response emphasized empirical team-performance
@@ -53,7 +41,7 @@ Hypothesis: small changes to intake framing, delegation, criticism and retrieval
 research team produce more directly useful results at proportionate effort. No new runtime or role is needed.
 The current contracts in `CAP-DLV-deep-research` and `UC-research-an-idea-and-shape-a-roadmap` remain the foundation.
 
-### User constraints and evidence status
+#### User constraints and evidence status
 
 The requested work proceeds through Planning of this bounded improvement. Plan acceptance and Development
 handoff remain separate Host decisions. Keep the explicitly invoked skill with skill-local Markdown roles and optional delegation.
@@ -62,7 +50,26 @@ Do not require same-task comparisons, blind scoring or proof of team benefit bef
 The observations above come from the pilot conversation and returned assignments retained in
 `MAT-agent-team-design-pilot`. This proposal needs no access to the transient run directory.
 
-## 2. Planning Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Make deep-research deliverable-driven and proportionate so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 Planning used `low` activity-effort: the direction is already concrete and needs no additional research or critic
 pass. No essential user question remains. Development remains `medium` because agent-facing instructions and
@@ -75,12 +82,12 @@ retained behavior contracts need independent review.
 | Retrieval classification | A definite refusal stops access to that resource. An ordinary technical retrieval failure permits bounded authorized recovery. Ambiguous authorization stops that resource while unrelated permitted work can continue. | Failed retrieval and actual replacement evidence remain visible; recovery consumes the original assignment bound. |
 | Verification | Retain installation and authority checks; use concrete semantic review examples for instruction behavior. | No test claims to measure creativity, usefulness or cost superiority, and no comparison experiment is required. |
 
-`PADR-deliverable-driven-research` records the lasting instruction choice and tradeoffs. `target-docs.md` identifies
+`ADR-deliverable-driven-research` records the lasting instruction choice and tradeoffs. `target-docs.md` identifies
 the exact expected source and Living Spec reflection. No new package, runtime behavior or feature edge is needed.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Frame the requested output before allocating research
+#### 3.1 Frame the requested output before allocating research
 
 Record the requested deliverable, intended use, known constraints and research stopping point in the run brief.
 Infer these from the request where possible; ask only when a missing choice changes the research target.
@@ -91,7 +98,7 @@ what to omit and a recommended starting composition. Empirical evidence can qual
 becoming a separate effectiveness study. For a factual research question, use the appropriate factual output;
 repository discovery is not a universal requirement.
 
-### 3.2 Review usefulness as well as factual support
+#### 3.2 Review usefulness as well as factual support
 
 Before retaining the result, the coordinator should check whether the requested artifact is present, whether the
 recommendation supports the user's intended next action and whether it introduces unnecessary prerequisites.
@@ -101,7 +108,7 @@ A finding should name the missing or burdensome output, the relevant user constr
 Zero supported findings remains valid. Do not mandate criticism, consensus, a fixed issue count or extra rounds.
 Do not add an independent reviewer to every research run.
 
-### 3.3 Verify consequential claims selectively
+#### 3.3 Verify consequential claims selectively
 
 Investigators should return the inspected source identity, the relevant location or finding and its limitations.
 The coordinator should inspect those returns and selectively reopen sources where a claim changes the
@@ -111,7 +118,7 @@ A clear, adequately sourced return should not trigger a complete repeat of its i
 Selective verification does not mean accepting every role claim without review. Keep observation, vendor claim,
 inference and unavailable evidence distinct in the retained result.
 
-### 3.4 Separate retrieval recovery from authorization refusal
+#### 3.4 Separate retrieval recovery from authorization refusal
 
 Preserve the prohibition on bypassing an actual permission or sandbox refusal. Do not use another tool, path,
 process, identity or setting to obtain access to the same denied resource.
@@ -125,7 +132,7 @@ research may continue. The return should identify the failed retrieval and what 
 
 Use the role's existing observable research bound; no new automatic retry engine or expanding budget is proposed.
 
-### 3.5 Keep follow-up work proportional
+#### 3.5 Keep follow-up work proportional
 
 Separate optional investigations from prerequisites. A roadmap should connect directly to the user's intended
 use and avoid turning every unknown into more research. When the user declines comparative validation, keep
@@ -135,14 +142,14 @@ Retain the existing fresh-context dispatch, one-question assignments, source qua
 material and explicit separation between behavioral instructions and host enforcement. Adjust the existing
 skill and references rather than adding personas, a framework or a fixed team size.
 
-### Expected scope
+#### Expected scope
 
 Edit the source bundle's entry, orchestration/synthesis references and affected role wording. Reconcile the
 changed behavior into the capability and use case. Update existing bundle checks only where the instruction
 contract changes. Managed and projected copies remain generated through normal synchronization.
 No new cross-feature dependency or package edge is in scope.
 
-### Acceptance examples for Development
+#### Acceptance examples for Development
 
 - A practical-reference request produces concrete repositories/files and reuse guidance in its first retained
   answer, rather than only research about whether the approach works.
@@ -154,7 +161,7 @@ No new cross-feature dependency or package edge is in scope.
   never authorizes alternate access to the denied resource. Missing coverage remains visible.
 - A simple request can complete without discovery-critic or additional roles. Criticism can return zero findings.
 
-### Scope excluded
+#### Scope excluded
 
 - A new UI/UX or ideation-team skill, installation of referenced repositories or copying their entire workflows.
 - Benchmarks, same-task A/B/C comparisons, blind human scoring or validation until team superiority is proved.
@@ -162,7 +169,7 @@ No new cross-feature dependency or package edge is in scope.
 - Changes to Git/worktree lifecycle, research material immutability, citation policy or publication authority.
 - Implementation during Planning, or mandatory additional research/review rounds.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 This proposal remains `reviewing` for the Host's committed-source review and `plan-accept` decision. Planning
 has settled the direction; it claims neither acceptance nor a Development handoff.
@@ -171,3 +178,4 @@ On acceptance, hand off one bounded source-bundle/documentation change at `mediu
 promoted decision in the declared Development scope. Retirement follows the normal handoff lifecycle. On rejection,
 record the decision and follow the normal rejection lifecycle. No comparative-benefit study gates either adoption
 or completion of the implementation checks.
+

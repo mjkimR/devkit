@@ -1,13 +1,13 @@
 ---
-id: PADR-deliverable-driven-research
+id: ADR-deliverable-driven-research
 title: Keep research oriented to the requested deliverable
 summary: "For bounded research, we align assignments and synthesis with the requested deliverable and use selective verification, accepting semantic review instead of a mandatory effectiveness benchmark."
-proposal: PROP-deep-research-practical-orchestration
-status: draft
+proposal: SPEC-deep-research-practical-orchestration
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-deliverable-driven-research] Keep research oriented to the requested deliverable
+# [ADR-deliverable-driven-research] Keep research oriented to the requested deliverable
 
 ## 1. Context & Problem Statement
 
