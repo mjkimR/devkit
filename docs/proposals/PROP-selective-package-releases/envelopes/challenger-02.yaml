@@ -1,0 +1,18 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-05T04:11:29.422814Z'
+status: completed
+summary: round 2; no material findings; the full fix batch addresses generated-edit provenance, repeated preparation, exact-pin closure and bundle exclusions while retaining existing contracts.
+findings: []
+assumptions:
+- Codex emulated isolation; before/after snapshot d75c2ca9fe78069af4a306eaf09314134cedff61 remained identical.
+unverified_areas:
+- Preparation, interrupted-write recovery, wheel builds, historical bootstrap, external installations and publication retries require Development checks.
+checks:
+  design: PASS complete fix batch and affected contracts reviewed
+  diff: PASS supplied committed range
+diff_scope:
+  base: 08aa5e5ea1869d698e69f5740110a6c888abb36d
+  head: a5f04f175474a2c24bffc57e5f9ad93ff88712d0
