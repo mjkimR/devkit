@@ -14,10 +14,11 @@ boundaries:
     - packages/devkit-dist/src/devkit_dist/features/distribution/
     - packages/devkit-dist/tests/
     - docs/capabilities/distribution/
-    - docs/architecture/
+    - docs/architecture/ARCH-05-2-components.md
     - docs/decisions/
-    - docs/development/reference/
-    - guides/install/
+    - docs/usecases/
+    - docs/development/reference/distribution.md
+    - guides/install/existing-repository.md
     - packages/devkit-dist/src/devkit_dist/bundles/devkit/
   excludes:
     - packages/devkit-core/
@@ -41,73 +42,134 @@ A repository-committed copy of upstream bundle sources could remove recurring pr
 retaining normal selection, synchronization, receipts and overrides. The hypothesis applies to private bundle
 content; the devkit runtime and other Python dependencies still need their own installation path.
 
-## 2. Technical Spike Questions
+## 2. Planning Decisions
 
-- **Q1 — Source completeness:** What is the minimum supported input: an installed content package, a local bundle
-  root, or an authenticated upstream checkout? How are templates, included files and runtime imports accounted for?
-- **Q2 — Packaging:** Should one snapshot package contain one bundle or several? How are bundle identity and Python
-  module names preserved without duplicate discovery when upstream packages remain installed?
-- **Q3 — Provenance and versioning:** How are source package/version, bundle version, available commit identity,
-  content hash and local snapshot identity recorded without storing credentials or claiming an unknown commit?
-- **Q4 — Refresh behavior:** How does an explicit refresh show additions, changes and removals, preserve project
-  overrides, reject edited snapshot sources, and leave the previous snapshot usable after failure?
-- **Q5 — Dependency boundary:** Which content-only bundles can be copied completely? How are bundles importing
-  external Python modules or command plugins rejected or accompanied by explicit dependency requirements?
-- **Q6 — Fresh clone:** What bootstrap is still required, and can installation and synchronization complete without
-  contacting the private bundle origin when all declared runtime/build dependencies are otherwise available?
+The comparison and code evidence are in `materials/source-and-dependency-boundary.md`.
+`PADR-bundle-source-snapshots` records the packaging and refresh choice.
 
-## 3. Proposed Design & Impact
+| Question | Settled direction | Consequence |
+| --- | --- | --- |
+| Source | An explicit accessible local content-package checkout, with static `pyproject.toml` metadata and ordinary `src/` resource modules. | No cloning, credentials, installed-module import or arbitrary build execution in the snapshot command. |
+| Granularity | Copy every bundle entry point of that content-only package into one generated local wrapper. | Existing package-level installation can replace the original without stranding its other bundles. No provider precedence or partial shadowing. |
+| Assets | Preserve original manifests, all variants, constitutions, declared source trees, templates and bundle-local helper files. | Rule/gate Python assets are supported when their dependencies satisfy the boundary below; copying rendered projections is excluded. |
+| Provenance | Source package/version, each bundle/version, optional verified source commit, ordered file hashes/modes and aggregate digest. | Record a commit only when copied source files match that commit; otherwise use null. Never persist source paths, remote URLs, credentials or timestamps. |
+| Local identity | Generated distribution/module names come from an explicit unique package name; local package version remains `0.0.0`. | Git adoption commit plus source digest identifies updates; unchanged input is byte-for-byte idempotent. |
+| Update | Explicit source-to-snapshot refresh, inspectable diff and expected-current digest before applying. | No background fetch, automatic Git commit or silent overwrite. |
+| Loader | Normal installed content-package discovery, selection and sync. | Existing duplicate-name errors remain; replacing dependencies is an explicit consumer step. |
 
-Recommended starting direction, subject to Planning:
+### Supported dependency boundary
 
-1. Read a complete bundle source from an explicitly supplied, accessible source. Package the source under a local
-   content package, conventionally under `tools/`, and install it using the existing path/workspace mechanism.
-2. Copy authoring sources and manifest data, including templates and required support files, rather than rendered
-   `.devkit/managed/` copies or host projections. Validate supported content before accepting a snapshot.
-3. Record credential-free provenance and deterministic content hashes. Keep upstream bundle versions separate from
-   the local snapshot's identity; the consumer commit records which snapshot was adopted.
-4. Refresh only on an explicit request. Present source differences, refuse silent overwrites of locally changed
-   snapshot sources, and apply the new snapshot coherently. Use project overrides for consumer adaptations.
-5. Resolve duplicate bundle discovery explicitly when replacing an installed upstream provider. Account for an
-   upstream package that also provides other needed bundles or runtime plugins.
-6. Reuse the installed-package loader and existing sync/receipt ownership. A second local bundle loader is not the
-   starting direction. CLI names and any provenance file schema remain Planning decisions.
+The initial supported source package has only `devkit.bundles` entry points, static name/version metadata,
+no project runtime dependencies, and resource-module initializers containing only a docstring or no statements.
+It may provide several bundles. `devkit-starter` and the content-only catalog demonstrate these shapes.
+A mixed application/command-provider package is refused with its offending metadata named.
 
-Illustrative outcome: an authorized maintainer snapshots a private team bundle into a consumer repository and
-commits its local package plus provenance. A fresh consumer checkout installs that package and runs normal sync
-without fetching the private team repository. A later maintainer refresh produces a reviewable source diff.
+A bundle-owned rule, gate or helper Python module is not an application package. Preserve it unchanged when
+its relative imports stay within the copied plugin/helper tree and its absolute imports use the standard library
+or documented devkit runtime APIs. Preflight checks Python ASTs for imports outside that set, original-package
+absolute imports and syntactically dynamic imports; those cases report unsupported input before destination writes.
+This supports the ordinary dependency-free rule case without claiming to prove arbitrary Python behavior.
+No source Python is executed during inspection. Shell/helper tools and agent instructions retain their declared
+consumer environment requirements; copying them does not install a runtime or make an offline execution guarantee.
 
-The expected runtime boundary is distribution. New cross-feature dependency edges are out of scope unless Planning
-explicitly expands the declared boundary. Reconcile the result with `CAP-DIST-in-repo-bundles`,
-`CAP-DIST-content-packages`, `CAP-DIST-workspace-ownership` and `CAP-DIST-sync-and-transactions`. Record an ADR if
-Planning changes the accepted discovery or ownership decisions.
+The generated wrapper declares no dependency on the upstream package. A consumer supplies devkit and, for
+rules/gates/workflows, its required harness through the existing installation mechanism. License/notice files
+explicitly named by source package metadata are retained. Inputs needing nonstandard build mapping, omitted
+resource helpers or unavailable runtime code are refused; no successful partial snapshot is emitted.
 
-**Scope excluded:** copying the devkit runtime, arbitrary executable-package vendoring, eliminating all network
-access, storing authentication material, background upstream tracking, automatic Git commits, a new package
-registry, and automatic three-way merging of snapshot-source edits.
+### Command and transaction shape
+
+Proposed public CLI (names settle here; final result models/error codes belong in the feature spec):
+
+```bash
+uv run devkit bundle snapshot /checkout/team-assets --to tools/team-assets-snapshot --package team-assets-snapshot
+uv run devkit bundle refresh tools/team-assets-snapshot --source /checkout/team-assets --check
+uv run devkit bundle refresh tools/team-assets-snapshot --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-source-digest>
+```
+
+Creation writes a generated package with `src/team_assets_snapshot/<bundle_module>/bundle/`, empty resource
+initializers, `pyproject.toml` and a schema-versioned `snapshot.json`. Original bundle names, versions and content
+bytes remain unchanged; generated entry points target the wrapper's distinct module namespace. A package with
+colliding or invalid normalized wrapper module names is refused. The destination must be a new directory inside
+the consumer repository and must not overlap the source, Git/devkit/agent state or another snapshot.
+
+The provenance records source identity and the full owned output inventory, including generated packaging files.
+The digest covers canonical relative paths, bytes and normalized executable modes; it excludes the digest field
+itself. Version-only source changes are observable provenance updates. No local version bump is needed for an
+editable repository package. A refresh with the same metadata/content writes nothing.
+
+Creation and refresh stage and validate the complete candidate before touching the destination. Refresh compares
+all owned files and unexpected additions against `snapshot.json` and refuses local changes, unknown provenance
+schemas and an expected-current digest mismatch. Its result lists additions, modifications, mode changes and
+removals deterministically; `--check` writes nothing. Apply uses a guarded staged replacement with rollback on
+reported write/validation failure. Never merge local edits automatically. Source drift between preview and apply
+is exposed through the candidate digest in both results; apply requires `--candidate <reviewed-source-digest>` in addition to `--expect`. Creation is explicit without a
+preview; refresh apply always requires both digests. The feature spec defines the conflict code.
+
+The command does not edit consumer `pyproject.toml`, `uv.lock`, config, overrides, receipt or Git. It returns exact
+local package installation and upstream dependency replacement instructions. Before installation, the consumer
+removes the original content-only provider and installs the wrapper in the dev dependency group. If another
+requirement keeps the original provider installed, the existing duplicate-name error must be resolved explicitly;
+no import/package precedence is invented. All original bundles are in the wrapper, so unrelated selections from
+that provider remain available. Normal `devkit sync` then updates receipts and keeps project overrides under
+`CAP-DIST-workspace-ownership`, including upstream drift notices. Snapshot refresh alone does not sync.
+
+### Alternatives and impact
+
+- **Manual source copy:** viable today, but has no shared inventory, local-edit refusal or refresh diff. Keep it as
+  an escape hatch, not the repeatable command's implementation contract.
+- **A `.devkit/local/` source loader:** avoids wrapper packaging but duplicates discovery/ownership. Rejected in
+  `CAP-DIST-in-repo-bundles`; this proposal preserves that decision.
+- **Installed-package or arbitrary wheel vendoring:** convenient input but importing/building runtime code and
+  dependency closure would broaden the authentication promise. The first command reads an accessible checkout.
+- **Selected-bundle extraction while leaving its package installed:** conflicts with global duplicate discovery.
+  Whole content-package replacement is the first scope; partial extraction needs a demonstrated consumer case.
+
+Implementation remains within the distribution feature: CLI calls typed use cases, services decide source/package
+support, repositories read/write source snapshots, and models carry results/errors. No new feature edge is
+admitted. `target-docs.md` names exact future paths and retained contracts. No production or Living Spec edit is
+part of this Planning turn. Development effort remains `medium`; estimated size remains `L` (one spec with creation,
+refresh and installed-consumer verification).
+
+**Scope excluded:** devkit runtime copying, arbitrary executable-package vendoring, dependency/build execution,
+automatic upstream access, credentials, all-network-free bootstrap, automatic Git commits, provider precedence,
+a second loader and automatic three-way merging of locally edited sources.
+
+## 3. Verification and Evidence Limits
+
+No private source package was supplied. The design is grounded in the public starter/catalog layouts and existing
+loader contracts, not a measured fix in a private consumer. That limit does not prevent specifying a supported
+class; unsupported real inputs will name the needed dependency/layout rather than claim success.
+
+Development acceptance checks:
+
+- **AC1:** Given a supported multi-bundle content package, creation preserves all manifest/variant/template/helper
+  bytes and executable modes, emits valid importable wrapper entry points and credential-free matching provenance.
+  A self-contained rule fixture using the documented devkit APIs is included, not categorically rejected as Python.
+- **AC2:** Given a fresh consumer with declared runtime/build dependencies available and private origin inaccessible,
+  installing only the committed local wrapper and running locked sync reproduces its selected assets. No private
+  origin requirement remains in the consumer dependency graph. A built-wheel consumer test proves this boundary.
+- **AC3:** Given changed upstream bytes, modes, manifest metadata or deletions, preview lists the complete diff.
+  Applying the reviewed source/current digests updates coherently; identical input writes nothing. An injected
+  recoverable write failure leaves the previous package/provenance usable and unchanged.
+- **AC4:** Given local source edits/additions, stale digests, unknown schemas, unsupported imports/layout/dependencies
+  or conflicting bundle providers, the relevant command returns a stable actionable condition and never silently
+  overwrites consumer content or claims a complete snapshot.
+- **AC5:** Given a project override, explicit refresh followed by ordinary sync preserves the adaptation and reports
+  upstream drift using existing ownership behavior. The snapshot operation leaves overrides and receipt untouched.
+- **AC6:** Given a source package providing several bundles or runtime command entry points, preflight reports the
+  complete replacement set or refuses the mixed runtime package; it never silently removes a still-needed provider.
+
+Use real filesystem/inventory tests for hashing, safety and rollback, CLI result tests for codes/actions, and
+installed-consumer tests for discovery, fresh clone bootstrap and supported rule assets. Run `just test-dist` to
+retain dist's runtime independence from the harness; rule execution belongs only in a harness-equipped consumer
+fixture. No performance improvement is claimed, so no timing baseline is required.
 
 ## 4. Lifecycle & Retirement Criteria
 
-This is a queued draft with `medium` Planning and Development effort and estimated size `L`. Its priority is `high`
-because it addresses repeated authentication friction. It does not depend on `PROP-selective-package-releases`:
-source version plus content hash can identify a snapshot under either release policy.
-
-Planning is ready for acceptance when supported bundle types, local packaging, provenance, duplicate-provider
-handling, explicit refresh and failure behavior are specified. Confirm whether the motivating private dependency
-contains content alone or runtime code before selecting the first supported scope.
-
-Candidate Development acceptance checks:
-
-- **AC1:** Given a supported private bundle and authorized source access, snapshot creation produces a valid local
-  content package and credential-free provenance whose hashes match the copied sources.
-- **AC2:** Given a clean consumer clone with runtime/build dependencies available and private-origin credentials
-  absent, installing the local package and running sync reproduces the selected assets without fetching that origin.
-- **AC3:** Given a changed upstream bundle, explicit refresh reports additions, changes and removals; unchanged
-  inputs do not create content churn, and a failed refresh leaves the previous snapshot usable.
-- **AC4:** Given local snapshot edits, duplicate bundle providers or unsupported external runtime dependencies, the
-  operation reports an actionable condition without silently discarding content or claiming a complete snapshot.
-- **AC5:** Given a project override, refresh preserves the adaptation and exposes upstream drift through the
-  existing ownership mechanism.
-
-Acceptance and handoff follow the existing proposal lifecycle. Narrow or reject the draft if the motivating
-credential problem is confined to runtime installation and bundle snapshots do not address it.
+This proposal is in Planning at `medium` effort. It has no prerequisite proposal, including
+`PROP-selective-package-releases`: source package version, bundle version and digest work under either release
+policy. Acceptance decides the explicit source/whole-provider replacement and dependency boundary above.
+Handoff starts one feature spec and promotes the PADR. Reject the proposal if private-content reuse does not justify
+explicit provenance/refresh beyond manual local-package creation. Implementation and integration remain pending
+until their lifecycle authorities and verification hold.
