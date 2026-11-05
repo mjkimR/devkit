@@ -41,3 +41,8 @@ from the canonical source. Source roots are now canonicalized after existing sou
 before Git-relative identity checks. Its regression and explicit source-symlink rejection pass. Both failing
 provenance regressions are retained; the complete focused filesystem/installed consumer set passed36 before adding
 the third symlink guard regression, which also passed. Fresh fixed-content broader checks run before final report.
+
+The Host's follow-up symlink-parent regression failed before the final path fix. Metadata reads now retain
+the full lexical ancestor no-symlink validation before canonicalizing the source root. Both direct and parent
+symlinks refuse; ordinary ../source preserves commit/digest. Full focused filesystem/consumer verification
+passes38 after these changes. No symlink policy was relaxed.

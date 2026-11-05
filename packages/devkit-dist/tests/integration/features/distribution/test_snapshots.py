@@ -374,3 +374,12 @@ def test_source_symlink_stays_rejected_before_canonicalization(checkout) -> None
     with pytest.raises(SnapshotInvalidError):
         CreateBundleSnapshot().execute(root, link, destination, "team-copy")
     assert not destination.exists()
+
+
+def test_source_symlinked_parent_stays_rejected_before_canonicalization(checkout) -> None:
+    root, source, destination = checkout
+    alias_parent = source.parent / "alias-parent"
+    alias_parent.symlink_to(source.parent, target_is_directory=True)
+    with pytest.raises(SnapshotInvalidError):
+        CreateBundleSnapshot().execute(root, alias_parent / source.name, destination, "team-copy")
+    assert not destination.exists()

@@ -22,7 +22,7 @@ from devkit_dist.features.project.repositories.invocation import guard_execution
 
 def read_content(path: Path) -> Content:
     """Read a regular file without following a symbolic-link component."""
-    if path.is_symlink() or not path.is_file():
+    if any(part.is_symlink() for part in (path, *path.parents)) or not path.is_file():
         raise SnapshotInvalidError(f"expected a regular, unlinked source file: {path}")
     try:
         return Content(path.read_bytes(), normal_mode(path.stat().st_mode))
