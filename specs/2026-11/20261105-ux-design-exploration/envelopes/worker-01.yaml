@@ -1,0 +1,25 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T00:33:55.388840Z'
+status: completed
+summary: Completed UIUX implementation, installation tests, independent code/reconcile reviews and six resolved Living Spec targets. No sync outputs or Tier B extensions. Host-authorized initial scope amendment adds only catalog data_roots registration; local integration and final landed-head verification remain with Host.
+findings: []
+assumptions:
+- 'Codex role boundaries are emulated: absolute cwd, explicit write/read scopes, per-operation approvals, unchanged support-role HEAD/tree snapshots and committed-range inspection substitute for native enforcement.'
+- Host explicitly amended Tier A for .devkit/architecture.toml data_roots uiux_improve only; task 1 and plan document the exact addition.
+- Source, registration, architecture data root and tests are unchanged since the full regression run; later work is documentation and records only.
+unverified_areas:
+- No live consumer product UI, aesthetic quality, model obedience or comparative team-effectiveness evaluation. No empirical improvement or token savings claimed.
+checks:
+  sync_start: PASS exit=0
+  sync_finish: PASS exit=0; no tracked outputs
+  tests: PASS full fallback 6604 passed 15 skipped; subsequent docs-only 16 passed; focused integration38 plus wheel consumer1
+  lint: PASS ruff and Pyright catalog; 22 committed rules zero errors/warnings
+  review: PASS medium independent code review zero findings and reconcile review zero findings
+  envelopes: PASS no pending questions, problems or open findings before worker record
+diff_scope:
+  base: 2cf74e47e864f2b681f81d4bb4aa93ca0767f02f
+  head: 6726fdb7c2c9d637d759b228c54bf7634d808810
+activity_effort: medium

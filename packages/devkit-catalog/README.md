@@ -8,6 +8,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | --- | --- | --- |
 | `adaptive-dev` | `core` | Adaptive product iteration, optional support and mutable current context without SDD delivery records |
 | `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
+| `uiux-improve` | `core` | User-invoked overall UI/UX improvement with optional local perspectives and implementation through the consumer workflow |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
 | `command-design` | `core` | Creation-time guidance for necessary justfile, CLI and MCP entry points; one conditional instruction, no always-loaded pointer |
@@ -57,6 +58,15 @@ three moved roles on upgrade; sync removes their unmodified projections and anno
   refused until then.
 
 See `CAP-DLV-deep-research`.
+
+## UI/UX improvement
+
+`uv run devkit add uiux-improve` selects the content-only bundle with no required docs or spec package.
+Explicitly invoke `/uiux-improve <goal>` to inspect and improve a supplied interface or flow. Optional designer,
+unconventional-designer, reference-researcher and critic instructions stay inside the skill rather than registering
+global specialists. The coordinator carries requested implementation and actual checks through the consumer's
+existing workflow; review-only requests stay read-only. Selection starts no work and changes no development policy.
+No fixed team, design score, research report or comparison experiment is required. See `CAP-DLV-uiux-improvement`.
 
 ## Command design
 

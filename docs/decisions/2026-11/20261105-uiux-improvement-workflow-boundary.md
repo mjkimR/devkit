@@ -1,13 +1,13 @@
 ---
-id: PADR-uiux-improvement-workflow-boundary
+id: ADR-uiux-improvement-workflow-boundary
 title: Keep UI/UX improvement opt-in and within the project delivery workflow
 summary: "For reusable UI/UX improvement, we ship an explicitly invoked skill with local roles and reuse the consumer delivery workflow, to carry changes through existing checks, accepting host-dependent tools and implementation boundaries."
-proposal: PROP-ux-design-exploration
-status: draft
+proposal: SPEC-ux-design-exploration
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
+# [ADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
 
 ## 1. Context & Problem Statement
 
@@ -32,18 +32,16 @@ design-only role instructions into unrelated work. Consumers can use different d
 ## 4. Decision Outcome
 
 - `uiux-improve` is an opt-in catalog bundle with a user-invoked entry and local role documents. It registers no
-  global specialists and supplies no always-loaded design instruction.
+  global specialists and supplies no always-loaded design instruction. → `CAP-DLV-uiux-improvement` rules 1–2 (MUST).
 - The coordinator chooses useful perspectives, owns synthesis and continues requested implementation through
   the consumer's existing development workflow. Selecting the bundle or invoking the skill changes no workflow
-  policy and grants no commit, integration or publication authority.
+  policy and grants no commit, integration or publication authority. → `CAP-DLV-uiux-improvement` rule 3 (MUST).
 - The skill can finish a narrow request inline. Research, alternatives and critique are optional means of
-  improvement rather than a required cast, report, score or experiment.
+  improvement rather than a required cast, report, score or experiment. → `CAP-DLV-uiux-improvement` rule 6 (MAY).
 - A fresh child receives only its bounded assignment and selected role instructions where the host supports it.
-  Those instructions confer no native permission or shared-resource isolation.
+  Those instructions confer no native permission or shared-resource isolation. → `CAP-DLV-uiux-improvement` rules 7 (MUST), 8 (SHOULD) and 10 (MUST).
 
-The prospective capability named in `target-docs.md` will restate these boundaries with normative strength during
-Development; exact rule traces are added when that document exists. This decision does not supersede the
-research-specific `ADR-skill-local-research-roles`.
+This decision does not supersede the research-specific `ADR-skill-local-research-roles`.
 
 ## 5. Consequences
 

@@ -14,6 +14,7 @@ cli-tool = "devkit_catalog.cli_tool"
 command-design = "devkit_catalog.command_design"
 adaptive-dev = "devkit_catalog.adaptive_dev"
 deep-research = "devkit_catalog.deep_research"
+uiux-improve = "devkit_catalog.uiux_improve"
 
 [dependency-groups]
 dev = ["devkit-dist", "devkit-agt"]  # bundle tests use devkit-dist's manifest reader; rule tests the rules engine
