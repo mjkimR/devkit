@@ -2,28 +2,25 @@
 id: PLAN-justfile-standard-templates
 spec: SPEC-justfile-standard-templates
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-justfile-standard-templates` Minimal Command Setup Guidance
+# Technical Plan: SPEC-justfile-standard-templates
 
-## 1. Architecture Overview & Impact
-- Target Area: harness/
-- Target Docs Blueprint: `PROP-justfile-standard-templates-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+No conflicting invariant or ADR change. CAP-DIST-content-packages owns catalog distribution and
+CAP-GATE-commit-gates keeps verification commands project-selected. `cli-tool` retains Python implementation
+rules. The catalog bundle adds no runtime code, framework dependency or new feature edge.
 
-### Planned Boundaries:
-- `guides/install/`
-- `packages/devkit-catalog/src/devkit_catalog/`
-- `packages/devkit-catalog/tests/`
-- `packages/devkit-catalog/pyproject.toml`
-- `packages/devkit-catalog/README.md`
-- `docs/capabilities/harness/`
-- `docs/capabilities/distribution/`
-- `docs/usecases/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `docs/decisions/`
+Register `command-design = devkit_catalog.command_design` with an empty initializer and one manifest instruction.
+Use a conditional description for creation/configuration/extension tasks and no AGENTS guidance pointer.
+Document the bundle in catalog/install recommendations and a capability plus use case. Put native command reuse
+and optional recipe examples in the installation guides. Keep existing CI/hook checks explicit.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 6. Verification & Test Plan
+
+Existing parametrized catalog manifest tests validate entry point, opt-in and version. Add a deployment test for
+selection, context discovery and absence of extra projections. Review the instruction against all three creation
+scenarios rather than testing exact prose. Run a temporary Node command fixture for the documented native
+verification example, `just test-affected`, catalog lint/types and document/asset rules. Do not claim pilot validation.
