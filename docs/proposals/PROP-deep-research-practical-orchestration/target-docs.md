@@ -7,13 +7,14 @@ created_at: 2026-11-05
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-deep-research.md
   - file: docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md
-  - file: docs/decisions/ADR-deliverable-driven-research.md
+  - file: docs/decisions/2026-11/20261105-deliverable-driven-research.md
 ---
 
 # Planned source and Living Spec reflection
 
 This is a Planning target list for `PROP-deep-research-practical-orchestration`; it describes proposed behavior.
-No source or current contract changes are made by this Planning turn.
+No source or current contract changes are made by this Planning turn. The prospective ADR path assumes handoff
+on 2026-11-05; use the actual promoted path if handoff occurs on another date.
 
 ## Source paths
 
