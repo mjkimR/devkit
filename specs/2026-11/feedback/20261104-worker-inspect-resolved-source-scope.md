@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-04
 ---
 
@@ -52,3 +52,11 @@ Default inspection: exit1; scope fail; ancestry/head/worktree/scope_extensions/e
 Exact missing path: specs/2026-11/20261104-namespace-roadmap/feedback/entrypoints-derive-offers-managed-paths.md.
 Host inspection with original complete scope: exit0, outside_scope=[], every check pass.
 ```
+
+## Disposition
+
+`SPEC-worker-source-completion` retains completion scope for an explicitly linked resolved source when the same
+exact path and ID were open at the audit base. Already terminal, missing, unknown or different-ID base sources
+remain excluded; explicit scope still replaces the whole inferred set. Verified by four failing Red regressions,
+64 passing worker inspection tests, 1665 affected tests and independent code review with zero findings.
+The recorded accepted-input/returned-head range now derives the previously omitted source path without an override.

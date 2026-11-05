@@ -2,7 +2,7 @@
 id: SPEC-worker-source-completion
 title: Preserve source feedback completion scope
 summary: "Worker inspection retains completion scope for explicitly linked feedback that was open at the audit base."
-status: active
+status: completed
 created: 2026-11-05
 related_capabilities:
   - CAP-DLV-delivery-workflows
