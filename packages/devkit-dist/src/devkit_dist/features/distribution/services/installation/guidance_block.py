@@ -48,14 +48,18 @@ def render(bundles: list[str], entry_skills: list[str], fragments: list[str] | t
     ]
     if bundles:
         lines.append(
-            "- Before work that touches a bundle's assets, run `uv run devkit get-context <bundle>` once"
-            " per bundle in the current agent context. Installed bundles: " + ", ".join(f"`{b}`" for b in bundles) + "."
+            "- Before work on selected bundles' assets, run `uv run devkit get-context <bundle>` once"
+            " per bundle per agent context. Installed bundles: " + ", ".join(f"`{b}`" for b in bundles) + "."
         )
     else:
         lines.append(
             "- No bundle is selected. `uv run devkit list` shows installed bundles;"
             " `uv run devkit add <bundle>` selects one."
         )
+    lines.append(
+        "- For an unselected source bundle, read its `bundle.toml`, constitution and relevant instructions directly;"
+        " selection is not required."
+    )
     for kind in sorted(entry_skills):
         if kind not in ENTRY_SKILLS:
             raise DistributionError(f"unknown entry skill kind: {kind}")

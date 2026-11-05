@@ -8,7 +8,7 @@ target: devkit get-context <bundle>
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-05
 ---
 
@@ -40,3 +40,13 @@ message=bundle is not synchronized: design-explore
 fix=uv run devkit add design-explore
 uv run devkit sync --check: exit=0
 ```
+
+## Disposition
+
+- **Disposition**: Session fix in `packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/guidance_block.py`:
+  limit `get-context` guidance to selected bundles and explicitly direct unselected source-bundle authors to read
+  the source manifest, constitution and relevant instructions without changing selection. Regenerated the repository
+  guidance through `devkit sync`; receipt-backed `get-context` behavior remains unchanged.
+- **Verification**: The two new selected/empty-selection regression cases failed before the fix and passed after it;
+  the guidance, context and release-boundary test files passed together (31 tests). The regression also checks that
+  sync leaves the selection configuration unchanged.

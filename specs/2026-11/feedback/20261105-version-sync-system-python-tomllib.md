@@ -8,7 +8,7 @@ target: justfile version-sync and version-check
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-05
 ---
 
@@ -50,3 +50,13 @@ $ uv run --no-active python scripts/version.py
 $ uv run --no-active python scripts/version.py --check
 [VERSION: 0.1.6 state=checked packages=12]
 ```
+
+## Disposition
+
+- **Disposition**: The selective-package-releases change already updated both `justfile` recipes to use
+  `uv run --no-active python scripts/version.py`. This session verified that implementation and closed the stale
+  feedback without another version change.
+- **Verification**: Actual `just version-sync` and `just version-check` invocations both reached the release CLI's
+  `RELEASE_BASELINE_REQUIRED` validation (exit 2), with no `tomllib` import failure. A completed release baseline is
+  now required by the selective-release workflow; no baseline was imported and no release metadata was changed.
+  The four existing release-boundary tests passed in the combined 31-test run.

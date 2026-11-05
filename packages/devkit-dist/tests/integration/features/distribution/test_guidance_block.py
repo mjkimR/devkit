@@ -92,6 +92,26 @@ def test_block_follows_selection_changes(installed: list[InstalledBundle], targe
     assert "guidance_block" in json.loads((target / RECEIPT_PATH).read_text())
 
 
+@pytest.mark.parametrize("selected", [True, False])
+def test_source_authoring_context_does_not_require_selection(
+    installed: list[InstalledBundle], target: Path, selected: bool
+) -> None:
+    if not selected:
+        write_config(target, presets="")
+    config = (target / CONFIG_PATH).read_bytes()
+    sync_project(target, installed)
+    text = (target / AGENTS_FILE).read_text()
+    assert (
+        "For an unselected source bundle, read its `bundle.toml`, constitution and relevant instructions directly"
+        in text
+    )
+    assert "selection is not required" in text
+    if selected:
+        assert "Before work on selected bundles' assets" in text
+        assert "`uv run devkit get-context <bundle>`" in text
+    assert (target / CONFIG_PATH).read_bytes() == config
+
+
 def test_bytes_outside_markers_are_preserved(installed: list[InstalledBundle], target: Path) -> None:
     agents = target / AGENTS_FILE
     agents.write_text("# My project\n\nHouse rules.\n")
