@@ -6,6 +6,7 @@
 4. Ask discovery-planner for drafts when separate synthesis is useful; supply the requested artifact, intended use and constraints, then validate its claims against actual sources, role returns and user decisions.
 5. Cover the logical contents below proportionately in the index or its linked notes; label proposed behavior and conditional work as planned, not current capability or an accepted delivery commitment.
 6. End the index with a `Status:` line (`complete` or `partial`), its open questions and the next investigation.
+   For pending cloud work, retain the exact safe prompt, request label/revision, selected attachments, truthful disposition, remaining question and next action in this same partial material; retain any report evidence used with its inspection limits and no transient-only required reference.
 7. When the user names a `partial` material to resume the same investigation, update that index in place. Never rewrite a `complete` material: later research creates a new material that cites it.
 8. Before retention, check that the draft contains the requested artifact, supports the intended next action and imposes no unwanted prerequisite; repair a mismatch inline or use optional criticism.
    Inspect the written files and report actual paths, evidence coverage and unverified decisions; verify that the next action grants no authority absent from the user's request.

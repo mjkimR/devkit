@@ -76,6 +76,7 @@
       "paths": [
         ".agents/skills/deep-research/SKILL.md",
         ".agents/skills/deep-research/agents/openai.yaml",
+        ".agents/skills/deep-research/references/cloud-handoff.md",
         ".agents/skills/deep-research/references/orchestration.md",
         ".agents/skills/deep-research/references/synthesis.md",
         ".agents/skills/deep-research/references/workspace.md",
@@ -84,6 +85,7 @@
         ".agents/skills/deep-research/roles/discovery-planner.md",
         ".agents/skills/deep-research/roles/research-investigator.md",
         ".claude/skills/deep-research/SKILL.md",
+        ".claude/skills/deep-research/references/cloud-handoff.md",
         ".claude/skills/deep-research/references/orchestration.md",
         ".claude/skills/deep-research/references/synthesis.md",
         ".claude/skills/deep-research/references/workspace.md",
@@ -92,6 +94,7 @@
         ".claude/skills/deep-research/roles/discovery-planner.md",
         ".claude/skills/deep-research/roles/research-investigator.md",
         ".devkit/managed/deep-research/skills/deep-research/SKILL.md",
+        ".devkit/managed/deep-research/skills/deep-research/references/cloud-handoff.md",
         ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md",
         ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md",
         ".devkit/managed/deep-research/skills/deep-research/references/workspace.md",
@@ -1021,11 +1024,15 @@
     },
     ".agents/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "6e531c14d95c3adfcef9b1edbd2a9f07f491c6948c7876b8dc71b681c72b9ea5"
+      "sha256": "af4061af224e89731fb83049281bd798146e7916822e0ddf7bf6bf8b70169405"
     },
     ".agents/skills/deep-research/agents/openai.yaml": {
       "mode": 420,
       "sha256": "a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94"
+    },
+    ".agents/skills/deep-research/references/cloud-handoff.md": {
+      "mode": 420,
+      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
     },
     ".agents/skills/deep-research/references/orchestration.md": {
       "mode": 420,
@@ -1033,11 +1040,11 @@
     },
     ".agents/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "6fb36007ac3678d57e3881afc21d1ebfd6571f8193653fa790ae3b4131dd3c12"
+      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
     },
     ".agents/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "71f2e42a6a1d34a0e6a1fa4b3aeb0e2317e778bac0f5efef2a635285d0f473ab"
+      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
     },
     ".agents/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
@@ -1313,7 +1320,11 @@
     },
     ".claude/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "3e31e66b7f698e2d403b2bcd849f26c80eb0d7560883f099273414d4208c09bf"
+      "sha256": "f41b4a81e70f355eb6be46d18d2c2dde19ccfe5f9f1395a9cd5272717a117cb6"
+    },
+    ".claude/skills/deep-research/references/cloud-handoff.md": {
+      "mode": 420,
+      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
     },
     ".claude/skills/deep-research/references/orchestration.md": {
       "mode": 420,
@@ -1321,11 +1332,11 @@
     },
     ".claude/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "6fb36007ac3678d57e3881afc21d1ebfd6571f8193653fa790ae3b4131dd3c12"
+      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
     },
     ".claude/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "71f2e42a6a1d34a0e6a1fa4b3aeb0e2317e778bac0f5efef2a635285d0f473ab"
+      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
     },
     ".claude/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
@@ -1685,7 +1696,11 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "6e531c14d95c3adfcef9b1edbd2a9f07f491c6948c7876b8dc71b681c72b9ea5"
+      "sha256": "af4061af224e89731fb83049281bd798146e7916822e0ddf7bf6bf8b70169405"
+    },
+    ".devkit/managed/deep-research/skills/deep-research/references/cloud-handoff.md": {
+      "mode": 420,
+      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md": {
       "mode": 420,
@@ -1693,11 +1708,11 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "6fb36007ac3678d57e3881afc21d1ebfd6571f8193653fa790ae3b4131dd3c12"
+      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "71f2e42a6a1d34a0e6a1fa4b3aeb0e2317e778bac0f5efef2a635285d0f473ab"
+      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
