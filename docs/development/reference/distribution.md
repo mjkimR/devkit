@@ -382,3 +382,51 @@ and `devkit config show` report as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning
 assets; approval copy reads it per request.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.
+
+## Bundle source snapshots
+
+Snapshot a complete supported provider from an accessible local checkout:
+
+    uv run devkit bundle snapshot /checkout/team-assets --to tools/team-assets-copy --package team-assets-copy
+
+This JSON-only command creates a distinct editable local content package, version 0.0.0, containing every bundle
+entry point with original bundle versions and source bytes/modes. It emits schema-1 snapshot.json with source
+identity, optional verified commit, per-file hashes and one canonical aggregate. It records no source paths,
+remote URLs, credentials or timestamps. The provenance file excludes its own payload hash; the aggregate excludes
+its own digest.
+
+The supported source has static project metadata, empty runtime dependencies, only devkit.bundles entry points,
+ordinary Hatch src package mappings and inert resource initializers. All variants, templates, constitutions,
+bundle-local helpers and named license files are retained. Static runtime Python imports may use stdlib or the
+public API prefixes `devkit_core.base`, `devkit_core.core`, `devkit.advisory`, `devkit_cli`, `devkit_agt.features.rules`, `devkit_agt.features.gate`; relative helpers must resolve inside copied files.
+Rule test modules retain their consumer test-environment requirements and are not runtime-import preflight inputs.
+Hook handlers support the documented observe handler; external handlers and workflow plugin references refuse.
+No Python, handler or build code is executed during inspection. The import subset is not a security sandbox or
+proof of arbitrary runtime behavior.
+
+Follow returned provider-removal/editable-install actions; remove the original provider from every dependency
+group, resolve remaining transitive requirements and use normal selection/sync. The command edits none of the
+consumer dependency metadata, lock, config, receipt, overrides or Git. Runtime/harness/build dependencies remain
+separately installed. Keep consumer adaptations in project overrides, not generated snapshot sources.
+
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --check
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
+
+Preview is read-only. Apply requires both returned digests, refuses authored source changes/additions and unknown
+provenance, and stages/validates before replacement. A reported write/validation failure restores the prior
+package when recovery is possible. Derived __pycache__ and pyc files are excluded from drift; unchanged input
+writes nothing. Changed entry-point metadata returns an explicit package reinstall command, and removed selected
+bundles return explicit deselection commands before sync. Existing duplicate-provider refusal and override drift
+behavior remain in force.
+
+Results name status/code, destination, local package, all bundle versions, current/candidate digests,
+added/modified/removed paths, packaging_changed, removed_selected and actions with stable codes/commands.
+Statuses are created, preview, updated and unchanged; preview may have empty changes. Both operations support
+the normal workspace-root option, and destinations are relative to that consumer root.
+
+| Code | Exit | Action |
+| --- | --- | --- |
+| `BUNDLE_SNAPSHOT_UNSUPPORTED` | 2 | Use a static content-only provider within the documented import/layout subset; install runtime dependencies separately. |
+| `BUNDLE_SNAPSHOT_INVALID` | 2 | Correct the source/provenance or choose an unlinked, non-overlapping destination inside the consumer root. |
+| `BUNDLE_SNAPSHOT_CONFLICT` | 2 | Preserve authored edits, restore generated sources and preview again; apply both returned digests. |
+| `BUNDLE_SNAPSHOT_WRITE_FAILED` | 2 | Resolve the filesystem failure; preserve a reported recovery backup before retrying. |

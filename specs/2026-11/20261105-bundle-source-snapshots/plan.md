@@ -40,7 +40,7 @@ Schema-1 snapshot.json stores source distribution/version, bundle/module version
 commit, source metadata and ordered payload path/hash/mode entries. Aggregate hashes canonical provenance without
 its digest; payload excludes snapshot.json. No timestamps or paths/remote URLs. Compare byte/mode inventory and
 refuse authored drift; derived bytecode is excluded. Stage next to destination, validate all staged bundles, then
-replace via backup/rename with rollback on reported failure. A per-destination exclusive lock serializes refresh.
+replace via backup/rename with rollback on reported failure. An advisory consumer-directory lock serializes snapshot commands without creating a lock file or project state.
 
 ## 5. Error Handling & Edge Cases
 
