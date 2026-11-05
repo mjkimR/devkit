@@ -2,7 +2,7 @@
 id: SPEC-gitignore-drift-detection
 title: Git Tracking Diagnostics for Projected Assets
 summary: "Reports unignored and tracked native projections without modifying project ignore rules or the Git index."
-status: active
+status: completed
 created: 2026-11-05
 related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership]
 related_usecases: []
