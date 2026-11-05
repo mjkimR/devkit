@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: Fix FB-worker-inspect-resolved-source-scope with audit-base open-to-resolved
+  scope inference and preserved terminal-source exclusions.
+by: user
+at: '2026-11-04T23:03:13.134225Z'
