@@ -17,7 +17,7 @@ boundaries:
     - docs/capabilities/delivery/
     - docs/usecases/delivery/
     - docs/architecture/ARCH-05-2-components.md
-    - guides/
+    - guides/install/bundle-recommendations.md
   excludes:
     - packages/devkit/src/
     - packages/devkit-dist/src/
@@ -43,7 +43,7 @@ and refine them through use rather than run comparative experiments before adopt
 The skill's goal is overall UI/UX improvement. Producing alternatives is one means of achieving that goal,
 not the required final product. A normal improvement request should be able to reach actual changes and
 proportionate verification within its authorized scope. Diagnosis-only or proposal-only requests retain their
-narrower boundaries. No implementation starts from this draft itself.
+narrower boundaries. Product changes start only after the applicable delivery workflow permits them.
 
 Hypothesis: one coordinator can select useful independent perspectives, combine them into coherent design
 changes and carry the requested improvement through the project's normal delivery process. The skill should
@@ -58,19 +58,33 @@ address flow quality and visual quality together, while keeping the work focused
 - This draft provides direct references and a self-contained rationale. It does not require the separate
   research material or its transient execution records to be understood.
 
-## 2. Technical Spike Questions
+## 2. Planning Decisions
 
-No performance benchmark or preliminary agent-team comparison is proposed. Planning should settle:
+- **Public entry:** `uiux-improve` is both the bundle and skill name. Its description names overall interface and
+  user-flow improvement; `invocation = "user"` prevents implicit invocation through supported projections.
+- **Intake and completion:** recover the target, user outcome, relevant artifacts and constraints. Reuse supplied
+  context instead of requiring a brief. Finish with the applied changes, actual verification and material limits;
+  a diagnosis-only request finishes with findings. Alternatives and a formal design document are optional.
+- **Workflow boundary:** the skill provides design guidance while the consumer's existing development workflow
+  controls implementation, records, checks, commit and integration. It does not select a development approach,
+  install delivery tooling or automatically invoke a sibling skill. A missing required approval leaves changes
+  pending through that workflow instead of being treated as design completion.
+- **Distribution:** ship one content-only catalog bundle, one user-invoked skill, four local role files and two
+  references. No globally registered role, pointer or always-loaded design instruction is introduced.
+- **Optional delegation:** keep a small, concrete request inline. For an open-ended request, dispatch only useful
+  design, unconventional-design, reference or critique assignments. First passes receive independent inputs.
+  One bounded critique/refinement pass is available; no cast, count, score or consensus is required.
+- **Authorship:** write original concise guidance informed by the retained reference analysis. Link upstream
+  repositories for provenance; no upstream source file or prose excerpt needs to be copied. If Development
+  chooses to copy text, inspect that revision's license and preserve required attribution before committing it.
+- **Retention:** honor an explicitly requested destination; otherwise report in conversation. Product changes and
+  design artifacts follow the consumer's ownership conventions. No new persistent memory or document kind is added.
 
-- **Q1:** Confirm the public skill/bundle name; `uiux-improve` is the working recommendation.
-- **Q2:** Define the minimum intake and completion content without requiring a report, design document or
-  multiple alternatives for every request. Prefer the target, desired outcome, constraints and actual result.
-- **Q3:** Specify how implementation continues under the consumer project's existing development workflow.
-  The skill should support real changes without inventing a separate delivery lifecycle or requiring SDD tooling.
-- **Q4:** Choose the useful excerpts from upstream design instructions and preserve their licenses/attribution.
-  Prefer selective adaptation over vendoring repositories, tools or their update mechanisms.
-- **Q5:** Keep small requests inline while making fresh independent design perspectives readily available for
-  open-ended improvement. Do not require all roles, a fixed team size or a separate implementer role.
+`PADR-uiux-improvement-workflow-boundary` records the lasting delivery and local-role boundary. Public naming,
+reference selection and role assignments remain reversible implementation choices. No runtime spike, further
+literature survey, product usability experiment or agent-team comparison is needed for this content delivery.
+There are no unresolved product decisions for this Planning turn. Development remains `medium` for packaging,
+instruction review and consumer-workflow compatibility.
 
 ## 3. Proposed Design & Impact
 
@@ -94,9 +108,9 @@ invocation. No auto-selection, global specialist registration, runtime module or
 
 Use the skill-local-role approach illustrated by `ADR-skill-local-research-roles`: general subagents read the
 selected role file and receive a self-contained assignment, with fresh context where supported. That ADR owns
-the existing research-specific decision; Planning should record any new decision required for this bundle.
+the existing research-specific decision. `PADR-uiux-improvement-workflow-boundary` records this bundle’s decision.
 
-Proposed layout, not an implementation or final public naming contract:
+Selected skill layout inside `devkit_catalog/uiux_improve/bundle/skills/`, to be created in Development:
 
 ```text
 uiux-improve/
@@ -171,9 +185,25 @@ own concise delegation and usefulness checks without waiting for another work un
 
 ### Expected scope and acceptance examples
 
-The declared source and test parents accommodate a new content-only bundle directory, its discovery registration
-and focused distribution tests. Other catalog bundles remain unchanged. Reconcile the capability, use case,
-architecture layout and consumer installation guidance. No application-package or viewer redesign is included.
+The boundary parents accommodate files that do not exist yet. Development is limited to these additions and
+shared registration/document edits:
+
+- Add `packages/devkit-catalog/src/devkit_catalog/uiux_improve/__init__.py` and `uiux_improve/bundle/` below that
+  package, containing `bundle.toml` and the selected skill tree above.
+- Register `uiux-improve = "devkit_catalog.uiux_improve"` in `packages/devkit-catalog/pyproject.toml`; the initializer
+  stays empty and no dependency or runtime feature edge is added.
+- Add `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py` for opt-in selection, invocation
+  metadata, local-role deployment, absent global roles and self-contained content.
+- Add `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/test_installed_consumer.py` for wheel installation and
+  public CLI selection with dist/catalog and no required spec/docs tooling. Reuse existing consumer-test support.
+  Existing parameterized `test_bundles.py` should cover registration without changes.
+- Add the capability and use case named in `target-docs.md`; update the catalog README,
+  `ARCH-05-2-components` and `guides/install/bundle-recommendations.md` for layout, selection and invocation.
+  The promoted PADR is the only planned decision-document addition.
+
+Other catalog bundles, application packages, viewer screens, shared distribution behavior, existing governance
+and consumer products remain outside this delivery. No screens are drafted because this task delivers an agent
+skill rather than a concrete product interface.
 
 - Explicit selection deploys the entry and local roles; unrelated work receives no globally registered UI/UX roles.
 - An improvement request can proceed from inspection through implementation and appropriate verification under
@@ -191,11 +221,12 @@ architecture layout and consumer installation guidance. No application-package o
 - Mandatory multi-agent casts, debate rounds, numeric design scores or benchmark programs.
 - A new design editor, screenshot engine, browser runtime, scheduler or global agent-role framework.
 - Wholesale repository installation or mandatory external services such as Figma.
-- Changing a consumer's workflow, bypassing its approvals or implementing a product in this drafting task.
+- Changing a consumer's workflow, bypassing its approvals or implementing a consumer product in this skill-delivery task.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep the proposal in `draft`; the request authorizes proposal writing, not Planning acceptance or implementation.
-Planning should settle the public name, workflow boundary, adapted guidance and proportionate role selection.
-The intended implementation is one content-bundle and documentation change with focused packaging checks.
-Use the normal proposal acceptance, handoff and retirement lifecycle when the user elects to proceed.
+Planning leaves the proposal `reviewing`, with a committed challenger round, folded findings, target-document
+blueprint and worker return. The Host reviews that committed source for `plan-accept`; acceptance and
+`proposal-handoff` remain separate authorities under the effective policy. Neither is recorded by this worker.
+After authorized handoff, one feature spec delivers the bundle, focused checks and Living Spec reflection.
+The Planning proposal is retired by the normal handoff lifecycle, with the PADR promoted to an ADR.
