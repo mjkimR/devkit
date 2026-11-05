@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T00:33:28.419414Z'
+status: completed
+summary: Delivered uiux-improve as a user-invoked optional catalog bundle with four local roles and consumer-workflow implementation/verification. Independent code and reconcile reviews have zero findings; all six document targets are resolved. No source changes followed the full regression run.
+findings: []
+assumptions:
+- Host-authorized scope amendment adds only uiux_improve to existing architecture data_roots; no dependencies, feature edges or policy change.
+unverified_areas:
+- No live product UI, aesthetic quality, model obedience or comparative-effectiveness evaluation; instruction review and packaging checks establish the stated contracts only.
+checks:
+  tests: PASS full-fallback affected regression 6604 passed 15 skipped; subsequent docs-only affected 16 passed; focused integration 38 and wheel consumer 1 passed
+  build: PASS isolated dist/catalog wheels selected, removed and reselected UIUX entry without agt/docs/spec; user artifacts retained
+  lint: PASS catalog ruff and Pyright; committed 22 rules zero findings; git diff --check clean
+  review: PASS independent medium code reviewer and reconcile reviewer zero findings
+diff_scope:
+  base: 2cf74e47e864f2b681f81d4bb4aa93ca0767f02f
+  head: 7aa2e621b2dcc556a3fa919b57a307ba87026d17
