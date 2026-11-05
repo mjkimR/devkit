@@ -15,7 +15,6 @@ from devkit_dist.features.distribution.models.errors import (
     ProjectionNotIgnoredNotice,
     ProjectionTrackedNotice,
 )
-from devkit_dist.features.project.repositories.project import git_toplevel
 
 LIMIT = 10
 NATIVE_ROOTS = (".agents/", ".claude/", ".codex/")
@@ -34,9 +33,10 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
     """Inspect desired ignore coverage and current/previous tracking, never changing the index or ignores."""
     wanted = {name for name in desired if name.startswith(NATIVE_ROOTS)}
     owned = wanted | {name for name in previous if name.startswith(NATIVE_ROOTS)}
-    if not owned or git_toplevel(root) is None:
+    if not owned:
         return []
     try:
+        run_git(root, "rev-parse", "--show-toplevel")
         tracked = _paths(run_git(root, "ls-files", "-z", "--", ".")) & owned
         candidates = sorted(wanted - tracked)
         ignored = (
@@ -54,7 +54,11 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
             if candidates
             else set()
         )
-    except GitError:
+    except GitError as exc:
+        # Git has no distinct exit code for nonrepository vs access/discovery failures.
+        # The shared runner fixes LC_ALL=C; only this explicit nonrepository response is a skip.
+        if exc.returncode == 128 and exc.stderr.startswith("fatal: not a git repository"):
+            return []
         return [
             ProjectionGitCheckFailedNotice(
                 "Git could not inspect native projection tracking and ignore coverage",
@@ -72,7 +76,12 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
             else []
         )
         if kind is ProjectionTrackedNotice:
-            command = "git rm --cached -- " + " ".join(shlex.quote(":(literal)" + name) for name in shown)
+            command = (
+                "git -C "
+                + shlex.quote(str(root.resolve()))
+                + " rm --cached -- "
+                + " ".join(shlex.quote(":(literal)" + name) for name in shown)
+            )
             notices.append(
                 kind(
                     f"{len(paths)} native projection file(s) are tracked by Git",

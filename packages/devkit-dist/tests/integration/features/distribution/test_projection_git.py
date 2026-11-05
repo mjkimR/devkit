@@ -97,16 +97,34 @@ def test_bound_and_literal_untracking_remediation(root: Path) -> None:
     git(root, "add", ".")
     (finding,) = notices(root, [special])
     assert finding.fix is not None
-    subprocess.run(["sh", "-c", finding.fix], cwd=root, check=True, capture_output=True)
+    other = root.parent / "other"
+    other.mkdir()
+    git(other, "init", "-q")
+    other_path = other / special
+    other_path.parent.mkdir(parents=True)
+    other_path.write_text("unrelated repository\n")
+    git(other, "add", ".")
+    other_index = (other / ".git/index").read_bytes()
+    subprocess.run(["sh", "-c", finding.fix], cwd=other, check=True, capture_output=True)
+    assert (other / ".git/index").read_bytes() == other_index
     assert path.exists()
     assert git(root, "ls-files", "-z") == str(neighbor.relative_to(root)).encode() + b"\0"
 
 
-def test_non_git_and_failed_query(tmp_path: Path, root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("failed_command", ["rev-parse", "ls-files"])
+def test_non_git_and_failed_query(
+    tmp_path: Path, root: Path, monkeypatch: pytest.MonkeyPatch, failed_command: str
+) -> None:
     assert notices(tmp_path, [NATIVE]) == []
 
-    def fail(*args, **kwargs):
-        raise GitError("query failed", command=("git", "ls-files"))
+    original = projection_git.run_git
+
+    def fail(cwd, *args, **kwargs):
+        if args[0] == failed_command:
+            raise GitError(
+                "query failed", command=("git", failed_command), returncode=128, stderr="fatal: access denied"
+            )
+        return original(cwd, *args, **kwargs)
 
     monkeypatch.setattr(projection_git, "run_git", fail)
     (finding,) = notices(root, [NATIVE])
