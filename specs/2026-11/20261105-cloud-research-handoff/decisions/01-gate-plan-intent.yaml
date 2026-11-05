@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-cloud-research-handoff: User authorizes Planning for cloud research handoff
+  at medium effort.'
+by: user
+at: '2026-11-05T04:20:20.282757Z'

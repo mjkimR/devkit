@@ -1,32 +1,24 @@
 ---
-id: PROP-cloud-research-handoff
+id: SPEC-cloud-research-handoff
 title: Cloud research request and result handoff
-summary: "Extend deep research with user-mediated cloud research requests, resumable result intake and evidence-aware synthesis without adding a research runtime."
-status: accepted
-created_at: 2026-11-05
-target_area: docs/capabilities/delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/deep_research/
-    - packages/devkit-catalog/tests/integration/bundles/test_deep_research.py
-    - packages/devkit-catalog/tests/e2e/bundles/deep_research/
-    - docs/capabilities/delivery/CAP-DLV-deep-research.md
-    - docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md
-    - docs/decisions/
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit-dist/
-task_kind: feature
-workflow: sdd-proposal
+summary: Extend deep research with user-mediated cloud research requests, resumable result intake and evidence-aware synthesis without adding a research runtime.
+status: planned
+created: 2026-11-05
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-cloud-research-handoff] Cloud research request and result handoff
+# [SPEC-cloud-research-handoff] Cloud research request and result handoff
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-cloud-research-handoff on 2026-11-05.
+- **Preserved Materials**: `docs/materials/2026-11/20261105-cloud-research-handoff`
+- Target Docs Blueprint: `PROP-cloud-research-handoff-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-DLV-deep-research` supports optional local research roles, evidence-aware synthesis and resumable partial
 materials. It does not define a request-and-return procedure for research performed by a user in ChatGPT or Gemini.
@@ -34,10 +26,29 @@ materials. It does not define a request-and-return procedure for research perfor
 A copyable research brief and explicit result intake could let a user employ cloud research alongside local work
 without introducing a provider runtime. The useful outcome is the incorporated evidence, not merely a prompt.
 
-## 2. Planning Findings and Decisions
+## 2. User Stories
 
-`materials/round-trip-design.md` records inspected contracts and the option comparison.
-`PADR-user-mediated-cloud-research` records the lasting request/intake decision; it replaces no earlier ADR.
+- **US-1**: As a developer/agent, I want to implement Cloud research request and result handoff so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Findings and Decisions
+
+`docs/materials/2026-11/20261105-cloud-research-handoff/round-trip-design.md` records inspected contracts and the option comparison.
+`ADR-user-mediated-cloud-research` records the lasting request/intake decision; it replaces no earlier ADR.
 
 | Question | Settled direction |
 | --- | --- |
@@ -47,7 +58,7 @@ without introducing a provider runtime. The useful outcome is the incorporated e
 | Convenience | Copyable conversation text is the default; an optional Markdown request/report inside the existing permitted paths helps long briefs. Accept readable pasted or attached text without requiring a provider-specific export. |
 | Automation | Browser/API execution remains excluded. A demonstrated manual-transfer burden can motivate separate intake, never an implicit follow-up prerequisite. |
 
-### Option comparison
+#### Option comparison
 
 - Keep the current generic brief: no new instruction, but no defined association between an outbound request and
   returned evidence, and no durable pending-request handoff.
@@ -56,9 +67,9 @@ without introducing a provider runtime. The useful outcome is the incorporated e
 - Add provider adapters or browser submission: reduces some user transfer, but introduces unavailable account,
   cost, execution and disclosure decisions outside the requested first scope.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Request and user handoff
+#### Request and user handoff
 
 During an explicitly invoked investigation, offer cloud work only for a bounded missing question when useful or
 when the user asks. Cloud work is optional; the coordinator does not invoke another research entry or impose a
@@ -78,7 +89,7 @@ claim an external task ran under this contract.
 Copyable conversation text is sufficient. When useful, write a Markdown request only inside the current transient
 run or retained material. No new CLI, document kind, shared subagent or native browser dependency is added.
 
-### Pending state and durable resume
+#### Pending state and durable resume
 
 Use ordinary request notes with the label/revision, intended provider if known, the exact sanitized request,
 attachments actually selected, remaining question and one truthful disposition:
@@ -95,7 +106,7 @@ next action. Required resume content must survive loss of every transient file. 
 the user names it; it updates that same partial material, preserving existing collision and complete-material
 immutability rules. Do not silently resubmit, duplicate or rewrite the user's request.
 
-### Return matching and evidence intake
+#### Return matching and evidence intake
 
 Accept user-supplied readable pasted text, attached text/Markdown or a readable export. A report link is usable only
 when its contents are actually accessible within authorization; a link alone is not inspected evidence. For an
@@ -117,7 +128,7 @@ Source reopening targets consequential gaps, contradictions or suspect support, 
 search to be repeated. A confirmed access refusal stops that resource; ordinary retrieval recovery stays within
 the original research bound. No result or sufficient support is a valid partial outcome.
 
-### Ownership and exclusions
+#### Ownership and exclusions
 
 Change only the deep-research skill-local instructions, the two named contracts, focused consumer checks and the
 promoted PADR listed in `target-docs.md`. Keep existing roles optional and coordinator-owned retention. No new
@@ -127,7 +138,7 @@ feature dependency is proposed. Guides remain selection-only under the existing 
 a provider-specific report parser, automatic commits, fixed team counts and automatic acceptance of external claims.
 The proposal adds no deferred implementation commitment to those exclusions.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning is `medium`, estimated size `M`; Development remains `medium`. There is no prerequisite proposal, no
 outstanding user-only design question, no UI screen and no runtime or capability implementation in this branch.
@@ -155,3 +166,4 @@ Focused distribution/consumer tests check shipped instructions and unchanged ins
 review of the concrete request/resume/intake examples checks agent behavior; no provider run or comparative
 benefit experiment is an adoption prerequisite. API/product availability is not needed for this provider-neutral
 contract and must be verified separately if later execution integration is authorized.
+
