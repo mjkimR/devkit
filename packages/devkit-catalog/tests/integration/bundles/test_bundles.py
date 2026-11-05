@@ -88,11 +88,12 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
 
 
 MAINTENANCE_PRESETS = {
-    "all": {"drift-reconciliation", "weekly-report", "review-refactor", "performance-pass"},
+    "all": {"drift-reconciliation", "weekly-report", "review-refactor", "performance-pass", "test-management"},
     "upkeep": {"drift-reconciliation", "review-refactor"},
     "reporting": {"weekly-report"},
     "refactoring": {"review-refactor"},
     "performance": {"performance-pass", "review-refactor"},
+    "testing": {"test-management"},
 }
 REVIEW_REFACTOR = ("SKILL.md", "references/applying.md", "references/criteria.md")
 PERFORMANCE_PASS = (
@@ -102,7 +103,12 @@ PERFORMANCE_PASS = (
     "references/candidates.md",
     "references/changes.md",
 )
-DIRECTORY_PLAYBOOKS = {"review-refactor": REVIEW_REFACTOR, "performance-pass": PERFORMANCE_PASS}
+TEST_MANAGEMENT = ("SKILL.md", "references/assessment.md", "references/pytest.md")
+DIRECTORY_PLAYBOOKS = {
+    "review-refactor": REVIEW_REFACTOR,
+    "performance-pass": PERFORMANCE_PASS,
+    "test-management": TEST_MANAGEMENT,
+}
 
 
 def _maintenance_files(name: str) -> set[str]:
@@ -331,3 +337,15 @@ def test_command_design_is_conditional_instruction_only(tmp_path: Path) -> None:
     assert "# Design command entry points" not in instruction.header
     assert Path(instruction.path).is_file()
     assert not (tmp_path / ".agents/skills/command-design").exists()
+
+
+def test_test_management_references_are_bounded_and_conditional() -> None:
+    root = _playbook_root("test-management")
+    files = _assert_self_contained_within_budget(root, TEST_MANAGEMENT)
+    assert {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()} == set(TEST_MANAGEMENT)
+    body = files["SKILL.md"].read_text()
+    assert "Read `references/assessment.md` before" in body
+    assert "Read `references/pytest.md` when" in body
+    # Structural checks complement the procedural walkthrough; they do not execute the instructions.
+    for name in TEST_MANAGEMENT[1:]:
+        assert "references/" not in files[name].read_text()

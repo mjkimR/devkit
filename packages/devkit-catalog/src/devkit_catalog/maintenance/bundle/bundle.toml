@@ -34,3 +34,11 @@ source = "playbooks/performance-pass"
 
 [presets.performance]
 assets = ["performance-pass", "review-refactor"]
+
+[[assets]]
+id = "test-management"
+kind = "playbook"
+source = "playbooks/test-management"
+
+[presets.testing]
+assets = ["test-management"]
