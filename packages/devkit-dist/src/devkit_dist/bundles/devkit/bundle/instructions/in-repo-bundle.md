@@ -90,8 +90,8 @@ passes and `uv run devkit status` exits `0`.
 
        uv run devkit bundle snapshot /checkout/team-assets --to tools/team-assets-copy --package team-assets-copy
 
-3. Follow the returned provider-removal and editable-install commands; remove the original provider from every
-   dependency group and resolve transitive requirements that still install it.
+3. Follow returned conditional removal/install actions: skip direct removal when absent, use --dev only for a
+   direct dev-group declaration, remove other direct requirements from their owning group, and resolve transitive origin requirements.
 4. Run normal selection and sync, then commit the local package, provenance and deliberate dependency changes.
 
 The source must use static metadata, ordinary Hatch src resources and inert initializers with no project runtime

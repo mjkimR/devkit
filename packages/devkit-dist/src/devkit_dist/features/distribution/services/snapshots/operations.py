@@ -80,7 +80,7 @@ def result(
                 {
                     "code": "SNAPSHOT_REPLACE_PROVIDER",
                     "command": f"uv remove --dev {shlex.quote(upstream)}",
-                    "detail": "Remove the original provider from every dependency group; resolve transitive requirements explicitly",
+                    "detail": "Run --dev only for a direct dev-group requirement; skip when absent. Use the owning group for other direct requirements and resolve transitive origin requirements separately",
                 },
                 {"code": "SNAPSHOT_INSTALL_LOCAL", "command": f"uv add --dev --editable {shlex.quote(relative)}"},
             ]

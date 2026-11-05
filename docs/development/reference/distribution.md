@@ -404,8 +404,9 @@ Hook handlers support the documented observe handler; external handlers and work
 No Python, handler or build code is executed during inspection. The import subset is not a security sandbox or
 proof of arbitrary runtime behavior.
 
-Follow returned provider-removal/editable-install actions; remove the original provider from every dependency
-group, resolve remaining transitive requirements and use normal selection/sync. The command edits none of the
+Follow returned conditional provider-removal/editable-install actions. Skip direct removal when absent; use --dev
+only for a direct dev-group declaration and the actual owning group otherwise. Resolve remaining transitive origin
+requirements explicitly, then use normal selection/sync. The command edits none of the
 consumer dependency metadata, lock, config, receipt, overrides or Git. Runtime/harness/build dependencies remain
 separately installed. Keep consumer adaptations in project overrides, not generated snapshot sources.
 

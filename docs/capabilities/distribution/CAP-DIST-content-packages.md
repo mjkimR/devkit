@@ -9,6 +9,8 @@ entrypoints:
   - packages/devkit/src/devkit_agt/bundles/harness/
   - packages/devkit-catalog/src/devkit_catalog/
 created_at: 2026-10-17
+usecases:
+  - UC-snapshot-bundle-sources
 ---
 
 # [CAP-DIST-content-packages] Content Packages
@@ -237,3 +239,19 @@ The content-only `command-design` bundle MUST remain opt-in. Its default `core` 
 instruction for creating or extending justfile, CLI and MCP entry points, with no always-loaded guidance or
 native skill projection. CAP-HARN-command-design owns the instruction's behavior; catalog manifest and deployment
 tests verify its packaging. It requires only devkit-dist to distribute and adds no runtime dependency.
+
+## Snapshot Provider Replacement
+
+A generated bundle source snapshot remains an ordinary local content package under
+`CAP-DIST-in-repo-bundles`. WHEN replacing a supported content provider, the consumer MUST remove its
+complete original provider dependency before installing the distinct wrapper; no partial shadowing or precedence
+is introduced. The wrapper carries all provider bundles. If no direct origin requirement exists, skip direct
+removal; resolve any transitive requirement that keeps the origin separately. Use the actual owning group for
+removal, with --dev only for a dev-group declaration. Existing duplicate-provider errors remain.
+Mixed runtime/command providers are unsupported snapshot inputs, not unsupported content wheels.
+
+WHEN refresh changes generated package metadata or entry points, the consumer MUST reinstall the editable package
+before discovery/sync. WHEN a removed bundle is still selected, the consumer MUST explicitly deselect it; refresh
+reports that next action without editing selection. The local package stays 0.0.0; upstream versions plus digest
+and adoption commit identify its source.
+Test: packages/devkit-dist/tests/e2e/cli/test_snapshots.py.

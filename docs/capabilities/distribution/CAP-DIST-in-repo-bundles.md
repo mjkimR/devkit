@@ -1,10 +1,15 @@
 ---
 id: CAP-DIST-in-repo-bundles
 title: "In-Repository Bundles"
-summary: "Repository-owned assets packaged and consumed locally without external distribution, with their installation next to the declared devkit requirement and their rules in Git snapshot gates."
+summary: "Local content packages and complete shared-provider source snapshots use ordinary discovery, explicit refresh and project overrides, with independent runtime installation."
 area: distribution
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit_dist/features/distribution/cli/bundles.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/snapshots.py
 created_at: 2026-10-17
+usecases:
+  - UC-snapshot-bundle-sources
 ---
 
 # [CAP-DIST-in-repo-bundles] In-Repository Bundles
@@ -185,3 +190,64 @@ order between bundles is not a declared priority, so rule IDs SHOULD be prefixed
   `bundle.toml`. Not implemented.
 - **Explicit rule precedence**: a declared load order replacing bundle name ordering, if shadowing upstream rules
   becomes common. Not planned until a concrete need appears.
+
+## 8. Bundle Source Snapshots
+
+`ADR-bundle-source-snapshots` owns complete-provider packaging, credential-free provenance and explicit
+refresh. A bundle source snapshot is generated source in an ordinary local package, conventionally under tools/.
+It copies upstream resources; managed/projection output is not a source, and no second loader is introduced.
+
+1. **Snapshot source**: WHEN creating a snapshot, distribution MUST inspect a local static content-only checkout
+   with ordinary Hatch src resource mappings, inert initializers, empty project runtime dependencies and only
+   devkit.bundles entry points without executing provider code or builds.
+2. **Snapshot packaging**: WHEN creation succeeds, distribution MUST preserve every provider bundle, original
+   bundle versions, bytes/executable modes, variants, templates, constitutions, relative helpers and named license
+   files in an ordinary distinct wrapper whose editable package version is 0.0.0.
+3. **Supported inputs**: IF source layout, imports or declarative runtime references exceed the documented subset,
+   THEN distribution MUST refuse `BUNDLE_SNAPSHOT_UNSUPPORTED` before destination writes.
+   The distribution reference names public API prefixes and consumer test-environment limits; arbitrary Python
+   behavior and runtime-dependency closure are not certified.
+4. **Snapshot provenance**: WHEN creating provenance, distribution MUST record schema, wrapper/source identities,
+   original bundle versions, optional verified commit and canonical path/hash/normalized-mode entries without
+   source paths, remote URLs, credentials or timestamps.
+5. **Verified identity**: WHEN a commit is recorded, distribution MUST compare every copied input to that one
+   captured immutable commit; equivalent unlinked source path spellings MUST produce identical provenance.
+6. **Snapshot preview**: WHERE refresh has --check, distribution MUST report deterministic additions, modifications,
+   removals, current/candidate digests and subsequent actions without writing files.
+7. **Reviewed adoption**: WHEN applying refresh, distribution MUST match both --expect and --candidate against the
+   current snapshot and prepared source before replacing it.
+8. **Authored drift**: IF authored changes or a changed captured previous tree are detected, THEN refresh MUST
+   preserve/restore that actual tree and refuse `BUNDLE_SNAPSHOT_CONFLICT` without overwriting edits.
+9. **Replacement recovery**: IF staged or installed validation/write fails and restoration is possible, THEN
+   distribution MUST restore the prior package and report `BUNDLE_SNAPSHOT_WRITE_FAILED`; failed restoration MUST
+   preserve and identify its recovery backup.
+10. **Idempotence**: WHEN metadata/content is unchanged, refresh MUST write nothing; derived __pycache__ and pyc files
+    MUST NOT count as authored drift. Other unexpected local files remain drift.
+11. **Destination**: IF a destination is existing at creation, symlinked, outside the consumer, overlaps the source
+    or protected state, or lies inside another snapshot, THEN distribution MUST refuse without content replacement.
+12. **Explicit continuation**: WHEN an operation finishes, distribution MUST return applicable conditional provider
+    replacement, install, metadata reinstall and removed-selected-bundle actions without executing them.
+
+Tests: packages/devkit-dist/tests/integration/features/distribution/test_snapshots.py covers support, identity,
+diffs, drift and recovery. packages/devkit-dist/tests/e2e/cli/test_snapshots.py proves wrapper/runtime wheels,
+fresh-clone bootstrap without the private origin, editable metadata changes and harness-equipped rule execution.
+The dist-only suite retains installation without devkit-agt.
+
+### Interface and state
+
+    uv run devkit bundle snapshot SOURCE --to DEST --package NAME [-w ROOT]
+    uv run devkit bundle refresh DEST --source SOURCE --check [-w ROOT]
+    uv run devkit bundle refresh DEST --source SOURCE --expect CURRENT --candidate REVIEWED [-w ROOT]
+
+The commands print exactly one JSON object. Exit 0 statuses/codes are created/`BUNDLE_SNAPSHOT_CREATED`,
+preview/`BUNDLE_SNAPSHOT_PREVIEW`, updated/`BUNDLE_SNAPSHOT_UPDATED` and unchanged/`BUNDLE_SNAPSHOT_UNCHANGED`.
+Results carry destination, package, bundle versions, current_digest, candidate_digest, changes, packaging_changed,
+removed_selected, actions and notices. `BUNDLE_SNAPSHOT_INVALID`, `BUNDLE_SNAPSHOT_UNSUPPORTED`,
+`BUNDLE_SNAPSHOT_CONFLICT` and `BUNDLE_SNAPSHOT_WRITE_FAILED` use exit 2 with deterministic corrective directives.
+
+Schema 1 snapshot.json contains package; source name/version/commit/requires_python/metadata_sha256; bundle
+version/module pairs; ordered files with SHA256 and normalized modes (420 or 493); and aggregate digest. Payload
+excludes snapshot.json; the aggregate hashes canonical metadata plus inventory without its own digest.
+Unknown schemas, malformed records and mismatched aggregate hashes refuse. Generated sources use explicit
+refresh; consumer adaptations use project overrides. Removal commands apply only to the dependency's owning group
+and are skipped when the original provider is absent as a direct requirement.

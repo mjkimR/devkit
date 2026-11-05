@@ -5,7 +5,7 @@ summary: "Copy complete supported content providers into local packages with cre
 status: in-progress
 created: 2026-11-05
 related_capabilities: [CAP-DIST-in-repo-bundles, CAP-DIST-content-packages, CAP-DIST-workspace-ownership, CAP-DIST-sync-and-transactions]
-related_usecases: []
+related_usecases: [UC-snapshot-bundle-sources]
 workflow: sdd-spec-feature
 ---
 

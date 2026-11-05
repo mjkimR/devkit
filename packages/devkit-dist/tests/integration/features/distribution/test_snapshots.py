@@ -66,6 +66,9 @@ def test_complete_provider_bytes_modes_versions_and_path_free_provenance(checkou
     assert 'version = "0.0.0"' in (destination / "pyproject.toml").read_text()
     assert not (root / ".devkit").exists()
     assert [item["code"] for item in outcome.actions][:2] == ["SNAPSHOT_REPLACE_PROVIDER", "SNAPSHOT_INSTALL_LOCAL"]
+    removal = next(item for item in outcome.actions if item["code"] == "SNAPSHOT_REPLACE_PROVIDER")
+    assert "direct dev-group" in removal["detail"] and "skip when absent" in removal["detail"]
+    assert "owning group" in removal["detail"] and "transitive" in removal["detail"]
     validate_package(destination)
 
 

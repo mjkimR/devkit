@@ -46,3 +46,8 @@ The Host's follow-up symlink-parent regression failed before the final path fix.
 the full lexical ancestor no-symlink validation before canonicalizing the source root. Both direct and parent
 symlinks refuse; ordinary ../source preserves commit/digest. Full focused filesystem/consumer verification
 passes38 after these changes. No symlink policy was relaxed.
+
+The Host requested explicit applicability on provider-removal actions: direct removal is skipped when absent,
+--dev applies only to a dev-group declaration, and other direct requirements use their owning group while
+transitive origins require separate resolution. Existing action detail, bundled/installation/reference guidance
+and focused assertions now agree. This is an in-scope continuation clarification, no dependency parser/editing.

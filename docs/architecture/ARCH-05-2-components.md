@@ -188,7 +188,7 @@ e2e combinations; individual packages need no duplicate installation suites.
 | **`devkit_dist.features.project`** | Project configuration, receipts and execution binding behavior. | Internal library |
 | **`devkit.advisory`** | Standard library advisory protocol and error base classes. | `AdvisoryError`, `ArgumentError`, `ExitCode` |
 | **`devkit_cli`** | The agent-first command boundary of `ARCH-08-1-agent-output` for any click command; `devkit_dist.adapters.cli` binds it to devkit (`CAP-CLI-agent-cli-toolkit`). | `Boundary`, `LazyGroup`, `echo_json`, `echo_notices` |
-| **`devkit_dist.features.distribution`** (dist) | Bundle manifest validation, transaction engine, skill/subagent projection, the configuration schema and the receipt writer. | `sync`, `add`, `remove`, `list`, `status` |
+| **`devkit_dist.features.distribution`** (dist) | Bundle manifest validation, source snapshot/refresh, transaction engine, skill/subagent projection, configuration and receipt writing. | `sync`, `add`, `remove`, `list`, `status`, `bundle snapshot`, `bundle refresh` |
 | **`devkit_agt.features.rules`** (agt) | Deterministic static invariant checking, autofix, and convergence recheck. | `rules check`, `rules fix`, `rules phases` |
 | **`devkit_agt.features.workflow`** (agt) | Multi-stage delivery procedures, stage evaluation, decision envelopes. | `workflow next`, `workflow envelope` |
 | **`devkit_agt.features.worktree`** (agt) | Activity branch management and task worktree lifecycle. | `worktree start`, `worktree finish` |
