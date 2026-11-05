@@ -2,7 +2,7 @@
 id: PROP-design-explore-counterarguments
 title: Optional counterargument and response in design exploration
 summary: "Extend the existing design critic with a bounded optional response and refinement exchange for consequential design disagreements."
-status: reviewing
+status: accepted
 created_at: 2026-11-05
 target_area: docs/capabilities/delivery/
 priority: low
