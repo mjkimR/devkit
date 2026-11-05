@@ -2,7 +2,7 @@
 id: SPEC-deep-research-practical-orchestration
 title: Make deep-research deliverable-driven and proportionate
 summary: "Refine research assignments, synthesis and retrieval recovery around the requested deliverable while preserving opt-in roles and existing research authority."
-status: in-progress
+status: completed
 created: 2026-11-05
 related_capabilities: [CAP-DLV-deep-research]
 related_usecases: [UC-research-an-idea-and-shape-a-roadmap]

@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-deep-research-practical-orchestration
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-deep-research.md
     resolution: modified
@@ -24,3 +24,7 @@ scope is delivered; no deferred feature or source feedback needs a follow-up des
 
 The source review passed AC-01 through AC-06 by semantic walkthrough and AC-07 with existing distribution and
 installed-consumer checks. These establish instruction consistency and packaging, not empirical effectiveness.
+
+Independent reconcile review identified one P2 in generic output descriptions. The implementer qualified both
+capability rows and reverified them against the unchanged planner/synthesis instructions; reconcile-check-02
+records zero remaining findings. No waiver was used.
