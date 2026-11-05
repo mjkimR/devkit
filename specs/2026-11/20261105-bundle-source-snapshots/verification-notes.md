@@ -19,3 +19,12 @@ per-operation approval and range/snapshot audits. No runtime/dependency edge was
 - Static types and dist lint pass. Fresh just test-dist: 1338 passed in 31.94s.\n- Final full-fallback verification runs against the committed implementation before review completion.
 
 No private provider, measured auth latency or arbitrary source-code correctness is claimed.
+
+## Independent code review fixes
+
+The mandatory reviewer reproduced P1 concurrent authored-edit loss and P2 incorrect INVALID classification of
+post-replacement validation failure. The replacement transaction now receives the verified prior file inventory,
+moves the current tree to backup, compares that captured tree before installing anything, and restores/refuses
+CONFLICT on mismatch. Transaction validation exceptions become WRITE_FAILED after rollback; preflight validation
+remains outside the transaction. Regression tests cover edits during candidate preparation and both OSError and
+the validator's actual SnapshotInvalidError. Focused filesystem/installed-consumer checks pass 34 cases.

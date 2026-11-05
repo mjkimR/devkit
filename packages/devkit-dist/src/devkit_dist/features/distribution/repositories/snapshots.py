@@ -99,6 +99,7 @@ def replace_snapshot(
     validate: Callable[[Path], None],
     *,
     creating: bool,
+    previous_files: Mapping[str, Content] | None = None,
 ) -> None:
     """Stage and validate before replacing; restore the previous tree on a reported failure."""
     guard_execution()
@@ -128,6 +129,12 @@ def replace_snapshot(
             backup = Path(tempfile.mkdtemp(prefix=f".{destination.name}.previous-", dir=parent))
             backup.rmdir()
             destination.rename(backup)
+            try:
+                previous = read_tree(backup)
+            except SnapshotInvalidError as changed:
+                raise SnapshotConflictError("snapshot changed while refresh was preparing; preview again") from changed
+            if previous_files is None or previous != previous_files:
+                raise SnapshotConflictError("snapshot changed while refresh was preparing; preview again")
         stage.rename(destination)
         stage = None
         installed = True
@@ -145,7 +152,7 @@ def replace_snapshot(
                 f"snapshot write and rollback failed: {exc}; {rollback}",
                 f"Preserve recovery backup: {backup}",
             ) from exc
-        if isinstance(exc, (SnapshotConflictError, SnapshotInvalidError)):
+        if isinstance(exc, SnapshotConflictError):
             raise
         if not isinstance(exc, Exception):
             raise

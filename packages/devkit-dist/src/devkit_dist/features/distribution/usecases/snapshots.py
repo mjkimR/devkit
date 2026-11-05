@@ -66,5 +66,7 @@ class RefreshBundleSnapshot(BaseUseCase):
                 root, destination, prepared, previous=previous, old_files=old_files, preview=check, selected=selected
             )
             if not check and any(outcome.changes.values()):
-                replace_snapshot(destination, prepared.files, validate_package, creating=False)
+                replace_snapshot(
+                    destination, prepared.files, validate_package, creating=False, previous_files=old_files
+                )
             return outcome

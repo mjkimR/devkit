@@ -204,7 +204,10 @@ def test_unsupported_provider_metadata_and_declarative_references(checkout, muta
     assert not destination.exists()
 
 
-def test_validated_replacement_failure_rolls_back_prior_package(checkout, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("failure", [OSError, SnapshotInvalidError])
+def test_validated_replacement_failure_rolls_back_prior_package(
+    checkout, monkeypatch: pytest.MonkeyPatch, failure
+) -> None:
     _, source, destination = checkout
     create(checkout)
     before = read_tree(destination)
@@ -214,7 +217,7 @@ def test_validated_replacement_failure_rolls_back_prior_package(checkout, monkey
     def fail_after_install(path: Path) -> None:
         original(path)
         if path == destination:
-            raise OSError("injected post-replacement validation failure")
+            raise failure("injected post-replacement validation failure")
 
     monkeypatch.setattr(operations, "validate_package", fail_after_install)
     with pytest.raises(SnapshotWriteError):
@@ -281,3 +284,26 @@ def test_optional_commit_matches_only_copied_committed_inputs(checkout) -> None:
     refresh(checkout, apply=True)
     record = json.loads((checkout[2] / "snapshot.json").read_text())
     assert record["source"]["commit"] is None
+
+
+def test_edit_during_candidate_preparation_is_preserved(checkout, monkeypatch: pytest.MonkeyPatch) -> None:
+    root, source, destination = checkout
+    create(checkout)
+    (source / "src/private_content/alpha/bundle/extra.txt").write_text("upstream")
+    preview = refresh(checkout)
+    original = operations.prepare_candidate
+    local = destination / "src/team_copy/alpha/bundle/guide.md.jinja"
+
+    def edit_during_prepare(source_path: Path, package: str):
+        candidate = original(source_path, package)
+        local.write_text("authored during refresh")
+        return candidate
+
+    monkeypatch.setattr(operations, "prepare_candidate", edit_during_prepare)
+    with pytest.raises(SnapshotConflictError):
+        RefreshBundleSnapshot().execute(
+            root, destination, source, expect=preview.current_digest, candidate=preview.candidate_digest
+        )
+    assert local.read_text() == "authored during refresh"
+    assert not (destination / "src/team_copy/alpha/bundle/extra.txt").exists()
+    assert sorted(destination.parent.iterdir()) == [destination]
