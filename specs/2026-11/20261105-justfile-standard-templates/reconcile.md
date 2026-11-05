@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-justfile-standard-templates
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-command-design.md
     resolution: modified

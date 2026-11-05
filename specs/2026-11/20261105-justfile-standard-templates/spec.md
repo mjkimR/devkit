@@ -2,7 +2,7 @@
 id: SPEC-justfile-standard-templates
 title: Minimal Command Setup Guidance
 summary: "Provides opt-in creation-time guidance for justfile, CLI and MCP entry points with native verification setup examples."
-status: active
+status: completed
 created: 2026-11-05
 related_capabilities: [CAP-DIST-content-packages, CAP-GATE-commit-gates]
 related_usecases: []

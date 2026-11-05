@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T23:30:25.454677Z'
+status: completed
+summary: 'Independent reconciliation PASS: all nine retained documentation targets match the instruction, packaging and explicit native verification examples.'
+findings: []
+assumptions:
+- Codex reconcile-reviewer emulated; read-only snapshot unchanged
+checks:
+  contracts: PASS AC-01 through AC-03 and reciprocal capability/usecase references
+diff_scope:
+  base: 22141f429f8d8c235ccae85a0be170d2bd3313ec
+  head: f0225febadde087d338c07b7db0e31ad2d90865f
