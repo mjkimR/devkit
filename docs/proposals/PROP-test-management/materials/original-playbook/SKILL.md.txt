@@ -1,0 +1,77 @@
+---
+name: test-management
+description: Audit, organize, and optimize test suites across unit, integration, and e2e tiers. Establishes separation policies as suites grow and configures parallel runners with safe concurrency controls.
+---
+
+# Test management
+
+Run only when the user invoked or confirmed this playbook (`devkit-playbook` or `devkit playbook get maintenance/test-management`). Invocation authorizes assessment; selection and invocation authorize no change. Only the user's decision round does: an unattended run stops at the decision round with nothing applied.
+
+## Constraints for every run
+
+- Apply no directory, marker, or configuration change before the decision round approved it.
+- Keep tests offline and deterministic; never connect unit or integration tests to live external endpoints or shared persistent databases.
+- Keep tests leak-free; isolate temporary directories, in-memory databases, and asynchronous event loops per worker process.
+- If you find broken tests during intake or measurement, record them as follow-up items; never repair application defects in this pass.
+
+## 1. Intake and baseline measurement
+
+1. Record the test runner configuration and package layout (`pyproject.toml`, `justfile`, test scripts).
+2. Record the test suite baseline unprofiled:
+   - Total test count and distribution across directories or markers.
+   - Serial execution wall time.
+   - Parallel execution wall time when a parallel runner is installed.
+3. Identify test smells and isolation risks:
+   - Tests connecting to external network hosts.
+   - Slow end-to-end or MCP tests executed inside standard unit recipes.
+   - Race conditions or table collisions when running with multiple workers.
+
+## 2. Review test tiering and growth separation
+
+Read `references/tiering.md` when reviewing tier boundaries, organizing tests into directories, or separating fast and slow test suites.
+
+1. Classify tests by their exercised boundary:
+   - Unit: pure memory and domain logic without external boundaries.
+   - Integration: in-process component wiring, temporary directories, in-memory databases.
+   - End-to-end: full application runtime, HTTP/MCP transports, subprocess execution, browser automation.
+2. If total test duration exceeds fifteen seconds, separate fast regression suites from end-to-end execution.
+3. If heavy scale benchmarks or hardware-specific tests exist, move them to quarantined recipes or conditional skips.
+
+## 3. Tune runner concurrency and isolation
+
+Read `references/pytest.md` before configuring pytest options, adjusting worker counts, or resolving parallel concurrency failures.
+
+1. Set the parallel worker configuration to `-n auto --maxprocesses=8 --dist worksteal` by default.
+2. If pure unit tests run in less than two seconds serially, keep unit recipes serial to avoid worker startup overhead.
+3. If tests use SQLite, ensure in-memory databases use isolated connections per worker.
+4. If an external database URL is supplied, ensure parallel execution is rejected immediately.
+5. If tests use asynchronous loops, ensure loop fixtures are scoped to individual functions.
+
+## 4. Align branch integration and verification policy
+
+Read `references/integration-policy.md` when evaluating branch promotion strategies, nightly test cadence, or merge verification strength.
+
+1. Map the repository profile to the four integration options:
+   - Single main with nightly verification.
+   - Dev to main promotion following nightly full verification.
+   - Batch integration verification.
+   - Full-suite gated merge verification.
+2. If adopting dev to main promotion, verify that main receives only fast-forward updates from verified dev commits.
+3. Select the merge verification strength: branch affected only, small batch affected, or per-merge affected.
+
+## 5. Decision round
+
+Present all proposed changes together:
+- Tier reorganization: moving files between unit, integration, and e2e directories or configuring automatic marker assignment.
+- Runner and recipe adjustments: adding fast test recipes or updating parallel flags.
+- Concurrency and isolation repairs: adding database guards or environment variable stripping fixtures.
+- Branch integration selection: documenting or updating repository merge workflows.
+
+Record the user's decision for each candidate. Apply only agreed changes.
+
+## 6. Apply agreed changes and verify
+
+1. Apply approved directory or configuration edits.
+2. Run the repository test suite to verify that all tests pass without concurrency conflicts or isolation leakage.
+3. Record the before and after execution times in the final summary.
+

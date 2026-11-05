@@ -1,0 +1,55 @@
+# Branch Integration and Verification Policy
+
+## 1. Integration options
+
+Select an integration model based on test duration, team size, and release requirements:
+
+| Option | Workflow | Advantages | Trade-offs | Recommended context |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Single main + nightly** | Merge to `main` upon passing affected tests. Run full test suites in nightly CI and release gates. | Simplest structure. Zero branch synchronization overhead. Fastest developer velocity. | `main` includes unverified intermediate commits between nightlies. Broken commits propagate to new worktrees. | Solo development or libraries with affected runtimes under thirty seconds. |
+| **2. Dev to main promotion** | Branch from and merge into `dev` upon passing affected tests. Promote `dev` commits to `main` only after passing nightly full suites. | Clear separation between in-progress code and verified releases. `main` stays 100% stable. | Worktrees branched from `dev` can catch temporary regressions before nightly catches them. | Deployable services or web backends requiring a production-ready branch. |
+| **3. Batch integration verification** | Group multiple completed branches into a staging integration and test affected paths across the combined result. | Reduces redundant CI runs. Catches interaction conflicts between concurrent branches earlier. | Isolating failures requires bisection across the batch. Integration feedback is delayed. | High-frequency small ticket development where individual full runs are wasteful. |
+| **4. Full-suite gated merge** | Merge a branch only after running the full test suite against the target base. | Maximum reliability. Baseline branch never receives broken commits. | High wait and compute costs. Concurrent merges require re-running full suites on rebase. | Safety-critical systems or multi-team codebases with dedicated merge queues. |
+
+## 2. Dev to main promotion operational rules
+
+When selecting option 2, apply these rules to keep synchronization lightweight:
+
+1. **Keep main as a fast-forward pointer**:
+   - Never commit directly to `main`.
+   - Never merge feature branches into `main`.
+   - Treat `main` strictly as a pointer to the latest verified `dev` commit.
+
+2. **Branch from dev**:
+   - Create all feature branches and worktrees from the latest `dev` HEAD.
+
+3. **Merge to dev upon branch verification**:
+   - Merge a feature branch into `dev` once its affected tests pass.
+
+4. **Run full verification on nightly dev commits**:
+   - Schedule nightly CI against the current `dev` commit to run the full test suite across all packages.
+
+5. **Advance main via fast-forward only**:
+   - If the nightly suite passes, advance `main` to that tested `dev` commit:
+     ```bash
+     git checkout main && git merge --ff-only <tested-dev-commit-sha>
+     ```
+   - If commits were pushed to `dev` while nightly ran, leave them on `dev` for the next verification run.
+
+6. **Prioritize dev recovery on failure**:
+   - If the nightly suite fails, leave `main` unchanged.
+   - Treat repairing `dev` as the highest priority task before resuming feature development.
+
+7. **Release from main**:
+   - Cut release tags and production deployment artifacts exclusively from `main`.
+
+## 3. Merge verification strength on dev
+
+When merging individual branches into `dev`, choose one of three verification levels:
+
+| Verification level | Procedure | Advantages | Trade-offs |
+| :--- | :--- | :--- | :--- |
+| **A. Branch affected only** | Run affected tests on the feature branch before merging; run no immediate post-merge test. | Lowest immediate cost and fastest turnaround. | Misses semantic interactions between branches until nightly runs. |
+| **B. Small batch affected** | Merge two to four related branches, then run affected tests once on the merged result. | Balances test cost against early conflict detection. | Requires slight coordination to batch related work. |
+| **C. Per-merge affected** | Run affected tests immediately on `dev` after every single merge. | Earliest feedback on integration regressions. | Can duplicate branch checks and slow down rapid successive merges. |
+

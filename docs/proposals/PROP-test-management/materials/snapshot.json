@@ -1,0 +1,30 @@
+{
+  "source_head": "190f3092feb14d4c2c78fd19e2028bb562f81885",
+  "files": [
+    {
+      "source": "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/SKILL.md",
+      "archive": "materials/original-playbook/SKILL.md.txt",
+      "sha256": "d40d31cf7edd60ec9caeb7d0c8255546a2c53e9ce5f66bd0ccd12a8731cbbf36"
+    },
+    {
+      "source": "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/references/integration-policy.md",
+      "archive": "materials/original-playbook/references/integration-policy.md.txt",
+      "sha256": "0166509625ef518a3652e4ecde2b4c44d9b751c34729b413132611af22440b8f"
+    },
+    {
+      "source": "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/references/pytest.md",
+      "archive": "materials/original-playbook/references/pytest.md.txt",
+      "sha256": "8004af538cf8c53afab09713f24e73f95680d6ffa961a1e72a2fd9df94162a58"
+    },
+    {
+      "source": "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/references/tiering.md",
+      "archive": "materials/original-playbook/references/tiering.md.txt",
+      "sha256": "b11ba380a6d117733524b4c45f76f315e9c28c3751596f3d69a64250e9e516a8"
+    },
+    {
+      "source": "git diff of bundle.toml and test_bundles.py",
+      "archive": "materials/original-registration-and-tests.patch",
+      "sha256": "3759236eee1e7a4932bf9e268623a091469915f26cf3539853f198ddc0bb7be9"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+# Pytest and Concurrency Optimization
+
+## 1. Parallel execution configuration
+
+When parallelizing tests across multiple CPU cores, use `pytest-xdist`:
+
+```bash
+pytest -n auto --maxprocesses=8 --dist worksteal -q --tb=short
+```
+
+- Pass `-n auto --maxprocesses=8` to parallelize work while capping worker processes at eight to avoid CPU thrashing and memory exhaustion.
+- Pass `--dist worksteal` so workers dynamically claim pending tests from a shared queue when test durations vary.
+- Pass `--max-worker-restart=0` to terminate the test run immediately if any worker process exits unexpectedly (such as an unhandled segfault or memory limit), avoiding masked crashes.
+- Pass `-n0` or set worker environment variables to zero (`PYTEST_WORKERS=0`) to force serial execution when debugging with an interactive debugger or diagnosing race conditions.
+
+## 2. Concurrency hazards and mitigations
+
+### Unit test parallelization overhead
+
+- If pure unit tests complete in less than two seconds serially, run them without parallel workers.
+- Spawning worker processes introduces Python startup and collection overhead (~1.5–3.0 seconds). Parallel workers benefit I/O-bound integration suites, not microsecond unit assertions.
+
+### Database isolation per worker
+
+- If tests use SQLite, use private in-memory connections (`sqlite+aiosqlite:///:memory:` with `StaticPool`). Because OS worker processes maintain independent memory spaces, workers execute concurrently without lock contention.
+- If an environment variable provides an external database URL (such as PostgreSQL), prevent accidental parallel execution in the root test configuration:
+  ```python
+  def pytest_configure(config):
+      num_workers = getattr(config.option, "numprocesses", 0) or 0
+      if os.getenv("TEST_DATABASE_URL") and num_workers > 0:
+          raise pytest.UsageError("Shared external database requires serial execution (-n 0).")
+  ```
+
+### Asynchronous fixture scope
+
+- If using `pytest-asyncio`, configure function-scoped fixture loops in the project configuration:
+  ```toml
+  [tool.pytest.ini_options]
+  asyncio_mode = "auto"
+  asyncio_default_fixture_loop_scope = "function"
+  ```
+- Function scoping prevents event loop state or pending background tasks from leaking across tests.
+
+### Loopback socket creation in sandboxes
+
+- Asynchronous test frameworks and transport libraries create local socket pairs (`socket.socketpair()`) to wake event loops across thread boundaries.
+- If running inside a restricted sandbox that blocks socket creation, execute a preflight environment check before invoking pytest, or request permission approval before retrying.
+
+### Workstation environment isolation
+
+- Add an autouse fixture in the root test configuration to strip workstation environment variables before running tests:
+  ```python
+  @pytest.fixture(autouse=True)
+  def strip_workstation_environment(monkeypatch):
+      for key in tuple(os.environ):
+          if any(key.startswith(prefix) for prefix in ("VECTOR_DB_", "APP_API_", "SECRET_")):
+              monkeypatch.delenv(key, raising=False)
+  ```
+
