@@ -1,0 +1,33 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T07:08:54.114009Z'
+status: completed
+summary: 'Completed one Development turn through final-change-report with all six ACs, three code-review rounds and three independent reconcile rounds passed. Ready for Host integration; no merge/push/actual tag/publication/version bump. Scope extensions and sync outputs: none.'
+findings: []
+assumptions:
+- 'Codex isolation is emulated: absolute worktree cwd/reads, explicit per-operation escalations, scoped commits and audited support-role snapshots substitute for native confinement.'
+- Host explicitly admitted ARCH01/05-1/05-3, CAP-CLI-agent-cli-toolkit and three linked ADR qualifier/rationale repairs; no Tier B extension or changed subsystem decision.
+- dev-integration passed from project auto policy; worker stops at integrate waiting for Host runner lint-ci-clean. Branch checks do not attest eventual landed HEAD.
+- One initial default ruff cache access failure was retried only as the exact Host-authorized escalated operation; no approval-review refusal or unfinished denied operation.
+unverified_areas:
+- Real historical original assets were not supplied or fetched; real bootstrap availability and live GitHub publication/retry remain first-use checks. No published bytes were recreated or overwritten.
+- Metadata preservation is a captured-input check before generated writes, without global locking or unrelated source snapshot guarantees.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS UV_OFFLINE=1 just test-affected --base 0e17cd72d96d5111e39731291241472d7cd3f87b mode=full 6668 passed 15 skipped 152.80s code_head=93a3be2f0ca59da8e8d957256718a0f42ba3f337; subsequent changes prose/records only
+  build: PASS local original wheel/bootstrap/tagged-build and clean wheel/Git/tool consumer fixtures; inactive extras, corruption, retry, rollover and authored-edit cases verified
+  lint: PASS just lint-check plus scoped ruff check/format
+  types: PASS package checks plus pyright scripts/releases packages/devkit tools/devkit-dev
+  rules: PASS final committed --ci --base 0e17cd72d96d5111e39731291241472d7cd3f87b 22 zero violations
+  sync_end: PASS fresh sync --check create0 update0 remove0 seed0
+  review: PASS review03 after review01/02 fixes and reverify01/02; no recurring findings; all six nested reviewers completed and snapshots unchanged
+  reconcile: PASS independent rounds1/2/3; reconcile-check05 PASS all21 targets; checks02/04 close exact wording batches; anchor completed
+  measurement: PASS one-process original-wheel fixture policy count lockstep5 selective2; unchanged advisory/core/CLI retained; no latency claim
+  scope: PASS exact task boundaries plus seven Host-admitted version-only documentation paths; extensions0 sync_outputs0
+  feedback: PASS sweep recorded0 duplicates0 open_critical0
+diff_scope:
+  base: 0e17cd72d96d5111e39731291241472d7cd3f87b
+  head: 8ad092d7888435d131a2ca9b67854062598def64
+activity_effort: high
