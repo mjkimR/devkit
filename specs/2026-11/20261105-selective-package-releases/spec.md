@@ -4,11 +4,10 @@ title: Selective package releases under a shared release version
 summary: Keep unchanged package versions stable while assigning one shared release version to changed packages and required dependency updates.
 status: planned
 created: 2026-11-05
-related_capabilities: []
+related_capabilities: [CAP-DIST-content-packages, CAP-DIST-in-repo-bundles]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-selective-package-releases] Selective package releases under a shared release version
 
@@ -34,22 +33,48 @@ change advances advisory and its necessary dependents to that release number.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Selective package releases under a shared release version so that system capabilities are extended.
+- **US-1**: As a maintainer, I prepare one release while retaining unchanged published wheel and bundle identities.
+- **US-2**: As a consumer, I install a complete compatible wheel or Git set using its actual versions and original artifact locations.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Independent package version choices, ranges, registry publication, application refactors, new feature edges, model/npm policy changes, handbook regeneration and remote publication during Development.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Selective identity
+- **Given** a dist-owned skill change or identical shipped content
+- **When** the release tooling prepares, checks, builds or verifies the applicable fixture
+- **Then** Given a dist-owned skill change or identical shipped content, preparation advances only changed packages and exact-pin reverse dependents; identical wheels and unchanged bundles retain versions.
 
-## 5. Carried Proposal Notes
+### [AC-02] Dependency closure and consumers
+- **Given** an advisory change
+- **When** the release tooling prepares, checks, builds or verifies the applicable fixture
+- **Then** Given an advisory change, every runtime and optional internal exact pin reaches a fixed point, preserving markers, extras and unversioned pass-throughs; clean wheel and Git consumers resolve outside this workspace.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Deterministic repreparation and immutability
+- **Given** repeated preparation and prepare/revert/prepare
+- **When** the release tooling prepares, checks, builds or verifies the applicable fixture
+- **Then** Given repeated preparation and prepare/revert/prepare, plans are deterministic against the completed baseline; only still-matching generated edits unwind and no false pin seeds remain. Reused identities retain URLs and bytes; corrupt or missing artifacts and retry mismatches refuse.
+
+### [AC-04] Canonical payload identity
+- **Given** metadata
+- **When** the release tooling prepares, checks, builds or verifies the applicable fixture
+- **Then** Given metadata, README, resources, member additions/removals, bundle or recipe changes, detection includes affected wheels. Only owned generated versions and derived container fields normalize; code literals and executable modes matter. Bundle editing byproducts do not change fingerprints.
+
+### [AC-05] Complete installation variants
+- **Given** a complete inventory
+- **When** the release tooling prepares, checks, builds or verifies the applicable fixture
+- **Then** Given a complete inventory, generated commands cover harness, dist, SDD, viewer, tool, advisory, CLI, search and MCP using per-package URL closure. Advisory stays standard-library-only, dist installs without agt, and executable version is installed dist version.
+
+### [AC-06] Bootstrap and failure behavior
+- **Given** an explicit historical lockstep baseline
+- **When** the release tooling prepares, checks, builds or verifies the applicable fixture
+- **Then** Given an explicit historical lockstep baseline, bootstrap verifies original wheel filenames, checksums and source identities. Missing/invalid baseline, inconsistent dependencies, unsupported wheels and failed lock/sync produce no success. A partial upload retry uploads missing assets only and refuses mismatched existing bytes.
+
+## 5. Approved Design and Implementation Assumptions
+
+The following approved design remains normative. The current base preserves its premises. No historical published baseline has been supplied; Development uses verified fixture originals and does not create a real pending release or bump VERSION.
 
 ### 2. Technical Spike Questions
 
