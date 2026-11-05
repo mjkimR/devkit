@@ -142,4 +142,4 @@ ownership and completion gates, and route only user-decided changes through the 
 loads conditionally; runner defaults require local coverage/isolation evidence. Unattended runs apply nothing.
 Missing tools remain gaps. No runtime, scheduler, detector, mandatory companion run or history backend is added.
 See `CAP-DLV-drift-reconciliation`, `CAP-DLV-weekly-report`, `CAP-DLV-review-refactor` and
-`CAP-DLV-performance-pass`.
+`CAP-DLV-performance-pass` and `CAP-DLV-test-management`.
