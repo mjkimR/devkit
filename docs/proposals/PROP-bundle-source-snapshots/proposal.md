@@ -2,7 +2,7 @@
 id: PROP-bundle-source-snapshots
 title: Repository-committed bundle source snapshots
 summary: "Copy reusable bundle sources into a local content package with provenance and explicit updates so consumer repositories can install private bundle content without upstream credentials."
-status: draft
+status: reviewing
 created_at: 2026-11-05
 target_area: docs/capabilities/distribution/
 priority: high
