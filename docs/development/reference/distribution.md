@@ -10,18 +10,18 @@ commands of `devkit-agt` mount under the same executable. The normative specific
 ## 1. Quick Start
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v<version>
-uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
-  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
-  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
-  "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"                     # the CLI and a content package
+# Read each URL from the chosen release-inventory.json or copy its generated release-note command.
+uv add --dev "devkit-dist @ <devkit-dist-inventory-wheel-url>" \
+  "devkit-core @ <devkit-core-inventory-wheel-url>" \
+  "devkit-cli @ <devkit-cli-inventory-wheel-url>" \
+  "devkit-advisory @ <devkit-advisory-inventory-wheel-url>" \
+  "devkit-starter @ <devkit-starter-inventory-wheel-url>"                     # the CLI and a content package
 uv run devkit add starter                              # devkit and advisory are deployed by default; select the rest
 uv run devkit sync --agent codex --agent claude-code   # projections go to every supported agent unless narrowed
 uv run devkit list
 ```
 
-`devkit-agt` (the harness) depends on `devkit-dist` at the same version; a Git installation declares one of them, never
+`devkit-agt` (the harness) pins the selected actual version of `devkit-dist`; a Git installation declares one of them, never
 both, and a release-wheel installation of `devkit-agt` names the `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory`
 wheels next to it only because no index serves them.
 In this monorepo, run `uv sync --all-packages` first, then `uv run --package devkit-dist devkit sync -w <target-directory>`.

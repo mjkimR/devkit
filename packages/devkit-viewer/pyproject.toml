@@ -27,7 +27,7 @@ devkit-core = { workspace = true }
 devkit-agt = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 # The committed app build under src/devkit_viewer/static/ ships inside the package.

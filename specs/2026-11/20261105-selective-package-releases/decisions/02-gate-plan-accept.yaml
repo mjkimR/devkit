@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-selective-package-releases
+by: user
+at: '2026-11-05T05:46:22.604549Z'

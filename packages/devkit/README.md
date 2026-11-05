@@ -3,12 +3,12 @@
 The devkit developer harness: repository rules, delivery workflows, commit gates, task worktrees, tracked generated
 files, approval-bound integration and compact command output, mounted under the `devkit` command line of
 [`devkit-dist`](../devkit-dist/README.md). The distribution name is `devkit-agt`; imports use the regular `devkit_agt` package. It
-depends on `devkit-dist` and `devkit-advisory` at its own version (released in lockstep; see `ARCH-07-deployment`), so installing
+depends on `devkit-dist` and `devkit-advisory` at exact inventory-selected versions (see `ARCH-07-deployment`), so installing
 `devkit-agt` installs the whole CLI: every distribution command of `devkit-dist` plus `devkit rules`,
 `devkit workflow`, `devkit maintenance history`, `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`. It
 ships no console script of its own: its commands are `devkit.commands` plugins (`ARCH-05-3-command-plugins`).
 Requires Python 3.12 or later; runtime dependencies are `devkit-core`, `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
-`devkit-advisory` (`devkit-dist` brings `devkit-cli`). The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
+`devkit-advisory` (`devkit-dist` brings `devkit-cli`). The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the selected actual-version
 `devkit-mcp` wheel for the optional transport. Domain integration imports only dependency-free core contracts.
 
 ## Install

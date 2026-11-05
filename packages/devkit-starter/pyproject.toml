@@ -16,7 +16,7 @@ dev = ["devkit-dist"]  # the tests load the bundle with devkit-dist's manifest r
 devkit-dist = { workspace = true }
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

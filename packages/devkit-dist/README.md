@@ -4,14 +4,14 @@ Agent asset distribution in one Python package with the `devkit` command line: b
 transactional sync and the installation receipt, context loading, playbooks and native host hooks. The distribution
 name is `devkit-dist`; imports are under `devkit_dist`. It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
 Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` (the
-agent-first command-line boundary) and `devkit-advisory` (the `devkit.advisory` library), the devkit ones at the same version. The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
+agent-first command-line boundary) and `devkit-advisory` (the `devkit.advisory` library), each at its exact inventory-selected version. The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
 and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns the native stdio transport;
 dist owns exact project registration and does not import the SDK.
 
 `devkit-dist` alone deploys skills, subagents, instructions, playbooks, guidance, documents and host hooks; it runs
 no repository rules, commit gates or delivery workflows. The developer harness (`devkit rules`, `devkit workflow`,
 `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`) is the
-[`devkit-agt`](../devkit/README.md) package, which depends on `devkit-dist` at the same version and mounts its
+[`devkit-agt`](../devkit/README.md) package, which pins the selected actual version of `devkit-dist` and mounts its
 commands under the same `devkit` executable. In a standalone installation a harness command name answers with
 `HARNESS_COMMAND_UNAVAILABLE`, and deployed rule, gate or workflow assets with a `HARNESS_ENGINE_MISSING` warning; both
 name the requirement to add.

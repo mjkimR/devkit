@@ -1,0 +1,27 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T06:32:07.793665Z'
+status: completed
+summary: 'round 2; prior three P1s fixed; new P1: stale completed baseline can downgrade unchanged current package.'
+findings:
+- issue: Preparation accepts a completed baseline inconsistent with current published package versions.
+  evidence: scripts/releases/prepare.py:145-177 and metadata.py:73; coherent five-package0.1.1 exact pins/root0.1.2/no pending with completed0.1.0 produced advisory_current=0.1.1 advisory_selected=0.1.0.
+  failure_condition: Explicit completed inventory predates current published identities and normalized payload matches old inventory.
+  suggested_action: Validate logically unwound current package versions against the baseline before selecting or writing; preserve recorded generated edits and new packages; add coherent older-baseline refusal regression without changing bundle payload normalization.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated same-worktree read isolation with unchanged before/after HEAD and tree9b373688; no outside reads or reviewer writes.
+- Four exact Tier A documentation additions were expressly Host-admitted and remain qualifier-only.
+unverified_areas:
+- Real historical artifacts and live publication remain first-use checks.
+checks:
+  tests: PASS mode=full6662 passed15 skipped181.07s
+  prior_findings: PASS all three prior failure conditions fixed
+  stale_baseline: FAIL coherent current0.1.1 selected unchanged advisory0.1.0
+diff_scope:
+  base: 324a51547a44460a3f1adefd6732a9df49095211
+  head: c70385de9d6e19635411c387bc0fb7bc732028f7
+activity_effort: high

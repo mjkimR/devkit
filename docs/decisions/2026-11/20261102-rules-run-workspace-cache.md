@@ -73,7 +73,7 @@ Drivers are listed per source decision; a "(driver N)" in Decision Outcome refer
 2. Valid source yields the same tree for every rule; the file name in error messages stays workspace-relative.
 3. Results stay byte-identical for UTF-8 source without a BOM; changes on other encodings are acceptable (user).
 4. Each rule keeps its own reporting policy for unparsable files.
-5. No compatibility shim: no external consumer exists, and devkit-dist and devkit-agt are released in lockstep.
+5. No compatibility shim: no external consumer exists.
 6. Callers without a `RuleContext` (`inspect_architecture`, `inspect_usecases` in tests) keep working.
 
 `ADR-share-one-read-only-parsed-tree-per-python-file`:

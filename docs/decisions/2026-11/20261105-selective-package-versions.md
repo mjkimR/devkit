@@ -1,17 +1,19 @@
 ---
-id: PADR-selective-package-versions
+id: ADR-selective-package-versions
 title: Selective package versions and immutable release inventories
 summary: "For independently consumed workspace wheels, we advance changed distributions and exact-pin dependents under one release number, to reduce version churn, accepting mixed versions and release inventories."
-proposal: PROP-selective-package-releases
+proposal: SPEC-selective-package-releases
 supersedes:
   - ADR-package-ownership-and-release-version
-status: draft
+  - ADR-document-system
+  - ADR-mcp-runtime-and-shared-artifacts
+status: accepted
 created_at: 2026-11-05
 ---
 
-# [PADR-selective-package-versions] Selective package versions and immutable release inventories
+# [ADR-selective-package-versions] Selective package versions and immutable release inventories
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-05
 
 ## 1. Context & Problem Statement
@@ -43,21 +45,23 @@ Choose selective versions with exact pins for version stability without expandin
 
 - Root `VERSION` selects a release number; only distributions with significant wheel content or dependency metadata
   changes take that number. Bundles advance only for their own source changes. → `ARCH-07-deployment` section 1.1
-  (MUST, proposed restatement).
+  (MUST).
 - A normalized wheel comparison ignores only the owning version fields and derived container records. Dependency
   metadata remains significant after recorded generated preparation edits are logically unwound; bundle
   enumeration retains its existing byproduct exclusions. Exact-pin dependents advance to a fixed point.
-  → `ARCH-07-deployment` section 1.1 (MUST, proposed restatement).
+  → `ARCH-07-deployment` section 1.1 (MUST).
 - A complete release inventory records actual package versions and original artifact URLs and digests. Unchanged
-  published wheels retain their original bytes and location. → `ARCH-07-deployment` section 1.1 (MUST, proposed
-  restatement).
+  published wheels retain their original bytes and location. → `ARCH-07-deployment` section 1.1 (MUST).
 - Wheel installation commands name the selected dependency closure with each artifact's original URL. Git sources
-  remain pinned to one monorepo commit with consistent exact pins. → `CAP-DIST-content-packages` section 2 (MUST,
-  proposed restatement).
+  remain pinned to one monorepo commit with consistent exact pins. → `CAP-DIST-content-packages` section 2 (MUST).
 - This decision replaces the old ADR's Single release version clauses and only the same-version qualifiers in
   its foundation, MCP runtime and harness dependency clauses. All package ownership, dependency direction, import,
-  configuration, bundle assignment and CLI version-source decisions remain in force. The old ADR stays accepted
-  and gains a partial-supersession notice when this PADR is promoted.
+  configuration, bundle assignment and CLI version-source decisions remain in force. The old ADR stays accepted with a partial-supersession notice.
+
+- This decision also replaces only `ADR-document-system`'s root-version and same-version qualifiers in its
+  Document package and bundles Package clause, and `ADR-mcp-runtime-and-shared-artifacts`'s foundation-lockstep
+  qualifier in its first MCP runtime outcome. Their document/SDD/MCP ownership, dependency directions, registration,
+  approval and runtime decisions remain. → `ARCH-07-deployment` section 1.1 (MUST).
 
 ## 5. Consequences
 
@@ -72,9 +76,9 @@ Compatible ranges, independent package version selection and registry publicatio
 
 ## 6. Confirmation
 
-Development replaces lockstep assertions in
+Selective identity, closure and inventory checks are covered in
 `packages/devkit/tests/integration/package/test_version_script.py` and
 `packages/devkit/tests/integration/package/test_lockstep.py` with selective identity, closure and inventory checks.
 Release-tooling tests cover canonicalization, bootstrap provenance, artifact corruption, incomplete preparation
 and publish retry. Installed consumer tests verify wheel/Git sets outside the source workspace and preserve
-advisory-only and dist-without-agt isolation. Until those checks exist, this PADR is a proposed decision only.
+advisory-only and dist-without-agt isolation. The first selective release additionally requires verified historical originals; fixture validation does not establish their availability.

@@ -15,6 +15,9 @@ aliases:
 
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: native confirmation as the normal route, CLI/PR authorization as recovery and no extra approval after native confirmation (Host-approval clause).
 
+Superseded in part by `ADR-selective-package-versions`: only the foundation-lockstep version qualifier in the
+first MCP runtime and project registration outcome; runtime, registration and approval decisions remain.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @minjae
@@ -128,7 +131,7 @@ collection.
 
 ### MCP runtime and project registration
 
-- Create `devkit_mcp` in the optional, foundation-lockstep `devkit-mcp` wheel. It depends on dist and SDK/runtime
+- Create `devkit_mcp` in the optional `devkit-mcp` wheel with selected actual-version internal pins. It depends on dist and SDK/runtime
   libraries, serves `devkit.host.services`, and mounts `devkit mcp`. SDK-free service contracts move to the core
   foundation (`devkit.core.mcp` when decided; `devkit_core.base` under `ADR-package-ownership-and-release-version`); agt/spec
   own their services. (ADR-independent-mcp-runtime-with-project-registration-and-environment-guards)

@@ -24,38 +24,36 @@ def _pins(project: dict, name: str) -> list[str]:
     return [dep.split(";")[0].split("#")[0].replace(" ", "") for dep in project["dependencies"] if dep.startswith(name)]
 
 
-def test_release_wheels_share_one_version() -> None:
-    versions = {name: _project(directory)["version"] for name, directory in WHEELS.items()}
+def test_each_wheel_pins_actual_dependency_versions() -> None:
+    from packaging.requirements import Requirement
+    from packaging.utils import canonicalize_name
+
     root = PACKAGES.parent
-    expected = (root / "VERSION").read_text().strip()
-    for path in sorted(root.glob("packages/*/pyproject.toml")) + sorted(root.glob("tools/*/pyproject.toml")):
-        project = tomllib.loads(path.read_text())["project"]
-        versions[project["name"]] = project["version"]
-    assert set(versions.values()) == {expected}, versions
-
-
-def test_each_wheel_pins_the_exact_version_of_the_wheels_below_it() -> None:
-    agt, dist = _project("devkit"), _project("devkit-dist")
-    version = agt["version"]
-    assert _pins(agt, "devkit-dist") == [f"devkit-dist=={version}"]
-    assert _pins(agt, "devkit-advisory") == [f"devkit-advisory=={version}"]
-    assert _pins(dist, "devkit-advisory") == [f"devkit-advisory=={version}"]
-    assert _pins(dist, "devkit-cli") == [f"devkit-cli=={version}"]
-    assert _pins(_project("devkit-cli"), "devkit-advisory") == [f"devkit-advisory=={version}"]
-    assert _pins(dist, "devkit-agt") == []  # devkit-dist never depends on the harness
-
-
-def test_every_release_install_command_with_devkit_dist_names_its_companion_wheels() -> None:
-    # SPEC-cli-toolkit AC-11: no index serves the wheels devkit-dist pins, so each command must name them.
-    release = (PACKAGES.parent / "scripts/release.sh").read_text()
-    commands = [line for line in release.splitlines() if line.startswith("uv ") and "$dist_wheel" in line]
-    assert commands
-    assert [line for line in commands if not all(f"${w}_wheel" in line for w in ("core", "cli", "advisory"))] == []
+    projects = [
+        tomllib.loads(p.read_text())["project"]
+        for directory in ("packages", "tools")
+        for p in (root / directory).glob("*/pyproject.toml")
+    ]
+    versions = {canonicalize_name(p["name"]): p["version"] for p in projects}
+    for project in projects:
+        requirements = [
+            *project.get("dependencies", []),
+            *(r for rs in project.get("optional-dependencies", {}).values() for r in rs),
+        ]
+        for raw in requirements:
+            requirement = Requirement(raw)
+            name = canonicalize_name(requirement.name)
+            if name in versions and requirement.specifier:
+                assert str(requirement.specifier) == "==" + versions[name]
+    assert _pins(_project("devkit-dist"), "devkit-agt") == []
 
 
 def test_devkit_agt_extras_pass_through_to_devkit_dist() -> None:
     agt, dist = _project("devkit"), _project("devkit-dist")
-    assert agt["optional-dependencies"] == {"mcp": [f"devkit-mcp=={agt['version']}"], "search": ["devkit-dist[search]"]}
+    assert agt["optional-dependencies"] == {
+        "mcp": [f"devkit-mcp=={_project('devkit-mcp')['version']}"],
+        "search": ["devkit-dist[search]"],
+    }
     assert set(dist["optional-dependencies"]) == {"search"}
 
 

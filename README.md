@@ -87,22 +87,22 @@ They are not published to PyPI; install them from Git or an explicit wheel URL/p
 ## Using devkit in another project
 
 No package index hosts these wheels. Each `vX.Y.Z` tag publishes a GitHub Release
-with every package's wheel, `SHA256SUMS` and the install commands; install by URL:
+with changed wheels, `SHA256SUMS`, a complete `release-inventory.json` and install commands. Unchanged wheels retain their original URLs; install the inventory-selected closure:
 
 ```bash
-base=https://github.com/mjkimR/devkit/releases/download/v<version>
-uv add --dev "devkit-agt @ $base/devkit_agt-<version>-py3-none-any.whl" \
-  "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
-  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
-  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl"
+# Read each URL from the chosen release-inventory.json or copy its generated release-note command.
+uv add --dev "devkit-agt @ <devkit-agt-inventory-wheel-url>" \
+  "devkit-dist @ <devkit-dist-inventory-wheel-url>" \
+  "devkit-core @ <devkit-core-inventory-wheel-url>" \
+  "devkit-cli @ <devkit-cli-inventory-wheel-url>" \
+  "devkit-advisory @ <devkit-advisory-inventory-wheel-url>"
 # or, with dense and hybrid search (numpy, tokenizers and the 15 MB embedding model):
-uv add --dev "devkit-agt[search] @ $base/devkit_agt-<version>-py3-none-any.whl" \
-  "devkit-dist[search] @ $base/devkit_dist-<version>-py3-none-any.whl" \
-  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
-  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
-  "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
-  "devkit-embed @ $base/devkit_embed-0.1.0-py3-none-any.whl"
+uv add --dev "devkit-agt[search] @ <devkit-agt-inventory-wheel-url>" \
+  "devkit-dist[search] @ <devkit-dist-inventory-wheel-url>" \
+  "devkit-core @ <devkit-core-inventory-wheel-url>" \
+  "devkit-cli @ <devkit-cli-inventory-wheel-url>" \
+  "devkit-advisory @ <devkit-advisory-inventory-wheel-url>" \
+  "devkit-embed @ <devkit-embed-inventory-wheel-url>"
 
 uv run devkit sync          # deploys auto-selected bundles (built in: devkit, advisory, harness)
 uv run devkit add git-commits authoring   # opt-in practice bundles built into devkit
@@ -110,7 +110,7 @@ uv run devkit list
 uv run devkit rules check
 ```
 
-`devkit-agt` requires `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` of the same version, and no index
+`devkit-agt` requires `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` at their actual inventory-selected versions, and no index
 serves them, so all five wheels are named. A repository that only deploys agent assets installs `devkit-dist` (with
 `devkit-core`, `devkit-cli` and `devkit-advisory`) alone: it gets sync, context loading, playbooks and native hooks, the `devkit` and `advisory`
 bundles, and no harness command or guidance (`devkit rules` and the other harness commands answer with
@@ -152,23 +152,36 @@ without a consumer project, point `-w` at an existing empty directory:
 
 ## Releasing
 
-Edit root `VERSION` (for example, `0.1.2`), then run:
+Edit root `VERSION` (for example, `0.1.7`), then run:
 
 ```bash
-just version-sync          # update all workspace and bundle versions, internal pins and uv.lock
-just version-check         # read-only metadata consistency check
-just release-build v0.1.2  # build and validate the release locally
+just version-sync --baseline scripts/releases/baseline-v0.1.6.json
+just version-check --baseline scripts/releases/baseline-v0.1.6.json
+just release-build v0.1.7 --baseline scripts/releases/baseline-v0.1.6.json
 ```
 
-Commit `VERSION`, the generated package metadata and `uv.lock` together. All workspace packages under
-`packages/` and `tools/` share this release version. Versioned internal requirements use exact matching pins;
-unversioned extra pass-throughs retain their spelling. Static metadata keeps wheels and source distributions
-buildable without the repository's root version file.
+First import one completed lockstep release's original wheels and SHA256SUMS explicitly:
 
-After the change reaches `main`, push the matching tag, for example `git tag v0.1.2 && git push origin v0.1.2`.
-The release workflow runs the full CI, refuses a commit outside `main`, and validates the tag, `VERSION`, package
-metadata and lock before building every workspace wheel and publishing the GitHub Release. See
-`ARCH-07-deployment` and `ADR-single-release-version`.
+```bash
+uv run python scripts/version.py --bootstrap v0.1.6 --source v0.1.6 \
+  --artifacts dist/original-v0.1.6 --output scripts/releases/baseline-v0.1.6.json --repository mjkimR/devkit
+```
+
+These paths and tags illustrate inputs; they do not assert that historical assets are available. Missing or corrupt
+originals block bootstrap. Commit the verified baseline, `VERSION`, generated package metadata, `uv.lock`, sync receipt
+and `scripts/releases/pending.json` together. Only changed distributions and exact-pin reverse dependents take the
+release version; unchanged packages and bundles retain their versions. Repeated preparation compares with the same
+completed baseline and logically unwinds recorded generated edits. Lock or sync failure leaves an incomplete plan
+and no success sentinel. Resolve the failure and rerun the same command. For the next release, pass that release's completed inventory;
+tooling verifies and supersedes its retained committed plan without unwinding published metadata. An older baseline
+that disagrees with current package versions refuses. Metadata edited during comparison is preserved and preparation
+refuses before generated writes; rerun after editing finishes.
+
+After the metadata reaches `main`, the maintainer authorizes the matching tag. CI verifies main ancestry and the
+committed complete plan, builds changed publication wheels, verifies reused originals, then publishes a completed
+inventory last. Retry reuses matching uploaded bytes and uploads missing assets only; a mismatch refuses. No wheel
+identity is rebuilt and republished. `ARCH-07-deployment` and `ADR-selective-package-versions` own the contract.
+The executable version remains installed `devkit-dist`; static package metadata supports standalone Git builds.
 
 To refresh the handbook for this release, run the `devkit-dev/handbook` playbook after editing `VERSION` and before
 the metadata commit; only a release whose tag equals `handbook/manifest.json`'s tag checks the handbook

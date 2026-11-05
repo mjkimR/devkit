@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T07:01:13.863731Z'
+status: completed
+summary: round 2; closes reconcile-check-03; all exact Host-admitted ADR qualifier/notice/trace repairs applied; cache driver retains no-shim decision; fresh round3 follows.
+findings: []
+assumptions:
+- Three exact ADR paths and trace-only additions admitted as Tier A by Host before edits; no subsystem decision changed.
+checks:
+  reflection: PASS concrete suggested actions; all21 targets recorded
+  rules: PASS 22 no violations
+  diff: PASS named version qualifiers partial notices and rationale only
+diff_scope:
+  base: 2a6ca9f6ae5ed4c4e06d413bfdd7a6acf10f81d1
+  head: 68149b7693a6ef4c4ada368ea647f3e217477775
+activity_effort: high

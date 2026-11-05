@@ -1,0 +1,25 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-05T07:07:22.700877Z'
+status: completed
+summary: Selective preparation, immutable inventories/builds, verified bootstrap and resumable publication tooling complete; all six ACs, code review and Living Spec reconciliation passed. Ready for Host integration.
+findings: []
+assumptions:
+- Worker isolation and support roles are emulated through absolute worktree scopes, scoped commits and audited pre/post snapshots; no native guarantee.
+unverified_areas:
+- No real historical originals supplied/fetched; real bootstrap availability and live publication/retry remain first-use checks. No actual repository tag/release or version bump was created.
+checks:
+  tests: PASS UV_OFFLINE=1 just test-affected --base 0e17cd72d96d5111e39731291241472d7cd3f87b mode=full 6668 passed15 skipped152.80s at code93a3be2f; later changes prose/records only
+  build: PASS real local wheel/bootstrap/tagged-build fixtures and clean wheel/Git/tool consumers including optional extras; corrupt/missing/retry cases refuse
+  lint: PASS just lint-check and scoped ruff check/format; final committed rules22zero
+  types: PASS all package types plus pyright scripts/releases packages/devkit tools/devkit-dev
+  review: PASS code3 fresh rounds with2 reverifies; reconcile3 fresh rounds with2 exact-wording closure checks; no open current findings
+  scope: PASS task boundaries plus exact Host TierA admissions; extensions0 sync_outputs0
+  measurement: PASS local policy-count fixture lockstep5 selective2; no latency claim
+  critical_feedback: PASS open critical0; sweep recorded0 duplicates0
+diff_scope:
+  base: 0e17cd72d96d5111e39731291241472d7cd3f87b
+  head: 4f92243da127e633134b2d067f2a03669b8bb907
+activity_effort: high
