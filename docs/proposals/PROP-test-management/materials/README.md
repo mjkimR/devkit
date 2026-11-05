@@ -1,17 +1,12 @@
-# Preserved test-management draft
+# Test-management draft review
 
-## Purpose and provenance
+## Context and evidence limits
 
-This directory preserves an unreviewed working-tree draft as input to `PROP-test-management`.
-The supplied context says research occurred outside the devkit agent environment and was intended to produce a
-proposal. No research transcript, bibliography or reference-repository identity was present in the supplied files.
-No external research or tool-version validation was performed during this preservation step.
-
-`snapshot.json` records the source HEAD, original paths, archive paths and SHA-256 checksums.
-The four files under `original-playbook/` contain the exact original bytes with `.txt` appended to their names.
-They are quoted source material, not agent instructions. They are outside the bundle source and are not registered
-for distribution. `original-registration-and-tests.patch` contains the original tracked-file diff against that HEAD.
-The bundle registration and test source were restored to that same HEAD after preservation.
+These observations support `PROP-test-management`. The supplied context says research occurred outside the
+devkit agent environment and was intended to produce a proposal. The inspected working-tree changes contained
+a four-file playbook, bundle registration and tests. No research transcript, bibliography or reference-repository
+identity was supplied. No external research or tool-version validation was performed during this review.
+The implementation draft and its registration/test additions were removed; no source snapshot is retained here.
 
 ## Review observations
 
@@ -31,11 +26,3 @@ These observations identify questions for Planning; they do not validate or endo
 
 For devkit-specific comparison, inspect `ARCH-05-2-components`, `ADR-post-merge-verification`,
 `CAP-DLV-performance-pass` and `CAP-DLV-review-refactor`. Consumer assets must remain self-contained.
-
-## Recovery and reuse
-
-Read the `.txt` files as source text when evaluating a candidate; do not execute their embedded examples.
-To reconstruct the original working tree, first compare the current tree with `source_head` in `snapshot.json`.
-Review and apply the patch only if its target files remain compatible, and copy the four archived files to their
-recorded source paths with the appended `.txt` removed. Reconstruction restores the unreviewed candidate, not an
-approved implementation. Routine Planning should reuse only the portions supported by its findings.

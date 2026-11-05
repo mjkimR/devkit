@@ -1,7 +1,7 @@
 ---
 id: PROP-test-management
 title: Evidence-based test management playbook
-summary: "Evaluate a reusable test-management playbook for consumer repositories using a preserved implementation draft. Establish evidence, scope and verification criteria before adopting runner, tiering or integration guidance."
+summary: "Evaluate a reusable test-management playbook for consumer repositories using findings from an unreviewed implementation draft. Establish evidence, scope and verification criteria before adopting runner, tiering or integration guidance."
 status: draft
 created_at: 2026-11-05
 target_area: capabilities/delivery/
@@ -32,16 +32,16 @@ workflow: sdd-proposal
 Research about test practices for devkit and other reference repositories produced an implementation-shaped
 playbook instead of the requested proposal. The available input contains four playbook files, bundle registration
 and integration-test edits. It contains no source bibliography, reference-repository inventory, measured baseline
-or trial report. Preserve that work as a candidate design without treating its directives as accepted policy.
+or trial report. Use its review findings to frame a candidate design without treating its directives as accepted policy.
 
 The hypothesis is that an opt-in test-management playbook can help agents assess test boundaries, isolation and
 runner costs across consumer repositories, then propose changes grounded in the consumer's own contracts.
 The existing draft combines these concerns with branch promotion and verification policy; Planning must decide
 whether that latter scope belongs in the same playbook.
 
-The original text and registration/test diff are preserved byte-for-byte in [materials](materials/README.md).
-They are research inputs, not deployed assets or passing-check evidence. The source playbook and its registration
-have been removed from the distributable bundle; existing bundle behavior is unchanged.
+The [review observations](materials/README.md) identify assumptions that need validation. The implementation
+draft, registration and test additions have been removed from the distributable bundle. No source snapshot is
+retained in this proposal; existing bundle behavior is unchanged.
 
 ## 2. Technical Spike Questions
 
@@ -82,7 +82,7 @@ proposal does not authorize changes to devkit's branch model, CI cadence or fina
 
 - A bounded opt-in catalog asset, with its registration/preset chosen during Planning.
 - Packaging and behavior-oriented checks for selection, conditional loading and authorization boundaries.
-  The archived string-presence tests are examples of intended coverage, not evidence of procedural correctness.
+  The draft's string-presence tests indicated intended coverage, not evidence of procedural correctness.
 - A capability and linked use case for retained behavior; related documentation updates only where necessary.
 - No new feature dependency edges or runtime implementation are proposed.
 
@@ -109,9 +109,9 @@ layers. Any independent integration-policy redesign requires separately scoped w
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal in `draft` until Planning resolves the scope and evidence questions. The preserved draft grants
+Keep this proposal in `draft` until Planning resolves the scope and evidence questions. The draft review grants
 no direction acceptance or Development handoff. Continue with `/spec-next` for `PROP-test-management` when selected.
 
 On acceptance, use the proposal lifecycle to record the chosen direction and hand off to a feature spec before
-changing shipped assets. Preserve useful source material through handoff. If rejected, retain the user's reason
-through the normal proposal retirement process. Do not restore the archived implementation automatically.
+changing shipped assets. Carry the review findings through handoff. If rejected, retain the user's reason
+through the normal proposal retirement process. Implementation requires a verified spec and normal Development checks.
