@@ -1,8 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Implement the agreed projection diagnostic scope.
-by: user
-at: '2026-11-04T23:11:03.749665Z'

@@ -1,0 +1,30 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-04T23:22:44.621648Z'
+status: completed
+review: review-01.yaml
+summary: 'Host verified all three fixes: failed discovery warns, remediation targets root from another repository, annotation names affected contract.'
+findings:
+- issue: Git discovery failures silently suppress diagnostics.
+  evidence: repositories/projection_git.py calls git_toplevel before its try; that helper swallows GitError.
+  failure_condition: Missing Git, timeout or access refusal during rev-parse.
+  suggested_action: Distinguish nonrepository from failure and test discovery errors.
+  resolution: resolved
+  severity: P2
+- issue: Untracking remedy is not bound to inspected repository.
+  evidence: repositories/projection_git.py builds relative git rm advice without -C.
+  failure_condition: Advice is executed from another repository after sync -w.
+  suggested_action: Quote inspected root in git -C and test from another repository.
+  resolution: resolved
+  severity: P2
+- issue: Scope extension lacks affected contract ID.
+  evidence: tasks.md reference-document extension reason.
+  failure_condition: Review cannot tie the adjacent document to an affected contract.
+  suggested_action: Name CAP-DIST-sync-and-transactions in the reason.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 7 targeted regression tests; prior affected 2952 and dist-only 1305 reused for unchanged behavior
+  types: PASS just check dist
