@@ -1,0 +1,34 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:28:10.588801Z'
+status: completed
+summary: round 2; REVISE. Bounded output and four integration repairs hold. Two P1s remain; recurring orphan terminal-gate failure requires bounded-recovery Host handover.
+findings:
+- issue: 'recurs: review-01.yaml #1; terminal completion bypasses retained process-group ownership after reaping.'
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:169; scratch/review-02/test_recheck.py:87 fails for both passed and cancelled variants.
+  failure_condition: The pre-reap scan misses a newly orphaned same-group child. Poll reaps the leader and run returns with established groups unresolved because no previously known PID appears alive. The next scan exposes child PID 201, but live_owned checks only known PIDs. Passed/cancelled is persisted with only preparation PID 100 owned, permitting cleanup while the writer survives.
+  suggested_action: Require fresh post-reap group discovery and verified retirement of every established group before terminal completion or confirmed cancellation, including exception paths; preserve reuse guards and add supervisor-level regressions. Apply bounded-recovery Host handover.
+  resolution: open
+  severity: P1
+- issue: Interrupted cleanup leaves no durable in-progress or unfinished cleanup record.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/services/lifecycle.py:29; scratch/review-02/test_recheck.py:112 finds cleanup absent after KeyboardInterrupt.
+  failure_condition: Removal begins and cleaner/waiter is interrupted before remove returns. Cleanup JSON is written only afterward, so status cannot distinguish untouched from interrupted removal, violating AC14 inspectable progress/safe retry.
+  suggested_action: Atomically persist cleanup intent/progress before effects, retain inspectable unfinished state on interruption and validate/resume only safe remaining effects on explicit retry while preserving execution result. Add removal interruption and status/retry coverage.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated boundary uses absolute worktree cwd/read/probe scopes and fixed HEAD; reviewer reported no explicit source/document reads outside worktree.
+unverified_areas:
+- Linux runtime; real OS race frequency; independent reconcile; subsequent user-required verification-discovery guidance.
+checks:
+  review_probes: FAIL 3 failed 2 passed; scratch/review-02/test_recheck.py with system basetemp
+  affected_tests: PASS 6367 passed 3 skipped in 98.78s
+  committed_rules: PASS --ci --base ede62bde errors=0 warnings=0
+  repaired_interfaces: PASS bounded projection text uv-run UC keys registration
+  boundary: PASS unchanged HEAD clean tree and scoped probes
+diff_scope:
+  base: 41553fd82b554b3840db096e6ad40411fe39e30e
+  head: 37074d0d284288055931c856e755e876dd4f806d
+activity_effort: high

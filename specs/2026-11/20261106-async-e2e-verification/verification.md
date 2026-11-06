@@ -37,3 +37,7 @@ High code review round 1 found two P1 ownership/output defects and four P2 inter
 The first `just test-affected --base ede62bde -- --basetemp scratch/pytest-affected-1` invocation was invalid: fixtures without their own Git root inherited the ignored scratch parent and appeared empty to rule discovery. It was interrupted and preserved. The same first failing rule file passed 12/12 with a system temporary fixture root. Corrected full fallback then produced 6,357 passed, 3 skipped and four ordinary registration/directive/UC syntax failures, which the repair batch addresses; final corrected fallback is recorded in the final envelopes.
 
 Offline package verification: `uv build --package devkit-agt --wheel --out-dir scratch/wheels --offline` succeeded. The resulting wheel includes the exec entry point, captured runtime and worktree execution API.
+
+## Bounded-recovery stop
+
+Round 2 independently reproduced a recurring P1 at the supervisor terminal gate (passed and cancelled variants) and a P1 cleanup-interruption persistence gap. The passing general suite does not establish these acceptance conditions. This run ends with a problem and no final change report; `recovery-handoff.md` names exact evidence, pending user-required guidance refinement and remaining reconcile/final stages.
