@@ -1,0 +1,23 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-06T11:40:04.686457Z'
+status: completed
+summary: 'Completed the second medium-effort Planning run: source scout, reproducible archetype/project-extension and agents-only projection probes, bounded read-only depth-two invocation, host reference checks, concrete authority/preset/assignment decisions and ordered implementation ownership mapped to AC-1 through AC-10. Independent challenger found no material issue; plan acceptance, main merge and Development handoff remain pending.'
+findings: []
+assumptions:
+- Three public swarm agents owned by adaptive-dev; separate agents-only preset; caller workflow preserved; source model defaults omitted; Development effort medium.
+unverified_areas:
+- Registered prototype invocation, concurrent coding worktrees, combined-check failures, interruption recovery, native enforcement, unexercised host runtimes, isolated proposed wheel install and performance remain Development checks or explicit missing coverage.
+checks:
+  tests: PASS just test-affected --base 5a89b2eaebfe4559ce17cb533ed0a8382ac0fb77; 15 passed at 5ab30d86
+  rules: PASS proposal directory; 22 rules, zero errors or warnings
+  projection: PASS retained script; twelve files, project extension/model policy, agents-only selection and BUNDLE_CONFLICT preservation
+  nesting: PASS one fresh-context read-only child at depth two, same-child continuation, instruction-level WRITE_DENIED and unchanged source snapshots
+  review: PASS source scout and second medium challenger, zero material findings
+  e2e: PASS empty affected selection over saved main baseline interval
+diff_scope:
+  base: 86eb5bd1b706ec586ebbdbd76ad4840ae22c00b2
+  head: 5ab30d86cd368f90b42158986dec77e99b5478c0
+activity_effort: medium

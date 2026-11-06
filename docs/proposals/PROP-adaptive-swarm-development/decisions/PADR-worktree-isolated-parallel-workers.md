@@ -1,55 +1,64 @@
 ---
 id: PADR-worktree-isolated-parallel-workers
-title: Worktree-isolated parallel workers
-summary: For parallel swarm code authoring, we isolate workers using explicit file boundary contracts and devkit worktrees, to eliminate concurrent write collisions and merge conflicts, accepting the local git worktree creation overhead.
+title: Separate worktrees for concurrent adaptive writers
+summary: "For concurrent adaptive writers, we propose one worktree per writer with bounded ownership and combined-result checks, to avoid same-checkout interference, accepting setup cost and remaining merge conflicts."
 proposal: PROP-adaptive-swarm-development
 status: draft
 created_at: 2026-11-06
 ---
 
-# [PADR-worktree-isolated-parallel-workers] Worktree-isolated parallel workers
-
-- **Status**: Draft
-- **Date**: 2026-11-06
-
----
+# [PADR-worktree-isolated-parallel-workers] Separate worktrees for concurrent adaptive writers
 
 ## 1. Context & Problem Statement
 
-When multiple AI coding agents execute simultaneously in a shared workspace, they frequently attempt to modify the same
-files or shared module indices concurrently. This causes race conditions, corrupted file syntax, lost edits, and git merge
-conflicts. Pure prompt-based multi-agent frameworks (such as default MetaGPT or chat-based swarms) suffer repeatedly from
-this failure mode because they lack filesystem-level isolation primitives.
+Concurrent writers in one checkout share files, index and HEAD even when their nominal file sets are disjoint.
+Separate worktrees avoid same-checkout interference but share repository metadata and may still produce conflicting
+changes. Nested delegation adds a parent writer that must not race its children.
+
+The catalog bundle installs independently of the harness, so availability of `devkit worktree` cannot be assumed.
 
 ## 2. Decision Drivers
 
-- **Concurrency Without File Collisions**: Multiple builders must be able to generate code and tests in parallel without overwriting each other's changes.
-- **Deterministic Merge and Integration**: Each worker's contributions must be verifiable and cleanly integrated into the target branch.
-- **Fail-Fast Defect Isolation**: A regression caused by one builder must not block or pollute another builder's working state.
-- **Reuse of devkit Harness**: Leverage existing `devkit worktree` and git operator primitives without inventing external daemons.
+- Give each concurrent writer an identifiable source and exclusive working checkout.
+- Keep child ownership within the parent assignment.
+- Preserve independent installation and existing Git authority.
+- Verify combined and landed results rather than infer success from worker checks.
+- Preserve incomplete results through interruption and cleanup.
 
 ## 3. Considered Options
 
-- **Option 1: Shared Directory with Prompt Constraints**: All agents operate in the single working tree, relying strictly on prompt admonitions not to edit overlapping files. Rejected because LLM agents frequently drift outside instructed boundaries, leading to corrupted states.
-- **Option 2: Patch/Diff Hand-off via In-Memory Strings**: Workers return patch strings or text diffs to the coordinator, which applies them sequentially. Rejected because workers cannot run compilers, linters, or local unit tests against an unapplied patch.
-- **Option 3: Worktree-Isolated Execution**: Each builder receives an isolated git worktree via `devkit worktree create` and an explicit file touch boundary (`_Boundary`). Workers commit their bounded changes locally, and the coordinator integrates them sequentially.
+- Shared checkout with disjoint file instructions: low setup cost, but shared index/HEAD and accidental cross-writes remain.
+- Serialized writers in one checkout: simple ownership and no concurrent writes, with no writing parallelism.
+- Separate worktree per concurrent writer: independent checkout state and local checks, with setup cost and merge conflicts.
+- Patch-only return: serial application is possible, but executable verification needs a materialized working tree.
 
 ## 4. Decision Outcome
 
-We choose **Option 3: Worktree-Isolated Execution**.
+The proposed choice is separate worktrees for concurrent writers, with serialized execution as the fallback.
 
-- The architect partitions work into disjoint file boundary contracts (`_Boundary`) prior to implementation. → `CAP-DLV-adaptive-development` rule 13 (MUST).
-- Parallel builders run in independent git worktrees created via devkit's worktree lifecycle management.
-- Each builder verifies its local changes with package unit tests before signaling completion.
-- The coordinator merges worker branches sequentially, resolving any residual interface glue before triggering the QA tester.
+- Each concurrent writing agent, including a second-level child, owns a separate worktree and an explicit write boundary.
+- A parent performs no concurrent writes in a child's worktree; it integrates shared glue after children finish.
+- Use the existing harness lifecycle when available, otherwise the consuming project's documented Git procedure.
+  Missing permission or tooling causes serialized work rather than automatic installation or host-setting changes.
+- A worker receives explicit permitted Git operations and reports base/final identity, changed paths and actual checks.
+- The Host integrates accepted results serially and verifies the combined source and applicable final target SHA.
+- Cleanup waits for active writers and preserves dirty worktrees and unmerged results until retained or separately
+  authorized for removal.
+
+`PROP-adaptive-swarm-development-target` describes the prospective capability clauses. Separate worktrees reduce
+same-checkout interference; they do not guarantee native path confinement, a compilable checkout, conflict-free merges
+or isolation of databases, ports, caches and other external test resources.
 
 ## 5. Consequences
 
-- **Positive**: Zero concurrent file overwrite collisions. Each builder has a clean, compilable environment.
-- **Positive**: Builders can execute tests locally in their own worktree without interfering with peer workers.
-- **Negative / Trade-off**: Worktree creation introduces slight filesystem and disk overhead (git checkout setup).
-- **Follow-up**: Ensure cleanup routines remove temporary worktrees when the swarm session completes or is cancelled.
+- Workers can run local checks against their own materialized changes.
+- Boundary checks and interface coordination remain necessary after worktree isolation.
+- Worktree setup and dependency initialization add cost; small tasks can remain direct or sequential.
+- Shared external test resources need project-specific isolation when the selected checks use them.
+- An interrupted run may intentionally retain worktrees for recovery.
 
 ## 6. Confirmation
 
-Integration tests verify that parallel workers operating in isolated worktrees commit distinct changes without index locks or file collision errors. Review verifies that worktree cleanup runs on session completion.
+Planned representative exercises cover two writing workers, parent/child ownership, a semantic integration conflict,
+a failed combined check and interrupted cleanup. Tests identify the source SHA and retained worktree state.
+Review only for assignment compliance where the host provides emulated boundaries; no zero-conflict claim is made.

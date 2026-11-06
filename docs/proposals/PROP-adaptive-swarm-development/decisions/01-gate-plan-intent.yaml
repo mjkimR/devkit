@@ -1,0 +1,7 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: User requested review and refinement of the existing proposal.
+at: '2026-11-06T10:59:35.741163Z'

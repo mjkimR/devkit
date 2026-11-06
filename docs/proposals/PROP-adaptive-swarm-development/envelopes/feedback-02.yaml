@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-06T11:39:36.837797Z'
+status: completed
+summary: Swept the second Planning run, probes and diff. Corrected draft assumptions and the probe expectation in scope; no additional reusable repository or upstream issue requires a feedback record.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
