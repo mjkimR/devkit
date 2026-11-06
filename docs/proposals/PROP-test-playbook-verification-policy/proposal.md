@@ -105,6 +105,12 @@ outstanding changes and repair priority. Start with one E2E run when resource co
 as advice rather than a mandatory executor limit. The local-orch skill owns the concrete workflow procedure,
 so the playbook links it rather than duplicating its full instructions.
 
+Recommend the delivered `exec wait <run-id> --clean` when the Host wants completion observation and guarded
+cleanup in one background call. Keep environments by default when diagnostic artifacts are needed. Explain that
+cancel stops managed execution, cleanup removes an eligible inactive checkout, and manifests/logs remain readable.
+The waiter reports native execution and cleanup independently. Wait interruption or timeout does not cancel the
+execution or remove an unknown environment. Agent completion notification depends on its execution tool.
+
 A verification subagent can help diagnose results but is not required for asynchrony or process persistence.
 Git-operator retains Git lifecycle duties. Without an active Host, discuss existing CI/rework and nightly repair
 arrangements rather than assuming a local agent will observe every failure.
@@ -140,6 +146,9 @@ actual test evidence and the repository's own delivery requirements. No executor
   failure, discuss follow-up repair without inventing a continuously available Host.
 - **AC-9:** Given devkit itself, assess its local-orch usage; given a client, inspect its actual setup instead of
   requiring a declared policy mode. Examples remain recommendations and introduce no selector or extra decision round.
+- **AC-10:** Given background waiting and optional cleanup, recommendations explain retained execution evidence,
+  separate cleanup outcome, default environment retention and tool-dependent completion notification. Do not
+  equate an interrupted waiter with execution cancellation or promise automatic agent push notification.
 
 ## 4. Lifecycle & Retirement Criteria
 
