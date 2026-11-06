@@ -48,9 +48,9 @@ need separate decisions.
 
 ## 4. Decision Outcome
 
-The proposed choice is prefixed archetypes with role overlays, supporting optional role leads.
+The choice is prefixed archetypes with role overlays, supporting optional role leads.
 
-- `adaptive-dev` owns the proposed public `swarm-planner`, `swarm-worker` and `swarm-verifier` assets; compatible
+- `adaptive-dev` owns the public `swarm-planner`, `swarm-worker` and `swarm-verifier` assets; compatible
   callers can reuse installed contracts without importing private orchestration or sibling role files.
 - The `agents` preset selects only the three public archetypes; `core` adds them to the existing adaptive entry and
   support assets. Shared agents have no adaptive entry prerequisite and follow their caller's governing workflow.
@@ -65,8 +65,9 @@ The proposed choice is prefixed archetypes with role overlays, supporting option
 - Host support status and subagent model levels use existing distribution contracts. No native enforcement or model
   savings is inferred from registration alone.
 
-The prospective restatement is in `PROP-adaptive-swarm-development-target`; the current capability does not yet
-state these clauses. On promotion, this decision partially supersedes the role-set clauses of
+`CAP-DLV-adaptive-development` rules 1, 12, 13 and 19 and its reusable-agent interface restate these clauses;
+`UC-advance-an-idea` extensions 5b through 5b4 cover optional teams and fallback. `ARCH-05-2-components`
+restates catalog ownership. This decision partially supersedes the role-set clauses of
 `ADR-adaptive-development-and-research`. Its approach, current-context and research-material decisions are retained.
 
 ## 5. Consequences
@@ -79,9 +80,10 @@ state these clauses. On promotion, this decision partially supersedes the role-s
 
 ## 6. Confirmation
 
-Planned catalog integration and installed-consumer tests check prefixed assets, host projections, project extensions
+Catalog integration and installed-consumer tests check prefixed assets, host projections, project extensions
 and installation without `devkit-spec`. Representative invocation exercises check flat/nested dispatch, capacity
 fallback and actual permission status. The Planning projection and read-only nesting observations are in
-[feasibility-spike.md](../../materials/2026-11/20261106-adaptive-swarm-development/feasibility-spike.md). Coding teams, native enforcement, unexercised runtimes and
-performance remain unverified; static checks and one read-only call do not establish them.
+[feasibility-spike.md](../../materials/2026-11/20261106-adaptive-swarm-development/feasibility-spike.md). `SPEC-adaptive-swarm-development` retains actual isolated fixture-writing, aggregate-failure and dirty-checkpoint
+observations using generic authored-contract emulation. Native named-role invocation, native enforcement,
+unexercised runtimes and performance remain unverified; static checks do not establish them.
 Review only for semantic ownership and overlay compatibility; packaging tests do not prove either.
