@@ -293,3 +293,17 @@ def test_actual_compact_wrapper_cancellation(repo: Path) -> None:
     done = cli(repo, "cancel", record["run_id"], expected=1)
     assert done["outcome"] == "cancelled" and not runtime.live_owned(done)
     cli(repo, "wait", record["run_id"], "--clean", expected=1)
+
+
+def test_huge_log_and_single_huge_line_have_bounded_tail(repo: Path) -> None:
+    record = launch(repo, "print('z'*1000000); print('last')")
+    done = cli(repo, "wait", record["run_id"], expected=0)
+    logs = cli(repo, "logs", record["run_id"], expected=0)
+    assert sum(len(line) for line in logs["lines"]) <= 65536
+    assert logs["lines"][-1] == "last"
+    assert logs["tail"]["truncated"] and logs["tail"]["omitted_prefix_bytes"] > 900000
+    assert Path(done["log"]).stat().st_size > 1000000
+    one = cli(repo, "logs", record["run_id"], "--tail", "1", expected=0)
+    assert one["lines"] == ["last"] and one["tail"]["omitted_lines_in_window"] == 1
+    zero = cli(repo, "logs", record["run_id"], "--tail", "0", expected=0)
+    assert zero["lines"] == [] and zero["tail"]["truncated"]

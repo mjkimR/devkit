@@ -45,6 +45,6 @@ Rules 1–8 are covered by `packages/devkit/tests/e2e/features/isolated_executio
 - Phases/outcomes: preparing, running, passed, failed, setup_failed, cancelled, interrupted, unknown. No terminal record plus no identified live supervisor is unknown. `list` includes pending and retained terminal runs.
 - Start success exits 0 with pending state; invalid/unavailable launch exits 2. Status exits 0 for pending/pass, 1 for known negative execution, 2 for unknown/unreadable evidence. The native exit code is separate.
 - Wait exits 0 for passing execution and successful requested cleanup, 1 for known negative execution, 2 for unknown, timeout or refused requested cleanup. Cleanup never replaces the execution result. Earlier cleanup evidence remains visible without changing later execution-only status exits.
-- Logs default to 100 lines, accept 0–1000 and read at most 64 KiB; full raw output remains at the log path. No automatic pruning is performed.
+- Logs default to 100 lines, accept 0–1000 and read at most 64 KiB; full raw output remains at the log path. Tail metadata reports omitted prefix bytes and omitted lines in the bounded read window, including a clipped single huge line. No automatic pruning is performed.
 
 See the execution command reference for stable codes and examples.

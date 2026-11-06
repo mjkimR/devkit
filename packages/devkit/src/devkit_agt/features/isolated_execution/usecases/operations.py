@@ -48,11 +48,21 @@ class ExecutionLogs(BaseUseCase):
         try:
             with path.open("rb") as stream:
                 stream.seek(0, 2)
-                stream.seek(max(0, stream.tell() - 65536))
-                lines = stream.read().decode(errors="replace").splitlines()
+                size = stream.tell()
+                offset = max(0, size - 65536)
+                stream.seek(offset)
+                lines = stream.read(65536).decode(errors="replace").splitlines()
         except FileNotFoundError:
-            lines = []
+            lines, size, offset = [], 0, 0
         record["lines"] = lines[-tail:] if tail else []
+        omitted = max(0, len(lines) - tail)
+        record["tail"] = {
+            "requested_lines": tail,
+            "read_bytes": size - offset,
+            "omitted_prefix_bytes": offset,
+            "omitted_lines_in_window": omitted,
+            "truncated": bool(offset or omitted),
+        }
         return record
 
 
