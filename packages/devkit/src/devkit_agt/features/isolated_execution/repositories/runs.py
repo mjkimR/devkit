@@ -62,18 +62,28 @@ class Runs:
             target = directory / "result.json"
             if not target.exists():
                 target = directory / "state.json"
-            record = json.loads(target.read_text()) if target.exists() else manifest.copy()
-            for key in ("run_id", "repository", "checkout", "sha", "argv"):
-                if record[key] != manifest[key]:
-                    raise ValueError(f"{key} differs from captured manifest")
-            cleanup = directory / "cleanup.json"
-            if cleanup.exists():
-                record["cleanup"] = json.loads(cleanup.read_text())
+
+            def validated(value: RunRecord) -> RunRecord:
+                for key in ("run_id", "repository", "checkout", "sha", "argv"):
+                    if value[key] != manifest[key]:
+                        raise ValueError(f"{key} differs from captured manifest")
+                return value
+
+            record = validated(json.loads(target.read_text()) if target.exists() else manifest.copy())
             if record.get("outcome") not in TERMINAL:
                 identity = record.get("supervisor")
                 table = runtime.processes()
                 if not identity or not runtime.same(identity, table.get(identity["pid"])):
-                    record.update(phase="unknown", outcome="unknown")
+                    # Publication precedes supervisor exit. The state snapshot may
+                    # predate both; recheck durable evidence before declaring loss.
+                    result = directory / "result.json"
+                    if result.exists():
+                        record = validated(json.loads(result.read_text()))
+                    if record.get("outcome") not in TERMINAL:
+                        record.update(phase="unknown", outcome="unknown")
+            cleanup = directory / "cleanup.json"
+            if cleanup.exists():
+                record["cleanup"] = json.loads(cleanup.read_text())
             return record
         except (OSError, ValueError, KeyError, TypeError) as exc:
             raise error("EXECUTION_RECORD_UNREADABLE", f"execution evidence cannot be trusted: {exc}") from exc

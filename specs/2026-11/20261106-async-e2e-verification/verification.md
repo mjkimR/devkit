@@ -75,3 +75,21 @@ eligible removal. Previous review records remain unchanged. Both unchanged round
 normal lifecycle, interruption and partial-retry scenarios pass after the fix.
 
 The same pre-discovery identity gate now covers every established secondary process group as well as the direct child. A new regression first failed because cancellation signalled an unrelated reused secondary leader, then passed after the generic guard. Final focused runtime/lifecycle verification passes 47 cases including the two unchanged R3 probes; harness types and feature lint pass.
+
+## Terminal-publication observation repair
+
+Fresh independent round 4 confirmed the R3 ownership remedy and found a new P1 observer race outside that fix diff.
+The reader could load running state, then miss the supervisor after its terminal publication, returning unknown.
+A feature-owned deterministic regression covering absent/reused supervisors, valid/missing/mismatched/nonterminal
+publication and retained cleanup first produced 4 failures and 4 passes. The named Runs.read location now reloads
+and validates newly published terminal evidence before declaring unknown, exactly as the reviewer recommended.
+Missing or nonterminal evidence remains unknown and mismatched identity remains unreadable; no interface changes.
+The unchanged independent R4 probe and all owned runtime/lifecycle tests then pass 54 cases in 17.06 seconds.
+Harness types and feature lint pass; the sole formatter blank-line requirement was applied before commit.
+This nonrecurring batch meets all four minor-fix self-verification conditions: only the named implementation
+location plus regression tests and evidence, concrete suggested action applied as written, no public contract
+change, and deterministic Red-to-Green evidence. Rounds 1–4 remain retained without reset.
+
+Before that observer-only repair, the complete selected-tier affected fallback passed 6386 tests with 3 skips
+against ede62bde (347 paths, 139.54 seconds). Whole lint, 22 governance rules, harness types, generated artifacts
+(2 checked, 0 stale) and offline wheel build passed on 1f0d9c6b. Final source and landed checks cover the repair.
