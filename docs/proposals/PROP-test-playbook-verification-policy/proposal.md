@@ -1,7 +1,7 @@
 ---
 id: PROP-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
-summary: "Align maintenance/test-management with local asynchronous verification and cloud PR delivery that accepts nightly detection of merged-base failures. Preserve the selected consumer policy while assessing evidence, recovery and route-specific completion."
+summary: "Align maintenance/test-management with devkit's local-orchestrated verification and separate client local/cloud scenarios. Preserve consumer policy while assessing asynchronous evidence, nightly risk acceptance, recovery and completion."
 status: draft
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -43,6 +43,10 @@ The hypothesis is that aligning the playbook with the retained verification cont
 blocking time and E2E necessity without weakening coverage or mistaking a background launch for verification.
 This work changes reusable assessment guidance, not the verification policy or runner implementation itself.
 
+Devkit itself consumes only the local-orchestrated policy. Client repositories may select local-base or cloud-pr
+under their own adopted verification instructions. The playbook distinguishes the repository being assessed
+from the devkit product's own consumption; cloud-pr guidance does not introduce cloud delivery or PR CI in devkit.
+
 ### Scope and non-goals
 
 - Update the source playbook and relevant references, with focused guidance verification and capability alignment.
@@ -81,6 +85,10 @@ other tiers do not establish the changed behavior. Record justified omissions se
 
 Read the consumer's adopted policy before proposing background execution. Preserve existing synchronous
 requirements until a separately authorized policy change alters them. This playbook does not grant that change.
+
+Identify the assessed repository and its explicitly selected delivery scenario before evaluating missing gates.
+A worker running in the cloud, or a local Host using a PR, does not by itself select cloud risk acceptance.
+Keep operational mode transient; this assessment does not write a persistent `cloud-pr` mode setting.
 
 Identify the selected delivery scenario before evaluating missing gates:
 
@@ -142,6 +150,8 @@ retroactively require the completed PR to wait for the local asynchronous comple
   given a later nightly failure, it routes follow-up repair without inventing a continuously available Host.
 - **AC-9:** Given local-base, required asynchronous results remain pending until collected; selecting the cloud
   risk scenario for another consumer does not silently waive local verification.
+- **AC-10:** Given devkit itself, assess local-orchestrated consumption only; given a client repository, preserve
+  its explicitly adopted local/cloud scenario without treating worker location as policy selection.
 
 ## 4. Lifecycle & Retirement Criteria
 
