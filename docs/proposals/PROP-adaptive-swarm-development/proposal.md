@@ -1,7 +1,7 @@
 ---
 id: PROP-adaptive-swarm-development
-title: Agent Swarm-driven Rapid Development in Adaptive Mode
-summary: Provide an agent-swarm rapid development workflow under adaptive-dev evaluating pure skill-local roles against archetype and core-global hybrid subagent models with worktree isolation as a fast alternative to step-by-step SDD.
+title: Reusable Subagents and Optional Teams for Adaptive Development
+summary: "Extend adaptive development with reusable prefixed subagents, on-demand role contracts and optional two-level delegation, preserving direct work and source-specific verification."
 status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -16,243 +16,229 @@ boundaries:
     - packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/
     - docs/capabilities/delivery/CAP-DLV-adaptive-development.md
     - docs/usecases/delivery/UC-advance-an-idea.md
+    - docs/architecture/ARCH-05-2-components.md
   excludes:
-    - docs/decisions/
+    - packages/devkit-dist/
+    - packages/devkit-spec/
 task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-adaptive-swarm-development] Agent Swarm-driven Rapid Development in Adaptive Mode
+# [PROP-adaptive-swarm-development] Reusable Subagents and Optional Teams for Adaptive Development
 
 ## 1. Background & Hypothesis
 
-devkit's primary delivery methodology—Spec-Driven Development (SDD)—is optimized for high assurance, lasting governance,
-and zero phantom completion. SDD enforces strict, phased gates (`spec` → `plan` → `tasks` → `develop` → `review` →
-`reconcile` → `integrate`), requiring Given/When/Then acceptance scenarios, preliminary decisions (PADRs), granular task
-boundaries, isolated worker envelopes, and full Living Spec synchronization. While this provides excellent rigor for
-foundational infrastructure, it creates significant ceremonial friction for rapid prototyping, exploratory spikes,
-and early-stage feature development ("한땀한땀 개발하는 느낌").
+`CAP-DLV-adaptive-development` already supports clarification, research, implementation and usage verification
+without per-change SDD records. Its bundle registers three optional support subagents: `product-clarifier`,
+`product-researcher` and `usage-reviewer`. The missing capability is a reusable delegation procedure for code-writing
+teams, including ownership, nested delegation and verification of their combined result.
 
-In contrast, modern agentic software workflows frequently leverage **multi-agent swarms** to achieve rapid,
-high-throughput development. An analysis of major upstream frameworks and role repositories—including
-[FoundationAgents/MetaGPT](https://github.com/FoundationAgents/MetaGPT),
-[code-yeongyu/oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent),
-[Yeachan-Heo/oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex),
-[msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents),
-[VoltAgent/awesome-codex-subagents](https://github.com/VoltAgent/awesome-codex-subagents), and
-[wshobson/agents](https://github.com/wshobson/agents) (detailed in
-[reference-swarm-architectures.md](materials/reference-swarm-architectures.md))—reveals clear patterns:
-1. **SOP-driven role pipelines** (e.g., MetaGPT's Architect → Engineer → QA flow) structure ambiguous ideas into concrete
-   deliverables much faster than ad-hoc single-agent prompting.
-2. **Specialized role contracts** (e.g., agency-agents and awesome-codex) define bounded personas that excel at single
-   responsibilities (interface design, refactoring, adversarial testing).
+SDD already supports isolated workers and nested review delegation (`ARCH-04-delivery-strategy`). This proposal
+adapts useful delegation patterns to adaptive development without introducing SDD Units or a mandatory role pipeline.
+It does not claim that SDD execution is necessarily serial or that adaptive development is limited to ideation.
 
-However, purely prompt-based agent swarms suffer from three critical failure modes:
-- **Concurrent File Collisions**: Agents modifying overlapping files simultaneously create git conflicts and syntax corruption.
-- **Interface Drift**: Independent workers implement diverging assumptions without binding contract checks.
-- **Phantom Completion & Test Rot**: Agents declare success without compiling or running real test suites.
+### Core hypothesis
 
-Furthermore, unlike narrow utility skills (such as `deep-research`), rapid software development is a **cross-cutting capability
-that affects everyday engineering workflows across the entire repository**. Consequently, strict skill isolation is not
-strictly mandatory. A hybrid spectrum combining global subagents and dynamic role markdown contracts offers substantial
-advantages in native tool sandboxing, model-tier optimization (e.g. fast Flash models for coders, reasoning Pro models for
-planners), and direct chat invocation ergonomics.
+A small set of reusable, prefixed subagents can supply execution capabilities, while on-demand `roles/*.md`
+contracts supply task-specific responsibilities. A subagent can execute a bounded task itself or, where the host
+supports nesting and the task warrants it, lead a small team of its own subagents. Registration and team topology
+are separate choices: either flat or nested execution can use the same registered agents and role documents.
 
-Currently, devkit's `adaptive-dev` bundle (`CAP-DLV-adaptive-development`) provides an alternative development approach
-(`[development] approach = "adaptive-dev"`), but its delegation is restricted to exploratory ideation
-(`product-clarifier`, `product-researcher`, `usage-reviewer`). It lacks an execution swarm for actual code authoring.
+This is a design hypothesis. Prompt cost, latency, model savings and host enforcement remain unmeasured.
+The local reference comparison is in [reference-swarm-architectures.md](materials/reference-swarm-architectures.md).
+Upstream examples motivate patterns; they are not evidence of performance or correctness in devkit.
 
-### Core Hypothesis
+### Scope and non-goals
 
-By equipping `adaptive-dev` with a **worktree-isolated agent swarm pipeline** and evaluating the optimal balance between
-**subagent registration and dynamic role markdown contracts**, devkit can provide a rapid, autonomous development mode that
-matches the development speed of multi-agent frameworks while eliminating their concurrency and test reliability failures:
-1. **Flexible Subagent & Role Structuring**: Systematically evaluate four candidate models—ranging from pure skill-local
-   roles to archetype-subagent hybrids and core-global subagents—to balance prompt overhead, native tool sandboxing, and model
-   specialization (`PADR-skill-local-swarm-roles`).
-2. **Worktree & Boundary Isolation**: The Architect partitions tasks into disjoint file boundaries (`_Boundary`), and Builders
-   operate in independent git worktrees via `devkit worktree`, preventing concurrent write collisions
-   (`PADR-worktree-isolated-parallel-workers`).
-3. **Adversarial QA with Deterministic Checks**: A dedicated QA Tester role executes devkit's native verification pipeline
-   (`just test-affected`, `just check`, `just lint-check`), routing concrete test failures back to builders before integration.
-4. **Lightweight Context Retention**: The swarm retains progress in mutable `.devkit/adaptive-dev.md` context files without
-   requiring SDD envelopes, approvals, or Living Spec updates. Voluntary graduation to SDD remains available at any time.
+In scope:
 
-### Scope and Non-Goals
+- Ship a small default set of general execution subagents with a common prefix in `adaptive-dev`.
+- Allow installed prefixed subagents to be reused by compatible callers, and allow projects to add their own agents.
+- Keep task and domain specializations in role Markdown files loaded only for the assigned task.
+- Support direct work, flat delegation and optional two-level delegation with bounded ownership and concurrency.
+- Define worker isolation, combined verification, interruption recovery and current-context ownership.
+- Update the capability, use case and catalog ownership description after implementation.
+- Verify bundle installation, projection, extension and representative invocation behavior.
 
-- **In-scope**:
-  - Expanding the `adaptive-dev` bundle in `packages/devkit-catalog` with swarm orchestration instructions and references.
-  - Authoring core swarm role contracts: `architect.md`, `builder.md`, `qa-tester.md`, and `reviewer.md` under `roles/`.
-  - Evaluating and prototyping hybrid subagent models (Archetype Subagents + Role Overlays vs. Core Global + Long-Tail Catalog).
-  - Defining the 4-phase Sprint SOP: Sprint Decomposition → Parallel Build → Adversarial QA → Integration.
-  - Integrating `devkit worktree` and file boundary checks into the swarm delegation procedure.
-  - Updating Living Spec `CAP-DLV-adaptive-development` and use case `UC-advance-an-idea`.
-  - Testing bundle self-containment, role references, and catalog packaging in `packages/devkit-catalog/tests/`.
-- **Non-goals**:
-  - Replacing or altering the primary SDD workflow (`sdd-spec-feature`, `sdd-proposal`).
-  - Building a background daemon, long-running agent scheduler, or external message broker.
-  - Introducing heavy runtime dependencies (e.g., vendoring MetaGPT, LangChain, or Autogen).
-  - Enforcing mandatory SDD adoption or automatic document generation for adaptive changes.
+Scope excluded:
 
----
+- A runtime scheduler, daemon, agent bus, automatic agent importer or new package.
+- Changes to distribution schemas, host settings, SDD orchestration or shared model-level resolution.
+- A mandatory team hierarchy or role sequence for every adaptive action.
+- Automatic approach switching, SDD adoption, publication or new approval authority.
+- Guaranteed speedup, conflict-free merges, native file-boundary enforcement or model quality equivalence.
+- Making other bundles depend on these agents or moving existing SDD roles into a shared registry.
 
-## 2. Technical Spike Questions
+## 2. Design Decisions and Alternatives
 
-- **Q1 — Subagent & Role Architecture Models**: What is the optimal division of responsibility between platform-registered
-  subagents and on-demand role markdown files?
-  - *Candidate Models (Evaluated in PADR-skill-local-swarm-roles and materials/reference-swarm-architectures.md)*:
-    - *Model 1 (Pure Skill-Local)*: General subagents load `roles/*.md` dynamically. Zero global tokens, but no native tool
-      sandboxing or model tier specialization.
-    - *Model 2 (Archetype Subagent + Role Overlay - Hybrid A)*: Register 2~3 functional capability archetypes globally
-      (`swarm-planner` [read-only, pro], `swarm-worker` [write tools, flash], `swarm-verifier` [exec/bash, flash]). The coordinator
-      passes specific `roles/<role>.md` contracts into the archetype at runtime.
-    - *Model 3 (Core Global + Long-Tail Catalog - Hybrid B)*: Register 3 primary daily roles (`architect`, `builder`, `qa-tester`)
-      globally for direct chat invocation, while keeping specialized personas (security, ui, db, refactorer) as on-demand `roles/*.md`.
-    - *Model 4 (Full Static Registry)*: Register all 10+ personas as native subagents. High prompt overhead and rigid.
-  - *Spike Action*: Benchmark prompt token cost, startup latency, and tool permission reliability across Models 1, 2, and 3 during Planning.
-- **Q2 — Concurrency & Collision Prevention**: How do parallel builders avoid overwriting shared files or causing merge
-  conflicts during concurrent execution?
-  - *Finding*: The Architect establishes disjoint file touch boundaries (`_Boundary`). Where overlapping edits are required,
-    builders execute in isolated git worktrees via `devkit worktree create`. Formally resolved in
-    `PADR-worktree-isolated-parallel-workers`.
-- **Q3 — Verification Rigor vs. Iteration Speed**: How does the swarm verify code correctness without the heavy ceremony of
-  SDD envelopes and approvals?
-  - *Finding*: A dedicated `qa-tester` role executes native project commands (`just test-affected`, `just check`,
-    `just lint-check`). If failures occur, the QA Tester produces reproduction steps and routes them back to the responsible
-    Builder in an iterative loop.
-- **Q4 — Minimal Contract Format (The Sprint Contract)**: What minimal artifact should the Architect produce before Builders
-  start writing code?
-  - *Finding*: A lightweight Sprint Contract specifying: (1) Goal & User Story, (2) Target Public Interfaces/Types,
-    (3) Disjoint `_Boundary` allocations per Builder, and (4) Stop Condition.
-- **Q5 — Model Tiering and Cost Optimization**: Can swarm builders leverage lighter, faster models (e.g. Flash) while planners
-  use reasoning models (e.g. Pro)?
-  - *Finding*: In Model 2 and Model 3, archetype/core subagents can declare specific model tiers (e.g., `model: flash` for builders,
-    `model: pro` for architects), reducing swarm execution cost and latency by up to 70%.
-- **Q6 — Relationship with Existing SDD**: How does an adaptive swarm project graduate to SDD when stabilization is desired?
-  - *Finding*: Existing `CAP-DLV-adaptive-development` Rule 16 ("Voluntary adoption") remains in force: the user may run
-    `devkit sdd adopt` (or the baseline adoption procedure) to scaffold the initial Living Spec from the working codebase.
+### 2.1 Shared prefixed agents and task-specific roles
 
----
+The recommended default is the archetype model in `PADR-skill-local-swarm-roles`:
 
-## 3. Proposed Design & Impact
+| Proposed agent ID | Stable responsibility | Example role overlay |
+| :--- | :--- | :--- |
+| `swarm-planner` | Analyze and partition one assigned goal | `roles/architect.md` |
+| `swarm-worker` | Implement within an assigned write boundary | `roles/builder.md` |
+| `swarm-verifier` | Verify an identified source or artifact and return evidence | `roles/qa-tester.md`, `roles/reviewer.md` |
 
-### 3.1 Four-Stage Swarm SOP Pipeline
+The `swarm-` prefix identifies this shipped family and avoids bare names such as `builder` or `architect`.
+The names are proposed public asset IDs, not a new namespace mechanism. Each agent has one owning bundle and uses
+existing native projections. Common contracts retain the existing host support declarations and subagent model levels
+from `CAP-DIST-agent-projections`; this bundle adds no model router.
 
-The swarm operates under a structured four-stage Standard Operating Procedure managed by the Coordinator (`swarm-lead`):
+Other callers may reuse an installed agent when its contract matches their task. Such reuse is optional and does
+not permit importing another bundle's private role files. A caller supplies its own role contract and verifies agent
+availability. The adaptive bundle itself remains independently installable with docs/catalog and does not require
+`devkit-spec` or another role catalog.
+
+Projects can add a specialized native subagent through an existing in-repository bundle, for example
+`acme-security-reviewer`, or supply a local role file to a default agent. Prefer a role file when only task instructions
+change. Add a registered agent when recurring execution settings or a stable reusable contract justify it. Project
+extensions use their own prefix and do not overwrite shipped IDs. The three defaults are a starting set, not a limit
+on the number of user-defined agents.
+
+A role overlay specifies the assigned goal and deliverable. It cannot widen the agent's host permissions, Git
+operations or delegated authority. Resolve an incompatible overlay by choosing a compatible agent or returning the
+capability gap; do not silently combine conflicting contracts.
+
+### 2.2 Optional role leads and two-level delegation
+
+The user-facing Host remains the overall coordinator. A first-level subagent may act as a role lead (the master
+for that assigned responsibility) and spawn second-level agents with specialized role files.
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Lead as Swarm Lead (Coordinator)
-    participant Arch as Role: Architect
-    participant B1 as Role: Builder 1
-    participant B2 as Role: Builder 2
-    participant QA as Role: QA Tester
-    participant Rev as Role: Reviewer
-
-    User->>Lead: /adaptive-dev <goal>
-    Lead->>Arch: Delegate Sprint Framing (Archetype: Planner)
-    Arch-->>Lead: Sprint Contract (Interfaces + Disjoint Boundaries)
-    
-    par Parallel Implementation
-        Lead->>B1: Assign Boundary A (Archetype: Worker / Worktree A)
-        Lead->>B2: Assign Boundary B (Archetype: Worker / Worktree B)
-        B1-->>Lead: Completed Code + Unit Tests
-        B2-->>Lead: Completed Code + Unit Tests
-    end
-    
-    Lead->>Lead: Merge Worktrees to Swarm Branch
-    Lead->>QA: Delegate Adversarial Verification (Archetype: Verifier)
-    QA->>QA: Run just test-affected & just check
-    
-    alt Tests Failed
-        QA-->>Lead: Defect Report with Tracebacks
-        Lead->>B1: Targeted Bug Fix Assignment
-        B1-->>Lead: Repaired Diff
-        Lead->>QA: Re-verify
-    end
-    
-    Lead->>Rev: Sanity & Boundary Review
-    Rev-->>Lead: Clean Review Summary
-    Lead->>Lead: Update .devkit/adaptive-dev.md
-    Lead-->>User: Report Landed Result & Next Action
+flowchart TD
+    H["Host: user goal, shared budget, integration"]
+    H --> P["swarm-planner: architecture lead"]
+    H --> B["swarm-worker: implementation lead"]
+    H --> V["swarm-verifier: verification lead"]
+    P --> PR["Child: interface analysis role"]
+    B --> B1["Child: backend builder role"]
+    B --> B2["Child: frontend builder role"]
+    V --> VR["Child: regression or review role"]
 ```
 
-1. **Stage 1: Sprint Framing (Architect)**:
-   - Evaluates the user's intent against existing codebase architecture (`ARCH-05-2-components`).
-   - Produces a lightweight Sprint Contract defining interface signatures and strict file touch boundaries (`_Boundary`).
-2. **Stage 2: Parallel Build (Builders)**:
-   - Dispatches 1 to N `builder` subagents, each assigned to an isolated worktree or disjoint file path.
-   - Builders write feature logic and corresponding unit tests, validating locally before returning diffs.
-3. **Stage 3: Adversarial QA (QA Tester)**:
-   - Integrates builder branches and runs `just test-affected`, `just check`, and `just lint-check`.
-   - If tests fail, reports exact failures back to the responsible builder for immediate repair.
-4. **Stage 4: Review & Checkpoint (Reviewer & Coordinator)**:
-   - Performs a lightweight sanity review on changed diffs to ensure no architectural boundary violations occurred.
-   - Updates mutable context in `.devkit/adaptive-dev.md` with active facts and next actions.
+This diagram shows available relationships, not a requirement to run all agents concurrently. The defaults are:
 
-### 3.2 Comparison of Subagent & Role Architecture Models
+1. Keep small or inseparable work in the invoking agent.
+2. Use flat delegation when one bounded assignment fits one agent.
+3. Use a role lead only when its assignment contains independently useful subtasks and nesting is available.
 
-| Dimension | Model 1: Pure Skill-Local | Model 2: Archetype Subagent + Role Overlay (Hybrid A) | Model 3: Core Global + Long-Tail Catalog (Hybrid B) |
+The delegation limit is two child levels below the Host: Host → role lead → child. Second-level agents do not
+spawn further agents. The Host allocates a session-wide child-agent budget before dispatch, including waiting leads
+and their children. A lead receives an explicit child allowance; it does not independently allocate a full team.
+When capacity is insufficient, execute inline or sequentially rather than wait while occupying all slots.
+
+Each lead owns the aggregate result for its assignment. Child boundaries stay within the lead's boundary, and the
+lead checks actual changed paths and evidence before returning. A read-only lead delegates only read-only work.
+The Host owns cross-lead coordination, final integration and `.devkit/adaptive-dev.md`; leads return evidence or drafts.
+
+Nesting support is host-dependent and remains to be exercised. If it is unavailable, the Host flattens the assignments
+and retains the same ownership and verification requirements. If subagents are unavailable, the Host works directly
+and reports the unverified delegation behavior. No host setting is changed to enable nesting.
+
+### 2.3 Alternatives
+
+| Option | Benefit | Cost or limitation | Proposed use |
 | :--- | :--- | :--- | :--- |
-| **Global Prompt Tokens** | 0 tokens (zero overhead) | ~150 tokens (2~3 generic archetypes) | ~300 tokens (3 core subagents) |
-| **Tool Sandboxing** | Behavioral (prompt-based only) | **Native**: Planner has no write tools; Worker has write tools; Verifier has bash | **Native**: Tailored per core subagent |
-| **Model Selection** | Inherits coordinator model | **Optimal**: Pro for Planner, Flash for Workers | **Optimal**: Pro for Architect, Flash for Builders |
-| **Direct Chat Invocation** | No (Coordinator invocation only) | Partial (via archetype name) | **Yes**: Direct `@architect` or `@qa-tester` |
-| **Long-Tail Personas** | Placed in `roles/*.md` | Placed in `roles/*.md` (loaded into Worker) | Placed in `roles/*.md` |
+| Existing direct adaptive work | No team startup or registration cost | No parallel execution procedure | Keep for small work and fallback |
+| General agents plus role files | Small bundle surface; portable role content | Available settings depend on the host invocation API | Supported fallback |
+| Prefixed archetypes plus role files | Stable reusable execution contracts; extensible specialization | Persistent metadata and host-specific projections | Recommended default |
+| Registered domain personas | Convenient recurring specialist invocation | More public contracts and metadata | Project extension when justified |
+| Mandatory nested role teams | Delegates local coordination | Extra context transfer, latency and occupied slots | Rejected as the default |
 
-### 3.3 Role Contracts (`roles/*.md`)
+Role-file placement alone determines neither model selection nor native enforcement. A general-agent invocation
+may expose those settings, and a registered agent may still be emulated. Measure the actual host behavior rather
+than assigning universal guarantees to either model.
 
-The bundle provides four core role markdown contracts, designed to be loaded either directly by general subagents or passed
-as operational overlays to archetype/core subagents:
+## 3. Execution and Ownership
 
-| Role Document | Primary Responsibility | Primary Input | Expected Deliverable |
-| :--- | :--- | :--- | :--- |
-| `roles/architect.md` | System decomposition, interface design, file boundary partitioning | User goal, existing architecture docs | Sprint Contract with interfaces and `_Boundary` mappings |
-| `roles/builder.md` | Feature implementation and unit test authoring | Assigned `_Boundary`, interface contract | Working code, unit tests, local test run log |
-| `roles/qa-tester.md` | Adversarial test execution, regression hunting | Merged branch, changed file paths | Test execution outcome (`just test-affected`), defect reports |
-| `roles/reviewer.md` | Diff cleanliness, architecture rule compliance | Combined git diff, test report | Review summary, boundary adherence confirmation |
+### 3.1 Lightweight assignment contract
 
-### 3.4 devkit Primitives Integration
+Before delegated code authoring, record the goal, relevant source/base SHA, public interfaces when needed, absolute
+read/write boundaries, permitted Git operations, verification commands, stop condition and expected return.
+A role lead also receives its depth and child allowance. Keep this in the assignment or mutable current context;
+no separate Sprint Contract file or SDD artifact is required.
 
-- **Worktree Management**: The coordinator utilizes `devkit worktree create` and `devkit worktree remove` to manage ephemeral
-  worker directories, avoiding filesystem interference.
-- **Affected Test Runner**: The QA Tester invokes `scripts/affected_tests.py` via `just test-affected`, ensuring only tests
-  relevant to the modified packages are executed, keeping feedback cycles fast.
-- **Advisory Protocol Compliance**: When execution issues arise (e.g. build failure or dirty worktree), tools emit standard
-  advisory notices (`CAP-ADV-agent-advisory-protocol`).
+Architectural decomposition is conditional on interface or ownership uncertainty. The Host can provide an already
+clear assignment directly instead of starting an architect solely to repeat it.
 
-### 3.5 Acceptance Scenarios
+### 3.2 Parallel implementation
 
-- **AC-1:** Given a request under `adaptive-dev`, the coordinator initiates the sprint framing phase without creating SDD
-  artifacts (`spec.md`, `plan.md`, `tasks.md`).
-- **AC-2:** Planning spike benchmarks evaluate Model 1, Model 2, and Model 3 against token overhead, model tier savings,
-  and tool permission isolation, documenting the chosen architecture in the promoted ADR.
-- **AC-3:** Given a complex feature request, the Architect role produces a Sprint Contract defining interface signatures
-  and disjoint file touch boundaries (`_Boundary`) for each parallel builder.
-- **AC-4:** Given parallel builders, each builder executes within an assigned file boundary or dedicated git worktree without
-  file write collisions.
-- **AC-5:** Given completed builder work, the QA Tester executes `just test-affected` and type checks, identifying regressions
-  and routing them back for resolution before completion.
-- **AC-6:** On sprint completion, the coordinator updates `.devkit/adaptive-dev.md` with current facts, completed files, and
-  next steps, leaving the repository in a clean, passing state.
-- **AC-7:** All role contracts and reference documents are contained within `packages/devkit-catalog`, deploy cleanly,
-  and pass catalog integration tests.
+`PADR-worktree-isolated-parallel-workers` proposes one worktree per concurrent writing worker, including nested
+workers. Disjoint file ownership still matters for integration; separate worktrees do not prevent incompatible
+interfaces, shared external resource conflicts or merge conflicts.
 
----
+When the harness is available, use its existing worktree lifecycle. Otherwise use the consuming project's documented
+Git procedure. A minimal catalog installation does not imply that `devkit worktree` is installed. If isolated writable
+worktrees cannot be created within current authority, serialize writers. A lead does not write into a worktree while
+its child owns it; shared glue changes occur after children finish.
 
-## 4. Lifecycle & Retirement Criteria
+### 3.3 Verification, integration and recovery
 
-- **Preliminary Decisions**:
-  - `PADR-skill-local-swarm-roles`: Swarm subagent and role architecture models (evaluating pure local vs archetype and core-global hybrids).
-  - `PADR-worktree-isolated-parallel-workers`: Worktree isolation for parallel swarm execution.
-- **Supporting Materials**:
-  - `materials/reference-swarm-architectures.md`: Comparative survey of MetaGPT, oh-my-openagent, oh-my-codex, agency-agents,
-    awesome-codex-subagents, and wshobson/agents, with detailed evaluation of Models 1 through 4.
-- **Retirement / Graduation**:
-  - Retain this proposal under `docs/proposals/PROP-adaptive-swarm-development/`.
-  - Planning finalizes the chosen subagent/role model, Sprint Contract schema, and worktree lifecycle glue.
-  - Acceptance (`devkit spec proposal accept adaptive-swarm-development`) merges the Planning branch.
-  - Development implements the roles and updated `adaptive-dev` skill in `packages/devkit-catalog`.
-  - Retire the proposal bundle upon graduation and Living Spec reconciliation (`CAP-DLV-adaptive-development`).
+Workers check their bounded changes before returning. A return identifies status, source/base and final SHA where
+committed, actual changed paths, commands, outcomes, unresolved defects and unverified areas. The lead verifies its
+aggregate assignment; the Host verifies the combined result and controls integration into the final target.
+
+Use the consuming project's lint, type, test and representative usage commands. In this repository, use
+`just test-affected` with its full fallback, required lint/type/rule checks, and the applicable E2E and final-target
+verification procedure. Record the baseline before integration and identify each checked SHA. A worker's passing
+checks do not establish that the combined or landed HEAD passes.
+
+A dedicated verifier is useful for separable checks; it is not mandatory for every action. Independent verification
+requirements of the consuming project still apply. Failures route to the responsible writer with reproducing evidence.
+Bound repair attempts in the assignment and report an unresolved result when the stop condition is reached.
+
+Update `.devkit/adaptive-dev.md` when resume facts change, including on failure or interruption. A passing QA gate is
+not a prerequisite for preserving failure evidence. On cancellation, stop or collect active children before releasing
+ownership. Preserve unmerged commits and dirty worktrees; remove only worktrees whose results are retained or whose
+removal has separate authority.
+
+## 4. Acceptance Scenarios
+
+- **AC-1:** Given an adaptive task that needs no delegation, when the Host acts, then it can implement and verify
+  directly without creating SDD artifacts or running a fixed team sequence.
+- **AC-2:** Given an independent docs/catalog installation, when `adaptive-dev` is selected and synchronized, then
+  the three prefixed archetype contracts and their supported projections deploy without `devkit-spec`.
+- **AC-3:** Given a compatible caller and an installed archetype, when the caller supplies its own bounded role
+  assignment, then the agent can return the requested evidence without loading adaptive orchestration or sibling
+  bundles' private assets.
+- **AC-4:** Given a project-owned specialized agent or role overlay, when it is selected for a task, then shipped
+  defaults remain unchanged and incompatible permissions or unavailable capabilities are reported explicitly.
+- **AC-5:** Given a nested assignment, when the lead dispatches children, then depth stays within two child levels,
+  all children fit the Host's shared allowance, and each child stays within its parent's authority and ownership.
+- **AC-6:** Given no nested-agent support or insufficient capacity, when the assignment is executed, then the Host
+  flattens or serializes it and preserves the same result and verification contracts without changing host settings.
+- **AC-7:** Given concurrent writing children, when they implement, then each owns a separate worktree; a parent
+  performs no concurrent writes there, and actual changed paths are checked before integration.
+- **AC-8:** Given completed worker results, when the Host reports delivery, then combined and applicable landed-target
+  checks identify their actual SHAs, commands and outcomes; failed or unavailable checks remain explicit.
+- **AC-9:** Given a failed or interrupted assignment, when work pauses, then current context records retained results,
+  active ownership and the next action, and cleanup preserves unmerged or dirty work.
+
+Installation and projection tests establish packaging behavior only. Invocation exercises and review establish the
+semantic delegation behavior; keyword assertions do not prove concurrency, sandboxing or successful nested execution.
+
+## 5. Planning Findings and Remaining Evidence
+
+The Planning review selects prefixed archetypes plus on-demand role files as the recommended direction and keeps
+nested role leads optional. `PADR-skill-local-swarm-roles` records registration and team-topology alternatives;
+`PADR-worktree-isolated-parallel-workers` records write ownership and integration consequences.
+
+Existing `CAP-DLV-adaptive-development` exclusions for fixed hierarchy and model routing remain in force: the team
+shape is optional and model settings reuse distribution policy. The existing no-Git-mutation contract for product
+support roles remains unchanged; code-writing archetypes receive separately defined Git authority. The promoted
+role decision will amend the relevant role-set clauses of `ADR-adaptive-development-and-research` without replacing
+its approach, current-context or research-material decisions.
+
+Before implementation is declared verified, exercise direct, flat and nested assignments on supported hosts and
+record unavailable cases. Start with one representative coding task and one failed/interrupted task. Record actual
+host/version, source identity, depth/capacity behavior and permission enforcement or emulation. Compare latency or
+token usage only when the runtime exposes measurements and the task, model settings and completion checks match;
+otherwise retain those metrics as unmeasured. No performance threshold or savings percentage is an acceptance claim.
+
+## 6. Lifecycle and Target Documents
+
+`PROP-adaptive-swarm-development-target` lists prospective Living Spec changes. Current capability and architecture
+contracts remain unchanged during this proposal review. Acceptance and Development handoff remain separate authorized
+operations; this refinement does not accept the proposal, merge its Planning branch or start implementation.

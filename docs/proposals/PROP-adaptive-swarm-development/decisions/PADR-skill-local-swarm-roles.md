@@ -1,62 +1,78 @@
 ---
 id: PADR-skill-local-swarm-roles
-title: Swarm subagent and role architecture models
-summary: For swarm subagents in adaptive development, we weigh skill-local roles against archetype and core-global hybrid models, to balance context footprint, native tool gating, and model specialization, retaining the choice for resolution in Planning.
+title: Reusable prefixed subagents with optional role teams
+summary: "For adaptive delegation, we propose reusable prefixed archetypes with on-demand role contracts and optional two-level teams, to support project extensions, accepting host-specific capability checks and coordination overhead."
 proposal: PROP-adaptive-swarm-development
 status: draft
 created_at: 2026-11-06
 ---
 
-# [PADR-skill-local-swarm-roles] Swarm subagent and role architecture models
-
-- **Status**: Draft
-- **Date**: 2026-11-06
-
----
+# [PADR-skill-local-swarm-roles] Reusable prefixed subagents with optional role teams
 
 ## 1. Context & Problem Statement
 
-Adaptive development requires specialized roles (coordinator, architect, builder, qa-tester, reviewer) to operate
-as a rapid, autonomous development swarm. Unlike narrow single-task utilities (such as `deep-research`), rapid development
-is a core activity impacting the entire repository. Registering all personas as global subagents creates severe system
-prompt bloat and platform lock-in. Conversely, restricting all execution to pure skill-local role documents forces child
-agents to inherit the coordinator's model tier and prevents native tool sandboxing (e.g. restricting an architect from
-modifying files).
+Adaptive development already registers optional product support roles, but has no code-writing team contract.
+General execution settings and task-specific specialization have different lifecycles. Registering every persona
+expands the public agent surface; using only local role files leaves recurring execution configuration to each caller.
+Neither registration nor role-file placement alone establishes native permission enforcement or model selection.
 
-A balanced architectural model is required that provides necessary tool gating and model routing without global token bloat.
+The existing capability excludes a mandatory hierarchy and a new model router. Optional role leads can delegate
+local subtasks while the Host keeps user-facing authority and final integration. Registration and topology therefore
+need separate decisions.
 
 ## 2. Decision Drivers
 
-- **Context Window Economy**: Minimize persistent system prompt overhead across unrelated developer chat sessions.
-- **Native Tool Sandboxing & Safety**: Enable host-level tool restrictions (e.g., read-only for planners, full execution for verifiers).
-- **Cost & Speed Routing (Model Tiers)**: Allow high-speed/lower-cost models (e.g., Flash) for high-volume builders, while preserving reasoning models (e.g., Pro) for architecture and planning.
-- **Persona Extensibility**: Allow developers to easily author or import specialized personas (from `agency-agents` or `awesome-codex-subagents`) without modifying global platform configurations.
-- **Daily Ergonomics**: Support both autonomous multi-agent swarm execution and optional direct single-role invocation in chat.
+- Reuse common execution contracts across compatible callers.
+- Add project specialists without editing shipped agents.
+- Preserve direct work and flat delegation for small assignments.
+- Bound nested authority, ownership and session-wide capacity.
+- Use existing host projections and model levels without distribution changes.
+- Keep docs/catalog installation independent of SDD and other role catalogs.
 
 ## 3. Considered Options
 
-- **Option 1: Pure Skill-Local Roles (Model 1)**: Zero registered subagents. The coordinator spawns general subagents and passes role markdown files on demand. Cleanest global footprint, but lacks native tool gating and model tier differentiation.
-- **Option 2: Archetype Subagents + Role Overlays (Hybrid Model A)**: Register 2~3 broad capability archetypes globally (`swarm-planner`, `swarm-worker`, `swarm-verifier`) with tailored tool permissions and model tiers. The coordinator passes specialized `roles/<role>.md` files to the appropriate archetype at runtime.
-- **Option 3: Core Global Subagents + Long-Tail Catalog (Hybrid Model B)**: Register 3 primary daily roles (`architect`, `builder`, `qa-tester`) globally for direct chat and swarm use, while maintaining long-tail/domain personas (security, ui, refactorer) as on-demand `roles/*.md` files.
-- **Option 4: Fully Registered Static Subagents (Model 4)**: Register every persona as an independent global subagent. Maximizes native platform integration, but incurs unacceptable prompt overhead and platform-specific lock-in.
+### Registration
+
+- Existing direct work and general agents with role files: small surface, but recurring configuration stays with callers.
+- Prefixed archetypes with role files: reusable execution defaults, with additional metadata and projection maintenance.
+- Registered core personas plus a role catalog: convenient for recurring domain work, with more coupled public identities.
+- Register every specialist: explicit configuration per role, with the largest maintenance and metadata surface.
+
+### Team topology
+
+- Flat only: simple ownership and capacity accounting, but the Host handles every subtask.
+- Optional role leads with one child level: local coordination when useful, with extra context transfer and occupied slots.
+- Mandatory or unbounded nested teams: extra orchestration for small tasks and harder interruption/capacity management.
 
 ## 4. Decision Outcome
 
-We frame the choice between **Option 2 (Archetype Subagents + Role Overlays)**, **Option 3 (Core Global + Long-Tail Catalog)**,
-and **Option 1 (Pure Skill-Local)** as an active Planning spike to be resolved based on host platform capabilities and token measurements:
+The proposed choice is prefixed archetypes with role overlays, supporting optional role leads.
 
-- The proposal retains the comparative evaluation of Hybrid Model A (Archetype Subagents) and Hybrid Model B (Core Global) alongside Pure Skill-Local Roles.
-- In all candidate models, the long-tail persona catalog is authored and distributed as plain Markdown contracts under `roles/` within `devkit-catalog`. → `CAP-DLV-adaptive-development` rule 1 (MUST).
-- If an archetype hybrid is selected, the bundle registers at most 3 functional archetypes to bound global context overhead.
-- Planning will measure token footprints and verify whether host subagent invocations reliably accept dynamic role file payloads before final ADR acceptance.
+- `adaptive-dev` owns the proposed public `swarm-planner`, `swarm-worker` and `swarm-verifier` assets; compatible
+  callers can reuse installed contracts without importing private orchestration or sibling role files.
+- Projects extend behavior through their own prefixed agents or bounded role files; the default set is not an extension cap.
+- Task overlays narrow assignments and cannot expand execution permissions or Git authority.
+- The Host chooses direct, flat or nested execution per task. A role lead owns the aggregate result of its assignment.
+- Nested execution stops at Host → lead → child and uses a Host-assigned session-wide child budget, including waiting leads.
+- Unsupported nesting or insufficient capacity produces flat, direct or sequential execution with explicit limitations.
+- Host support status and subagent model levels use existing distribution contracts. No native enforcement or model
+  savings is inferred from registration alone.
+
+The prospective restatement is in `PROP-adaptive-swarm-development-target`; the current capability does not yet
+state these clauses. On promotion, this decision partially supersedes the role-set clauses of
+`ADR-adaptive-development-and-research`. Its approach, current-context and research-material decisions are retained.
 
 ## 5. Consequences
 
-- **Positive**: Prevents premature architectural lock-in, enabling empirical measurement of token overhead vs. tool sandboxing benefits.
-- **Positive**: Retains compatibility with upstream role libraries (`agency-agents`, `awesome-codex-subagents`).
-- **Trade-off**: Requires Planning to define the exact invocation contract for passing role files to archetype subagents.
-- **Follow-up**: Test whether the host environment (`Antigravity`, `OpenAgent`, `Codex`) reliably supports `invoke_subagent` with explicit file-path role assignments across subagent types.
+- A small reusable execution vocabulary supports task specialization without registering every persona.
+- A lead can coordinate independent subtasks, but adds context transfer and consumes a slot while waiting.
+- Public agent IDs need stable ownership and project extensions need distinct names.
+- Role compatibility and actual host capabilities must be checked at dispatch; Markdown is not a permissions boundary.
+- Bundles retain self-contained assets; optional external callers handle availability and their own fallback.
 
 ## 6. Confirmation
 
-Planning spike benchmarks will record token consumption, subagent startup latency, and tool permission enforcement across the candidate models before advancing the PADR to an accepted ADR.
+Planned catalog integration and installed-consumer tests check prefixed assets, host projections, project extensions
+and installation without `devkit-spec`. Representative invocation exercises check flat/nested dispatch, capacity
+fallback and actual permission status. Until exercised, host behavior and performance are unverified.
+Review only for semantic ownership and overlay compatibility; packaging tests do not prove either.
