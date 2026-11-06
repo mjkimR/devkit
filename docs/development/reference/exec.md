@@ -14,6 +14,7 @@ Background the waiter through a tool that delivers completion if independent wor
 | Code | Caller action |
 | --- | --- |
 | `EXECUTION_ARGUMENT_INVALID` | Supply a full local commit SHA, native argv and nonempty setup. |
+| `EXECUTION_LIST_ARGUMENT_INVALID` | Use limit 1–100 and a nonnegative offset. |
 | `EXECUTION_ID_INVALID` | Use a retained 32-character run ID from list/start. |
 | `EXECUTION_REF_UNKNOWN` | Make the requested commit available locally. |
 | `EXECUTION_RECORD_UNREADABLE` | Inspect retained evidence; never infer a passing result. |

@@ -65,18 +65,35 @@ def live_owned(record: dict[str, Any]) -> bool:
 
 
 def _discover(
-    known: dict[int, dict[str, Any]], leader: int, table: dict[int, dict[str, Any]], *, unreaped: bool = True
+    known: dict[int, dict[str, Any]],
+    leader: int,
+    table: dict[int, dict[str, Any]],
+    *,
+    unreaped: bool = True,
+    groups: set[int] | None = None,
 ) -> None:
-    if leader not in known and leader in table:
+    # Established session/group IDs remain owned while members exist, even if
+    # the leader was reaped between ps and poll. Retire only after observing emptiness.
+    if groups is None:
+        groups = {p["pgid"] for p in known.values() if p["pid"] == p["pgid"]}
+        if unreaped:
+            groups.add(leader)
+    for group in list(groups):
+        owner, current = known.get(group), table.get(group)
+        if (owner and current and not same(owner, current)) or (
+            not any(p["pgid"] == group for p in table.values()) and not (unreaped and group == leader)
+        ):
+            groups.remove(group)
+    if leader not in known and leader in table and unreaped:
         known[leader] = table[leader]
     changed = True
     while changed:
         changed = False
-        groups = ({leader} if unreaped else set()) | {p["pgid"] for p in known.values() if same(p, table.get(p["pid"]))}
         for pid, row in table.items():
             parent = known.get(row["ppid"])
             if pid not in known and ((parent and same(parent, table.get(row["ppid"]))) or row["pgid"] in groups):
                 known[pid] = row
+                groups.add(row["pgid"])
                 changed = True
 
 
@@ -134,9 +151,10 @@ def supervise(directory: Path) -> None:
             argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True
         )
         stopping: float | None = None
+        groups = {active.pid}
         while True:
             table = processes()
-            _discover(known, active.pid, table, unreaped=active.returncode is None)
+            _discover(known, active.pid, table, unreaped=active.returncode is None, groups=groups)
             record["managed"] = list(known.values())
             atomic(directory / "state.json", record)
             if (directory / "cancel").exists() or interrupted:

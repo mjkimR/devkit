@@ -5,9 +5,10 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 
-from devkit_agt.features.isolated_execution.models.record import RunRecord
+from devkit_agt.features.isolated_execution.models.record import RunRecord, public_record
 from devkit_agt.features.isolated_execution.repositories.runs import Runs, error
 from devkit_agt.features.isolated_execution.services import lifecycle
 from devkit_agt.features.worktree.repositories.execution import configured_setup
@@ -22,14 +23,27 @@ class StartExecution(BaseUseCase):
 
 
 class ListExecutions(BaseUseCase):
-    def execute(self, root: Path) -> list[RunRecord]:
-        """Discover retained runs from a fresh caller process."""
+    def execute(self, root: Path, *, limit: int = 20, offset: int = 0) -> RunRecord:
+        """Discover a bounded page; one corrupt run does not hide other evidence."""
+        if not 1 <= limit <= 100 or offset < 0:
+            raise error("EXECUTION_LIST_ARGUMENT_INVALID", "list limit must be 1-100 and offset nonnegative")
         runs = Runs(root)
-        return [
-            runs.read(p.name)
-            for p in sorted(runs.directory.glob("*/manifest.json"), key=lambda p: p.parent.name)
-            for p in [p.parent]
-        ]
+        paths = sorted(runs.directory.glob("*/manifest.json"), key=lambda p: p.parent.name)
+        records: list[RunRecord] = []
+        for path in paths[offset : offset + limit]:
+            try:
+                records.append(public_record(runs.read(path.parent.name), compact=True))
+            except AdvisoryError as exc:
+                records.append(
+                    {"run_id": path.parent.name[:32], "phase": "unknown", "outcome": "unknown", "code": exc.code}
+                )
+        return {
+            "runs": records,
+            "total": len(paths),
+            "offset": offset,
+            "limit": limit,
+            "next_offset": offset + limit if offset + limit < len(paths) else None,
+        }
 
 
 class InspectExecution(BaseUseCase):

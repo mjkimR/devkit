@@ -26,7 +26,7 @@ def error(code: str, message: str) -> AdvisoryError:
     return AdvisoryError.invalid_input(
         message,
         code=code,
-        fix="Inspect devkit exec list and retained execution logs; repair the reported condition before retrying",
+        fix="Inspect uv run devkit exec list and retained execution logs; repair the reported condition before retrying",
     )
 
 

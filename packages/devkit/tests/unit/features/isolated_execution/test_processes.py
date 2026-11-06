@@ -17,3 +17,23 @@ def test_retired_group_does_not_adopt_unrelated_reused_pid() -> None:
     }
     _discover(known, 7, table, unreaped=False)
     assert set(known) == {7}
+
+
+def test_reaped_leader_keeps_unobserved_same_group_orphan_owned() -> None:
+    known = {101: {"pid": 101, "birth": "leader", "ppid": 1, "pgid": 101}}
+    table = {102: {"pid": 102, "birth": "child", "ppid": 1, "pgid": 101}}
+    _discover(known, 101, table, unreaped=False)
+    assert 102 in known
+
+
+def test_owned_group_retires_after_empty_observation_and_never_readopts() -> None:
+    known = {101: {"pid": 101, "birth": "leader", "ppid": 1, "pgid": 101}}
+    groups = {101}
+    child = {102: {"pid": 102, "birth": "child", "ppid": 1, "pgid": 101}}
+    _discover(known, 101, child, unreaped=False, groups=groups)
+    assert groups == {101} and 102 in known
+    _discover(known, 101, {}, unreaped=False, groups=groups)
+    assert not groups
+    reused = {103: {"pid": 103, "birth": "other", "ppid": 1, "pgid": 101}}
+    _discover(known, 101, reused, unreaped=False, groups=groups)
+    assert 103 not in known

@@ -32,12 +32,12 @@ entrypoints:
 
 ## 3. Extensions
 
-- **1a. Invalid commit/argv**: the system refuses with `EXECUTION_ARGUMENT_INVALID` or `EXECUTION_REF_UNKNOWN`; the use case ends.
-- **4a. Preparation/native failure**: the system retains failure evidence and returns a negative result; resumes at step 5.
-- **4b. Lost process ownership**: the system reports unknown and retains the checkout; the use case ends.
-- **3a. Wait timeout/interruption**: observation stops without cancelling execution; the agent may resume at step 3.
-- **3b. Cancellation requested**: the system confirms managed shutdown and retains the checkout; resumes at step 5.
-- **5a. Unsafe cleanup**: the system reports `EXECUTION_CLEAN_REFUSED` separately and retains the execution result and environment; resumes at step 6.
+- **1a.** Invalid commit/argv: the system refuses with `EXECUTION_ARGUMENT_INVALID` or `EXECUTION_REF_UNKNOWN`; the use case ends.
+- **4a.** Preparation/native failure: the system retains failure evidence and returns a negative result; resumes at step 5.
+- **4b.** Lost process ownership: the system reports unknown and retains the checkout; the use case ends.
+- **3a.** Wait timeout/interruption: observation stops without cancelling execution; the agent may resume at step 3.
+- **3b.** Cancellation requested: the system confirms managed shutdown and retains the checkout; resumes at step 5.
+- **5a.** Unsafe cleanup: the system reports `EXECUTION_CLEAN_REFUSED` separately and retains the execution result and environment; resumes at step 6.
 
 ## 4. Postconditions
 

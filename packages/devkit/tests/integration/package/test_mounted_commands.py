@@ -45,6 +45,7 @@ def _loaded_areas(*args: str) -> set[str]:
 
 def test_every_harness_command_keeps_its_name_and_target() -> None:
     assert MOUNTED == {
+        "exec": "devkit_agt.features.isolated_execution.cli:cli",
         "gate": "devkit_agt.features.gate.cli:cli",
         "generated": "devkit_agt.features.generated.cli:cli",
         "integration": "devkit_agt.features.integration.cli:cli",

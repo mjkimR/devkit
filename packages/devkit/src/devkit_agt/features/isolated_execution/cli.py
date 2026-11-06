@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import click
-from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, is_json
+from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, field_value, is_json, yes_no
 
-from devkit_agt.features.isolated_execution.models.record import RunRecord, exit_code
+from devkit_agt.features.isolated_execution.models.record import RunRecord, exit_code, public_record
 from devkit_agt.features.isolated_execution.usecases.operations import (
     CancelExecution,
     CleanExecution,
@@ -21,10 +20,41 @@ from devkit_agt.features.isolated_execution.usecases.operations import (
 
 
 def output(record: RunRecord, output_format: str) -> None:
+    view = public_record(record)
     if is_json(output_format):
-        echo_json(record)
+        echo_json(view)
     else:
-        click.echo(f"[EXECUTION_RESULT: {json.dumps(record, ensure_ascii=False)}]")
+        values = {
+            "id": view.get("run_id"),
+            "sha": view.get("sha"),
+            "phase": view.get("phase"),
+            "outcome": view.get("outcome"),
+            "exit": view.get("exit_code"),
+            "observer": view.get("observer"),
+            "cleanup": view.get("cleanup", {}).get("outcome"),
+            "managed": view.get("managed_count"),
+            "log": view.get("log"),
+            "result": view.get("result"),
+        }
+        fields = " ".join(
+            f"{key}={field_value(str(value) if value is not None else None)}" for key, value in values.items()
+        )
+        truncated = bool(
+            view["truncated_fields"]
+            or view.get("argv_truncated")
+            or view.get("managed_omitted")
+            or view.get("tail", {}).get("truncated")
+        )
+        click.echo(f"[EXECUTION_RESULT: {fields} truncated={yes_no(truncated)}]")
+        if "cleanup" in view:
+            cleanup = view["cleanup"]
+            click.echo(
+                f"[EXECUTION_CLEANUP: outcome={field_value(cleanup.get('outcome'))} code={field_value(cleanup.get('code'))} detail={field_value(cleanup.get('detail'))}]"
+            )
+        if "detail" in view:
+            click.echo(f"[EXECUTION_DETAIL: message={field_value(view['detail'])}]")
+        for line in view.get("lines", []):
+            click.echo(f"[EXECUTION_LOG_LINE: text={field_value(line)}]")
     raise click.exceptions.Exit(exit_code(record))
 
 
@@ -45,16 +75,23 @@ def start(sha: str, setup: str | None, argv: tuple[str, ...], output_format: str
 
 
 @cli.command("list")
+@click.option("--limit", default=20, type=int, show_default=True)
+@click.option("--offset", default=0, type=int, show_default=True)
 @FORMAT_OPTION
 @boundary
-def list_runs(output_format: str) -> None:
+def list_runs(output_format: str, limit: int, offset: int) -> None:
     """List retained execution evidence, including pending runs."""
-    records = ListExecutions().execute(Path.cwd())
+    page = ListExecutions().execute(Path.cwd(), limit=limit, offset=offset)
     if is_json(output_format):
-        echo_json({"runs": records})
+        echo_json(page)
     else:
-        for record in records:
-            click.echo(f"[EXECUTION_RUN: id={record['run_id']} sha={record['sha']} phase={record['phase']}]")
+        click.echo(
+            f"[EXECUTION_LIST: total={page['total']} offset={page['offset']} count={len(page['runs'])} next={field_value(str(page['next_offset']) if page['next_offset'] is not None else None)}]"
+        )
+        for record in page["runs"]:
+            click.echo(
+                f"[EXECUTION_RUN: id={field_value(record['run_id'])} sha={field_value(record.get('sha'))} phase={field_value(record['phase'])}]"
+            )
 
 
 @cli.command("status")

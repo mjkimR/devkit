@@ -307,3 +307,17 @@ def test_huge_log_and_single_huge_line_have_bounded_tail(repo: Path) -> None:
     assert one["lines"] == ["last"] and one["tail"]["omitted_lines_in_window"] == 1
     zero = cli(repo, "logs", record["run_id"], "--tail", "0", expected=0)
     assert zero["lines"] == [] and zero["tail"]["truncated"]
+
+
+def test_immediate_leader_exit_cannot_hide_same_group_writer(repo: Path) -> None:
+    ready = repo.parent / "same-group-ready"
+    child = f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(30)"
+    code = f"import subprocess,sys; subprocess.Popen([sys.executable,'-c',{child!r}])"
+    record = launch(repo, code)
+    wait_file(ready)
+    time.sleep(0.1)
+    active = cli(repo, "wait", record["run_id"], "--clean", "--timeout", "0.05", expected=2)
+    assert active["observer"] == "timeout" and Path(record["checkout"]).is_dir()
+    cancelled = cli(repo, "cancel", record["run_id"], expected=1)
+    assert cancelled["outcome"] == "cancelled" and not runtime.live_owned(cancelled)
+    cli(repo, "wait", record["run_id"], "--clean", expected=1)

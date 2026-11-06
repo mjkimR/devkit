@@ -8,7 +8,7 @@ from unittest.mock import patch
 from devkit_agt.features.isolated_execution.repositories.runs import Runs
 from devkit_agt.features.isolated_execution.services.lifecycle import wait
 
-root=Path.cwd()/'scratch/blocking-consumer';root.mkdir(exist_ok=True)
+root=Path.cwd()/f'scratch/blocking-consumer-{time.time_ns()}';root.mkdir(parents=True)
 env={k:v for k,v in os.environ.items() if not k.startswith('GIT_')}
 def git(*args):
  return subprocess.check_output(['git','-C',str(root),'-c','user.name=fixture','-c','user.email=fixture@example.com',*args],env=env,text=True).strip()
