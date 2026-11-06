@@ -15,7 +15,8 @@ boundaries:
   owns:
     - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/
     - packages/devkit-catalog/tests/
-    - docs/capabilities/delivery/
+    - docs/capabilities/delivery/CAP-DLV-test-management.md
+    - docs/usecases/delivery/UC-assess-test-management.md
   excludes:
     - scripts/
     - packages/devkit/src/devkit_agt/features/
@@ -28,7 +29,7 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`SPEC-async-e2e-verification` proposes a separate `devkit exec` group for fixed-commit asynchronous commands,
+`SPEC-async-e2e-verification` delivers a separate `devkit exec` group for fixed-commit asynchronous commands,
 persistent execution evidence, direct native argv and local-orch skill integration. Tests are its first consumer;
 existing `devkit run` keeps its synchronous bounded-output behavior. This follow-up teaches the existing test-management playbook
 how to assess that capability and recommend practical test arrangements.
@@ -53,18 +54,23 @@ that a consumer must select or register. The executor needs neither that distinc
 - Exclude client CI/branch implementation, application defect repairs and broad test-suite optimization.
 - Exclude editing managed copies or projected agent files directly.
 
-## 2. Technical Spike Questions
+## 2. Settled Implementation Decisions
 
-- **Q1:** Which delivered execution commands and states does the prerequisite retain? Keep native argv passing
-  and existing setup conventions; do not invent profile mappings or hypothetical commands.
-- **Q2:** Which recommendations belong in the main playbook, generic assessment reference or pytest reference
-  so that non-Python consumers retain native commands and ownership?
-- **Q3:** How should findings distinguish E2E frequency, blocked Host time, environment preparation and actual
-  command cost without treating an integration label as a cheap-test guarantee?
-- **Q4:** Which focused checks and walkthroughs show that launch, pending, interrupted and unknown execution
-  never become passing evidence, and omitted E2E retains its reason?
-- **Q5:** How should local/cloud examples explain their tradeoffs without adding policy selection or imposing
-  a missing postmerge check on a consumer that accepts nightly detection?
+The direction is settled by the preceding native-command and local/cloud discussion. The prerequisite is
+completed on main at 300fb476, with final unit/integration and actual isolated E2E verification collected.
+No comparison, spike, new execution policy or PADR remains to resolve before Development.
+
+- Keep the main playbook as the explicit-invocation assessment router with its existing one decision round.
+- Keep generic command/coverage/resource discovery in assessment.md; require established independent groups
+  before recommending deferred execution. Keep existing required checks synchronous for unclear/unseparated suites.
+- Add a conditionally loaded execution.md for local/cloud operating examples and optional devkit exec usage.
+  Use the delivered start/wait/cancel/clean semantics and direct native argv; require no profiles or policy selector.
+- Keep pytest-specific comparison and within-run concurrency advice in pytest.md. Distinguish that concurrency,
+  overlapped verification, test frequency, preparation cost and native execution cost.
+- Use the existing bundle deployment/self-containment tests plus a labelled procedural walkthrough over all
+  acceptance scenarios. Do not present a walkthrough as consumer execution or performance evidence.
+- Reconcile CAP-DLV-test-management and UC-assess-test-management. No executor, selector, CI implementation or
+  global delivery-policy change belongs to this follow-up.
 
 ## 3. Proposed Design & Impact
 
