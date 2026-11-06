@@ -28,8 +28,9 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`PROP-async-e2e-verification` provides fixed-commit asynchronous execution, persistent run evidence, direct native
-command passing and local-orch skill integration. This follow-up teaches the existing test-management playbook
+`PROP-async-e2e-verification` proposes a separate `devkit exec` group for fixed-commit asynchronous commands,
+persistent execution evidence, direct native argv and local-orch skill integration. Tests are its first consumer;
+existing `devkit run` keeps its synchronous bounded-output behavior. This follow-up teaches the existing test-management playbook
 how to assess that capability and recommend practical test arrangements.
 
 The source is `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/SKILL.md`.
