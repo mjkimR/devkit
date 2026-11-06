@@ -161,7 +161,7 @@ actual test evidence and the repository's own delivery requirements. No executor
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep `depends_on: PROP-async-e2e-verification`. Start implementation after the prerequisite execution contract
+Keep `depends_on: SPEC-async-e2e-verification`. Start implementation after the prerequisite execution contract
 and local usage land and pass required verification. Follow its identity through normal handoff rather than
 removing the dependency to start early.
 
