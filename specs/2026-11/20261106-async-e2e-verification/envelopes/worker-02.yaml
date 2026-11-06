@@ -1,0 +1,40 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:50:19.906192Z'
+status: failed
+summary: 'Host-directed recovery committed fresh post-exit stage-group gating, durable interrupted cleanup with serialized safe partial retry, and actual-command discovery/coverage-overlap/synchronous-fallback guidance. Resolution-01 names worker-01 in fix commit70064feb; R2 Red-to-Green and three review counts retained. Independent recovery round3 finds two new P1 ownership defects; Task2 reopened and recovery-handoff.md updated. No further source fix, review or integration. Only tracked sync output: .devkit/installation.json on Task3.'
+findings: []
+assumptions:
+- Host projection is emulated; absolute worktree cwd/scopes, separate per-operation escalations and unchanged reviewer snapshots substitute for native confinement.
+- Last accepted range base remains90cf89872da19e0722429f643c3d2535c465a6e4; all commits, three review rounds and worker-01 preserved. No new dependency, edge or policy.
+- Host exclusively owns the next source remedy and fresh round4 after this clean handover; no user gate or acceptance relaxation. Prior accepted outside-worktree scratch deviation remains retained; all new authored scratch is inside ignored worktree.
+unverified_areas:
+- Linux runtime execution and real OS PID-reuse frequency.
+- Explicit proof/cleanup-state Living Spec completion, reconcile.md with all9 approved targets, entrypoint derivation, fresh independent reconcile-review1, feedback sweep and final-report remain unfinished.
+checks:
+  sync_start: PASS exit=0
+  p1_red: PASS exact R2 probes3 failed2 passed before recovery edits
+  focused: PASS 41 implementation guidance and unchanged R2 probes; independent R3 existing36 tests
+  tests: PASS affected full fallback base ede62bde system basetemp6374 passed3 skipped109.48s346paths
+  build: PASS offline recovery harness wheel
+  lint: PASS whole just lint-check
+  types: PASS just check devkit-agt after fake fixture cast correction
+  rules: PASS whole-worktree and independent committed --ci --base ede62bde
+  generated: PASS checked2 stale0 at205a6cd4
+  sync: PASS source sync and final check; only tracked output .devkit/installation.json
+  measurement: PASS refreshed same fixture warmup3 samples per arm runtime70064feb; Hostblocked1.162s versus0.238s; no suite acceleration claim
+  review: FAIL round3 new reused-leader signalling P1 and missing-positive-proof cleanup P1; independent2probesFAIL
+  review_boundary: PASS identical before-after snapshotcfc2d2772215dc22479cb76138b33261cf552107; reviewedHEAD205a6cd4 clean; no outside source/document reads
+diff_scope:
+  base: 90cf89872da19e0722429f643c3d2535c465a6e4
+  head: efdadd3250c44f981cd5b89c3f7f93adce12e020
+problem:
+  cause: 'Host-directed recovery fresh independent round3 failed: an originally unobserved leader PID can be reused/adopted before the post-exit guard and cancellation signals an unrelated process; preceding-runtime terminal records lacking positive quiescence proof still authorize cleanup through known-PID fallback with a missed writer alive. Required recovery round failed; no further self-fix was attempted.'
+  attempts:
+  - Reproduced all3 exact R2 failures Red; committed stage-group post-exit gate/retired histories/pending proof plus durable cleanup progress/lock/partial retry and feature-owned Green tests in70064feb with resolution-01.
+  - Implemented actual-command discovery, overlap/exclusion, independent-group and synchronous-fallback guidance consistently; synced receipt on Task3; required affected6374pass3skip, focused41, lint/types/rules/generated/sync/wheel and refreshed controlled measurement passed.
+  - Closed only verified round2 conditions by reverify02. Fresh round3 at205a6cd4 found2newP1s in scratch/review-03/test_independent_recovery.py:55 (signalled=[200]) and76 (remove called without proof); review03 retains both open. Task2 reopened; no source fix or further reviewer started.
+  recovery: Host takes exclusive source-repair ownership after final clean head. Reject any unobserved reappearing/reused original leader BEFORE discovery/signalling, retaining unknown without signalling. Require explicit persisted positive terminal ownership proof, including valid no-launch/no-group proof, before cleanup; no known-PID fallback for older captured results. Translate exact R3 probes to feature-owned Red-to-Green tests; fixer writes resolution naming worker-02. Preserve all counts and use Host-authorized fresh round4 over the different remedy. Then finish all9 approved Living Spec reconcile targets, entrypoints, fresh high reconcile1, feedback and final-report. No integration with open P1s.
+activity_effort: high
