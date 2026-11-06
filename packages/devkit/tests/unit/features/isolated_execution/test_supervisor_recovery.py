@@ -85,6 +85,8 @@ def test_interrupted_cleanup_remains_recorded_and_inspectable(tmp_path, monkeypa
         "checkout": "/run-owned/checkout",
         "sha": "b" * 40,
         "managed": [],
+        # Current supervisor evidence, not an older proof-less retained result.
+        "ownership": {"groups": [], "quiescent": True, "verified_at": 1.0},
     }
 
     class Runs:

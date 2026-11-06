@@ -24,6 +24,8 @@ def clean(runs: Runs, run_id: str) -> RunRecord:
             supervisor = record.get("supervisor")
             if supervisor and supervisor["pid"] in table:
                 raise ValueError("supervisor is still active or its PID identity is unresolved")
+            if not runtime.confirmed_quiescence(record):
+                raise ValueError("positive managed-group quiescence proof is missing or incomplete")
             if runtime.live_owned(record):
                 raise ValueError("managed process ownership remains active or unresolved")
             runtime.atomic(

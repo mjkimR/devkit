@@ -60,3 +60,16 @@ Recovery checks: focused feature/guidance plus unchanged R2 probes **41 passed**
 ## Failed independent recovery round 3
 
 Fresh independent R3 existing runtime/lifecycle/guidance tests passed36 and committed rules passed. Two new independent probes failed in `scratch/review-03/test_independent_recovery.py`: the pre-scan adopted/signalled unrelated reused leader PID200 after the original unobserved leader and orphan disappeared; retained terminal evidence without positive quiescence proof still authorized cleanup with a missed writer alive. Review03 records both as P1. The recovery stops for Host remedy without another fix round. Task2 is reopened; Living Spec reconciliation and final-report remain unfinished. Before/after support-role snapshot is identical `cfc2d2772215dc22479cb76138b33261cf552107`; reviewed HEAD205a6cd4 remained clean. Reviewer reported no outside-worktree source/document reads.
+
+## Host terminal-guard recovery
+
+Review round 3's exact two failure conditions were copied into feature-owned terminal-guard regressions and
+failed before repair. The Host then moved the reaped-leader identity guard before discovery and signalling,
+required explicit persisted positive quiescence before cleanup, and recorded valid no-process-started evidence
+for prelaunch cancellation. Current liveness inspection remains separate from cleanup authorization.
+
+The positive interrupted-cleanup fixture now carries current producer quiescence evidence; a retained terminal
+without that proof is a separate refusal regression. This strengthens the cleanup prerequisite without weakening
+interruption coverage. An older synthetic scratch probe lacking that prerequisite no longer represents an
+eligible removal. Previous review records remain unchanged. Both unchanged round-3 probes and feature-owned
+normal lifecycle, interruption and partial-retry scenarios pass after the fix.
