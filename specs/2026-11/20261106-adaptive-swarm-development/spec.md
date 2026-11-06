@@ -2,7 +2,7 @@
 id: SPEC-adaptive-swarm-development
 title: Reusable Subagents and Optional Teams for Adaptive Development
 summary: "Extend adaptive development with reusable prefixed subagents, on-demand role contracts and optional two-level delegation, preserving direct work and source-specific verification."
-status: in-progress
+status: completed
 created: 2026-11-06
 related_capabilities: []
 related_usecases: []

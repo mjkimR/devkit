@@ -31,3 +31,9 @@ Host created a separate fixture repository and two writing worktrees. Seed 2a29a
 Caller remained SDD throughout; no adaptive entry or approach change was invoked. Overlays narrowed ownership and could not grant push. Explicit absolute boundaries and actual Git comparisons substitute for native path confinement. Native named-role runtime invocation, Claude Code/Antigravity execution, native interruption/confinement, broad reliability, token cost and performance remain unverified. Packaging/projection success does not upgrade those claims.
 
 Review snapshot before and after code-reviewer was c9170672895997c71a27de180558d5f587c37cf2; actual source/index/HEAD remained unchanged. Reviewer found only Given/When/Then formatting and trailing blank-line cleanup, fixed without changing behavior or coverage.
+
+## Reconciled-head checks
+
+At 89f64194b85bce7ff701457cb01e5a12874115ad, affected unit/integration selection expands for use-case docs: 147 PASS (18 selected paths, full fallback retained). Catalog lint/format PASS (93 files), Pyright PASS (0 errors/warnings), CI rules PASS (22 rules, zero violations). Exact commands remain those above. Core bundle plan independently measured 9 assets and 18 native agent files. Entrypoint list queries resolve both selected doorway files to their CAP/UC targets. No open critical feedback was listed.
+
+Independent reconcile reviewer returned completed with no findings; six target coverage, AC alignment, decision traces and honest evidence limits PASS. Before/after tree snapshots both 8b3e7f9d930fea9c21b4a77acf1083cceec15204; HEAD unchanged. No reads outside the worktree were reported.

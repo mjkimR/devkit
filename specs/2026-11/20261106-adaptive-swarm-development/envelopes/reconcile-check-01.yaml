@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T13:31:10.402072Z'
+status: completed
+summary: 'Independent medium reconciliation PASS: all six targets reflect AC-01..10; ADR traces and partial supersession agree with implementation.'
+findings: []
+assumptions:
+- Emulated read-only reviewer; identical before/after tree 8b3e7f9d930fea9c21b4a77acf1083cceec15204 and unchanged HEAD verify no source writes.
+unverified_areas:
+- Native named-agent invocation, native cancellation/confinement, other hosts and performance.
+checks:
+  targets: PASS all six targets and contract alignment
+  traceability: PASS accepted decision restatements
+diff_scope:
+  base: fc02ef0ac798a8a2efc7c9f41ac0480f9c91dd07
+  head: 89f64194b85bce7ff701457cb01e5a12874115ad
+activity_effort: medium
