@@ -1,33 +1,24 @@
 ---
-id: PROP-test-playbook-verification-policy
+id: SPEC-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
-summary: "Extend maintenance/test-management with asynchronous test assessment and recommended local/cloud operating examples. Preserve native project checks and use direct commands without a devkit delivery-policy selector or test-profile map."
-status: accepted
-created_at: 2026-11-06
-target_area: capabilities/delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
+summary: Extend maintenance/test-management with asynchronous test assessment and recommended local/cloud operating examples. Preserve native project checks and use direct commands without a devkit delivery-policy selector or test-profile map.
+status: planned
+created: 2026-11-06
 depends_on:
   - SPEC-async-e2e-verification
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/
-    - packages/devkit-catalog/tests/
-    - docs/capabilities/delivery/CAP-DLV-test-management.md
-    - docs/usecases/delivery/UC-assess-test-management.md
-  excludes:
-    - scripts/
-    - packages/devkit/src/devkit_agt/features/
-    - .github/workflows/
-task_kind: feature
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-test-playbook-verification-policy] Align the Test Playbook with Verification Policy
+# [SPEC-test-playbook-verification-policy] Align the Test Playbook with Verification Policy
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-test-playbook-verification-policy on 2026-11-06.
+
+### 1. Background & Hypothesis
 
 `SPEC-async-e2e-verification` delivers a separate `devkit exec` group for fixed-commit asynchronous commands,
 persistent execution evidence, direct native argv and local-orch skill integration. Tests are its first consumer;
@@ -42,7 +33,7 @@ Devkit itself uses local-orchestrated development. A client repository can have 
 Local/cloud examples help explain scheduling tradeoffs; they are recommendations, not product policy alternatives
 that a consumer must select or register. The executor needs neither that distinction nor a configuration setting.
 
-### Scope and non-goals
+#### Scope and non-goals
 
 - Update the source playbook and relevant references, with focused guidance checks and capability alignment.
 - Preserve explicit invocation, user-selected assessment scope, one decision round and consumer workflow routing.
@@ -54,7 +45,26 @@ that a consumer must select or register. The executor needs neither that distinc
 - Exclude client CI/branch implementation, application defect repairs and broad test-suite optimization.
 - Exclude editing managed copies or projected agent files directly.
 
-## 2. Settled Implementation Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Align the Test Playbook with Verification Policy so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Settled Implementation Decisions
 
 The direction is settled by the preceding native-command and local/cloud discussion. The prerequisite is
 completed on main at 300fb476, with final unit/integration and actual isolated E2E verification collected.
@@ -72,9 +82,9 @@ No comparison, spike, new execution policy or PADR remains to resolve before Dev
 - Reconcile CAP-DLV-test-management and UC-assess-test-management. No executor, selector, CI implementation or
   global delivery-policy change belongs to this follow-up.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Assessment and recommendations
+#### 3.1 Assessment and recommendations
 
 Inventory test semantics, affected scope, measured cost, resource isolation and execution timing separately.
 Read the actual commands, CI triggers and required checks of the repository being assessed. Do not infer its
@@ -106,7 +116,7 @@ Assess actual project requirements when reporting gaps. An intentionally absent 
 required check. Failed required PR CI still blocks merge. If a recommendation would change an existing project
 requirement, route that change through the normal decision round; the playbook does not silently apply it.
 
-### 3.2 Execution evidence and local use
+#### 3.2 Execution evidence and local use
 
 Assess exact tested SHA, native command, selection baseline where applicable, environment, state, exit code and
 logs. Confirm that advancing main cannot change files/dependencies used by an active run. Reuse the delivered
@@ -127,7 +137,7 @@ A verification subagent can help diagnose results but is not required for asynch
 Git-operator retains Git lifecycle duties. Without an active Host, discuss existing CI/rework and nightly repair
 arrangements rather than assuming a local agent will observe every failure.
 
-### 3.3 Decision and reporting
+#### 3.3 Decision and reporting
 
 Present proposed changes with source evidence, exact paths, coverage consequences and validation. Keep the
 existing one decision round for proposed edits, not an extra local/cloud policy-selection round. Route approved
@@ -138,7 +148,7 @@ contention where measured; missing comparable evidence supports no speedup claim
 Keep pending runs, coverage gaps and next collection actions visible. Distinguish assessment completion from
 actual test evidence and the repository's own delivery requirements. No executor launch establishes a test pass.
 
-### 3.4 Expected acceptance scenarios
+#### 3.4 Expected acceptance scenarios
 
 - **AC-1:** Given the delivered prerequisite, the playbook uses actual commands or labelled examples and preserves
   native checks. Direct command passing requires no test-profile map or local/cloud configuration.
@@ -165,7 +175,7 @@ actual test evidence and the repository's own delivery requirements. No executor
   and makes no E2E-existence, cost or independent-runnability assumption. Given explicit independently runnable
   groups, recommendations preserve their complete required coverage without adding a profile or policy selector.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Keep `depends_on: SPEC-async-e2e-verification`. Start implementation after the prerequisite execution contract
 and local usage land and pass required verification. Follow its identity through normal handoff rather than
@@ -174,3 +184,4 @@ removing the dependency to start early.
 Before asset edits, load authoring context and the maintenance bundle's source instructions. Inspect the
 then-current playbook and actual interfaces. Verify references and focused guidance checks; label recommendation
 walkthroughs separately from runtime tests. Graduate through the normal proposal workflow.
+
