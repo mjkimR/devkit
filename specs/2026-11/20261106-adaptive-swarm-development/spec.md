@@ -2,7 +2,7 @@
 id: SPEC-adaptive-swarm-development
 title: Reusable Subagents and Optional Teams for Adaptive Development
 summary: "Extend adaptive development with reusable prefixed subagents, on-demand role contracts and optional two-level delegation, preserving direct work and source-specific verification."
-status: planned
+status: in-progress
 created: 2026-11-06
 related_capabilities: []
 related_usecases: []
@@ -79,8 +79,8 @@ Scope excluded:
 ### Scenario 2 [AC-02]
 
 - **Given** an independent docs/catalog installation
-- **When** `adaptive-dev` is selected and synchronized, then
-  the three prefixed archetype contracts and their supported projections deploy without `devkit-spec`.
+- **When** `adaptive-dev` is selected and synchronized
+- **Then** the three prefixed archetype contracts and their supported projections deploy without `devkit-spec`.
 
 ### Scenario 3 [AC-03]
 
