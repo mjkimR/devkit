@@ -1,0 +1,8 @@
+request: return:spike
+kind: return
+action: accept
+workflow: sdd-proposal
+stage: spike
+note: Continue authorized Planning with source feasibility and bounded nesting spikes
+  before direction approval.
+at: '2026-11-06T11:28:21.700690Z'

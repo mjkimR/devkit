@@ -9,6 +9,7 @@ targets:
   - file: docs/capabilities/delivery/CAP-DLV-adaptive-development.md
   - file: docs/usecases/delivery/UC-advance-an-idea.md
   - file: docs/architecture/ARCH-05-2-components.md
+  - file: docs/decisions/2026-11/20261102-adaptive-development-and-research.md
 ---
 
 # [PROP-adaptive-swarm-development-target] Target Living Spec for Reusable Adaptive Subagents
@@ -20,7 +21,9 @@ These are prospective changes after implementation. Existing Living Spec contrac
 Preserve clarification, implementation, usage verification, independent docs/catalog installation and optional roles.
 Add reusable code-writing delegation without a mandatory pipeline, fixed hierarchy or runtime model router.
 
-- Rule 1 (Explicit selection): extend deployed contents to the three prefixed archetype contracts and their supported
+- Rule 1 (Explicit selection): define `core` as the existing adaptive assets plus execution archetypes, and `agents`
+  as only the three public archetypes. The agents preset leaves the adaptive entry/pointer unselected and changes
+  neither approach nor caller lifecycle authority. Extend deployed contents to the three prefixed archetype contracts and their supported
   native projections. Keep existing product-support roles; do not renumber the rule as a role-storage policy.
 - Rule 2 (Independent installation): keep installation independent of `devkit-spec` and sibling role catalogs.
 - Rule 9 (Truthful verification): describe worker, combined and applicable landed-target checks with exact source
@@ -37,7 +40,11 @@ Add reusable code-writing delegation without a mandatory pipeline, fixed hierarc
 - Add a writer-isolation clause: concurrent writers use separate worktrees and parents do not write concurrently
   into child-owned worktrees. Serialize when isolated execution is unavailable.
 - Add reuse/extension clauses: one owner per public agent ID; optional compatible callers supply their own role
-  contracts; project specialists use distinct prefixed IDs; shipped defaults stay independently usable.
+  contracts; project specialists use distinct prefixed IDs; shipped defaults stay independently usable. No `skill`
+  prerequisite or source model/effort default is added to public archetypes. Model policy stays bundle-qualified.
+- Scope the bundle constitution's approach guard to adaptive product iteration, preserving generic caller use
+  under SDD. Distinguish product support roles' no-commit clause from explicitly assigned worker commit authority.
+- Give verifiers an explicit ignored probe/test-output scope without permission to change product sources or Git.
 - Add recovery clauses: unsupported nesting falls back to flat/direct execution, and cleanup preserves active,
   dirty or unmerged results until collected or separately authorized for removal.
 
@@ -102,9 +109,11 @@ widen archetype permissions. Existing product role paths and template identity a
 ## 5. Verification Plan
 
 - Extend `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` for default prefixed assets,
-  supported projections, local role packaging, distinct project extensions and bundle self-containment.
+  supported projections, both presets, absolute role resolution, distinct project extensions/collision refusal,
+  model-policy keys and bundle self-containment.
 - Extend `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py` for wheel installation
-  with docs/catalog and without `devkit-spec`, including archetype projections.
+  with docs/catalog and without `devkit-spec`, including archetype projections and agents-only use under SDD.
+  Docs currently brings devkit-agt transitively; independence means no SDD requirement, not a no-harness claim.
 - Record representative direct/flat/nested invocations, slot fallback, incompatible roles, combined failure and
   interruption recovery. Static packaging checks do not establish semantic runtime behavior.
 - Use the consuming project's documented checks. This repository keeps affected-test full fallback, required
@@ -112,3 +121,10 @@ widen archetype permissions. Existing product role paths and template identity a
 
 No assertion that the bundle projects zero native subagents is retained: it already registers three support roles,
 and this proposal adds three execution archetypes.
+
+## 6. Planning Evidence and Handoff
+
+The concrete assignment example, host declaration matrix, ordered file owners and AC mapping are in
+`PROP-adaptive-swarm-development` section 5. Source/projection and bounded read-only nesting observations are in
+[feasibility-spike.md](materials/feasibility-spike.md). Development still authors the retained assets, installation
+checks and semantic exercises; the Planning prototypes are not shipped bundle contents.

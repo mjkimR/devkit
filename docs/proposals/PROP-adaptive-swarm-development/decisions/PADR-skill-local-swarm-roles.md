@@ -4,6 +4,8 @@ title: Reusable prefixed subagents with optional role teams
 summary: "For adaptive delegation, we propose reusable prefixed archetypes with on-demand role contracts and optional two-level teams, to support project extensions, accepting host-specific capability checks and coordination overhead."
 proposal: PROP-adaptive-swarm-development
 status: draft
+supersedes: ADR-adaptive-development-and-research
+supersedes_clause: "Adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force."
 created_at: 2026-11-06
 ---
 
@@ -50,8 +52,13 @@ The proposed choice is prefixed archetypes with role overlays, supporting option
 
 - `adaptive-dev` owns the proposed public `swarm-planner`, `swarm-worker` and `swarm-verifier` assets; compatible
   callers can reuse installed contracts without importing private orchestration or sibling role files.
+- The `agents` preset selects only the three public archetypes; `core` adds them to the existing adaptive entry and
+  support assets. Shared agents have no adaptive entry prerequisite and follow their caller's governing workflow.
+- Source model/effort defaults remain omitted; existing bundle-qualified project model policy applies.
 - Projects extend behavior through their own prefixed agents or bounded role files; the default set is not an extension cap.
-- Task overlays narrow assignments and cannot expand execution permissions or Git authority.
+- Task overlays narrow assignments and cannot expand execution permissions or Git authority. The planner stays
+  read-only; the verifier may write assigned test/probe artifacts while product sources and Git remain read-only.
+  Worker commits require explicit assignment authority.
 - The Host chooses direct, flat or nested execution per task. A role lead owns the aggregate result of its assignment.
 - Nested execution stops at Host → lead → child and uses a Host-assigned session-wide child budget, including waiting leads.
 - Unsupported nesting or insufficient capacity produces flat, direct or sequential execution with explicit limitations.
@@ -74,5 +81,7 @@ state these clauses. On promotion, this decision partially supersedes the role-s
 
 Planned catalog integration and installed-consumer tests check prefixed assets, host projections, project extensions
 and installation without `devkit-spec`. Representative invocation exercises check flat/nested dispatch, capacity
-fallback and actual permission status. Until exercised, host behavior and performance are unverified.
+fallback and actual permission status. The Planning projection and read-only nesting observations are in
+[feasibility-spike.md](../materials/feasibility-spike.md). Coding teams, native enforcement, unexercised runtimes and
+performance remain unverified; static checks and one read-only call do not establish them.
 Review only for semantic ownership and overlay compatibility; packaging tests do not prove either.

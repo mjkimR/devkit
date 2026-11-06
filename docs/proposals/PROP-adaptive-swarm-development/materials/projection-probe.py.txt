@@ -1,0 +1,129 @@
+"""Temporary Planning probe; does not modify tracked bundle sources or host settings."""
+from pathlib import Path
+import argparse
+import json
+import shutil
+import tomllib
+
+from devkit.advisory import AdvisoryError
+from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_dist.features.distribution.services.installation.config import update_config
+from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+from devkit_dist.features.distribution.usecases.sync import sync_project
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--workspace-root', type=Path, required=True)
+parser.add_argument('--output-root', type=Path, required=True)
+args = parser.parse_args()
+ROOT = args.workspace_root.resolve()
+PROBE = args.output_root.resolve()
+PROBE.mkdir(parents=True, exist_ok=False)
+prototype = PROBE / 'bundle'
+shutil.copytree(ROOT / 'packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle', prototype, dirs_exist_ok=True)
+ids = ['swarm-planner', 'swarm-worker', 'swarm-verifier']
+for name in ids:
+    mode = 'read-only' if name == 'swarm-planner' else 'workspace-write'
+    tools = '[Read, Grep, Glob, Agent]' if name == 'swarm-planner' else '[Read, Grep, Glob, Bash, Agent]'
+    if name == 'swarm-worker':
+        tools = '[Read, Grep, Glob, Write, Edit, Bash, Agent]'
+    (prototype / 'subagents' / f'{name}.md').write_text(f'''---
+role: {name}
+title: Planning prototype {name}
+description: Executes one assigned bounded task or coordinates children within the supplied allowance.
+x-execution: isolated
+x-invocation: optional
+x-git-actions: [read]
+hosts:
+  claude-code:
+    status: emulated
+    tools: {tools}
+  codex:
+    status: emulated
+    sandbox_mode: {mode}
+  antigravity:
+    status: unverified
+    tools: [view_file, grep_search, run_command]
+    commandExecutionPolicy: sandbox
+---
+
+# Planning prototype {name}
+
+Read the absolute task role contract supplied by the caller.
+Act within its assigned boundary and permitted actions.
+Do not invoke adaptive-dev or require a development approach setting.
+Only the Host writes .devkit/adaptive-dev.md or integrates the final target.
+Report actual source identity, changed paths, commands, outcomes and unverified areas.
+''')
+manifest = prototype / 'bundle.toml'
+text = manifest.read_text()
+text = text.replace('assets = ["adaptive-dev",', 'assets = ["swarm-planner", "swarm-worker", "swarm-verifier", "adaptive-dev",')
+marker = '[presets.core]'
+assets = ''.join(f'[[assets]]\nid = "{name}"\nkind = "subagent"\nsource = "subagents/{name}.md"\n\n' for name in ids)
+manifest.write_text(text.replace(marker, assets + marker) + '\n[presets.agents]\nassets = [\"swarm-planner\", \"swarm-worker\", \"swarm-verifier\"]\n')
+
+extension = PROBE / 'extension'
+extension.mkdir(exist_ok=True)
+(extension / 'subagents').mkdir(exist_ok=True)
+(extension / 'subagents/acme-security-reviewer.md').write_text((prototype / 'subagents/swarm-planner.md').read_text().replace('swarm-planner', 'acme-security-reviewer'))
+(extension / 'bundle.toml').write_text('''schema = 1
+name = "acme-team"
+version = "0.1.0"
+default_preset = "core"
+[[assets]]
+id = "acme-security-reviewer"
+kind = "subagent"
+source = "subagents/acme-security-reviewer.md"
+[presets.core]
+assets = ["acme-security-reviewer"]
+''')
+
+bundle = load_bundle(prototype)
+ext = load_bundle(extension)
+installed = [InstalledBundle('devkit-catalog', bundle.version, bundle), InstalledBundle('acme-team', ext.version, ext)]
+consumer = PROBE / 'consumer'
+consumer.mkdir(exist_ok=True)
+update_config(consumer, agents=['codex', 'claude-code', 'antigravity'], presets={'adaptive-dev': ['core'], 'acme-team': ['core']})
+# Exercise existing bundle-qualified model policy, including the extension.
+config = consumer / '.devkit/config.toml'
+config.write_text(config.read_text() + '\n[subagents.roles."adaptive-dev:swarm-worker"]\nlevel = "lean"\n\n[subagents.roles."acme-team:acme-security-reviewer"]\nlevel = "compact"\n')
+sync_project(consumer, installed)
+worker = tomllib.loads((consumer / '.codex/agents/swarm-worker.toml').read_text())
+assert worker['model'] == 'gpt-6.1-terra' and worker['model_reasoning_effort'] == 'medium'
+for name in ids + ['acme-security-reviewer']:
+    for path in [f'.codex/agents/{name}.toml', f'.claude/agents/{name}.md', f'.agents/agents/{name}.md']:
+        assert (consumer / path).is_file(), path
+    assert 'get-context spec' not in (consumer / f'.codex/agents/{name}.toml').read_text()
+    assert 'get-context adaptive-dev' not in (consumer / f'.codex/agents/{name}.toml').read_text()
+assert not (consumer / '.devkit/managed/spec').exists()
+assert not (consumer / '.devkit/adaptive-dev.md').exists()
+
+agent_consumer = PROBE / 'agents-only-consumer'
+agent_consumer.mkdir()
+update_config(agent_consumer, agents=['codex'], presets={'adaptive-dev': ['agents']})
+sync_project(agent_consumer, installed[:1])
+assert {p.stem for p in (agent_consumer / '.codex/agents').glob('*.toml')} == set(ids)
+assert not (agent_consumer / '.agents/skills/adaptive-dev').exists()
+assert '`/adaptive-dev`' not in (agent_consumer / 'AGENTS.md').read_text()
+assert not (agent_consumer / '.devkit/adaptive-dev.md').exists()
+assert 'get-context adaptive-dev' not in (agent_consumer / '.codex/agents/swarm-worker.toml').read_text()
+
+before = {p.relative_to(consumer).as_posix(): p.read_bytes() for p in (consumer / '.codex/agents').glob('*.toml')}
+# Reuse the established global collision guard rather than introducing prefix routing.
+conflicting = PROBE / 'collision'
+shutil.copytree(extension, conflicting, dirs_exist_ok=True)
+(conflicting / 'subagents/acme-security-reviewer.md').rename(conflicting / 'subagents/swarm-worker.md')
+cp = conflicting / 'subagents/swarm-worker.md'
+cp.write_text(cp.read_text().replace('acme-security-reviewer', 'swarm-worker'))
+mp = conflicting / 'bundle.toml'
+mp.write_text(mp.read_text().replace('acme-team', 'collision-team').replace('acme-security-reviewer', 'swarm-worker'))
+collision = load_bundle(conflicting)
+update_config(consumer, presets={'collision-team': ['core']})
+try:
+    sync_project(consumer, installed + [InstalledBundle('collision-team', collision.version, collision)])
+except AdvisoryError as error:
+    collision_code = error.code
+else:
+    raise AssertionError('duplicate public agent id was not rejected')
+assert collision_code == 'BUNDLE_CONFLICT', collision_code
+assert before == {p.relative_to(consumer).as_posix(): p.read_bytes() for p in (consumer / '.codex/agents').glob('*.toml')}
+print(json.dumps({'status':'passed','prototype_assets':ids,'project_extension':'acme-security-reviewer','host_projections':12,'agents_only_preset':True,'agents_only_adaptive_entry_deployed':False,'model_policy':'adaptive-dev:swarm-worker -> lean; acme-team:acme-security-reviewer -> compact','collision_code':collision_code,'collision_preserved_projections':True,'spec_assets_installed':False,'current_context_seeded':False,'limits':['source-tree runtime; not isolated wheel install','projection is not native host execution','prototypes not installed into the active session','no nested coding or worktree integration exercised']}, sort_keys=True))

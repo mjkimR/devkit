@@ -17,6 +17,7 @@ boundaries:
     - docs/capabilities/delivery/CAP-DLV-adaptive-development.md
     - docs/usecases/delivery/UC-advance-an-idea.md
     - docs/architecture/ARCH-05-2-components.md
+    - docs/decisions/2026-11/20261102-adaptive-development-and-research.md
   excludes:
     - packages/devkit-dist/
     - packages/devkit-spec/
@@ -44,7 +45,9 @@ contracts supply task-specific responsibilities. A subagent can execute a bounde
 supports nesting and the task warrants it, lead a small team of its own subagents. Registration and team topology
 are separate choices: either flat or nested execution can use the same registered agents and role documents.
 
-This is a design hypothesis. Prompt cost, latency, model savings and host enforcement remain unmeasured.
+Planning has exercised source-level projection, an agent-only preset and one read-only nested role assignment.
+These observations establish bounded feasibility, not completed implementation. Prompt cost, latency, model savings
+and native host enforcement remain unmeasured.
 The local reference comparison is in [reference-swarm-architectures.md](materials/reference-swarm-architectures.md).
 Upstream examples motivate patterns; they are not evidence of performance or correctness in devkit.
 
@@ -82,9 +85,25 @@ The recommended default is the archetype model in `PADR-skill-local-swarm-roles`
 | `swarm-verifier` | Verify an identified source or artifact and return evidence | `roles/qa-tester.md`, `roles/reviewer.md` |
 
 The `swarm-` prefix identifies this shipped family and avoids bare names such as `builder` or `architect`.
-The names are proposed public asset IDs, not a new namespace mechanism. Each agent has one owning bundle and uses
-existing native projections. Common contracts retain the existing host support declarations and subagent model levels
-from `CAP-DIST-agent-projections`; this bundle adds no model router.
+The names are selected public asset IDs for this proposed implementation, not a new namespace mechanism. Each agent has one owning bundle
+and uses existing native projections. Common contracts retain the existing host support declarations and subagent model levels
+from `CAP-DIST-agent-projections`; this bundle adds no model router. Omit a source `level` and native model/effort
+defaults so existing project policy and host inheritance apply. A project may opt into a shared level with the owning bundle-qualified key, for example:
+
+```toml
+[subagents.roles."adaptive-dev:swarm-worker"]
+level = "lean"
+```
+
+Add `adaptive-dev:agents` containing only the three archetype assets. Keep `adaptive-dev:core` as the existing six
+assets plus those archetypes. A caller that only needs reusable execution selects `uv run devkit add adaptive-dev:agents`.
+This does not deploy the adaptive skill or its pointer, seed current context, or change the development approach.
+Distribution still writes its ordinary managed guidance block. The reusable contracts have no `skill: adaptive-dev`
+field and do not load an adaptive entry or context as a prerequisite.
+
+Scope the bundle constitution's approach guard to `/adaptive-dev` product iteration. Distinguish existing product
+support roles, which never commit, from bounded execution workers, which may commit only on explicit assignment.
+Agent-only callers follow their own governing workflow and authority; the preset does not bypass SDD obligations.
 
 Other callers may reuse an installed agent when its contract matches their task. Such reuse is optional and does
 not permit importing another bundle's private role files. A caller supplies its own role contract and verifies agent
@@ -128,13 +147,18 @@ The delegation limit is two child levels below the Host: Host → role lead → 
 spawn further agents. The Host allocates a session-wide child-agent budget before dispatch, including waiting leads
 and their children. A lead receives an explicit child allowance; it does not independently allocate a full team.
 When capacity is insufficient, execute inline or sequentially rather than wait while occupying all slots.
+Count the Host too when the runtime's reported limit includes it. Reserve capacity before dispatching a lead;
+unknown capacity grants no nested allowance. Treat completion as slot release only when the runtime's accounting
+supports that interpretation. Budgeting and the depth-two limit are procedural checks, not newly enforced settings.
 
 Each lead owns the aggregate result for its assignment. Child boundaries stay within the lead's boundary, and the
-lead checks actual changed paths and evidence before returning. A read-only lead delegates only read-only work.
+lead checks actual changed paths and evidence before returning. A planner delegates only read-only work.
+A verifier keeps product sources and Git read-only, but may use an explicit scratch/probe directory and project-approved test outputs. Its children inherit those same restrictions.
 The Host owns cross-lead coordination, final integration and `.devkit/adaptive-dev.md`; leads return evidence or drafts.
 
-Nesting support is host-dependent and remains to be exercised. If it is unavailable, the Host flattens the assignments
-and retains the same ownership and verification requirements. If subagents are unavailable, the Host works directly
+One general-agent read-only depth-two call with an absolute role-file overlay succeeded in the Planning session.
+Registered archetype invocation and other native runtimes remain to be exercised; nesting is checked at dispatch.
+If it is unavailable, the Host flattens the assignments and retains the same ownership and verification requirements. If subagents are unavailable, the Host works directly
 and reports the unverified delegation behavior. No host setting is changed to enable nesting.
 
 ### 2.3 Alternatives
@@ -157,8 +181,29 @@ than assigning universal guarantees to either model.
 
 Before delegated code authoring, record the goal, relevant source/base SHA, public interfaces when needed, absolute
 read/write boundaries, permitted Git operations, verification commands, stop condition and expected return.
-A role lead also receives its depth and child allowance. Keep this in the assignment or mutable current context;
-no separate Sprint Contract file or SDD artifact is required.
+A role lead also receives its depth and child allowance. Treat the following as a task-message example, not a
+new parser or persisted schema:
+
+```yaml
+goal: Implement the assigned interface
+source: {base_sha: "<sha>", worktree: "<absolute worker checkout>"}
+role_contract: "<absolute role file resolved from the invoked skill>"
+read_boundaries: ["<absolute allowed inputs>"]
+write_boundaries: ["<absolute owned source paths>"]
+probe_path: "<absolute assigned ignored scratch path>"
+git_actions: [read, commit]
+checks: ["<project command>"]
+depth_remaining: 1
+child_allowance: 1
+stop_condition: "Return after the assigned checks, or report the first authority gap"
+expected_output: "status, source/base/final identity, changed paths, checks, defects, unverified areas"
+```
+
+Resolve a local role path from the invoked skill directory, verify it exists and is readable in the child's scope,
+and pass that absolute path. A caller can instead provide bounded inline role instructions. Do not assume that
+relative paths resolve from a reference directory, default cwd or a sibling checkout. External callers supply their
+own overlays; the public agent does not discover another skill's roles automatically. Keep this in the assignment
+or mutable current context; no separate Sprint Contract file or SDD artifact is required.
 
 Architectural decomposition is conditional on interface or ownership uncertainty. The Host can provide an already
 clear assignment directly instead of starting an architect solely to repeat it.
@@ -170,8 +215,9 @@ workers. Disjoint file ownership still matters for integration; separate worktre
 interfaces, shared external resource conflicts or merge conflicts.
 
 When the harness is available, use its existing worktree lifecycle. Otherwise use the consuming project's documented
-Git procedure. A minimal catalog installation does not imply that `devkit worktree` is installed. If isolated writable
-worktrees cannot be created within current authority, serialize writers. A lead does not write into a worktree while
+Git procedure. Catalog itself has no runtime dependencies. The documented docs/catalog installation currently includes
+`devkit-agt` through `devkit-docs`; still check actual command availability and worktree permissions at dispatch.
+If isolated writable worktrees cannot be created within current authority, serialize writers. A lead does not write into a worktree while
 its child owns it; shared glue changes occur after children finish.
 
 ### 3.3 Verification, integration and recovery
@@ -215,27 +261,85 @@ removal has separate authority.
   checks identify their actual SHAs, commands and outcomes; failed or unavailable checks remain explicit.
 - **AC-9:** Given a failed or interrupted assignment, when work pauses, then current context records retained results,
   active ownership and the next action, and cleanup preserves unmerged or dirty work.
+- **AC-10:** Given an SDD consumer selecting only `adaptive-dev:agents`, when assets synchronize and a compatible
+  caller assigns bounded work, then only the three execution agents deploy, no adaptive entry/pointer or current
+  context deploys, and neither the approach nor the caller's lifecycle authority changes.
 
 Installation and projection tests establish packaging behavior only. Invocation exercises and review establish the
 semantic delegation behavior; keyword assertions do not prove concurrency, sandboxing or successful nested execution.
 
-## 5. Planning Findings and Remaining Evidence
+## 5. Planning Outcome and Development Sequence
 
-The Planning review selects prefixed archetypes plus on-demand role files as the recommended direction and keeps
-nested role leads optional. `PADR-skill-local-swarm-roles` records registration and team-topology alternatives;
-`PADR-worktree-isolated-parallel-workers` records write ownership and integration consequences.
+### 5.1 Observed feasibility and retained gaps
 
-Existing `CAP-DLV-adaptive-development` exclusions for fixed hierarchy and model routing remain in force: the team
-shape is optional and model settings reuse distribution policy. The existing no-Git-mutation contract for product
-support roles remains unchanged; code-writing archetypes receive separately defined Git authority. The promoted
-role decision will amend the relevant role-set clauses of `ADR-adaptive-development-and-research` without replacing
-its approach, current-context or research-material decisions.
+[feasibility-spike.md](materials/feasibility-spike.md) records the source review, reproducible projection probe,
+official host references and the bounded nested-call result at Planning baseline
+`86eb5bd1b706ec586ebbdbd76ad4840ae22c00b2`.
 
-Before implementation is declared verified, exercise direct, flat and nested assignments on supported hosts and
-record unavailable cases. Start with one representative coding task and one failed/interrupted task. Record actual
-host/version, source identity, depth/capacity behavior and permission enforcement or emulation. Compare latency or
-token usage only when the runtime exposes measurements and the task, model settings and completion checks match;
-otherwise retain those metrics as unmeasured. No performance threshold or savings percentage is an acceptance claim.
+- The existing schema deployed three prototype archetypes plus a distinct project agent into twelve native files
+  across three projection targets. Bundle-qualified model policy applied without a schema change.
+- The prototype agent-only preset deployed only the execution agents; the adaptive entry and pointer were absent.
+- A duplicate `swarm-worker` from a second bundle returned `BUNDLE_CONFLICT` and left existing projections unchanged.
+- A fresh-context role lead spawned one child, passed an absolute role file and validated the returned evidence.
+  The same child refused a read-only assignment's write request with `WRITE_DENIED`; no mutation was attempted.
+- Source/index/HEAD snapshots were unchanged by the read-only agents. This does not prove native sandbox enforcement
+  or exclude transient writes beyond the observed/reported evidence.
+
+Registration, reuse and optional role-lead topology are selected for this plan. Runtime implementation still needs
+representative coding, combined-failure, interruption and fresh-installed-consumer exercises. Claude Code and
+Antigravity were not run. Token cost, performance, model quality and native confinement remain unverified.
+
+### 5.2 Execution settings to author
+
+All three common contracts declare every supported host, omit `skill` and model/effort defaults, and carry explicit
+assignment/return instructions. Start with `emulated` status for Claude Code and Codex and `unverified` for Antigravity;
+projection validation alone does not justify upgrading status. Preserve the three existing product-support contracts.
+
+| Agent | Claude Code tools | Codex declared sandbox | Antigravity tools and command policy | Product/Git authority |
+| :--- | :--- | :--- | :--- | :--- |
+| swarm-planner | Read, Grep, Glob, Agent | read-only; not relied on as an override | view_file, grep_search; off | Read only; descendants read only |
+| swarm-worker | Read, Grep, Glob, Write, Edit, Bash, Agent | workspace-write; inherited effective policy still governs | view_file, grep_search, replace_file_content, run_command; sandbox | Assigned writes; commit only when explicitly granted |
+| swarm-verifier | Read, Grep, Glob, Bash, Agent | workspace-write; product read-only by contract | view_file, grep_search, run_command; sandbox | Read-only product and Git; assigned test/probe writes only |
+
+`Agent` permits Claude Code delegation where effective host policy supports it. Antigravity's nested invocation
+capability is not asserted by a file-tool allowlist. None of these declarations grants host-setting changes,
+publication or native path confinement. On hosts that cannot provide the required operations under current authority,
+return the gap and use the defined direct/flat/sequential path.
+
+### 5.3 Ordered implementation packages
+
+These are a Development handoff outline, not a parallel delivery pipeline or checked-off implementation tasks.
+Keep one source writer until the shared contracts and entry changes agree; use read-only helpers when useful.
+
+| Order | Owned files under the declared boundaries | Result and validation | Requirements |
+| :--- | :--- | :--- | :--- |
+| 1 | adaptive_dev/bundle/subagents/swarm-*.md, bundle.toml, AGENTS.md | Three self-contained agents; core and agents presets; scoped approach/Git clauses; bundle validate/plan and preset isolation checks | AC-2, AC-3, AC-4, AC-10 |
+| 2 | adaptive_dev/bundle/skills/adaptive-dev/SKILL.md, references/delegation.md, references/orchestration.md, roles/*.md | Conditional entry routing, bounded assignments, role path resolution, lead allowance, isolation, fallback, verification and recovery; direct/flat/nested walkthroughs | AC-1, AC-3, AC-5, AC-6, AC-7, AC-8, AC-9 |
+| 3 | adaptive_dev/bundle/skills/adaptive-dev/references/current-context.md; catalog integration test and adaptive-dev installed-consumer E2E directory | Failure checkpoints, unchanged product-support contracts, project extension/collision, no-SDD wheel install, agents-only under SDD, retained context and honest missing coverage | AC-1 through AC-10 |
+| 4 | CAP-DLV-adaptive-development, UC-advance-an-idea, ARCH-05-2-components and retained ADR partial-supersession pointer | Current behavior and entrypoints reflect verified assets; capability/use-case cross-references and promoted ADR clauses agree | AC-1 through AC-10 |
+
+Paths beginning `adaptive_dev/` in this table are under
+`packages/devkit-catalog/src/devkit_catalog/`. The test owners are
+`packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and
+`packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/`. No source outside those boundaries or new feature edge is planned.
+
+### 5.4 Verification and readiness
+
+During Development, validate and plan the edited bundle; run affected unit/integration checks with full fallback,
+required lint/type/rule checks for actual changed files, and the installed-consumer E2E selected by the changes.
+Preserve the integration baseline and exact checked SHAs under the repository's existing final-target procedure.
+Do not use another host's success or static keyword checks to mark a native-runtime exercise passed.
+
+Representative behavior covers direct work, a flat external caller, a nested assignment when available, exhausted or
+unknown allowance, incompatible roles, two isolated writing checkouts, failed combined checks and interruption with
+dirty/unmerged work. Missing host capability takes the fallback case and stays unverified for nested execution.
+No task promises to validate every runtime or to benchmark performance before delivery.
+
+`PADR-skill-local-swarm-roles` and `PADR-worktree-isolated-parallel-workers` record the selected draft decisions.
+The role PADR declares partial supersession of `ADR-adaptive-development-and-research`; the existing handoff procedure
+adds its pointer without superseding the retained approach, current-context or research-material decisions.
+No product or architecture contract is changed before the approved implementation is retained. Development effort
+remains `medium`; there is no runtime/schema change, new package or unresolved design choice requiring user input.
 
 ## 6. Lifecycle and Target Documents
 
