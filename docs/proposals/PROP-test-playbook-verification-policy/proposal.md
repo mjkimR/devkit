@@ -74,6 +74,12 @@ Inventory test semantics, affected scope, measured cost, resource isolation and 
 Read the actual commands, CI triggers and required checks of the repository being assessed. Do not infer its
 requirements from devkit's own local-orch habits or from where its worker runs.
 
+Establish independently runnable groups from repository instructions, scripts, runner configuration and CI.
+Do not assume every consumer has E2E, infer cost from tier/directory names, or treat an undocumented split as
+missing tests. Recommend asynchronous separation only when existing required coverage is preserved. With an
+unseparated or unclear suite, retain its existing required verification synchronously; any proposed restructuring
+is separately assessed and routed through the existing decision round.
+
 Recommend frequent unit/integration checks during worktree/PR iteration, with E2E when needed to establish the
 changed behavior. Preserve required lint, types, rules, frontend and other native checks. Use conservative full
 fallback within the repository's selection contract. Explain E2E omissions separately from passing results.
@@ -149,6 +155,9 @@ actual test evidence and the repository's own delivery requirements. No executor
 - **AC-10:** Given background waiting and optional cleanup, recommendations explain retained execution evidence,
   separate cleanup outcome, default environment retention and tool-dependent completion notification. Do not
   equate an interrupted waiter with execution cancellation or promise automatic agent push notification.
+- **AC-11:** Given an unseparated or undocumented suite, assessment keeps existing required checks synchronously
+  and makes no E2E-existence, cost or independent-runnability assumption. Given explicit independently runnable
+  groups, recommendations preserve their complete required coverage without adding a profile or policy selector.
 
 ## 4. Lifecycle & Retirement Criteria
 
