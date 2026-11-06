@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-async-e2e-verification
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-05-2-components.md
     resolution: modified
@@ -36,4 +36,6 @@ PROP-test-playbook-verification-policy remains a draft depending on SPEC-async-e
 
 ## Entrypoints
 
-Entrypoint candidates are reviewed before application. Preserve existing narrow doorways and add only isolated_execution CLI/use cases and the execution-only worktree API where owned. Drop test paths, helpers, broad shared roots and AGENTS/README hubs.
+Entrypoint candidates were derived and reviewed; only the execution-only worktree API and isolated-verification guide were appended where owned. Preserve existing narrow doorways and add only isolated_execution CLI/use cases and the execution-only worktree API where owned. Drop test paths, helpers, broad shared roots and AGENTS/README hubs.
+
+Independent high reconcile round 1 covered all nine targets. Its two document findings were corrected with the exact proposed wording; reconcile-check-02 closes the round under minor-fix self-verification. No required contract mismatch is waived.

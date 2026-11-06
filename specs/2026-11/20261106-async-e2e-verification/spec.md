@@ -2,7 +2,7 @@
 id: SPEC-async-e2e-verification
 title: Asynchronous E2E Verification
 summary: "Provide isolated asynchronous native commands with persistent evidence and guarded cancellation and cleanup. Use tier-aware selection and background observation for local-orchestrated E2E."
-status: in-progress
+status: completed
 created: 2026-11-06
 related_capabilities: []
 related_usecases: []
