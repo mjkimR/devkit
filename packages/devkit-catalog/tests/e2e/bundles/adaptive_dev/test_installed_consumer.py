@@ -79,9 +79,7 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     agents_consumer.mkdir()
     run("git", "init", "-q", str(agents_consumer))
     run(python, "-m", "devkit_dist", "sync", "-w", str(agents_consumer), cwd=agents_consumer)
-    agent_config = agents_consumer / ".devkit/config.toml"
-    agent_config.write_text(agent_config.read_text() + '\n[bundles."adaptive-dev"]\npresets = ["agents"]\n')
-    run(python, "-m", "devkit_dist", "sync", "-w", str(agents_consumer), cwd=agents_consumer)
+    run(python, "-m", "devkit_dist", "add", "adaptive-dev:agents", "-w", str(agents_consumer), cwd=agents_consumer)
     assert {p.stem for p in (agents_consumer / ".codex/agents").glob("swarm-*.toml")} == {
         "swarm-planner",
         "swarm-worker",
