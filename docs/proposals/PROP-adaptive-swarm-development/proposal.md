@@ -2,7 +2,7 @@
 id: PROP-adaptive-swarm-development
 title: Agent Swarm-driven Rapid Development in Adaptive Mode
 summary: Provide an agent-swarm rapid development workflow under adaptive-dev evaluating pure skill-local roles against archetype and core-global hybrid subagent models with worktree isolation as a fast alternative to step-by-step SDD.
-status: draft
+status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: high
