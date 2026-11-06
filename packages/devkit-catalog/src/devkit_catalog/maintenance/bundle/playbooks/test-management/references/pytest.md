@@ -9,6 +9,8 @@ path-derived markers are an ownership convention, not proof of purity or network
 Inspect worker/run ownership of database names, file paths, ports and environment inputs. Session fixtures may
 execute per worker. Keep shared-database serial guards and disposable-resource validation. Worker caps do not
 establish isolation; do not copy application-specific environment stripping or database fixtures.
+Distinguish workers within one pytest run from overlapping independent verification runs. Check run namespaces
+as well as worker namespaces before overlapping execution; worker caps do not bound the cost of several runs.
 Use the installed version's help/documentation before proposing flags. Official references:
 [distribution](https://pytest-xdist.readthedocs.io/en/stable/distribution.html) and
 [worker/run identity and fixture scope](https://pytest-xdist.readthedocs.io/en/stable/how-to.html).
@@ -20,9 +22,11 @@ Use the installed version's help/documentation before proposing flags. Official 
    per variant. Keep the machine otherwise idle; label cache state and failures. This is a local runner comparison,
    not a universal performance guarantee or a replacement for a separately selected performance-pass contract.
 3. Compare collected node-ID multisets, outcomes, optional skips, setup/teardown failures and cleanup as well as
-   elapsed time. Counts alone do not prove equal coverage. Inspect collection code before collecting identities.
+   elapsed time, setup cost and resource contention. Counts alone do not prove equal coverage. Inspect collection code before collecting identities.
 4. Retain current settings when results are incomplete, noisy or slower; record `not_run` for missing evidence.
    Promote no default until coverage and isolation are preserved and the named metric improves.
+5. Report Host blocking separately from native duration, run count and CPU; scheduling overlap alone proves no
+   runner speedup. Keep this within-run worker comparison distinct from overlapping verification runs.
 
 For example, a serial command and an eight-worker candidate with different skip sets are not equivalent even if
 both exit successfully and the candidate is faster. Report the mismatch and propose no promotion.

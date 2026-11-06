@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Narrow independent-group prerequisite to async separation; cloud consultation
+  remains valid with existing combined synchronous or CI coverage.
+at: '2026-11-06T04:31:33.307963Z'
