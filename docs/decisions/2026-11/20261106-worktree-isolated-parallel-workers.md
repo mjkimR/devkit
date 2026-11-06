@@ -1,13 +1,13 @@
 ---
-id: PADR-worktree-isolated-parallel-workers
+id: ADR-worktree-isolated-parallel-workers
 title: Separate worktrees for concurrent adaptive writers
-summary: "For concurrent adaptive writers, we propose one worktree per writer with bounded ownership and combined-result checks, to avoid same-checkout interference, accepting setup cost and remaining merge conflicts."
-proposal: PROP-adaptive-swarm-development
-status: draft
+summary: "For concurrent adaptive writers, we use one worktree per writer with bounded ownership and combined-result checks, to avoid same-checkout interference, accepting setup cost and remaining merge conflicts."
+proposal: SPEC-adaptive-swarm-development
+status: accepted
 created_at: 2026-11-06
 ---
 
-# [PADR-worktree-isolated-parallel-workers] Separate worktrees for concurrent adaptive writers
+# [ADR-worktree-isolated-parallel-workers] Separate worktrees for concurrent adaptive writers
 
 ## 1. Context & Problem Statement
 
@@ -34,7 +34,7 @@ The catalog bundle installs independently of the harness, so availability of `de
 
 ## 4. Decision Outcome
 
-The proposed choice is separate worktrees for concurrent writers, with serialized execution as the fallback.
+The choice is separate worktrees for concurrent writers, with serialized execution as the fallback.
 
 - Each concurrent writing agent, including a second-level child, owns a separate worktree and an explicit write boundary.
 - A parent performs no concurrent writes in a child's worktree; it integrates shared glue after children finish.
@@ -45,7 +45,8 @@ The proposed choice is separate worktrees for concurrent writers, with serialize
 - Cleanup waits for active writers and preserves dirty worktrees and unmerged results until retained or separately
   authorized for removal.
 
-`PROP-adaptive-swarm-development-target` describes the prospective capability clauses. Separate worktrees reduce
+`CAP-DLV-adaptive-development` rules 9, 14, 20 and 21 and `UC-advance-an-idea` extensions 5b3, 6a and 7b
+restate isolation, combined verification and recovery. Separate worktrees reduce
 same-checkout interference; they do not guarantee native path confinement, a compilable checkout, conflict-free merges
 or isolation of databases, ports, caches and other external test resources.
 
@@ -59,6 +60,8 @@ or isolation of databases, ports, caches and other external test resources.
 
 ## 6. Confirmation
 
-Planned representative exercises cover two writing workers, parent/child ownership, a semantic integration conflict,
-a failed combined check and interrupted cleanup. Tests identify the source SHA and retained worktree state.
+`SPEC-adaptive-swarm-development` retains actual two-worktree coding observations, separate passing local tests,
+a failing combined fixture check and a deliberate stop-before-commit checkpoint with dirty state preserved.
+The fixture observed semantic failure without a Git merge conflict. Native process interruption remains unverified.
+Tests identify exact source SHAs and retained worktree state.
 Review only for assignment compliance where the host provides emulated boundaries; no zero-conflict claim is made.

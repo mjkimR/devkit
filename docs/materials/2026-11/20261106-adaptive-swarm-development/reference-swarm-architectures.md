@@ -2,7 +2,7 @@
 
 ## 1. Purpose and Evidence Boundary
 
-This material compares design patterns for `PROP-adaptive-swarm-development`. It is a design comparison against
+This material compares design patterns for `SPEC-adaptive-swarm-development`. It is a design comparison against
 repository contracts, not a benchmark or a fresh audit of upstream implementations. The upstream repository links
 below are retained as investigation leads. Their current behavior, agent counts and runtime guarantees have not
 been independently verified in this Planning refinement.

@@ -3,13 +3,14 @@ id: CAP-DLV-adaptive-development
 aliases:
   - CAP-DLV-idea-incubation
 title: Adaptive Development
-summary: "An opt-in content bundle supports iterative product work with optional support roles and resumes from mutable current facts without SDD records; retained research is linked by its material ID, not run by this bundle."
+summary: "An opt-in content bundle supports adaptive product iteration and reusable execution agents with bounded optional teams, caller-owned lifecycle authority, isolated writers and source-specific verification."
 area: delivery
 status: active
 usecases:
   - UC-advance-an-idea
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/subagents/swarm-worker.md
 ---
 
 # [CAP-DLV-adaptive-development] Adaptive Development
@@ -17,17 +18,19 @@ entrypoints:
 ## 1. Summary
 
 The opt-in `adaptive-dev` catalog bundle supplies `/adaptive-dev` for adaptive product iteration, three optional
-support roles and a current-context template. The invoking agent is the coordinator (master). A product can remain
+support roles, three reusable execution archetypes and a current-context template. The invoking agent is the coordinator (master). A product can remain
 in adaptive development; no amount of work implies eventual SDD adoption. Explicit research teams are a separate bundle
 (`CAP-DLV-deep-research`); this bundle neither invokes nor suggests them and links their retained material by ID.
 
 `ADR-adaptive-development-and-research` owns the bundle's contents and its retained approach check and current context,
 linking a research material by its ID, and the approach, bundle, entry and context-file names.
+`ADR-skill-local-swarm-roles` owns reusable execution agents and optional role leads;
+`ADR-worktree-isolated-parallel-workers` owns isolated writers and aggregate verification.
 
 ## 2. Scope and Boundary
 
 - **In-Scope**: adaptive clarification, bounded research/experiments, representative implementation and actual
-  usage, optional support roles, mutable current facts and resume.
+  usage, reusable execution agents, optional role leads, mutable current facts and resume.
 - **Out-of-Scope**: explicit research teams and their retained materials (`CAP-DLV-deep-research`), shared approach
   policy (`CAP-DLV-project-policy`), generic projection (`CAP-DIST-agent-projections`), document formats
   (`CAP-DOCS-document-model`), project build/test tools and the separate baseline readiness/activation procedure
@@ -39,7 +42,9 @@ linking a research material by its ID, and the approach, bundle, entry and conte
 ## 3. Business Rules and Policies
 
 1. **Explicit selection**: WHERE `adaptive-dev:core` is selected, sync MUST deploy the bundle's entry and roles
-   without seeding context or product documents. Test: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py`.
+   without seeding context or product documents. Core retains the six entry/support/template assets and adds
+   `swarm-planner`, `swarm-worker` and `swarm-verifier`; `adaptive-dev:agents` MUST select only these three archetypes,
+   with no adaptive entry, pointer or context template. Neither preset changes approach or caller lifecycle authority. Test: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py`.
 2. **Independent installation**: The bundle MUST install with docs/catalog without a devkit-spec distribution.
    Test: `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
 3. **Approach inspection**: WHEN the entry starts product work, the coordinator MUST inspect the effective common
@@ -55,18 +60,25 @@ linking a research material by its ID, and the approach, bundle, entry and conte
 8. **Representative implementation**: WHEN implementation is retained, the coordinator MUST provide executable run
    and verification instructions for its representative flow.
 9. **Truthful verification**: WHEN reporting a check, the coordinator MUST identify actual source/artifact-specific
-   execution and limitations; skipped, unavailable or inconclusive evidence remains unverified.
+   execution and limitations; skipped, unavailable or inconclusive evidence remains unverified. Worker, aggregate
+   and applicable landed-target results MUST identify their actual checked SHAs/artifacts, commands and outcomes.
 10. **Iteration scope**: WHILE the product goal and constraints hold, the coordinator MAY reconstruct retained code,
     tests and documents without per-change SDD Units, approvals, envelopes or immutable experiment history.
 11. **Changed direction**: IF the goal or constraints change, THEN the coordinator MUST obtain user direction before
     dependent work.
 12. **Optional support**: WHERE a separable question or usage scope warrants delegation, the coordinator MAY invoke
-    the corresponding support role; no action requires all roles or a fixed team count.
+    the corresponding support or execution agent directly, in flat delegation or through an optional role lead;
+    no action requires all roles or a fixed team count.
 13. **Role boundaries**: WHEN a role is invoked, the coordinator MUST supply one goal, absolute boundaries,
-    source/artifact identity, permitted actions, stop condition and expected output before verifying the actual
-    return. The role reports native/emulated availability truthfully.
+    source/base identity, permitted actions and Git operations, checks, stop condition and expected output before
+    verifying the actual return. Child authority MUST narrow the parent assignment; nesting MUST stop at
+    Host → lead → child and fit the Host-wide allowance including waiting leads. Unknown/exhausted capacity or
+    unavailable nesting requires direct, flat or sequential fallback without settings changes. The role reports
+    native/emulated availability truthfully.
 14. **Current context ownership**: WHEN retained resume facts change or work pauses, the coordinator MUST update
-    project-owned `.devkit/adaptive-dev.md`; roles return evidence or drafts instead of editing that file.
+    project-owned `.devkit/adaptive-dev.md`; roles return evidence or drafts instead of editing that file. Failure
+    checkpoints MUST retain source identity, dirty/unmerged results, active ownership and next recovery action;
+    passing QA is not a prerequisite.
 15. **Context preservation**: WHEN sync, removal or re-selection runs, sync MUST preserve existing project-owned
     context and product notes. Tests: catalog integration and installed-consumer tests.
 16. **Voluntary adoption**: WHEN the user explicitly requests SDD adoption, the coordinator MUST leave activation to
@@ -80,6 +92,17 @@ linking a research material by its ID, and the approach, bundle, entry and conte
     `.devkit/incubation.md`. Tests: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and
     `packages/devkit-dist/tests/integration/features/project/test_development.py`.
 
+19. **Reusable execution contracts**: Public archetypes MUST omit a skill prerequisite and source model/effort defaults;
+    compatible callers retain their own workflow and authority, including SDD. Existing bundle-qualified model policy applies.
+    Projects MAY extend via distinct prefixed IDs or verified caller-owned absolute overlays without changing shipped defaults;
+    overlays MUST NOT expand tool, write or Git permissions. Public IDs have one owning bundle.
+20. **Writer isolation**: Concurrent writers MUST own separate worktrees and absolute boundaries; parents MUST wait
+    before writing in child-owned checkouts. Unavailable isolation requires serial writers. Actual changed paths MUST
+    be checked before integration; only the Host integrates into the final target.
+21. **Recovery**: On failure/interruption, the lead MUST stop or collect children before releasing ownership and
+    preserve active, dirty or unmerged worktrees until results are retained or removal has separate authority.
+    Failed combined checks return to bounded repair with reproducing evidence or an explicit unresolved result.
+
 Distribution checks enforce file/metadata contracts. Clarification, evidence, optionality and resume are semantic
 agent contracts; keyword assertions alone do not establish them.
 
@@ -88,7 +111,7 @@ agent contracts; keyword assertions alone do not establish them.
 ### Distribution and entry
 
 Install devkit-docs and devkit-catalog, then select `uv run devkit add adaptive-dev` (`adaptive-dev:core`).
-The skill and three common role contracts use existing projection mechanisms. No adaptive-development runtime or CLI is
+The skill and six registered agent contracts use existing projection mechanisms. No adaptive-development runtime or CLI is
 added.
 
 `uv run devkit config show` exposes `configuration.development.approach` and its source.
@@ -108,11 +131,33 @@ input it reads by its `MAT-<slug>` ID when the user supplies or the current cont
 | product-researcher | Evidence for one product decision, or an explicitly bounded experiment | Read-only by default; assigned scratch notes or prototype writes only |
 | usage-reviewer | Expected versus observed representative usage | Read-only product source; assigned test-data interactions only |
 
-Every role leaves the index and HEAD unchanged and commits/publishes nothing. A result contains status
+Every product-support role leaves the index and HEAD unchanged and commits/publishes nothing. A result contains status
 (`completed`, `needs_input` or `failed`), summary, source/artifact identity, observations with evidence/failure
 conditions, recommendation or draft, assumptions and unverified areas. An experiment also returns actual changed
 paths, commands and outcomes. The Host verifies boundaries and evidence before fold-back; direct communication
-is optional host functionality and never changes authority. There is no SDD envelope requirement.
+is optional host functionality and never changes authority. Adaptive product iteration has no SDD envelope requirement; an external SDD caller retains its own required records.
+
+### Reusable execution agents and overlays
+
+| Agent | Product and Git boundary |
+| --- | --- |
+| swarm-planner | Read-only sources, index and HEAD; descendants remain read-only |
+| swarm-worker | Assigned source/test paths; commit only with explicit payload authority; no final integration/publication |
+| swarm-verifier | Read-only product sources and Git; assigned ignored probe/test outputs may be written |
+
+Archetypes declare emulated support on Codex and Claude Code, and unverified support on Antigravity. Projection
+checks do not establish native invocation, path confinement, nested execution, performance or all-host support.
+Execution settings remain subordinate to effective host policy; no host/model/approval override is granted.
+
+Before delegation, resolve local architect, builder, qa-tester or reviewer overlays from the invoked skill's directory,
+not the cwd or reference directory. Verify existence and pass the absolute path. Compatible external callers can
+supply their own verified absolute role file without loading adaptive orchestration or another bundle's private assets.
+Use the registered-role mechanism when available; label generic role-file emulation or direct fallback explicitly.
+
+Assignments and returns identify goal/result, source/base/final SHA where committed, actual paths, permitted actions,
+checks/commands/outcomes, stop condition, remaining depth/allowance, defects and unverified areas. Leads verify their
+aggregate scope; the Host verifies combined and applicable landed-target results under the consuming project's
+required checks. Product-support no-commit rules remain separate from expressly assigned worker commits.
 
 ### Product notes and resume
 

@@ -33,5 +33,23 @@ id = "current-context-template"
 kind = "document"
 source = "templates/current-context.md"
 
+[[assets]]
+id = "swarm-planner"
+kind = "subagent"
+source = "subagents/swarm-planner.md"
+
+[[assets]]
+id = "swarm-worker"
+kind = "subagent"
+source = "subagents/swarm-worker.md"
+
+[[assets]]
+id = "swarm-verifier"
+kind = "subagent"
+source = "subagents/swarm-verifier.md"
+
 [presets.core]
-assets = ["adaptive-dev", "adaptive-dev-pointer", "product-clarifier", "product-researcher", "usage-reviewer", "current-context-template"]
+assets = ["adaptive-dev", "adaptive-dev-pointer", "product-clarifier", "product-researcher", "usage-reviewer", "current-context-template", "swarm-planner", "swarm-worker", "swarm-verifier"]
+
+[presets.agents]
+assets = ["swarm-planner", "swarm-worker", "swarm-verifier"]

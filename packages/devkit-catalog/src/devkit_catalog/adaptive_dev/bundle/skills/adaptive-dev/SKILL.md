@@ -17,10 +17,11 @@ Take the next useful action toward the user's product goal, keeping enough curre
 2. Reuse known facts; read `references/discovery.md` when the next action needs product clarification or comparison.
 3. Choose the next action from the missing evidence; research or implementation may start before discovery finishes. Keep ordinary small questions inline.
 4. Read `references/evidence-and-iteration.md` before research, an experiment, implementation or usage verification; then run the action and verify its retained result.
-5. Read `references/delegation.md` before assigning a separable question or verification scope to an optional role; inline work needs no role.
-6. Read `references/current-context.md` before writing current context, pausing, resuming in another session or answering an explicit SDD adoption request.
-7. Write only documents that help the next decision or describe retained behavior.
-8. Fix failed retained behavior, rerun its affected checks and report remaining gaps.
+5. Read `references/delegation.md` before assigning separable planning, implementation or verification to a compatible agent; inline work needs no role.
+6. Read `references/orchestration.md` when coordinating parallel writers, role leads, combined checks or interruption recovery.
+7. Read `references/current-context.md` before writing current context, pausing, resuming in another session or answering an explicit SDD adoption request.
+8. Write only documents that help the next decision or describe retained behavior.
+9. Fix failed retained behavior, rerun its affected checks and report remaining gaps.
 
 ## Completion of an action
 

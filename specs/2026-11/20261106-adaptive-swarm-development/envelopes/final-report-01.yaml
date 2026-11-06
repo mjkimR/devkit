@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T13:32:31.224896Z'
+status: completed
+summary: Reusable adaptive execution agents, optional bounded teams and isolated-writer guidance implemented, tested and reconciled; all AC-01..10 covered, no open review findings. Ready for Host integration only.
+findings: []
+assumptions:
+- Host-authorized scheduling exception used identical native selected E2E synchronously after executor identity failure; unknown run 9c1f721c93e6402fb1a5cebd278cfad2 remains preserved and uncleaned.
+- Caller remained SDD; no model, host policy, feature-edge, schema or integration authority change; no scope extensions or sync outputs.
+unverified_areas:
+- Native named-role invocation, native interruption/confinement, unexercised hosts and performance; generic fixture observations are bounded evidence only.
+checks:
+  tests: PASS 147 affected unit/integration at 89f64194b85bce7ff701457cb01e5a12874115ad; selected installed E2E 4 at de3e9af5634125e9ab16ebbcfb69fbc35a7e1ad0; source unchanged since checks
+  build: PASS real wheel builds and docs/catalog installation without devkit-spec in selected E2E; bundle validate 9 assets; core/agents projection plan PASS
+  lint: PASS catalog lint/format and Pyright at 89f64194; CI rules current 6cc078ef; diff check PASS
+diff_scope:
+  base: fc02ef0ac798a8a2efc7c9f41ac0480f9c91dd07
+  head: 6cc078ef5de1da9cc20d32fcd1198028b4970f65

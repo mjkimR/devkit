@@ -1,0 +1,27 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T13:33:01.692503Z'
+status: completed
+summary: 'Completed one Development turn: AC-01..10 implemented in declared catalog assets/tests, independently reviewed, reconciled across six approved docs and committed. No scope extensions or sync outputs; no integration/publication performed. Final-report-01 holds verification identities; Host owns integration runner and eventual landed checks.'
+findings: []
+assumptions:
+- Existing projection/schema/model mechanisms suffice; core measured 6 to 9 assets and 9 to 18 native agent files; agents-only projects exactly three archetypes.
+- Emulated host boundaries enforced through absolute scope, exclusive source ownership, per-operation escalation and actual diff/snapshot comparison; no native confinement guarantee.
+- Caller remains SDD and Host alone owns final integration/current context. Support roles keep no-commit authority; worker commits require explicit assignment.
+unverified_areas:
+- Native named-role invocation, native process interruption/confinement, Claude Code/Antigravity runtime, model savings and performance. Preserved executor run remains unknown; eventual landed target is Host responsibility.
+checks:
+  sync_start: PASS exit=0
+  sync_current: PASS exit=0 create=0 update=0 remove=0 seed=0; MCP_REGISTRATION_SHADOWED advisory unchanged
+  tests: PASS 147 affected unit/integration at 89f64194b85bce7ff701457cb01e5a12874115ad; 4 selected installed E2E at de3e9af5634125e9ab16ebbcfb69fbc35a7e1ad0; baseline 441bfde9603497c652d9cd6aac7c2688f0a2603a
+  lint: PASS catalog lint/format, Pyright, CI rules and diff check
+  build: PASS bundle validate and core/agents plans; real independent wheel consumer
+  reviews: PASS review-01 sole P3 fixed/reverified; reconcile-check-01 no findings; before/after tree snapshots identical
+  semantic: PASS two isolated leaf local passes, aggregate failure then repair pass, preserved dirty checkpoint; bounded generic contract emulation
+  isolated_executor: SKIP run 9c1f721c93e6402fb1a5cebd278cfad2 unknown before tests; Host scheduling exception used native synchronous E2E; no cancellation/cleanup success claimed
+diff_scope:
+  base: fc02ef0ac798a8a2efc7c9f41ac0480f9c91dd07
+  head: 689f92ea80c86374c43388badebf37bfa71842e9
+activity_effort: medium

@@ -6,13 +6,14 @@ title: Advance an idea and leave resumable current context
 summary: "An AI coding agent advances one useful product action through adaptive-development guidance and leaves current facts, executable instructions and honest evidence for the next action or session."
 area: delivery
 primary_actor: AI coding agent
-supporting_actors: [Product owner, Optional product clarification/research/usage subagents]
+supporting_actors: [Product owner, Optional support and reusable execution agents]
 status: active
 capabilities:
   - CAP-DLV-adaptive-development
   - CAP-HARN-agent-guidance
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md
 ---
 
 # [UC-advance-an-idea] Advance an idea and leave resumable current context
@@ -42,10 +43,15 @@ entrypoints:
 - **3b.** A retained research material exists: the agent reads it by the `MAT-<slug>` ID the user supplies or the current context links, never starting or suggesting a research entry; resumes at step 4.
 - **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
 - **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
-- **5b.** Optional support: the agent delegates a separable question or usage scope with explicit boundaries, verifies the returned evidence and folds it into current choices; resumes at step 6.
+- **5b.** Optional support: the agent delegates a separable question or usage or implementation scope with source/base identity, absolute ownership, permitted actions/Git, checks, stop condition and return fields, verifies actual paths and evidence and folds it into current choices; resumes at step 6.
+- **5b1.** Optional role lead: if useful and supported within the Host-wide allowance, the lead delegates narrowed children at depth at most Host → lead → child, counts waiting leads and verifies its aggregate scope; resumes at step 6.
+- **5b2.** Missing nesting or unknown/exhausted capacity: the Host uses direct, flat or sequential execution with the same result/check contract and no host-setting change; resumes at step 5.
+- **5b3.** Concurrent writers: the Host assigns separate worktrees and exclusive ownership; parents wait before writing in child-owned checkouts. If isolation is unavailable, writers run serially; resumes at step 6.
+- **5b4.** Incompatible overlay or unavailable registered invocation: the Host reports the gap, rejects expanded permissions and selects compatible direct execution or explicitly labelled emulation; resumes at step 5.
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
-- **6a.** Failed retained behavior: the agent repairs the implementation within the agreed goal and repeats affected verification; resumes at step 6.
+- **6a.** Failed retained or combined behavior: the Host routes reproducing evidence to the responsible writer for bounded repair, repeats combined checks and reports an unresolved result at the stop condition; resumes at step 6.
 - **6b.** Missing verification evidence: the agent reports the check as unverified and records the gap/next action without claiming successful retained behavior; proceeds to step 7 with that limitation.
+- **7b.** Failure/interruption: the Host collects or stops children, preserves dirty/unmerged results and active ownership, and writes source identity, failed checks and next recovery action to current context before cleanup; the use case pauses.
 - **7a.** Explicit SDD adoption request: the agent explains preparing SDD assets while adaptive development remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
 
 ## 4. Postconditions
@@ -91,7 +97,7 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 - **Covers**: 5b, 5c
 - **Given**: a separable usage-check scope and an optional role.
 - **When**: the role returns evidence or fails its boundary.
-- **Then**: the coordinator verifies actual results before fold-back and does not treat a failed or out-of-scope return as completion or authority.
+- **Then**: the Host verifies actual paths and source-specific results before fold-back and keeps optional lead depth/capacity within the assignment; a failed or out-of-scope return supplies no completion or authority.
 
 ### Scenario 6: Report verification truthfully
 
@@ -113,3 +119,10 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 - **Given**: current context links a committed research material by its ID.
 - **When**: the agent recovers current facts.
 - **Then**: it reads that material as evidence and neither invokes nor suggests a research entry.
+
+### Scenario 9: Isolate writers and check their aggregate
+
+- **Covers**: 5b1, 5b2, 5b3, 5b4, 6a, 7b
+- **Given**: two separable writing assignments and a shared product constraint.
+- **When**: isolated workers pass locally but their combined result fails or work is interrupted.
+- **Then**: the Host retains exact source-specific outcomes, routes bounded repair and preserves dirty/unmerged checkpoints; no worker pass substitutes for combined or applicable landed-target verification.

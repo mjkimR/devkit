@@ -82,7 +82,9 @@ its common CLI boundary, and docs and spec each own `adapters/cli.py` for the se
 may retain their existing bundle-only layouts. The content-only catalog owns the opt-in `adaptive-dev` and `deep-research`
 bundles under `devkit_catalog/adaptive_dev/bundle/` and `devkit_catalog/deep_research/bundle/`; their entries, optional
 role contracts and context template add no runtime module or dependency, and neither bundle depends on or shares an
-asset with the other. The opt-in `uiux-improve` content bundle lives under
+asset with the other. Adaptive-dev also owns reusable `swarm-planner`, `swarm-worker` and `swarm-verifier` contracts,
+skill-local task overlays and orchestration references. Compatible external callers may reuse installed public
+contracts under their own workflow; private sibling assets and mandatory bundle dependencies are not introduced. The opt-in `uiux-improve` content bundle lives under
 `devkit_catalog/uiux_improve/bundle/`; its user-invoked entry and local design roles add no runtime dependency or
 shared orchestration module (`CAP-DLV-uiux-improvement`). The opt-in `design-explore` bundle lives under
 `devkit_catalog/design_explore/bundle/`; its user-invoked skill, local solution-explorer/researcher/critic roles

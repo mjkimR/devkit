@@ -1,0 +1,7 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: User authorized implementing the accepted adaptive swarm plan at medium effort.
+at: '2026-11-06T13:14:32.057130Z'
