@@ -1,0 +1,31 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:41:39.582549Z'
+status: completed
+review: review-02.yaml
+summary: round 2 repairs verified by implementer under Host-directed resolution-01; unchanged exact R2 probes failed before repair and pass after fresh post-exit group retirement and durable interrupted cleanup fixes. Feature-owned tests cover both variants, postlaunch discovery failure, retired stage PID reuse, actual same-group orphan/compact, interruption/status/safe partial retry and concurrent cleanup. Semantic/schema changes require the authorized fresh independent round 3; this reverify is not that round.
+findings:
+- issue: 'recurs: review-01.yaml #1; terminal completion bypasses retained process-group ownership after reaping.'
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:169; scratch/review-02/test_recheck.py:87 fails for both passed and cancelled variants.
+  failure_condition: The pre-reap scan misses a newly orphaned same-group child. Poll reaps the leader and run returns with established groups unresolved because no previously known PID appears alive. The next scan exposes child PID 201, but live_owned checks only known PIDs. Passed/cancelled is persisted with only preparation PID 100 owned, permitting cleanup while the writer survives.
+  suggested_action: Require fresh post-reap group discovery and verified retirement of every established group before terminal completion or confirmed cancellation, including exception paths; preserve reuse guards and add supervisor-level regressions. Apply bounded-recovery Host handover.
+  resolution: resolved
+  severity: P1
+- issue: Interrupted cleanup leaves no durable in-progress or unfinished cleanup record.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/services/lifecycle.py:29; scratch/review-02/test_recheck.py:112 finds cleanup absent after KeyboardInterrupt.
+  failure_condition: Removal begins and cleaner/waiter is interrupted before remove returns. Cleanup JSON is written only afterward, so status cannot distinguish untouched from interrupted removal, violating AC14 inspectable progress/safe retry.
+  suggested_action: Atomically persist cleanup intent/progress before effects, retain inspectable unfinished state on interruption and validate/resume only safe remaining effects on explicit retry while preserving execution result. Add removal interruption and status/retry coverage.
+  resolution: resolved
+  severity: P1
+checks:
+  p1_red: PASS exact R2 probes reproduced 3 failed 2 passed before fixes
+  focused: PASS 41 runtime cleanup guidance and unchanged R2 probes
+  affected: PASS 6374 passed 3 skipped selected-tier full fallback base ede62bde
+  lint_types_rules: PASS whole lint-check harness types whole-worktree rules
+  build: PASS offline recovery harness wheel
+diff_scope:
+  base: 37074d0d284288055931c856e755e876dd4f806d
+  head: 70064febe5ccec2719dea8220032f1450f588f6a
+activity_effort: high
