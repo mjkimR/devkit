@@ -2,7 +2,7 @@
 id: PROP-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
 summary: "Extend maintenance/test-management with asynchronous test assessment and recommended local/cloud operating examples. Preserve native project checks and use direct commands without a devkit delivery-policy selector or test-profile map."
-status: draft
+status: accepted
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: medium
