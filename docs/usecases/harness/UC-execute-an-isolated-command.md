@@ -37,6 +37,7 @@ entrypoints:
 - **4b.** Lost process ownership: the system reports unknown and retains the checkout; the use case ends.
 - **3a.** Wait timeout/interruption: observation stops without cancelling execution; the agent may resume at step 3.
 - **3b.** Cancellation requested: the system confirms managed shutdown and retains the checkout; resumes at step 5.
+- **5b.** Cleanup interrupted: the system preserves the original result and in-progress or unfinished cleanup evidence; the agent inspects it and may retry at step 5.
 - **5a.** Unsafe cleanup: the system reports `EXECUTION_CLEAN_REFUSED` separately and retains the execution result and environment; resumes at step 6.
 
 ## 4. Postconditions
@@ -94,3 +95,24 @@ entrypoints:
 - **Given** a passed run whose checkout contains unexpected untracked diagnostics.
 - **When** cleanup is requested.
 - **Then** its passing execution result is preserved separately from the cleanup refusal and diagnostics remain.
+
+### Scenario 8: Retained completion lacks ownership proof
+
+- **Covers**: 5a
+- **Given** an older terminal result without explicit positive group-quiescence evidence.
+- **When** cleanup is requested.
+- **Then** the result remains inspectable and cleanup refuses without removing the checkout.
+
+### Scenario 9: Interrupted cleanup
+
+- **Covers**: 5b
+- **Given** an eligible terminal run.
+- **When** the remover is interrupted after recording cleanup in progress.
+- **Then** the original result remains unchanged, incomplete cleanup is visible and an explicit retry revalidates ownership under serialization.
+
+### Scenario 10: Terminal publication during inspection
+
+- **Covers**: main success scenario, 4b
+- **Given** a reader has loaded running state.
+- **When** the supervisor publishes its valid terminal result and exits before process inspection.
+- **Then** the reader collects the terminal result; missing or mismatched evidence never becomes a pass.

@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD stages, gates and run records govern delivery. Worker inspection retains audit-base source completion scope; reusable git-operator executes Host-authorized lifecycle jobs with Git identity and recovery checks."
+summary: "SDD stages, gates and records govern delivery. Workers retain source scope; the Host accepts verification, including optional isolated background groups, while git-operator performs authorized Git lifecycle effects."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -16,6 +16,7 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit-spec/src/devkit_spec/features/worker/cli/commands.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/references/isolated-execution.md
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows

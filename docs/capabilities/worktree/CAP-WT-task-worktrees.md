@@ -1,13 +1,14 @@
 ---
 id: CAP-WT-task-worktrees
 title: "Task Worktrees"
-summary: "Task worktree isolation, creation-time local preference snapshots, activity branches, Host-authorized CLI integration with local or pull-request routes, merge gates, and stale checkout cleanup."
+summary: "Task and execution-only detached worktrees provide isolated checkouts. Activity branches retain local preference snapshots and guarded integration; fixed-commit execution checkouts have explicit ownership and guarded removal."
 area: worktree
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit/src/devkit_agt/features/worktree/usecases/planning.py
+  - packages/devkit/src/devkit_agt/features/worktree/repositories/execution.py
 created_at: 2026-10-17
 usecases:
   - UC-drive-development-to-integration
@@ -229,3 +230,5 @@ completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merg
 WHEN isolated execution requests preparation, worktree MUST create a unique detached checkout at its fixed commit and store run/path/SHA/repository ownership in the checkout's Git administrative directory. This API invokes no activity Unit, branch marker, merge, push or post-finish extension. `CAP-HARN-isolated-execution` owns setup, waiting, managed-process cancellation and retention.
 
 WHEN removal is requested, worktree MUST check the registered detached checkout, fixed HEAD, common repository, exact ownership marker and clean tracked/untracked content, then remove only that checkout. Missing already-removed checkouts are idempotent; unrelated, changed and dirty checkouts refuse. Manifests/results/logs stay in the common Git directory. Tests: `packages/devkit/tests/e2e/features/isolated_execution/test_lifecycle.py`.
+
+If an interrupted removal has left the owned checkout absent but its exact Git registration and run marker retained, retry may retire only that registration after revalidation. An existing checkout still requires every identity and cleanliness guard. A native remover inherits the caller's per-run cleanup lock so another cleanup cannot race an unfinished removal.

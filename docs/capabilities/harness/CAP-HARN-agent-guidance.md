@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Approach-aware SDD, opt-in adaptive-development and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
+summary: "Agent guidance for SDD, adaptive development, deep research and milestone operations. Local-orchestrated verification discovers independent check groups and collects isolated results without changing consumer requirements."
 area: harness
 status: active
 created_at: 2026-10-13

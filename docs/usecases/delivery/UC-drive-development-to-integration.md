@@ -1,7 +1,7 @@
 ---
 id: UC-drive-development-to-integration
 title: Drive Development to Integration
-summary: "An AI coding agent develops an agreed task through workflow stages, verifies and persists evidence including eligible single-envelope commits, then integrates locally or by pull request under Host authority and dev-integration policy."
+summary: "An AI coding agent develops an agreed task, verifies and persists evidence, collects optional background verification, and integrates locally or by pull request under Host authority and dev-integration policy."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -17,6 +17,7 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/usecases/service.py
   - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/references/isolated-execution.md
 
 created_at: 2026-10-21
 capabilities:

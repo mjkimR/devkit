@@ -24,7 +24,11 @@ Background the waiter through a tool that delivers completion if independent wor
 | `EXECUTION_TAIL_INVALID` | Request 0–1000 log lines. |
 | `EXECUTION_TIMEOUT_INVALID` | Supply a finite nonnegative timeout. |
 | `EXECUTION_WAIT_TIMEOUT` | Retain execution; collect later or explicitly cancel. |
+| `EXECUTION_CLEAN_IN_PROGRESS` | Inspect the retained cleanup operation; wait for its remover before retrying. |
+| `EXECUTION_CLEAN_UNFINISHED` | Inspect the original result and checkout; an explicit clean retry revalidates ownership. |
 | `EXECUTION_CLEAN_REFUSED` | Inspect active/unknown ownership, checkout identity and dirty files; retain evidence and repair deliberately. |
 | `EXECUTION_CLEANED` | Checkout removal is complete or already complete; evidence remains. |
 
 Execution outcomes remain separate from native exit codes and observer/cleanup outcomes. Status pending/pass exits 0, known negative exits 1, unknown/unreadable exits 2. Wait timeout or cleanup refusal exits 2 even when the original command passed or failed. The executor owns evidence and resource effects; the Host owns delivery completion.
+
+Cleanup requires explicit persisted positive managed-group quiescence; older terminal records without that proof remain readable but refuse removal. Cleanup progress is persisted before removal, and interruption leaves incomplete evidence. Retry never force-removes dirty or unrelated content.
