@@ -2,7 +2,7 @@
 id: PROP-async-e2e-verification
 title: Asynchronous E2E Verification
 summary: "Provide devkit exec for isolated asynchronous native commands with persistent execution results, and use it for local-orchestrated E2E. Keep devkit run unchanged and place client local/cloud operating recommendations in the dependent test-management playbook."
-status: reviewing
+status: accepted
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: high
