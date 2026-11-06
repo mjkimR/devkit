@@ -1,0 +1,19 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-06T00:35:02.756156Z'
+status: completed
+summary: 'No material findings in revised direction: separate exec group preserves run compatibility; direct argv/evidence stays separate from delivery decisions; local-orch guidance retained without policy selection.'
+findings: []
+assumptions:
+- Codex emulated read-only; matching before/after tree 917d58f44554734ccb6fc28be8261c6ffa6f0b2e and unchanged HEAD.
+- User requested a separate general execution group; exec is the Host naming recommendation. No plan acceptance is implied.
+unverified_areas:
+- Runtime isolation, process ownership, cancellation, cleanup and native fixtures await Development implementation and probes.
+checks:
+  inspection: PASS revised proposal, retained PADR, evidence and source boundaries
+  compatibility: PASS no existing run parser changes required
+diff_scope:
+  base: 9f5358cd33ce98060f7afc2c8636f2230962979f
+  head: d9333f8f07bd40c217baa9b300067b0eda39826e

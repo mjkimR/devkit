@@ -1,0 +1,29 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-06T00:16:59.918235Z'
+status: completed
+summary: Existing worktree preparation is revision-aware; compact is synchronous. A reusable test lifecycle needs explicit ownership; script/CLI costs compared in materials.
+findings:
+- issue: Fixed-commit activity preparation exists, but the CLI does not expose its revision argument and independent dependency isolation depends on project setup.
+  evidence: packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py:254-280,297-372; packages/devkit/src/devkit_agt/features/worktree/usecases/configured.py:27-50
+  suggested_action: Reuse worktree ownership with an explicit test-only preparation boundary and fail test setup on preparation notices.
+  resolution: open
+- issue: Compact execution is synchronous, stops its process group on caller interruption and prunes old logs; it has no persistent background run identity or status lifecycle.
+  evidence: packages/devkit/src/devkit_agt/features/compact/usecases/execute.py:164-186,225-280,437-467; packages/devkit/src/devkit_agt/features/compact/cli.py:1-17
+  suggested_action: Add background lifecycle separately without changing compact interruption ownership or evidence retention.
+  resolution: open
+- issue: A repository script is smaller initially, while a reusable CLI requires explicit feature ownership, command registration and declared dependencies.
+  evidence: packages/devkit/pyproject.toml:22-31; .devkit/architecture.toml:62-78; docs/architecture/ARCH-05-2-components.md:59-73,99-104,190-196
+  suggested_action: Narrow the selected CLI feature and allowed edges before handoff; keep native setup and test selection project-owned.
+  resolution: open
+assumptions:
+- Codex scout emulated read-only; Host-created PADR scaffolds explain the only concurrent new paths and HEAD stayed unchanged.
+unverified_areas:
+- Detached-process host survival, external resources and cross-platform process probes require Development validation.
+checks:
+  inspection: PASS source/code evidence; no runtime tests by Scout
+diff_scope:
+  base: 6df79c1c81db4692c254c36629014b63561e48b8
+  head: dc1d7eca6f9df88fdd6d675591cf99329df3ba3d
