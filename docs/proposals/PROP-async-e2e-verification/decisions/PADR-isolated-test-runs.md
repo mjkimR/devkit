@@ -39,7 +39,7 @@ manager. Main's files and dependencies can change while a long E2E command execu
   → `ARCH-05-2-components` harness feature ownership and layering (MUST).
 - Worktree owns creation and removal of run-owned fixed-commit execution checkouts. These execution-only environments have
   no SDD Unit, merge, push or activity post-finish effects; existing task-worktree policy remains unchanged.
-  → `ARCH-05-2-components` worktree and test-execution responsibilities (MUST).
+  → `ARCH-05-2-components` worktree and isolated-execution responsibilities (MUST).
 - Local-orch guidance describes direct Host launch, independent work, outstanding coverage, result collection and
   repair priority; git-operator retains Git lifecycle jobs. A one-run starting recommendation stays in guidance,
   rather than becoming an executor-wide admission policy.
@@ -48,9 +48,13 @@ manager. Main's files and dependencies can change while a long E2E command execu
   local/cloud policy selection is introduced. Delivery decisions remain with the calling workflow. Isolated execution
   depends only on the declared worktree and project features; compact and generic integration gain no test-supervision dependency.
   → `ARCH-05-2-components` declared feature graph (MUST).
-- The separate `exec` group owns start, list, status, logs, cancel and clean. Existing `devkit run` parsing,
+- The separate `exec` group owns start, list, status, logs, wait, cancel and clean. Existing `devkit run` parsing,
   synchronous execution and interruption behavior remain unchanged.
   → `ARCH-05-2-components` compact and isolated-execution responsibilities (MUST).
+- Cancellation confirms managed-process shutdown before environment removal is eligible. Finished environments
+  remain by default; explicit clean or `wait --clean` reclaims eligible checkouts while preserving results/logs.
+  Waiting observes execution without owning its cancellation or promising agent push notification.
+  The harness isolated-execution capability restates these lifecycle clauses during Development.
 - Manifests/logs survive eligible checkout cleanup, distinguish setup failure and unknown execution, and never
   turn launch success into passing evidence. Host-enforced termination and reboot have no survival guarantee.
   The harness isolated-execution capability restates these interface clauses during Development.
@@ -73,5 +77,6 @@ nonblocking ordering, local-orch scheduling guidance, restart inspection, proces
 AC-10 check direct native command passing and the boundary between execution evidence and delivery decisions.
 Development runs
 separate-process probes and a native consumer fixture on supported platforms. Local measurements compare the
-same revision/test set with async disabled/enabled. AC-11 preserves existing compact-run behavior. Host scheduling
+same revision/test set with async disabled/enabled. AC-11 preserves existing compact-run behavior. AC-12 through
+AC-15 cover cancellation, explicit cleanup, wait composition, concurrent observers and notification boundaries. Host scheduling
 compliance is Review only.

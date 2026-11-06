@@ -92,7 +92,20 @@ execution-count reduction, environment setup cost, CPU/memory benefit or full-su
 `devkit run --help` confirms the current single-command shape, `devkit run [OPTIONS] COMMAND...`. Its parser
 forwards arbitrary native argv and its interruption contract stops the command group. The root CLI has no
 `exec` command at this Planning revision. Use a separate `devkit exec` group for isolated asynchronous execution
-and its start/list/status/logs/cancel/clean operations. Do not extend `run` with subcommands or split launch into
+and its start/list/status/logs/wait/cancel/clean operations. Do not extend `run` with subcommands or split launch into
 `run` and inspection into `runs`. Test selection stays in the passed command; no profile or local/cloud setting
 is introduced. Existing bounded measurements remain evidence about the initial E2E consumer, not a generic
 build benchmark.
+
+## Wait, cancel and cleanup refinement
+
+`compact/usecases/execute.py` starts its native command in a new session and owns interruption propagation. An
+isolated execution can invoke a wrapper that invokes compact, so stopping only the outer leader does not prove
+all managed writers have stopped. Cancellation/cleanup probes must include that nested wrapper and a surviving
+child. Keep environments by default and separate confirmed cancellation from cleanup.
+
+`exec wait <run-id> --clean` moves per-run observation and eligible resource cleanup into one CLI call. Preserve
+the execution result and logs outside the checkout before cleanup; report cleanup independently. Interrupting or
+timing out the observer does not cancel its execution. Test repeated/concurrent cleanup and already-terminal
+results. The caller can background the waiter; actual agent completion notification depends on its execution tool
+and is not supplied by a new CLI daemon. These are proposed contracts awaiting Development probes.

@@ -89,12 +89,13 @@ recommendations, without adding a product-level completion policy or configuring
 | Q2 Cost | Measure bounded suites now; require same-machine synchronous/async comparison during Development | `materials/planning-evidence.md`; no whole-suite speedup claim |
 | Q3 Owner | A separate `devkit exec` group for isolated native commands, with test-specific choices in caller commands/guidance | `PADR-isolated-test-runs`; interface alternatives below |
 | Q4 Runtime | Detached POSIX supervisor, persistent evidence, no daemon/reboot guarantee | Process survival probes and failure injection are Development checks |
-| Q5 Isolation | Test-only detached checkout, independent dependency environment and run-specific temporary resources | Worktree revision support exists; test-environment allocation is added explicitly |
+| Q5 Isolation | Execution-only detached checkout, independent dependency environment and run-specific temporary resources | Worktree revision support exists; test-environment allocation is added explicitly |
 | Q6 Evidence | Results name the exact tested SHA; local-orch tracks outstanding changes and completion | Sections 3.2 and 3.4 |
 | Q7 Recovery | Distinguish setup, test failure, interruption and unknown; preserve evidence on cleanup | Section 3.3; no automatic retry, replay or rollback |
 | Q8 Boundaries | `devkit_agt.features.isolated_execution` with declared worktree/project dependencies | Section 3.5; no other feature edge is approved |
 | Q9 Operating examples | Local/cloud scheduling recommendations move to the dependent playbook, without runtime policy selection | `PROP-test-playbook-verification-policy` |
 | Q10 Command mapping | Pass native argv directly after `--`; reuse existing worktree setup, without a test-profile map in config | Section 3.3 |
+| Q11 Waiting and cleanup | `wait <run-id> --clean` observes one execution and returns its preserved result plus guarded cleanup outcome | Section 3.3; no notification daemon |
 
 The existing revision-aware worktree preparation is reusable, but its activity-branch semantics are not execution
 identity. Extend worktree ownership for execution-only checkout creation/removal instead of creating synthetic SDD
@@ -146,7 +147,9 @@ client repositories retain their own checks and commands.
 2. Determine required E2E from the accumulated change interval. When selection is nonempty and no E2E is running,
    launch it at the fixed landed SHA before beginning the next independent task. A selected merge batch has a
    bounded unit set. When selection is empty, record the reason instead of claiming a test pass.
-3. The Host directly manages the background run and can start independent work before it finishes. Recommend
+3. The Host launches `exec wait <run-id> --clean` through its execution tool's background facility to collect the
+   result and reclaim the checkout without repeated agent-driven polling. The Host can start independent work
+   before that waiter finishes. Recommend
    one active E2E run initially to limit CPU/resource contention; this is scheduling advice, not a CLI-wide
    admission limit or hidden queue. A verifier subagent is optional; git-operator keeps Git lifecycle duties.
 4. If more changes land while a run is active, preserve the outstanding interval. Finish the active run rather
@@ -155,7 +158,8 @@ client repositories retain their own checks and commands.
 5. Check results before each merge, on observed completion and at batch/session completion. On an observed
    failure, hold new merges and prioritize repair; independent branch work can continue. Repair the landed
    state and recheck the accumulated interval without automatic rollback or merge replay.
-6. Keep required verification pending until results are collected. Record run IDs, tested SHA, batch baseline,
+6. A waiter completion is evidence to inspect, not an automatic merge decision. Keep required verification
+   pending until results are collected. Record run IDs, tested SHA, batch baseline,
    outstanding units and next collection step in recoverable Host notes. After context loss, inspect stored runs
    and merge history; uncertain coverage uses full fallback rather than comparing main to itself.
 
@@ -172,7 +176,7 @@ unchanged. It executes synchronously in the current directory and preserves its 
 | Extend `run` with lifecycle subcommands | Arbitrary command forwarding would compete with subcommand parsing; rejected |
 | Add `run` flags plus a `runs` management group | Preserves parsing but splits isolated execution across two namespaces; rejected |
 | A test-only group | Does not reflect generic setup, argv and result handling; rejected |
-| Separate `exec start/list/status/logs/cancel/clean` group | Selected; one isolated-execution namespace and no changes to the existing run entry |
+| Separate `exec start/list/status/logs/wait/cancel/clean` group | Selected; one isolated-execution namespace and no changes to the existing run entry |
 
 Proposed commands, unavailable until Development:
 
@@ -181,6 +185,7 @@ devkit exec start --ref <fixed-sha> -- just test-affected --tier e2e --base <bas
 devkit exec list
 devkit exec status <run-id>
 devkit exec logs <run-id> --tail 100
+devkit exec wait <run-id> [--clean] [--timeout <seconds>]
 devkit exec cancel <run-id>
 devkit exec clean <run-id>
 ```
@@ -228,17 +233,54 @@ it. Host-enforced descendant termination, application exit policies, OS shutdown
 survival guarantee. Records remain recoverable. Development verifies the supported boundary with separate-process
 probes; it does not turn a subagent or detached PID into a durability claim.
 
-Cancellation signals only a positively identified owned supervisor/process group; a bare stored PID is
-insufficient. Unknown ownership prevents signalling and cleanup. `clean` removes only an inactive run-owned
-checkout after identity/dirty checks, preserving manifests and logs. It refuses active, unknown, unrelated or
-unexpectedly dirty environments. No force-delete, automatic retry, automatic evidence pruning or automatic rollback
-is included. A denied sandbox operation remains pending with its actual code; do not skip tests or reroute it.
+Cancellation and environment recovery are separate effects. `cancel` requests termination during preparation
+or native execution and returns the actual cancellation outcome. It does not remove the worktree. The supervisor
+stops setup/native commands through its positively identified process ownership, gives termination a bounded grace
+period, escalates where safe and confirms that managed writers have exited before marking the run cancelled.
+A bare stored PID or exit of only the launcher is insufficient. Cover nested wrappers such as `devkit run`, which
+owns another process group, and commands whose leader exits before children. If ownership or termination cannot
+be confirmed, retain the environment and report the unresolved state. Commands that intentionally detach beyond
+the managed process boundary require project cooperation; this is worktree isolation, not OS containment.
+
+Completed, failed and cancelled runs retain their environments by default. `clean` is an explicit request to
+remove an inactive run-owned checkout after identity/dirty checks. It preserves the manifest, result summary and
+logs outside that checkout, and refuses active, unknown, unrelated or unexpectedly dirty environments. Cleanup
+is idempotent: an already-cleaned run remains inspectable and reports that no checkout removal remains.
+No expiry-driven or implicit on-completion cleanup is added. Native artifacts still inside the checkout are
+removed by successful cleanup; callers retain the environment when they need those artifacts for diagnosis.
+
+`wait <run-id>` handles per-run observation inside the CLI instead of requiring the agent to invoke `status`
+repeatedly. It periodically checks stored state and process identity until a terminal outcome is available, then
+returns the bounded result summary, tested SHA, native exit code and retained log locations. A run that is already
+terminal returns immediately. `--clean` additionally requests guarded checkout cleanup after a trustworthy terminal
+result is persisted and managed processes are confirmed inactive. It applies after success, failure, setup failure
+or confirmed cancellation, provided the ordinary clean guards pass. Preserve the command result before deleting
+its checkout and emit one final response containing separate execution and cleanup outcomes. Under JSON this is
+one object. A cleanup failure never replaces or rewrites the recorded execution result.
+
+Without `--clean`, waiting preserves the environment. On unknown execution or `--timeout`, return an actionable
+non-success result and retain the environment; do not cancel or clean it. Interrupting the waiter stops only that
+observer, not the detached execution. Cleanup already in progress remains recorded and re-inspectable; a later
+explicit clean retries only its safe remaining effects. Multiple waiters may inspect the same execution; serialize
+per-run cleanup so that repeated wait/clean requests do not remove resources twice or touch unrelated paths.
+
+The intended local usage is `start` followed by one background `wait --clean`. The execution tool may deliver its
+completion event and output to the Host; the CLI itself provides no push notification into an agent conversation.
+On tools without such delivery, a later result lookup is still necessary. Waiter observation and resource cleanup
+do not become a worker scheduler: the Host still chooses subsequent work, coverage and failure repairs. No test
+profile, local/cloud setting, daemon or remote notification integration is introduced.
+
+No force-delete, automatic retry of native commands or automatic rollback is included. A denied sandbox operation
+retains its actual code and state; do not skip required work or reroute the operation.
 
 Text output uses stable `EXECUTION_*` sentinels/codes; JSON returns one object. Launch success is exit 0 with pending
 state, not a test pass. `status` returns 0 for pending/pass, 1 for a known negative result and 2 for unknown or
 unreadable execution; the payload always carries the exact state. Native exit codes remain separate. Invalid input
 or inability to start returns 2. Logs remain bounded (`--tail`, default 100); raw output stays at its recorded path.
-Detailed field/code names are finalized in the Development spec under `ARCH-08-1-agent-output` and
+For `wait`, exit 0 requires a successful command and successful requested cleanup; known negative execution
+returns 1. Unknown state, wait timeout or refused/failed requested cleanup returns 2 with the original execution
+result and separate observer/cleanup code retained. Native exit codes remain in the result rather than becoming
+the observer's exit code. Detailed field/code names are finalized in the Development spec under `ARCH-08-1-agent-output` and
 `CAP-ADV-agent-advisory-protocol`.
 
 ### 3.4 Evidence and local-orch completion
@@ -265,7 +307,7 @@ writes only these narrowed responsibilities, plus generated projections produced
 
 | Owner | Planned files/responsibility |
 | :--- | :--- |
-| `devkit_agt.features.isolated_execution` | `exec` CLI, typed `BaseUseCase` operations, run model, supervisor/process and manifest repositories; unit/integration/E2E tests mirroring this feature |
+| `devkit_agt.features.isolated_execution` | `exec` CLI including wait/optional cleanup, typed `BaseUseCase` operations, run model, supervisor/process and manifest repositories; unit/integration/E2E tests mirroring this feature |
 | `devkit_agt.features.worktree` | Execution-only fixed-commit checkout preparation/removal API and focused tests; existing activity start/finish behavior retained |
 | Package registration | `packages/devkit/pyproject.toml`, package README and `.devkit/architecture.toml`; add only the `exec` harness command name to dist CLI discovery diagnostics and focused plugin tests |
 | Repository selection | `scripts/affected_tests.py`, thin justfile documentation and existing selector regressions |
@@ -315,6 +357,18 @@ proposal. Read authoring context before later source asset edits; this Planning 
 - **AC-11:** Given existing `devkit run` invocations, current-directory execution, argument forwarding, bounded
   output and interruption cleanup remain unchanged. The separate `exec` group owns isolated execution lifecycle;
   list/status let a fresh process locate and inspect retained executions.
+- **AC-12:** Given cancellation during setup or native execution, terminate and verify managed process groups
+  before confirming cancellation. A nested compact wrapper, a surviving child, unknown ownership or reused PID
+  cannot cause premature cleanup or signalling of unrelated processes. Cancel itself retains the checkout.
+- **AC-13:** Given a terminal run, `wait` returns its bounded persisted result without agent-driven status polling.
+  `wait --clean` removes only an eligible checkout and reports execution and cleanup separately; a failed command
+  retains its failure evidence after cleanup, and a cleanup refusal retains its original execution outcome.
+- **AC-14:** Given waiter interruption, timeout, unknown state or concurrent waiters, execution is not implicitly
+  cancelled and unsafe cleanup does not occur. Repeated cleanup is idempotent. Waiting without `--clean` retains
+  the checkout, and completed executions have no unsolicited automatic cleanup.
+- **AC-15:** Given a Host using background `wait --clean`, local-orch guidance explains result collection through
+  the execution tool and its notification limits. CLI completion alone does not imply an agent received a push
+  event or made a delivery/repair decision.
 
 Keep the measured synchronous baseline reproducible in the Development worktree with the async path disabled.
 Do not check out a different revision or compare different test selections to claim a speedup. Product-process
