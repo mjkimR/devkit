@@ -87,3 +87,24 @@ narrowed the prerequisite to asynchronous separation and explicitly kept combine
 consultation valid. Cloud wording refers to existing/applicable E2E rather than creating a new tier requirement.
 This repairs AC-11 precision without changing the accepted cloud risk or native required checks. Initial source
 E2E evidence remains exact to adbb4860; the changed source receives its own verification below.
+
+## Repaired source verification
+
+Source HEAD bb1563952f4ece53dc2559c9e60b8e0643b2cf8d includes the AC-11 repair and both Living Spec drafts.
+Affected unit/integration verification against 72dcf58181c421a2904cc6acde54d4f6a673788c PASS 144 on the same
+precommit content, partial selection of 18 paths, full fallback retained. Rules CI at committed bb156395 PASS 22;
+hygiene PASS 25, generated check checked=2 stale=0 and sync --check zero drift. Offline wheel rebuilt into
+scratch/wheel-final contains all four playbook files; execution.md bytes exactly match final source.
+
+Selected E2E launched with `uv run devkit exec start --ref bb1563952f4ece53dc2559c9e60b8e0643b2cf8d -- just test-affected --base 72dcf58181c421a2904cc6acde54d4f6a673788c --tier e2e`.
+Run 888835679daa456fbd08df20b84cb758 PASS exit=0, 4 selected paths / 4 passed in 6.88s. Background
+`uv run devkit exec wait 888835679daa456fbd08df20b84cb758 --clean --format json` returned observer=completed and
+cleanup=cleaned / EXECUTION_CLEANED. Original logs/results remain under shared Git
+`devkit/executions/888835679daa456fbd08df20b84cb758/`; reading this own run log is the only added external-worktree
+verification read. Earlier adbb4860 results remain labelled to their actual SHA.
+
+Fresh independent review02 PASS at bb156395, no findings; original twelve criteria traced and the exact no-E2E
+failure condition verified. Reviewer before/after snapshot f49c4c2261ddc2ca5ded518259a6163cc8094a22 unchanged,
+clean HEAD unchanged, outside_reads empty. No probes or source writes. Entrypoint derivation offered the playbook
+directory and structure test; rejected both because existing SKILL.md is the single doorway for each contract.
+The implementer's reflected targets are complete; separate reconciliation verification follows.

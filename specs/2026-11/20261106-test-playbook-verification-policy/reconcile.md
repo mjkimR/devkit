@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-test-playbook-verification-policy
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-test-management.md
     resolution: modified
@@ -20,5 +20,5 @@ cloud nightly repair and inconclusive tuning.
 
 No runtime/API, architecture, dependency, glossary term or general completion-policy change is introduced. No
 waiver, deferred required work or source feedback retirement is needed. Existing entrypoints remain the main
-router for both documents; derived helpers/tests are not doorways. Code review PASS at adbb4860 covers all twelve
+router for both documents; derived helpers/tests are not doorways. Fresh code review PASS at bb156395 covers all twelve
 criteria; separate reconcile verification follows this implementer-authored reflection.

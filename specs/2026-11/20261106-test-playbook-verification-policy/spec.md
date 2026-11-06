@@ -2,7 +2,7 @@
 id: SPEC-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
 summary: "Assess independent test groups and asynchronous verification without weakening consumer checks; provide optional local and cloud scheduling examples through the existing decision round."
-status: in-progress
+status: completed
 created: 2026-11-06
 depends_on:
   - SPEC-async-e2e-verification
