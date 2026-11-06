@@ -55,3 +55,8 @@ Guidance walkthroughs: (1) inspect docs/scripts/runner/CI and prove the devkit s
 
 
 Recovery checks: focused feature/guidance plus unchanged R2 probes **41 passed**; affected selected-tier full fallback **6374 passed, 3 skipped in 109.48s**, 346 selected paths against `ede62bde` (`scratch/recovery-affected.log`). Whole-workspace lint-check, harness types, whole-worktree governance rules and offline wheel build passed. Initial type check found a fake Runs fixture typing mismatch; corrected by explicit typed fixture cast and rechecked successfully. Only tracked sync output remains `.devkit/installation.json` on Task 3. The controlled measurement above is refreshed on committed recovery runtime; its fixture and limits are identical between arms and it still makes no full-suite or aggregate-memory claim.
+
+
+## Failed independent recovery round 3
+
+Fresh independent R3 existing runtime/lifecycle/guidance tests passed36 and committed rules passed. Two new independent probes failed in `scratch/review-03/test_independent_recovery.py`: the pre-scan adopted/signalled unrelated reused leader PID200 after the original unobserved leader and orphan disappeared; retained terminal evidence without positive quiescence proof still authorized cleanup with a missed writer alive. Review03 records both as P1. The recovery stops for Host remedy without another fix round. Task2 is reopened; Living Spec reconciliation and final-report remain unfinished. Before/after support-role snapshot is identical `cfc2d2772215dc22479cb76138b33261cf552107`; reviewed HEAD205a6cd4 remained clean. Reviewer reported no outside-worktree source/document reads.

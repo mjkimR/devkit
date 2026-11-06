@@ -1,0 +1,36 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:48:46.241017Z'
+status: completed
+summary: round 3; REVISE. Host-directed recovery's one fresh independent round finds two P1 ownership defects despite focused and committed-rule passes. Preserve failed recovery evidence and return to Host without another fix round.
+findings:
+- issue: An unobserved leader's reused PID can be adopted and signalled as owned.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:165; scratch/review-03/test_independent_recovery.py:55 fails with signalled=[200].
+  failure_condition: Leader 200 exits before its identity is observed. The post-exit scan discovers owned orphan 201/group 200. After that orphan exits, unrelated PID/group 200 appears before an empty observation. The next pre-scan adopts it through group membership before the post-exit identity guard, and cancellation signals it.
+  suggested_action: Before discovery or signalling on every post-reap iteration, reject a reappearing direct-leader PID lacking the original identity. Preserve unknown ownership without signalling; add the supervisor-level regression.
+  resolution: open
+  severity: P1
+- issue: Cleanup still accepts retained terminal evidence without positive group-quiescence proof.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/services/lifecycle.py:21; packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:63; scratch/review-03/test_independent_recovery.py:76 fails because remove is called.
+  failure_condition: A retained result from the preceding captured runtime contains terminal passed status and only preparation history, with no ownership proof. A missed same-group writer remains alive. Cleanup falls back to known-PID checks and authorizes removal despite lacking the required post-exit proof.
+  suggested_action: Require explicit persisted positive quiescence evidence before removal, conservatively refusing absent or incomplete proof while preserving the original execution result. Record valid no-launch/no-group completion explicitly and add retained-record regression coverage.
+  resolution: open
+  severity: P1
+assumptions:
+- 'Host isolation is emulated: absolute worktree cwd/read scopes, round-only probes and unchanged before/after snapshot substitute for native confinement; reviewer reported no explicit source/document reads outside worktree or source/index/HEAD edits.'
+- Initial native reviewer rerun hit sandbox PermissionError at launch and was superseded by individually approved passing native rerun.
+unverified_areas:
+- Linux runtime execution and real OS PID-reuse frequency.
+- Independent Living Spec reconciliation and final landed-head verification remain required.
+checks:
+  focused: PASS independent36 runtime lifecycle guidance tests18.24s with approved POSIX access
+  probes: FAIL 2 independent probes in scratch/review-03/test_independent_recovery.py
+  committed_rules: PASS --ci --base ede62bde errors0 warnings0
+  diff_check: PASS git diff --check
+  boundary: PASS snapshot unchanged cfc2d2772215dc22479cb76138b33261cf552107 HEAD205a6cd4 clean
+diff_scope:
+  base: 37074d0d284288055931c856e755e876dd4f806d
+  head: 205a6cd43264c45a9109a90f64a4cea871201264
+activity_effort: high
