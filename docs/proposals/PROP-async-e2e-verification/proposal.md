@@ -2,7 +2,7 @@
 id: PROP-async-e2e-verification
 title: Asynchronous E2E Verification
 summary: "Separate local-base verification with Host-managed asynchronous E2E from cloud-base delivery with premerge PR CI and accepted nightly detection of integration failures. Keep worker iteration lightweight and define route-specific evidence, recovery and completion."
-status: draft
+status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: high
