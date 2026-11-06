@@ -1,0 +1,22 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-06T11:09:17.772550Z'
+status: completed
+summary: No material findings across the five refined proposal documents; reusable prefixed archetypes and optional bounded role leads preserve existing authority, independent installation and truthful verification.
+findings: []
+assumptions:
+- Codex projection is emulated; explicit read scope and identical before/after tree snapshots substitute for native enforcement.
+- Proposed agent IDs and topology remain recommendations pending acceptance; product support roles retain no-index/HEAD-mutation authority.
+unverified_areas:
+- Native nesting, slot behavior and permission enforcement require host-specific exercises; token cost, performance and model quality were not measured.
+- The plan-intent gate record was outside the five-document content review.
+checks:
+  review: PASS current capability, use case, projections, model policy, ADR, architecture and bundle contracts compared against AC-1 through AC-9
+  boundary: PASS before and after tree 2df11ccef0878467e6a0624efb73eb4b60c486aa; HEAD unchanged
+  diff: PASS git diff --check
+diff_scope:
+  base: 5a89b2eaebfe4559ce17cb533ed0a8382ac0fb77
+  head: 9df9a27fcf215bf83360357b0b423db8202e8a6d
+activity_effort: medium
