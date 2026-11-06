@@ -1,7 +1,7 @@
 ---
 id: PROP-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
-summary: "Align maintenance/test-management with devkit's local-orchestrated verification and separate client local/cloud scenarios. Preserve consumer policy while assessing asynchronous evidence, nightly risk acceptance, recovery and completion."
+summary: "Extend maintenance/test-management with asynchronous test assessment and recommended local/cloud operating examples. Preserve native project checks and use direct commands without a devkit delivery-policy selector or test-profile map."
 status: draft
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -28,137 +28,124 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`PROP-async-e2e-verification` proposes frequent synchronous unit/integration checks and selective asynchronous
-E2E with fixed-commit isolation, durable evidence and Host-owned local recovery. It also defines cloud-base PR
-CI followed by automatic merge, with no immediate postmerge CI and accepted nightly detection of integration
-failures. This follow-up updates the existing
-`maintenance/test-management` playbook after that policy and its actual execution interface are delivered.
+`PROP-async-e2e-verification` provides fixed-commit asynchronous execution, persistent run evidence, direct native
+command passing and local-orch skill integration. This follow-up teaches the existing test-management playbook
+how to assess that capability and recommend practical test arrangements.
 
 The source is `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/SKILL.md`.
-Its `references/assessment.md` separates iteration aids from completion checks and preserves affected-selection
-fallbacks. Its `references/pytest.md` checks worker/run resource ownership and requires comparable evidence
-before promoting tuning changes. These principles remain useful under asynchronous execution.
+Its `references/assessment.md` preserves coverage, resources and completion checks. Its `references/pytest.md`
+requires comparable evidence before promoting tuning changes. Retain those principles.
 
-The hypothesis is that aligning the playbook with the retained verification contract will let agents assess
-blocking time and E2E necessity without weakening coverage or mistaking a background launch for verification.
-This work changes reusable assessment guidance, not the verification policy or runner implementation itself.
-
-Devkit itself consumes only the local-orchestrated policy. Client repositories may select local-base or cloud-pr
-under their own adopted verification instructions. The playbook distinguishes the repository being assessed
-from the devkit product's own consumption; cloud-pr guidance does not introduce cloud delivery or PR CI in devkit.
+Devkit itself uses local-orchestrated development. A client repository can have different CI and delivery habits.
+Local/cloud examples help explain scheduling tradeoffs; they are recommendations, not product policy alternatives
+that a consumer must select or register. The executor needs neither that distinction nor a configuration setting.
 
 ### Scope and non-goals
 
-- Update the source playbook and relevant references, with focused guidance verification and capability alignment.
-- Preserve explicit invocation, user-selected scope, one decision round and consumer workflow routing.
-- Preserve consumer tier names, resource checks, required gates and optional-skip semantics.
-- Include the explicit cloud-base risk-acceptance scenario without imposing local completion gates on it.
-- Exclude changes to the prerequisite's execution engine, test selector or delivery policy.
-- Exclude a mandatory devkit CLI, pytest dependency, subagent or concurrency setting for every consumer.
-- Exclude CI/branch redesign, application defect repairs and broad test-suite optimization.
+- Update the source playbook and relevant references, with focused guidance checks and capability alignment.
+- Preserve explicit invocation, user-selected assessment scope, one decision round and consumer workflow routing.
+- Preserve native tier names, resource prerequisites, required checks and documented optional skips.
+- Include recommended local and cloud arrangements, including accepted nightly detection of broken combinations.
+- Exclude a local/cloud policy selector, route registry, new global completion contract and test-profile config.
+- Exclude changes to the prerequisite executor, test selector or local-orch implementation.
+- Exclude mandatory devkit commands, pytest, a verifier subagent or a concurrency setting for every consumer.
+- Exclude client CI/branch implementation, application defect repairs and broad test-suite optimization.
 - Exclude editing managed copies or projected agent files directly.
 
 ## 2. Technical Spike Questions
 
-- **Q1:** Which delivered commands and states does `PROP-async-e2e-verification` retain? If it chooses a
-  repository script, how does the playbook assess that interface without presenting a hypothetical CLI as real?
-- **Q2:** Which guidance belongs in the main playbook, generic assessment reference or pytest-specific reference
-  so that a non-Python consumer keeps its native execution and completion contract?
-- **Q3:** How should findings distinguish unnecessary E2E frequency, blocking scheduling, environment setup cost
-  and actual test execution cost while preserving the coverage each tier provides?
-- **Q4:** Which guidance checks or walkthroughs prove that pending, failed, interrupted and unknown executions
-  never become successful test evidence, and that skipped E2E has an explicit reason?
-- **Q5:** How does assessment distinguish an intentionally absent cloud postmerge gate from an unavailable
-  required check, while recording accepted risk, nightly cadence and the repair-request recipient/mechanism?
+- **Q1:** Which delivered execution commands and states does the prerequisite retain? Keep native argv passing
+  and existing setup conventions; do not invent profile mappings or hypothetical commands.
+- **Q2:** Which recommendations belong in the main playbook, generic assessment reference or pytest reference
+  so that non-Python consumers retain native commands and ownership?
+- **Q3:** How should findings distinguish E2E frequency, blocked Host time, environment preparation and actual
+  command cost without treating an integration label as a cheap-test guarantee?
+- **Q4:** Which focused checks and walkthroughs show that launch, pending, interrupted and unknown execution
+  never become passing evidence, and omitted E2E retains its reason?
+- **Q5:** How should local/cloud examples explain their tradeoffs without adding policy selection or imposing
+  a missing postmerge check on a consumer that accepts nightly detection?
 
 ## 3. Proposed Design & Impact
 
-### 3.1 Assessment updates
+### 3.1 Assessment and recommendations
 
-Inventory test tier, affected scope, execution cost, resource isolation and required timing as separate facts.
-Keep measured cost distinct from test semantics: an integration label does not prove cheap execution and a
-long duration does not authorize reclassification or deletion.
+Inventory test semantics, affected scope, measured cost, resource isolation and execution timing separately.
+Read the actual commands, CI triggers and required checks of the repository being assessed. Do not infer its
+requirements from devkit's own local-orch habits or from where its worker runs.
 
-Assess branch checks, synchronous landed checks and asynchronous required checks separately. Preserve full
-fallback within the consumer's declared selection contract. Identify cases needing E2E before merge because
-other tiers do not establish the changed behavior. Record justified omissions separately from passed tests.
+Recommend frequent unit/integration checks during worktree/PR iteration, with E2E when needed to establish the
+changed behavior. Preserve required lint, types, rules, frontend and other native checks. Use conservative full
+fallback within the repository's selection contract. Explain E2E omissions separately from passing results.
 
-Read the consumer's adopted policy before proposing background execution. Preserve existing synchronous
-requirements until a separately authorized policy change alters them. This playbook does not grant that change.
+Present the following as operating examples, not mandatory modes or a configuration decision:
 
-Identify the assessed repository and its explicitly selected delivery scenario before evaluating missing gates.
-A worker running in the cloud, or a local Host using a PR, does not by itself select cloud risk acceptance.
-Keep operational mode transient; this assessment does not write a persistent `cloud-pr` mode setting.
-
-Identify the selected delivery scenario before evaluating missing gates:
-
-| Scenario | Required flow | Completion and accepted risk |
+| Example | Suggested arrangement | Tradeoff to explain |
 | :--- | :--- | :--- |
-| Local-base | Worker unit/integration with selective E2E; merge; synchronous unit/integration and asynchronous required E2E | Host collects required results before completing the landed scope |
-| Cloud-base | Worker unit/integration with selective E2E; PR CI including E2E; rework on failure; automatic merge on pass | PR checks and merge complete the work; no immediate postmerge CI; nightly detects combination failures and requests follow-up repair |
+| Active local Host | Worker unit/integration and selective E2E; merge; synchronous unit/integration; selective E2E asynchronously while independent work proceeds | Host collects required results and prioritizes repair when a failure is observed |
+| Cloud PR without an active Host | Worker unit/integration and selective E2E; required PR CI including E2E; rework on failure; automatic merge on pass; nightly later | No immediate postmerge CI; passing PRs can break main in combination until nightly detection and repair |
 
-For the cloud-base risk-acceptance scenario, record that main can break after individually passing PRs merge.
-Do not require validation of the latest base's prospective merge result, force a merge queue or add immediate
-postmerge CI as a condition of accepting this scenario. Record nightly cadence, missed-run visibility and who
-receives or dispatches repair work in the Host's absence. An absent check that this policy does not require is
-not an unmet gate. Required PR checks still block merging when failed or unavailable.
+The cloud example accepts that broken combinations reach main. Do not add latest-base prospective merge testing,
+forced base refresh, a merge queue or immediate postmerge CI as prerequisites for that recommendation. Explain
+nightly timing and how failures reach the repository's repair process, without prescribing an adapter or recipient
+schema. A later nightly failure is follow-up repair, not proof that the merged combination had passed earlier.
 
-### 3.2 Execution evidence and recovery
+Assess actual project requirements when reporting gaps. An intentionally absent check is not an unavailable
+required check. Failed required PR CI still blocks merge. If a recommendation would change an existing project
+requirement, route that change through the normal decision round; the playbook does not silently apply it.
 
-Assess whether background runs record their exact SHA, selection baseline and scope, commands, environment,
-state, exit code and log location. Check whether advancing main can change files, dependencies or resources
-used by an active run. Reuse the prerequisite's vocabulary and actual interfaces.
+### 3.2 Execution evidence and local use
 
-Assess Host result checks, bounded concurrency, accumulated verification and failure-priority handling. A
-successful launch is pending verification. A successful result at one SHA does not establish a later HEAD.
-Unknown or interrupted execution remains visible; an unavailable required check remains `not_run` and unmet.
+Assess exact tested SHA, native command, selection baseline where applicable, environment, state, exit code and
+logs. Confirm that advancing main cannot change files/dependencies used by an active run. Reuse the delivered
+interfaces; do not add test-profile mappings or local/cloud flags to the executor.
 
-For local-base, keep the Host responsible for scheduling, repair routing and completion. An optional verification
-subagent changes who collects or diagnoses evidence, not the evidence requirements. Do not expand git-operator
-into test supervision implicitly. For cloud-base, inspect CI outcomes and the defined rework/repair dispatch
-mechanism instead of assuming an active Host. Nightly failures route follow-up work after PR completion.
+For local scheduling recommendations, explain direct Host launch and result collection, bounded batches,
+outstanding changes and repair priority. Start with one E2E run when resource contention warrants it; keep this
+as advice rather than a mandatory executor limit. The local-orch skill owns the concrete workflow procedure,
+so the playbook links it rather than duplicating its full instructions.
 
-### 3.3 Decision and reporting updates
+A verification subagent can help diagnose results but is not required for asynchrony or process persistence.
+Git-operator retains Git lifecycle duties. Without an active Host, discuss existing CI/rework and nightly repair
+arrangements rather than assuming a local agent will observe every failure.
 
-Present proposed changes with exact source paths, coverage consequences, measured evidence and required
-validation. Keep the existing one decision round. Route approved changes through the consumer's workflow;
-background execution is not permission to bypass a required completion check.
+### 3.3 Decision and reporting
 
-Extend report guidance to distinguish reduced blocking time from reduced total test time or execution count.
-Retain pending runs and the next result-collection action in any incomplete report. Preserve the distinction
-between completion of the assessment, completion under the selected delivery policy and actual test evidence.
-Cloud PR completion does not assert that its merged combination passed tests. A later nightly failure does not
-retroactively require the completed PR to wait for the local asynchronous completion flow.
+Present proposed changes with source evidence, exact paths, coverage consequences and validation. Keep the
+existing one decision round for proposed edits, not an extra local/cloud policy-selection round. Route approved
+changes through the consumer workflow and keep unanswered candidates pending.
+
+Separate reduced blocking from reduced test execution time or run count. Report preparation cost and resource
+contention where measured; missing comparable evidence supports no speedup claim or default tuning promotion.
+Keep pending runs, coverage gaps and next collection actions visible. Distinguish assessment completion from
+actual test evidence and the repository's own delivery requirements. No executor launch establishes a test pass.
 
 ### 3.4 Expected acceptance scenarios
 
-- **AC-1:** Given the prerequisite's delivered interface, the playbook names only actual commands or clearly
-  labelled examples and preserves the consumer's native checks.
-- **AC-2:** Given asynchronous E2E, an assessment identifies its SHA, outstanding coverage and collection action;
-  launch success or an earlier SHA's pass cannot satisfy later required verification.
-- **AC-3:** Given unavailable required tests, failed E2E or unknown execution, the report retains the unmet gate
-  and routes follow-up work without silently weakening the policy.
-- **AC-4:** Given a non-Python consumer or an expensive integration test, guidance separates cost from tier and
-  preserves native ownership, resources and commands.
-- **AC-5:** Given a tuning recommendation, the report distinguishes measured blocking time, execution cost and
-  coverage. Missing comparable evidence does not produce a speedup claim or default promotion.
-- **AC-6:** Given no invocation or no decision on proposed edits, no assessment or configuration change is
-  automatically initiated by merely retrieving the playbook.
-- **AC-7:** Given selected cloud-base risk acceptance, missing immediate postmerge CI or latest-base merge-result
-  validation is not an unmet gate. The assessment records accepted failure exposure and nightly repair routing.
-- **AC-8:** Given failed required cloud PR CI, the assessment preserves the merge block and rework request;
-  given a later nightly failure, it routes follow-up repair without inventing a continuously available Host.
-- **AC-9:** Given local-base, required asynchronous results remain pending until collected; selecting the cloud
-  risk scenario for another consumer does not silently waive local verification.
-- **AC-10:** Given devkit itself, assess local-orchestrated consumption only; given a client repository, preserve
-  its explicitly adopted local/cloud scenario without treating worker location as policy selection.
+- **AC-1:** Given the delivered prerequisite, the playbook uses actual commands or labelled examples and preserves
+  native checks. Direct command passing requires no test-profile map or local/cloud configuration.
+- **AC-2:** Given asynchronous E2E, assessment identifies its SHA, outstanding coverage and collection action;
+  launch success and an ancestor's pass cannot satisfy later required verification.
+- **AC-3:** Given a missing required check, failed test or unknown execution, the report preserves the gap and
+  routes proposed follow-up through the consumer workflow without weakening coverage.
+- **AC-4:** Given non-Python tests or an expensive integration suite, recommendations preserve native ownership,
+  commands and resources, and separate measured cost from tier semantics.
+- **AC-5:** Given a tuning recommendation, the report distinguishes blocked time, execution cost and coverage;
+  missing comparable results produce no speedup claim or default promotion.
+- **AC-6:** Given no invocation or no decision on proposed edits, no assessment or configuration change starts
+  automatically from retrieving the playbook.
+- **AC-7:** Given the cloud example's accepted nightly risk, the recommendation requires no latest-base merged
+  result, merge queue or immediate postmerge CI. Explain combination failures and later repair.
+- **AC-8:** Given required PR CI failure, preserve the existing merge block and rework arrangement; given nightly
+  failure, discuss follow-up repair without inventing a continuously available Host.
+- **AC-9:** Given devkit itself, assess its local-orch usage; given a client, inspect its actual setup instead of
+  requiring a declared policy mode. Examples remain recommendations and introduce no selector or extra decision round.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this draft dependent on `PROP-async-e2e-verification`. Start its implementation only after the prerequisite's
-policy and execution contract have landed and passed required verification. Follow the prerequisite identity
-through normal proposal handoff rather than removing the dependency to start early.
+Keep `depends_on: PROP-async-e2e-verification`. Start implementation after the prerequisite execution contract
+and local usage land and pass required verification. Follow its identity through normal handoff rather than
+removing the dependency to start early.
 
-Before asset edits, load the authoring context and the maintenance bundle's source instructions. Inspect the
-then-current playbook and narrow changes to its actual gaps. Verify document references and focused guidance
-checks; label walkthroughs separately from executed runtime tests. Graduate through the normal proposal workflow.
+Before asset edits, load authoring context and the maintenance bundle's source instructions. Inspect the
+then-current playbook and actual interfaces. Verify references and focused guidance checks; label recommendation
+walkthroughs separately from runtime tests. Graduate through the normal proposal workflow.
