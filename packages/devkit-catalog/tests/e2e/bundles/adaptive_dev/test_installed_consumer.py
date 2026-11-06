@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[6]
@@ -64,9 +65,39 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".agents/skills/spec").exists()
     assert (consumer / ".agents/skills/adaptive-dev/SKILL.md").is_file()
     assert not (consumer / ".agents/skills/deep-research").exists()
-    for role in ("product-clarifier", "product-researcher", "usage-reviewer"):
+    for role in (
+        "product-clarifier",
+        "product-researcher",
+        "usage-reviewer",
+        "swarm-planner",
+        "swarm-worker",
+        "swarm-verifier",
+    ):
         assert (consumer / f".codex/agents/{role}.toml").is_file()
     assert not (consumer / ".codex/agents/direction-explorer.toml").exists()
+    agents_consumer = tmp_path / "sdd-agents-consumer"
+    agents_consumer.mkdir()
+    run("git", "init", "-q", str(agents_consumer))
+    run(python, "-m", "devkit_dist", "sync", "-w", str(agents_consumer), cwd=agents_consumer)
+    agent_config = agents_consumer / ".devkit/config.toml"
+    agent_config.write_text(agent_config.read_text() + '\n[bundles."adaptive-dev"]\npresets = ["agents"]\n')
+    run(python, "-m", "devkit_dist", "sync", "-w", str(agents_consumer), cwd=agents_consumer)
+    assert {p.stem for p in (agents_consumer / ".codex/agents").glob("swarm-*.toml")} == {
+        "swarm-planner",
+        "swarm-worker",
+        "swarm-verifier",
+    }
+    inspected_agents = json.loads(
+        run(python, "-m", "devkit_dist", "config", "show", "-w", str(agents_consumer), cwd=agents_consumer)
+    )
+    assert inspected_agents["configuration"]["development"]["approach"] == "sdd"
+    assert not (agents_consumer / ".agents/skills/adaptive-dev").exists()
+    assert not (agents_consumer / ".devkit/managed/adaptive-dev/templates").exists()
+    assert not (agents_consumer / ".devkit/adaptive-dev.md").exists()
+    assert "`/adaptive-dev`" not in (agents_consumer / "AGENTS.md").read_text()
+    worker_projection = tomllib.loads((agents_consumer / ".codex/agents/swarm-worker.toml").read_text())
+    assert "model" not in worker_projection
+    assert "model_reasoning_effort" not in worker_projection
     current = consumer / ".devkit/adaptive-dev.md"
     current.write_bytes(b"# Current facts\nGoal: household list\nUnverified: offline merge\n")
     expected_context = current.read_bytes()

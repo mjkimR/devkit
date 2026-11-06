@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import re
+import shutil
 import tomllib
 from pathlib import Path
 
 import pytest
+from devkit.advisory import AdvisoryError
 from devkit_dist.features.distribution.models.errors import SelectionError
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.bundles.subagents import read_contract
@@ -17,6 +19,7 @@ from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
 BUNDLE = PACKAGE / "src/devkit_catalog/adaptive_dev/bundle"
+SWARM = {"swarm-planner", "swarm-worker", "swarm-verifier"}
 ROLES = {"product-clarifier", "product-researcher", "usage-reviewer"}
 
 
@@ -42,13 +45,13 @@ def test_adaptive_dev_projects_roles_and_entry_without_seeding_product_state(tmp
     assert (tmp_path / ".agents/skills/adaptive-dev/SKILL.md").read_bytes() == (
         managed / "skills/adaptive-dev/SKILL.md"
     ).read_bytes()
-    for role in ROLES:
+    for role in ROLES | SWARM:
         assert (tmp_path / f".codex/agents/{role}.toml").is_file()
         assert (tmp_path / f".claude/agents/{role}.md").is_file()
         assert (tmp_path / f".agents/agents/{role}.md").is_file()
         projected = tomllib.loads((tmp_path / f".codex/agents/{role}.toml").read_text())
         assert projected["sandbox_mode"] == (
-            "read-only" if role in {"product-clarifier", "usage-reviewer"} else "workspace-write"
+            "read-only" if role in {"product-clarifier", "usage-reviewer", "swarm-planner"} else "workspace-write"
         )
     assert not (tmp_path / ".devkit/adaptive-dev.md").exists()
     assert not (tmp_path / "docs").exists()
@@ -93,7 +96,13 @@ def test_roles_keep_optional_execution_and_coordinator_context_ownership() -> No
 
 def test_preset_keeps_product_iteration_without_the_research_entry() -> None:  # SPEC-deep-research-bundle AC-04
     bundle = load_bundle(BUNDLE)
-    assert set(bundle.presets["core"]) == {"adaptive-dev", "adaptive-dev-pointer", "current-context-template", *ROLES}
+    assert set(bundle.presets["core"]) == {
+        "adaptive-dev",
+        "adaptive-dev-pointer",
+        "current-context-template",
+        *ROLES,
+        *SWARM,
+    }
     assert {asset.id for asset in bundle.assets} == set(bundle.presets["core"])
 
 
@@ -149,3 +158,90 @@ def test_former_incubation_selection_is_refused(tmp_path: Path) -> None:  # SPEC
         sync_project(tmp_path, _installed())
     assert raised.value.code == "SELECTION_INVALID"
     assert not (tmp_path / ".devkit/managed/adaptive-dev").exists()
+
+
+def test_agents_only_preserves_sdd_and_projects_no_entry(tmp_path: Path) -> None:
+    update_config(tmp_path, agents=["codex", "claude-code", "antigravity"], presets={"adaptive-dev": ["agents"]})
+    config = tmp_path / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[development]\napproach = "sdd"\n')
+    before_config = config.read_bytes()
+    sync_project(tmp_path, _installed())
+    assert {p.stem for p in (tmp_path / ".codex/agents").glob("*.toml")} == SWARM
+    for role in SWARM:
+        projected = tomllib.loads((tmp_path / f".codex/agents/{role}.toml").read_text())
+        assert "model" not in projected
+        assert "model_reasoning_effort" not in projected
+        assert (tmp_path / f".claude/agents/{role}.md").is_file()
+        assert (tmp_path / f".agents/agents/{role}.md").is_file()
+        contract = read_contract((BUNDLE / f"subagents/{role}.md").read_bytes(), "adaptive-dev", role)
+        assert contract.skill is None
+        assert contract.hosts["codex"].status == "emulated"
+        assert contract.hosts["claude-code"].status == "emulated"
+        assert contract.hosts["antigravity"].status == "unverified"
+    assert config.read_bytes() == before_config
+    assert not (tmp_path / ".agents/skills/adaptive-dev").exists()
+    assert not (tmp_path / ".devkit/managed/adaptive-dev/templates").exists()
+    assert not (tmp_path / ".devkit/adaptive-dev.md").exists()
+    assert "`/adaptive-dev`" not in (tmp_path / "AGENTS.md").read_text()
+
+
+def test_extension_model_policy_and_collision_are_transactional(tmp_path: Path) -> None:
+    extension = tmp_path / "project-bundle"
+    (extension / "subagents").mkdir(parents=True)
+    role = "acme-security-reviewer"
+    (extension / f"subagents/{role}.md").write_text(
+        (BUNDLE / "subagents/swarm-planner.md").read_text().replace("swarm-planner", role)
+    )
+    (extension / "bundle.toml").write_text(f'''schema = 1
+name = "acme-team"
+version = "0.1.0"
+default_preset = "core"
+[[assets]]
+id = "{role}"
+kind = "subagent"
+source = "subagents/{role}.md"
+[presets.core]
+assets = ["{role}"]
+''')
+    bundle = load_bundle(extension)
+    installed = [*_installed(), InstalledBundle("acme-team", bundle.version, bundle)]
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    update_config(consumer, agents=["codex"], presets={"adaptive-dev": ["agents"], "acme-team": ["core"]})
+    config = consumer / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[subagents.roles."adaptive-dev:swarm-worker"]\nlevel = "lean"\n')
+    sync_project(consumer, installed)
+    worker = tomllib.loads((consumer / ".codex/agents/swarm-worker.toml").read_text())
+    assert worker["model"] == "gpt-6.1-terra"
+    assert worker["model_reasoning_effort"] == "medium"
+    assert (consumer / f".codex/agents/{role}.toml").is_file()
+    assert not (consumer / ".agents/skills/adaptive-dev").exists()
+    before = {p.name: p.read_bytes() for p in (consumer / ".codex/agents").glob("*")}
+    collision = tmp_path / "collision"
+    shutil.copytree(extension, collision)
+    (collision / "subagents/swarm-worker.md").write_text(
+        (collision / f"subagents/{role}.md").read_text().replace(role, "swarm-worker")
+    )
+    manifest = collision / "bundle.toml"
+    manifest.write_text(manifest.read_text().replace("acme-team", "collision-team").replace(role, "swarm-worker"))
+    duplicate = load_bundle(collision)
+    update_config(consumer, presets={"collision-team": ["core"]})
+    with pytest.raises(AdvisoryError) as raised:
+        sync_project(consumer, [*installed, InstalledBundle("collision-team", duplicate.version, duplicate)])
+    assert raised.value.code == "BUNDLE_CONFLICT"
+    assert before == {p.name: p.read_bytes() for p in (consumer / ".codex/agents").glob("*")}
+
+
+def test_local_role_paths_resolve_from_installed_skill_not_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    update_config(tmp_path, agents=["codex"], presets={"adaptive-dev": ["core"]})
+    sync_project(tmp_path, _installed())
+    skill = (tmp_path / ".agents/skills/adaptive-dev/SKILL.md").resolve()
+    unrelated = tmp_path / "other-working-directory"
+    unrelated.mkdir()
+    monkeypatch.chdir(unrelated)
+    for role in ("architect", "builder", "qa-tester", "reviewer"):
+        overlay = (skill.parent / "roles" / f"{role}.md").resolve(strict=True)
+        assert overlay.is_absolute()
+        assert "caller" in overlay.read_text()
+    # Resolving from a loaded reference is a different path and must not be used.
+    assert not (skill.parent / "references/roles/builder.md").exists()
