@@ -40,11 +40,13 @@ manager. Main's files and dependencies can change while a long E2E command execu
 - Worktree owns creation and removal of run-owned fixed-commit test checkouts. These test-only environments have
   no SDD Unit, merge, push or activity post-finish effects; existing task-worktree policy remains unchanged.
   → `ARCH-05-2-components` worktree and test-execution responsibilities (MUST).
-- The Host directly coordinates one active E2E run per repository, preserves outstanding change coverage and
-  collects required results before local completion; git-operator retains Git lifecycle jobs.
-  → `CAP-DLV-delivery-workflows` section 4.8 local verification (MUST).
-- Project-native setup and command argv determine execution. Test execution depends only on the declared
-  worktree and project features; compact and generic integration gain no test-supervision dependency.
+- Local-orch guidance describes direct Host launch, independent work, outstanding coverage, result collection and
+  repair priority; git-operator retains Git lifecycle jobs. A one-run starting recommendation stays in guidance,
+  rather than becoming an executor-wide admission policy.
+  → `CAP-HARN-agent-guidance` local-orch verification procedure (MUST).
+- Project-native setup and argv passed directly after `--` determine execution. No test-profile mapping or
+  local/cloud policy selection is introduced. Delivery decisions remain with the calling workflow. Test execution
+  depends only on the declared worktree and project features; compact and generic integration gain no test-supervision dependency.
   → `ARCH-05-2-components` declared feature graph (MUST).
 - Manifests/logs survive eligible checkout cleanup, distinguish setup failure and unknown execution, and never
   turn launch success into passing evidence. Host-enforced termination and reboot have no survival guarantee.
@@ -57,13 +59,15 @@ not active contracts introduced by Planning.
 
 The CLI requires registration, storage compatibility, process identity checks and tests on macOS/Linux. Each
 fresh environment has setup cost and can compete for CPU with workers. No performance improvement is assumed.
-A script remains a useful measurement fixture, not a parallel production scheduler. Unsupported external
-resource sharing prevents dispatch until the project supplies isolation. Missing durable evidence leaves
+A script remains a useful measurement fixture, not a parallel production scheduler. The caller checks shared
+external resources and supplies project-specific isolation before dispatch. Missing durable evidence leaves
 verification pending; no automatic retries or broad cleanup hide it.
 
 ## 6. Confirmation
 
 AC-1 and AC-3 through AC-8 in `PROP-async-e2e-verification` cover tier-safe selection, immutable environment,
-nonblocking ordering, bounded scheduling, restart inspection, process identity and cleanup. Development runs
+nonblocking ordering, local-orch scheduling guidance, restart inspection, process identity and cleanup. AC-9 and
+AC-10 check direct native command passing and the boundary between execution evidence and delivery decisions.
+Development runs
 separate-process probes and a native consumer fixture on supported platforms. Local measurements compare the
 same revision/test set with async disabled/enabled. Host scheduling compliance is Review only.

@@ -24,7 +24,8 @@ measurements ran; these are indicative costs, not a controlled before/after opti
   `ARCH-04-2-delivery-policy` section 1 keeps operational modes transient. Neither is authority to configure an
   unnamed client or implement an external adapter in this repository.
 - `ADR-post-merge-verification` and `CAP-DLV-delivery-workflows` section 4.8 currently require collected landed
-  checks. `PADR-delivery-verification-routes` proposes a bounded client cloud exception, retaining devkit local checks.
+  checks. The refined proposal preserves that boundary and adds asynchronous launch/collection instructions for
+  local-orch; client operating examples are recommendations in the dependent playbook.
 
 ## Ownership alternatives
 
@@ -83,5 +84,5 @@ execution-count reduction, environment setup cost, CPU/memory benefit or full-su
    remain outside the persistence guarantee.
 5. A consumer fixture uses a native non-pytest command to verify that the lifecycle does not force Python test
    conventions. No real client, paid provider, external database or credentials are used.
-6. Review cloud PR rework and nightly repair as contract walkthroughs unless a separately scoped consumer run
-   supplies actual CI/adapter evidence. Do not report those walkthroughs as executed cloud integration tests.
+6. Verify local-orch launch/collection and repair-priority guidance separately from runtime tests. Client local/cloud
+   recommendations belong to the dependent playbook and do not create executor policy modes or profile maps.

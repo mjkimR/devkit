@@ -1,7 +1,7 @@
 ---
 id: PROP-async-e2e-verification
 title: Asynchronous E2E Verification
-summary: "Define Host-managed asynchronous E2E for devkit's local-orchestrated development and reusable client verification guidance. Client cloud-pr delivery accepts nightly detection of broken merge combinations without postmerge CI."
+summary: "Provide fixed-commit asynchronous test execution with direct native commands, persistent results and local-orchestrated usage guidance. Devkit uses it locally; client local/cloud operating recommendations belong to the dependent test-management playbook."
 status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -22,11 +22,8 @@ boundaries:
     - packages/devkit-spec/tests/integration/bundles/spec/
     - .devkit/architecture.toml
     - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
-    - docs/capabilities/delivery/CAP-DLV-proposal-planning.md
     - docs/capabilities/harness/
     - docs/capabilities/worktree/
-    - docs/architecture/ARCH-04-1-ecosystem-boundaries.md
-    - docs/architecture/ARCH-04-2-delivery-policy.md
     - docs/architecture/ARCH-05-2-components.md
     - docs/development/reference/
     - docs/decisions/
@@ -57,25 +54,23 @@ The hypothesis is that selective E2E in an isolated fixed-commit environment let
 work before E2E finishes. Batching can reduce repeat runs. Asynchrony alone reduces neither test execution time
 nor CPU consumption. `materials/planning-evidence.md` records bounded measurements and their limits.
 
-### 1.1 Separate product delivery from consumer policy
+### 1.1 Execution mechanism and operating guidance
 
-| Concern | devkit repository itself | Client repositories consuming devkit |
-| :--- | :--- | :--- |
-| Delivery pattern | Local-orchestrated only | Local-base or explicitly selected cloud-pr scenario |
-| After local merge | Synchronous unit/integration and required ancillary checks; selective asynchronous E2E | Same local completion model when local-base is selected |
-| Cloud PR CI and automatic merge | No cloud-pr adoption or PR CI rollout | Consumer CI and automation own required PR CI, rework, automatic merge and nightly repair dispatch |
-| Nightly | Existing full backstop | Consumer-defined cadence; accepted delayed combination-failure detection under cloud policy |
-| Assets delivered here | Local execution capability, repository commands and guidance | Reusable guidance and scenario contract; no client CI is configured by this change |
+Devkit provides asynchronous test execution, fixed-commit environment preparation and result inspection.
+The executor does not need to know whether a caller uses local-orchestrated work, a cloud PR or another workflow.
+It reports what command ran, where it ran and its actual outcome; the caller owns test timing and delivery decisions.
+There is no local/cloud policy selection, route registry, profile mapping or corresponding configuration switch.
 
-Neither worker location nor the presence of a PR chooses cloud risk acceptance. A local Host integrating via a PR
-still follows the local completion contract. Operational modes remain transient under
-`ARCH-04-2-delivery-policy`. Consumer verification instructions declare the permitted scenarios; the active
-workflow selects one explicitly and reports it. This proposal adds no persistent `cloud-pr` mode setting.
+Devkit itself uses local-orchestrated development. Its local-orch skill needs concrete instructions for launching
+E2E, proceeding with independent work, collecting results and prioritizing repairs. Include that integration here.
+Client local/cloud operating examples and their tradeoffs belong to the dependent test-management playbook as
+recommendations, without adding a product-level completion policy or configuring client CI.
 
 ### 1.2 Scope and non-goals
 
 - Include one harness-owned local test-run lifecycle and devkit's tier-aware affected selector.
-- Include route-specific delivery guidance and a cloud client risk-acceptance contract.
+- Include local-orch usage guidance and devkit's own local adoption.
+- Exclude local/cloud policy selection, new consumer completion contracts and test-profile configuration.
 - Exclude cloud-pr use by devkit itself, CI workflow edits, external autohub implementation and release changes.
 - Exclude replacing unit/integration with E2E, a mandatory verifier subagent and git-operator test supervision.
 - Exclude a distributed scheduler, environment pool, container platform, Windows background execution and global locks.
@@ -92,19 +87,23 @@ workflow selects one explicitly and reports it. This proposal adds no persistent
 | Q3 Owner | A reusable `devkit test` lifecycle, with project-owned native commands | `PADR-isolated-test-runs`; scout alternatives |
 | Q4 Runtime | Detached POSIX supervisor, persistent evidence, no daemon/reboot guarantee | Process survival probes and failure injection are Development checks |
 | Q5 Isolation | Test-only detached checkout, independent dependency environment and run-specific temporary resources | Worktree revision support exists; test-environment allocation is added explicitly |
-| Q6 Completion | Coverage uses an explicit baseline and exact tested SHA; outstanding descendants require selection/recheck | Sections 3.3 and 3.5 |
-| Q7 Recovery | Distinguish setup, test failure, interruption and unknown; preserve evidence on cleanup | Section 3.4; no automatic retry, replay or rollback |
-| Q8 Boundaries | `devkit_agt.features.test_execution` with declared worktree/project dependencies | Section 3.6; no other feature edge is approved |
-| Q9 Cloud recovery | Consumer CI events route to its automation owner; autohub is the ecosystem adapter, outside this repo | Section 3.2; no client was supplied to validate activation |
-| Q10 Policies | devkit local-only; client selects a documented scenario without changing operational mode config | `PADR-delivery-verification-routes` |
+| Q6 Evidence | Results name the exact tested SHA; local-orch tracks outstanding changes and completion | Sections 3.2 and 3.4 |
+| Q7 Recovery | Distinguish setup, test failure, interruption and unknown; preserve evidence on cleanup | Section 3.3; no automatic retry, replay or rollback |
+| Q8 Boundaries | `devkit_agt.features.test_execution` with declared worktree/project dependencies | Section 3.5; no other feature edge is approved |
+| Q9 Operating examples | Local/cloud scheduling recommendations move to the dependent playbook, without runtime policy selection | `PROP-test-playbook-verification-policy` |
+| Q10 Command mapping | Pass native argv directly after `--`; reuse existing worktree setup, without a test-profile map in config | Section 3.3 |
 
 The existing revision-aware worktree preparation is reusable, but its activity-branch semantics are not test-run
 identity. Extend worktree ownership for test-only checkout creation/removal instead of creating synthetic SDD
 Units. Setup and sync warnings prevent a test run from becoming ready. The background lifecycle does not reuse
 the compact runner's interruption ownership or its pruned log store.
 
-No user question remains about the accepted cloud risk. Interface and ownership choices below are the recommended
-direction for `plan-accept`, rather than claims about an existing command.
+The preliminary decision titled "Separate local and cloud verification completion" is withdrawn. A formal
+consumer-policy split and supersession of the existing landed-verification ADR exceed the requested mechanism.
+Retain one execution-lifecycle PADR. Local/cloud operating examples remain in the dependent playbook.
+
+Interface and ownership choices below are the recommended direction for `plan-accept`, rather than claims about
+an existing command. Direct native command passing remains the selected interface; profile mapping is not added.
 
 ## 3. Proposed Design & Impact
 
@@ -128,62 +127,38 @@ When a selected tier has no tests, report `none` with a selection reason and do 
 
 The E2E-required decision uses the E2E-only selection over the same accumulated change interval. A manual skip
 cannot turn a nonempty required selection into success. A required premerge reproduction or acceptance check
-runs before merge; ordinary worker iterations need not repeat it. Client PR CI remains its separate required gate.
+runs before merge; ordinary worker iterations need not repeat it. Consumer CI requirements remain owned by
+that repository.
 
-### 3.2 Client cloud risk acceptance
+### 3.2 Local-orch usage guidance
 
-Both client routes keep worker iterations focused on unit/integration, with E2E when the change needs it.
-For an explicitly selected client cloud-pr scenario:
+Update the source local-orch skill and relevant integration/completion references to use the execution mechanism.
+This is an agent procedure, not an executor policy mode. Devkit's own local-orch consumption uses the procedure;
+client repositories retain their own checks and commands.
 
-1. Required PR CI includes E2E. A failure or unavailable required check blocks automatic merge.
-2. The client's CI observer requests rework against the PR head and includes check URL, tested SHA and failure evidence.
-3. Passing required PR CI and confirmed automatic merge complete that PR's work.
-4. There is no immediate postmerge CI and no requirement to test the latest base's prospective merge result,
-   force a base refresh or introduce a merge queue.
-5. Nightly tests detect combination failures later. Main can remain broken until detection and repair.
+1. Before the first merge, save the target SHA for affected selection. After selected merges, synchronize landed
+   dependencies and managed assets in fresh processes, repair and commit stale generated artifacts, then run
+   unit/integration and required lint, types, rules and frontend checks synchronously.
+2. Determine required E2E from the accumulated change interval. When selection is nonempty and no E2E is running,
+   launch it at the fixed landed SHA before beginning the next independent task. A selected merge batch has a
+   bounded unit set. When selection is empty, record the reason instead of claiming a test pass.
+3. The Host directly manages the background run and can start independent work before it finishes. Recommend
+   one active E2E run initially to limit CPU/resource contention; this is scheduling advice, not a CLI-wide
+   admission limit or hidden queue. A verifier subagent is optional; git-operator keeps Git lifecycle duties.
+4. If more changes land while a run is active, preserve the outstanding interval. Finish the active run rather
+   than repeatedly cancelling to chase HEAD. Collect it and dispatch the accumulated selection before another
+   merge. Do not let an indefinitely growing batch postpone E2E forever.
+5. Check results before each merge, on observed completion and at batch/session completion. On an observed
+   failure, hold new merges and prioritize repair; independent branch work can continue. Repair the landed
+   state and recheck the accumulated interval without automatic rollback or merge replay.
+6. Keep required verification pending until results are collected. Record run IDs, tested SHA, batch baseline,
+   outstanding units and next collection step in recoverable Host notes. After context loss, inspect stored runs
+   and merge history; uncertain coverage uses full fallback rather than comparing main to itself.
 
-Consumer verification instructions name the PR check set, automatic-merge owner, nightly workflow/cadence/timezone,
-last-success and missed-run visibility, and repair destination. CI completion/failure events feed the consumer's
-automation owner; in the documented ecosystem this is autohub. A failed PR produces PR rework; failed nightly
-produces follow-up repair against the nightly SHA with logs. Delivery retries deduplicate by run/check identity.
-If dispatch fails, the CI/automation record remains visibly undelivered for that owner to recover. No local Host
-session is presumed. These are adapter obligations and walkthrough checks, not implemented webhooks in this scope.
+The executor does not implement those merge/completion decisions or automatically dispatch workers. The Host
+applies the repository's existing requirements and distinguishes an actual pass from launch success.
 
-No client repository is configured or certified here. A consumer without that wiring can review the scenario,
-but cannot claim that automatic rework or repair is active. Devkit's own unchanged nightly schedule is 04:17
-Asia/Seoul; it runs full CI when the scheduled head differs from the last successful nightly head. That schedule
-is evidence about devkit, not a default silently imposed on clients. PR CI is not currently a devkit trigger.
-
-The intentionally absent merged-result/postmerge checks are not unmet gates under this client policy. A later
-nightly failure creates new repair work and does not retroactively make the completed PR a local pending run.
-Passing PR CI proves only the revision and scope it actually tested.
-
-### 3.3 Local Host scheduling
-
-After each selected merge or merge batch, synchronize dependencies from landed declarations and use fresh
-processes. Check generated assets, regenerate and commit stale artifacts, then run required unit/integration,
-lint, types, rules and frontend checks synchronously. Save the premerge target SHA before the first merge.
-
-The Host directly launches required E2E through the test-run CLI. Git-operator continues bounded lifecycle jobs;
-a verification subagent is optional for diagnosis, not required for scheduling or process survival.
-
-- Allow one preparing/running E2E run per repository. A second start returns the active run identity; it does not
-  create a hidden queue. Reserve the slot atomically for concurrent callers.
-- If idle, dispatch required E2E after the synchronous checks for the selected merge batch and before beginning
-  the next independent task. A deliberate batch has a fixed selected unit set, not an indefinitely growing queue.
-- If busy, accumulate later changes. After collecting the active result, dispatch the accumulated interval before
-  another merge. Finish the current run instead of cancelling repeatedly to chase HEAD.
-- Check results before every merge, when a tool reports completion and at batch/session completion. The Host
-  can continue independent work while a result is pending. There is no continuous observer when the Host is absent.
-- On an observed failure, hold new merges, prioritize repair and retain the original failing SHA. Workers can
-  continue independent branch work. Repair the current landed state, then recheck the accumulated interval.
-
-Record the batch start, outstanding unit IDs, run IDs, last collected successful coverage and next collection
-step in the Host's recoverable batch notes. Run manifests preserve each launched interval. After context loss,
-recover from manifests and the actual merge history. If the outstanding interval cannot be established, select
-full coverage; never infer a baseline from current main itself.
-
-### 3.4 Minimal local execution lifecycle
+### 3.3 Minimal asynchronous execution lifecycle
 
 `devkit_agt.features.test_execution` owns `devkit test`. Proposed commands, unavailable until Development:
 
@@ -195,11 +170,13 @@ devkit test cancel <run-id>
 devkit test clean <run-id>
 ```
 
-`start` resolves both SHAs before returning, validates their ancestry, persists the request and launches a detached
-supervisor. It returns while state is `preparing`; checkout/setup and tests run in the background. The supervisor
+`start` resolves the requested SHAs before returning, persists the request and launches a detached supervisor.
+The baseline is caller-supplied evidence; the executor does not use it to choose tests or determine delivery
+completion. It returns while state is `preparing`; checkout/setup and tests run in the background. The supervisor
 owns the captured run definition, not mutable files in main. Project setup comes from the existing worktree setup
 configuration, with an explicit per-run `--setup` override. Native test argv follows `--`; devkit does not invent
-pytest, uv, just, service provisioning or a second profile configuration system for consumers.
+pytest, uv, just, service provisioning or a test-profile configuration system for consumers. The command passed
+after `--` is the test command; no `--profile` option or test-profile table is introduced in `config.toml`.
 
 Worktree owns fixed-commit detached test checkout creation and guarded removal. Test checkouts have no SDD Unit,
 merge, push or post-finish hooks. Their path is a unique sibling of the retained base; a manifest binds the path
@@ -209,8 +186,8 @@ Restore managed assets with locked sync where applicable. Setup/sync failure is 
 that allows tests to start. Do not copy `.env` or credentials implicitly.
 
 Give each run a private temporary directory and run ID. Resource-dependent commands use disposable data and
-isolated services or ephemeral ports. File isolation alone does not isolate an external database or fixed port;
-unsupported shared resources prevent that run from being dispatched until the project supplies isolation.
+isolated services or ephemeral ports supplied by the project. The caller checks resource suitability before
+launch: the executor cannot infer whether arbitrary command argv shares a database or fixed port with other work.
 
 Persist manifests and logs under the repository's common Git directory, outside disposable checkouts. Store
 repository identity, run ID, fixed SHA, baseline, argv, setup command, runtime identity, environment path, process
@@ -221,9 +198,9 @@ runs so context loss does not hide results.
 
 | Outcome | Meaning and next action |
 | :--- | :--- |
-| `preparing` / `running` | Pending; inspect again before a merge or completion |
+| `preparing` / `running` | No terminal result yet; caller inspects again |
 | `passed` | Actual native command exited zero; apply only to its tested SHA/scope |
-| `failed` | Native command ran and failed; hold local merges and repair |
+| `failed` | Native command ran and failed; return its exit code and evidence to the caller |
 | `setup_failed` | Checkout, runtime, setup or locked sync could not complete; repair prerequisites and start a new run |
 | `cancelled` / `interrupted` | No passing evidence; inspect retained logs and decide a new run |
 | `unknown` | No terminal record and no positively identified live supervisor; investigate, never infer success |
@@ -247,10 +224,10 @@ or inability to start returns 2. Logs remain bounded (`--tail`, default 100); ra
 Detailed field/code names are finalized in the Development spec under `ARCH-08-1-agent-output` and
 `CAP-ADV-agent-advisory-protocol`.
 
-### 3.5 Coverage and completion
+### 3.4 Evidence and local-orch completion
 
-A local run records interval B..A and executes the selection against A's fixed files. A pass at A never claims B's
-untested descendant C passed. For accumulated later changes, compute selection from the earliest still-uncovered
+In devkit's local-orch use, the caller records interval B..A and passes a command that selects tests against A's
+fixed files. A pass at A never claims A's untested descendant C passed. For accumulated later changes, compute selection from the earliest still-uncovered
 baseline to the current landed SHA; do not overwrite it merely because an intermediate partial run passed.
 
 At final local completion, the current landed HEAD has passing required synchronous results and either passing
@@ -260,12 +237,11 @@ selection requires no E2E. Report every actual checked SHA; do not relabel an ol
 Generated repair commits are part of this interval. Launch, cleanup or the merge CLI's successful exit does not
 complete verification.
 
-Client cloud completion reports required PR checks, tested PR revision, confirmed merge and selected risk policy.
-It makes no claim that the merged combination passed. Required unavailable PR checks remain unmet; checks
-intentionally absent under that policy do not. `PADR-delivery-verification-routes` partially supersedes
-`ADR-post-merge-verification` for this client completion boundary while retaining local obligations.
+The same execution mechanism can be called from any workflow without a local/cloud mode flag. Delivery
+completion stays with the caller and its existing repository instructions. The follow-up playbook explains
+recommended local and cloud arrangements; it does not create mandatory product policy alternatives.
 
-### 3.6 Ownership and reconciliation
+### 3.5 Ownership and reconciliation
 
 The broad parent paths in frontmatter exist because the feature/test directories do not yet exist. Development
 writes only these narrowed responsibilities, plus generated projections produced by authorized sync:
@@ -276,8 +252,8 @@ writes only these narrowed responsibilities, plus generated projections produced
 | `devkit_agt.features.worktree` | Test-only fixed-commit checkout preparation/removal API and focused tests; existing activity start/finish behavior retained |
 | Package registration | `packages/devkit/pyproject.toml`, package README and `.devkit/architecture.toml` |
 | Repository selection | `scripts/affected_tests.py`, thin justfile documentation and existing selector regressions |
-| Consumer guidance | Source spec bundle completion, worktree, integration, orchestration and proposal-acceptance guidance; focused integration tests |
-| Living Spec | Delivery completion/proposal acceptance, harness execution/guidance, worktree allocation and component/role-policy boundaries; CLI quick reference and PADR promotion |
+| Local-orch integration | Source spec bundle local-orch skill and relevant integration/completion references; focused guidance tests |
+| Living Spec | Harness execution/guidance, local-orch verification procedure, worktree allocation and component boundaries; CLI quick reference and execution PADR promotion |
 | devkit consumption | `AGENTS.md` verification instructions explicitly local-orchestrated; no cloud CI adoption |
 
 Approve only `test_execution -> devkit_agt.features.worktree` and
@@ -286,25 +262,27 @@ No reverse dependency from worktree, integration, compact or spec to test execut
 project wrappers as commands rather than importing compact internals. Generic integration remains Git-only.
 
 A harness capability will own the test-run contract and its entrypoints; use the existing document index to choose
-its final ID during Development. Local/cloud policy is restated in `CAP-DLV-delivery-workflows` section 4.8 and
-`CAP-HARN-agent-guidance`; proposal acceptance in `CAP-DLV-proposal-planning` follows the same route distinction.
-Partial supersession keeps the unaffected Git/authority/recovery clauses of `ADR-post-merge-verification` active.
-Read authoring context before later source asset edits. This Planning run edits no deployed guidance.
+its final ID during Development. `CAP-DLV-delivery-workflows` section 4.8 and `CAP-HARN-agent-guidance` explain
+local-orch usage while preserving the existing final-verification boundary. Asynchronous execution does not
+require superseding `ADR-post-merge-verification`: independent work may proceed while required results remain
+pending, and completion still collects them. Client completion policies and cloud automation are outside this
+proposal. Read authoring context before later source asset edits; this Planning run edits no deployed guidance.
 
-### 3.7 Acceptance and validation plan
+### 3.6 Acceptance and validation plan
 
 - **AC-1:** Given E2E edits, explicit data mappings, broad directories, unknown inputs and shared foundations,
   unit/integration selection collects no E2E, E2E selection collects only E2E, and full fallback preserves each tier.
   Empty tiers do not trigger an unscoped pytest run. Preserve embedded rule and frontend checks.
-- **AC-2:** Given either worker route, guidance runs unit/integration frequently and relevant E2E when required;
-  failed required client PR CI blocks merge independently of worker selectivity.
+- **AC-2:** Given local-orch work, the source skill explains synchronous unit/integration, selective asynchronous
+  E2E, continued independent work, result collection and repair priority. It uses the delivered command interface.
 - **AC-3:** Given a run at A and main advancing to B with changed dependencies, A's files/environment/runtime remain
   fixed and its result names A. A setup/sync failure prevents command execution.
 - **AC-4:** Given a controlled E2E command waiting on a test-owned latch, start returns and another independent task
   completes before releasing that latch. Record setup/start/command/Host-blocked time and resource cost against a
   synchronous run on the same revision, command and test set; correctness is ordering, not an arbitrary speed ratio.
-- **AC-5:** Given merges while a run is active, only one run is preparing/running, the next interval retains all
-  outstanding changes and no descendant is reported tested by an ancestor pass. A batch cannot defer dispatch forever.
+- **AC-5:** Given merges while a run is active, the local-orch procedure retains all outstanding changes for the
+  next selection and never reports descendants tested by an ancestor pass. The procedure bounds dispatch; the
+  initial one-run recommendation does not become a mandatory executor concurrency policy.
 - **AC-6:** Given a failed local result, the next Host result check holds merges and prioritizes repair. Repair then
   checks the accumulated state without merge replay or automatic rollback.
 - **AC-7:** Given a completed launch call and a separate status process, evidence remains readable. Simulate parent
@@ -312,14 +290,10 @@ Read authoring context before later source asset edits. This Planning run edits 
   unrelated process. Document OS/host survival limits.
 - **AC-8:** Given cleanup, active/unknown/unrelated/dirty environments are preserved; an eligible run loses only its
   own checkout while logs and manifest remain readable.
-- **AC-9:** Given an explicitly configured client cloud scenario, required PR CI including E2E plus automatic merge
-  completes PR work without latest-base merged-result validation or immediate postmerge CI.
-- **AC-10:** Given failed/missing client PR CI, a contract walkthrough retains the merge block and routes rework with
-  check/run identity. Label external dispatch unexecuted unless validated in that consumer.
-- **AC-11:** Given passing PRs whose combination breaks main, a client walkthrough routes the nightly failure as
-  subsequent repair and reports accepted detection delay, evidence and dispatch owner without assuming an active Host.
-- **AC-12:** Given devkit itself, repository instructions use only local-orchestrated completion. Client cloud options
-  never waive devkit's required checks. Guidance distinguishes an intentionally absent cloud check from a missing gate.
+- **AC-9:** Given an arbitrary native command, `start` runs the argv passed after `--` with project setup. There
+  is no test-profile mapping or local/cloud selection in the CLI or config; a non-pytest fixture works unchanged.
+- **AC-10:** Given devkit itself, repository instructions use local-orchestrated consumption. The executor reports
+  command evidence without deciding merge approval, delivery completion or cloud CI behavior.
 
 Keep the measured synchronous baseline reproducible in the Development worktree with the async path disabled.
 Do not check out a different revision or compare different test selections to claim a speedup. Product-process
@@ -328,11 +302,12 @@ justifies `dev_effort: high`; platform process probes and a consumer fixture cov
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning compares implementation owners, records bounded evidence, drafts both PADRs, and folds an independent
-Challenger review before direction acceptance. The work remains one L-sized verification capability. Broad test
+Planning compares implementation owners, records bounded evidence, retains the execution PADR and folds an
+independent Challenger review before direction acceptance. The work remains one L-sized verification capability. Broad test
 performance tuning, a distributed runner or external cloud adapter implementation requires separate scope.
 
-`plan-accept` approves this direction and its partial policy supersession; handoff separately authorizes Development.
+`plan-accept` approves the execution capability and local-orch integration direction. Handoff separately
+authorizes Development.
 This run grants neither acceptance nor implementation authority. Development writes its spec, plan and tasks,
 then implements, reviews and reconciles the actual behavior and evidence. Keep the dependent playbook proposal
-in Backlog until the prerequisite policy and execution contract land and pass required local verification.
+in Backlog until the prerequisite execution contract and local usage land and pass required local verification.
