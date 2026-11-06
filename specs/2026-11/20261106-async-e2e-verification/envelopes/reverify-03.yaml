@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:15:01.863017Z'
+status: completed
+review: review-03.yaml
+summary: 'R3 P1s resolved by Host remedy confirmed in fresh round4: pre-discovery leader guards and mandatory positive quiescence. Rounds1-4 retained; R4 distinct observer finding is closed separately.'
+findings:
+- issue: An unobserved leader's reused PID can be adopted and signalled as owned.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:165; scratch/review-03/test_independent_recovery.py:55 fails with signalled=[200].
+  failure_condition: Leader 200 exits before its identity is observed. The post-exit scan discovers owned orphan 201/group 200. After that orphan exits, unrelated PID/group 200 appears before an empty observation. The next pre-scan adopts it through group membership before the post-exit identity guard, and cancellation signals it.
+  suggested_action: Before discovery or signalling on every post-reap iteration, reject a reappearing direct-leader PID lacking the original identity. Preserve unknown ownership without signalling; add the supervisor-level regression.
+  resolution: resolved
+  severity: P1
+- issue: Cleanup still accepts retained terminal evidence without positive group-quiescence proof.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/services/lifecycle.py:21; packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:63; scratch/review-03/test_independent_recovery.py:76 fails because remove is called.
+  failure_condition: A retained result from the preceding captured runtime contains terminal passed status and only preparation history, with no ownership proof. A missed same-group writer remains alive. Cleanup falls back to known-PID checks and authorizes removal despite lacking the required post-exit proof.
+  suggested_action: Require explicit persisted positive quiescence evidence before removal, conservatively refusing absent or incomplete proof while preserving the original execution result. Record valid no-launch/no-group completion explicitly and add retained-record regression coverage.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS exact R3 probes and retained feature regressions Red-to-Green; R4 confirms both conditions addressed
+diff_scope:
+  base: 205a6cd43264c45a9109a90f64a4cea871201264
+  head: cca1a85380a923a51310d0679d79fae10ac34ed0
+activity_effort: high
