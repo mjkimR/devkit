@@ -1,13 +1,13 @@
 ---
-id: PADR-worktree-isolated-parallel-workers
+id: ADR-worktree-isolated-parallel-workers
 title: Separate worktrees for concurrent adaptive writers
 summary: "For concurrent adaptive writers, we propose one worktree per writer with bounded ownership and combined-result checks, to avoid same-checkout interference, accepting setup cost and remaining merge conflicts."
-proposal: PROP-adaptive-swarm-development
-status: draft
+proposal: SPEC-adaptive-swarm-development
+status: accepted
 created_at: 2026-11-06
 ---
 
-# [PADR-worktree-isolated-parallel-workers] Separate worktrees for concurrent adaptive writers
+# [ADR-worktree-isolated-parallel-workers] Separate worktrees for concurrent adaptive writers
 
 ## 1. Context & Problem Statement
 

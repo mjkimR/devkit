@@ -96,7 +96,7 @@ Select three prefixed archetypes, an agents-only preset, caller-owned overlays a
 model defaults omitted. Give the verifier assigned scratch writes while preserving product/Git read-only authority.
 Keep concurrent writers in separate worktrees and final integration with the Host.
 
-The ordered implementation outline and AC mapping are in `PROP-adaptive-swarm-development` section 5.
+The ordered implementation outline and AC mapping are in `SPEC-adaptive-swarm-development` section 5.
 Development must retain real assets, exercise project extension and agents-only behavior from wheels without SDD,
 and record representative coding, combined-failure and interruption outcomes or explicit unavailable coverage.
 No measured performance or universal host-support claim is promoted from this spike.

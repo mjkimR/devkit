@@ -3,7 +3,7 @@ id: PROP-adaptive-swarm-development-target
 title: Target Living Spec for Reusable Adaptive Subagents
 summary: "Prospective capability, use-case and ownership updates for prefixed adaptive subagents, optional role leads and source-specific combined verification."
 status: draft
-proposal: PROP-adaptive-swarm-development
+proposal: SPEC-adaptive-swarm-development
 created_at: 2026-11-06
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-adaptive-development.md
@@ -48,8 +48,8 @@ Add reusable code-writing delegation without a mandatory pipeline, fixed hierarc
 - Add recovery clauses: unsupported nesting falls back to flat/direct execution, and cleanup preserves active,
   dirty or unmerged results until collected or separately authorized for removal.
 
-Restate the promoted decisions from `PADR-skill-local-swarm-roles` and
-`PADR-worktree-isolated-parallel-workers` at those clauses. Keep performance outcomes unmeasured until exercised.
+Restate the promoted decisions from `ADR-skill-local-swarm-roles` and
+`ADR-worktree-isolated-parallel-workers` at those clauses. Keep performance outcomes unmeasured until exercised.
 
 ## 2. Use Case: UC-advance-an-idea
 
@@ -125,6 +125,6 @@ and this proposal adds three execution archetypes.
 ## 6. Planning Evidence and Handoff
 
 The concrete assignment example, host declaration matrix, ordered file owners and AC mapping are in
-`PROP-adaptive-swarm-development` section 5. Source/projection and bounded read-only nesting observations are in
-[feasibility-spike.md](materials/feasibility-spike.md). Development still authors the retained assets, installation
+`SPEC-adaptive-swarm-development` section 5. Source/projection and bounded read-only nesting observations are in
+[feasibility-spike.md](../../../docs/materials/2026-11/20261106-adaptive-swarm-development/feasibility-spike.md). Development still authors the retained assets, installation
 checks and semantic exercises; the Planning prototypes are not shipped bundle contents.

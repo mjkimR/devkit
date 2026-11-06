@@ -1,33 +1,24 @@
 ---
-id: PROP-adaptive-swarm-development
+id: SPEC-adaptive-swarm-development
 title: Reusable Subagents and Optional Teams for Adaptive Development
-summary: "Extend adaptive development with reusable prefixed subagents, on-demand role contracts and optional two-level delegation, preserving direct work and source-specific verification."
-status: accepted
-created_at: 2026-11-06
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/
-    - packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py
-    - packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/
-    - docs/capabilities/delivery/CAP-DLV-adaptive-development.md
-    - docs/usecases/delivery/UC-advance-an-idea.md
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/decisions/2026-11/20261102-adaptive-development-and-research.md
-  excludes:
-    - packages/devkit-dist/
-    - packages/devkit-spec/
-task_kind: feature
-workflow: sdd-proposal
+summary: Extend adaptive development with reusable prefixed subagents, on-demand role contracts and optional two-level delegation, preserving direct work and source-specific verification.
+status: planned
+created: 2026-11-06
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-adaptive-swarm-development] Reusable Subagents and Optional Teams for Adaptive Development
+# [SPEC-adaptive-swarm-development] Reusable Subagents and Optional Teams for Adaptive Development
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-adaptive-swarm-development on 2026-11-06.
+- **Preserved Materials**: `docs/materials/2026-11/20261106-adaptive-swarm-development`
+- Target Docs Blueprint: `PROP-adaptive-swarm-development-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `CAP-DLV-adaptive-development` already supports clarification, research, implementation and usage verification
 without per-change SDD records. Its bundle registers three optional support subagents: `product-clarifier`,
@@ -38,7 +29,7 @@ SDD already supports isolated workers and nested review delegation (`ARCH-04-del
 adapts useful delegation patterns to adaptive development without introducing SDD Units or a mandatory role pipeline.
 It does not claim that SDD execution is necessarily serial or that adaptive development is limited to ideation.
 
-### Core hypothesis
+#### Core hypothesis
 
 A small set of reusable, prefixed subagents can supply execution capabilities, while on-demand `roles/*.md`
 contracts supply task-specific responsibilities. A subagent can execute a bounded task itself or, where the host
@@ -48,10 +39,10 @@ are separate choices: either flat or nested execution can use the same registere
 Planning has exercised source-level projection, an agent-only preset and one read-only nested role assignment.
 These observations establish bounded feasibility, not completed implementation. Prompt cost, latency, model savings
 and native host enforcement remain unmeasured.
-The local reference comparison is in [reference-swarm-architectures.md](materials/reference-swarm-architectures.md).
+The local reference comparison is in [reference-swarm-architectures.md](../../../docs/materials/2026-11/20261106-adaptive-swarm-development/reference-swarm-architectures.md).
 Upstream examples motivate patterns; they are not evidence of performance or correctness in devkit.
 
-### Scope and non-goals
+#### Scope and non-goals
 
 In scope:
 
@@ -72,11 +63,70 @@ Scope excluded:
 - Guaranteed speedup, conflict-free merges, native file-boundary enforcement or model quality equivalence.
 - Making other bundles depend on these agents or moving existing SDD roles into a shared registry.
 
-## 2. Design Decisions and Alternatives
+## 2. User Stories
 
-### 2.1 Shared prefixed agents and task-specific roles
+- **US-1**: As a developer/agent, I want to implement Reusable Subagents and Optional Teams for Adaptive Development so that system capabilities are extended.
 
-The recommended default is the archetype model in `PADR-skill-local-swarm-roles`:
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### Scenario 1 [AC-01]: Carried from proposal
+- **AC-1:** Given an adaptive task that needs no delegation, when the Host acts, then it can implement and verify
+  directly without creating SDD artifacts or running a fixed team sequence.
+
+### Scenario 2 [AC-02]: Carried from proposal
+- **AC-2:** Given an independent docs/catalog installation, when `adaptive-dev` is selected and synchronized, then
+  the three prefixed archetype contracts and their supported projections deploy without `devkit-spec`.
+
+### Scenario 3 [AC-03]: Carried from proposal
+- **AC-3:** Given a compatible caller and an installed archetype, when the caller supplies its own bounded role
+  assignment, then the agent can return the requested evidence without loading adaptive orchestration or sibling
+  bundles' private assets.
+
+### Scenario 4 [AC-04]: Carried from proposal
+- **AC-4:** Given a project-owned specialized agent or role overlay, when it is selected for a task, then shipped
+  defaults remain unchanged and incompatible permissions or unavailable capabilities are reported explicitly.
+
+### Scenario 5 [AC-05]: Carried from proposal
+- **AC-5:** Given a nested assignment, when the lead dispatches children, then depth stays within two child levels,
+  all children fit the Host's shared allowance, and each child stays within its parent's authority and ownership.
+
+### Scenario 6 [AC-06]: Carried from proposal
+- **AC-6:** Given no nested-agent support or insufficient capacity, when the assignment is executed, then the Host
+  flattens or serializes it and preserves the same result and verification contracts without changing host settings.
+
+### Scenario 7 [AC-07]: Carried from proposal
+- **AC-7:** Given concurrent writing children, when they implement, then each owns a separate worktree; a parent
+  performs no concurrent writes there, and actual changed paths are checked before integration.
+
+### Scenario 8 [AC-08]: Carried from proposal
+- **AC-8:** Given completed worker results, when the Host reports delivery, then combined and applicable landed-target
+  checks identify their actual SHAs, commands and outcomes; failed or unavailable checks remain explicit.
+
+### Scenario 9 [AC-09]: Carried from proposal
+- **AC-9:** Given a failed or interrupted assignment, when work pauses, then current context records retained results,
+  active ownership and the next action, and cleanup preserves unmerged or dirty work.
+
+### Scenario 10 [AC-10]: Carried from proposal
+- **AC-10:** Given an SDD consumer selecting only `adaptive-dev:agents`, when assets synchronize and a compatible
+  caller assigns bounded work, then only the three execution agents deploy, no adaptive entry/pointer or current
+  context deploys, and neither the approach nor the caller's lifecycle authority changes.
+
+Installation and projection tests establish packaging behavior only. Invocation exercises and review establish the
+semantic delegation behavior; keyword assertions do not prove concurrency, sandboxing or successful nested execution.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Design Decisions and Alternatives
+
+#### 2.1 Shared prefixed agents and task-specific roles
+
+The recommended default is the archetype model in `ADR-skill-local-swarm-roles`:
 
 | Proposed agent ID | Stable responsibility | Example role overlay |
 | :--- | :--- | :--- |
@@ -120,7 +170,7 @@ A role overlay specifies the assigned goal and deliverable. It cannot widen the 
 operations or delegated authority. Resolve an incompatible overlay by choosing a compatible agent or returning the
 capability gap; do not silently combine conflicting contracts.
 
-### 2.2 Optional role leads and two-level delegation
+#### 2.2 Optional role leads and two-level delegation
 
 The user-facing Host remains the overall coordinator. A first-level subagent may act as a role lead (the master
 for that assigned responsibility) and spawn second-level agents with specialized role files.
@@ -161,7 +211,7 @@ Registered archetype invocation and other native runtimes remain to be exercised
 If it is unavailable, the Host flattens the assignments and retains the same ownership and verification requirements. If subagents are unavailable, the Host works directly
 and reports the unverified delegation behavior. No host setting is changed to enable nesting.
 
-### 2.3 Alternatives
+#### 2.3 Alternatives
 
 | Option | Benefit | Cost or limitation | Proposed use |
 | :--- | :--- | :--- | :--- |
@@ -175,9 +225,9 @@ Role-file placement alone determines neither model selection nor native enforcem
 may expose those settings, and a registered agent may still be emulated. Measure the actual host behavior rather
 than assigning universal guarantees to either model.
 
-## 3. Execution and Ownership
+### 3. Execution and Ownership
 
-### 3.1 Lightweight assignment contract
+#### 3.1 Lightweight assignment contract
 
 Before delegated code authoring, record the goal, relevant source/base SHA, public interfaces when needed, absolute
 read/write boundaries, permitted Git operations, verification commands, stop condition and expected return.
@@ -208,9 +258,9 @@ or mutable current context; no separate Sprint Contract file or SDD artifact is 
 Architectural decomposition is conditional on interface or ownership uncertainty. The Host can provide an already
 clear assignment directly instead of starting an architect solely to repeat it.
 
-### 3.2 Parallel implementation
+#### 3.2 Parallel implementation
 
-`PADR-worktree-isolated-parallel-workers` proposes one worktree per concurrent writing worker, including nested
+`ADR-worktree-isolated-parallel-workers` proposes one worktree per concurrent writing worker, including nested
 workers. Disjoint file ownership still matters for integration; separate worktrees do not prevent incompatible
 interfaces, shared external resource conflicts or merge conflicts.
 
@@ -220,7 +270,7 @@ Git procedure. Catalog itself has no runtime dependencies. The documented docs/c
 If isolated writable worktrees cannot be created within current authority, serialize writers. A lead does not write into a worktree while
 its child owns it; shared glue changes occur after children finish.
 
-### 3.3 Verification, integration and recovery
+#### 3.3 Verification, integration and recovery
 
 Workers check their bounded changes before returning. A return identifies status, source/base and final SHA where
 committed, actual changed paths, commands, outcomes, unresolved defects and unverified areas. The lead verifies its
@@ -240,39 +290,11 @@ not a prerequisite for preserving failure evidence. On cancellation, stop or col
 ownership. Preserve unmerged commits and dirty worktrees; remove only worktrees whose results are retained or whose
 removal has separate authority.
 
-## 4. Acceptance Scenarios
+### 5. Planning Outcome and Development Sequence
 
-- **AC-1:** Given an adaptive task that needs no delegation, when the Host acts, then it can implement and verify
-  directly without creating SDD artifacts or running a fixed team sequence.
-- **AC-2:** Given an independent docs/catalog installation, when `adaptive-dev` is selected and synchronized, then
-  the three prefixed archetype contracts and their supported projections deploy without `devkit-spec`.
-- **AC-3:** Given a compatible caller and an installed archetype, when the caller supplies its own bounded role
-  assignment, then the agent can return the requested evidence without loading adaptive orchestration or sibling
-  bundles' private assets.
-- **AC-4:** Given a project-owned specialized agent or role overlay, when it is selected for a task, then shipped
-  defaults remain unchanged and incompatible permissions or unavailable capabilities are reported explicitly.
-- **AC-5:** Given a nested assignment, when the lead dispatches children, then depth stays within two child levels,
-  all children fit the Host's shared allowance, and each child stays within its parent's authority and ownership.
-- **AC-6:** Given no nested-agent support or insufficient capacity, when the assignment is executed, then the Host
-  flattens or serializes it and preserves the same result and verification contracts without changing host settings.
-- **AC-7:** Given concurrent writing children, when they implement, then each owns a separate worktree; a parent
-  performs no concurrent writes there, and actual changed paths are checked before integration.
-- **AC-8:** Given completed worker results, when the Host reports delivery, then combined and applicable landed-target
-  checks identify their actual SHAs, commands and outcomes; failed or unavailable checks remain explicit.
-- **AC-9:** Given a failed or interrupted assignment, when work pauses, then current context records retained results,
-  active ownership and the next action, and cleanup preserves unmerged or dirty work.
-- **AC-10:** Given an SDD consumer selecting only `adaptive-dev:agents`, when assets synchronize and a compatible
-  caller assigns bounded work, then only the three execution agents deploy, no adaptive entry/pointer or current
-  context deploys, and neither the approach nor the caller's lifecycle authority changes.
+#### 5.1 Observed feasibility and retained gaps
 
-Installation and projection tests establish packaging behavior only. Invocation exercises and review establish the
-semantic delegation behavior; keyword assertions do not prove concurrency, sandboxing or successful nested execution.
-
-## 5. Planning Outcome and Development Sequence
-
-### 5.1 Observed feasibility and retained gaps
-
-[feasibility-spike.md](materials/feasibility-spike.md) records the source review, reproducible projection probe,
+[feasibility-spike.md](../../../docs/materials/2026-11/20261106-adaptive-swarm-development/feasibility-spike.md) records the source review, reproducible projection probe,
 official host references and the bounded nested-call result at Planning baseline
 `86eb5bd1b706ec586ebbdbd76ad4840ae22c00b2`.
 
@@ -289,7 +311,7 @@ Registration, reuse and optional role-lead topology are selected for this plan. 
 representative coding, combined-failure, interruption and fresh-installed-consumer exercises. Claude Code and
 Antigravity were not run. Token cost, performance, model quality and native confinement remain unverified.
 
-### 5.2 Execution settings to author
+#### 5.2 Execution settings to author
 
 All three common contracts declare every supported host, omit `skill` and model/effort defaults, and carry explicit
 assignment/return instructions. Start with `emulated` status for Claude Code and Codex and `unverified` for Antigravity;
@@ -306,7 +328,7 @@ capability is not asserted by a file-tool allowlist. None of these declarations 
 publication or native path confinement. On hosts that cannot provide the required operations under current authority,
 return the gap and use the defined direct/flat/sequential path.
 
-### 5.3 Ordered implementation packages
+#### 5.3 Ordered implementation packages
 
 These are a Development handoff outline, not a parallel delivery pipeline or checked-off implementation tasks.
 Keep one source writer until the shared contracts and entry changes agree; use read-only helpers when useful.
@@ -323,7 +345,7 @@ Paths beginning `adaptive_dev/` in this table are under
 `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and
 `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/`. No source outside those boundaries or new feature edge is planned.
 
-### 5.4 Verification and readiness
+#### 5.4 Verification and readiness
 
 During Development, validate and plan the edited bundle; run affected unit/integration checks with full fallback,
 required lint/type/rule checks for actual changed files, and the installed-consumer E2E selected by the changes.
@@ -335,14 +357,15 @@ unknown allowance, incompatible roles, two isolated writing checkouts, failed co
 dirty/unmerged work. Missing host capability takes the fallback case and stays unverified for nested execution.
 No task promises to validate every runtime or to benchmark performance before delivery.
 
-`PADR-skill-local-swarm-roles` and `PADR-worktree-isolated-parallel-workers` record the selected draft decisions.
+`ADR-skill-local-swarm-roles` and `ADR-worktree-isolated-parallel-workers` record the selected draft decisions.
 The role PADR declares partial supersession of `ADR-adaptive-development-and-research`; the existing handoff procedure
 adds its pointer without superseding the retained approach, current-context or research-material decisions.
 No product or architecture contract is changed before the approved implementation is retained. Development effort
 remains `medium`; there is no runtime/schema change, new package or unresolved design choice requiring user input.
 
-## 6. Lifecycle and Target Documents
+### 6. Lifecycle and Target Documents
 
 `PROP-adaptive-swarm-development-target` lists prospective Living Spec changes. Current capability and architecture
 contracts remain unchanged during this proposal review. Acceptance and Development handoff remain separate authorized
 operations; this refinement does not accept the proposal, merge its Planning branch or start implementation.
+

@@ -1,15 +1,15 @@
 ---
-id: PADR-skill-local-swarm-roles
+id: ADR-skill-local-swarm-roles
 title: Reusable prefixed subagents with optional role teams
 summary: "For adaptive delegation, we propose reusable prefixed archetypes with on-demand role contracts and optional two-level teams, to support project extensions, accepting host-specific capability checks and coordination overhead."
-proposal: PROP-adaptive-swarm-development
-status: draft
+proposal: SPEC-adaptive-swarm-development
+status: accepted
 supersedes: ADR-adaptive-development-and-research
 supersedes_clause: "Adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force."
 created_at: 2026-11-06
 ---
 
-# [PADR-skill-local-swarm-roles] Reusable prefixed subagents with optional role teams
+# [ADR-skill-local-swarm-roles] Reusable prefixed subagents with optional role teams
 
 ## 1. Context & Problem Statement
 
@@ -82,6 +82,6 @@ state these clauses. On promotion, this decision partially supersedes the role-s
 Planned catalog integration and installed-consumer tests check prefixed assets, host projections, project extensions
 and installation without `devkit-spec`. Representative invocation exercises check flat/nested dispatch, capacity
 fallback and actual permission status. The Planning projection and read-only nesting observations are in
-[feasibility-spike.md](../materials/feasibility-spike.md). Coding teams, native enforcement, unexercised runtimes and
+[feasibility-spike.md](../../materials/2026-11/20261106-adaptive-swarm-development/feasibility-spike.md). Coding teams, native enforcement, unexercised runtimes and
 performance remain unverified; static checks and one read-only call do not establish them.
 Review only for semantic ownership and overlay compatibility; packaging tests do not prove either.
