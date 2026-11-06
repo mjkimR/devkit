@@ -32,7 +32,7 @@ below. This before/after is a qualitative instruction-coverage measurement, not 
 | AC-08 | Required PR CI fails; later nightly fails; another consumer requires integrated-result verification | Preserve failed-PR merge block and rework; route nightly evidence to existing repair issue/workflow; retain the other consumer's final required check unless changed through existing decision round | execution section 3; assessment section 5 |
 | AC-09 | Async recommendations absent, then requested; optional harness/spec/devkit absent | Load execution only for async/scheduling; no reference-to-reference links or external bundle/document assumptions; native runner remains valid | SKILL section 2; execution section 1; isolated bundle tests |
 | AC-10 | Wait timeout/interruption, unknown execution, explicit cancel, cleanup failure after negative run | Observation ending does not cancel/remove; confirm managed stop, retain checkout; guarded cleanup only eligible inactive environment, original outcome/logs retained; tool delivery or later collection, optional verifier/Git-only operator | execution sections 2/4 |
-| AC-11 | Unseparated or unclear suite, overlapping broad commands, no E2E; alternatively documented independent groups | Existing required commands stay synchronous absent established split; no fabricated E2E/empty coverage; supported independent groups preserve all required checks and full fallbacks; restructuring is a decision candidate | assessment sections 1/3; execution sections 1/2 |
+| AC-11 | Unseparated or unclear suite, overlapping broad commands, no E2E; alternatively documented independent groups | Existing required commands stay synchronous absent established split; combined synchronous/CI or no-E2E suites still receive consultation/scheduling advice; async separation alone needs independent groups; no fabricated E2E/empty coverage; restructuring is a decision candidate | assessment sections 1/3; execution sections 1/2 |
 | AC-12 | Repo already identifies commands/resources; responsiveness or delayed-detection tolerance is missing | Read code/tests/fixtures/scripts/CI first; ask only decision-relevant missing aims in a concise bundle; synthesize prioritized evidence-backed arrangement/reasons/tradeoffs; compare viable alternative where meaningful, keep current if favored; proposed edits/validation use same single change-decision round | SKILL sections 1/2/3/4; assessment section 2; execution section 1 |
 
 The walkthrough confirms instruction paths for all twelve ACs. Existing native requirements remain authoritative;
@@ -62,3 +62,28 @@ An initial `just test catalog integration/bundles/test_bundles.py` was rejected 
 pytest; using the documented package-relative tests path passed. Initial unprivileged lint could not write the
 sibling-worktree cache; the approved rerun exposed a formatting issue, repaired only in the owned test file.
 These failures do not establish a test pass. Final committed-content checks and independent review follow below.
+
+## Committed source verification and review
+
+Source HEAD adbb4860a79089329c5921321231c4bc110b5a80: rules CI against retained baseline
+72dcf58181c421a2904cc6acde54d4f6a673788c PASS 22; generated check PASS checked=2 stale=0 skipped=0.
+Selected isolated E2E used `uv run devkit exec start --ref adbb4860a79089329c5921321231c4bc110b5a80 -- just test-affected --base 72dcf58181c421a2904cc6acde54d4f6a673788c --tier e2e`.
+Run ID 43c8203ece6d47fc9dff06e585d55a47 completed PASS exit=0, four selected catalog paths, 4 passed in 5.74s.
+Background `uv run devkit exec wait 43c8203ece6d47fc9dff06e585d55a47 --clean --format json` returned
+observer=completed, cleanup=cleaned / EXECUTION_CLEANED. Original log/result retained under shared Git
+`devkit/executions/43c8203ece6d47fc9dff06e585d55a47/`. The read of that own execution log is outside the
+worker worktree and is verification evidence, not a read of another source checkout.
+
+Independent medium code-reviewer PASS, no findings, exact reviewed source head adbb4860 and accepted audit base
+b559c6df. Before/after temporary-index trees both 3aefe842089a22b2175f242b1f8aa148ed863951; actual HEAD and clean
+status unchanged. Reviewer read no repository source/documents outside the worktree and made no probes/writes.
+Boundary enforcement was emulated through absolute paths, explicit scoped payload and snapshot comparison.
+
+## Source precision repair after initial review
+
+The Host identified that execution section 1's independent-group condition could incorrectly gate all scheduling
+examples, including ordinary cloud PR/nightly consultation for combined commands. Returned to build-verify,
+narrowed the prerequisite to asynchronous separation and explicitly kept combined synchronous/CI and no-E2E
+consultation valid. Cloud wording refers to existing/applicable E2E rather than creating a new tier requirement.
+This repairs AC-11 precision without changing the accepted cloud risk or native required checks. Initial source
+E2E evidence remains exact to adbb4860; the changed source receives its own verification below.

@@ -2,8 +2,10 @@
 
 ## 1. Preserve the consumer's verification contract
 
-Use these operating examples only after establishing independently runnable groups with complete required
+Recommend asynchronous separation only after establishing independently runnable groups with complete required
 coverage. Keep existing required commands synchronous when the split is unclear, unseparated or overlapping.
+Consultation and scheduling recommendations still apply to combined synchronous/CI commands and suites without
+E2E; do not infer an E2E requirement from these examples.
 Use the consumer's documented command prefix and native-compatible execution/CI tools; devkit, a harness, a spec
 workflow and a verifier subagent are optional. Introduce no local/cloud mode, profile map or policy selector.
 Keep concrete merge scheduling and integration authority with the consumer's existing orchestrator.
@@ -33,8 +35,9 @@ repair routing and completion.
 
 ## 3. Cloud PR example without an active Host
 
-Recommend worker unit/integration and necessary selective E2E, followed by the consumer's required PR CI including
-E2E. Preserve the merge block on failed required PR CI, rework the change and rerun required checks. With the
+Recommend worker unit/integration and necessary selective E2E where it exists, followed by the consumer's required
+PR CI including its existing required E2E coverage. A combined native command can supply that coverage; require no
+new E2E definition for a suite without it. Preserve the merge block on failed required PR CI, rework the change and rerun required checks. With the
 consumer's existing authority, automatic merge follows passing required PR checks. This example intentionally
 has no immediate postmerge CI: separate passing PRs can break the combined main until nightly detection.
 
