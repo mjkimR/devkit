@@ -2,28 +2,27 @@
 id: PLAN-adaptive-swarm-development
 spec: SPEC-adaptive-swarm-development
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-adaptive-swarm-development` Reusable Subagents and Optional Teams for Adaptive Development
+# Technical Plan: Reusable Adaptive Subagents
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
-- Target Docs Blueprint: `PROP-adaptive-swarm-development-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+`SPEC-adaptive-swarm-development` follows `ADR-skill-local-swarm-roles` and `ADR-worktree-isolated-parallel-workers`. Existing distribution projections, model policy and caller lifecycle remain authoritative. No new feature edges or runtime dependencies are introduced. `ARCH-05-2-components` permits catalog-owned content and mirrored integration/E2E tests.
 
-### Planned Boundaries:
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py`
-- `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/`
-- `docs/capabilities/delivery/CAP-DLV-adaptive-development.md`
-- `docs/usecases/delivery/UC-advance-an-idea.md`
-- `docs/architecture/ARCH-05-2-components.md`
-- `docs/decisions/2026-11/20261102-adaptive-development-and-research.md`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit-dist/`
-- `packages/devkit-spec/`
+Adaptive-dev owns three public archetypes, four local roles and conditional orchestration guidance. Core retains six assets and adds three archetypes; agents selects exactly those three. Scope the approach guard to adaptive product iteration; compatible external callers retain their own workflow. Product-support roles retain no-commit contracts. Writers can commit only when expressly assigned. Planner descendants remain read-only; verifier writes only assigned ignored outputs.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 3. Component & Interface Design
+
+Assignments carry goal, source/base, absolute readable role and ownership boundaries, permitted actions, checks, stop condition, depth/Host-wide allowance and expected return. Return status, exact source/commits, changed paths, commands/outcomes, defects and unverified areas. Overlay permissions intersect the archetype and caller authority. Resolve local roles from the loaded skill directory and external overlays by verified caller-owned absolute path. Prefer direct work; use flat or Host→lead→child only when useful and available, at most two child levels.
+
+## 4. Error Handling & Edge Cases
+
+Unknown/exhausted allowance or missing nesting selects direct/flat/serial execution without settings changes. Concurrent writers own separate worktrees; parent writes wait for child return. Verify actual changes before integration. Host owns final integration and current context. Preserve dirty/unmerged checkpoints on failure or interruption, collect children and record next action before cleanup. Bound repair in each assignment.
+
+## 5. Verification & Test Plan
+
+Connect real bundle selection, projections, extension collision, model policy and context preservation in catalog integration tests. Extend installed-wheel E2E without devkit-spec and agents-only under SDD. Retain semantic direct/flat/depth-two role-file exercises separately from packaging and native-runtime claims. Compare recorded Planning baseline to final projection counts/preset behavior; report native runtime and performance limits.
+
+Run bundle validate/plan, just lint-check catalog, just check catalog, just test-affected --base 441bfde9603497c652d9cd6aac7c2688f0a2603a, and devkit rules check --ci --base main. Commit tested source, run selected E2E through devkit exec at a fixed ref, collect final result. Independent code-reviewer and reconcile-reviewer verify scope and Living Spec. Host verifies eventual landed HEAD independently.
