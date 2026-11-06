@@ -9,6 +9,8 @@ uv run devkit exec list --format json
 uv run devkit exec logs <run-id> --tail 100
 ```
 
+Devkit's `just test-affected` defaults to `--tier unit-integration`, excluding E2E even when E2E tests changed. `--tier e2e` selects only E2E; `--tier all` or compatibility `--e2e` selects both. Explicit data mappings and broad directories obey the selected tier. Unknown-input and shared-foundation full fallback stays within that tier, preserving embedded rule coverage in unit/integration or all selections. An empty tier runs no pytest command; required frontend checks remain separately reported.
+
 Background the waiter through a tool that delivers completion if independent work should proceed. Without that delivery, inspect later. Wait timeout/interruption does not cancel; cancel retains the checkout; clean preserves logs/results outside it. Retain native artifacts before requesting clean. Setup uses worktree configuration or `--setup`; no implicit `.env` copy, profile map or local/cloud selector exists.
 
 | Code | Caller action |

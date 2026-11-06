@@ -168,7 +168,7 @@ An activity branch nobody moves stays in progress: devkit MUST NOT expire it. `d
 
 ## 7. Module Layout
 
-`devkit_agt.features.worktree` uses `devkit_core`, distribution project support and `devkit.advisory`; Git MUST run through `devkit_core.core.git.run_git`, except `git worktree add` and `git worktree remove`, which run in a session of their own (`start` step 4).
+`devkit_agt.features.worktree` uses `devkit_core`, distribution project support and `devkit.advisory`. Activity lifecycle Git operations MUST run through `devkit_core.core.git.run_git`, except `git worktree add` and `git worktree remove`, which run in a session of their own (`start` step 4). The execution-only captured repository module uses standard-library subprocess Git calls with inherited `GIT_` overrides removed, so checkout preparation remains independent of mutable project imports (`ADR-isolated-test-runs`).
 
 The package is laid out by layer under `features/worktree/`:
 
