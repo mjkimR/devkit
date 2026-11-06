@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:23:25.583929Z'
+status: completed
+summary: Delivered generic isolated exec start/list/status/logs/wait/cancel/clean, explicit guarded retention and wait-clean composition, tier-safe devkit selection, and conditional local-orch discovery/async/collection/repair guidance. High code review rounds1-4 and reconcile round1 are closed with retained evidence. Source is ready for local integration; landed verification remains Host work.
+findings: []
+assumptions:
+- Reverify04 phrase no API/schema/code change means no public API/schema/stable error-code change; the named Runs.read implementation changed exactly as its finding prescribed, with deterministic Red-to-Green evidence.
+- Devkit uses local-orch; native command groups are discovered per repository. Unseparated or unclear consumers retain synchronous required checks. Playbook implementation stays in dependent draft PROP-test-playbook-verification-policy.
+unverified_areas:
+- Linux runtime was not executed; macOS process tests establish local evidence. Target runtime synchronization and final landed-head synchronous/E2E checks occur after integration.
+checks:
+  tests: PASS just test-affected --base ede62bde selected-tier full fallback6394 passed3 skipped109.95s; focused runtime/lifecycle54 passed17.06s; selector91 and guidance checks retained
+  build: PASS uv build --package devkit-agt --wheel --out-dir scratch/final-source-wheels --offline
+  lint: PASS whole workspace lint-check; changed feature ruff/format; harness pyright0; rules22 errors0 warnings0; generated2 stale0; sync-check exit0
+diff_scope:
+  base: 90cf89872da19e0722429f643c3d2535c465a6e4
+  head: 3486ccbd4590257c039329072266848cc1330537
