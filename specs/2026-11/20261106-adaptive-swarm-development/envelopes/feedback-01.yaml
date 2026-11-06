@@ -1,0 +1,13 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T13:31:42.565900Z'
+status: completed
+summary: Swept this Development turn and actual diff; recorded FB-isolated-execution-group-identity after existing-feedback lookup. No other unresolved tool or policy observation.
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
+diff_scope:
+  base: ''
+  head: 530e254757c0ddff2ab1fecc9b0066d6b6c33bbf
