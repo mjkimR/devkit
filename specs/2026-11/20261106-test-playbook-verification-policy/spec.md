@@ -1,187 +1,103 @@
 ---
 id: SPEC-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
-summary: Extend maintenance/test-management with asynchronous test assessment and recommended local/cloud operating examples. Preserve native project checks and use direct commands without a devkit delivery-policy selector or test-profile map.
+summary: "Assess independent test groups and asynchronous verification without weakening consumer checks; provide optional local and cloud scheduling examples through the existing decision round."
 status: planned
 created: 2026-11-06
 depends_on:
   - SPEC-async-e2e-verification
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-test-management]
+related_usecases: [UC-assess-test-management]
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-test-playbook-verification-policy] Align the Test Playbook with Verification Policy
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-test-playbook-verification-policy on 2026-11-06.
-
-### 1. Background & Hypothesis
-
-`SPEC-async-e2e-verification` delivers a separate `devkit exec` group for fixed-commit asynchronous commands,
-persistent execution evidence, direct native argv and local-orch skill integration. Tests are its first consumer;
-existing `devkit run` keeps its synchronous bounded-output behavior. This follow-up teaches the existing test-management playbook
-how to assess that capability and recommend practical test arrangements.
-
-The source is `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/SKILL.md`.
-Its `references/assessment.md` preserves coverage, resources and completion checks. Its `references/pytest.md`
-requires comparable evidence before promoting tuning changes. Retain those principles.
-
-Devkit itself uses local-orchestrated development. A client repository can have different CI and delivery habits.
-Local/cloud examples help explain scheduling tradeoffs; they are recommendations, not product policy alternatives
-that a consumer must select or register. The executor needs neither that distinction nor a configuration setting.
-
-#### Scope and non-goals
-
-- Update the source playbook and relevant references, with focused guidance checks and capability alignment.
-- Preserve explicit invocation, user-selected assessment scope, one decision round and consumer workflow routing.
-- Preserve native tier names, resource prerequisites, required checks and documented optional skips.
-- Include recommended local and cloud arrangements, including accepted nightly detection of broken combinations.
-- Exclude a local/cloud policy selector, route registry, new global completion contract and test-profile config.
-- Exclude changes to the prerequisite executor, test selector or local-orch implementation.
-- Exclude mandatory devkit commands, pytest, a verifier subagent or a concurrency setting for every consumer.
-- Exclude client CI/branch implementation, application defect repairs and broad test-suite optimization.
-- Exclude editing managed copies or projected agent files directly.
+The test-management playbook preserves coverage and safe resources but lacks guidance for independently runnable
+verification and asynchronous result collection. The prerequisite SPEC-async-e2e-verification is delivered on the
+current base. This change teaches assessment and recommendation; it does not run an assessment on devkit.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Align the Test Playbook with Verification Policy so that system capabilities are extended.
+- **US-1**: As an AI coding agent, I want to assess actual consumer test commands and coverage so that asynchronous
+  scheduling preserves the consumer's required verification.
+- **US-2**: As a consumer maintainer, I want local and cloud examples with explicit evidence and repair ownership
+  so that I can decide scoped changes in the existing decision round.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Executor, test selector, scripts, CI, application runtime or local-orchestrator changes.
+2. **Scope Excluded**: Policy selectors, test-profile maps, new feature edges or global completion requirements.
+3. **Scope Excluded**: Running real consumer CI/services, tuning actual suites, mandatory pytest/devkit/verifier use
+   or implicitly applying consumer configuration.
+4. **Scope Excluded**: Changes to managed/projected assets, bundle selection or architecture metadata.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Native commands without configuration indirection
+- **Given** the delivered fixed-commit executor and a consumer with native verification commands.
+- **When** the playbook recommends execution.
+- **Then** it uses actual commands or labelled generic examples with the consumer invocation prefix, preserves native checks and requires no test-profile map or local/cloud selector.
 
-## 5. Carried Proposal Notes
+### [AC-02] Pending coverage and exact revision
+- **Given** an asynchronous run at SHA A and later descendant C.
+- **When** the agent reports verification.
+- **Then** it records tested SHA, native command, selection baseline and outstanding coverage with a collection action; launch success or A passing cannot establish required C coverage.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Failures and required gaps
+- **Given** a failed required check, unavailable required prerequisite or unknown execution.
+- **When** the agent assesses completion.
+- **Then** it preserves failed, pending or not_run evidence and unmet gates, distinguishes optional omissions and routes proposed follow-up through the consumer workflow without weakening required coverage.
 
-### 2. Settled Implementation Decisions
+### [AC-04] Native ownership and independent cost
+- **Given** a non-Python suite, costly integration tests or cheap browser tests.
+- **When** the agent inventories tests.
+- **Then** it inspects documents, scripts, runner configuration and CI triggers for coverage, exclusions, overlap, commands, cost and isolation separately; tier names and directories establish neither E2E existence nor cost or independent execution.
 
-The direction is settled by the preceding native-command and local/cloud discussion. The prerequisite is
-completed on main at 300fb476, with final unit/integration and actual isolated E2E verification collected.
-No comparison, spike, new execution policy or PADR remains to resolve before Development.
+### [AC-05] Comparable tuning evidence
+- **Given** a proposed runner or scheduling optimization.
+- **When** the agent assesses its benefit.
+- **Then** it distinguishes Host blocking, run count, native execution and setup/resource costs, retains pytest same-revision/selection/node-ID/outcome/skip/cleanup comparisons, and claims no speedup or default promotion without comparable measurements.
 
-- Keep the main playbook as the explicit-invocation assessment router with its existing one decision round.
-- Keep generic command/coverage/resource discovery in assessment.md; require established independent groups
-  before recommending deferred execution. Keep existing required checks synchronous for unclear/unseparated suites.
-- Add a conditionally loaded execution.md for local/cloud operating examples and optional devkit exec usage.
-  Use the delivered start/wait/cancel/clean semantics and direct native argv; require no profiles or policy selector.
-- Keep pytest-specific comparison and within-run concurrency advice in pytest.md. Distinguish that concurrency,
-  overlapped verification, test frequency, preparation cost and native execution cost.
-- Use the existing bundle deployment/self-containment tests plus a labelled procedural walkthrough over all
-  acceptance scenarios. Do not present a walkthrough as consumer execution or performance evidence.
-- Reconcile CAP-DLV-test-management and UC-assess-test-management. No executor, selector, CI implementation or
-  global delivery-policy change belongs to this follow-up.
+### [AC-06] Invocation and one decision round
+- **Given** playbook retrieval without invocation or proposed edits without a decision.
+- **When** the agent reaches the relevant boundary.
+- **Then** retrieval starts no assessment, invocation authorizes only assessment, unanswered candidates stay pending, and approved exact-scope changes retain native workflow and integration approvals through one decision round.
 
-### 3. Proposed Design & Impact
+### [AC-07] Cloud example accepts later detection
+- **Given** a cloud PR workflow with required PR CI including E2E and no active Host.
+- **When** the playbook gives an operating example.
+- **Then** it describes worker checks, failed-CI rework, automatic merge on pass and nightly detection of a potentially broken combined main, without requiring latest-base prospective testing, base refresh, merge queues or immediate postmerge CI.
 
-#### 3.1 Assessment and recommendations
+### [AC-08] Existing requirements and repair
+- **Given** required PR CI fails, nightly finds broken combined main, or the consumer requires final integrated-result checks.
+- **When** the agent recommends cloud scheduling.
+- **Then** failed required PR CI blocks merge, nightly failures enter the existing consumer repair mechanism without an always-on Host assumption, intentionally absent checks are distinguished from unavailable required checks, and existing final checks remain unless changed through the same decision round.
 
-Inventory test semantics, affected scope, measured cost, resource isolation and execution timing separately.
-Read the actual commands, CI triggers and required checks of the repository being assessed. Do not infer its
-requirements from devkit's own local-orch habits or from where its worker runs.
+### [AC-09] Conditional self-contained examples
+- **Given** async execution or scheduling recommendations are in scope.
+- **When** the main playbook routes the assessment.
+- **Then** it conditionally loads a one-level execution reference with optional native-compatible runners and generic devkit examples, keeps every shared constraint in SKILL.md, and assumes neither spec/harness installation nor authoring-repository documents or a policy selector.
 
-Establish independently runnable groups from repository instructions, scripts, runner configuration and CI.
-Do not assume every consumer has E2E, infer cost from tier/directory names, or treat an undocumented split as
-missing tests. Recommend asynchronous separation only when existing required coverage is preserved. With an
-unseparated or unclear suite, retain its existing required verification synchronously; any proposed restructuring
-is separately assessed and routed through the existing decision round.
+### [AC-10] Observation and cleanup are separate
+- **Given** background waiting, timeout, interruption, cancellation or requested cleanup.
+- **When** the agent recommends optional devkit execution.
+- **Then** it explains tool-dependent result delivery or later collection, pending/unknown never passing, observation ending without cancellation, confirmed managed stop retaining checkout, guarded inactive cleanup, retained original outcome/logs and default artifact retention for diagnosis; optional verifiers and Git-only operators retain their boundaries.
 
-Recommend frequent unit/integration checks during worktree/PR iteration, with E2E when needed to establish the
-changed behavior. Preserve required lint, types, rules, frontend and other native checks. Use conservative full
-fallback within the repository's selection contract. Explain E2E omissions separately from passing results.
+### [AC-11] Independent groups before async separation
+- **Given** an unseparated, unclear, overlapping, no-E2E or explicitly separated suite.
+- **When** the agent chooses recommendations.
+- **Then** it preserves complete required coverage, keeps existing required checks synchronous when no independent subset is established, preserves frequent existing unit/integration iteration and necessary selective E2E plus native checks/fallbacks, and routes any restructuring through the same decision round without fabricating E2E or empty coverage.
 
-Present the following as operating examples, not mandatory modes or a configuration decision:
+## 5. Implementation Assumptions
 
-| Example | Suggested arrangement | Tradeoff to explain |
-| :--- | :--- | :--- |
-| Active local Host | Worker unit/integration and selective E2E; merge; synchronous unit/integration; selective E2E asynchronously while independent work proceeds | Host collects required results and prioritizes repair when a failure is observed |
-| Cloud PR without an active Host | Worker unit/integration and selective E2E; required PR CI including E2E; rework on failure; automatic merge on pass; nightly later | No immediate postmerge CI; passing PRs can break main in combination until nightly detection and repair |
+The direct acceptance settles the direction and skips Planning under user authority. The prerequisite interface
+is present in this worktree; no premise breaks the agreed scope. Maintenance is unselected, so deployment tests
+use isolated consumer fixtures and sync must leave selected assets unchanged. Execution examples are consumer
+recommendations; concrete merge scheduling belongs to that consumer's orchestrator.
 
-The cloud example accepts that broken combinations reach main. Do not add latest-base prospective merge testing,
-forced base refresh, a merge queue or immediate postmerge CI as prerequisites for that recommendation. Explain
-nightly timing and how failures reach the repository's repair process, without prescribing an adapter or recipient
-schema. A later nightly failure is follow-up repair, not proof that the merged combination had passed earlier.
-
-Assess actual project requirements when reporting gaps. An intentionally absent check is not an unavailable
-required check. Failed required PR CI still blocks merge. If a recommendation would change an existing project
-requirement, route that change through the normal decision round; the playbook does not silently apply it.
-
-#### 3.2 Execution evidence and local use
-
-Assess exact tested SHA, native command, selection baseline where applicable, environment, state, exit code and
-logs. Confirm that advancing main cannot change files/dependencies used by an active run. Reuse the delivered
-interfaces; do not add test-profile mappings or local/cloud flags to the executor.
-
-For local scheduling recommendations, explain direct Host launch and result collection, bounded batches,
-outstanding changes and repair priority. Start with one E2E run when resource contention warrants it; keep this
-as advice rather than a mandatory executor limit. The local-orch skill owns the concrete workflow procedure,
-so the playbook links it rather than duplicating its full instructions.
-
-Recommend the delivered `exec wait <run-id> --clean` when the Host wants completion observation and guarded
-cleanup in one background call. Keep environments by default when diagnostic artifacts are needed. Explain that
-cancel stops managed execution, cleanup removes an eligible inactive checkout, and manifests/logs remain readable.
-The waiter reports native execution and cleanup independently. Wait interruption or timeout does not cancel the
-execution or remove an unknown environment. Agent completion notification depends on its execution tool.
-
-A verification subagent can help diagnose results but is not required for asynchrony or process persistence.
-Git-operator retains Git lifecycle duties. Without an active Host, discuss existing CI/rework and nightly repair
-arrangements rather than assuming a local agent will observe every failure.
-
-#### 3.3 Decision and reporting
-
-Present proposed changes with source evidence, exact paths, coverage consequences and validation. Keep the
-existing one decision round for proposed edits, not an extra local/cloud policy-selection round. Route approved
-changes through the consumer workflow and keep unanswered candidates pending.
-
-Separate reduced blocking from reduced test execution time or run count. Report preparation cost and resource
-contention where measured; missing comparable evidence supports no speedup claim or default tuning promotion.
-Keep pending runs, coverage gaps and next collection actions visible. Distinguish assessment completion from
-actual test evidence and the repository's own delivery requirements. No executor launch establishes a test pass.
-
-#### 3.4 Expected acceptance scenarios
-
-- **AC-1:** Given the delivered prerequisite, the playbook uses actual commands or labelled examples and preserves
-  native checks. Direct command passing requires no test-profile map or local/cloud configuration.
-- **AC-2:** Given asynchronous E2E, assessment identifies its SHA, outstanding coverage and collection action;
-  launch success and an ancestor's pass cannot satisfy later required verification.
-- **AC-3:** Given a missing required check, failed test or unknown execution, the report preserves the gap and
-  routes proposed follow-up through the consumer workflow without weakening coverage.
-- **AC-4:** Given non-Python tests or an expensive integration suite, recommendations preserve native ownership,
-  commands and resources, and separate measured cost from tier semantics.
-- **AC-5:** Given a tuning recommendation, the report distinguishes blocked time, execution cost and coverage;
-  missing comparable results produce no speedup claim or default promotion.
-- **AC-6:** Given no invocation or no decision on proposed edits, no assessment or configuration change starts
-  automatically from retrieving the playbook.
-- **AC-7:** Given the cloud example's accepted nightly risk, the recommendation requires no latest-base merged
-  result, merge queue or immediate postmerge CI. Explain combination failures and later repair.
-- **AC-8:** Given required PR CI failure, preserve the existing merge block and rework arrangement; given nightly
-  failure, discuss follow-up repair without inventing a continuously available Host.
-- **AC-9:** Given devkit itself, assess its local-orch usage; given a client, inspect its actual setup instead of
-  requiring a declared policy mode. Examples remain recommendations and introduce no selector or extra decision round.
-- **AC-10:** Given background waiting and optional cleanup, recommendations explain retained execution evidence,
-  separate cleanup outcome, default environment retention and tool-dependent completion notification. Do not
-  equate an interrupted waiter with execution cancellation or promise automatic agent push notification.
-- **AC-11:** Given an unseparated or undocumented suite, assessment keeps existing required checks synchronously
-  and makes no E2E-existence, cost or independent-runnability assumption. Given explicit independently runnable
-  groups, recommendations preserve their complete required coverage without adding a profile or policy selector.
-
-### 4. Lifecycle & Retirement Criteria
-
-Keep `depends_on: SPEC-async-e2e-verification`. Start implementation after the prerequisite execution contract
-and local usage land and pass required verification. Follow its identity through normal handoff rather than
-removing the dependency to start early.
-
-Before asset edits, load authoring context and the maintenance bundle's source instructions. Inspect the
-then-current playbook and actual interfaces. Verify references and focused guidance checks; label recommendation
-walkthroughs separately from runtime tests. Graduate through the normal proposal workflow.
-
+Keep scope/resource safety, explicit invocation, one decision round and existing required checks in the main file.
+Use assessment.md for native inventory, execution.md for conditional scheduling and pytest.md for optional runner
+comparison. This keeps bundle references one level deep and avoids duplicating a delivery implementation.
