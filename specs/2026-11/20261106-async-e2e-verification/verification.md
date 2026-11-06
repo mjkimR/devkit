@@ -93,3 +93,26 @@ change, and deterministic Red-to-Green evidence. Rounds 1–4 remain retained wi
 Before that observer-only repair, the complete selected-tier affected fallback passed 6386 tests with 3 skips
 against ede62bde (347 paths, 139.54 seconds). Whole lint, 22 governance rules, harness types, generated artifacts
 (2 checked, 0 stale) and offline wheel build passed on 1f0d9c6b. Final source and landed checks cover the repair.
+
+## Landed verification and temporary Git discovery repair
+
+The saved premerge main was b382d065; local no-ff landing was 42cf89f8. Landed unit/integration full fallback
+passed 6394 with 3 skips in 142.38 seconds; whole workspace lint/types and 22 rules passed. The one-line
+follow-up proposal dependency reference repair at f8851106 passed its 15 affected tests. Generated artifacts
+were current (2 checked, 0 stale), and setup plus fresh-process sync completed without tracked drift.
+
+Actual isolated E2E run b65d9dc9f35947368869b20324e66b64 at f8851106 returned native failure:
+12 failed, 342 passed, 13 skipped in 110.50 seconds. The observer completed, requested cleanup was confirmed,
+and its negative result and logs remained readable. Non-Git temporary fixture projects inherited the retained
+main Git directory from the run-private TMPDIR under the common Git directory. This affected branch-policy
+checks, not the tested source commit. No rollback or merge replay occurred.
+
+The feature-owned native regression uses rev-parse --absolute-git-dir, matching the failed discovery path;
+--show-toplevel alone refuses inside Git metadata and did not reproduce it. The correct query failed before
+repair. A ceiling equal to TMPDIR protected its descendants but not TMPDIR itself; the expanded root/descendant
+case also failed. The captured supervisor now sets an execution-owned GIT_CEILING_DIRECTORIES at the run
+directory, above the temporary root. Inherited Git overrides are still scrubbed. Native temporary discovery
+cannot escape that boundary while the actual checkout still reports its fixed SHA. Storage, public CLI,
+cleanup scope and evidence retention are unchanged. Focused owned runtime/lifecycle tests pass 54 in 15.89
+seconds, harness types have zero errors, and changed-file lint/format and diff checks pass. Final affected and
+actual isolated E2E checks run on the repair commit before delivery completion.

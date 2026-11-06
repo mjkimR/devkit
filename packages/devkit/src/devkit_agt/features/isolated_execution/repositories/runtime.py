@@ -180,6 +180,9 @@ def supervise(directory: Path) -> None:
         TMPDIR=str(directory / "tmp"),
         TMP=str(directory / "tmp"),
         TEMP=str(directory / "tmp"),
+        # Temporary consumers must not discover the retained base through .git.
+        # Their own repositories remain discoverable below this boundary.
+        GIT_CEILING_DIRECTORIES=str(directory.resolve()),
         DEVKIT_EXEC_RUN_ID=record["run_id"],
     )
     paths = [p for p in env.get("PATH", os.defpath).split(os.pathsep) if not (Path(p).parent / "pyvenv.cfg").is_file()]

@@ -390,3 +390,18 @@ def test_cleanup_interruption_releases_lock_only_after_effect_settles(repo: Path
         with pytest.raises(KeyboardInterrupt):
             first.result(timeout=5)
         assert second.result(timeout=5)["cleanup"]["outcome"] == "cleaned"
+
+
+def test_temporary_projects_do_not_inherit_the_retained_repository(repo: Path) -> None:
+    record = launch(
+        repo,
+        "import subprocess,tempfile; from pathlib import Path; "
+        "roots=(Path(tempfile.gettempdir()),Path(tempfile.mkdtemp())); "
+        "found=[subprocess.run(['git','-C',str(root),'rev-parse','--absolute-git-dir'],capture_output=True) for root in roots]; "
+        "assert all(result.returncode != 0 for result in found), [result.stdout.decode() for result in found]; "
+        f"assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip() == {git(repo, 'rev-parse', 'HEAD')!r}; "
+        "print('temporary-git-boundary')",
+    )
+    done = cli(repo, "wait", record["run_id"], "--clean", expected=0)
+    assert done["cleanup"]["outcome"] == "cleaned"
+    assert cli(repo, "logs", record["run_id"], expected=0)["lines"] == ["temporary-git-boundary"]
