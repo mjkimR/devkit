@@ -1,0 +1,21 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:23:55.611313Z'
+status: completed
+summary: Host-owned terminal/observation recovery and completion. Validated retained worker ranges from last accepted90cf; all15 AC retained, code review rounds1-4 and reconcile round1 closed. Final source includes generic exec, tier selector and repository-discovered conditional async guidance. Ready for policy-auto local integration; no publication. Source work committed; target verification remains pending.
+findings: []
+assumptions:
+- Emulated worktree isolation uses absolute cwd and per-operation approved sibling writes. Original one-off /private/tmp/devkit_exec_impl.py scratch retention explicitly accepted; all later authored scratch is ignored in the worktree.
+unverified_areas:
+- Linux native runtime; final landed-head setup/sync/generated and synchronous/E2E verification remain Host-owned.
+checks:
+  sync_start: PASS exit=0 initial Host recovery sync-check; final sync-check exit0 with receipt-only Task3 sync output
+  tests: PASS source affected6394 skipped3; focused54; retained selector91; Red-to-Green ownership/publication regressions
+  build: PASS final offline harness wheel
+  lint: PASS workspace lint-check, feature ruff/format, harness types, rules22, generated2 stale0
+diff_scope:
+  base: 90cf89872da19e0722429f643c3d2535c465a6e4
+  head: 71e777772b78d721c9fc4fee5545cb0013806464
+activity_effort: high

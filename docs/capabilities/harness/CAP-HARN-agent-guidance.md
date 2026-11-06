@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Approach-aware SDD, opt-in adaptive-development and explicitly invoked deep-research entries consume shared policy, document authoring formats and product support; milestone guidance preserves user-owned transitions with atomic archive movement."
+summary: "Agent guidance for SDD, adaptive development, deep research and milestone operations. Local-orchestrated verification discovers independent check groups and collects isolated results without changing consumer requirements."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -495,3 +495,11 @@ The entry runs only on explicit user invocation: native projection disables impl
 opens with the explicit-only guard; no skill, pointer, guide or role suggests it. It inspects no approach, writes only
 its transient run directory and one indexed material under `docs/materials/`, and never commits: its report directs
 the commit through the project's Git policy.
+
+## Local-orchestrated verification
+
+Before choosing asynchronous verification, the Host inspects repository documentation, scripts, runner configuration and CI for actual required commands and coverage. It establishes independently runnable groups and verifies what the retained synchronous command excludes and what the asynchronous command covers, preserving all existing required coverage. Directory names and test labels establish neither E2E existence, cost nor independent runnability. If verification is unseparated, unclear or has no independently runnable subset, the Host keeps the existing required commands synchronously. Consumers need no E2E tier; guidance neither manufactures empty coverage nor automatically restructures verification. Overlapping broad commands do not establish reduced blocking by adding a duplicate E2E run. Devkit's selector commands are its own adoption example.
+
+Where independent required groups are established, the source local-orch skill SHOULD start with one outstanding isolated E2E run after the project's established synchronous verification group and preserve its existing full fallback. It launches native argv at fixed A, backgrounds one `exec wait --clean` through the tool, continues independent work and collects its result. Tool notification limits, default retention and separate execution/cleanup outcomes remain explicit (`CAP-HARN-isolated-execution`).
+
+WHILE main advances, the Host MUST retain the earliest uncovered interval, including generated repairs, and MUST NOT label A's result as testing descendant C. Before completion, current landed HEAD needs required synchronous results and passing required E2E there or an explicit empty E2E selection across the complete uncovered interval. At the next failed/unknown result check, hold further merges and prioritize repair without merge replay or automatic rollback. Git-operator remains a Git executor. Source guidance tests cover launch/work/collection ordering; actual Host compliance is Review only (`ADR-isolated-test-runs`).

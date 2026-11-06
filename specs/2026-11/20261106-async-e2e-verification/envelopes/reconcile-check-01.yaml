@@ -1,0 +1,32 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:21:28.572559Z'
+status: completed
+summary: round 1; REVISE. Independent comparison covers nine targets and AC01-15; worktree Git-boundary wording contradicts the approved captured runtime, and selector defaults/fallback details are incomplete.
+findings:
+- issue: The worktree contract still prohibits the approved captured implementation Git boundary.
+  evidence: docs/capabilities/worktree/CAP-WT-task-worktrees.md:171; worktree/repositories/execution.py:24; ARCH-05-2-components:223
+  failure_condition: Captured execution-only rev-parse/list/status uses stdlib subprocess, while section7 still requires core run_git for every operation except add/remove.
+  suggested_action: Replace section7 opening with activity-lifecycle-only run_git requirement and explicit captured execution-only stdlib Git calls with inherited GIT_ overrides removed under ADR-isolated-test-runs.
+  resolution: open
+  severity: P1
+- issue: AC-01 selector behavior is incompletely reflected in docs.
+  evidence: docs/development/reference/exec.md:6; reconcile.md:31; scripts/affected_tests.py:464,599
+  failure_condition: Docs readers cannot determine default edited-E2E exclusion, both-tier requests, tier-bounded full fallback and empty-tier no-op.
+  suggested_action: Add the exact reviewer paragraph after the command example documenting default unit-integration, e2e/all and --e2e, broad/data mappings, tier-bounded full fallback, embedded rules, empty no-op and separate frontend checks.
+  resolution: open
+  severity: P2
+assumptions:
+- Emulated read-only absolute worktree scope; clean unchanged HEAD/tree/index. Approved captured-runtime ADR authorizes the execution-only stdlib Git boundary; this is reflection consistency, not a waiver.
+unverified_areas:
+- Linux runtime execution and final landed HEAD checks.
+checks:
+  scope: PASS whole Development diff, fifteen AC and nine targets compared; no missing target or waiver
+  evidence: PASS retained6394 tests with3 skips, offline wheel, review04/reverify04 and feature regressions inspected
+  boundary: PASS unchanged e7346df3 and clean snapshot c936fe2d6509aff79df09f553615144a4fc3cf97
+diff_scope:
+  base: ede62bde33154c63448594180b2430a7acb18ebc
+  head: e7346df3de6896f6de6f8fad3af96ffd286bb648
+activity_effort: high

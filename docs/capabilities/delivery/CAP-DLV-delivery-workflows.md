@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD stages, gates and run records govern delivery. Worker inspection retains audit-base source completion scope; reusable git-operator executes Host-authorized lifecycle jobs with Git identity and recovery checks."
+summary: "SDD stages, gates and records govern delivery. Workers retain source scope; the Host accepts verification, including optional isolated background groups, while git-operator performs authorized Git lifecycle effects."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -16,6 +16,7 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/cli.py
   - packages/devkit-spec/src/devkit_spec/features/worker/cli/commands.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/references/isolated-execution.md
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -648,6 +649,10 @@ prompt.
 6. **Acceptance.** Proposal acceptance retains direction eligibility and explicit authority, but composed acceptance
    yields before handoff. The Host verifies the accepted landing and invokes handoff in a fresh process with the
    unchanged authorized scope, mode and effort (`CAP-DLV-proposal-planning`).
+
+Before choosing asynchronous verification, the Host inspects repository documentation, scripts, runner configuration and CI for actual required commands and coverage. It establishes independently runnable groups and verifies what the retained synchronous command excludes and what the asynchronous command covers, preserving all existing required coverage. Directory names and test labels establish neither E2E existence, cost nor independent runnability. If verification is unseparated, unclear or has no independently runnable subset, the Host keeps the existing required commands synchronously. Consumers need no E2E tier; guidance neither manufactures empty coverage nor automatically restructures verification. Overlapping broad commands do not establish reduced blocking by adding a duplicate E2E run. Devkit's selector commands are its own adoption example.
+
+Where independent required groups are established, local-orchestrated use keeps the project's known synchronous group synchronous and selected required E2E MAY run through `CAP-HARN-isolated-execution` while independent work continues. The Host records baseline B, tested SHA A and outstanding coverage; an ancestor pass never attests a later HEAD. Required final E2E passes at current landed HEAD or an explicit empty selection covers its complete uncovered interval, including generated repairs. At the next failed/unknown result check, hold further merges and prioritize repair. Background `wait --clean` composes observation and eligible cleanup, while execution tools own notification delivery and the Host owns acceptance. One outstanding run is the starting recommendation, not an executor policy.
 
 `ADR-post-merge-verification` records this boundary. Guidance regressions in
 `packages/devkit-spec/tests/integration/bundles/spec/test_moved_target_guidance.py` check the sequence; the Host's

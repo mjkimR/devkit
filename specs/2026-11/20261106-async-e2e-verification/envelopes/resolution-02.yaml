@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:57:17.104788Z'
+status: completed
+summary: 'Host-directed alternative remedy: reject unknown/reused reaped leaders before every pre-discovery/signalling path; require explicit producer quiescence proof for removal, with explicit valid no-launch evidence. R3 exact regressions reproduced Red then Green; current-producer cleanup interruption remains covered. Retain review counts 1-3 and run fresh independent round 4 over this remedy, without relaxing the fifteen AC.'
+findings: []
+checks: {}
+resolves: worker-02.yaml

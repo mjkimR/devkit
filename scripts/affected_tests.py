@@ -458,15 +458,54 @@ def _source_node(workspace: Workspace, path: str) -> str | None:
     return package
 
 
-def select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) -> Selection:
+Tier = Literal["unit-integration", "e2e", "all"]
+
+
+def _tier_paths(root: Path, paths: Iterable[str], tier: Tier) -> tuple[str, ...]:
+    """Expand mixed-tier directories so neither explicit maps nor full fallback escape the tier."""
+
+    def allowed(path: str) -> bool:
+        e2e = "/tests/e2e/" in path or path.startswith("tests/e2e/")
+        return tier == "all" or (e2e if tier == "e2e" else not e2e)
+
+    kept: set[str] = set()
+    for name in paths:
+        target = root / name
+        if target.is_file():
+            if allowed(name):
+                kept.add(name)
+        elif target.is_dir():
+            files = sorted(
+                p.relative_to(root).as_posix() for p in target.rglob("test_*.py") if "__pycache__" not in p.parts
+            )
+            selected = [p for p in files if allowed(p)]
+            if selected and len(selected) == len(files):
+                kept.add(name)
+            else:
+                kept.update(selected)
+    return tuple(sorted(p for p in kept if not any(p.startswith(f"{other}/") for other in kept)))
+
+
+def select(root: Path, changed: Iterable[str], *, include_e2e: bool = False, tier: Tier | None = None) -> Selection:
+    chosen: Tier = tier or ("all" if include_e2e else "unit-integration")
     changed = sorted(set(changed))
     try:
-        return _select(root, changed, include_e2e=include_e2e)
+        selection = _select(root, changed)
     except UnsafeGraph as exc:
-        return Selection("full", (), str(exc), any(path.startswith(FRONTEND_PREFIXES) for path in changed))
+        selection = Selection("full", (), str(exc), any(path.startswith(FRONTEND_PREFIXES) for path in changed))
+    paths = selection.paths
+    if selection.mode == "full":
+        paths = tuple(
+            p.relative_to(root).as_posix()
+            for home in ("packages", "tools")
+            for p in (root / home).rglob("test_*.py")
+            if "tests" in p.parts and "__pycache__" not in p.parts
+        )
+    kept = _tier_paths(root, paths, chosen)
+    return Selection(selection.mode if kept else "none", kept, selection.reason, selection.frontend)
 
 
-def _select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) -> Selection:
+def _select(root: Path, changed: Iterable[str]) -> Selection:
     """The test paths a set of changed repository-relative paths can affect."""
     changed = sorted(set(changed))
     frontend = any(path.startswith(FRONTEND_PREFIXES) for path in changed)
@@ -475,16 +514,12 @@ def _select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) ->
             return Selection("full", (), path, frontend)
     workspace = Workspace(root)
     paths: set[str] = set()
-    data_targets: set[str] = set()
     causes: set[str] = set()
     nodes: set[str] = set()
-    has_e2e_change = any("/tests/e2e/" in path or path.startswith("tests/e2e/") for path in changed)
-    allow_e2e = include_e2e or has_e2e_change
     for path in changed:
         data = [(prefix, tests) for prefix, tests in DATA if path.startswith(prefix)]
         for prefix, tests in data:
             paths.update(tests)
-            data_targets.update(tests)
             causes.add(prefix)
         if re.fullmatch(r"(?:packages|tools)/[^/]+/src/.+", path):
             if path.startswith((f"{DIST}/src/", f"{DEVKIT}/src/")):
@@ -510,8 +545,6 @@ def _select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) ->
             if group.depends & affected:
                 paths.update(group.paths)
     kept = sorted(p for p in paths if (root / p).exists())
-    if not allow_e2e:
-        kept = [p for p in kept if "/tests/e2e/" not in p or p in data_targets]
     kept = [p for p in kept if not any(p.startswith(f"{other}/") for other in kept)]
     if not kept:
         return Selection("none", (), "frontend" if frontend else "untested", frontend)
@@ -563,13 +596,19 @@ def _replace_process(argv: list[str]) -> None:
 @click.command(context_settings={"ignore_unknown_options": True})
 @click.option("--base", default="main", show_default=True, help="Ref whose merge base with HEAD starts the changes.")
 @click.option("--list", "list_only", is_flag=True, help="Print the selection and its paths without running pytest.")
-@click.option("--e2e", "include_e2e", is_flag=True, help="Include slow end-to-end tests.")
+@click.option("--e2e", "include_e2e", is_flag=True, help="Compatibility alias for --tier all.")
+@click.option(
+    "--tier",
+    type=click.Choice(["unit-integration", "e2e", "all"]),
+    default=None,
+    help="Test tier; default unit-integration. Full fallback stays within this tier.",
+)
 @click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
 @boundary
-def main(base: str, list_only: bool, include_e2e: bool, pytest_args: tuple[str, ...]) -> None:
+def main(base: str, list_only: bool, include_e2e: bool, tier: Tier | None, pytest_args: tuple[str, ...]) -> None:
     """Run the tests the changes since BASE can affect; arguments after `--` go to pytest."""
     changed = changed_paths(ROOT, base)
-    selection = select(ROOT, changed, include_e2e=include_e2e)
+    selection = select(ROOT, changed, include_e2e=include_e2e, tier=tier)
     click.echo(
         f"[TEST_SELECTION: mode={selection.mode} base={base} changed={len(changed)} "
         f"paths={len(selection.paths)} reason={selection.reason}]"

@@ -10,7 +10,7 @@ size: M
 planning_effort: medium
 dev_effort: medium
 depends_on:
-  - PROP-async-e2e-verification
+  - SPEC-async-e2e-verification
 boundaries:
   owns:
     - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/
@@ -28,7 +28,7 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`PROP-async-e2e-verification` proposes a separate `devkit exec` group for fixed-commit asynchronous commands,
+`SPEC-async-e2e-verification` proposes a separate `devkit exec` group for fixed-commit asynchronous commands,
 persistent execution evidence, direct native argv and local-orch skill integration. Tests are its first consumer;
 existing `devkit run` keeps its synchronous bounded-output behavior. This follow-up teaches the existing test-management playbook
 how to assess that capability and recommend practical test arrangements.

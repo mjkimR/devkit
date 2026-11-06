@@ -1,0 +1,25 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:12:49.217382Z'
+status: completed
+summary: 'round 4; REVISE. R3 ownership defects are addressed. New independent P1: stale running-state observation can override a terminal result published before process enumeration.'
+findings:
+- issue: Wait can report unknown after a valid terminal result has already been published.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runs.py:62-76; services/lifecycle.py:61-63; scratch/review-04/test_terminal_publication.py:38 fails unknown != passed. Native interruption/huge-log waits also returned unknown before later valid results.
+  failure_condition: Reader loads running state; supervisor publishes result.json and exits before process enumeration. Reader marks stale state unknown without rechecking terminal evidence, violating AC-13.
+  suggested_action: Before declaring unknown after supervisor identity disappears or changes, reload and validate any newly published terminal result. Preserve unknown when trustworthy terminal evidence remains absent. Add a feature-owned deterministic publication-order regression and retain interruption coverage.
+  resolution: open
+  severity: P1
+assumptions:
+- 'Emulated isolation: absolute worktree scope, ignored round-only probes, individually approved native tests, unchanged HEAD/tree/index/worktree; no prior scratch probes read or run.'
+unverified_areas:
+- Linux runtime execution; independent reconciliation and final landed-head checks remain.
+checks:
+  independent: FAIL 43 passed 2 failed runtime/lifecycle; deterministic terminal-publication probe failed 1 in 0.07s
+  host: PASS affected6386 skipped3; whole lint/rules22/types/generated2stale0/offline wheel on reviewed HEAD
+  boundary: PASS unchanged snapshot632a6186274b87d45979e2ff08b39e7468e10d43 and clean reviewed HEAD
+diff_scope:
+  base: 205a6cd43264c45a9109a90f64a4cea871201264
+  head: 1f0d9c6b5ff244636c6888e45b2e9cf032bf641a

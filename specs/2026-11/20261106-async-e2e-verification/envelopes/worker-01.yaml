@@ -1,0 +1,37 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:29:01.688793Z'
+status: failed
+summary: 'Implemented isolated exec lifecycle, tier selection, local-orch guidance and draft Living Spec; high review stops on recurring orphan-quiescence P1 plus cleanup-interruption P1. Tracked sync output: .devkit/installation.json on Task 3; Host accepted retaining the one initial /private/tmp/devkit_exec_impl.py scratch-location deviation. Tasks 2/3 reopened; recovery-handoff.md preserves exact probes, two review rounds, required verification-discovery guidance and remaining reconcile/final stages.'
+findings: []
+assumptions:
+- Host projection is emulated; absolute worktree cwd/read/write scopes, per-operation escalations and committed diff checks substitute for native confinement.
+- Host approved the worktree execution public API registration, package-registration test/helper updates and retention of the one existing outside-worktree scratch script; no new feature edge or dependency added.
+unverified_areas:
+- Linux runtime execution and real OS orphan-race frequency.
+- Independent Living Spec reconcile, spec entrypoint derivation, feedback sweep and final-change-report are incomplete.
+- New user-required conditional verification discovery/fallback guidance and consistent CAP-DLV/UC/HARN restatements remain to implement.
+checks:
+  sync_start: PASS exit=0
+  tests: 'PASS just test-affected --base ede62bde with system basetemp: 6367 passed 3 skipped; source 37074d0d'
+  focused: PASS lifecycle16 E2E plus8 unit; selector91; combined interface95
+  build: PASS offline devkit-agt wheel and exec/captured-module payload inspection
+  lint: PASS whole just lint-check
+  types: PASS whole workspace before review repairs and final just check devkit-agt plus targeted selector/API
+  rules: PASS whole-worktree and committed --ci --base ede62bde
+  generated: PASS checked=2 stale=0
+  sync: PASS source sync and later ignored MCP projection repair/check; only tracked output .devkit/installation.json
+  review: 'FAIL round 2 recurring P1 review-01 #1 and new cleanup-progress P1; independent probes 3 failed 2 passed'
+diff_scope:
+  base: 90cf89872da19e0722429f643c3d2535c465a6e4
+  head: ece2d5fe8ce53dd63b6c7a1412e53d7fa47a5ada
+problem:
+  cause: 'High review round 2 confirms the same P1 orphan ownership failure condition after its fix: terminal completion/cancellation uses a pre-reap process table and known-PID-only final guard, permitting a surviving same-group writer. AC14 also lacks durable cleanup progress when removal is interrupted. Bounded review-loop recovery requires Host handover.'
+  attempts:
+  - Recorded independent review-01 with six findings; reproduced both P1s Red; repaired helper group retention and bounded public output with focused Green tests; closed round 1 by reverify-01.
+  - Fresh review-02 supervisor probes still fail passed/cancelled variants and cleanup interruption; preserved scratch/review-02/test_recheck.py and review-02.yaml without another self-fix.
+  - Required selected-tier full fallback passed 6367 tests after correcting invalid nested ignored-scratch fixture location; no test/AC weakened.
+  recovery: 'Host-directed recovery within approved scope: require fresh post-exit group quiescence on every terminal/exception path; persist cleanup intent/progress before effects and preserve safe retry evidence; implement conditional verification-command discovery/fallback guidance. The fixer writes resolution naming this worker record, retains both review counts and performs the further fresh round allowed by review-loop, then completes reconcile/feedback/final report. Exact scopes and evidence are in recovery-handoff.md.'
+activity_effort: high

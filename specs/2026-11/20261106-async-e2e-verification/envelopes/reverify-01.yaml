@@ -1,0 +1,56 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:19:59.198215Z'
+status: completed
+review: review-01.yaml
+summary: round 1 repairs verified by implementer; both P1 regressions failed before repair and now pass. Runtime ownership and public schema changed, so a fresh high-effort round 2 is required.
+findings:
+- issue: A newly orphaned child can disappear from managed ownership after its leader is reaped.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runtime.py:75; scratch/review-01/test_review_probes.py:16 fails because PID 102 is absent from known after _discover(..., unreaped=False).
+  failure_condition: Snapshot N observes a leader that forks a same-group child and exits before poll reaps it. Snapshot N+1 drops its group while the unobserved orphan survives, permitting premature terminal evidence and cleanup.
+  suggested_action: Retain established group ownership until authoritative observation verifies emptiness, preserve reuse guards and add the snapshot/poll ordering and surviving-child regressions.
+  resolution: resolved
+  severity: P1
+- issue: Public inspection returns the complete growing process history rather than a bounded result summary.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/cli.py:23; scratch/review-01/test_review_probes.py:26 fails because wait emits 2044047 bytes for 1000 identities.
+  failure_condition: Many descendants or large argv make status/wait/logs/list unbounded despite log-tail limits.
+  suggested_action: Introduce bounded public projections and compact list entries with counts/truncation/evidence paths; retain complete internal ownership and test large histories/argv.
+  resolution: resolved
+  severity: P1
+- issue: Text output violates sentinel field grammar and empty list emits no result.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/cli.py:27 and :56; scratch/review-01/test_review_probes.py:34 stdout is empty.
+  failure_condition: Empty list has no OK sentinel and other text results embed raw JSON instead of escaped named fields.
+  suggested_action: Render named fields through field_value/yes_no, emit explicit empty-list result and test text mode.
+  resolution: resolved
+  severity: P2
+- issue: Advisory directive names a bare devkit command.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runs.py:29; test_agent_output_contract.py:171 fails.
+  failure_condition: Shared fix text names devkit exec list without uv run.
+  suggested_action: Name uv run devkit exec list and rerun agent-output regression.
+  resolution: resolved
+  severity: P2
+- issue: New use-case extensions do not parse as keyed extensions.
+  evidence: docs/usecases/harness/UC-execute-an-isolated-command.md:35; test_ux_repository_usecases.py fails.
+  failure_condition: Description inside bold extension key makes all six branches disappear from parsed extensions.
+  suggested_action: Apply repository keyed extension syntax and rerun use-case parser.
+  resolution: resolved
+  severity: P2
+- issue: Harness registration expectations omit exec and its import footprint.
+  evidence: packages/devkit/tests/integration/package/test_mounted_commands.py:47 and :77; tests/support/testsupport/layering.py:19.
+  failure_condition: Exact command map differs and isolated_execution is absent from the lazy import ledger.
+  suggested_action: Add exact exec entry point and narrow actual worktree footprint without weakening existing expectations; rerun mounted tests.
+  resolution: resolved
+  severity: P2
+unverified_areas:
+- Final affected fallback is running; Linux execution remains unverified.
+checks:
+  p1_red: PASS both failure conditions reproduced before fixes
+  focused: PASS 24 lifecycle identity output cases; combined integration green 95
+  lint_types_rules: PASS whole lint-check agt types whole-worktree rules
+  build: PASS offline harness wheel and entrypoint/module inspection
+diff_scope:
+  base: 41553fd82b554b3840db096e6ad40411fe39e30e
+  head: a9f236ccd2b461f0d8958839c33e517ae90367a5
+activity_effort: high

@@ -17,6 +17,7 @@ FEATURES = set(DECLARATION["features"])
 
 # Behavioral lazy-loading expectations, not architectural import permissions.
 LAZY_IMPORT_AREAS: dict[str, set[str]] = {
+    "isolated_execution": {"worktree"},
     "rules": {"compact"},
     "workflow": {"rules"},
     "gate": {"rules", "compact"},

@@ -107,7 +107,10 @@ def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affec
 )
 def test_shared_foundations_select_the_full_suite(affected: ModuleType, path: str) -> None:
     selection = affected.select(ROOT, ["docs/README.md", path])
-    assert (selection.mode, selection.paths, selection.reason) == ("full", (), path)
+    assert (selection.mode, selection.reason) == ("full", path)
+    assert selection.paths
+    assert not any("/tests/e2e/" in p for p in selection.paths)
+    assert any("/rules/" in p for p in selection.paths)
 
 
 def test_an_unmapped_path_selects_the_full_suite(affected: ModuleType) -> None:
@@ -173,8 +176,9 @@ def test_architecture_config_alone_selects_structure_rule_and_integration_tests(
     assert affected.select(ROOT, [".devkit/config.toml"]).mode == "none"
 
 
-def test_script_with_e2e_target_in_data_is_selected_even_without_e2e_flag(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["scripts/affected_tests.py"])
+def test_script_with_e2e_target_respects_explicit_tier(affected: ModuleType) -> None:
+    assert affected.select(ROOT, ["scripts/affected_tests.py"]).mode == "none"
+    selection = affected.select(ROOT, ["scripts/affected_tests.py"], tier="e2e")
     assert selection.mode == "partial"
     assert selection.reason == "scripts/affected_tests.py"
     assert selection.paths == (f"{TESTS}/e2e/package/test_affected_tests.py",)
@@ -188,6 +192,7 @@ def test_changed_tests_select_themselves_and_helpers_their_directory(affected: M
             f"{TESTS}/e2e/features/gate/test_hooks.py",
             f"{TESTS}/integration/features/gate/test_deleted_meanwhile.py",
         ],
+        tier="all",
     )
     assert selection.paths == (
         "packages/devkit-spec/tests/integration/features/scope",
@@ -304,8 +309,10 @@ def test_a_full_selection_runs_the_whole_suite(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
     lines = invoke(affected, monkeypatch, ["uv.lock"], "-n0")
-    assert lines == ["[TEST_SELECTION: mode=full base=main changed=1 paths=0 reason=uv.lock]"]
-    assert command == [["bash", str(ROOT / "scripts/module.sh"), "test", "all", "-n0"]]
+    paths = affected.select(ROOT, ["uv.lock"]).paths
+    assert lines == [f"[TEST_SELECTION: mode=full base=main changed=1 paths={len(paths)} reason=uv.lock]"]
+    assert command == [["bash", str(ROOT / "scripts/module.sh"), "test", "all", *paths, "-n0"]]
+    assert all("/tests/e2e/" not in p for p in paths)
 
 
 def test_an_empty_selection_runs_nothing(
@@ -351,7 +358,12 @@ def test_a_full_suite_change_still_names_the_frontend_checks(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
     lines = invoke(affected, monkeypatch, [FRONTEND, "uv.lock"], "--list")
-    assert lines == ["[TEST_SELECTION: mode=full base=main changed=2 paths=0 reason=uv.lock]", FRONTEND_LINE]
+    paths = affected.select(ROOT, ["uv.lock"]).paths
+    assert lines[:2] == [
+        f"[TEST_SELECTION: mode=full base=main changed=2 paths={len(paths)} reason=uv.lock]",
+        FRONTEND_LINE,
+    ]
+    assert lines[2:] == [f"[TEST_PATH: {path}]" for path in paths]
 
 
 def test_other_changes_print_no_frontend_line(
@@ -561,7 +573,7 @@ def test_mcp_runtime_consumer_mapping_is_retained(affected: ModuleType) -> None:
     } <= set(selection.paths)
 
 
-def test_default_selection_excludes_e2e_tests_unless_requested_or_changed(affected: ModuleType) -> None:
+def test_default_selection_excludes_even_changed_e2e_tests_until_requested(affected: ModuleType) -> None:
     worktree = "packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py"
     default_sel = affected.select(ROOT, [worktree])
     assert not any("/tests/e2e/" in path for path in default_sel.paths)
@@ -571,7 +583,9 @@ def test_default_selection_excludes_e2e_tests_unless_requested_or_changed(affect
     assert any("/tests/e2e/" in path for path in e2e_sel.paths)
 
     direct_e2e = affected.select(ROOT, [f"{TESTS}/e2e/features/worktree/test_lifecycle.py"])
-    assert f"{TESTS}/e2e/features/worktree/test_lifecycle.py" in direct_e2e.paths
+    assert direct_e2e.mode == "none"
+    explicit = affected.select(ROOT, [f"{TESTS}/e2e/features/worktree/test_lifecycle.py"], tier="e2e")
+    assert explicit.paths == (f"{TESTS}/e2e/features/worktree/test_lifecycle.py",)
 
 
 def test_relative_helper_package_initializer_keeps_its_dependency(affected: ModuleType, graph_root: Path) -> None:
@@ -663,3 +677,52 @@ def test_pythonpath_support_helpers_keep_cross_category_dependencies(affected: M
     consumer = f"{TESTS}/integration/features/workflow/test_support.py"
     put(graph_root, consumer, "from spec_support.scope import value")
     assert consumer in affected.select(graph_root, [SCOPE_SOURCE]).paths
+
+
+@pytest.mark.parametrize("tier", ["unit-integration", "e2e", "all"])
+@pytest.mark.parametrize("trigger", ["uv.lock", "unknown-input"])
+def test_full_fallback_stays_in_tier_and_keeps_embedded_rules(
+    affected: ModuleType, tmp_path: Path, tier: str, trigger: str
+) -> None:
+    files = {
+        "packages/sample/tests/unit/test_one.py",
+        "packages/sample/tests/integration/test_two.py",
+        "packages/sample/tests/e2e/test_three.py",
+        "packages/sample/src/sample/bundle/rules/x/tests/test_rule.py",
+    }
+    for name in files:
+        put(tmp_path, name, "def test_ok(): pass")
+    selected = affected.select(tmp_path, [trigger], tier=tier)
+    expected = files if tier == "all" else {p for p in files if ("/tests/e2e/" in p) == (tier == "e2e")}
+    assert selected.mode == "full" and set(selected.paths) == expected
+
+
+@pytest.mark.parametrize("tier", ["unit-integration", "e2e", "all"])
+def test_broad_directory_map_is_expanded_before_tier_filter(
+    affected: ModuleType, graph_root: Path, monkeypatch: pytest.MonkeyPatch, tier: str
+) -> None:
+    names = {"packages/sample/tests/unit/test_one.py", "packages/sample/tests/e2e/test_two.py"}
+    for name in names:
+        put(graph_root, name, "def test_ok(): pass")
+    monkeypatch.setattr(affected, "DATA", (("broad", ("packages/sample/tests",)),))
+    result = affected.select(graph_root, ["broad/data"], tier=tier)
+    if tier == "all":
+        assert result.paths == ("packages/sample/tests",)
+    else:
+        assert set(result.paths) == {p for p in names if ("/tests/e2e/" in p) == (tier == "e2e")}
+
+
+def test_empty_e2e_tier_never_hands_unscoped_pytest_to_runner(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]], tmp_path: Path
+) -> None:
+    put(tmp_path, "packages/sample/tests/unit/test_one.py", "def test_ok(): pass")
+    monkeypatch.setattr(affected, "ROOT", tmp_path)
+    lines = invoke(affected, monkeypatch, ["uv.lock"], "--tier", "e2e")
+    assert "mode=none" in lines[0] and command == []
+
+
+def test_e2e_compatibility_flag_selects_all_tiers(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
+) -> None:
+    invoke(affected, monkeypatch, ["uv.lock"], "--e2e")
+    assert command[0][4:] == list(affected.select(ROOT, ["uv.lock"], tier="all").paths)

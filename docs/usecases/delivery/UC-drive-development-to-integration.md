@@ -1,7 +1,7 @@
 ---
 id: UC-drive-development-to-integration
 title: Drive Development to Integration
-summary: "An AI coding agent develops an agreed task through workflow stages, verifies and persists evidence including eligible single-envelope commits, then integrates locally or by pull request under Host authority and dev-integration policy."
+summary: "An AI coding agent develops an agreed task, verifies and persists evidence, collects optional background verification, and integrates locally or by pull request under Host authority and dev-integration policy."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -17,6 +17,7 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/usecases/service.py
   - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/references/isolated-execution.md
 
 created_at: 2026-10-21
 capabilities:
@@ -405,3 +406,9 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: confirmed landing and cleanup followed by a failing final check
 - **When**: the Host repairs the target within scope and reruns required checks
 - **Then**: only the passing resulting HEAD is reported complete, and the merge is neither replayed nor automatically rolled back
+
+## Local-orchestrated asynchronous verification
+
+Before choosing asynchronous verification, the Host inspects repository documentation, scripts, runner configuration and CI for actual required commands and coverage. It establishes independently runnable groups and verifies what the retained synchronous command excludes and what the asynchronous command covers, preserving all existing required coverage. Directory names and test labels establish neither E2E existence, cost nor independent runnability. If verification is unseparated, unclear or has no independently runnable subset, the Host keeps the existing required commands synchronously. Consumers need no E2E tier; guidance neither manufactures empty coverage nor automatically restructures verification. Overlapping broad commands do not establish reduced blocking by adding a duplicate E2E run. Devkit's selector commands are its own adoption example.
+
+Where independent required groups are established, after landing and environment/artifact synchronization the Host performs the project's synchronous verification group, starts selected E2E at the fixed landed commit and observes it in the background while continuing independent work (`CAP-HARN-agent-guidance`, `CAP-DLV-delivery-workflows`). It collects execution and optional cleanup outcomes through the execution tool; missing notification requires later inspection. A failure/unknown result holds further merges at the next result check and prioritizes repair. Completion collects current-HEAD required results or explicit empty E2E selection for the full uncovered interval, preserving exact tested SHAs and generated-repair coverage.

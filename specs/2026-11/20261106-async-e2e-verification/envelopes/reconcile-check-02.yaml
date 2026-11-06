@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:22:29.107475Z'
+status: completed
+summary: 'round 1; closes reconcile-check-01. Both findings resolved by exact reviewer wording at the two named document locations. Minor-fix conditions hold: named docs only, suggested action verbatim, approved contract meaning unchanged, actual two-location diff checked. Nine targets and fifteen AC reflected; no waiver.'
+findings: []
+assumptions:
+- Only wording at named documents changed; no implementation or agreed contract change. Existing glossary is unchanged. Tests/helpers/hubs and broad shared entrypoint candidates rejected; narrow execution entrypoints retained.
+unverified_areas:
+- Linux runtime execution; final landed-head checks remain.
+checks:
+  reflection: PASS captured stdlib Git boundary matches approved ADR and module; selector paragraph matches defaults/tiers/fallback/empty behavior
+  rules: PASS 22 errors0 warnings0 on two changed documents; git diff check
+diff_scope:
+  base: e7346df3de6896f6de6f8fad3af96ffd286bb648
+  head: a0cf721aa199c21257540e3ee953bb0e1699e87d
+activity_effort: high

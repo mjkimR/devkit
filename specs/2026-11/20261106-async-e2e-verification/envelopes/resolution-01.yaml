@@ -1,0 +1,11 @@
+kind: resolution
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T01:39:22.396319Z'
+status: completed
+summary: 'Host-directed recovery of envelopes/worker-01.yaml: fresh post-exit stage-group quiescence gates all terminal results; postlaunch exceptions retain unknown ownership; cleanup progress survives interruption with serialized safe explicit retry; actual-command coverage discovery and synchronous fallback guidance preserve required checks. R2 exact probes reproduced Red then passed Green with feature-owned regressions. Preserve review counts 1/2; this remedy receives one further fresh independent code-review round 3 over fixes since 37074d0d and affected behavior, without resetting the review loop.'
+findings: []
+checks: {}
+resolves: worker-01.yaml
+activity_effort: high

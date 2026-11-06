@@ -91,3 +91,11 @@ devkit-spec.
 ## Maintenance history
 
 `devkit maintenance history` captures run evidence locally and publishes only with explicit destination authority. Start with `start --playbook weekly-report --scope "<scope>" --into <parent> --report <report>` and close with `finish --run <dir> --outcome completed`. Register extra evidence at finish with `--file <path>`; publish selects only frozen files. `init`, `publish` and `update` require `--authority`. `[maintenance.history] repository` and `branch` configure inputs only. See `CAP-DLV-maintenance-history` for codes and retry semantics.
+
+## Isolated native commands
+
+`devkit exec start --ref <full-commit-sha> [--setup <shell-command>] -- <native argv>` returns a background run ID. It creates a detached fixed-commit checkout and uses the project's worktree setup; receipt-bearing projects additionally require checkout-local locked sync. Preparation failure prevents the command from running.
+
+Use `exec list`, `status <id>`, `logs <id> --tail 100`, `wait <id> [--timeout seconds] [--clean]`, `cancel <id>` and `clean <id>`; each supports `--format json`. Background a single `wait --clean` through the caller tool when completion delivery is available. Wait interruption/timeout leaves execution running. Cancel confirms managed shutdown and retains the checkout. Explicit clean removes only an inactive clean run-owned checkout, preserving manifests/results/logs in the common Git directory. Native artifacts inside it are removed, so retain it when debugging needs them.
+
+The captured supervisor supports local macOS/Linux; it promises no survival across host descendant termination or reboot. Callers supply disposable data/services, select tests and own completion decisions. There are no profiles or local/cloud policy flags. `devkit run` retains its synchronous current-directory behavior.

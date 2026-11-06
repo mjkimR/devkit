@@ -1,0 +1,23 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-06T02:15:01.998034Z'
+status: completed
+review: review-04.yaml
+summary: 'R4 new P1 resolved: reload and validate terminal evidence before declaring supervisor loss. All four minor-fix conditions hold: named Runs.read location plus tests/evidence only; exact suggested action; no API/schema/code change; deterministic Red4fail/4pass to Green54pass including unchanged R4 probe and interruption. No recurrence or review-count reset.'
+findings:
+- issue: Wait can report unknown after a valid terminal result has already been published.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runs.py:62-76; services/lifecycle.py:61-63; scratch/review-04/test_terminal_publication.py:38 fails unknown != passed. Native interruption/huge-log waits also returned unknown before later valid results.
+  failure_condition: Reader loads running state; supervisor publishes result.json and exits before process enumeration. Reader marks stale state unknown without rechecking terminal evidence, violating AC-13.
+  suggested_action: Before declaring unknown after supervisor identity disappears or changes, reload and validate any newly published terminal result. Preserve unknown when trustworthy terminal evidence remains absent. Add a feature-owned deterministic publication-order regression and retain interruption coverage.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS 54 runtime/lifecycle/publication cases in17.06s including unchanged independent probe
+  types: PASS harness pyright0 errors
+  lint: PASS feature ruff; formatter blank line applied; diff check
+diff_scope:
+  base: 1f0d9c6b5ff244636c6888e45b2e9cf032bf641a
+  head: cca1a85380a923a51310d0679d79fae10ac34ed0
+activity_effort: high
