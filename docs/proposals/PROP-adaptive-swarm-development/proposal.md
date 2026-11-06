@@ -2,7 +2,7 @@
 id: PROP-adaptive-swarm-development
 title: Reusable Subagents and Optional Teams for Adaptive Development
 summary: "Extend adaptive development with reusable prefixed subagents, on-demand role contracts and optional two-level delegation, preserving direct work and source-specific verification."
-status: reviewing
+status: accepted
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: high
