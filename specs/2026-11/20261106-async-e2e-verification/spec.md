@@ -1,47 +1,23 @@
 ---
-id: PROP-async-e2e-verification
+id: SPEC-async-e2e-verification
 title: Asynchronous E2E Verification
-summary: "Provide devkit exec for isolated asynchronous native commands with persistent execution results, and use it for local-orchestrated E2E. Keep devkit run unchanged and place client local/cloud operating recommendations in the dependent test-management playbook."
-status: accepted
-created_at: 2026-11-06
-target_area: capabilities/delivery/
-priority: high
-size: L
-planning_effort: medium
-dev_effort: high
-boundaries:
-  owns:
-    - scripts/affected_tests.py
-    - justfile
-    - packages/devkit/src/devkit_agt/features/worktree/
-    - packages/devkit/src/devkit_agt/features/
-    - packages/devkit/pyproject.toml
-    - packages/devkit/README.md
-    - packages/devkit-dist/src/devkit_dist/cli.py
-    - packages/devkit-dist/tests/integration/cli/
-    - packages/devkit/tests/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-    - packages/devkit-spec/tests/integration/bundles/spec/
-    - .devkit/architecture.toml
-    - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
-    - docs/capabilities/harness/
-    - docs/capabilities/worktree/
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/development/reference/
-    - docs/decisions/
-    - AGENTS.md
-  excludes:
-    - packages/devkit-viewer/
-    - .github/workflows/
-    - .github/scripts/
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/test-management/
-task_kind: feature
-workflow: sdd-proposal
+summary: Provide devkit exec for isolated asynchronous native commands with persistent execution results, and use it for local-orchestrated E2E. Keep devkit run unchanged and place client local/cloud operating recommendations in the dependent test-management playbook.
+status: planned
+created: 2026-11-06
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-async-e2e-verification] Asynchronous E2E Verification
+# [SPEC-async-e2e-verification] Asynchronous E2E Verification
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-async-e2e-verification on 2026-11-06.
+- **Preserved Materials**: `docs/materials/2026-11/20261106-async-e2e-verification`
+
+### 1. Background & Hypothesis
 
 Long E2E runs block local-orchestrated integration. `scripts/affected_tests.py` excludes many E2E paths, but
 explicit data mappings, edited E2E tests and its full fallback can still include them. `--e2e` adds E2E rather
@@ -54,9 +30,9 @@ It does not manage detached test runs (`CAP-CMP-bounded-execution`).
 
 The hypothesis is that selective E2E in an isolated fixed-commit environment lets the Host start independent
 work before E2E finishes. Batching can reduce repeat runs. Asynchrony alone reduces neither test execution time
-nor CPU consumption. `materials/planning-evidence.md` records bounded measurements and their limits.
+nor CPU consumption. `docs/materials/2026-11/20261106-async-e2e-verification/planning-evidence.md` records bounded measurements and their limits.
 
-### 1.1 Execution mechanism and operating guidance
+#### 1.1 Execution mechanism and operating guidance
 
 Devkit provides isolated asynchronous command execution, fixed-commit environment preparation and result inspection.
 The executor does not need to know whether a caller uses local-orchestrated work, a cloud PR or another workflow.
@@ -68,7 +44,7 @@ E2E, proceeding with independent work, collecting results and prioritizing repai
 Client local/cloud operating examples and their tradeoffs belong to the dependent test-management playbook as
 recommendations, without adding a product-level completion policy or configuring client CI.
 
-### 1.2 Scope and non-goals
+#### 1.2 Scope and non-goals
 
 - Include one harness-owned isolated command lifecycle under `devkit exec` and devkit's tier-aware affected selector.
 - Preserve existing `devkit run` synchronous execution, interruption and bounded-output behavior.
@@ -81,13 +57,32 @@ recommendations, without adding a product-level completion policy or configuring
 - Exclude test-playbook changes, retained in dependent `PROP-test-playbook-verification-policy`.
 - Planning changes only this proposal bundle. Active contracts and production behavior change during Development.
 
-## 2. Planning Decisions and Evidence
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Asynchronous E2E Verification so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions and Evidence
 
 | Spike | Settled direction | Evidence or remaining validation |
 | :--- | :--- | :--- |
 | Q1 Selection | Independent tier and impact scope; conservative fallback stays inside the selected tier | Selector source and existing selector regressions; section 3.1 |
-| Q2 Cost | Measure bounded suites now; require same-machine synchronous/async comparison during Development | `materials/planning-evidence.md`; no whole-suite speedup claim |
-| Q3 Owner | A separate `devkit exec` group for isolated native commands, with test-specific choices in caller commands/guidance | `PADR-isolated-test-runs`; interface alternatives below |
+| Q2 Cost | Measure bounded suites now; require same-machine synchronous/async comparison during Development | `docs/materials/2026-11/20261106-async-e2e-verification/planning-evidence.md`; no whole-suite speedup claim |
+| Q3 Owner | A separate `devkit exec` group for isolated native commands, with test-specific choices in caller commands/guidance | `ADR-isolated-test-runs`; interface alternatives below |
 | Q4 Runtime | Detached POSIX supervisor, persistent evidence, no daemon/reboot guarantee | Process survival probes and failure injection are Development checks |
 | Q5 Isolation | Execution-only detached checkout, independent dependency environment and run-specific temporary resources | Worktree revision support exists; test-environment allocation is added explicitly |
 | Q6 Evidence | Results name the exact tested SHA; local-orch tracks outstanding changes and completion | Sections 3.2 and 3.4 |
@@ -110,9 +105,9 @@ Retain one execution-lifecycle PADR. Local/cloud operating examples remain in th
 Interface and ownership choices below are the recommended direction for `plan-accept`, rather than claims about
 an existing command. Direct native command passing remains the selected interface; profile mapping is not added.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Tier-aware test selection
+#### 3.1 Tier-aware test selection
 
 Add `--tier unit-integration|e2e|all` to `just test-affected`, defaulting to `unit-integration`. Keep `--e2e` as a
 compatibility alias for `--tier all`; contradictory combinations fail with an argument code. Impact selection
@@ -135,7 +130,7 @@ cannot turn a nonempty required selection into success. A required premerge repr
 runs before merge; ordinary worker iterations need not repeat it. Consumer CI requirements remain owned by
 that repository.
 
-### 3.2 Local-orch usage guidance
+#### 3.2 Local-orch usage guidance
 
 Update the source local-orch skill and relevant integration/completion references to use the execution mechanism.
 This is an agent procedure, not an executor policy mode. Devkit's own local-orch consumption uses the procedure;
@@ -166,7 +161,7 @@ client repositories retain their own checks and commands.
 The executor does not implement those merge/completion decisions or automatically dispatch workers. The Host
 applies the repository's existing requirements and distinguishes an actual pass from launch success.
 
-### 3.3 Isolated command interface and lifecycle
+#### 3.3 Isolated command interface and lifecycle
 
 `devkit_agt.features.isolated_execution` owns `devkit exec`. Existing `devkit run [OPTIONS] COMMAND...` remains
 unchanged. It executes synchronously in the current directory and preserves its interruption/output behavior.
@@ -283,7 +278,7 @@ result and separate observer/cleanup code retained. Native exit codes remain in 
 the observer's exit code. Detailed field/code names are finalized in the Development spec under `ARCH-08-1-agent-output` and
 `CAP-ADV-agent-advisory-protocol`.
 
-### 3.4 Evidence and local-orch completion
+#### 3.4 Evidence and local-orch completion
 
 In devkit's local-orch use, the caller records interval B..A and passes a command that selects tests against A's
 fixed files. A pass at A never claims A's untested descendant C passed. For accumulated later changes, compute selection from the earliest still-uncovered
@@ -300,7 +295,7 @@ The same execution mechanism can be called from any workflow without a local/clo
 completion stays with the caller and its existing repository instructions. The follow-up playbook explains
 recommended local and cloud arrangements; it does not create mandatory product policy alternatives.
 
-### 3.5 Ownership and reconciliation
+#### 3.5 Ownership and reconciliation
 
 The broad parent paths in frontmatter exist because the feature/test directories do not yet exist. Development
 writes only these narrowed responsibilities, plus generated projections produced by authorized sync:
@@ -327,7 +322,7 @@ require superseding `ADR-post-merge-verification`: independent work may proceed 
 pending, and completion still collects them. Client completion policies and cloud automation are outside this
 proposal. Read authoring context before later source asset edits; this Planning run edits no deployed guidance.
 
-### 3.6 Acceptance and validation plan
+#### 3.6 Acceptance and validation plan
 
 - **AC-1:** Given E2E edits, explicit data mappings, broad directories, unknown inputs and shared foundations,
   unit/integration selection collects no E2E, E2E selection collects only E2E, and full fallback preserves each tier.
@@ -375,7 +370,7 @@ Do not check out a different revision or compare different test selections to cl
 probes and native test runs are separate evidence from agent-guidance walkthroughs. New public CLI behavior
 justifies `dev_effort: high`; platform process probes and a consumer fixture cover it without modifying a real client.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning compares implementation owners, records bounded evidence, retains the execution PADR and folds an
 independent Challenger review before direction acceptance. The work remains one L-sized isolated-execution capability with E2E as its first consumer. Broad test
@@ -386,3 +381,4 @@ authorizes Development.
 This run grants neither acceptance nor implementation authority. Development writes its spec, plan and tasks,
 then implements, reviews and reconciles the actual behavior and evidence. Keep the dependent playbook proposal
 in Backlog until the prerequisite execution contract and local usage land and pass required local verification.
+

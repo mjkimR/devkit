@@ -1,13 +1,13 @@
 ---
-id: PADR-isolated-test-runs
+id: ADR-isolated-test-runs
 title: Own isolated asynchronous commands in the harness
 summary: "For isolated asynchronous commands, we add a separate devkit exec lifecycle with fixed-commit environments and persistent evidence, to support tests and builds while preserving devkit run, accepting setup cost and OS-bounded process survival."
-proposal: PROP-async-e2e-verification
-status: draft
+proposal: SPEC-async-e2e-verification
+status: accepted
 created_at: 2026-11-06
 ---
 
-# [PADR-isolated-test-runs] Own isolated asynchronous commands in the harness
+# [ADR-isolated-test-runs] Own isolated asynchronous commands in the harness
 
 ## 1. Context & Problem Statement
 
@@ -72,7 +72,7 @@ verification pending; no automatic retries or broad cleanup hide it.
 
 ## 6. Confirmation
 
-AC-1 and AC-3 through AC-8 in `PROP-async-e2e-verification` cover tier-safe selection, immutable environment,
+AC-1 and AC-3 through AC-8 in `SPEC-async-e2e-verification` cover tier-safe selection, immutable environment,
 nonblocking ordering, local-orch scheduling guidance, restart inspection, process identity and cleanup. AC-9 and
 AC-10 check direct native command passing and the boundary between execution evidence and delivery decisions.
 Development runs
