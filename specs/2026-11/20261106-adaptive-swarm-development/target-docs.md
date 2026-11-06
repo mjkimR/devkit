@@ -125,6 +125,6 @@ and this proposal adds three execution archetypes.
 ## 6. Planning Evidence and Handoff
 
 The concrete assignment example, host declaration matrix, ordered file owners and AC mapping are in
-`SPEC-adaptive-swarm-development` section 5. Source/projection and bounded read-only nesting observations are in
+`SPEC-adaptive-swarm-development` and its carried implementation outline. Source/projection and bounded read-only nesting observations are in
 [feasibility-spike.md](../../../docs/materials/2026-11/20261106-adaptive-swarm-development/feasibility-spike.md). Development still authors the retained assets, installation
 checks and semantic exercises; the Planning prototypes are not shipped bundle contents.
