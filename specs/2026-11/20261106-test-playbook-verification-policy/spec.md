@@ -2,7 +2,7 @@
 id: SPEC-test-playbook-verification-policy
 title: Align the Test Playbook with Verification Policy
 summary: "Assess independent test groups and asynchronous verification without weakening consumer checks; provide optional local and cloud scheduling examples through the existing decision round."
-status: planned
+status: in-progress
 created: 2026-11-06
 depends_on:
   - SPEC-async-e2e-verification
@@ -90,6 +90,11 @@ current base. This change teaches assessment and recommendation; it does not run
 - **Given** an unseparated, unclear, overlapping, no-E2E or explicitly separated suite.
 - **When** the agent chooses recommendations.
 - **Then** it preserves complete required coverage, keeps existing required checks synchronous when no independent subset is established, preserves frequent existing unit/integration iteration and necessary selective E2E plus native checks/fallbacks, and routes any restructuring through the same decision round without fabricating E2E or empty coverage.
+
+### [AC-12] Consultative recommendation from repository evidence and user aims
+- **Given** an explicitly invoked assessment with readable repository evidence and user aims that can be incomplete.
+- **When** the agent develops its recommendation.
+- **Then** it reads actual code, tests, fixtures, scripts and CI before asking for repository facts; asks concise bundled questions only for missing goals, preferences or tradeoffs; synthesizes a concrete recommended arrangement with prioritized aims, reasons, coverage/latency/resource/failure-detection tradeoffs and a viable alternative where meaningful; recommends keeping current settings when evidence favors them; and presents bounded edits/validation in the existing single change-decision round without treating preference clarification as consent, integration approval or a policy-mode choice.
 
 ## 5. Implementation Assumptions
 

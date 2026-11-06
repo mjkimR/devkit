@@ -103,7 +103,7 @@ PERFORMANCE_PASS = (
     "references/candidates.md",
     "references/changes.md",
 )
-TEST_MANAGEMENT = ("SKILL.md", "references/assessment.md", "references/pytest.md")
+TEST_MANAGEMENT = ("SKILL.md", "references/assessment.md", "references/pytest.md", "references/execution.md")
 DIRECTORY_PLAYBOOKS = {
     "review-refactor": REVIEW_REFACTOR,
     "performance-pass": PERFORMANCE_PASS,
@@ -346,6 +346,9 @@ def test_test_management_references_are_bounded_and_conditional() -> None:
     body = files["SKILL.md"].read_text()
     assert "Read `references/assessment.md` before" in body
     assert "Read `references/pytest.md` when" in body
+    assert (
+        "Read `references/execution.md` when asynchronous execution or scheduling recommendations are in scope." in body
+    )
     # Structural checks complement the procedural walkthrough; they do not execute the instructions.
     for name in TEST_MANAGEMENT[1:]:
         assert "references/" not in files[name].read_text()
