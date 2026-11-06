@@ -1,14 +1,13 @@
 ---
 id: SPEC-async-e2e-verification
 title: Asynchronous E2E Verification
-summary: Provide devkit exec for isolated asynchronous native commands with persistent execution results, and use it for local-orchestrated E2E. Keep devkit run unchanged and place client local/cloud operating recommendations in the dependent test-management playbook.
+summary: "Provide isolated asynchronous native commands with persistent evidence and guarded cancellation and cleanup. Use tier-aware selection and background observation for local-orchestrated E2E."
 status: planned
 created: 2026-11-06
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-async-e2e-verification] Asynchronous E2E Verification
 
@@ -59,22 +58,13 @@ recommendations, without adding a product-level completion policy or configuring
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Asynchronous E2E Verification so that system capabilities are extended.
+As an agent, start native verification at a fixed commit, continue independent work and collect persistent evidence before declaring delivery complete.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+Scope Excluded: cloud execution, Windows, schedulers, profile maps, implicit environment cleanup, changed compact semantics and client completion policy.
 
-## 4. Acceptance Criteria & Behavioral Contracts
-
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
-
-## 5. Carried Proposal Notes
-
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+## Approved design and evidence
 
 ### 2. Planning Decisions and Evidence
 
@@ -322,49 +312,6 @@ require superseding `ADR-post-merge-verification`: independent work may proceed 
 pending, and completion still collects them. Client completion policies and cloud automation are outside this
 proposal. Read authoring context before later source asset edits; this Planning run edits no deployed guidance.
 
-#### 3.6 Acceptance and validation plan
-
-- **AC-1:** Given E2E edits, explicit data mappings, broad directories, unknown inputs and shared foundations,
-  unit/integration selection collects no E2E, E2E selection collects only E2E, and full fallback preserves each tier.
-  Empty tiers do not trigger an unscoped pytest run. Preserve embedded rule and frontend checks.
-- **AC-2:** Given local-orch work, the source skill explains synchronous unit/integration, selective asynchronous
-  E2E, continued independent work, result collection and repair priority. It uses the delivered command interface.
-- **AC-3:** Given a run at A and main advancing to B with changed dependencies, A's files/environment/runtime remain
-  fixed and its result names A. A setup/sync failure prevents command execution.
-- **AC-4:** Given a controlled E2E command waiting on a test-owned latch, start returns and another independent task
-  completes before releasing that latch. Record setup/start/command/Host-blocked time and resource cost against a
-  synchronous run on the same revision, command and test set; correctness is ordering, not an arbitrary speed ratio.
-- **AC-5:** Given merges while a run is active, the local-orch procedure retains all outstanding changes for the
-  next selection and never reports descendants tested by an ancestor pass. The procedure bounds dispatch; the
-  initial one-run recommendation does not become a mandatory executor concurrency policy.
-- **AC-6:** Given a failed local result, the next Host result check holds merges and prioritizes repair. Repair then
-  checks the accumulated state without merge replay or automatic rollback.
-- **AC-7:** Given a completed launch call and a separate status process, evidence remains readable. Simulate parent
-  exit, interrupted supervisor, missing terminal record and reused PID; unknown execution never passes or kills an
-  unrelated process. Document OS/host survival limits.
-- **AC-8:** Given cleanup, active/unknown/unrelated/dirty environments are preserved; an eligible run loses only its
-  own checkout while logs and manifest remain readable.
-- **AC-9:** Given an arbitrary native command, `start` runs the argv passed after `--` with project setup. There
-  is no test-profile mapping or local/cloud selection in the CLI or config; native test, build and non-pytest fixtures
-  use the same interface. A test baseline, if needed, belongs to the passed command.
-- **AC-10:** Given devkit itself, repository instructions use local-orchestrated consumption. The executor reports
-  command evidence without deciding merge approval, delivery completion or cloud CI behavior.
-- **AC-11:** Given existing `devkit run` invocations, current-directory execution, argument forwarding, bounded
-  output and interruption cleanup remain unchanged. The separate `exec` group owns isolated execution lifecycle;
-  list/status let a fresh process locate and inspect retained executions.
-- **AC-12:** Given cancellation during setup or native execution, terminate and verify managed process groups
-  before confirming cancellation. A nested compact wrapper, a surviving child, unknown ownership or reused PID
-  cannot cause premature cleanup or signalling of unrelated processes. Cancel itself retains the checkout.
-- **AC-13:** Given a terminal run, `wait` returns its bounded persisted result without agent-driven status polling.
-  `wait --clean` removes only an eligible checkout and reports execution and cleanup separately; a failed command
-  retains its failure evidence after cleanup, and a cleanup refusal retains its original execution outcome.
-- **AC-14:** Given waiter interruption, timeout, unknown state or concurrent waiters, execution is not implicitly
-  cancelled and unsafe cleanup does not occur. Repeated cleanup is idempotent. Waiting without `--clean` retains
-  the checkout, and completed executions have no unsolicited automatic cleanup.
-- **AC-15:** Given a Host using background `wait --clean`, local-orch guidance explains result collection through
-  the execution tool and its notification limits. CLI completion alone does not imply an agent received a push
-  event or made a delivery/repair decision.
-
 Keep the measured synchronous baseline reproducible in the Development worktree with the async path disabled.
 Do not check out a different revision or compare different test selections to claim a speedup. Product-process
 probes and native test runs are separate evidence from agent-guidance walkthroughs. New public CLI behavior
@@ -382,3 +329,99 @@ This run grants neither acceptance nor implementation authority. Development wri
 then implements, reviews and reconciles the actual behavior and evidence. Keep the dependent playbook proposal
 in Backlog until the prerequisite execution contract and local usage land and pass required local verification.
 
+
+## Acceptance Criteria
+
+### [AC-01] E2E edits
+
+- **Given** E2E edits.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Explicit data mappings, broad directories, unknown inputs and shared foundations, unit/integration selection collects no E2E, E2E selection collects only E2E, and full fallback preserves each tier. Empty tiers do not trigger an unscoped pytest run. Preserve embedded rule and frontend checks.
+
+### [AC-02] local-orch work
+
+- **Given** local-orch work.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** The source skill explains synchronous unit/integration, selective asynchronous E2E, continued independent work, result collection and repair priority. It uses the delivered command interface.
+
+### [AC-03] a run at A and main advancing to B with changed dependencies
+
+- **Given** a run at A and main advancing to B with changed dependencies.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** A's files/environment/runtime remain fixed and its result names A. A setup/sync failure prevents command execution.
+
+### [AC-04] a controlled E2E command waiting on a test-owned latch
+
+- **Given** a controlled E2E command waiting on a test-owned latch.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Start returns and another independent task completes before releasing that latch. Record setup/start/command/Host-blocked time and resource cost against a synchronous run on the same revision, command and test set; correctness is ordering, not an arbitrary speed ratio.
+
+### [AC-05] merges while a run is active
+
+- **Given** merges while a run is active.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** The local-orch procedure retains all outstanding changes for the next selection and never reports descendants tested by an ancestor pass. The procedure bounds dispatch; the initial one-run recommendation does not become a mandatory executor concurrency policy.
+
+### [AC-06] a failed local result
+
+- **Given** a failed local result.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** The next Host result check holds merges and prioritizes repair. Repair then checks the accumulated state without merge replay or automatic rollback.
+
+### [AC-07] a completed launch call and a separate status process
+
+- **Given** a completed launch call and a separate status process.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Evidence remains readable. Simulate parent exit, interrupted supervisor, missing terminal record and reused PID; unknown execution never passes or kills an unrelated process. Document OS/host survival limits.
+
+### [AC-08] cleanup
+
+- **Given** cleanup.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Active/unknown/unrelated/dirty environments are preserved; an eligible run loses only its own checkout while logs and manifest remain readable.
+
+### [AC-09] an arbitrary native command
+
+- **Given** an arbitrary native command.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** `start` runs the argv passed after `--` with project setup. There is no test-profile mapping or local/cloud selection in the CLI or config; native test, build and non-pytest fixtures use the same interface. A test baseline, if needed, belongs to the passed command.
+
+### [AC-10] devkit itself
+
+- **Given** devkit itself.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Repository instructions use local-orchestrated consumption. The executor reports command evidence without deciding merge approval, delivery completion or cloud CI behavior.
+
+### [AC-11] existing `devkit run` invocations
+
+- **Given** existing `devkit run` invocations.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Current-directory execution, argument forwarding, bounded output and interruption cleanup remain unchanged. The separate `exec` group owns isolated execution lifecycle; list/status let a fresh process locate and inspect retained executions.
+
+### [AC-12] cancellation during setup or native execution
+
+- **Given** cancellation during setup or native execution.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Terminate and verify managed process groups before confirming cancellation. A nested compact wrapper, a surviving child, unknown ownership or reused PID cannot cause premature cleanup or signalling of unrelated processes. Cancel itself retains the checkout.
+
+### [AC-13] a terminal run
+
+- **Given** a terminal run.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** `wait` returns its bounded persisted result without agent-driven status polling. `wait --clean` removes only an eligible checkout and reports execution and cleanup separately; a failed command retains its failure evidence after cleanup, and a cleanup refusal retains its original execution outcome.
+
+### [AC-14] waiter interruption
+
+- **Given** waiter interruption.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Timeout, unknown state or concurrent waiters, execution is not implicitly cancelled and unsafe cleanup does not occur. Repeated cleanup is idempotent. Waiting without `--clean` retains the checkout, and completed executions have no unsolicited automatic cleanup.
+
+### [AC-15] a Host using background `wait --clean`
+
+- **Given** a Host using background `wait --clean`.
+- **When** the applicable lifecycle operation or guidance walkthrough runs.
+- **Then** Local-orch guidance explains result collection through the execution tool and its notification limits. CLI completion alone does not imply an agent received a push event or made a delivery/repair decision.
+
+## Development assumptions
+
+The carried premises still hold at the handoff base. Use a captured standard-library supervisor and captured worktree execution module; neither imports the mutable project after launch. Process identity uses OS start identity and argv, with conservative unknown-state refusal. macOS runtime probes are available; Linux execution remains unverified locally. CLI-only output has no human-operated screens.
