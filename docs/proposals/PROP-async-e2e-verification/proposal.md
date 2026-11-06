@@ -1,7 +1,7 @@
 ---
 id: PROP-async-e2e-verification
 title: Asynchronous E2E Verification
-summary: "Reduce blocking test time with synchronous unit and integration checks and selective asynchronous E2E verification of isolated commits. Keep the Host responsible for scheduling, recovery and completion while evaluating a minimal execution lifecycle."
+summary: "Separate local-base verification with Host-managed asynchronous E2E from cloud-base delivery with premerge PR CI and accepted nightly detection of integration failures. Keep worker iteration lightweight and define route-specific evidence, recovery and completion."
 status: draft
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -51,14 +51,17 @@ remains pending. E2E still runs when needed. Asynchrony alone does not reduce CP
 
 ### Scope and non-goals
 
-The intended outcome is one verification flow covering tier selection, isolated execution, result collection and
-Host recovery. Direct Host management is the recommended starting point. CLI ownership remains a Planning choice.
+The intended outcome is a verification policy with two explicit delivery scenarios: local-base with an active
+Host and cloud-base through cloud-pr without a continuously available Host. Both keep worker iteration lightweight.
+Direct Host management is recommended for local background runs. CLI ownership remains a Planning choice.
+The distinction follows delivery ownership and completion policy, not merely the machine executing a worker.
 
 - Exclude replacing unit/integration checks with E2E alone; their coverage is complementary.
 - Exclude a mandatory verification subagent or test-supervision duties for git-operator.
 - Exclude a distributed scheduler, environment pool, container platform or global locking service.
 - Exclude blanket test deletion, broad fixture rewrites and treating every integration test as cheap.
-- Exclude CI/release changes; scheduled full CI remains a backstop, not local completion evidence.
+- Include the cloud-base CI timing and risk-acceptance contract; exclude CI workflow implementation and release
+  changes in this draft. Scheduled full CI remains a backstop, not local completion evidence.
 - Exclude test-playbook revision, tracked separately by `PROP-test-playbook-verification-policy`.
 - Exclude implementation or active policy changes during this Backlog task.
 
@@ -80,6 +83,11 @@ Host recovery. Direct Host management is the recommended starting point. CLI own
   cancellation, evidence retention, safe cleanup and handling of unavailable execution permissions.
 - **Q8 — Ownership:** If a CLI is selected, choose its owning feature and required declared dependencies under
   `ARCH-05-2-components`. Narrow the candidate paths before handoff; this draft approves no new feature edge.
+- **Q9 — Cloud recovery:** Define the concrete recipient and dispatch mechanism for failed PR CI and nightly
+  repair requests when the Host is absent. Record nightly cadence, missed-run visibility and repair ownership.
+  These questions do not reopen the accepted risk of a broken merged base before nightly detection.
+- **Q10 — Policy mapping:** Define how consumers select local-base or cloud-base and report completion under
+  that policy. Identify the ADR changes needed to bound existing final-landed-verification requirements.
 
 ## 3. Proposed Design & Impact
 
@@ -89,18 +97,40 @@ Separate test tier (`unit+integration`, `e2e`, `all`) from impact scope (`affect
 full fallback within each selected tier: uncertainty expands synchronous coverage to all unit/integration tests
 and asynchronous coverage to all required E2E tests.
 
-| Delivery point | Synchronous checks | E2E handling |
+Workers on both routes run unit/integration frequently and E2E only when needed for their change. Required lint,
+types, rules and frontend checks remain applicable. Cloud PR CI is a separate gate that includes required E2E;
+worker-side selectivity does not remove that gate.
+
+| Delivery point | Local-base / local-orchestrated | Cloud-base / cloud-pr |
 | :--- | :--- | :--- |
-| PR/task worktree | Affected unit/integration and required lint, types, rules and frontend checks | Relevant premerge E2E when it is the only evidence for changed behavior, such as packaging or installation |
-| Landed batch | Synchronize dependencies and bundles, commit generated repairs, then check the resulting HEAD | Run required E2E for that fixed SHA asynchronously and continue useful work |
-| Failure observed | Hold new merges and prioritize diagnosis and repair | Recheck the repaired commit; retain original failure evidence |
-| Batch completion | Collect results and map evidence to pending units | Complete only the scope whose required verification passed |
+| Worker iteration | Worktree unit/integration, with relevant E2E when needed | PR work unit/integration, with relevant E2E when needed |
+| Before merge | Required branch checks | PR CI including E2E; failure requests rework and prevents automatic merge |
+| Merge | Host-managed integration | Automatic merge after required PR CI passes |
+| Immediately after merge | Synchronize runtime and generated assets; unit/integration synchronously, required E2E asynchronously | No immediate postmerge CI |
+| Later failure handling | Host prioritizes repair and holds new merges when failure is observed | Nightly tests detect merged-base failures and request follow-up repair |
+| Work completion | Required synchronous and asynchronous results collected for the covered landed scope | Required PR CI passes and automatic merge succeeds; nightly recovery is subsequent work |
 
-Synchronous tests reuse their development environment. Background tests use a fixed-commit environment because
-main's files and dependencies can change during execution. Save the target SHA before the first merge for
-affected selection; comparing main to itself is invalid. Preserve required frontend and governance checks.
+Local synchronous tests reuse their development environment. Local background tests use a fixed-commit
+environment because main's files and dependencies can change during execution. Save the target SHA before the
+first merge for affected selection; comparing main to itself is invalid.
 
-### 3.2 Host scheduling and responsibility
+### 3.2 Cloud-base risk acceptance
+
+Cloud-base is a batch-oriented delivery scenario without a continuously available Host. It explicitly accepts
+that individually passing PRs can break main when combined. It requires neither validation against the latest
+base's prospective merge result nor an immediate postmerge CI run. A merge queue or forced base refresh is not
+a prerequisite of this scenario. A passing PR run proves only its actual tested revision and scope.
+
+Nightly tests detect accumulated integration defects after landing. Main may remain broken between merge and
+nightly detection and until repair completes. The policy records the accepted risk, nightly cadence and repair
+request recipient/mechanism. A nightly failure creates follow-up repair work; it does not retroactively turn a
+completed PR into a pending local asynchronous verification job. Nightly is not claimed as proof before it runs.
+
+The absence of an immediate postmerge check is intentional under this selected policy, not an unmet gate.
+A failed required PR check still prevents automatic merge and triggers rework. Planning specifies the dispatch
+mechanism and evidence without assuming that a main agent will observe the failure in an active session.
+
+### 3.3 Local Host scheduling and responsibility
 
 The Host starts background execution and checks results before new merges and at work-batch completion. On
 failure, it holds new merges and prioritizes repair. Independent workers may continue work. If failure becomes
@@ -120,7 +150,7 @@ that prevents indefinite deferral. Collect the final required run before reporti
 All options require the same isolation and evidence. A subagent does not inherently improve test speed, process
 survival or permissions. The Host retains result acceptance and completion decisions under every option.
 
-### 3.3 Minimal execution lifecycle
+### 3.4 Minimal local execution lifecycle
 
 If a CLI is selected, one request prepares the environment and starts execution. The Host should not manually
 assemble environment allocation, launch and bookkeeping for each run. Reuse project-defined setup and test
@@ -145,37 +175,49 @@ initial implementation rather than parallel script and CLI schedulers. Any CLI f
 `CAP-ADV-agent-advisory-protocol` and `CAP-CLI-agent-cli-toolkit` with stable codes and deterministic actions.
 Ordinary synchronous tests need no fresh environment allocation for every invocation.
 
-### 3.4 Policy and evidence
+### 3.5 Policy and evidence
 
-Keep merge success, synchronous verification and required E2E completion distinct. Success at A does not prove
-its descendant B. Batch coverage follows the actual tested commit and selected tests. An E2E omission records
-a selection reason rather than an assumed pass.
+Keep Git effects, verification evidence and policy-specific completion distinct. Success at A does not prove
+its descendant B. Local batch coverage follows the actual tested commit and selected tests; required local
+E2E remains pending until collected. Cloud completion follows the PR gate and merge, with merged-base stability
+explicitly left to nightly detection. An E2E omission records a selection reason rather than an assumed pass.
 
 Reconcile the retained design with `CAP-DLV-delivery-workflows`, `CAP-HARN-agent-guidance`,
 `ADR-post-merge-verification`, source orchestration/integration guidance and repository verification instructions.
-A lasting policy change needs a preliminary decision and the corresponding ADR on graduation. Preserve runtime
-synchronization, generated repairs and failure recovery without merge replay or automatic rollback.
+A lasting policy change needs a preliminary decision and the corresponding ADR on graduation. Explicitly bound
+existing final-landed-verification requirements by route: retain local runtime synchronization, generated repairs
+and final verification; document the cloud-base exception and its accepted detection delay. Recovery uses no
+merge replay or automatic rollback. This draft does not silently change the active repository policy.
 
-### 3.5 Expected acceptance scenarios
+### 3.6 Expected acceptance scenarios
 
 Planning refines these proposed scenarios into executable checks and measurement thresholds.
 
 - **AC-1:** Given uncertain impact, selecting either tier expands to its full coverage without silently running
   the heavy tier in the synchronous phase.
-- **AC-2:** Given behavior covered only by E2E, branch readiness requires its relevant E2E evidence. Unrelated
-  changes may omit E2E with an explicit selection reason.
+- **AC-2:** Given either worker route, iteration uses unit/integration and relevant E2E when needed. Required
+  premerge E2E evidence can come from branch checks or cloud PR CI; unrelated worker runs may omit it with reason.
 - **AC-3:** Given a run for A, advancing main to B and synchronizing B's dependencies leaves A's files and
   environment isolated; the result still names A.
 - **AC-4:** Given running E2E, another independent task starts before it finishes. Compare blocked time and total
   resource cost against the synchronous baseline rather than assuming an improvement.
 - **AC-5:** Given intervening merges, the next run includes outstanding changes and no untested descendant is
   reported verified. Required verification is not deferred indefinitely.
-- **AC-6:** Given a failed result, the Host's next result check holds new merges, prioritizes repair and keeps
+- **AC-6:** Given a failed local result, the Host's next result check holds new merges, prioritizes repair and keeps
   completion pending until repaired coverage passes.
 - **AC-7:** Given Host context loss or interruption, stored execution identity and evidence are recoverable;
   unknown execution is not success.
 - **AC-8:** Given a completed run, cleanup retains readable evidence and leaves active or unrelated environments
   intact.
+- **AC-9:** Given cloud-base with passing required PR CI including E2E, automatic merge completes the PR work
+  without requiring latest-base merge-result validation or immediate postmerge CI.
+- **AC-10:** Given failed required PR CI, automatic merge remains blocked and a rework request is routed without
+  relying on an active Host session.
+- **AC-11:** Given passing PRs whose combination breaks main, nightly detects the failure and routes follow-up
+  repair with tested revision and failure evidence. The report states the accepted detection delay and does not
+  claim the merged combination passed before nightly ran.
+- **AC-12:** Given the cloud-base policy is selected, absence of immediate postmerge CI is not reported as an
+  unmet gate. The same omission under local-base still leaves required local verification pending.
 
 ## 4. Lifecycle & Retirement Criteria
 
