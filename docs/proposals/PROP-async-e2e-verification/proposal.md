@@ -1,7 +1,7 @@
 ---
 id: PROP-async-e2e-verification
 title: Asynchronous E2E Verification
-summary: "Provide fixed-commit asynchronous test execution with direct native commands, persistent results and local-orchestrated usage guidance. Devkit uses it locally; client local/cloud operating recommendations belong to the dependent test-management playbook."
+summary: "Provide devkit exec for isolated asynchronous native commands with persistent execution results, and use it for local-orchestrated E2E. Keep devkit run unchanged and place client local/cloud operating recommendations in the dependent test-management playbook."
 status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -17,6 +17,8 @@ boundaries:
     - packages/devkit/src/devkit_agt/features/
     - packages/devkit/pyproject.toml
     - packages/devkit/README.md
+    - packages/devkit-dist/src/devkit_dist/cli.py
+    - packages/devkit-dist/tests/integration/cli/
     - packages/devkit/tests/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
     - packages/devkit-spec/tests/integration/bundles/spec/
@@ -56,7 +58,7 @@ nor CPU consumption. `materials/planning-evidence.md` records bounded measuremen
 
 ### 1.1 Execution mechanism and operating guidance
 
-Devkit provides asynchronous test execution, fixed-commit environment preparation and result inspection.
+Devkit provides isolated asynchronous command execution, fixed-commit environment preparation and result inspection.
 The executor does not need to know whether a caller uses local-orchestrated work, a cloud PR or another workflow.
 It reports what command ran, where it ran and its actual outcome; the caller owns test timing and delivery decisions.
 There is no local/cloud policy selection, route registry, profile mapping or corresponding configuration switch.
@@ -68,7 +70,8 @@ recommendations, without adding a product-level completion policy or configuring
 
 ### 1.2 Scope and non-goals
 
-- Include one harness-owned local test-run lifecycle and devkit's tier-aware affected selector.
+- Include one harness-owned isolated command lifecycle under `devkit exec` and devkit's tier-aware affected selector.
+- Preserve existing `devkit run` synchronous execution, interruption and bounded-output behavior.
 - Include local-orch usage guidance and devkit's own local adoption.
 - Exclude local/cloud policy selection, new consumer completion contracts and test-profile configuration.
 - Exclude cloud-pr use by devkit itself, CI workflow edits, external autohub implementation and release changes.
@@ -84,19 +87,20 @@ recommendations, without adding a product-level completion policy or configuring
 | :--- | :--- | :--- |
 | Q1 Selection | Independent tier and impact scope; conservative fallback stays inside the selected tier | Selector source and existing selector regressions; section 3.1 |
 | Q2 Cost | Measure bounded suites now; require same-machine synchronous/async comparison during Development | `materials/planning-evidence.md`; no whole-suite speedup claim |
-| Q3 Owner | A reusable `devkit test` lifecycle, with project-owned native commands | `PADR-isolated-test-runs`; scout alternatives |
+| Q3 Owner | A separate `devkit exec` group for isolated native commands, with test-specific choices in caller commands/guidance | `PADR-isolated-test-runs`; interface alternatives below |
 | Q4 Runtime | Detached POSIX supervisor, persistent evidence, no daemon/reboot guarantee | Process survival probes and failure injection are Development checks |
 | Q5 Isolation | Test-only detached checkout, independent dependency environment and run-specific temporary resources | Worktree revision support exists; test-environment allocation is added explicitly |
 | Q6 Evidence | Results name the exact tested SHA; local-orch tracks outstanding changes and completion | Sections 3.2 and 3.4 |
 | Q7 Recovery | Distinguish setup, test failure, interruption and unknown; preserve evidence on cleanup | Section 3.3; no automatic retry, replay or rollback |
-| Q8 Boundaries | `devkit_agt.features.test_execution` with declared worktree/project dependencies | Section 3.5; no other feature edge is approved |
+| Q8 Boundaries | `devkit_agt.features.isolated_execution` with declared worktree/project dependencies | Section 3.5; no other feature edge is approved |
 | Q9 Operating examples | Local/cloud scheduling recommendations move to the dependent playbook, without runtime policy selection | `PROP-test-playbook-verification-policy` |
 | Q10 Command mapping | Pass native argv directly after `--`; reuse existing worktree setup, without a test-profile map in config | Section 3.3 |
 
-The existing revision-aware worktree preparation is reusable, but its activity-branch semantics are not test-run
-identity. Extend worktree ownership for test-only checkout creation/removal instead of creating synthetic SDD
+The existing revision-aware worktree preparation is reusable, but its activity-branch semantics are not execution
+identity. Extend worktree ownership for execution-only checkout creation/removal instead of creating synthetic SDD
 Units. Setup and sync warnings prevent a test run from becoming ready. The background lifecycle does not reuse
-the compact runner's interruption ownership or its pruned log store.
+the compact runner's interruption ownership or its pruned log store. Tests are the first consumer; builds and
+other project-native commands use the same mechanism without a test-specific mode.
 
 The preliminary decision titled "Separate local and cloud verification completion" is withdrawn. A formal
 consumer-policy split and supersession of the existing landed-verification ADR exceed the requested mechanism.
@@ -158,43 +162,56 @@ client repositories retain their own checks and commands.
 The executor does not implement those merge/completion decisions or automatically dispatch workers. The Host
 applies the repository's existing requirements and distinguishes an actual pass from launch success.
 
-### 3.3 Minimal asynchronous execution lifecycle
+### 3.3 Isolated command interface and lifecycle
 
-`devkit_agt.features.test_execution` owns `devkit test`. Proposed commands, unavailable until Development:
+`devkit_agt.features.isolated_execution` owns `devkit exec`. Existing `devkit run [OPTIONS] COMMAND...` remains
+unchanged. It executes synchronously in the current directory and preserves its interruption/output behavior.
+
+| Interface alternative | Assessment |
+| :--- | :--- |
+| Extend `run` with lifecycle subcommands | Arbitrary command forwarding would compete with subcommand parsing; rejected |
+| Add `run` flags plus a `runs` management group | Preserves parsing but splits isolated execution across two namespaces; rejected |
+| A test-only group | Does not reflect generic setup, argv and result handling; rejected |
+| Separate `exec start/list/status/logs/cancel/clean` group | Selected; one isolated-execution namespace and no changes to the existing run entry |
+
+Proposed commands, unavailable until Development:
 
 ```sh
-devkit test start --ref <fixed-sha> --base <baseline-sha> -- just test-affected --tier e2e --base <baseline-sha>
-devkit test status [<run-id>]
-devkit test logs <run-id> --tail 100
-devkit test cancel <run-id>
-devkit test clean <run-id>
+devkit exec start --ref <fixed-sha> -- just test-affected --tier e2e --base <baseline-sha>
+devkit exec list
+devkit exec status <run-id>
+devkit exec logs <run-id> --tail 100
+devkit exec cancel <run-id>
+devkit exec clean <run-id>
 ```
 
-`start` resolves the requested SHAs before returning, persists the request and launches a detached supervisor.
-The baseline is caller-supplied evidence; the executor does not use it to choose tests or determine delivery
-completion. It returns while state is `preparing`; checkout/setup and tests run in the background. The supervisor
+`start` resolves `--ref` to an exact commit, persists the request and launches a detached supervisor.
+Every `exec start` prepares a fixed-commit worktree and executes asynchronously; separate `--isolate` or `--async`
+switches are unnecessary in this group. It returns a run ID while state is `preparing`. The caller passes any
+affected-selection baseline to its native command; `exec` has no `--base` selector or test-completion logic.
+Checkout/setup and the native command run in the background. The supervisor
 owns the captured run definition, not mutable files in main. Project setup comes from the existing worktree setup
 configuration, with an explicit per-run `--setup` override. Native test argv follows `--`; devkit does not invent
 pytest, uv, just, service provisioning or a test-profile configuration system for consumers. The command passed
 after `--` is the test command; no `--profile` option or test-profile table is introduced in `config.toml`.
 
-Worktree owns fixed-commit detached test checkout creation and guarded removal. Test checkouts have no SDD Unit,
+Worktree owns fixed-commit detached execution checkout creation and guarded removal. Execution checkouts have no SDD Unit,
 merge, push or post-finish hooks. Their path is a unique sibling of the retained base; a manifest binds the path
 to this run. Setup runs in that checkout and creates its own environment. Scrub inherited `VIRTUAL_ENV` and
 project-environment overrides that would redirect dependencies to main; record project setup requirements.
 Restore managed assets with locked sync where applicable. Setup/sync failure is `setup_failed`, never a warning
-that allows tests to start. Do not copy `.env` or credentials implicitly.
+that allows the command to start. Do not copy `.env` or credentials implicitly.
 
 Give each run a private temporary directory and run ID. Resource-dependent commands use disposable data and
 isolated services or ephemeral ports supplied by the project. The caller checks resource suitability before
 launch: the executor cannot infer whether arbitrary command argv shares a database or fixed port with other work.
 
 Persist manifests and logs under the repository's common Git directory, outside disposable checkouts. Store
-repository identity, run ID, fixed SHA, baseline, argv, setup command, runtime identity, environment path, process
+repository identity, run ID, fixed SHA, argv, setup command, runtime identity, environment path, process
 identity, timestamps, phase, terminal outcome, exit code and logs. Writes use atomic replacement. Keep the
-captured launcher/runtime usable while main changes; test dependencies come from the fixed checkout. Inspect
-and bounded log retrieval work from a later Host process. `status` without an ID lists outstanding and terminal
-runs so context loss does not hide results.
+captured launcher/runtime usable while main changes; command dependencies come from the fixed checkout. Inspect
+and bounded log retrieval work from a later Host process. `list` returns run IDs and current states, including
+outstanding and terminal executions, so context loss does not hide results. `status` inspects one run ID.
 
 | Outcome | Meaning and next action |
 | :--- | :--- |
@@ -217,7 +234,7 @@ checkout after identity/dirty checks, preserving manifests and logs. It refuses 
 unexpectedly dirty environments. No force-delete, automatic retry, automatic evidence pruning or automatic rollback
 is included. A denied sandbox operation remains pending with its actual code; do not skip tests or reroute it.
 
-Text output uses stable `TEST_RUN_*` sentinels/codes; JSON returns one object. Launch success is exit 0 with pending
+Text output uses stable `EXECUTION_*` sentinels/codes; JSON returns one object. Launch success is exit 0 with pending
 state, not a test pass. `status` returns 0 for pending/pass, 1 for a known negative result and 2 for unknown or
 unreadable execution; the payload always carries the exact state. Native exit codes remain separate. Invalid input
 or inability to start returns 2. Logs remain bounded (`--tail`, default 100); raw output stays at its recorded path.
@@ -248,20 +265,20 @@ writes only these narrowed responsibilities, plus generated projections produced
 
 | Owner | Planned files/responsibility |
 | :--- | :--- |
-| `devkit_agt.features.test_execution` | New `cli`, typed `BaseUseCase` operations, run model, supervisor/process and manifest repositories; unit/integration/E2E tests mirroring this feature |
-| `devkit_agt.features.worktree` | Test-only fixed-commit checkout preparation/removal API and focused tests; existing activity start/finish behavior retained |
-| Package registration | `packages/devkit/pyproject.toml`, package README and `.devkit/architecture.toml` |
+| `devkit_agt.features.isolated_execution` | `exec` CLI, typed `BaseUseCase` operations, run model, supervisor/process and manifest repositories; unit/integration/E2E tests mirroring this feature |
+| `devkit_agt.features.worktree` | Execution-only fixed-commit checkout preparation/removal API and focused tests; existing activity start/finish behavior retained |
+| Package registration | `packages/devkit/pyproject.toml`, package README and `.devkit/architecture.toml`; add only the `exec` harness command name to dist CLI discovery diagnostics and focused plugin tests |
 | Repository selection | `scripts/affected_tests.py`, thin justfile documentation and existing selector regressions |
 | Local-orch integration | Source spec bundle local-orch skill and relevant integration/completion references; focused guidance tests |
 | Living Spec | Harness execution/guidance, local-orch verification procedure, worktree allocation and component boundaries; CLI quick reference and execution PADR promotion |
 | devkit consumption | `AGENTS.md` verification instructions explicitly local-orchestrated; no cloud CI adoption |
 
-Approve only `test_execution -> devkit_agt.features.worktree` and
-`test_execution -> devkit_dist.features.project` as new feature edges. Worktree keeps its existing project edge.
-No reverse dependency from worktree, integration, compact or spec to test execution is required. Invoke existing
+Approve only `isolated_execution -> devkit_agt.features.worktree` and
+`isolated_execution -> devkit_dist.features.project` as new feature edges. Worktree keeps its existing project edge.
+No reverse dependency from worktree, integration, compact or spec to isolated execution is required. Invoke existing
 project wrappers as commands rather than importing compact internals. Generic integration remains Git-only.
 
-A harness capability will own the test-run contract and its entrypoints; use the existing document index to choose
+A harness capability will own the isolated-command contract and its entrypoints; use the existing document index to choose
 its final ID during Development. `CAP-DLV-delivery-workflows` section 4.8 and `CAP-HARN-agent-guidance` explain
 local-orch usage while preserving the existing final-verification boundary. Asynchronous execution does not
 require superseding `ADR-post-merge-verification`: independent work may proceed while required results remain
@@ -291,9 +308,13 @@ proposal. Read authoring context before later source asset edits; this Planning 
 - **AC-8:** Given cleanup, active/unknown/unrelated/dirty environments are preserved; an eligible run loses only its
   own checkout while logs and manifest remain readable.
 - **AC-9:** Given an arbitrary native command, `start` runs the argv passed after `--` with project setup. There
-  is no test-profile mapping or local/cloud selection in the CLI or config; a non-pytest fixture works unchanged.
+  is no test-profile mapping or local/cloud selection in the CLI or config; native test, build and non-pytest fixtures
+  use the same interface. A test baseline, if needed, belongs to the passed command.
 - **AC-10:** Given devkit itself, repository instructions use local-orchestrated consumption. The executor reports
   command evidence without deciding merge approval, delivery completion or cloud CI behavior.
+- **AC-11:** Given existing `devkit run` invocations, current-directory execution, argument forwarding, bounded
+  output and interruption cleanup remain unchanged. The separate `exec` group owns isolated execution lifecycle;
+  list/status let a fresh process locate and inspect retained executions.
 
 Keep the measured synchronous baseline reproducible in the Development worktree with the async path disabled.
 Do not check out a different revision or compare different test selections to claim a speedup. Product-process
@@ -303,7 +324,7 @@ justifies `dev_effort: high`; platform process probes and a consumer fixture cov
 ## 4. Lifecycle & Retirement Criteria
 
 Planning compares implementation owners, records bounded evidence, retains the execution PADR and folds an
-independent Challenger review before direction acceptance. The work remains one L-sized verification capability. Broad test
+independent Challenger review before direction acceptance. The work remains one L-sized isolated-execution capability with E2E as its first consumer. Broad test
 performance tuning, a distributed runner or external cloud adapter implementation requires separate scope.
 
 `plan-accept` approves the execution capability and local-orch integration direction. Handoff separately

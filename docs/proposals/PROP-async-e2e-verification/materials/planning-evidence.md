@@ -14,7 +14,7 @@ measurements ran; these are indicative costs, not a controlled before/after opti
   revision, creates its checkout, runs project setup and restores locked managed assets. Setup/sync failures
   become notices for activity worktrees, which is insufficient to start a verified test run.
 - `packages/devkit/src/devkit_agt/features/worktree/usecases/configured.py:27-50` exposes activity creation without
-  the revision argument. A test-only checkout API must retain worktree ownership without synthetic SDD Units.
+  the revision argument. An execution-only checkout API must retain worktree ownership without synthetic SDD Units.
 - `packages/devkit/src/devkit_agt/features/compact/usecases/execute.py:164-186,225-280,437-467` owns synchronous
   command interruption and pruned logs. Reusing it as a detached manager would change its contract.
 - `.github/workflows/ci.yml:9-18` declares reusable/manual CI, without push or PR triggers.
@@ -32,7 +32,7 @@ measurements ran; these are indicative costs, not a controlled before/after opti
 | Option | Reuse and cost | Risk and disposition |
 | :--- | :--- | :--- |
 | Repository script | Thin just recipe; lowest command registration cost | Lifecycle duplicated by client repositories; retain only as a measurement fixture |
-| Harness CLI | Worktree/project facilities; new command, state, supervisor, cleanup and tests | More implementation work; recommended for reusable environment issuance and result inspection |
+| Separate `devkit exec` CLI | Worktree/project facilities; new command, state, supervisor, cleanup and tests | More implementation work; recommended for reusable environment issuance and result inspection |
 | Dedicated verifier agent | Fresh diagnosis context | Still needs the same process/evidence infrastructure; optional only |
 | git-operator or compact expansion | Existing actors/runner | Mixes Git jobs or synchronous interruption semantics with supervision; rejected |
 
@@ -82,7 +82,17 @@ execution-count reduction, environment setup cost, CPU/memory benefit or full-su
 4. Separate process probes cover launch-call completion, parent exit, missing terminal record, interruption,
    ownership mismatch and cleanup on macOS/Linux. Host application descendant-kill behavior and reboot survival
    remain outside the persistence guarantee.
-5. A consumer fixture uses a native non-pytest command to verify that the lifecycle does not force Python test
+5. Consumer fixtures use native test/build and non-pytest commands to verify that the lifecycle does not force Python test
    conventions. No real client, paid provider, external database or credentials are used.
 6. Verify local-orch launch/collection and repair-priority guidance separately from runtime tests. Client local/cloud
    recommendations belong to the dependent playbook and do not create executor policy modes or profile maps.
+
+## Interface refinement
+
+`devkit run --help` confirms the current single-command shape, `devkit run [OPTIONS] COMMAND...`. Its parser
+forwards arbitrary native argv and its interruption contract stops the command group. The root CLI has no
+`exec` command at this Planning revision. Use a separate `devkit exec` group for isolated asynchronous execution
+and its start/list/status/logs/cancel/clean operations. Do not extend `run` with subcommands or split launch into
+`run` and inspection into `runs`. Test selection stays in the passed command; no profile or local/cloud setting
+is introduced. Existing bounded measurements remain evidence about the initial E2E consumer, not a generic
+build benchmark.
