@@ -87,6 +87,32 @@ def live_owned(record: dict[str, Any]) -> bool:
     return any(p["pgid"] in groups for p in table.values()) or any(p["pid"] in table for p in record.get("managed", []))
 
 
+def validate_group_leaders(
+    known: dict[int, dict[str, Any]],
+    leader: int,
+    table: dict[int, dict[str, Any]],
+    groups: set[int],
+    *,
+    unreaped: bool,
+) -> None:
+    """Reject unknown/reused established leaders before discovery or signals.
+
+    Only the unreaped direct child has a kernel-held identity without an
+    observed birth. Secondary groups need an already observed leader identity.
+    """
+    for group in groups:
+        current = table.get(group)
+        if current is None:
+            continue
+        original = known.get(group)
+        if original is None:
+            if group == leader and unreaped:
+                continue
+            raise RuntimeError("established group leader identity is unresolved")
+        if not same(original, current):
+            raise RuntimeError("established group leader identity changed")
+
+
 def _discover(
     known: dict[int, dict[str, Any]],
     leader: int,
@@ -187,13 +213,7 @@ def supervise(directory: Path) -> None:
         atomic(directory / "state.json", record)
         while True:
             table = processes()
-            # A reaped direct child cannot reappear. Reject an unknown/reused
-            # leader before group discovery can adopt it or cancellation can
-            # signal it through the preceding group's retained membership.
-            if active.returncode is not None and active.pid in table:
-                original = known.get(active.pid)
-                if original is None or not same(original, table[active.pid]):
-                    raise RuntimeError("reaped leader identity is unresolved")
+            validate_group_leaders(known, active.pid, table, groups, unreaped=active.returncode is None)
             _discover(known, active.pid, table, unreaped=active.returncode is None, groups=groups, retire=False)
             record["managed"] = history + list(known.values())
             record["ownership"] = {"groups": sorted(groups), "quiescent": False}
@@ -212,8 +232,7 @@ def supervise(directory: Path) -> None:
                 # The scan before poll cannot establish post-exit quiescence.
                 # Keep every established group through a fresh enumeration.
                 table = processes()
-                if active.pid in table and active.pid not in known:
-                    raise RuntimeError("post-exit leader identity is unresolved")
+                validate_group_leaders(known, active.pid, table, groups, unreaped=False)
                 if any(p["pid"] in table and not same(p, table[p["pid"]]) for p in known.values()):
                     raise RuntimeError("managed process identity changed")
                 _discover(known, active.pid, table, unreaped=False, groups=groups)

@@ -4,12 +4,12 @@
 
 Same fixture commit, argv, setup, isolated environment, machine and resource limits. Async disabled by waiting for the exact same supervisor process inside its launch Popen wrapper; one warmup then three samples per arm. 0.9s independent-work fixture follows launch in each arm. Timing includes process observation; not whole-suite speedup evidence.
 
-Measured recovery runtime source: `70064febe5ccec2719dea8220032f1450f588f6a`; refreshed after the terminal-gate fix. Fixture commit: `2ee8e165570bc1499f92b1e280fed2a06d3a5a82`; platform macOS. The fixture runs a standard-library native command sleeping 0.8 seconds and checking one committed input; each arm then performs the same 0.9-second independent-work fixture. Both arms use identical detached-checkout preparation and cleanup. This measures caller blocking, not suite acceleration or a comparison against current-directory commands. No network/service resources are used.
+Measured runtime source: `82ab7efb` plus the retained established-group leader validation fix in this batch. Fixture commit: `e4e873bc2ee4ef32890918bb0d4da600aff0301d`; platform macOS. The fixture runs a standard-library native command sleeping 0.8 seconds and checking one committed input; each arm then performs the same 0.9-second independent-work fixture. Both arms use identical detached-checkout preparation and cleanup. This measures caller blocking, not suite acceleration or a comparison against current-directory commands. No network/service resources are used.
 
 | Mode | Launch return median s | Host blocked median s | Preparation median s | Native + observation median s | Child CPU median s | Child peak RSS median MiB |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| synchronous-disabled-async | 1.058 | 1.162 | 0.108 | 0.869 | 0.485 | 15.86 |
-| asynchronous | 0.058 | 0.238 | 0.109 | 0.874 | 0.498 | 15.84 |
+| synchronous-disabled-async | 1.127 | 1.262 | 0.131 | 0.902 | 0.570 | 15.625 |
+| asynchronous | 0.064 | 0.388 | 0.128 | 0.931 | 0.584 | 16.312 |
 
 Both arms pay detached checkout/runtime/evidence storage and supervisor/process-observation CPU cost. Asynchrony overlaps that work with the caller and adds no claim of lower test CPU or full-suite latency. RSS covers reaped children, not aggregate concurrent peak memory. The native command plus observation has similar duration; the latch regression separately proves ordering before release. The baseline is the same head implementation with asynchronous launch disabled, not a checkout of the base.
 
@@ -73,3 +73,5 @@ without that proof is a separate refusal regression. This strengthens the cleanu
 interruption coverage. An older synthetic scratch probe lacking that prerequisite no longer represents an
 eligible removal. Previous review records remain unchanged. Both unchanged round-3 probes and feature-owned
 normal lifecycle, interruption and partial-retry scenarios pass after the fix.
+
+The same pre-discovery identity gate now covers every established secondary process group as well as the direct child. A new regression first failed because cancellation signalled an unrelated reused secondary leader, then passed after the generic guard. Final focused runtime/lifecycle verification passes 47 cases including the two unchanged R3 probes; harness types and feature lint pass.

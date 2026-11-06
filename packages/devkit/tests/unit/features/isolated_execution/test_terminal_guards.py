@@ -153,3 +153,69 @@ def test_prelaunch_cancellation_records_explicit_no_process_proof(tmp_path, monk
     assert result["outcome"] == "cancelled"
     assert result["ownership"]["basis"] == "no_process_started"
     assert not runtime.live_owned(result)
+
+
+def test_reused_unobserved_secondary_group_leader_is_never_signalled(tmp_path, monkeypatch):
+    directory = tmp_path / "run"
+    directory.mkdir()
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    (directory / "manifest.json").write_text(
+        json.dumps(
+            {
+                "run_id": "a" * 32,
+                "checkout": str(checkout),
+                "base": str(tmp_path),
+                "sha": "b" * 40,
+                "setup": None,
+                "argv": ["native"],
+            }
+        )
+    )
+    state = {"child": None, "preparation": 0, "native": 0, "poll": 0}
+    signalled = []
+
+    def row(pid, group, birth, parent=1):
+        return {"pid": pid, "ppid": parent, "pgid": group, "birth": birth, "argv": "fixture"}
+
+    class Child:
+        def __init__(self, argv, **kwargs):
+            self.pid = 100 if len(argv) > 1 else 200
+            self.returncode = None
+            state["child"] = self
+
+        def poll(self):
+            if self.pid == 200:
+                state["poll"] += 1
+                if state["poll"] == 1:
+                    return None
+            self.returncode = 0
+            return 0
+
+    def snapshot():
+        child = state["child"]
+        if child is None:
+            return {os.getpid(): row(os.getpid(), os.getpid(), "supervisor")}
+        if child.pid == 100:
+            state["preparation"] += 1
+            return {100: row(100, 100, "preparation")} if state["preparation"] == 1 else {}
+        state["native"] += 1
+        if state["native"] == 1:
+            # Child 301 establishes group 300 through observed parent 200;
+            # the original group leader 300 was never observed.
+            return {200: row(200, 200, "native"), 301: row(301, 300, "owned-child", 200)}
+        if state["native"] == 2:
+            (directory / "cancel").touch()
+            # The child exits and unrelated group leader 300 reuses the ID.
+            return {200: row(200, 200, "native"), 300: row(300, 300, "unrelated")}
+        return {}
+
+    monkeypatch.setattr(runtime.subprocess, "Popen", Child)
+    monkeypatch.setattr(runtime, "processes", snapshot)
+    monkeypatch.setattr(runtime.signal, "signal", lambda *args: None)
+    monkeypatch.setattr(runtime.os, "kill", lambda pid, sig: signalled.append(pid))
+    monkeypatch.setattr(runtime.time, "sleep", lambda duration: None)
+    runtime.supervise(directory)
+    assert 300 not in signalled
+    assert json.loads((directory / "state.json").read_text())["outcome"] == "unknown"
+    assert not (directory / "result.json").exists()
