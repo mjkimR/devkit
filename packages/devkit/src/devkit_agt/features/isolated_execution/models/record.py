@@ -12,7 +12,8 @@ RunRecord = dict[str, Any]
 def exit_code(record: RunRecord) -> int:
     """Keep native, execution, observer and cleanup outcomes separate."""
     if record.get("observer") in {"timeout", "unknown"} or (
-        record.get("cleanup_requested") and record.get("cleanup", {}).get("outcome") == "refused"
+        record.get("cleanup_requested")
+        and record.get("cleanup", {}).get("outcome") in {"refused", "in_progress", "unfinished"}
     ):
         return 2
     outcome = record.get("outcome", record.get("phase"))

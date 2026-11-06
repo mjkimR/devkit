@@ -60,8 +60,11 @@ def same(saved: dict[str, Any], current: dict[str, Any] | None) -> bool:
 
 def live_owned(record: dict[str, Any]) -> bool:
     """Conservative guard for later cleanup; a reused identity is unresolved."""
+    if record.get("ownership", {}).get("quiescent") is True:
+        return False  # These histories were retired by fresh post-exit observation.
     table = processes()
-    return any(p["pid"] in table for p in record.get("managed", []))
+    groups = record.get("ownership", {}).get("groups", [])
+    return any(p["pgid"] in groups for p in table.values()) or any(p["pid"] in table for p in record.get("managed", []))
 
 
 def _discover(
@@ -71,6 +74,7 @@ def _discover(
     *,
     unreaped: bool = True,
     groups: set[int] | None = None,
+    retire: bool = True,
 ) -> None:
     # Established session/group IDs remain owned while members exist, even if
     # the leader was reaped between ps and poll. Retire only after observing emptiness.
@@ -81,7 +85,7 @@ def _discover(
     for group in list(groups):
         owner, current = known.get(group), table.get(group)
         if (owner and current and not same(owner, current)) or (
-            not any(p["pgid"] == group for p in table.values()) and not (unreaped and group == leader)
+            retire and not any(p["pgid"] == group for p in table.values()) and not (unreaped and group == leader)
         ):
             groups.remove(group)
     if leader not in known and leader in table and unreaped:
@@ -131,6 +135,7 @@ def supervise(directory: Path) -> None:
     env["PATH"] = str(checkout / ".venv" / "bin") + os.pathsep + os.pathsep.join(paths)
     log = (directory / "output.log").open("ab", buffering=0)
     known: dict[int, dict[str, Any]] = {}
+    history: list[dict[str, Any]] = []
     cancelled = False
     interrupted = False
     active: subprocess.Popen[bytes] | None = None
@@ -152,10 +157,14 @@ def supervise(directory: Path) -> None:
         )
         stopping: float | None = None
         groups = {active.pid}
+        known.clear()
+        record["ownership"] = {"groups": sorted(groups), "quiescent": False}
+        atomic(directory / "state.json", record)
         while True:
             table = processes()
-            _discover(known, active.pid, table, unreaped=active.returncode is None, groups=groups)
-            record["managed"] = list(known.values())
+            _discover(known, active.pid, table, unreaped=active.returncode is None, groups=groups, retire=False)
+            record["managed"] = history + list(known.values())
+            record["ownership"] = {"groups": sorted(groups), "quiescent": False}
             atomic(directory / "state.json", record)
             if (directory / "cancel").exists() or interrupted:
                 cancelled = True
@@ -167,9 +176,26 @@ def supervise(directory: Path) -> None:
                         with contextlib.suppress(ProcessLookupError):
                             os.kill(identity["pid"], sig)
             code = active.poll()
-            living = [p for p in known.values() if same(p, table.get(p["pid"]))]
-            if code is not None and not living:
-                return code
+            if code is not None:
+                # The scan before poll cannot establish post-exit quiescence.
+                # Keep every established group through a fresh enumeration.
+                table = processes()
+                if active.pid in table and active.pid not in known:
+                    raise RuntimeError("post-exit leader identity is unresolved")
+                if any(p["pid"] in table and not same(p, table[p["pid"]]) for p in known.values()):
+                    raise RuntimeError("managed process identity changed")
+                _discover(known, active.pid, table, unreaped=False, groups=groups)
+                record["managed"] = history + list(known.values())
+                record["ownership"] = {"groups": sorted(groups), "quiescent": False}
+                atomic(directory / "state.json", record)
+                living = [p for p in known.values() if same(p, table.get(p["pid"]))]
+                if not groups and not living:
+                    history.extend(known.values())
+                    known.clear()
+                    active = None
+                    record["ownership"] = {"groups": [], "quiescent": True, "verified_at": time.time()}
+                    atomic(directory / "state.json", record)
+                    return code
             # A changed identity is never signalled or treated as verified shutdown.
             if code is not None and any(p["pid"] in table and not same(p, table[p["pid"]]) for p in known.values()):
                 raise RuntimeError("managed process identity changed")
@@ -217,7 +243,7 @@ def supervise(directory: Path) -> None:
     if cancelled:
         outcome = "interrupted" if interrupted else "cancelled"
     # Do not manufacture terminal evidence if any managed writer remains unresolved.
-    if live_owned(record):
+    if active is not None or not record.get("ownership", {}).get("quiescent", True):
         record.update(phase="unknown", outcome="unknown", detail="managed processes remain or identity is unresolved")
         atomic(directory / "state.json", record)
         return

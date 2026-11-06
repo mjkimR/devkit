@@ -321,3 +321,72 @@ def test_immediate_leader_exit_cannot_hide_same_group_writer(repo: Path) -> None
     cancelled = cli(repo, "cancel", record["run_id"], expected=1)
     assert cancelled["outcome"] == "cancelled" and not runtime.live_owned(cancelled)
     cli(repo, "wait", record["run_id"], "--clean", expected=1)
+
+
+@pytest.mark.parametrize("partial", [False, True])
+def test_interrupted_cleanup_status_and_safe_explicit_retry(repo: Path, monkeypatch, partial: bool) -> None:
+    import shutil
+
+    from devkit_agt.features.isolated_execution.repositories.runs import Runs
+    from devkit_agt.features.isolated_execution.services import lifecycle
+    from devkit_agt.features.worktree.repositories import execution
+
+    record = launch(repo, "raise SystemExit(7)")
+    done = cli(repo, "wait", record["run_id"], expected=1)
+    runs = Runs(repo)
+    original = execution._remove_checkout
+
+    def interrupted(base, checkout, lock_fd, *, missing):
+        assert json.loads((runs.path(record["run_id"]) / "cleanup.json").read_text())["outcome"] == "in_progress"
+        if partial:
+            shutil.rmtree(checkout)
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr(execution, "_remove_checkout", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        lifecycle.clean(runs, record["run_id"])
+    observed = cli(repo, "status", record["run_id"], expected=1)
+    assert observed["outcome"] == "failed" and observed["exit_code"] == 7
+    assert observed["cleanup"]["outcome"] == "unfinished"
+    assert Path(done["result"]).is_file()
+    monkeypatch.setattr(execution, "_remove_checkout", original)
+    retry = lifecycle.clean(runs, record["run_id"])
+    assert retry["cleanup"]["outcome"] == "cleaned"
+    assert retry["outcome"] == "failed" and retry["exit_code"] == 7
+    assert not Path(record["checkout"]).exists()
+    assert lifecycle.clean(runs, record["run_id"])["cleanup"]["outcome"] == "already_clean"
+
+
+def test_cleanup_interruption_releases_lock_only_after_effect_settles(repo: Path, monkeypatch) -> None:
+    from threading import Event
+
+    from devkit_agt.features.isolated_execution.repositories.runs import Runs
+    from devkit_agt.features.isolated_execution.services import lifecycle
+
+    record = launch(repo, "print('done')")
+    cli(repo, "wait", record["run_id"], expected=0)
+    runs = Runs(repo)
+    entered, release, second_entered = Event(), Event(), Event()
+    original = lifecycle.remove
+    calls = []
+
+    def interrupted(*args):
+        calls.append(args)
+        assert args[-1] is not None  # Native Git inherits the held cleanup lock.
+        if len(calls) == 1:
+            entered.set()
+            assert release.wait(5)
+            raise KeyboardInterrupt()
+        second_entered.set()
+        return original(*args)
+
+    monkeypatch.setattr(lifecycle, "remove", interrupted)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(lifecycle.clean, runs, record["run_id"])
+        assert entered.wait(5)
+        second = pool.submit(lifecycle.clean, runs, record["run_id"])
+        assert not second_entered.wait(0.1)
+        release.set()
+        with pytest.raises(KeyboardInterrupt):
+            first.result(timeout=5)
+        assert second.result(timeout=5)["cleanup"]["outcome"] == "cleaned"

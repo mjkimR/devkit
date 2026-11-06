@@ -8,7 +8,7 @@ def test_local_orch_launch_wait_work_collect_and_repair_order() -> None:
     assert "references/isolated-execution.md" in main
     text = raw("skills/spec-orchestrate/references/isolated-execution.md")
     markers = [
-        "Run required lint",
+        "Run the project's established synchronous",
         "Start the required selected E2E",
         "Start one background",
         "continue independent work",
@@ -43,3 +43,24 @@ def test_wait_notification_does_not_replace_completion_boundary() -> None:
     assert "execution, observer and cleanup outcomes separate" in text
     completion = raw("skills/spec/references/completion.md")
     assert "Required results remain pending" in completion
+
+
+def test_async_groups_require_actual_coverage_discovery_and_synchronous_fallback() -> None:
+    text = raw("skills/spec-orchestrate/references/isolated-execution.md")
+    for phrase in (
+        "documentation, scripts, runner configuration and CI",
+        "retained synchronous command excludes",
+        "asynchronous command covers",
+        "independently runnable groups",
+        "all existing required coverage",
+        "directory names or test labels",
+        "unseparated, unclear",
+        "keep the existing required commands synchronously",
+        "Do not require consumers to define E2E",
+        "manufacture empty E2E coverage",
+        "automatically restructure",
+        "duplicate E2E invocation",
+        "Devkit repository adoption example",
+    ):
+        assert phrase in text
+    assert text.index("Inspect repository") < text.index("1. Save")

@@ -1,10 +1,16 @@
 # Isolated verification in local-orchestrated work
 
-Use this procedure when the project exposes a separate synchronous tier and required E2E tier; otherwise keep the project's required verification commands.
+Inspect repository documentation, scripts, runner configuration and CI to identify the actual required verification commands and their coverage before choosing execution groups.
+Establish which checks the retained synchronous command excludes and which checks the asynchronous command covers; a broad `npm test` or `pytest tests` can already include E2E.
+Use this procedure only for established independently runnable groups that preserve all existing required coverage.
+Do not infer E2E existence, cost or independent runnability from directory names or test labels alone.
+If verification is unseparated, unclear or has no independently runnable subset, keep the existing required commands synchronously.
+Do not require consumers to define E2E, manufacture empty E2E coverage or automatically restructure their verification.
+If commands overlap, resolve the coverage split from existing supported commands before deferring a group; adding a duplicate E2E invocation establishes no reduced blocking.
 
 1. Save the landed baseline B before the first merge; keep the earliest still-uncovered baseline for each required tier.
 2. After landing at A, synchronize the landed environment in fresh processes, restore bundles, repair stale generated artifacts and commit them before selecting tests.
-3. Run required lint, types, rules, frontend checks and selected unit/integration tests synchronously against A; preserve selected-tier full fallback and explicit empty selections.
+3. Run the project's established synchronous verification group against A, including its required lint, types, rules and frontend checks; preserve its existing full fallback and explicit empty selections.
 4. Check that the native command uses disposable data and isolated services or ephemeral ports; supply project setup through the existing worktree configuration or `--setup`.
 5. Start the required selected E2E command with `devkit exec start --ref <A> -- <native argv>` and retain its run ID, tested SHA A, baseline B and selection.
 6. Start one background `devkit exec wait <run-id> --clean --format json` through the execution tool, then continue independent work while verification is pending.
@@ -12,7 +18,7 @@ Use this procedure when the project exposes a separate synchronous tier and requ
 8. At the next result check, hold further merges on a failed or unknown result and prioritize repair; inspect retained logs, retain the checkout when native artifacts are needed, and launch a new run for repaired content without merge replay or automatic rollback.
 9. Before completion, collect required synchronous results and passing required E2E at current landed HEAD, or record an explicit empty E2E selection for the entire uncovered interval.
 
-Example for a project with devkit's repository selector:
+Devkit repository adoption example, after establishing its disjoint unit/integration and E2E selector groups:
 
 ```sh
 just test-affected --base <B> --tier unit-integration

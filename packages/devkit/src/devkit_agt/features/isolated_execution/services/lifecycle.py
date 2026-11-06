@@ -14,7 +14,7 @@ from devkit_agt.features.worktree.repositories.execution import remove
 
 def clean(runs: Runs, run_id: str) -> RunRecord:
     """Preserve durable result and logs while removing an eligible inactive checkout."""
-    with runs.cleanup_lock(run_id):
+    with runs.cleanup_lock(run_id) as lock_fd:
         record = runs.read(run_id)
         directory = runs.path(run_id)
         try:
@@ -26,9 +26,24 @@ def clean(runs: Runs, run_id: str) -> RunRecord:
                 raise ValueError("supervisor is still active or its PID identity is unresolved")
             if runtime.live_owned(record):
                 raise ValueError("managed process ownership remains active or unresolved")
-            outcome = remove(runs.base, Path(record["checkout"]), record["sha"], run_id)
+            runtime.atomic(
+                directory / "cleanup.json",
+                {"outcome": "in_progress", "code": "EXECUTION_CLEAN_IN_PROGRESS", "started_at": time.time()},
+            )
+            outcome = remove(runs.base, Path(record["checkout"]), record["sha"], run_id, lock_fd)
             cleanup = {"outcome": outcome, "code": "EXECUTION_CLEANED", "completed_at": time.time()}
-        except (OSError, ValueError, subprocess.CalledProcessError) as exc:
+        except BaseException as exc:
+            if not isinstance(exc, (OSError, ValueError, subprocess.CalledProcessError)):
+                runtime.atomic(
+                    directory / "cleanup.json",
+                    {
+                        "outcome": "unfinished",
+                        "code": "EXECUTION_CLEAN_UNFINISHED",
+                        "detail": type(exc).__name__,
+                        "completed_at": time.time(),
+                    },
+                )
+                raise
             cleanup = {"outcome": "refused", "code": "EXECUTION_CLEAN_REFUSED", "detail": str(exc)}
         runtime.atomic(directory / "cleanup.json", cleanup)
         record["cleanup"] = cleanup

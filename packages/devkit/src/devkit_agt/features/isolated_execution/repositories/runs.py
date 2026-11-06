@@ -145,7 +145,7 @@ class Runs:
         return record
 
     @contextmanager
-    def cleanup_lock(self, run_id: str) -> Iterator[None]:
+    def cleanup_lock(self, run_id: str) -> Iterator[int]:
         with (self.path(run_id) / "cleanup.lock").open("a") as stream:
             fcntl.flock(stream, fcntl.LOCK_EX)
-            yield
+            yield stream.fileno()
