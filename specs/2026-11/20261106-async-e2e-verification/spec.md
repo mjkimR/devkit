@@ -2,7 +2,7 @@
 id: SPEC-async-e2e-verification
 title: Asynchronous E2E Verification
 summary: "Provide isolated asynchronous native commands with persistent evidence and guarded cancellation and cleanup. Use tier-aware selection and background observation for local-orchestrated E2E."
-status: planned
+status: in-progress
 created: 2026-11-06
 related_capabilities: []
 related_usecases: []
@@ -62,7 +62,7 @@ As an agent, start native verification at a fixed commit, continue independent w
 
 ## 3. Non-Goals
 
-Scope Excluded: cloud execution, Windows, schedulers, profile maps, implicit environment cleanup, changed compact semantics and client completion policy.
+Scope Excluded: cloud orchestration and CI implementation, Windows, schedulers, profile maps, implicit environment cleanup, changed compact semantics and client completion policy.
 
 ## Approved design and evidence
 

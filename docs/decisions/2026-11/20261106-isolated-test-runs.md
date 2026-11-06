@@ -54,13 +54,12 @@ manager. Main's files and dependencies can change while a long E2E command execu
 - Cancellation confirms managed-process shutdown before environment removal is eligible. Finished environments
   remain by default; explicit clean or `wait --clean` reclaims eligible checkouts while preserving results/logs.
   Waiting observes execution without owning its cancellation or promising agent push notification.
-  The harness isolated-execution capability restates these lifecycle clauses during Development.
+  → `CAP-HARN-isolated-execution` lifecycle and retention rules (MUST).
 - Manifests/logs survive eligible checkout cleanup, distinguish setup failure and unknown execution, and never
   turn launch success into passing evidence. Host-enforced termination and reboot have no survival guarantee.
-  The harness isolated-execution capability restates these interface clauses during Development.
+  → `CAP-HARN-isolated-execution` evidence and interface rules (MUST).
 
-The proposal contains command and state details. Restatement traces above name intended Development changes,
-not active contracts introduced by Planning.
+The retained command and state details are restated in `CAP-HARN-isolated-execution`; `SPEC-async-e2e-verification` retains Development acceptance and evidence.
 
 ## 5. Consequences
 

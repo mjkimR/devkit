@@ -148,8 +148,9 @@ def test_a_harness_name_without_its_command_is_a_coded_error(name: str) -> None:
 
 
 @pytest.mark.usefixtures("no_plugins")
-def test_a_harness_name_reports_json_when_asked() -> None:
-    result = CliRunner().invoke(root.cli, ["run", "--format", "json", "--", "pytest"])
+@pytest.mark.parametrize("name", ["run", "exec"])
+def test_a_harness_name_reports_json_when_asked(name: str) -> None:
+    result = CliRunner().invoke(root.cli, [name, "--format", "json", "--", "pytest"])
     assert result.exit_code == 2 and result.stderr == ""
     error = json.loads(result.stdout)["error"]
     assert error["code"] == "HARNESS_COMMAND_UNAVAILABLE" and error["advisory"]["fix"] == HARNESS_INSTALL_FIX

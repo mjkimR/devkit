@@ -215,3 +215,9 @@ lifecycle assets. No asset has two owners (`ADR-document-system`).
 
 The project feature owns typed shared development approach inspection in devkit-dist. Integration in devkit-agt owns approved Git effects and scoped cleanup, without content readiness. The Host runs branch checks and fresh-process final checks after synchronizing landed dependencies. SDD rule applicability and mutation judgments remain in devkit-spec. The common committed-ownership repository reads workflow anchor frontmatter without importing the
 workflow engine or optional SDD tooling. `RULE-architecture` enforces these dependency edges.
+
+## Isolated execution ownership
+
+`devkit_agt.features.isolated_execution` owns the separate `exec` lifecycle, typed use cases and persistent run evidence. Its repositories hold the captured standard-library supervisor, process observations and atomic records; its services apply observation/cancellation/cleanup policy. The only feature edges are to `devkit_agt.features.worktree` and `devkit_dist.features.project`, declared in `.devkit/architecture.toml`.
+
+Worktree repositories own execution-only detached checkout creation and guarded removal without activity branches, Units, merge/push or post-finish effects. The supervisor captures that implementation before launch and uses a base interpreter independently of changing main imports/dependencies. Compact `devkit run` remains synchronous and imports no isolated-execution manager. Generic integration and git-operator gain no test supervision (`ADR-isolated-test-runs`, `CAP-HARN-isolated-execution`).

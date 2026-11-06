@@ -21,6 +21,7 @@ search = ["devkit-dist[search]"]
 
 # devkit-agt ships no console script: devkit-dist owns `devkit`, and these commands mount under it.
 [project.entry-points."devkit.commands"]
+exec = "devkit_agt.features.isolated_execution.cli:cli"
 gate = "devkit_agt.features.gate.cli:cli"
 generated = "devkit_agt.features.generated.cli:cli"
 integration = "devkit_agt.features.integration.cli:cli"

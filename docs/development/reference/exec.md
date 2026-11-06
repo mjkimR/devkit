@@ -1,0 +1,29 @@
+# Isolated execution reference
+
+`CAP-HARN-isolated-execution` owns the contract; `UC-execute-an-isolated-command` owns the caller flow.
+
+```sh
+uv run devkit exec start --ref <full-local-SHA> -- just test-affected --base <baseline> --tier e2e
+uv run devkit exec wait <run-id> --clean --format json
+uv run devkit exec list --format json
+uv run devkit exec logs <run-id> --tail 100
+```
+
+Background the waiter through a tool that delivers completion if independent work should proceed. Without that delivery, inspect later. Wait timeout/interruption does not cancel; cancel retains the checkout; clean preserves logs/results outside it. Retain native artifacts before requesting clean. Setup uses worktree configuration or `--setup`; no implicit `.env` copy, profile map or local/cloud selector exists.
+
+| Code | Caller action |
+| --- | --- |
+| `EXECUTION_ARGUMENT_INVALID` | Supply a full local commit SHA, native argv and nonempty setup. |
+| `EXECUTION_ID_INVALID` | Use a retained 32-character run ID from list/start. |
+| `EXECUTION_REF_UNKNOWN` | Make the requested commit available locally. |
+| `EXECUTION_RECORD_UNREADABLE` | Inspect retained evidence; never infer a passing result. |
+| `EXECUTION_REPOSITORY_UNREADABLE` | Use an accessible local Git repository. |
+| `EXECUTION_REPOSITORY_UNSUPPORTED` | Use a retained non-bare checkout. |
+| `EXECUTION_PLATFORM_UNSUPPORTED` | Use POSIX macOS/Linux. |
+| `EXECUTION_TAIL_INVALID` | Request 0–1000 log lines. |
+| `EXECUTION_TIMEOUT_INVALID` | Supply a finite nonnegative timeout. |
+| `EXECUTION_WAIT_TIMEOUT` | Retain execution; collect later or explicitly cancel. |
+| `EXECUTION_CLEAN_REFUSED` | Inspect active/unknown ownership, checkout identity and dirty files; retain evidence and repair deliberately. |
+| `EXECUTION_CLEANED` | Checkout removal is complete or already complete; evidence remains. |
+
+Execution outcomes remain separate from native exit codes and observer/cleanup outcomes. Status pending/pass exits 0, known negative exits 1, unknown/unreadable exits 2. Wait timeout or cleanup refusal exits 2 even when the original command passed or failed. The executor owns evidence and resource effects; the Host owns delivery completion.

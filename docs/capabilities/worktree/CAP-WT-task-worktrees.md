@@ -223,3 +223,9 @@ The integration CLI reports confirmed Git landing and cleanup separately from fi
 `verification=not_started`. The Host synchronizes the landed runtime and runs required final checks before delivery
 completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). Standalone
 `devkit worktree finish --merge` retains its existing guards.
+
+## Execution-only checkouts
+
+WHEN isolated execution requests preparation, worktree MUST create a unique detached checkout at its fixed commit and store run/path/SHA/repository ownership in the checkout's Git administrative directory. This API invokes no activity Unit, branch marker, merge, push or post-finish extension. `CAP-HARN-isolated-execution` owns setup, waiting, managed-process cancellation and retention.
+
+WHEN removal is requested, worktree MUST check the registered detached checkout, fixed HEAD, common repository, exact ownership marker and clean tracked/untracked content, then remove only that checkout. Missing already-removed checkouts are idempotent; unrelated, changed and dirty checkouts refuse. Manifests/results/logs stay in the common Git directory. Tests: `packages/devkit/tests/e2e/features/isolated_execution/test_lifecycle.py`.

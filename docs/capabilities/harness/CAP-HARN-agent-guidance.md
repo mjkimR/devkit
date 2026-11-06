@@ -495,3 +495,9 @@ The entry runs only on explicit user invocation: native projection disables impl
 opens with the explicit-only guard; no skill, pointer, guide or role suggests it. It inspects no approach, writes only
 its transient run directory and one indexed material under `docs/materials/`, and never commits: its report directs
 the commit through the project's Git policy.
+
+## Local-orchestrated verification
+
+The source local-orch skill SHOULD start with one outstanding isolated E2E run after synchronous required unit/integration checks and preserve selected-tier full fallback. It launches native argv at fixed A, backgrounds one `exec wait --clean` through the tool, continues independent work and collects its result. Tool notification limits, default retention and separate execution/cleanup outcomes remain explicit (`CAP-HARN-isolated-execution`).
+
+WHILE main advances, the Host MUST retain the earliest uncovered interval, including generated repairs, and MUST NOT label A's result as testing descendant C. Before completion, current landed HEAD needs required synchronous results and passing required E2E there or an explicit empty E2E selection across the complete uncovered interval. At the next failed/unknown result check, hold further merges and prioritize repair without merge replay or automatic rollback. Git-operator remains a Git executor. Source guidance tests cover launch/work/collection ordering; actual Host compliance is Review only (`ADR-isolated-test-runs`).

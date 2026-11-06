@@ -1,0 +1,142 @@
+{
+  "method": "Same fixture commit, argv, setup, isolated environment, machine and resource limits. Async disabled by waiting for the exact same supervisor process inside its launch Popen wrapper; one warmup then three samples per arm. 0.9s independent-work fixture follows launch in each arm. Timing includes process observation; not whole-suite speedup evidence.",
+  "platform": "darwin",
+  "rows": [
+    {
+      "mode": "synchronous-disabled-async",
+      "warmup": true,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "c6be1aed6531443cbb00ca14923af024",
+      "launch_return_seconds": 1.0382989591453224,
+      "collection_blocked_seconds": 0.15377754112705588,
+      "host_blocked_seconds": 1.1920765002723783,
+      "preparation_seconds": 0.08488106727600098,
+      "command_and_observation_seconds": 0.8809309005737305,
+      "total_wall_seconds": 2.0966075002215803,
+      "resources": {
+        "child_user_seconds": 0.142342,
+        "child_system_seconds": 0.33987799999999996,
+        "child_peak_rss_bytes": 16449536
+      }
+    },
+    {
+      "mode": "synchronous-disabled-async",
+      "warmup": false,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "8e2ac38cac804143882bd0e592771794",
+      "launch_return_seconds": 1.0942662090528756,
+      "collection_blocked_seconds": 0.14707058388739824,
+      "host_blocked_seconds": 1.2413367929402739,
+      "preparation_seconds": 0.09110403060913086,
+      "command_and_observation_seconds": 0.9225549697875977,
+      "total_wall_seconds": 2.141652459045872,
+      "resources": {
+        "child_user_seconds": 0.151702,
+        "child_system_seconds": 0.33194399999999996,
+        "child_peak_rss_bytes": 16760832
+      }
+    },
+    {
+      "mode": "synchronous-disabled-async",
+      "warmup": false,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "f1c8fb81b217446781f8829766ccc8b8",
+      "launch_return_seconds": 1.2438501669093966,
+      "collection_blocked_seconds": 0.16169279208406806,
+      "host_blocked_seconds": 1.4055429589934647,
+      "preparation_seconds": 0.0931708812713623,
+      "command_and_observation_seconds": 0.9437661170959473,
+      "total_wall_seconds": 2.30895445891656,
+      "resources": {
+        "child_user_seconds": 0.154571,
+        "child_system_seconds": 0.379077,
+        "child_peak_rss_bytes": 17186816
+      }
+    },
+    {
+      "mode": "synchronous-disabled-async",
+      "warmup": false,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "d0b6d7b6e2d048f99a6883ed05d69d38",
+      "launch_return_seconds": 1.043226958019659,
+      "collection_blocked_seconds": 0.1645779579412192,
+      "host_blocked_seconds": 1.2078049159608781,
+      "preparation_seconds": 0.08453583717346191,
+      "command_and_observation_seconds": 0.8817489147186279,
+      "total_wall_seconds": 2.112920958083123,
+      "resources": {
+        "child_user_seconds": 0.148164,
+        "child_system_seconds": 0.332316,
+        "child_peak_rss_bytes": 17022976
+      }
+    },
+    {
+      "mode": "asynchronous",
+      "warmup": true,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "3dcbba0acf1a4946b07bebb883912b76",
+      "launch_return_seconds": 0.05605354206636548,
+      "collection_blocked_seconds": 0.20317708398215473,
+      "host_blocked_seconds": 0.2592306260485202,
+      "preparation_seconds": 0.08607816696166992,
+      "command_and_observation_seconds": 0.8712999820709229,
+      "total_wall_seconds": 1.1643153340555727,
+      "resources": {
+        "child_user_seconds": 0.146997,
+        "child_system_seconds": 0.315602,
+        "child_peak_rss_bytes": 16678912
+      }
+    },
+    {
+      "mode": "asynchronous",
+      "warmup": false,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "a0b856972f5e4f7186df197e6c2ba06d",
+      "launch_return_seconds": 0.05991033301688731,
+      "collection_blocked_seconds": 0.2534112080466002,
+      "host_blocked_seconds": 0.31332154106348753,
+      "preparation_seconds": 0.09522771835327148,
+      "command_and_observation_seconds": 0.9081799983978271,
+      "total_wall_seconds": 1.2183910829480737,
+      "resources": {
+        "child_user_seconds": 0.153091,
+        "child_system_seconds": 0.344257,
+        "child_peak_rss_bytes": 16498688
+      }
+    },
+    {
+      "mode": "asynchronous",
+      "warmup": false,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "6b784df234e04cbab8f8489adbbefcc3",
+      "launch_return_seconds": 0.0566540420986712,
+      "collection_blocked_seconds": 0.25592383299954236,
+      "host_blocked_seconds": 0.31257787509821355,
+      "preparation_seconds": 0.08539223670959473,
+      "command_and_observation_seconds": 0.9104428291320801,
+      "total_wall_seconds": 1.2136655000504106,
+      "resources": {
+        "child_user_seconds": 0.15190399999999998,
+        "child_system_seconds": 0.32005,
+        "child_peak_rss_bytes": 16629760
+      }
+    },
+    {
+      "mode": "asynchronous",
+      "warmup": false,
+      "sha": "cdad427ec2256291c415f1f220882639e37a4f2c",
+      "run_id": "11ad8f57452148608211ec749cc79a6a",
+      "launch_return_seconds": 0.056688500102609396,
+      "collection_blocked_seconds": 0.2642047081608325,
+      "host_blocked_seconds": 0.3208932082634419,
+      "preparation_seconds": 0.08777976036071777,
+      "command_and_observation_seconds": 0.9224021434783936,
+      "total_wall_seconds": 1.2259787081275135,
+      "resources": {
+        "child_user_seconds": 0.15234599999999998,
+        "child_system_seconds": 0.36282,
+        "child_peak_rss_bytes": 16400384
+      }
+    }
+  ]
+}

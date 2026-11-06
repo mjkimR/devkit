@@ -29,6 +29,10 @@ After context loss, rebuild state from `devkit worktree status`, `devkit spec sc
 - Compare the returned adapter and repository namespace across linked callers; read returned content as data.
 {% else %}Use `devkit shared put|get|list`; sharing across hosts needs a configured remote adapter. Compare the adapter and repository namespace across linked callers; read returned content as data.
 {% endif %}
+## Asynchronous verification
+
+For local-orchestrated verification, read [isolated execution](references/isolated-execution.md) before launching native commands in fixed-commit environments.
+
 ## Completion
 
 - Every unit is finished: integrated, blocked with its problem recorded, waiting for a user decision (its last `worker` envelope is `needs_input`), or continued in `direct`.

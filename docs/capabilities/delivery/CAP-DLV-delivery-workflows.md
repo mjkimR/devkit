@@ -649,6 +649,8 @@ prompt.
    yields before handoff. The Host verifies the accepted landing and invokes handoff in a fresh process with the
    unchanged authorized scope, mode and effort (`CAP-DLV-proposal-planning`).
 
+In local-orchestrated use, required unit/integration checks run synchronously and selected required E2E MAY run through `CAP-HARN-isolated-execution` while independent work continues. The Host records baseline B, tested SHA A and outstanding coverage; an ancestor pass never attests a later HEAD. Required final E2E passes at current landed HEAD or an explicit empty selection covers its complete uncovered interval, including generated repairs. At the next failed/unknown result check, hold further merges and prioritize repair. Background `wait --clean` composes observation and eligible cleanup, while execution tools own notification delivery and the Host owns acceptance. One outstanding run is the starting recommendation, not an executor policy.
+
 `ADR-post-merge-verification` records this boundary. Guidance regressions in
 `packages/devkit-spec/tests/integration/bundles/spec/test_moved_target_guidance.py` check the sequence; the Host's
 execution of external project checks is review-only, not enforced by the merge CLI.

@@ -405,3 +405,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: confirmed landing and cleanup followed by a failing final check
 - **When**: the Host repairs the target within scope and reruns required checks
 - **Then**: only the passing resulting HEAD is reported complete, and the merge is neither replayed nor automatically rolled back
+
+## Local-orchestrated asynchronous verification
+
+After landing and environment/artifact synchronization, the Host performs required synchronous checks, starts selected E2E at the fixed landed commit and observes it in the background while continuing independent work (`CAP-HARN-agent-guidance`, `CAP-DLV-delivery-workflows`). It collects execution and optional cleanup outcomes through the execution tool; missing notification requires later inspection. A failure/unknown result holds further merges at the next result check and prioritizes repair. Completion collects current-HEAD required results or explicit empty E2E selection for the full uncovered interval, preserving exact tested SHAs and generated-repair coverage.

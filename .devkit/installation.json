@@ -665,12 +665,15 @@
         ".agents/skills/spec-orchestrate/agents/openai.yaml",
         ".agents/skills/spec-orchestrate/references/git-operator-dispatch.md",
         ".agents/skills/spec-orchestrate/references/git-operator-operations.md",
+        ".agents/skills/spec-orchestrate/references/isolated-execution.md",
         ".claude/skills/spec-orchestrate/SKILL.md",
         ".claude/skills/spec-orchestrate/references/git-operator-dispatch.md",
         ".claude/skills/spec-orchestrate/references/git-operator-operations.md",
+        ".claude/skills/spec-orchestrate/references/isolated-execution.md",
         ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md",
         ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-dispatch.md",
-        ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-operations.md"
+        ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-operations.md",
+        ".devkit/managed/spec/skills/spec-orchestrate/references/isolated-execution.md"
       ]
     },
     {
@@ -1140,7 +1143,7 @@
     },
     ".agents/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "c9b63c67c142d439a9e8a1edd5b88144d759e0ee00360f2e9a363f9957d56a99"
+      "sha256": "b671c71149ede8b89f5f84a0345e6355812c263c91a68639c9f68cf1fa2c2f8f"
     },
     ".agents/skills/spec-orchestrate/agents/openai.yaml": {
       "mode": 420,
@@ -1153,6 +1156,10 @@
     ".agents/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
       "sha256": "cd88e5adad5ea22996037999b50a466b0547d4d28cb4820159008bde0114e3ef"
+    },
+    ".agents/skills/spec-orchestrate/references/isolated-execution.md": {
+      "mode": 420,
+      "sha256": "8e12ba40f6792cb37a84d2ad794a5acd34d44a0da7e554b1d3262982fcd64482"
     },
     ".agents/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1220,7 +1227,7 @@
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "ec1dec89fb3c3db9468a393e5d681fdaf3924aa07b5cffbb9049170bfd265fb9"
+      "sha256": "c180e4a970cb40111c96c1ba99e0320e693b952fbbbad21b368efb3eac8b6d3b"
     },
     ".agents/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -1424,7 +1431,7 @@
     },
     ".claude/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "03fc2cabf2d4ad8817f74e0a4890ca6b7db1a5c91f644547dc569f05baa20668"
+      "sha256": "58b6b7118fa27ce085ab99572167bb268cfc00e54e6d849bb0fc2827b7010bf9"
     },
     ".claude/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
@@ -1433,6 +1440,10 @@
     ".claude/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
       "sha256": "cd88e5adad5ea22996037999b50a466b0547d4d28cb4820159008bde0114e3ef"
+    },
+    ".claude/skills/spec-orchestrate/references/isolated-execution.md": {
+      "mode": 420,
+      "sha256": "8e12ba40f6792cb37a84d2ad794a5acd34d44a0da7e554b1d3262982fcd64482"
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1500,7 +1511,7 @@
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "ec1dec89fb3c3db9468a393e5d681fdaf3924aa07b5cffbb9049170bfd265fb9"
+      "sha256": "c180e4a970cb40111c96c1ba99e0320e693b952fbbbad21b368efb3eac8b6d3b"
     },
     ".claude/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -2172,7 +2183,7 @@
     },
     ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "c9b63c67c142d439a9e8a1edd5b88144d759e0ee00360f2e9a363f9957d56a99"
+      "sha256": "b671c71149ede8b89f5f84a0345e6355812c263c91a68639c9f68cf1fa2c2f8f"
     },
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-dispatch.md": {
       "mode": 420,
@@ -2181,6 +2192,10 @@
     ".devkit/managed/spec/skills/spec-orchestrate/references/git-operator-operations.md": {
       "mode": 420,
       "sha256": "cd88e5adad5ea22996037999b50a466b0547d4d28cb4820159008bde0114e3ef"
+    },
+    ".devkit/managed/spec/skills/spec-orchestrate/references/isolated-execution.md": {
+      "mode": 420,
+      "sha256": "8e12ba40f6792cb37a84d2ad794a5acd34d44a0da7e554b1d3262982fcd64482"
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -2248,7 +2263,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "ec1dec89fb3c3db9468a393e5d681fdaf3924aa07b5cffbb9049170bfd265fb9"
+      "sha256": "c180e4a970cb40111c96c1ba99e0320e693b952fbbbad21b368efb3eac8b6d3b"
     },
     ".devkit/managed/spec/skills/spec/references/depth-and-close.md": {
       "mode": 420,

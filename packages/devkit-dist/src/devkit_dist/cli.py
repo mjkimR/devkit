@@ -67,6 +67,7 @@ COMMANDS: dict[str, str] = {
 # The command names devkit-agt mounts through devkit.commands. Names only, consulted last: an installed command of
 # the name always wins, and the list is never shown by ``--help``.
 HARNESS_COMMANDS: tuple[str, ...] = (
+    "exec",
     "rules",
     "workflow",
     "gate",
