@@ -95,3 +95,48 @@ Keep this draft in Backlog until explicit pickup. Planning settles task-brief de
 acceptance and handoff follow the existing proposal lifecycle. One spec can deliver the guidance, affected asset
 tests and Living Spec reconciliation. Completion requires the acceptance scenarios and relevant repository checks;
 no runtime or model-performance claim follows from document validation.
+
+## 5. Planning decisions
+
+### Assignment and scheduling
+
+Reuse the existing delegation payload rather than create a second schema. When a task is split, each assignment
+names its deliverable, single owner, dependency or `none`, completion evidence and expected handoff. Existing
+source identity, permissions, absolute boundaries, checks, stop condition and capacity limits remain required.
+Record the shared interface and its owner only when another unit relies on that interface. A prose handoff in the
+assignment is sufficient; no graph file or persistent registry is required.
+
+If a shared contract is unsettled and concurrent writers depend on it, first resolve it through a bounded contract
+assignment or sequence the dependent writers. Once the interface is agreed, independent implementations may run
+concurrently in separate worktrees. A task whose handoff and coordination cost exceeds its expected benefit stays
+direct. Unknown isolation or capacity uses the existing serial fallback. A file boundary alone is not proof of
+independence.
+
+### Role-specific checks
+
+The architect identifies deliverables, blocking dependencies, interface ownership and assumptions that could
+invalidate the split. The builder checks implementation against the agreed interface and reports an unresolved
+mismatch instead of changing another owner's contract. The qa-tester exercises the assigned representative flow
+and reports expected versus observed behavior with reproduction and coverage limits. The reviewer examines the
+actual assigned diff for correctness, regressions, caller compatibility and relevant failure handling; it labels
+unproven concerns as hypotheses. These checks apply only within the assignment and grant no new authority.
+
+### Verification and retained impact
+
+Development checks the consumer-facing installed assets and preserves the existing source-to-projection constraints.
+Review each AC against concrete representative assignments, including the shared-interface case and the serial
+fallback; use deterministic packaging checks only for their actual file/projection guarantees. Agent execution
+behavior is not proven by keyword tests and can be evaluated separately by PROP-adaptive-behavior-evaluation.
+Update CAP-DLV-adaptive-development and the affected use case only where retained behavior changes; apply the
+repository's agent-asset authoring and document guidance during Development. `dev_effort: medium` remains suitable:
+the change crosses role and orchestration instructions but does not change the execution runtime or public IDs.
+
+Each dependent assignment receives the agreed interface and its source or artifact identity. If its worktree does
+not contain that version, include the identified contract as an explicit input or defer the assignment until its
+base contains it. If the interface changes, reassess affected assignments before accepting their results.
+
+Before Development reports these semantic scenarios covered, review at least three representative assignment
+fixtures: independent deliverables, disjoint files sharing an API, and isolation unavailable. For each, assess
+ownership, interface identity, dependency ordering and expected handoff against the proposed guidance. Review all
+four overlays against their assigned responsibilities and authority limits. Record fixture inputs, observations,
+reviewer and unresolved gaps. This is a contract review, not an observed live-agent execution.
