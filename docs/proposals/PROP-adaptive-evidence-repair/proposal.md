@@ -2,7 +2,7 @@
 id: PROP-adaptive-evidence-repair
 title: Adaptive failure verification and bounded repair
 summary: "Guide risk-based failure verification and evidence-driven repair, retaining only the recovery facts needed to resume adaptive development."
-status: draft
+status: reviewing
 created_at: 2026-11-07
 target_area: capabilities/delivery/
 priority: high
