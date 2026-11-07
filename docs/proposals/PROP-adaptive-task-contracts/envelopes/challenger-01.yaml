@@ -1,0 +1,26 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-07T13:21:42.590075Z'
+status: completed
+summary: Two P2 gaps in interface propagation and observable semantic review
+findings:
+- issue: Dependent assignments may not receive the agreed interface and source identity.
+  evidence: Proposal candidate design and AC-01; adaptive orchestration requires separate worktrees and source identities.
+  failure_condition: A contract changes after worker worktrees are created and dependent workers use different stale assumptions.
+  resolution: open
+  severity: P2
+- issue: Semantic acceptance lacks an observable verification method.
+  evidence: Proposal AC-01 to AC-05 and CAP-DLV-adaptive-development distinguish semantic behavior from packaging checks.
+  failure_condition: Asset checks pass without a representative assessment of the coordination and role instructions.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated role; read scope and Git status checked, no native path enforcement
+unverified_areas:
+- No live agent behavior or comparative performance tested
+checks: {}
+diff_scope:
+  base: ''
+  head: c60099ecffb2a25f482d5be2d0c9dbd1bbc4522c
