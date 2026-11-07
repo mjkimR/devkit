@@ -35,6 +35,9 @@ def processes() -> dict[int, dict[str, Any]]:
         ["ps", "-axo", "pid=,ppid=,pgid=,lstart=,stat=,args="], capture_output=True, text=True, check=True
     )
     found: dict[int, dict[str, Any]] = {}
+    boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip() if sys.platform.startswith("linux") else ""
+    if sys.platform.startswith("linux") and not boot_id:
+        raise RuntimeError("Linux boot identity is unavailable")
     for line in result.stdout.splitlines():
         parts = line.split(None, 9)
         if len(parts) != 10:
@@ -42,12 +45,14 @@ def processes() -> dict[int, dict[str, Any]]:
         pid, ppid, pgid = map(int, parts[:3])
         if parts[8].startswith("Z"):
             continue
-        # Linux exposes a finer start identity than ps's second resolution.
+        # Linux ps wall-clock start times can change across snapshots. Pair the
+        # kernel start ticks with the boot identity to detect PID reuse, including
+        # reuse after a reboot. Older records fail closed against this format.
         birth = " ".join(parts[3:8])
         proc = Path(f"/proc/{pid}/stat")
         if sys.platform.startswith("linux"):
             try:
-                birth += ":" + proc.read_text().rsplit(")", 1)[1].split()[19]
+                birth = f"linux:{boot_id}:" + proc.read_text().rsplit(")", 1)[1].split()[19]
             except (OSError, IndexError):
                 continue
         found[pid] = {"pid": pid, "ppid": ppid, "pgid": pgid, "birth": birth, "argv": parts[9]}
