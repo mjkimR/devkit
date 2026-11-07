@@ -2,7 +2,7 @@
 id: PROP-adaptive-task-contracts
 title: Adaptive task decomposition and role specialization
 summary: "Strengthen adaptive task decomposition and role overlays with explicit interfaces, ownership and completion evidence while preserving optional delegation."
-status: draft
+status: reviewing
 created_at: 2026-11-07
 target_area: capabilities/delivery/
 priority: high
