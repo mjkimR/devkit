@@ -2,7 +2,7 @@
 id: PROP-adaptive-evidence-repair
 title: Adaptive failure verification and bounded repair
 summary: "Guide risk-based failure verification and evidence-driven repair, retaining only the recovery facts needed to resume adaptive development."
-status: draft
+status: accepted
 created_at: 2026-11-07
 target_area: capabilities/delivery/
 priority: high
@@ -73,12 +73,31 @@ automatic deletion of failed work, runtime retry engine and new feature dependen
 - Preserve active, dirty and unmerged work under existing recovery authority. Clean up only assigned disposable
   probe outputs and processes; no blanket cleanup or separate immutable experiment history.
 
+### Planning decisions and verification
+
+- Keep an assignment's own bounds when present. Without one, after two consecutive attempts produce the same
+  symptom and no materially new diagnostic evidence, change strategy before another equivalent attempt. A new
+  observation is material when it changes or tests a causal hypothesis, isolates a dependency, or identifies a
+  distinct failure; a repeat of the same output alone is not progress. This is a diagnostic trigger, not a cap on
+  authorized work or a completion condition. Continue safe, useful diagnosis; report an unresolved blocker only
+  when the next necessary action cannot be performed within authority or available resources.
+- When a probe fails before valid product execution, classify a harness or environment cause only on evidence.
+  Otherwise retain an unknown cause and leave the product unverified. A harness fix must be followed by a valid
+  product probe before claiming the product behavior passed.
+- Development reviews the relevant scenario walkthroughs with concrete inputs, expected actions and an evidence
+  record covering actual behavior, source identity, observations and limitations. Existing packaging tests establish
+  asset/projection properties only. Live agent execution is separate and may be unavailable; report it as unverified
+  rather than implying the walkthrough proves model behavior. Do not gate this change on another proposal.
+- Example: a test fixture fails to start twice with the same import error. Inspect the fixture environment or import
+  path before a third equivalent run; preserve the failed output and leave the product check unverified. A later
+  repaired harness must rerun the product flow.
+
 ### Expected acceptance scenarios
 
 - **AC-01:** Given a changed stateful operation, when verifying it, then the coordinator chooses relevant failure
   and integration probes alongside the normal path and records actual source-specific outcomes.
-- **AC-02:** Given a broken test harness, when the probe fails, then the result identifies a harness failure and
-  leaves product behavior unverified until a valid probe runs.
+- **AC-02:** Given a broken test harness, when the probe fails, then the result classifies a harness failure only when supported by evidence; an ambiguous cause remains unknown.
+  Product behavior stays unverified until a valid probe runs.
 - **AC-03:** Given repeated identical failures without new evidence, when the repair bound or no-progress
   condition is met, then the agent changes diagnostic strategy or reports the unresolved defect and next action.
 - **AC-04:** Given a useful failed attempt before interruption, when checkpointing, then the Host retains its
@@ -100,7 +119,6 @@ These inspected guides motivate candidate behavior; their numeric retry limits a
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this draft until explicit Planning pickup. Planning settles probe selection, repair bounds and checkpoint
-examples. One spec can deliver this guidance and its relevant checks with CAP-DLV-adaptive-development reconciled.
+Keep this draft until explicit Planning pickup. Planning recommends the no-progress trigger and evidence distinctions above; acceptance settles the direction. One spec can deliver this guidance and its relevant checks with CAP-DLV-adaptive-development reconciled.
 PROP-adaptive-task-contracts can proceed independently; coordinate overlapping orchestration edits if developed
 concurrently. PROP-adaptive-behavior-evaluation separately evaluates execution behavior.
