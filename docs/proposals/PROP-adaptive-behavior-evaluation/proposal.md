@@ -2,7 +2,7 @@
 id: PROP-adaptive-behavior-evaluation
 title: Adaptive agent behavior evaluation
 summary: "Evaluate adaptive agent decisions with bounded execution scenarios and observable evidence, separately from asset packaging and projection checks."
-status: reviewing
+status: accepted
 created_at: 2026-11-07
 target_area: capabilities/delivery/
 priority: medium
