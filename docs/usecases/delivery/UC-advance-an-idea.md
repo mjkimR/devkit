@@ -44,6 +44,7 @@ entrypoints:
 - **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
 - **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
 - **5b.** Optional support: the agent delegates a separable question or usage or implementation scope with source/base identity, absolute ownership, permitted actions/Git, checks, stop condition and return fields, verifies actual paths and evidence and folds it into current choices; resumes at step 6.
+- **5b5.** Shared interface: if delegated deliverables depend on an unsettled interface, the coordinator assigns its owner and resolves it before concurrent dependent writes or sequences them. It supplies the agreed identity to dependent assignments and reassesses them if it changes; resumes at step 5.
 - **5b1.** Optional role lead: if useful and supported within the Host-wide allowance, the lead delegates narrowed children at depth at most Host → lead → child, counts waiting leads and verifies its aggregate scope; resumes at step 6.
 - **5b2.** Missing nesting or unknown/exhausted capacity: the Host uses direct, flat or sequential execution with the same result/check contract and no host-setting change; resumes at step 5.
 - **5b3.** Concurrent writers: the Host assigns separate worktrees and exclusive ownership; parents wait before writing in child-owned checkouts. If isolation is unavailable, writers run serially; resumes at step 6.
@@ -135,3 +136,10 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 - **Given**: a fixture fails twice with the same import error before product execution and no material new evidence.
 - **When**: the coordinator assesses the failure and checkpoints before interruption.
 - **Then**: product behavior remains unverified, diagnosis changes before an equivalent retry, and useful recovery facts remain available for applicability checks on resume.
+
+### Scenario 11: Resolve a shared interface before concurrent work
+
+- **Covers**: 5b5
+- **Given**: two disjoint writing assignments depend on an unsettled API.
+- **When**: the coordinator prepares their handoffs.
+- **Then**: it assigns the API owner, resolves the interface or sequences the work, and supplies its identity to dependents.

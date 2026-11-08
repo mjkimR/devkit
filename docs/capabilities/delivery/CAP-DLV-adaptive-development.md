@@ -75,6 +75,19 @@ linking a research material by its ID, and the approach, bundle, entry and conte
     Host → lead → child and fit the Host-wide allowance including waiting leads. Unknown/exhausted capacity or
     unavailable nesting requires direct, flat or sequential fallback without settings changes. The role reports
     native/emulated availability truthfully.
+13a. **Assignment handoff**: WHEN delegating a deliverable, the coordinator MUST name one owner, dependency or
+    none, completion evidence and expected integration handoff alongside the existing assignment fields.
+13b. **Shared interface**: WHEN concurrent writers depend on an unsettled shared interface, the coordinator MUST
+    assign its ownership and resolve it before dependent concurrent writes, or sequence those writers.
+13c. **Interface identity**: WHEN an assignment depends on a shared interface, the coordinator MUST provide the
+    agreed interface and its source or artifact identity; a missing version requires explicit input or deferral.
+    A changed interface requires reassessing dependent assignments before accepting their results.
+13d. **Role checks**: WHERE the architect overlay is used, it MUST identify deliverables, blocking dependencies,
+    interface ownership and assumptions that invalidate the split. WHERE the builder overlay is used, it MUST check
+    the agreed interface and failure handling and report unresolved mismatches. WHERE the qa-tester overlay is used,
+    it MUST report expected and observed behavior, reproduction and coverage limits. WHERE the reviewer overlay is
+    used, it MUST check the actual diff for correctness, regressions, caller compatibility and failure handling and
+    label unproven concerns as hypotheses. No overlay expands caller authority.
 14. **Current context ownership**: WHEN retained resume facts change or work pauses, the coordinator MUST update
     project-owned `.devkit/adaptive-dev.md`; roles return evidence or drafts instead of editing that file. Failure
     checkpoints MUST retain source identity, dirty/unmerged results, active ownership and next recovery action;
