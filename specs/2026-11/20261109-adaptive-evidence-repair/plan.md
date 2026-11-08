@@ -2,29 +2,21 @@
 id: PLAN-adaptive-evidence-repair
 spec: SPEC-adaptive-evidence-repair
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-adaptive-evidence-repair` Adaptive failure verification and bounded repair
+# Technical Plan: `SPEC-adaptive-evidence-repair`
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+No change to `ADR-adaptive-development-and-research` or `CAP-DLV-adaptive-development` ownership, authority or verification invariants is needed.
 
-### Planned Boundaries:
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/evidence-and-iteration.md`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/current-context.md`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/templates/current-context.md`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py`
-- `docs/capabilities/delivery/CAP-DLV-adaptive-development.md`
-- `docs/usecases/delivery/`
-- `docs/decisions/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit-dist/src/`
-- `packages/devkit/src/`
-- `.devkit/managed/`
+Extend the existing adaptive-dev guidance and mutable context template. Keep probe selection and classification in evidence-and-iteration, shared failure routing in orchestration, and resume facts in current-context. No runtime, schema or feature edge is added. Reconcile `CAP-DLV-adaptive-development` and `UC-advance-an-idea`.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 5. Error Handling & Edge Cases
+
+Evidence supports a harness or environment classification; ambiguous cause stays unknown. Failed harness setup never establishes product behavior. Assignment bounds take precedence over the diagnostic fallback. Preserve work and authority in recovery.
+
+## 6. Verification & Test Plan
+
+Review representative walkthroughs for AC-01 through AC-05 with concrete inputs, expected actions, source identity, observed guidance and limits. Run catalog integration packaging checks, relevant asset hygiene, `just lint-check`, `just check`, `just rules-check` and `just test-affected` under repository policy. Packaging does not establish live agent behavior; report live execution separately as unverified if unavailable.
