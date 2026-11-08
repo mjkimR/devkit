@@ -50,6 +50,8 @@ entrypoints:
 - **5b4.** Incompatible overlay or unavailable registered invocation: the Host reports the gap, rejects expanded permissions and selects compatible direct execution or explicitly labelled emulation; resumes at step 5.
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
 - **6a.** Failed retained or combined behavior: the Host routes reproducing evidence to the responsible writer for bounded repair, repeats combined checks and reports an unresolved result at the stop condition; resumes at step 6.
+- **6a1.** Probe fails before valid product execution: the agent classifies a harness or environment cause only on evidence, otherwise keeps the cause unknown and product behavior unverified; resumes at step 6 after a valid probe is available.
+- **6a2.** Identical repair attempts produce no new diagnostic evidence: the agent changes strategy at the applicable bound, or reports an unresolved blocker when the needed next action is unavailable; resumes at step 6 or proceeds to step 7.
 - **6b.** Missing verification evidence: the agent reports the check as unverified and records the gap/next action without claiming successful retained behavior; proceeds to step 7 with that limitation.
 - **7b.** Failure/interruption: the Host collects or stops children, preserves dirty/unmerged results and active ownership, and writes source identity, failed checks and next recovery action to current context before cleanup; the use case pauses.
 - **7a.** Explicit SDD adoption request: the agent explains preparing SDD assets while adaptive development remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
@@ -126,3 +128,10 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 - **Given**: two separable writing assignments and a shared product constraint.
 - **When**: isolated workers pass locally but their combined result fails or work is interrupted.
 - **Then**: the Host retains exact source-specific outcomes, routes bounded repair and preserves dirty/unmerged checkpoints; no worker pass substitutes for combined or applicable landed-target verification.
+
+### Scenario 10: Diagnose a failed probe and preserve recovery
+
+- **Covers**: 6a1, 6a2, 7b
+- **Given**: a fixture fails twice with the same import error before product execution and no material new evidence.
+- **When**: the coordinator assesses the failure and checkpoints before interruption.
+- **Then**: product behavior remains unverified, diagnosis changes before an equivalent retry, and useful recovery facts remain available for applicability checks on resume.

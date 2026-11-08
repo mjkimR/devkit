@@ -1,0 +1,12 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:44:03.532748Z'
+status: completed
+summary: Implementer verified rules 22 and 25 now use MUST under their stated conditions; both targets match the implementation and AC.
+findings: []
+unverified_areas:
+- Live agent execution not observed.
+checks:
+  reverify: PASS capability strength matches AC-01 and AC-04

@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:44:03.288051Z'
+status: completed
+summary: Independent review found capability weakened required probe and recovery outcomes.
+findings:
+- issue: Capability makes required probe selection and recovery retention recommendations.
+  evidence: CAP-DLV-adaptive-development rules 22 and 25 used SHOULD while AC-01 and AC-04 require the outcomes.
+  failure_condition: A coordinator omits relevant probes or useful recovery facts despite the applicable scenario.
+  suggested_action: State the bounded requirements at the strength of the accepted scenarios.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex projection emulated; absolute paths and read-only inspection substitute for native enforcement.
+checks: {}
+diff_scope:
+  base: 56e614f858a0f0dca8bd509d452468c6e7a36057
+  head: 7cef9d7ddc2cfafb3af2134e8b62f63dcc3a6be4
