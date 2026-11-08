@@ -5,23 +5,23 @@ against these assignments; this is a contract walkthrough, not a live-agent exec
 
 ## Independent deliverables
 
-Input: one writer adds a parser, another writes unrelated documentation; no shared interface. Each assignment has
-one owner, dependency `none`, a passing assigned check and a handoff of actual paths and source SHA. The delegation
+Input: writer A adds a CSV parser and writer B edits a usage guide; no shared interface. Each assignment has
+one owner, dependency `none`, a passing parser test or guide lint respectively, and a handoff of actual paths and source SHA. The delegation
 reference requires these fields. No interface identity or ordering is needed. Observation: the two writers can
 proceed in isolated worktrees and the Host checks the combined result. Gaps: none in this fixture.
 
 ## Disjoint files, shared API
 
-Input: writer A defines an API and writer B consumes it in a different file. The coordinator assigns A ownership of
-the interface and sequences B after agreement; B receives the agreed interface and source or artifact identity.
+Input: writer A defines `parse_csv(bytes) -> Rows` in `parser.py` and writer B consumes it in `importer.py`. The coordinator assigns A ownership of
+the interface and sequences B after agreement; B receives `parse_csv(bytes) -> Rows` at source commit `abc1234`.
 If B's base lacks that version, it receives the identified contract or waits. If the interface changes, the Host
 reassesses B before accepting the handoff. Observation: file separation alone does not authorize fanout. Completion
-is each assigned check and a source-specific handoff. Gaps: no runtime enforcement is claimed.
+is `pytest tests/test_parser.py` for A, `pytest tests/test_importer.py` for B, and each handoff names its paths and SHA. Gaps: no runtime enforcement is claimed.
 
 ## Isolation unavailable
 
-Input: a two-file task has an unsettled interface and no worktree isolation. The coordinator retains one owner at a
-time, resolves the interface first, supplies its identity to the dependent assignment and checks the combined result.
+Input: the same `parser.py` and `importer.py` assignment has no worktree isolation. The coordinator retains one owner at a
+time, resolves the interface first, supplies interface `parse_csv(bytes) -> Rows` at `abc1234` to B and runs both parser and importer tests after B hands off its paths and SHA.
 Observation: serial execution keeps the same evidence and handoff without a team or graph file. Gaps: host
 availability is not tested by this walkthrough.
 
