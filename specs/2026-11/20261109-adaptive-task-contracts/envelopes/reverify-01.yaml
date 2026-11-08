@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:54:13.912391Z'
+status: completed
+review: review-01.yaml
+summary: Implementer verified concrete fixture identities and installed projection equality; catalog build and tests pass.
+findings:
+- issue: Representative assignment walkthroughs lack concrete interface identity and completion evidence.
+  evidence: specs/2026-11/20261109-adaptive-task-contracts/walkthrough.md:14
+  failure_condition: A missing or mismatched interface version is not assessed by generic fixtures.
+  suggested_action: Give fixtures concrete interface identity, owners, checks and handoffs.
+  resolution: resolved
+  severity: P2
+- issue: Consumer projection checks do not verify changed reference and overlay assets.
+  evidence: packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py:40
+  failure_condition: A missing or stale changed asset can escape existing entry skill and agent existence assertions.
+  suggested_action: Verify changed source to projection content and package build.
+  resolution: resolved
+  severity: P2
+checks:
+  catalog: PASS 12 tests
+  build: PASS wheel and sdist
+  format: PASS ruff
+diff_scope:
+  base: ''
+  head: c11cdef1a7566aa3057ed6d95d85c7b30af51e11
