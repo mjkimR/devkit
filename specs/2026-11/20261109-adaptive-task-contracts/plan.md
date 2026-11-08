@@ -2,29 +2,22 @@
 id: PLAN-adaptive-task-contracts
 spec: SPEC-adaptive-task-contracts
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-adaptive-task-contracts` Adaptive task decomposition and role specialization
+# Technical Plan: `SPEC-adaptive-task-contracts`
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+No architectural invariant changes. Existing caller authority and isolated-writer boundaries remain in force.
+No feature dependency edge is introduced.
 
-### Planned Boundaries:
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/delegation.md`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/roles/`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/subagents/swarm-planner.md`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py`
-- `docs/capabilities/delivery/CAP-DLV-adaptive-development.md`
-- `docs/usecases/delivery/`
-- `docs/decisions/`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit-dist/src/`
-- `packages/devkit/src/`
-- `.devkit/managed/`
+Extend the adaptive bundle's delegation and orchestration references and four role overlays. The swarm planner
+retains read-only authority while describing dependencies. Update `CAP-DLV-adaptive-development` and
+`UC-advance-an-idea` with retained behavior. No runtime API or storage changes.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 6. Verification & Test Plan
+
+Review three concrete assignment fixtures and all four overlays against AC-01 through AC-04. Check installed
+consumer assets and run catalog integration packaging/projection tests for AC-05. Run `just lint-check`,
+`just check`, `just rules-check` and `just test-affected`; report live agent execution as unverified.
