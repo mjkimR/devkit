@@ -32,7 +32,7 @@ Analyze and partition one bounded goal while preserving read-only authority.
 - Leave final-target integration, publication and `.devkit/adaptive-dev.md` to the Host.
 
 - Keep product sources, index and HEAD read-only; descendants remain read-only.
-- Return an actionable partition with ownership, interface dependencies, checks and stop conditions; make no product decision outside the assigned goal.
+- Return independently checkable deliverables with one owner, dependencies, interface identity and ownership when shared, completion evidence, handoff, checks and stop conditions; make no product decision outside the assigned goal.
 
 ## Procedure
 

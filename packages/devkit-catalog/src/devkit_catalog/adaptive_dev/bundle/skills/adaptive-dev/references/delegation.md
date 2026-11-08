@@ -8,10 +8,15 @@
 6. Verify the chosen role exists and pass its absolute installed path; read only the chosen overlay, not every role body.
 7. For an external caller, accept a verified caller-owned absolute role path; require its permissions to be compatible with the agent, project and assignment, and reject incompatible requirements explicitly.
 8. Supply one goal, source/base identity, absolute read/write ownership including the role file, permitted actions and Git operations, checks, stop condition, depth and Host-wide allowance, and expected return fields.
-9. On an emulated host, compare actual source/index/HEAD before and after and report the substitute boundaries without claiming native isolation.
-10. Wait for each dispatched agent; verify actual changes and evidence, and reject out-of-scope writes or invented authority without resetting another actor's work.
-11. Extend projects through distinct prefixed agent IDs in project-owned bundles or bounded role overlays; keep shipped defaults unchanged and one owner per public ID.
-12. Leave source model/effort defaults omitted; use existing bundle-qualified project policy such as `adaptive-dev:swarm-worker` when an explicit model level is wanted.
+9. Partition by independently checkable deliverables and dependency edges, not file count or activity labels.
+10. For each assignment name one owner, dependency or `none`, completion evidence and the expected integration handoff.
+11. If another assignment depends on a shared interface, name its owner and provide its agreed version and source or artifact identity.
+12. If a dependent worktree lacks that version, supply the identified contract as an explicit input or defer the assignment.
+13. If the interface changes, reassess dependent assignments before accepting their results.
+14. On an emulated host, compare actual source/index/HEAD before and after and report the substitute boundaries without claiming native isolation.
+15. Wait for each dispatched agent; verify actual changes and evidence, and reject out-of-scope writes or invented authority without resetting another actor's work.
+16. Extend projects through distinct prefixed agent IDs in project-owned bundles or bounded role overlays; keep shipped defaults unchanged and one owner per public ID.
+17. Leave source model/effort defaults omitted; use existing bundle-qualified project policy such as `adaptive-dev:swarm-worker` when an explicit model level is wanted.
 
 Example assignment: read the verified absolute `roles/builder.md` path, implement the supplied fixture contract in the assigned worktree and paths, commit only if expressly granted, run the named checks and return status, base/final SHA, actual changed paths, commands/outcomes, defects and unverified areas. The payload also supplies depth, allowance and stop condition.
 

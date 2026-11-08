@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:56:50.758474Z'
+status: completed
+summary: Bounded assignment and role guidance implemented; three concrete fixtures, installed projections and independent reviews verified.
+findings: []
+unverified_areas:
+- Live agent behavior and quantitative baseline measurement
+checks:
+  tests: PASS just test-affected 147 and catalog 12
+  build: PASS catalog wheel and sdist
+  lint: PASS just lint-check, just check, just rules-check and changed test ruff
+diff_scope:
+  base: ''
+  head: 5ca705207b2c5b513b586148a3a45e35438ac534

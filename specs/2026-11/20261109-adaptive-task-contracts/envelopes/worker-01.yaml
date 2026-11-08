@@ -1,0 +1,19 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:57:05.474781Z'
+status: completed
+summary: Completed task contract guidance, concrete walkthroughs, projection checks and Living Spec reconciliation. Codex role is emulated; absolute paths, per-operation approvals and diff checks substitute for native enforcement.
+findings: []
+unverified_areas:
+- Live agent behavior and quantitative before/after baseline were not observed; three fixtures reviewed on source 0257205d.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 147; catalog 12
+  lint: PASS just lint-check, just check, just rules-check; changed test ruff
+  build: PASS catalog wheel and sdist
+diff_scope:
+  base: ce55a31f0ded1d39a37a70489830c4dfd286b967
+  head: 401ced9ccfac19b173bef41e4d363e702fc17181
+activity_effort: medium

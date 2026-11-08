@@ -1,0 +1,23 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:55:30.409818Z'
+status: completed
+summary: Independent reconciliation found missing role responsibility detail.
+findings:
+- issue: Capability does not identify distinct checks for the four overlays.
+  evidence: docs/capabilities/delivery/CAP-DLV-adaptive-development.md:85
+  failure_condition: A reader cannot determine each role responsibility from the Living Spec.
+  suggested_action: Describe each overlay's principal checks while retaining its authority limit.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated; absolute scope and Git checks substitute for native boundaries.
+unverified_areas:
+- Live agent execution
+checks: {}
+diff_scope:
+  base: ''
+  head: 349368bfb8b67a45ae1ce0e8e7bcd309dcb13ace
+activity_effort: medium

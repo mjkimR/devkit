@@ -45,6 +45,25 @@ def test_adaptive_dev_projects_roles_and_entry_without_seeding_product_state(tmp
     assert (tmp_path / ".agents/skills/adaptive-dev/SKILL.md").read_bytes() == (
         managed / "skills/adaptive-dev/SKILL.md"
     ).read_bytes()
+    for relative in (
+        "references/delegation.md",
+        "references/orchestration.md",
+        "roles/architect.md",
+        "roles/builder.md",
+        "roles/qa-tester.md",
+        "roles/reviewer.md",
+    ):
+        source = BUNDLE / "skills/adaptive-dev" / relative
+        assert (managed / "skills/adaptive-dev" / relative).read_bytes() == source.read_bytes()
+        for projection in (".agents/skills/adaptive-dev", ".claude/skills/adaptive-dev"):
+            assert (tmp_path / projection / relative).read_bytes() == source.read_bytes()
+    planner = read_contract((BUNDLE / "subagents/swarm-planner.md").read_bytes(), "adaptive-dev", "swarm-planner")
+    assert (
+        planner.body
+        in tomllib.loads((tmp_path / ".codex/agents/swarm-planner.toml").read_text())["developer_instructions"]
+    )
+    for projection in (".claude/agents/swarm-planner.md", ".agents/agents/swarm-planner.md"):
+        assert planner.body.rstrip() in (tmp_path / projection).read_text()
     for role in ROLES | SWARM:
         assert (tmp_path / f".codex/agents/{role}.toml").is_file()
         assert (tmp_path / f".claude/agents/{role}.md").is_file()
