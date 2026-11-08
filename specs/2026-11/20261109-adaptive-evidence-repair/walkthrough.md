@@ -1,6 +1,6 @@
 # Evidence and recovery walkthroughs
 
-Source: `ffa78d56` plus the adaptive-dev guidance diff in this worktree. Reviewer: Development worker. These are contract walkthroughs, not live model execution; installed packaging tests do not establish agent decisions.
+Source: guidance at commit `cbb4c82b85edac460ef0588838591e39e089ec0c`, reviewed against `56e614f858a0f0dca8bd509d452468c6e7a36057`. Reviewer: Development worker. These are contract walkthroughs, not live model execution; installed packaging tests do not establish agent decisions.
 
 | Input | Expected action | Observation and limit |
 | --- | --- | --- |
