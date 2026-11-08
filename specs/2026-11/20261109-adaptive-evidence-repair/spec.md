@@ -1,35 +1,22 @@
 ---
-id: PROP-adaptive-evidence-repair
+id: SPEC-adaptive-evidence-repair
 title: Adaptive failure verification and bounded repair
-summary: "Guide risk-based failure verification and evidence-driven repair, retaining only the recovery facts needed to resume adaptive development."
-status: accepted
-created_at: 2026-11-07
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/evidence-and-iteration.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/current-context.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/templates/current-context.md
-  - packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py
-  - docs/capabilities/delivery/CAP-DLV-adaptive-development.md
-  - docs/usecases/delivery/
-  - docs/decisions/
-  excludes:
-  - packages/devkit-dist/src/
-  - packages/devkit/src/
-  - .devkit/managed/
-task_kind: feature
-workflow: sdd-proposal
+summary: Guide risk-based failure verification and evidence-driven repair, retaining only the recovery facts needed to resume adaptive development.
+status: planned
+created: 2026-11-09
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-adaptive-evidence-repair] Adaptive failure verification and bounded repair
+# [SPEC-adaptive-evidence-repair] Adaptive failure verification and bounded repair
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-adaptive-evidence-repair on 2026-11-09.
+
+### 1. Background & Hypothesis
 
 CAP-DLV-adaptive-development requires representative usage, truthful evidence, bounded repair and failure
 checkpoints. It does not explain how to select relevant failure paths or distinguish repeated effort from new
@@ -39,13 +26,32 @@ facts rather than an additional memory subsystem.
 The hypothesis is that risk-based failure probes and evidence-based repair decisions reduce false completion and
 repeated unsuccessful attempts while preserving lightweight adaptive iteration.
 
-### Scope and exclusions
+#### Scope and exclusions
 
 Extend verification, repair and current-context guidance as one evidence-to-recovery loop. Exclude a universal
 adversarial test matrix, fixed QA pipeline, mandatory screenshots or scores, new state store, transcript retention,
 automatic deletion of failed work, runtime retry engine and new feature dependency edges.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Adaptive failure verification and bounded repair so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1:** How should the coordinator select a normal path, a relevant failure path and an integration edge, allowing
   inapplicable cases to be omitted and unavailable checks to remain explicitly unverified?
@@ -54,9 +60,9 @@ automatic deletion of failed work, runtime retry engine and new feature dependen
   treating elapsed time as permission? Compare an assignment-specific bound with a small fallback bound.
 - **Q4:** Which failed attempts still affect the next action and belong in mutable current context?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Candidate design
+#### Candidate design
 
 - Select checks from the actual changed behavior and consequence of failure. Consider malformed input, duplicate
   execution, cancellation/resume, stale state and partial failure only when relevant. Keep probes bounded and
@@ -73,7 +79,7 @@ automatic deletion of failed work, runtime retry engine and new feature dependen
 - Preserve active, dirty and unmerged work under existing recovery authority. Clean up only assigned disposable
   probe outputs and processes; no blanket cleanup or separate immutable experiment history.
 
-### Planning decisions and verification
+#### Planning decisions and verification
 
 - Keep an assignment's own bounds when present. Without one, after two consecutive attempts produce the same
   symptom and no materially new diagnostic evidence, change strategy before another equivalent attempt. A new
@@ -92,7 +98,7 @@ automatic deletion of failed work, runtime retry engine and new feature dependen
   path before a third equivalent run; preserve the failed output and leave the product check unverified. A later
   repaired harness must rerun the product flow.
 
-### Expected acceptance scenarios
+#### Expected acceptance scenarios
 
 - **AC-01:** Given a changed stateful operation, when verifying it, then the coordinator chooses relevant failure
   and integration probes alongside the normal path and records actual source-specific outcomes.
@@ -105,7 +111,7 @@ automatic deletion of failed work, runtime retry engine and new feature dependen
 - **AC-05:** Given a low-impact stateless change, when choosing probes and notes, then the agent omits irrelevant
   adversarial scenarios and unnecessary history. Existing context and unmerged work remain preserved.
 
-### Evidence and references
+#### Evidence and references
 
 These inspected guides motivate candidate behavior; their numeric retry limits are not adopted by this draft:
 - [OMX UltraQA](https://github.com/Yeachan-Heo/oh-my-codex/blob/HEAD/skills/ultraqa/SKILL.md): dynamic failure scenarios,
@@ -117,8 +123,9 @@ These inspected guides motivate candidate behavior; their numeric retry limits a
 - [OmO memory overview](https://github.com/code-yeongyu/oh-my-openagent/blob/HEAD/README.md): avoid repeating mistakes;
   use existing current context instead of importing the memory runtime.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Keep this draft until explicit Planning pickup. Planning recommends the no-progress trigger and evidence distinctions above; acceptance settles the direction. One spec can deliver this guidance and its relevant checks with CAP-DLV-adaptive-development reconciled.
 PROP-adaptive-task-contracts can proceed independently; coordinate overlapping orchestration edits if developed
 concurrently. PROP-adaptive-behavior-evaluation separately evaluates execution behavior.
+
