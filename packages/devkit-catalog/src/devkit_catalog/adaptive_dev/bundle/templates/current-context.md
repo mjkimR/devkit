@@ -18,6 +18,8 @@ Setup/run/check commands and required environment. For each observed result, nam
 
 Unresolved product or technical decisions and missing evidence that still affect work. When research notes exist, link their current evidence, surviving alternatives and conditions that would reopen a choice; link a retained research material by its `MAT-<slug>` ID.
 
+When a failed approach still affects work, record its reason, source identity, owner, surviving hypothesis, retry condition and recovery action. Recheck applicability on resume.
+
 ## Next useful action
 
 One next executable action and what its result will decide. Link current product documents or retained evidence when present.

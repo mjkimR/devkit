@@ -103,6 +103,11 @@ linking a research material by its ID, and the approach, bundle, entry and conte
     preserve active, dirty or unmerged worktrees until results are retained or removal has separate authority.
     Failed combined checks return to bounded repair with reproducing evidence or an explicit unresolved result.
 
+22. **Risk-based probes**: WHEN verifying a change, the coordinator MUST choose normal, relevant failure and integration probes from the changed behavior and consequence of failure and retain the expected signal, actual interaction, source identity, outcome and limitation.
+23. **Probe classification**: IF a probe fails before valid product execution, THEN the coordinator MUST classify a harness or environment failure only on evidence and otherwise retain an unknown cause; product behavior remains unverified until a valid product probe passes.
+24. **No-progress diagnosis**: IF no assignment repair bound is supplied and two consecutive attempts produce the same symptom without material new diagnostic evidence, THEN the coordinator MUST change strategy before another equivalent attempt. Material evidence changes or tests a causal hypothesis, isolates a dependency or identifies a distinct failure. The trigger does not cap authorized work or establish completion.
+25. **Useful recovery facts**: WHEN a failed approach affects the next action, the Host MUST retain its reason, source identity, owner, surviving hypothesis, retry condition and next recovery action; on resume the coordinator rechecks applicability.
+
 Distribution checks enforce file/metadata contracts. Clarification, evidence, optionality and resume are semantic
 agent contracts; keyword assertions alone do not establish them.
 

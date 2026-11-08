@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:42:00.641998Z'
+status: completed
+summary: Independent review found walkthrough provenance incomplete; role projection emulated.
+findings:
+- issue: The scenario walkthrough does not identify the reviewed guidance version reproducibly.
+  evidence: specs/2026-11/20261109-adaptive-evidence-repair/walkthrough.md:3 names ffa78d56 plus a now-empty worktree diff; guidance is committed in cbb4c82b.
+  failure_condition: A reviewer cannot recover the exact guidance assessed from the recorded source.
+  suggested_action: Record the immutable implementation commit and reviewed range.
+  resolution: open
+  severity: P2
+checks:
+  tests: PASS catalog 12 and affected 146
+  lint: PASS lint-check, check, rules-check and rules check --ci
+diff_scope:
+  base: 56e614f858a0f0dca8bd509d452468c6e7a36057
+  head: cbb4c82b85edac460ef0588838591e39e089ec0c

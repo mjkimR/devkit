@@ -11,3 +11,14 @@
 9. When source or retained behavior changes, rerun the affected verification; keep unaffected evidence with its original identity and applicability.
 
 Example evidence: `python app.py --add milk` then `python app.py --list`, with the actual output and tested revision. A mocked transcript is scenario input, not an observed product run.
+
+## Failure probes and repair
+
+1. Select the normal path and failure and integration probes from the changed behavior and consequence of failure. For stateful work, assess malformed input, duplicate execution, cancellation/resume, stale state and partial failure when relevant; omit inapplicable cases.
+2. Keep probes bounded by existing authority; do not require production writes. Record each expected signal, actual command or interaction, source/artifact identity, outcome and limitation. Mark unavailable probes unverified.
+3. If a probe fails before valid product execution, classify a harness or environment failure only when evidence supports it; otherwise retain an unknown cause. Leave product behavior unverified until a valid product probe passes, including after a harness fix.
+4. Compare the symptom, causal hypothesis, attempted change and new evidence before another repair. Keep an assignment's own repair bound. Without one, after two consecutive attempts produce the same symptom without materially new diagnostic evidence, change strategy before another equivalent attempt.
+5. Treat evidence as material when it changes or tests a causal hypothesis, isolates a dependency or identifies a distinct failure. Repeating the same output alone is not progress.
+6. Continue safe, useful diagnosis within authority; report the unresolved blocker and next action when the necessary action is unavailable. The trigger is not a cap on authorized work or a completion condition. Rerun affected checks before claiming the original behavior passed.
+
+Example: if a fixture twice fails to start with the same import error, inspect its environment or import path before another equivalent run. Preserve the failure and leave the product probe unverified until it executes.

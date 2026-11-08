@@ -1,0 +1,22 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:45:40.655646Z'
+status: completed
+summary: Completed guidance and Living Spec; independent review findings fixed. Entrypoint candidates were reference and test files, not new doorways. No selected bundle sync output.
+findings: []
+assumptions:
+- Codex projection emulated; absolute paths, per-operation approvals and actual diff review substitute for native role and path enforcement.
+unverified_areas:
+- Live agent behavior not observed; walkthroughs review guidance contract only.
+- No quantitative baseline was specified; before/after model behavior was not measured.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS affected 146 and catalog 12 at cbb4c82b
+  build: PASS catalog wheel and sdist at f9230122
+  lint: PASS lint-check, check and rules-check; reconciled documents rules pass
+diff_scope:
+  base: ''
+  head: f36dfa0a896c7331bb8621f228f5d01975a07d3f
+activity_effort: medium

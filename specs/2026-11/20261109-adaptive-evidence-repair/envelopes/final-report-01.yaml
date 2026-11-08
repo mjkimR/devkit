@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:45:23.068180Z'
+status: completed
+summary: Delivered risk-based probe selection, evidence-led repair and resumable recovery guidance with reconciled capability and use case.
+findings: []
+assumptions:
+- Codex role projection emulated; absolute paths, per-operation approvals and diff checks substitute for native enforcement.
+unverified_areas:
+- Live agent execution not observed; scenario walkthrough is contract review only.
+checks:
+  tests: PASS just test-affected 146 and catalog integration 12 at cbb4c82b
+  build: PASS uv build --package devkit-catalog at f9230122
+  lint: PASS just lint-check, just check, just rules-check; document rules after reconciliation
+diff_scope:
+  base: 56e614f858a0f0dca8bd509d452468c6e7a36057
+  head: f9230122672762b7e7f9345df1c48b624b854d26

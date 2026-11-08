@@ -1,0 +1,16 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-08T16:42:25.184789Z'
+status: completed
+review: review-01.yaml
+summary: Verified walkthrough names exact reviewed implementation and base commits.
+findings:
+- issue: The scenario walkthrough does not identify the reviewed guidance version reproducibly.
+  evidence: specs/2026-11/20261109-adaptive-evidence-repair/walkthrough.md:3 names ffa78d56 plus a now-empty worktree diff; guidance is committed in cbb4c82b.
+  failure_condition: A reviewer cannot recover the exact guidance assessed from the recorded source.
+  suggested_action: Record the immutable implementation commit and reviewed range.
+  resolution: resolved
+  severity: P2
+checks: {}
