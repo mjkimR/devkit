@@ -1,32 +1,22 @@
 ---
-id: PROP-adaptive-behavior-evaluation
+id: SPEC-adaptive-behavior-evaluation
 title: Adaptive agent behavior evaluation
-summary: "Evaluate adaptive agent decisions with bounded execution scenarios and observable evidence, separately from asset packaging and projection checks."
-status: accepted
-created_at: 2026-11-07
-target_area: capabilities/delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-  - packages/devkit-catalog/tests/
-  - docs/materials/
-  - docs/capabilities/delivery/CAP-DLV-adaptive-development.md
-  - docs/usecases/delivery/
-  - docs/decisions/
-  excludes:
-  - packages/devkit-dist/src/
-  - packages/devkit/src/
-  - .devkit/managed/
-task_kind: feature
-workflow: sdd-proposal
+summary: Evaluate adaptive agent decisions with bounded execution scenarios and observable evidence, separately from asset packaging and projection checks.
+status: planned
+created: 2026-11-09
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-adaptive-behavior-evaluation] Adaptive agent behavior evaluation
+# [SPEC-adaptive-behavior-evaluation] Adaptive agent behavior evaluation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-adaptive-behavior-evaluation on 2026-11-09.
+
+### 1. Background & Hypothesis
 
 CAP-DLV-adaptive-development explicitly distinguishes semantic agent contracts from distribution checks.
 `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` checks selection, projection, metadata,
@@ -36,14 +26,33 @@ respects recovery ownership in practice or refuses unsupported completion claims
 The hypothesis is that a small set of executable, evidence-scored scenarios can expose instruction regressions
 without making ordinary deterministic package checks depend on hosted model availability.
 
-### Scope and exclusions
+#### Scope and exclusions
 
 Design and deliver bounded behavioral evaluations for existing adaptive contracts and the proposed guidance in
 PROP-adaptive-task-contracts and PROP-adaptive-evidence-repair. Exclude a new evaluation service or wheel,
 mandatory hosted-model calls in ordinary tests, live credentials in fixtures, performance claims from packaging
 checks, a runtime scheduler, production writes and new feature dependency edges.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Adaptive agent behavior evaluation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1:** Can existing repository execution and test facilities run an actual agent against installed assets with
   bounded permissions, time and cost? Inspect architecture before choosing any runner or new test tier.
@@ -52,9 +61,9 @@ checks, a runtime scheduler, production writes and new feature dependency edges.
 - **Q3:** What minimum repetition policy reveals nondeterminism without imposing a broad benchmark budget?
 - **Q4:** How can deterministic fixtures test the scorer without being reported as evidence of actual agent behavior?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Candidate evaluation set
+#### Candidate evaluation set
 
 | Scenario | Observable success signal |
 | --- | --- |
@@ -66,7 +75,7 @@ checks, a runtime scheduler, production writes and new feature dependency edges.
 | Interruption with dirty worker checkout | Work and ownership preserved; Host checkpoint names recovery action |
 | Resume against changed source | Prior evidence rechecked for applicability before reuse |
 
-### Planning decisions and feasibility
+#### Planning decisions and feasibility
 
 Use an opt-in Codex CLI probe first, with one disposable fixture repository and the installed adaptive assets.
 `codex exec --help` on this worktree confirms a noninteractive entry and selectable sandbox; it does not establish
@@ -81,7 +90,7 @@ results conflict or a nondeterministic issue is suspected. This is not a reliabi
 estimate. Use one active probe, a fixed timeout chosen by the operator before launch and explicit cost authorization
 for any paid model use. Keep all fixtures disposable, with no production credentials or writes.
 
-### Candidate execution and scoring
+#### Candidate execution and scoring
 
 - Prefer existing runners and package-owned test support. Planning chooses concrete file placement and command
   after examining ARCH-05-2-components and existing evaluation facilities; no runner is preselected by this draft.
@@ -99,7 +108,7 @@ for any paid model use. Keep all fixtures disposable, with no production credent
 - Keep execution evaluation opt-in initially. Ordinary package checks continue to cover packaging/projection;
   model-dependent results have a separate command and explicit coverage limits.
 
-### Expected acceptance scenarios
+#### Expected acceptance scenarios
 
 - **AC-01:** Given the evaluation entry, when a supported agent host is available, then it can execute at least one
   bounded scenario against installed assets and retain reproducible inputs, identity and observed actions.
@@ -112,17 +121,18 @@ for any paid model use. Keep all fixtures disposable, with no production credent
 - **AC-05:** Deterministic scorer checks include both compliant and violating fixtures. Required normal package
   checks run without model credentials; the evaluation command documents bounds and cleanup.
 
-### References and sequencing
+#### References and sequencing
 
 Use the evidence and external source links retained in PROP-adaptive-task-contracts and PROP-adaptive-evidence-repair.
 The evaluation can begin with current adaptive contracts; additional scenarios should follow those proposals'
 accepted behavior. This is recommended sequencing, not a prerequisite that blocks independent evaluator work.
 Do not infer a measured advantage over external projects from their documentation or this proposed evaluation set.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Keep this draft pending explicit pickup. Planning selects a minimum scenario set and scoring contract; Development begins with the bounded runner
 feasibility spike. The operator selects a timeout and authorizes any model spend before a live run. If actual agent execution is unavailable, retain the gap rather than silently reducing
 the outcome to keyword assertions. One spec should deliver the selected evaluation slice; split in Backlog if
 Planning discovers a separate runtime platform is necessary. Retire through normal acceptance, handoff and
 Living Spec reconciliation only after the chosen executable scenarios and evaluator checks are verified.
+

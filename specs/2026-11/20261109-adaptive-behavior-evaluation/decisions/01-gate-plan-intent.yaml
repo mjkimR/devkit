@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-adaptive-behavior-evaluation
+by: user
+at: '2026-11-08T16:59:00.638540Z'
