@@ -9,7 +9,7 @@
 7. Require each writer to check its changes and return actual paths and source identities; validate its diff before accepting evidence.
 8. Require leads to verify their aggregate assignment; the Host alone integrates into the final target through the project's authorized route and verifies the combined result and applicable landed target.
 9. Use the consuming project's relevant build, lint, type, tests and representative usage checks; record exact checked SHA/artifact, commands, outcomes and unreached scope rather than inferring combined success from child passes.
-10. Route failed combined checks to the responsible writer with reproducing evidence; obey the assignment's bounded repair/stop condition and report unresolved defects explicitly.
+10. Route failed combined checks to the responsible writer with reproducing evidence; apply the repair and no-progress guidance in `evidence-and-iteration.md` and report unresolved defects explicitly.
 11. On failure or interruption, stop or collect active children before releasing ownership; return retained commits, dirty paths, active owners and next action to the Host.
 12. Preserve active, dirty or unmerged worktrees until results are retained or removal has separate authority; checkpointing does not require passing QA.
 13. Only the Host updates `.devkit/adaptive-dev.md`; record useful failed checks, unmerged/dirty results, source identity, ownership and recovery steps before pause or handoff.

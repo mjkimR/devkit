@@ -2,7 +2,7 @@
 id: SPEC-adaptive-evidence-repair
 title: Adaptive failure verification and bounded repair
 summary: "Guides risk-based failure verification and evidence-driven recovery in adaptive development."
-status: planned
+status: in-progress
 created: 2026-11-09
 related_capabilities: [CAP-DLV-adaptive-development]
 related_usecases: [UC-advance-an-idea]
