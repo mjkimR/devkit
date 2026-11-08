@@ -2,7 +2,7 @@
 id: SPEC-adaptive-task-contracts
 title: Adaptive task decomposition and role specialization
 summary: "Strengthen adaptive task assignments and role checks while preserving optional delegation and caller authority."
-status: planned
+status: in-progress
 created: 2026-11-09
 related_capabilities: [CAP-DLV-adaptive-development]
 related_usecases: [UC-advance-an-idea]
