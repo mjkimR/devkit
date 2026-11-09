@@ -43,10 +43,10 @@ checks, a runtime scheduler, production writes and new feature dependency edges.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] Bounded observed execution
-- **Given** a supported agent host and a disposable fixture containing installed adaptive assets
-- **When** the evaluation entry runs one bounded scenario
-- **Then** it retains the scenario input, source and asset identity, observed actions, outcome and coverage limits.
+### [AC-01] Evidence-scoring entry
+- **Given** a bounded scenario and its evidence supplied to the evaluation entry
+- **When** the entry assesses that evidence
+- **Then** it records scenario and source identity, observations, outcome and coverage limits, and never presents synthetic evidence as an observed agent run.
 
 ### [AC-02] Combined failure and missing evidence
 - **Given** a trace in which child checks pass and the combined check fails or is missing
@@ -68,7 +68,11 @@ checks, a runtime scheduler, production writes and new feature dependency edges.
 - **When** ordinary package checks run
 - **Then** they validate the scorer without model calls, while the opt-in evaluation command documents its bounds and cleanup.
 
-## 5. Carried Proposal Notes
+## 5. Scope decision
+
+The user directs completion without paid model calls or a live model feasibility prerequisite. Deliver deterministic evidence scoring and unavailable reporting in this unit. A scripted fixture validates the scorer only; it is not evidence of live agent behavior. No live runner or live execution claim is required. The earlier proposal notes below describe the original direction; where they conflict, this decision and the acceptance criteria govern.
+
+## 6. Carried Proposal Notes
 
 Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
 
