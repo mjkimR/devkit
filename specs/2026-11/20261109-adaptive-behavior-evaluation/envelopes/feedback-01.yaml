@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-09T01:00:35.128429Z'
+status: completed
+summary: Reviewed run observations; worktree interpreter mismatch reported to Host for feedback disposition.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
