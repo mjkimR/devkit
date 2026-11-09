@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-09T00:59:41.778684Z'
+status: completed
+summary: Author verified schema, example and sufficient-evidence wording against scorer and tests; both findings fixed.
+findings: []
+assumptions:
+- Codex role isolation is emulated; absolute scope and diff checking substitute for native enforcement.
+unverified_areas:
+- No live agent execution or artifact authenticity was verified.
+checks: {}

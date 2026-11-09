@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-09T00:59:34.003063Z'
+status: completed
+summary: Independent review identified two documentation mismatches.
+findings:
+- issue: Scorer input schema and values were incomplete.
+  evidence: docs/capabilities/delivery/CAP-DLV-adaptive-development.md:180
+  failure_condition: An operator cannot construct a valid evidence record.
+  suggested_action: Document the schema and example.
+  resolution: open
+  severity: P2
+- issue: Plan overstates precedence of violations over missing evidence.
+  evidence: specs/2026-11/20261109-adaptive-behavior-evaluation/plan.md:18
+  failure_condition: Missing child evidence is inconclusive despite the plan wording.
+  suggested_action: State the sufficient evidence condition.
+  resolution: open
+  severity: P2
+checks: {}
+diff_scope:
+  base: ''
+  head: 5323be7eaaf807761e8e6b49f94404aff3a5ab2e
