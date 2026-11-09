@@ -2,7 +2,7 @@
 id: SPEC-adaptive-behavior-evaluation
 title: Adaptive agent behavior evaluation
 summary: Evaluate adaptive agent decisions with bounded execution scenarios and observable evidence, separately from asset packaging and projection checks.
-status: planned
+status: in-progress
 created: 2026-11-09
 related_capabilities: [CAP-DLV-adaptive-development]
 related_usecases: [UC-advance-an-idea]
