@@ -35,18 +35,38 @@ checks, a runtime scheduler, production writes and new feature dependency edges.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Adaptive agent behavior evaluation so that system capabilities are extended.
+- **US-1**: As a maintainer, I want bounded, evidence-scored agent scenarios so that I can distinguish observed behavior from packaging checks and unavailable execution.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: A new evaluation service or wheel, mandatory model calls in ordinary tests, production writes, credentials in fixtures, a runtime scheduler, and new feature dependency edges.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Bounded observed execution
+- **Given** a supported agent host and a disposable fixture containing installed adaptive assets
+- **When** the evaluation entry runs one bounded scenario
+- **Then** it retains the scenario input, source and asset identity, observed actions, outcome and coverage limits.
+
+### [AC-02] Combined failure and missing evidence
+- **Given** a trace in which child checks pass and the combined check fails or is missing
+- **When** the scorer evaluates completion
+- **Then** it reports fail for completion based only on child passes and inconclusive for a missing combined result.
+
+### [AC-03] Interrupted writer
+- **Given** an interrupted writer and its available artifacts
+- **When** the evaluator assesses recovery
+- **Then** it checks retained work, ownership and recovery from artifacts, marks incomplete evidence inconclusive, and preserves dirty work until retention or separately authorized removal.
+
+### [AC-04] Unavailable execution
+- **Given** host or model execution is unavailable
+- **When** the evaluation runs
+- **Then** it reports unavailable coverage and does not report a skipped run or scripted replay as a behavioral pass.
+
+### [AC-05] Deterministic scorer checks
+- **Given** compliant and violating fixtures without model credentials
+- **When** ordinary package checks run
+- **Then** they validate the scorer without model calls, while the opt-in evaluation command documents its bounds and cleanup.
 
 ## 5. Carried Proposal Notes
 
