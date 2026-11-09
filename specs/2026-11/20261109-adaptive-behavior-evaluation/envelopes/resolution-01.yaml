@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-09T00:53:20.794633Z'
+status: completed
+summary: User-directed scope in commit 6f79169d removes live feasibility prerequisite; deterministic evidence scoring proceeds without model calls.
+findings: []
+checks: {}
+resolves: worker-01.yaml

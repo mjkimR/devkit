@@ -1,0 +1,30 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-09T00:57:02.976653Z'
+status: completed
+summary: Independent review identified evidence and malformed input defects.
+findings:
+- issue: Arbitrary nonempty files passed interrupted-writer scoring.
+  evidence: packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py:44
+  failure_condition: Unrelated files do not establish retained work or ownership.
+  suggested_action: Validate artifact content and identity.
+  resolution: open
+  severity: P2
+- issue: Combined pass lacked underlying observations.
+  evidence: packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py:33
+  failure_condition: A self-reported string without evidence passed.
+  suggested_action: Require and report source-matched artifacts.
+  resolution: open
+  severity: P2
+- issue: Malformed evidence kind can crash the scorer.
+  evidence: packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py:29
+  failure_condition: Array or object kind raises TypeError.
+  suggested_action: Validate type and test malformed input.
+  resolution: open
+  severity: P2
+checks: {}
+diff_scope:
+  base: c4cc719be2e193ac7afbcdd25f8830a32674d7a2
+  head: 4d6defa4aacef8371e1d80d18866c87d0bfbe032

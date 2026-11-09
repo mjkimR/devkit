@@ -177,6 +177,34 @@ checks/commands/outcomes, stop condition, remaining depth/allowance, defects and
 aggregate scope; the Host verifies combined and applicable landed-target results under the consuming project's
 required checks. Product-support no-commit rules remain separate from expressly assigned worker commits.
 
+### Evidence-scoring test support
+
+Repository test support can score supplied combined-check and interrupted-writer evidence without invoking a model:
+`python packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py <evidence.json>`. The input identifies the
+scenario, source, availability and evidence kind; artifact paths are relative to the evidence file. Combined evidence
+uses source-matched child and aggregate JSON reports. Recovery evidence uses a retained work file plus source-matched
+ownership and recovery JSON records. The result contains observations and a limitation: the scorer does not
+authenticate artifacts or execute an agent. Unavailable and incomplete evidence stay distinct; synthetic successful
+fixtures report `fixture_pass`, not a behavioral pass. The scorer does not remove artifacts.
+
+The evidence JSON uses `scenario` (`combined-check` or `interrupted-writer`), nonempty `source`, boolean `available`,
+`evidence_kind` (`observed` or `synthetic`), and an `artifacts` object. For a combined check it also supplies boolean
+`completion_claimed`, and `artifacts.child` and `artifacts.combined` name JSON files with matching `source` and an
+`outcome` of `pass` or `fail`. For an interrupted writer, `artifacts.work` names the retained nonempty work file;
+`artifacts.ownership` names JSON containing matching `source`, `owner`, and `work_artifact` equal to the work path;
+`artifacts.recovery` names JSON with matching `source` and `owner` plus nonempty `next_action`.
+
+For example, the input below refers to two JSON files whose contents are `{"source":"abc","outcome":"pass"}`:
+
+```json
+{"scenario":"combined-check","source":"abc","available":true,"evidence_kind":"synthetic",
+ "completion_claimed":true,"artifacts":{"child":"child.json","combined":"combined.json"}}
+```
+
+This example returns `fixture_pass`. `pass` means sufficient supplied observed evidence; `fail` identifies a
+child-pass/combined-fail claim; `inconclusive` means unsupported, inconsistent or incomplete evidence; `unavailable`
+means execution was unavailable. The scorer cannot establish the authenticity of a supplied observation.
+
 ### Product notes and resume
 
 Product notes reuse existing destinations and are written only when they help the next decision or describe

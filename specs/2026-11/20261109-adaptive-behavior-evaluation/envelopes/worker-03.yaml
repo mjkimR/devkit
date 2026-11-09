@@ -1,0 +1,21 @@
+kind: worker
+stage: specify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-09T00:51:34.183930Z'
+status: needs_input
+summary: Received the user-approved scope change; the Host must apply the revised contract before worker implementation.
+findings: []
+assumptions:
+- Codex isolation is emulated; absolute paths, per-operation approvals and Host diff inspection substitute for native enforcement.
+checks:
+  sync_start: PASS exit=0
+diff_scope:
+  base: b8ddbfedc2c7a53ceec1d32d2e392b3a63a51377
+  head: b8ddbfedc2c7a53ceec1d32d2e392b3a63a51377
+problem:
+  cause: The worker contract forbids shrinking scope; the existing accepted specification still requires live feasibility.
+  attempts:
+  - Read the Host recovery instruction and inspected the existing blocked workflow.
+  recovery: Host applies and commits the user-approved revised scope and acceptance criteria, then dispatches a worker against that contract.
+activity_effort: medium
