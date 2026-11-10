@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T01:20:53.500757Z'
+status: completed
+summary: 'Swept the second Planning run: the answer record, two scout calls, the Git probe, the fold, one challenger call and its reverify, and the rule checks. Recorded FB-no-public-git-observation-helpers and FB-containers-say-devkit-docs-ships-no-bundle. Duplicate: FB-padr-trace-to-planned-document (open), with one evidence line added. A scout''s probe in the session scratchpad and a challenger''s read of its own persisted output are run events reported in the worker envelope, not observations on a repository asset.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=1
