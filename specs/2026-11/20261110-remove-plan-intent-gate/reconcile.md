@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-remove-plan-intent-gate
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-04-2-delivery-policy.md
     resolution: modified

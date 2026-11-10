@@ -2,7 +2,7 @@
 id: SPEC-remove-plan-intent-gate
 title: Remove the plan-intent gate
 summary: "Remove duplicate task-intent approval from SDD while preserving explicit task authorization, later approval boundaries and historical workflow records."
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-proposal-planning, CAP-DLV-project-policy, CAP-HARN-agent-guidance]
 related_usecases: [UC-route-development-intent, UC-plan-and-hand-off-a-proposal, UC-drive-development-to-integration]
