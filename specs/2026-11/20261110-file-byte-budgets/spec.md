@@ -2,7 +2,7 @@
 id: SPEC-file-byte-budgets
 title: Measure file hygiene budgets in bytes
 summary: "Replace line-count hygiene budgets with raw byte budgets, retaining the rule ID, warning phase and consolidated-record eligibility while migrating settings and current guidance."
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: [CAP-GOV-evaluation-lifecycle, CAP-GOV-rule-authoring]
 related_usecases: []

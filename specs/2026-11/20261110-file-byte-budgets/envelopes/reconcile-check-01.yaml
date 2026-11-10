@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:54:54.123768Z'
+status: completed
+summary: PASS five reconcile targets, builtin guide and consolidation playbooks reflect AC-01 through AC-06; independent medium reviewer found no mismatches.
+findings: []
+assumptions:
+- 'Emulated isolation: explicit assigned-worktree reads, no mutations; caller before/after HEAD and full tracked/untracked snapshot identical (237fa500, tree 2cd0e5d8f557c7978edc7a505c4fd9aff18c69a7); no native guarantee.'
+- Test, lint, type, rules, sync and generated results are implementer evidence; reviewer did not rerun suites.
+unverified_areas:
+- Host integration/final combined-head checks remain outside this review. Permitted uv runtime dependencies outside worktree; no outside repository content intentionally read.
+checks:
+  contracts: PASS five targets cover AC-01 through AC-06
+  implementation: PASS raw cached bytes, defaults, settings errors, diagnostics and retained semantics
+  decisions: PASS exact partial pointers and preserved old outcome
+  evidence: PASS source-specific hygiene 8 to 3; production unchanged after e3717ccc
+diff_scope:
+  base: 25a33dc0640f854d6b767be5244236562332c0ae
+  head: 237fa500768c6bda62194fe0bd4f1c8f1a240e14

@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-file-byte-budgets
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md
     resolution: modified
@@ -38,7 +38,7 @@ it contains 3 file-length warnings and no errors. Two are the original unsplit d
 the third is a 55,692-byte historical material. The Host separately delivered the CAP split and owns the final
 combined-head hygiene result; these files do not claim its outcome.
 
-The independent code review passed at e3717ccc. Required all-tier affected tests passed 4320 at that same production
+The independent code review passed at e3717ccc; the separate reconciliation review passed at 237fa500 with no findings. Required all-tier affected tests passed 4320 at that same production
 HEAD, including selected native E2E. Focused suites and builtin rule tests passed. No production change follows that
 head; subsequent files hold reconciliation, measured evidence and workflow records. Native lint/types, cumulative
 rules, sync and generated checks passed. The sole tracked sync output is `.devkit/installation.json`.
