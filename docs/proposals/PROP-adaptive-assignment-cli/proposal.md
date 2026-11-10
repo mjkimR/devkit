@@ -2,7 +2,7 @@
 id: PROP-adaptive-assignment-cli
 title: Assignment ledger and return verification commands for adaptive delegation
 summary: "Add commands that record delegated assignments and verify a returned result against its assignment, so a Host resumes outstanding work from recorded state and checks scope, source identity and declared checks deterministically."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
