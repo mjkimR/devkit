@@ -1,0 +1,87 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:11:51.154804Z'
+status: completed
+review: challenger-02.yaml
+summary: 'Folded all 12 challenger-02 findings: brief carries framing and drafts, PRODUCT.md/DESIGN.md need explicit direction in briefs, no-edit scoped to the skill run, only prompt-free install routes, ignore entries confined to .impeccable/, scope and wording consistency, guide check narrowed, evidence cells and host claims qualified, no devkit-docs or SDD concepts in skill text.'
+findings:
+- issue: With OOUX documents present, the brief carries their paths instead of the framing result, so the request's structural change and any consumer screen draft never reach the session.
+  evidence: proposal.md:244-245,194,258-260,207-209,326-329; target-docs.md:47-48; PADR-impeccable-session-authority.md:82-83
+  failure_condition: A structural request in a project with UX documents builds against the stale current model; an SDD Screen draft is in no brief field.
+  suggested_action: Brief carries the framing result citing the OOUX documents by path read-only (or conversation framing), plus consumer-supplied drafts or specifications by path read-only; apply to rule 16, PADR, section 3.2 and AC-2.
+  resolution: resolved
+  severity: P2
+- issue: The brief's context-file permission lets the coordinator list PRODUCT.md or DESIGN.md as writable on its own judgment, contradicting rule 19's explicit-direction requirement.
+  evidence: proposal.md:274-275,287-288; target-docs.md:48,64-65; PADR-impeccable-session-authority.md:76-77,96-99
+  failure_condition: A delegated refinement rewrites DESIGN.md or the PRODUCT.md anchor without the user's direction while rule 16 is satisfied.
+  suggested_action: The brief permits PRODUCT.md or DESIGN.md only on the user's explicit direction; add to section 3.4, 3.5, rule 16, PADR and assert_rule list.
+  resolution: resolved
+  severity: P2
+- issue: Rule 17's unscoped MUST NOT edit OOUX documents collides with the consumer workflow the same agent continues (for example spec-sync) and with a direct user request.
+  evidence: target-docs.md:57-58,91-92; proposal.md:265-267,116; PADR-impeccable-session-authority.md:106-107
+  failure_condition: The same agent reaching spec-sync is forbidden to refresh docs/ux/, contradicting rule 3, or the rule is unenforceable.
+  suggested_action: Scope it to the skill run; updates follow the consumer workflow's own step; apply to rule 17, PADR, section 3.4 item 8, UC 6c and AC-10.
+  resolution: resolved
+  severity: P2
+- issue: The coordinator running the interactive npx installer while the user answers its prompts cannot work through a host shell.
+  evidence: proposal.md:237-241; planning-evidence.md:44; PADR-impeccable-session-authority.md:40
+  failure_condition: The installer hangs without a TTY or the agent answers scope and hook prompts on the user's behalf, possibly installing an unconfirmed hook.
+  suggested_action: Run only a non-interactive route (manual copy) or non-interactive options whose values the user stated; otherwise hand the exact command to the user; record npx flags as unverified.
+  resolution: resolved
+  severity: P2
+- issue: Adding upstream's recommended ignore entries does not name the file or form; upstream lists unprefixed entries such as *.png and cache/.
+  evidence: proposal.md:284; planning-evidence.md:52-53; target-docs.md:61-63
+  failure_condition: Appending the block unchanged to the root .gitignore ignores every product PNG and cache/ or previews/ directory, silently dropping assets from commits.
+  suggested_action: Confine entries to .impeccable/ (prefixed or in .impeccable/.gitignore) and show the exact lines before writing; mark the upstream form unverified.
+  resolution: resolved
+  severity: P2
+- issue: Capability scope puts Impeccable installation both In-Scope and Out-of-Scope.
+  evidence: target-docs.md:26-28
+  failure_condition: A reconcile reviewer cannot tell whether rule 19's install belongs to the capability.
+  suggested_action: Reword Out-of-Scope to Impeccable's installer, commands, hooks, detector and file conventions as upstream contracts.
+  resolution: resolved
+  severity: P3
+- issue: Rule 17 and UC 6b say changes are reported without reverting or deleting them unconditionally, while rule 19 allows removing named session output on request.
+  evidence: target-docs.md:54-58,88-90,61-65,93-95
+  failure_condition: A user's cleanup request at acceptance is forbidden by rule 17 read literally.
+  suggested_action: Qualify rule 17 and UC 6b with on its own initiative / except as rule 19 allows.
+  resolution: resolved
+  severity: P3
+- issue: The stale-document report scope is inconsistent (OOUX documents, states or interactions, UX documents).
+  evidence: target-docs.md:57-58,91; proposal.md:265-266,350-351; PADR-impeccable-session-authority.md:106
+  failure_condition: A moved CTA leaves the object register stale and unreported.
+  suggested_action: Use one phrase everywhere naming glossary, object register and UX documents.
+  resolution: resolved
+  severity: P3
+- issue: The AC-11 guard that no skill file names README.md would forbid the legitimate pointer to Impeccable's README guidance.
+  evidence: proposal.md:366-367,280-281,291
+  failure_condition: The guide check fails on an upstream pointer or bends wording.
+  suggested_action: Assert no skill file or bundle.toml links or names a path to the bundle's own guide; keep the exact-set managed assertion.
+  resolution: resolved
+  severity: P3
+- issue: Planning-evidence consequence cells still say the skill installs nothing and installs no hook.
+  evidence: planning-evidence.md:44,54
+  failure_condition: A retained material cited by the promoted PADR states the opposite of the accepted rule.
+  suggested_action: Update the two cells to name installation only on the user's request.
+  resolution: resolved
+  severity: P3
+- issue: PADR consequences and proposal state unverified host and upstream facts as settled (Codex inheritance omitted; every Impeccable command reads PRODUCT.md).
+  evidence: PADR-impeccable-session-authority.md:133-137; proposal.md:279,407; planning-evidence.md:66-67
+  failure_condition: An accepted ADR carries claims the evidence leaves unverified or contradicts.
+  suggested_action: Qualify host-dependence as unverified on every host, and say Impeccable commands that load PRODUCT.md see the reference section.
+  resolution: resolved
+  severity: P3
+- issue: Agent-asset self-containment leaks, because orchestration names spec-sync and design-guidance names a selected namespace glossary, a devkit-docs concept.
+  evidence: proposal.md:266-267,207-209,219-221; ux-writing.md; agent-asset-writing.md:55-56
+  failure_condition: Without devkit-docs or under adaptive-dev the agent is pointed at a nonexistent stage or selection.
+  suggested_action: Drop the spec-sync parenthetical from the skill text; phrase namespace sources as a package-level glossary or register beside the affected code.
+  resolution: resolved
+  severity: P3
+checks:
+  rules: PASS devkit rules check on the proposal bundle (errors=0 warnings=0)
+diff_scope:
+  base: 8476ed421e7cd50fccf46232faa04be833145912
+  head: 227f66434e52b495818da16eba20c324859fd521
+activity_effort: medium
