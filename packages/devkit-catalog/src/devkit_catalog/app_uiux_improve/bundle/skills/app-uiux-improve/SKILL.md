@@ -67,6 +67,9 @@ the request. A review-only request ends with findings and no product edits.
    On the Impeccable track, also report changes outside the edit list, session output, consumer context files the
    session created or changed, unverifiable attribution and each OOUX document the change made stale.
    Honor a requested output destination; otherwise report in conversation. Product artifacts follow project ownership.
+10. If the user asks you to install Impeccable, add ignore entries, remove Impeccable output or add the `PRODUCT.md`
+    reference section, read `references/orchestration.md` before acting and follow its project-file rules; carry the
+    change through the consumer workflow like any product change.
 
 ## Completion
 

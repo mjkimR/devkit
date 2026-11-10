@@ -201,6 +201,14 @@ def test_project_files_setup_and_cleanup_follow_the_users_request() -> None:  # 
     assert_rule(orchestration, "user-requested change", "consumer workflow", "host's approvals")
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "install impeccable", "ignore entries", "`product.md` or `design.md`", "user's request")
+    assert_rule(
+        skill,
+        "user asks you to install impeccable",
+        "ignore entries",
+        "remove impeccable output",
+        "`product.md` reference section",
+        "read `references/orchestration.md` before acting",
+    )
 
 
 GUIDE_SECTIONS = (
