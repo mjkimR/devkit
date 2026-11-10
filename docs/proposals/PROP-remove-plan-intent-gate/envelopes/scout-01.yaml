@@ -1,0 +1,31 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T04:46:52.496866Z'
+status: completed
+summary: Legacy decisions are generically parsed; handoff and retired-policy behavior require explicit regressions.
+findings:
+- issue: Valid legacy intent decisions do not require migration.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/repositories/unit/decisions.py:103-112,150-168; packages/devkit/src/devkit_agt/features/workflow/usecases/evaluate.py:87-90,410-417
+  failure_condition: A malformed record still fails; runtime coverage with the gate absent is not yet established.
+  suggested_action: Keep old valid records and add workflow-next and rules regressions during Development.
+  resolution: open
+- issue: Removing the built-in gate alone leaves configured intent keys reported as active.
+  evidence: packages/devkit-spec/src/devkit_spec/features/policy/usecases/inspect.py:28-42
+  failure_condition: Existing plan-intent configuration is still listed after only deleting INTENT_GATE.
+  suggested_action: Treat the retired key as ignored and test ask, auto and off configurations.
+  resolution: open
+- issue: Handoff tests require intent carry today.
+  evidence: packages/devkit-spec/tests/integration/features/proposals/test_proposal_handoff_records.py:110-131
+  failure_condition: Carry expectations remain unchanged after removing the SDD gate.
+  suggested_action: Stop selecting intent carry while retaining plan-accept carry and test historical proposals.
+  resolution: open
+assumptions:
+- Codex emulated read-only role; absolute read scope and Git diff checks substitute for native path enforcement.
+unverified_areas:
+- 'Static inspection only: runtime legacy workflow and rules regression remains for Development.'
+checks: {}
+diff_scope:
+  base: 1ad1eb0c6903cc574f3d7c4b251bd3e257b9d84e
+  head: 1ad1eb0c6903cc574f3d7c4b251bd3e257b9d84e

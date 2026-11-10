@@ -2,7 +2,7 @@
 id: PROP-remove-plan-intent-gate
 title: Remove the plan-intent gate
 summary: "Remove the plan-intent approval gate, its decision records and its guidance from the SDD workflows, because an explicit task instruction already supplies intent and the gate only adds a record, a commit and special cases in acceptance and handoff."
-status: draft
+status: accepted
 created_at: 2026-11-10
 target_area: capabilities/delivery/
 priority: low
@@ -25,6 +25,11 @@ boundaries:
     - docs/usecases/delivery/
     - docs/architecture/ARCH-04-delivery-strategy.md
     - docs/architecture/ARCH-04-2-delivery-policy.md
+    - docs/decisions/
+    - handbook/en/concepts.md
+    - handbook/en/areas/delivery.md
+    - handbook/en/journeys/route-development-intent.md
+    - handbook/en/journeys/plan-and-hand-off-a-proposal.md
   excludes:
     - specs/
     - packages/devkit/src/devkit_agt/
@@ -36,7 +41,7 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-Every SDD workflow except `sdd-overall-refactor` declares `human_gate: plan-intent` at its intent stage. The default
+All six SDD workflows, including `sdd-overall-refactor`, declare `human_gate: plan-intent` at its intent stage. The default
 policy is `ask`, so each proposal pickup and each spec Unit records `decisions/01-gate-plan-intent.yaml` with
 `devkit workflow answer` and commits it as its own commit.
 
@@ -64,32 +69,71 @@ The gate still costs:
 Hypothesis: removing the gate, rather than setting `plan-intent = "auto"`, makes the workflows and their guidance
 smaller with no loss of control, because nothing reads the record except the checks that exist to require it.
 
-## 2. Technical Spike Questions
+## 2. Technical Spike Findings
 
-- **Q1**: Where does the depth escalation reason go? `depth-and-close.md` step 3 stores "depth session -> spec:
-  <reason>" in the `plan-intent` note. Candidates: `spec.md`, the Unit's first commit message, or no record.
-- **Q2**: Does the workflow engine (`devkit_agt`) tolerate the `plan-intent` decision records already committed in
-  completed specs and live proposals once no workflow declares the gate? `devkit workflow next` and
-  `devkit rules check` must stay clean on them without a migration.
-- **Q3**: Do the intent stages keep a reason to exist without a gate (the `intent-proposal` size exit check stays),
-  or do some merge into the next stage?
-- **Q4**: Does any external consumer need a human confirmation before a task starts? If so, keep it as an opt-in
-  policy instead of a default gate; otherwise remove `[workflow.approvals] plan-intent` outright and report a
-  configured value as unknown.
+Evidence is pinned to source `4a6223361b6a60171be665db598b4a81b277d38f`; details are in
+`materials/planning-evidence.md`.
+
+- **Q1 Depth escalation**: record the reason, agreed intent and retained work in `spec.md` under a classification
+  note. Do not replace the removed approval record with another record or a special commit requirement.
+- **Q2 Historical records**: retain valid existing decision files in live and completed Units. The generic loader
+  validates request shape, not membership in the current gate list. Development verifies both `workflow next` and
+  rules on a Unit containing an old record after removing the workflow gate. Handoff stops selecting and carrying
+  `gate:plan-intent`; proposal retirement keeps its ordinary record-drop behavior and Git history.
+- **Q3 Intent stages**: retain `intent`, `intent-proposal`, `intent-session` and `intent-refactor` IDs, entry/exit
+  checks and return targets. Set their human gate to false, rename their display name to task scope or proposal
+  eligibility, and keep the proposal size check. Removing stage IDs risks historical envelopes and adds no value
+  to removing the gate.
+- **Q4 Configuration**: remove the built-in policy entry. A configured `plan-intent` is a retired SDD key: omit it
+  from active policy output, warn with the existing `SPEC_APPROVAL_KEY_IGNORED` notice and instruct removal. Preserve
+  generic custom workflow gates and their engine configuration semantics. No opt-in SDD intent gate remains.
 
 ## 3. Proposed Design & Impact
 
-- Remove `human_gate: plan-intent` and its `approvals` entry from the 6 SDD workflows and their prose.
+- Set `human_gate: false` and remove `gates.plan-intent` from all six SDD workflows, including
+  `sdd-overall-refactor`. Remove gate prose while retaining intent stage IDs and their non-gate checks.
 - Remove the `plan-intent` steps from the `spec` skill, its references (`backlog`, `depth-and-close`, `classification`,
   `proposals-catalog`, `worktree`, `playbooks`), `spec-next` and `spec-specify` references, and the bundle `AGENTS.md`
   block. The intake reply keeps stating the classification and effort.
 - Code: drop the `gate:plan-intent` eligibility condition from `devkit spec proposal accept`, the `plan-intent`
   requirement and carry from `devkit spec proposal handoff`, and `INTENT_GATE` from policy inspection. The approval
-  boundaries stay `plan-accept`, `proposal-handoff` and `dev-integration`.
+  boundaries stay `plan-accept`, `proposal-handoff` and `dev-integration`. Keep `gate:plan-accept` carry and its
+  existing warning behavior; narrow `SPEC_PROPOSAL_GATE_NOT_CARRIED` wording rather than removing the code.
 - Living Spec: update `CAP-DLV-proposal-planning`, `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`,
   `CAP-HARN-agent-guidance`, the delivery use cases and `ARCH-04-delivery-strategy` and `ARCH-04-2-delivery-policy`.
 - Decision: a new ADR superseding in part the "Task intent" outcome and the intent gate of
-  `ADR-delivery-approval-and-lifecycle-authority`.
+  `ADR-delivery-approval-and-lifecycle-authority`. The earlier ADR remains accepted; unrelated authority clauses
+  stay in force. The PADR also names affected clauses in `ADR-proposal-acceptance`, `ADR-delivery-classification`,
+  `ADR-roadmap-and-milestones-ledger` and `ADR-ux-screens`; reconciliation adds partial pointers to each without
+  changing unrelated decisions or accepted status. UX alternatives remain settled before implementation.
+  Reconcile the four declared English handbook pages with the same behavior.
+
+### Planning decisions
+
+- Remove the gate rather than default it to `auto`: `auto` retains its declarations, policy handling and handoff
+  special cases. Keeping the existing gate retains duplicate bookkeeping. The durable choice is recorded in
+  `PADR-remove-plan-intent-gate`.
+- Task authorization remains an explicit instruction. Backlog items are never implicitly scheduled; goal, scope,
+  expected bugfix behavior and classification remain stated before work begins. No replacement approval is added.
+- Development remains one feature spec at `medium` effort. It changes one lifecycle rule across its adapters, assets
+  and contracts; it does not require a second spec or a new feature dependency.
+- Bundle synchronization outputs are admitted only through the existing sync-output class; generated files are
+  regenerated, never hand-edited. Historical specs, materials and archived documents are not rewritten.
+
+### Acceptance and verification
+
+1. All six deployed workflows validate without declaring or requesting `plan-intent`; proposal `size: XL` still
+   blocks eligibility. Other gate policies and bugfix Red/Green stages retain their behavior.
+2. Direct acceptance and composed handoff work without an intent record. Handoff carries only the existing
+   acceptance audit record, and a missing `plan-accept` still refuses. Test ask and auto policy paths.
+3. Valid old intent decisions remain unchanged and do not make `workflow next` or rules fail in live/completed
+   Units. Historical intent-stage envelopes and return targets remain valid.
+4. Policy output contains the three boundaries and configured custom gates, with no default intent entry.
+   A retained `plan-intent = "ask"`, `"auto"` or `"off"` emits the ignored-key warning and no active intent entry.
+5. Depth escalation records its reason in `spec.md`. Source skills, deployed guidance, capabilities, use cases,
+   architecture and English handbook pages describe the same authorization boundary.
+6. Run bundle sync, required lint/types/rules and `just test-affected` with full fallback; run selected native E2E
+   synchronously in Development. Verify distribution and handoff/policy/size regressions. No timing gain is claimed.
 
 Non-Goals:
 

@@ -1,0 +1,22 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T04:49:04.521749Z'
+status: completed
+summary: Removal is justified; partial supersession must cover four additional accepted ADRs.
+findings:
+- issue: The PADR supersedes only one ADR while other accepted decisions independently require the removed gate.
+  evidence: docs/decisions/2026-10/20261022-proposal-acceptance.md:191-195,219-224; docs/decisions/2026-11/20261102-delivery-classification.md:154,167-174; docs/decisions/2026-11/20261102-roadmap-and-milestones-ledger.md:324-325; docs/decisions/2026-11/20261102-ux-screens.md:173
+  failure_condition: Accepted ADR clauses still prescribe removed gate behavior after delivery without an identified replacement.
+  suggested_action: Extend partial supersession to those clauses and preserve unrelated behavior, including UX choice before implementation.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only role; identical before/after tree 1f32563254164735c8879d0a319bc4c2dfb7badd confirms no changes.
+unverified_areas:
+- Runtime legacy-record regressions remain Development work.
+checks: {}
+diff_scope:
+  base: 4a6223361b6a60171be665db598b4a81b277d38f
+  head: d62a630aff9e9852c18dc401b0229d86663cae48
