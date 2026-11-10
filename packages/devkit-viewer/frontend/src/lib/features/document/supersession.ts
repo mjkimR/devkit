@@ -117,7 +117,7 @@ function visibleLines(lines: string[]): Map<number, string> {
 				const list = col - base <= 3 ? line.match(marker) : null;
 				if (list) {
 					while (columns.length && columns.at(-1)! > col) columns.pop();
-					const spaces = list[3].replace(/\t/g, '    ').length;
+					const spaces = indent(list[3]);
 					columns.push(col + list[2].length + (spaces >= 1 && spaces <= 4 ? spaces : 1));
 				} else if (afterBlank || col === 0)
 					while (columns.length && columns.at(-1)! > col) columns.pop();

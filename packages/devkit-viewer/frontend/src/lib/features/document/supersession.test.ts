@@ -137,3 +137,9 @@ it('resets indented code at fence boundaries exactly as Python visible_lines', (
 		{ id: 'ADR-old', text: 'visible' }
 	]);
 });
+
+it('uses tab-stop columns for a list-contained tilde fence, matching Python', () => {
+	const body =
+		'- \tparent\n        ~~~md\n        Supersedes in part `ADR-old`: hidden\n        ~~~\n';
+	expect(replacementStatements(doc('ADR-new', '', body))).toEqual([]);
+});
