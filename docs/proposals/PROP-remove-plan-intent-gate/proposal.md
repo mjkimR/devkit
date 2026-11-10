@@ -103,7 +103,10 @@ Evidence is pinned to source `4a6223361b6a60171be665db598b4a81b277d38f`; details
   `CAP-HARN-agent-guidance`, the delivery use cases and `ARCH-04-delivery-strategy` and `ARCH-04-2-delivery-policy`.
 - Decision: a new ADR superseding in part the "Task intent" outcome and the intent gate of
   `ADR-delivery-approval-and-lifecycle-authority`. The earlier ADR remains accepted; unrelated authority clauses
-  stay in force. Reconcile the four declared English handbook pages with the same behavior.
+  stay in force. The PADR also names affected clauses in `ADR-proposal-acceptance`, `ADR-delivery-classification`,
+  `ADR-roadmap-and-milestones-ledger` and `ADR-ux-screens`; reconciliation adds partial pointers to each without
+  changing unrelated decisions or accepted status. UX alternatives remain settled before implementation.
+  Reconcile the four declared English handbook pages with the same behavior.
 
 ### Planning decisions
 

@@ -3,7 +3,7 @@ id: PADR-remove-plan-intent-gate
 title: Remove the task intent approval gate
 summary: "For instructed SDD work, we remove the plan-intent gate and its records, to avoid duplicate authorization bookkeeping, accepting that task authorization is enforced by agent guidance."
 proposal: PROP-remove-plan-intent-gate
-supersedes: [ADR-delivery-approval-and-lifecycle-authority]
+supersedes: [ADR-delivery-approval-and-lifecycle-authority, ADR-proposal-acceptance, ADR-delivery-classification, ADR-roadmap-and-milestones-ledger, ADR-ux-screens]
 status: draft
 created_at: 2026-11-10
 ---
@@ -41,9 +41,22 @@ special handling in proposal acceptance, handoff and policy reporting without de
   → `CAP-DLV-proposal-planning` rule 12 (MUST).
 - Configured `plan-intent` is reported as an ignored retired SDD key, without changing generic custom gate semantics.
   → `CAP-DLV-project-policy` rule 4 (MUST).
-- This replaces only the Task intent outcome's gate/record requirement in
-  `ADR-delivery-approval-and-lifecycle-authority`; its explicit-instruction rule and unrelated authority clauses
-  remain in force. The earlier ADR remains accepted with a partial-supersession pointer.
+### Replaced clauses
+
+This decision replaces only the following gate-dependent clauses. Each earlier ADR remains accepted with a
+partial-supersession pointer; its unrelated decisions remain in force.
+
+- `ADR-delivery-approval-and-lifecycle-authority`: Task intent's gate/record requirement is removed; explicit task
+  authorization and all later boundary policies remain.
+- `ADR-proposal-acceptance`: Both gates in one request and Eligibility checked by the tool lose their intent gate,
+  intent-record prerequisite and pending-intent special case. Explicit `plan-accept`, direct-acceptance eligibility,
+  visibility, sweep, acceptance audit and handoff guard remain; effort hints are stated at intake.
+- `ADR-delivery-classification`: Gates, Overall refactor workflow and Handoff target lose `plan-intent` and its
+  carry. Classification axes, workflow/stage IDs, `plan-accept`, `dev-integration` and target workflow remain.
+- `ADR-roadmap-and-milestones-ledger`: Next work no longer selects confirm-the-intent from an absent gate record.
+  It recommends starting the eligible requested draft's Planning; ordering and explicit task instruction remain.
+- `ADR-ux-screens`: the inline Planning boundary is before implementation rather than before `plan-intent`.
+  Comparing screen candidates during Planning and retaining the recommended candidate during Development remain.
 
 ## 5. Consequences
 

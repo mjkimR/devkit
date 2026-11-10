@@ -37,3 +37,11 @@ Four English handbook pages describe the gate and need reconciliation: `handbook
 Stage IDs preserve historical envelope attribution and return targets. Gate removal is complete across all six
 workflows; generic workflow-engine changes, historical record migration and new feature edges remain excluded.
 No performance or timing improvement is claimed. The acceptance checks compare observable behavior, not counts.
+
+## Challenger refinement
+
+The mandatory medium challenger identified gate-dependent clauses in four additional accepted ADRs. The PADR's
+Replaced clauses inventory now names `ADR-proposal-acceptance`, `ADR-delivery-classification`,
+`ADR-roadmap-and-milestones-ledger` and `ADR-ux-screens` alongside
+`ADR-delivery-approval-and-lifecycle-authority`. Development adds only partial pointers to those earlier ADRs and
+retains direct-acceptance safeguards, next-work ordering and screen-choice timing before implementation.
