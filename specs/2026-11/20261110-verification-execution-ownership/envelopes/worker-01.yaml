@@ -1,0 +1,24 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:25:47.442473Z'
+status: completed
+summary: Completed Host/worker execution ownership, portable client guide, rendered regression coverage and four-target reconciliation. Independent code/reconcile reviews PASS. Sync output .devkit/installation.json recorded in Task1.1; no scope extensions.
+findings: []
+assumptions:
+- Only documentation clarification and records changed after source checks; no broad test repeat after records.
+- Host projection emulated; absolute cwd, operation-specific escalation and matching before/after reviewer trees verify boundaries.
+unverified_areas:
+- Host final landed verification and integration remain.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0
+  tests: PASS 1911 native unit/integration;77 native E2E;8 targeted ownership regressions at67aa2f2b
+  lint: PASS full lint-check/check and committed CI rules
+  review: PASS independent code and reconcile reviews;no findings
+  execution: PASS worker used native synchronous commands in assigned worktree;no exec lifecycle or execution checkout
+diff_scope:
+  base: 0d010ae82237ab918a972fea5891ab4e70f2d0a0
+  head: 093b6f4eb3432279c08a3c5a50aea47dfeb443db
+activity_effort: medium
