@@ -11,10 +11,9 @@ usecases:
   - UC-drive-development-to-integration
   - UC-handle-delivery-problems-and-exceptions
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
   - packages/devkit-spec/src/devkit_spec/features/worker/cli/commands.py
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-orchestrate/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/SKILL.md
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/development-worker.md.jinja
 ---
 
 # [CAP-DLV-delivery-roles] Delivery roles and worker result validation

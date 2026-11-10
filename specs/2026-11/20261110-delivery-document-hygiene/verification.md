@@ -5,8 +5,8 @@ Baseline: `cf1c4fd4767131c2194bfccea618dc722f49108d`. Native checks ran synchron
 | Check | Outcome |
 | --- | --- |
 | Exact normalized moved-block comparison | PASS roles, worker inspection, lifecycle; see relocated-sections.json |
-| Workflow CAP / role CAP lines | 783 to 490 / 344 |
-| Proposal CAP / lifecycle CAP lines | 784 to 310 / 519 |
+| Workflow CAP / role CAP lines | 783 to 498 / 343 |
+| Proposal CAP / lifecycle CAP lines | 784 to 352 / 518 |
 | Distribution reference lines | 433 to 414; unique diagnostics and source subset retained |
 | Cumulative rules against baseline | PASS no violations |
 | Affected tests, tier all | PASS 17 tests; partial selection 8 paths, no fallback suppressed |
@@ -19,3 +19,6 @@ distribution reference 414/400, Development use case 415/400. The first two rema
 unique indexes and the use case keeps every acceptance scenario. No line-budget override or line joining is used.
 Runtime, lint/type/frontend behavior is unchanged and the Host supplied passing baseline evidence; no source tests
 were added merely to reflect prose. No benchmark or runtime improvement is claimed.
+
+Independent review P2 repair: every baseline H2/H3 heading remains in the original CAP as either contract text or
+a redirect portal. New CAP entrypoints name three existing doorway files each; no broad shared directory is added.

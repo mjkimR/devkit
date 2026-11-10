@@ -8,10 +8,9 @@ created_at: 2026-11-10
 usecases:
   - UC-plan-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/accept.py
 ---
 
 # [CAP-DLV-proposal-lifecycle] Proposal lifecycle commands and handoff

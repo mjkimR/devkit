@@ -386,6 +386,14 @@ has no envelope key: it lives in `reconcile.md`.
 `CAP-DLV-delivery-roles` owns the ten role contracts (§4.1), reusable lifecycle executor (§4.1.1), one-shot activity
 workers (§4.1.2) and worker-result inspection (§4.2). Stage assignments and review effort remain defined here.
 
+### 4.6.1 Reusable lifecycle execution
+
+`CAP-DLV-delivery-roles` §4.1.1 defines reusable git-operator dispatch, authority and effect checks.
+
+### 4.6.2 One-shot activity workers
+
+`CAP-DLV-delivery-roles` §4.1.2 defines activity-worker execution, write admission and acceptance boundaries.
+
 ### 4.7 Executor Commands (devkit)
 
 | Command | Use |

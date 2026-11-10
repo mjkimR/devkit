@@ -303,8 +303,50 @@ rather than retaining delivery lineage. Actual new work, exclusion or moving sco
 scope; explicit exclusion/movement is a scope disposition, never delivery. `CAP-HARN-agent-guidance` defines the
 current two-confirmation Backlog review. No lifecycle hook or runtime milestone mutation is introduced.
 
-### 4.5 Lifecycle operations
+### 4.5 Handoff Steps
 
-`CAP-DLV-proposal-lifecycle` owns handoff writes and rewriting (§4.1–4.3), pruning (§4.4), command/output/library/code
-interfaces (§4.5–4.8), Host-authorized execution, review briefings and recovery. The Planning and eligibility
-policies above remain this capability's contract.
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.1, including preflight, writes and recovery.
+
+### 4.6 Carrying the Proposal Body
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.2.
+
+### 4.7 Rewriting Links and References
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.3.
+
+### 4.8 Prune
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.4.
+
+### 4.9 Commands and Options
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.5.
+
+### 4.10 Output
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.6.
+
+### 4.11 Library
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.7.
+
+### 4.12 Codes
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` §4.8.
+
+## Host-authorized proposal lifecycle CLI
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` Host-authorized proposal lifecycle CLI.
+
+## Proposal review briefings and combined acceptance
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` Proposal review briefings and combined acceptance.
+
+### Policy-aware decision boundaries
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` Policy-aware decision boundaries.
+
+## Approach precondition
+
+Detailed contract: `CAP-DLV-proposal-lifecycle` Approach precondition.
