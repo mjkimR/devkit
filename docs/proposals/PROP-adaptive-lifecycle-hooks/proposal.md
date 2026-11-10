@@ -2,7 +2,7 @@
 id: PROP-adaptive-lifecycle-hooks
 title: Lifecycle hook gates for adaptive delegation
 summary: "Investigate the measured effect and exact work scope of Stop, SubagentStop and SessionStart hooks that read the adaptive assignment ledger, and deliver them only if the investigation supports it."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: capabilities/host/
 priority: medium                      # critical | high | medium | low
