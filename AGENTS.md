@@ -33,6 +33,7 @@ package, feature, layer or test tier. The rules agents most often need:
   Adapters call use cases; services and repositories never import use cases or adapters.
 - `devkit_core.base` never imports `devkit_core.core`; `devkit-core` imports no application package.
   `devkit-dist` never imports `devkit_agt` or the MCP SDK, and its tests pass without `devkit-agt` (`just test-dist`).
+- `devkit-adaptive` never imports `devkit_spec`.
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
 
 ## Documentation
@@ -77,7 +78,7 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 | `devkit-docs` | Document system: document model, `devkit docs` commands, document rules |
 | `devkit-spec` | Spec-driven delivery commands and agent assets |
 | `devkit-starter` | Example external content package |
-| `devkit-adaptive` | Opt-in adaptive development bundle |
+| `devkit-adaptive` | Adaptive development bundle and `devkit adaptive` assignment commands |
 | `devkit-catalog` | Opt-in content bundles |
 | `devkit-viewer` | Local read-only Living Spec viewer and its Svelte library |
 

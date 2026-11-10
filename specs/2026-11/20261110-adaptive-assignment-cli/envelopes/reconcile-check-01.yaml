@@ -1,0 +1,32 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T02:17:41.318232Z'
+status: completed
+summary: Independent reconcile review covered all14 targets and found three documentation gaps; implementation and principal command/storage/dependency contracts agree.
+findings:
+- issue: Installation guidance omits the adaptive-only SDD preparation path.
+  evidence: adoption guide requires replacing a direct base that the new installation need not declare; recommendation policy and agents/import row retain old requirements.
+  failure_condition: A consumer declaring only devkit-adaptive has no applicable documented SDD preparation route.
+  suggested_action: Add devkit-spec while keeping adaptive when no direct base exists; replace only an actual direct base.
+  resolution: open
+  severity: P2
+- issue: Use case omits harness-first lifecycle and assignment-verification fallback scenario.
+  evidence: UC-advance-an-idea 5b3 remains generic; Scenario 5 describes manual diff only.
+  failure_condition: Following the use case misses two explicit target-docs requirements.
+  suggested_action: State harness then project Git order, and failed command verification with manual fallback.
+  resolution: open
+  severity: P2
+- issue: Import boundary and no-command prerequisite restatements are absent.
+  evidence: Root AGENTS lacks devkit-adaptive never-imports-devkit_spec; capability rule19 has no assignment-command prerequisite clause.
+  failure_condition: AC23 per-document review cannot find the target statements.
+  suggested_action: Add the two exact restatements.
+  resolution: open
+  severity: P3
+assumptions:
+- Codex isolation emulated by absolute workdir, read-only commands, unchanged HEAD and snapshot; no outside reads or writes.
+checks: {}
+diff_scope:
+  base: f0434e6ed0c981340754256022750527f8887e7a
+  head: e4543050ae3aefacef7fecc3dc4dca08459ec356

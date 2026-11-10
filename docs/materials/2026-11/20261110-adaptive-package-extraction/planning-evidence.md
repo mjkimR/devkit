@@ -59,7 +59,7 @@ Facts:
 
 | Option | Evidence | Cost | Risk | Open |
 | --- | --- | --- | --- | --- |
-| 2a. `dependencies = []` in this unit; the first command adds its requirements | The catalog's own metadata (`packages/devkit-catalog/pyproject.toml:7`); no import exists | None in this unit; `PROP-adaptive-assignment-cli` edits `pyproject.toml` | None: the same closure as today | The base of the commands, at the time of this comparison |
+| 2a. `dependencies = []` in this unit; the first command adds its requirements | The catalog's own metadata (`packages/devkit-catalog/pyproject.toml:7`); no import exists | None in this unit; `SPEC-adaptive-assignment-cli` edits `pyproject.toml` | None: the same closure as today | The base of the commands, at the time of this comparison |
 | 2b. Pin `devkit-dist` (with `devkit-core`, `click`) in this unit | `devkit-mcp` precedent | Exact-pin and release-closure wiring for a package without code | The source stops being a snapshot source (`BUNDLE_SNAPSHOT_UNSUPPORTED`) in a unit that promises no behavior change | Same as 2a |
 | 2c. Pin `devkit-agt` in this unit | `devkit-spec`, `devkit-docs`, `devkit-viewer` precedent; worktree and execution features become importable | As 2b | As 2b, and a consumer of `adaptive-dev:agents` or `adaptive-dev:import` on `devkit-dist` alone receives `devkit-agt` and the auto-selected `harness` bundle, against `guides/install/bundle-recommendations.md:36` | Whether the commands need harness features at all |
 
@@ -67,11 +67,11 @@ Recommendation: 2a. It is the only option that keeps the unit free of behavior c
 the commands open instead of fixing it before their design exists.
 
 Decision (user): 2a for this unit, so the wheel is bundle-only at the move. The base is settled as `devkit-docs`,
-which itself requires `devkit-agt` and so `devkit-dist`, and `PROP-adaptive-assignment-cli` introduces it together
+which itself requires `devkit-agt` and so `devkit-dist`, and `SPEC-adaptive-assignment-cli` introduces it together
 with the first commands. Options 2b and 2c compared a base of `devkit-dist` or `devkit-agt` before that decision;
 they and the list below remain as evidence and bind neither unit.
 
-What this evidence shows for `PROP-adaptive-assignment-cli` (Q5 there):
+What this evidence shows for `SPEC-adaptive-assignment-cli` (Q5 there):
 
 - A requirement on `devkit-dist` and `devkit-core` keeps the `agents` and `import` presets installable without the
   harness; a requirement on `devkit-agt` changes what a `devkit-dist`-only consumer deploys.
@@ -120,13 +120,13 @@ reproduced in this Planning.
 | `ADR-adaptive-development-and-research` | Approach policy, SDD adoption, discovery, materials and deep-research clauses; the names `adaptive-dev`, `/adaptive-dev`, `.devkit/adaptive-dev.md` | None | Stay in force |
 | `ADR-skill-local-swarm-roles` | The sentence "`ARCH-05-2-components` restates catalog ownership" and the driver "Keep docs/catalog installation independent of SDD" | Its decision clauses name no owning wheel; the trace sentence is a reference repair | Wording repair, no supersession |
 | `ADR-package-ownership-and-release-version` | "Application extensions use their own regular packages"; "No installed path belongs to two wheels" | The new package follows both | None |
-| `CAP-DLV-adaptive-development` | §1 "catalog bundle"; §2 Scope Excluded "new wheel"; rule 2; the test paths of rules 1, 2, 18, 26, 27, 28 and 38 and of the closing paragraph; §4 "Install devkit-docs and devkit-catalog"; the scorer path; `entrypoints` | Restated to the new owner and paths. "No adaptive-development runtime or CLI is added" stays true for this unit and is `PROP-adaptive-assignment-cli`'s to change | Capability edit carried by the new decision |
+| `CAP-DLV-adaptive-development` | §1 "catalog bundle"; §2 Scope Excluded "new wheel"; rule 2; the test paths of rules 1, 2, 18, 26, 27, 28 and 38 and of the closing paragraph; §4 "Install devkit-docs and devkit-catalog"; the scorer path; `entrypoints` | Restated to the new owner and paths. "No adaptive-development runtime or CLI is added" stays true for this unit and is `SPEC-adaptive-assignment-cli`'s to change | Capability edit carried by the new decision |
 | `ARCH-05-2-components` | 1.1: the catalog "owns the opt-in `adaptive-dev` and `deep-research` bundles"; the package list of section 1 | `adaptive-dev` leaves the catalog sentence; `devkit_adaptive` joins the application packages | Architecture edit |
 | `ARCH-07-deployment` | The paragraph "The devkit-catalog wheel registers `adaptive-dev = ...`" and the installation command list of 1.1 | Restated to `devkit-adaptive` | Architecture edit |
 
 Recommendation: one superseding decision limited to the owning wheel and its installation, promoted from
 `ADR-adaptive-dev-distribution`. The decision on a command line or runtime belongs to
-`PROP-adaptive-assignment-cli`, because this unit adds neither.
+`SPEC-adaptive-assignment-cli`, because this unit adds neither.
 
 ## Set 5: entry points (Q5)
 

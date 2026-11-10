@@ -21,3 +21,12 @@
 Example assignment: read the verified absolute `roles/builder.md` path, implement the supplied fixture contract in the assigned worktree and paths, commit only if expressly granted, run the named checks and return status, base/final SHA, actual changed paths, commands/outcomes, defects and unverified areas. The payload also supplies depth, allowance and stop condition.
 
 The caller's lifecycle controls required records: adaptive iteration requires no SDD envelope; an SDD caller retains its own records and gates. Agent selection grants no product decision, commit authority or current-context write.
+
+Before dispatching a deliverable, the delegating agent SHOULD record it with `uv run devkit adaptive assignment new`,
+passing its governing documents as `--governing` and its literal write paths as `--write`; put the assignment ID in the payload.
+After a return, record it with `uv run devkit adaptive assignment return <id>`, then run `uv run devkit adaptive assignment verify <id>`.
+Treat `result=fail` as a rejected return and route its codes to repair; exit `1` alone may instead mean a warning under `--strict`.
+After integrating or abandoning the result, use `uv run devkit adaptive assignment close <id>` with the outcome and required reason.
+On `ADAPTIVE_SCOPE_OVERLAP`, narrow the scope, close a finished assignment, sequence with `--depends-on`, or leave a bounded experiment unrecorded; name only an existing dependency.
+On `ADAPTIVE_GOVERNING_UNRESOLVED`, correct the value, bring the document into the assignee's worktree, or pass an absolute path of a readable copy.
+If a command cannot record, keep the manual payload, actual diff comparison and retained checkpoint procedure above; report assignments as unrecorded and never reroute a denied write.

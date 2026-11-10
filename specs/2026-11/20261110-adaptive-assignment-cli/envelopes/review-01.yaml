@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T02:13:08.937298Z'
+status: completed
+summary: Independent review found smoke fixture ordering and explicit empty identity defaults; implementation boundaries and policy inspected.
+findings:
+- issue: Smoke invokes assignment list before Git initialization.
+  evidence: tests/e2e/smoke.sh list at line 196 precedes git init at line 320; full smoke exits ADAPTIVE_REPOSITORY_UNSUPPORTED.
+  failure_condition: Running just smoke on source 35eb5ebf stops before completing consumer checks.
+  suggested_action: Move list after Git initialization and rerun smoke.
+  resolution: open
+  severity: P2
+- issue: Explicitly empty IDs and revisions receive omitted-option defaults.
+  evidence: services/operations.py truthiness defaults and scratch/assignment/review-01/probe.py show empty --id, --base and --final exit 0.
+  failure_condition: An empty supplied identity is silently accepted rather than rejected with the contract code.
+  suggested_action: Apply defaults for None only and assert refusal without a new ledger event.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex isolation emulated through absolute paths, read-only commands and unchanged snapshot; no outside reads.
+checks:
+  scope: PASS declared paths and approved edges
+  tests: PASS adaptive 72 and full affected 6463; two review probes identify defects
+diff_scope:
+  base: f274fc21bec273a3f24b5b370e7d040446b94a30
+  head: 35eb5ebfddcd409b3f309540b25b9cda277740f1
+activity_effort: medium

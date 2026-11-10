@@ -1,0 +1,26 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T02:23:26.773920Z'
+status: completed
+summary: Completed assignment CLI and ledger verification with exact document-system dependency, guidance and installation contracts. Independent review and reconciliation fixes verified; all14 targets resolved. Host integration and landed checks remain.
+findings: []
+assumptions:
+- No scope extension or sync output; bundle is unselected in this repository. Emulated boundaries checked with absolute cwd, per-operation escalation, unchanged reviewer snapshots and committed range.
+- Tests at0f923376 cover repaired runtime; later source change only updates one E2E expectation and is verified at8c247663. Final report and this worker record are the only later changes.
+unverified_areas:
+- No merge, push or publication. Host must synchronize landed runtime/generated artifacts and verify final target from earliest baseline f0434e6ed0c981340754256022750527f8887e7a.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0
+  tests: PASS full affected unit/integration6466 passed3 skipped; latest delta17 passed; selector regression91 passed
+  e2e: PASS run324a3f475c4e41448acd35b1f076cd1a SHA8c247663477fd435b37b88d72afa9a52888ecbee 355 passed13 skipped cleanup=cleaned
+  smoke: PASS just smoke complete after Git fixture initialization fix
+  lint: PASS full lint-check and check; targeted static checks after code fixes; committed CI rules zero violations
+  lock: PASS uv lock --check
+  reviews: PASS initial independent code P2x2 and reconcile P2x2/P3x1 repaired and implementer reverified; no waived required mismatch
+diff_scope:
+  base: f274fc21bec273a3f24b5b370e7d040446b94a30
+  head: 6823a6acc3fad6a3a751b978187cd220d8b23649
+activity_effort: medium

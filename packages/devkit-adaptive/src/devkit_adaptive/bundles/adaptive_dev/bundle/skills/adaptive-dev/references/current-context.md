@@ -9,3 +9,10 @@
 7. When a failed approach still affects the next action, retain its reason, source identity, owner, surviving hypothesis, retry condition and next recovery action. On resume, recheck whether these facts still apply.
 8. On an explicit SDD adoption request, explain preparing the spec package/assets while the effective approach stays adaptive-dev. Once the `sdd-baseline` playbook in `spec:core` is available and invoked or confirmed, route the retained current facts to it; it owns readiness, exact activation effects and recovery.
 9. Never activate SDD from this skill, infer graduation from size, time or experiment count, or reconstruct earlier delivery records; existing documents, context or the spec package are no activation decision.
+
+On resume run `uv run devkit adaptive assignment list` beside reading current context.
+In a new context treat every `open` assignment as interrupted; assume no earlier agent still runs.
+For each ID inspect `worktree_state`, `commits`, `dirty` and `attention`, then read its goal, stop condition, commit grant, governing documents and checks with `uv run devkit adaptive assignment show <id>`.
+Record a return from retained state, dispatch it again, or close it as abandoned.
+Before pausing, name outstanding assignment IDs and next recovery actions in current context; the ledger holds their scope, base and checks.
+An ID absent from the ledger is stale context.

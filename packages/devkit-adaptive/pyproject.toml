@@ -4,15 +4,20 @@ version = "0.1.6"
 description = "Opt-in adaptive development agent guidance"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["devkit-core==0.1.6", "click>=8.1.7", "devkit-docs==0.1.6"]
 
 [project.entry-points."devkit.bundles"]
 adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"
+
+[project.entry-points."devkit.commands"]
+adaptive = "devkit_adaptive.cli:cli"
 
 [dependency-groups]
 dev = ["devkit-dist"]
 
 [tool.uv.sources]
+devkit-core = { workspace = true }
+devkit-docs = { workspace = true }
 devkit-dist = { workspace = true }
 
 [build-system]

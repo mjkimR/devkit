@@ -22,7 +22,7 @@ created_at: 2026-11-10
 
 `ADR-adaptive-development-and-research` placed the `adaptive-dev` bundle in `devkit-catalog` and rejected a dedicated
 wheel because no runtime dependency required one. `MS-adaptive-development-runtime` plans commands that record
-delegated assignments and verify returned results (`PROP-adaptive-assignment-cli`). A command needs Python code, a
+delegated assignments and verify returned results (`SPEC-adaptive-assignment-cli`). A command needs Python code, a
 `devkit.commands` entry point and runtime requirements.
 
 `devkit-catalog` holds content only and declares no runtime requirement. Projects that never use adaptive
@@ -99,7 +99,7 @@ discovery, materials and deep-research decisions stay in force, as do the names 
   `CAP-DLV-adaptive-development` rule 2 (MUST)
 - At the move the wheel declares no runtime requirement and no entry point besides `devkit.bundles`, and holds no
   feature, command or runtime module.
-- The change that adds the first command (`PROP-adaptive-assignment-cli`) adds the wheel's runtime requirement,
+- The change that adds the first command (`SPEC-adaptive-assignment-cli`) adds the wheel's runtime requirement,
   whose base is `devkit-docs`, and records the effect of that requirement and of the command entry point.
 - The move has no migration path for an existing selection, because nothing uses the bundle outside this
   repository: `devkit-catalog` gains no runtime requirement on `devkit-adaptive`, no second registration and no
@@ -121,7 +121,7 @@ registration;
   wheel.
 - Negative: a selection of `adaptive-dev` made while the catalog shipped it gets no migration path; none exists
   outside this repository.
-- Follow-up: when `PROP-adaptive-assignment-cli` adds the first command, it adds the requirement on `devkit-docs`
+- Follow-up: when `SPEC-adaptive-assignment-cli` adds the first command, it adds the requirement on `devkit-docs`
   and records what the requirement and the command entry point change for this source.
 
 ## 6. Confirmation

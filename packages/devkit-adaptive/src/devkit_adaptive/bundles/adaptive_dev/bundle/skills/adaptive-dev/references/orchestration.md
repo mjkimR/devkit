@@ -4,7 +4,7 @@
 2. Allocate capacity across the Host's whole session, including waiting leads; a lead receives a remaining allowance and cannot infer a private pool or grant extra capacity.
 3. If nesting is unsupported or capacity is unknown/exhausted, flatten or serialize the assignment and retain its result/check contract; change no host setting.
 4. Narrow child authority to the intersection of parent assignment, agent contract and overlay; planners' descendants remain read-only, and verifiers' descendants write only assigned ignored outputs.
-5. Before parallel writes, give each writer a separate worktree, source/base identity and exclusive absolute ownership; use the project's documented worktree procedure and permitted Git actions without assuming a harness is installed.
+5. Before parallel writes, give each writer a separate worktree, source/base identity and exclusive absolute ownership; create it with the installed harness lifecycle `uv run devkit worktree start|status|finish` on a `dev-<slug>` branch; where that lifecycle cannot be used, follow the project's documented Git procedure; without either, serialize writers.
 6. Before dependent concurrent writes, resolve an unsettled shared interface in a bounded contract assignment or sequence the dependent writers.
 7. If coordination costs more than its expected benefit, keep the task direct.
 8. If worktrees or permission are unavailable, serialize writers; a parent waits until a child returns before writing shared glue in that child's checkout.
@@ -17,3 +17,8 @@
 15. Only the Host updates `.devkit/adaptive-dev.md`; record useful failed checks, unmerged/dirty results, source identity, ownership and recovery steps before pause or handoff.
 
 Completion requires collected children, checked actual paths, source-specific check results and a Host checkpoint when resume facts changed. Packaging/projection checks establish no native invocation, path enforcement, performance or all-host support guarantee.
+
+A `swarm-worker` lead records children with `uv run devkit adaptive assignment new --parent <its ID>` only when its payload supplies the ID and permission, and closes all children before returning.
+A `swarm-verifier` or `swarm-planner` lead records nothing: the Host records its children from the returned partition or leaves them unrecorded.
+On interruption and before pausing, the Host runs `uv run devkit adaptive assignment list` and checkpoints outstanding IDs.
+Assignment commands accept every present worktree of the repository, however it was created.

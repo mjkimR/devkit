@@ -17,6 +17,10 @@ aliases:
 
 # [ADR-adaptive-development-and-research] Adaptive development, SDD adoption and explicit deep research
 
+Superseded in part by `ADR-adaptive-assignment-commands`: the command-group part of "Identifiers and commands use `adaptive-dev`" only; the approach value, bundle, entry skill and context file retain `adaptive-dev`.
+
+Superseded in part by `ADR-adaptive-requires-document-system`: the independent docs/catalog installation clause only; adaptive development now installs through the single `devkit-adaptive` requirement, while independence from `devkit-spec` remains in force.
+
 Superseded in part by `ADR-adaptive-dev-distribution`: owning-wheel clauses of the adaptive-dev bundle only; the approach, assets, presets and unrelated decisions remain in force.
 
 Superseded in part by `ADR-skill-local-swarm-roles`: adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force. `CAP-DLV-adaptive-development` restates the retained support-role limits separately from reusable execution-agent authority and presets.

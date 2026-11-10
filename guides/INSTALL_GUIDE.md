@@ -95,7 +95,7 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   `devkit-workflow` skill) and the `devkit spec` commands. Declare it only when
   the user wants spec-driven delivery ([Bundle Recommendations](install/bundle-recommendations.md) lists the
   evidence); never declare `devkit-agt` next to it.
-- `devkit-adaptive` (optional) owns the opt-in `adaptive-dev` bundle; install it for adaptive development or its reusable agents/import presets.
+- `devkit-adaptive` (optional) owns the opt-in `adaptive-dev` bundle and assignment commands, and brings the document system and harness without devkit-spec; install it for adaptive development or its reusable agents/import presets.
 - `devkit-catalog` (optional) adds opt-in bundles that deploy nothing until selected; add it only when a
   [recommended bundle](install/bundle-recommendations.md) comes from it.
 - Both packages require Python 3.12 or newer; the project's `requires-python` must allow 3.12 (the route documents
@@ -111,7 +111,7 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
 - Upgrading later, when the requirement names no ref (the commands above): `uv lock --upgrade-package devkit-agt
   --upgrade-package devkit-dist --upgrade-package devkit-core --upgrade-package devkit-cli --upgrade-package
   devkit-advisory` (plus `--upgrade-package devkit-spec --upgrade-package devkit-docs` when `devkit-spec` is declared, and
-  `--upgrade-package devkit-catalog` and `--upgrade-package devkit-adaptive` when declared), then
+  `--upgrade-package devkit-catalog` when declared, and `--upgrade-package devkit-adaptive --upgrade-package devkit-docs` when devkit-adaptive is declared), then
   `uv sync` and `uv run devkit sync`.
 - Upgrading a pinned requirement: when `pyproject.toml` pins a ref (`rev = ...` under `[tool.uv.sources]`, or
   `@<ref>` in the Git URL), `uv lock --upgrade-package` keeps the pinned commit and changes nothing. Re-declare each
@@ -124,7 +124,7 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
 
 ### Adaptive development
 
-For a user-approved adaptive development path, declare devkit-docs and devkit-adaptive using the package commands above;
+For a user-approved adaptive development path, declare devkit-adaptive, which brings devkit-docs and the harness using the package commands above;
 no devkit-spec requirement is needed. Set shared `.devkit/config.toml` policy explicitly:
 
 ```toml

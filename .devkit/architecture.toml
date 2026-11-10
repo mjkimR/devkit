@@ -191,8 +191,13 @@ data_roots = ["bundle"]
 [[packages]]
 namespace = "devkit_adaptive"
 root = "packages/devkit-adaptive/src/devkit_adaptive"
-kind = "content"
+kind = "features"
+features = ["assignment"]
+feature_dependencies.assignment = ["devkit_dist.features.project", "devkit_docs.features.documents"]
+root_modules = ["cli"]
 data_roots = ["bundles"]
+dependencies = ["devkit_docs", "devkit_dist", "devkit_core", "devkit.advisory"]
+public_modules = ["devkit_adaptive.features.assignment.usecases.listing"]
 
 [[packages]]
 namespace = "devkit_catalog"

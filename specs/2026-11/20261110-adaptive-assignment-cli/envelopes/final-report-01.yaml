@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T02:22:47.456268Z'
+status: completed
+summary: Implemented the six assignment commands, shared append-only ledger and deterministic return verification, document-system requirement, installation and guidance contracts. Independent code and reconcile findings repaired.
+findings: []
+assumptions:
+- Source tests were run on repaired runtime from0f923376; subsequent source change only updates the affected-selector E2E expectation, validated directly and in final E2E8c247663.
+- reverify-01 records the prior HEAD while its fixes were still in the worktree before combined commit0f923376; subsequent full unit/integration and fixed-SHA E2E attest the committed repairs.
+- Codex isolation is emulated with absolute workdir, operation-specific permissions, read-only reviewer snapshots and committed scope audit; no native boundary guarantee is claimed.
+unverified_areas:
+- Host integration, landed runtime synchronization/generated checks and final target verification remain; no merge or publication performed.
+checks:
+  tests: PASS full unit/integration 6466 passed 3 skipped; final docs delta17 passed; selector regression91 passed; isolated E2E355 passed13 skipped at8c247663
+  build: PASS just smoke complete with thirteen wheels and adaptive list; installed consumer verifies exact docs requirement, auto-select and absence of spec/catalog
+  lint: PASS full lint-check and check, targeted lint/types after code fixes, CI rules and uv lock --check
+diff_scope:
+  base: f0434e6ed0c981340754256022750527f8887e7a
+  head: 8c247663477fd435b37b88d72afa9a52888ecbee
