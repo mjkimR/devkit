@@ -9,7 +9,6 @@ import subprocess
 import sys
 import sysconfig
 import tempfile
-from datetime import timedelta
 from pathlib import Path
 
 from devkit_agt.features.worktree import locate, start
@@ -59,10 +58,6 @@ async def conversation(root: Path, worktree: Path, prepared_digest: str) -> None
                 "integration",
                 "integrate",
                 "dev-smoke",
-                "--task-kind",
-                "session",
-                "--task-id",
-                "installed-fixture",
                 "--expected-digest",
                 prepared_digest,
                 "--workspace-root",
@@ -112,10 +107,6 @@ def main() -> None:
                     "integration",
                     "prepare",
                     "dev-smoke",
-                    "--task-kind",
-                    "session",
-                    "--task-id",
-                    "installed-fixture",
                     "-w",
                     str(root),
                     "--format",

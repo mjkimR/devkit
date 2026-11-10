@@ -1,0 +1,79 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:34:57.772052Z'
+status: completed
+review: challenger-01.yaml
+summary: 'All eleven findings of challenger-01 are folded and were checked by the planning worker against the edited text; the challenger was not called again. 1: a writer truncates an unterminated fragment under the lock, AC-13 runs the sequence. 2: show prints every recorded field, AC-12 asserts it. 3: the uncommitted-changes warning needs the commit grant, guidance branches on result. 4: the code table carries modes. 5: the PADR supersedes only the naming clause, conditional on q2. 6: --no-optional-locks. 7 to 11: archetype wording, overlap routes, AC-19, the unborn repository rule and the exact JSON keys.'
+findings:
+- issue: 'The torn-line recovery destroys the ledger: a reader ignores an unparsable final line, the next writer starts on a new line, and the fragment becomes an unparsable earlier line, so every later command exits 2 with ADAPTIVE_LEDGER_UNREADABLE.'
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:273,302-304,309,326,403-405; decisions/PADR-adaptive-assignment-ledger-storage.md:28,55-56
+  failure_condition: A writer is killed mid-append and a later write succeeds; the next read finds the fragment on a non-final line. AC-13 passes while the sequence torn line, write, list fails.
+  suggested_action: Under the lock, truncate an unterminated final fragment before appending and extend AC-13 with the sequence.
+  resolution: resolved
+  severity: P1
+- issue: No text output prints goal, commit, governing, depends_on, evidence, handoff, stop, the return summary and unverified areas or the close reason, although they are recorded for resume.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:36-38,125,179-182,320
+  failure_condition: After an unplanned interruption a new Host context reads list and show in text mode and cannot dispatch an assignment again from recorded state.
+  suggested_action: Add show sentinels for the missing fields or name show --format json as the resume read, and add an acceptance scenario that a fresh process recovers goal, stop and commit grant.
+  resolution: resolved
+  severity: P2
+- issue: ADAPTIVE_UNCOMMITTED_CHANGES is unconditional, so it fires on every correct assignment without --commit; under --strict a passing verification exits 1, which the delegation guidance treats as a rejected return.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:258-259,263,318,336-338; packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/subagents/swarm-worker.md:34
+  failure_condition: 'Any assignment without --commit whose assignee wrote in scope: verify warns, and with strict set exits 1 on result=pass.'
+  suggested_action: Raise the warning only when the assignment grants commits; make the delegation step branch on result, not on exit 1; add the no-commit pass case to an acceptance scenario.
+  resolution: resolved
+  severity: P2
+- issue: The code table gives level and exit code but not the advisory fields that derive each error's mode and [ACTION] directive.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:267-289; docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md:126-142; packages/devkit-spec/src/devkit_spec/base/errors.py:20-24
+  failure_condition: Following the devkit-spec base, an unset class derives MAINTENANCE, so a scope violation or overlap tells the Host a tool defect occurred.
+  suggested_action: Add a mode column to the code table.
+  resolution: resolved
+  severity: P2
+- issue: PADR-adaptive-assignment-commands supersedes a clause that is a decision driver of the deep-research part of the ADR, not an adaptive-development decision; only the naming clause is a decision clause, and it is replaced only under q2's recommended answer.
+  evidence: docs/decisions/2026-11/20261102-adaptive-development-and-research.md:107-116,250,271-292; decisions/PADR-adaptive-assignment-commands.md:6,20-21,47-50; target-docs.md:75-77; docs/capabilities/delivery/CAP-DLV-proposal-planning.md:350-356
+  failure_condition: At handoff a Superseded in part line misstates the deep-research decision; under the other q2 answer the PADR supersedes nothing while supersedes still makes handoff write a pointer.
+  suggested_action: Limit the supersession to the naming clause, conditional on q2, and present the CLI exclusion as capability text.
+  resolution: resolved
+  severity: P2
+- issue: Section 3.4 specifies git status without --no-optional-locks, while the evidence and precedent use the flag; list and verify run in worktrees where assignees work.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:160-165,245; materials/planning-evidence.md:20; packages/devkit-spec/src/devkit_spec/features/worker/usecases/inspect.py:128
+  failure_condition: The Host runs list while an assignee runs git add or git commit; a plain git status takes index.lock and the assignee's command fails. Reasoned from Git's documented purpose for the flag; not run.
+  suggested_action: Write git --no-optional-locks status for verify and list.
+  resolution: resolved
+  severity: P2
+- issue: The lead sentence planned for all three archetypes cannot be executed by swarm-planner, which has no shell, and under the agents preset no archetype reaches the fallback text in delegation.md.
+  evidence: packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/subagents/swarm-planner.md:11,14,18; packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/bundle.toml:65-66; docs/proposals/PROP-adaptive-assignment-cli/proposal.md:313,322,325
+  failure_condition: A planner lead cannot run new --parent, so its children stay unrecorded; an SDD caller with only the archetypes gets a sentence that names no command and no fallback.
+  suggested_action: Limit recording of children to swarm-worker and swarm-verifier and make the archetype sentence self-contained.
+  resolution: resolved
+  severity: P3
+- issue: The overlap refusal across worktrees has no stated Host action; the only ways through are closing the other assignment or naming it in --depends-on, which can record a false dependency.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:221-223,281,325-328,336-338; docs/capabilities/delivery/CAP-DLV-adaptive-development.md:75-76,122-124
+  failure_condition: A prototype in a scratch worktree touches paths an open worker assignment owns, or a merged assignment was not yet closed; the Host gets exit 2 with no route in the guidance.
+  suggested_action: Add one guidance line and the advisory [FIX] for ADAPTIVE_SCOPE_OVERLAP.
+  resolution: resolved
+  severity: P3
+- issue: 'AC-19 does not check what it claims: importing the package loads only its __init__, so sys.modules lacks devkit_spec even if feature modules import it.'
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:419; docs/architecture/ARCH-05-3-command-plugins.md:25
+  failure_condition: A use case imports devkit_spec inside the feature and AC-19 still passes.
+  suggested_action: Import every module of the package before the check, or rely on the dependencies declaration that RULE-architecture enforces.
+  resolution: resolved
+  severity: P3
+- issue: 'AC-18 contradicts ADAPTIVE_REPOSITORY_UNSUPPORTED on the existing fixture: the installed-consumer project is initialized without a commit.'
+  evidence: packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py:46,85; docs/proposals/PROP-adaptive-assignment-cli/proposal.md:272,417-418
+  failure_condition: The implementer adds the list call to the existing consumer, gets exit 2 and must guess between adding a commit and relaxing the rule.
+  suggested_action: State that the consumer has one commit, or define that list and show need a work tree only.
+  resolution: resolved
+  severity: P3
+- issue: 'Three output shapes are left open: the verify JSON check objects, the observed object for a closed assignment or a missing worktree, and one advisory per failed check where the checks check has two codes.'
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:160-169,189-190,239,306-308,409-410
+  failure_condition: AC-15 cannot be asserted mechanically for these keys, and the later hook proposal would bind to whatever Development picks.
+  suggested_action: State the exact keys, the null rules for observed and one advisory per applying code.
+  resolution: resolved
+  severity: P3
+unverified_areas:
+- 'No Git experiment ran in this turn: the probe command was denied by the host permission system and not retried'
+checks: {}
+activity_effort: medium

@@ -1,0 +1,51 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:57:15.722253Z'
+status: completed
+summary: 'Consequences of devkit-adaptive requiring devkit-docs: an exact == pin that the release tooling rewrites and checks, re-release whenever devkit-docs changes, docs:core auto-selected with a one-time BUNDLE_AUTO_SELECTED notice and harness:core as a built-in, the wheel refused as a devkit bundle snapshot source (BUNDLE_SNAPSHOT_UNSUPPORTED), and installation statements in two capabilities, three architecture documents, five guide files, READMEs and the smoke script that name devkit-docs plus devkit-catalog.'
+findings:
+- issue: Sibling requirements are exact pins of the actual version (devkit-docs==0.1.6 form) with a workspace source per sibling; devkit-spec and devkit-docs also pin devkit-core and require click directly. identity.consistent() and metadata.selected() refuse any other specifier, metadata.generated() rewrites the pin at release, prepare() runs uv lock, and test_lockstep asserts the pin for every packages/* and tools/* project, so a new package is covered without registration.
+  evidence: packages/devkit-spec/pyproject.toml:7-16,54-58; packages/devkit-docs/pyproject.toml:7-15,41-43; scripts/releases/identity.py:56-70,98-113; scripts/releases/metadata.py:70-134; scripts/releases/prepare.py:289-309; packages/devkit/tests/integration/package/test_lockstep.py:27-47; docs/architecture/ARCH-07-deployment.md:46-48
+  suggested_action: Declare devkit-core==<version>, click>=8.1.7 and devkit-docs==<version> with workspace sources and regenerate uv.lock; no release script changes.
+  resolution: open
+- issue: A wheel whose exact pin differs is added to the changed set, so devkit-adaptive takes a new version whenever devkit-docs, devkit-agt, devkit-dist or devkit-core does.
+  evidence: scripts/releases/metadata.py:93-99; docs/architecture/ARCH-07-deployment.md:40-43
+  suggested_action: State the release coupling as a consequence of the requirement.
+  resolution: open
+- issue: 'Auto-selection follows the installed bundle, not the requirement graph: with devkit-adaptive and its closure installed and no presets configured, devkit sync selects devkit:core, advisory:core and harness:core as built-ins and docs:core with a one-time BUNDLE_AUTO_SELECTED notice; adaptive-dev stays unselected until devkit add adaptive-dev; a project can opt out of docs with devkit remove docs.'
+  evidence: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml:4-5; packages/devkit/src/devkit_agt/bundles/harness/bundle/bundle.toml:4-6; packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config.py:226-290; packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py:221-240,842-900; docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md:113-116,349-352
+  suggested_action: Assert the receipt presets docs == [core] and harness == [core] in the installed-consumer test, as packages/devkit/tests/integration/bundles/harness/test_bundle.py:69-80 does.
+  resolution: open
+- issue: 'devkit bundle snapshot refuses a source project with runtime or optional dependencies, or with any entry-point group other than devkit.bundles, before it reads a bundle: BUNDLE_SNAPSHOT_UNSUPPORTED. The devkit-docs requirement alone ends the adaptive wheel''s eligibility; the devkit.commands group does too. No document or guide tells consumers to snapshot the adaptive-dev bundle.'
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/snapshots/source.py:42-66,145; packages/devkit-dist/src/devkit_dist/features/distribution/models/snapshots.py:20-24; packages/devkit-dist/tests/integration/features/distribution/test_snapshots.py:179-187; guides/install/existing-repository.md:283-285
+  suggested_action: State the lost snapshot eligibility as an accepted cost.
+  resolution: open
+- issue: 'Installation statements that name devkit-docs plus devkit-catalog or imply no harness: CAP-DLV-adaptive-development rule 2 and section 4; CAP-HARN-agent-guidance; ARCH-05-2-components; ARCH-07-deployment; ARCH-05-1-containers dependency lines; guides/INSTALL_GUIDE.md; guides/install/existing-repository.md, new-repository.md, bundle-recommendations.md and adaptive-dev-sdd-adoption.md; packages/devkit-catalog/README.md; root README.md and AGENTS.md package table. Several of them describe devkit-docs as an alternative to devkit-agt although devkit-docs requires it.'
+  evidence: docs/capabilities/delivery/CAP-DLV-adaptive-development.md:51,65-66,210-212; docs/capabilities/harness/CAP-HARN-agent-guidance.md:473-475; docs/architecture/ARCH-05-2-components.md:80-88; docs/architecture/ARCH-07-deployment.md:170-183; docs/architecture/ARCH-05-1-containers.md:127-128,160; guides/INSTALL_GUIDE.md:76-126,228; guides/install/existing-repository.md:250-257; guides/install/new-repository.md:98-104; guides/install/bundle-recommendations.md:25-35,76-88; guides/install/adaptive-dev-sdd-adoption.md:19-21; packages/devkit-catalog/README.md:26-27; README.md:31,134-135; AGENTS.md:80
+  suggested_action: 'State, per document, the installation statement that holds after this unit: devkit-adaptive alone, which brings the document system and the harness, without devkit-spec.'
+  resolution: open
+- issue: 'Bundle text that assumes an optional document system or no harness: orchestration.md step 5 (without assuming a harness is installed), documents.md steps 1 and 2 (when the docs bundle is selected; create no document system unprompted) and the current-context template; test_adaptive_dev_documents.py asserts the no-document-system wording.'
+  evidence: packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md:7; packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/documents.md:3-4; packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/templates/current-context.md:15; packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev_documents.py:33
+  suggested_action: Decide which conditions become unconditional and update the content tests with them.
+  resolution: open
+- issue: The installed-consumer test builds and installs the advisory, cli, core, dist, agt, docs and catalog wheels by file, asserts only that devkit-spec is absent, and initializes its consumer without a commit; the smoke script asserts the catalog's bundle set and adds wheels by file, naming the docs wheel beside the spec wheel because no index serves the siblings.
+  evidence: packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py:25-65,123-132; tests/e2e/smoke.sh:40-58,194,228,382; docs/development/reference/distribution.md:24-26
+  suggested_action: Assert the Requires-Dist of devkit-adaptive, the docs and harness presets in the receipt and the absence of devkit-spec; keep sibling wheels named by file.
+  resolution: open
+- issue: An existing project that selected adaptive-dev and installs only devkit-catalog after the move fails sync with SELECTION_INVALID; this belongs to the extraction.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config.py:238-276; docs/capabilities/distribution/CAP-DIST-content-packages.md:97-100
+  suggested_action: Leave migration to PROP-adaptive-package-extraction; no consumer outside this repository exists.
+  resolution: open
+assumptions:
+- Expected consumer output was derived from code, not from a run
+- PROP-adaptive-package-extraction was read as the draft in this worktree; its Planning result is not visible here
+unverified_areas:
+- No test, smoke or installed-consumer run was executed
+- Whether rules check passes in the installed consumer once the docs rule assets deploy without a docs tree
+- Whether uv add of the adaptive wheel in the smoke script needs the docs wheel named beside it
+- Inbound references to the changed documents were searched with rg, not with devkit docs refs
+- Exit codes of SELECTION_INVALID and BUNDLE_SNAPSHOT_UNSUPPORTED were inferred from the input-error convention
+checks: {}
+activity_effort: medium

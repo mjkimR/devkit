@@ -51,6 +51,7 @@ dist_wheel=$(wheel devkit_dist)
 devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
+adaptive_wheel=$(wheel devkit_adaptive)
 catalog_wheel=$(wheel devkit_catalog)
 mcp_wheel=$(wheel devkit_mcp)
 docs_wheel=$(wheel devkit_docs)
@@ -191,7 +192,7 @@ echo "==> creating a fresh consumer project"
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --no-build-package pyyaml --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
+    uv add --no-build-package pyyaml --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" "$adaptive_wheel" >/dev/null
     uv run python -c '
 import yaml
 from devkit_core.core import YamlBindingUnavailableError, safe_load
@@ -225,7 +226,8 @@ with discover_bundles() as bundles:
         'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
         'authoring': 'devkit-agt', 'harness': 'devkit-agt',
     }
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'response-style', 'maintenance', 'cli-tool', 'adaptive-dev', 'deep-research'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'response-style', 'maintenance', 'cli-tool', 'command-design', 'deep-research', 'app-uiux-improve', 'design-explore'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-adaptive'} == {'adaptive-dev'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null

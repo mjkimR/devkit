@@ -17,7 +17,7 @@ created_at: 2026-10-17
 
 Each application wheel owns a regular Python package (`ARCH-05-1-containers`): `devkit_dist`
 holds distribution behavior and the root command line; `devkit_agt` holds the harness engines;
-`devkit_docs` holds the document system; `devkit_spec`, `devkit_mcp` and `devkit_viewer` own their extensions.
+`devkit_docs` holds the document system; `devkit_spec`, `devkit_adaptive`, `devkit_mcp` and `devkit_viewer` own their extensions.
 The public advisory API remains `devkit.advisory`. `ADR-package-ownership-and-release-version` records the ownership and
 layout decision; `ADR-document-system` places the document layer in `devkit_docs` below `devkit_spec`.
 
@@ -79,10 +79,11 @@ shared errors and SDK-free MCP contracts, and `devkit_core.core` holds generic i
 A package may explicitly declare shared transport adapters: dist owns `adapters/cli.py` for
 its common CLI boundary, and docs and spec each own `adapters/cli.py` for the sentinel output their commands share. These adapters remain above application layers. Application-owned bundles live under
 `bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
-may retain their existing bundle-only layouts. The content-only catalog owns the opt-in `adaptive-dev` and `deep-research`
-bundles under `devkit_catalog/adaptive_dev/bundle/` and `devkit_catalog/deep_research/bundle/`; their entries, optional
-role contracts and context template add no runtime module or dependency, and neither bundle depends on or shares an
-asset with the other. Adaptive-dev also owns reusable `swarm-planner`, `swarm-worker` and `swarm-verifier` contracts,
+may retain their existing bundle-only layouts. The content-only catalog owns the opt-in `deep-research` bundle under
+`devkit_catalog/deep_research/bundle/` and the `app-uiux-improve` and `design-explore` bundles below.
+`devkit_adaptive` owns the opt-in `adaptive-dev` bundle under `devkit_adaptive/bundles/adaptive_dev/bundle/`,
+with no feature, runtime module or dependency until its first command. Its entry, optional role contracts and context
+template remain independent of `deep-research`; neither bundle shares an asset with the other. Adaptive-dev also owns reusable `swarm-planner`, `swarm-worker` and `swarm-verifier` contracts,
 skill-local task overlays and orchestration references, and the user-invoked `adaptive-import` skill with its
 `agent-asset-conversion` playbook, which write converted assets into the consuming project's own bundle. Compatible external callers may reuse installed public
 contracts under their own workflow; private sibling assets and mandatory bundle dependencies are not introduced. The opt-in `app-uiux-improve` content bundle lives under

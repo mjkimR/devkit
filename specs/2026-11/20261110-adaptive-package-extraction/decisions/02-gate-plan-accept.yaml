@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-adaptive-package-extraction
+by: user
+at: '2026-11-10T01:03:22.857465Z'

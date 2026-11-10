@@ -189,10 +189,16 @@ kind = "content"
 data_roots = ["bundle"]
 
 [[packages]]
+namespace = "devkit_adaptive"
+root = "packages/devkit-adaptive/src/devkit_adaptive"
+kind = "content"
+data_roots = ["bundles"]
+
+[[packages]]
 namespace = "devkit_catalog"
 root = "packages/devkit-catalog/src/devkit_catalog"
 kind = "content"
-data_roots = ["response_style", "host_observer", "maintenance", "cli_tool", "adaptive_dev", "deep_research", "command_design", "app_uiux_improve", "design_explore"]
+data_roots = ["response_style", "host_observer", "maintenance", "cli_tool", "deep_research", "command_design", "app_uiux_improve", "design_explore"]
 
 [[import_exceptions]]
 source = "devkit_agt.features.rules.models.contracts"

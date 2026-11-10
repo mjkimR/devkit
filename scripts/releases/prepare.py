@@ -223,6 +223,15 @@ def compute(root: Path, baseline_path: Path, *, builder=build) -> tuple[dict, di
     for name, entry in candidate.items():
         for bundle_name, bundle in entry["bundles"].items():
             previous = baseline["packages"].get(name, {}).get("bundles", {}).get(bundle_name)
+            if previous is None:
+                previous = next(
+                    (
+                        entry["bundles"][bundle_name]
+                        for entry in baseline["packages"].values()
+                        if bundle_name in entry["bundles"]
+                    ),
+                    None,
+                )
             version = (
                 release if previous is None or previous["fingerprint"] != bundle["fingerprint"] else previous["version"]
             )

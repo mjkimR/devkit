@@ -16,7 +16,7 @@ usecases:
   - UC-drive-development-to-integration
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
   - packages/devkit-catalog/src/devkit_catalog/deep_research/bundle/skills/deep-research/SKILL.md
 ---
 
@@ -470,9 +470,9 @@ copies it into a proposal's `materials/` (`ADR-adaptive-development-and-research
 
 ## Adaptive development entry and current context
 
-The opt-in `adaptive-dev:core` catalog bundle supplies `/adaptive-dev`, conditional references, the adaptive-dev pointer, three
+The opt-in `adaptive-dev:core` bundle supplies `/adaptive-dev`, conditional references, the adaptive-dev pointer, three
 optional support contracts and a current-context template (`CAP-DLV-adaptive-development`). Install devkit-docs
-and devkit-catalog and select `adaptive-dev` explicitly; devkit-spec is not required. The entry inspects common
+and devkit-adaptive and select `adaptive-dev` explicitly; devkit-spec is not required. The entry inspects common
 `configuration.development.approach` before product work and stops on SDD or invalid policy rather than switching
 approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
 

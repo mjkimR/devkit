@@ -1,7 +1,7 @@
 # Continuous integration for the devkit monorepo.
 #
 # Three jobs: the workspace checks every package (devkit-dist, devkit, devkit-starter,
-# devkit-catalog, ...: lint, types, tests, governance rules) on Linux and macOS, and runs the
+# devkit-adaptive, devkit-catalog, ...: lint, types, tests, governance rules) on Linux and macOS, and runs the
 # devkit-dist tests again in an environment without devkit-agt (the dist-only check); the consumer smoke
 # builds the wheels, installs them into fresh projects the way a consumer would (devkit-dist alone, then with
 # devkit-agt) and commits through the installed gate hooks (it needs git, which the runner
