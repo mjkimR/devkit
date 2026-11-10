@@ -5,11 +5,11 @@ on the rule; the instance carries the defaults and its class carries the field
 types. A project configures a rule in ``.devkit/config.toml``::
 
     [rules.settings.RULE-file-length]
-    max_lines = 300
+    max_bytes = 300
 
     [[rules.settings.RULE-file-length.overrides]]
     path = "docs/research/**"
-    max_lines = 800
+    max_bytes = 800
 
 Every layer (base values and each override applied to the base values) is
 validated against the dataclass before any rule runs: unknown keys, wrong

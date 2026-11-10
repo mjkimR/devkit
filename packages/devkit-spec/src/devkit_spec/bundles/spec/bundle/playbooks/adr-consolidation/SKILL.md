@@ -25,8 +25,8 @@ Read every ADR in scope, superseded ones included (`uv run devkit docs list deci
 - Leave out an ADR that contradicts another in-effect ADR or no longer matches the code or the Living Spec, and record
   it with the `spec-feedback` skill.
 - Order members by `created_at`, then supersession order.
-- If `RULE-file-length` configures `consolidated_max_lines`, use the larger of that budget and the resolved
-  `max_lines` as a topic-breadth heuristic for each proposed replacement. Review an over-budget group by topic;
+- If `RULE-file-length` configures `consolidated_max_bytes`, use the larger of that budget and the resolved
+  `max_bytes` as a signal for loaded content size for each proposed replacement. Review an over-budget group by topic;
   preserve every driver, decision, rejected option and consequence. Never discard retained content to meet a budget.
 
 Show the user the group map (replacement slug, members, one-line topic) before writing, unless the request named the

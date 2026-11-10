@@ -256,3 +256,26 @@ def test_commit_index_applies_only_to_its_own_repository(
 
     monkeypatch.setenv("GIT_INDEX_FILE", index)
     assert commit_index(repo) is None  # Git's own variable already applies
+
+
+@pytest.mark.parametrize("staged,live,overflow", [(b"x" * 31, b"x", True), (b"x", b"x" * 31, False)])
+def test_file_byte_budget_uses_materialized_snapshot_not_live_size(
+    repo: Path, tmp_path: Path, staged: bytes, live: bytes, overflow: bool
+) -> None:
+    from devkit_agt.features.rules import Phase, RuleContext, evaluate_rules
+    from devkit_agt.features.rules.services.builtins.file_length import FileLengthRule
+
+    (repo / "docs/a.md").write_bytes(staged)
+    _git(repo, "add", "docs/a.md")
+    (repo / "docs/a.md").write_bytes(live)
+    snapshot = git_snapshot(repo, staged=True)
+    out = tmp_path / "byte-snapshot"
+    materialize_snapshot(snapshot, out)
+    ctx = RuleContext(workspace_root=out, changed_files=list(snapshot.changed), snapshot=snapshot, phase=Phase.HYGIENE)
+    result = evaluate_rules(ctx, [FileLengthRule(max_bytes=30)])
+    assert result.errors == []
+    assert len(result.violations) == int(overflow)
+    if overflow:
+        assert result.violations[0].message == "File exceeds byte budget (31 > 30 bytes)"
+        assert result.violations[0].line == 1
+    assert (repo / "docs/a.md").read_bytes() == live

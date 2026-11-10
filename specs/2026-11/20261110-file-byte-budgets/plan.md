@@ -42,7 +42,8 @@ live path. Keep alias qualification, malformed-frontmatter fallback and ordinary
   the default byte count and unchanged phase/severity.
 - AC-06: source playbook assertions, document rules, source-pinned before/after hygiene JSON, and capability/ADR
   comparison. The baseline is `materials/hygiene-before.json`, captured before source edits on this branch.
-- Required native commands: `just lint-check dev`, `just lint-check spec`, `just check dev`, `just check spec`,
+- Required native commands: `just lint-check agt`, `just lint-check dev`, `just lint-check spec`, `just check agt`, `just check dev`,
+  `just check spec`,
   `uv run devkit rules check --ci --base 7bc401d4f599ff3373a01a11084e7719fe1272f0`,
   `just test-affected --base 7bc401d4f599ff3373a01a11084e7719fe1272f0 --tier all`, source builtin/playbook tests,
   sync and generated checks. Preserve full fallback; run required E2E synchronously here.
