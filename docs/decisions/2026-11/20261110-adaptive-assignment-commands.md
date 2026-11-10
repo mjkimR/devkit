@@ -1,16 +1,16 @@
 ---
-id: PADR-adaptive-assignment-commands
+id: ADR-adaptive-assignment-commands
 title: Adaptive assignment commands
 summary: For adaptive delegation whose assignment board lives only in the Host's context, we add a devkit adaptive assignment command group that records assignments and verifies returns against the repository, to make resume and return checks deterministic, accepting a CLI the first decision excluded.
-proposal: PROP-adaptive-assignment-cli
+proposal: SPEC-adaptive-assignment-cli
 supersedes: [ADR-adaptive-development-and-research]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-adaptive-assignment-commands] Adaptive assignment commands
+# [ADR-adaptive-assignment-commands] Adaptive assignment commands
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 
 ---
@@ -75,7 +75,7 @@ group and no runtime service, scheduler or process runner.
   guidance, so the guidance states the steps without an availability condition. When a command cannot record (an
   unsupported repository, an unwritable or unreadable ledger, a denied write), the Host keeps the manual board and
   diff reading and reports the assignments as unrecorded. → `CAP-DLV-adaptive-development` rules 13 and 14 (SHOULD).
-- Recording validates the governing documents an assignment names (`PADR-adaptive-requires-document-system`).
+- Recording validates the governing documents an assignment names (`ADR-adaptive-requires-document-system`).
   → CAP-DLV-adaptive-assignments §3 (MUST).
 - The Host keeps these judgments: whether a returned result meets its goal, whether a recorded check outcome is
   true, whether an open assignment's agent is still running, capacity and allowance, shared-interface agreement, and

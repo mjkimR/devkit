@@ -10,7 +10,7 @@ size: L                               # S | M | L | XL (XL: would need two or mo
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-adaptive-development-runtime
-depends_on: [PROP-adaptive-assignment-cli]
+depends_on: [SPEC-adaptive-assignment-cli]
 boundaries:
   owns:
     - packages/
@@ -42,7 +42,7 @@ handler.
 This proposal is investigation first. Planning measures the effect and sizes the work, and accepts delivery only
 when both support it. A rejection with its evidence is a valid outcome.
 
-Hypothesis: once assignments are recorded (`PROP-adaptive-assignment-cli`), a `Stop` and `SubagentStop` gate that
+Hypothesis: once assignments are recorded (`SPEC-adaptive-assignment-cli`), a `Stop` and `SubagentStop` gate that
 reads the ledger prevents sessions and workers from ending with outstanding assignments at a host-adapter cost that
 is bounded and reusable by other bundles.
 

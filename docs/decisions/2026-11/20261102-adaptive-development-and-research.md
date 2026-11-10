@@ -17,6 +17,10 @@ aliases:
 
 # [ADR-adaptive-development-and-research] Adaptive development, SDD adoption and explicit deep research
 
+Superseded in part by `ADR-adaptive-assignment-commands`: For adaptive delegation whose assignment board lives only in the Host's context, we add a devkit adaptive assignment command group that records assignments and verifies returns against the repository, to make resume and return checks deterministic, accepting a CLI the first decision excluded.
+
+Superseded in part by `ADR-adaptive-requires-document-system`: For the adaptive distribution, whose commands validate governing documents and whose guidance links project documents, we require devkit-docs with an exact pin, to give every installation the document system and the harness, accepting release coupling and the loss of snapshot eligibility.
+
 Superseded in part by `ADR-adaptive-dev-distribution`: owning-wheel clauses of the adaptive-dev bundle only; the approach, assets, presets and unrelated decisions remain in force.
 
 Superseded in part by `ADR-skill-local-swarm-roles`: adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force. `CAP-DLV-adaptive-development` restates the retained support-role limits separately from reusable execution-agent authority and presets.

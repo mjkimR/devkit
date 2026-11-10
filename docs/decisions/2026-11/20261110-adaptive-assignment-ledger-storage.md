@@ -1,22 +1,22 @@
 ---
-id: PADR-adaptive-assignment-ledger-storage
+id: ADR-adaptive-assignment-ledger-storage
 title: Assignment ledger in the shared Git directory
 summary: For assignment state that the Host and role leads in other worktrees read and write, we keep an append-only JSON Lines ledger under the shared Git directory, to give every linked worktree one untracked record, accepting that another clone starts without it and sandboxes may ask approval.
-proposal: PROP-adaptive-assignment-cli
-status: draft
+proposal: SPEC-adaptive-assignment-cli
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-adaptive-assignment-ledger-storage] Assignment ledger in the shared Git directory
+# [ADR-adaptive-assignment-ledger-storage] Assignment ledger in the shared Git directory
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 
 ---
 
 ## 1. Context & Problem Statement
 
-The assignment commands (`PADR-adaptive-assignment-commands`) need one record that the Host reads and writes from its
+The assignment commands (`ADR-adaptive-assignment-commands`) need one record that the Host reads and writes from its
 checkout and a role lead from another worktree. Parallel writers each own a worktree on its own branch, so a file in
 the working tree is either tracked, and differs per branch, or ignored, and exists per checkout. A later consumer
 (`PROP-adaptive-lifecycle-hooks`) reads the same record from whichever checkout a host session runs in.
@@ -38,7 +38,7 @@ the working tree is either tracked, and differs per branch, or ignored, and exis
 - **Shared Git directory** (chosen): one record for all worktrees with the precedent of `devkit exec` and the spec
   scope registry; another clone has no record, and a sandboxed host may ask approval for the write.
 
-Format options, compared in the proposal's `materials/planning-evidence.md` §5: one JSON document, one JSON file per
+Format options, compared in the proposal's `docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §5: one JSON document, one JSON file per
 assignment, or an append-only JSON Lines event log (chosen).
 
 ## 4. Decision Outcome

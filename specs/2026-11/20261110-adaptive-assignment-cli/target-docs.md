@@ -2,7 +2,7 @@
 id: PROP-adaptive-assignment-cli-target
 title: Target Living Spec Structure for PROP-adaptive-assignment-cli
 status: draft
-proposal: PROP-adaptive-assignment-cli
+proposal: SPEC-adaptive-assignment-cli
 created_at: 2026-11-10
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
@@ -44,9 +44,9 @@ catalog. Each item states what must hold after this unit; where the landed wordi
     exit code, and the stated limits of verification (proposal §3.2 to §3.6).
   - Frontmatter `entrypoints`: the feature's CLI module; `usecases`: `UC-advance-an-idea`.
 - `CAP-DLV-adaptive-development`:
-  - §1, the paragraph on decision ownership: the decision promoted from `PADR-adaptive-assignment-commands` owns
+  - §1, the paragraph on decision ownership: the decision promoted from `ADR-adaptive-assignment-commands` owns
     the command group and its naming (rules 13, 14, 18 and 19 where they name the commands), and the decision
-    promoted from `PADR-adaptive-requires-document-system` owns the requirement and the document defaults (rules 2,
+    promoted from `ADR-adaptive-requires-document-system` owns the requirement and the document defaults (rules 2,
     26 and 27). The sentence that rules 26 and 27 "have no decision record" is corrected for the parts that
     decision now owns; the import entry (rules 28 to 39) keeps the capability as its contract.
   - Rule 2 (independent installation): the `devkit-adaptive` distribution MUST require `devkit-docs` and MUST
@@ -124,8 +124,8 @@ catalog. Each item states what must hold after this unit; where the landed wordi
 - `ARCH-07-deployment`: a clean adaptive-dev installation is `devkit-adaptive` alone, without devkit-spec; its
   requirement on `devkit-docs` is an exact pin like every internal requirement. The sentence on the docs bundle
   says its core is auto-selected by any installation that carries `devkit-docs`.
-- Decisions promoted at handoff: `PADR-adaptive-assignment-commands`, `PADR-adaptive-requires-document-system`
-  (each supersedes in part `ADR-adaptive-development-and-research`) and `PADR-adaptive-assignment-ledger-storage`.
+- Decisions promoted at handoff: `ADR-adaptive-assignment-commands`, `ADR-adaptive-requires-document-system`
+  (each supersedes in part `ADR-adaptive-development-and-research`) and `ADR-adaptive-assignment-ledger-storage`.
 - `ADR-worktree-isolated-parallel-workers` and `ADR-skill-local-swarm-roles` are not superseded and not edited:
   the guidance follows the first one's order (harness lifecycle, then the project's Git procedure) and the second
   one's read-only Git contract for `swarm-verifier`.

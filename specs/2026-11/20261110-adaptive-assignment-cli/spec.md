@@ -1,48 +1,26 @@
 ---
-id: PROP-adaptive-assignment-cli
+id: SPEC-adaptive-assignment-cli
 title: Assignment ledger and return verification commands for adaptive delegation
-summary: "Add commands that record delegated assignments and verify a return against its assignment, and make devkit-adaptive require the document system, so a Host resumes from recorded state and checks scope, source identity, declared checks and governing documents deterministically."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-10
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-adaptive-development-runtime
-depends_on: [SPEC-adaptive-package-extraction]
-boundaries:
-  owns:
-    - packages/
-    - uv.lock
-    - pyproject.toml
-    - AGENTS.md
-    - README.md
-    - tests/e2e/smoke.sh
-    - guides/
-    - .devkit/architecture.toml
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/usecases/delivery/UC-advance-an-idea.md
-    - docs/architecture/ARCH-05-1-containers.md
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/architecture/ARCH-07-deployment.md
-    - docs/decisions/
-    - docs/development/reference/
-    - scripts/affected_tests.py
-  excludes:
-    - packages/devkit-spec/
-    - packages/devkit/src/
-    - packages/devkit-docs/
-    - packages/devkit-core/
-    - packages/devkit-dist/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Add commands that record delegated assignments and verify a return against its assignment, and make devkit-adaptive require the document system, so a Host resumes from recorded state and checks scope, source identity, declared checks and governing documents deterministically.
+status: planned
+created: 2026-11-10
+depends_on:
+  - SPEC-adaptive-package-extraction
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-adaptive-assignment-cli] Assignment ledger and return verification commands for adaptive delegation
+# [SPEC-adaptive-assignment-cli] Assignment ledger and return verification commands for adaptive delegation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-adaptive-assignment-cli on 2026-11-10.
+- **Preserved Materials**: `docs/materials/2026-11/20261110-adaptive-assignment-cli`
+- Target Docs Blueprint: `PROP-adaptive-assignment-cli-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 In adaptive development the Host delegates to swarm agents with a goal, source identity, exclusive write scope,
 governing documents, checks and return fields (`CAP-DLV-adaptive-development` rules 13, 13a and 26). The assignment
@@ -61,34 +39,53 @@ its requirement on the document system.
 Hypothesis: a small command set that records assignments and verifies returns makes resume and completion checks
 deterministic for large parallel builds without a scheduler, a process runner or per-change SDD records.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Planning answered each question. §3 holds the settled design; `envelopes/answer-01.yaml` holds the user's two
+- **US-1**: As a developer/agent, I want to implement Assignment ledger and return verification commands for adaptive delegation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Planning answered each question. §3 holds the settled design; historical Git `f0434e6ed0c981340754256022750527f8887e7a:docs/proposals/PROP-adaptive-assignment-cli/envelopes/answer-01.yaml` holds the user's two
 answers, and no question is open.
 
 | Question | Answer | Where |
 | --- | --- | --- |
 | Q1 Command surface | `devkit adaptive assignment new\|return\|verify\|close\|list\|show`; a failed verification, an out-of-scope write included, exits `1` | §3.2, §3.4, §3.5 |
-| Q2 Ledger | Append-only JSON Lines under the shared Git directory; the delegating agent writes | §3.6, `PADR-adaptive-assignment-ledger-storage` |
+| Q2 Ledger | Append-only JSON Lines under the shared Git directory; the delegating agent writes | §3.6, `ADR-adaptive-assignment-ledger-storage` |
 | Q3 Verification | Ancestry, HEAD, commit grant, changed paths against literal path prefixes, declared checks against recorded outcomes, children; `new` refuses an overlapping scope and an unresolved governing document | §3.2, §3.3, §3.4 |
 | Q4 Nesting | `--parent`; one level below the Host's assignment; child authority inside the parent's; the parent fails verification while a child is not closed | §3.3, §3.4 |
-| Q5 Reuse | `devkit_core`, `devkit_dist` and the document index of `devkit_docs`; no public harness module fits, so no `devkit_agt` edge; no `devkit_spec` import | §3.8, `materials/planning-evidence.md` §10 |
+| Q5 Reuse | `devkit_core`, `devkit_dist` and the document index of `devkit_docs`; no public harness module fits, so no `devkit_agt` edge; no `devkit_spec` import | §3.8, `docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §10 |
 | Q6 Resume | `list` reports repository facts per assignment and no liveness; a new context treats every open assignment as interrupted | §3.2 `list`, §3.7 |
 | Q7 Current context | The Markdown names assignment IDs and the next action; the ledger holds scope, base and checks; no command reads or writes the Markdown | §3.7 |
 | Q8 Guidance | The delegating agent records and verifies as its standard delegation step; the manual procedure is the fallback when a command cannot record; document steps lose their installation condition | §3.7 |
 | Q9 Evidence scorer | Kept unchanged as test support | §3.1 |
-| Base dependency (user's answer) | `devkit-adaptive` requires `devkit-docs` | §3.8, §3.9, `PADR-adaptive-requires-document-system` |
-| Command group name (user's answer) | `devkit adaptive assignment` | §3.2, `PADR-adaptive-assignment-commands` |
+| Base dependency (user's answer) | `devkit-adaptive` requires `devkit-docs` | §3.8, §3.9, `ADR-adaptive-requires-document-system` |
+| Command group name (user's answer) | `devkit adaptive assignment` | §3.2, `ADR-adaptive-assignment-commands` |
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Planning decisions
+#### 3.1 Planning decisions
 
 Three decisions meet the admission criteria and are PADRs:
 
-- `PADR-adaptive-assignment-commands`: the command group, what it compares and what stays a Host judgment.
-- `PADR-adaptive-assignment-ledger-storage`: location and format of the ledger.
-- `PADR-adaptive-requires-document-system`: the requirement on `devkit-docs` and what it makes unconditional.
+- `ADR-adaptive-assignment-commands`: the command group, what it compares and what stays a Host judgment.
+- `ADR-adaptive-assignment-ledger-storage`: location and format of the ledger.
+- `ADR-adaptive-requires-document-system`: the requirement on `devkit-docs` and what it makes unconditional.
 
 The user's direction for this turn, recorded as decisions:
 
@@ -106,7 +103,7 @@ The other choices, each with its reason:
 - **Requirement form.** `packages/devkit-adaptive/pyproject.toml` declares `devkit-core==<version>`,
   `click>=8.1.7` and `devkit-docs==<version>`, with a workspace source for each sibling. `devkit-spec` and
   `devkit-docs` declare theirs the same way, and the release inventory accepts no other form for an internal
-  requirement (`materials/planning-evidence.md` §11). No release script changes: the inventory, the pin rewrite and
+  requirement (`docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §11). No release script changes: the inventory, the pin rewrite and
   the lockstep test read every `packages/*/pyproject.toml`. No release install variant is added.
 - **Accepted cost: release coupling.** The wheel takes a new version whenever `devkit-docs`, `devkit-agt`,
   `devkit-dist` or `devkit-core` does.
@@ -120,9 +117,9 @@ The other choices, each with its reason:
   functions, because no public module holds them: the harness parser is a private function, the status parser lives
   in a feature without a public module, and the literal containment helper of `devkit-docs` is outside its
   `public_modules`. No source file under `packages/devkit/src/` or `packages/devkit-docs/` changes, and the feature
-  declares no `devkit_agt` edge (`materials/planning-evidence.md` §10).
+  declares no `devkit_agt` edge (`docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §10).
 - **Governing documents are validated when an assignment is recorded**, in the assignment's worktree, so a document
-  the assignee cannot read is refused (`materials/planning-evidence.md` §12). `verify` and `list` do not check them
+  the assignee cannot read is refused (`docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §12). `verify` and `list` do not check them
   again.
 - **Guidance loses its installation conditions.** The commands ship in the same wheel as the guidance, and the
   document system and the harness are requirements of that wheel. The conditions "where the commands are
@@ -145,7 +142,7 @@ The other choices, each with its reason:
   system's kinds. No per-change record is added.
 - **Write scope is literal path prefixes.** An entry names a file or a directory with its subtree; `.` names the
   whole worktree. `*`, `?` and `[` are refused. Containment, overlap and narrowing are then exact
-  (`materials/planning-evidence.md` §6). Globs can be added later without invalidating an entry.
+  (`docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §6). Globs can be added later without invalidating an entry.
 - **Verification runs no check.** It compares each declared check with the outcome the delegating agent recorded
   from the return. The user excluded a process runner.
 - **Closing does not require a passed verification.** `close --outcome integrated` on an assignment that is not
@@ -167,12 +164,12 @@ The other choices, each with its reason:
 - **One spec, size `L`.** The requirement exists because the feature imports the document index, the guidance
   names the commands, and one installed-consumer test asserts both. A split into "requirement and guidance" and
   "commands" would land a requirement without importing code and edit the same capability, bundle references and
-  consumer test twice (`materials/planning-evidence.md` §13). §3.11 gives an order of work that keeps each part
+  consumer test twice (`docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §13). §3.11 gives an order of work that keeps each part
   verifiable.
 - **`dev_effort` stays `medium`.** The ledger is local, untracked state with no migration, and no consumer outside
   this repository depends on the installation statements.
 
-### 3.2 Commands
+#### 3.2 Commands
 
 The group is `devkit adaptive assignment`, mounted by the entry point `adaptive = "devkit_adaptive.cli:cli"` in the
 `devkit.commands` group of `devkit-adaptive` (`ARCH-05-3-command-plugins`). Every command:
@@ -306,7 +303,7 @@ The `checks` object of `verify` has exactly these keys and members:
 | `checks` | `status`, `missing`: list of names, `not_passed`: list of `{"name", "outcome"}` |
 | `children` | `status`, `outstanding`: list of IDs |
 
-### 3.3 Records
+#### 3.3 Records
 
 An `<assignment>` object:
 
@@ -345,7 +342,7 @@ Write-scope rules:
   commit grant (`ADAPTIVE_AUTHORITY_NOT_NARROWED`). The parent must have no parent (`ADAPTIVE_NESTING_DEPTH`), which
   keeps the depth at Host, lead, child.
 
-### 3.4 Verification
+#### 3.4 Verification
 
 `verify` evaluates these checks in order. The result is `pass` when no check is `fail` or `not-run`.
 
@@ -366,7 +363,7 @@ Changed paths are the union of:
   paths in `dirty_at_assign`. `--no-optional-locks` keeps the command from writing the index of a worktree where an
   assignee is working.
 
-Reading the status output (observed with Git 2.49.0, `materials/planning-evidence.md` §9):
+Reading the status output (observed with Git 2.49.0, `docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §9):
 
 - A record is `XY <path>`, terminated by NUL. When `X` or `Y` is `R` or `C`, the next NUL-terminated record is the
   original path without a status prefix. Both names count as changed.
@@ -390,7 +387,7 @@ In-scope uncommitted paths do not fail `scope`. When the assignment grants commi
 `ADAPTIVE_UNCOMMITTED_CHANGES` warning, because the final commit does not contain them. Without the grant they are
 the expected result and no warning is raised.
 
-### 3.5 Codes and exit codes
+#### 3.5 Codes and exit codes
 
 Exit `0`: success, warnings and notices included. Exit `1`: `verify` with a failed check, or a warning under
 `--strict`. Exit `2`: the command could not run or refused. `CAP-HARN-command-mount` §4.7 describes `devkit spec` and
@@ -433,9 +430,9 @@ another `--governing` value, a `--workspace-root` that is a subdirectory of a wo
 `DOCS_ID_UNRESOLVED` and `DOCS_ID_DUPLICATE` are caught and reported as `ADAPTIVE_GOVERNING_UNRESOLVED`. With the
 distribution absent, `devkit adaptive` is click's usage error, exit `2`, without a code.
 
-### 3.6 Ledger
+#### 3.6 Ledger
 
-`PADR-adaptive-assignment-ledger-storage` decides location and format. The details Development implements:
+`ADR-adaptive-assignment-ledger-storage` decides location and format. The details Development implements:
 
 - Directory `<git common dir>/devkit/adaptive/`, created on the first write; files `ledger.jsonl` and `lock`. The
   common directory is the output of `git rev-parse --path-format=absolute --git-common-dir`. For a linked worktree
@@ -453,7 +450,7 @@ distribution absent, `devkit adaptive` is click's usage error, exit `2`, without
   `public_modules`.
 - No command deletes or rewrites an event, and no pruning command is added.
 
-### 3.7 Guidance
+#### 3.7 Guidance
 
 The delegating agent runs the commands: the Host for its assignments and a `swarm-worker` lead for its children. An
 assignee never runs them. The bundle text states each step without an installation condition. Before editing the bundle,
@@ -488,7 +485,7 @@ Callers and roles:
 
 The `adaptive-import` skill and the conversion playbook do not name the commands.
 
-### 3.8 Package, requirement and reuse
+#### 3.8 Package, requirement and reuse
 
 Paths below use the names this proposal expects from the prerequisite (§3.11): the distribution `devkit-adaptive`
 in `packages/devkit-adaptive/`, the import package `devkit_adaptive`.
@@ -549,7 +546,7 @@ public_modules = ["devkit_adaptive.features.assignment.usecases.listing"]
 
 - A CLI module calls a use case's `execute` and no repository, service or use-case function
   (`RULE-usecase-boundaries`); `resolve_root` is the one bootstrap call, as in `devkit-spec` and `devkit-docs`.
-- Written in the feature, because no public module holds them (`materials/planning-evidence.md` §10): the
+- Written in the feature, because no public module holds them (`docs/materials/2026-11/20261110-adaptive-assignment-cli/planning-evidence.md` §10): the
   worktree-list parser (records `worktree`, `HEAD`, `branch`, `bare`, `prunable`; model:
   `packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py:179-198`), the status parser (§3.4), the
   revision resolver, the common-directory lookup, the prefix functions and the JSON Lines append.
@@ -583,7 +580,7 @@ public_modules = ["devkit_adaptive.features.assignment.usecases.listing"]
   beside it, as it does for the spec wheel, because no index serves them; it then runs
   `uv run devkit adaptive assignment list`.
 
-### 3.9 Installation statements
+#### 3.9 Installation statements
 
 After this unit a consumer installs adaptive development with the one requirement `devkit-adaptive`. That
 requirement brings the document system and the harness; the `docs` and `harness` bundles are selected by their own
@@ -600,7 +597,7 @@ Statements that stay true and are not edited:
   `guides/install/bundle-recommendations.md`) do not change.
 - The catalog's content-only rule.
 
-### 3.10 Acceptance scenarios
+#### 3.10 Acceptance scenarios
 
 Each scenario is a test on a temporary repository unless it says otherwise.
 
@@ -695,7 +692,7 @@ Each scenario is a test on a temporary repository unless it says otherwise.
   `deep-research`, and `rg -n "docs/catalog" docs/capabilities docs/architecture guides` prints no statement about
   adaptive development.
 
-### 3.11 Prerequisite and order of work
+#### 3.11 Prerequisite and order of work
 
 Development starts only after `SPEC-adaptive-package-extraction` has landed. This design assumes of it:
 
@@ -722,7 +719,7 @@ An order that keeps each part verifiable:
 5. The bundle guidance and its content tests.
 6. The Living Spec of `target-docs.md`, the reference page and the READMEs.
 
-### 3.12 Exclusions and assumptions
+#### 3.12 Exclusions and assumptions
 
 Excluded: host lifecycle hooks (`PROP-adaptive-lifecycle-hooks`), a scheduler or process runner, model routing, SDD
 Units or envelopes, an MCP service, glob write scopes, ledger pruning, a release install variant, a migration path
@@ -743,7 +740,8 @@ Assumptions the user confirms at `plan-accept`:
   or not at all.
 - One spec at size `L`.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr adaptive-assignment-cli "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -757,3 +755,4 @@ Assumptions the user confirms at `plan-accept`:
 Development starts only after `SPEC-adaptive-package-extraction` has landed, because the feature and the
 requirement are added to the package that proposal creates. Retire through acceptance, handoff and Living Spec
 reconciliation once the scenarios of §3.10 pass.
+

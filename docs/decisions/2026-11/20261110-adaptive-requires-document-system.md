@@ -1,16 +1,16 @@
 ---
-id: PADR-adaptive-requires-document-system
+id: ADR-adaptive-requires-document-system
 title: devkit-adaptive requires the document system
 summary: For the adaptive distribution, whose commands validate governing documents and whose guidance links project documents, we require devkit-docs with an exact pin, to give every installation the document system and the harness, accepting release coupling and the loss of snapshot eligibility.
-proposal: PROP-adaptive-assignment-cli
+proposal: SPEC-adaptive-assignment-cli
 supersedes: [ADR-adaptive-development-and-research]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-adaptive-requires-document-system] devkit-adaptive requires the document system
+# [ADR-adaptive-requires-document-system] devkit-adaptive requires the document system
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 
 ---
@@ -23,7 +23,7 @@ requirements. The bundle guidance therefore conditions every document step on th
 orchestration reference assumes no harness.
 
 Adaptive development is being raised from a content bundle to a package with commands
-(`PADR-adaptive-assignment-commands`). An assignment names its governing documents by ID or path
+(`ADR-adaptive-assignment-commands`). An assignment names its governing documents by ID or path
 (`CAP-DLV-adaptive-development` rule 26). A command can check those names only when the document index is importable.
 `devkit-docs` already requires `devkit-agt`, which requires `devkit-dist`, so the two-requirement installation
 already carries the harness; the guidance and several guides describe it as if it did not.

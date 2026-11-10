@@ -1,7 +1,7 @@
 # Planning evidence for the assignment commands
 
-Evidence and comparisons behind the settled design in `PROP-adaptive-assignment-cli`. The four `scout` envelopes
-(`envelopes/scout-01.yaml` to `envelopes/scout-04.yaml`) hold the findings; this file keeps the comparisons and the
+Evidence and comparisons behind the settled design in `SPEC-adaptive-assignment-cli`. The four `scout` envelopes
+(historical Git `f0434e6ed0c981340754256022750527f8887e7a:docs/proposals/PROP-adaptive-assignment-cli/envelopes/scout-01.yaml` to historical Git `f0434e6ed0c981340754256022750527f8887e7a:docs/proposals/PROP-adaptive-assignment-cli/envelopes/scout-04.yaml`) hold the findings; this file keeps the comparisons and the
 probe results.
 
 ## 1. Evidence boundary
@@ -91,7 +91,7 @@ uses no pattern. Literal prefixes keep the three decisions exact; adding globs l
 | `devkit-dist` only | Installing the bundle and the commands without the harness; the commands on `devkit_core` and `devkit_dist` helpers; guidance that names `devkit worktree` only as the project's documented procedure when a harness is installed | Importing `devkit_agt` worktree, workflow or rules modules; a small worktree-list parser and a prefix matcher are written in the feature |
 | `devkit-agt` | Importing public `devkit_agt` modules (`match_path`, the hex-validating `is_ancestor`) and declaring edges to `devkit_agt.features.worktree` | Installing the harness wheel with every adaptive installation; the orchestration reference's "without assuming a harness is installed" no longer describes the package; the adaptive test suite depends on `devkit-agt` |
 
-The user chose neither option: `devkit-adaptive` requires `devkit-docs` (`envelopes/answer-01.yaml`, q1). Section 11
+The user chose neither option: `devkit-adaptive` requires `devkit-docs` (historical Git `f0434e6ed0c981340754256022750527f8887e7a:docs/proposals/PROP-adaptive-assignment-cli/envelopes/answer-01.yaml`, q1). Section 11
 holds what follows from that requirement.
 
 ## 8. Contract statements that the commands touch
