@@ -9,6 +9,8 @@ created_at: 2026-11-05
 
 # [ADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
 
+Superseded in part by `ADR-impeccable-session-authority`: Decision Outcome clause 2 now admits one user-selected, brief-bounded Impeccable session whose changes the coordinator accepts before continuing; its no-policy-change and no-commit, integration or publication authority statements, clauses 1 and 3, and clause 4 for local roles stay in force.
+
 ## 1. Context & Problem Statement
 
 UI/UX improvement can need diagnosis, independent design perspectives, implementation and usage verification.
@@ -31,7 +33,7 @@ design-only role instructions into unrelated work. Consumers can use different d
 
 ## 4. Decision Outcome
 
-- `uiux-improve` is an opt-in catalog bundle with a user-invoked entry and local role documents. It registers no
+- `app-uiux-improve` is an opt-in catalog bundle with a user-invoked entry and local role documents. It registers no
   global specialists and supplies no always-loaded design instruction. → `CAP-DLV-uiux-improvement` rules 1–2 (MUST).
 - The coordinator chooses useful perspectives, owns synthesis and continues requested implementation through
   the consumer's existing development workflow. Selecting the bundle or invoking the skill changes no workflow

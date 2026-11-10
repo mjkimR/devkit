@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T00:31:56.347064Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified finding 1 at c8a41274: SKILL.md step 10 routes user-requested install, ignore entries, output removal and the PRODUCT.md section to references/orchestration.md before acting; a new assert_rule covers it. No reviewer recall: scope unchanged and the fix is one routing step.'
+findings:
+- issue: SKILL.md routes to references/orchestration.md only before delegating, so a standalone user request to install Impeccable, add ignore entries, remove Impeccable output or add the PRODUCT.md reference section reads none of the bounding rules
+  evidence: packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md:46
+  failure_condition: the user asks for setup or cleanup without delegation; the agent may run an interactive installer, add unshown ignore lines outside .impeccable/ or copy object content into PRODUCT.md
+  suggested_action: widen the read condition or add the planned setup and cleanup procedure step, and assert it in the integration test
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS test_app_uiux_improve.py 8 passed
+  lint: PASS just lint-check devkit-catalog; hygiene 0 warnings
+diff_scope:
+  base: 83b7c0a82834d799fe01f6ff180511e97ee17075
+  head: c8a41274e391fe80b2a0094c7422303b5a3cedfc

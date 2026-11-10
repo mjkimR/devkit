@@ -8,7 +8,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | --- | --- | --- |
 | `adaptive-dev` | `core`, `agents`, `import` | Adaptive product iteration, optional support and mutable current context without SDD delivery records; `agents`: the three reusable swarm archetypes alone; `import`: the user-invoked `/adaptive-import` entry and its `agent-asset-conversion` playbook alone |
 | `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
-| `uiux-improve` | `core` | User-invoked overall UI/UX improvement with optional local perspectives and implementation through the consumer workflow |
+| `app-uiux-improve` | `core` | User-invoked UI/UX improvement for software interfaces: proportionate object framing, optional local perspectives or a user-selected Impeccable session, and implementation through the consumer workflow |
 | `design-explore` | `core` | User-invoked general solution design with optional local premise exploration, mechanisms and tradeoffs; conversation-first result |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance`, `testing` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, performance passes, and test-management assessments |
@@ -73,12 +73,16 @@ See `CAP-DLV-deep-research`.
 
 ## UI/UX improvement
 
-`uv run devkit add uiux-improve` selects the content-only bundle with no required docs or spec package.
-Explicitly invoke `/uiux-improve <goal>` to inspect and improve a supplied interface or flow. Optional designer,
-unconventional-designer, reference-researcher and critic instructions stay inside the skill rather than registering
-global specialists. The coordinator carries requested implementation and actual checks through the consumer's
-existing workflow; review-only requests stay read-only. Selection starts no work and changes no development policy.
-No fixed team, design score, research report or comparison experiment is required. See `CAP-DLV-uiux-improvement`.
+`uv run devkit add app-uiux-improve` selects the content-only bundle with no required docs or spec package.
+Explicitly invoke `/app-uiux-improve <goal>` to improve a software interface or flow. Before restructuring views or
+flows, the coordinator frames the affected objects, from the project's glossary, object register and UX documents
+when they exist. It implements inline, optionally with the skill-local designer, unconventional-designer,
+reference-researcher and critic roles, or, on the user's selection, briefs one separately installed Impeccable session
+and accepts its changes against a recorded base. Implementation and checks follow the consumer's existing workflow;
+review-only requests stay read-only. Installation, ignore entries and cleanup happen only on the user's request.
+No fixed team, design score, research report or comparison experiment is required.
+Selection starts no work and changes no development policy. The [usage guide](src/devkit_catalog/app_uiux_improve/bundle/README.md)
+covers setup, the per-task flow and troubleshooting. See `CAP-DLV-uiux-improvement`.
 
 ## General solution exploration
 
