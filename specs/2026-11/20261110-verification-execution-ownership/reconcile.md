@@ -20,3 +20,6 @@ ownership boundary across bundles without inventing supersession. No use-case fl
 The client guide and installation entry links preserve native commands, optional tooling, combined suites and
 manual ownership outside the managed block. Tests verify rendered guidance rather than live agent compliance.
 No required work is deferred and no source feedback was named as a direct-fix input.
+
+Entrypoint derivation retained existing doorway declarations; candidates from broad task joins that point at
+tests, guides or another capability were declined. No entrypoint changes are needed for this wording/routing change.
