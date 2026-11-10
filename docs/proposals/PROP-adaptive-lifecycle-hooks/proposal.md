@@ -38,8 +38,8 @@ devkit's hook assets target Codex only. A handler returns context for `SessionSt
 (`CAP-HOST-lifecycle-observation`). devkit manages no Claude Code hook registration (`CAP-DIST-agent-projections`,
 host configuration boundary).
 
-This proposal is investigation first. Planning establishes what is missing and what it costs to provide, and
-accepts delivery only when a measured effect supports it. A rejection with its evidence is a valid outcome.
+This proposal is investigation first. Planning establishes what is missing and what it costs to provide. Delivery
+is a separate decision. A rejection with its evidence is a valid outcome.
 
 Hypothesis: once assignments are recorded (`PROP-adaptive-assignment-cli`), a `Stop` and `SubagentStop` gate that
 reads the ledger prevents sessions and workers from ending with outstanding assignments at a host-adapter cost that
@@ -49,8 +49,10 @@ Planning's finding on the hypothesis, before any measurement:
 
 - The host-adapter cost is bounded and sized (§3.3). It is small on Codex and concentrated in a second host.
 - The `Stop` half is buildable on the candidate ledger with three small additions to it (§3.4).
-- The `SubagentStop` half is not: under the candidate ledger a worker always ends with its assignment `open`, so
-  the ledger holds no condition that separates a finished worker from an unfinished one (§3.4).
+- The `SubagentStop` half is buildable only narrowly. Under the candidate ledger a worker always ends with its
+  assignment `open`, so the status is no block condition. A gate for an assignee in its own worktree can use other
+  conditions, with one more ledger addition and one host fact that is not established. A gate for every assignee
+  needs the assignment design changed (§3.4, §3.5).
 - The effect is unmeasured and cannot be measured before the commands exist (§3.6).
 
 ## 2. Technical Spike Questions
@@ -60,14 +62,14 @@ The evidence is in `materials/`; each answer names its file. No host was run in 
 
 | Question | Answer | Where |
 | --- | --- | --- |
-| Q1 Effect | Not measured: the failures are defined against a ledger that does not exist yet. The commands and guidance already keep the board across an interruption and report scope and check failures; they leave three failures to the Host's attention (F1 ending with unnamed outstanding assignments, F2 acting before reading the ledger on resume, F3 a rejected return the worker could have repaired). The measurement is defined with five mechanical observations and four scenarios | §3.6; `materials/gate-behavior-and-measurement.md` §4 |
-| Q2 Host contracts | Codex and Claude Code document the same contract for all three events: `decision: "block"` with a reason the model receives, `stop_hook_active`, `session_id` and `cwd`, subagent identity on `SubagentStop`, context injection at session start. Antigravity documents `Stop` and `SessionStart` with other shapes and no subagent event. No live probe ran; the procedures are written | §3.2; `materials/host-capability-matrix.md`, `materials/live-probes.md` |
-| Q3 Host adapter scope | Fifteen gaps. A stop decision and the `SubagentStop` event are small changes to the Codex adapter. A Claude Code adapter is a complex module: it puts a settings file that also holds permission settings under management, which changes the host configuration boundary in three capabilities. The receipt needs no new field and the removal rule applies unchanged | §3.3; `materials/devkit-gaps-and-work-breakdown.md` §3 |
-| Q4 Gate behavior | Block once when a top-level assignment recorded from this checkout is not `closed`, the host's `stop_hook_active` is false and the outstanding set differs from the one this session was last blocked for. Release on everything else, every failure included. A wrong release costs what the absence of the gate costs; a wrong block is a new cost and can push an agent to close assignments to pass | §3.5; `materials/gate-behavior-and-measurement.md` §3 |
+| Q1 Effect | Not measured: the failures are defined against a ledger that does not exist yet. The commands and guidance already keep the board across an interruption and report scope and check failures; they leave three failures to the Host's attention (F1 ending with unnamed outstanding assignments, F2 acting before reading the ledger on resume, F3 a failed verification the worker could have repaired). The measurement is defined with six observations, each with its source, and four scenarios | §3.6; `materials/gate-behavior-and-measurement.md` §4 |
+| Q2 Host contracts | Codex and Claude Code document the same contract for all three events: `decision: "block"` with a reason the model receives, `stop_hook_active`, `session_id` and `cwd`, subagent identity on `SubagentStop`, context injection at session start. Antigravity documents `Stop` and `SessionStart` with other shapes and no subagent event. No live probe ran in Planning; the procedures are written. One earlier record shows Codex delivering `SessionStart` and `Stop` to a prototype logger | §3.2; `materials/host-capability-matrix.md`, `materials/host-documentation-extraction.md`, `materials/live-probes.md` |
+| Q3 Host adapter scope | Gaps G1 to G16, one of them not applicable. A stop decision and the `SubagentStop` event are small changes to the Codex adapter. A Claude Code adapter is a complex module: it puts a settings file that also holds permission settings under management, which changes the host configuration boundary in three capabilities. A new host needs no new receipt field, but the ownership and removal rules carry over unchanged only for a tracked shared file; which Claude Code file is written and where its ownership is recorded is an open decision inside that adapter | §3.3; `materials/devkit-gaps-and-work-breakdown.md` §3, §3.1 |
+| Q4 Gate behavior | Two block conditions are possible: block when an outstanding ID is not named in `.devkit/adaptive-dev.md`, which matches F1 and reads a file the capability says is not parsed; or block when the outstanding set changed, which touches no contract and blocks about once per turn end in an active build. Both release on every failure and on the repeated stop. A wrong release costs what the absence of the gate costs; a wrong block is a new cost and can push an agent to close assignments to pass | §3.5; `materials/gate-behavior-and-measurement.md` §3 |
 | Q5 Session start | Counts per status, one line per outstanding assignment (about 30 fit in 4,096 characters) and the commands to read next, injected only when something is outstanding. Over the static pointer it adds the state itself | `materials/gate-behavior-and-measurement.md` §3.3 |
 | Q6 Applicability | A preset of its own in the `adaptive-dev` bundle; a project opts in by selecting it. A caller that selects only `adaptive-dev:agents` gets no hook. The gate makes no approach check, like the commands | `materials/gate-behavior-and-measurement.md` §3.4 |
-| Q7 Decomposition | It depends on the option carried forward. Codex only is one spec. With a Claude Code adapter it is two specs, and the proposal is then returned for decomposition with the two children named in the material. The design as first drafted, with a `SubagentStop` gate, is three | §3.7; `materials/devkit-gaps-and-work-breakdown.md` §5, §6 |
-| Q8 Decision criteria | Fixed before measurement: a Host `Stop` gate on a host when F1 occurs in at least 2 of 10 observed runs or 2 of 5 `combined-check` runs there and the host's probes pass; session-start injection when F2 occurs in at least 2 of 5 `interrupted-writer` runs; a `SubagentStop` gate when F3 is at least 20% of returns and the assignment design is changed first; otherwise no delivery | §3.6; `materials/gate-behavior-and-measurement.md` §4.4 |
+| Q7 Decomposition | It follows from the Claude Code adapter, which is a complex module by itself. Without it the delivery is one spec. With it the delivery is two specs, and the proposal is then returned for decomposition with the two children named in the material. The design as first drafted, with a `SubagentStop` gate, is three | §3.7; `materials/devkit-gaps-and-work-breakdown.md` §5, §6 |
+| Q8 Decision criteria | Fixed before measurement, as conventions for small samples: a Host `Stop` gate on a host when F1 recurs there (2 observed runs, or 2 of 5 `combined-check` runs), the chosen block condition would not have blocked correct pauses (fewer than 3 of 5 pause runs) and the host's probes pass; session-start injection when F2 recurs (2 of 5 `interrupted-writer` runs); the narrow `SubagentStop` gate when F3 is at least 20% of ten or more returns and the host reports a subagent's own directory; otherwise no delivery. The measurement ends at ten observed runs per host or 30 days after the commands are delivered | §3.6; `materials/gate-behavior-and-measurement.md` §4.4 |
 
 ## 3. Proposed Design & Impact
 
@@ -84,8 +86,11 @@ it. What the evidence settles:
   other two hosts, it documents no subagent event and no failure behavior, and its adapter is a complex module of
   its own (`materials/devkit-gaps-and-work-breakdown.md`, W5).
 - **`PreToolUse` enforcement stays out of scope.** Nothing in the evidence challenges that exclusion.
-- **A `SubagentStop` gate is in no delivery option.** It needs the assignment design changed first (§3.4).
 - **`boundaries` and `dev_effort` are unchanged.** They are revised with the option that is carried forward.
+
+Left to the specification of whatever is delivered, with the evidence in the materials: the block condition of the
+`Stop` gate (§3.5), and the Claude Code settings file with the place of its ownership record
+(`materials/devkit-gaps-and-work-breakdown.md` §3.1).
 
 ### 3.2 What the hosts provide
 
@@ -95,14 +100,19 @@ it. What the evidence settles:
 | `SubagentStop` hook | Documented | Documented | Absent | Not an event |
 | `SessionStart` hook and context | Documented | Documented | Documented, other shape | Codex only |
 | Blocking decision with a reason | Documented | Documented | Documented, other shape | Missing from the handler contract |
-| Repeated-stop signal | `stop_hook_active`; a host cap is unknown | `stop_hook_active` and a cap of eight continuations | Unknown | Passed through |
+| Repeated-stop signal | `stop_hook_active`; a host cap is unknown | `stop_hook_active` and a cap of eight continuations without a tool call | Unknown | Passed through |
 | Host session against subagent | By event; `Stop` inside a subagent thread is unknown | By event, documented | Unknown | Passed through |
 | Project registration file | `.codex/hooks.json`, hook review required | `.claude/settings.json` or `.claude/settings.local.json`, shared with permission settings | `.agents/hooks.json` | `.codex/hooks.json` only |
-| Behavior on timeout or failure | Unknown | Released, documented | Unknown | Released |
+| Behavior on timeout or failure | Unknown | Released by the documented general rules; no sentence specific to `Stop` was captured | Unknown | Released |
 
-Two findings hold on both documented hosts. A gate that cannot run releases silently: an unreviewed hook on Codex, a
-`devkit` that is not on the host's PATH, a timeout. And nothing has been observed: the repository records no
-delivery of any hook by a host, the existing Codex path included.
+A gate that cannot run releases silently on both documented hosts: an unreviewed hook on Codex, a `devkit` that is
+not on the host's PATH, a timeout.
+
+What has been observed on a host is narrow. One earlier spike recorded Codex delivering project-registered
+`SessionStart` and `Stop` hooks to a prototype logger
+(`docs/materials/2026-10/20261017-hook-driven-integration-cleanup/codex-spike-evidence.md`). Not observed: devkit's
+generated hook command run by a host, a block decision, `stop_hook_active`, a subagent event, timeout and failure
+behavior, and any hook on Claude Code.
 
 ### 3.3 What devkit lacks and what it costs
 
@@ -110,13 +120,15 @@ delivery of any hook by a host, the existing Codex path included.
 | --- | --- | --- |
 | W1 | Stop decision in the handler contract, rendered for Codex | S |
 | W2 | `SubagentStop` event for Codex | S |
-| W3 | Dispatch observation for every handler, so `devkit host status` shows that a gate ran | S |
+| W3 | Dispatch observation for every handler, so `devkit host status` shows that a hook ran | S |
 | W4 | Claude Code hook adapter, with the decision on its settings file and the host configuration boundary | L |
 | W5 | Antigravity hook adapter | L |
-| W6 | Ledger additions in the assignment feature (§3.4) | S |
+| W6 | Ledger additions for a Host gate, in the assignment feature (§3.4) | S |
+| W6b | Paths outside the scope in the list observation of an open assignment | S |
 | W7 | Session-start handler and hook preset in `devkit-adaptive` | M |
 | W8 | Host `Stop` gate handler | M |
-| W9 | `SubagentStop` gate, after a change to the assignment design | L |
+| W9a | Narrow `SubagentStop` gate, for an assignee in its own worktree | M |
+| W9b | `SubagentStop` gate for every assignee, after a change to the assignment design | L |
 | W10 | Probes and measurement | Not a spec |
 
 `materials/devkit-gaps-and-work-breakdown.md` §4 lists the modules, tests, documents, dependencies and risk of each.
@@ -131,21 +143,23 @@ Read from `PROP-adaptive-assignment-cli` at commit `0cf00a40` of its Planning br
 | A read that fits a hook timeout: statuses without one `git status` per open assignment | Missing; an option on the list use case |
 | The assignments of the stopping session: the checkout that recorded each one | Missing; one recorded field on `new`. The ledger is shared by every worktree of the repository, so without it a gate blocks unrelated sessions |
 | Git calls that ignore the hook process's Git environment | Left open there |
-| A mapping from a stopping subagent to its assignment | Missing, and not derivable in general |
-| A condition that is true when a worker must not stop yet | Missing by design: the delegating agent records the return after the worker has stopped, and `verify` needs a return |
+| A mapping from a stopping subagent to its assignment | Derivable only for an assignee in its own worktree, and only if the host reports that directory |
+| A condition that is true when a worker must not stop yet | Not the status: the delegating agent records the return after the worker has stopped. Unclosed children and uncommitted paths are derivable; paths outside the scope need an addition to the list observation |
 
-The first three missing rows are W6. The last two are why W9 needs the assignment design changed.
+The first three missing rows are W6; the scope observation is W6b.
 
 ### 3.5 Gate behavior
 
-`materials/gate-behavior-and-measurement.md` §3 holds the decision table. The properties the sizing rests on:
+`materials/gate-behavior-and-measurement.md` §3 holds the decision tables. The properties the sizing rests on:
 
-- The gate blocks at most once per changed set of outstanding assignments in a session. This needs one small record
-  per session, kept by the handler's package.
+- The `Stop` gate has two candidate block conditions (Q4). The name-aware one keeps no state and needs one sentence
+  of `CAP-DLV-adaptive-development` changed; the state-only one keeps one small record per session.
 - The second stop is the explicit cancel. No cancel command is added.
 - A missing or empty ledger releases silently; an unreadable ledger releases with the existing warning.
-- On Claude Code a stop while assigned subagents still run is released, if the `background_tasks` field carries what
-  its name says (probe CC-4).
+- On Claude Code a stop while subagents still run is released, if `background_tasks` lets a running subagent be told
+  from a background shell (probe CC-4).
+- devkit finds the project from the event's `cwd`. An event whose `cwd` is another worktree is checked against that
+  checkout and releases where its registration is absent (gap G16).
 
 ### 3.6 Effect and decision criteria
 
@@ -160,29 +174,39 @@ cannot run a host with a hook registered.
 | --- | --- | --- | --- |
 | (a) Codex only: blocking `Stop` and session start | W1, W3, W6, W7, W8 | 1, size L | F1 and F2 on Codex |
 | (b) Codex and Claude Code | (a) plus W4 | 2 | F1 and F2 on both |
-| (c) Session-start injection only | W6, W7; W4 for Claude Code | 1, size M; 2 with Claude Code | F2 |
+| (c) Session-start injection only | W7 and W3; W4 for Claude Code | 1, size M; 2 with Claude Code | F2 |
 | (d) No delivery | None | 0 | Nothing beyond the commands |
 | (e) Decide after the measurement | W10, then (a) to (d) by the criteria | 0 now | Nothing until the decision |
 
-Recommendation: (e). No option can start before the commands exist; the cost of a wrong release is the cost of
-having no gate, while a wrong block is a new one; and the milestone asks for a decision based on a measured effect
-(`MS-adaptive-development-runtime`, exit condition). Waiting loses no delivery time. If a delivery is wanted without
-the measurement, (c) on Codex is the smallest: it changes no hook contract, blocks nothing and gives the first live
-observation of the hook path.
+The narrow `SubagentStop` gate (W2, W6b, W9a) is an addition to (a) or (b): one further spec of size M after the
+Host gate.
 
-Under (b), or (c) with Claude Code, the proposal is returned for decomposition into a host child (W1 to W4) and an
-adaptive child (W7, W8).
+Recommendation: (e), for two reasons. No option as packaged can start before the commands exist: W1 to W5 could,
+but they would deliver a contract without a consumer. And the cost of a wrong release is the cost of having no
+gate, while a wrong block is a new one, so the gate is worth its cost only where the failure recurs.
+`materials/devkit-gaps-and-work-breakdown.md` §5 states what (e) consists of: the trigger, who measures, when it
+ends, and what happens to this unit and its materials while it waits.
+
+If a delivery is wanted without the measurement, the smallest depends on the host of the user's adaptive Host
+sessions (q1): on Codex it is (c), which changes no hook contract and blocks nothing; on Claude Code it starts with
+W4.
+
+Under (b), or (c) with Claude Code, the proposal is returned for decomposition into a host child and an adaptive
+child.
 
 ### 3.8 Open questions
 
-- **q1 Delivery option**: which of (a) to (e) is carried forward. Recommended: (e).
-- **q2 Live probes**: when the probes of `materials/live-probes.md` run. Recommended: at the decision point, before
-  any delivery option is accepted.
-- **q3 Session start after compaction**: whether session-start injection also fires when the host reports the
+- **q1 Host of the adaptive Host sessions**: Codex, Claude Code or both. The repository does not say, and it decides
+  what each option prevents.
+- **q2 Delivery option**: which of (a) to (e) is carried forward. Recommended: (e), with this unit ended without
+  acceptance and its materials retained.
+- **q3 Live probes**: when the probes of `materials/live-probes.md` run. Recommended: now, before the measurement.
+- **q4 Session start after compaction**: whether session-start injection also fires when the host reports the
   `compact` source. Recommended: yes; it applies only if an option with session-start injection is delivered.
 
 One item is for the Host, not the user: whether W6 enters `PROP-adaptive-assignment-cli` while it is in Planning.
-The recorded checkout cannot be added to assignments recorded before the field exists.
+The recorded checkout cannot be added to assignments recorded before the field exists, and observed runs in a
+repository with concurrent sessions are counted only once it exists.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--

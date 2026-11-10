@@ -10,16 +10,20 @@ Every cell carries one evidence class:
 
 | Class | Meaning |
 | --- | --- |
-| `documented` | Stated on the vendor's own documentation page, retrieved 2026-11-10 through a fetch tool that returns a model-extracted summary. The wording is as extracted and was not compared byte for byte with the page. |
+| `documented` | Stated on the vendor's own documentation page, retrieved 2026-11-10 through a fetch tool that returns a model-extracted summary. The wording is as extracted and was not compared byte for byte with the page. `host-documentation-extraction.md` holds the extraction for every such cell. |
 | `code` | Observed in devkit code or tests at commit `79156358` (the base of this Planning branch). |
 | `probe` | Not stated on the fetched pages, or stated but decisive for the design: only a live host session settles it (`live-probes.md`). |
 
 - No host was run. No hook was registered on any host and no host setting was read or changed.
-- No record of a live hook delivery exists in the repository: a search of `docs/` and `specs/` finds only the
-  capability's own statement that deployment and subprocess tests "verify the generated command, not interactive host
-  trust or event delivery" (`CAP-HOST-lifecycle-observation` §1,
-  `docs/capabilities/host/CAP-HOST-lifecycle-observation.md:36-38`). The existing Codex path is therefore also
-  unobserved on a host.
+- One live delivery is recorded in the repository.
+  `docs/materials/2026-10/20261017-hook-driven-integration-cleanup/codex-spike-evidence.md` (`:17`, `:38-47`) holds an
+  interactive Codex CLI 0.163.0 session of 2026-10-17 in which a project `.codex/hooks.json` with a prototype logger
+  received `SessionStart` once and `Stop`, `UserPromptSubmit`, `PreToolUse` and `PostToolUse` twice each over two
+  turns. Its trust interactions were not recorded.
+- Not observed anywhere in the repository: devkit's generated `devkit host hook` command run by a host
+  (`CAP-HOST-lifecycle-observation` §1 leaves it to "a real Codex session",
+  `docs/capabilities/host/CAP-HOST-lifecycle-observation.md:36-38`), a block decision, `stop_hook_active`, a subagent
+  event, timeout and failure behavior, and any hook on Claude Code or Antigravity.
 - Locally installed versions at retrieval: Claude Code 2.1.321, codex-cli 0.167.0. The vendor pages name no version
   for the three events.
 
@@ -34,8 +38,8 @@ Sources:
 | CX-C | <https://developers.openai.com/codex/config-reference>, which redirects to <https://learn.chatgpt.com/docs/config-file/config-reference> |
 | AG-H | <https://antigravity.google/docs/hooks/> |
 
-The Gemini CLI hook pages were read as a neighbour product only and support no cell. The full extraction is recorded
-in `envelopes/scout-01.yaml`.
+The Gemini CLI hook pages were read as a neighbour product only and support no cell. `envelopes/scout-01.yaml`
+records the scout's findings and `host-documentation-extraction.md` its extraction per item.
 
 ## 2. Matrix
 
@@ -86,11 +90,16 @@ Cell format: **supported**, **unsupported** or **unknown**, then the evidence cl
 
 | Item | Host | Why it matters |
 | --- | --- | --- |
-| A project hook is delivered at all, with the documented fields | Codex, Claude Code | Every cell above is `documented`, none observed |
+| A project hook is delivered with the documented fields | Claude Code; Codex for devkit's generated command | Codex delivered `SessionStart` and `Stop` to a prototype logger once (section 1); nothing else is observed |
+| `stop_hook_active` after the model ran a tool in the continuation | Codex, Claude Code | The real gate's reason asks for commands or an edit before the next stop; Claude Code's continuation counter resets on a tool call |
+| The `cwd` of a `SubagentStop` when the subagent works in another worktree | Codex, Claude Code | The mapping from a subagent to its assignment and devkit's project lookup both use it |
+| `SessionStart` with `source` `compact` after a compaction | Codex, Claude Code | Question q4 assumes it |
+| Whether a second checkout of the same registration needs a new hook review | Codex | Every worktree would need one |
 | `Stop` fires inside a subagent thread | Codex | A Host gate would otherwise block workers |
 | Behavior on timeout and on an exit code other than 0 and 2 | Codex | Decides whether a slow or broken gate holds a session |
 | A consecutive-block cap | Codex | Without one the gate's own loop breaker is the only release |
 | `stop_hook_active` on the second stop | Codex, Claude Code | The loop breaker relies on it |
+| The entry types in `background_tasks` | Claude Code | A release must count running subagents, not a background shell |
 | The shape of `background_tasks` on `Stop` | Claude Code | Lets a gate tell a pause that waits for running subagents from an end with nothing running |
 | Hooks under `codex exec` and `claude -p` | Codex, Claude Code | Headless runs are where a lost assignment is least visible |
 | Any Antigravity behavior beyond the event table | Antigravity | Only needed if Antigravity is carried forward |

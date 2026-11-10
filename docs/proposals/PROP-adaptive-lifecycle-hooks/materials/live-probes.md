@@ -7,11 +7,13 @@ user-level host setting.
 
 ## 1. Rules for every probe
 
-- Run it in a new directory outside every repository checkout. The directory holds the only files the probe creates.
+- Run it in a new parent directory outside every repository checkout. It holds `main/`, a new Git repository with
+  one commit and the probe files, and `wt/`, a linked worktree of it (`git -C main worktree add ../wt`). The host
+  starts in `main/`. These are the only files the probe creates.
 - The hook command is the script below. It appends the hook input to `probe.log` and answers by event.
 - Record, per observation, the host version, the event line from `probe.log` and what the host displayed.
-- Remove the probe by deleting the directory. On Codex also remove the directory's trust entry if `/hooks` or the
-  trust prompt recorded one.
+- Remove the probe by deleting the parent directory. On Codex also remove the directory's trust entry if `/hooks` or
+  the trust prompt recorded one.
 
 `probe.py`, identical for Codex and Claude Code:
 
@@ -33,14 +35,19 @@ if mode == "fail":
 if name == "SessionStart":
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart",
                                              "additionalContext": "PROBE-CONTEXT-7391"}}))
-elif name in ("Stop", "SubagentStop") and (mode == "always" or not event.get("stop_hook_active")):
-    print(json.dumps({"decision": "block", "reason": f"PROBE-BLOCK {name}: reply with the word ACK, then stop."}))
+elif name in ("Stop", "SubagentStop") and (mode.startswith("always") or not event.get("stop_hook_active")):
+    task = "run the shell command `echo PROBE-TOOL`, then stop" if mode.endswith("tool") else "reply with the word ACK, then stop"
+    print(json.dumps({"decision": "block", "reason": f"PROBE-BLOCK {name}: {task}."}))
 else:
     print("{}")
 ```
 
-The file `mode` selects a variant: absent or `normal` blocks the first stop only, `always` blocks every stop, `slow`
-sleeps past the timeout, and `fail` exits 1.
+Planning ran the script with synthetic events in every mode under the proposal's ignored `.probe/` directory: it
+prints one valid JSON object and exits `0`, or exits `1` in `fail` mode. No host ran it.
+
+The file `mode` selects a variant: absent or `normal` blocks the first stop only and asks for a word; `tool` blocks
+the first stop only and asks for a shell command, as the real gate's reason asks for commands or an edit; `always`
+and `always-tool` block every stop; `slow` sleeps past the timeout; `fail` exits 1.
 
 ## 2. Probe CC: Claude Code
 
@@ -62,13 +69,16 @@ Start `claude` in the directory and accept the workspace trust prompt.
 | --- | --- | --- |
 | CC-1 | Start the session, then ask "What is the probe context string?" | A `SessionStart` line with `session_id`, `cwd`, `source`; the model answers `PROBE-CONTEXT-7391` |
 | CC-2 | Ask "Say hello." | Two `Stop` lines: `stop_hook_active` false, then true; the model writes `ACK` between them; the fields `background_tasks` and `agent_id` (expected absent) on each line |
-| CC-3 | Ask "Start a subagent that replies with one word." | A `SubagentStop` line with `agent_id`, `agent_type`, `stop_hook_active`; the subagent writes `ACK` and stops; no `Stop` line carries an `agent_id` |
-| CC-4 | Ask it to start a background subagent that waits ten seconds, then answer at once | The `Stop` line written while the subagent runs: the content of `background_tasks` |
-| CC-5 | Write `always` to `mode`, ask "Say hello." | The number of `Stop` lines before the host ends the turn (documented: eight continuations) and the message shown |
+| CC-2b | Write `tool` to `mode`, ask "Say hello." | The `Stop` line after the model ran `echo PROBE-TOOL`: whether `stop_hook_active` is true |
+| CC-3 | Remove `mode`. Ask "Start a subagent that replies with one word." | A `SubagentStop` line with `agent_id`, `agent_type`, `stop_hook_active`, `cwd`; the subagent writes `ACK` and stops; no `Stop` line carries an `agent_id` |
+| CC-3b | Ask "Start a subagent that creates the file `note.txt` in the directory `../wt` and replies with one word." | The `cwd` on that `SubagentStop` line: `main/` or `wt/` |
+| CC-4 | Ask it to start a background subagent that waits ten seconds, then answer at once. Repeat with a background shell command that sleeps thirty seconds and no subagent | The `Stop` line written while each runs: the entries of `background_tasks` and how a subagent entry differs from a shell entry |
+| CC-5 | Write `always` to `mode`, ask "Say hello."; then `always-tool` | The number of `Stop` lines before the host ends the turn (documented: eight continuations without a tool call) and the message shown; under `always-tool`, whether the host ever ends the turn by itself (interrupt after twelve blocks) |
 | CC-6 | Write `slow` to `mode`, ask "Say hello." | The turn ends after about ten seconds; what the host shows |
 | CC-7 | Write `fail` to `mode`, ask "Say hello." | The turn ends; what the host shows |
 | CC-8 | Remove `mode`; run `claude -p "Say hello."` in the directory | Whether `SessionStart` and `Stop` lines appear, and whether the output contains `ACK` |
 | CC-9 | Move the `hooks` object to `.claude/settings.local.json` and repeat CC-2 | Same delivery from the local settings file |
+| CC-10 | In a session with several turns, run the host's manual compaction command | Whether a `SessionStart` line with `source` `compact` is written, and whether the model can then state the probe context string |
 
 ## 3. Probe CX: Codex
 
@@ -92,12 +102,16 @@ Start `codex` in the directory, trust the project and review the three hooks wit
 | CX-1 | Before reviewing the hooks, ask "Say hello." | No line in `probe.log`: an unreviewed hook is skipped; what the host shows about it |
 | CX-2 | After the review, start a new session and ask "What is the probe context string?" | A `SessionStart` line with `session_id`, `cwd`, `source`; the model answers `PROBE-CONTEXT-7391` |
 | CX-3 | Ask "Say hello." | Two `Stop` lines with `stop_hook_active` false, then true; `ACK` between them |
-| CX-4 | Ask it to start a subagent that replies with one word | A `SubagentStop` line with `agent_id` and `agent_type`; whether a `Stop` line is also written for the subagent thread (compare `session_id` and `turn_id`) |
-| CX-5 | Write `always` to `mode`, ask "Say hello."; interrupt after ten blocks | Whether the host ends the turn by itself, and after how many blocks |
+| CX-3b | Write `tool` to `mode`, ask "Say hello." | The `Stop` line after the model ran `echo PROBE-TOOL`: whether `stop_hook_active` is true |
+| CX-4 | Remove `mode`. Ask it to start a subagent that replies with one word | A `SubagentStop` line with `agent_id`, `agent_type` and `cwd`; whether a `Stop` line is also written for the subagent thread (compare `session_id` and `turn_id`) |
+| CX-4b | Ask it to start a subagent that creates the file `note.txt` in the directory `../wt` and replies with one word | The `cwd` on that `SubagentStop` line: `main/` or `wt/` |
+| CX-5 | Write `always` to `mode`, ask "Say hello."; interrupt after ten blocks; then `always-tool` | Whether the host ends the turn by itself, and after how many blocks, in each mode |
 | CX-6 | Write `slow` to `mode`, ask "Say hello." | Whether the turn ends or continues after the ten second timeout; what the host shows |
 | CX-7 | Write `fail` to `mode`, ask "Say hello." | Whether the turn ends; what the host shows |
 | CX-8 | Remove `mode`; run `codex exec "Say hello."` in the directory | Whether `SessionStart` and `Stop` lines appear |
 | CX-9 | Change `timeout` to `11` for `Stop` in `.codex/hooks.json`, start a new session, ask "Say hello." | Whether the changed hook is skipped until reviewed again |
+| CX-10 | Copy `.codex/hooks.json` unchanged into `wt/`, start `codex` there, ask "Say hello." | Whether the same registration in a second checkout needs its own trust and review |
+| CX-11 | In a session with several turns, run the host's manual compaction command | Whether a `SessionStart` line with `source` `compact` is written |
 
 ## 4. Probe DK: the existing devkit path on Codex
 
@@ -127,10 +141,15 @@ above does not apply: the input has no `hook_event_name` documented and the resp
 
 | Result | Consequence for the design |
 | --- | --- |
-| CC-2 or CX-3 shows no second `Stop` line with `stop_hook_active` true | The loop breaker cannot rely on the host field; the gate needs its own per-session record, which adds a work item |
+| CC-2 or CX-3 shows no second `Stop` line with `stop_hook_active` true | The loop breaker cannot rely on the host field; the gate needs its own per-turn record |
+| CC-2b or CX-3b shows `stop_hook_active` false after the tool call | The host field covers only a stop with no tool call in between. A gate whose reason asks for work must bound its blocks by its own condition, which the name-aware condition does and the state-only condition does only with a per-session record (`gate-behavior-and-measurement.md` §3.1) |
+| CC-3b or CX-4b shows `cwd` in `main/` | A subagent cannot be mapped to its assignment by worktree on that host, and the narrow `SubagentStop` gate is not buildable there |
+| CC-3b or CX-4b shows `cwd` in `wt/` | The mapping works, and devkit's project lookup then reads the worker checkout's receipt and host file (gap G16) |
+| CC-10 or CX-11 shows no `SessionStart` after a compaction | Question q4 has no effect on that host |
+| CX-10 shows a new review | Every worktree needs a review before its hooks run on Codex |
 | CX-4 shows `Stop` inside a subagent thread | The Host gate on Codex must tell subagent threads apart before it reads the ledger, or it is not delivered on Codex |
-| CX-6 or CX-7 shows a held turn | The gate needs a self-imposed deadline below the host timeout, and a failed dispatch must still print a valid release |
+| CX-6 or CX-7 shows a held turn | Not a reason against delivery: the gate gets a self-imposed deadline below the host timeout, and a failed dispatch already prints a valid release. It adds that deadline to the gate handler |
 | CX-5 shows no host cap | The gate's own release on `stop_hook_active` is the only loop breaker on Codex |
-| CC-4 shows running subagents in `background_tasks` | The gate releases without a block while assigned subagents still run, which removes the most frequent wrong block on Claude Code |
+| CC-4 shows subagent entries that differ from shell entries in `background_tasks` | The gate releases without a block while subagents still run. If the entries cannot be told apart, the release is dropped: a background shell would otherwise release every stop |
 | CC-8 or CX-8 shows no hook in headless mode | The gate has no effect on headless runs; the measurement plan uses interactive sessions only |
 | CX-1 and CX-9 as documented | Every installation and every changed registration needs a user review on Codex; the installation guide says so |
