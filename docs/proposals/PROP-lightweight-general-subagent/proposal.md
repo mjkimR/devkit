@@ -65,8 +65,8 @@ MCP servers gains less.
   ([first-call-tokens.md](materials/first-call-tokens.md)).
 - **Q2** (partly answered): the four deep-research roles read sources, use the web, run authorized experiments with
   Bash and write scratch notes; the tool list covers them. app-uiux-improve's `designer` and `critic` may inspect a
-  running UI, which on Claude Code goes through a browser MCP server outside the list (`SKILL.md:36-37`). Open
-  decision D3.
+  running UI, which on Claude Code goes through a browser MCP server outside the list (`SKILL.md:36-37`); D3 assigns
+  those assignments to `general-purpose`.
 - **Q3** (answered): host blocks follow `swarm-worker`. `claude-code` is `native` with the tool list; `codex` is
   `emulated` with `sandbox_mode: workspace-write` and has no tool allowlist, so it gains no token reduction;
   `antigravity` is `unverified` with `view_file, grep_search, replace_file_content, run_command`. No block is
@@ -76,7 +76,8 @@ MCP servers gains less.
 
 ## 3. Proposed Design & Impact
 
-- **New `role-worker` subagent asset**, auto-selected through `devkit-dist` (placement: open decision D1). Every project
+- **New `role-worker` subagent asset** in `devkit-dist`'s `devkit` bundle `core` preset (D1), as minimal distribution
+  infrastructure shared by other bundles. Every project
   that syncs any bundle receives it unless the owner opts out with `devkit = false`. `bundle.toml` has no
   bundle-to-bundle dependency key, and none is added.
 - **Role contract** (`subagents/role-worker.md`):
@@ -87,25 +88,30 @@ MCP servers gains less.
   - The body says to read the role file the prompt names first and follow it as the assignment contract; without a
     named role file, it treats the prompt as the assignment. It re-delegates only independent work, preferring
     `role-worker` or a fitting dedicated subagent over `general-purpose`. Markdown is not a permission boundary.
-- **Role-file callers** spawn `role-worker` instead of a general subagent, with no fallback. When `role-worker` is
-  not available (`devkit = false` or a host without the projection), the caller stops that delegation and reports the
-  missing subagent and its cause instead of spawning another type:
-  - deep-research: `SKILL.md` step 4 and `references/orchestration.md`;
-  - app-uiux-improve: `references/orchestration.md`;
-  - design-explore: `references/orchestration.md` (open decision D2);
-  - skill-authoring playbook: `references/roles.md` directs new skill-local roles to `role-worker`.
+- **Role-file callers** assign the subagent type statically per role or assignment in their instructions (D3):
+  `role-worker` by default, `general-purpose` only for an assignment that needs a capability outside the
+  `role-worker` tool list. This is a fixed mapping, not a runtime fallback: when `role-worker` is not available
+  (`devkit = false` or a host without the projection), the caller stops that delegation and reports the missing
+  subagent and its cause instead of spawning another type.
+  - deep-research: `SKILL.md` step 4 and `references/orchestration.md`; every role uses `role-worker`;
+  - app-uiux-improve: `references/orchestration.md`; an assignment that interacts with a running UI uses
+    `general-purpose`, every other assignment `role-worker`;
+  - design-explore: `references/orchestration.md` (D2); every role uses `role-worker` unless an assignment interacts
+    with a running UI;
+  - skill-authoring playbook: `references/roles.md` makes `role-worker` the default for skill-local roles and tells
+    authors to name `general-purpose` for a role or assignment that needs a capability outside its tool list.
 - **Living Spec**:
-  - `CAP-DLV-deep-research` rule 11, `CAP-DLV-uiux-improvement`, `CAP-DLV-design-exploration` (with D2) and
+  - `CAP-DLV-deep-research` rule 11, `CAP-DLV-uiux-improvement`, `CAP-DLV-design-exploration` and
     `CAP-HARN-agent-guidance` where they name a general subagent.
   - `CAP-DIST-agent-projections` or the owning distribution capability lists `role-worker` with its host statuses.
-  - One PADR supersedes in part `ADR-skill-local-research-roles` (the "general subagent" clause only; rule 1, no
-    registered research subagents, remains) and, under D1 option (a), the `devkit`-bundle clause of
-    `ADR-package-ownership-and-release-version`.
+  - `PADR-role-worker-subagent` supersedes in part `ADR-skill-local-research-roles` (the "general subagent" clause
+    only; rule 1, no registered research subagents, remains) and the `devkit`-bundle clause of
+    `ADR-package-ownership-and-release-version`, which now admits general subagents shared by other bundles.
 - **Tests**:
   - Update `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py:146` ("general subagent") and the
     matching app-uiux-improve and design-explore assertions.
-  - Under D1 option (a), update `packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py`,
-    which asserts the `devkit` bundle holds instructions only.
+  - Update `packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py`, which asserts the
+    `devkit` bundle holds instructions only.
   - Add a devkit-dist integration test that syncs the owning bundle and asserts the `role-worker` projection for all
     three hosts with their statuses and the Claude Code `tools` list.
 - **Manual check** (Development, review evidence, not a test): with the method of
@@ -125,12 +131,13 @@ MCP servers gains less.
   `challenger-01` findings.
 - Release notes mention the new projection files that every consumer receives on upgrade.
 
-## 5. Open decisions
+## 5. User decisions
 
-- **D1**: where `role-worker` lives, given that `ADR-package-ownership-and-release-version` limits the `devkit` bundle
-  to distribution guidance with instructions only.
-- **D2**: whether design-explore joins the callers.
-- **D3**: how app-uiux-improve roles cover running-UI inspection without browser MCP tools.
+- **D1** (user): `role-worker` lives in the `devkit` bundle as minimal distribution infrastructure; no other existing
+  bundle fits, because only `devkit` and `advisory` are auto-selected from `devkit-dist`.
+- **D2** (user): design-explore joins the role-file callers.
+- **D3** (user): callers assign subagent types statically per role or assignment; running-UI interaction uses
+  `general-purpose`, everything else `role-worker`.
 
 ## 6. Lifecycle & Retirement Criteria
 
