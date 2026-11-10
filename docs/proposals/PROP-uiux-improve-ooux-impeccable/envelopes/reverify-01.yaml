@@ -1,0 +1,51 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-09T23:35:40.062470Z'
+status: completed
+review: challenger-01.yaml
+summary: Folded findings 1-5 into the PADR, proposal sections 3.2-3.8, target docs and planning evidence; finding 6 (qualified name) stays open as worker question q1 for plan-accept.
+findings:
+- issue: The fresh-child default sequence includes commands that ask the user questions; Planning marked only shape as needing the user.
+  evidence: proposal.md:174-179; PADR-impeccable-session-authority.md:53-55; planning-evidence.md:50; upstream a49e3e9b SKILL.md:75, reference/new-work.md:18-20,41, reference/init.md:27-29, reference/critique.md:3,15,44-47, reference/polish.md:18,80
+  failure_condition: New work on a new surface, or any work without PRODUCT.md, in a fresh child stalls or answers Impeccable's confirmation questions itself.
+  suggested_action: Limit the fresh child to refinement commands on existing surfaces; route new work, init, shape and critique to the user-run session; the child returns any upstream question as a blocker; correct planning evidence and add an assert_rule.
+  resolution: resolved
+  severity: P1
+- issue: The default commands write .impeccable/ files, but the brief permits context-file writes only when listed.
+  evidence: proposal.md:171-175; PADR:64-66; critique.md:3; new-work.md:53; planning-evidence.md:51,53
+  failure_condition: Every critique or hooked run flags its own expected output as out-of-list; gitignored writes escape a Git-status comparison.
+  suggested_action: Classify Impeccable session output separately from product edits and from consumer context files; report it as session output and disclose ignored-path coverage.
+  resolution: resolved
+  severity: P2
+- issue: Acceptance compares only the working tree against a state held in conversation; the brief names no working directory.
+  evidence: proposal.md:170-183; PADR:64,69-74; target-docs.md:43-49; CAP-DLV-uiux-improvement.md:38-39
+  failure_condition: A committing user session, a different checkout, a context reset or a non-Git consumer defeats attribution; pre-implementation workflow steps can be skipped.
+  suggested_action: Put the absolute working directory and recorded base in the brief; complete pre-implementation workflow steps before delegating; report a moved HEAD or missing base as unverifiable; without Git compare listed files and disclose coverage.
+  resolution: resolved
+  severity: P2
+- issue: Contract wording leaves conflicts after reconcile (rule 14 is a sync rule; CAP section 4 says the coordinator owns product changes; ADR clause 4 declared in force).
+  evidence: target-docs.md:38-40; CAP-DLV-uiux-improvement.md:66-67,83; ADR-uiux-improvement-workflow-boundary:41-42; PADR:87-88
+  failure_condition: Rule 14 mixes sync and runtime behavior; section 4 and clause 4 read as forbidding an editing Impeccable child.
+  suggested_action: Move context-file reporting to a new rule, restate CAP section 4, and state that clause 4 governs local roles.
+  resolution: resolved
+  severity: P3
+- issue: Rule 15 does not forbid loading Impeccable into the coordinator's own context without selection.
+  evidence: PADR:44-45,57-58; upstream SKILL.md:3,82
+  failure_condition: Host skill matching loads Impeccable during the inline track, undercutting AC-3 and context isolation.
+  suggested_action: The coordinator neither loads nor invokes Impeccable without selection; treat user-installed hook output as consumer check evidence.
+  resolution: resolved
+  severity: P3
+- issue: The qualified name is still pending at plan-accept.
+  evidence: proposal.md:103-106; target-docs.md:18
+  failure_condition: Handoff carries name placeholders into ACs, test paths and the rename boundary.
+  suggested_action: 'Decision needed: choose the qualified name (recommended app-uiux-improve) before plan-accept.'
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check on the proposal bundle
+diff_scope:
+  base: f810077abd5583303b18105c690b95ca4ac73a3b
+  head: c5292f5f43a9d95fd7aee3157d8409dbef1c59a7
+activity_effort: medium

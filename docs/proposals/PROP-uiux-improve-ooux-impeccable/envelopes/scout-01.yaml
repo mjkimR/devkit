@@ -1,0 +1,20 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-09T23:27:49.610597Z'
+status: completed
+summary: Upstream Impeccable at a49e3e9b documents npx impeccable install, the Claude Code plugin marketplace and manual copy; PRODUCT.md, DESIGN.md and shared .impeccable/ files are committed context; shape is an interactive interview with no code; live mode disables sandbox and approvals. Evidence in materials/planning-evidence.md section 3.
+findings: []
+assumptions:
+- Read upstream primary files at a pinned commit; the documentation site was not read.
+unverified_areas:
+- extract, generate and live writes beyond SKILL.md summaries
+- Absence of .gitignore writes in the full installer tree
+- No Impeccable installation or session was run
+checks:
+  source: PASS README, SKILL.md and reference files at a49e3e9b
+diff_scope:
+  base: f810077abd5583303b18105c690b95ca4ac73a3b
+  head: 10b4a6fd95360427b472e846bda359124f33aed7
+activity_effort: medium
