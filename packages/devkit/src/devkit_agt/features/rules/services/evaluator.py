@@ -215,17 +215,19 @@ def _mark_fixed(initial: Sequence[Violation], recheck: Sequence[Violation], ran:
     A finding counts as fixed when the recheck reports fewer findings with its
     identity (rule, file, message) than the initial check did; the line is not
     compared, because a fix may move it. Only a rule in ``ran`` (the IDs of the
-    rules the recheck ran) can vouch for a repair: a finding of a rule the
-    recheck omitted is returned as found. The inputs are not modified.
+    rules the recheck ran) can vouch for a repair: every finding of a rule the
+    recheck did not run, fixable or not, is returned as found. The inputs are
+    not modified.
     """
     remaining = Counter(_finding_key(v) for v in recheck)
     checked = set(ran)
     reported: list[Violation] = []
     for v in initial:
-        if not v.fixable:
-            continue
+        # First: the recheck cannot report again the findings of a rule it did not run, manual ones included.
         if v.rule_id not in checked:
             reported.append(v)
+            continue
+        if not v.fixable:
             continue
         key = _finding_key(v)
         if remaining[key] > 0:
