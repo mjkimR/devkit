@@ -8,7 +8,7 @@ target: packages/devkit-core/src/devkit_core/core/git.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-10
 ---
 
@@ -55,3 +55,5 @@ packages/devkit/src/devkit_agt/features/compact/services/porcelain.py:8  status_
 packages/devkit-spec/src/devkit_spec/features/worker/usecases/inspect.py:125-142  status parser
 packages/devkit-core/src/devkit_core/core/__init__.py exports run_git, run_git_text, is_ancestor only
 ```
+
+- **Disposition**: PROP-core-git-observation-helpers: queued as a draft proposal that adds the public helpers and moves the existing parsers to them.
