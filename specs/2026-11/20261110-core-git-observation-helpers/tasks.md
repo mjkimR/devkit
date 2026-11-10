@@ -23,7 +23,7 @@ plan: PLAN-core-git-observation-helpers
     `docs/capabilities/compact/CAP-CMP-bounded-execution.md`
   - _Requirements: AC-04, AC-10_
   - **Verification**: `just test-affected --base 1f8e0954cd2bd25cb93f0c0907e852440b2ba73f`
-- [ ] **Task 2.2**: `devkit_dist` callers moved, newline worktree path test
+- [x] **Task 2.2**: `devkit_dist` callers moved, newline worktree path test
   - **_Boundary**: `packages/devkit-dist/src/devkit_dist/features/`, `packages/devkit-dist/tests/`
   - _Requirements: AC-04, AC-09_
   - **Verification**: `just test-dist`
