@@ -80,7 +80,7 @@ and separately runs the compact tests through `devkit run`.
 `uv run pytest` from the repository root runs every test.
 
 The CLI (`devkit`), bundle names and entry-point groups retain their names. Python imports expose
-wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_cli`, `devkit_docs`, `devkit_spec`, `devkit_mcp` and
+wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_cli`, `devkit_docs`, `devkit_spec`, `devkit_adaptive`, `devkit_mcp` and
 `devkit_viewer`. The runtime advisory library preserves `devkit.advisory`. The distributions are
 `devkit-dist` and `devkit-agt` to avoid confusion with the unrelated `devkit` project on PyPI.
 They are not published to PyPI; install them from Git or an explicit wheel URL/path.

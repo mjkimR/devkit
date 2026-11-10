@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-adaptive-package-extraction
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-adaptive-development.md
     resolution: modified
@@ -42,3 +42,5 @@ The five installation guides describe fresh installs of docs plus adaptive; they
 Deferred runtime commands and the requirement on devkit-docs remain in `PROP-adaptive-assignment-cli`; lifecycle-hook investigation remains in `PROP-adaptive-lifecycle-hooks`. Both destinations already exist and no acceptance criterion of this unit is deferred.
 
 Entrypoints were moved one-for-one from their existing bundle asset paths. Broad package and repository-tooling derivation candidates are rejected because they are not these documents' reading doorways.
+
+Independent medium reconcile review covered all ten targets. Its README namespace omission was fixed and rechecked by the implementer; the namespace inventory now includes `devkit_adaptive`.

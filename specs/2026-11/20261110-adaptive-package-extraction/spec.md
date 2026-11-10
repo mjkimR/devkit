@@ -2,7 +2,7 @@
 id: SPEC-adaptive-package-extraction
 title: Extract adaptive development into a devkit-adaptive distribution
 summary: "Move the adaptive-dev bundle from the content-only devkit-catalog into a new devkit-adaptive distribution with unchanged bundle name, presets and assets, so adaptive development can gain commands while the catalog stays content-only."
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: []
 related_usecases: []
