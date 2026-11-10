@@ -28,6 +28,7 @@ repositories' runtime,
 `packages/devkit-docs` the document system (`devkit docs`, the document model and the document rules),
 `packages/devkit-spec` the Spec-Driven Development (SDD) extension built on it,
 `tools/devkit-dev` the repository development bundle and its structure rules,
+`packages/devkit-adaptive` the opt-in adaptive development bundle,
 `packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles,
 `packages/devkit-viewer` the local repository viewer (`devkit viewer serve`, with its Svelte frontend), `models/devkit-embed` the embedding model of the
 `search` extra of `devkit-dist` and `devkit-agt` (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
@@ -67,8 +68,8 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
-`devkit-docs`, `devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. Short names are accepted too:
-`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `cli`, `dist`, `mcp`, `starter`, `catalog`, `docs`, `spec` and `viewer` for
+`devkit-docs`, `devkit-spec`, `devkit-adaptive`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. Short names are accepted too:
+`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `cli`, `dist`, `mcp`, `starter`, `adaptive`, `catalog`, `docs`, `spec` and `viewer` for
 `devkit-<name>` (`scripts/_lib.sh` `module_short_names`; an unknown name prints both lists). Feature names select their tests across tiers and matching source subtrees; tier names (`unit`, `integration`, `e2e`) or explicit paths also narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
@@ -202,6 +203,7 @@ requirement on it, run `just model-build` (fetches and verifies the files, build
 
 - `ARCH-01-introduction-and-goals`: modules, interaction model, and the full documentation index.
 - [devkit-dist](packages/devkit-dist/README.md) and [devkit-agt](packages/devkit/README.md): module tables with links to each module's reference.
+- [devkit-adaptive](packages/devkit-adaptive/README.md): adaptive development guidance and reusable agents.
 - [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
 - [devkit-viewer](packages/devkit-viewer/README.md): the local repository viewer and its frontend commands (`just viewer ...`).
 - Handbook for people: a release snapshot of the Living Spec in English and Korean under `handbook/en/` and

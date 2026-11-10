@@ -7,7 +7,7 @@ from pathlib import Path
 from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
-BUNDLE = PACKAGE / "src/devkit_catalog/adaptive_dev/bundle"
+BUNDLE = PACKAGE / "src/devkit_adaptive/bundles/adaptive_dev/bundle"
 SKILL = BUNDLE / "skills/adaptive-dev"
 DOCUMENTS = SKILL / "references/documents.md"
 

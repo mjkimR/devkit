@@ -1,4 +1,4 @@
-"""Real docs/catalog wheels expose adaptive-dev assets and shared policy without SDD."""
+"""Real docs/adaptive wheels expose adaptive-dev assets and shared policy without SDD."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
         "devkit-dist",
         "devkit-agt",
         "devkit-docs",
-        "devkit-catalog",
+        "devkit-adaptive",
     ]:
         run("uv", "build", "--package", package, "--wheel", "--out-dir", str(wheels), cwd=ROOT)
     venv = tmp_path / "venv"
@@ -39,7 +39,7 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     run(
         python,
         "-c",
-        "from importlib.metadata import distributions; assert 'devkit-spec' not in {item.metadata['Name'] for item in distributions()}",
+        "from importlib.metadata import distributions; assert {'devkit-spec', 'devkit-catalog'}.isdisjoint({item.metadata['Name'] for item in distributions()})",
     )
     consumer = tmp_path / "consumer"
     consumer.mkdir()

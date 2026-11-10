@@ -67,6 +67,7 @@ cli devkit-cli
 dist devkit-dist
 mcp devkit-mcp
 starter devkit-starter
+adaptive devkit-adaptive
 catalog devkit-catalog
 docs devkit-docs
 spec devkit-spec

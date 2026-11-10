@@ -12,8 +12,8 @@ capabilities:
   - CAP-DLV-adaptive-development
   - CAP-HARN-agent-guidance
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md
 ---
 
 # [UC-advance-an-idea] Advance an idea and leave resumable current context

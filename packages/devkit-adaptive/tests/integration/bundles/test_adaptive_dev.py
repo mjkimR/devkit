@@ -19,7 +19,7 @@ from devkit_dist.features.distribution.usecases.sync import sync_project
 from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
-BUNDLE = PACKAGE / "src/devkit_catalog/adaptive_dev/bundle"
+BUNDLE = PACKAGE / "src/devkit_adaptive/bundles/adaptive_dev/bundle"
 SWARM = {"swarm-planner", "swarm-worker", "swarm-verifier"}
 ROLES = {"product-clarifier", "product-researcher", "usage-reviewer"}
 IMPORT = {"adaptive-import", "agent-asset-conversion"}
@@ -27,7 +27,7 @@ IMPORT = {"adaptive-import", "agent-asset-conversion"}
 
 def _installed() -> list[InstalledBundle]:
     bundle = load_bundle(BUNDLE)
-    return [InstalledBundle("devkit-catalog", bundle.version, bundle)]
+    return [InstalledBundle("devkit-adaptive", bundle.version, bundle)]
 
 
 def test_adaptive_dev_requires_explicit_selection(tmp_path: Path) -> None:
@@ -179,7 +179,7 @@ def test_bundle_names_only_adaptive_dev() -> None:  # SPEC-rename-incubation-to-
     pointer = (BUNDLE / "guidance/adaptive-dev-pointer.md").read_text()
     assert_rule(pointer, "`approach=adaptive-dev`", "`/adaptive-dev`", "`get-context adaptive-dev`")
     entry_points = tomllib.loads((PACKAGE / "pyproject.toml").read_text())["project"]["entry-points"]["devkit.bundles"]
-    assert entry_points["adaptive-dev"] == "devkit_catalog.adaptive_dev"
+    assert entry_points["adaptive-dev"] == "devkit_adaptive.bundles.adaptive_dev"
     assert "incubation" not in entry_points
 
 
@@ -278,3 +278,18 @@ def test_local_role_paths_resolve_from_installed_skill_not_cwd(tmp_path: Path, m
         assert "caller" in overlay.read_text()
     # Resolving from a loaded reference is a different path and must not be used.
     assert not (skill.parent / "references/roles/builder.md").exists()
+
+
+def test_distribution_is_bundle_only_without_runtime_dependencies() -> None:
+    metadata = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
+    project = metadata["project"]
+    assert project["name"] == "devkit-adaptive"
+    assert project["dependencies"] == []
+    assert not project.get("optional-dependencies")
+    assert project["entry-points"] == {"devkit.bundles": {"adaptive-dev": "devkit_adaptive.bundles.adaptive_dev"}}
+    root = PACKAGE / "src/devkit_adaptive"
+    assert {p.relative_to(root).as_posix() for p in root.rglob("*.py")} == {
+        "__init__.py",
+        "bundles/__init__.py",
+        "bundles/adaptive_dev/__init__.py",
+    }

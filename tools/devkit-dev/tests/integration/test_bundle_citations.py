@@ -12,6 +12,8 @@ import re
 import tomllib
 from pathlib import Path
 
+import devkit_adaptive.bundles
+
 # Static imports of every shipping module: a change to their sources selects this test in `just test-affected`.
 import devkit_agt.bundles
 import devkit_catalog
@@ -25,6 +27,7 @@ from devkit_docs.features.documents.repositories.index import DocumentIndex
 ROOT = Path(__file__).resolve().parents[4]
 SHIPPING = (
     devkit_agt.bundles,
+    devkit_adaptive.bundles,
     devkit_catalog,
     devkit_dist.bundles,
     devkit_docs.bundles,

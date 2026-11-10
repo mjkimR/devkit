@@ -81,6 +81,7 @@ uv add --no-build-package pyyaml --dev "devkit-spec @ git+https://github.com/mjk
 uv add --no-build-package pyyaml --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
 
 uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-catalog"
+uv add --dev "devkit-adaptive @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-adaptive"
 uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibYAML binding is unavailable'"
 ```
 
@@ -94,6 +95,7 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   `devkit-workflow` skill) and the `devkit spec` commands. Declare it only when
   the user wants spec-driven delivery ([Bundle Recommendations](install/bundle-recommendations.md) lists the
   evidence); never declare `devkit-agt` next to it.
+- `devkit-adaptive` (optional) owns the opt-in `adaptive-dev` bundle; install it for adaptive development or its reusable agents/import presets.
 - `devkit-catalog` (optional) adds opt-in bundles that deploy nothing until selected; add it only when a
   [recommended bundle](install/bundle-recommendations.md) comes from it.
 - Both packages require Python 3.12 or newer; the project's `requires-python` must allow 3.12 (the route documents
@@ -109,7 +111,7 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
 - Upgrading later, when the requirement names no ref (the commands above): `uv lock --upgrade-package devkit-agt
   --upgrade-package devkit-dist --upgrade-package devkit-core --upgrade-package devkit-cli --upgrade-package
   devkit-advisory` (plus `--upgrade-package devkit-spec --upgrade-package devkit-docs` when `devkit-spec` is declared, and
-  `--upgrade-package devkit-catalog` when declared), then
+  `--upgrade-package devkit-catalog` and `--upgrade-package devkit-adaptive` when declared), then
   `uv sync` and `uv run devkit sync`.
 - Upgrading a pinned requirement: when `pyproject.toml` pins a ref (`rev = ...` under `[tool.uv.sources]`, or
   `@<ref>` in the Git URL), `uv lock --upgrade-package` keeps the pinned commit and changes nothing. Re-declare each
@@ -122,7 +124,7 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
 
 ### Adaptive development
 
-For a user-approved adaptive development path, declare devkit-docs and devkit-catalog using the package commands above;
+For a user-approved adaptive development path, declare devkit-docs and devkit-adaptive using the package commands above;
 no devkit-spec requirement is needed. Set shared `.devkit/config.toml` policy explicitly:
 
 ```toml
@@ -137,7 +139,7 @@ actual-usage verification. Optional support roles are not mandatory phases. The 
 `.devkit/adaptive-dev.md` when useful. Leave that project-owned file available to normal version control and preserve
 its bytes during installation. No complete backlog or SDD Unit is needed before the first useful action.
 
-The absent approach defaults to `sdd`; selecting the catalog bundle never changes that value. Do not implicitly
+The absent approach defaults to `sdd`; selecting the adaptive-dev bundle never changes that value. Do not implicitly
 remove existing SDD assets or reopen its history. Retain project checks and use a separately requested verified
 [baseline procedure](install/adaptive-dev-sdd-adoption.md) for voluntary SDD adoption.
 

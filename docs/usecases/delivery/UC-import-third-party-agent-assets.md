@@ -9,8 +9,8 @@ status: active
 capabilities:
   - CAP-DLV-adaptive-development
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-import/SKILL.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/playbooks/agent-asset-conversion/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-import/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/playbooks/agent-asset-conversion/SKILL.md
 created_at: 2026-11-10
 ---
 

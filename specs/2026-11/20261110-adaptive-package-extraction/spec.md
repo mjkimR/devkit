@@ -271,3 +271,5 @@ set 2 holds the evidence this Planning collected.
 The accepted proposal remains applicable at base `9ab4f8e5ec0d1e4922013106199835ce6b74838e`. No new feature edge is introduced.
 The Host measured `just smoke` there: foundation 210 tests passed, then the catalog bundle-set assertion failed because it expected five of eight registered bundles. The planned assertion update covers this failure.
 Codex worker boundaries are emulated: every command uses the absolute assigned worktree, write scope is audited against the accepted input, and writes and commits request operation-specific sandbox approval.
+
+The smoke expectation uses the actual registered name `app-uiux-improve`; the carried proposal shortened it to `uiux-improve`. This repairs the planned inventory assertion without changing any bundle name.

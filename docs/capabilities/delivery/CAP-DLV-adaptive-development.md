@@ -10,17 +10,17 @@ usecases:
   - UC-advance-an-idea
   - UC-import-third-party-agent-assets
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/subagents/swarm-worker.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-import/SKILL.md
-  - packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/playbooks/agent-asset-conversion/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/subagents/swarm-worker.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-import/SKILL.md
+  - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/playbooks/agent-asset-conversion/SKILL.md
 ---
 
 # [CAP-DLV-adaptive-development] Adaptive Development
 
 ## 1. Summary
 
-The opt-in `adaptive-dev` catalog bundle supplies `/adaptive-dev` for adaptive product iteration, three optional
+The opt-in `adaptive-dev` bundle of `devkit-adaptive` supplies `/adaptive-dev` for adaptive product iteration, three optional
 support roles, three reusable execution archetypes and a current-context template. The invoking agent is the coordinator (master). A product can remain
 in adaptive development; no amount of work implies eventual SDD adoption. Explicit research teams are a separate bundle
 (`CAP-DLV-deep-research`); this bundle neither invokes nor suggests them and links their retained material by ID.
@@ -37,6 +37,8 @@ decision record; this capability is their contract.
 `ADR-skill-local-swarm-roles` owns reusable execution agents and optional role leads;
 `ADR-worktree-isolated-parallel-workers` owns isolated writers and aggregate verification.
 
+`ADR-adaptive-dev-distribution` owns the bundle distribution.
+
 ## 2. Scope and Boundary
 
 - **In-Scope**: adaptive clarification, bounded research/experiments, representative implementation and actual
@@ -48,7 +50,7 @@ decision record; this capability is their contract.
   (`CAP-DOCS-document-model`), project build/test tools and the separate baseline readiness/activation procedure
   (`CAP-DLV-sdd-baseline-adoption`); project-owned bundle packaging and installation (`CAP-DIST-in-repo-bundles`),
   asset kinds and validation (`CAP-DIST-manifest-spec`) and playbook retrieval (`CAP-DIST-context-and-playbooks`).
-- **Scope Excluded**: a runtime scheduler, agent bus, new wheel, mandatory role sequence, model routing, fixed
+- **Scope Excluded**: a runtime scheduler, agent bus, mandatory role sequence, model routing, fixed
   management hierarchy, automatic approach switching, automatic implementation/publication, per-change SDD
   artifacts and reconstructed experiment history; a document system created for a project that maintains none;
   import of a whole pack or an unselected item, execution or installation of source content, a vendored or
@@ -61,9 +63,9 @@ decision record; this capability is their contract.
    `swarm-planner`, `swarm-worker` and `swarm-verifier`, the `adaptive-import` skill and the `agent-asset-conversion`
    playbook. `adaptive-dev:agents` MUST select only the three archetypes and `adaptive-dev:import` only the import
    skill and playbook, each with no adaptive entry, pointer or context template. No preset changes approach or caller
-   lifecycle authority. Tests: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and `packages/devkit-catalog/tests/integration/bundles/test_adaptive_import.py`.
-2. **Independent installation**: The bundle MUST install with docs/catalog without a devkit-spec distribution.
-   Test: `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
+   lifecycle authority. Tests: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` and `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_import.py`.
+2. **Independent installation**: The bundle MUST install with devkit-docs and devkit-adaptive without a devkit-spec distribution.
+   Test: `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
 3. **Approach inspection**: WHEN the entry starts product work, the coordinator MUST inspect the effective common
    development approach rather than infer it from bundle selection.
 4. **Inactive entry**: IF the approach is not `adaptive-dev`, THEN the entry MUST stop product actions and report the
@@ -116,7 +118,7 @@ decision record; this capability is their contract.
     checkpoints MUST retain source identity, dirty/unmerged results, active ownership and next recovery action;
     passing QA is not a prerequisite.
 15. **Context preservation**: WHEN sync, removal or re-selection runs, sync MUST preserve existing project-owned
-    context and product notes. Tests: catalog integration and installed-consumer tests.
+    context and product notes. Tests: devkit-adaptive integration and installed-consumer tests.
 16. **Voluntary adoption**: WHEN the user explicitly requests SDD adoption, the coordinator MUST leave activation to
     the separately available baseline procedure while explaining preparation with adaptive development still active.
 17. **Useful alternatives**: WHEN research choices affect resume, current facts SHOULD link retained notes, surviving
@@ -125,7 +127,7 @@ decision record; this capability is their contract.
 18. **One name**: Documents MUST call the approach "adaptive development"; identifiers and commands MUST use
     `adaptive-dev`. The former `incubation` name MUST NOT be accepted: no `incubation` bundle alias
     (`SELECTION_INVALID`) or approach value (`DEVELOPMENT_CONFIG_INVALID`), and no fallback read of
-    `.devkit/incubation.md`. Tests: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and
+    `.devkit/incubation.md`. Tests: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` and
     `packages/devkit-dist/tests/integration/features/project/test_development.py`.
 
 19. **Reusable execution contracts**: Public archetypes MUST omit a skill prerequisite and source model/effort defaults;
@@ -147,7 +149,7 @@ decision record; this capability is their contract.
 26. **Governing documents**: WHERE the project maintains documents, WHEN the coordinator partitions a multi-writer
     build, it MUST find the documents that govern the goal and name them in each assignment by ID, by absolute path
     where a document has no ID, or as `none`; an assignee treats them as constraints and returns a conflict with one
-    to the Host instead of resolving it (`UC-advance-an-idea` 5b6). Test: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev_documents.py`.
+    to the Host instead of resolving it (`UC-advance-an-idea` 5b6). Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev_documents.py`.
 27. **Current-state documents**: WHEN the Host integrates a retained result, it MUST update the current-state
     documents the subject warrants, describing current state and writing nothing for a discarded experiment, and
     include the project's document checks in combined checks when the project defines them; an unavailable document
@@ -155,10 +157,10 @@ decision record; this capability is their contract.
     choice in current context to its document ID, to its path where the document has no ID, or to `undocumented`,
     linking rather than copying content (`UC-advance-an-idea` 7c). IF the project maintains no document tree, THEN the
     coordinator MUST record that fact in current context and create no document system. Document work adds no
-    per-change record, SDD Unit, approval or envelope. Test: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev_documents.py`.
+    per-change record, SDD Unit, approval or envelope. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev_documents.py`.
 
 28. **Explicit import entry**: The bundle MUST declare `adaptive-import` with `invocation = "user"`, and its other
-    assets MUST NOT name or suggest the entry or its playbook. Test: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_import.py`.
+    assets MUST NOT name or suggest the entry or its playbook. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_import.py`.
 29. **Approach independence**: WHEN the import entry or the conversion playbook runs, it MUST NOT require an approach
     check or change the approach or a host setting; its edits follow the project's governing workflow and Git
     authority.
@@ -192,12 +194,12 @@ decision record; this capability is their contract.
 38. **Project-owned placement**: Converted assets MUST live in the project's own in-repository bundle
     (`CAP-DIST-in-repo-bundles`) under project-prefixed IDs, with shipped archetypes and overlays unchanged. A role
     overlay is a `document` asset read from its managed path and passed to an archetype as a verified absolute role
-    path, and the bundle's constitution lists each converted role. Test: `packages/devkit-catalog/tests/integration/bundles/test_adaptive_import.py`.
+    path, and the bundle's constitution lists each converted role. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_import.py`.
 39. **Validation and trial**: WHEN an asset is placed, the agent MUST repeat bundle validation, planning and sync
     until each exits `0`, then run one bounded trial assignment through the archetype and compare its return with the
     archetype's return fields; IF the host cannot run the trial, THEN the agent MUST report it as unverified.
 
-Rules 29 to 37 and 39 bind the agent; `packages/devkit-catalog/tests/integration/bundles/test_adaptive_import.py`
+Rules 29 to 37 and 39 bind the agent; `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_import.py`
 asserts that the entry and the playbook state each directive.
 
 Distribution checks enforce file/metadata contracts. Clarification, evidence, optionality, resume, document linkage and
@@ -207,7 +209,7 @@ import judgment are semantic agent contracts; keyword assertions alone do not es
 
 ### Distribution and entry
 
-Install devkit-docs and devkit-catalog, then select `uv run devkit add adaptive-dev` (`adaptive-dev:core`).
+Install devkit-docs and devkit-adaptive, then select `uv run devkit add adaptive-dev` (`adaptive-dev:core`).
 The two skills, six registered agent contracts and the playbook use existing projection and retrieval mechanisms. No
 adaptive-development runtime or CLI is added.
 
@@ -291,7 +293,7 @@ next action, a bounded trial assignment.
 ### Evidence-scoring test support
 
 Repository test support can score supplied combined-check and interrupted-writer evidence without invoking a model:
-`python packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py <evidence.json>`. The input identifies the
+`python packages/devkit-adaptive/tests/support/adaptive_behavior_scorer.py <evidence.json>`. The input identifies the
 scenario, source, availability and evidence kind; artifact paths are relative to the evidence file. Combined evidence
 uses source-matched child and aggregate JSON reports. Recovery evidence uses a retained work file plus source-matched
 ownership and recovery JSON records. The result contains observations and a limitation: the scorer does not

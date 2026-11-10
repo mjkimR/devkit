@@ -272,7 +272,7 @@ self-contained `deep-research` catalog bundle.
 
 ### Adaptive-dev bundle
 - The catalog bundle is `adaptive-dev:core` in devkit-catalog (entry point
-  `adaptive-dev = "devkit_catalog.adaptive_dev"`), with one `/adaptive-dev` coordinator, three optional support
+  `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"`), with one `/adaptive-dev` coordinator, three optional support
   contracts and a project-owned mutable `.devkit/adaptive-dev.md`; its pointer guidance is `adaptive-dev-pointer`.
   (ADR-keep-incubation-guidance-opt-in-and-current-state-based; names per ADR-adaptive-dev-approach-name)
 - The bundle keeps `/adaptive-dev`, `product-clarifier`, `product-researcher`, `usage-reviewer`, the pointer and the
@@ -442,8 +442,8 @@ self-contained `deep-research` catalog bundle.
   `docs/materials/2026-10/20261028-incubation-lifecycle-policy/consumer-inventory.md`.
 - Approach name (`ADR-adaptive-dev-approach-name`):
   `packages/devkit-dist/tests/integration/features/project/test_development.py` accepts `adaptive-dev` and `sdd` and
-  refuses `incubation` with `DEVELOPMENT_CONFIG_INVALID`; `packages/devkit-catalog/tests/integration/bundles/` selects
-  and projects the `adaptive-dev` bundle; `tests/e2e/smoke.sh` lists `adaptive-dev` in the catalog bundle set.
+  refuses `incubation` with `DEVELOPMENT_CONFIG_INVALID`; `packages/devkit-adaptive/tests/integration/bundles/` selects
+  and projects the `adaptive-dev` bundle; `tests/e2e/smoke.sh` lists `adaptive-dev` under `devkit-adaptive`.
 - SDD adoption (`ADR-adopt-sdd-through-an-evidenced-baseline-playbook`): asset inventory and guidance assertions
   verify entry/ownership and prohibited retrospective artifacts. Seeded app exercises cover ready, missing-evidence,
   source-change and partial-failure paths, recording coverage and real versus simulated decisions. Existing brownfield
@@ -453,8 +453,8 @@ self-contained `deep-research` catalog bundle.
   manifest/projection/reference tests and context-byte preservation exercise distribution. Bounded scenario
   walkthroughs exercise incomplete-goal discovery, research/experiments, inline and delegated iteration, usage
   verification and cross-session resume. Review compares results to AC-01 through AC-06; token checks alone are
-  insufficient. `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py` and
-  `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py` verify distribution and policy
+  insufficient. `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` and
+  `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py` verify distribution and policy
   consumption. `SPEC-incubation-development-guidance` retains labelled scenario, actual command and fresh-context
   resume evidence; those bounded observations do not establish general model reliability or real-user usability.
 - Discovery teams (`ADR-extend-incubation-with-optional-discovery-teams`): catalog manifest/projection and docs-only
