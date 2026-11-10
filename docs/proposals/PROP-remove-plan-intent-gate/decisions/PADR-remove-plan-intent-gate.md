@@ -46,16 +46,16 @@ special handling in proposal acceptance, handoff and policy reporting without de
 This decision replaces only the following gate-dependent clauses. Each earlier ADR remains accepted with a
 partial-supersession pointer; its unrelated decisions remain in force.
 
-- `ADR-delivery-approval-and-lifecycle-authority`: Task intent's gate/record requirement is removed; explicit task
+- Supersedes in part `ADR-delivery-approval-and-lifecycle-authority`: Task intent's gate/record requirement is removed; explicit task
   authorization and all later boundary policies remain.
-- `ADR-proposal-acceptance`: Both gates in one request and Eligibility checked by the tool lose their intent gate,
+- Supersedes in part `ADR-proposal-acceptance`: Both gates in one request and Eligibility checked by the tool lose their intent gate,
   intent-record prerequisite and pending-intent special case. Explicit `plan-accept`, direct-acceptance eligibility,
   visibility, sweep, acceptance audit and handoff guard remain; effort hints are stated at intake.
-- `ADR-delivery-classification`: Gates, Overall refactor workflow and Handoff target lose `plan-intent` and its
+- Supersedes in part `ADR-delivery-classification`: Gates, Overall refactor workflow and Handoff target lose `plan-intent` and its
   carry. Classification axes, workflow/stage IDs, `plan-accept`, `dev-integration` and target workflow remain.
-- `ADR-roadmap-and-milestones-ledger`: Next work no longer selects confirm-the-intent from an absent gate record.
+- Supersedes in part `ADR-roadmap-and-milestones-ledger`: Next work no longer selects confirm-the-intent from an absent gate record.
   It recommends starting the eligible requested draft's Planning; ordering and explicit task instruction remain.
-- `ADR-ux-screens`: the inline Planning boundary is before implementation rather than before `plan-intent`.
+- Supersedes in part `ADR-ux-screens`: the inline Planning boundary is before implementation rather than before `plan-intent`.
   Comparing screen candidates during Planning and retaining the recommended candidate during Development remain.
 
 ## 5. Consequences
