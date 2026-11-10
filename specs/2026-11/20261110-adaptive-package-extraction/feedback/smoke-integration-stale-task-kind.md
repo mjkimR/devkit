@@ -8,7 +8,7 @@ target: tests/e2e/smoke_integration.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -38,3 +38,10 @@ smoke_integration.py:127: assert result.returncode == 0
 Usage: python -m devkit_dist integration prepare [OPTIONS] BRANCH
 Error: No such option '--task-kind'.
 ```
+
+## Disposition
+
+Session fix in `tests/e2e/smoke_integration.py` removes the unsupported `--task-kind` and `--task-id`
+arguments from both integration commands. The existing digest, authority, merge and cleanup assertions remain.
+The standalone integration probe reproduces the option error before the fix and passes afterward;
+`just smoke` completes successfully with the built wheels after the fix.
