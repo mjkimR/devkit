@@ -48,8 +48,22 @@ id = "swarm-verifier"
 kind = "subagent"
 source = "subagents/swarm-verifier.md"
 
+[[assets]]
+id = "adaptive-import"
+kind = "skill"
+source = "skills/adaptive-import"
+invocation = "user"
+
+[[assets]]
+id = "agent-asset-conversion"
+kind = "playbook"
+source = "playbooks/agent-asset-conversion"
+
 [presets.core]
-assets = ["adaptive-dev", "adaptive-dev-pointer", "product-clarifier", "product-researcher", "usage-reviewer", "current-context-template", "swarm-planner", "swarm-worker", "swarm-verifier"]
+assets = ["adaptive-dev", "adaptive-dev-pointer", "product-clarifier", "product-researcher", "usage-reviewer", "current-context-template", "swarm-planner", "swarm-worker", "swarm-verifier", "adaptive-import", "agent-asset-conversion"]
 
 [presets.agents]
 assets = ["swarm-planner", "swarm-worker", "swarm-verifier"]
+
+[presets.import]
+assets = ["adaptive-import", "agent-asset-conversion"]

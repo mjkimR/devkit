@@ -44,18 +44,21 @@ entrypoints:
 - **4a.** Missing product decision: the agent asks only the missing next-action question with its supported recommendation; awaits the product owner's decision, then resumes at step 4.
 - **5a.** Goal or constraint change: the agent obtains the product owner's direction before dependent work; resumes at step 4 with the settled direction or ends while that decision is pending.
 - **5b.** Optional support: the agent delegates a separable question or usage or implementation scope with source/base identity, absolute ownership, permitted actions/Git, checks, stop condition and return fields, verifies actual paths and evidence and folds it into current choices; resumes at step 6.
-- **5b5.** Shared interface: if delegated deliverables depend on an unsettled interface, the coordinator assigns its owner and resolves it before concurrent dependent writes or sequences them. It supplies the agreed identity to dependent assignments and reassesses them if it changes; resumes at step 5.
+- **5b5.** Shared interface: if delegated deliverables depend on an unsettled interface, the coordinator assigns its owner and resolves it before concurrent dependent writes or sequences them. It supplies the agreed identity to dependent assignments and reassesses them if it changes. An interface that outlives its assignment is first recorded in its current-state document, marked as agreed until its implementation is integrated; that document's ID and source identity then identify it; resumes at step 5.
 - **5b1.** Optional role lead: if useful and supported within the Host-wide allowance, the lead delegates narrowed children at depth at most Host → lead → child, counts waiting leads and verifies its aggregate scope; resumes at step 6.
 - **5b2.** Missing nesting or unknown/exhausted capacity: the Host uses direct, flat or sequential execution with the same result/check contract and no host-setting change; resumes at step 5.
 - **5b3.** Concurrent writers: the Host assigns separate worktrees and exclusive ownership; parents wait before writing in child-owned checkouts. If isolation is unavailable, writers run serially; resumes at step 6.
 - **5b4.** Incompatible overlay or unavailable registered invocation: the Host reports the gap, rejects expanded permissions and selects compatible direct execution or explicitly labelled emulation; resumes at step 5.
+- **5b6.** Governing documents: before partitioning a multi-writer build in a project that maintains documents, the coordinator finds the documents that govern the goal and names them in each assignment by ID or absolute path, or `none`. An assignee treats them as constraints and returns a conflict to the Host instead of resolving it; resumes at step 5.
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects that return as completion evidence; resumes at step 4 without discarding another actor's work.
 - **6a.** Failed retained or combined behavior: the Host routes reproducing evidence to the responsible writer for bounded repair, repeats combined checks and reports an unresolved result at the stop condition; resumes at step 6.
 - **6a1.** Probe fails before valid product execution: the agent classifies a harness or environment cause only on evidence, otherwise keeps the cause unknown and product behavior unverified; resumes at step 6 after a valid probe is available.
 - **6a2.** Identical repair attempts produce no new diagnostic evidence: the agent changes strategy at the applicable bound, or reports an unresolved blocker when the needed next action is unavailable; resumes at step 6 or proceeds to step 7.
 - **6b.** Missing verification evidence: the agent reports the check as unverified and records the gap/next action without claiming successful retained behavior; proceeds to step 7 with that limitation.
+- **6c.** Retained result integrated in a project that maintains documents: the Host updates the current-state documents the subject warrants, describing current state and writing nothing for a discarded experiment, and includes the project's document checks in combined checks; an unavailable document check is reported as unverified; resumes at step 6.
 - **7b.** Failure/interruption: the Host collects or stops children, preserves dirty/unmerged results and active ownership, and writes source identity, failed checks and next recovery action to current context before cleanup; the use case pauses.
 - **7a.** Explicit SDD adoption request: the agent explains preparing SDD assets while adaptive development remains active and routes to the separately available baseline procedure; this use case ends without activating SDD.
+- **7c.** Retained behavior, structure or choice: the Host maps each one in current context to its document ID, or its path where the document has no ID, or marks it `undocumented`, linking rather than copying content; a project without a document tree records that fact and gains no document system; resumes at step 7.
 
 ## 4. Postconditions
 
@@ -65,7 +68,8 @@ entrypoints:
 ## 5. Acceptance Criteria (Given / When / Then)
 
 Rules: approach-gated entry; adaptive next action; bounded evidence; goal-bound iteration; optional role boundaries;
-truthful verification; mutable coordinator-owned resume facts; useful alternatives; voluntary adoption.
+truthful verification; mutable coordinator-owned resume facts; useful alternatives; voluntary adoption;
+current-state project documents.
 
 ### Scenario 1: Advance a representative flow
 
@@ -143,3 +147,10 @@ truthful verification; mutable coordinator-owned resume facts; useful alternativ
 - **Given**: two disjoint writing assignments depend on an unsettled API.
 - **When**: the coordinator prepares their handoffs.
 - **Then**: it assigns the API owner, resolves the interface or sequences the work, and supplies its identity to dependents.
+
+### Scenario 12: Link a multi-writer build to project documents
+
+- **Covers**: 5b6, 6c, 7c
+- **Given**: a project with an architecture document and two writing assignments; one retained behavior has no document.
+- **When**: the coordinator partitions the build, integrates the retained results and updates current context.
+- **Then**: each assignment names its governing documents, the changed structure is described in the architecture document as current state, the project's document checks run with the combined checks, and current context maps each retained item to a document ID or `undocumented` without a per-change record.

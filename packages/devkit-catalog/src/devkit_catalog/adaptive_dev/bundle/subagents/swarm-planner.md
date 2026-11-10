@@ -15,7 +15,7 @@ hosts:
   antigravity:
     status: unverified
     tools: [view_file, grep_search]
-    commandExecutionPolicy: off
+    commandExecutionPolicy: "off"
 ---
 
 # Swarm Planner

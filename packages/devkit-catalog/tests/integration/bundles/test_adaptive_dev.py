@@ -8,6 +8,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 from devkit.advisory import AdvisoryError
 from devkit_dist.features.distribution.models.errors import SelectionError
 from devkit_dist.features.distribution.services.bundles import load_bundle
@@ -21,6 +22,7 @@ PACKAGE = Path(__file__).parents[3]
 BUNDLE = PACKAGE / "src/devkit_catalog/adaptive_dev/bundle"
 SWARM = {"swarm-planner", "swarm-worker", "swarm-verifier"}
 ROLES = {"product-clarifier", "product-researcher", "usage-reviewer"}
+IMPORT = {"adaptive-import", "agent-asset-conversion"}
 
 
 def _installed() -> list[InstalledBundle]:
@@ -64,6 +66,9 @@ def test_adaptive_dev_projects_roles_and_entry_without_seeding_product_state(tmp
     )
     for projection in (".claude/agents/swarm-planner.md", ".agents/agents/swarm-planner.md"):
         assert planner.body.rstrip() in (tmp_path / projection).read_text()
+    # The read-only planner disables Antigravity command execution; an unquoted `off` would project as a boolean.
+    antigravity = (tmp_path / ".agents/agents/swarm-planner.md").read_text().split("---", 2)[1]
+    assert yaml.safe_load(antigravity)["commandExecutionPolicy"] == "off"
     for role in ROLES | SWARM:
         assert (tmp_path / f".codex/agents/{role}.toml").is_file()
         assert (tmp_path / f".claude/agents/{role}.md").is_file()
@@ -72,6 +77,9 @@ def test_adaptive_dev_projects_roles_and_entry_without_seeding_product_state(tmp
         assert projected["sandbox_mode"] == (
             "read-only" if role in {"product-clarifier", "usage-reviewer", "swarm-planner"} else "workspace-write"
         )
+    assert (managed / "playbooks/agent-asset-conversion/SKILL.md").is_file()
+    for projection in (".agents/skills/adaptive-import", ".claude/skills/adaptive-import"):
+        assert (tmp_path / projection / "SKILL.md").is_file()
     assert not (tmp_path / ".devkit/adaptive-dev.md").exists()
     assert not (tmp_path / "docs").exists()
     assert not (tmp_path / "specs").exists()
@@ -121,8 +129,12 @@ def test_preset_keeps_product_iteration_without_the_research_entry() -> None:  #
         "current-context-template",
         *ROLES,
         *SWARM,
+        *IMPORT,
     }
     assert {asset.id for asset in bundle.assets} == set(bundle.presets["core"])
+    assert set(bundle.presets) == {"core", "agents", "import"}
+    assert set(bundle.presets["agents"]) == SWARM
+    assert set(bundle.presets["import"]) == IMPORT
 
 
 def test_no_file_names_or_suggests_the_research_entry() -> None:  # SPEC-deep-research-bundle AC-09
@@ -199,6 +211,8 @@ def test_agents_only_preserves_sdd_and_projects_no_entry(tmp_path: Path) -> None
         assert contract.hosts["antigravity"].status == "unverified"
     assert config.read_bytes() == before_config
     assert not (tmp_path / ".agents/skills/adaptive-dev").exists()
+    assert not (tmp_path / ".agents/skills/adaptive-import").exists()
+    assert not (tmp_path / ".devkit/managed/adaptive-dev/playbooks").exists()
     assert not (tmp_path / ".devkit/managed/adaptive-dev/templates").exists()
     assert not (tmp_path / ".devkit/adaptive-dev.md").exists()
     assert "`/adaptive-dev`" not in (tmp_path / "AGENTS.md").read_text()

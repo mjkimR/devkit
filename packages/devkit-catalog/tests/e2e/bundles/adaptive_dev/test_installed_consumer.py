@@ -65,6 +65,11 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     assert not (consumer / ".agents/skills/spec").exists()
     assert (consumer / ".agents/skills/adaptive-dev/SKILL.md").is_file()
     assert not (consumer / ".agents/skills/deep-research").exists()
+    assert (consumer / ".agents/skills/adaptive-import/SKILL.md").is_file()
+    assert "disable-model-invocation: true" in (consumer / ".claude/skills/adaptive-import/SKILL.md").read_text()
+    conversion = json.loads(cli("playbook", "get", "adaptive-dev/agent-asset-conversion"))
+    assert conversion["id"] == "agent-asset-conversion"
+    assert Path(conversion["source"]["path"]).is_file()
     for role in (
         "product-clarifier",
         "product-researcher",
@@ -90,12 +95,24 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     )
     assert inspected_agents["configuration"]["development"]["approach"] == "sdd"
     assert not (agents_consumer / ".agents/skills/adaptive-dev").exists()
+    assert not (agents_consumer / ".agents/skills/adaptive-import").exists()
     assert not (agents_consumer / ".devkit/managed/adaptive-dev/templates").exists()
     assert not (agents_consumer / ".devkit/adaptive-dev.md").exists()
     assert "`/adaptive-dev`" not in (agents_consumer / "AGENTS.md").read_text()
     worker_projection = tomllib.loads((agents_consumer / ".codex/agents/swarm-worker.toml").read_text())
     assert "model" not in worker_projection
     assert "model_reasoning_effort" not in worker_projection
+    run(python, "-m", "devkit_dist", "add", "adaptive-dev:import", "-w", str(agents_consumer), cwd=agents_consumer)
+    assert (agents_consumer / ".agents/skills/adaptive-import/SKILL.md").is_file()
+    assert (agents_consumer / ".devkit/managed/adaptive-dev/playbooks/agent-asset-conversion/SKILL.md").is_file()
+    assert (agents_consumer / ".codex/agents/swarm-worker.toml").is_file()
+    assert not (agents_consumer / ".agents/skills/adaptive-dev").exists()
+    assert not (agents_consumer / ".devkit/managed/adaptive-dev/templates").exists()
+    assert "`/adaptive-dev`" not in (agents_consumer / "AGENTS.md").read_text()
+    reinspected = json.loads(
+        run(python, "-m", "devkit_dist", "config", "show", "-w", str(agents_consumer), cwd=agents_consumer)
+    )
+    assert reinspected["configuration"]["development"]["approach"] == "sdd"
     current = consumer / ".devkit/adaptive-dev.md"
     current.write_bytes(b"# Current facts\nGoal: household list\nUnverified: offline merge\n")
     expected_context = current.read_bytes()

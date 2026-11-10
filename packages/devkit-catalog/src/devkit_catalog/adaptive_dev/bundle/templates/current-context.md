@@ -10,6 +10,10 @@ Product goal, intended users, constraints, representative flow and signs of usef
 
 Separate user decisions, implementation choices and assumptions needing evidence. Record the reason that still matters.
 
+## Documents
+
+Map each retained behavior, structure or choice to its document ID, or to its path where the document has no ID; mark one without a document `undocumented`. Link, never copy document content. When the project maintains no document tree, say so here.
+
 ## Run and verify
 
 Setup/run/check commands and required environment. For each observed result, name the source/artifact identity, actual command or interaction, outcome and limitation. Mark unexecuted or skipped checks as unverified.

@@ -7,7 +7,7 @@
 5. Resolve `roles/<role>.md` from the directory containing the invoked `SKILL.md`, never the cwd or reference directory; if that location is unavailable, locate and verify the invoked skill first.
 6. Verify the chosen role exists and pass its absolute installed path; read only the chosen overlay, not every role body.
 7. For an external caller, accept a verified caller-owned absolute role path; require its permissions to be compatible with the agent, project and assignment, and reject incompatible requirements explicitly.
-8. Supply one goal, source/base identity, absolute read/write ownership including the role file, permitted actions and Git operations, checks, stop condition, depth and Host-wide allowance, and expected return fields.
+8. Supply one goal, source/base identity, absolute read/write ownership including the role file, governing documents by ID or absolute path or `none`, permitted actions and Git operations, checks, stop condition, depth and Host-wide allowance, and expected return fields.
 9. Partition by independently checkable deliverables and dependency edges, not file count or activity labels.
 10. For each assignment name one owner, dependency or `none`, completion evidence and the expected integration handoff.
 11. If another assignment depends on a shared interface, name its owner and provide its agreed version and source or artifact identity.

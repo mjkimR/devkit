@@ -20,7 +20,7 @@ Take the next useful action toward the user's product goal, keeping enough curre
 5. Read `references/delegation.md` before assigning separable planning, implementation or verification to a compatible agent; inline work needs no role.
 6. Read `references/orchestration.md` when coordinating parallel writers, role leads, combined checks or interruption recovery.
 7. Read `references/current-context.md` before writing current context, pausing, resuming in another session or answering an explicit SDD adoption request.
-8. Write only documents that help the next decision or describe retained behavior.
+8. Write only documents that help the next decision or describe retained behavior; read `references/documents.md` before partitioning against project documents, settling a shared interface that outlives its assignment, integrating a retained result or writing a project document.
 9. Fix failed retained behavior, rerun its affected checks and report remaining gaps.
 
 ## Completion of an action

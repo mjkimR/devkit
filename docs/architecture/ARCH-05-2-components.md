@@ -83,7 +83,8 @@ may retain their existing bundle-only layouts. The content-only catalog owns the
 bundles under `devkit_catalog/adaptive_dev/bundle/` and `devkit_catalog/deep_research/bundle/`; their entries, optional
 role contracts and context template add no runtime module or dependency, and neither bundle depends on or shares an
 asset with the other. Adaptive-dev also owns reusable `swarm-planner`, `swarm-worker` and `swarm-verifier` contracts,
-skill-local task overlays and orchestration references. Compatible external callers may reuse installed public
+skill-local task overlays and orchestration references, and the user-invoked `adaptive-import` skill with its
+`agent-asset-conversion` playbook, which write converted assets into the consuming project's own bundle. Compatible external callers may reuse installed public
 contracts under their own workflow; private sibling assets and mandatory bundle dependencies are not introduced. The opt-in `uiux-improve` content bundle lives under
 `devkit_catalog/uiux_improve/bundle/`; its user-invoked entry and local design roles add no runtime dependency or
 shared orchestration module (`CAP-DLV-uiux-improvement`). The opt-in `design-explore` bundle lives under
