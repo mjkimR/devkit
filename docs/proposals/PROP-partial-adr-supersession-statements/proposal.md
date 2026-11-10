@@ -2,7 +2,7 @@
 id: PROP-partial-adr-supersession-statements
 title: Structured partial-supersession statements for ADRs
 summary: "Record each partial replacement once, as a structured statement in the superseding ADR, let handoff copy it into the earlier ADR's pointer and let the CLI and viewer show a decision's partial replacements, so earlier ADRs stay readable without manual pointer clarification."
-status: draft
+status: reviewing
 created_at: 2026-11-10
 target_area: capabilities/documents/
 priority: medium
