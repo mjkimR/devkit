@@ -2,7 +2,7 @@
 id: SPEC-core-git-observation-helpers
 title: Public Git observation helpers in devkit-core
 summary: Add public devkit-core functions that read git worktree list and git status porcelain records, and move the packages' private parsers to them, so each Git output is parsed once and tested once.
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: [CAP-CMP-bounded-execution, CAP-DLV-adaptive-assignments]
 related_usecases: []
