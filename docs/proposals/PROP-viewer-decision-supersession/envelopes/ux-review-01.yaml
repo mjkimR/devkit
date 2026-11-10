@@ -1,0 +1,24 @@
+kind: ux-review
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T05:01:28.373087Z'
+status: completed
+summary: Round 1 walked steps 1-5 and extensions 3a/3b/4a; UX-view-decision R1=2 R2=2 R3=2 R4=2 R5=2 R6=2; UX-decision-supersession R1=2 R2=2 R3=2 R4=2 R5=2 R6=2. One source-state link inconsistency.
+findings:
+- issue: 'link check (reviewer judgment): available navigation is omitted from interaction source states.'
+  evidence: target-docs.md:87-100 permits navigation during loading/error, but Open a decision accepts only populated; target-docs.md:138-146 retains successful incomplete relations, but Follow accepts only populated.
+  failure_condition: A reader needs another decision during loading/error, or follows an unambiguous relation from an incomplete index.
+  suggested_action: Permit Open a decision from loading/error/raw/populated and Follow a resolved link from incomplete when its target resolves.
+  resolution: open
+assumptions:
+- Codex emulated read-only route; before/after tree fb959368f4f9e09de7c8b3310124691e67bf6db7 and HEAD unchanged; no outside-worktree reads reported.
+- R6 uses drafted object register rows; UC/UX IDs remain plain text until spec-sync.
+unverified_areas:
+- No implementation, rendered mockup, keyboard or assistive-technology test yet; link rules will confirm retained documents.
+checks:
+  walkthrough: PASS main steps and all extensions
+  rubric: PASS both elements all six items
+diff_scope:
+  base: 7ed35b755138e9460e1de6f42d10b390886f448b
+  head: d9b618eab2b662b46bdde840bff4b0c3c010119a

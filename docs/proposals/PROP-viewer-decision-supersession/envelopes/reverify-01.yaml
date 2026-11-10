@@ -1,0 +1,22 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T04:59:01.411490Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Both P2 gaps folded: exact displayed subject drives relations, and proposal PADR links open the checkout ADR in Files; AC and Screens now state the regressions.'
+findings:
+- issue: Files can display fresh subject content beside relations from an older cached copy.
+  evidence: proposal.md:77-80; packages/devkit-viewer/frontend/src/lib/api/documents.ts:140-151; packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:197-234
+  failure_condition: A saved ADR edit is opened within the index cache TTL, or relations reload while the displayed subject body remains older.
+  suggested_action: Replace the subject index entry with the exact displayed document and test reload and saved edits within TTL.
+  resolution: resolved
+  severity: P2
+- issue: PADR relation navigation from proposal detail does not define a supported destination.
+  evidence: proposal.md:83-90,129-130; target-docs.md:28-36,143; packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:340-352
+  failure_condition: A PADR in a Planning bundle links to an ADR outside that selected proposal bundle.
+  suggested_action: Open the checkout ADR in Files in the same viewer and test that source distinction, without expanding proposal detail to render ADRs.
+  resolution: resolved
+  severity: P2
+checks: {}

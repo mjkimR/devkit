@@ -1,0 +1,29 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T04:58:32.771215Z'
+status: completed
+summary: Browser derivation and inline summary fit; two P2 gaps require exact displayed-subject freshness and explicit PADR-to-ADR navigation.
+findings:
+- issue: Files can display fresh subject content beside relations from an older cached copy.
+  evidence: proposal.md:77-80; packages/devkit-viewer/frontend/src/lib/api/documents.ts:140-151; packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:197-234
+  failure_condition: A saved ADR edit is opened within the index cache TTL, or relations reload while the displayed subject body remains older.
+  suggested_action: Replace the subject index entry with the exact displayed document and test reload and saved edits within TTL.
+  resolution: open
+  severity: P2
+- issue: PADR relation navigation from proposal detail does not define a supported destination.
+  evidence: proposal.md:83-90,129-130; target-docs.md:28-36,143; packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:340-352
+  failure_condition: A PADR in a Planning bundle links to an ADR outside that selected proposal bundle.
+  suggested_action: Open the checkout ADR in Files in the same viewer and test that source distinction, without expanding proposal detail to render ADRs.
+  resolution: open
+  severity: P2
+assumptions:
+- Medium mandatory challenger, Codex emulated read-only route; before/after tree 287e05920bb406c5a26f4ed2a4dbfc3990fcd988 and HEAD unchanged; no outside-worktree reads reported.
+unverified_areas:
+- Parser parity, request counts, accessibility and generated assets remain Development checks; optional UX scoring not performed.
+checks:
+  source_review: PASS read-only design and source inspection
+diff_scope:
+  base: 7ed35b755138e9460e1de6f42d10b390886f448b
+  head: 2456098ee37cf9bc646511611735ec94fef60499
