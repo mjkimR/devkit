@@ -1,7 +1,7 @@
 ---
 id: PROP-lightweight-general-subagent
 title: Lightweight general subagent for role-file delegation
-summary: "Add a neutral, tool-limited general subagent to the auto-selected devkit bundle and route deep-research role delegation to it, so role-file children start without the full general-purpose tool and skill context."
+summary: "Add a neutral, tool-limited role-worker subagent to the auto-selected devkit bundle and route skill-local role-file delegation to it, so role children start without the full general-purpose tool and skill context."
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: capabilities/distribution/
@@ -14,11 +14,15 @@ boundaries:
   owns:
     - capabilities/distribution/
     - capabilities/delivery/
+    - capabilities/harness/
     - packages/devkit-dist/src/devkit_dist/bundles/devkit/
     - packages/devkit-catalog/src/devkit_catalog/deep_research/
+    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
+    - packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/skill-authoring/
   excludes:
     - packages/devkit-adaptive/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
+    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 ---
@@ -41,9 +45,13 @@ A registered subagent costs the Host one listing line (name, description, tools)
 only for the child. A single registered subagent with a neutral name and description therefore keeps explicit-only
 skills unadvertised, while a restricted tool list removes most of the fixed load.
 
-**Hypothesis**: a registered general subagent limited to `Read, Grep, Glob, Bash, Edit, Write, WebSearch, WebFetch,
+Two other assets use the same pattern: app-uiux-improve's `references/orchestration.md` passes a role file to a
+general subagent, and the skill-authoring playbook's `references/roles.md` tells authors to do so for every
+skill-local role.
+
+**Hypothesis**: a registered `role-worker` subagent limited to `Read, Grep, Glob, Bash, Edit, Write, WebSearch, WebFetch,
 Agent` starts with substantially fewer first-call input tokens than `general-purpose`, and deep-research's four roles
-complete their assignments with that tool list.
+and app-uiux-improve's roles complete their assignments with that tool list.
 
 ## 2. Technical Spike Questions
 
@@ -51,44 +59,49 @@ complete their assignments with that tool list.
   ~36k of `general-purpose`, and how much of the difference comes from the `Agent` tool's schema, which lists every
   available agent type?
 - **Q2**: Do the four deep-research roles (`direction-explorer`, `discovery-critic`, `discovery-planner`,
-  `research-investigator`) need any tool outside the list, such as an MCP knowledge source?
+  `research-investigator`) or app-uiux-improve's roles need any tool outside the list, such as an MCP knowledge
+  source?
 - **Q3**: What are the Codex and Antigravity host blocks? Codex exposes `sandbox_mode` but no tool allowlist, so the
   token reduction may be Claude Code only; the contract needs a status (`native` or `emulated`) per host.
-- **Q4**: Which name? `lean` is already a subagent model level in the glossary (`ADR-subagent-levels`), so
-  `lean-worker` could be read as a model level. Candidates: `lean-worker`, `general-worker`, `role-worker`.
-- **Q5**: Should `adaptive-dev`'s `swarm-worker` be reused instead? It already has a similar Claude Code tool list,
+- **Q4**: Should `adaptive-dev`'s `swarm-worker` be reused instead? It already has a similar Claude Code tool list,
   but its contract is implementation-specific (commit authority, owned assignment) and `devkit-adaptive` is not
   always installed.
 
 ## 3. Proposed Design & Impact
 
-- **New subagent asset** in `devkit-dist`'s `devkit` bundle, added to its `core` preset. The bundle declares
+- **New `role-worker` subagent asset** in `devkit-dist`'s `devkit` bundle, added to its `core` preset. The bundle declares
   `auto_select = true` and `devkit-dist` provides the `devkit` executable, so every project that syncs any bundle
   receives it unless the owner opts out with `devkit = false`. `bundle.toml` has no bundle-to-bundle dependency key,
   and none is added.
 - **Role contract** (`subagents/<name>.md`):
-  - Name and description stay neutral and name no skill, bundle or research role.
+  - The name `role-worker` is the user's decision: it names the role-file pattern, names no skill, bundle or
+    research role, and avoids the `lean` subagent model level (`ADR-subagent-levels`). The description stays
+    equally neutral.
   - `level` is omitted, so the model is inherited (`CAP-DIST-agent-projections` §3 rule 1).
   - `claude-code`: `tools: [Read, Grep, Glob, Bash, Edit, Write, WebSearch, WebFetch, Agent]`; no MCP, Artifact,
     Workflow or Skill tools.
   - The body says to read the role file the prompt names first and follow it as the assignment contract. It
-    re-delegates only independent work, preferring this subagent or a fitting dedicated one over `general-purpose`.
+    re-delegates only independent work, preferring `role-worker` or a fitting dedicated one over `general-purpose`.
     Markdown is not a permission boundary.
-- **Deep research**: `SKILL.md` step 4 and `references/orchestration.md` spawn the new subagent instead of a
-  general subagent, with no fallback.
+- **Role-file callers** spawn `role-worker` instead of a general subagent, with no fallback:
+  - deep-research: `SKILL.md` step 4 and `references/orchestration.md`;
+  - app-uiux-improve: `references/orchestration.md`;
+  - skill-authoring playbook: `references/roles.md` directs new skill-local roles to `role-worker`.
 - **Living Spec**:
-  - Revise `CAP-DLV-deep-research` rule 11.
+  - Revise `CAP-DLV-deep-research` rule 11, and the role-delegation wording in `CAP-DLV-uiux-improvement` or
+    `CAP-DLV-design-exploration` and `CAP-HARN-agent-guidance` where it names a general subagent.
   - Add the asset to `CAP-DIST-agent-projections` or the `devkit` bundle description where bundle contents are listed.
   - Record a PADR that supersedes in part `ADR-skill-local-research-roles` (the "general subagent" clause only).
     Rule 1 (no registered research subagents) remains, because the new subagent is not a research role.
-- **Out of scope**: changing `general-purpose`, other bundles' delegation, and the spec bundle's dedicated
-  subagents.
+- **Out of scope**:
+  - `general-purpose` itself;
+  - the spec bundle's dedicated subagents;
+  - `sdd-overall-refactor`'s general subagents for parallel drafting, edits and research, which carry no role file.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Planning settles Q1 to Q5 with a measurement on Claude Code and records the subagent-name and ADR-supersession
-  decisions as PADRs.
+- Planning settles Q1 to Q4 with a measurement on Claude Code and records the ADR-supersession decision as a PADR.
 - On acceptance: `devkit spec proposal accept lightweight-general-subagent --by user`, then handoff to one
   `sdd-spec-feature` spec.
-- On rejection: `status: rejected` with the user's reason in the commit message. Deep research keeps spawning a
+- On rejection: `status: rejected` with the user's reason in the commit message. Role-file callers keep spawning a
   general subagent.
