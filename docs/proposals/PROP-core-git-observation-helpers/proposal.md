@@ -25,6 +25,8 @@ boundaries:
     - packages/devkit-viewer/src/devkit_viewer/features/
     - packages/devkit-viewer/tests/
     - docs/development/reference/
+    - docs/capabilities/compact/CAP-CMP-bounded-execution.md
+    - docs/capabilities/delivery/CAP-DLV-adaptive-assignments.md
   excludes:
     - docs/capabilities/
     - docs/decisions/
@@ -107,8 +109,10 @@ parses its own output with the same function.
   record. Paths are Git's, including the trailing `/` of an untracked directory.
 - **Commit resolution** (Q3, recommended option): `resolve_commit(cwd, revision) -> str | None` runs
   `rev-parse --verify --quiet --end-of-options <revision>^{commit}` and returns the full commit ID, `None` when Git
-  reports the revision unknown (exit 1), and raises `GitError` otherwise.
-- All decoding is UTF-8 with `surrogateescape`. `devkit-core` keeps importing no application package.
+  reports the revision unknown (exit 1) or prints anything but a 40- or 64-digit hexadecimal ID (a leading `^`
+  makes `rev-parse` print `^<id>`), and raises `GitError` otherwise.
+- All decoding is UTF-8 with `surrogateescape`, which equals the `os.fsdecode` some callers use under a UTF-8
+  file system encoding (the supported macOS and Linux setups); behavior preservation is claimed for that encoding. `devkit-core` keeps importing no application package.
 
 ### Caller migration (Q2, recommended option: in this spec)
 
@@ -118,13 +122,18 @@ record filtering):
 
 - Worktree list: `devkit_agt` worktree lifecycle and integration service; `devkit_dist` shared repositories (both
   readers) and host registrations; `devkit_spec` scope inventory (parser only, over its own runner) and reconcile
-  contract; `devkit_adaptive` assignment; `devkit_mcp` runtime configuration; `devkit_viewer` browse planning.
+  contract; `devkit_adaptive` assignment; `devkit_mcp` runtime configuration; `devkit_viewer` browse planning
+  (parser only, over its own `run_git`, which its tests patch). `devkit_adaptive` keeps `parse_worktrees` and
+  `parse_status` as thin wrappers over the core parsers that apply its path keys and trailing-slash strip, so their
+  unit tests keep pinning that mapping.
 - Status: `devkit_agt` generated engine, gate commands, maintenance history snapshot (parser only, over its own
   runner) and envelope commit; `devkit_spec` worker inspection and native handoff (the `-z` reader and the `line[3:]`
   reader), proposals report; `devkit_adaptive` assignment. `devkit_agt.features.compact.services.porcelain`, its
-  export and its unit test are removed once no caller uses them.
-- Commit resolution: only `devkit_adaptive` assignment's `revision`, the one site without `--end-of-options`. The
-  other 25 `^{commit}` lines are single calls, not parsers, and stay.
+  export, its unit test and its sentence in `CAP-CMP-bounded-execution` are removed once no caller uses them.
+- Commit resolution: only `devkit_adaptive` assignment's `revision`, the one site without `--end-of-options`. It
+  maps both `None` and `GitError` with exit status 128 to `ADAPTIVE_REVISION_UNRESOLVED`, as today; the command it
+  names in `CAP-DLV-adaptive-assignments` gains `--end-of-options`. The other 25 `^{commit}` lines are single calls,
+  not parsers, and stay.
 - Not migrated: `devkit_agt.features.worktree.repositories.execution` and
   `devkit_agt.features.isolated_execution.repositories.runs`, which run Git through the standard-library-only
   execution module (`CAP-WT-task-worktrees`, `ADR-isolated-test-runs`); `devkit_spec` scope observation's
@@ -132,10 +141,18 @@ record filtering):
 
 ### Behavior
 
-No command, output, error code or capability contract changes. Three accidental differences become the shared
-behavior, each only for paths no current test or contract uses: worktree lists read without `-z` now read a path
-containing a newline; `devkit_mcp` no longer raises `UnicodeDecodeError` on a non-UTF-8 worktree path; the two
-`line[3:]` status readers now read a quoted path (`core.quotePath`) as its real name. `devkit_spec` reconcile contract
+No command, output, error code or capability contract changes, except these accidental differences, which become
+the shared behavior, each only for input no current test or contract uses:
+
+- Worktree lists read without `-z` now read a path containing a newline.
+- `devkit_mcp` no longer raises `UnicodeDecodeError` on a non-UTF-8 worktree path.
+- The two `line[3:]` status readers (`devkit_spec` native handoff's dirty base check and proposals report) read a
+  quoted path (`core.quotePath`) as its real name, and list a staged rename as its two names instead of the text
+  `orig -> new`, which changes the listed paths and their count.
+- `devkit_spec` native handoff's `-z` reader reads a rename's second field when either status column is `R` or `C`,
+  not only the index column, so an intent-to-add rename no longer yields a truncated pseudo-path.
+- `devkit_adaptive` refuses a revision with a leading `^` or `-` as unresolved instead of storing `^<id>` or passing
+  it to Git as an option. `devkit_spec` reconcile contract
 keeps reading the first `branch` record. Feature edges are unchanged (`gate` and `generated` keep their `compact` edge
 for `run_command`); `.devkit/architecture.toml` is not edited.
 
@@ -146,9 +163,11 @@ for `run_command`); `.devkit/architecture.toml` is not edited.
   locked (with and without reason), prunable and unborn worktrees, and a path with a newline. Unit tests cover the
   parsers' malformed input (missing rename field, empty output).
 - Each migrated feature's existing tests stay green unchanged, except the removed `compact` porcelain test and test
-  doubles that fed a removed private parser; `just test-affected` selects them.
-- `docs/development/reference/core.md` documents the new functions beside `run_git`. No capability or decision
-  document changes.
+  doubles that fed a removed private parser; `just test-affected` selects them. Each accidental difference above
+  gets a test in the feature it changes, and `resolve_commit` a `^HEAD` test.
+- `docs/development/reference/core.md` documents the new functions beside `run_git`. Two capability lines change
+  (the `status_records` sentence of `CAP-CMP-bounded-execution` and the resolution command of
+  `CAP-DLV-adaptive-assignments`); no decision document changes.
 
 ## Planning decisions
 
@@ -162,6 +181,9 @@ for `run_command`); `.devkit/architecture.toml` is not edited.
   `devkit-adaptive` `test_values.py`); a rename keeps both names in one record; parsers are public so callers with
   their own runners reuse them.
 - The `.devkit/architecture.toml` ownership the draft listed is dropped: no feature edge changes.
+- Two capability files are owned by exception to the `docs/capabilities/` exclusion, each for the one line the
+  migration makes stale; no other capability or decision text changes.
+- Q2 and Q3 are open; the design above follows the recommended option of each.
 
 ## 4. Lifecycle & Retirement Criteria
 

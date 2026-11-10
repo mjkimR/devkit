@@ -28,7 +28,7 @@ Six sites use `-z` and six do not. Classes: **L** load-bearing (a helper or the 
 | Site | Options | Rename second field | Decode | Trailing `/` | Returns |
 | --- | --- | --- | --- | --- | --- |
 | `devkit_agt` `compact/services/porcelain.py:8-20` `status_records` | caller's | skipped | bytes | kept | `(XY, path)` bytes; pinned by `devkit/tests/unit/features/compact/test_porcelain.py` |
-| caller `generated/usecases/engine.py:195` | `--untracked-files=all` | via `status_records` | `os.fsdecode` | kept | path to (status, digest) |
+| caller `generated/usecases/engine.py:195` | `--untracked-files=all` | via `status_records` | UTF-8 surrogateescape (`_decode`, `engine.py:136`) | kept | path to (status, digest) |
 | caller `gate/usecases/gates/commands.py:54-58` | `--untracked-files=normal`; keeps worktree column non-blank | via `status_records` | `os.fsdecode` | kept | unstaged paths |
 | `devkit_agt` `maintenance_history/repositories/snapshot.py:26-37` | `--untracked-files=all`, `-- . :(top,literal,exclude)...`, env `GIT_OPTIONAL_LOCKS=0`, own runner | skipped by index | `os.fsdecode` | kept | dirty paths (emptiness) |
 | `devkit_agt` `workflow/repositories/envelope_commit.py:88-94` | `--untracked-files=all --ignore-submodules=none --no-renames`, `--literal-pathspecs` | none (`--no-renames`) | surrogateescape | kept | path to XY |
