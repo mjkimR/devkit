@@ -95,7 +95,8 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     targets plus the modified files check again (every active rule when a fix
     failed, since its writes are unknown): a fixable initial finding of a rule
     the recheck ran that it no longer reports is returned with ``fixed`` set,
-    followed by the recheck's findings.
+    every initial finding of a rule the recheck did not run (it omitted
+    itself) is returned as found, followed by the recheck's findings.
     """
     resolvers, policy_errors = validate_policy(
         rules,
