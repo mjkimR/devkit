@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
@@ -345,8 +346,9 @@ def test_an_invalid_for_is_an_argument_error_before_any_provider_runs(
         lambda root, working, directory: ["docs/packages/api/steering"],
         lambda root, working, directory: ("docs/packages/api/steering", []),
         lambda root, working, directory: ([], [42]),
+        lambda root, working, directory: sys.exit(3),
     ],
-    ids=["raises", "unsafe", "not-a-pair", "string", "non-string-item"],
+    ids=["raises", "unsafe", "not-a-pair", "string", "non-string-item", "exits"],
 )
 def test_a_failing_provider_degrades_to_the_declared_directory_with_a_warning(
     tmp_path: Path, providers: list[SimpleNamespace], provider: Callable[..., object]
@@ -385,3 +387,18 @@ def test_an_entry_point_that_does_not_load_is_a_warning(tmp_path: Path, provider
     [notice] = data["notices"]
     assert notice["code"] == "CONTEXT_DOCUMENTS_EXTENSION_FAILED"
     assert notice["message"] == "context documents extension broken failed: no module named pkg"
+
+
+def test_failing_provider_discovery_degrades_to_the_declared_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = _namespaces(tmp_path)
+
+    def broken(group: str) -> object:
+        raise SystemExit("metadata broken")
+
+    monkeypatch.setattr(context_documents.metadata, "entry_points", broken)
+    data = GetContext().execute(target, "team").to_dict()
+    assert _paths(data["documents"], target) == ["docs/steering/a.md", "docs/steering/b.md"]
+    [notice] = data["notices"]
+    assert notice["code"] == "CONTEXT_DOCUMENTS_EXTENSION_FAILED"

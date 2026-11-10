@@ -219,15 +219,20 @@ def provided_directories(root: Path, working: Path, directory: str) -> tuple[Pro
 
     Providers run in sorted entry-point name order. A provider that fails to load, raises or returns anything but
     a pair of sequences of safe workspace-relative directories (``seed_target``) contributes nothing: its whole
-    result is dropped with one warning naming the entry point.
+    result is dropped with one warning naming the entry point. A provider calling ``sys.exit()`` is a failure like
+    any other, and failed discovery drops every provider with one warning.
     """
     listed: list[str] = []
     mentioned: list[str] = []
     notices: list[AdvisoryError] = []
-    for entry in sorted(metadata.entry_points(group=PROVIDER_GROUP), key=lambda item: (item.name, item.value)):
+    try:
+        entries = sorted(metadata.entry_points(group=PROVIDER_GROUP), key=lambda item: (item.name, item.value))
+    except (Exception, SystemExit) as exc:
+        return ProvidedDirectories((), ()), [_failed("discovery", str(exc) or type(exc).__name__)]
+    for entry in entries:
         try:
             provided = _provided(entry, root, working, directory)
-        except Exception as exc:
+        except (Exception, SystemExit) as exc:
             notices.append(_failed(entry.name, str(exc) or type(exc).__name__))
             continue
         listed.extend(provided.listed)

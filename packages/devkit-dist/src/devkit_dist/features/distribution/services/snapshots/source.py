@@ -16,7 +16,12 @@ from devkit_dist.features.distribution.models.snapshots import (
     SnapshotInvalidError,
     SnapshotUnsupportedError,
 )
-from devkit_dist.features.distribution.repositories.snapshots import read_content, read_tree, source_commit
+from devkit_dist.features.distribution.repositories.snapshots import (
+    read_content,
+    read_tree,
+    source_commit,
+    symlinked_ancestor,
+)
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.bundles.manifest import safe_source
 from devkit_dist.features.distribution.services.snapshots.provenance import seal, validate_relative_inventory
@@ -142,6 +147,12 @@ def prepare_candidate(source: Path, package: str) -> SnapshotCandidate:
     module = package_module(package)
     if source.is_symlink() or not source.is_dir():
         raise SnapshotInvalidError("source must be an accessible unlinked checkout directory")
+    linked = symlinked_ancestor(source)
+    if linked is not None:
+        raise SnapshotInvalidError(
+            f"source path has a symlinked component: {linked}",
+            fix=f"Pass the resolved source path instead: {source.resolve()}",
+        )
     project, raw = _project(source)
     source = source.resolve()
     source_name = project["name"]
@@ -166,7 +177,7 @@ def prepare_candidate(source: Path, package: str) -> SnapshotCandidate:
         if not MODULE.fullmatch(local) or keyword.iskeyword(local) or local in destinations:
             raise SnapshotUnsupportedError(f"bundle name has colliding/invalid normalized wrapper module: {name}")
         destinations.add(local)
-        payload = read_tree(root, source=True)
+        payload = read_tree(root)
         check_python(payload)
         check_declarations(bundle, payload)
         prefix = f"src/{module}/{local}"

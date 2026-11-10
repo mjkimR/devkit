@@ -111,6 +111,18 @@ def test_bound_and_literal_untracking_remediation(root: Path) -> None:
     assert git(root, "ls-files", "-z") == str(neighbor.relative_to(root)).encode() + b"\0"
 
 
+def test_not_ignored_advice_clears_the_notice_below_the_repository_root(root: Path) -> None:
+    sub = root / "sub dir"
+    sub.mkdir()
+    (finding,) = notices(sub, [NATIVE])
+    assert finding.code == "PROJECTION_NOT_IGNORED"
+    patterns = [
+        line.removeprefix("ignore pattern: ") for line in finding.details if line.startswith("ignore pattern: ")
+    ]
+    (root / ".gitignore").write_text("".join(f"{pattern}\n" for pattern in patterns))
+    assert notices(sub, [NATIVE]) == []
+
+
 @pytest.mark.parametrize("failed_command", ["rev-parse", "ls-files"])
 def test_non_git_and_failed_query(
     tmp_path: Path, root: Path, monkeypatch: pytest.MonkeyPatch, failed_command: str

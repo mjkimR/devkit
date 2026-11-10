@@ -57,7 +57,7 @@ def test_complete_provider_bytes_modes_versions_and_path_free_provenance(checkou
     for name in ("alpha", "beta"):
         origin = source / f"src/private_content/{name}/bundle"
         copied = destination / f"src/team_copy/{name}/bundle"
-        assert read_tree(origin, source=True) == read_tree(copied)
+        assert read_tree(origin) == read_tree(copied)
         assert (copied / "check.sh").stat().st_mode & 0o111
         assert (copied / "native/reviewer.toml").is_file()
         assert (copied / "guide.md.jinja").is_file()
@@ -383,6 +383,41 @@ def test_source_symlinked_parent_stays_rejected_before_canonicalization(checkout
     root, source, destination = checkout
     alias_parent = source.parent / "alias-parent"
     alias_parent.symlink_to(source.parent, target_is_directory=True)
-    with pytest.raises(SnapshotInvalidError):
+    with pytest.raises(SnapshotInvalidError) as raised:
         CreateBundleSnapshot().execute(root, alias_parent / source.name, destination, "team-copy")
+    assert raised.value.code == "BUNDLE_SNAPSHOT_INVALID" and str(alias_parent) in str(raised.value)
+    assert raised.value.fix == f"Pass the resolved source path instead: {source.resolve()}"
     assert not destination.exists()
+
+
+def test_destination_symlinked_parent_refusal_names_the_resolved_path(checkout) -> None:
+    root, source, _ = checkout
+    alias = root.parent / "consumer-alias"
+    alias.symlink_to(root, target_is_directory=True)
+    with pytest.raises(SnapshotInvalidError) as raised:
+        CreateBundleSnapshot().execute(alias, source, alias / "tools/team-copy", "team-copy")
+    assert raised.value.code == "BUNDLE_SNAPSHOT_INVALID" and str(alias) in str(raised.value)
+    assert raised.value.fix == f"Pass the resolved destination path instead: {root.resolve() / 'tools/team-copy'}"
+    assert not (root / "tools").exists()
+
+
+def test_symlink_inside_source_checkout_stays_rejected(checkout) -> None:
+    root, source, destination = checkout
+    package = source / "src/private_content"
+    (package / "linked").symlink_to(package / "alpha", target_is_directory=True)
+    (source / "pyproject.toml").write_text(
+        (source / "pyproject.toml")
+        .read_text()
+        .replace('alpha = "private_content.alpha"', 'alpha = "private_content.linked"')
+    )
+    with pytest.raises(SnapshotInvalidError):
+        CreateBundleSnapshot().execute(root, source, destination, "team-copy")
+    assert not destination.exists()
+
+
+def test_finder_metadata_in_snapshot_is_not_authored_drift(checkout) -> None:
+    _, _, destination = checkout
+    create(checkout)
+    (destination / ".DS_Store").write_bytes(b"finder")
+    (destination / "src/team_copy/alpha/bundle/.DS_Store").write_bytes(b"finder")
+    assert refresh(checkout, apply=True).status == "unchanged"

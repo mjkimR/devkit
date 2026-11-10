@@ -36,7 +36,8 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
     if not owned:
         return []
     try:
-        run_git(root, "rev-parse", "--show-toplevel")
+        # Ignore patterns are anchored at the repository root, so a devkit root below it needs its prefix.
+        prefix = os.fsdecode(run_git(root, "rev-parse", "--show-toplevel", "--show-prefix")).split("\n")[1]
         tracked = _paths(run_git(root, "ls-files", "-z", "--", ".")) & owned
         candidates = sorted(wanted - tracked)
         ignored = (
@@ -92,7 +93,7 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
                 )
             )
         else:
-            patterns = [f"ignore pattern: {_ignore_pattern(name)}" for name in shown]
+            patterns = [f"ignore pattern: {_ignore_pattern(prefix + name)}" for name in shown]
             notices.append(
                 kind(
                     f"{len(paths)} native projection file(s) lack effective Git ignore coverage",

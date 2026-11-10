@@ -15,7 +15,7 @@ from devkit_dist.features.distribution.models.snapshots import (
     SnapshotInvalidError,
     SnapshotResult,
 )
-from devkit_dist.features.distribution.repositories.snapshots import read_tree
+from devkit_dist.features.distribution.repositories.snapshots import read_tree, symlinked_ancestor
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.snapshots.provenance import file_changes, load_provenance
 
@@ -28,6 +28,16 @@ def destination_path(root: Path, destination: Path, source: Path) -> Path:
         rel = requested.relative_to(root).as_posix()
         parts = normalize_relpath(rel, canonical=True).parts
     except (ValueError, UnsafePathError) as exc:
+        linked = symlinked_ancestor(requested)
+        try:
+            resolved = requested.resolve()
+        except (OSError, RuntimeError):  # Python 3.12 raises RuntimeError for a symlink loop
+            linked = None
+        if linked is not None and resolved.is_relative_to(root):
+            raise SnapshotInvalidError(
+                f"snapshot destination path has a symlinked component: {linked}",
+                fix=f"Pass the resolved destination path instead: {resolved}",
+            ) from exc
         raise SnapshotInvalidError("snapshot destination must be a new directory inside the consumer root") from exc
     if any(part.casefold() in PROTECTED for part in parts) or parts[0].casefold() == "agents.md":
         raise SnapshotInvalidError("snapshot destination overlaps Git, devkit or agent state")
@@ -35,7 +45,7 @@ def destination_path(root: Path, destination: Path, source: Path) -> Path:
     for part in parts:
         path /= part
         if path.is_symlink():
-            raise SnapshotInvalidError("snapshot destination has a symlinked component")
+            raise SnapshotInvalidError(f"snapshot destination has a symlinked component: {path}")
         if path != requested and (path / "snapshot.json").exists():
             raise SnapshotConflictError("snapshot destination is nested inside another snapshot")
     physical, origin = requested.resolve(), source.resolve()
