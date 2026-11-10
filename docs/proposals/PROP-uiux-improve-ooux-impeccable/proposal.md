@@ -107,10 +107,12 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 - **Q2. OOUX depth.** Framing scales with the request (§3.2). A local change skips it; a change across views writes a
   short object list in conversation; no diagram, notation or full-product object map is required.
 - **Q3. Delegation brief.** `PADR-impeccable-session-authority` settles the authority model; §3.4 lists the brief.
-  File boundaries are an explicit edit list checked after the session against the pre-session working tree.
+  File boundaries are an explicit edit list checked after the session against a recorded base; interactive commands
+  run in a session the user operates.
 - **Q4. Impeccable project files.** They are consumer-owned project context (§3.5). The skill reports what a session
   created or changed, points to upstream's commit-versus-ignore guidance and changes nothing without the user's
-  direction. Deletion is dropped: it conflicts with capability rules 3 and 14.
+  direction. Deletion is dropped: it conflicts with capability rules 3 and 14. Impeccable's own session output
+  (snapshots, mocks, hook state) is reported separately.
 - **Q5. Inline fallback.** `references/design-guidance.md` keeps its lenses and adds the baseline craft checks in §3.3,
   written originally.
 - **Q6. Tests.** The renamed integration test keeps the 12,288-byte, governance-ID and conditional-reference checks and
@@ -146,9 +148,10 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
    - Inline (default): the coordinator implements, optionally with the four local roles, which stay available
      regardless of track. `reference-researcher` is retained.
    - Impeccable (on the user's selection only): the coordinator writes the brief in §3.4 and delegates one session
-     under `PADR-impeccable-session-authority`.
-3. **Verify and report.** The coordinator inspects the changed interface, runs the project's applicable checks and,
-   when Impeccable is installed, may run `npx impeccable detect` on the changed files. It reports actual checks
+     under `PADR-impeccable-session-authority`: a fresh child for refinement, a session the user operates for
+     interactive commands.
+3. **Verify and report.** The coordinator inspects the changed interface and runs the project's applicable checks. On
+   the Impeccable track, the session's detector and `audit` results join the evidence. It reports actual checks
    separately from design inference.
 
 ### 3.3 Design guidance additions
@@ -164,32 +167,44 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 
 ### 3.4 Impeccable delegation in `references/orchestration.md`
 
-1. **Availability.** If Impeccable is absent and the user wants it, name the upstream routes and stop that track:
+1. **Selection.** Without the user's selection, the coordinator neither starts an Impeccable session nor loads or
+   invokes Impeccable in its own context; an installed Impeccable permits an offer. Output of a hook the user
+   installed counts as consumer check evidence.
+2. **Availability.** If Impeccable is absent and the user wants it, name the upstream routes and stop that track:
    `npx impeccable install`, Claude Code `/plugin marketplace add pbakaus/impeccable` followed by installing it from
    `/plugin`, or a manual copy of `skills/impeccable`. The coordinator never installs it. The user can continue inline.
-2. **Brief.** Goal; framing result; the product files the session may edit; the files and concerns it leaves unchanged
-   (data schema, business logic, dependencies, files with uncommitted user edits unless the user includes them);
-   whether it may write `PRODUCT.md`, `DESIGN.md` or `.impeccable/` files; the commands to run; the stop condition;
-   the expected return (changed files, commands run, detector or critique results, degraded coverage, blockers).
-3. **Commands.** Default sequence for a fresh child: ordinary new work or `polish` on the listed files, then `audit`
-   and, where nested children are available, `critique`. Exclude `live`, which runs agents with sandbox and approvals
-   off.
-4. **`shape` and OOUX.** `shape` is an interactive interview that writes no code. In a fresh child, the coordinator's
-   framing replaces it, because a child cannot hold the interview with the user. In a session the user runs, the user
-   may run `shape` with the framing as its starting context; its brief stays in conversation.
-5. **Routes.** A fresh child where the host supports one, or a session the user runs from the same brief. The
-   coordinator records the working-tree state first and makes no product edits until the session returns.
-6. **Acceptance.** Compare the working tree with the recorded state; take changes inside the edit list into
-   verification; report changes outside it without reverting or deleting them; continue through the consumer workflow.
+3. **Workflow first.** Complete the consumer workflow's steps that precede implementation (branch, worktree, required
+   records) before delegating.
+4. **Brief.** Goal; framing result; absolute working directory; recorded base (HEAD, status and content hashes of the
+   listed files under Git, the listed files' hashes otherwise); the product files the session may edit; the files and
+   concerns it leaves unchanged (data schema, business logic, dependencies, files with uncommitted user edits unless
+   the user includes them); whether it may write consumer context files; the commands to run; the stop condition; the
+   expected return (changed files, commands run, detector or audit results, session output, degraded coverage,
+   blockers including any upstream question).
+5. **Command routing.** A fresh child runs only commands that refine existing surfaces without user answers: `polish`,
+   `audit` and narrow refinement commands such as `distill`, `typeset` or `layout`. New work, `init`, `shape` and
+   `critique` ask the user questions (and `critique` needs two isolated sub-agents), so they run in a session the user
+   operates from the same brief. A child returns any upstream question as a blocker and never answers it. No route
+   uses `live`, which runs agents with sandbox and approvals off.
+6. **`shape` and OOUX.** `shape` is an interactive interview that writes no code. The coordinator's framing covers its
+   structural role for a fresh child. In a session the user runs, the user may run `shape` with the framing as its
+   starting context; its brief stays in conversation.
+7. **Pause.** The coordinator makes no product edits until the session returns.
+8. **Acceptance.** Compare the working directory with the recorded base. Take changes to listed product files into
+   verification. Report Impeccable session output (critique snapshots, mocks, hook and runtime state under
+   `.impeccable/`) as session output, and any other change without reverting or deleting it. Report a moved HEAD, a
+   missing base or unobservable ignored paths as unverifiable attribution or limited coverage. Continue accepted
+   changes through the consumer workflow.
 
 ### 3.5 Impeccable project files
 
 - `PRODUCT.md` (`init`), `DESIGN.md` (`document`) and shared `.impeccable/` files (`config.json`, `design.json`,
   `surfaces/*.md`, critique snapshots) are persistent project context; upstream recommends committing them and
   ignoring runtime output (`config.local.json`, caches, screenshots, `review/`, `questions/`, live session state).
-- The consumer owns these files and decides their retention. The coordinator lists the ones a session created or
-  changed, points to upstream's "Project files and git" guidance, and changes neither them nor `.gitignore` without
-  the user's direction.
+- The consumer owns these files and decides their retention. The brief permits writes to `PRODUCT.md`, `DESIGN.md`,
+  `.impeccable/design.json`, `.impeccable/config.json` and `.impeccable/surfaces/` only when it lists them.
+- The coordinator lists the context files a session created or changed, points to upstream's "Project files and git"
+  guidance, and changes neither them nor `.gitignore` without the user's direction.
 - Upstream's README and `init` reference differ on critique snapshots; the skill points to upstream instead of
   restating either list ([planning evidence](materials/planning-evidence.md) §3).
 
@@ -198,39 +213,48 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 - **AC-1:** Given a request that adds, merges or reorders views or flows, the agent names the affected objects,
   relationships, CTAs and attributes before layout or styling changes; given a local change, it proceeds without an
   ORCA pass; given a review-only request, it returns findings with no product edits.
-- **AC-2:** Given the user selects Impeccable, the agent produces a self-contained brief with the edit list, unchanged
-  concerns, context-file permission, commands without `live`, stop condition and expected return, and makes no product
+- **AC-2:** Given the user selects Impeccable, the agent completes the consumer's pre-implementation workflow steps,
+  produces a self-contained brief with the working directory, recorded base, edit list, unchanged concerns,
+  context-file permission, routed commands without `live`, stop condition and expected return, and makes no product
   edits until the session returns.
-- **AC-3:** Given Impeccable is absent or not selected, the agent completes the improvement inline with the framing and
-  design guidance; when the user wants Impeccable, it names the three upstream install routes and installs nothing.
-- **AC-4:** Given a session created or changed `PRODUCT.md`, `DESIGN.md` or `.impeccable/` files, the agent reports them
-  as consumer-owned with upstream's retention guidance and deletes, moves or git-ignores none of them without the
-  user's direction.
-- **AC-5:** Given the session changed a file outside its edit list, the agent reports that file to the user and neither
-  reverts nor delivers it as accepted work.
-- **AC-6:** The bundle, skill, entry point, module, data root, tests, README, installation guide and component
+- **AC-3:** Given a fresh child would need new work, `init`, `shape` or `critique`, the agent routes those commands to a
+  session the user operates; given a child meets an upstream question, the child returns it as a blocker unanswered.
+- **AC-4:** Given Impeccable is absent or not selected, the agent completes the improvement inline with the framing and
+  design guidance without loading Impeccable; when the user wants Impeccable, it names the three upstream install
+  routes and installs nothing.
+- **AC-5:** Given a session created or changed `PRODUCT.md`, `DESIGN.md` or shared `.impeccable/` context files, the
+  agent reports them as consumer-owned with upstream's retention guidance and deletes, moves or git-ignores none of
+  them without the user's direction.
+- **AC-6:** Given the session changed a file outside its edit list, the agent reports that file and neither reverts nor
+  delivers it as accepted work; given HEAD moved or the base is missing, it reports attribution as unverifiable.
+- **AC-7:** The bundle, skill, entry point, module, data root, tests, README, installation guide and component
   description use the qualified name; no alias or entry point for the old bundle, skill or module name remains.
-- **AC-7:** Every bundled Markdown file stays within 12,288 bytes, contains no governance IDs and passes the catalog
+- **AC-8:** Every bundled Markdown file stays within 12,288 bytes, contains no governance IDs and passes the catalog
   integration tests; the installed-consumer test passes under the new name without devkit-agt, devkit-docs or
   devkit-spec.
-- **AC-8:** Selection, invocation and delegation grant no commit, integration or publication authority.
+- **AC-9:** Selection, invocation and delegation grant no commit, integration or publication authority.
 
 ### 3.7 Tests
 
 - Move and rename the integration and E2E tests; keep every existing assertion with the new paths.
-- Add `assert_rule` checks: Impeccable only on user selection; brief fields; `live` excluded; no product edits while the
-  session runs; outside-list changes reported without revert; context files reported, not deleted or ignored; install
-  routes named without installing; local change without ORCA pass.
+- Add `assert_rule` checks: Impeccable neither loaded nor invoked without selection; workflow steps before delegating;
+  brief fields including working directory and base; command routing to the user-run session; upstream questions
+  returned unanswered; `live` excluded; no product edits while the session runs; outside-list changes reported without
+  revert; unverifiable attribution reported; context files reported, not deleted or ignored; install routes named
+  without installing; local change without ORCA pass.
+- AC-1 to AC-6 and AC-9 are instruction checks: the tests verify stated behavior, not model obedience.
 
 ### 3.8 Planning decisions
 
 - Capability and use-case IDs stay; only their text and entrypoints change (§3.1).
 - The four local roles stay in both tracks; the delegated session is not a local role.
 - Naming stays a Planning decision, not a PADR: it is reversible while the bundle has no consumers.
+- Capability rule 14 stays a sync rule. Coordinator reporting of consumer context files becomes new rule 18, and the
+  capability's interface section says the coordinator owns synthesis, acceptance and retained output.
 - `ADR-uiux-improvement-workflow-boundary` is superseded in part, not wholly (`PADR-impeccable-session-authority`).
-  The handoff adds its "Superseded in part by" line; Development replaces that line's summary with the replaced
-  clause and repairs the bundle name in clause 1 as a reference repair. This is the only `docs/decisions/` file
-  Development edits.
+  The handoff writes its "Superseded in part by" line, and the Host clarifies that line to name the replaced clause
+  before a worker starts (post-handoff link check). Development's only `docs/decisions/` edit is the reference repair
+  of the bundle name in that ADR's clause 1, which changes no decision.
 
 ## 4. Lifecycle & Retirement Criteria
 
