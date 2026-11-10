@@ -1,7 +1,7 @@
 ---
 id: PROP-uiux-improve-ooux-impeccable
 title: OOUX-framed UI/UX improvement and Impeccable delegation
-summary: "Rename uiux-improve with a software-interface qualifier, add proportionate OOUX framing and let a user-selected, brief-bounded Impeccable session edit product files under coordinator acceptance, leaving Impeccable's project files to the consumer."
+summary: "Rename uiux-improve to app-uiux-improve, add proportionate OOUX framing and let a user-selected, brief-bounded Impeccable session edit product files under coordinator acceptance, leaving Impeccable's project files to the consumer."
 status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
@@ -76,13 +76,15 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
    Impeccable session, then accept, verify and deliver its changes through the consumer workflow.
 3. **Consumer-owned project files**: treat Impeccable's `PRODUCT.md`, `DESIGN.md` and shared `.impeccable/` files as
    project context the consumer keeps or ignores, never as scaffolding the skill deletes.
-4. **Qualified name**: rename the bundle and skill with a software-interface qualifier. `uiux-improve` is absent from
-   release tag `v0.1.5` and has no other consumer, so the rename is a clean break.
+4. **Qualified name**: rename the bundle and skill to `app-uiux-improve`, which adds the software-application
+   qualifier. `uiux-improve` is absent from release tag `v0.1.5` and has no other consumer, so the rename is a clean
+   break.
 
 ### Scope and non-goals
 
 - In scope:
-  - Rename the bundle, skill, entry point, module, data root and test paths to the qualified name.
+  - Rename the bundle, skill, entry point, module, data root and test paths to `app-uiux-improve` (module
+    `app_uiux_improve`).
   - Restructure `SKILL.md` around framing, inline or delegated execution, and verification.
   - Add proportionate ORCA framing and baseline craft checks to `references/design-guidance.md`.
   - Add the Impeccable brief, routes and acceptance steps to `references/orchestration.md`.
@@ -100,10 +102,10 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 
 ## 2. Technical Spike Questions and Planning Answers
 
-- **Q1. Qualified name.** Pending the user's choice (worker question `q1`). Recommendation: `app-uiux-improve`, which
-  keeps the recognizable `uiux-improve` stem and adds the software-application qualifier. The bundle, skill, entry-point
-  key, module (`app_uiux_improve`) and test paths take the one chosen name. Zero breakage: release tag `v0.1.5` holds no
-  `uiux` path, and every tracked reference is listed in [planning evidence](materials/planning-evidence.md) §2.
+- **Q1. Qualified name.** The user chose `app-uiux-improve` (worker question `q1`), which keeps the recognizable
+  `uiux-improve` stem and adds the software-application qualifier. The bundle, skill, entry-point key, module
+  (`app_uiux_improve`), data root and test paths take this one name (§3.1). Zero breakage: release tag `v0.1.5` holds
+  no `uiux` path, and every tracked reference is listed in [planning evidence](materials/planning-evidence.md) §2.
 - **Q2. OOUX depth.** Framing scales with the request (§3.2). A local change skips it; a change across views writes a
   short object list in conversation; no diagram, notation or full-product object map is required.
 - **Q3. Delegation brief.** `PADR-impeccable-session-authority` settles the authority model; §3.4 lists the brief.
@@ -122,12 +124,15 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 
 ### 3.1 Clean-break rename
 
-- The chosen name replaces `uiux-improve` in `bundle.toml` (`name`, asset `id`, `source`), the skill directory and its
-  `SKILL.md` `name`, the `packages/devkit-catalog/pyproject.toml` entry point, the module directory and the
-  `.devkit/architecture.toml` `data_roots` entry.
-- With the recommended name, Development creates `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/`,
-  `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py` and
-  `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`. Their parents are owned only for these moves.
+- `app-uiux-improve` replaces `uiux-improve` in `bundle.toml` (`name`, asset `id`, `source`, preset `core`), the skill
+  directory and its `SKILL.md` `name`. The `packages/devkit-catalog/pyproject.toml` entry point becomes
+  `app-uiux-improve = "devkit_catalog.app_uiux_improve"`, and the `.devkit/architecture.toml` `data_roots` entry becomes
+  `app_uiux_improve`.
+- Development moves the module to `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/` (skill at
+  `bundle/skills/app-uiux-improve/`), the integration test to
+  `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py` and the E2E test directory to
+  `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`. The boundaries name these new paths by their existing
+  parents, which are owned only for these moves.
 - `packages/devkit-catalog/README.md`, `guides/install/bundle-recommendations.md` and `ARCH-05-2-components` name the
   new bundle and path.
 - No alias, redirect or compatibility entry is kept.
@@ -228,9 +233,10 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 - **AC-6:** Given the session changed a file outside its edit list, the agent reports that file and neither reverts nor
   delivers it as accepted work; given HEAD moved or the base is missing, it reports attribution as unverifiable.
 - **AC-7:** The bundle, skill, entry point, module, data root, tests, README, installation guide and component
-  description use the qualified name; no alias or entry point for the old bundle, skill or module name remains.
+  description use `app-uiux-improve` (module `app_uiux_improve`); no alias or entry point for the old `uiux-improve`
+  bundle, skill or `uiux_improve` module remains.
 - **AC-8:** Every bundled Markdown file stays within 12,288 bytes, contains no governance IDs and passes the catalog
-  integration tests; the installed-consumer test passes under the new name without devkit-agt, devkit-docs or
+  integration tests; the installed-consumer test passes as `app-uiux-improve` without devkit-agt, devkit-docs or
   devkit-spec.
 - **AC-9:** Selection, invocation and delegation grant no commit, integration or publication authority.
 
@@ -248,7 +254,8 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 
 - Capability and use-case IDs stay; only their text and entrypoints change (§3.1).
 - The four local roles stay in both tracks; the delegated session is not a local role.
-- Naming stays a Planning decision, not a PADR: it is reversible while the bundle has no consumers.
+- Naming stays a Planning decision, not a PADR: it is reversible while the bundle has no consumers. The user chose
+  `app-uiux-improve` over `software-ui-improve` and `ooux-ui-improve`.
 - Capability rule 14 stays a sync rule. Coordinator reporting of consumer context files becomes new rule 18, and the
   capability's interface section says the coordinator owns synthesis, acceptance and retained output.
 - `ADR-uiux-improvement-workflow-boundary` is superseded in part, not wholly (`PADR-impeccable-session-authority`).

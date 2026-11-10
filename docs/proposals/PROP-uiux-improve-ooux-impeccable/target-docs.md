@@ -15,18 +15,19 @@ targets:
 # [PROP-uiux-improve-ooux-impeccable-target] Target Living Spec for OOUX-framed UI/UX improvement and Impeccable delegation
 
 These are prospective changes after implementation. Existing Living Spec contracts remain in force during Planning.
-`<name>` stands for the qualified name the user chooses (recommended: `app-uiux-improve`, module `app_uiux_improve`).
+The qualified bundle and skill name is `app-uiux-improve` (module `app_uiux_improve`).
 
 ## 1. Capability: CAP-DLV-uiux-improvement
 
 Keep the ID. Retitle to name software interfaces (for example "Software interface UI/UX improvement"). Update the
-summary, entrypoint and section 1 to the qualified bundle, OOUX framing and optional Impeccable delegation, and cite
-`PADR-impeccable-session-authority` beside `ADR-uiux-improvement-workflow-boundary`.
+summary, entrypoint and section 1 to the `app-uiux-improve` bundle, OOUX framing and optional Impeccable delegation,
+and cite `PADR-impeccable-session-authority` beside `ADR-uiux-improvement-workflow-boundary`.
 
 - **Scope**: In-Scope adds proportionate object framing and user-selected Impeccable delegation. Out-of-Scope adds
   Impeccable's installation, commands, hooks, detector and file conventions (upstream) and non-software design domains.
   Scope Excluded keeps automatic companion skill invocation and adds vendored external prompt text.
-- **Rule 1** (Opt-in distribution): `<name>:core`; one skill and four local role files; renamed test path.
+- **Rule 1** (Opt-in distribution): `app-uiux-improve:core`; one skill and four local role files; test path
+  `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`.
 - **Rule 3** (Consumer authority): unchanged wording; it also covers changes accepted from a delegated session.
 - **Rule 4** (Goal-driven improvement): add the framing clause: WHEN a request adds, merges or reorders views or flows,
   the coordinator SHOULD name the affected objects, relationships, CTAs and attributes before layout or styling; a
@@ -34,7 +35,7 @@ summary, entrypoint and section 1 to the qualified bundle, OOUX framing and opti
 - **Rule 9** (Role authority): unchanged for local roles; state that the delegated session is governed by rules 15–18.
 - **Rule 10** (Host limits): add: IF Impeccable is unavailable, THEN the coordinator MUST name the upstream install
   routes, install nothing and continue inline when the user wants.
-- **Rule 13** (Independent installation): renamed E2E test path.
+- **Rule 13** (Independent installation): E2E test path `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`.
 - **Rule 14** (Artifact preservation): unchanged sync rule and tests.
 - **New rule 15** (User-selected delegation): WHERE the user has not selected the Impeccable track, the coordinator
   MUST NOT start an Impeccable session or load or invoke Impeccable in its own context; an installed Impeccable
@@ -53,7 +54,8 @@ summary, entrypoint and section 1 to the qualified bundle, OOUX framing and opti
 - **New rule 18** (Consumer context files): WHEN a session creates or changes `PRODUCT.md`, `DESIGN.md` or shared
   `.impeccable/` context files, the coordinator MUST report them as consumer-owned with upstream's retention guidance
   and MUST NOT delete, move or git-ignore them without the user's direction.
-- **Section 4**: `uv run devkit add <name>`, `/<name> <goal>`, registration `<name> = "devkit_catalog.<module>"`; the
+- **Section 4**: `uv run devkit add app-uiux-improve`, `/app-uiux-improve <goal>`, registration
+  `app-uiux-improve = "devkit_catalog.app_uiux_improve"`; the
   orchestration reference adds the Impeccable brief; the session return lists changed files, commands run, detector
   or audit results, session output, degraded coverage and blockers. Restate "The coordinator owns synthesis, retained
   output and product changes" as "owns synthesis, acceptance and retained output; product changes follow rules 3,
@@ -80,7 +82,8 @@ Keep the ID and main scenario; update the entrypoint. Add:
 
 ## 3. Architecture: ARCH-05-2-components
 
-Rename the bundle and `devkit_catalog/<module>/bundle/` path in the content-bundle paragraph. The bundle still adds no
+Rename the bundle to `app-uiux-improve` and its path to `devkit_catalog/app_uiux_improve/bundle/` in the
+content-bundle paragraph. The bundle still adds no
 runtime dependency or shared orchestration module; Impeccable stays an optional, user-installed external skill.
 
 ## 4. Decision: ADR-uiux-improvement-workflow-boundary
@@ -88,5 +91,5 @@ runtime dependency or shared orchestration module; Impeccable stays an optional,
 `PADR-impeccable-session-authority` promotes with `supersedes: [ADR-uiux-improvement-workflow-boundary]`. The handoff
 inserts "Superseded in part by" below the heading; the Host's post-handoff check clarifies it to name the replaced
 clause: Decision Outcome clause 2's coordinator-only continuation of requested implementation now admits one
-user-selected, brief-bounded Impeccable session. The ADR stays `accepted`; clause 4 stays in force for local roles. Development repairs clause 1's bundle name
-to `<name>` without changing the decision.
+user-selected, brief-bounded Impeccable session. The ADR stays `accepted`; clause 4 stays in force for local roles.
+Development repairs clause 1's bundle name to `app-uiux-improve` without changing the decision.

@@ -14,17 +14,17 @@ excluding `.git` and this proposal.
 
 | Path | Reference | Rename action |
 | :--- | :--- | :--- |
-| `packages/devkit-catalog/src/devkit_catalog/uiux_improve/` | module, `bundle.toml` `name` and asset `id`/`source`, skill directory and `SKILL.md` `name` | move to the qualified module and skill directory |
-| `packages/devkit-catalog/pyproject.toml:17` | entry point `uiux-improve = "devkit_catalog.uiux_improve"` | rename key and module |
-| `.devkit/architecture.toml:195` | `devkit_catalog` `data_roots` entry `uiux_improve` | rename data root |
+| `packages/devkit-catalog/src/devkit_catalog/uiux_improve/` | module, `bundle.toml` `name` and asset `id`/`source`, skill directory and `SKILL.md` `name` | move to `app_uiux_improve/` and skill directory `app-uiux-improve` |
+| `packages/devkit-catalog/pyproject.toml:17` | entry point `uiux-improve = "devkit_catalog.uiux_improve"` | rename to `app-uiux-improve = "devkit_catalog.app_uiux_improve"` |
+| `.devkit/architecture.toml:195` | `devkit_catalog` `data_roots` entry `uiux_improve` | rename data root to `app_uiux_improve` |
 | `packages/devkit-catalog/README.md:11,65-70` | bundle table row and the UI/UX improvement section | rename and describe OOUX framing and optional delegation |
 | `guides/install/bundle-recommendations.md:37` | recommendation row and `uv run devkit add uiux-improve` | rename and keep the recommendation condition |
 | `docs/architecture/ARCH-05-2-components.md:87-89` | bundle name and `devkit_catalog/uiux_improve/bundle/` | rename |
 | `docs/capabilities/delivery/CAP-DLV-uiux-improvement.md` | entrypoint path, rule 1 preset, rule 13 test path, section 4 commands and registration | rename and restate the new rules |
 | `docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md` | entrypoint path | rename and add extensions |
 | `docs/decisions/2026-11/20261105-uiux-improvement-workflow-boundary.md:34` | bundle name in Decision Outcome clause 1 | reference repair; the handoff adds the partial-supersession line |
-| `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py` | bundle, skill and preset paths | move to the qualified test module |
-| `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/` | installed-consumer test | move to the qualified test directory |
+| `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py` | bundle, skill and preset paths | move to `test_app_uiux_improve.py` |
+| `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/` | installed-consumer test | move to `tests/e2e/bundles/app_uiux_improve/` |
 | `docs/capabilities/delivery/CAP-DLV-design-exploration.md:29` | cites `CAP-DLV-uiux-improvement` by ID only | none while the capability ID is kept |
 | `specs/2026-11/20261105-ux-design-exploration/` | completed spec history | none: completed specs stay as history |
 
