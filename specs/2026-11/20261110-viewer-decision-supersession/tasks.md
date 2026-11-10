@@ -3,12 +3,18 @@ id: TASKS-viewer-decision-supersession
 spec: SPEC-viewer-decision-supersession
 plan: PLAN-viewer-decision-supersession
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-viewer-decision-supersession` Show decision supersession in the Living Spec viewer
+# Task Breakdown: `SPEC-viewer-decision-supersession`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: packages/devkit-viewer/, docs/capabilities/viewer/CAP-VIEW-repository-viewer.md, docs/usecases/, docs/ux/, docs/steering/
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Derive canonical supersession relations and source-aware replacement text with parity fixtures.
+  - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/features/document/supersession.ts`, `packages/devkit-viewer/frontend/src/lib/features/document/supersession.test.ts`
+  - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
+  - **Verification**: `just viewer test`
+- [ ] **Task 2**: Integrate the shared summary in Read, Files and PADR chapters with loading, navigation and source guards.
+  - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/features/document/`, `packages/devkit-viewer/frontend/src/lib/features/knowledge/ChapterSection.svelte`, `packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte`, `packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`, `packages/devkit-viewer/frontend/src/lib/SddViewer.svelte`, `packages/devkit-viewer/frontend/src/lib/SddViewer.test.ts`
+  - _Requirements: AC-01, AC-04, AC-05, AC-06, AC-07_
+  - **Verification**: `just viewer lint`, `just viewer check`, `just viewer test`
+- [ ] **Task 3**: Build the committed viewer assets and verify package compatibility.
+  - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/static/`
+  - _Requirements: AC-08_
+  - **Verification**: `just viewer pack`, `just viewer build`, `uv run devkit generated check viewer-assets`
