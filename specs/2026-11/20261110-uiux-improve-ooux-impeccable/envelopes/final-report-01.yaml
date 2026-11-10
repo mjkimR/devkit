@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T00:39:57.581087Z'
+status: completed
+summary: 'Renamed uiux-improve to app-uiux-improve (clean break), added proportionate ORCA framing with conditional OOUX sources, baseline craft checks, user-selected Impeccable delegation (brief, routing, pause, acceptance, project files, user-requested setup and cleanup) and the undeployed human usage guide; Living Spec reconciled. Review: 1 P2 fixed and self-verified; reconcile: 1 P2 fixed and self-verified.'
+findings: []
+assumptions:
+- The ADR-uiux-improvement-workflow-boundary 'Superseded in part by' pointer still repeats the new ADR summary; it is the Host's post-handoff line and outside this unit's scope (FB-partial-supersession-pointer-still-summary).
+checks:
+  tests: PASS just test-affected --base 83b7c0a8 full fallback 6423 passed 3 skipped; e2e tier 355 passed 13 skipped at acba5162; app_uiux_improve e2e 1 passed at 5d8125cab5cfda5ec994434287d623a54744f80d
+  build: PASS uv build --package devkit-catalog wheel holds app_uiux_improve and the guide, entry point app-uiux-improve
+  lint: PASS devkit rules check --ci --base 83b7c0a8; just lint-check and just check devkit-catalog
+diff_scope:
+  base: 83b7c0a82834d799fe01f6ff180511e97ee17075
+  head: 5d8125cab5cfda5ec994434287d623a54744f80d
