@@ -17,7 +17,7 @@
     "source_normalized_sha256": "4ba21241df6cbaae18f0a1c70070b08e12d6d51b7bcff839bfeba293ec2df909",
     "expected_destination_normalized_sha256": "7fd7d50ed50523fbd8135d88cd90a2cbad091966c5eeebe22918246acd12dd17",
     "source_lines": 76,
-    "destination_lines": 76
+    "destination_lines": 75
   },
   {
     "source": "docs/capabilities/delivery/CAP-DLV-proposal-planning.md",

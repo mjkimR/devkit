@@ -340,4 +340,3 @@ invalid Git inputs or unresolved required unit/head/base. A not-run check alone 
 The helper MUST NOT write records, modify files, repair, retry, synchronize, merge or widen scope. It adds no
 approval request, workflow gate, integration refusal or scope registration. The Host's delegation payload remains
 authoritative, and the Host decides acceptance under the existing procedure.
-
