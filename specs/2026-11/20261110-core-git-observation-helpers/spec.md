@@ -1,45 +1,23 @@
 ---
-id: PROP-core-git-observation-helpers
+id: SPEC-core-git-observation-helpers
 title: Public Git observation helpers in devkit-core
-summary: "Add public devkit-core functions that read git worktree list and git status porcelain records, and move the packages' private parsers to them, so each Git output is parsed once and tested once."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-10
-target_area: packages/devkit-core/
-priority: medium                      # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-core/
-    - packages/devkit/src/devkit_agt/features/
-    - packages/devkit/tests/
-    - packages/devkit-dist/src/devkit_dist/features/
-    - packages/devkit-dist/tests/
-    - packages/devkit-spec/src/devkit_spec/features/
-    - packages/devkit-spec/tests/
-    - packages/devkit-adaptive/src/devkit_adaptive/features/
-    - packages/devkit-adaptive/tests/
-    - packages/devkit-mcp/src/devkit_mcp/features/
-    - packages/devkit-mcp/tests/
-    - packages/devkit-viewer/src/devkit_viewer/features/
-    - packages/devkit-viewer/tests/
-    - docs/development/reference/
-    - docs/capabilities/compact/CAP-CMP-bounded-execution.md
-    - docs/capabilities/delivery/CAP-DLV-adaptive-assignments.md
-  excludes:
-    - docs/capabilities/
-    - docs/decisions/
-    - packages/devkit-spec/src/devkit_spec/bundles/
-    - packages/devkit-adaptive/src/devkit_adaptive/bundles/
-    - .devkit/architecture.toml
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Add public devkit-core functions that read git worktree list and git status porcelain records, and move the packages' private parsers to them, so each Git output is parsed once and tested once.
+status: planned
+created: 2026-11-10
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-core-git-observation-helpers] Public Git observation helpers in devkit-core
+# [SPEC-core-git-observation-helpers] Public Git observation helpers in devkit-core
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-core-git-observation-helpers on 2026-11-10.
+- **Preserved Materials**: `docs/materials/2026-11/20261110-core-git-observation-helpers`
+
+### 1. Background & Hypothesis
 
 `devkit_core.core` exports only `run_git`, `run_git_text` and `is_ancestor` for Git. Every feature that needs the
 worktrees of a repository or the records of `git status --porcelain` parses the output itself:
@@ -57,7 +35,7 @@ worktrees of a repository or the records of `git status --porcelain` parses the 
 - Revision resolution (`git rev-parse`) is written inline wherever a full commit ID is needed: 26 lines resolve
   `<rev>^{commit}`, with three different error conventions and `--end-of-options` at only three of them.
 
-The inventory with every site's semantics is `materials/call-site-inventory.md`.
+The inventory with every site's semantics is `docs/materials/2026-11/20261110-core-git-observation-helpers/call-site-inventory.md`.
 
 The details that are easy to get wrong are decided separately in each copy: the record order of a rename in `-z`
 output, the trailing slash of an untracked nested repository, and the `bare`, `detached`, `locked` and `prunable`
@@ -67,13 +45,32 @@ each new feature adds another (the adaptive assignment commands added the latest
 Hypothesis: one public, tested reading of each output in `devkit_core.core` removes the duplicated parsers without
 changing any command's behavior, and new features stop adding copies.
 
-## Source feedback (when this proposal receives feedback)
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Public Git observation helpers in devkit-core so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback (when this proposal receives feedback)
 
 - `FB-no-public-git-observation-helpers`: worktree records, status records with both names of a rename and moving the
   existing callers. Its revision resolver is declined (Planning decisions); the adaptive lookup it pointed at is fixed
   locally.
 
-## 2. Technical Spike Questions
+### 2. Technical Spike Questions
 
 - **Q1**: Which call sites read Git output with semantics a shared helper must preserve (no `-z`, first line only,
   `--no-optional-locks`, `--no-renames`, `--ignore-submodules=none`, deadlines through `Deadline`, a local `git`
@@ -85,9 +82,9 @@ changing any command's behavior, and new features stop adding copies.
 - **Q4**: Which record shapes (dataclass fields, rename representation, path decoding with `surrogateescape`) serve
   every current caller without each one re-mapping them?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Helpers in `devkit_core.core.git`
+#### Helpers in `devkit_core.core.git`
 
 Exported from `devkit_core.core` beside `run_git`. Each reader is a pure parser over Git's bytes plus a thin runner
 over `run_git`, so a caller with its own runner (an environment, a pathspec or a `Deadline` the runner does not take)
@@ -111,9 +108,9 @@ parses its own output with the same function.
 - All decoding is UTF-8 with `surrogateescape`, which equals the `os.fsdecode` some callers use under a UTF-8
   file system encoding (the supported macOS and Linux setups); behavior preservation is claimed for that encoding. `devkit-core` keeps importing no application package.
 
-### Caller migration (in this spec)
+#### Caller migration (in this spec)
 
-Every parser in `materials/call-site-inventory.md` moves to the helpers, feature by feature, with each caller keeping
+Every parser in `docs/materials/2026-11/20261110-core-git-observation-helpers/call-site-inventory.md` moves to the helpers, feature by feature, with each caller keeping
 its own mapping (path resolution, zero HEAD to `None`, the adaptive trailing-slash strip, its error translation and
 record filtering):
 
@@ -137,7 +134,7 @@ record filtering):
   execution module (`CAP-WT-task-worktrees`, `ADR-isolated-test-runs`); `devkit_spec` scope observation's
   fingerprint, which hashes raw output; status calls that test only emptiness.
 
-### Behavior
+#### Behavior
 
 No command, output, error code or capability contract changes, except these accidental differences, which become
 the shared behavior, each only for input no current test or contract uses:
@@ -154,7 +151,7 @@ the shared behavior, each only for input no current test or contract uses:
 keeps reading the first `branch` record. Feature edges are unchanged (`gate` and `generated` keep their `compact` edge
 for `run_command`); `.devkit/architecture.toml` is not edited.
 
-### Tests and documents
+#### Tests and documents
 
 - New `devkit-core` integration tests (`packages/devkit-core/tests/integration/core/`) run real Git for: a rename and a
   copy, an untracked nested repository, a non-UTF-8 path, `--no-renames`, pathspecs; main, linked, detached, bare,
@@ -167,7 +164,7 @@ for `run_command`); `.devkit/architecture.toml` is not edited.
   (the `status_records` sentence of `CAP-CMP-bounded-execution` and the resolution command of
   `CAP-DLV-adaptive-assignments`); no decision document changes.
 
-## Planning decisions
+### Planning decisions
 
 - Size stays `L`: one spec and one task kind (`feature`); the migration is about twenty call sites in six packages,
   each a local swap verified by its feature's tests. Two specs would be needed only if the migration were split out
@@ -185,10 +182,11 @@ for `run_command`); `.devkit/architecture.toml` is not edited.
 - Q3 (answered by the user): no public commit resolver. With one migrating caller it would be speculative API; the
   adaptive lookup gets `--end-of-options` and a hex check locally, and the other `^{commit}` lines stay.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On acceptance (plan-accept): `devkit spec proposal accept core-git-observation-helpers --by user` records
   `gate:plan-accept` and `status: accepted`, then the Planning branch is merged; an eligible draft may instead be
   accepted with `--direct` on the base. Development starts with `devkit spec proposal handoff core-git-observation-helpers`.
 - On rejection: change only `status: rejected`, with the user's decision and reason as a decision sentence in the
   commit message; a later hygiene pass writes the rejection ADR and deletes the proposal directory.
+

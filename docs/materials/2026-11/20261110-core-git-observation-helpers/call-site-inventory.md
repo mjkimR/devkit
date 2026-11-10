@@ -1,6 +1,6 @@
 # Git observation call-site inventory
 
-Planning evidence for `PROP-core-git-observation-helpers`, taken at worktree HEAD `467c5dbb` (`scout-01`). Paths are
+Planning evidence for `SPEC-core-git-observation-helpers`, taken at worktree HEAD `467c5dbb` (`scout-01`). Paths are
 relative to `packages/`. Counts are matching lines in `packages/*/src/**/*.py`, tests excluded.
 
 ## 1. `git worktree list --porcelain` (12 sites)
