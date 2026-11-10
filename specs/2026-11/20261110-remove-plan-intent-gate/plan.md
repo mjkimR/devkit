@@ -2,39 +2,33 @@
 id: PLAN-remove-plan-intent-gate
 spec: SPEC-remove-plan-intent-gate
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-remove-plan-intent-gate` Remove the plan-intent gate
+# Technical Plan: `SPEC-remove-plan-intent-gate`
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+`ADR-remove-plan-intent-gate` replaces the identified gate-dependent clauses while preserving other authority.
+The generic workflow engine in devkit-agt is unchanged. No new dependency, storage schema or feature edge is needed.
 
-### Planned Boundaries:
-- `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`
-- `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/`
-- `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja`
-- `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/`
-- `packages/devkit-spec/src/devkit_spec/features/delivery/`
-- `packages/devkit-spec/src/devkit_spec/features/policy/`
-- `packages/devkit-spec/src/devkit_spec/base/errors.py`
-- `packages/devkit-spec/tests/`
-- `packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py`
-- `docs/capabilities/delivery/`
-- `docs/capabilities/harness/CAP-HARN-agent-guidance.md`
-- `docs/usecases/delivery/`
-- `docs/architecture/ARCH-04-delivery-strategy.md`
-- `docs/architecture/ARCH-04-2-delivery-policy.md`
-- `docs/decisions/`
-- `handbook/en/concepts.md`
-- `handbook/en/areas/delivery.md`
-- `handbook/en/journeys/route-development-intent.md`
-- `handbook/en/journeys/plan-and-hand-off-a-proposal.md`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `specs/`
-- `packages/devkit/src/devkit_agt/`
+- Bundle definitions keep intent stage IDs/checks and remove their human gate declarations.
+- Proposal acceptance drops its missing-intent special case. Handoff selects only plan-accept records.
+- Delivery handoff requires completed plan-accept, not plan-intent.
+- Policy inspection omits the retired key, warns through SPEC_APPROVAL_KEY_IGNORED and retains custom gates.
+- Skills, constitution and Living Spec describe explicit instruction authority without replacement bookkeeping.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 3. Component & Interface Design
+
+Existing commands and result fields remain. An accept --check result has no pending intent entry.
+Handoff carried_gates contains only gate:plan-accept. Retired configuration is accepted as ignored at the SDD policy
+boundary, including off; generic workflow configuration remains untouched. Historical decision loading is unchanged.
+
+## 6. Verification & Test Plan
+
+- AC-01/03: deployed workflow validation, new Unit evaluation, XL eligibility and legacy-record next/rules regression.
+- AC-02: proposal acceptance, handoff record and composed delivery tests; required plan-accept and custom-gate behavior.
+- AC-04: policy CLI default/custom/retired ask-auto-off tests and strict warning behavior.
+- AC-05: guidance distribution tests, source/deployed search, docs rules and independent reconcile review.
+- Run just lint-check spec, just check spec, rules --ci against a74c84af, sync --check/generated check and
+  just test-affected --base a74c84afc72b193f32131242b223b76539500ba0 --tier all synchronously with full fallback.
