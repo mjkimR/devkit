@@ -30,3 +30,9 @@ index copy; relation reload retains that subject version. Proposal-detail PADR t
 checkout ADR in Files, using the existing outside-bundle navigation path. Development AC-4/AC-5 and the Screens
 carry both regressions. Challenger snapshots both equal `287e05920bb406c5a26f4ed2a4dbfc3990fcd988` and HEAD
 remained unchanged; no outside-worktree read was reported.
+
+User-requested UX round 1 walked all five main steps and extensions 3a/3b/4a. Both drafted elements scored
+R1-R6=2. Its link-check finding was folded by allowing decision navigation from loading/error/raw and allowing
+unambiguous relation navigation from incomplete scans. Original finding remains in ux-review-01; revised drafts
+are sent to the second and final permitted UX round. The round-1 snapshots equal
+`fb959368f4f9e09de7c8b3310124691e67bf6db7`, with unchanged HEAD.

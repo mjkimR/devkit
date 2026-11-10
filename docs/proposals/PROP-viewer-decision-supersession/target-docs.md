@@ -94,7 +94,7 @@ controls retain their placement.
 
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
-| Open a decision from existing navigation | UC-read-decision-supersession 1 | populated | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Selected decision title and body replace the prior one |
+| Open a decision from existing navigation | UC-read-decision-supersession 1 | populated, loading, error, raw | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Selected decision title and body replace the prior one |
 | Select rendered mode | UC-read-decision-supersession 3 | raw | populated | | `CAP-VIEW-repository-viewer` | Relation loading or summary appears |
 | Select raw mode where the host offers it | global: inspect the document source | populated | raw | | `CAP-VIEW-repository-viewer` | Original document source replaces the rendered body |
 | Choose another repository or branch | UC-read-decision-supersession 4a | populated | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Previous context clears; selected source loads |
@@ -143,7 +143,7 @@ superseded ADR is wholly invalid. An unresolved or ambiguous ID has no link and 
 
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
-| Follow a resolved decision link | UC-read-decision-supersession 4 | populated | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Target title/body/summary appears; Read reveals its namespace, Files keeps its view, proposal-detail PADR opens checkout ADR in Files |
+| Follow an unambiguous resolved decision link | UC-read-decision-supersession 4 | populated, incomplete | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Target title/body/summary appears; Read reveals its namespace, Files keeps its view, proposal-detail PADR opens checkout ADR in Files |
 | Reload relations | UC-read-decision-supersession 3a | populated, empty, incomplete, error | loading | | `CAP-VIEW-repository-viewer` | Source index reloads and replaces summary or shows failure |
 | Continue reading after an unavailable target | UC-read-decision-supersession 3b | populated, incomplete | populated, incomplete | | `CAP-VIEW-repository-viewer` | Written ID and missing-scope text remain visible without a broken control |
 
