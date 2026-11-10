@@ -270,7 +270,26 @@ def test_legacy_intent_records_remain_readable_without_migration(synced: Path, t
     assert created.returncode == 0, created.stderr
     unit = root / "specs/2026-01/20260115-legacy"
     anchor = unit / "spec.md"
-    anchor.write_text(re.sub(r"(?m)^status:.*$", f"status: {status}", anchor.read_text(), count=1))
+    anchor.write_text(
+        f'---\nid: SPEC-legacy\ntitle: Legacy\nsummary: "Validate historical workflow records."\nstatus: {status}\n'
+        "workflow: sdd-spec-feature\nrelated_capabilities: []\nrelated_usecases: []\n---\n"
+        "# Legacy\n\n## Acceptance Criteria\n\n### [AC-01] Historical records remain readable\n"
+        "- **Given** an authorized task\n- **When** evaluated\n- **Then** historical records remain readable\n"
+    )
+    (unit / "plan.md").write_text(
+        "---\nid: PLAN-legacy\nspec: SPEC-legacy\n---\n# Legacy plan\nRetain historical records.\n"
+    )
+    mark = "x" if status == "completed" else " "
+    (unit / "tasks.md").write_text(
+        "---\nid: TASKS-legacy\nspec: SPEC-legacy\nplan: PLAN-legacy\n---\n# Tasks\n"
+        f"- [{mark}] Validate historical records\n  - **_Boundary**: `specs/2026-01/20260115-legacy/`\n"
+        "  - _Requirements: AC-01_\n"
+    )
+    reconcile_status = "resolved" if status == "completed" else "pending"
+    (unit / "reconcile.md").write_text(
+        f"---\nreconcile_id: REC-legacy\nstatus: {reconcile_status}\ntargets: []\n---\n"
+        "No Living Spec contract changes in this compatibility fixture.\n"
+    )
     directory = unit / "decisions"
     directory.mkdir(exist_ok=True)
     record = directory / "01-gate-plan-intent.yaml"
@@ -284,7 +303,7 @@ def test_legacy_intent_records_remain_readable_without_migration(synced: Path, t
     payload = json.loads(result.stdout)
     assert not payload["errors"] and not payload["blocked"]
     assert not any(item["id"] == "gate:plan-intent" for item in payload["requests"])
-    checked = _devkit("rules", "check", str(record), "-w", str(root), "--format", "json")
+    checked = _devkit("rules", "check", str(unit), "-w", str(root), "--format", "json")
     assert checked.returncode == 0, checked.stdout + checked.stderr
     assert record.read_bytes() == before
 
@@ -306,3 +325,12 @@ def test_custom_workflow_gate_is_still_requested(synced: Path, tmp_path: Path) -
     result = _devkit("workflow", "next", "--unit", "specs/custom", "-w", str(root))
     assert result.returncode == 0, result.stdout + result.stderr
     assert "[REQUEST: id=gate:custom-authorization" in result.stdout
+
+
+def test_intake_and_prerequisite_overrides_need_no_intent_record() -> None:
+    classification = raw("skills/spec/references/classification.md")
+    pickup = raw("skills/spec-next/references/next-work.md")
+    assert "draft and its intent record" not in classification
+    assert_rule(classification, "create no intent approval record")
+    assert_rule(pickup, "record the override", "proposal Planning decisions or `spec.md`")
+    assert "intent decision" not in flat(pickup)

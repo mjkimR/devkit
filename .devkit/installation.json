@@ -1131,7 +1131,7 @@
     },
     ".agents/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "a6178253753e4dfc811bf93e1fe75cf176d2b97b10e3dbb4e56c0778e5754ac4"
+      "sha256": "e070236b8840deee82e8d7100284f39a8b52c527860a3ccb2b33ecc4da683b35"
     },
     ".agents/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1223,7 +1223,7 @@
     },
     ".agents/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "865e2ec6af2aef4c4879968a250380c7d754f1812220c131c5ae9ff571b722ef"
+      "sha256": "7963e4c58eb82912352ccda5b78f282cca9f46345f952b7ee4e832d1d7804479"
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
@@ -1419,7 +1419,7 @@
     },
     ".claude/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "a6178253753e4dfc811bf93e1fe75cf176d2b97b10e3dbb4e56c0778e5754ac4"
+      "sha256": "e070236b8840deee82e8d7100284f39a8b52c527860a3ccb2b33ecc4da683b35"
     },
     ".claude/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1507,7 +1507,7 @@
     },
     ".claude/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "865e2ec6af2aef4c4879968a250380c7d754f1812220c131c5ae9ff571b722ef"
+      "sha256": "7963e4c58eb82912352ccda5b78f282cca9f46345f952b7ee4e832d1d7804479"
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
@@ -2171,7 +2171,7 @@
     },
     ".devkit/managed/spec/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "a6178253753e4dfc811bf93e1fe75cf176d2b97b10e3dbb4e56c0778e5754ac4"
+      "sha256": "e070236b8840deee82e8d7100284f39a8b52c527860a3ccb2b33ecc4da683b35"
     },
     ".devkit/managed/spec/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -2259,7 +2259,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "865e2ec6af2aef4c4879968a250380c7d754f1812220c131c5ae9ff571b722ef"
+      "sha256": "7963e4c58eb82912352ccda5b78f282cca9f46345f952b7ee4e832d1d7804479"
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
