@@ -290,7 +290,7 @@ def test_list_prints_the_selection_without_running(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
     lines = invoke(affected, monkeypatch, ["docs/x.md"], "--list", "--base", "dev")
-    assert lines[0] == "[TEST_SELECTION: mode=partial base=dev changed=1 paths=6 reason=docs/]"
+    assert lines[0] == "[TEST_SELECTION: mode=partial base=dev changed=1 paths=7 reason=docs/]"
     assert lines[1:] == [f"[TEST_PATH: {path}]" for path in affected.select(ROOT, ["docs/x.md"]).paths]
     assert command == []
 
