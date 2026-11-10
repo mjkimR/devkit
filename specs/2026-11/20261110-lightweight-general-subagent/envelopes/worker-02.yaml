@@ -1,0 +1,37 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T10:49:33.094306Z'
+status: completed
+summary: 'Resumed at review-refine after Host recovery 0b0a57f0: code-reviewer PASS (P3 test gap fixed, Host-owned P3 waived), reconcile.md written and verified by reconcile-reviewer plus a self-verified round 2, one feedback recorded, final change report committed.'
+findings: []
+unverified_areas:
+- 'Manual first-call token check: pending Host evidence in a fresh session after landing; after-measurement missing, baseline is the Planning measurement in first-call-tokens.md'
+- Live role-worker behavior on Codex (emulated) and Antigravity (unverified); only projection shape is tested
+checks:
+  sync_start: PASS exit=0
+  lint-check: PASS
+  check: PASS 0 errors
+  rules-check: PASS
+  test-affected: PASS 318 passed
+  test-affected-e2e: PASS 3/3
+  test-dist: PASS 1358
+  sync_check: PASS
+  generated_check: PASS stale=0
+diff_scope:
+  base: 0b0a57f0c8ca585d375f9c6b03269c9b71f1331e
+  head: 58f3963638b6344257f9cb719248bbcc49122a79
+scope_extensions:
+- path: docs/development/reference/distribution.md
+  task: 1
+  reason: restates the devkit bundle contents of CAP-DIST-content-packages
+  requirements:
+  - AC-01
+  - AC-02
+- path: packages/devkit/tests/integration/bundles/authoring/test_bundle.py
+  task: 3
+  reason: test mirror of the skill-authoring playbook for its AC-07 check
+  requirements:
+  - AC-07
+activity_effort: medium
