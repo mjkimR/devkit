@@ -25,5 +25,11 @@ id = "in-repo-bundle"
 kind = "instruction"
 source = "instructions/in-repo-bundle.md"
 
+# A neutral, tool-limited general subagent that other bundles' skills delegate role files to.
+[[assets]]
+id = "role-worker"
+kind = "subagent"
+source = "subagents/role-worker.md"
+
 [presets.core]
-assets = ["consumption", "resource-kinds", "in-repo-bundle"]
+assets = ["consumption", "resource-kinds", "in-repo-bundle", "role-worker"]

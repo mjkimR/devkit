@@ -1,16 +1,16 @@
 ---
-id: PADR-role-worker-subagent
+id: ADR-role-worker-subagent
 title: Shared role-worker subagent for skill-local roles
 summary: "For skill-local role delegation, we ship a tool-limited role-worker subagent in the auto-selected devkit bundle and assign it statically per role, to cut each child's fixed context by about half, accepting one listing line in every consumer and a widened devkit-bundle contract."
-proposal: PROP-lightweight-general-subagent
+proposal: SPEC-lightweight-general-subagent
 supersedes: [ADR-skill-local-research-roles, ADR-package-ownership-and-release-version]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-role-worker-subagent] Shared role-worker subagent for skill-local roles
+# [ADR-role-worker-subagent] Shared role-worker subagent for skill-local roles
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 
 ---
@@ -20,7 +20,7 @@ created_at: 2026-11-10
 Skill-local roles (deep-research, app-uiux-improve, design-explore) pass a role file to a general subagent so that no
 role metadata enters global context. On Claude Code that subagent is `general-purpose`, which receives every tool,
 MCP tools included. It starts each child at about 36k input tokens, while subagents with a restricted tool list start
-at 11k to 16k on the same machine (`PROP-lightweight-general-subagent` materials). A per-role registered subagent
+at 11k to 16k on the same machine ([first-call-tokens.md](../../materials/2026-11/20261110-lightweight-general-subagent/first-call-tokens.md)). A per-role registered subagent
 would cut the load but expose role descriptions outside explicit invocation. The `devkit` bundle, the only
 auto-selected `devkit-dist` bundle that fits, is limited to distribution guidance with instructions only.
 
@@ -47,14 +47,15 @@ exposes no role or skill name and arrives wherever `devkit-dist` syncs, with the
 
 - The `devkit` bundle's `core` preset ships the `role-worker` subagent. Its Claude Code block allows only Read, Grep,
   Glob, Bash, Edit, Write, WebSearch, WebFetch and Agent; its Codex block is emulated with workspace-write and its
-  Antigravity block is unverified. → CAP-DIST-agent-projections (planned)
+  Antigravity block is unverified. → `CAP-DIST-agent-projections`
 - `role-worker` reads the role file its prompt names and follows it as the assignment contract; without one, it
-  treats the prompt as the assignment.
+  treats the prompt as the assignment. → `CAP-DIST-agent-projections` (Shared General Subagent, rule 2)
 - A skill's instructions assign the subagent type per role or assignment: `role-worker` by default, and
   `general-purpose` for an assignment that needs a capability outside the `role-worker` tool list, such as
   interacting with a running UI. This is a fixed mapping, not a runtime fallback. → `CAP-DLV-deep-research` rule 11
-  (MUST)
+  (MUST), `CAP-DLV-uiux-improvement` rule 7, `CAP-DLV-design-exploration` rule 3, `CAP-HARN-agent-guidance`
 - A caller that cannot find `role-worker` stops that delegation and reports the missing subagent and its cause.
+  → `CAP-DLV-deep-research` rule 11, `CAP-DLV-uiux-improvement` rule 7, `CAP-DLV-design-exploration` rule 3
 - The `devkit` bundle holds distribution guidance and general subagents that other bundles share.
 
 Supersedes in part `ADR-skill-local-research-roles`: the clause that a general subagent receives the selected role path and bounded assignment.

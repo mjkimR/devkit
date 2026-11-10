@@ -40,7 +40,9 @@ Expected return and relevant source location or finding with limits:
 Research bound / stop condition:
 ```
 
-Spawn a general subagent for the selected role; instruct it to read the assigned role file before acting.
+Spawn a `role-worker` subagent for every selected role; instruct it to read the assigned role file before acting.
+If `role-worker` is unavailable, stop that delegation and report the missing subagent and its cause, such as a
+deselected `devkit` bundle or a host without its projection; never spawn another subagent type in its place.
 Use a fresh context without parent conversation inheritance when the host supports that choice; pass only the
 assignment and relevant sources. If inheritance cannot be disabled, report that context limitation.
 Keep the role file readable within the assignment's read boundaries.

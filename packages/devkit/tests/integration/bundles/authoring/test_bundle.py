@@ -13,6 +13,7 @@ from devkit_agt.features.rules import resolve_managed_rules
 from devkit_dist.cli import cli
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.project.repositories.receipt import load_receipt
+from distsupport.guidance import assert_rule
 from testsupport.rules import write
 
 PACKAGE = Path(__file__).parents[4]
@@ -74,6 +75,15 @@ def consumer(tmp_path: Path) -> Path:
     root.mkdir()
     _run("add", "authoring", "--workspace-root", str(root))
     return root
+
+
+def test_skill_local_roles_default_to_role_worker() -> None:  # SPEC-lightweight-general-subagent AC-07
+    text = (BUNDLE / "playbooks/skill-authoring/references/roles.md").read_text()
+    assert_rule(text, "skill-local role", "`role-worker` subagent", "read that file first")
+    assert_rule(text, "per role or assignment", "`role-worker` by default", "outside", "`general-purpose`")
+    assert_rule(text, "`role-worker` is unavailable", "stop that delegation", "its cause", "never", "runtime fallback")
+    assert_rule(text, "commit authority or worktree ownership", "builder", "instead of `role-worker`")
+    assert "tell a general subagent" not in text
 
 
 def test_add_deploys_both_presets_and_the_playbooks_are_searchable(consumer: Path) -> None:

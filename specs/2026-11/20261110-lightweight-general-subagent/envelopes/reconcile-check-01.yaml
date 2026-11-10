@@ -1,0 +1,40 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T10:46:02.353062Z'
+status: completed
+summary: 'reconcile-reviewer (nested, fresh context) verified 8 targets against 39f653c8..0f4a7b0c: all match AC-01..AC-07 and every changed asset has a target; two P2 imprecisions in CAP-DIST-agent-projections and two P3 trace and reasoning improvements.'
+findings:
+- issue: CAP-DIST-agent-projections Shared role worker rule 1 states unconditionally that role-worker is projected with no model or effort field, while a project-selected level still adds them
+  evidence: docs/capabilities/distribution/CAP-DIST-agent-projections.md:122-124; docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md:175
+  failure_condition: A consumer selecting a subagent level gets model and effort fields in role-worker projections, contradicting rule 1 read alone
+  suggested_action: 'Reword rule 1: the contract authors no level, model or effort field, so its model follows section 3'
+  resolution: open
+  severity: P2
+- issue: CAP-DIST-agent-projections rule 2 omits that the child follows the named role file as the assignment contract and stops with the cause when that file is missing or unreadable
+  evidence: docs/capabilities/distribution/CAP-DIST-agent-projections.md:125-127; packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/subagents/role-worker.md:29-30
+  failure_condition: A caller or skill author using the capability as the contract cannot learn that a bad role path ends in stop-and-report
+  suggested_action: Extend rule 2 with the assignment-contract and missing-role-file stop clauses
+  resolution: open
+  severity: P2
+- issue: 'ADR-role-worker-subagent traces are imprecise: the static-mapping clause points only to CAP-DLV-deep-research rule 11, which has no running-UI exception, and the role-file and missing-role-worker clauses have no trace'
+  evidence: docs/decisions/2026-11/20261110-role-worker-subagent.md:51-57
+  failure_condition: A reader following the trace arrows to the general-purpose exception or stop-and-report rule lands on a rule that has neither
+  suggested_action: 'Repair the traces only: clause 2 to CAP-DIST-agent-projections rule 2, clause 3 also to the uiux, design-exploration and agent-guidance rules, clause 4 to the three CAP-DLV rules'
+  resolution: open
+  severity: P3
+- issue: reconcile.md no-impact reasoning claims all three use cases have a delegation-unavailable report-missing-coverage extension; only UC-research 4b has one, and its permitted-equivalent wording needs the CAP-DLV exclusion noted
+  evidence: specs/2026-11/20261110-lightweight-general-subagent/reconcile.md:43-47; docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md:43; docs/usecases/delivery/UC-explore-a-design-problem.md:38
+  failure_condition: A later reader cannot find the cited extension for two use cases, or reads permitted equivalent as allowing a general-purpose fallback
+  suggested_action: Cite UC-research 4b, UC-improve 3b and UC-explore 3a with their minimal guarantees, and note that the CAP-DLV rules exclude another subagent type
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native nested reconcile-reviewer subagent; required at medium because the change is cross-component'
+unverified_areas:
+- Reviewer did not rerun checks; relied on worker results at 0f4a7b0c and earlier
+checks: {}
+diff_scope:
+  base: 39f653c8c6d2d2ebbdf8e5d4af378d92e3c90b2a
+  head: 0f4a7b0cb47696eb2064586f35762c84ac739c70

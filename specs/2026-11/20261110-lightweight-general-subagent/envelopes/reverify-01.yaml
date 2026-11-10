@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T10:25:57.683041Z'
+status: completed
+review: review-01.yaml
+summary: 'Developer verified finding 1 fixed at 50ce2163: the projection test asserts commandExecutionPolicy sandbox and AC-01 names it; finding 2 is Host-owned and routed to the Host.'
+findings:
+- issue: CAP-DIST-agent-projections Shared role worker rule cites a test for the status and native settings above, but the test never asserts the Antigravity commandExecutionPolicy sandbox setting
+  evidence: docs/capabilities/distribution/CAP-DIST-agent-projections.md:121; packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py:90
+  failure_condition: Removing or changing commandExecutionPolicy in role-worker.md's Antigravity block breaks the documented rule while test_guide_bundle.py still passes
+  suggested_action: Assert antigravity commandExecutionPolicy == sandbox in test_role_worker_projects_for_every_host_with_inherited_model
+  resolution: resolved
+  severity: P3
+- issue: Host-owned recovery commit 0b0a57f0 changes packages/devkit/tests/integration/bundles/harness/test_bundle.py, outside the initial write scope and every task boundary, with no scope-extension annotation; its authority is recorded only in envelopes/resolution-01.yaml. The change is necessary and does not weaken the test.
+  evidence: packages/devkit/tests/integration/bundles/harness/test_bundle.py:126; specs/2026-11/20261110-lightweight-general-subagent/envelopes/resolution-01.yaml:9
+  failure_condition: A final Host or inspect comparison of touched paths against task boundaries and typed records finds a changed path no annotation or worker record covers
+  suggested_action: Keep the change; the Host names the Host-authorized path as a mechanical consequence of the approved core-preset change in its final scope record
+  resolution: waived
+  waiver: Host-owned recovery commit 0b0a57f0; the worker may not edit that path, and the Host records its authority in its final scope report
+  severity: P3
+checks:
+  tests: PASS test_guide_bundle.py 11/11 at 50ce2163
+  lint: PASS just lint-check
+diff_scope:
+  base: 0b0a57f0c8ca585d375f9c6b03269c9b71f1331e
+  head: 50ce2163d5808a41884495aa291254599e38a4ae
+activity_effort: medium

@@ -11,8 +11,15 @@
 
 ## Write the delegation instructions
 
-- For a skill-local role, route the task to one role file and tell a general subagent to read that file first;
+- For a skill-local role, route the task to one role file and tell a `role-worker` subagent to read that file first;
   pass its absolute installed path without loading every role body into the coordinator.
+- Name the subagent type per role or assignment in the delegation instructions, `role-worker` by default. If a role
+  or assignment needs a capability outside the `role-worker` tool list, such as interacting with a running UI, name
+  the host's general subagent (`general-purpose` on Claude Code) for it instead.
+- If `role-worker` is unavailable, tell the coordinator to stop that delegation and report the missing subagent and
+  its cause; never write a runtime fallback to another subagent type.
+- If the child holds commit authority or worktree ownership, such as adaptive-dev's builder role, keep the
+  delegation the skill defines instead of `role-worker`.
 - For a registered role, use the host's registered-role invocation so its execution settings apply.
 - Supply the child with its goal, relevant sources, read/write boundaries, permitted actions, stop condition and
   expected return; make its assigned role file readable within those boundaries.

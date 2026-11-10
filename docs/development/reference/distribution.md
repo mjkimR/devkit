@@ -278,7 +278,8 @@ error's `fix`, never in its message. The others are `DistributionError` subclass
 
 `devkit-dist` ships a bundle named `devkit` so that the guidance about devkit travels with the CLI version it
 describes: a constitution (`AGENTS.md`) with the consumption contracts and three instructions, delivered through
-`devkit get-context devkit`. It describes distribution only and names no harness command as a directive. It is
+`devkit get-context devkit`, and the `role-worker` subagent that other bundles' skills delegate skill-local role
+files to (`CAP-DIST-agent-projections`). It names no harness command as a directive. It is
 auto-selected with its default and only preset, `core`, which adds nothing to `AGENTS.md`; `uv run devkit remove
 devkit` opts out. The sources live in `packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/` and are the
 consumer-facing mirror of these documents; keep them in step.
@@ -288,6 +289,7 @@ consumer-facing mirror of these documents; keep them in step.
 | `consumption` | Using, changing or troubleshooting devkit-managed assets: context loading, playbooks, overrides, selection and the sync/receipt lifecycle. |
 | `resource-kinds` | Adding a rule, skill, subagent, instruction, playbook, workflow or gate: the decision tree and comparison of asset kinds. |
 | `in-repo-bundle` | Adding repository-specific assets: shipping them as a bundle installed from the same repository. |
+| `role-worker` (subagent) | Projected for every host, not read through `get-context`: the tool-limited child a skill names for a skill-local role file. |
 
 `devkit-agt` ships the `harness` bundle (`CAP-DIST-content-packages`), auto-selected wherever it is installed: a
 constitution with the rules-and-gates and snapshot-gate contracts and the guidance for the harness. Its default

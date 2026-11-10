@@ -18,6 +18,8 @@ aliases:
 
 # [ADR-package-ownership-and-release-version] Package ownership, namespaces and the single release version
 
+Superseded in part by `ADR-role-worker-subagent`: the clause that the `devkit` bundle keeps only distribution guidance.
+
 Superseded in part by `ADR-selective-package-versions`: the Single release version clauses and only the same-version qualifiers in the foundation, MCP runtime and harness dependency clauses. All other decisions remain in force.
 
 - **Status**: Accepted

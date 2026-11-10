@@ -19,7 +19,7 @@ Run only when the user explicitly invokes this entry; never suggest or start it 
 1. Read the supplied question, sources and documents. Read an earlier run directory or retained material only when the user names it as an input source.
 2. Recover the requested deliverable, intended use, known constraints, actual decisions and stop condition; ask only a missing decision that changes the research target.
 3. Read `references/orchestration.md` before allocating an investigation or comparing candidate directions.
-4. When delegating, select one role file under `roles/` through the orchestration reference; send its absolute path to a general subagent and instruct it to read that file first.
+4. When delegating, select one role file under `roles/` through the orchestration reference; send its absolute path to a `role-worker` subagent and instruct it to read that file first.
 5. Choose a bounded next investigation from the missing evidence; use optional roles only where separate context adds useful coverage. Read `references/workspace.md` before allocating scratch work or promoting its results.
 6. If a bounded missing question benefits from user-mediated cloud research or the user requests it, read `references/cloud-handoff.md` before preparing a request or incorporating a returned report. Cloud work is optional within this invoked investigation.
 7. Review actual role returns and their inspected evidence; reopen sources only for consequential gaps, contradictions or suspect support, then revise, combine or stop assignments.

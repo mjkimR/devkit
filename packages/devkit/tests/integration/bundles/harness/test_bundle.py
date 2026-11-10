@@ -6,6 +6,7 @@ It is auto-selected and built in wherever devkit-agt is installed (``ADR-dist-bu
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tomllib
 from importlib import resources
@@ -122,12 +123,13 @@ def test_an_override_of_a_moved_asset_stops_applying_and_is_recreated_in_harness
     shutil.copytree(_devkit_root(), old)
     shutil.copy(BUNDLE / "instructions/devkit-run.md", old / "instructions/devkit-run.md")
     manifest = old / "bundle.toml"
+    # Append devkit-run to whatever the core preset lists now, so a later devkit asset does not break the fixture.
+    text, count = re.subn(
+        r"(\[presets\.core\]\nassets = \[[^\]]*)\]", r'\1, "devkit-run"]', manifest.read_text(), count=1
+    )
+    assert count == 1
     manifest.write_text(
-        manifest.read_text().replace(
-            'assets = ["consumption", "resource-kinds", "in-repo-bundle"]',
-            'assets = ["consumption", "resource-kinds", "in-repo-bundle", "devkit-run"]',
-        )
-        + '\n[[assets]]\nid = "devkit-run"\nkind = "instruction"\nsource = "instructions/devkit-run.md"\n'
+        text + '\n[[assets]]\nid = "devkit-run"\nkind = "instruction"\nsource = "instructions/devkit-run.md"\n'
     )
     target = tmp_path / "consumer"
     target.mkdir()

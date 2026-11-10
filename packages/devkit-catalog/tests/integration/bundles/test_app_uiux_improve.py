@@ -110,6 +110,13 @@ def test_entry_preserves_improvement_scope_and_consumer_authority() -> None:  # 
     assert_rule(orchestration, "fresh context without parent conversation inheritance")
     assert_rule(orchestration, "fresh children are unavailable", "inline", "not independent contexts")
     assert_rule(orchestration, "keep peer conclusions out", "first-pass payloads")
+    # AC-05 of SPEC-lightweight-general-subagent: subagent type per assignment, no runtime fallback.
+    assert_rule(orchestration, "interacts with a running UI", "`general-purpose`", "outside `role-worker`")
+    assert_rule(orchestration, "`role-worker` subagent for every other assignment")
+    assert_rule(
+        orchestration, "`role-worker` is unavailable", "stop that delegation", "its cause", "never spawn another"
+    )
+    assert "general subagent with" not in orchestration
     assert_rule(orchestration, "failed or missing role", "no findings")
     critic = (SKILL / "roles/critic.md").read_text()
     assert_rule(critic, "zero findings", "none are supported")

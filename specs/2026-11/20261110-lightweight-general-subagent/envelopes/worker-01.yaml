@@ -1,0 +1,44 @@
+kind: worker
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T09:37:59.573151Z'
+status: failed
+summary: Specified the unit and implemented all three tasks (role-worker contract in devkit core, static subagent assignment in deep-research, app-uiux-improve and design-explore, role-worker default in skill-authoring roles.md) with Living Spec updates; stopped before review because one existing test outside the write scope encodes the old devkit core preset.
+findings: []
+assumptions:
+- Antigravity block carries commandExecutionPolicy sandbox following swarm-worker
+unverified_areas:
+- 'code-reviewer and reconcile-reviewer not run: the run stopped on the problem before review-refine'
+- 'manual first-call token check: pending Host evidence in a fresh session after landing'
+checks:
+  sync_start: PASS exit=0
+  lint-check: PASS
+  check: PASS pyright 0 errors
+  rules-check: PASS
+  test-affected: FAIL 317/318 packages/devkit/tests/integration/bundles/harness/test_bundle.py::test_an_override_of_a_moved_asset_stops_applying_and_is_recreated_in_harness
+  test-affected-e2e: PASS 3/3
+  test-dist: PASS 1358/1358
+  sync_check: PASS exit=0
+  generated_check: PASS stale=0
+diff_scope:
+  base: 39f653c8c6d2d2ebbdf8e5d4af378d92e3c90b2a
+  head: da209308e9d5eddc6071cff6ccdf375bac00413c
+scope_extensions:
+- path: docs/development/reference/distribution.md
+  task: 1
+  reason: restates the devkit bundle contents of CAP-DIST-content-packages
+  requirements:
+  - AC-01
+  - AC-02
+- path: packages/devkit/tests/integration/bundles/authoring/test_bundle.py
+  task: 3
+  reason: test mirror of the skill-authoring playbook for its AC-07 check
+  requirements:
+  - AC-07
+problem:
+  cause: test_an_override_of_a_moved_asset_stops_applying_and_is_recreated_in_harness in packages/devkit/tests/integration/bundles/harness/test_bundle.py builds an old devkit bundle by string-replacing the literal core preset line assets = [consumption, resource-kinds, in-repo-bundle]; the approved role-worker addition changes that line, the replace no longer matches and the test fails with SelectionError. The file is a harness-bundle test in devkit-agt, outside the write scope and not adjacent to a declared root, so it needs Host authority.
+  attempts:
+  - 'Checked whether the devkit bundle manifest could keep the literal: presets cannot compose and any reordering or extra asset changes the line; no in-scope fix exists. All other required checks pass.'
+  recovery: Grant packages/devkit/tests/integration/bundles/harness/test_bundle.py and change the fixture replacement at lines 127-128 to match assets = [consumption, resource-kinds, in-repo-bundle, role-worker] and append devkit-run to it; then rerun just test-affected and continue at review-refine with the code-reviewer and reconcile-reviewer.
+activity_effort: medium

@@ -137,7 +137,7 @@ Bundles registered by either wheel are built in (`builtin` in `devkit list` and 
 
 | Bundle | Wheel | Selection | Contents |
 | --- | --- | --- | --- |
-| `devkit` | `devkit-dist` | Auto-selected (`core`, its only preset) | The consumption contracts and instructions of distribution; it names no harness command as a directive, and describes rule, gate and workflow assets only as kinds it deploys. |
+| `devkit` | `devkit-dist` | Auto-selected (`core`, its only preset) | The consumption contracts and instructions of distribution, and the `role-worker` general subagent that other bundles share (`CAP-DIST-agent-projections`); it names no harness command as a directive, and describes rule, gate and workflow assets only as kinds it deploys. |
 | `advisory` | `devkit-dist` | Auto-selected (`core`); opt-in `python` | The Agent Advisory Protocol guides; `python` adds the library guide and `RULE-advisory-unique-code`. |
 | `git-commits` | `devkit-dist` | Opt-in | Commit message conventions and their `AGENTS.md` pointer. |
 | `harness` | `devkit-agt` | Auto-selected (`core`); opt-in `run`; `harness = false` opts out | The constitution with the rules-and-gates contract and the snapshot-gate contract (snapshot gates trust the committed receipt), the instructions `harness-consumption` (configuration tables of the engines, workflows, rules and commit gates), `harness-assets` (running and testing rule, gate and workflow assets, rules of an in-repository bundle in Git snapshot gates) and `devkit-run`; the `run` preset adds the `run-pointer` guidance line. |

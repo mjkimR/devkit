@@ -121,6 +121,10 @@ def test_optional_local_assignments_and_evidence_boundaries() -> None:  # AC-03,
     assert_rule(text, "failed or missing role", "missing coverage", "not agreement")
     assert_rule(text, "self-contained assignment", "hard constraints", "absolute read/write boundaries", "stop")
     assert_rule(text, "wait for actual returns")
+    # AC-06 of SPEC-lightweight-general-subagent: role-worker per role, running-UI exception, no runtime fallback.
+    assert_rule(text, "absolute installed path to a `role-worker` subagent", "running UI", "`general-purpose`")
+    assert_rule(text, "`role-worker` is unavailable", "stop that delegation", "its cause", "never spawn another")
+    assert "general child" not in text
     researcher = (SKILL / "roles/reference-researcher.md").read_text()
     assert_rule(researcher, "precise source links", "separate inference from evidence")
     assert_rule(researcher, "access is refused", "stop", "without another access route")

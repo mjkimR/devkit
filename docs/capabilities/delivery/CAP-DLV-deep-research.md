@@ -69,7 +69,7 @@ citation. `ADR-skill-local-research-roles` owns skill-local role distribution.
     no investigation requires all roles, a fixed team count or a role sequence.
 11. **Role boundaries**: WHEN a role is invoked, the coordinator MUST supply one goal, absolute boundaries,
     source/artifact identity, permitted actions, stop condition and expected output before verifying the actual
-    return. The coordinator MUST spawn a general subagent with the selected role file path and instruct it to read that file first. It MUST use a fresh context without parent conversation inheritance where supported and otherwise report that limitation. Role documents confer no native tool or sandbox settings; the role reports actual host limits. Test:
+    return. The coordinator MUST spawn a `role-worker` subagent (`CAP-DIST-agent-projections`) for every role with the selected role file path and instruct it to read that file first; IF `role-worker` is unavailable, THEN it MUST stop that delegation and report the missing subagent and its cause instead of spawning another type (`ADR-role-worker-subagent`). It MUST use a fresh context without parent conversation inheritance where supported and otherwise report that limitation. Role documents confer no native tool or sandbox settings; the role reports actual host limits. Test:
     `test_roles_keep_optional_execution_and_coordinator_material_ownership`.
 12. **Independent alternatives**: WHILE direction is open, the coordinator SHOULD develop materially different
     premises independently before sharing peer conclusions, then compare them under relevant common criteria.

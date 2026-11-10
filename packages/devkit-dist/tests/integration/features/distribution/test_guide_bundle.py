@@ -1,7 +1,9 @@
-"""The ``devkit`` guide bundle shipped inside devkit-dist: distribution guidance only.
+"""The ``devkit`` guide bundle shipped inside devkit-dist: distribution guidance and shared general subagents.
 
 The harness guidance (rules, gates, workflows, ``devkit run``) ships with devkit-agt in the ``harness`` bundle
-(``ADR-dist-bundles-compatibility``), so a standalone installation deploys no directive it cannot follow.
+(``ADR-dist-bundles-compatibility``), so a standalone installation deploys no directive it cannot follow. The
+``role-worker`` subagent is the tool-limited child other bundles' skills delegate role files to
+(``ADR-role-worker-subagent``).
 """
 
 from __future__ import annotations
@@ -12,8 +14,10 @@ from importlib import resources
 from pathlib import Path
 
 import pytest
+import yaml
 from devkit_dist.features.distribution.models.errors import SelectionError
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_dist.features.distribution.services.bundles.subagents import projection_path, read_contract
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.usecases.context import GetContext
@@ -21,6 +25,9 @@ from devkit_dist.features.distribution.usecases.sync import sync_project
 from distsupport.guidance import assert_rule
 
 INSTRUCTIONS = ["consumption", "in-repo-bundle", "resource-kinds"]
+SUBAGENTS = ["role-worker"]
+CLAUDE_TOOLS = ["Read", "Grep", "Glob", "Bash", "Edit", "Write", "WebSearch", "WebFetch", "Agent"]
+ANTIGRAVITY_TOOLS = ["view_file", "grep_search", "replace_file_content", "run_command"]
 # Commands of devkit-agt: never a directive of this bundle.
 HARNESS_COMMANDS = ("devkit rules", "devkit gate", "devkit workflow", "devkit run", "devkit worktree")
 
@@ -31,13 +38,14 @@ def _root() -> Path:
     return path
 
 
-def test_guide_bundle_is_valid_and_its_default_is_instruction_only() -> None:
+def test_guide_bundle_is_valid_and_its_default_holds_instructions_and_shared_subagents() -> None:  # AC-02
     bundle = load_bundle(_root())
     assert bundle.name == "devkit"
     assert bundle.default_preset == "core" and bundle.auto_select
     assert bundle.preset_names == ["all", "core"]
-    assert bundle.select(["core"]) == set(INSTRUCTIONS) == {asset.id for asset in bundle.assets}
-    assert {asset.kind for asset in bundle.assets} == {"instruction"}  # nothing in AGENTS.md
+    assert bundle.select(["core"]) == set(INSTRUCTIONS + SUBAGENTS) == {asset.id for asset in bundle.assets}
+    kinds = {asset.id: asset.kind for asset in bundle.assets}
+    assert kinds == {**dict.fromkeys(INSTRUCTIONS, "instruction"), **dict.fromkeys(SUBAGENTS, "subagent")}
     assert bundle.constitution is not None
     constitution = bundle.constitution.read_text("utf-8")
     assert len(constitution.splitlines()) <= 100
@@ -46,9 +54,62 @@ def test_guide_bundle_is_valid_and_its_default_is_instruction_only() -> None:
 
 
 def test_the_bundle_names_no_harness_command() -> None:
-    files = [_root() / "AGENTS.md", *sorted((_root() / "instructions").glob("*.md"))]
+    files = [
+        _root() / "AGENTS.md",
+        *sorted((_root() / "instructions").glob("*.md")),
+        *sorted((_root() / "subagents").glob("*.md")),
+    ]
     found = {path.name: [cmd for cmd in HARNESS_COMMANDS if cmd in path.read_text("utf-8")] for path in files}
     assert {name: commands for name, commands in found.items() if commands} == {}
+
+
+def test_role_worker_projects_for_every_host_with_inherited_model(tmp_path: Path) -> None:  # AC-01, AC-02
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"devkit": ["core"]}, agents=["claude-code", "codex", "antigravity"])
+    sync_project(target, [InstalledBundle("devkit-dist", "0.1.0", load_bundle(_root()))])
+    assert (target / ".devkit/managed/devkit/subagents/role-worker.md").is_file()
+    projections = {
+        path.relative_to(target).as_posix()
+        for directory in (".claude/agents", ".codex/agents", ".agents/agents")
+        for path in (target / directory).glob("*")
+    }
+    assert projections == {projection_path(host, "role-worker") for host in ("claude-code", "codex", "antigravity")}
+
+    claude_head, claude_prompt = (target / ".claude/agents/role-worker.md").read_text().split("---\n")[1:]
+    claude = yaml.safe_load(claude_head)
+    assert claude["name"] == "role-worker" and claude["tools"] == CLAUDE_TOOLS
+    assert not {"model", "effort"} & claude.keys()
+    assert "Host projection: native." in claude_prompt
+
+    codex = tomllib.loads((target / ".codex/agents/role-worker.toml").read_text())
+    assert codex["sandbox_mode"] == "workspace-write"
+    assert not {"model", "model_reasoning_effort"} & codex.keys()
+    assert "Host projection: emulated." in codex["developer_instructions"]
+
+    antigravity_head, antigravity_prompt = (target / ".agents/agents/role-worker.md").read_text().split("---\n")[1:]
+    antigravity = yaml.safe_load(antigravity_head)
+    assert antigravity["tools"] == ANTIGRAVITY_TOOLS and antigravity["subagent"] is True
+    assert antigravity["commandExecutionPolicy"] == "sandbox"
+    assert "model" not in antigravity
+    assert "Host projection: unverified." in antigravity_prompt
+
+    # The subagent adds nothing to the root guidance block.
+    assert "role-worker" not in (target / "AGENTS.md").read_text()
+
+
+def test_role_worker_is_neutral_and_follows_the_named_role_file() -> None:  # AC-03
+    contract = read_contract((_root() / "subagents/role-worker.md").read_bytes(), "devkit", "role-worker")
+    assert contract.level is None and contract.skill is None
+    listing = f"{contract.role} {contract.title} {contract.description}".lower()
+    for name in ("research", "uiux", "design", "explore", "critic", "investigator", "devkit", "skill", "bundle"):
+        assert name not in listing, name
+    body = contract.body
+    assert_rule(body, "prompt names a role file", "read it before any other action", "assignment contract")
+    assert_rule(body, "missing or unreadable", "stop")
+    assert_rule(body, "names no role file", "treat the prompt as the assignment")
+    assert_rule(body, "delegate only work that is independent")
+    assert_rule(body, "prefer", "`role-worker`", "fitting dedicated subagent", "over `general-purpose`")
 
 
 def test_the_constitution_keeps_the_distribution_contracts() -> None:
