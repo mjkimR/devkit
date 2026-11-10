@@ -158,7 +158,6 @@ agreement with the diff is unambiguous and no cross-component interpretation rem
 
 | Boundary | Decision |
 | --- | --- |
-| `plan-intent` | Goal and scope; an explicit task instruction supplies it. |
 | `plan-accept` | Proposal direction. |
 | `proposal-handoff` | Start Development and its setup/worktree effects. |
 | `dev-integration` | Land the verified change and perform scoped cleanup. |

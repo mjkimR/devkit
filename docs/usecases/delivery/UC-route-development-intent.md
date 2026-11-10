@@ -5,7 +5,7 @@ summary: "Routes SDD development requests by task-kind, planning-depth and activ
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
-  - User (confirms the classification and answers plan-intent)
+  - User (instructs the task and confirms unresolved classification)
 status: active
 created_at: 2026-10-13
 capabilities:
@@ -45,7 +45,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
    (`CAP-DLV-project-policy`).
 5. The agent creates the spec bundle, bound to the workflow of the task kind, with skeleton documents
    (`CAP-DLV-spec-bundles`).
-6. The agent records `plan-intent` from the user's explicit task instruction (`CAP-DLV-delivery-workflows`).
+6. The agent states the scope authorized by the user's explicit task instruction (`CAP-DLV-delivery-workflows`).
 7. The agent asks the workflow for the next stage and follows the stage, its unmet checks and the skill it names
    (`CAP-DLV-delivery-workflows`).
 
@@ -72,18 +72,18 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   development intake, so the agent runs no playbook search, classifies nothing and creates no Unit; the research
   entry's own skill takes over and work the research later informs starts as ordinary intake
   (`CAP-HARN-agent-guidance`); this routing use case ends.
-- **2a.** The effective policy is invalid (a `[tool.spec]` key outside the table, or a `plan-intent` or main
+- **2a.** The effective policy is invalid (a `[tool.spec]` key outside the table, or a main
   boundary policy other than `ask` or `auto`): the system refuses with `SPEC_CONFIG_INVALID`
   (`CAP-DLV-project-policy`); the agent stops policy-dependent work; the use case ends.
 - **3a.** The task needs nothing settled before implementation (`session` depth): the agent agrees the intent in the
   conversation and follows the stages of `sdd-session-<task-kind>` itself, writing no Unit, envelope, gate record
   file or reconcile document (`CAP-DLV-delivery-workflows`); the use case ends.
 - **3b.** The direction must be decided first (`proposal` depth): the agent creates a draft proposal bound to
-  `sdd-proposal` and records `plan-intent` as the user's confirmation of the draft in Backlog
+  `sdd-proposal` and states the explicitly requested scope and Planning effort in Backlog
   (`CAP-DLV-delivery-workflows`); the use case ends and `UC-plan-and-hand-off-a-proposal` continues.
 - **3c.** The request will not start now, or must be decomposed (it would need two or more specs or a different
   `task_kind`, `size: XL`): the agent keeps it as one or more draft proposals in
-  Backlog, a rough `XL` draft only until it is decomposed before `plan-intent`, optionally assigns an existing milestone at the global or a namespace roadmap root, and preserves the origin in `decomposed_from` or
+  Backlog, a rough `XL` draft only until it is decomposed before Planning, optionally assigns an existing milestone at the global or a namespace roadmap root, and preserves the origin in `decomposed_from` or
   `supersedes` through handoff, without an external tracker (`CAP-HARN-agent-guidance`); the use case ends.
 - **3d.** The change adds no behavior and restructures several areas at once (`overall-refactor`): the agent runs
   `sdd-overall-refactor` in `direct` mode with the user, without a Unit, proposal or spec bundle
@@ -99,19 +99,17 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   written down: the agent creates the bundle bound to `sdd-spec-bugfix`, which holds only `spec.md`; its `reproduce`
   stage stays open until a reproduction is recorded (`CAP-DLV-spec-bundles`, `CAP-DLV-delivery-workflows`); resumes
   at step 6.
-- **6a.** The request leaves the goal, scope, verification, `task-kind` or `planning-depth` unresolved under
-  `plan-intent` policy `ask`: the workflow waits on the human gate, and the agent asks the user and records the answer
-  only after the user's explicit reply (`CAP-DLV-delivery-workflows`); resumes at step 7.
-- **6b.** `plan-intent` policy is `auto`: the gate passes by policy, reported as policy, never as the user's consent
-  (`CAP-DLV-delivery-workflows`); resumes at step 7.
-- **6c.** The user declines the intent: the agent records the decline with the user's reason
-  (`CAP-DLV-delivery-workflows`); the use case ends.
+- **6a.** Goal, scope, verification, kind or depth is unresolved: the agent clarifies it with the user before
+  dependent work (`CAP-DLV-delivery-workflows`); resumes at step 7 after the answer.
+- **6b.** A retired intent approval key is configured: policy inspection warns with SPEC_APPROVAL_KEY_IGNORED and
+  omits it from active policy; no intent gate is requested (`CAP-DLV-project-policy`); resumes at step 7.
+- **6c.** The user withdraws the task instruction: the agent starts no further work; the use case ends.
 - **\*a.** During Development, a `session` task turns out to need a lasting design record, a contract change or a
   Living Spec change: the agent raises the depth to `spec` itself under `depth_escalation=auto`, or after the user's
   confirmation under `ask`, and a worker reports the need as a problem instead (`CAP-HARN-agent-guidance`,
   `CAP-DLV-project-policy`); the agent adds a spec Unit on `dev-<slug>` in the current work environment with no close,
   new slug or new worktree, first starting that branch in the current checkout when it is missing, which carries the
-  uncommitted changes over (`CAP-WT-task-worktrees`), and records the agreed intent and the work so far; resumes at
+  uncommitted changes over (`CAP-WT-task-worktrees`), and records the agreed intent, depth escalation reason and the work so far in `spec.md`; resumes at
   step 7.
 
 ---
@@ -119,8 +117,8 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 ## 4. Postconditions
 
 - **Success guarantee**: The task follows exactly one workflow `sdd-<planning-depth>[-<task-kind>]` (or
-  `sdd-overall-refactor`), named by the bound Unit or, for a session, by the agreement in the conversation. A Unit's
-  `plan-intent` is recorded from an explicit user instruction, the user's explicit answer or `auto` policy. A queued
+  `sdd-overall-refactor`), named by the bound Unit or, for a session, by the agreement in the conversation. The task is
+  authorized only by the explicit instruction; no task-intent approval record is created. A queued
   request exists as a draft proposal with its provenance.
 - **Minimal guarantee**: No approval is inferred. A refused `devkit spec new` leaves the workspace unchanged. A policy
   error stops policy-dependent work. A depth is never lowered except through a proposal's handoff or the user's
@@ -168,9 +166,9 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Then**: the agent runs no `devkit playbook search`, states no classification, and creates no proposal, spec bundle,
   gate record or envelope
 
-### Scenario 3: An invalid intent policy stops routing
+### Scenario 3: An invalid main boundary policy stops routing
 - **Covers**: 2a
-- **Given**: `.devkit/config.toml` sets `[workflow.approvals] plan-intent = "off"`
+- **Given**: `.devkit/config.toml` sets `[workflow.approvals] plan-accept = "off"`
 - **When**: the agent runs `devkit spec policy`
 - **Then**: the command fails with `SPEC_CONFIG_INVALID`, and the agent starts no policy-dependent work
 
@@ -228,28 +226,23 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Then**: the bundle holds only `spec.md`, bound to `sdd-spec-bugfix`, and the `reproduce` stage stays open until a
   `red` envelope records `checks.reproduced`
 
-### Scenario 12: An unresolved intent waits for the user
+### Scenario 12: An unresolved task scope waits for clarification
 - **Covers**: 6a
-- **Given**: `[GATE_POLICY: plan-intent policy=ask source=default]`, a freshly created bundle, and a request that
-  left its verification unresolved
-- **When**: the agent runs `devkit workflow next --unit <dir>`
-- **Then**: the output shows `[WAITING: human gate:plan-intent]`, and the agent records
-  `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user` only after the user's
-  explicit answer
+- **Given**: a task instruction leaves verification unresolved
+- **When**: the agent prepares work
+- **Then**: it clarifies verification before dependent work, without creating an intent approval record
 
-### Scenario 13: Policy satisfies the intent gate
+### Scenario 13: A retired intent setting is ignored visibly
 - **Covers**: 6b
-- **Given**: `[GATE_POLICY: plan-intent policy=auto source=config]` and a freshly created bundle
-- **When**: the agent runs `devkit workflow next --unit <dir>`
-- **Then**: the workflow names the next stage without asking `gate:plan-intent`, and the agent reports the policy as
-  the authority
+- **Given**: configured plan-intent is ask, auto or off
+- **When**: the agent runs `devkit spec policy`
+- **Then**: output omits the retired gate and returns SPEC_APPROVAL_KEY_IGNORED with removal advice
 
-### Scenario 14: A declined intent ends the task
+### Scenario 14: A withdrawn instruction stops further work
 - **Covers**: 6c
-- **Given**: the workflow waits on `gate:plan-intent`
-- **When**: the user rejects the stated intent and the agent runs `devkit workflow answer --unit <dir> --request
-  gate:plan-intent --action decline --by user --note "<reason>"`
-- **Then**: the decline is recorded with the reason, and the agent starts no Development stage
+- **Given**: an instructed task has not begun implementation
+- **When**: the user withdraws the instruction
+- **Then**: the agent starts no Development stage and creates no intent-decline record
 
 ### Scenario 15: A session that needs a contract change is raised to `spec`
 - **Covers**: \*a

@@ -12,8 +12,7 @@ after explicit acceptance or owning policy delegation. Its form follows from the
 It writes ``status: accepted`` (not for a repair) and records ``gate:plan-accept`` through devkit's
 ``record_answer``, so the workflow decides whether ``collect-feedback`` holds, is switched off or is skipped by
 policy; when the workflow does not open the gate it restores ``proposal.md`` byte-for-byte and reports the unmet
-checks and hold reasons. ``check`` runs every check and writes nothing; a missing ``gate:plan-intent`` is then a
-pending condition, not a blocking one. The command never records ``plan-intent``, commits, merges or hands off.
+checks and hold reasons. ``check`` runs every check and writes nothing. The command never commits, merges or hands off.
 """
 
 from __future__ import annotations
@@ -66,7 +65,6 @@ from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.handoff import (
     ACCEPT_GATE,
     ACCEPTED,
-    INTENT_GATE,
     NEEDS_DECOMPOSE,
     TASK_KIND,
     proposal_gates,
@@ -89,7 +87,7 @@ class AcceptResult:
 
     ``status`` is the proposal's status after the command (its current one under ``checked``), ``decision`` the
     ``gate:plan-accept`` record written (``None`` under ``checked``), ``pending`` the conditions a ``checked`` run
-    reports as still to be recorded before the acceptance (``gate:plan-intent``).
+    reports as still to be recorded before the acceptance; retained for result compatibility.
     """
 
     proposal: str
@@ -183,16 +181,10 @@ def _direct_conditions(
     return failed
 
 
-def _not_eligible_fix(slug: str, unit: str, pending: list[str]) -> str:
+def _not_eligible_fix(slug: str) -> str:
     """The ``ProposalNotEligibleError`` fix with this proposal's exact commands."""
-    intent = (
-        f" (record the user's plan-intent with `{DEVKIT} workflow answer --unit {unit} --request {INTENT_GATE} "
-        "--action accept --by user` on the base checkout)"
-        if pending
-        else ""
-    )
     return (
-        f"Report the conditions to the user; on the user's decision resolve them{intent} and rerun, or start Planning "
+        f"Report the conditions to the user; on the user's decision resolve them and rerun, or start Planning "
         f"on {PLANNING_PREFIX}{slug} (`{DEVKIT} worktree start {PLANNING_PREFIX}{slug}`). Never edit the status or the "
         "gate records by hand"
     )
@@ -298,7 +290,6 @@ class AcceptProposalUseCase(BaseUseCase):
         status = text_value(meta.get("status")).lower()
         gates = {gate.request for gate in proposal_gates(bundle, workflow)}
         form = _form(slug, status, direct, ACCEPT_GATE in gates, rel)
-        pending: list[str] = []
         workspace = Workspace(root, lint=None, ancestor=None)
         unit = workspace.resolve_unit(bundle.relative_to(root).as_posix())
         if form == PLANNING:
@@ -313,18 +304,15 @@ class AcceptProposalUseCase(BaseUseCase):
                 )
         else:
             blocking = _direct_conditions(root, bundle, slug, meta, form, workspace, unit)
-            if INTENT_GATE not in gates and workspace.config.policy("plan-intent") != "auto":
-                pending.append(INTENT_GATE)
-            if blocking or (pending and not check):
+            if blocking:
                 raise ProposalNotEligibleError(
                     f"PROP-{slug} is not eligible for a direct acceptance ({form})",
                     *(f"blocking: {item}" for item in blocking),
-                    *(f"pending: {item} is not recorded (the user's explicit answer first)" for item in pending),
                     target_files=[rel],
-                    fix=_not_eligible_fix(slug, bundle.relative_to(root).as_posix(), pending),
+                    fix=_not_eligible_fix(slug),
                 )
         if check:
-            return AcceptResult(f"PROP-{slug}", rel, form, status, True, pending=tuple(pending))
+            return AcceptResult(f"PROP-{slug}", rel, form, status, True)
 
         recorded = _note(meta, form, reason)
         if form != REPAIR:

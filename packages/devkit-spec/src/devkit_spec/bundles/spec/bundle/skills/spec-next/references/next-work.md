@@ -16,8 +16,7 @@ because its branch exists. Recommend; do not start, accept or activate anything.
    2. Then milestone groups: active, ready planned, none; ties by milestone `created_at`, then ID.
    3. Within a group: priority critical/high/medium/low (default high), size S/M/L/XL (default M), draft
       `created_at` (missing sorts last), draft ID.
-4. Recommend the first eligible draft: record an existing explicit task instruction as plan-intent (ask only when
-   intent is unresolved), and offer Planning, a direct acceptance
+4. Recommend the first eligible draft: use the explicit task instruction to start Planning (clarify unresolved intent first), or offer Planning, a direct acceptance
    (`devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`) when its direction is settled,
    or a session reclassification for `session`-depth work (the `spec` skill's `references/backlog.md`). Report as
    Backlog actions: other drafts in unready/done/dropped milestones, `needs_decompose` and `XL` drafts (decompose

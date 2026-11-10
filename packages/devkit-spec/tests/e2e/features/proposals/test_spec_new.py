@@ -199,7 +199,9 @@ def test_a_new_bundle_passes_the_rules_and_starts_its_workflow(tmp_path: Path) -
         assert result.returncode == 0, result.stdout + result.stderr
         payload = json.loads(result.stdout)
         assert payload["workflow"] == ("sdd-spec-bugfix" if "sdd-spec-bugfix" in args else "sdd-spec-feature")
-        assert payload["stage"]["id"] == "intent"
+        assert payload["stage"]["id"] == ("characterize" if "sdd-spec-bugfix" in args else "specify")
+        assert "intent" in payload["done"]
+        assert not any(request["id"] == "gate:plan-intent" for request in payload["requests"])
     result = _devkit(tmp_path, "rules", "check")
     assert result.returncode == 0, result.stdout + result.stderr
 

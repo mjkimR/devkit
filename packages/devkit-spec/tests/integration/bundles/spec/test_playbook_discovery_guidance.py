@@ -86,7 +86,7 @@ def test_confirm_first_offer_silent_no_match_and_recorded_selection() -> None:
     for code in ("NOT_SYNCHRONIZED", "CONFIG_LOCAL_RENDER_STALE", "ARGUMENT_INVALID", "SEARCH_EXTRA_MISSING"):
         assert code in step, code
     assert_rule(step, "lock timeout", "counts as no match", "never run its remediation")
-    assert_rule(reference, "record the playbook id", "`plan-intent` note")
+    assert_rule(reference, "record the playbook id", "`spec.md` or the proposal's Planning decisions")
     assert_rule(reference, "confirmation grants what an explicit invocation grants", "no more")
 
 

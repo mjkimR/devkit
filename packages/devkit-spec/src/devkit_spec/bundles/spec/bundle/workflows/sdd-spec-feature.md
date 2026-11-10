@@ -1,12 +1,11 @@
 ---
 id: sdd-spec-feature
-title: "Spec feature (planning-depth spec, task-kind feature: plan-intent and dev-integration gates)"
+title: "Spec feature (planning-depth spec, task-kind feature: dev-integration gate)"
 status: active
 schema_version: 1
 # dev-integration is asked after the change is final: its approval is passed as `--given dev-integration`, never
 # recorded.
 gates:
-  plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration
 # Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 layout:
@@ -20,8 +19,8 @@ checks:
   - { name: exception-handled, class: human, description: "the cause of the exception was handled by the user" }
 stages:
   - id: intent
-    name: Plan intent
-    human_gate: plan-intent
+    name: Task scope
+    human_gate: false
     entry: []
     exit: [anchor-exists]
     artifacts: [docs/proposals/PROP-<slug>/proposal.md, specs/<YYYY-MM>/<YYYYMMDD>-<slug>/]
@@ -142,7 +141,7 @@ stages:
 
 # Spec feature (`planning-depth` spec, `task-kind` feature)
 
-New or changed behavior whose direction is clear but whose contract (behavior, interface) must be fixed before implementation. Inline Planning creates the spec bundle `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with `devkit spec new <slug>` on the activity branch `dev-<slug>` (the `SPEC-<slug>`, `PLAN-<slug>` and `TASKS-<slug>` skeletons, `spec.md` bound to this workflow) and records `plan-intent` there; that state is the input of Development. A `proposal`-depth task arrives through workflow `sdd-proposal` and `devkit spec proposal handoff` (proposal `task_kind: feature`). Living Spec changes land in the same integration unit before merge.
+New or changed behavior whose direction is clear but whose contract (behavior, interface) must be fixed before implementation. Inline Planning creates the spec bundle `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with `devkit spec new <slug>` on the activity branch `dev-<slug>` (the `SPEC-<slug>`, `PLAN-<slug>` and `TASKS-<slug>` skeletons, `spec.md` bound to this workflow); that state is the input of Development. A `proposal`-depth task arrives through workflow `sdd-proposal` and `devkit spec proposal handoff` (proposal `task_kind: feature`). Living Spec changes land in the same integration unit before merge.
 
 The frontmatter is the only stage definition (`devkit workflow show --unit <dir>`); `devkit workflow next --unit <dir>` names the current stage, what is unmet and the skill to open. This document keeps only the rules the schema cannot express.
 
@@ -156,7 +155,7 @@ The `code-reviewer` and `reconcile-reviewer` roles follow the `activity-effort` 
 
 ## Gate rules
 
-- **`plan-intent` records authorized task intent.** It opens once `spec.md` exists; record it with `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user` when the explicit task instruction already supplies goal, scope, verification, `task-kind` and `planning-depth`; do not ask for the same consent again. Under `auto` the gate passes by policy. A spec handed off from a proposal carries the proposal's `gate:plan-intent` and `gate:plan-accept` records under their own names (`[CARRIED_GATE]`); `plan-intent` is not asked again.
+- The explicit task instruction supplies goal, scope, verification, `task-kind` and `planning-depth`; no intent approval record is created. A handed-off spec retains only the proposal acceptance audit record.
 - **`dev-integration` is per integration unit** (one PR). Under `ask` the user's explicit OK is asserted with `--given dev-integration` on every `next` after it and never recorded, or a runner binds the gate to the PR ready state; under `auto` it passes by policy once the review, reconcile and final change report hold, also at `activity-effort` `low`. `--given lint-ci-clean` and `--given merged` declare runner evidence.
 - **Objections and returns.** A `dev-integration` objection about the change takes the stage's return path; one about direction is a close (`spec` skill). A `devkit workflow return --to <stage>` voids the approvals of that stage and later ones.
 - **Integration is a stage, not a persona.** Its code authority is limited to conflict resolution and the verification that needs; its docs authority is the reflection the approved change requires; neither needs re-approval. It trusts prior review: it re-verifies only what conflict resolution and docs reflection changed, never restarts code review and adds no approval gate. Adopting a new policy is a separate decision.

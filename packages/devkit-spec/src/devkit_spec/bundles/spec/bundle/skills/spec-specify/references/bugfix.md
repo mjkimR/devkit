@@ -1,6 +1,6 @@
 # spec-specify reference: bugfix characterization and evidence
 
-The expected behavior was agreed at `plan-intent`; characterization is Development work under the shared contracts of
+The explicit task instruction states the expected behavior; characterization is Development work under the shared contracts of
 `SKILL.md` §4. `devkit workflow show sdd-spec-bugfix` holds the Red/Green and alternative-evidence rules.
 
 ## Stage `characterize`

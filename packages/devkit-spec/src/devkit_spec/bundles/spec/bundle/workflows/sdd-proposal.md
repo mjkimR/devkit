@@ -1,10 +1,9 @@
 ---
 id: sdd-proposal
-title: "Proposal (planning-depth proposal: plan-intent, review, plan-accept, handoff)"
+title: "Proposal (planning-depth proposal: eligibility, review, plan-accept, handoff)"
 status: active
 schema_version: 1
 gates:
-  plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   plan-accept: { policies: [ask, auto] }  # direction decision, user or owning policy
 # Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 # No `next` list: devkit's handoff cannot move a unit across layouts; `devkit spec proposal handoff` does.
@@ -17,10 +16,10 @@ checks:
   - { name: exception-handled, class: human, description: "the cause of the exception was handled by the user" }
 stages:
   - id: intent-proposal
-    name: Plan intent
-    human_gate: plan-intent
+    name: Task scope
+    human_gate: false
     entry: []
-    # The size gate: `size` absent or exactly S, M or L; an XL draft is decomposed before plan-intent.
+    # The size gate: `size` absent or exactly S, M or L; an XL draft is decomposed before Planning.
     exit: [anchor-exists, frontmatter(proposal.md size S|M|L|)]
     artifacts: [docs/proposals/PROP-<slug>/proposal.md]
     skills: [spec]
@@ -97,19 +96,19 @@ The frontmatter is the only stage definition (`devkit workflow show --unit <dir>
 
 | proposal `status` | stage | who changes it |
 | --- | --- | --- |
-| `draft` | `intent-proposal` | whoever adds the draft, in any activity; `plan-intent` is the user's confirmation of the draft in Backlog |
+| `draft` | `intent-proposal` | whoever adds the draft, in any activity; an explicit task instruction starts Planning after eligibility checks |
 | `reviewing` | `spike`, `collect-feedback`, `direction-handoff` | the executor that starts Planning, on the `plan-<slug>` branch |
 | `accepted` | `plan-accept` passed | `devkit spec proposal accept` after the user's acceptance (Host locally, autohub in `cloud-pr`); from `draft` at a direct acceptance in Backlog |
 | `rejected` | Planning ends | the Host or autohub that received the rejection, status only |
 
-- **Planning starts** only from a draft with `plan-intent` recorded and without `needs_decompose: true`, on its own branch `plan-<slug>`. An `XL` draft cannot get `plan-intent`: the `intent-proposal` exit `frontmatter(proposal.md size S|M|L|)` stays unmet (`detail="size=XL"`), with no request to answer (decompose first: the `spec` skill's `references/backlog.md`, The XL size gate). A draft found to need splitting during Planning goes back to Backlog (the `spec` skill's `references/planning.md` step 1).
-- **Spike** never becomes the current stage on its own: run it whenever the Planning `activity-effort` requires a `challenger` or `scout` (the `spec` skill's `references/effort.md`; `high` rounds follow its `references/review-loop.md`). The Planning effort (`planning_effort` hint in `proposal.md`) is proposed with `plan-intent`. Its materials go under the proposal's `materials/` and move to `docs/materials/` at handoff. Zero findings is a valid spike result.
+- **Planning starts** from an explicitly requested draft without `needs_decompose: true`, on `plan-<slug>`. An `XL` draft keeps the `intent-proposal` size exit unmet (`detail="size=XL"`); read this as "decompose first" (the `spec` skill's `references/backlog.md`, The XL size gate). A draft found to need splitting during Planning returns to Backlog (the `spec` skill's `references/planning.md` step 1).
+- **Spike** never becomes the current stage on its own: run it whenever the Planning `activity-effort` requires a `challenger` or `scout` (the `spec` skill's `references/effort.md`; `high` rounds follow its `references/review-loop.md`). The Planning effort (`planning_effort` hint in `proposal.md`) is stated at intake. Its materials go under the proposal's `materials/` and move to `docs/materials/` at handoff. Zero findings is a valid spike result.
 - **Handoff** has no exit check: once `plan-accept` holds, `next` reports the unit complete (`[STAGE: - complete=yes]`). Merge the Planning branch (a direct acceptance has none), then run `devkit spec proposal handoff <slug>` as Development's first step on `dev-<slug>` (the `spec` skill's `references/worktree.md` §1).
 
 ## Gate rules
 
-- `plan-accept` decides direction and `proposal-handoff` authorizes Development. Everything after handoff belongs to the bound workflow, which carries both records under their own names.
-- **Open questions** in a run's `worker` envelope hold `plan-accept` and the Planning branch's merge until an `answer` envelope answers each (`[PENDING_QUESTION]`); `plan-intent`, passed before, stays passed. Asking and recording: the `spec` skill's `references/worker-records.md`.
+- `plan-accept` decides direction and `proposal-handoff` authorizes Development. Everything after handoff belongs to the bound workflow, which retains the proposal acceptance audit record.
+- **Open questions** in a run's `worker` envelope hold `plan-accept` and the Planning branch's merge until an `answer` envelope answers each (`[PENDING_QUESTION]`). Asking and recording: the `spec` skill's `references/worker-records.md`.
 - **`plan-accept` is the acceptance of the direction** and, when there is a Planning branch, the approval to merge it. Ask and record it for a proposal in review (`status: reviewing`) on its `plan-<slug>` branch, in the Planning's own checkout, or for an eligible draft at a direct acceptance (below); never for a `rejected` one (its Planning has ended). Before requesting it, the Planning executor completes the `spec` skill's `references/planning.md` step 5. The acceptance request shows the proposal's change summary, the decisions made in this Planning, the recommended `dev_effort` for Development, and the effort record: the `activity-effort` of each Planning run (its `worker` envelope, noting any difference from `planning_effort`) and the support-role envelopes present (`challenger`, `scout`, `ux-review`, or none, from `devkit workflow envelope check --unit <dir>`), each `challenger` round with the `reverify` that closes it (`review=` on its line), and each `ux-review` round with its open findings, which the user decides at this gate. When a run's effort required a `challenger` that left no envelope, or a `scout` at `high` that left none, the request names the gap; the user may send the proposal back to `spike`. The gate passes with `devkit spec proposal accept <slug> --by user [--note <text>]`, run after explicit acceptance or owning `plan-accept=auto` delegation (`--by policy`): it writes `status: accepted` and records the gate in one validated step, committed together; never edit the status or the record by hand.
 - **Direct acceptance** (Backlog, no Planning; eligibility and procedure: the `spec` skill's `references/backlog.md`, Direct acceptance): the Host records `plan-accept` on the base checkout with `accept --direct`, without `reviewing`. It has no Planning run, no `activity-effort` and no `worker` envelope, and the request shows "Planning: skipped (direct acceptance)" where a Planning acceptance shows its effort record. The handoff carries its note (`PROP-<slug>: <note>`); a bound proposal without its recorded acceptance is refused at handoff (`SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`).
 - **Rejection changes the status only.** The executor that received it sets `status: rejected` with the user's decision and its reason in the commit message (and in the final merge commit when commits are squashed), rewritten as one English decision sentence naming `user` as the decider and never as a conversation quote, as every record is, closes the last run's open questions in the same commit (`worker-records.md`), and merges per policy. No worker runs, no ADR is written and nothing is deleted then; the later cleanup is what the `[FIX]` of `SPEC_PROPOSAL_REJECTED_PENDING` (listed by `devkit rules check -p hygiene` until then) says: the rejection ADR, then the deletion; the user may invoke the `feedback-hygiene` playbook for it. A `rejected` proposal is never resumed, accepted or started: never answer its `plan-accept`, start another sweep or set it back to `reviewing`, even when `next` shows unmet `collect-feedback` or `direction-handoff` checks.

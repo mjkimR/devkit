@@ -1,4 +1,4 @@
-"""The proposal unit's workflow records at handoff: dropped, and its plan-intent and plan-accept carried by name."""
+"""The proposal unit's workflow records at handoff: dropped, and only its plan-accept carried by name."""
 
 from __future__ import annotations
 
@@ -33,8 +33,16 @@ def _proposal(root: Path, slug: str) -> Path:
     """A bundle bound to ``sdd-proposal`` whose spec follows the gated ``sdd-spec-feature``; returns its
     proposal.md."""
     write_workflow(root, "sdd-proposal", PROPOSAL_WORKFLOW)
-    write_workflow(root, "sdd-spec-feature", GATED.format(id="sdd-spec-feature", middle=""))
-    write_workflow(root, "sdd-spec-bugfix", GATED.format(id="sdd-spec-bugfix", middle=CHARACTERIZE))
+    write_workflow(
+        root,
+        "sdd-spec-feature",
+        GATED.format(id="sdd-spec-feature", middle="").replace("human_gate: plan-intent", "human_gate: false"),
+    )
+    write_workflow(
+        root,
+        "sdd-spec-bugfix",
+        GATED.format(id="sdd-spec-bugfix", middle=CHARACTERIZE).replace("human_gate: plan-intent", "human_gate: false"),
+    )
     created = create_proposal(root, slug, today=TODAY)
     return root / created.path
 
@@ -107,7 +115,7 @@ def test_records_alone_create_no_materials_directory(workspace: Path) -> None:
     assert len(result.dropped_records) == 2
 
 
-def test_carries_plan_intent_and_plan_accept_under_their_names(workspace: Path) -> None:
+def test_carries_only_plan_accept_and_drops_historical_intent(workspace: Path) -> None:
     accept(_proposal(workspace, "carry"))
     _answered(workspace, "carry")
 
@@ -115,12 +123,10 @@ def test_carries_plan_intent_and_plan_accept_under_their_names(workspace: Path) 
 
     spec = f"specs/{MONTH}/{STAMP}-carry"
     assert result.carried_gates == [
-        CarriedGate("gate:plan-intent", f"{spec}/decisions/01-gate-plan-intent.yaml"),
-        CarriedGate("gate:plan-accept", f"{spec}/decisions/02-gate-plan-accept.yaml"),
+        CarriedGate("gate:plan-accept", f"{spec}/decisions/01-gate-plan-accept.yaml"),
     ]
     records = _spec_records(workspace, "carry")
     assert [(r["request"], r["action"], r["by"], r["note"], r["workflow"], r["stage"]) for r in records] == [
-        ("gate:plan-intent", "accept", "user", "PROP-carry", "sdd-spec-feature", "intent"),
         ("gate:plan-accept", "accept", "user", "PROP-carry", "sdd-spec-feature", "direction-handoff"),
     ]
     assert result.notices == []
@@ -136,14 +142,14 @@ def test_a_bugfix_spec_carries_both_records(workspace: Path) -> None:
     _answered(workspace, "defect")
     result = handoff_proposal(workspace, "defect", today=TODAY)
     assert result.workflow == "sdd-spec-bugfix"
-    assert [gate.request for gate in result.carried_gates] == ["gate:plan-intent", "gate:plan-accept"]
+    assert [gate.request for gate in result.carried_gates] == ["gate:plan-accept"]
 
 
 def test_keeps_who_answered(workspace: Path) -> None:
     accept(_proposal(workspace, "remote"))
     _answered(workspace, "remote", by="autohub")
     handoff_proposal(workspace, "remote", today=TODAY)
-    assert [record["by"] for record in _spec_records(workspace, "remote")] == ["user", "autohub"]
+    assert [record["by"] for record in _spec_records(workspace, "remote")] == ["autohub"]
 
 
 @pytest.mark.parametrize(
@@ -181,7 +187,11 @@ def test_a_bound_proposal_without_an_accepted_record_is_not_handed_off(
 
 
 def test_an_unbound_or_single_file_proposal_hands_off_on_its_status(workspace: Path) -> None:
-    write_workflow(workspace, "sdd-spec-feature", GATED.format(id="sdd-spec-feature", middle=""))
+    write_workflow(
+        workspace,
+        "sdd-spec-feature",
+        GATED.format(id="sdd-spec-feature", middle="").replace("human_gate: plan-intent", "human_gate: false"),
+    )
     accept(workspace / create_proposal(workspace, "bare", today=TODAY).path)  # sdd-proposal unavailable: unbound
     single = workspace / "docs/proposals/PROP-solo.md"
     single.write_text("---\nid: PROP-solo\nstatus: accepted\n---\n\n# Solo\n", encoding="utf-8")
@@ -207,7 +217,6 @@ def test_the_carried_acceptance_keeps_the_proposals_note(workspace: Path) -> Non
     _record(workspace, "noted", "02-gate-plan-accept.yaml", by="user", note=note)
     handoff_proposal(workspace, "noted", today=TODAY)
     assert [record["note"] for record in _spec_records(workspace, "noted")] == [
-        "PROP-noted",
         f"PROP-noted: {note}",
     ]
 
@@ -217,7 +226,7 @@ def test_a_cancel_after_the_users_accept_changes_nothing(workspace: Path) -> Non
     _answered(workspace, "cancel")
     _record(workspace, "cancel", "03-gate-plan-accept.yaml", by="user", action="cancel")
     result = handoff_proposal(workspace, "cancel", today=TODAY)
-    assert [gate.request for gate in result.carried_gates] == ["gate:plan-intent", "gate:plan-accept"]
+    assert [gate.request for gate in result.carried_gates] == ["gate:plan-accept"]
 
 
 def test_records_nothing_for_an_unbound_spec(workspace: Path) -> None:
@@ -239,13 +248,13 @@ def test_a_recording_failure_is_a_warning(workspace: Path, monkeypatch: pytest.M
     monkeypatch.setattr(handoff_module, "write_decision", write_decision)
     result = handoff_proposal(workspace, "fails", today=TODAY)
 
-    assert [gate.request for gate in result.carried_gates] == ["gate:plan-intent"]
-    assert [record["request"] for record in _spec_records(workspace, "fails")] == ["gate:plan-intent"]
+    assert [gate.request for gate in result.carried_gates] == []
+    assert [record["request"] for record in _spec_records(workspace, "fails")] == []
     [notice] = result.notices
     assert notice.code == "SPEC_PROPOSAL_GATE_NOT_CARRIED"
     assert "gate:plan-accept" in notice.message and "disk full" in notice.details
     spec = f"specs/{MONTH}/{STAMP}-fails"
-    assert notice.fix is not None and f"uv run devkit workflow next --unit {spec}" in notice.fix
+    assert notice.fix is not None and f"{spec}/decisions/" in notice.fix
     assert not (workspace / UNIT.format(slug="fails")).exists()
 
 

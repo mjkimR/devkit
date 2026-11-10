@@ -52,13 +52,13 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    `[tool.spec] worktree` and `depth_escalation` default to `"auto"`; `[worktree]` values are devkit's defaults (`pull_request = "auto"`,
    `delete_branch = true`, `merge = "no-ff"`, no `setup`); integration needs no provider selection. Legacy `[integration] provider` is ignored; unknown integration keys retain actionable diagnostics (`CAP-INT-mcp-services`).
 4. **Decision boundaries and task intent**: `plan-accept`, `proposal-handoff`, and `dev-integration` are the three
-   main decision boundaries, followed in policy output by `plan-intent` and configured custom gates. Each boundary
-   and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
+   main decision boundaries, followed in policy output by configured custom gates. Each boundary
+   permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
    declared by no workflow stage: `devkit spec proposal accept --mode accept_and_handoff` and
    `devkit spec proposal handoff --effort` read it (`CAP-DLV-proposal-planning`). The plain
    `devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff`
    decision and reads no policy itself.
-   `plan-intent` records an already instructed task without another confirmation. An uninstructed Backlog item does
+   An explicit task instruction MUST authorize only its stated scope; no intent approval record is created. An uninstructed Backlog item does
    not become authorized merely because an agent discovers it. Main boundaries are independent: direction acceptance
    may wait in Backlog before Development starts. The Host may carry one conversational decision across acceptance and handoff when the exact effects are presented together.
    Owning base auto, also retained by the prospective source, delegates only that boundary's verified local effects.
@@ -66,6 +66,9 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    as a human approval. The Planning acceptance merge belongs to `plan-accept`, not Development's `dev-integration`.
    Host permissions, required PR policy and publication authority remain separate (`ADR-delivery-approval-and-lifecycle-authority`).
    `exception` is a resolution stage, not a gate: its key emits `SPEC_APPROVAL_KEY_IGNORED` and is not listed.
+   A configured retired `plan-intent` key (ask, auto or off) MUST emit the same warning with removal advice and
+   MUST NOT appear in active policy output; generic configured custom gates remain unchanged.
+   Tests: `packages/devkit-spec/tests/integration/features/policy/test_cli_policy.py`.
 5. **Strict table**: `[tool.spec]` MUST be a table with only the keys `worktree`, `depth_escalation`, `scope` and
    `feedback`; anything else is `SPEC_CONFIG_INVALID`, raised by every command that reads the table.
    `worktree` is `"auto"` or `"required"`, `depth_escalation` `"auto"` or `"ask"`; a boolean is `SPEC_CONFIG_INVALID`, with no mapping (devkit rejects a boolean `pull_request` the
@@ -119,14 +122,13 @@ uv run devkit spec policy [-w/--workspace-root DIR] [--format text|json] [-q] [-
 [GATE_POLICY: plan-accept policy=ask source=default]
 [GATE_POLICY: proposal-handoff policy=ask source=default]
 [GATE_POLICY: dev-integration policy=auto source=config]
-[GATE_POLICY: plan-intent policy=ask source=default]
 [STAGE_POLICY: collect-feedback state=off]
 [GIT_POLICY: worktree=required pull_request=auto delete_branch=yes setup="uv sync"]
 [ROUTING_POLICY: depth_escalation=auto]
 [FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]
 ```
 
-- `GATE_POLICY`: one line per gate; `policy` is `ask` or `auto` for the three boundaries and `plan-intent` (rule 4),
+- `GATE_POLICY`: one line per gate; `policy` is `ask` or `auto` for the three boundaries (rule 4),
   and `ask`, `auto` or `off` for a configured custom gate (`CAP-DLV-workflow-orchestration`);
   `source` is `config` when `.devkit/config.toml` sets it, else
   `default`.
@@ -151,7 +153,6 @@ are the level strings, `setup` is `null` when unset).
 dev-integration = "ask"     # one approval per integration unit (PR); "auto" after review, checks and reconcile
 plan-accept = "ask"         # proposal direction; auto delegates checked acceptance and Planning merge
 proposal-handoff = "ask"    # start Development; auto uses the accepted dev_effort hint
-plan-intent = "ask"         # record instructed task intent without repeating the same consent
 
 [workflow.stages]
 collect-feedback = "off"    # switch a stage off by id

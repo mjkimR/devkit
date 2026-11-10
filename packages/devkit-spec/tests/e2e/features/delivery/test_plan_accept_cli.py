@@ -24,9 +24,6 @@ def proposal_seed_template(synced_template: Path, tmp_path_factory: pytest.TempP
     unit = "docs/proposals/PROP-idea"
     _cli(wt, "spec", "proposal", "new", "idea", "--title", "Idea", "--summary", "Review this idea.")
     _cli(
-        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user"
-    )
-    _cli(
         wt,
         "workflow",
         "envelope",

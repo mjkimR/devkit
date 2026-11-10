@@ -46,7 +46,6 @@ SCOPE_NAMESPACE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9._-]*$")
 SCOPE_TIMEOUT_RANGE = (1, 300)
 WORKTREE_LEVELS = ("auto", "required")
 DEPTH_ESCALATION = ("auto", "ask")
-INTENT_GATE = "plan-intent"
 APPROVAL_GATES = ("plan-accept", "proposal-handoff", "dev-integration")
 """Main business decision boundaries, independently delegated through ask or auto."""
 INTEGRATION_GATE = "dev-integration"
@@ -182,8 +181,8 @@ def read_spec_config(root: Path) -> SpecConfig:
 
 
 def check_approvals(approvals: dict[str, str]) -> None:
-    """Main decision boundaries and task intent permit ask or policy delegation, never off."""
-    for gate in (INTENT_GATE, *APPROVAL_GATES):
+    """Main decision boundaries permit ask or policy delegation, never off."""
+    for gate in APPROVAL_GATES:
         policy = approvals.get(gate, "ask")
         if policy not in INTEGRATION_POLICIES:
             raise SpecConfigError(

@@ -7,7 +7,7 @@ summary: "An AI coding agent develops a proposal, reviews its committed Planning
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
-  - User (confirms plan-intent, answers Planning questions, gives plan-accept)
+  - User (instructs Planning, answers Planning questions, gives plan-accept)
   - scout
   - challenger
   - planning-worker (local-orchestrated mode only)
@@ -45,8 +45,8 @@ capabilities:
 
 ## 2. Main Success Scenario
 
-1. The agent creates a draft proposal bound to `sdd-proposal` in Backlog, and records the user's confirmation of the
-   draft, with its proposed Planning effort, as `plan-intent` (`CAP-DLV-proposal-planning`,
+1. The agent creates a draft proposal bound to `sdd-proposal` in Backlog, and states the explicitly requested
+   scope and proposed Planning effort at intake (`CAP-DLV-proposal-planning`,
    `CAP-DLV-delivery-workflows`).
 2. The agent starts Planning on `plan-<slug>` and sets the proposal in review (`CAP-DLV-delivery-workflows`).
 3. The agent gathers evidence through `scout` and criticism through `challenger` as the Planning effort requires,
@@ -66,7 +66,7 @@ capabilities:
 8. With `proposal-handoff` authority, the agent starts `dev-<slug>` and hands the proposal off: the system creates the
    spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs and writes the "Superseded in
    part by" line into each ADR a PADR's `supersedes` names that is not `superseded`, moves materials and open
-   feedback, carries the `plan-intent` and `plan-accept` records by name, rewrites what pointed into the proposal and
+   feedback, carries the `plan-accept` record by name, rewrites what pointed into the proposal and
    removes it (`CAP-DLV-proposal-planning`, `CAP-DLV-spec-bundles`).
 9. The agent rereads the rewritten references and fixes unresolved links: after the composed handoff, which committed
    its own transaction, in a later Host commit on `dev-<slug>` before a worker starts; after the plain handoff, in
@@ -78,14 +78,14 @@ capabilities:
 
 - **1a.** The draft's `size` is not absent or exactly `S`, `M` or `L` (an `XL` draft, whose work would need two or
   more specs or a different `task_kind`): the workflow shows the `intent-proposal` size check unmet
-  (`detail="size=XL"`) and opens no `plan-intent` request, and recording it is refused with `REQUEST_UNKNOWN`
+  (`detail="size=XL"`) and opens no intent approval request
   (`CAP-DLV-proposal-planning`); the agent decomposes the draft in Backlog, splitting it with `--decomposed-from` or
   promoting it to a milestone on the user's decision, optionally through the read-only `decomposer` role
   (`CAP-DLV-delivery-workflows`), and never edits the size to pass; the use case ends for the parent.
 - **2a.** The draft's direction is settled and nothing needs Planning: on the user's explicit acceptance the agent
   checks eligibility read-only on the base checkout, sweeps the acceptance session and records a direct acceptance,
   with no Planning branch, run, effort or `worker` envelope (`CAP-DLV-proposal-planning`); resumes at step 7.
-- **2b.** A direct acceptance fails a condition (no `plan-intent`, `needs_decompose`, a `size` such as `XL`, `supersedes`, a
+- **2b.** A direct acceptance fails a condition (`needs_decompose`, a `size` such as `XL`, `supersedes`, a
   Planning branch, an envelope hold, a checkout other than the base): the system refuses with `SPEC_PROPOSAL_NOT_ELIGIBLE`,
   listing every failed condition, and writes nothing (`CAP-DLV-proposal-planning`); resumes at step 2 or the use
   case ends.
@@ -157,8 +157,8 @@ capabilities:
 
 - **Success guarantee**: A Planning proposal is reviewed at its final committed source before its acceptance. One spec bundle `SPEC-<slug>` replaces the proposal and is bound to `sdd-spec-<task_kind>`.
   Its PADRs are accepted ADRs, its materials and settled feedback live under `docs/materials/`, its open feedback
-  sits in the spec with unchanged IDs, statuses and observation dates, and its `plan-intent` and `plan-accept` records
-  are carried by name. Live references name the spec and the ADRs. After a direct acceptance the same holds without a
+  sits in the spec with unchanged IDs, statuses and observation dates, and its `plan-accept` record
+  is carried by name. Live references name the spec and the ADRs. After a direct acceptance the same holds without a
   Planning run.
 - **Minimal guarantee**: Approval is never inferred. A refused acceptance or handoff prerequisite writes nothing, a
   failed handoff write rolls back and keeps the proposal for a rerun, and a refused handoff commit keeps the
@@ -181,10 +181,10 @@ capabilities:
 
 ### Scenario 2: The proposal's approvals carry by name
 - **Covers**: main success scenario
-- **Given**: an accepted proposal whose unit recorded `gate:plan-intent` and `gate:plan-accept` by the user
+- **Given**: an accepted proposal whose unit recorded `gate:plan-accept` by the user
 - **When**: the agent hands it off
-- **Then**: the spec holds the same two requests as decision records with note `PROP-<slug>: <the record's note>`
-  (`PROP-<slug>` when the record has none), each reported as `[CARRIED_GATE: ...]`; `plan-intent` is not asked again
+- **Then**: the spec holds only the acceptance request as a decision record with note `PROP-<slug>: <the record's note>`
+  (`PROP-<slug>` when the record has none), reported as `[CARRIED_GATE: ...]`; no intent record is carried,
   and `plan-accept` satisfies no spec stage
 
 ### Scenario 3: References into the proposal follow it
@@ -203,7 +203,7 @@ capabilities:
 
 ### Scenario 5: A settled draft is accepted directly
 - **Covers**: 2a
-- **Given**: a draft with its `plan-intent` recorded, no `needs_decompose`, `supersedes` or Planning branch, no
+- **Given**: an explicitly requested draft with no `needs_decompose`, `supersedes` or Planning branch, no
   envelope hold, a swept acceptance session, in the base checkout on its base branch
 - **When**: after the user's explicit acceptance the agent runs `devkit spec proposal accept <slug> --by user --direct
   --note "<reason>"`

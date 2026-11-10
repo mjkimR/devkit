@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 from click.testing import CliRunner, Result
-from devkit_agt.features.workflow import Workspace, load_decisions, record_answer
+from devkit_agt.features.workflow import load_decisions
 from devkit_dist.cli import cli as devkit_cli
 from spec_support.proposals import TODAY, write_workflow
 from spec_support.scope import git, write
@@ -87,16 +87,15 @@ def test_an_xl_draft_leaves_plan_intent_unmet_at_next(tmp_path: Path, policy: st
 
 @pytest.mark.parametrize("policy", ["ask", "auto"])
 @pytest.mark.parametrize("size", [None, "L"])
-def test_an_absent_or_l_size_opens_the_request(tmp_path: Path, policy: str, size: str | None) -> None:
+def test_an_absent_or_l_size_passes_eligibility_without_intent(tmp_path: Path, policy: str, size: str | None) -> None:
     root = _repo(tmp_path, policy)
     _draft(root, size)
     result = _run(root, "workflow", "next", "--unit", UNIT)
     assert result.exit_code == 0, result.output
     assert "frontmatter(proposal.md size" not in result.stdout
-    if policy == "ask":
-        assert "[REQUEST: id=gate:plan-intent " in result.stdout
-    else:
-        assert "[GATE_PASSED: plan-intent stage=intent-proposal policy=auto" in result.stdout
+    assert "[REQUEST: id=gate:plan-intent " not in result.stdout
+    assert "[GATE_PASSED: plan-intent" not in result.stdout
+    assert "[DONE: intent-proposal" in result.stdout
 
 
 def test_plan_intent_cannot_be_recorded_for_an_xl_draft(tmp_path: Path) -> None:
@@ -119,8 +118,6 @@ def _accept_check(root: Path) -> Result:
 def test_a_direct_acceptance_check_names_the_size_blocker(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     proposal = _draft(root, "L")
-    ws = Workspace(root, lint=None, ancestor=None)
-    record_answer(ws, ws.resolve_unit(UNIT), "gate:plan-intent", "accept", by="user", lint=False)
     assert "size:" not in _accept_check(root).stdout
     proposal.write_text(proposal.read_text(encoding="utf-8").replace("size: L\n", "size: XL\n"), encoding="utf-8")
     result = _accept_check(root)

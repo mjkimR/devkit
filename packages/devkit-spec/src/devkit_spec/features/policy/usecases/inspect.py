@@ -10,11 +10,11 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.features.project import read_development_approach
 
 from devkit_spec.base.errors import ApprovalKeyIgnoredWarning
-from devkit_spec.features.policy.services.config import APPROVAL_GATES, INTENT_GATE, check_approvals, read_spec_config
+from devkit_spec.features.policy.services.config import APPROVAL_GATES, check_approvals, read_spec_config
 
-GATES = (*APPROVAL_GATES, INTENT_GATE)
+GATES = APPROVAL_GATES
 # Keys that name no gate: ``exception`` is a shared stage a person always handles (03 §2).
-NOT_GATES = ("exception",)
+NOT_GATES = ("exception", "plan-intent")
 
 
 class InspectPolicyUseCase(BaseUseCase):
@@ -28,7 +28,12 @@ class InspectPolicyUseCase(BaseUseCase):
         gates = [*GATES, *sorted(set(workflow.approvals) - set(GATES) - set(NOT_GATES))]
         notices: list[AdvisoryError] = [
             ApprovalKeyIgnoredWarning(
-                f"[workflow.approvals] {key} has no effect: {key} is a stage a person always handles, not a gate",
+                f"[workflow.approvals] {key} has no effect: "
+                + (
+                    "plan-intent is a retired SDD approval key"
+                    if key == "plan-intent"
+                    else "exception is a stage a person always handles, not a gate"
+                ),
                 target_files=[".devkit/config.toml"],
                 fix=f"Remove {key} from [workflow.approvals] in .devkit/config.toml",
             )

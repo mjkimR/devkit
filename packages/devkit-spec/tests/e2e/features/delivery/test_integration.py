@@ -26,9 +26,6 @@ def _complete_feature_spec(
     compact = date.replace("-", "")
     unit = f"specs/{month}/{compact}-{slug}"
     _cli(wt, "workflow", "new", slug, "--workflow", "sdd-spec-feature", "--date", date)
-    _cli(
-        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user"
-    )
     write(
         wt,
         f"{unit}/spec.md",
@@ -137,9 +134,6 @@ def _complete_bugfix_spec(wt: Path, slug: str = "fix", *, date: str = "2026-10-1
     compact = date.replace("-", "")
     unit = f"specs/{month}/{compact}-{slug}"
     _cli(wt, "workflow", "new", slug, "--workflow", "sdd-spec-bugfix", "--date", date)
-    _cli(
-        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user"
-    )
     write(
         wt,
         f"{unit}/spec.md",

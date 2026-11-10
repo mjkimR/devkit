@@ -15,8 +15,7 @@ skip cases, search and selection rule stay in the skill.
 
 - Classify with the confirmed playbook's stated depth and scope: a playbook that runs at `session` depth needs no
   Unit, and a Unit or a proposal under review is never lowered for it.
-- When the task continues to a Unit or proposal, record the playbook ID in the `plan-intent` note and the Unit's or
-  proposal's records, so a worker that skips discovery still follows it. Records name the ID, never the conversation.
+- When the task continues to a Unit or proposal, record the playbook ID in `spec.md` or the proposal's Planning decisions, so a worker that skips discovery still follows it. Records name the ID, never the conversation.
 
 ## 3. Use the playbook
 

@@ -24,7 +24,6 @@ def test_defaults(workspace: Path) -> None:
         "[GATE_POLICY: plan-accept policy=ask source=default]",
         "[GATE_POLICY: proposal-handoff policy=ask source=default]",
         "[GATE_POLICY: dev-integration policy=ask source=default]",
-        "[GATE_POLICY: plan-intent policy=ask source=default]",
         "[GIT_POLICY: worktree=auto pull_request=auto delete_branch=yes setup=-]",
         "[ROUTING_POLICY: depth_escalation=auto]",
         "[FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]",
@@ -56,7 +55,7 @@ def test_configured(workspace: Path, write: Write) -> None:
     assert payload["routing"] == {"depth_escalation": "ask"}
 
 
-@pytest.mark.parametrize("gate", ["plan-intent", "plan-accept", "proposal-handoff", "dev-integration"])
+@pytest.mark.parametrize("gate", ["plan-accept", "proposal-handoff", "dev-integration"])
 @pytest.mark.parametrize("policy", ["ask", "auto"])
 def test_main_approval_boundaries_accept_ask_and_auto(workspace: Path, write: Write, gate: str, policy: str) -> None:
     write(".devkit/config.toml", f'[workflow.approvals]\n{gate} = "{policy}"\n')
@@ -65,7 +64,7 @@ def test_main_approval_boundaries_accept_ask_and_auto(workspace: Path, write: Wr
     assert f"[GATE_POLICY: {gate} policy={policy} source=config]" in result.stdout
 
 
-@pytest.mark.parametrize("gate", ["plan-intent", "plan-accept", "proposal-handoff", "dev-integration"])
+@pytest.mark.parametrize("gate", ["plan-accept", "proposal-handoff", "dev-integration"])
 def test_main_approval_boundaries_cannot_be_skipped(workspace: Path, write: Write, gate: str) -> None:
     write(".devkit/config.toml", f'[workflow.approvals]\n{gate} = "off"\n')
     result = _policy(workspace)
@@ -114,3 +113,17 @@ def test_spec_config_error_is_a_config_error() -> None:
     from devkit_dist.base.errors import ConfigError
 
     assert issubclass(SpecConfigError, ConfigError)
+
+
+@pytest.mark.parametrize("policy", ["ask", "auto", "off"])
+def test_retired_intent_key_warns_without_active_gate(workspace: Path, write: Write, policy: str) -> None:
+    write(".devkit/config.toml", f'[workflow.approvals]\nplan-intent = "{policy}"\ncustom = "off"\n')
+    result = _policy(workspace)
+    assert result.exit_code == 0, result.output
+    assert "GATE_POLICY: plan-intent" not in result.stdout
+    assert "[GATE_POLICY: custom policy=off source=config]" in result.stdout
+    data = json.loads(_policy(workspace, "--format", "json").stdout)
+    assert "plan-intent" not in data["approvals"]
+    assert data["notices"][0]["code"] == "SPEC_APPROVAL_KEY_IGNORED"
+    assert "Remove plan-intent" in data["notices"][0]["advisory"]["fix"]
+    assert _policy(workspace, "--strict").exit_code == 1

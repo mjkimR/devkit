@@ -17,7 +17,7 @@ The axes and workflows are in the spec constitution (`devkit get-context spec`);
 
 ## 2. Inline Planning (`session`, `spec`) and the problem rule
 
-- `spec`: start `dev-<slug>` and the Unit per [worktree](worktree.md) §1, or with `--no-worktree` per [branches](branches.md) §2; agree the intent, record `plan-intent` and commit. That committed state is Development's input; a worker or cloud run continues the branch ([branches](branches.md) §3).
+- `spec`: start `dev-<slug>` and the Unit per [worktree](worktree.md) §1, or with `--no-worktree` per [branches](branches.md) §2; state the agreed intent and commit. That committed state is Development's input; a worker or cloud run continues the branch ([branches](branches.md) §3).
 - `session`: agree the intent in the conversation and follow `.devkit/managed/spec/workflows/sdd-session-<task_kind>.md` for its mode, branch and completion.
 - Keep one Unit when its outcome can be implemented and verified together; sequence shared contracts and conflicting files, parallelize independent scopes.
 - Inside the agreed goal, scope and contract, take the recommended option and record it.
