@@ -12,6 +12,33 @@ from devkit_core.core import file_lock, run_git_text
 from devkit_adaptive.base.errors import LedgerFragmentIgnored, LedgerUnreadable, LedgerUnwritable
 from devkit_adaptive.features.assignment.models.values import Event, fold
 
+# Every field the assigned-event writer (services.operations.new) records; readers index them directly.
+ASSIGNED_FIELDS = frozenset(
+    {
+        "id",
+        "status",
+        "owner",
+        "role",
+        "goal",
+        "worktree",
+        "base",
+        "write",
+        "commit",
+        "checks",
+        "governing",
+        "depends_on",
+        "parent",
+        "evidence",
+        "handoff",
+        "stop",
+        "assigned_at",
+        "dirty_at_assign",
+        "return",
+        "verification",
+        "close",
+    }
+)
+
 
 class Ledger:
     def __init__(self, root: Path):
@@ -41,7 +68,11 @@ class Ledger:
                 ):
                     raise ValueError("invalid event schema")
                 if event["event"] == "assigned":
-                    if event["id"] in known or event["data"].get("id") != event["id"]:
+                    if (
+                        event["id"] in known
+                        or event["data"].get("id") != event["id"]
+                        or not event["data"].keys() >= ASSIGNED_FIELDS
+                    ):
                         raise ValueError("invalid assignment event")
                     known.add(event["id"])
                 elif event["id"] not in known:

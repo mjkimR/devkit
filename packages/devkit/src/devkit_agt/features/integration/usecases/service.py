@@ -462,8 +462,8 @@ class IntegrationService:
         operation = "preflight"
         merged = result.steps["merge"] in {"completed", "skipped"}
         removed = result.steps["worktree_remove"] in {"completed", "skipped"}
-        if not merged:
-            # Seeded artifacts are disclosed only for a build that landed; a refusal reports none.
+        if result.steps["merge"] not in {"completed", "skipped", "unknown"}:
+            # Seeded artifacts are disclosed only for a build that may have landed; a refusal reports none.
             result.seeded = ()
             result.notices[:] = [notice for notice in result.notices if notice.code != "INTEGRATION_GENERATED_SEEDED"]
         try:
@@ -642,6 +642,7 @@ class IntegrationService:
             # Seeded artifacts are disclosed once the build may have landed; a refusal before that discloses none.
             if seeding is not None and seeding.seeded:
                 result.seeded = seeding.seeded
+                result.notices[:] = [n for n in result.notices if n.code != "INTEGRATION_GENERATED_SEEDED"]
                 result.notices.append(seeded_warning(seeding.seeded))
 
         try:

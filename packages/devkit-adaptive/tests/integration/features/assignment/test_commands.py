@@ -333,6 +333,17 @@ def test_malformed_event_data_is_unreadable(repo, call):
     assert call("list", expected=2)["error"]["code"] == "ADAPTIVE_LEDGER_UNREADABLE"
 
 
+@pytest.mark.parametrize("missing", ["status", "worktree", "base", "depends_on", "dirty_at_assign"])
+def test_assigned_event_missing_recorded_field_is_unreadable(repo, call, missing):
+    assigned(call)
+    path = Ledger(repo).path
+    event = json.loads(path.read_bytes())
+    del event["data"][missing]
+    path.write_text(json.dumps(event) + "\n")
+    for command in (("list",), ("show", "a1")):
+        assert call(*command, expected=2)["error"]["code"] == "ADAPTIVE_LEDGER_UNREADABLE"
+
+
 def test_symlink_loop_scope_is_argument_error(repo, call):
     (repo / "loop").symlink_to("loop")
     assert call("new", "--owner", "o", "--goal", "g", "--write", "loop", expected=2)["error"]["code"] == (

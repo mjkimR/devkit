@@ -415,3 +415,41 @@ def test_refused_fast_forward_discloses_no_seeded_artifacts(repo, monkeypatch):
     assert result.status == "blocked" and result.errors[0].code == "WORKTREE_MERGE_FAILED"
     assert result.seeded == ()
     assert "INTEGRATION_GENERATED_SEEDED" not in [notice.code for notice in result.notices]
+
+
+def test_rerun_after_unknown_fast_forward_keeps_the_seeded_disclosure(repo, monkeypatch):
+    """A fast-forward that may have landed keeps its seeded disclosure when a rerun of the request is refused."""
+    import hashlib
+    import json
+
+    import devkit_agt.features.integration.usecases.service as service_module
+
+    base, worktree = repo
+
+    def receipt(root, side):
+        record = {".agents/skill.md": {"sha256": hashlib.sha256(side.encode()).hexdigest(), "mode": 420}}
+        data = {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": [], "files": record}
+        (root / ".devkit").mkdir(exist_ok=True)
+        (root / ".devkit/installation.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        git(root, "add", ".devkit/installation.json")
+        git(root, "commit", "-qm", f"receipt {side}")
+
+    receipt(base, "base")
+    git(worktree, "merge", "-q", "main")
+    receipt(worktree, "source")
+    receipt(base, "target")
+    service = IntegrationService(base)
+    original = service_module.fast_forward
+
+    def timed_out(root, sha):
+        original(root, sha)
+        raise GitError("fast-forward timed out after ref update")
+
+    monkeypatch.setattr(service_module, "fast_forward", timed_out)
+    first = integrate(service)
+    seeded = first.seeded
+    assert first.steps["merge"] == "unknown" and seeded
+    monkeypatch.setattr(service_module, "fast_forward", original)
+    rerun = service._run(first.request.id, 0)
+    assert rerun.steps["merge"] == "completed" and rerun.seeded == seeded
+    assert [notice.code for notice in rerun.notices].count("INTEGRATION_GENERATED_SEEDED") == 1
