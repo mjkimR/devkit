@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Proceed with proposal Planning at medium effort.
+by: user
+at: '2026-11-10T04:50:22.254493Z'
