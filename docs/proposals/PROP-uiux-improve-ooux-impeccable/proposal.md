@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-ooux-impeccable
 title: OOUX-framed UI/UX improvement and Impeccable delegation
 summary: "Reorient uiux-improve as an OOUX-framed coordinator for software interfaces that guides isolated Impeccable execution, manages scaffolding via gitignore or cleansing, and qualifies the skill name without backward-compatibility burden."
-status: draft
+status: reviewing
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: high
