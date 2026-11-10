@@ -63,6 +63,12 @@ Choose selective versions with exact pins for version stability without expandin
   qualifier in its first MCP runtime outcome. Their document/SDD/MCP ownership, dependency directions, registration,
   approval and runtime decisions remain. → `ARCH-07-deployment` section 1.1 (MUST).
 
+- Supersedes in part `ADR-package-ownership-and-release-version`: the Single release version clauses and only the same-version qualifiers in the foundation, MCP runtime and harness dependency clauses. All other decisions remain in force.
+
+- Supersedes in part `ADR-document-system`: the root-version and same-version qualifiers in the Document package and bundles Package clause; document and SDD ownership and dependency directions remain.
+
+- Supersedes in part `ADR-mcp-runtime-and-shared-artifacts`: the foundation-lockstep qualifier in the first MCP runtime outcome; ownership, dependency directions, runtime, registration and approval decisions remain.
+
 ## 5. Consequences
 
 Unchanged advisory/content distributions can retain their versions across releases. An advisory change still

@@ -5,7 +5,6 @@ summary: "For adaptive delegation, we propose reusable prefixed archetypes with 
 proposal: SPEC-adaptive-swarm-development
 status: accepted
 supersedes: ADR-adaptive-development-and-research
-supersedes_clause: "Adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force."
 created_at: 2026-11-06
 ---
 
@@ -67,8 +66,9 @@ The choice is prefixed archetypes with role overlays, supporting optional role l
 
 `CAP-DLV-adaptive-development` rules 1, 12, 13 and 19 and its reusable-agent interface restate these clauses;
 `UC-advance-an-idea` extensions 5b through 5b4 cover optional teams and fallback. `ARCH-05-2-components`
-restates bundle ownership. This decision partially supersedes the role-set clauses of
-`ADR-adaptive-development-and-research`. Its approach, current-context and research-material decisions are retained.
+restates bundle ownership. The partial-supersession statement below names the replaced role-set and role-authority clauses.
+
+- Supersedes in part `ADR-adaptive-development-and-research`: the adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force.
 
 ## 5. Consequences
 

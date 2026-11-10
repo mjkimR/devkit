@@ -81,6 +81,8 @@ precedent.
 
 ---
 
+- Supersedes in part `ADR-ux-screens`: the Step links and coverage clauses for empty Step cells and uncited steps or extensions, which now exclude classifications with a reason; the off-screen phrase and the known limit that every uncited step retains a warning. Classified steps retain their flow effects.
+
 ## 5. Consequences
 
 - **Positive**:

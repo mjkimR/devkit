@@ -18,7 +18,7 @@ def _doc(name: str, header: str = "", body: str = "", status: str = "accepted") 
 def test_valid_whole_and_partial_replacements(tmp_path: Path) -> None:
     files = {
         OLD: _doc("ADR-old", "superseded_by: ADR-new\n", status="superseded"),
-        NEW: _doc("ADR-new", "supersedes: [ADR-old, ADR-partial]\n"),
+        NEW: _doc("ADR-new", "supersedes: [ADR-old, ADR-partial]\n", "Supersedes in part `ADR-partial`: retries.\n"),
         "docs/decisions/partial.md": _doc("ADR-partial", body="Superseded in part by `ADR-new`: retries.\n"),
     }
     assert check(RULE, tmp_path, files) == []
@@ -61,7 +61,7 @@ def test_invalid_supersedes_metadata(tmp_path: Path, value: str) -> None:
 
 def test_missing_partial_counterparts_are_reported_on_both_sides(tmp_path: Path) -> None:
     files = {OLD: _doc("ADR-old"), NEW: _doc("ADR-new", "supersedes: ADR-old\n")}
-    assert [v.file for v in check(RULE, tmp_path, files)] == [NEW]
+    assert [v.file for v in check(RULE, tmp_path, files)] == [NEW, NEW]
     files[OLD] = _doc("ADR-old", body="Superseded in part by `ADR-new`: retries.\n")
     files[NEW] = _doc("ADR-new")
     assert [v.file for v in check(RULE, tmp_path, files)] == [OLD]
@@ -76,7 +76,11 @@ def test_partial_pointer_must_resolve_and_target_stays_accepted(tmp_path: Path) 
 def test_aliases_on_both_sides_resolve_canonically(tmp_path: Path) -> None:
     files = {
         OLD: _doc("ADR-old", "aliases: [ADR-old-alias]\n", "Superseded in part by `ADR-new-alias`: retries.\n"),
-        NEW: _doc("ADR-new", "aliases: [ADR-new-alias]\nsupersedes: ADR-old-alias\n"),
+        NEW: _doc(
+            "ADR-new",
+            "aliases: [ADR-new-alias]\nsupersedes: ADR-old-alias\n",
+            "Supersedes in part `ADR-old-alias`: retries.\n",
+        ),
     }
     assert check(RULE, tmp_path, files) == []
     files[OLD] = _doc("ADR-old", "aliases: [ADR-old-alias]\nsuperseded_by: ADR-new-alias\n", status="superseded")
@@ -147,3 +151,51 @@ def test_root_and_nested_materials_are_free_form(tmp_path: Path) -> None:
         "specs/x/materials/example.md": _doc("ADR-nested", "supersedes: ADR-missing\n"),
     }
     assert check(RULE, tmp_path, files) == []
+
+
+@pytest.mark.parametrize("kind", ["ADR", "PADR"])
+def test_missing_statement_and_padr_pointer_exemption(tmp_path: Path, kind: str) -> None:
+    path = NEW if kind == "ADR" else "docs/proposals/p/decisions/PADR-new.md"
+    name = f"{kind}-new"
+    files = {
+        OLD: _doc("ADR-old", body=f"Superseded in part by `{name}`: retries.\n"),
+        path: _doc(name, "supersedes: ADR-old\n"),
+    }
+    found = check(RULE, tmp_path, files, targets=[path])
+    assert len(found) == 1 and "needs a partial statement" in found[0].message and found[0].line == 4
+    files[path] = _doc(name, "supersedes: ADR-old\n", "Supersedes in part `ADR-old`: retries.\n")
+    assert check(RULE, tmp_path, files, targets=[path]) == []
+
+
+@pytest.mark.parametrize(
+    "body,fragment",
+    [
+        ("Supersedes in part `ADR-other`: retries.\n", "stray"),
+        ("Supersedes in part `ADR-old`:\n", "empty"),
+        ("Supersedes in part `ADR-old`: retries.\n\nSupersedes in part `ADR-old`: retries.\n", "duplicated"),
+    ],
+)
+def test_statement_shape_errors(tmp_path: Path, body: str, fragment: str) -> None:
+    files = {
+        OLD: _doc("ADR-old", body="Superseded in part by `ADR-new`: retries.\n"),
+        NEW: _doc("ADR-new", "supersedes: ADR-old\n", body),
+    }
+    found = check(RULE, tmp_path, files)
+    assert sum(fragment in v.message for v in found) == 1
+    assert all(not v.fixable for v in found)
+
+
+@pytest.mark.parametrize("targets", [[OLD], [NEW], [OLD, NEW]])
+def test_pointer_text_targeting_and_source_comparison(tmp_path: Path, targets: list[str]) -> None:
+    files = {
+        OLD: _doc("ADR-old", body="Superseded in part by `ADR-new`: the `old` mode.\n"),
+        NEW: _doc("ADR-new", "supersedes: ADR-old\n", "Supersedes in part `ADR-old`: the `new` mode.\n"),
+    }
+    found = check(RULE, tmp_path, files, targets=targets)
+    assert len(found) == 1 and "repeat the statement" in found[0].message
+    assert found[0].file == (OLD if OLD in targets else NEW)
+    files[OLD] = _doc(
+        "ADR-old",
+        body="Superseded in part by `ADR-new`: the\n `new` mode.\n\nSuperseded in part by `ADR-new`: other.\n",
+    )
+    assert check(RULE, tmp_path, files, targets=targets) == []

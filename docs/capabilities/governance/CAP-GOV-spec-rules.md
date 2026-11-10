@@ -51,7 +51,7 @@ commit.
 | Rule | Checks | Fix |
 | --- | --- | --- |
 | `RULE-document-reference` | Relation fields hold full IDs of the right kind; references resolve to exactly one document except missing historical feedback IDs; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files, glossary Owners and the configured quick references resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference, a steering or quick-reference code-span alias, or a glossary Owner alias to the canonical ID. |
-| `RULE-decision-supersession` | ADR whole and partial replacement status, metadata resolution and reciprocal partial pointers agree; historical ADRs checked, materials and PADRs excluded. | none |
+| `RULE-decision-supersession` | ADR whole and partial replacement status, metadata resolution and reciprocal partial pointers and partial-supersession statements agree; historical ADRs checked, materials excluded, PADRs checked for statements only. | none |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
 | `RULE-traceability-link` | A use case's `capabilities` and a capability's `usecases` link both ways. | Appends the missing reverse ID. |
@@ -412,7 +412,7 @@ is classified with a reason, per item, so that it stops warning while every othe
    to an ADR whose status is superseded or whose visible partial pointer names the superseder.
 4. **Canonical identity**: The rule MUST compare these relationships through unique canonical alias resolution.
 5. **Evaluation boundaries**: The rule MUST check targeted ADRs including superseded records, exclude root and
-   nested materials and PADRs, and read through the snapshot cache. It MUST NOT rewrite files or add graph edges.
+   nested materials, check PADRs for statements only, and read through the snapshot cache. It MUST NOT rewrite files or add graph edges.
 6. **Partial history**: The rule MUST allow a wholly superseded ADR to retain earlier reciprocal partial pointers.
    Otherwise a partial-pointer owner MUST stay accepted. Pointer scanning masks code fences, indented code,
    comments, escapes and struck-out text, using the shared visible-prose scanner.
@@ -422,6 +422,16 @@ Review determines whether the replacement actually covers all or part of an ADR;
 relationships. Tests: `packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/decision_supersession/tests/`.
 
 ## 4. Interfaces & Data Contracts
+
+7. **Statement presence**: WHEN an ADR or PADR lists a resolving non-superseded ADR in `supersedes`, the rule MUST
+   report a missing statement at that field. Aliases resolve canonically.
+8. **Statement shape**: the rule MUST report stray, duplicated or empty statements at their statement line as
+   non-fixable errors. Visible source is read through the common reader of `CAP-DOCS-document-model`.
+9. **Pointer text**: WHEN a non-superseded earlier ADR has pointers naming its superseder but none repeats the
+   statement's source text after collapsing whitespace, the rule MUST report one non-fixable error per pair at the
+   earlier ADR's first such pointer if targeted, else at the statement. Earlier-only targeting follows its named
+   superseder. Missing pointers retain the existing metadata finding without a pointer-text error. PADRs and
+   superseded targets are exempt from pointer-text checks.
 
 ### 4.1 Commands (devkit's)
 

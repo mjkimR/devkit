@@ -37,3 +37,13 @@ superseded_by: null # optional: only on a superseded ADR; one replaced in part s
 ## 5. Consequences
 ## 6. Confirmation
 ```
+
+For each earlier ADR that is not superseded, write one statement in Decision Outcome, as its own paragraph or list item:
+
+```markdown
+Supersedes in part `ADR-<old>`: <the replaced clauses>.
+```
+
+The earlier ADR's pointer repeats the statement text, code spans included; only whitespace may differ.
+Keep the statement free of trace, source citation, nested list and relative link. For a whole replacement, use
+the same statement naming every decision, then set the earlier ADR superseded after handoff; the statement may stay.

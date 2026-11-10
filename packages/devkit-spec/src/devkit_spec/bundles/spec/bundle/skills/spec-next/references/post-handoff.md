@@ -4,8 +4,7 @@ Run after `devkit spec proposal handoff <slug>`, after following each warning's 
 nothing: commit these fixes with its writes. The composed handoff (`--effort`, `accept --mode accept_and_handoff`)
 already committed its transaction (`commit=`). Review any unresolved links or rewritten references it reports
 (`SPEC_PROPOSAL_LINK_UNRESOLVED`, `SPEC_PROPOSAL_REFS_REWRITTEN`; JSON `handoff.unresolved`, `handoff.rewritten`),
-including those outside the new spec and promoted ADRs. Commit link fixes and partial-supersession pointer
-clarifications on `dev-<slug>` as a later Host commit before a worker starts.
+including those outside the new spec and promoted ADRs. Commit link fixes on `dev-<slug>` as a later Host commit before a worker starts.
 
 1. Fix each `[UNRESOLVED_LINK]`: point it at the new spec or promoted ADR by full ID (`` `SPEC-<slug>` ``,
    `` `ADR-<slug>` ``), or drop it.
@@ -13,9 +12,7 @@ clarifications on `dev-<slug>` as a later Host commit before a worker starts.
    `rg -n "\]\([^)]*(PROP-<slug>/|\.\./proposal\.md)" docs specs` returns nothing.
 3. Reread each `[REWRITTEN: ... kind=id]` line outside the new spec and promoted ADRs; where it meant the proposal as
    an origin, reword it to stay true ("split off from the original proposal of `SPEC-x`").
-4. Review each `Superseded in part by` pointer handoff added. If it repeats the new ADR's summary instead of naming
-   the replaced clauses, clarify it from the new ADR's Decision Outcome; keep the earlier ADR's other decisions.
-5. `devkit rules check` passes.
+4. `devkit rules check` passes.
 
 ## Sibling drafts
 

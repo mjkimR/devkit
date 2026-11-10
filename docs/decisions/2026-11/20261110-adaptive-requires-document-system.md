@@ -71,6 +71,8 @@ the consumer declares side by side. The independence from `devkit-spec` in the s
   when available, otherwise the consuming project's documented Git procedure" now always meets an installed
   harness, so the orchestration guidance names `uv run devkit worktree` first. → `UC-advance-an-idea` 5b3.
 
+- Supersedes in part `ADR-adaptive-development-and-research`: the independent docs/catalog installation clause only: adaptive development installs through the single `devkit-adaptive` requirement; independence from `devkit-spec` remains in force.
+
 ## 5. Consequences
 
 - Positive: one installation statement in every guide; the guidance drops its installation conditions; a mistyped or

@@ -21,7 +21,7 @@ supersedes:
 
 # [ADR-local-and-pull-request-integration] Local and Pull Request Integration of Approved Sources
 
-Superseded in part by `ADR-post-merge-verification`: For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target.
+Superseded in part by `ADR-post-merge-verification`: the requirements for target-runtime readiness, content finish guards and receipt consistency before landing, readiness evidence equality and disclosure, and mandatory provider binding in the integration digest. Git identity, conflict, route, approval and unknown-outcome clauses remain.
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
@@ -426,6 +426,8 @@ still refuse before the confirmation, and every landing that was not checked is 
   (ADR-retire-stale-integration-approval-clauses)
 
 ---
+
+- Supersedes in part `ADR-configuration-language-and-rendering`: the confirmation-form rules requiring explanations when schema metadata is omitted, verbatim source and provider prose, and language sampled once per form; and native approval routes in the local-text clause. Its other clauses remain in force.
 
 ## 5. Consequences
 

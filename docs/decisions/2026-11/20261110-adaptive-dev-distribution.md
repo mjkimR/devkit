@@ -112,6 +112,8 @@ discovery, materials and deep-research decisions stay in force, as do the names 
 registration;
 `CAP-DLV-adaptive-development` §2 keeps the remaining exclusions.
 
+- Supersedes in part `ADR-adaptive-development-and-research`: the adaptive-dev bundle owning-wheel clauses: its place in devkit-catalog and entry point, content-only catalog ownership and independent docs/catalog installation as far as they concern adaptive-dev, the rejection of a dedicated wheel, and the driver without another release wheel. Other decisions remain in force.
+
 ## 5. Consequences
 
 - Positive: commands for adaptive development have an owning package with `bundles/` and room for `features/`, and

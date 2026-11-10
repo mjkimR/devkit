@@ -289,7 +289,7 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   `--slug` (a leading `PADR-` dropped, normalized as in 4.2) or else the title's slug; the title stays free text, so
   `padr plans "2024 roadmap" --slug roadmap-2024` works where the title alone is refused. The file has `id`, `title`, `summary` (or
   the commented placeholder `# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>`), `proposal:
-  PROP-<slug>`, the commented line `# supersedes: [ADR-<slug>]` (uncommented, it names the ADRs the decision replaces,
+  PROP-<slug>`, the commented line `# supersedes: [ADR-<slug>]` (uncommented, it names the ADRs the decision replaces; the comment names the `Supersedes in part` sentence for Decision Outcome,
   wholly or in part, and Decision Outcome names the replaced clauses; `CAP-DOCS-document-model`), `status: draft`,
   `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
   `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
@@ -351,8 +351,10 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    status is not `superseded`, the handoff MUST write one body line "Superseded in part by `ADR-<new>`: <clause>"
    below that ADR's first H1 heading (after the frontmatter when it has none), as a paragraph of its own, in
    promotion order when several PADRs name the same ADR, and MUST NOT write it when a visible line of that ADR
-   already names the promoted ADR by its ID or an alias; `<clause>` is the PADR's `summary`, else its `title`, as
-   one sentence, and Development replaces it with the replaced clauses at `living-spec-draft`. The pointer is the
+   already names the promoted ADR by its ID or an alias; `<clause>` is the promoted ADR's partial-supersession
+   statement source text for that target, copied verbatim. A missing statement MUST fail with `SPEC_PROPOSAL_INVALID`
+   before the first write; its error names the PADR and target and its fix names the statement to add.
+   A composed handoff preserves its created worktree and proposal on this handoff-step failure. The pointer is the
    line `RULE-decision-supersession` requires, so the handoff commit passes the gate; each line is reported as
    `[SUPERSEDED_IN_PART: <adr> path= line= by=]` (JSON `pointers`). The handoff writes no `status: superseded` or
    `superseded_by` (a whole supersession is the author's edit), and an entry that resolves to nothing, to several
@@ -633,7 +635,7 @@ Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Ev
 | `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high` (an automatic handoff the proposal's `dev_effort`); the caller corrects the effort and reruns. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`BLOCKED`) | `ProposalInPlanningError` | `check` (exit `1`, its negative answer): Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr` and `new --decomposed-from` (exit `2`): `plan-<slug>` exists and the checkout is not on it, or the parent left `draft`. |
-| `SPEC_PROPOSAL_INVALID` | `ERROR` (`INPUT_ERROR`) | `ProposalInvalidError` | `[TARGET]` names the file. The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; the composed acceptance or handoff finds a `task_kind`, effort, `title` or `summary` it cannot use; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
+| `SPEC_PROPOSAL_INVALID` | `ERROR` (`INPUT_ERROR`) | `ProposalInvalidError` | `[TARGET]` names the file. A needed handoff pointer has no partial-supersession statement; or the proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; the composed acceptance or handoff finds a `task_kind`, effort, `title` or `summary` it cannot use; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
 | `SPEC_PROPOSAL_NOT_APPROVED` | `ERROR` (`INTERACTION`) | `ProposalNotApprovedError` | `handoff`: status is not `accepted`, `plan-accept` was not given; `[FIX]` records it with `devkit spec proposal accept` after the user's acceptance. `new`: the proposal `--supersedes` names is not `accepted`; a supersede replaces an accepted proposal only. |
 | `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`, or the composed `accept --mode` on `plan-<slug>`: a bundle bound to `sdd-proposal` says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. `[FIX]` names the slug's exact repair command. |
 | `SPEC_PROPOSAL_POLICY_NOT_AUTO` | `ERROR` (`BLOCKED`) | `ProposalPolicyNotAutoError` | `accept --by policy` (with or without `--mode`) while the owning `plan-accept` policy is not `auto`; nothing written. The composed form checks it before the checkout, and every command a composed refusal names keeps the caller's own `--by`. `[REPORT]` says the user accepts explicitly or changes the policy; no fix suggests `--by user`. |

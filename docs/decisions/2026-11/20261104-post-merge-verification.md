@@ -69,6 +69,16 @@ verification policy. A personal project's deliberate owner bypass is outside the
   Provider-free adoption preserves authority for actual approach and asset changes. → `CAP-DLV-adaptive-development`
   and `CAP-DLV-sdd-baseline-adoption` integration and activation contracts (MUST).
 
+- Supersedes in part `ADR-local-and-pull-request-integration`: the requirements for target-runtime readiness, content finish guards and receipt consistency before landing, readiness evidence equality and disclosure, and mandatory provider binding in the integration digest. Git identity, conflict, route, approval and unknown-outcome clauses remain.
+
+- Supersedes in part `ADR-delivery-approval-and-lifecycle-authority`: the merge-time readiness and report-engine revalidation requirements only. Direction acceptance and retained-base approval authority remain.
+
+- Supersedes in part `ADR-test-selection-and-ci`: permission to leave non-batch integrated-head testing to a later batch or nightly run. Affected selection, full fallback and full nightly/release CI remain.
+
+- Supersedes in part `ADR-proposal-acceptance`: optional same-process acceptance, merge and handoff composition only; `accept_and_handoff` retains authorized effects but yields to Host final verification before a fresh handoff invocation. Other acceptance decisions remain.
+
+- Supersedes in part `ADR-adaptive-development-and-research`: the premerge project/session readiness, touched-Unit integration refusal and provider-activation requirements only. Independent Host branch checks, approach policy, explicit SDD artifact checks, history and unrelated adoption/research decisions remain.
+
 ## 5. Consequences
 
 Tool upgrades and ordinary development share one completion procedure. Integration loses provider-only CLI inputs

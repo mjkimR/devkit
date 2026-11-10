@@ -90,6 +90,14 @@ four stay `accepted`.
 
 ---
 
+- Supersedes in part `ADR-proposal-acceptance`: the native lifecycle approval clause, the consequence requiring separate live evidence for native form rendering, and the viewer exception clause. Conversational acceptance and the repository viewer protections remain in force.
+
+- Supersedes in part `ADR-mcp-runtime-and-shared-artifacts`: the Host-approval clause parts making native confirmation the normal route, CLI/PR authorization mere recovery, and extra approval unnecessary after native confirmation. Host approval authority and host permission prompts remain in force.
+
+- Supersedes in part `ADR-document-system`: the distribution clause assigning every rule asset to the spec bundle and the document templates and docs skeleton in its devkit-spec methodology list; lifecycle templates remain with devkit-spec.
+
+- Supersedes in part `ADR-steering-documents`: the statements that `devkit get-context spec` lists steering documents, that role contracts receive the list through spec context, and that a guidance test asserts this. Role contracts still load spec context; docs context lists the steering documents.
+
 ## 5. Consequences
 
 - **Positive**: The four ADRs no longer contradict the route or the owner the code has.

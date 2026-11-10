@@ -200,7 +200,7 @@ e2e combinations; individual packages need no duplicate installation suites.
 | **`devkit_agt.features.worktree`** (agt) | Activity branch management and task worktree lifecycle. | `worktree start`, `worktree finish` |
 | **`devkit_agt.features.gate`** (agt) | Git hook wrappers enforcing commit policies. | `gate install`, `gate run` |
 | **`devkit_agt.features.compact`** (agt) | Bounded command execution with persistent log capture. | `devkit run` |
-| **`devkit_docs.features.documents`** (docs) | Document model, index and memo, namespaces, references, browse and search. | `docs resolve`, `docs refs`, `docs list`, `docs search` |
+| **`devkit_docs.features.documents`** (docs) | Document model, index and memo, namespaces, references, browse and search. | `docs resolve`, `docs refs`, `docs list`, `docs search`, `docs supersession` |
 | **`devkit_docs.features.governance`** (docs) | Document rule implementations and the entrypoint path contract. | Library API (rule wrappers in the `docs` bundle) |
 | **`devkit_spec.features`** (spec) | Proposals, delivery, scope, worker inspection, policy, entrypoints and lifecycle rules. | `spec new`, `spec proposal`, `spec policy`, `spec entrypoints`, `spec scope`, `spec worker` |
 | **`devkit_dist.features.search`** (dist) | Lexical (BM25), dense (embeddings), and hybrid document retrieval. | Library API |

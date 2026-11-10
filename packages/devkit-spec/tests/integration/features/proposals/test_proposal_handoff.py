@@ -526,7 +526,12 @@ def _superseding(workspace: Path, slug: str, title: str, supersedes: str, *, sum
     padr = workspace / created.path
     scaffolded = padr.read_text(encoding="utf-8")
     placeholder = next(line for line in scaffolded.splitlines() if line.startswith("# supersedes:"))
-    padr.write_text(scaffolded.replace(placeholder, f"supersedes: {supersedes}"), encoding="utf-8")
+    text = scaffolded.replace(placeholder, f"supersedes: {supersedes}")
+    import re
+
+    for target in re.findall(r"ADR-[a-z-]+", supersedes):
+        text += f"\nSupersedes in part `{target}`: the `parser` choice for {title}.\n"
+    padr.write_text(text, encoding="utf-8")
     return proposal
 
 
@@ -542,7 +547,9 @@ def test_a_padr_supersedes_reaches_the_adr_and_the_named_adr_gets_the_pointer(wo
     meta = parse(adr).data
     assert meta is not None and meta["supersedes"] == ["ADR-old"]
     assert (workspace / OLD_ADR).read_text(encoding="utf-8") == OLD_TEXT.replace(
-        "# [ADR-old] Old\n", f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n", 1
+        "# [ADR-old] Old\n",
+        "# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: the `parser` choice for Pick A.\n",
+        1,
     )
     assert [p.to_dict() for p in result.pointers] == [
         {"adr": "ADR-old", "path": OLD_ADR, "line": 9, "by": "ADR-pick-a"}
@@ -557,7 +564,9 @@ def test_a_commented_heading_line_before_the_h1_is_not_the_heading(workspace: Pa
     result = handoff_proposal(workspace, "commented", today=TODAY)
     text = (workspace / OLD_ADR).read_text(encoding="utf-8")
     assert text == commented.replace(
-        "# [ADR-old] Old\n", f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n", 1
+        "# [ADR-old] Old\n",
+        "# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: the `parser` choice for Pick A.\n",
+        1,
     )
     assert [(p.line, p.by) for p in result.pointers] == [(13, "ADR-pick-a")]
 
@@ -600,11 +609,13 @@ def test_targets_the_pointer_rule_does_not_need_are_left_alone(workspace: Path, 
     assert meta is not None and meta["supersedes"] == ["ADR-done", "ADR-gone", "CAP-X-thing"]
 
 
-def test_a_pointer_without_a_summary_carries_the_title(workspace: Path, write: Write) -> None:
+def test_a_pointer_without_a_summary_still_copies_the_statement(workspace: Path, write: Write) -> None:
     write(OLD_ADR, OLD_TEXT)
     accept(_superseding(workspace, "titled", "Pick A", "ADR-old", summary=None))
     handoff_proposal(workspace, "titled", today=TODAY)
-    assert "\nSuperseded in part by `ADR-pick-a`: Pick A.\n" in (workspace / OLD_ADR).read_text(encoding="utf-8")
+    assert "\nSuperseded in part by `ADR-pick-a`: the `parser` choice for Pick A.\n" in (workspace / OLD_ADR).read_text(
+        encoding="utf-8"
+    )
 
 
 def test_two_superseders_of_one_adr_write_two_pointers_in_decision_order(workspace: Path, write: Write) -> None:
@@ -616,8 +627,8 @@ def test_two_superseders_of_one_adr_write_two_pointers_in_decision_order(workspa
     text = (workspace / OLD_ADR).read_text(encoding="utf-8")
     assert text == OLD_TEXT.replace(
         "# [ADR-old] Old\n",
-        f"# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: {Y}\n\n"
-        "Superseded in part by `ADR-pick-b`: For B, we pick B, to be B, accepting B.\n",
+        "# [ADR-old] Old\n\nSuperseded in part by `ADR-pick-a`: the `parser` choice for Pick A.\n\n"
+        "Superseded in part by `ADR-pick-b`: the `parser` choice for Pick B.\n",
         1,
     )
     assert [(p.by, p.line) for p in result.pointers] == [("ADR-pick-a", 9), ("ADR-pick-b", 11)]
@@ -1276,3 +1287,35 @@ def test_mixed_acceptance_and_non_goals_carry_as_contract(workspace: Path) -> No
         "### 4. Acceptance Evidence and Non-Goals\n\n- AC1: Publish a briefing.\n- AC2: Refuse a stale one." in contract
     )
     assert contract.index("- AC1") < contract.index("## 6. Carried Proposal Notes")
+
+
+def test_missing_statement_refuses_before_any_write(workspace: Path, write: Write) -> None:
+    from devkit_spec.base.errors import ProposalInvalidError
+
+    write(OLD_ADR, OLD_TEXT)
+    proposal = _superseding(workspace, "missing-statement", "Pick A", "[ADR-old]")
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    padr.write_text(padr.read_text().split("\nSupersedes in part", 1)[0])
+    accept(proposal)
+    before = {p.relative_to(workspace): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+    with pytest.raises(ProposalInvalidError) as error:
+        handoff_proposal(workspace, "missing-statement", today=TODAY)
+    assert error.value.code == "SPEC_PROPOSAL_INVALID"
+    assert "ADR-old" in str(error.value) and "PADR-pick-a" in str(error.value.target_files)
+    assert before == {p.relative_to(workspace): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+
+
+def test_pointer_and_statement_rewrite_proposal_reference_equally(workspace: Path, write: Write) -> None:
+    write(OLD_ADR, OLD_TEXT)
+    proposal = _superseding(workspace, "references", "Pick A", "[ADR-old]")
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    padr.write_text(
+        padr.read_text().replace("the `parser` choice for Pick A.", "the `parser` choice of `PROP-references`.")
+    )
+    accept(proposal)
+    handoff_proposal(workspace, "references", today=TODAY)
+    pointer = (workspace / OLD_ADR).read_text()
+    statement = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-a.md").read_text()
+    payload = "the `parser` choice of `SPEC-references`."
+    assert f"Superseded in part by `ADR-pick-a`: {payload}" in pointer
+    assert f"Supersedes in part `ADR-old`: {payload}" in statement

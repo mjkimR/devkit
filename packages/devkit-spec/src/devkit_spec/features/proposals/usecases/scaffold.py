@@ -486,8 +486,7 @@ class CreatedDecision:
 
 
 SUPERSEDES_PLACEHOLDER = (
-    "# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in"
-    " Decision Outcome"
+    "# supersedes: [ADR-<slug>]   # write Supersedes in part `ADR-<slug>`: <the replaced clauses>. in Decision Outcome"
 )
 """The PADR's commented ``supersedes`` key: handoff keeps the frontmatter, so an uncommented value reaches the ADR, and
 drops this exact line when it is left unchanged. The
