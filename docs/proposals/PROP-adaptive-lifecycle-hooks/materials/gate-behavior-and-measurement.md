@@ -6,11 +6,12 @@ specified only as far as the sizing and the delivery decision need.
 
 ## 1. Evidence boundary
 
-- The ledger design is the candidate of `PROP-adaptive-assignment-cli` at commit
-  `0cf00a403c208d432fba525cda81f8bdd6cdece6` of branch `plan-adaptive-assignment-cli`, read with `git show` from
-  `docs/proposals/PROP-adaptive-assignment-cli/proposal.md` and its two PADRs. It is in Planning and not accepted; its
-  two open questions (base dependency, command group name) do not affect this document. Section numbers below
-  (§3.2, §3.6) are that proposal's.
+- The ledger design is that of `PROP-adaptive-assignment-cli`, read with `git show` at commit
+  `0cf00a403c208d432fba525cda81f8bdd6cdece6` of its Planning branch from
+  `docs/proposals/PROP-adaptive-assignment-cli/proposal.md` and its two PADRs. The proposal has since been accepted
+  on the base branch (commit `caa50fa7`). Read again there, the rows of section 2 are unchanged except N8, which the
+  accepted design decides: Git calls inherit the environment. Section numbers below (§3.2, §3.6) are that
+  proposal's and are the same in both versions.
 - No ledger, command or package `devkit-adaptive` exists on this branch. Nothing here was run against one.
 - Timings were taken on this machine in this worktree (4,760 tracked files, four worktrees), three runs each:
   `.venv/bin/devkit host hook --host codex --asset x:y` with a minimal event on stdin took 0.06 s wall time (the
@@ -20,24 +21,24 @@ specified only as far as the sizing and the delivery decision need.
 
 ## 2. What the gate needs from the ledger and the commands
 
-| # | Need | Candidate design | Supplied |
+| # | Need | Assignment design | Supplied |
 | --- | --- | --- | --- |
 | N1 | A read interface a handler can call in process | The list use case is the read interface for other code and is declared in `public_modules` (§3.6) | Yes |
-| N2 | A read that fits a hook timeout whatever the repository size | `list` observes every assignment that is not `closed`: one `git status --untracked-files=all` and the HEAD and commit-count reads per assignment (§3.2). The cost is linear in open assignments and in working-tree size, and the candidate's own run lists it as unmeasured | **No.** A gate that needs statuses only wants the fold of the ledger with no worktree observation: the list use case accepts "do not observe", or a summary use case. At the 0.03 s measured here it is optional for a small repository |
+| N2 | A read that fits a hook timeout whatever the repository size | `list` observes every assignment that is not `closed`: one `git status --untracked-files=all` and the HEAD and commit-count reads per assignment (§3.2). The cost is linear in open assignments and in working-tree size, and that proposal's first Planning run lists it as unmeasured | **No.** A gate that needs statuses only wants the fold of the ledger with no worktree observation: the list use case accepts "do not observe", or a summary use case. At the 0.03 s measured here it is optional for a small repository |
 | N3 | The assignments that belong to the session that is stopping | The ledger is one file per repository, shared by every worktree (§3.6). A record names the assignee's `owner` and `worktree` and a `parent`; nothing names the checkout or session that recorded it (§3.3) | **No.** Needed: the worktree root from which `new` ran, recorded with the assignment. The gate then reads the top-level assignments recorded from the checkout that contains the hook's `cwd`. Whether a host exposes its session identity to a shell command is not stated on the fetched pages, so a session key is not assumed |
 | N4 | Tell a Host session from a worker | Not a ledger matter where the host separates the events: Claude Code documents `Stop` for the main agent only. On Codex it is unknown whether `Stop` fires inside a subagent thread (probe CX-4) | By the host on Claude Code; unknown on Codex |
 | N5 | Map a stopping subagent to its assignment | The hook supplies `agent_id`, `agent_type` and `cwd`. The record has no host agent identity; `owner` is free text | **Partly.** The derivable key is the assignment whose `worktree` contains the hook's `cwd`. It covers an assignee in its own worktree, which `CAP-DLV-adaptive-development` rule 20 requires of concurrent writers, if the host reports the subagent's working directory there (probes CC-3b, CX-4b). It does not cover an assignee that shares the Host checkout |
 | N6 | A condition that is true when a worker must not stop yet | The assignee runs no command; the delegating agent records `return` after the worker has stopped (§3.7). An assignment is therefore `open` at every `SubagentStop`, finished or not, and `verify` refuses an assignment without a return (`ADAPTIVE_ASSIGNMENT_NOT_RETURNED`) | **Partly.** The status carries no signal at that moment. Three conditions are derivable without one: a lead with a child that is not `closed` (ledger), and `no-changes` and `dirty` (the `list` observation). Paths outside the scope are not reported before a return; `list` reads worktrees "with the same Git commands as `verify`", so reporting them is an addition to that observation, not a command an assignee runs |
 | N7 | Defined results for a missing, damaged or unreachable ledger | No ledger: an empty list, exit `0`. Unterminated fragment: `ADAPTIVE_LEDGER_FRAGMENT_IGNORED` warning and a result. Unparsable line or unknown schema: `ADAPTIVE_LEDGER_UNREADABLE`. No repository: `ADAPTIVE_REPOSITORY_UNSUPPORTED` (§3.5) | Yes |
-| N8 | Git calls that ignore the hook process's Git environment | Left to Development: "a hook consumer makes inheritance a risk" (§3.8) | **Open.** Needed: the list use case drops `GIT_DIR`, `GIT_WORK_TREE` and `GIT_INDEX_FILE` |
+| N8 | Git calls that ignore the hook process's Git environment | Decided otherwise there: "Git calls inherit the environment". The commands read the repository that `GIT_DIR`, `GIT_WORK_TREE` or `GIT_INDEX_FILE` name when these are set, and the capability states this as a limit (§3.1, §3.4) | **No, by decision.** A hook process that a host starts with one of these variables set reads the repository it names |
 | N9 | A stable read contract | The file format is private; the list use case and `list --format json` are the contract (§3.6) | Yes |
 | N10 | Age or liveness of an assignment | Excluded by decision: no heartbeat, lease or age threshold; `assigned_at` is recorded (§3.1) | Not supplied, by design. The gate cannot tell a running assignee from an interrupted one from the ledger |
 
 Two groups of additions follow, both in the assignment feature:
 
-- **W6**: N2, N3 and N8. One recorded field on `new`, a list read without observation, and Git environment
-  scrubbing. N3 changes the candidate record, so it belongs to `PROP-adaptive-assignment-cli` or to a follow-up that
-  lands before a `Stop` gate and before observed runs are counted in a repository with concurrent sessions
+- **W6**: N2 and N3. One recorded field on `new` and a list read without observation. N3 changes the accepted
+  record. `PROP-adaptive-assignment-cli` is accepted, so W6 cannot enter its Planning: it is a follow-up to that
+  unit, delivered before a `Stop` gate and before observed runs are counted in a repository with concurrent sessions
   (section 4.2). A session-start injection that blocks nothing works without W6: it then lists every outstanding
   assignment of the repository with its worktree.
 - **W6b**: paths outside the scope in the `list` observation of an `open` assignment (N6). Only a `SubagentStop`
@@ -60,13 +61,14 @@ assignment recorded from this checkout (N3) is not `closed`, and the host's `sto
 | Matches F1 | Yes: a Host that named the IDs before pausing (`CAP-DLV-adaptive-development` rule 14) is not blocked | No: it blocks a correct pause |
 | Blocks in an active build | One per turn end until every outstanding ID is named or closed. Acting on an assignment, a cancel by second stop and continuation 3 release that stop only | About one per turn end, because every `new`, `return`, `verify` and `close` changes the set |
 | State the gate keeps | None as stated. With none, a cancel is forgotten at the next turn end and an unrelated session in the checkout is blocked at every turn end. The record of the other column, applied to the unnamed set, makes a cancel last for the session; gap G11 then applies to both conditions | One record per session under `.devkit/transient/`, keyed by a hash of the session identity (gap G11) |
-| Contract it touches | `CAP-DLV-adaptive-development` says the file is "not managed/transient state or a parsed lifecycle" (`:328`), and the candidate ledger decision says "No command reads or writes it". A token search by a hook handler reads it | None |
+| Contract it touches | `CAP-DLV-adaptive-development` says the file is "not managed/transient state or a parsed lifecycle" (`:328`), and the accepted ledger storage decision says "No command reads or writes it". A token search by a hook handler reads it | None |
 | What it misses | An ID named at an earlier pause whose status changed since | Nothing by construction |
 
 The sizing of the gate handler (W8, size M) holds under both, with or without the record. What selects the
 condition is one decision: whether a hook handler may read `.devkit/adaptive-dev.md`. Allowing it changes the
-sentence of `CAP-DLV-adaptive-development` quoted above and the sentence "No command reads or writes it" of the
-ledger storage decision in `PROP-adaptive-assignment-cli`. That decision is not settled here; it belongs to the
+sentence of `CAP-DLV-adaptive-development` quoted above and needs a decision that supersedes the sentence "No
+command reads or writes it" of the ledger storage decision in `PROP-adaptive-assignment-cli`, which is accepted.
+That decision is not settled here; it belongs to the
 specification if a gate is delivered. If it is refused, only the state-only condition remains, and by the
 wrong-block criterion of section 4.4 that condition is not deliverable on a host where Hosts name their assignments
 before pausing: no `Stop` gate is then delivered there.
@@ -112,7 +114,7 @@ condition would not have blocked correct pauses, before the gate is worth delive
 ### 3.2 `SubagentStop` gate
 
 The hypothesis of the proposal says a gate prevents workers "from ending with outstanding assignments". Under the
-candidate ledger a worker always ends with its assignment `open` (N6), so the status cannot be the block condition.
+assignment ledger a worker always ends with its assignment `open` (N6), so the status cannot be the block condition.
 Two gates of different cost follow.
 
 **Narrow gate, for an assignee in its own worktree.** The assignment is the one whose `worktree` contains the hook's
@@ -120,11 +122,11 @@ Two gates of different cost follow.
 
 | Condition | Source | Limit |
 | --- | --- | --- |
-| A lead stops while a child it recorded is not `closed` | Ledger (`parent`) | The candidate guidance already has a lead close its children before it returns |
+| A lead stops while a child it recorded is not `closed` | Ledger (`parent`) | The assignment guidance already has a lead close its children before it returns |
 | A writer with a commit grant stops with uncommitted paths | `list` observation (`dirty`) | An assignment without the grant leaves uncommitted paths on purpose. `verify` reports this as a warning, not a failed check, so F3 does not count it |
 | A writer without a commit grant stops with commits | `list` observation (`commits`) | Corresponds to the `commit` check |
 | A writer stops with paths outside its scope | `list` observation with W6b | Needs the addition; the largest expected value, because a worker that still runs can repair its own violation |
-| A writer stops with no change (`no-changes`) | `list` observation | A read-only or investigative assignment looks the same unless `write` is empty, and a correct result can be no change; the condition is kept only under the wrong-block term of section 4.4 |
+| A writer stops with no change (`no-changes`) | `list` observation | Applied only to an assignment with a commit grant: without the grant the final commit is always the base and the recorded verification holds no changed paths, so an accepted no-change result cannot be counted (section 4.2). A read-only or investigative assignment looks the same unless `write` is empty. A correct result can be no change; the condition is kept only under the wrong-block term of section 4.4 |
 
 It depends on four things that are not established: the host reports the subagent's working directory as `cwd`
 (probes CC-3b, CX-4b); devkit dispatches correctly for a `cwd` in another worktree (gap G16); W6b is added to the
@@ -243,7 +245,7 @@ observed runs at the end of the window is judged on the constructed scenarios al
 
 | Decision | Criterion, read after the measurement |
 | --- | --- |
-| Deliver a Host `Stop` gate on a host | F1 (`open` or action due) in at least 2 observed runs on that host, or in at least 2 of 5 runs of `combined-check` with O3 true; and the probes for that host show the hook delivered, the reason reaching the model, a release on the repeated stop, and a released stop when the hook command fails (CC-7, CX-7) or a fallback in the generated command that makes it so. With the name-aware condition the decision rests on these alone. The state-only condition also needs fewer than 3 of the 5 pause runs to show a would-be wrong block |
+| Deliver a Host `Stop` gate on a host | F1 (`open` or action due) in at least 2 observed runs on that host, or in at least 2 of 5 runs of `combined-check` with O3 true; and the probes for that host show the hook delivered, the reason reaching the model, a release on the repeated stop, and a released stop when the hook command fails (CC-7, CX-7) or, where CX-7 shows a held turn, a fallback in the generated command that probe CX-7b shows to release it. With the name-aware condition the decision rests on these alone. The state-only condition also needs fewer than 3 of the 5 pause runs to show a would-be wrong block |
 | Deliver `SessionStart` injection on a host | F2 in at least 2 of 5 runs of `interrupted-writer`, or in at least 2 observed resumed runs, on that host |
 | Deliver the narrow `SubagentStop` gate on a host | F3 in at least 20% of recorded returns across the observed runs, with at least ten returns; and probes CC-3b or CX-4b show the subagent's own worktree as `cwd`. Its `no-changes` condition is included only if no would-be wrong block of that gate occurred in the window |
 | Add a host adapter | A gate or an injection meets its criterion on that host and the host is not Codex |

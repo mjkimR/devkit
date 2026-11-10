@@ -48,8 +48,8 @@ is bounded and reusable by other bundles.
 Planning's finding on the hypothesis, before any measurement:
 
 - The host-adapter cost is bounded and sized (§3.3). It is small on Codex and concentrated in a second host.
-- The `Stop` half is buildable on the candidate ledger with three small additions to it (§3.4).
-- The `SubagentStop` half is buildable only narrowly. Under the candidate ledger a worker always ends with its
+- The `Stop` half is buildable on the accepted assignment ledger with two small additions to it (§3.4).
+- The `SubagentStop` half is buildable only narrowly. Under that ledger a worker always ends with its
   assignment `open`, so the status is no block condition. A gate for an assignee in its own worktree can use other
   conditions, with one more ledger addition and one host fact that is not established. A gate for every assignee
   needs the assignment design changed (§3.4, §3.5).
@@ -91,7 +91,7 @@ it. What the evidence settles:
 - **`boundaries` and `dev_effort` are unchanged.** They are revised with the option that is carried forward.
 
 Left to the specification of whatever is delivered, with the evidence in the materials: the block condition of the
-`Stop` gate (§3.5), and the Claude Code settings file with the place of its ownership record
+`Stop` gate (§3.5), and, under W4, the Claude Code settings file with the place of its ownership record
 (`materials/devkit-gaps-and-work-breakdown.md` §3.1).
 
 ### 3.2 What the hosts provide
@@ -139,18 +139,20 @@ behavior, and any hook on Claude Code.
 
 ### 3.4 What the gate needs from the ledger
 
-Read from `PROP-adaptive-assignment-cli` at commit `0cf00a40` of its Planning branch; that design is not accepted.
+Read at commit `0cf00a40` of the Planning branch of `PROP-adaptive-assignment-cli`; the proposal has since been
+accepted, with these rows unchanged except the Git environment, which the accepted design decides to inherit and
+states as a limit.
 
-| Need | Candidate design |
+| Need | Assignment design |
 | --- | --- |
 | A read interface for a handler; defined results for a missing or damaged ledger; a stable contract | Supplied |
 | A read that fits a hook timeout: statuses without one `git status` per open assignment | Missing; an option on the list use case |
 | The assignments of the stopping session: the checkout that recorded each one | Missing; one recorded field on `new`. The ledger is shared by every worktree of the repository, so without it a gate blocks unrelated sessions |
-| Git calls that ignore the hook process's Git environment | Left open there |
+| Git calls that ignore the hook process's Git environment | Decided otherwise there: Git calls inherit the environment |
 | A mapping from a stopping subagent to its assignment | Derivable only for an assignee in its own worktree, and only if the host reports that directory |
 | A condition that is true when a worker must not stop yet | Not the status: the delegating agent records the return after the worker has stopped. Unclosed children and uncommitted paths are derivable; paths outside the scope need an addition to the list observation |
 
-The first three missing rows are W6; the scope observation is W6b.
+The two rows marked missing are W6; the scope observation is W6b.
 
 ### 3.5 Gate behavior
 
@@ -195,7 +197,7 @@ ends, and what happens to this unit and its materials while it waits.
 
 If a delivery is wanted without the measurement, the smallest depends on the host of the user's adaptive Host
 sessions (q1): on Codex it is (c), which adds no response to the hook contract and blocks nothing; on Claude Code
-it is (c) with W4u, one spec of size L with a registration the user installs in each clone, or W4 first.
+it is (c) with W4u, one spec of size L with a registration the user installs in each checkout, or W4 first.
 
 Under (b), or (c) with Claude Code under W4, the proposal is returned for decomposition into a host child and an
 adaptive child.
@@ -208,7 +210,9 @@ adaptive child.
   becomes `rejected` with the reason "delivery decision deferred until the measurement", the Host first retains the
   materials under `docs/materials/` and opens a draft for the measurement
   (`materials/devkit-gaps-and-work-breakdown.md` §5). The alternative under (e) keeps the unit in review on its
-  branch.
+  branch. When the answer is (b), or (c) with Claude Code, it also names how the registration is installed: by the
+  user (W4u: no boundary change, a manual step per checkout, one spec for (c)) or by devkit (W4: the proposal is
+  returned for decomposition).
 - **q3 Live probes**: when the probes of `materials/live-probes.md` run. Recommended: now for the steps that can
   remove an option before the measurement (`Stop` inside a Codex subagent thread, the `cwd` of a subagent, the
   repeated stop after a tool call, a failed hook command), with their prerequisite steps; the rest, and a repeat of
@@ -218,11 +222,10 @@ adaptive child.
   `compact` source. Recommended: yes. It is asked only for the case that q2 selects an option with session-start
   injection.
 
-Two items are for the Host, not the user, while `PROP-adaptive-assignment-cli` is still in Planning: whether W6
-enters it, and whether its ledger storage decision keeps the sentence "No command reads or writes it" about
-`.devkit/adaptive-dev.md`, which the name-aware block condition would contradict. The recorded checkout cannot be
-added to assignments recorded before the field exists, and observed runs in a repository with concurrent sessions
-are counted only once it exists.
+Two items are for the Host, not the user. `PROP-adaptive-assignment-cli` is accepted, so neither can enter its
+Planning: W6 is a follow-up to that unit, delivered before a `Stop` gate and before observed runs with concurrent
+sessions are counted, and the name-aware block condition needs a decision that supersedes the sentence "No command
+reads or writes it". The recorded checkout cannot be added to assignments recorded before the field exists.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--

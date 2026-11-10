@@ -117,6 +117,7 @@ Start `codex` in the directory, trust the project and review the three hooks wit
 | CX-5 | Write `always` to `mode`, ask "Say hello."; interrupt after ten blocks; then `always-tool` | Whether the host ends the turn by itself, and after how many blocks, in each mode |
 | CX-6 | Write `slow` to `mode`, ask "Say hello." | Whether the turn ends or continues after the ten second timeout; what the host shows |
 | CX-7 | Write `fail` to `mode`, ask "Say hello." | Whether the turn ends; what the host shows |
+| CX-7b | Only if CX-7 shows a held turn: set the `Stop` command in `.codex/hooks.json` to `/ABSOLUTE/PATH/absent || echo '{}'`, review the changed hook, ask "Say hello." | Whether the turn ends: the host runs the command through a shell and a fallback releases the stop |
 | CX-8 | Remove `mode`; run `codex exec "Say hello."` in the directory | Whether `SessionStart` and `Stop` lines appear |
 | CX-9 | Change `timeout` to `11` for `Stop` in `.codex/hooks.json`, start a new session, ask "Say hello." | Whether the changed hook is skipped until reviewed again |
 | CX-10 | Copy `.codex/hooks.json` unchanged into `wt/` (the command still names `main/probe.py`), start `codex` there, ask "Say hello." | Whether the same registration in a second checkout needs its own trust and review |
@@ -159,7 +160,7 @@ above does not apply: the input has no `hook_event_name` documented and the resp
 | CX-10 shows a new review | Every worktree needs a review before its hooks run on Codex |
 | CX-4 shows `Stop` inside a subagent thread | The Host gate on Codex must tell subagent threads apart before it reads the ledger, or it is not delivered on Codex |
 | CX-6 shows a held turn | The gate handler gets a self-imposed deadline below the host timeout |
-| CX-7 shows a held turn | A hook command that fails before devkit runs, as when `devkit` is not on the host's PATH, holds every stop. Either the generated command gains a fallback that prints `{}`, which changes `CAP-HOST-lifecycle-observation` §4 and the command the receipt records, or no `Stop` gate is delivered on Codex |
+| CX-7 shows a held turn | A hook command that fails before devkit runs, as when `devkit` is not on the host's PATH, holds every stop. If CX-7b shows that a fallback releases it, the generated command gains a fallback that prints `{}`, which changes `CAP-HOST-lifecycle-observation` §4 and the command the receipt records. Otherwise no `Stop` gate is delivered on Codex |
 | CX-5 shows no host cap | The gate's own release on `stop_hook_active` is the only loop breaker on Codex |
 | CC-4 shows subagent entries that differ from shell entries in `background_tasks` | The gate releases without a block while subagents still run. If the entries cannot be told apart, the release is dropped: a background shell would otherwise release every stop |
 | CC-8 or CX-8 shows no hook in headless mode | The gate has no effect on headless runs; the measurement plan uses interactive sessions only |
