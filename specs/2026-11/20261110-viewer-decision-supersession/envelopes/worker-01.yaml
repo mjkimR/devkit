@@ -1,0 +1,26 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:42:28.133079Z'
+status: completed
+summary: Implemented and reviewed viewer supersession; all five review/reconcile defects fixed with permanent regressions, six Living Spec targets resolved. Host admitted exact devkit-docs repository UX citation test; no Tier B or sync-output additions. Ready for Host integration.
+findings: []
+assumptions:
+- Codex route is emulated; absolute paths, per-operation approvals and clean reviewer snapshot checks substitute for native isolation.
+- Exact Host Tier A extension packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py overrides its prior package deny only for screen citation regression coverage.
+unverified_areas:
+- 'Actual rendered layout and assistive-technology behavior remain unverified: CUA browser access host was unavailable. DOM interaction tests and generated build passed.'
+checks:
+  sync_start: PASS exit=0
+  tests: PASS all-tier affected167 pytest at100fc774 and167 frontend Vitest
+  frontend: PASS install lint check pack build with Node22.23.4
+  docs: PASS native citation pytest, lint and Pyright
+  generated: PASS viewer-assets stale0 and final sync check
+  rules: PASS cumulative CI rules and document checks
+  review: PASS fresh independent review02 and bounded implementer reverify02
+  reconcile: PASS independent reconcile-check02 all six targets
+diff_scope:
+  base: 5cf7d7a76ef8930e2e7c83d3b34a7f694989913a
+  head: e35b4c50e712a54220e5395cb19d6cfe20fd440c
+activity_effort: medium
