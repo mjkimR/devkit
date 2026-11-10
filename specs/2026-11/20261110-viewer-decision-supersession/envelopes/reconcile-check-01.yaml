@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:32:24.086925Z'
+status: completed
+summary: Six targets are covered; subject status and refreshed-target navigation contradict retained contracts and require code fixes.
+findings:
+- issue: Read and proposal-detail decision headers omit the subject actual status.
+  evidence: UX-view-decision.md:17,29; spec.md:153,165; ChapterSection.svelte:48-59 only renders group, title, ID/path and source badge.
+  failure_condition: A reader opens an ADR in Read or PADR in proposal detail.
+  suggested_action: Display actual subject status in ChapterSection header and add regression; preserve retained UX contract.
+  resolution: open
+  severity: P1
+- issue: Following a refreshed Read relation leaves target body and subject relation input stale.
+  evidence: spec.md:113-114; KnowledgeViews.svelte:107-118 and 513-515 retains bodies then calls jump without replacing the target.
+  failure_condition: A related ADR changes after book load, relations reload, and the reader follows the relation.
+  suggested_action: Replace selected target from fresh relation index before scrolling and test body and relation input alignment.
+  resolution: open
+  severity: P1
+checks:
+  coverage: PASS all six Living Spec targets covered
+diff_scope:
+  base: 5cf7d7a76ef8930e2e7c83d3b34a7f694989913a
+  head: 4df1400cfd0d908ca18f5182fdccadd1a0768792

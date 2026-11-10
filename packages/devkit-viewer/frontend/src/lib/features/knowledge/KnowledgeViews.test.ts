@@ -184,6 +184,9 @@ describe('Read decision supersession', () => {
 			onOpen = vi.fn();
 		render(KnowledgeViews, { ...props(source), view: 'book', bookRequested: true, onOpen });
 		await screen.findAllByText('old clause.');
+		expect(document.querySelector('section.chapter header .decision-status')?.textContent).toBe(
+			'accepted'
+		);
 		expect(source.treeRecursive).toHaveBeenCalledTimes(2);
 		await fireEvent.change(screen.getByRole('combobox', { name: 'Scope' }), {
 			target: { value: 'a' }
@@ -199,7 +202,7 @@ describe('Read decision supersession', () => {
 		const proposal =
 			'---\nid: PROP-test\ntitle: Test proposal\nstatus: reviewing\n---\n# Test proposal';
 		const padr =
-			'---\nid: PADR-test\ntitle: Test decision\nsupersedes: ADR-old\n---\nSupersedes in part `ADR-old`: proposed scope.';
+			'---\nid: PADR-test\ntitle: Test decision\nstatus: draft\nsupersedes: ADR-old\n---\nSupersedes in part `ADR-old`: proposed scope.';
 		source.planningProposals = vi.fn(async () => ({
 			sources: [
 				{
@@ -239,6 +242,9 @@ describe('Read decision supersession', () => {
 		await fireEvent.click(await screen.findByText('Test proposal'));
 		await fireEvent.click(await screen.findByRole('button', { name: 'decisions/PADR-test.md' }));
 		await screen.findByText('Proposed supersession');
+		expect(document.querySelector('section.chapter header .decision-status')?.textContent).toBe(
+			'draft'
+		);
 		expect(document.querySelector('.source-badge')?.textContent).toBe('worktree plan-test');
 		await fireEvent.click(screen.getByRole('link', { name: /ADR-old — Old decision/ }));
 		expect(onOpen).toHaveBeenCalledWith('docs/packages/a/decisions/old.md');
@@ -289,4 +295,46 @@ it('Read relation reload refreshes peers while retaining each displayed subject 
 		document.getElementById('doc-docs%2Fdecisions%2Fnew.md')!.querySelector('.replacement-text')
 			?.textContent
 	).toBe('initial scope');
+});
+
+it('Read relation navigation refreshes the selected target body and subject input together', async () => {
+	let scope = 'original scope';
+	const files = () => ({
+		'docs/decisions/old.md':
+			'---\nid: ADR-old\ntitle: Earlier\nstatus: accepted\n---\n# Earlier body',
+		'docs/decisions/new.md': `---\nid: ADR-new\ntitle: Later\nstatus: accepted\nsupersedes: ADR-old\n---\n# Later body\n\nSupersedes in part \`ADR-old\`: ${scope}`
+	});
+	const listing = (root: string) => ({
+		items: Object.keys(files())
+			.filter((path) => path.startsWith(`${root}/`))
+			.map((path) => ({ path, name: path.split('/').at(-1)!, type: 'blob' }))
+	});
+	const source: RepositoryDataSource = {
+		info: async () => ({ default_branch: 'main' }),
+		tree: async (root) => listing(root),
+		treeRecursive: async (root) => listing(root),
+		blob: async (path) => ({
+			path,
+			content: files()[path as keyof ReturnType<typeof files>],
+			encoding: 'utf-8'
+		})
+	};
+	render(KnowledgeViews, { ...props(source), view: 'book', bookRequested: true });
+	await screen.findAllByText('original scope');
+	const earlier = document.getElementById('doc-docs%2Fdecisions%2Fold.md')!;
+	scope = 'updated scope';
+	await fireEvent.click(
+		[...earlier.querySelectorAll('button')].find(
+			(button) => button.textContent === 'Reload relations'
+		)!
+	);
+	await waitFor(() =>
+		expect(earlier.querySelector('.replacement-text')?.textContent).toBe('updated scope')
+	);
+	await fireEvent.click(earlier.querySelector('.relation-row a')!);
+	const later = document.getElementById('doc-docs%2Fdecisions%2Fnew.md')!;
+	await waitFor(() =>
+		expect(later.querySelector('.markdown-body')?.textContent).toContain('updated scope')
+	);
+	expect(later.querySelector('.replacement-text')?.textContent).toBe('updated scope');
 });

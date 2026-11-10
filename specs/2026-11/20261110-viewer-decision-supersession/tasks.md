@@ -18,3 +18,11 @@ plan: PLAN-viewer-decision-supersession
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/static/`
   - _Requirements: AC-08_
   - **Verification**: `just viewer pack`, `just viewer build`, `uv run devkit generated check viewer-assets`
+
+- [x] **Task 4**: Verify exact viewer UC screen citations while retaining nonscreen repository UC coverage.
+  - **_Boundary**: `packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py`
+  - _Requirements: AC-08_
+  - **Verification**: targeted native pytest and affected checks.
+
+The Host explicitly admitted Task 4's exact cross-package test path after its no-screens repository assumption
+failed on the first approved viewer UX use case. All other devkit-docs production and test paths remain excluded.

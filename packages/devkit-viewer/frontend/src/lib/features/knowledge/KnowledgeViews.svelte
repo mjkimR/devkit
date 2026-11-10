@@ -398,6 +398,21 @@
 		onLocation(path, anchor, view, findDocument(path)?.meta ?? {});
 	}
 
+	async function openRelation(path: string) {
+		if (view !== 'book') {
+			onOpen(path);
+			return;
+		}
+		const fresh = relationDocuments.find((doc) => doc.path === path);
+		if (fresh) {
+			documents = documents.some((doc) => doc.path === path)
+				? documents.map((doc) => (doc.path === path ? fresh : doc))
+				: [...documents, fresh];
+			await tick();
+		}
+		await jump(path);
+	}
+
 	function linkNavigation(node: HTMLElement) {
 		node.addEventListener('click', followLink);
 		return {
@@ -510,10 +525,7 @@
 							{relationLoading}
 							relationErrors={errors}
 							onReloadRelations={reloadRelations}
-							onRelationOpen={(path) => {
-								if (view === 'book') void jump(path);
-								else onOpen(path);
-							}}
+							onRelationOpen={openRelation}
 						/>
 					{/each}
 					{#if !visibleDocs.length}

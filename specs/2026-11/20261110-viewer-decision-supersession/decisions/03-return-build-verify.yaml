@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Implement retained decision status and selected relation-target freshness; preserve
+  contracts.
+at: '2026-11-10T05:32:24.895342Z'

@@ -2,6 +2,7 @@
 	import type { RepositoryDocument } from '../../api/documents';
 	import { documentAnchor, bookGroup } from '../../api/documents';
 	import SupersessionSummary from '../document/SupersessionSummary.svelte';
+	import { isDecision } from '../document/supersession';
 
 	let {
 		doc,
@@ -51,6 +52,9 @@
 			<span class="chapter-group">{bookGroup(doc) ?? fileLabel(doc.path)}</span>
 			<h2>{doc.title}</h2>
 			<small>{doc.meta.id ? doc.meta.id + ' · ' : ''}{doc.path}</small>
+			{#if isDecision(doc)}<span class="decision-status"
+					>{typeof doc.meta.status === 'string' ? doc.meta.status : 'Unknown status'}</span
+				>{/if}
 		</div>
 		{#if sourceLabel}
 			<span class="source-badge" title="Planning source">{sourceLabel}</span>
@@ -87,6 +91,13 @@
 		gap: 16px;
 		padding-bottom: 20px;
 		border-bottom: 1px solid var(--border-panel);
+	}
+
+	.decision-status {
+		display: inline-block;
+		margin-left: 8px;
+		font-size: 12px;
+		color: var(--text-secondary);
 	}
 
 	.chapter h2 {
