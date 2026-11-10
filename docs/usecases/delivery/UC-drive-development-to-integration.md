@@ -21,6 +21,7 @@ entrypoints:
 
 created_at: 2026-10-21
 capabilities:
+  - CAP-DLV-delivery-roles
   - CAP-DLV-delivery-workflows
   - CAP-DLV-project-policy
   - CAP-DLV-workflow-envelopes
@@ -87,11 +88,11 @@ The integration executor's coded refusals this section does not name, and their 
 - **1b.** The user instructs `local-orchestrated` mode: a `development-worker` runs the turn in its own `dev-`
   worktree from the stage the workflow names up to the final change report, nests the reviewers and commits at every
   stage boundary; the agent validates the cumulative committed range, and a range it rejects becomes a problem in its
-  own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-workflows`). The Host reuses git-operator for
+  own `worker` envelope that blocks the Unit (`CAP-DLV-delivery-roles`). The Host reuses git-operator for
   read-only preparation and exact authorized execution, retaining source preparation and acceptance; normal
   integration includes cleanup (`CAP-INT-mcp-services`). Before starting the worker on a `prepare-worktree` or
   `handoff` result, the Host compares its `checks.worker_input` (`head`, `dirty_paths`) with its own Git observation
-  and starts the worker only on a clean HEAD (`CAP-DLV-delivery-workflows`). Once every unit of the run is finished
+  and starts the worker only on a clean HEAD (`CAP-DLV-delivery-roles`). Once every unit of the run is finished
   (integrated, blocked with its problem recorded, waiting for a user decision or continued in `direct`) and no worker
   turn is running, the Host runs `devkit generated check` on the base branch HEAD, regenerates and commits any stale
   artifact (`devkit generated regen <ids>`), then runs the repository's integrated-content tests once on that head
@@ -401,7 +402,7 @@ The integration executor's coded refusals this section does not name, and their 
   warning naming `uv run devkit generated regen devkit-receipt`, the landed tree keeps the base's receipt and equals
   the prepared result, and the branch received no base merge
 
-### Scenario 32: Final failure is repaired on the target
+### Scenario 33: Final failure is repaired on the target
 - **Covers**: 9a
 - **Given**: confirmed landing and cleanup followed by a failing final check
 - **When**: the Host repairs the target within scope and reruns required checks

@@ -265,7 +265,7 @@ Decided by the user (`review-method` and `review-placement`). (ADR-ux-review-bef
   - No mechanical check before code. A link defect found at `living-spec-draft` that the code shares (for example a
     missing exit) returns the unit to `build-verify`, which repeats code review; one only in the documents is fixed at
     sync. (ADR-ux-drafts-before-code)
-  - Nothing blocks a unit that skips the UX review; `CAP-DLV-delivery-workflows` gains a seventh role, and the effort
+  - Nothing blocks a unit that skips the UX review; `CAP-DLV-delivery-roles` contains the seventh role, and the effort
     table and its review rule name the UX review. (ADR-ux-review-before-code)
 - **Follow-ups**:
   - A derived navigation listing (from the targets) if projects report that screens alone are hard to navigate.

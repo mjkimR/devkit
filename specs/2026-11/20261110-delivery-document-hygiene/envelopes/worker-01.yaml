@@ -1,0 +1,25 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:26:33.836703Z'
+status: completed
+summary: Completed content-preserving capability partition, exact current trace/backlink repairs, reference deduplication and scenario numbering; independent review/reconcile findings fixed, ready for Host integration.
+findings: []
+assumptions:
+- Codex isolation is emulated through absolute worktree scope, per-operation permissions and unchanged reviewer tree/HEAD audits.
+- No Tier B extension, sync output, runtime, dependency, asset or historical-spec change.
+unverified_areas:
+- Host integration and final target verification remain pending; baseline line-budget warnings are source-pinned, not future byte-policy claims.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS 17 tier-all affected tests at c46dfaca; explicit empty E2E selection from cf1c4fd4
+  rules: PASS cumulative rules and committed-range whitespace
+  sync: PASS final exit=0 no outputs
+  review: PASS mandatory independent review; anchor P2 closed by reverify
+  reconcile: PASS independent20-target contract verification; prescribed EOF P2 self-verified
+  preservation: PASS normalized source/destination blocks, original anchors, scenario bodies and backlinks
+diff_scope:
+  base: d43a6a63f99a7ab910eb9dc615535741c09901b1
+  head: 7190161697a058a6d7588f40cf6ea0939013b046
+activity_effort: medium

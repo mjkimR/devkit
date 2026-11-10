@@ -90,7 +90,7 @@ We adopt **Option 1**.
   supersession (MUST)
 - `devkit spec proposal handoff` writes the pointer from the promoted decision's statement and refuses, before any
   write, a `supersedes` entry that needs a pointer and has no statement. Nobody rewrites the pointer after handoff. →
-  `CAP-DLV-proposal-planning` 4.5 step 4 (MUST)
+  `CAP-DLV-proposal-lifecycle` §4.1 step 4 (MUST)
 - `RULE-decision-supersession` reports a missing, duplicated, stray or empty statement in an ADR or a PADR, and an
   earlier ADR without a pointer that repeats the statement. The rule stays report-only: it compares text and never
   interprets which clauses a statement covers. → `CAP-GOV-spec-rules` 3.17 (MUST)

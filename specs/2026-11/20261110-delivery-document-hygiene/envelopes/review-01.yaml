@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:14:58.682483Z'
+status: completed
+summary: Contract relocation, admitted scope and scenario preservation pass; restore the original handoff portal anchor.
+findings:
+- issue: The proposal portal changes the original handoff anchor.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-planning.md:306 replaces Handoff Steps with Lifecycle operations, changing the original fragment.
+  failure_condition: An existing handoff-section bookmark no longer resolves, contrary to portal-anchor preservation.
+  suggested_action: Retain the original Handoff Steps heading for the redirect portal.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only role; identical before/after tree83a1081f and HEADc45b465d.
+checks:
+  preservation: PASS independently reconstructed all three relocated blocks
+  scenarios: PASS bodies unchanged
+diff_scope:
+  base: d43a6a63f99a7ab910eb9dc615535741c09901b1
+  head: c45b465d40dbd17af1efe75f89a2a035141d5460

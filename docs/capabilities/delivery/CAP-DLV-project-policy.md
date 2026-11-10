@@ -55,7 +55,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    main decision boundaries, followed in policy output by configured custom gates. Each boundary
    permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
    declared by no workflow stage: `devkit spec proposal accept --mode accept_and_handoff` and
-   `devkit spec proposal handoff --effort` read it (`CAP-DLV-proposal-planning`). The plain
+   `devkit spec proposal handoff --effort` read it (`CAP-DLV-proposal-lifecycle`). The plain
    `devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff`
    decision and reads no policy itself.
    An explicit task instruction MUST authorize only its stated scope; no intent approval record is created. An uninstructed Backlog item does

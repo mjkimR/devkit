@@ -22,6 +22,8 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/git-operator.md
 created_at: 2026-10-13
 capabilities:
+  - CAP-DLV-proposal-lifecycle
+  - CAP-DLV-delivery-roles
   - CAP-DLV-proposal-planning
   - CAP-DLV-spec-bundles
   - CAP-DLV-delivery-workflows

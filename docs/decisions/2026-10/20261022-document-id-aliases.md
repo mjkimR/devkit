@@ -92,7 +92,7 @@ Option 4.
 ## 5. Consequences
 
 - A rename keeps the old ID in `aliases`, and one `devkit rules fix` moves current documents to the new ID.
-- The handoff gains alias translation and an alias clash check (`CAP-DLV-proposal-planning`).
+- The handoff gains alias translation and an alias clash check (`CAP-DLV-proposal-lifecycle`).
 - Aliases are identifiers, not search keywords; the playbook field of the same name follows this meaning
   (`ADR-playbook-retrieval`).
 - ADR supersession stays as it is, and no file under `docs/decisions/` is edited by this work.

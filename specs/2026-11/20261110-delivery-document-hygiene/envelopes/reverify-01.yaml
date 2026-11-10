@@ -1,0 +1,16 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:15:45.977110Z'
+status: completed
+review: review-01.yaml
+summary: Restored every baseline portal heading; implementer verified all original H2/H3 anchors and existing doorway entrypoints.
+findings:
+- issue: The proposal portal changes the original handoff anchor.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-planning.md:306 replaces Handoff Steps with Lifecycle operations, changing the original fragment.
+  failure_condition: An existing handoff-section bookmark no longer resolves, contrary to portal-anchor preservation.
+  suggested_action: Retain the original Handoff Steps heading for the redirect portal.
+  resolution: resolved
+  severity: P2
+checks: {}
