@@ -1,7 +1,7 @@
 ---
 id: PADR-impeccable-session-authority
 title: Bounded Impeccable sessions under coordinator acceptance
-summary: For user-selected Impeccable craft work, we let one bounded session edit only brief-named product files while the coordinator accepts, verifies and delivers the result through the consumer workflow, keeping context isolated, accepting host-dependent enforcement.
+summary: For user-selected Impeccable craft work, we let one bounded session edit only brief-named product files under coordinator acceptance and let the coordinator set up or clean up only on the user's request, keeping consumer authority and context isolation, accepting host-dependent enforcement.
 proposal: PROP-uiux-improve-ooux-impeccable
 supersedes: [ADR-uiux-improvement-workflow-boundary]
 status: draft
@@ -21,11 +21,13 @@ created_at: 2026-11-10
 suggestions and leave product source, retained files, index and HEAD unchanged, and the capability excludes automatic
 companion skill invocation. Impeccable, a separately installed design skill, changes product source through its own
 commands, writes project context files that its README recommends committing and writes its own session output under
-`.impeccable/`. Several of its commands ask the user questions before they act (new work, `init`, `shape`,
+`.impeccable/`. A project may also keep its OOUX model in a glossary, an object register and UX documents that the
+consumer's own workflow maintains. Several of its commands ask the user questions before they act (new work, `init`, `shape`,
 `critique`). Running it inside the coordinator's context loads its instruction set into the rest of the improvement
 request; running it in a separate session lets a second actor edit the working tree. The skill must state who may
 edit what, when that actor runs and who answers for the result, without granting workflow authority the consumer has
-not given.
+not given. Installing Impeccable and removing its output are steps the user can take by hand; the skill must say
+when the coordinator may take them instead.
 
 ## 2. Decision Drivers
 
@@ -33,6 +35,8 @@ not given.
 - Keep Impeccable's instruction volume out of the coordinator's context.
 - Make every product edit attributable and checked before it is reported or delivered.
 - Leave consumer-owned files in place; never delete or hide them without the consumer's direction.
+- Let the user hand routine setup and cleanup to the coordinator without the coordinator acting on its own.
+- Keep one source for the object model; reference the consumer's OOUX documents instead of copying them.
 - Keep the user in the loop wherever Impeccable asks the user; no actor answers on the user's behalf.
 - Keep small requests inexpensive; invoke no external skill the user did not select.
 - Add no runtime, installer or vendored upstream text to devkit.
@@ -57,26 +61,36 @@ not given.
 Chosen option: bounded delegated session under coordinator acceptance, because it keeps Impeccable's instructions out
 of the coordinator's context while every product change still passes the coordinator's inspection and the consumer's
 checks and approvals. Routing interactive commands to a session the user runs keeps Impeccable's questions with the
-user.
+user. Setup and cleanup stay steps the user takes or requests, so the coordinator gains no initiative over consumer
+files, and the OOUX reference section keeps one source for the object model.
 
 - Without the user's selection of the Impeccable track, the coordinator neither starts an Impeccable session nor loads
   or invokes Impeccable in its own context. An installed Impeccable permits an offer. Output of a hook the user
   installed is consumer check evidence, not an invocation. → `CAP-DLV-uiux-improvement` rule 15 (MUST).
-- The coordinator never installs Impeccable. When it is absent, the coordinator names the upstream install routes
-  and continues inline if the user wants. → `CAP-DLV-uiux-improvement` rule 10 (MUST).
+- When Impeccable is absent, the coordinator names the upstream install routes and continues inline if the user
+  wants. → `CAP-DLV-uiux-improvement` rule 10 (MUST).
+- On the user's request, and never on its own initiative, the coordinator may install Impeccable through an upstream
+  route it can run, add upstream's recommended ignore entries, remove Impeccable runtime or session output the user
+  names, or add an OOUX reference section to `PRODUCT.md`. A user-directed action is the consumer's decision and goes
+  through the consumer workflow and the host's approvals. → `CAP-DLV-uiux-improvement` rule 19 (MUST).
+- `PRODUCT.md` and `DESIGN.md` stay out of any cleanup the user does not name them in, and any change to them needs
+  the user's explicit direction. → `CAP-DLV-uiux-improvement` rule 19 (MUST).
+- The OOUX reference section in `PRODUCT.md` names the consumer's OOUX documents by path and copies none of their
+  content. → `CAP-DLV-uiux-improvement` rule 19 (MUST).
 - Before delegating, the coordinator completes the consumer workflow's steps that precede implementation (for example
   a branch, worktree or required record). → `CAP-DLV-uiux-improvement` rule 3 (MUST).
-- The session receives a self-contained brief: goal, framing result, the absolute working directory, the recorded base,
-  the product files it may edit, the files and concerns it leaves unchanged (data schema, business logic,
-  dependencies, files with uncommitted user edits unless the user includes them), whether it may write consumer
-  context files, the commands to run, the stop condition and the expected return. → `CAP-DLV-uiux-improvement`
-  rule 16 (MUST).
+- The session receives a self-contained brief: goal, the consumer's OOUX document paths as read-only context or the
+  conversation framing when none exist, the absolute working directory, the recorded base, the product files it may
+  edit, the files and concerns it leaves unchanged (data schema, business logic, dependencies, the OOUX documents,
+  files with uncommitted user edits unless the user includes them), whether it may write consumer context files, the
+  commands to run, the stop condition and the expected return. → `CAP-DLV-uiux-improvement` rule 16 (MUST).
 - The recorded base is HEAD, the working-tree status and the content hashes of the listed files where the project
   uses Git, and the listed files' content hashes otherwise. → `CAP-DLV-uiux-improvement` rule 16 (MUST).
 - A fresh child runs only commands that refine existing surfaces without user answers (`polish`, `audit` and narrow
-  refinement commands). New work, `init`, `shape` and `critique` run in a session the user operates from the same
-  brief. A child that meets an upstream question returns it as a blocker and never answers it.
-  → `CAP-DLV-uiux-improvement` rule 16 (MUST).
+  refinement commands), loading Impeccable through the host's skill mechanism. New work, `init`, `shape` and
+  `critique` run in a session the user operates from the same brief. A child that meets an upstream question or
+  cannot load Impeccable returns it as a blocker and never answers it; the coordinator moves the command to the
+  user's session. → `CAP-DLV-uiux-improvement` rule 16 (MUST).
 - The brief excludes Impeccable's `live` mode and any other route that turns off the host's sandbox or approvals,
   because such a route bypasses the consumer's permissions. → `CAP-DLV-uiux-improvement` rule 16 (MUST).
 - The session leaves index, HEAD, commits and every file outside its permitted classes unchanged. It writes consumer
@@ -89,12 +103,13 @@ user.
   product files into verification and reports any other change without reverting or deleting it. A moved HEAD, a
   missing base or a change to an ignored path it cannot observe is reported as unverifiable attribution or limited
   coverage. → `CAP-DLV-uiux-improvement` rules 10 and 17 (MUST).
+- After accepting a change, the coordinator reports the consumer's OOUX documents whose states or interactions it
+  made stale and edits none of them; the consumer workflow updates them. → `CAP-DLV-uiux-improvement` rule 17 (MUST).
 - The coordinator owns synthesis, acceptance, verification and continuation of accepted changes through the
   consumer's existing workflow. Selection or delegation grants no commit, integration or publication authority.
   → `CAP-DLV-uiux-improvement` rules 3 and 17 (MUST).
 - Consumer context files are consumer-owned project files. The coordinator reports which ones the session created or
-  changed, with upstream's commit-versus-ignore guidance, and changes neither them nor `.gitignore` without the user's
-  direction. → `CAP-DLV-uiux-improvement` rule 18 (MUST).
+  changed, with upstream's commit-versus-ignore guidance. → `CAP-DLV-uiux-improvement` rule 18 (MUST).
 - Local roles keep returning suggestions and evidence only; the delegated session is not a local role.
   → `CAP-DLV-uiux-improvement` rule 9 (MUST).
 
@@ -115,12 +130,15 @@ own instructions.
   out-of-list edit, only expose it afterward; ignored paths can escape a Git comparison.
 - Risk: Impeccable's commands, files and install routes are upstream contracts that can change. The skill names them
   without vendoring them; a session that finds a changed contract reports it in its return.
-- Follow-up: when the user asks to retain or ignore Impeccable files, the coordinator applies that request through
-  the consumer workflow as an ordinary product change.
+- Positive: every Impeccable command reads the object model through the `PRODUCT.md` reference section without a
+  copy that drifts.
+- Negative: a stale UX document stays stale until the consumer workflow updates it; the skill only reports it.
+- Negative: whether a fresh child can load Impeccable depends on the host (documented for Claude Code subagents, not
+  for Codex sub-agents); where it cannot, refinement also needs the user's session.
 
 ## 6. Confirmation
 
 - The renamed integration test (`test_entry_preserves_improvement_scope_and_consumer_authority` and the delegation
-  assertions planned beside it) checks the selection, brief, command routing, question return, pause, acceptance and
-  file-ownership instructions.
+  assertions planned beside it) checks the selection, brief, command routing, question return, pause, acceptance,
+  stale-document report, file-ownership and user-requested setup and cleanup instructions.
 - Review only: whether a host enforces the edit list and whether a delegated session honors its brief.

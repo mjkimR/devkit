@@ -55,3 +55,14 @@ A Planning scout read the public repository at `main` =
 | Live mode | `README.md` "Live mode": apply runs `codex` or `claude` with sandbox and approvals off. | The brief excludes `live`, because it bypasses the consumer's approvals. |
 | Scope guidance | `reference/init.md:7`: confirm shared versus app-specific scope before writing; `SKILL.md`: "Never repair drift as a side effect of a design task." No guidance on running Impeccable in a separate session beyond the critique sub-agents. | The edit list and stop condition come from the coordinator's brief. |
 | License | Apache-2.0 (`LICENSE`); `NOTICE.md` credits MIT-licensed platform references. | Nothing is copied; attribution applies only if later work copies text. |
+
+## 4. Host facts: can a fresh child load an installed Impeccable
+
+A Planning scout read the official host documentation on 2026-11-10 (WebFetch summaries; exact wording not
+re-verified). No host session was run.
+
+| Host | Evidence | Planning consequence |
+| :--- | :--- | :--- |
+| Claude Code | [Sub-agents](https://code.claude.com/docs/en/sub-agents), "Preload skills into subagents": without the `skills` field a subagent "can still discover and invoke project, user, and plugin skills through the Skill tool during execution"; a subagent starts with a fresh context and does not inherit skills the parent already invoked; skills that set `disable-model-invocation: true` cannot be preloaded; omitting `Skill` from `tools` blocks skills. The built-in general-purpose agent has "every tool available to subagents"; its `Skill` access is inferred, not stated. [Skills](https://code.claude.com/docs/en/skills): project skills load from `.claude/skills/`, plugin skills are namespaced `/plugin:skill`. | A fresh child can load Impeccable through the Skill tool when the host gives the child that tool. Unverified: the general-purpose agent's access and whether Impeccable's own frontmatter blocks model invocation. |
+| Codex | Skills ([build skills](https://learn.chatgpt.com/docs/build-skills)): Codex scans `.agents/skills` from the working directory up to the repository root. Sub-agents ([subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)): "Skills inherit from the parent, and a custom agent can disable individual skills with `skills.config`"; sub-agents inherit the sandbox policy. Skill discovery inside a sub-agent is not described. | Unverified: whether a Codex sub-agent loads an installed Impeccable. |
+| Any host, path-read fallback | A child that reads `SKILL.md` by path gets the prompt text but loses skill-scoped hooks and tool grants and must resolve bundled files itself (Claude Code skills page). | Rejected as a route: the child loads Impeccable through the host's skill mechanism or returns a blocker, and the command moves to the user's session. |
