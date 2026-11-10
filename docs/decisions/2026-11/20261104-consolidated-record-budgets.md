@@ -9,6 +9,8 @@ created_at: 2026-11-04
 
 # [ADR-consolidated-record-budgets] Rule-local budgets for alias-bearing records
 
+Superseded in part by `ADR-byte-based-file-budgets`: the line-count metric, line-based setting names and the repository's 600-line limits. Alias eligibility, optional rule-local budgeting, max precedence and pure settings resolution remain.
+
 - **Status**: Accepted
 - **Date**: 2026-11-04
 
