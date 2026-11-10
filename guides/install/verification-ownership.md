@@ -34,7 +34,7 @@ no role or current-directory restriction is installed.
 ## Apply an upgrade
 
 1. Inventory existing required commands and their CI coverage before editing guidance.
-2. Upgrade the installed devkit packages through the project's documented dependency procedure, then run its
+2. If devkit is not installed, keep the native tooling and skip this step. Otherwise upgrade the installed devkit packages through the project's documented dependency procedure, then run its
    documented `devkit sync` invocation to refresh selected managed assets. No fixed package manager is required
    by the responsibility split; use the consumer's existing prefix.
 3. Inspect project-owned instructions outside the managed block. Sync updates managed assets and its own block;
