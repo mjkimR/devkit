@@ -115,7 +115,7 @@ The common path: a `spec`-depth `feature` in `direct` mode.
    This writes `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with skeleton `spec.md`, `plan.md` and `tasks.md`, bound to
    `sdd-spec-feature`, and ends with `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`
    ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)).
-6. **Intent.** It records `plan-intent` from your explicit instruction.
+6. **Scope.** It states the scope authorized by your explicit instruction; no intent approval record is created.
 7. **Next stage.** It runs `devkit workflow next --unit <dir>` and follows the stage, its unmet checks and the skill it
    names ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)).
 
@@ -126,24 +126,16 @@ The common path: a `spec`-depth `feature` in `direct` mode.
 | Approach is `adaptive-dev` | No SDD routing: the agent follows the project's adaptive development guidance and its independent document and project checks, creating no Unit and choosing no depth. See [Advance an idea](advance-an-idea.md). Units already bound to SDD keep their checks. |
 | `session` depth | Intent agreed in conversation; the agent follows `sdd-session-<task-kind>` itself, writing no Unit, envelope, gate record or reconcile document. |
 | `proposal` depth | `devkit spec proposal new <slug>` creates a draft `docs/proposals/PROP-<slug>/proposal.md`; continues in [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md). |
-| Not starting now, or too big | Kept as one or more draft proposals in Backlog, optionally in a milestone, with `decomposed_from` or `supersedes` preserving the origin. Work that would need two or more specs or a different `task-kind` is `size: XL` and is decomposed before `plan-intent`. |
+| Not starting now, or too big | Kept as one or more draft proposals in Backlog, optionally in a milestone, with `decomposed_from` or `supersedes` preserving the origin. Work that would need two or more specs or a different `task-kind` is `size: XL` and is decomposed before Planning. |
 | `overall-refactor` | No behavior added, several areas restructured: `sdd-overall-refactor` in `direct` mode, without a Unit, proposal or bundle. |
 | Defect against a contract | `devkit spec new <slug> --workflow sdd-spec-bugfix`: only `spec.md`; the `reproduce` stage stays open until a reproduction is recorded. |
 | You only ask "what next?" | `spec-next` recommends an eligible queued draft (by prerequisites, milestone, priority, size); `needs_decompose` and `XL` drafts are reported as Backlog decomposition through the `decomposer` role; approvals stay with you. |
 
-## Approving the intent
+## Authorizing the task
 
-Under `plan-intent` policy `ask` (the default), when goal, scope, verification, kind or depth are still open,
-`devkit workflow next` prints `[WAITING: human gate:plan-intent]`. The agent asks you, and records your answer only
-after you reply:
-
-```sh
-uv run devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user
-uv run devkit workflow answer --unit <dir> --request gate:plan-intent --action decline --by user --note "<reason>"
-```
-
-Under `auto` the gate passes by policy, and the agent reports it as policy, never as your consent. A decline ends the
-task.
+Your explicit instruction authorizes the stated goal and scope. The agent clarifies unresolved details before
+starting dependent work; it creates no intent gate record. Later proposal acceptance, Development start and final
+integration retain their independent approval policies.
 
 ## When it goes wrong
 
@@ -155,7 +147,7 @@ task.
 - **`DEVELOPMENT_CONFIG_INVALID`.** The `[development]` table has an unknown key or value; policy-dependent commands
   refuse until you fix `.devkit/config.toml`.
 - **`SPEC_CONFIG_INVALID` from `devkit spec policy`.** A `[tool.spec]` key is unknown, or a gate policy is not `ask` or
-  `auto` (for example `plan-intent = "off"`). The agent stops policy-dependent work until you fix `.devkit/config.toml`.
+  `auto` (for example `plan-accept = "off"`). The agent stops policy-dependent work until you fix `.devkit/config.toml`.
 - **`SPEC_WRONG_BRANCH`.** The checkout is not on `dev-<slug>`; nothing is written. Start or continue that branch, then
   rerun `devkit spec new`.
 - **`SPEC_EXISTS`.** Another document, proposal or bundle already holds the slug (`[TARGET]` lists it). Choose another

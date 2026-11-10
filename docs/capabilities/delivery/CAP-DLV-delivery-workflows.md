@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD stages, gates and records govern delivery. Workers retain source scope; the Host accepts verification, including optional isolated background groups, while git-operator performs authorized Git lifecycle effects."
+summary: "SDD stages retain eligibility checks and historical records without task-intent approval. Later boundaries govern delivery; workers retain scope, the Host accepts verification and git-operator executes authorized lifecycle effects."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -35,7 +35,7 @@ sequence.
 ## 2. Scope & Boundary
 
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
-  the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
+  the approval semantics of `plan-accept`, `proposal-handoff`, `dev-integration` and the `exception` stage, the envelope kinds
   the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the ten role contracts, and the
   Host-led branch and final verification, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
@@ -76,7 +76,7 @@ sequence.
 3. **Shared stages are identical**: a stage id used by several definitions MUST have the same exit checks, gate,
    role, isolation, skills and artifacts in each; `devkit workflow validate` with no arguments reports a difference
    as `SHARED_STAGE_MISMATCH`. Returns are each workflow's own.
-4. **Gates are named `<activity>-<decision>`**: `plan-intent`, `plan-accept` and `dev-integration`; the `exception`
+4. **Gates are named `<activity>-<decision>`**: `plan-accept`, `proposal-handoff` and `dev-integration`; the `exception`
    stage belongs to no activity. Numbered gate names are not used.
 5. **Decision boundaries and authority**: `plan-accept`, `proposal-handoff`, and `dev-integration` independently permit
    `ask` or `auto`, default `ask`. User decisions are explicit; policy delegation is reported as policy, never fabricated
@@ -85,12 +85,11 @@ sequence.
    `ask`, the Host may combine acceptance and handoff in one conversation, then invokes the CLI. Verified local effects still obey readiness, exact report,
    SHA, worktree, cleanup and environment guards; publication and host permissions remain separate.
    `workflow return` voids the stage and later decision records and envelopes. Policy delegation never disables checks.
-6. **`plan-intent` opens every task**: goal, scope, verification (for a bugfix, the expected behavior), `task-kind`
-   and `planning-depth` describe the instructed task. An explicit task instruction supplies this intent without a repeated prompt; `auto` permits policy satisfaction. For `spec` depth the gate opens once the anchor exists and is
-   recorded in inline Planning; for `proposal` depth it is the user's confirmation of the draft in Backlog, which one
-   request may ask together with a direct acceptance's `plan-accept` (two explicit answers, neither inferred); a spec
-   handed off from a proposal carries the proposal's `gate:plan-intent` and `gate:plan-accept` records under the same
-   names (`CAP-DLV-proposal-planning`).
+6. **Explicit task authorization**: an explicit instruction MUST authorize the task's goal, scope, verification,
+   `task-kind` and `planning-depth` before work starts. SDD workflows MUST NOT declare an intent approval gate or
+   create intent approval records. Intent stage IDs, non-gate checks and return targets remain stable. Existing
+   valid intent decisions remain inert history without migration. A handed-off spec retains only plan-accept as
+   an acceptance audit record (`ADR-remove-plan-intent-gate`, `CAP-DLV-proposal-planning` rule 12).
 7. **No Development direction gate**: Development starts from the agreed intent. Implementation choices inside it
    are made with the recommended option and recorded; a non-blocking improvement is reported as feedback (a
    follow-up draft proposal is also allowed); only a problem that cannot be solved without changing the agreed goal,
@@ -195,7 +194,7 @@ sequence.
     `high`, two or more options compared, a `scout` starting from `devkit docs refs <ID> --direction in` for each
     capability and ADR the proposal touches, then `challenger` rounds of the same loop. A proposal scaffolds
     non-authoritative `planning_effort` and `dev_effort` hints (`low` | `medium` | `high`, default `medium`) in
-    `proposal.md`: `planning_effort` is proposed with `plan-intent` and pre-fills Planning start, `dev_effort` is
+    `proposal.md`: `planning_effort` is stated at intake and pre-fills Planning start, `dev_effort` is
     refined during Planning before `plan-accept` and returned by `handoff` to pre-fill Development start, while the
     confirmed `activity-effort` of each run is recorded only on its `worker-NN.yaml` envelope (with any override reason
     in `summary`). The effort is always proposed with a reason when the activity starts, and the `plan-accept`
@@ -225,12 +224,12 @@ sequence.
 
 | Workflow | Classification | Layout (`work_dir` / `unit_path`) | Anchor | Gates |
 | --- | --- | --- | --- | --- |
-| `sdd-session-feature` | `session` × `feature` | none | none | `plan-intent`, `dev-integration` |
-| `sdd-session-bugfix` | `session` × `bugfix` | none | none | `plan-intent`, `dev-integration` |
-| `sdd-overall-refactor` | `overall-refactor` (no depth) | none | none | `plan-intent`, `dev-integration` |
-| `sdd-spec-feature` | `spec` × `feature` | `specs` / `{date:%Y-%m}/{date:%Y%m%d}-{slug}` | `spec.md` | `plan-intent`, `dev-integration` |
-| `sdd-spec-bugfix` | `spec` × `bugfix` | `specs` / `{date:%Y-%m}/{date:%Y%m%d}-{slug}` | `spec.md` | `plan-intent`, `dev-integration` |
-| `sdd-proposal` | `proposal` (either kind) | `docs/proposals` / `PROP-{slug}` | `proposal.md` | `plan-intent`, `plan-accept` |
+| `sdd-session-feature` | `session` × `feature` | none | none | `dev-integration` |
+| `sdd-session-bugfix` | `session` × `bugfix` | none | none | `dev-integration` |
+| `sdd-overall-refactor` | `overall-refactor` (no depth) | none | none | `dev-integration` |
+| `sdd-spec-feature` | `spec` × `feature` | `specs` / `{date:%Y-%m}/{date:%Y%m%d}-{slug}` | `spec.md` | `dev-integration` |
+| `sdd-spec-bugfix` | `spec` × `bugfix` | `specs` / `{date:%Y-%m}/{date:%Y%m%d}-{slug}` | `spec.md` | `dev-integration` |
+| `sdd-proposal` | `proposal` (either kind) | `docs/proposals` / `PROP-{slug}` | `proposal.md` | `plan-accept` |
 
 Each definition with a unit sets its own `layout`, so spec bundles and proposal bundles live where the document model
 expects them and `devkit workflow list` finds both. `schema_version` is `1` in every definition.
@@ -239,17 +238,17 @@ expects them and `devkit workflow list` finds both. `schema_version` is `1` in e
 
 `devkit workflow show <id>` is the authoritative list; in order (gate in parentheses):
 
-- **`sdd-session-feature`**: `intent-session` (`plan-intent`), `execute-verify`, `report-session`, `approval-session`
+- **`sdd-session-feature`**: `intent-session`, `execute-verify`, `report-session`, `approval-session`
   (`dev-integration`), `commit-session` (exit `lint-ci-clean`), `merge` (exit `merged`).
 - **`sdd-session-bugfix`**: `intent-session`, `reproduce-session`, then the stages of `sdd-session-feature` from
   `execute-verify` on.
-- **`sdd-overall-refactor`**: `intent-refactor` (`plan-intent`), `restructure`, `report-refactor`, `commit-refactor`
+- **`sdd-overall-refactor`**: `intent-refactor`, `restructure`, `report-refactor`, `commit-refactor`
   (exit `lint-ci-clean`), `approval-refactor` (`dev-integration`), `merge` (exit `merged`).
-- **`sdd-spec-feature`**: `intent` (`plan-intent`), `specify`, `build-verify`, `review-refine`, `living-spec-draft`,
+- **`sdd-spec-feature`**: `intent`, `specify`, `build-verify`, `review-refine`, `living-spec-draft`,
   `collect-feedback`, `final-change-report`, `integration-approval` (`dev-integration`), `integrate`, `merge`.
-- **`sdd-spec-bugfix`**: `intent` (`plan-intent`), `characterize`, `plan-tasks`, `reproduce`, `fix-verify`, then the
+- **`sdd-spec-bugfix`**: `intent`, `characterize`, `plan-tasks`, `reproduce`, `fix-verify`, then the
   stages of `sdd-spec-feature` from `review-refine` on.
-- **`sdd-proposal`**: `intent-proposal` (`plan-intent`; its exit also requires `size` absent or exactly `S`, `M` or
+- **`sdd-proposal`**: `intent-proposal` (its exit requires `size` absent or exactly `S`, `M` or
   `L`, `frontmatter(proposal.md size S|M|L|)`, so an `XL` draft shows it unmet and opens no request), `spike` (optional in the schema and never current on
   its own, but run whenever the Planning effort requires a `challenger`, rule 15, or the direction needs evidence;
   having no exit check, it may show under `[DONE]` before any review ran, which is not Planning evidence: the
@@ -298,15 +297,13 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 
 | Gate | Stage(s) | Approval key (`[workflow.approvals]`) |
 | --- | --- | --- |
-| `plan-intent` | `intent`, `intent-session`, `intent-proposal` | task intent: `ask` or `auto` |
 | `plan-accept` | `direction-handoff` | `ask` or `auto` |
 | `proposal-handoff` | none: `devkit spec proposal accept --mode accept_and_handoff` and `devkit spec proposal handoff --effort` read it | `ask` or `auto` |
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a
-  `[REQUEST: id=gate:<gate> ...]`. A `plan-intent` answer is `devkit workflow answer --unit <dir> --request
-  gate:plan-intent --action accept --by user`, a `plan-accept` acceptance `devkit spec proposal accept <slug> --by user`
-  (`--direct` for a direct acceptance), and a decline of either `--action decline --by user --note "<reason>"`. A
+  `[REQUEST: id=gate:<gate> ...]`. A `plan-accept` acceptance is `devkit spec proposal accept <slug> --by user`
+  (`--direct` for a direct acceptance), and a decline of plan-accept `--action decline --by user --note "<reason>"`. A
   `dev-integration` OK is `--given dev-integration` on every later `next`, and an objection about the change takes the
   stage's return path; where a runner binds `gate:dev-integration` to PR state, the PR ready state answers it. Every
   definition with that gate declares `gates: {dev-integration: {answer: given}}`, so `next` ends its `[REQUEST]` with
@@ -315,11 +312,11 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
   `[GATE_PASSED: dev-integration stage=integration-approval policy=auto source=policy]` (JSON `passed_gates`), the basis
   every report cites.
 - `--given <gate>` asserts a gate for one run (a runner's binding).
-- The workflow definitions fix the policies each stage gate accepts (`gates.<gate>.policies`): `plan-intent`,
+- The workflow definitions fix the policies each stage gate accepts (`gates.<gate>.policies`):
   `plan-accept` and `dev-integration` take `ask` or `auto`. A configured policy outside them stops every devkit workflow
   command that evaluates the unit with `WORKFLOW_GATE_POLICY`. `proposal-handoff` is declared by no stage, so workflow
   commands never check it. `devkit spec policy` and the spec commands that read an approval policy refuse any of the
-  four outside `ask` or `auto` with `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
+  three boundaries outside `ask` or `auto` with `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 - `plan-accept` is asked only for a proposal in review, or for a draft once a direct acceptance wrote
   `status: accepted`: the `direction-handoff` exit is `frontmatter(proposal.md status reviewing|accepted)`, so a draft
   otherwise, or a rejected proposal, gets no request. A `plan-accept` acceptance is recorded with
@@ -617,7 +614,7 @@ prompt.
 | --- | --- |
 | `devkit workflow next --unit <dir> [--given <check>]...` | Current stage, unmet checks, `[NEXT_SKILL]`, `[WAITING]`, `[DELEGATE]`, `[SKIPPED]`. |
 | `devkit workflow show <id>` / `--unit <dir>` | Render a definition. |
-| `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a `plan-intent` decision, or decline `plan-accept`. |
+| `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a custom gate decision, or decline `plan-accept`. |
 | `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-planning`). |
 | `devkit workflow return --unit <dir> --to <stage>` | Go back within the activity; voids later approvals and earlier envelopes of those stages. |
 | `devkit workflow bind --unit <dir> --workflow <id>` | Bind an unbound unit, or change its workflow. |

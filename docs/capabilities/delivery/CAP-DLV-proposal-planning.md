@@ -3,7 +3,7 @@ id: CAP-DLV-proposal-planning
 aliases:
   - CAP-DLV-proposal-incubation
 title: Proposal Planning and Handoff
-summary: "Proposal creation validates live and archived milestone membership with nonblocking terminal notices. Planning and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
+summary: "Proposal Planning and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback. Explicit task instructions replace intent approval, and handoff carries only the acceptance audit record."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -48,7 +48,7 @@ removes it.
   - Format and reference rules over proposal files: `CAP-GOV-spec-rules`.
 - **Non-Goals**:
   - **Scope Excluded**: inferring approval. Neither `accept` nor handoff derives the user's choice from context;
-    `accept` requires explicit user acceptance or owning `plan-accept=auto` policy and never records `plan-intent`.
+    `accept` requires explicit user acceptance or owning `plan-accept=auto` policy and creates no task-intent approval record.
   - **Scope Excluded**: moving into a worktree. Handoff runs in the workspace it is given; task worktrees are
     devkit's `devkit worktree`.
   - **Scope Excluded**: archives. Rejected and handed-off proposals are deleted; Git history keeps them.
@@ -123,21 +123,13 @@ removes it.
     linked or base, whose branch is not `dev-<slug>` (a detached HEAD included) MUST be refused before anything is
     read or written (`SPEC_PROPOSAL_WRONG_WORKTREE`), so the spec bundle never lands on another task's branch and the
     accepted proposal is never deleted from the base itself. A workspace outside Git is not checked.
-12. **Workflow records stay behind; the approvals carry by name**: the proposal unit's devkit workflow records
-    (decision records and envelopes as devkit's `load_decisions` and `load_envelopes` find them, malformed ones
-    included) MUST NOT be carried; they are dropped with the proposal (Git history keeps them) and listed. The
-    proposal's own approvals are carried under their own names, never re-labelled as another decision: for each of
-    `gate:plan-intent` and `gate:plan-accept` whose effective record in the proposal's bound workflow (its latest
-    that is not a `cancel`, followed by no return record that is not a `cancel`: stricter than devkit's voiding) is
-    `accept`, the handoff records the same request in the bound spec with the record's `by` and note
-    `PROP-<slug>: <the record's note>` (`PROP-<slug>` when it has none), so the spec shows how its direction was
-    accepted, a direct acceptance included.
-    `gate:plan-intent`, open at the spec's `intent` stage, is answered through devkit's `record_answer`;
-    `gate:plan-accept`, which no spec workflow asks, is written as a decision record of the spec's workflow with the
-    proposal's stage, kept for the audit trail and satisfying no stage. A gate of the spec answered by policy is
-    skipped; an unbound spec records nothing. Carrying an existing answer is not inferring one (rule 2). A recording
-    failure is a `SPEC_PROPOSAL_GATE_NOT_CARRIED` warning; the gates recorded before it stay and the handoff stays
-    done.
+12. **Workflow records stay behind; acceptance carries by name**: proposal workflow decisions and envelopes,
+    including historical intent decisions, MUST be dropped with the retired proposal and listed; Git history keeps
+    them. The effective accepted `gate:plan-accept` record MUST be carried to the bound spec with its original `by`
+    and `PROP-<slug>: <note>` provenance (`PROP-<slug>` when no note exists). It retains the proposal stage, satisfies no spec stage and serves only
+    the acceptance audit trail. Returns and cancellations retain their existing voiding semantics. An unbound spec
+    records nothing. A recording failure returns `SPEC_PROPOSAL_GATE_NOT_CARRIED` without undoing the handoff;
+    restore the acceptance audit record from history after resolving the cause. No intent decision is carried.
 13. **Backlog changes only a draft not in Planning**: Backlog edits, splits and deletes proposals by hand, so before
     each such change the agent MUST run `devkit spec proposal check <slug>`, which refuses
     (`SPEC_PROPOSAL_IN_PLANNING`) while `plan-<slug>` exists locally or as a fetched remote branch (Planning changes the
@@ -151,8 +143,7 @@ removes it.
     A rough `size: XL` draft stays valid in Backlog, but it is decomposed before Planning. One predicate decides:
     `size` absent or exactly `S`, `M` or `L` passes; any other value (`XL`, `xl`, a typo) fails, and every refusal
     names the allowed values. The `sdd-proposal` `intent-proposal` exit `frontmatter(proposal.md size S|M|L|)` stays
-    unmet (`detail="size=XL"`, exit `0`), so `plan-intent` opens no request under `ask` or `auto` and `devkit
-    workflow answer --request gate:plan-intent` is `REQUEST_UNKNOWN`; `accept --direct` blocks (rule 14); a
+    unmet (`detail="size=XL"`, exit `0`); no intent approval request exists; `accept --direct` blocks (rule 14); a
     `plan-` attach of a proposal not `accepted` is refused (`WORKTREE_ATTACH_REFUSED`), never a `dev-` attach or the
     readiness of an accepted proposal; a Planning run returns a failing proposal as for decomposition. Agents read
     the unmet check as "decompose first" and never edit the size to pass it. The exits, applied on the user's
@@ -173,7 +164,7 @@ removes it.
     `accepted` proposal without an effective `gate:plan-accept`; every other combination, a `rejected`, single-file or
     unbound proposal included, is `SPEC_PROPOSAL_ACCEPT_REFUSED`. A direct acceptance and a repair MUST hold every
     condition of `ADR-proposal-acceptance` the tool checks, all reported at once
-    (`SPEC_PROPOSAL_NOT_ELIGIBLE`, one `blocking:` or `pending:` detail each): an accepted `gate:plan-intent`, no
+    (`SPEC_PROPOSAL_NOT_ELIGIBLE`, one `blocking:` detail each): no
     `needs_decompose: true`, a `size` absent or `S`, `M` or `L` (else `size: <value> (decompose first: ...)`), no `supersedes`, no local or fetched `plan-<slug>`, `task_kind` `feature` or `bugfix`
     (absent: `feature`), no envelope hold, and the base checkout: the main worktree on a branch that is not `plan-*`
     or `dev-*` and, when `origin/HEAD` resolves, is its target (outside Git not checked). A repair also refuses a
@@ -182,9 +173,7 @@ removes it.
     command writes `status: accepted` (not for a repair; only the value changes) and records `gate:plan-accept`
     through devkit's `record_answer`, so the workflow decides whether `collect-feedback` passed, is switched off or is
     skipped by policy; when the gate does not open it restores `proposal.md` byte-for-byte and reports the unmet
-    checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every check and writes nothing; there a
-    missing `gate:plan-intent` is `pending`, not blocking, because one request may ask both gates. `accept` never
-    records `plan-intent`. Without `--mode` it never commits, merges or hands off, and Backlog commits a direct
+    checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every eligibility check and writes nothing; no intent prerequisite or pending-intent condition exists. Without `--mode` it never commits, merges or hands off, and Backlog commits a direct
     acceptance on the base; with `--mode` it composes the commit, the Planning merge and an optional handoff
     (Host-authorized proposal lifecycle CLI, below).
 
@@ -273,7 +262,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `milestone` | Optional (`--milestone`): one existing MS ID at the global roadmap root or a registered namespace's roadmap root (`CAP-GOV-spec-rules` Milestone validation contract) for planned/active or in that root's flat _archive/ for done/dropped, or one of its aliases (the canonical ID is written); canonical filename/identity and status/location are validated before writing and never carried to `spec.md`. A done or dropped milestone returns `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation or changing the milestone. |
 | `boundaries` | `owns` (scaffolded: the target area) and `excludes` (scaffolded: `docs/decisions/`); carried to `plan.md` and `tasks.md`. |
 | `task_kind` | `feature` (scaffolded default) or `bugfix` (`--task-kind`): the provisional `task-kind`, confirmed at `plan-accept`; the spec follows `sdd-spec-<task_kind>`. |
-| `planning_effort` | `low`, `medium` (scaffolded default) or `high` (`--planning-effort`): non-authoritative Planning `activity-effort` hint, confirmed at `plan-intent`; not carried to `spec.md`. |
+| `planning_effort` | `low`, `medium` (scaffolded default) or `high` (`--planning-effort`): non-authoritative Planning `activity-effort` hint, stated at intake; not carried to `spec.md`. |
 | `dev_effort` | `low`, `medium` (scaffolded default) or `high` (`--dev-effort`): non-authoritative Development `activity-effort` hint, provisional in Backlog and refined during Planning before `plan-accept`; returned by `handoff` (`dev_effort`) and not carried to `spec.md`. |
 | `supersedes` | Optional (`--supersedes PROP-<old>`): the accepted proposal a close by supersede replaces; it must exist (`SPEC_PROPOSAL_NOT_FOUND`) and be `accepted` (`SPEC_PROPOSAL_NOT_APPROVED`). |
 | `decomposed_from` | Optional (`--decomposed-from PROP-<source>`): an editable draft source; another slug, existing, draft, and without a Planning branch. Carried as provenance even after source deletion. |
@@ -396,7 +385,7 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
      have.
 6. **Rewriting** of what pointed into the proposal (4.7).
 7. **Removal** of the proposal, with its workflow records.
-8. **Gates**: the proposal's `plan-intent` and `plan-accept` records carried to the spec (rule 12).
+8. **Gates**: the proposal's `plan-accept` record carried to the spec (rule 12).
 
 A failure in steps 1 to 5 rolls back: what was moved goes back, what was written is removed (a directory created
 inside the moved `materials/` is followed back and removed when empty), and the proposal is kept. Every pre-existing
@@ -543,7 +532,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 [NEXT_CMD: uv run devkit workflow next --unit docs/proposals/PROP-fast-engine]
 [PADR: PADR-use-ast-parser path=docs/proposals/PROP-fast-engine/decisions/PADR-use-ast-parser.md proposal=PROP-fast-engine]
 [PROPOSAL: PROP-fast-engine path=docs/proposals/PROP-fast-engine/proposal.md status=draft editable=yes]
-[ACCEPT_CHECK: PROP-small-fix form=direct path=docs/proposals/PROP-small-fix/proposal.md eligible=no pending=gate:plan-intent]
+[ACCEPT_CHECK: PROP-small-fix form=direct path=docs/proposals/PROP-small-fix/proposal.md eligible=yes pending=-]
 [ACCEPTED: PROP-small-fix form=direct path=docs/proposals/PROP-small-fix/proposal.md status=accepted decision=docs/proposals/PROP-small-fix/decisions/02-gate-plan-accept.yaml]
 [HANDOFF: PROP-fast-engine spec=SPEC-fast-engine dir=specs/2026-10/20261013-fast-engine workflow=sdd-spec-feature dev_effort=medium]
 [TARGET_DOCS: specs/2026-10/20261013-fast-engine/target-docs.md]
@@ -552,8 +541,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 [SUPERSEDED_IN_PART: ADR-regex-rules path=docs/decisions/2026-09/20260901-regex-rules.md line=9 by=ADR-use-ast-parser]
 [DROPPED_RECORD: docs/proposals/PROP-fast-engine/decisions/01-gate-plan-intent.yaml]
 [DROPPED_RECORD: docs/proposals/PROP-fast-engine/decisions/02-gate-plan-accept.yaml]
-[CARRIED_GATE: gate:plan-intent decision=specs/2026-10/20261013-fast-engine/decisions/01-gate-plan-intent.yaml]
-[CARRIED_GATE: gate:plan-accept decision=specs/2026-10/20261013-fast-engine/decisions/02-gate-plan-accept.yaml]
+[CARRIED_GATE: gate:plan-accept decision=specs/2026-10/20261013-fast-engine/decisions/01-gate-plan-accept.yaml]
 [REWRITTEN: docs/usecases/core/UC-x.md:5 kind=id from=PROP-fast-engine to=SPEC-fast-engine]
 [REWRITTEN: docs/usecases/core/UC-x.md:9 kind=link from=../../proposals/PROP-fast-engine/proposal.md to=../../../specs/2026-10/20261013-fast-engine/spec.md]
 [UNRESOLVED_LINK: docs/usecases/core/UC-x.md:9 kind=link target=../../proposals/PROP-fast-engine/decisions/ reason=unmapped]
@@ -571,8 +559,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 - `padr`: one `[PADR: ...]` line. JSON: `id`, `path`, `proposal`.
 - `check`: one `[PROPOSAL: ... status=draft editable=yes]` line. JSON: `id`, `path`, `status`, `editable`.
 - `accept`: `[ACCEPTED: <id> form=planning|direct|repair path= status=accepted decision=<record>]`; with `--check`
-  `[ACCEPT_CHECK: <id> form= path= eligible=yes|no pending=<requests>|-]` and nothing written; a pending condition
-  (`gate:plan-intent`) the real run would refuse is `eligible=no` and exits `1`. JSON: `proposal`, `path`,
+  `[ACCEPT_CHECK: <id> form= path= eligible=yes|no pending=<requests>|-]` and nothing written; the result reports eligibility without a pending-intent condition. JSON: `proposal`, `path`,
   `form`, `status` (the current one under `--check`), `checked`, `eligible`, `decision` (`null` under `--check`),
   `pending`. The composed `--mode` form is described under the Host-authorized lifecycle CLI.
 - `handoff`: `[HANDOFF: ...]` (`workflow=-`: unbound; `dev_effort=<effort>` when the proposal declared `dev_effort`), `[TARGET_DOCS: ...]` and `[MATERIALS: ...]` when the bundle had
@@ -627,7 +614,7 @@ Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Ev
 | `SPEC_PADR_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalDecisionExistsError` | `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
 | `SPEC_PROPOSAL_SLUG_CONFLICT` | `ERROR` (`INTERACTION`) | `ProposalSlugConflictError` | `SPEC-<slug>` exists (`[TARGET]`); the user picks another slug or drops the duplicate. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ProposalNotFoundError` | No bundle or single-file proposal has the slug (`padr`: no bundle); `new`: `--supersedes` names a proposal that does not exist. |
-| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`INTERACTION`) | `HandoffNotReadyError` | The composed `proposal handoff --effort` finds no committed `proposal.md`, a proposal that is not accepted or needs decomposition, or no completed `sdd-proposal` Planning with its own `plan-intent` and `plan-accept`; `[DETAIL]` names the condition, `[TARGET]` the proposal. |
+| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`INTERACTION`) | `HandoffNotReadyError` | The composed `proposal handoff --effort` finds no committed `proposal.md`, a proposal that is not accepted or needs decomposition, or no completed `sdd-proposal` Planning with its own `plan-accept`; `[DETAIL]` names the condition, `[TARGET]` the proposal. |
 | `SPEC_HANDOFF_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `HandoffBaseDirtyError` | The composed handoff: the retained base checkout has uncommitted changes, listed in `[TARGET]`. |
 | `SPEC_HANDOFF_WORKTREE_CONFLICT` | `ERROR` (`INTERACTION`) | `HandoffWorktreeConflictError` | The composed handoff: a `dev-<slug>` worktree (`[TARGET]`) exists that devkit did not create for this accepted base, or holds changes or another commit; `[DETAIL]` says which. It is never reused or removed. |
 | `SPEC_HANDOFF_STALE` | `ERROR` (`INTERACTION`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed, or whose handoff commit landed but is not one clean direct child of the reviewed base: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. For a landed but unclean commit `[FIX]` repairs `dev-<slug>` in place and never reruns. |

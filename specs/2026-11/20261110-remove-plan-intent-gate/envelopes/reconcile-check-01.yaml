@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:22:56.173013Z'
+status: completed
+summary: Independent verification confirms target coverage and partial pointers; align residual intent decision/confirmation wording.
+findings:
+- issue: Canonical guidance retains removed intent decision and confirmation requirements.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:445; docs/usecases/delivery/UC-route-development-intent.md:59,145; handbook/en/concepts.md:333-334
+  failure_condition: A reader creates a removed intent decision or requests repeated confirmation despite an explicit task instruction.
+  suggested_action: Align override storage and orientation wording with explicit task instruction; clarify confirmation only for unresolved scope or classification.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only verification with matching tree and HEAD.
+checks: {}
+diff_scope:
+  base: a74c84afc72b193f32131242b223b76539500ba0
+  head: 05b3a395f1030ea65e78982ae6b161e9620bbc5c
+activity_effort: medium

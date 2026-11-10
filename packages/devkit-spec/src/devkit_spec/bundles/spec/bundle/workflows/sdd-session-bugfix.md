@@ -6,7 +6,6 @@ schema_version: 1
 # dev-integration is asked after the change is final: its approval is passed as `--given dev-integration`, never
 # recorded.
 gates:
-  plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration
 # Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 # No layout: a session creates no work unit, envelope, gate record file or reconcile document.
@@ -17,8 +16,8 @@ checks:
   - { name: exception-handled, class: human, description: "the cause of the exception was handled by the user" }
 stages:
   - id: intent-session
-    name: Plan intent
-    human_gate: plan-intent
+    name: Task scope
+    human_gate: false
     entry: []
     exit: []
     artifacts: [agreed intent in the conversation or the Work Plan Item]
@@ -108,7 +107,7 @@ stages:
 
 # Session bugfix (`planning-depth` session, `task-kind` bugfix)
 
-A defect against an agreed contract that the session can reproduce and fix without written documents. The expected behavior is agreed at `plan-intent`. All other rules of the `sdd-session-feature` body apply, its review included (the `spec` skill's `references/effort.md`, at `high` its `references/review-loop.md`).
+A defect against an agreed contract that the session can reproduce and fix without written documents. The explicit task instruction states the expected behavior. All other rules of the `sdd-session-feature` body apply, its review included (the `spec` skill's `references/effort.md`, at `high` its `references/review-loop.md`).
 
 - **Red before Green.** Before the fix, write a test that reproduces the defect and confirm it fails (Red, `reproduce-session`); then fix it so the test passes (Green, `execute-verify`). The test stays as a regression test. A compile, environment or test-setup failure unrelated to the defect is not reproduction; a build failure that is the defect is.
 - **Report the evidence.** The final response or the PR body includes the Red then Green evidence: the reproduction command, its failure before and its pass after the fix.

@@ -183,8 +183,12 @@ def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(
     next_unit = exercise.root / "specs/2026-10/20261028-next-change"
     assert next_unit.is_dir()
     route = exercise.cli("workflow", "next", "--unit", str(next_unit))
-    assert "plan-intent" in route.stdout
-    exercise.report("verified", "Activation succeeded; next requested change uses ordinary SDD plan-intent.", decision)
+    assert "[DONE: intent]" in route.stdout
+    assert "[STAGE: specify " in route.stdout
+    assert "gate:plan-intent" not in route.stdout
+    exercise.report(
+        "verified", "Activation succeeded; next requested change uses ordinary SDD task authorization.", decision
+    )
 
 
 def test_missing_required_usage_evidence_keeps_adaptive_dev_despite_format_pass(tmp_path: Path) -> None:

@@ -1,14 +1,14 @@
 ---
-id: PADR-remove-plan-intent-gate
+id: ADR-remove-plan-intent-gate
 title: Remove the task intent approval gate
 summary: "For instructed SDD work, we remove the plan-intent gate and its records, to avoid duplicate authorization bookkeeping, accepting that task authorization is enforced by agent guidance."
-proposal: PROP-remove-plan-intent-gate
+proposal: SPEC-remove-plan-intent-gate
 supersedes: [ADR-delivery-approval-and-lifecycle-authority, ADR-proposal-acceptance, ADR-delivery-classification, ADR-roadmap-and-milestones-ledger, ADR-ux-screens]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-remove-plan-intent-gate] Remove the task intent approval gate
+# [ADR-remove-plan-intent-gate] Remove the task intent approval gate
 
 ## 1. Context & Problem Statement
 

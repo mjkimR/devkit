@@ -26,7 +26,7 @@ path it would create), then:
    devkit's loaders find them) are not carried: they are dropped with the proposal;
 5. rewrites links and ID references that pointed into the proposal (``rewrite``);
 6. removes the proposal;
-7. carries the proposal's ``gate:plan-intent`` and ``gate:plan-accept`` records to the spec under the same names
+7. carries the proposal's ``gate:plan-accept`` records to the spec under the same names
    (``proposal_gates``, ``_record_gates``), each with the note ``PROP-<slug>: <the proposal record's note>``: a carried
    approval is never turned into the approval of another decision.
 
@@ -156,10 +156,9 @@ NEEDS_DECOMPOSE = "needs_decompose"
 NAMESPACE = "namespace"
 SUMMARY = "summary"
 ACCEPTED = "accepted"
-INTENT_GATE = "gate:plan-intent"
 ACCEPT_GATE = "gate:plan-accept"
 # The proposal's approvals the spec carries by name, in this order (handoff never re-labels them).
-CARRIED_GATES = (INTENT_GATE, ACCEPT_GATE)
+CARRIED_GATES = (ACCEPT_GATE,)
 RETURN_PREFIX = "return:"
 
 # Files an operating system leaves behind; never carried, they are deleted with the proposal.
@@ -350,7 +349,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     """Hand proposal ``slug`` off to a spec bundle under the workspace ``root`` (see the module docstring).
 
     Approval is ``status: accepted``, written once ``plan-accept`` was given; it is never inferred. The spec carries
-    the proposal's own ``gate:plan-intent`` and ``gate:plan-accept`` records under their names; a failure there is a
+    the proposal's own ``gate:plan-accept`` records under their names; a failure there is a
     ``ProposalGateNotCarriedWarning``. Raises, before writing anything: ``ProposalSlugError`` (also for a
     proposal or PADR slug whose first segment has no letter), ``ProposalNotFoundError``, ``ProposalInvalidError``
     (also a ``task_kind`` outside ``TASK_KINDS`` or a ``planning_effort``/``dev_effort`` outside ``EFFORTS``),
@@ -759,7 +758,8 @@ def _clause(index: DocumentIndex, target_id: str, decision: _Decision) -> str:
         raise ProposalInvalidError(
             f"{decision.adr_id}: missing partial statement for {target_id}",
             target_files=[str(decision.padr)],
-            fix=f"Add Supersedes in part `{target_id}`: <the replaced clauses>. to the PADR Decision Outcome",
+            fix=f"In {decision.padr}, add a Supersedes in part statement naming `{target_id}` followed by a colon "
+            "and the specific replaced clauses in Decision Outcome",
         )
     return statement.text
 
@@ -941,11 +941,8 @@ def _record_gates(
 ) -> list[CarriedGate]:
     """Record each of the proposal's ``gates`` in the spec under its own name, with its ``by`` and the note
     ``PROP-<slug>: <the gate's note>`` (``PROP-<slug>`` when it has none), so the spec shows how its direction was
-    accepted. A gate that is an open request of the bound spec (``gate:plan-intent`` at its ``intent`` stage)
-    is answered with devkit's ``record_answer``; one the spec's workflow never asks (``gate:plan-accept``) is written
-    as a decision record of the spec's workflow with the proposal's stage, kept for the audit trail and counting for
-    no stage. A gate the spec answered by policy is skipped. The first failure of any kind stops and is added to
-    ``notices`` as a ``ProposalGateNotCarriedWarning``: the handoff itself is done by then."""
+    accepted. The acceptance record is retained for audit and counts for no spec stage. A failure is reported as
+    ``ProposalGateNotCarriedWarning`` because the handoff has already completed."""
     rel = target_dir.relative_to(root).as_posix()
     origin = f"PROP-{slug}"
     carried: list[CarriedGate] = []
@@ -980,8 +977,8 @@ def _record_gates(
                 f"{request} of SPEC-{slug} was not carried from {origin}",
                 detail,
                 target_files=[f"{rel}/{SPEC_FILE}"],
-                fix=f"Once the cause is resolved, ask the user again for each gate {DEVKIT} workflow next --unit {rel} "
-                f"reports as waiting and record the answer with {DEVKIT} workflow answer",
+                fix=f"Resolve the cause and restore the proposal acceptance audit record in {rel}/decisions/ "
+                "from the committed proposal history; do not request task intent again",
             )
         )
     return carried

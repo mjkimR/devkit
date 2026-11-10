@@ -1,7 +1,7 @@
 ---
 id: ARCH-04-delivery-strategy
 title: Delivery Strategy
-summary: "Macro delivery architecture, Backlog-Planning-Development lifecycle, three-axis classification, execution modes, and decision boundaries."
+summary: "Macro delivery architecture, Backlog-Planning-Development lifecycle, three-axis classification and execution modes, with explicit task authorization and three later decision boundaries."
 status: active
 created_at: 2026-10-21
 ---
@@ -51,7 +51,7 @@ flowchart LR
 | Activity | Input | Output | Applicable Modes | Key Decisions |
 | :--- | :--- | :--- | :--- | :--- |
 | **Backlog** | User requests, open feedback | Tentative classification, draft proposals, milestone anchors | `direct` | Classification confirmation, draft intake |
-| **Planning** | Classified request | Agreed intent in conversation (`session`), spec Unit (`spec`), or accepted proposal (`proposal`) | Inline: `direct`<br/>Proposal: `direct`, `local-orchestrated`, `cloud-pr` | `plan-intent`, `plan-accept` (proposal) |
+| **Planning** | Classified request | Agreed intent in conversation (`session`), spec Unit (`spec`), or accepted proposal (`proposal`) | Inline: `direct`<br/>Proposal: `direct`, `local-orchestrated`, `cloud-pr` | `plan-accept` (proposal) |
 | **Development** | Agreed intent (Unit or session agreement) | Verified changes, reports, Living Spec & reconcile updates | `direct`, `local-orchestrated`, `cloud-pr` | `proposal-handoff`, `dev-integration` |
 
 Development MUST start from agreed intent. Unit-bearing paths MUST evaluate stage exit conditions with `devkit workflow next`; `session` tasks complete within conversation context without durable envelopes or reconcile files.
@@ -163,11 +163,10 @@ A slug identifies the line of work across activities, while each activity runs i
 
 ## 4. Decision Boundaries and Gates
 
-The four decision gates represent explicit authorization boundaries in `[workflow.approvals]`:
+The three decision boundaries represent explicit authorization boundaries in `[workflow.approvals]`:
 
 | Gate | Scope | Authority & Delegation |
 | :--- | :--- | :--- |
-| `plan-intent` | Authorizes initial scope, goal, and classification | Explicit instruction satisfies `plan-intent` without duplicate prompting; supports `ask` or `auto`. |
 | `plan-accept` | Accepts proposal direction and merges Planning branch | Defaults to `ask`; supports policy delegation (`auto`). Supports direct acceptance in Backlog. |
 | `proposal-handoff`| Authorizes starting Development and Unit transition | Defaults to `ask`; supports policy delegation (`auto`). Schedulable independently of `plan-accept`. |
 | `dev-integration` | Authorizes merging verified Development changes | Evaluated by `approvals.dev-integration` (`ask` or `auto`). Requires passing verification and reconcile. |

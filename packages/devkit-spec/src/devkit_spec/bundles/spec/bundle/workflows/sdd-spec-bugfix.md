@@ -6,7 +6,6 @@ schema_version: 1
 # dev-integration is asked after the change is final: its approval is passed as `--given dev-integration`, never
 # recorded.
 gates:
-  plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration
 # Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 layout:
@@ -20,8 +19,8 @@ checks:
   - { name: exception-handled, class: human, description: "the cause of the exception was handled by the user" }
 stages:
   - id: intent
-    name: Plan intent
-    human_gate: plan-intent
+    name: Task scope
+    human_gate: false
     entry: []
     exit: [anchor-exists]
     artifacts: [docs/proposals/PROP-<slug>/proposal.md, specs/<YYYY-MM>/<YYYYMMDD>-<slug>/]
@@ -164,7 +163,7 @@ stages:
 
 # Spec bugfix (`planning-depth` spec, `task-kind` bugfix)
 
-A defect against an agreed contract whose fix needs a spec bundle: contract impact, or current, expected and preserved behavior that must be written down. A defect a session can reproduce and fix without written documents takes workflow `sdd-session-bugfix` instead. The bundle (`devkit spec new <slug> --workflow sdd-spec-bugfix`, or a proposal with `task_kind: bugfix` handed off with `devkit spec proposal handoff`) starts with `spec.md` only (ID `SPEC-<slug>`); the bound workflow is the only record of its `task-kind`. The expected behavior is agreed at `plan-intent`; characterizing the defect in `spec.md` (current, expected and preserved behavior, reproduction conditions; procedure: `spec-specify`) is Development's work.
+A defect against an agreed contract whose fix needs a spec bundle: contract impact, or current, expected and preserved behavior that must be written down. A defect a session can reproduce and fix without written documents takes workflow `sdd-session-bugfix` instead. The bundle (`devkit spec new <slug> --workflow sdd-spec-bugfix`, or a proposal with `task_kind: bugfix` handed off with `devkit spec proposal handoff`) starts with `spec.md` only (ID `SPEC-<slug>`); the bound workflow is the only record of its `task-kind`. The explicit task instruction states the expected behavior; characterizing the defect in `spec.md` (current, expected and preserved behavior, reproduction conditions; procedure: `spec-specify`) is Development's work.
 
 All other rules of the `sdd-spec-feature` body apply, except that the bundle starts with `spec.md` only and its stages map: `specify` is `characterize` then `plan-tasks` here, `build-verify` is `reproduce` then `fix-verify`, and the stages after the fix are the same.
 
@@ -181,7 +180,7 @@ After authoring review/reverify or final-report evidence, use `devkit workflow e
 
 ## The expected behavior is the agreement
 
-- `plan-intent` records the intent with the expected behavior included.
+- The explicit task instruction supplies the intent with the expected behavior included.
 - Implementation choices inside the agreed expected behavior are decided with the recommended option and recorded. When it cannot be kept (the defect turns out to be a design problem, or the expected behavior itself is disputed), the work stops as a problem and the Host decides recovery or a close.
 - At the review feedback breakpoint, feedback that changes the fix within the expected behavior is reverified through the existing return paths; feedback that changes the expected behavior is a close.
 - Red and Green evidence holds at every effort; roles follow the `spec` skill's `references/effort.md`, at `high` its `references/review-loop.md`.

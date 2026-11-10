@@ -13,7 +13,7 @@ Backlog keeps queued requests as draft proposals, follow-ups as feedback and mil
 
 ## The XL size gate
 
-`size: XL` means the work would need two or more specs or a different `task_kind`. A rough `XL` draft stays valid in Backlog but cannot pass `plan-intent` or start Planning: the `intent-proposal` exit needs `size` absent or exactly `S`, `M` or `L`, so `devkit workflow next` shows `frontmatter(proposal.md size S|M|L|)` unmet. Read that as "decompose first"; never edit the size to pass it. Both exits go through the `decomposer` and apply on the user's decision:
+`size: XL` means the work would need two or more specs or a different `task_kind`. A rough `XL` draft stays valid in Backlog but cannot start Planning: the `intent-proposal` exit needs `size` absent or exactly `S`, `M` or `L`, so `devkit workflow next` shows `frontmatter(proposal.md size S|M|L|)` unmet. Read that as "decompose first"; never edit the size to pass it. Both exits go through the `decomposer` and apply on the user's decision:
 
 - **Split**: decompose as above, one child per `--decomposed-from`.
 - **Promote**: with three or more children or a long-running theme, create `MS-<slug>.md` at the roadmap root of the theme, global or namespace (Milestones, below), and place the children in it; apply the relation to the parent's milestone the return proposes, resetting that milestone's completion review as a scope change requires.

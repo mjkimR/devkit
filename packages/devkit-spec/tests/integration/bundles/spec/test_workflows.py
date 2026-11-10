@@ -24,7 +24,7 @@ WORKFLOWS = (
     "sdd-spec-bugfix",
     "sdd-proposal",
 )
-GATES = {"plan-intent", "plan-accept", "dev-integration", False}
+GATES = {"plan-accept", "dev-integration", False}
 ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "scout", "triage", "decomposer")
 AGENT_FILES = (".claude/agents/{role}.md", ".codex/agents/{role}.toml", ".agents/agents/{role}.md")
 
@@ -102,7 +102,7 @@ def test_show_renders_each_workflow(synced: Path, workflow: str) -> None:
 
 
 @pytest.mark.parametrize("workflow", ["sdd-spec-feature", "sdd-spec-bugfix"])
-def test_a_spec_unit_is_a_spec_bundle_that_starts_at_the_plan_intent_gate(synced: Path, workflow: str) -> None:
+def test_a_spec_unit_passes_intent_without_a_gate(synced: Path, workflow: str) -> None:
     slug = workflow.removeprefix("sdd-spec-")
     created = _devkit("workflow", "new", slug, "--workflow", workflow, "--date", "2026-01-15", "-w", str(synced))
     assert created.returncode == 0, created.stderr
@@ -112,8 +112,8 @@ def test_a_spec_unit_is_a_spec_bundle_that_starts_at_the_plan_intent_gate(synced
 
     step = _devkit("workflow", "next", "--unit", str(unit), "-w", str(synced))
     assert step.returncode == 0, step.stderr
-    assert "[STAGE: intent human_gate=plan-intent" in step.stdout
-    assert "[WAITING: human gate:plan-intent]" in step.stdout
+    assert "[DONE: intent" in step.stdout
+    assert "gate:plan-intent" not in step.stdout
 
 
 def test_a_proposal_unit_is_a_proposal_bundle(synced: Path) -> None:
@@ -124,7 +124,8 @@ def test_a_proposal_unit_is_a_proposal_bundle(synced: Path) -> None:
 
     step = _devkit("workflow", "next", "--unit", str(unit), "-w", str(synced))
     assert step.returncode == 0, step.stderr
-    assert "[STAGE: intent-proposal human_gate=plan-intent" in step.stdout
+    assert "[DONE: intent-proposal" in step.stdout
+    assert "gate:plan-intent" not in step.stdout
 
 
 def _definition(workflow: str) -> dict[str, object]:
@@ -136,7 +137,7 @@ def test_the_gates_fix_their_policies_and_integration_is_answered_by_given(workf
     data = _definition(workflow)
     gates = {stage.get("human_gate") for stage in data["stages"]}  # type: ignore[union-attr]
     expected: dict[str, dict[str, object]] = {}
-    for gate in ("plan-intent", "plan-accept"):  # policy delegation preserves the gate and its checks
+    for gate in ("plan-accept",):  # policy delegation preserves the gate and its checks
         if gate in gates:
             expected[gate] = {"policies": ["ask", "auto"]}
     if "dev-integration" in gates:  # ask or auto; off would skip integration
@@ -201,7 +202,6 @@ def test_proposal_sweep_controls_plan_accept(synced: Path, tmp_path: Path, case:
         return result
 
     run("workflow", "new", "sweep", "--workflow", "sdd-proposal")
-    run("workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user")
     anchor = root / unit / "proposal.md"
     anchor.write_text(re.sub(r"(?m)^status:.*$", "status: reviewing", anchor.read_text(), count=1))
     if case in {"off", "requested-only"}:
@@ -258,3 +258,79 @@ def test_a_rejection_records_a_decision_sentence_never_a_quote() -> None:
         "never as a quote",
     )
     assert "quoting the reason" not in playbook
+
+
+@pytest.mark.parametrize("status", ["planned", "completed"])
+def test_legacy_intent_records_remain_readable_without_migration(synced: Path, tmp_path: Path, status: str) -> None:
+    root = tmp_path / "legacy"
+    shutil.copytree(synced, root)
+    created = _devkit(
+        "workflow", "new", "legacy", "--workflow", "sdd-spec-feature", "--date", "2026-01-15", "-w", str(root)
+    )
+    assert created.returncode == 0, created.stderr
+    unit = root / "specs/2026-01/20260115-legacy"
+    anchor = unit / "spec.md"
+    anchor.write_text(
+        f'---\nid: SPEC-legacy\ntitle: Legacy\nsummary: "Validate historical workflow records."\nstatus: {status}\n'
+        "workflow: sdd-spec-feature\nrelated_capabilities: []\nrelated_usecases: []\n---\n"
+        "# Legacy\n\n## Acceptance Criteria\n\n### [AC-01] Historical records remain readable\n"
+        "- **Given** an authorized task\n- **When** evaluated\n- **Then** historical records remain readable\n"
+    )
+    (unit / "plan.md").write_text(
+        "---\nid: PLAN-legacy\nspec: SPEC-legacy\n---\n# Legacy plan\nRetain historical records.\n"
+    )
+    mark = "x" if status == "completed" else " "
+    (unit / "tasks.md").write_text(
+        "---\nid: TASKS-legacy\nspec: SPEC-legacy\nplan: PLAN-legacy\n---\n# Tasks\n"
+        f"- [{mark}] Validate historical records\n  - **_Boundary**: `specs/2026-01/20260115-legacy/`\n"
+        "  - _Requirements: AC-01_\n"
+    )
+    reconcile_status = "resolved" if status == "completed" else "pending"
+    (unit / "reconcile.md").write_text(
+        f"---\nreconcile_id: REC-legacy\nstatus: {reconcile_status}\ntargets: []\n---\n"
+        "No Living Spec contract changes in this compatibility fixture.\n"
+    )
+    directory = unit / "decisions"
+    directory.mkdir(exist_ok=True)
+    record = directory / "01-gate-plan-intent.yaml"
+    record.write_text(
+        "request: gate:plan-intent\nkind: approve\naction: accept\nworkflow: sdd-spec-feature\n"
+        "stage: intent\nby: user\nat: '2026-01-15T00:00:00Z'\n"
+    )
+    before = record.read_bytes()
+    result = _devkit("workflow", "next", "--unit", str(unit), "-w", str(root), "--format", "json")
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert not payload["errors"] and not payload["blocked"]
+    assert not any(item["id"] == "gate:plan-intent" for item in payload["requests"])
+    checked = _devkit("rules", "check", str(unit), "-w", str(root), "--format", "json")
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+    assert record.read_bytes() == before
+
+
+def test_custom_workflow_gate_is_still_requested(synced: Path, tmp_path: Path) -> None:
+    root = tmp_path / "custom"
+    shutil.copytree(synced, root)
+    definition = root / ".devkit/workflows/custom.md"
+    definition.parent.mkdir(exist_ok=True)
+    definition.write_text(
+        "---\nid: custom\ntitle: Custom\nstatus: active\nschema_version: 1\n"
+        "layout: {work_dir: specs, unit_path: '{slug}', anchor: spec.md}\n"
+        "stages:\n  - id: intent\n    name: Custom authorization\n    human_gate: custom-authorization\n"
+        "    entry: []\n    exit: [anchor-exists]\n    artifacts: [spec.md]\n    skills: []\n"
+        "    role: developer\n    isolation: none\n    returns: []\n---\n"
+    )
+    created = _devkit("workflow", "new", "custom", "--workflow", "custom", "-w", str(root))
+    assert created.returncode == 0, created.stderr
+    result = _devkit("workflow", "next", "--unit", "specs/custom", "-w", str(root))
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "[REQUEST: id=gate:custom-authorization" in result.stdout
+
+
+def test_intake_and_prerequisite_overrides_need_no_intent_record() -> None:
+    classification = raw("skills/spec/references/classification.md")
+    pickup = raw("skills/spec-next/references/next-work.md")
+    assert "draft and its intent record" not in classification
+    assert_rule(classification, "create no intent approval record")
+    assert_rule(pickup, "record the override", "proposal Planning decisions or `spec.md`")
+    assert "intent decision" not in flat(pickup)

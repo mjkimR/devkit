@@ -1,0 +1,27 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:17:37.714628Z'
+status: completed
+summary: Core removal is consistent; fix remaining intent-record guidance and strengthen valid Unit legacy-rule coverage.
+findings:
+- issue: Shipped guidance still requires the removed intent record.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/classification.md:13; skills/spec-next/references/next-work.md:39-40
+  failure_condition: Proposal intake or an out-of-order pickup directs the consumer to create a removed intent record.
+  suggested_action: Store prerequisite overrides in proposal Planning decisions or spec.md and add guidance regressions.
+  resolution: open
+  severity: P2
+- issue: The legacy-record regression does not exercise rules on a valid Unit.
+  evidence: packages/devkit-spec/tests/integration/bundles/spec/test_workflows.py:273,287
+  failure_condition: Unit-level validation could reject historical records while the YAML-only target still passes.
+  suggested_action: Use valid live/completed Units, check each Unit and retain byte-for-byte historical-record assertions.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only review; absolute paths and matching tree/HEAD substitute for native enforcement.
+checks: {}
+diff_scope:
+  base: e853f74400d447857a93e13e064c01bff0ec7c15
+  head: 16c91e7b485b8f6a44a386614ef39efd7e87e879
+activity_effort: medium

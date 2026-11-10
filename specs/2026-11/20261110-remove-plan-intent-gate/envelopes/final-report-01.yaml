@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:27:30.371553Z'
+status: completed
+summary: Removed duplicate SDD task-intent approval; preserved explicit authorization, later boundaries, stage IDs and valid history. Code review and independent reconcile findings are fixed.
+findings: []
+assumptions:
+- Full fallback retained; native E2E ran synchronously in this assigned worktree.
+- Later changes after 05b3a395 are documentation or workflow records only, covered by docs selector and cumulative rules.
+unverified_areas:
+- 14 tests require a standalone environment without installed devkit-agt; 2 require Linux /proc and os.waitid. Integrated target verification remains Host-owned.
+checks:
+  tests: 'PASS full-fallback tier all at 05b3a395: 6856 passed, 16 skipped; docs-only follow-up from that SHA: 17 passed'
+  build: PASS Pyright at 05b3a395; generated check at c59e23d1 stale=0
+  lint: PASS Ruff at 05b3a395 and cumulative rules through c59e23d1; sync check exit=0
+diff_scope:
+  base: a74c84afc72b193f32131242b223b76539500ba0
+  head: a746310974f53bb75be9209c8f5f11b4a9efc779

@@ -17,6 +17,9 @@ aliases:
 
 # [ADR-roadmap-and-milestones-ledger] Repository-owned roadmap, milestone documents, merging and archive
 
+Superseded in part by `ADR-remove-plan-intent-gate`: Next work no longer selects confirm-the-intent from an absent gate record.
+It recommends starting the eligible requested draft's Planning; ordering and explicit task instruction remain.
+
 Superseded in part by `ADR-namespace-milestone-roots`: the global-only milestone and deferred per-namespace roadmap clause and the global-root wording for live milestones. Other clauses remain in force; goals remain prose without IDs.
 
 - **Status**: Accepted

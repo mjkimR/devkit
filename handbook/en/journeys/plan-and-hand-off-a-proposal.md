@@ -81,7 +81,7 @@ In Backlog, the agent creates a draft bound to the `sdd-proposal` workflow:
 uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Replaces the regex rule engine with an AST parser."
 ```
 
-It records your confirmation of the draft and its proposed Planning effort as `plan-intent`
+It states the explicitly requested draft scope and proposed Planning effort at intake
 ([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md)).
 A `--milestone` may name a planned, active, done or dropped milestone; a done or dropped one only adds the
 `SPEC_PROPOSAL_MILESTONE_INACTIVE` notice so you can review the membership.
@@ -89,7 +89,7 @@ A `--milestone` may name a planned, active, done or dropped milestone; a done or
 The draft's `size` decides whether it can be planned at all. `S`, `M` and `L` (or no size) are plannable. `XL` means
 the work would produce two or more specs, or mixes deliverables of different kinds (a bugfix with a new feature). An
 `XL` draft stays valid in Backlog, but `devkit workflow next` shows the `intent-proposal` size check unmet
-(`detail="size=XL"`) and no `plan-intent` request opens. The agent reads that as "decompose first" and never edits
+(`detail="size=XL"`) and Planning cannot start. The agent reads that as "decompose first" and never edits
 the size to get past it. On your decision it splits the draft (`devkit spec proposal new <child> --decomposed-from
 PROP-<parent>`, keeping the parent's milestone) or promotes it to a milestone holding the children, optionally asking the
 read-only `decomposer` role for a proposed split
@@ -142,7 +142,7 @@ uv run devkit spec proposal handoff fast-engine --effort medium
 The command creates or validates `dev-<slug>` and its worktree, runs setup and sync, and hands off there. The
 handoff creates the spec bundle bound to `sdd-spec-<task_kind>`
 ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)),
-promotes the PADRs to accepted ADRs, moves materials and open feedback, carries the `plan-intent` and `plan-accept`
+promotes the PADRs to accepted ADRs, moves materials and open feedback, carries the `plan-accept`
 records by name, rewrites references that pointed into the proposal, and removes it. Output lines name what moved:
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, then
 `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`.
@@ -158,8 +158,7 @@ in the same change and follows the spec workflow's next stage, as in
 - **Nothing needs Planning.** For a draft whose direction is settled, the agent checks eligibility read-only on the
   base checkout, then records a direct acceptance after your explicit decision:
   `uv run devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`, then the same without
-  `--check`. The check answers `eligible=no` and exits `1` while a condition is still pending, such as an unrecorded
-  `plan-intent`. An `XL` draft is never eligible.
+  `--check`. The check reports every blocking eligibility condition; no intent record is required. An `XL` draft is never eligible.
 - **It is really a small task.** At pickup you can decide a queued draft without PADRs is `session` work. The agent
   deletes the draft in one base commit that keeps its open feedback, and does the work as a session.
 - **It must be split.** Planning returns the proposal as a draft marked for decomposition. After the Planning branch
@@ -176,7 +175,7 @@ in the same change and follows the spec workflow's next stage, as in
 | Code | Meaning | What to do |
 | --- | --- | --- |
 | `SPEC_LIFECYCLE_INACTIVE` | The development approach is adaptive development, so proposal creation, acceptance and handoff are off. | Inspect `uv run devkit config show`; switching to SDD is your explicit choice ([Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)). |
-| `SPEC_PROPOSAL_NOT_ELIGIBLE` | A direct acceptance fails a condition (for example `size: XL` or a missing `plan-intent`); each is listed with the commands that resolve it. | Fix the condition or go through Planning. |
+| `SPEC_PROPOSAL_NOT_ELIGIBLE` | A direct acceptance fails a condition (for example `size: XL` or an unresolved envelope hold); each is listed with the commands that resolve it. | Fix the condition or go through Planning. |
 | `SPEC_PROPOSAL_GATE_NOT_OPEN` | The workflow does not open `plan-accept` (for example, a missing feedback sweep). The status is restored. | Meet the listed checks, then accept again. |
 | `SPEC_PROPOSAL_APPROVAL_NOT_READY` | The composed acceptance found Planning unfinished: unmet checks, open questions, holds, or no `plan-<slug>`. | Finish Planning there, then rerun. |
 | `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` | The commit gate refused the acceptance commit; both acceptance writes were withdrawn. | Run `uv run devkit rules check` on `plan-<slug>`, fix and commit, then rerun. |

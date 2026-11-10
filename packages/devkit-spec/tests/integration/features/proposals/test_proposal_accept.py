@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit_agt.features.workflow import Workspace, load_decisions, record_answer
+from devkit_agt.features.workflow import Workspace, load_decisions
 from devkit_dist.cli import cli as devkit_cli
 from spec_support.proposals import TODAY, write_workflow
 from spec_support.scope import git, write
@@ -53,8 +53,12 @@ def _draft(root: Path, slug: str = "small", *, intent: bool = True, swept: bool 
     created = create_proposal(root, slug, today=TODAY)
     assert created.workflow == "sdd-proposal"
     if intent:
-        ws = Workspace(root, lint=None, ancestor=None)
-        record_answer(ws, ws.resolve_unit(UNIT.format(slug=slug)), "gate:plan-intent", "accept", by="user", lint=False)
+        write(
+            root,
+            f"{UNIT.format(slug=slug)}/decisions/01-gate-plan-intent.yaml",
+            "request: gate:plan-intent\nkind: approve\naction: accept\nworkflow: sdd-proposal\n"
+            "stage: intent-proposal\nby: user\nat: '2026-10-13T00:00:00Z'\n",
+        )
     if swept:
         write(root, f"{UNIT.format(slug=slug)}/envelopes/feedback-01.yaml", SWEPT)
     return root / created.path
@@ -135,10 +139,10 @@ def test_every_failed_condition_is_listed_and_nothing_is_written(tmp_path: Path)
 
     assert error["code"] == "SPEC_PROPOSAL_NOT_ELIGIBLE" and error["mode"] == "INTERACTION"
     details = error["details"]
-    assert [line.split(":", 1)[0] for line in details] == ["blocking"] * 5 + ["pending"]
+    assert [line.split(":", 1)[0] for line in details] == ["blocking"] * 5
     for expected in ("needs_decompose", "supersedes: PROP-older", "origin/plan-small", "'chore'", "the tool broke"):
         assert any(expected in line for line in details), expected
-    assert "gate:plan-intent" in details[-1]
+    assert not any("gate:plan-intent" in line for line in details)
     assert _snapshot(root, "small") == before
 
 
@@ -214,30 +218,19 @@ def test_a_pending_question_or_a_malformed_worker_holds_it(tmp_path: Path, hold:
     assert _snapshot(root, "small") == before
 
 
-def test_the_check_reports_a_pending_intent_and_writes_nothing(tmp_path: Path) -> None:
+def test_the_check_and_acceptance_need_no_intent_record(tmp_path: Path) -> None:
     root = _repo(tmp_path)
-    proposal = _draft(root, intent=False)
+    _draft(root, intent=False)
     before = _snapshot(root, "small")
-
-    result = _accept(root, "small", "--direct", "--check", "--note", "settled")
-
-    # The real run refuses the pending intent, so the check's answer is negative (exit 1).
-    assert result.exit_code == 1, result.output
-    assert result.stdout == (
-        "[ACCEPT_CHECK: PROP-small form=direct path=docs/proposals/PROP-small/proposal.md eligible=no"
-        " pending=gate:plan-intent]\n"
-    )
-    checked = json.loads(_accept(root, "small", "--direct", "--check", "--note", "settled", "--format", "json").stdout)
-    assert (checked["eligible"], checked["pending"]) == (False, ["gate:plan-intent"])
+    result = _accept(root, "small", "--direct", "--check", "--note", "settled", "--format", "json")
+    assert result.exit_code == 0, result.output
+    checked = json.loads(result.stdout)
+    assert (checked["eligible"], checked["pending"]) == (True, [])
     assert _snapshot(root, "small") == before
-    _edit(proposal, "status: draft", "status: draft\nneeds_decompose: true")
-    error = _error(_accept(root, "small", "--direct", "--check", "--note", "settled", "--format", "json"))
-    assert error["code"] == "SPEC_PROPOSAL_NOT_ELIGIBLE"
-    assert [line.split(":", 1)[0] for line in error["details"]] == ["blocking", "pending"]
-    # The write itself still requires the intent recorded.
-    _edit(proposal, "\nneeds_decompose: true", "")
-    error = _error(_accept(root, "small", "--direct", "--note", "settled", "--format", "json"))
-    assert error["code"] == "SPEC_PROPOSAL_NOT_ELIGIBLE" and _plan_accepts(root, "small") == []
+    accepted = _accept(root, "small", "--direct", "--note", "settled", "--format", "json")
+    assert accepted.exit_code == 0, accepted.output
+    records = load_decisions(root / UNIT.format(slug="small")).records
+    assert [record.request for record in records] == ["gate:plan-accept"]
 
 
 def test_an_eligible_check_without_pending_conditions(tmp_path: Path) -> None:

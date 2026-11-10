@@ -14,6 +14,10 @@ aliases:
 
 # [ADR-proposal-acceptance] Proposal acceptance, review reports and proposal records
 
+Superseded in part by `ADR-remove-plan-intent-gate`: Both gates in one request and Eligibility checked by the tool lose their intent gate,
+intent-record prerequisite and pending-intent special case. Explicit `plan-accept`, direct-acceptance eligibility,
+visibility, sweep, acceptance audit and handoff guard remain; effort hints are stated at intake.
+
 Superseded in part by `ADR-post-merge-verification`: optional same-process acceptance, merge and handoff composition only; `accept_and_handoff` retains authorized effects but yields to Host final verification before a fresh handoff invocation. Other acceptance decisions remain.
 
 Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the consequence requiring separate live evidence for native form rendering, and the viewer exception clause. Conversational acceptance and the repository viewer protections remain in force.

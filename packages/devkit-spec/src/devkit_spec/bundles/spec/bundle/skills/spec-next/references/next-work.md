@@ -16,8 +16,7 @@ because its branch exists. Recommend; do not start, accept or activate anything.
    2. Then milestone groups: active, ready planned, none; ties by milestone `created_at`, then ID.
    3. Within a group: priority critical/high/medium/low (default high), size S/M/L/XL (default M), draft
       `created_at` (missing sorts last), draft ID.
-4. Recommend the first eligible draft: record an existing explicit task instruction as plan-intent (ask only when
-   intent is unresolved), and offer Planning, a direct acceptance
+4. Recommend Planning for the first eligible draft; start only on an explicit task instruction. Offer a direct acceptance
    (`devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`) when its direction is settled,
    or a session reclassification for `session`-depth work (the `spec` skill's `references/backlog.md`). Report as
    Backlog actions: other drafts in unready/done/dropped milestones, `needs_decompose` and `XL` drafts (decompose
@@ -37,5 +36,4 @@ Also used for explicit proposal pickup and direct-spec intake. The result schedu
 3. Report each blocked candidate with the prerequisite ID and reason (unfinished proposal, rejected proposal,
    unfinished spec, invalid/unknown target). Missing, ambiguous or malformed evidence is a Backlog repair action. A
    critical blocked draft stays blocked.
-4. Explicit user pickup can override order: show the unsatisfied IDs and record the override in the intent
-   decision. It cannot waive malformed references or cycles.
+4. Explicit user pickup can override order: show the unsatisfied IDs and record the override in proposal Planning decisions or `spec.md`. It cannot waive malformed references or cycles.

@@ -13,6 +13,9 @@ aliases:
 
 # [ADR-ux-screens] UX screen documents, step links and pre-code review
 
+Superseded in part by `ADR-remove-plan-intent-gate`: the inline Planning boundary is before implementation rather than before `plan-intent`.
+Comparing screen candidates during Planning and retaining the recommended candidate during Development remain.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - Superseded in part by `ADR-namespace-steering-registers`: the clauses requiring one root-only register, unconditional root creation with the first UX document, and root-only writes of drafted register rows by `spec-sync`. Shared rows stay global, namespace rows stay local, and files are created only when needed; other screen and register contracts remain.

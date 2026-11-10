@@ -1,7 +1,7 @@
 ---
 id: UC-drive-development-to-integration
 title: Drive Development to Integration
-summary: "An AI coding agent develops an agreed task, verifies and persists evidence, collects optional background verification, and integrates locally or by pull request under Host authority and dev-integration policy."
+summary: "An AI coding agent develops an explicitly instructed task, verifies and persists evidence, collects optional background verification and integrates locally or by pull request under Host authority and dev-integration policy."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -39,7 +39,7 @@ capabilities:
   cleanly with complete evidence.
 - **Scope**: the Development stages of the `sdd-spec-*` and `sdd-session-*` workflows, workflow envelopes, the
   `devkit integration` CLI and `devkit worktree finish`.
-- **Trigger**: A spec Unit's `plan-intent` is recorded (`UC-route-development-intent`), or a proposal is handed off
+- **Trigger**: A spec Unit has an explicitly instructed scope (`UC-route-development-intent`), or a proposal is handed off
   (`UC-plan-and-hand-off-a-proposal`).
 - **Preconditions**: The Unit is on its `dev-<slug>` activity branch, in a task worktree or the current checkout.
 

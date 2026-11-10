@@ -82,9 +82,6 @@ def _complete_proposal(wt: Path, slug: str = "idea") -> str:
     unit = f"docs/proposals/PROP-{slug}"
     _cli(wt, "spec", "proposal", "new", slug, "--title", "Idea", "--summary", "Proposal summary.")
     _cli(
-        wt, "workflow", "answer", "--unit", unit, "--request", "gate:plan-intent", "--action", "accept", "--by", "user"
-    )
-    _cli(
         wt,
         "workflow",
         "envelope",

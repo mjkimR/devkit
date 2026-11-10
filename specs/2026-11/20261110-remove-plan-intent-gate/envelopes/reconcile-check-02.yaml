@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:25:46.620547Z'
+status: completed
+summary: 'Implementer verified named P2 wording fixes against source: override storage, explicit orientation instruction and clarification only for unresolved scope; all 15 targets agree.'
+findings: []
+assumptions:
+- Self-verification follows the independent medium reconcile review; only its prescribed text edits and contract summaries changed.
+checks:
+  docs: PASS cumulative rules and 17 docs-selected tests
+  diff: PASS no production changes after full-fallback checked HEAD 05b3a395
+diff_scope:
+  base: 05b3a395f1030ea65e78982ae6b161e9620bbc5c
+  head: a937b82fedec45a13ee6eefc005c065665db110e
+activity_effort: medium

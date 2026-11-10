@@ -237,10 +237,12 @@ checks against the Unit's files and prints the first unmet stage, what is missin
 `devkit workflow show <id>` prints a whole definition. Because the Unit stores only its workflow ID, a changed
 definition applies to work already under way.
 
-A **gate** is a stage that waits for a decision; the `spec` workflows use three ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
+A **gate** is a stage that waits for a decision; SDD has three approval boundaries ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md)):
 
-- `plan-intent`: you agree on what the work is.
+Your explicit task instruction authorizes its stated scope; no intent approval record is needed.
+
 - `plan-accept`: you accept a proposal's direction.
+- `proposal-handoff`: you authorize Development to start; this boundary is read by the proposal lifecycle command.
 - `dev-integration`: you approve landing the finished work.
 
 Each gate is `ask` (wait for a person) or `auto` (delegated by project policy); a delegation is reported as policy,
@@ -328,8 +330,9 @@ See [Integration](areas/integration.md) for routes and recovery.
 A typical spec-depth change runs like this:
 
 1. `devkit sync` has deployed the `spec` bundle; the agent loads it with `devkit get-context spec`.
-2. You state an intent with `/spec <intent>`. The agent reads `devkit spec policy`, proposes a classification and,
-   once you confirm, creates a `dev-<slug>` branch and a spec bundle and records `plan-intent`.
+2. You state an intent with `/spec <intent>`. The agent reads `devkit spec policy`, states the classification
+   and creates a `dev-<slug>` branch and spec bundle from your explicit instruction. It clarifies unresolved scope
+   or classification before dependent work; no repeated confirmation or intent approval record is required.
 3. The agent follows `devkit workflow next`: spec, plan, tasks, implementation, review envelopes, the Living Spec
    reconcile, and a final change report.
 4. Rules and commit gates check every commit along the way.

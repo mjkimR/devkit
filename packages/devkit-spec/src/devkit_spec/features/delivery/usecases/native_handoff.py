@@ -207,14 +207,14 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
     ref = workspace.resolve_unit(unit)
     evaluation = workspace.evaluate_unit(ref, lint=False)
     passed = {gate.name for _stage, gate in evaluation.passed_gates if gate.satisfied}
-    missing = sorted({"plan-intent", "plan-accept"} - passed)
+    missing = sorted({"plan-accept"} - passed)
     if ref.doc.id != PROPOSAL_WORKFLOW or not evaluation.complete or evaluation.errors or missing:
         details = [f"workflow: {ref.doc.id}" if ref.doc.id != PROPOSAL_WORKFLOW else ""]
         details += [f"unmet: {check.name}" for check in evaluation.unmet]
         details += [f"problem ({error.code}): {error.message}" for error in evaluation.errors]
         details += [f"missing approval: {name}" for name in missing]
         raise HandoffNotReadyError(
-            f"PROP-{slug} has no completed {PROPOSAL_WORKFLOW} Planning with its own plan-intent and plan-accept",
+            f"PROP-{slug} has no completed {PROPOSAL_WORKFLOW} Planning with its own plan-accept",
             *(line for line in details if line),
             target_files=[rel],
         )

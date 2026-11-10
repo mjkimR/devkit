@@ -127,7 +127,7 @@ def test_the_size_gate_reads_as_decompose_first_everywhere() -> None:
         raw("skills/spec/SKILL.md"),
         "judge `size` against the `XL` definition ([backlog](references/backlog.md))",
         "`planning_effort`",
-        "plan-intent request",
+        "at intake",
     )
     assert "exit: [anchor-exists, frontmatter(proposal.md size S|M|L|)]" in raw("workflows/sdd-proposal.md")
     planning = raw("skills/spec/references/planning.md")

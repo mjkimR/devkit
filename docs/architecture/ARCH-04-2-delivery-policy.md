@@ -1,7 +1,7 @@
 ---
 id: ARCH-04-2-delivery-policy
 title: Delivery Policy
-summary: "Governance policy principles, approval delegations, branch and worktree decision trees, pull request rules, and stale branch detection."
+summary: "Governance policy principles, three approval delegations after explicit task authorization, branch and worktree decision trees, pull request rules and stale branch detection."
 status: active
 created_at: 2026-10-21
 ---
@@ -32,7 +32,6 @@ Policies are configured under `.devkit/config.toml` (`CAP-DLV-project-policy`):
 
 | Key | Owning Package | Allowed Values (Default) | Governed Behavior |
 | :--- | :--- | :--- | :--- |
-| `[workflow.approvals] plan-intent` | `devkit-spec` | `ask`, `auto` (`ask`) | Human confirmation vs explicit task prompt satisfying intent. |
 | `[workflow.approvals] plan-accept` | `devkit-spec` | `ask`, `auto` (`ask`) | Human acceptance vs policy-delegated direction acceptance. |
 | `[workflow.approvals] proposal-handoff` | `devkit-spec` | `ask`, `auto` (`ask`) | Human confirmation vs automated Development kickoff. |
 | `[workflow.approvals] dev-integration` | `devkit-agt` | `ask`, `auto` (`ask`) | Human confirmation vs automated integration delegation. |
@@ -104,12 +103,11 @@ flowchart TD
 
 | Gate | `ask` Policy | `auto` Policy | Hard Invariants |
 | :--- | :--- | :--- | :--- |
-| `plan-intent` | Explicit instruction or confirmation | Explicit task prompt satisfies intent | Task MUST NOT start without instruction. |
 | `plan-accept` | Explicit human acceptance | Direction accepted via policy delegation | Merge is an acceptance effect, not Development approval. |
 | `proposal-handoff`| Human confirms starting Development | Autonomous handoff and Unit creation | Handoff MUST have an accepted proposal anchor. |
 | `dev-integration`| Explicit user confirmation prompt | Autonomous integration upon passing checks | Review, verification, and reconcile MUST pass. |
 
-The four decision gates correspond to `[workflow.approvals]` configuration. Unrecoverable failures enter the `exception` workflow stage (`exception: true`), which a human MUST recover explicitly. That stage MUST NOT be delegated or configured in approvals.
+The three decision boundaries correspond to `[workflow.approvals]` configuration. Unrecoverable failures enter the `exception` workflow stage (`exception: true`), which a human MUST recover explicitly. That stage MUST NOT be delegated or configured in approvals.
 
 Policy delegation MUST be reported as `policy`, never as fabricated human consent. Revocation of auto authority MUST
 immediately halt pending effects.

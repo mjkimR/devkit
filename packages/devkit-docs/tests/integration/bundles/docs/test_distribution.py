@@ -61,7 +61,7 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
                 "`/spec",
                 "requires prior ADR",
                 "`spec-sync`",
-                "`plan-intent`",
+                "explicit task instruction",
                 "devkit spec proposal",
                 "spec:docs-skeleton",
                 ".devkit/managed/spec/",

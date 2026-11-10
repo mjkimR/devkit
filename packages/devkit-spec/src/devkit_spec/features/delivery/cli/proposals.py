@@ -28,8 +28,7 @@ Text output (paths are relative to the workspace root):
   ``[SUPERSEDED_IN_PART: <adr> path= line= by=]`` per "Superseded in part by" line written into an ADR a promoted
   decision supersedes in part, one
   ``[DROPPED_RECORD: <path>]`` per workflow record of the proposal unit removed with it, one
-  ``[CARRIED_GATE: <request> decision=<path>]`` per approval of the proposal (``gate:plan-intent``,
-  ``gate:plan-accept``) recorded in the spec under its name, one
+  ``[CARRIED_GATE: <request> decision=<path>]`` per approval of the proposal (``gate:plan-accept``) recorded in the spec under its name, one
   ``[REWRITTEN: <path>:<line> kind=link|id|path from= to=]`` per rewritten link, reference or code-span path, one
   ``[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]`` per link or reference left as it was,
   ``[SCOPE: <task> namespace= ... token=]`` when it registered the bundle's work scope, and

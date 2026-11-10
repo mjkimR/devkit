@@ -6,7 +6,6 @@ schema_version: 1
 # dev-integration is asked after the change is final: its approval is passed as `--given dev-integration`, never
 # recorded.
 gates:
-  plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration
 # Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 # No layout: an overall refactor creates no work unit, envelope, gate record file or reconcile document.
@@ -17,8 +16,8 @@ checks:
   - { name: exception-handled, class: human, description: "the cause of the exception was handled by the user" }
 stages:
   - id: intent-refactor
-    name: Plan intent
-    human_gate: plan-intent
+    name: Task scope
+    human_gate: false
     entry: []
     exit: []
     artifacts: [agreed goal, scope and non-goals in the conversation]

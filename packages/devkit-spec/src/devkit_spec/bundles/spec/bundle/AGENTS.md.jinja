@@ -52,11 +52,11 @@ instructions take precedence. Never end the user's session on your own.
   sequence. A Unit writes `spec.md`, `plan.md` and `tasks.md` before production code.
 - Before classification, gate and Git decisions, run `devkit spec policy` and read the `spec` skill's
   `references/completion.md`; before formal worktree work, its `references/worktree.md`.
-- An explicit task instruction supplies `plan-intent`; do not ask for the same consent again. Within approved scope the
+- An explicit task instruction authorizes its stated scope; no intent approval record is needed. Within approved scope the
   Host chooses sequencing, workers, implementation, review and fixes without further approval; a scope or constraint
   change needs new authority.
 - Records name `user` or `policy` and carry decisions, never conversation quotes, paraphrases or dates.
-- UX: choose alternatives in proposal or inline Planning before `plan-intent` (Development takes the recommended
+- UX: choose alternatives in proposal or inline Planning before implementation (Development takes the recommended
   candidate and records the alternatives as an assumption in `spec.md`); draft screens before code in `target-docs.md`
   (proposals) or `spec.md` (specs), and `spec-sync` writes the retained drafts and citations; offer the optional
   `ux-reviewer` before code, never for a `session` task.

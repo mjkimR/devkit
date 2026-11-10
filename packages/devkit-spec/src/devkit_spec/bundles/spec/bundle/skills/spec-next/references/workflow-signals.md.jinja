@@ -10,8 +10,6 @@ adds the spec delivery rules.
 For `[WAITING: human gate:<gate>]`, reuse an explicit authorization that covers this exact decision; otherwise ask
 once. Record only the authority actually given:
 
-- `plan-intent`: an existing explicit task instruction counts;
-  `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user`.
 - `plan-accept`: after the Host presents the findings and effects and receives the user's decision,
   `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user`. `proposal-handoff` can share
   the conversation; each policy stays independent.
