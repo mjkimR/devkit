@@ -1,0 +1,27 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T08:13:29.569344Z'
+status: completed
+summary: d1, d2, d3 decided
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: d1
+  choice: a
+  decision: role-worker lives in the devkit bundle core preset as minimal distribution infrastructure; the PADR supersedes in part the devkit-bundle clause of ADR-package-ownership-and-release-version and test_guide_bundle.py is updated.
+  constraints:
+  - The revised clause admits distribution guidance plus general subagents shared by other bundles; no other existing bundle fits because only devkit and advisory are auto-selected from devkit-dist.
+  by: user
+- question: d2
+  choice: a
+  decision: design-explore and CAP-DLV-design-exploration join the role-file callers.
+  by: user
+- question: d3
+  choice: null
+  decision: 'Callers statically assign a subagent type per role or assignment in their instructions: assignments that interact with a running UI use general-purpose, all other role assignments use role-worker; this is a fixed mapping, not a runtime fallback.'
+  constraints:
+  - skill-authoring roles.md states the default role-worker and that a role or assignment needing capabilities outside its tool list names general-purpose explicitly.
+  by: user
