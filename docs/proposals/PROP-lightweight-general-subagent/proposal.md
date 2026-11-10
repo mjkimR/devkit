@@ -2,7 +2,7 @@
 id: PROP-lightweight-general-subagent
 title: Lightweight general subagent for role-file delegation
 summary: "Add a neutral, tool-limited role-worker subagent to the auto-selected devkit bundle and route skill-local role-file delegation to it, so role children start without the full general-purpose tool and skill context."
-status: reviewing                         # draft | reviewing | accepted | rejected
+status: accepted                         # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: capabilities/distribution/
 namespace: global
