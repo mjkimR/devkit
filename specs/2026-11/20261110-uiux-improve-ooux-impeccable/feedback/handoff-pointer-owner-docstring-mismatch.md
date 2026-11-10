@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: promoted
 created_at: 2026-11-10
 ---
 
@@ -48,3 +48,7 @@ summary instead of naming the replaced clauses, clarify it from the new ADR's De
 post-handoff.md: "Commit link fixes and partial-supersession pointer clarifications on `dev-<slug>` as a later Host
 commit before a worker starts."
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-partial-adr-supersession-statements`: Q6 settles whether a post-handoff pointer clarification remains once handoff derives the pointer, and what the handoff docstrings and post-handoff reference then say.

@@ -106,4 +106,11 @@ separate proposal; Planning re-judges `size` and returns the draft for decomposi
 ## 4. Lifecycle & Retirement Criteria
 
 Planning answers Q1–Q6, records the statement-form decision as a PADR and drafts the Living Spec targets. On
-acceptance, handoff starts Development; the related feedback records close when the change lands.
+acceptance, handoff starts Development.
+
+## 5. Source feedback
+
+- `FB-partial-supersession-pointer-still-summary` (recurring): a summary pointer reached Development despite the
+  guidance-only post-handoff clarification.
+- `FB-handoff-pointer-owner-docstring-mismatch`: the handoff docstrings and the post-handoff reference name different
+  owners for the pointer clarification (Q6).

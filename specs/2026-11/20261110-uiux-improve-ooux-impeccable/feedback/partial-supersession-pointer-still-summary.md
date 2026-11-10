@@ -8,7 +8,7 @@ target: the spec-next post-handoff reference (partial-supersession pointer clari
 origin: agent
 severity: noise
 recurring: true
-status: open
+status: promoted
 created_at: 2026-11-10
 ---
 
@@ -35,3 +35,7 @@ Impeccable craft work, we let one bounded session edit ..." (identical to the ne
 Host commit after handoff: changes one line of the new ADR ("On promotion, this decision supersedes" ->
 "This decision supersedes"); the older ADR is not touched.
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-partial-adr-supersession-statements`: the replaced scope becomes a structured statement in the superseding ADR that handoff copies into the pointer and a rule checks, replacing the guidance-only clarification step.
