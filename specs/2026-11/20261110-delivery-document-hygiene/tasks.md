@@ -7,8 +7,10 @@ plan: PLAN-delivery-document-hygiene
 # Task Breakdown: `SPEC-delivery-document-hygiene`
 
 - [x] **Task 1**: Partition the delivery capabilities and retain a section relocation map.
-  - **_Boundary**: `docs/capabilities/delivery/CAP-DLV-delivery-workflows.md`, `docs/capabilities/delivery/CAP-DLV-delivery-roles.md`, `docs/capabilities/delivery/CAP-DLV-proposal-planning.md`, `docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md`, `specs/2026-11/20261110-delivery-document-hygiene/`
+  - **_Boundary**: `docs/capabilities/delivery/CAP-DLV-delivery-workflows.md`, `docs/capabilities/delivery/CAP-DLV-delivery-roles.md`, `docs/capabilities/delivery/CAP-DLV-proposal-planning.md`, `docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md`, `specs/2026-11/20261110-delivery-document-hygiene/`,
+    `packages/devkit-spec/tests/integration/bundles/spec/test_scratch_cleanup_guidance.py`
   - _Requirements: AC-01, AC-02_
+  - **Host-admitted integration repair**: `packages/devkit-spec/tests/integration/bundles/spec/test_scratch_cleanup_guidance.py` follows the relocated contract owner and preserves every assertion.
   - **Verification**: line counts, mechanical section comparison, document rules and independent review.
 - [x] **Task 2**: Repair exact current references and backlinks admitted by the Host.
   - **_Boundary**: `docs/architecture/ARCH-04-1-ecosystem-boundaries.md`,

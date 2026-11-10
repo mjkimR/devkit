@@ -12,7 +12,7 @@ PAYLOAD = "skills/spec-delegate/references/payload.md"
 WORKER = "subagents/development-worker.md"
 PLANNING_WORKER = "subagents/planning-worker.md"
 ENVIRONMENTS = ["local", "cloud"]
-WORKFLOWS = Path(__file__).resolve().parents[6] / "docs/capabilities/delivery/CAP-DLV-delivery-workflows.md"
+ROLES = Path(__file__).resolve().parents[6] / "docs/capabilities/delivery/CAP-DLV-delivery-roles.md"
 
 
 # AC-01
@@ -35,8 +35,8 @@ def test_payloads_never_ask_for_create_then_delete(environment: str) -> None:
     assert "Remove them before the last commit" not in text(PLANNING_WORKER, environment)
 
 
-def test_the_delivery_workflow_contract_mirrors_the_guidance() -> None:
-    contract = flat(WORKFLOWS.read_text(encoding="utf-8"))
+def test_the_delivery_role_contract_mirrors_the_guidance() -> None:
+    contract = flat(ROLES.read_text(encoding="utf-8"))
     assert "The worker leaves temporary files and throwaway repositories" in contract
     assert "removing the Planning worktree cleans them" in contract
     assert "A payload never asks a worker, Planning or Development, to delete a scratch file or fixture" in contract

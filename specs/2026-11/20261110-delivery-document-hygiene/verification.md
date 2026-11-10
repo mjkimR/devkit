@@ -33,3 +33,9 @@ removed, and the cumulative baseline diff is now checked explicitly. The change 
 
 Final document content at c46dfaca: cumulative committed-range whitespace, rules, sync and tier-all affected17
 tests PASS. Only workflow evidence/status records follow this checked content.
+
+## Integrated-head repair
+
+The full affected selection at `c399ec1a` found one guidance test still reading the original workflow capability.
+Its scratch-cleanup assertions now read `CAP-DLV-delivery-roles`, where the contract moved intact. The Host admitted
+the exact test path to AC-01/AC-02 integration repair; every positive and negative assertion remains unchanged.
