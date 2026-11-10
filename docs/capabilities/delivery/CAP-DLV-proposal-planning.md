@@ -3,7 +3,7 @@ id: CAP-DLV-proposal-planning
 aliases:
   - CAP-DLV-proposal-incubation
 title: Proposal Planning and Handoff
-summary: "Proposal creation validates live and archived milestone membership with nonblocking terminal notices. Planning and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
+summary: "Proposal Planning and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback. Explicit task instructions replace intent approval, and handoff carries only the acceptance audit record."
 area: delivery
 status: active
 created_at: 2026-10-13

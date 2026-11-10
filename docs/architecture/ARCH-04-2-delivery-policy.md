@@ -1,7 +1,7 @@
 ---
 id: ARCH-04-2-delivery-policy
 title: Delivery Policy
-summary: "Governance policy principles, approval delegations, branch and worktree decision trees, pull request rules, and stale branch detection."
+summary: "Governance policy principles, three approval delegations after explicit task authorization, branch and worktree decision trees, pull request rules and stale branch detection."
 status: active
 created_at: 2026-10-21
 ---

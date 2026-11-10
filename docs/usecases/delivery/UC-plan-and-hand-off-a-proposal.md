@@ -3,7 +3,7 @@ id: UC-plan-and-hand-off-a-proposal
 aliases:
   - UC-incubate-and-hand-off-a-proposal
 title: Plan a Proposal and Hand It Off to a Spec
-summary: "An AI coding agent develops a proposal, reviews its committed Planning source before acceptance under project policy, obtains Host approval against those findings, then accepts or hands it off while preserving materials, approvals and references."
+summary: "An AI coding agent plans an explicitly requested proposal, reviews its committed direction, then accepts or hands it off under independent approval policy while preserving decisions, materials, acceptance evidence and references."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:

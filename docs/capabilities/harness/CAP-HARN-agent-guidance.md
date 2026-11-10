@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance for SDD, adaptive development, deep research and milestone operations. Local-orchestrated verification discovers independent check groups and collects isolated results without changing consumer requirements."
+summary: "Agent guidance routes explicit task instructions through SDD without duplicate intent records, and covers adaptive development, deep research, milestones and local-orchestrated verification."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -442,7 +442,7 @@ reconcile, approval or coverage certification. No dependencies means unit-ready.
 ID and reason: unfinished proposal, rejected proposal, unfinished spec, or invalid/unknown target. Missing,
 malformed, ambiguous or unreadable base evidence requires Backlog repair. Filter ordinary and critical candidates
 before existing milestone/priority ordering. Explicit user pickup may override order, recording unsatisfied IDs
-and reasons in the ordinary intent decision; it cannot waive malformed references or cycle diagnostics.
+and reasons in proposal Planning decisions or `spec.md`; it cannot waive malformed references or cycle diagnostics.
 
 Before decompose, supersede, reject, delete or session reclassification, inspect incoming depends_on references
 across all namespaces, retaining only live direct unit edges. Review each edge with the user and replace it with

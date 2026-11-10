@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-project-policy
 title: Project Policy
-summary: "Effective SDD approval, stage, Git, routing and feedback policies consume the common development approach without owning another setting; retained-base authority governs lifecycle integration."
+summary: "Effective SDD approval, stage, Git, routing and feedback policy retains three later decision boundaries, ignores retired intent settings visibly and preserves retained-base lifecycle authority."
 area: delivery
 status: active
 created_at: 2026-10-13

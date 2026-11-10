@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "SDD stages, gates and records govern delivery. Workers retain source scope; the Host accepts verification, including optional isolated background groups, while git-operator performs authorized Git lifecycle effects."
+summary: "SDD stages retain eligibility checks and historical records without task-intent approval. Later boundaries govern delivery; workers retain scope, the Host accepts verification and git-operator executes authorized lifecycle effects."
 area: delivery
 status: active
 created_at: 2026-10-13

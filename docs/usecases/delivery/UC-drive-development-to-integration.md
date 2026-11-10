@@ -1,7 +1,7 @@
 ---
 id: UC-drive-development-to-integration
 title: Drive Development to Integration
-summary: "An AI coding agent develops an agreed task, verifies and persists evidence, collects optional background verification, and integrates locally or by pull request under Host authority and dev-integration policy."
+summary: "An AI coding agent develops an explicitly instructed task, verifies and persists evidence, collects optional background verification and integrates locally or by pull request under Host authority and dev-integration policy."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:

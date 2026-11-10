@@ -1,7 +1,7 @@
 ---
 id: ARCH-04-delivery-strategy
 title: Delivery Strategy
-summary: "Macro delivery architecture, Backlog-Planning-Development lifecycle, three-axis classification, execution modes, and decision boundaries."
+summary: "Macro delivery architecture, Backlog-Planning-Development lifecycle, three-axis classification and execution modes, with explicit task authorization and three later decision boundaries."
 status: active
 created_at: 2026-10-21
 ---

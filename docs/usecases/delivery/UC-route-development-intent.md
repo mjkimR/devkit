@@ -1,7 +1,7 @@
 ---
 id: UC-route-development-intent
 title: Route a Development Request to the Right Workflow
-summary: "Routes SDD development requests by task-kind, planning-depth and activity-effort after shared approach inspection; adaptive development follows its own guidance without implicit SDD Units."
+summary: "Routes explicit SDD task instructions by task-kind, planning-depth and activity-effort without intent approval records; adaptive development follows its own guidance without implicit SDD Units."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -56,7 +56,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **1a.** The user asks for orientation instead of stating an intent, and no Unit is in progress: the agent filters
   the queued drafts by their direct prerequisites on one local base snapshot, ranks the eligible ones by milestone,
   priority and size, recommends one with Planning, a direct acceptance or a session reclassification, and reports
-  decomposition (a `needs_decompose` or `XL` draft, through the `decomposer`) and milestone cleanup as Backlog actions (`CAP-HARN-agent-guidance`); intent approval and milestone
+  decomposition (a `needs_decompose` or `XL` draft, through the `decomposer`) and milestone cleanup as Backlog actions (`CAP-HARN-agent-guidance`); explicit task instructions and milestone
   transitions stay with the user; the use case ends.
 - **1b.** The message is not a new task intake (a continuation, a same-task follow-up, an explicit ID or rule
   remediation, a step inside a running playbook, an information-only question, a message from another agent, or the
@@ -142,7 +142,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Given**: queued drafts exist and no Unit is in progress
 - **When**: `spec-next` orients the agent
 - **Then**: it recommends an eligible draft in the milestone, priority and size order of `CAP-HARN-agent-guidance`,
-  reports decomposition or milestone cleanup as Backlog actions, and leaves intent approval and milestone transitions
+  reports decomposition or milestone cleanup as Backlog actions, and leaves explicit task instructions and milestone transitions
   to the user
 
 ### Scenario 2a: A continuation runs no playbook search

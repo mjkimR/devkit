@@ -330,8 +330,9 @@ See [Integration](areas/integration.md) for routes and recovery.
 A typical spec-depth change runs like this:
 
 1. `devkit sync` has deployed the `spec` bundle; the agent loads it with `devkit get-context spec`.
-2. You state an intent with `/spec <intent>`. The agent reads `devkit spec policy`, proposes a classification and,
-   once you confirm, creates a `dev-<slug>` branch and a spec bundle without an intent approval record.
+2. You state an intent with `/spec <intent>`. The agent reads `devkit spec policy`, states the classification
+   and creates a `dev-<slug>` branch and spec bundle from your explicit instruction. It clarifies unresolved scope
+   or classification before dependent work; no repeated confirmation or intent approval record is required.
 3. The agent follows `devkit workflow next`: spec, plan, tasks, implementation, review envelopes, the Living Spec
    reconcile, and a final change report.
 4. Rules and commit gates check every commit along the way.
