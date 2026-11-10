@@ -201,3 +201,39 @@ def test_project_files_setup_and_cleanup_follow_the_users_request() -> None:  # 
     assert_rule(orchestration, "user-requested change", "consumer workflow", "host's approvals")
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "install impeccable", "ignore entries", "`product.md` or `design.md`", "user's request")
+
+
+GUIDE_SECTIONS = (
+    "What it is for",
+    "One-time setup",
+    "Per-task flow",
+    "Launch routes",
+    "What the coordinator does and does not do",
+    "OOUX document linkage",
+    "Opt-in setup and cleanup",
+    "Troubleshooting",
+)
+
+
+def test_usage_guide_stays_a_human_document_outside_agent_assets(tmp_path: Path) -> None:  # AC-11
+    guide = BUNDLE / "README.md"
+    text = guide.read_text()
+    headings = re.findall(r"^## \d+\. (.+)$", text, flags=re.MULTILINE)
+    assert headings == list(GUIDE_SECTIONS)
+    assert not re.search(r"\b(ADR|PADR|CAP|UC|UX|ARCH|SPEC|PROP|MS|MAT|FB)-[A-Za-z0-9]", text)
+    for route in ("`npx impeccable install`", "`/plugin marketplace add pbakaus/impeccable`", "`skills/impeccable`"):
+        assert route in text
+    catalog = (PACKAGE / "README.md").read_text()
+    assert "(src/devkit_catalog/app_uiux_improve/bundle/README.md)" in catalog
+    # No agent-read bundle file points at the bundle's own guide; a pointer to Impeccable's README stays allowed.
+    own_guide = re.compile(r"\.\./README\.md|bundle/README\.md|\(README\.md\)|`README\.md`")
+    for path in [BUNDLE / "bundle.toml", *SKILL.rglob("*")]:
+        if path.is_file():
+            assert not own_guide.search(path.read_text()), path
+    update_config(tmp_path, agents=HOSTS, presets={"app-uiux-improve": ["core"]})
+    sync_project(tmp_path, _installed())
+    managed = tmp_path / ".devkit/managed/app-uiux-improve"
+    assert not list(managed.rglob("README.md"))
+    for projected in (".agents/skills/app-uiux-improve", ".claude/skills/app-uiux-improve"):
+        assert (tmp_path / projected / "SKILL.md").is_file()
+        assert not list((tmp_path / projected).rglob("README.md"))

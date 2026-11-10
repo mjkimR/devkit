@@ -57,6 +57,9 @@ def test_installed_app_uiux_improve_without_delivery_packages(tmp_path: Path) ->
         assert not (consumer / absent).exists()
     for relative in ("references/design-guidance.md", "references/orchestration.md"):
         assert (skill / relative).is_file()
+    # The human usage guide ships in the wheel but never reaches managed or projected files.
+    assert not list((consumer / ".devkit/managed/app-uiux-improve").rglob("README.md"))
+    assert not list(skill.rglob("README.md"))
     artifact = consumer / "design.md"
     artifact.write_text("User-owned design notes.\n")
     cli("remove", "app-uiux-improve")
