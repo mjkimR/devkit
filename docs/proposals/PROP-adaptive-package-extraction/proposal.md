@@ -2,7 +2,7 @@
 id: PROP-adaptive-package-extraction
 title: Extract adaptive development into a devkit-adaptive distribution
 summary: "Move the adaptive-dev bundle from the content-only devkit-catalog into a new devkit-adaptive distribution that can carry code, keeping existing selections working, so adaptive development can gain commands."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
