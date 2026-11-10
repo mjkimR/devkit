@@ -119,7 +119,7 @@ files, and the OOUX reference section keeps one source for the object model.
 - Local roles keep returning suggestions and evidence only; the delegated session is not a local role. →
   `CAP-DLV-uiux-improvement` rule 9 (MUST).
 
-On promotion, this decision supersedes Decision Outcome clause 2 of `ADR-uiux-improvement-workflow-boundary` in
+This decision supersedes Decision Outcome clause 2 of `ADR-uiux-improvement-workflow-boundary` in
 part: its coordinator-only continuation of requested implementation now admits one user-selected, brief-bounded
 Impeccable session whose changes the coordinator accepts before continuing. That clause's statements that selection
 changes no workflow policy and grants no commit, integration or publication authority stay in force. Clauses 1 and 3
