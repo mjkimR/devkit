@@ -1,7 +1,7 @@
 ---
 id: PROP-core-git-observation-helpers
 title: Public Git observation helpers in devkit-core
-summary: "Add public devkit-core functions that read git worktree list and git status porcelain records and resolve a revision to a commit ID, and move the packages' private parsers to them, so each Git output is parsed once and tested once."
+summary: "Add public devkit-core functions that read git worktree list and git status porcelain records, and move the packages' private parsers to them, so each Git output is parsed once and tested once."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: packages/devkit-core/
@@ -69,8 +69,9 @@ changing any command's behavior, and new features stop adding copies.
 
 ## Source feedback (when this proposal receives feedback)
 
-- `FB-no-public-git-observation-helpers`: the whole observation (worktree records, status records with both names of a
-  rename, revision resolution, moving the existing callers).
+- `FB-no-public-git-observation-helpers`: worktree records, status records with both names of a rename and moving the
+  existing callers. Its revision resolver is declined (Planning decisions); the adaptive lookup it pointed at is fixed
+  locally.
 
 ## 2. Technical Spike Questions
 
@@ -107,14 +108,10 @@ parses its own output with the same function.
   `original: str | None` (the second field of a rename or copy, read only when `X` or `Y` is `R` or `C`). Empty
   fields and the trailing NUL produce no record; a rename without its second field is `GitError`, never a silent
   record. Paths are Git's, including the trailing `/` of an untracked directory.
-- **Commit resolution** (Q3, recommended option): `resolve_commit(cwd, revision) -> str | None` runs
-  `rev-parse --verify --quiet --end-of-options <revision>^{commit}` and returns the full commit ID, `None` when Git
-  reports the revision unknown (exit 1) or prints anything but a 40- or 64-digit hexadecimal ID (a leading `^`
-  makes `rev-parse` print `^<id>`), and raises `GitError` otherwise.
 - All decoding is UTF-8 with `surrogateescape`, which equals the `os.fsdecode` some callers use under a UTF-8
   file system encoding (the supported macOS and Linux setups); behavior preservation is claimed for that encoding. `devkit-core` keeps importing no application package.
 
-### Caller migration (Q2, recommended option: in this spec)
+### Caller migration (in this spec)
 
 Every parser in `materials/call-site-inventory.md` moves to the helpers, feature by feature, with each caller keeping
 its own mapping (path resolution, zero HEAD to `None`, the adaptive trailing-slash strip, its error translation and
@@ -130,10 +127,11 @@ record filtering):
   runner) and envelope commit; `devkit_spec` worker inspection and native handoff (the `-z` reader and the `line[3:]`
   reader), proposals report; `devkit_adaptive` assignment. `devkit_agt.features.compact.services.porcelain`, its
   export, its unit test and its sentence in `CAP-CMP-bounded-execution` are removed once no caller uses them.
-- Commit resolution: only `devkit_adaptive` assignment's `revision`, the one site without `--end-of-options`. It
-  maps both `None` and `GitError` with exit status 128 to `ADAPTIVE_REVISION_UNRESOLVED`, as today; the command it
-  names in `CAP-DLV-adaptive-assignments` gains `--end-of-options`. The other 25 `^{commit}` lines are single calls,
-  not parsers, and stay.
+- Revision lookup, fixed locally with no new helper: `devkit_adaptive` assignment's `revision`, the one full-commit
+  site without `--end-of-options`, runs `rev-parse --verify --quiet --end-of-options <revision>^{commit}` and treats
+  output that is not a 40- or 64-digit hexadecimal ID (a leading `^` makes `rev-parse` print `^<id>`) as unresolved.
+  Every failure keeps mapping to `ADAPTIVE_REVISION_UNRESOLVED` as today; the command named in
+  `CAP-DLV-adaptive-assignments` gains `--end-of-options`. The other 25 `^{commit}` lines stay unchanged.
 - Not migrated: `devkit_agt.features.worktree.repositories.execution` and
   `devkit_agt.features.isolated_execution.repositories.runs`, which run Git through the standard-library-only
   execution module (`CAP-WT-task-worktrees`, `ADR-isolated-test-runs`); `devkit_spec` scope observation's
@@ -164,7 +162,7 @@ for `run_command`); `.devkit/architecture.toml` is not edited.
   parsers' malformed input (missing rename field, empty output).
 - Each migrated feature's existing tests stay green unchanged, except the removed `compact` porcelain test and test
   doubles that fed a removed private parser; `just test-affected` selects them. Each accidental difference above
-  gets a test in the feature it changes, and `resolve_commit` a `^HEAD` test.
+  gets a test in the feature it changes, including a `^HEAD` revision test at the `devkit_adaptive` lookup.
 - `docs/development/reference/core.md` documents the new functions beside `run_git`. Two capability lines change
   (the `status_records` sentence of `CAP-CMP-bounded-execution` and the resolution command of
   `CAP-DLV-adaptive-assignments`); no decision document changes.
@@ -183,7 +181,9 @@ for `run_command`); `.devkit/architecture.toml` is not edited.
 - The `.devkit/architecture.toml` ownership the draft listed is dropped: no feature edge changes.
 - Two capability files are owned by exception to the `docs/capabilities/` exclusion, each for the one line the
   migration makes stale; no other capability or decision text changes.
-- Q2 and Q3 are open; the design above follows the recommended option of each.
+- Q2 (answered by the user): the helpers and the migration of every parser in scope land in one spec.
+- Q3 (answered by the user): no public commit resolver. With one migrating caller it would be speculative API; the
+  adaptive lookup gets `--end-of-options` and a hex check locally, and the other `^{commit}` lines stay.
 
 ## 4. Lifecycle & Retirement Criteria
 
