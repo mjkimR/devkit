@@ -2,7 +2,7 @@
 id: SPEC-viewer-decision-supersession
 title: Show decision supersession in the Living Spec viewer
 summary: "Display both ADR replacement directions and exact replacement scope in Read and Files, with proposed PADR replacements and explicit incomplete-source states."
-status: in-progress
+status: completed
 created: 2026-11-10
 namespace: global
 depends_on: [SPEC-partial-adr-supersession-statements]

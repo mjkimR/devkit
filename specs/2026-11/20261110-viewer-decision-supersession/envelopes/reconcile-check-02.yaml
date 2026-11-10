@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:40:32.582259Z'
+status: completed
+summary: Independent recheck passes all six targets; actual header status and refreshed-target body/input contracts now agree with code and permanent regressions.
+findings: []
+assumptions:
+- Codex emulated read-only role; HEAD100fc774 and tree4cd45145cb3afbd52a212cc45d85f1a75e6b6e33 unchanged; exact docs citation test was Host-admitted.
+unverified_areas:
+- Rendered browser layout and assistive-technology behavior remain unverified because the CUA browser host was unavailable.
+checks:
+  coverage: PASS all six capability/usecase/UX/register/ADR targets
+  prior_findings: PASS both code-contract mismatches fixed with regressions
+  scope: PASS no new dependency or edge
+diff_scope:
+  base: 5cf7d7a76ef8930e2e7c83d3b34a7f694989913a
+  head: 100fc7742a18425bd1994d0a9bbf17ac7290b026

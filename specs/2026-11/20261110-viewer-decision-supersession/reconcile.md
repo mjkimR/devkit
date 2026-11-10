@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-viewer-decision-supersession
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-11/20261110-viewer-indexed-decision-supersession.md
     resolution: modified
