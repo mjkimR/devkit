@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:12:23.446835Z'
+status: completed
+summary: 'Implementer self-verification of the reconcile-check-01 P3 fix: core.md now states that any malformed status record, a rename or copy without its source included, raises GitError, matching git.py and the b''x\0'' unit case; reconcile.md resolved, spec completed; devkit rules check on the unit and the three docs passes'
+findings: []
+checks: {}
+diff_scope:
+  base: 1f8e0954cd2bd25cb93f0c0907e852440b2ba73f
+  head: 976c025e9884b527aa3c330a6a2f66f9c6b57b48
+activity_effort: medium
