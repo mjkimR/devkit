@@ -13,11 +13,13 @@ from devkit_core.core.git import run_git
 
 from devkit_viewer.features.browse.models.errors import ReadError, path_invalid, path_not_found
 
-_BOM = BOM.encode()
-_OPENER = OPENER.encode()
-_CLOSERS = frozenset(closer.encode() for closer in CLOSERS)
 # Bytes of the first line read to recognise an opener (a byte order mark, ``---`` and trailing whitespace).
 _OPENER_READ = 64
+
+
+def _delimiter(line: bytes) -> str:
+    """Decode a candidate delimiter line so ``str.rstrip`` strips the Unicode whitespace core's ``locate`` strips."""
+    return line.decode("utf-8", "replace")
 
 
 @dataclass(frozen=True)
@@ -127,12 +129,12 @@ class WorkingTreeReader:
         try:
             with target.open("rb") as stream:
                 first = stream.readline(_OPENER_READ)
-                if first.removeprefix(_BOM).rstrip() != _OPENER:
+                if _delimiter(first).removeprefix(BOM).rstrip() != OPENER:
                     return ""
                 lines = [first]
                 for line in stream:
                     lines.append(line)
-                    if line.rstrip() in _CLOSERS:
+                    if _delimiter(line).rstrip() in CLOSERS:
                         block = locate(b"".join(lines).decode("utf-8"))
                         if block is None:
                             return ""

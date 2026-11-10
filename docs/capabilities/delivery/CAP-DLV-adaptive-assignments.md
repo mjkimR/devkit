@@ -105,7 +105,8 @@ devkit adaptive assignment return <id> --status completed|needs_input|failed
     [--final <rev>] [--check <name>=<outcome>]... [--unverified <text>]... [--summary <text>]
 ```
 
-- `--final` defaults to the HEAD of the assignment's worktree; a given value must resolve to a commit.
+- `--final` defaults to the HEAD of the assignment's worktree; a given value must resolve to a commit. A given
+  value resolves in the assignment's worktree while it is present, otherwise in the repository of the invocation.
 - `<outcome>` is `pass`, `fail`, `skipped` or `unavailable`. An outcome for an undeclared name is recorded and never
   fails verification.
 - A later `return` on an assignment that is not `closed` replaces the current return; the earlier one stays in the
@@ -136,13 +137,14 @@ devkit adaptive assignment close <id> --outcome integrated|abandoned [--reason <
 - `head`: the worktree HEAD; `commits`: the number of commits in `<base>..HEAD`; `dirty`: the number of uncommitted
   and untracked paths not in `dirty_at_assign`;
 - `waiting_on`: the `depends_on` assignments that are not `closed`;
-- `attention`: zero or more of `worktree-missing`, `base-not-ancestor` (HEAD does not descend from the base),
-  `head-moved` (a return exists and HEAD is not its final commit) and `no-changes` (status `open`, HEAD is the base
-  and `dirty` is `0`).
+- `attention`: zero or more of `worktree-missing`, `worktree-unreadable`, `base-not-ancestor` (HEAD does not
+  descend from the base), `head-moved` (a return exists and HEAD is not its final commit) and `no-changes` (status
+  `open`, HEAD is the base and `dirty` is `0`).
 
 With a missing worktree, `head`, `commits` and `dirty` are null (`-` in text) and `attention` is
-`worktree-missing` alone. A closed assignment has `"observed": null` in JSON and `-` for the observed fields in
-text. `list` reads worktrees with the same Git commands as `verify` (the verification contract) and exits `0` whatever it lists.
+`worktree-missing` alone. With a present worktree whose HEAD or base Git cannot read (an unborn HEAD, a base
+outside its history), `head`, `commits` and `dirty` are null and `attention` is `worktree-unreadable` alone. A
+closed assignment has `"observed": null` in JSON and `-` for the observed fields in text. `list` reads worktrees with the same Git commands as `verify` (the verification contract) and exits `0` whatever it lists.
 
 **`show <id>`** prints one assignment with every recorded field, its current return and its event history. It is
 the read a new context uses to dispatch an assignment again.
@@ -274,7 +276,7 @@ class sets the fields that derive it (`input_error = True` for `INPUT_ERROR`, `a
 | Code | Level, exit, mode | Raised when |
 | --- | --- | --- |
 | `ADAPTIVE_REPOSITORY_UNSUPPORTED` | error, `2`, `INPUT_ERROR` | The workspace root is not inside a Git work tree |
-| `ADAPTIVE_LEDGER_UNREADABLE` | error, `2`, `INTERACTION` | A newline-terminated line cannot be parsed, or an event has an unknown schema number; the report asks whether to move the damaged ledger aside |
+| `ADAPTIVE_LEDGER_UNREADABLE` | error, `2`, `INTERACTION` | A newline-terminated line cannot be parsed, an event has an unknown schema number, or its data does not fold; the report asks whether to move the damaged ledger aside |
 | `ADAPTIVE_LEDGER_UNWRITABLE` | error, `2`, `INTERACTION` | The ledger directory, lock or file cannot be created or written; the report says the assignments stay unrecorded |
 | `ADAPTIVE_ASSIGNMENT_UNKNOWN` | error, `2`, `INPUT_ERROR` | An ID, `--parent` or `--depends-on` names no assignment |
 | `ADAPTIVE_ASSIGNMENT_EXISTS` | error, `2`, `INPUT_ERROR` | `new --id` names a recorded assignment |

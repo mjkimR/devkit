@@ -34,3 +34,24 @@ def test_frontmatter_block_is_not_a_body_statement() -> None:
     source += "\nSupersedes in part `ADR-old`: actual body.\n"
     entries = replacement_texts(source)
     assert len(entries) == 1 and entries[0].line == 9 and entries[0].text == "actual body."
+
+
+@pytest.mark.parametrize("comment", ["<!-- reviewer note -->", "<!--\nreviewer note\n-->"])
+def test_a_comment_after_a_statement_ends_its_text(comment: str) -> None:
+    source = f"Supersedes in part `ADR-old`: retries\nand backoff.\n{comment}\nafter.\n"
+    assert [e.text for e in replacement_texts(source)] == ["retries\nand backoff."]
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u0085", "\x0c", "\x1c"])
+def test_only_newlines_split_source_lines(separator: str) -> None:
+    source = f"Supersedes in part `ADR-old`: one{separator}two\nmore.\r\n\r\nSupersedes in part `ADR-b`: three.\n"
+    entries = replacement_texts(source)
+    assert [(e.id, e.line, e.text) for e in entries] == [
+        ("ADR-old", 1, f"one{separator}two\nmore."),
+        ("ADR-b", 4, "three."),
+    ]
+
+
+def test_a_code_span_line_continues_a_statement() -> None:
+    source = "Supersedes in part `ADR-old`: retries use\n`backoff`\nnow.\n"
+    assert [e.text for e in replacement_texts(source)] == ["retries use\n`backoff`\nnow."]

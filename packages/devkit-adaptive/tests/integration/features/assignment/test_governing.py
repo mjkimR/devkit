@@ -53,3 +53,10 @@ def test_unresolved_duplicate_and_other_worktree(repo, call, tmp_path):
     assert assigned(call, "--worktree", str(linked), "--governing", str(main_doc))["governing"] == [str(main_doc)]
     document(repo / "docs/capabilities/test/duplicate.md")
     assert "duplicate-id" in str(call("new", "--owner", "o", "--goal", "g", "--governing", "CAP-TEST-one", expected=2))
+
+
+def test_symlink_loop_governing_path_is_missing(repo, call):
+    (repo / "loop").symlink_to("loop")
+    result = call("new", "--owner", "o", "--goal", "g", "--governing", "loop", expected=2)
+    assert result["error"]["code"] == "ADAPTIVE_GOVERNING_UNRESOLVED"
+    assert "loop: missing-path" in str(result)

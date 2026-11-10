@@ -219,3 +219,112 @@ def test_reused_unobserved_secondary_group_leader_is_never_signalled(tmp_path, m
     assert 300 not in signalled
     assert json.loads((directory / "state.json").read_text())["outcome"] == "unknown"
     assert not (directory / "result.json").exists()
+
+
+def _supervise_unexecutable_native(tmp_path, monkeypatch):
+    directory = tmp_path / "run"
+    directory.mkdir()
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    (directory / "manifest.json").write_text(
+        json.dumps(
+            {
+                "run_id": "a" * 32,
+                "checkout": str(checkout),
+                "base": str(tmp_path),
+                "sha": "b" * 40,
+                "setup": None,
+                "argv": ["missing-native-command"],
+            }
+        )
+    )
+    state = {"child": None, "scans": 0}
+
+    class Child:
+        def __init__(self, argv, **kwargs):
+            if argv == ["missing-native-command"]:
+                raise FileNotFoundError(2, "No such file or directory", argv[0])
+            self.pid = 100
+            self.returncode = None
+            state["child"] = self
+
+        def poll(self):
+            self.returncode = 0
+            return 0
+
+    def snapshot():
+        if state["child"] is None:
+            return {}
+        state["scans"] += 1
+        return {100: {"pid": 100, "ppid": 1, "pgid": 100, "birth": "prep", "argv": "x"}} if state["scans"] == 1 else {}
+
+    monkeypatch.setattr(runtime.subprocess, "Popen", Child)
+    monkeypatch.setattr(runtime, "processes", snapshot)
+    monkeypatch.setattr(runtime.signal, "signal", lambda *args: None)
+    monkeypatch.setattr(runtime.time, "sleep", lambda duration: None)
+    runtime.supervise(directory)
+    return json.loads((directory / "result.json").read_text())
+
+
+def test_unexecutable_native_command_is_a_command_failure(tmp_path, monkeypatch):
+    result = _supervise_unexecutable_native(tmp_path, monkeypatch)
+    assert result["outcome"] == "failed", result
+    assert result["phase"] == "failed"
+    assert "missing-native-command" in result["detail"]
+
+
+def _terminal_runs(tmp_path, record):
+    (tmp_path / "result.json").write_text("{}")
+
+    class Runs:
+        base = tmp_path
+
+        def path(self, run_id):
+            return tmp_path
+
+        def read(self, run_id):
+            return dict(record)
+
+        def cleanup_lock(self, run_id):
+            return contextlib.nullcontext()
+
+    return cast(RunRepository, Runs())
+
+
+def _quiescent_terminal():
+    return {
+        "run_id": "a" * 32,
+        "outcome": "passed",
+        "checkout": "/owned/checkout",
+        "sha": "b" * 40,
+        "supervisor": {"pid": 50, "ppid": 1, "pgid": 50, "birth": "original-supervisor"},
+        "managed": [],
+        "ownership": {"groups": [], "quiescent": True, "verified_at": 1.0},
+    }
+
+
+def test_clean_ignores_reused_supervisor_pid(tmp_path, monkeypatch):
+    reused = {50: {"pid": 50, "ppid": 1, "pgid": 50, "birth": "unrelated-process"}}
+    monkeypatch.setattr(runtime, "processes", lambda: reused)
+    monkeypatch.setattr(lifecycle, "remove", lambda *args: "removed")
+    observed = lifecycle.clean(_terminal_runs(tmp_path, _quiescent_terminal()), "a" * 32)
+    assert observed["cleanup"]["code"] == "EXECUTION_CLEANED", observed["cleanup"]
+
+
+def test_clean_refuses_identified_live_supervisor(tmp_path, monkeypatch):
+    live = {50: {"pid": 50, "ppid": 1, "pgid": 50, "birth": "original-supervisor"}}
+    monkeypatch.setattr(runtime, "processes", lambda: live)
+    monkeypatch.setattr(lifecycle, "remove", lambda *args: "removed")
+    observed = lifecycle.clean(_terminal_runs(tmp_path, _quiescent_terminal()), "a" * 32)
+    assert observed["cleanup"]["code"] == "EXECUTION_CLEAN_REFUSED"
+
+
+def test_wait_does_not_poll_a_reused_supervisor_pid(tmp_path, monkeypatch):
+    reused = {50: {"pid": 50, "ppid": 1, "pgid": 50, "birth": "unrelated-process"}}
+    sleeps = []
+    monkeypatch.setattr(runtime, "processes", lambda: reused)
+    monkeypatch.setattr(lifecycle, "remove", lambda *args: "removed")
+    monkeypatch.setattr(lifecycle.time, "sleep", sleeps.append)
+    observed = lifecycle.wait(_terminal_runs(tmp_path, _quiescent_terminal()), "a" * 32, None, True)
+    assert not sleeps
+    assert observed["cleanup"]["code"] == "EXECUTION_CLEANED"

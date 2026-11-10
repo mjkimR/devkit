@@ -11,6 +11,7 @@ from pathlib import Path
 from types import FrameType
 from typing import Any
 
+import devkit_agt
 import devkit_core
 import pytest
 import yaml
@@ -188,9 +189,9 @@ def test_entries_without_a_known_shape_are_refused(entry: list[Any]) -> None:
 
 
 def _traced_files() -> set[str]:
-    """The ``devkit_docs`` and ``devkit_core`` source files whose code runs while documents are read, parsed,
-    encoded and decoded."""
-    roots = (str(Path(devkit_docs.__file__).parent), str(Path(devkit_core.__file__).parent))
+    """The ``devkit_docs``, ``devkit_core`` and ``devkit_agt`` (the shared Markdown scanner) source files whose code
+    runs while documents are read, parsed, encoded and decoded."""
+    roots = tuple(str(Path(file).parent) for file in (devkit_docs.__file__, devkit_core.__file__, devkit_agt.__file__))
     seen: set[str] = set()
 
     def profile(frame: FrameType, event: str, arg: object) -> None:
@@ -232,6 +233,7 @@ def test_the_fingerprint_covers_versions_and_sources() -> None:
     modules = memo.fingerprint_modules()
     assert "devkit_docs.features.documents.repositories.memo" in modules
     assert "devkit_docs.features.documents.models.parse" in modules
+    assert "devkit_agt.features.rules.models.markdown" in modules
     assert {"devkit_core.core.frontmatter", "devkit_core.core.yaml", "devkit_core.base.errors"} <= set(modules)
     assert memo.fingerprint() == memo.fingerprint() and memo.fingerprint() is not None
     assert yaml.__version__  # part of the fingerprint

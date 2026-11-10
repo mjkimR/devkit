@@ -243,6 +243,23 @@ def test_an_eligible_check_without_pending_conditions(tmp_path: Path) -> None:
     assert result.exit_code == 0 and "eligible=yes" in result.stdout
 
 
+def test_a_check_reports_failed_conditions_as_not_eligible(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    proposal = _draft(root)
+    _edit(proposal, "status: draft", "status: draft\nneeds_decompose: true")
+    before = _snapshot(root, "small")
+
+    result = _accept(root, "small", "--direct", "--check", "--note", "settled", "--format", "json")
+
+    assert result.exit_code == 1, result.output
+    checked = json.loads(result.stdout)
+    assert (checked["checked"], checked["eligible"], checked["decision"]) == (True, False, None)
+    assert any("needs_decompose" in item for item in checked["pending"]), checked
+    text = _accept(root, "small", "--direct", "--check", "--note", "settled")
+    assert text.exit_code == 1 and "eligible=no" in text.stdout, text.output
+    assert _snapshot(root, "small") == before
+
+
 def test_a_refusal_of_the_workflow_restores_the_status(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     proposal = _draft(root, swept=False)

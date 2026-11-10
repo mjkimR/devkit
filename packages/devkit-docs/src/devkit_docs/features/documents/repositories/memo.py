@@ -5,7 +5,7 @@ by the BLAKE2b digest of the UTF-8 encoding of the exact text the parser
 received (``ADR-content-keyed-document-parse-memo``). It is reused only for
 that path and digest, so it can never differ from a fresh parse. A whole memo
 is valid only under the parser fingerprint it was written with: a changed
-read, parse or codec module, PyYAML version, libyaml presence or Python
+read, parse, scanner or codec module, PyYAML version, libyaml presence or Python
 version discards it.
 
 The memo is ``<root>/.devkit/transient/docs/document-index.json``, used only
@@ -50,9 +50,15 @@ _log = get_logger(__name__)
 
 FORMAT_VERSION = 1
 MEMO_PARTS = (".devkit", "transient", "docs", "document-index.json")
-# The read, parse and codec path: every module of these packages, and these modules.
+# The read, parse and codec path: every module of these packages, and these modules (including the shared Markdown
+# scanner that ``models.markdown`` reads bodies with).
 FINGERPRINT_PACKAGES = ("devkit_docs.features.documents.models", "devkit_docs.features.documents.repositories")
-FINGERPRINT_MODULES = ("devkit_core.core.frontmatter", "devkit_core.core.yaml", "devkit_core.base.errors")
+FINGERPRINT_MODULES = (
+    "devkit_core.core.frontmatter",
+    "devkit_core.core.yaml",
+    "devkit_core.base.errors",
+    "devkit_agt.features.rules.models.markdown",
+)
 
 DOCUMENT = "d"
 NO_DOCUMENT = "n"

@@ -18,6 +18,7 @@ from devkit_agt.features.integration.models.contracts import (
     IntegrationContext,
     IntegrationRequest,
     IntegrationResult,
+    has_effects,
     prepare_command,
 )
 from devkit_agt.features.integration.models.errors import IntegrationConfigError, StaleRequestError
@@ -213,6 +214,8 @@ def prepare(service: IntegrationService, branch: str) -> IntegrationResult:
     if already:
         result.steps.update(push="completed", pull_request="completed", merge="completed")
         result.landed_sha = (pr.get("mergeCommit") or {}).get("oid") if pr else None
+    if plan.worktree_identity is None:
+        result.steps["worktree_remove"] = "skipped"
     result.pull_request = dict(pr or {})
     result.cleanup_steps = {scope.extension: "not_run" for scope in cleanup}
     return result
@@ -309,9 +312,9 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
             if found:
                 _pr_identity(found[0], plan.branch, plan.target_branch)
             operation = "push"
-            result.steps[operation] = "unknown"
             if port.ref(repository, f"refs/heads/{plan.branch}") != plan.source_sha:
                 guard_execution()
+                result.steps[operation] = "unknown"
                 port.push(repository, plan.source_sha, plan.branch)
             if port.ref(repository, f"refs/heads/{plan.branch}") != plan.source_sha:
                 raise _error("INTEGRATION_STEP_UNKNOWN", "Push outcome is not confirmed")
@@ -321,8 +324,8 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
             if request.pr_number:
                 pr = port.view(repository, request.pr_number)
             else:
-                result.steps[operation] = "unknown"
                 guard_execution()
+                result.steps[operation] = "unknown"
                 port.create(repository, plan.branch, plan.target_branch)
                 candidates = [p for p in port.find(repository, plan.branch) if p["state"] == "OPEN"]
                 if len(candidates) != 1:
@@ -377,8 +380,8 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     return result
                 if port.ref(repository, f"refs/heads/{plan.target_branch}") != target:
                     raise _error("INTEGRATION_TARGET_MOVED", "Target moved after the checked build")
-                result.steps["merge"] = "unknown"
                 guard_execution()
+                result.steps["merge"] = "unknown"
                 response = port.merge(repository, pr["number"], plan.source_sha, plan.branch, plan.target_branch)
                 pr = port.view(repository, pr["number"])
                 if pr["state"] != "MERGED" and response.http_status in {403, 405, 409, 422}:
@@ -468,8 +471,8 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                             "Remote source moved or is the base of an open PR",
                             "Inspect the lease and dependent PRs; preserve the local and remote branches, resolve the blocker, then prepare and approve a fresh CLI cleanup request",
                         )
-                    result.steps[operation] = "unknown"
                     guard_execution(terminal=record.finalized)
+                    result.steps[operation] = "unknown"
                     port.delete(repository, plan.source_sha, plan.branch)
                     if port.ref(repository, f"refs/heads/{plan.branch}") is not None:
                         raise _error("INTEGRATION_STEP_UNKNOWN", "Remote deletion is unconfirmed")
@@ -483,7 +486,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     guard_execution(terminal=bool(progress.removed))
                     if step == "worktree_remove":
                         capture_terminal_removal(Path(plan.path))
-                    if progress.removed:
+                    if progress.removed and plan.worktree_identity:
                         result.steps["worktree_remove"] = "completed"
                     _validate(service, result, merged=True)
                     result.steps[step] = "unknown"
@@ -496,32 +499,18 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     before_step=before_step,
                 )
                 record.finalized = True
-                result.steps["worktree_remove"] = "completed"
+                if plan.worktree_identity:
+                    result.steps["worktree_remove"] = "completed"
                 result.steps["branch_delete" if plan.delete_branch else "marker_clear"] = "completed"
             _validate(service, result, merged=True, finalized=True)
             operation = "post_finish"
-            assert result.finish is not None
-            for scope in request.cleanup:
-                if result.cleanup_steps[scope.extension] != "completed":
-                    guard_execution(terminal=True)
-                    done = providers.cleanup_extensions()[scope.extension][1].integration_run(
-                        service._context(result), result.finish, scope.targets
-                    )
-                    result.notices.extend(done.notices)
-                    if not done.done:
-                        raise _error(
-                            "INTEGRATION_CLEANUP_INCOMPLETE",
-                            "Scoped cleanup is incomplete",
-                            f"Inspect Git, PR and cleanup state, then run `{prepare_command(plan.branch, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
-                        )
-                    result.cleanup_steps[scope.extension] = "completed"
-            result.steps[operation] = "completed"
-            result.status = "completed"
+            # The local route's loop: an incomplete scope is a warning, later scopes still run.
+            service._run_cleanup(result, service._context(result))
     except (AdvisoryError, OSError, ValueError, KeyError) as exc:
         error = exc if isinstance(exc, AdvisoryError) else _error("INTEGRATION_STEP_UNKNOWN", str(exc))
         result.errors.append(error)
         result.failing_operation = operation
-        result.status = "partial" if any(s == "completed" for s in result.steps.values()) else "blocked"
         if result.steps.get(operation) != "unknown":
             result.steps[operation] = "failed"
+        result.status = "partial" if has_effects(result.steps) else "blocked"
     return result

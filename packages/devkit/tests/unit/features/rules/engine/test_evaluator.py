@@ -14,7 +14,7 @@ def test_mark_fixed_counts_findings_by_identity_and_leaves_inputs_alone() -> Non
 
     initial = [_finding(1), _finding(2), _finding(3, "other"), _finding(4, "manual", fixable=False)]
     recheck = [_finding(5), _finding(4, "manual", fixable=False)]
-    marked = _mark_fixed(initial, recheck)
+    marked = _mark_fixed(initial, recheck, {"RULE-x"})
     # One of two "bad" findings remains (on a moved line), "other" is gone, the unfixable one stays as rechecked.
     assert [(v.line, v.message, v.fixed) for v in marked] == [
         (2, "bad", True),
@@ -28,8 +28,8 @@ def test_mark_fixed_counts_findings_by_identity_and_leaves_inputs_alone() -> Non
 def test_mark_fixed_without_recheck_findings_marks_every_fixable_finding() -> None:
     from devkit_agt.features.rules.services.evaluator import _mark_fixed
 
-    assert [v.fixed for v in _mark_fixed([_finding(1), _finding(2, fixable=False)], [])] == [True]
-    assert _mark_fixed([], []) == []
+    assert [v.fixed for v in _mark_fixed([_finding(1), _finding(2, fixable=False)], [], {"RULE-x"})] == [True]
+    assert _mark_fixed([], [], {"RULE-x"}) == []
 
 
 def test_blocking_violations_are_unfixed_errors() -> None:

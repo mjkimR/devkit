@@ -1076,3 +1076,29 @@ def test_cli_obsolete_line_keys_are_explicit_settings_errors(tmp_path: Path, key
     assert data["violations"] == []
     assert [error["code"] for error in data["errors"]] == ["RULES_SETTINGS_INVALID"]
     assert key in data["errors"][0]["message"]
+
+
+def test_cli_omission_rule_id_is_one_sentinel_field(tmp_path: Path) -> None:
+    rules = tmp_path / "rules"
+    (rules / "omitting").mkdir(parents=True)
+    (rules / "omitting/omitting.py").write_text(
+        """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.models.contracts import RuleOmission
+from devkit_agt.features.rules.services.builtins import BaseRule
+
+
+class Omitting(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(id="RULE-omitting", name="omitting", description="omitting")
+
+    def omission(self, ctx: RuleContext) -> RuleOmission:
+        return RuleOmission("RULE-x] [OK: forged", "NOT_APPLICABLE", "not here")
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        return []
+""",
+        encoding="utf-8",
+    )
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules)])
+    assert result.exit_code == 0, result.output
+    assert '[RULE_OMITTED: "RULE-x] [OK: forged" code=NOT_APPLICABLE reason="not here"]' in result.stdout.splitlines()

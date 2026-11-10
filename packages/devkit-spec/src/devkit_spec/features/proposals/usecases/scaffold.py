@@ -321,7 +321,6 @@ def create_proposal(
     cwd: Path | None = None,
 ) -> CreatedProposal:
     """Compose the application entrypoint for internal callers."""
-    require_sdd(root)
     return CreateProposalUseCase().execute(
         root,
         slug,
@@ -567,7 +566,9 @@ class CreateProposalUseCase(BaseUseCase):
         registered or a ``summary`` that is empty, not English or longer than 300 stripped characters,
         ``ProposalNotFoundError`` for a ``supersedes`` naming no proposal and ``ProposalNotApprovedError`` for one that is not ``accepted``, ``ProposalExistsError`` when the
         bundle or a single-file proposal of the slug exists, ``ProposalSlugConflictError`` when ``SPEC-<slug>`` exists.
+        ``LifecycleInactiveError`` first, before any check or write, under the ``adaptive-dev`` development approach.
         """
+        require_sdd(root)
         root = root.resolve()
         slug = new_slug(slug)
         namespace, reported = bundle_namespace(root, namespace, cwd)
@@ -603,7 +604,9 @@ class CreateProposalUseCase(BaseUseCase):
         created = (today or date.today()).isoformat()
         # Only files are scaffolded: Git tracks no empty directory, so a Planning worktree would lack them anyway.
         # ``padr`` creates ``decisions/`` and the first material ``materials/``; devkit's record writers create their own.
-        bundle.mkdir(parents=True)
+        from devkit_spec.features.proposals.usecases.specs import make_dirs, roll_back
+
+        written: list[Path] = []
         proposal = bundle / PROPOSAL_FILE
         text = _proposal(
             slug,
@@ -620,13 +623,18 @@ class CreateProposalUseCase(BaseUseCase):
             decomposed_from=decomposed_from,
             needs_decompose=needs_decompose,
         )
-        proposal.write_text(text, encoding="utf-8")
-        if binding is not None:
-            write_binding(proposal, binding)
-        target_docs = None
-        if with_target_docs:
-            target_docs = bundle / TARGET_DOCS
-            target_docs.write_text(_target_docs(slug, title, created), encoding="utf-8")
+        target_docs = bundle / TARGET_DOCS if with_target_docs else None
+        try:
+            make_dirs(bundle, written)
+            proposal.write_text(text, encoding="utf-8")
+            if binding is not None:
+                write_binding(proposal, binding)
+            if target_docs is not None:
+                target_docs.write_text(_target_docs(slug, title, created), encoding="utf-8")
+        except BaseException:
+            # A partial bundle would refuse the rerun with ProposalExistsError; what cannot be removed is logged.
+            roll_back(written)
+            raise
         result = CreatedProposal(
             id=f"PROP-{slug}",
             dir=bundle.relative_to(root).as_posix(),
@@ -680,8 +688,10 @@ class CreateProposalDecisionUseCase(BaseUseCase):
         PADR slug whose first segment has no letter, ``ArgumentError`` for a ``summary`` that is empty, not English or
         longer than 300 stripped characters, ``ProposalNotFoundError`` when the bundle does not exist, ``ProposalInPlanningError`` when ``plan-<slug>`` exists
         and the checkout is not on it (a proposal in Planning is changed on that branch only, 01 §4.7),
-        ``ProposalDecisionExistsError`` when any document already declares the PADR ID.
+        ``ProposalDecisionExistsError`` when any document already declares the PADR ID. ``LifecycleInactiveError`` first,
+        before any check or write, under the ``adaptive-dev`` development approach.
         """
+        require_sdd(root)
         root = root.resolve()
         slug = require_slug(slug)
         summary = require_summary(summary)

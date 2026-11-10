@@ -621,3 +621,15 @@ class ProbeRule(BaseRule):
     assert [v.to_dict() for v in enabled.result.violations] == [v.to_dict() for v in disabled.result.violations]
     assert [v.message for v in enabled.result.violations] == ["2"]
     assert memo.read_bytes() == original
+
+
+def test_a_directory_target_spelled_in_another_case_checks_its_files(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, "docs/c.md", BROKEN)
+    _git(root, "add", "docs")
+    if not (root / "DOCS").is_dir():
+        pytest.skip("needs a case-insensitive file system")
+    for typed in ("DOCS", "Docs/", str(root / "Docs")):
+        run = run_project_rules(root, targets=[typed])
+        assert _files(run.result.violations) == ["docs/c.md"], typed
+    assert expand_targets(root, WorkspaceCache(root), ["DOCS/C.md"]) == ["docs/c.md"]

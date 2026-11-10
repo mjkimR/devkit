@@ -31,8 +31,14 @@ def atomic(path: Path, value: dict[str, Any]) -> None:
 
 def processes() -> dict[int, dict[str, Any]]:
     """Read process identity and ancestry on macOS and Linux."""
+    # The C locale fixes lstart at five tokens ("Tue Nov 10 16:41:11 2026");
+    # localized renderings (ko_KR, ja_JP) differ and would misalign the columns.
     result = subprocess.run(
-        ["ps", "-axo", "pid=,ppid=,pgid=,lstart=,stat=,args="], capture_output=True, text=True, check=True
+        ["ps", "-axo", "pid=,ppid=,pgid=,lstart=,stat=,args="],
+        capture_output=True,
+        text=True,
+        check=True,
+        env={**os.environ, "LC_ALL": "C"},
     )
     found: dict[int, dict[str, Any]] = {}
     boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip() if sys.platform.startswith("linux") else ""
@@ -297,6 +303,9 @@ def supervise(directory: Path) -> None:
         native_code = run(record["argv"], checkout)
         outcome = "passed" if native_code == 0 else "failed"
     except Exception as exc:
+        if record.get("phase") == "running":
+            # Preparation completed; an unexecutable native argv is a command failure.
+            outcome = "failed"
         record["detail"] = str(exc)
         log.write((str(exc) + "\n").encode())
     if cancelled:

@@ -121,11 +121,9 @@ def test_a_direct_acceptance_check_names_the_size_blocker(tmp_path: Path) -> Non
     assert "size:" not in _accept_check(root).stdout
     proposal.write_text(proposal.read_text(encoding="utf-8").replace("size: L\n", "size: XL\n"), encoding="utf-8")
     result = _accept_check(root)
-    assert result.exit_code == 2, result.output
-    error = json.loads(result.stdout)["error"]
-    assert error["code"] == "SPEC_PROPOSAL_NOT_ELIGIBLE"
-    details = error["advisory"]["details"]
+    assert result.exit_code == 1, result.output
+    checked = json.loads(result.stdout)
+    assert checked["eligible"] is False
     assert (
-        "blocking: size: XL (decompose first: split with --decomposed-from or promote to a milestone;"
-        " allowed: S, M, L or absent)"
-    ) in details, details
+        "size: XL (decompose first: split with --decomposed-from or promote to a milestone; allowed: S, M, L or absent)"
+    ) in checked["pending"], checked

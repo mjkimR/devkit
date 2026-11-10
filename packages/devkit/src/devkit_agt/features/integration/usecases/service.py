@@ -23,6 +23,7 @@ from devkit_agt.features.integration.models.contracts import (
     IntegrationRequest,
     IntegrationResult,
     Readiness,
+    has_effects,
     integrate_command,
     prepare_command,
 )
@@ -461,6 +462,10 @@ class IntegrationService:
         operation = "preflight"
         merged = result.steps["merge"] in {"completed", "skipped"}
         removed = result.steps["worktree_remove"] in {"completed", "skipped"}
+        if result.steps["merge"] not in {"completed", "skipped", "unknown"}:
+            # Seeded artifacts are disclosed only for a build that may have landed; a refusal reports none.
+            result.seeded = ()
+            result.notices[:] = [notice for notice in result.notices if notice.code != "INTEGRATION_GENERATED_SEEDED"]
         try:
             observed = self._observe(request)
             if observed.get("inspection_incomplete"):
@@ -520,37 +525,7 @@ class IntegrationService:
             self._validate(
                 request, merged=True, removed=True, finalized=True, cleanup_done=cleanup_done, context=context
             )
-            extensions = providers.cleanup_extensions()
-            assert result.finish is not None
-            for scope in request.cleanup:
-                if result.cleanup_steps[scope.extension] == "completed":
-                    continue
-                guard_execution(terminal=True)
-                result.cleanup_steps[scope.extension] = "running"
-                outcome = extensions[scope.extension][1].integration_run(context, result.finish, scope.targets)
-                if (
-                    not isinstance(outcome, CleanupResult)
-                    or type(outcome.done) is not bool
-                    or not all(isinstance(notice, AdvisoryError) for notice in outcome.notices)
-                ):
-                    raise CleanupContractError("scoped cleanup must return CleanupResult")
-                result.notices.extend(
-                    notice.with_level(Level.WARNING) if notice.level is Level.ERROR else notice
-                    for notice in outcome.notices
-                )
-                result.cleanup_steps[scope.extension] = "completed" if outcome.done else "failed"
-            result.steps["post_finish"] = (
-                "completed" if all(value == "completed" for value in result.cleanup_steps.values()) else "failed"
-            )
-            result.status = "completed" if result.steps["post_finish"] == "completed" else "partial"
-            if result.status == "partial":
-                result.failing_operation = "post_finish"
-                result.notices.append(
-                    CleanupIncompleteWarning(
-                        "Git integration completed; scoped post-finish cleanup remains",
-                        *[name for name, state in result.cleanup_steps.items() if state != "completed"],
-                    )
-                )
+            self._run_cleanup(result, context)
         except Exception as exc:
             error = (
                 exc
@@ -567,9 +542,52 @@ class IntegrationService:
                 )
             if result.finish and result.finish.removed is True and plan.worktree_identity:
                 result.steps["worktree_remove"] = "completed"
-            result.status = "partial" if any(value == "completed" for value in result.steps.values()) else "blocked"
+            result.status = "partial" if has_effects(result.steps) else "blocked"
         result.observed = self._observe(request)
         return result
+
+    @staticmethod
+    def _run_cleanup(result: IntegrationResult, context: IntegrationContext) -> None:
+        """Run the approved scoped post-finish cleanup after Git finished; both routes share it.
+
+        An incomplete scope is a warning and the later scopes still run; a malformed result is a contract error.
+        """
+        request = result.request
+        extensions = providers.cleanup_extensions()
+        assert result.finish is not None
+        for scope in request.cleanup:
+            if result.cleanup_steps[scope.extension] == "completed":
+                continue
+            guard_execution(terminal=True)
+            result.cleanup_steps[scope.extension] = "running"
+            outcome = extensions[scope.extension][1].integration_run(context, result.finish, scope.targets)
+            if (
+                not isinstance(outcome, CleanupResult)
+                or type(outcome.done) is not bool
+                or not all(isinstance(notice, AdvisoryError) for notice in outcome.notices)
+            ):
+                raise CleanupContractError("scoped cleanup must return CleanupResult")
+            result.notices.extend(
+                notice.with_level(Level.WARNING) if notice.level is Level.ERROR else notice
+                for notice in outcome.notices
+            )
+            result.cleanup_steps[scope.extension] = "completed" if outcome.done else "failed"
+        result.steps["post_finish"] = (
+            "completed" if all(value == "completed" for value in result.cleanup_steps.values()) else "failed"
+        )
+        result.status = "completed" if result.steps["post_finish"] == "completed" else "partial"
+        if result.status == "partial":
+            result.failing_operation = "post_finish"
+            warning = CleanupIncompleteWarning(
+                "Git integration completed; scoped post-finish cleanup remains",
+                *[name for name, state in result.cleanup_steps.items() if state != "completed"],
+            )
+            warning.fix = (
+                "Inspect the approved cleanup targets and actual Git or PR state, resolve the reported condition, then"
+                f" run `{prepare_command(request.context.finish.branch, request.route)}` and, after Host approval,"
+                " integrate with the digest it prints"
+            )
+            result.notices.append(warning)
 
     def _land(
         self,
@@ -600,8 +618,6 @@ class IntegrationService:
         self._validate(request, merged=False, removed=removed, finalized=False, cleanup_done=cleanup_done, target=head)
         result.steps["merge"] = "running"
         result.build_target, result.result_sha = head, None
-        result.seeded = ()
-        result.notices[:] = [notice for notice in result.notices if notice.code != "INTEGRATION_GENERATED_SEEDED"]
         seeding = GeneratedSeeding(self.root, head) if seeds else None
         result.result_sha = build_result(
             self.root,
@@ -613,9 +629,6 @@ class IntegrationService:
             advance=True,
             settle=seeding,
         )
-        if seeding is not None and seeding.seeded:
-            result.seeded = seeding.seeded
-            result.notices.append(seeded_warning(seeding.seeded))
         if (
             result.result_sha != plan.source_sha
             and _prospective(self.root, result.result_sha, head)[0] != request.post_policy_digest
@@ -624,12 +637,22 @@ class IntegrationService:
         if run_git_text(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}") != head:
             raise TargetMovedError("the base branch moved after the build; nothing changed on the target")
         self._validate(request, merged=False, removed=removed, finalized=False, cleanup_done=cleanup_done, target=head)
+
+        def disclose() -> None:
+            # Seeded artifacts are disclosed once the build may have landed; a refusal before that discloses none.
+            if seeding is not None and seeding.seeded:
+                result.seeded = seeding.seeded
+                result.notices[:] = [n for n in result.notices if n.code != "INTEGRATION_GENERATED_SEEDED"]
+                result.notices.append(seeded_warning(seeding.seeded))
+
         try:
             fast_forward(self.root, result.result_sha)
         except GitError as exc:
             if exc.returncode is None:
+                disclose()
                 raise
             raise MergeFailedError(f"local merge of {plan.branch} failed: {exc.stderr or exc.message}") from exc
+        disclose()
         # Git runs post-merge hooks before returning. A hook may amend commit metadata,
         # so bind cleanup to the observed commit only after proving checked content and
         # ordered provenance unchanged. Never substitute for the approved ff-only source.
@@ -638,6 +661,8 @@ class IntegrationService:
             if plan.merge_method != "no-ff" or run_git_text(
                 self.root, "show", "-s", "--format=%T %P", landed
             ) != run_git_text(self.root, "show", "-s", "--format=%T %P", result.result_sha):
+                # The fast-forward applied: the target moved, but not to the checked content (a partial effect).
+                result.steps["merge"] = "unknown"
                 raise StaleRequestError("the landed commit differs from the checked result tree or ordered parents")
             result.result_sha = landed
         result.steps["merge"] = "completed"

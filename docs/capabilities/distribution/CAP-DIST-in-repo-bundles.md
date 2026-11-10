@@ -222,7 +222,7 @@ It copies upstream resources; managed/projection output is not a source, and no 
    distribution MUST restore the prior package and report `BUNDLE_SNAPSHOT_WRITE_FAILED`; failed restoration MUST
    preserve and identify its recovery backup.
 10. **Idempotence**: WHEN metadata/content is unchanged, refresh MUST write nothing; derived __pycache__ and pyc files
-    MUST NOT count as authored drift. Other unexpected local files remain drift.
+    and Finder .DS_Store files MUST NOT count as authored drift. Other unexpected local files remain drift.
 11. **Destination**: IF a destination is existing at creation, symlinked, outside the consumer, overlaps the source
     or protected state, or lies inside another snapshot, THEN distribution MUST refuse without content replacement.
 12. **Explicit continuation**: WHEN an operation finishes, distribution MUST return applicable conditional provider

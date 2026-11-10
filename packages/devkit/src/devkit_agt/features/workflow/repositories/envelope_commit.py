@@ -23,6 +23,10 @@ class EnvelopeCommitRepository:
         self.branch: str | None = None
 
     def git(self, *args: str, input: bytes | None = None) -> bytes:
+        # `git commit` runs hooks and signing of unbounded duration; a timeout would report every slow attempt
+        # as uncertain, so only the bounded queries keep the default timeout.
+        if args[:1] == ("commit",):
+            return run_git(self.root, "--literal-pathspecs", *args, input=input, timeout=None)
         return run_git(self.root, "--literal-pathspecs", *args, input=input)
 
     def head(self) -> str:

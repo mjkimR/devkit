@@ -30,15 +30,23 @@ def read_content(path: Path) -> Content:
         raise SnapshotInvalidError(f"cannot read source file: {path}: {exc}") from exc
 
 
-def read_tree(root: Path, *, source: bool = False) -> dict[str, Content]:
-    """Read a tree; derived bytecode is not source drift or distributable content."""
+def symlinked_ancestor(path: Path) -> Path | None:
+    """The outermost symbolic-link component above ``path``, if any."""
+    for ancestor in reversed(path.parents):
+        if ancestor.is_symlink():
+            return ancestor
+    return None
+
+
+def read_tree(root: Path) -> dict[str, Content]:
+    """Read a tree; derived bytecode and Finder metadata are not drift or distributable content."""
     if not root.is_dir() or root.is_symlink():
         raise SnapshotInvalidError(f"expected a snapshot directory: {root}")
     found: dict[str, Content] = {}
     try:
         for entry in sorted(root.rglob("*")):
             rel = entry.relative_to(root)
-            if "__pycache__" in rel.parts or entry.name.endswith(".pyc") or (source and ".DS_Store" in rel.parts):
+            if "__pycache__" in rel.parts or entry.name.endswith(".pyc") or ".DS_Store" in rel.parts:
                 continue
             if entry.is_symlink() or not (entry.is_file() or entry.is_dir()):
                 raise SnapshotInvalidError(f"nonregular snapshot source: {rel.as_posix()}")

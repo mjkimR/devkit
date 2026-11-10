@@ -113,7 +113,10 @@ def _execute(request: RunRequest) -> None:
         )
     else:
         for omission in run.result.omissions:
-            click.echo(f"[RULE_OMITTED: {omission.rule_id} code={omission.code} reason={field_value(omission.reason)}]")
+            click.echo(
+                f"[RULE_OMITTED: {field_value(omission.rule_id)} code={field_value(omission.code)}"
+                f" reason={field_value(omission.reason)}]"
+            )
         output.print_transitions(run.transitions, run.phase, violations)
         output.print_violations(
             violations,

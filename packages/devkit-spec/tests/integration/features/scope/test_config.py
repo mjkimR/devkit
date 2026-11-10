@@ -45,3 +45,10 @@ def test_scope_must_be_a_table(workspace: Path, write: Write) -> None:
     write(".devkit/config.toml", '[tool.spec]\nscope = "x"\n')
     with pytest.raises(SpecConfigError):
         read_spec_config(workspace)
+
+
+def test_legacy_spec_namespaces_names_the_docs_table(workspace: Path, write: Write) -> None:
+    write(".devkit/config.toml", '[[tool.spec.namespaces]]\nname = "team"\npath = "team/"\n')
+    with pytest.raises(SpecConfigError, match=r"tool\.spec\.namespaces") as raised:
+        read_spec_config(workspace)
+    assert "[[tool.docs.namespaces]]" in (raised.value.fix or "")

@@ -17,7 +17,7 @@ from devkit_agt.features.maintenance_history.models.errors import (
     RecordCollision,
     RunMissing,
 )
-from devkit_agt.features.maintenance_history.models.records import ROOT_COMMIT, run_path
+from devkit_agt.features.maintenance_history.models.records import ROOT_COMMIT, git_sha, run_path
 from devkit_agt.features.maintenance_history.repositories.github import Response
 from devkit_agt.features.maintenance_history.repositories.local import read_record, write_record
 from devkit_agt.features.maintenance_history.services.publication import GitHubHistory, publish, update
@@ -148,6 +148,33 @@ def test_lost_ref_response_then_retry_inspects_without_republishing(repo: Path, 
     publish(history(fake), run, "simulated", (), "owner/repo")
     assert read_record(run)["publication"] == "published"
     assert mutations == sum(call[0] in ("POST", "PATCH") for call in fake.calls)
+
+
+def test_large_files_without_inline_content_are_read_through_blobs(repo: Path, tmp_path: Path) -> None:
+    # The contents API omits content (encoding "none") for files over 1 MB.
+    fake = FakeGitHub()
+    history(fake).initialize("simulated")
+    run = ready(repo, tmp_path)
+    result = publish(history(fake), run, "simulated", (), "owner/repo")
+
+    def large(method: str, path: str, payload: dict | None) -> Response | None:
+        files = {git_sha("blob", data): data for data in fake.files().values()}
+        name = path.removeprefix("contents/")
+        if method == "GET" and path.startswith("contents/") and name in fake.files():
+            data = fake.files()[name]
+            return Response(200, {}, {"content": "", "encoding": "none", "sha": git_sha("blob", data)})
+        if method == "GET" and path.startswith("git/blobs/"):
+            data = files[path.rsplit("/", 1)[-1]]
+            return Response(200, {}, {"content": base64.b64encode(data).decode(), "encoding": "base64"})
+        return None
+
+    fake.hook = large
+    mutations = sum(call[0] in ("POST", "PATCH") for call in fake.calls)
+    assert publish(history(fake), run, "simulated", (), "owner/repo").data == result.data
+    assert mutations == sum(call[0] in ("POST", "PATCH") for call in fake.calls)
+    fetched = history(fake).get(run.name, "report.md")
+    assert base64.b64decode(fetched.data["content"]) == Path(read_record(run)["report"]["path"]).read_bytes()
+    assert history(fake).listing("weekly-report", None, None, False, 20).data["count"] == 1
 
 
 @pytest.mark.parametrize(

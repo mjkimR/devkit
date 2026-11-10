@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from devkit_agt.features.rules.models.markdown import LineKind, scan
 from devkit_core.core.frontmatter import locate
 
 from devkit_docs.features.documents.models.ids import ID_SOURCE
@@ -28,11 +29,15 @@ class ReplacementText:
 
 def replacement_texts(source: str) -> list[ReplacementText]:
     """Read starts from masked prose and payloads from source, bounded by paragraph/item/heading ends."""
-    raw = source.splitlines()
+    # Lines split on "\n" only, as the scanner does, so raw and visible line numbers agree.
+    raw = [line.removesuffix("\r") for line in source.split("\n")]
     block = locate(source)
     start = block.end if block is not None else 0
     first_line = source[:start].count("\n") + 1
     visible = {line.number: line.text for line in visible_lines(source, start=start, first_line=first_line)}
+    comments = {
+        line.number for line in scan(source, start=start, first_line=first_line) if line.kind is LineKind.COMMENT
+    }
     result = []
     for number, line in visible.items():
         match = _START.match(line)
@@ -45,7 +50,13 @@ def replacement_texts(source: str) -> list[ReplacementText]:
         parts = [raw[number - 1][match.end() :].strip()] if match.group("colon") else []
         for following in range(number + 1, len(raw) + 1):
             text = raw[following - 1]
-            if not text.strip() or following not in visible or _BOUNDARY.match(visible[following]):
+            # A line wholly inside an HTML comment ends the statement: it is not part of its visible text.
+            if (
+                not text.strip()
+                or following not in visible
+                or following in comments
+                or _BOUNDARY.match(visible[following])
+            ):
                 break
             parts.append(text.strip())
         result.append(ReplacementText(match.group("id"), number, "\n".join(parts).strip(), pointer))

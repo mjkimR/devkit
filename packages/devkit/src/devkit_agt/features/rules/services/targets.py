@@ -29,7 +29,9 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     pinned = [workspace_root / directory for directory in (MANAGED_PATH, OVERRIDES_PATH)]
     for target in targets:
         path = Path(target)
-        absolute = _on_disk(Path(os.path.normpath(path if path.is_absolute() else workspace_root / path)))
+        absolute = _on_disk(
+            workspace_root, Path(os.path.normpath(path if path.is_absolute() else workspace_root / path))
+        )
         if not absolute.is_relative_to(workspace_root):
             absolute = absolute.resolve()
         if not absolute.is_relative_to(workspace_root):
@@ -72,15 +74,36 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     return files
 
 
-def _on_disk(path: Path) -> Path:
-    """``path``, or its spelling in the other Unicode normalization form when only that one exists.
+def _on_disk(workspace_root: Path, path: Path) -> Path:
+    """``path`` with each name below ``workspace_root`` spelled as on disk; the root and anything outside stay as given.
 
-    A file system that keeps names as written (Linux) finds an NFD name only when typed in NFD; macOS matches both.
+    A name the file system finds under another case or Unicode normalization (macOS) takes the listed spelling, so a
+    directory target expands to the names the workspace walk and Git use. A name the file system keeps as written
+    (Linux) is found in the other normalization form when only that one exists. Spelling stops at the first name
+    that is not found.
     """
-    if path.exists():
+    if not path.is_relative_to(workspace_root):
         return path
-    for form in ("NFC", "NFD"):
-        spelled = Path(unicodedata.normalize(form, str(path)))
-        if spelled != path and spelled.exists():
-            return spelled
-    return path
+    current = workspace_root
+    parts = path.relative_to(workspace_root).parts
+    for index, part in enumerate(parts):
+        try:
+            names = os.listdir(current)
+        except OSError:
+            return current.joinpath(*parts[index:])
+        if part not in names:
+            if os.path.lexists(current / part):
+                key = _spelling_key(part)
+                part = next((name for name in names if _spelling_key(name) == key), part)
+            else:
+                spelled = (unicodedata.normalize(form, part) for form in ("NFC", "NFD"))
+                found = next((name for name in spelled if name in names), None)
+                if found is None:
+                    return current.joinpath(*parts[index:])
+                part = found
+        current = current / part
+    return current
+
+
+def _spelling_key(name: str) -> str:
+    return unicodedata.normalize("NFC", name).casefold()

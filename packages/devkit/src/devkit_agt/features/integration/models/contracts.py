@@ -35,6 +35,11 @@ def prepare_command(branch: str, route: str, *, workspace: str | None = None) ->
     return devkit_command(f"integration prepare {_branch_arguments(branch, route)}{where}")
 
 
+def has_effects(steps: dict[str, str]) -> bool:
+    """Whether a step completed or may have applied (``unknown``): only a run without either changed nothing."""
+    return any(state in {"completed", "unknown"} for state in steps.values())
+
+
 def integrate_command(branch: str, route: str, digest: str | None, *, workspace: str | None = None) -> str:
     """The exact command executing the prepared Git scope."""
     pinned = f" --expected-digest {digest}" if digest else ""
