@@ -47,9 +47,14 @@ repository.
 
 Chosen: commands that record and verify. This replaces one clause of `ADR-adaptive-development-and-research`:
 "Identifiers and commands use `adaptive-dev`" stays in force for the approach value, the bundle, the entry skill and
-the context file, and no longer covers the command group, which is named after the distribution. The capability
-sentence "No adaptive-development runtime or CLI is added" is replaced in `CAP-DLV-adaptive-development`; no decision
-clause holds it.
+the context file, and no longer covers the command group, which is named after the distribution.
+
+The sentence "No adaptive-development runtime or CLI is added" is capability text
+(`CAP-DLV-adaptive-development` §4); this decision is the record that replaces it there. In
+`ADR-adaptive-development-and-research` the phrases "without another release wheel or runtime service" and "No new
+runtime, CLI or distribution mechanism" are decision drivers of the adaptive-dev bundle and of the deep-research
+split. They are not decision clauses, they stay as written, and this decision supersedes neither: it adds a command
+group and no runtime service, scheduler or process runner.
 
 - The command group is `devkit adaptive`, not `devkit adaptive-dev`. → `CAP-DLV-adaptive-development` rule 18 (MUST).
 
@@ -65,8 +70,12 @@ clause holds it.
 - The delegating agent runs the commands: the Host for its assignments, a role lead for its children. Assignees and
   product-support roles run none of them, and no archetype requires them. → `CAP-DLV-adaptive-development` rules 13
   and 19.
-- The commands are optional for the Host. Where they are unavailable or a host denies the ledger write, the Host
-  keeps the manual board and diff reading. → `CAP-DLV-adaptive-development` rules 13 and 14 (WHERE).
+- Recording is the Host's standard delegation step and never a gate. The commands ship in the same wheel as the
+  guidance, so the guidance states the steps without an availability condition. When a command cannot record (an
+  unsupported repository, an unwritable or unreadable ledger, a denied write), the Host keeps the manual board and
+  diff reading and reports the assignments as unrecorded. → `CAP-DLV-adaptive-development` rules 13 and 14 (SHOULD).
+- Recording validates the governing documents an assignment names (`PADR-adaptive-requires-document-system`).
+  → CAP-DLV-adaptive-assignments §3 (MUST).
 - The Host keeps these judgments: whether a returned result meets its goal, whether a recorded check outcome is
   true, whether an open assignment's agent is still running, capacity and allowance, shared-interface agreement, and
   acceptance of a result whose verification failed.
@@ -85,5 +94,5 @@ clause holds it.
 ## 6. Confirmation
 
 Tests of the `assignment` feature in `devkit-adaptive` for each rule of CAP-DLV-adaptive-assignments, the
-documented-codes test of the package, and the bundle content tests that assert the conditional wording in the
-guidance.
+documented-codes test of the package, and the bundle content tests that assert the recording steps and the fallback
+in the guidance.

@@ -66,7 +66,8 @@ Chosen: an append-only event log under the shared Git directory.
 - Negative: the ledger does not travel with a clone, a push or a copy of the working tree. Current context then names
   assignment IDs that the ledger lacks, and the Host recovers from the implementation as for stale context.
 - Negative: on a host whose sandbox protects the shared Git directory, each recording command needs approval. A
-  denied write is `ADAPTIVE_LEDGER_UNWRITABLE` and the Host falls back to the manual board.
+  write the file system refuses is `ADAPTIVE_LEDGER_UNWRITABLE`; a write the host denies never reaches the command.
+  In both cases the Host falls back to the manual board and does not reroute the write.
 - Risk: the ledger grows with every event. No pruning command is added; a follow-up is triggered when a real ledger
   makes `list` slow.
 
