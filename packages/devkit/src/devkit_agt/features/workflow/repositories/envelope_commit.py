@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from devkit_core.core import GitError, run_git
+from devkit_core.core import GitError, parse_status_records, run_git
 
 from devkit_agt.features.workflow.models.errors import (
     EnvelopeCommitFailedError,
@@ -89,9 +89,7 @@ class EnvelopeCommitRepository:
         data = self.git(
             "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignore-submodules=none", "--no-renames"
         )
-        return {
-            item[3:].decode("utf-8", "surrogateescape"): item[:2].decode("ascii") for item in data.split(b"\0") if item
-        }
+        return {record.path: record.code for record in parse_status_records(data)}
 
     def index_blob(self, path: str) -> bytes | None:
         data = self.git("ls-files", "--stage", "-z", "--", path)

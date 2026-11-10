@@ -18,7 +18,7 @@ plan: PLAN-core-git-observation-helpers
 
 ## Phase 2: Caller migration
 
-- [ ] **Task 2.1**: `devkit_agt` callers moved; `compact` porcelain removed
+- [x] **Task 2.1**: `devkit_agt` callers moved; `compact` porcelain removed
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/`, `packages/devkit/tests/`,
     `docs/capabilities/compact/CAP-CMP-bounded-execution.md`
   - _Requirements: AC-04, AC-10_

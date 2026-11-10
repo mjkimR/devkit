@@ -31,7 +31,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import is_ancestor, run_git, run_git_text
+from devkit_core.core.git import is_ancestor, run_git, run_git_text, worktree_records
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import constraint_environment, guard_execution
@@ -177,25 +177,17 @@ def path_for(position: Position, branch: str) -> Path:
 
 
 def _entries(base: Path) -> list[_Entry]:
-    records = os.fsdecode(run_git(base, "worktree", "list", "--porcelain", "-z")).split("\0")
-    entries: list[_Entry] = []
-    current: _Entry | None = None
-    for line in records:
-        if line.startswith("worktree "):
-            current = _Entry(_resolve(line.removeprefix("worktree ")))
-            entries.append(current)
-        elif current is None:
-            continue
-        elif line.startswith("branch "):
-            current.branch = line.removeprefix("branch ").removeprefix("refs/heads/")
-        elif line.startswith("HEAD "):
-            head = line.removeprefix("HEAD ")
-            current.head = head if head.strip("0") else None  # Git prints a zero id before the first commit
-        elif line == "prunable" or line.startswith("prunable "):
-            current.prunable = True
-        elif line == "locked" or line.startswith("locked "):
-            current.locked = True
-    return entries
+    return [
+        _Entry(
+            _resolve(str(record.path)),
+            branch=record.branch.removeprefix("refs/heads/") if record.branch is not None else None,
+            # Git prints a zero id before the first commit
+            head=record.head if record.head is not None and record.head.strip("0") else None,
+            prunable=record.prunable is not None,
+            locked=record.locked is not None,
+        )
+        for record in worktree_records(base)
+    ]
 
 
 def _created(base: Path, branch: str) -> bool:
