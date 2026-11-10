@@ -252,3 +252,45 @@ def test_a_finding_whose_rule_the_recheck_omits_is_not_reported_fixed(tmp_path: 
     # The recheck never ran the rule, so it cannot vouch for the repair: the finding stays as found.
     assert [(v.rule_id, v.fixed) for v in result.violations] == [("RULE-omitted-after-fix", False)]
     assert not result.ok
+
+
+def test_a_manual_finding_whose_rule_the_recheck_omits_stays_found(tmp_path: Path) -> None:
+    from devkit_agt.features.rules.models.contracts import RuleOmission
+    from devkit_agt.features.rules.services.builtins import BaseRule
+
+    class ManualOmittedAfterFix(BaseRule):
+        """A finding only a person can repair; another rule's fix makes this rule omit itself on the recheck."""
+
+        def __init__(self) -> None:
+            super().__init__(id="RULE-manual-omitted", name="manual", description="manual")
+
+        def omission(self, ctx: RuleContext) -> RuleOmission | None:
+            if "omit" in ctx.cache.read_text("doc.md"):
+                return RuleOmission(self.id, "NOT_APPLICABLE", "marker present")
+            return None
+
+        def check(self, ctx: RuleContext) -> list[Violation]:
+            return [Violation(self.id, "doc.md", 1, "manual", fixable=False)]
+
+    class Fixer(BaseRule):
+        def __init__(self) -> None:
+            super().__init__(id="RULE-fixer", name="fixer", description="fixer")
+
+        def check(self, ctx: RuleContext) -> list[Violation]:
+            if "omit" in ctx.cache.read_text("doc.md"):
+                return []
+            return [Violation(self.id, "doc.md", 1, "fixable", fixable=True)]
+
+        def fix(self, ctx: RuleContext) -> list[str]:
+            ctx.cache.write_text("doc.md", "bad\nomit\n")
+            return ["doc.md"]
+
+    (tmp_path / "doc.md").write_text("bad\n")
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, fix=True), [ManualOmittedAfterFix(), Fixer()])
+    assert [o.rule_id for o in result.omissions] == ["RULE-manual-omitted"]
+    # The recheck never ran the manual rule, so its finding is not dropped: it stays as found.
+    assert sorted((v.rule_id, v.fixed) for v in result.violations) == [
+        ("RULE-fixer", True),
+        ("RULE-manual-omitted", False),
+    ]
+    assert not result.ok
