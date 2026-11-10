@@ -11,7 +11,7 @@ from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import StartResult, branch_marker, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import GitError, run_git, run_git_text
+from devkit_core.core import GitError, StatusRecord, run_git, run_git_text, status_records
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.invocation import guard_execution
@@ -78,15 +78,12 @@ HANDOFF_SUBJECT = "spec: hand off {slug} to Development"
 
 def _dirty_paths(root: Path) -> list[str]:
     """Every path ``git status`` reports in ``root``, untracked files one by one, in Git's order."""
-    entries = run_git(root, "status", "--porcelain", "-z", "--untracked-files=all").decode(errors="surrogateescape")
-    paths, fields = [], iter(entries.split("\0"))
-    for entry in fields:
-        if not entry:
-            continue
-        paths.append(entry[3:])
-        if entry[0] in "RC":  # a staged rename or copy names its source in the next field
-            paths.append(next(fields, ""))
-    return [path for path in paths if path]
+    return _names(status_records(root, optional_locks=True))
+
+
+def _names(records: list[StatusRecord]) -> list[str]:
+    """Each record's path, followed by the source of a rename or copy, in Git's order."""
+    return [name for record in records for name in (record.path, record.original) if name]
 
 
 def _commit_handoff(root: Path, slug: str, base: str) -> str:
@@ -155,9 +152,9 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"{position.branch or '- (detached HEAD)'}",
             fix=f"Run {command} in the main worktree on its base branch",
         )
-    dirty = run_git_text(position.base, "status", "--porcelain", "--untracked-files=normal").splitlines()
-    if any(line.strip() for line in dirty):
-        paths = [line[3:] for line in dirty if line.strip()]
+    dirty = status_records(position.base, untracked="normal", optional_locks=True)
+    if dirty:
+        paths = _names(dirty)
         raise HandoffBaseDirtyError(
             "the base checkout has uncommitted changes",
             *([f"{len(paths) - 20} more paths"] if len(paths) > 20 else []),

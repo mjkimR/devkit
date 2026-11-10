@@ -27,7 +27,7 @@ plan: PLAN-core-git-observation-helpers
   - **_Boundary**: `packages/devkit-dist/src/devkit_dist/features/`, `packages/devkit-dist/tests/`
   - _Requirements: AC-04, AC-09_
   - **Verification**: `just test-dist`
-- [ ] **Task 2.3**: `devkit_spec` callers moved, quoted-path, rename and newline tests
+- [x] **Task 2.3**: `devkit_spec` callers moved, quoted-path, rename and newline tests
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/`, `packages/devkit-spec/tests/`
   - _Requirements: AC-04, AC-05, AC-06, AC-09_
   - **Verification**: `just test devkit-spec`

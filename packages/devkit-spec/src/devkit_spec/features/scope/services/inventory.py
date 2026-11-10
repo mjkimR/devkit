@@ -6,6 +6,8 @@ import os
 import re
 from pathlib import Path
 
+from devkit_core.core import parse_worktree_records
+
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.observation import Candidate
 from devkit_spec.features.scope.repositories.collection_git import git
@@ -35,22 +37,17 @@ def refs(root: Path, deadline: Deadline) -> list[Candidate]:
 def worktrees(root: Path, deadline: Deadline) -> list[Candidate]:
     raw = git(root, "worktree", "list", "--porcelain", "-z", deadline=deadline)
     result = []
-    for block in raw.split(b"\0\0"):
+    for record in parse_worktree_records(raw):
         deadline.check("scope worktree inventory")
-        fields: dict[str, str] = {}
-        for item in block.split(b"\0"):
-            if item:
-                key, _, value = item.decode("utf-8", errors="surrogateescape").partition(" ")
-                fields[key] = value
-        if "worktree" not in fields or "bare" in fields:
+        if record.bare:
             continue
-        path, ref = str(Path(fields["worktree"])), fields.get("branch", "")
+        path, ref = str(record.path), record.branch or ""
         result.append(
             Candidate(
                 # Named relative to the workspace (``.`` is this checkout): openable and free of absolute paths.
                 source_id=f"worktree:{os.path.relpath(path, root)}",
                 ref=ref,
-                sha=fields.get("HEAD", ""),
+                sha=record.head or "",
                 worktree=path,
                 branch=ref.removeprefix("refs/heads/"),
             )
