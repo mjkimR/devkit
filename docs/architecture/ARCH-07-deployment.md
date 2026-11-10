@@ -178,16 +178,16 @@ The devkit-docs wheel registers `docs = "devkit_docs.bundles.docs"` in `devkit.b
 auto-selected alongside spec:core for devkit-spec installations. Built-wheel isolation without devkit-spec is
 verified by `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`.
 
-The devkit-catalog wheel registers `adaptive-dev = "devkit_catalog.adaptive_dev"`; it deploys only after explicit
+The devkit-adaptive wheel registers `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"`; it deploys only after explicit
 selection of `adaptive-dev:core`, `adaptive-dev:agents` or `adaptive-dev:import`. A clean adaptive-dev installation uses
-devkit-docs plus devkit-catalog without devkit-spec. The catalog owns the entry, pointer, role contracts, managed
+devkit-docs plus devkit-adaptive without devkit-spec. The adaptive distribution owns the entry, pointer, role contracts, managed
 current-context template, the explicitly invoked import entry and the conversion playbook
 (`CAP-DLV-adaptive-development`). The coordinator's
 `.devkit/adaptive-dev.md` remains project-owned and is never a seeded or overwritten deployment output. Built-wheel
 isolation, common policy inspection and context preservation are exercised by
-`packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
+`packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
 
-The same wheel registers `deep-research = "devkit_catalog.deep_research"`; it deploys only after explicit
+The devkit-catalog wheel registers `deep-research = "devkit_catalog.deep_research"`; it deploys only after explicit
 `deep-research:core` selection and needs no devkit-spec under either approach. The catalog owns its entry, references
 and four role contracts; retained materials under `docs/materials/` are project-owned and never a deployment output.
 Built-wheel isolation under the default `sdd` approach, the transient workspace example and material preservation are

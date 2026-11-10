@@ -10,7 +10,7 @@ size: L                               # S | M | L | XL (XL: would need two or mo
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-adaptive-development-runtime
-depends_on: [PROP-adaptive-package-extraction]
+depends_on: [SPEC-adaptive-package-extraction]
 boundaries:
   owns:
     - packages/

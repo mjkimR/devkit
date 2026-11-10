@@ -6,6 +6,7 @@ import re
 import shutil
 from pathlib import Path
 
+import devkit_adaptive.bundles
 import pytest
 import yaml
 from devkit_dist.base.errors import ConfigError
@@ -18,7 +19,7 @@ from distsupport.guidance import assert_rule
 PACKAGE = Path(__file__).parents[3]
 REPOSITORY = PACKAGE.parents[1]
 BUNDLE = PACKAGE / "src/devkit_catalog/deep_research/bundle"
-ADAPTIVE_DEV = PACKAGE / "src/devkit_catalog/adaptive_dev/bundle"
+ADAPTIVE_DEV = Path(devkit_adaptive.bundles.__file__).parent / "adaptive_dev/bundle"
 SKILL = BUNDLE / "skills/deep-research/SKILL.md"
 MOVED = ("direction-explorer", "discovery-critic", "discovery-planner")
 ROLES = {*MOVED, "research-investigator"}

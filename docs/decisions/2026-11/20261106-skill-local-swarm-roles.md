@@ -67,7 +67,7 @@ The choice is prefixed archetypes with role overlays, supporting optional role l
 
 `CAP-DLV-adaptive-development` rules 1, 12, 13 and 19 and its reusable-agent interface restate these clauses;
 `UC-advance-an-idea` extensions 5b through 5b4 cover optional teams and fallback. `ARCH-05-2-components`
-restates catalog ownership. This decision partially supersedes the role-set clauses of
+restates bundle ownership. This decision partially supersedes the role-set clauses of
 `ADR-adaptive-development-and-research`. Its approach, current-context and research-material decisions are retained.
 
 ## 5. Consequences

@@ -10,6 +10,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "devkit-adaptive",
     "devkit-advisory",
     "devkit-agt",
     "devkit-catalog",
@@ -433,6 +434,21 @@ wheels = [
 ]
 
 [[package]]
+name = "devkit-adaptive"
+version = "0.1.6"
+source = { editable = "packages/devkit-adaptive" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "devkit-dist" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
+
+[[package]]
 name = "devkit-advisory"
 version = "0.1.6"
 source = { editable = "packages/devkit-advisory" }
@@ -486,6 +502,7 @@ source = { editable = "packages/devkit-catalog" }
 
 [package.dev-dependencies]
 dev = [
+    { name = "devkit-adaptive" },
     { name = "devkit-agt" },
     { name = "devkit-dist" },
 ]
@@ -494,6 +511,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "devkit-adaptive", editable = "packages/devkit-adaptive" },
     { name = "devkit-agt", editable = "packages/devkit" },
     { name = "devkit-dist", editable = "packages/devkit-dist" },
 ]
