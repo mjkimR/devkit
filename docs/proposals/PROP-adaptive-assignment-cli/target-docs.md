@@ -22,7 +22,7 @@ targets:
 
 This document defines the target blueprint of how the docs/ backbone (Living Spec) will evolve if proposal PROP-adaptive-assignment-cli is accepted. It represents a hypothesis plan subject to adjustment during implementation. Upon handoff, it is copied into specs/ to serve as a baseline for plan.md boundaries and reconcile.md targets.
 
-`PROP-adaptive-package-extraction` lands first and rewrites several of the passages below for the move out of the
+`SPEC-adaptive-package-extraction` lands first and rewrites several of the passages below for the move out of the
 catalog. Each item states what must hold after this unit; where the landed wording already says it, nothing changes.
 
 ---

@@ -54,7 +54,7 @@ returned result by reading its diff; no command compares the result with the ass
 happens and gate completion on it, and that their evidence checks stop at the shape of a file. Adaptive assignments
 already carry a worktree, a base identity and a write scope, so a command can check the repository itself.
 
-Adaptive development is being raised from a content bundle to a package: `PROP-adaptive-package-extraction` moves
+Adaptive development is being raised from a content bundle to a package: `SPEC-adaptive-package-extraction` moves
 the bundle into the `devkit-adaptive` distribution, and this proposal gives that distribution its first feature and
 its requirement on the document system.
 
@@ -697,7 +697,7 @@ Each scenario is a test on a temporary repository unless it says otherwise.
 
 ### 3.11 Prerequisite and order of work
 
-Development starts only after `PROP-adaptive-package-extraction` has landed. This design assumes of it:
+Development starts only after `SPEC-adaptive-package-extraction` has landed. This design assumes of it:
 
 - the distribution `devkit-adaptive` in `packages/devkit-adaptive/` with the import package `devkit_adaptive`, the
   `adaptive-dev` bundle and its tests inside that package, `dependencies = []` and a `devkit.bundles` entry point;
@@ -754,6 +754,6 @@ Assumptions the user confirms at `plan-accept`:
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
 
-Development starts only after `PROP-adaptive-package-extraction` has landed, because the feature and the
+Development starts only after `SPEC-adaptive-package-extraction` has landed, because the feature and the
 requirement are added to the package that proposal creates. Retire through acceptance, handoff and Living Spec
 reconciliation once the scenarios of §3.10 pass.
