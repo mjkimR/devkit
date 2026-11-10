@@ -1319,3 +1319,41 @@ def test_pointer_and_statement_rewrite_proposal_reference_equally(workspace: Pat
     payload = "the `parser` choice of `SPEC-references`."
     assert f"Superseded in part by `ADR-pick-a`: {payload}" in pointer
     assert f"Supersedes in part `ADR-old`: {payload}" in statement
+
+
+def test_wrapped_first_statement_keeps_later_pointer_locations(workspace: Path, write: Write) -> None:
+    from devkit_docs.features.documents.models.supersession import replacement_texts
+
+    write(OLD_ADR, OLD_TEXT)
+    proposal = _superseding(workspace, "wrapped", "Pick A", "[ADR-old]")
+    _superseding(workspace, "wrapped", "Pick B", "[ADR-old]")
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    padr.write_text(padr.read_text().replace("the `parser` choice for Pick A.", "the `parser` choice\n  for Pick A."))
+    accept(proposal)
+    result = handoff_proposal(workspace, "wrapped", today=TODAY)
+    actual = replacement_texts((workspace / OLD_ADR).read_text())
+    assert [(p.by, p.line) for p in result.pointers] == [(p.id, p.line) for p in actual]
+    assert result.pointers[1].line == result.pointers[0].line + 3
+
+
+def test_frontmatter_statement_refuses_handoff(workspace: Path, write: Write) -> None:
+    from devkit_spec.base.errors import ProposalInvalidError
+
+    write(OLD_ADR, OLD_TEXT)
+    proposal = _superseding(workspace, "header-only", "Pick A", "[ADR-old]")
+    padr = proposal.parent / "decisions/PADR-pick-a.md"
+    text = padr.read_text().split("\nSupersedes in part", 1)[0]
+    text = text.replace(f"summary: '{Y}'", "summary: |\n  Supersedes in part `ADR-old`: fake.")
+    # The scaffold's YAML scalar style is implementation-independent for this regression.
+    import re
+
+    text = (
+        re.sub(r"(?m)^summary:.*$", "summary: |\n  Supersedes in part `ADR-old`: fake.", text)
+        if "summary: |" not in text
+        else text
+    )
+    padr.write_text(text)
+    accept(proposal)
+    with pytest.raises(ProposalInvalidError):
+        handoff_proposal(workspace, "header-only", today=TODAY)
+    assert (workspace / OLD_ADR).read_text() == OLD_TEXT and proposal.exists()

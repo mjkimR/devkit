@@ -199,3 +199,13 @@ def test_pointer_text_targeting_and_source_comparison(tmp_path: Path, targets: l
         body="Superseded in part by `ADR-new`: the\n `new` mode.\n\nSuperseded in part by `ADR-new`: other.\n",
     )
     assert check(RULE, tmp_path, files, targets=targets) == []
+
+
+def test_frontmatter_statement_does_not_satisfy_padr_body(tmp_path: Path) -> None:
+    path = "docs/proposals/p/decisions/PADR-new.md"
+    files = {
+        OLD: _doc("ADR-old"),
+        path: _doc("PADR-new", "supersedes: ADR-old\nsummary: |\n  Supersedes in part `ADR-old`: retries.\n"),
+    }
+    found = check(RULE, tmp_path, files, targets=[path])
+    assert len(found) == 1 and "needs a partial statement" in found[0].message

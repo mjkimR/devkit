@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from devkit_core.core.frontmatter import locate
+
 from devkit_docs.features.documents.models.ids import ID_SOURCE
 from devkit_docs.features.documents.models.markdown import visible_lines
 
@@ -27,7 +29,10 @@ class ReplacementText:
 def replacement_texts(source: str) -> list[ReplacementText]:
     """Read starts from masked prose and payloads from source, bounded by paragraph/item/heading ends."""
     raw = source.splitlines()
-    visible = {line.number: line.text for line in visible_lines(source)}
+    block = locate(source)
+    start = block.end if block is not None else 0
+    first_line = source[:start].count("\n") + 1
+    visible = {line.number: line.text for line in visible_lines(source, start=start, first_line=first_line)}
     result = []
     for number, line in visible.items():
         match = _START.match(line)

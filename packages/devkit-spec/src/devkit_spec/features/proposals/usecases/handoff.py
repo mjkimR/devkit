@@ -809,7 +809,10 @@ def _plan_pointers(root: Path, index: DocumentIndex, decisions: list[_Decision])
         if not lines:
             continue
         text, first = _insert_pointer(original, "\n\n".join(line for _, line in lines))
-        planned += [_Pointer(target, adr_id, by, original, text, first + 2 * i) for i, (by, _) in enumerate(lines)]
+        number = first
+        for by, pointer in lines:
+            planned.append(_Pointer(target, adr_id, by, original, text, number))
+            number += pointer.count("\n") + 2
     return planned
 
 
