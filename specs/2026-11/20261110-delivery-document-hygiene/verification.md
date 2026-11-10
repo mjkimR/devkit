@@ -22,3 +22,7 @@ were added merely to reflect prose. No benchmark or runtime improvement is claim
 
 Independent review P2 repair: every baseline H2/H3 heading remains in the original CAP as either contract text or
 a redirect portal. New CAP entrypoints name three existing doorway files each; no broad shared directory is added.
+
+Entrypoint derivation: PASS zero source-code candidates from documentary boundaries (53 excluded-tree boundaries,
+8 non-entrypoint-bearing targets). No candidates applied. New manual doorway metadata is validated by rules and
+docs list --file, which returns CAP-DLV-delivery-roles for worker CLI and CAP-DLV-proposal-lifecycle for handoff.
