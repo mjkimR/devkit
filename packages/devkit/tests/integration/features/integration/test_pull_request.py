@@ -361,7 +361,9 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     result = run(service)
     assert result.errors[0].code == "INTEGRATION_STEP_UNKNOWN"
     assert result.steps["remote_delete" if deletion else "push"] == "unknown"
-    assert "devkit integration integrate" in result.errors[0].fix
+    assert result.status == "partial"  # a possibly-applied mutation is never "nothing happened"
+    assert "devkit integration prepare <branch> --route pull-request" in result.errors[0].fix
+    assert "devkit integration integrate" not in result.errors[0].fix
     assert worktree.exists()
     monkeypatch.setattr(adapter, "run_git", original)
     restarted = IntegrationService(base)
@@ -385,3 +387,70 @@ def test_cleanup_only_confirmation_describes_only_remaining_operations(remote_se
     assert request.context.finish.already_merged
     assert scope["already_merged"] is True and scope["pull_request"] == 12
     assert "readiness" not in scope
+
+
+def _cleanups(monkeypatch, *extensions):
+    import devkit_agt.features.integration.services.providers as providers
+
+    from .conftest import Entry
+
+    original = providers.metadata.entry_points
+    entries = [Entry(name, f"{name}:cleanup", extension) for name, extension in extensions]
+    monkeypatch.setattr(
+        providers.metadata,
+        "entry_points",
+        lambda **kw: entries if kw.get("group") == "devkit.post_finish" else original(**kw),
+    )
+
+
+class Cleanup:
+    integration_local_only = True
+
+    def __init__(self, outcome):
+        self.outcome = outcome
+        self.runs = 0
+
+    def integration_plan(self, _context):
+        from devkit_agt.features.integration import CleanupTarget
+
+        return (CleanupTarget("record", "task-1", "revision-1"),)
+
+    def integration_validate(self, _context, _targets):
+        return None
+
+    def integration_run(self, _context, _result, _targets):
+        self.runs += 1
+        return self.outcome
+
+
+def test_incomplete_cleanup_is_a_warning_and_later_scopes_still_run(remote_service, monkeypatch):
+    from devkit.advisory import Level
+    from devkit_agt.features.integration import CleanupResult
+
+    service, _fake, _base, worktree = remote_service
+    first, second = Cleanup(CleanupResult(False)), Cleanup(CleanupResult(True))
+    _cleanups(monkeypatch, ("a-first", first), ("b-second", second))
+    result = run(service)
+    assert result.status == "partial" and not result.errors, result.to_dict()
+    assert first.runs == second.runs == 1 and not worktree.exists()
+    assert result.cleanup_steps == {"a-first": "failed", "b-second": "completed"}
+    assert result.steps["post_finish"] == "failed" and result.failing_operation == "post_finish"
+    warning = next(n for n in result.notices if n.code == "INTEGRATION_CLEANUP_INCOMPLETE")
+    assert warning.level is Level.WARNING and "a-first" in warning.render()
+    assert "devkit integration prepare dev-demo --route pull-request" in warning.fix
+
+
+def test_malformed_cleanup_result_is_a_contract_error(remote_service, monkeypatch):
+    service, _fake, _base, _worktree = remote_service
+    _cleanups(monkeypatch, ("broken", Cleanup(None)))
+    result = run(service)
+    assert result.status == "partial" and result.errors[0].code == "INTEGRATION_CLEANUP_UNSCOPED"
+    assert result.failing_operation == "post_finish"
+
+
+def test_branch_without_worktree_reports_worktree_remove_skipped(remote_service):
+    service, _fake, base, worktree = remote_service
+    git(base, "worktree", "remove", str(worktree))
+    result = run(service)
+    assert result.status == "completed", result.to_dict()
+    assert result.steps["worktree_remove"] == "skipped"

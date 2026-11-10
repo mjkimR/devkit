@@ -58,7 +58,7 @@ class RuntimeLocationError(IntegrationError):
 class CleanupIncompleteWarning(IntegrationError):
     code = "INTEGRATION_CLEANUP_INCOMPLETE"
     level = Level.WARNING
-    fix = "Inspect the approved cleanup targets and actual Git or PR state, resolve the reported condition, then rerun `uv run devkit integration integrate` only when the source and remaining cleanup scope can be revalidated"
+    fix = "Inspect the approved cleanup targets and actual Git or PR state, resolve the reported condition, then run `uv run devkit integration prepare` for the branch and route and, after Host approval, integrate with the digest it prints"
 
 
 class GeneratedSeededWarning(IntegrationError):

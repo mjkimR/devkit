@@ -102,7 +102,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "Network budget exhausted before the next operation",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --route pull-request` for remaining work; do not repeat an unknown mutation",
+                "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work; do not repeat an unknown mutation",
             )
         return run_git(self.root, *args, timeout=remaining)
 
@@ -112,7 +112,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "GitHub observation timed out or exhausted the network budget",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --route pull-request` for remaining work; do not repeat an unknown mutation",
+                "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work; do not repeat an unknown mutation",
             )
         if result.returncode != 0:
             raise PullRequestError(
@@ -431,7 +431,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "Git mutation outcome is unconfirmed",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, rerun `uv run devkit integration integrate <branch> --route pull-request` for remaining work; do not repeat an unknown mutation",
+                "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work; do not repeat an unknown mutation",
                 str(exc),
             ) from exc
 

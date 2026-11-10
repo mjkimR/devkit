@@ -314,6 +314,20 @@ def test_partial_cleanup_warning_exits_zero_and_errors_print_last(repo, monkeypa
     assert stderr.index("[WARN]") < stderr.index("[ERROR]")
 
 
+def test_unknown_step_after_a_possible_mutation_exits_one(repo, monkeypatch):
+    """CAP-INT: exit 2 only when nothing happened; an unknown mutation outcome is a partial effect."""
+    from devkit.advisory import AdvisoryError
+    from devkit_agt.features.integration.models.contracts import IntegrationResult
+
+    base, _ = repo
+    request = IntegrationService(base).prepare("dev-demo").request
+    result = IntegrationResult(request, status="blocked")
+    result.steps["merge"] = "unknown"
+    result.errors.append(AdvisoryError("merge timed out", code="GIT_FAILED"))
+    monkeypatch.setattr("devkit_agt.features.integration.cli.IntegrateUseCase.execute", lambda *_a, **_k: result)
+    assert CliRunner().invoke(cli, _integrate_args(base)).exit_code == 1
+
+
 def test_prepare_inside_the_worktree_fixes_with_the_same_command_on_the_base(repo):
     base, worktree = repo
     result = CliRunner().invoke(cli, ["prepare", "dev-demo", "-w", str(worktree)])

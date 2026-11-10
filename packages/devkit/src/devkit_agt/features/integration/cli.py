@@ -20,6 +20,7 @@ from devkit_dist.adapters.cli import (
 
 from devkit_agt.features.integration.models.contracts import (
     SeededArtifact,
+    has_effects,
     integrate_command,
     prepare_command,
 )
@@ -139,7 +140,8 @@ def integrate(
             click.echo(error.render(), err=True)
     # 2 when nothing happened, 1 when an error stopped it part way; --strict only ever raises 0 to 1. A partial run
     # whose only advisory is a warning (Git integration done, scoped cleanup remains) succeeded.
-    if result.status == "blocked" and not any(state == "completed" for state in result.steps.values()):
+    # A step left unknown may have applied its mutation, so it counts as an effect.
+    if result.status == "blocked" and not has_effects(result.steps):
         raise click.exceptions.Exit(2)
     if result.errors:
         raise click.exceptions.Exit(1)

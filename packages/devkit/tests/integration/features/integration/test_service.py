@@ -347,3 +347,71 @@ def test_cloud_execution_environment_blocks_the_cli_before_effects(repo):
     with pytest.raises(McpInteractiveError), invocation(ExecutionBinding(worktree, base)):
         service.execute_cli("dev-demo", expected_digest="0" * 64)
     assert git(base, "show-ref") == before and worktree.exists()
+
+
+def test_unknown_merge_outcome_is_a_partial_effect(repo, monkeypatch):
+    """CAP-INT: a possibly-applied mutation is a partial effect, never "nothing happened"."""
+    base, _ = repo
+    original = merging.run_git
+
+    def ambiguous(root, *args, **kw):
+        value = original(root, *args, **kw)
+        if args[0] == "merge":
+            raise GitError("merge timed out after ref update")
+        return value
+
+    monkeypatch.setattr(merging, "run_git", ambiguous)
+    result = integrate(IntegrationService(base))
+    assert result.steps["merge"] == "unknown" and result.status == "partial"
+
+
+def test_landed_commit_mismatch_after_fast_forward_is_partial(repo, monkeypatch):
+    import devkit_agt.features.integration.usecases.service as service_module
+
+    base, _ = repo
+    original = service_module.fast_forward
+
+    def amended(root, sha):
+        original(root, sha)
+        write(base, "hook.txt", "changed by a post-merge hook\n")
+        git(base, "add", "hook.txt")
+        git(base, "commit", "--amend", "-qm", "amended")
+
+    monkeypatch.setattr(service_module, "fast_forward", amended)
+    result = integrate(IntegrationService(base))
+    assert result.errors and result.failing_operation == "merge"
+    assert result.steps["merge"] == "unknown" and result.status == "partial"
+
+
+def test_refused_fast_forward_discloses_no_seeded_artifacts(repo, monkeypatch):
+    """A refused integrate reports no seeded artifacts: nothing landed on the target."""
+    import hashlib
+    import json
+
+    import devkit_agt.features.integration.usecases.service as service_module
+
+    base, worktree = repo
+
+    def receipt(root, side):
+        record = {".agents/skill.md": {"sha256": hashlib.sha256(side.encode()).hexdigest(), "mode": 420}}
+        data = {"schema": 1, "packages": [], "selection": {"agents": [], "presets": {}}, "assets": [], "files": record}
+        (root / ".devkit").mkdir(exist_ok=True)
+        (root / ".devkit/installation.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        git(root, "add", ".devkit/installation.json")
+        git(root, "commit", "-qm", f"receipt {side}")
+
+    receipt(base, "base")
+    git(worktree, "merge", "-q", "main")
+    receipt(worktree, "source")
+    receipt(base, "target")
+    service = IntegrationService(base)
+    assert service.prepare("dev-demo").seeded
+
+    def refuse(_root, _sha):
+        raise GitError("not a fast-forward", returncode=1)
+
+    monkeypatch.setattr(service_module, "fast_forward", refuse)
+    result = integrate(service)
+    assert result.status == "blocked" and result.errors[0].code == "WORKTREE_MERGE_FAILED"
+    assert result.seeded == ()
+    assert "INTEGRATION_GENERATED_SEEDED" not in [notice.code for notice in result.notices]
