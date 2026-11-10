@@ -272,7 +272,7 @@ self-contained `deep-research` catalog bundle.
 
 ### Adaptive-dev bundle
 - The catalog bundle is `adaptive-dev:core` in devkit-catalog (entry point
-  `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"`), with one `/adaptive-dev` coordinator, three optional support
+  `adaptive-dev = "devkit_catalog.adaptive_dev"`), with one `/adaptive-dev` coordinator, three optional support
   contracts and a project-owned mutable `.devkit/adaptive-dev.md`; its pointer guidance is `adaptive-dev-pointer`.
   (ADR-keep-incubation-guidance-opt-in-and-current-state-based; names per ADR-adaptive-dev-approach-name)
 - The bundle keeps `/adaptive-dev`, `product-clarifier`, `product-researcher`, `usage-reviewer`, the pointer and the

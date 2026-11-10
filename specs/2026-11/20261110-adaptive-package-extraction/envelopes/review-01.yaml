@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T01:12:11.716735Z'
+status: completed
+summary: 'Independent medium review: extraction and release lookup meet scope; restore one historical ADR Outcome entry point.'
+findings:
+- issue: Historical ADR Decision Outcome entry point changed despite partial supersession.
+  evidence: docs/decisions/2026-11/20261102-adaptive-development-and-research.md Decision Outcome names catalog ownership with the new adaptive module; target-docs requires retaining earlier clauses.
+  failure_condition: Reading the previous ownership decision makes it appear to have selected the new entry point.
+  suggested_action: Restore devkit_catalog.adaptive_dev only in that retained Outcome clause.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex reviewer emulated; before/after tracked+untracked snapshot trees identical 016c05a37270b564e8e589c5ac826bc59555ea7c; HEAD unchanged.
+checks:
+  scope: PASS
+  bundle_identity: PASS
+  metadata_and_release: PASS
+diff_scope:
+  base: 9ab4f8e5ec0d1e4922013106199835ce6b74838e
+  head: 7e81bc8d895164f16154f8fde20fba30b58f0986
