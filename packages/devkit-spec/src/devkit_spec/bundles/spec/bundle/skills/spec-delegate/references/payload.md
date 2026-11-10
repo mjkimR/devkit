@@ -28,6 +28,11 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 
 ## Workers
 
+- Pass the worker the required native check commands and coverage; it runs them synchronously in its assigned
+  worktree, including necessary selective E2E, and returns source-specific evidence. Keep Host exec launch, wait,
+  cleanup and integrated-result acceptance out of worker payloads. The local-orchestrated Host owns those steps
+  after landing; sharing a worktree or inherited instructions does not transfer that responsibility.
+
 - Name initial declared paths and explicit denied paths separately for Development. An adjacent exact-file
   extension remains within the approved task/AC only under the worker's recorded Tier B contract; explicit denies
   prevail. New feature edges and protected classes cannot self-admit. Local/cloud use the same rules, with optional

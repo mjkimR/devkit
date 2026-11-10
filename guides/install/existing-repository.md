@@ -300,3 +300,6 @@ For an explicit update, preview and inspect before applying the two reported ide
 Follow any returned reinstall and explicit deselection actions, then sync. Refresh itself changes no dependency
 files, selection, overrides, receipt or Git. Verify a fresh consumer can install/sync without the private content
 origin given runtime/build prerequisites; copying content does not promise an all-network-free bootstrap.
+
+For delegated work or verification-guidance upgrades, apply [Verification ownership](verification-ownership.md).
+Keep the project's native commands and CI requirements; sync does not rewrite project-owned verification prose.

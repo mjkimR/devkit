@@ -497,6 +497,15 @@ the commit through the project's Git policy.
 
 ## Local-orchestrated verification
 
+The local-orchestrated Host MUST own post-integration asynchronous launch, collection, cleanup and final
+integrated coverage. Development workers MUST run required native checks synchronously in their assigned
+worktree, including necessary selective E2E, and return source-specific evidence. Worker payloads MUST NOT
+inherit the Host exec lifecycle; common completion guidance routes to it only for the Host after landing.
+Direct/session work retains native verification. Actor and task select responsibility, not directory location;
+the executor CLI has no role or cwd restriction. Rendered local/cloud and worker-projection regression tests in
+`packages/devkit-spec/tests/integration/bundles/spec/test_isolated_execution_guidance.py` check instruction routing;
+actual agent compliance is Review only. `ADR-verification-execution-ownership` records this boundary.
+
 Before choosing asynchronous verification, the Host inspects repository documentation, scripts, runner configuration and CI for actual required commands and coverage. It establishes independently runnable groups and verifies what the retained synchronous command excludes and what the asynchronous command covers, preserving all existing required coverage. Directory names and test labels establish neither E2E existence, cost nor independent runnability. If verification is unseparated, unclear or has no independently runnable subset, the Host keeps the existing required commands synchronously. Consumers need no E2E tier; guidance neither manufactures empty coverage nor automatically restructures verification. Overlapping broad commands do not establish reduced blocking by adding a duplicate E2E run. Devkit's selector commands are its own adoption example.
 
 Where independent required groups are established, the source local-orch skill SHOULD start with one outstanding isolated E2E run after the project's established synchronous verification group and preserve its existing full fallback. It launches native argv at fixed A, backgrounds one `exec wait --clean` through the tool, continues independent work and collects its result. Tool notification limits, default retention and separate execution/cleanup outcomes remain explicit (`CAP-HARN-isolated-execution`).

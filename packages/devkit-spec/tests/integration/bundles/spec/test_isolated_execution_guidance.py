@@ -1,6 +1,10 @@
 """Local-orch verification keeps exact coverage and repair responsibility with the Host."""
 
-from spec_support.bundle_text import raw
+import tomllib
+
+import pytest
+from devkit_dist.features.distribution.services.bundles.subagents import read_contract, render_projection
+from spec_support.bundle_text import flat, raw
 
 
 def test_local_orch_launch_wait_work_collect_and_repair_order() -> None:
@@ -64,3 +68,34 @@ def test_async_groups_require_actual_coverage_discovery_and_synchronous_fallback
     ):
         assert phrase in text
     assert text.index("Inspect repository") < text.index("1. Save")
+
+
+@pytest.mark.parametrize("environment", ["local", "cloud"])
+def test_worker_projection_keeps_native_checks_and_excludes_host_lifecycle(environment: str) -> None:
+    source = raw("subagents/development-worker.md", environment)
+    contract = read_contract(source.encode(), "development-worker.md")
+    projection = render_projection("codex", contract, ".devkit/managed/spec/subagents/development-worker.md")
+    assert projection is not None
+    instructions = flat(tomllib.loads(projection.decode())["developer_instructions"])
+    assert "Run required native checks synchronously in your assigned worktree" in instructions
+    assert "including necessary selective E2E" in instructions
+    assert "Do not launch or manage the Host exec lifecycle" in instructions
+    assert "Common completion guidance does not transfer" in instructions
+    assert "devkit exec start" not in instructions
+    assert "devkit exec wait" not in instructions
+
+
+@pytest.mark.parametrize("environment", ["local", "cloud"])
+def test_common_completion_and_payload_route_by_actor_not_directory(environment: str) -> None:
+    completion = flat(raw("skills/spec/references/completion.md", environment))
+    assert "Only when acting as the local-orchestrated Host after integration, follow" in completion
+    assert "they do not load that Host procedure for ordinary worker checks" in completion
+    assert "Direct/session work retains" in completion
+    payload = flat(raw("skills/spec-delegate/references/payload.md", environment))
+    assert "Keep Host exec launch, wait, cleanup and integrated-result acceptance out of worker payloads" in payload
+    host = flat(raw("skills/spec-orchestrate/references/isolated-execution.md", environment))
+    assert "only as the local-orchestrated Host" in host
+    assert "after landing" in host
+    assert "actor and task, not by whether the current directory is a worktree" in host
+    assert "no runtime role or cwd restriction" in host
+    assert "Do not require consumers to define E2E" in host
