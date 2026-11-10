@@ -31,7 +31,7 @@ plan: PLAN-core-git-observation-helpers
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/`, `packages/devkit-spec/tests/`
   - _Requirements: AC-04, AC-05, AC-06, AC-09_
   - **Verification**: `just test devkit-spec`
-- [ ] **Task 2.4**: `devkit_adaptive` parsers as wrappers and the local revision fix, with the `^HEAD` test
+- [x] **Task 2.4**: `devkit_adaptive` parsers as wrappers and the local revision fix, with the `^HEAD` test
   - **_Boundary**: `packages/devkit-adaptive/src/devkit_adaptive/features/`, `packages/devkit-adaptive/tests/`,
     `docs/capabilities/delivery/CAP-DLV-adaptive-assignments.md`
   - _Requirements: AC-04, AC-08, AC-10_
