@@ -1,0 +1,20 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: 'Planning direction approved with three corrections: (1) Impeccable''s PRODUCT.md,
+  DESIGN.md and shared .impeccable/ files are persistent project context upstream
+  recommends committing, not temporary scaffolding; reframe Q4/AC-4 so the consumer
+  owns and decides their retention, and drop deletion of consumer-owned files. (2)
+  Track A, where a delegated external session edits product source, changes the coordinator-owned
+  change model of ADR-uiux-improvement-workflow-boundary and CAP-DLV-uiux-improvement
+  rules 3 and 9; settle it by PADR, including how the existing ADR is superseded under
+  the docs/decisions/ exclusion. (3) State in the background why the proposal reverses
+  the 2026-11-05 agent-team-design-pilot material, which borrowed Impeccable guidance
+  without adopting its installer, CLI or project-file conventions. Also complete boundaries
+  for the rename (pyproject entry point, catalog README, install guide, ARCH-05-2-components),
+  make ORCA framing proportionate to request size, and use upstream-documented install
+  commands.'
+by: user
+at: '2026-11-09T23:21:10.242227Z'
