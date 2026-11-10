@@ -90,6 +90,24 @@ def test_cloud_blocks_terminal_capture(clones):
             capture_terminal_removal(task)
 
 
+def test_non_utf8_worktree_path_is_read(clones, monkeypatch):
+    import devkit_core.core.git as core_git
+
+    base, _ = clones
+    original = core_git.run_git
+
+    def listing(cwd, *args, **kwargs):
+        output = original(cwd, *args, **kwargs)
+        if args[:2] == ("worktree", "list"):
+            output += b"worktree /nonexistent/\xff\0HEAD " + b"0" * 40 + b"\0detached\0\0"
+        return output
+
+    monkeypatch.setattr(core_git, "run_git", listing)
+    # The listing is read (the base checkout stays first); the absent interpreter is the refusal.
+    with pytest.raises(configuration.RuntimeUnavailable, match="no verified retained interpreter"):
+        configuration.BuildLaunchDescriptorUseCase().execute(base, executable="/nonexistent/python")
+
+
 def test_linked_interpreter_lexical_path_is_rejected(clones):
     _, task = clones
     candidate = task / ".venv/bin/python"

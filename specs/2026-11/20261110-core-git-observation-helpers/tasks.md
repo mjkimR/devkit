@@ -36,7 +36,7 @@ plan: PLAN-core-git-observation-helpers
     `docs/capabilities/delivery/CAP-DLV-adaptive-assignments.md`
   - _Requirements: AC-04, AC-08, AC-10_
   - **Verification**: `just test devkit-adaptive`
-- [ ] **Task 2.5**: `devkit_mcp` and `devkit_viewer` callers moved, non-UTF-8 and newline tests
+- [x] **Task 2.5**: `devkit_mcp` and `devkit_viewer` callers moved, non-UTF-8 and newline tests
   - **_Boundary**: `packages/devkit-mcp/src/devkit_mcp/features/`, `packages/devkit-mcp/tests/`,
     `packages/devkit-viewer/src/devkit_viewer/features/`, `packages/devkit-viewer/tests/`
   - _Requirements: AC-04, AC-07, AC-09_
