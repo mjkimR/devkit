@@ -23,7 +23,7 @@ A later ADR that replaces part of an earlier one names it in `supersedes`, and t
 a "Superseded in part by `ADR-<new>`" pointer (`ADR-decision-ledger`, `CAP-DOCS-document-model`). Which clauses were
 replaced has no fixed form:
 
-- The later ADR states the replaced scope in free prose. The 26 existing pairs use at least five wordings, so no tool
+- The later ADR states the replaced scope in free prose. The 27 existing pairs use at least five wordings, so no tool
   can read it.
 - `devkit spec proposal handoff` therefore fills the pointer with the later ADR's `summary`, which states the new
   decision. A person has to rewrite it; six pointers still repeat a summary, and the rewrite has been applied to the
@@ -43,7 +43,7 @@ replaced has no fixed form:
 - A rule and the handoff read the scope with the reader they already have.
 - IDs in the text stay under `RULE-document-reference` and alias rewrites.
 - Agents write the text without YAML quoting of long prose.
-- The 26 existing pairs migrate by wording edits only.
+- The existing pairs migrate by wording edits only.
 
 ## 3. Considered Options
 
@@ -51,8 +51,8 @@ replaced has no fixed form:
 
 - **Overview**: the later ADR carries one list item or paragraph per earlier ADR: "Supersedes in part `ADR-<old>`:
   <the replaced clauses>." The earlier ADR's pointer repeats the same text.
-- **Pros**: mirrors the pointer, so one reader serves both; the text stays Markdown under the reference rules; all 26
-  pairs already state the scope in Decision Outcome; no new frontmatter field or status.
+- **Pros**: mirrors the pointer, so one reader serves both; the text stays Markdown under the reference rules; every
+  existing pair already states the scope in Decision Outcome; no new frontmatter field or status.
 - **Cons**: the scope exists in two files, and a rule has to keep the copies equal; a tool has to read the body.
 
 ### Option 2: A frontmatter map from each earlier ADR to its replaced clauses
@@ -97,6 +97,10 @@ We adopt **Option 1**.
   interprets which clauses a statement covers. → `CAP-GOV-spec-rules` 3.17 (MUST)
 - A PADR is checked for its statements because its author knows the replaced scope; its pointer does not exist before
   handoff and is not checked.
+- A decision that replaces a whole ADR uses the same statement and no second form: while the earlier ADR is not
+  `superseded`, the statement names every decision of that ADR, and handoff writes the pointer as for a partial
+  replacement. The author then sets `status: superseded` and `superseded_by`; the statement and the pointer stay as
+  written. Handoff sets neither field. → `CAP-DOCS-document-model` Decision supersession (MUST)
 - The frontmatter stays as it is: `supersedes` lists the earlier ADRs, an ADR replaced in part stays `accepted`, and
   the document index adds no edge for a decision's `supersedes`.
 - Option 1 satisfies the single-source, readable-earlier-ADR and existing-reader drivers. Option 2 fails the reference
@@ -111,9 +115,8 @@ We adopt **Option 1**.
     manual copy.
   - A repository that adopts this rule version with partly superseding ADRs gets errors until each has its statement
     and matching pointer; the rule guide states the repair, and the existing severity override defers it.
-  - A decision meant to replace a whole ADR through a PADR still passes through the partial form: its statement names
-    every decision, handoff writes the pointer, and the author's edit then sets `status: superseded` and
-    `superseded_by`.
+  - A whole replacement through a PADR carries a sentence and a pointer that say "in part", and both stay in the
+    ledger after the earlier ADR is `superseded`.
 - **Follow-ups**:
   - A fixer that copies the statement into the pointer, when manual copies are missed or become frequent.
   - The frontmatter form of Option 2, when a consumer has to read the replaced scope without reading the body.

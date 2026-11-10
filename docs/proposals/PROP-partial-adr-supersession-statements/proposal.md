@@ -45,8 +45,8 @@ workflow: sdd-proposal
 
 A decision is never changed in place: a new ADR names the earlier one in `supersedes`. When only part of the earlier
 ADR is replaced, the earlier ADR stays `accepted` with a "Superseded in part by `ADR-<new>`" line
-(`SPEC-partial-adr-supersession`). Partial replacement is the common path: 18 of the 65 ADRs carry such a line, in 26
-pairs, and none is wholly superseded.
+(`SPEC-partial-adr-supersession`). Partial replacement is the common path: at `c84a5485`, 18 of the 66 ADRs carry such
+a line, in 27 pairs, and none is wholly superseded.
 
 Which clauses were replaced has no defined home:
 
@@ -82,8 +82,9 @@ Partial supersession becomes reliable when the replaced scope is written once an
 
 ## 2. Technical Spike Questions
 
-Planning answered the six questions from repository evidence. `materials/planning-evidence.md` holds the inventory
-and the option tables, `envelopes/scout-01.yaml` the command and viewer evidence. Where an envelope differs from this
+Planning answered the six questions from repository evidence, and the user decided the scope of one flagged pair and
+the form of a whole replacement (Planning decisions). `materials/planning-evidence.md` holds the inventory and the
+option tables, `envelopes/scout-01.yaml` the command and viewer evidence. Where an envelope differs from this
 document, this document holds.
 
 - **Q1 Statement form**: a fixed sentence in Decision Outcome, one per earlier ADR: "Supersedes in part `ADR-<old>`:
@@ -94,10 +95,10 @@ document, this document holds.
   edits the statement and copies it to the pointer, and the rule reports a difference at the commit gate. No fixer is
   added.
 - **Q3 Rule checks and severity**: every added check is an error of `RULE-decision-supersession`. `main` stays clean
-  because the 26 pairs migrate in the same change. The handoff commit stays clean because handoff writes the pointer
-  from the statement and refuses a missing statement before it writes.
-- **Q4 Migration**: every pair on the Development head gets a statement and a pointer that repeats it (26 at
-  `b3e4753d`); the six summary-copy pointers are replaced in the same change. Pointers at affected statements stay as
+  because every existing pair migrates in the same change. The handoff commit stays clean because handoff writes the
+  pointer from the statement and refuses a missing statement before it writes.
+- **Q4 Migration**: every pair on the Development head gets a statement and a pointer that repeats it (27 at
+  `c84a5485`); the six summary-copy pointers are replaced in the same change. Pointers at affected statements stay as
   they are. A pair whose existing sources name different clauses is never settled by the migration itself (3.6).
 - **Q5 Command and viewer**: a sibling subcommand, `devkit docs supersession <ID>`, because `refs` is defined on the
   reference graph and a decision's `supersedes` is outside it. The viewer leaves this proposal:
@@ -126,6 +127,12 @@ document, this document holds.
 - A pointer at an affected statement ("Superseded in part by `ADR-<new>`: the next item.") stays valid beside the
   repeating pointer and keeps its own text.
 - The frontmatter is unchanged: `supersedes` lists the earlier ADRs, and the earlier ADR stays `accepted`.
+- **Whole replacement**: the form is the same, and no second sentence exists. A PADR that replaces a whole ADR
+  writes "Supersedes in part `ADR-<old>`:" with text that names every decision of that ADR, because the earlier ADR
+  is not `superseded` while the PADR is written. Handoff writes the pointer as for any other entry (3.3). The author
+  then sets `status: superseded` and `superseded_by` on the earlier ADR. The statement and the pointer stay as
+  written; the rule no longer checks the pair for a statement or pointer text (3.2), and
+  `devkit docs supersession` reports `scope=whole` with the statement's text (3.4).
 
 Example pair:
 
@@ -204,26 +211,34 @@ The existing checks stay. The rule adds, as errors without a fixer:
 ### 3.6 Ledger migration
 
 - Every pair on the Development head at its final verification gets one statement in the later ADR and one pointer
-  below the earlier ADR's heading that repeats it. `materials/planning-evidence.md` section 4 lists the 26 pairs at
-  `b3e4753d`; the base has since gained at least one more over `ADR-adaptive-development-and-research`
-  (`materials/planning-evidence.md` section 4).
+  below the earlier ADR's heading that repeats it. `materials/planning-evidence.md` section 4 lists the 27 pairs at
+  `c84a5485`; a pair that lands after that head is migrated the same way.
 - The statement restates the later ADR's own description of the replaced scope in the fixed form:
   - several items about one earlier ADR are joined into one statement;
   - an item that names several earlier ADRs, or mixes a clause with the replaced scope, is split: the clause keeps
     its trace or source citation, and each statement becomes an item of its own.
 - The migration settles no scope. A pair is flagged when its existing sources (the later ADR's Decision Outcome, the
   earlier ADR's pointer below the heading, and any other copy) name different clauses. A summary-copy pointer names
-  no clauses and is no source. A flagged pair takes the scope the user decided; without that decision Development
-  asks, and writes no statement for the pair by its own choice.
-- One pair is flagged at `b3e4753d`: `ADR-skill-local-swarm-roles` over `ADR-adaptive-development-and-research`. Its
-  Decision Outcome names "the role-set clauses"; its frontmatter key `supersedes_clause` and the earlier ADR's pointer
-  name "role-set and role-authority clauses". Its scope is an open question of this Planning.
+  no clauses and is no source. A source that names the same clauses in other words or in more detail does not flag
+  the pair. A flagged pair takes the scope the user decided; without that decision Development asks, and writes no
+  statement for the pair by its own choice.
+- Planning compared the sources of the 21 pairs at `c84a5485` whose pointer is no summary copy
+  (`materials/planning-evidence.md` section 4). Two are flagged:
+  - `ADR-skill-local-swarm-roles` over `ADR-adaptive-development-and-research`, decided by the user: the later ADR
+    replaces the role-set and role-authority clauses. The statement names both, as the earlier ADR's pointer and the
+    frontmatter key `supersedes_clause` do. The Decision Outcome sentence that names "the role-set clauses" only is
+    reworded into that statement, and the pointer keeps its scope and repeats the statement's text.
+  - `ADR-namespace-steering-registers` over `ADR-namespace-steering-directories`. Its Decision Outcome names "the
+    glossary-exclusion and package-glossary-location clauses"; the earlier ADR's pointer also names "root-only search
+    synonyms" and "the deferred namespace UX object register". Its scope is an open question of this Planning.
 - The frontmatter key `supersedes_clause` of `ADR-skill-local-swarm-roles`, the only one in the ledger, is removed:
   the statement replaces it.
 - The six summary-copy pointers and the pointer written with "for" take the statement's text.
 - Pointers at affected statements are not edited.
 - An open PADR on that head that names `supersedes` gets its statement as a restatement of its own Decision Outcome
-  and no other edit, so the rule passes on `main`. None exists on the base at `f0434e6e`.
+  and no other edit, so the rule passes on `main`. Two exist at `c84a5485`, both in one accepted proposal that is not
+  handed off, and each states its replaced scope in Decision Outcome prose (`materials/planning-evidence.md`
+  section 4). After that proposal's handoff they are ADRs, and their pairs migrate like the others.
 - `reconcile.md` holds one row per pair: the earlier sentences of the later ADR, the earlier pointer, the new
   statement, and whether the pair was flagged.
 
@@ -236,7 +251,8 @@ The existing checks stay. The rule adds, as errors without a fixer:
 - **Scope Excluded**: a fixer for `RULE-decision-supersession`. When to Reconsider: when manual copies of a repaired
   statement are missed.
 - **Scope Excluded**: changing any decision's meaning; migration edits wording and structure only.
-- **Scope Excluded**: consolidating ADRs, and setting `status: superseded` or `superseded_by` in handoff.
+- **Scope Excluded**: consolidating ADRs, a second statement form for a whole replacement, and setting
+  `status: superseded` or `superseded_by` in handoff; a whole supersession stays the author's edit.
 - **Scope Excluded**: a setting that turns the added checks off, or a migration aid for other repositories beyond the
   rule guide's repair text. A repository defers the checks with the existing severity override for
   `RULE-decision-supersession`.
@@ -294,6 +310,8 @@ The existing checks stay. The rule adds, as errors without a fixer:
   `devkit rules check` on the files the handoff wrote reports nothing from `RULE-decision-supersession`;
 - **And** when the statement cites the proposal by its ID, the statement and the pointer are still equal after the
   handoff's reference rewrite;
+- **And** the handoff leaves the earlier ADR's `status` unchanged and writes no `superseded_by`, whatever the
+  statement's text names;
 - **And Given** the same PADR without the statement, **Then** the plain `devkit spec proposal handoff` fails with
   `SPEC_PROPOSAL_INVALID`, names the PADR and the earlier ADR, and writes nothing.
 
@@ -307,6 +325,8 @@ The existing checks stay. The rule adds, as errors without a fixer:
   records that it reports at least one error for each pair present on that head;
 - **And** in the ADR files under `docs/decisions/`, the diff against the Development base changes only statements,
   pointers below a heading, the sentences the statements were reworded from and the removed `supersedes_clause` key;
+- **And** the statement of `ADR-skill-local-swarm-roles` for `ADR-adaptive-development-and-research` names the
+  role-set and the role-authority clauses, and the earlier ADR's pointer repeats it;
 - **And** `reconcile.md` holds one row per pair with the earlier sentences, the earlier pointer and the new
   statement, and names every flagged pair with the decision its scope follows.
 
@@ -316,6 +336,8 @@ The existing checks stay. The rule adds, as errors without a fixer:
 - **When** `devkit docs supersession <ID>` runs for it,
 - **Then** it prints one `[SUPERSEDES: ...]` and one `[SUPERSEDED_BY: ...]` line with `scope=partial`, each
   statement's line and text, and exits `0`; `--format json` prints one object with the same records;
+- **And** for a pair whose earlier ADR is `superseded` with `superseded_by` naming the later one, the line carries
+  `scope=whole` and the text of the later ADR's statement;
 - **And** an alias argument names its document, a capability ID fails with `ARGUMENT_INVALID` and exit `2`, and an
   unknown ID fails with `DOCS_ID_UNRESOLVED` and exit `2`.
 
@@ -347,15 +369,17 @@ The existing checks stay. The rule adds, as errors without a fixer:
 | PADR coverage (Q3) | The rule checks a PADR's statements, so a missing one is found when the PADR is committed, not at handoff | planning |
 | Missing statement at handoff (Q3) | Refused before the first write with `SPEC_PROPOSAL_INVALID`; no summary fallback | planning |
 | Migration (Q4) | All pairs in this change, the six summary copies included; text restated from the later ADR's own description | planning |
-| Pairs whose sources differ | The migration settles no scope: a flagged pair follows the user's decision. The one known pair is an open question | planning |
+| Pairs whose sources differ | The migration settles no scope: a flagged pair follows the user's decision, and Development asks for a flagged pair that has none. Sources that name the same clauses in other words or in more detail do not flag a pair | planning |
+| Scope of `ADR-skill-local-swarm-roles` over `ADR-adaptive-development-and-research` | The role-set and role-authority clauses. The Decision Outcome sentence is reworded to that scope, and the earlier ADR's pointer keeps it | user |
+| Scope of `ADR-namespace-steering-registers` over `ADR-namespace-steering-directories` | Open question of this Planning: the Decision Outcome names two clause groups, and the earlier ADR's pointer names two more subjects | planning |
 | `supersedes_clause` | Removed from `ADR-skill-local-swarm-roles`: a frontmatter copy of the scope is the form `PADR-partial-supersession-statements` rejects | planning |
 | Statement content | An item or paragraph of its own, without trace, source citation, nested list or relative link; text taken from the source lines | planning |
-| Open PADRs of other units | `docs/proposals/` is owned only for the statement of an open PADR that names `supersedes` on the Development head; none exists on the base at `f0434e6e` | planning |
+| Open PADRs of other units | `docs/proposals/` is owned only for the statement of an open PADR that names `supersedes` on the Development head; two exist at `c84a5485` (3.6) | planning |
 | Command (Q5) | `devkit docs supersession <ID>`, a sibling of `refs`; the index and `refs` are unchanged | planning |
 | Viewer (Q5) | Out of this proposal: another package, capability and verification chain. `PROP-viewer-decision-supersession` is the follow-up draft | planning |
 | Post-handoff clarification (Q6) | None remains; the step and the docstring sentences are removed | planning |
 | Other repositories | No new setting: a repository that adopts the rule version repairs its pairs from the rule guide, or defers with the existing severity override for the rule | planning |
-| Whole replacement through a PADR | Open question of this Planning. Drafted here as the recommended option: the PADR carries a statement naming every decision, handoff writes the pointer, the author then sets `superseded`, and the "in part" sentence stays in the ledger | planning |
+| Whole replacement through a PADR | One statement form: the PADR's statement names every decision, handoff writes the pointer, and the author then sets `superseded`. No whole-replacement form is added, and the handoff contract is not extended | user |
 | Supersession by this decision | `PADR-partial-supersession-statements` names no `supersedes`: it fixes the form of what `ADR-decision-ledger` already requires and leaves each of its clauses in force | planning |
 | Size | `L`, one spec: the rule, the migration and the handoff change cannot land apart, and the command shares their reader | planning |
 | `dev_effort` | Stays `medium`: the change is reversible in Git and releases nothing; the migration is checked by the rule and by review of a wording-only diff | planning |

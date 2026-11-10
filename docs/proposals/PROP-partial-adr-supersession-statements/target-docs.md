@@ -30,6 +30,9 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
     in its Decision Outcome, a list item or paragraph of its own that begins "Supersedes in part `ADR-<old>`:" and
     whose text runs to the next blank line, list item or heading. A statement SHOULD hold no trace, source citation
     or nested list.
+  - A whole replacement gains no form of its own: a decision that replaces all in-force decisions of an earlier ADR
+    MUST carry the same statement, naming every decision, while that ADR is not `superseded`. After the author sets
+    `status: superseded` and `superseded_by`, the statement and its pointer MAY stay as written.
   - The pointer sentence gains: one pointer of the earlier ADR naming the superseder MUST repeat the statement's text
     (source text, code spans included, equal after runs of whitespace are collapsed); the statement is the source, and a pointer at an affected
     statement MAY carry other text beside it.
@@ -72,7 +75,8 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
     Development replaces it at `living-spec-draft` is removed. A `supersedes` entry that needs a pointer and has no
     statement in the PADR MUST be refused with `SPEC_PROPOSAL_INVALID` before the first write; a composed handoff
     fails at its handoff step under its existing failure contract. The remaining
-    sentences (placement, order, no second pointer, the sentinel, no `status: superseded`) stay.
+    sentences (placement, order, no second pointer, the sentinel, no `status: superseded`) stay: a PADR that replaces
+    a whole ADR gets the same pointer, and the whole supersession stays the author's edit.
   - The error table row of `SPEC_PROPOSAL_INVALID` gains the condition.
 
 No sentinel, JSON key or code of an existing command changes; `devkit docs supersession` adds two sentinels and one
@@ -102,10 +106,10 @@ No screen changes: the viewer is `PROP-viewer-decision-supersession`'s.
 - `PADR-partial-supersession-statements` becomes an ADR at handoff. It names no `supersedes`.
 - `docs/decisions/README.md`: the opening paragraph and the schema comments name the statement and that the pointer
   repeats it.
-- `docs/decisions/` (not listed under `targets`, because the files are found at Development time): each pair of
-  `materials/planning-evidence.md` section 4, and each pair that lands before Development, gets its statement and its
-  repeating pointer, as section 3.6 of the proposal describes. No status, `supersedes` or `superseded_by` value
-  changes; the `supersedes_clause` key of `ADR-skill-local-swarm-roles` is removed.
+- `docs/decisions/` (not listed under `targets`, because the files are found at Development time): each pair on the
+  Development head at its final verification (27 at `c84a5485`, `materials/planning-evidence.md` section 4) gets its
+  statement and its repeating pointer, as section 3.6 of the proposal describes. No status, `supersedes` or
+  `superseded_by` value changes; the `supersedes_clause` key of `ADR-skill-local-swarm-roles` is removed.
 
 ---
 
@@ -132,7 +136,8 @@ No screen changes: the viewer is `PROP-viewer-decision-supersession`'s.
 | `RULE-decision-supersession` | Pointer and `supersedes` name each other | Also: the statement exists and one pointer repeats it |
 | PADRs in the rule | Excluded | Checked for statements |
 | Handoff without a replaced scope | Writes the summary | Refuses before writing |
-| Pointers that repeat a summary | 6 of 26 | 0 |
+| Pointers that repeat a summary | 6 of 27 | 0 |
+| Whole replacement through a PADR | A pointer holding the summary; the author sets `superseded` | The same statement, naming every decision, and its pointer; the author sets `superseded` |
 | Listing a decision's replacements | `devkit docs refs --direction in`, mixed with every body reference | `devkit docs supersession <ID>` |
 | Frontmatter, statuses, reference graph | `supersedes`, `accepted`, no decision edges | Unchanged |
 | Viewer | No supersession display | Unchanged; `PROP-viewer-decision-supersession` |
