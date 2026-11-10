@@ -3,7 +3,7 @@ id: PROP-uiux-improve-ooux-impeccable-target
 title: Target Living Spec for OOUX-framed UI/UX improvement and Impeccable delegation
 summary: "Prospective capability, use-case, component and decision updates for the renamed software-interface UI/UX skill, OOUX framing from consumer documents, bounded Impeccable sessions and user-requested setup."
 status: draft
-proposal: PROP-uiux-improve-ooux-impeccable
+proposal: SPEC-uiux-improve-ooux-impeccable
 created_at: 2026-11-10
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
@@ -21,7 +21,7 @@ The qualified bundle and skill name is `app-uiux-improve` (module `app_uiux_impr
 
 Keep the ID. Retitle to name software interfaces (for example "Software interface UI/UX improvement"). Update the
 summary, entrypoint and section 1 to the `app-uiux-improve` bundle, OOUX framing and optional Impeccable delegation,
-and cite `PADR-impeccable-session-authority` beside `ADR-uiux-improvement-workflow-boundary`.
+and cite `ADR-impeccable-session-authority` beside `ADR-uiux-improvement-workflow-boundary`.
 
 - **Scope**: In-Scope adds proportionate object framing (from the consumer's OOUX documents when present),
   user-selected Impeccable delegation and user-requested Impeccable setup and cleanup. Out-of-Scope adds Impeccable's
@@ -75,7 +75,7 @@ and cite `PADR-impeccable-session-authority` beside `ADR-uiux-improvement-workfl
   coordinator owns synthesis, retained output and product changes" as "owns synthesis, acceptance and retained output;
   product changes follow rules 3, 16, 17 and 19".
 
-Restate `PADR-impeccable-session-authority` at rules 3, 9, 10, 15, 16, 17, 18 and 19 with the traces its clauses
+Restate `ADR-impeccable-session-authority` at rules 3, 9, 10, 15, 16, 17, 18 and 19 with the traces its clauses
 name.
 
 ## 2. Use case: UC-improve-an-interface-and-user-flow
@@ -111,7 +111,7 @@ asks the coordinator to install. The bundle directory also holds a human usage g
 
 ## 4. Decision: ADR-uiux-improvement-workflow-boundary
 
-`PADR-impeccable-session-authority` promotes with `supersedes: [ADR-uiux-improvement-workflow-boundary]`. The handoff
+`ADR-impeccable-session-authority` promotes with `supersedes: [ADR-uiux-improvement-workflow-boundary]`. The handoff
 inserts "Superseded in part by" below the heading; the Host's post-handoff check clarifies it to name the replaced
 clause: Decision Outcome clause 2's coordinator-only continuation of requested implementation now admits one
 user-selected, brief-bounded Impeccable session. The ADR stays `accepted`; clause 4 stays in force for local roles.

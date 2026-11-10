@@ -1,42 +1,24 @@
 ---
-id: PROP-uiux-improve-ooux-impeccable
+id: SPEC-uiux-improve-ooux-impeccable
 title: OOUX-framed UI/UX improvement and Impeccable delegation
-summary: "Rename uiux-improve to app-uiux-improve, ground framing in the consumer's OOUX documents when present, let a user-selected, brief-bounded Impeccable session edit product files under coordinator acceptance and add a human usage guide."
-status: accepted
-created_at: 2026-11-06
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/uiux_improve/
-    - packages/devkit-catalog/src/devkit_catalog/
-    - packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py
-    - packages/devkit-catalog/tests/integration/bundles/
-    - packages/devkit-catalog/tests/e2e/bundles/uiux_improve/
-    - packages/devkit-catalog/tests/e2e/bundles/
-    - packages/devkit-catalog/pyproject.toml
-    - packages/devkit-catalog/README.md
-    - .devkit/architecture.toml
-    - guides/install/bundle-recommendations.md
-    - docs/architecture/ARCH-05-2-components.md
-    - docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
-    - docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md
-    - docs/decisions/2026-11/20261105-uiux-improvement-workflow-boundary.md
-  excludes:
-    - packages/devkit-catalog/src/devkit_catalog/design_explore/
-    - docs/capabilities/delivery/CAP-DLV-design-exploration.md
-    - packages/devkit-dist/
-    - specs/2026-11/20261105-ux-design-exploration/
-task_kind: feature
-workflow: sdd-proposal
+summary: Rename uiux-improve to app-uiux-improve, ground framing in the consumer's OOUX documents when present, let a user-selected, brief-bounded Impeccable session edit product files under coordinator acceptance and add a human usage guide.
+status: planned
+created: 2026-11-10
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-uiux-improve-ooux-impeccable] OOUX-framed UI/UX improvement and Impeccable delegation
+# [SPEC-uiux-improve-ooux-impeccable] OOUX-framed UI/UX improvement and Impeccable delegation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-uiux-improve-ooux-impeccable on 2026-11-10.
+- **Preserved Materials**: `docs/materials/2026-11/20261110-uiux-improve-ooux-impeccable`
+- Target Docs Blueprint: `PROP-uiux-improve-ooux-impeccable-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 The `uiux-improve` catalog bundle (`CAP-DLV-uiux-improvement`) is an explicitly invoked coordinator with four
 optional local roles (`designer`, `unconventional-designer`, `reference-researcher`, `critic`). The coordinator alone
@@ -60,7 +42,7 @@ and each screen's content tree, states and interactions in `docs/ux/<area>/UX-<s
 instruction of the `docs` bundle). The current skill never reads them, so a framing pass restates or contradicts the
 object model the project maintains.
 
-### Why this reverses part of `MAT-agent-team-design-pilot`
+#### Why this reverses part of `MAT-agent-team-design-pilot`
 
 `MAT-agent-team-design-pilot` borrowed Impeccable's design perspectives as guidance and adopted none of its installer,
 detector, hooks, CLI or project-file conventions. That choice kept the first bundle content-only while its value was
@@ -73,7 +55,7 @@ respects its project-file conventions instead of ignoring them. Installing Impec
 steps the user can take by hand; the skill only performs them on the user's request, for convenience. The pilot's
 other conclusions stand: optional roles, no fixed cast and no comparative experiment as a prerequisite.
 
-### Hypothesis
+#### Hypothesis
 
 The skill gives the most leverage as an OOUX-grounded coordinator for software interfaces:
 
@@ -95,7 +77,7 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 7. **A guide the user can reread**: a human-facing usage guide beside the bundle explains setup, the per-task flow and
    what the coordinator does and does not do.
 
-### Scope and non-goals
+#### Scope and non-goals
 
 - In scope:
   - Rename the bundle, skill, entry point, module, data root and test paths to `app-uiux-improve` (module
@@ -123,16 +105,35 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
   - Renaming `CAP-DLV-uiux-improvement` or `UC-improve-an-interface-and-user-flow`.
   - Numeric scorecards, heuristic quotas or comparative experiments.
 
-## 2. Technical Spike Questions and Planning Answers
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement OOUX-framed UI/UX improvement and Impeccable delegation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions and Planning Answers
 
 - **Q1. Qualified name.** The user chose `app-uiux-improve` (worker question `q1`), which keeps the recognizable
   `uiux-improve` stem and adds the software-application qualifier. The bundle, skill, entry-point key, module
   (`app_uiux_improve`), data root and test paths take this one name (§3.1). Zero breakage: release tag `v0.1.5` holds
-  no `uiux` path, and every tracked reference is listed in [planning evidence](materials/planning-evidence.md) §2.
+  no `uiux` path, and every tracked reference is listed in [planning evidence](../../../docs/materials/2026-11/20261110-uiux-improve-ooux-impeccable/planning-evidence.md) §2.
 - **Q2. OOUX depth and sources.** Framing scales with the request (§3.2). A local change skips it; a change across
   views frames the affected objects, from the project's OOUX documents when present and in conversation otherwise; no
   diagram, notation or full-product object map is required (§3.3).
-- **Q3. Delegation brief.** `PADR-impeccable-session-authority` settles the authority model; §3.4 lists the brief.
+- **Q3. Delegation brief.** `ADR-impeccable-session-authority` settles the authority model; §3.4 lists the brief.
   File boundaries are an explicit edit list checked after the session against a recorded base; interactive commands
   run in a session the user operates.
 - **Q4. Impeccable project files.** They are consumer-owned project context (§3.5). The skill reports what a session
@@ -145,12 +146,12 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
   and adds `assert_rule` checks for the new instructions and guide checks (§3.7).
 - **Q7. Child loading Impeccable.** Claude Code documents that a fresh subagent can discover and invoke project, user
   and plugin skills through the Skill tool; Codex documents skill inheritance for sub-agents but not discovery
-  ([planning evidence](materials/planning-evidence.md) §4). Loading is host-dependent, so a child that cannot load
+  ([planning evidence](../../../docs/materials/2026-11/20261110-uiux-improve-ooux-impeccable/planning-evidence.md) §4). Loading is host-dependent, so a child that cannot load
   Impeccable returns a blocker and the command moves to the user's session (§3.4).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Clean-break rename
+#### 3.1 Clean-break rename
 
 - `app-uiux-improve` replaces `uiux-improve` in `bundle.toml` (`name`, asset `id`, `source`, preset `core`), the skill
   directory and its `SKILL.md` `name`. The `packages/devkit-catalog/pyproject.toml` entry point becomes
@@ -167,7 +168,7 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 - `CAP-DLV-uiux-improvement` and `UC-improve-an-interface-and-user-flow` keep their IDs, so
   `CAP-DLV-design-exploration`, completed specs and ADR references need no change.
 
-### 3.2 Usage flow
+#### 3.2 Usage flow
 
 `SKILL.md` keeps recovery, inspection, review-only handling and reporting, and orders the work as below. The
 one-time steps are the user's; the coordinator helps only on request.
@@ -211,7 +212,7 @@ In an SDD consumer, a new screen is drafted as a Screen in Planning (`target-doc
 Impeccable implements and refines that draft. The skill states this as following the consumer workflow, without
 naming SDD records.
 
-### 3.3 Design guidance additions
+#### 3.3 Design guidance additions
 
 `references/design-guidance.md` gains, in original wording:
 
@@ -234,7 +235,7 @@ naming SDD records.
 The paths are named as an optional convention, so the bundle still installs and runs without `devkit-docs`
 (capability rule 13).
 
-### 3.4 Impeccable delegation in `references/orchestration.md`
+#### 3.4 Impeccable delegation in `references/orchestration.md`
 
 1. **Selection.** Without the user's selection, the coordinator neither starts an Impeccable session nor loads or
    invokes Impeccable in its own context; an installed Impeccable permits an offer. Output of a hook the user
@@ -276,7 +277,7 @@ The paths are named as an optional convention, so the bundle still installs and 
    them, and their update follows the consumer workflow's own step (under SDD, `spec-sync`; the skill text names no
    stage). Continue accepted changes through the consumer workflow.
 
-### 3.5 Impeccable project files, the `PRODUCT.md` anchor and user-requested setup
+#### 3.5 Impeccable project files, the `PRODUCT.md` anchor and user-requested setup
 
 - `PRODUCT.md` (`init`), `DESIGN.md` (`document`) and shared `.impeccable/` files (`config.json`, `design.json`,
   `surfaces/*.md`, critique snapshots) are persistent project context; upstream recommends committing them and
@@ -302,9 +303,9 @@ The paths are named as an optional convention, so the bundle still installs and 
 - A user-requested change is the consumer's decision and goes through the consumer workflow and the host's approvals
   like any product change (capability rule 3). Sync's artifact preservation (capability rule 14) is unchanged.
 - Upstream's README and `init` reference differ on critique snapshots; the skill points to upstream instead of
-  restating either list ([planning evidence](materials/planning-evidence.md) §3).
+  restating either list ([planning evidence](../../../docs/materials/2026-11/20261110-uiux-improve-ooux-impeccable/planning-evidence.md) §3).
 
-### 3.6 Human-facing usage guide
+#### 3.6 Human-facing usage guide
 
 `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/README.md` is a guide for the person using the
 bundle, read before or after installing it. It is not an agent asset:
@@ -331,7 +332,7 @@ Contents, in this order:
 8. Troubleshooting: Impeccable asks a question, the child cannot load Impeccable, a change outside the edit list,
    moved HEAD or unverifiable attribution, Impeccable not installed, a stale UX document.
 
-### 3.7 Expected acceptance scenarios and tests
+#### 3.7 Expected acceptance scenarios and tests
 
 - **AC-1:** Given a request that adds, merges or reorders views or flows, the agent names the affected objects,
   relationships, CTAs and attributes before layout or styling changes; given a local change, it proceeds without an
@@ -387,7 +388,7 @@ Tests:
   asserts the same absence.
 - AC-1 to AC-6, AC-9 and AC-10 are instruction checks: the tests verify stated behavior, not model obedience.
 
-### 3.8 Planning decisions
+#### 3.8 Planning decisions
 
 - Capability and use-case IDs stay; only their text and entrypoints change (§3.1).
 - The four local roles stay in both tracks; the delegated session is not a local role.
@@ -395,7 +396,7 @@ Tests:
   `app-uiux-improve` over `software-ui-improve` and `ooux-ui-improve`.
 - Capability rule 14 stays a sync rule. Coordinator reporting of consumer context files becomes new rule 18, and the
   capability's interface section says the coordinator owns synthesis, acceptance and retained output.
-- `ADR-uiux-improvement-workflow-boundary` is superseded in part, not wholly (`PADR-impeccable-session-authority`).
+- `ADR-uiux-improvement-workflow-boundary` is superseded in part, not wholly (`ADR-impeccable-session-authority`).
   The handoff writes its "Superseded in part by" line, and the Host clarifies that line to name the replaced clause
   before a worker starts (post-handoff link check). Development's only `docs/decisions/` edit is the reference repair
   of the bundle name in that ADR's clause 1, which changes no decision.
@@ -411,14 +412,14 @@ Tests:
     (crosses the consumer workflow's ownership and needs `devkit-docs` conventions); conversation-only framing
     (ignores the model the project maintains).
   - A stays a Planning decision with capability rule 4. B and C change who may write which file, so they are clauses
-    of `PADR-impeccable-session-authority`.
+    of `ADR-impeccable-session-authority`.
 - **Setup and cleanup are user-requested conveniences (by: user).** On the user's request the coordinator may install
   Impeccable through an upstream route, add upstream-recommended ignore entries or remove Impeccable runtime or
   session output the user names; never on its own initiative. This replaces "the coordinator never installs
   Impeccable" and "never deletes, moves or git-ignores". `PRODUCT.md` and `DESIGN.md` stay out of default cleanup
   because the anchor and design context live there, and any change to them needs the user's explicit direction. A
   user-directed action is the consumer's decision under capability rule 3; rule 14 is unaffected.
-  `PADR-impeccable-session-authority` carries the change.
+  `ADR-impeccable-session-authority` carries the change.
 - **Usage flow (by: user).** §3.2 states the one-time and per-task flow, the two launch routes and the SDD note that a
   new screen is drafted in Planning before Impeccable implements it.
 - **Child loading is host-dependent (Planning).** A child loads Impeccable through the host's skill mechanism. Loading
@@ -443,10 +444,11 @@ Tests:
 - **Development effort stays `medium`.** The added work is instruction text, one guide and test assertions with the
   same verification as before.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 On acceptance with `devkit spec proposal accept uiux-improve-ooux-impeccable`, the handoff creates the spec, promotes
-`PADR-impeccable-session-authority`, carries `PROP-uiux-improve-ooux-impeccable-target` and moves `materials/` into
+`ADR-impeccable-session-authority`, carries `PROP-uiux-improve-ooux-impeccable-target` and moves `materials/` into
 `docs/materials/`.
 Development implements under the boundaries above and reconciles the Living Spec. The proposal bundle is removed by
 the handoff.
+

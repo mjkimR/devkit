@@ -1,16 +1,16 @@
 ---
-id: PADR-impeccable-session-authority
+id: ADR-impeccable-session-authority
 title: Bounded Impeccable sessions under coordinator acceptance
 summary: For user-selected Impeccable craft work, we let one bounded session edit only brief-named product files under coordinator acceptance and let the coordinator set up or clean up only on the user's request, keeping consumer authority and context isolation, accepting host-dependent enforcement.
-proposal: PROP-uiux-improve-ooux-impeccable
+proposal: SPEC-uiux-improve-ooux-impeccable
 supersedes: [ADR-uiux-improvement-workflow-boundary]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-impeccable-session-authority] Bounded Impeccable sessions under coordinator acceptance
+# [ADR-impeccable-session-authority] Bounded Impeccable sessions under coordinator acceptance
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 
 ---

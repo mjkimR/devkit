@@ -9,6 +9,8 @@ created_at: 2026-11-05
 
 # [ADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
 
+Superseded in part by `ADR-impeccable-session-authority`: For user-selected Impeccable craft work, we let one bounded session edit only brief-named product files under coordinator acceptance and let the coordinator set up or clean up only on the user's request, keeping consumer authority and context isolation, accepting host-dependent enforcement.
+
 ## 1. Context & Problem Statement
 
 UI/UX improvement can need diagnosis, independent design perspectives, implementation and usage verification.
