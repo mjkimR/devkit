@@ -143,7 +143,15 @@ def test_roles_keep_optional_execution_and_coordinator_material_ownership() -> N
     assert_rule(investigator, "one question", "team investigation")
     assert_rule(investigator, "payload permits", "experiment", "only", "sandbox/prototype boundary", "assigned scratch")
     orchestration = (SKILL.parent / "references/orchestration.md").read_text()
-    assert_rule(orchestration, "general subagent", "read the assigned role file before acting")
+    # AC-04 of SPEC-lightweight-general-subagent: one static type for every role, no runtime fallback.
+    assert_rule(
+        orchestration, "`role-worker` subagent for every selected role", "read the assigned role file before acting"
+    )
+    assert_rule(
+        orchestration, "`role-worker` is unavailable", "stop that delegation", "its cause", "never spawn another"
+    )
+    assert "general subagent" not in orchestration
+    assert_rule(SKILL.read_text(), "absolute path to a `role-worker` subagent", "read that file first")
     assert_rule(orchestration, "fresh context", "without parent conversation inheritance")
     assert_rule(orchestration, "research-investigator", "one question per instance")
 

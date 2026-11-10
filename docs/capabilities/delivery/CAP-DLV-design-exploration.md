@@ -39,7 +39,10 @@ within the existing critique/refinement pass.
    Review: the entry guard and user-only projection integration test.
 3. **Local assignments**: WHEN delegating, the coordinator MUST pass a selected role's absolute path resolved from
    the invoked skill, with goal, premise, relevant facts, constraints, permitted actions, read/write boundaries,
-   stop condition and expected return. Review: `test_optional_local_assignments_and_evidence_boundaries`.
+   stop condition and expected return, to a `role-worker` subagent, or to the host's general subagent
+   (`general-purpose` on Claude Code) for an assignment that interacts with a running UI. IF `role-worker` is
+   unavailable, THEN the coordinator MUST stop that delegation and report the missing subagent and its cause
+   (`ADR-role-worker-subagent`). Review: `test_optional_local_assignments_and_evidence_boundaries`.
 4. **Independent first passes**: WHERE fresh children without parent inheritance are supported, the coordinator
    SHOULD withhold peer conclusions from their first-pass assignments.
    Review: `test_optional_local_assignments_and_evidence_boundaries`.

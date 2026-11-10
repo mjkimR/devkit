@@ -186,6 +186,12 @@ native subagent configuration authoring.
 
 For skill-local delegation, authors SHOULD route the child to its assigned absolute role path and first read,
 with a goal, relevant sources, read/write boundaries, permitted actions, stop condition and expected return.
+Authors SHOULD name the subagent type per role or assignment: `role-worker` by default
+(`CAP-DIST-agent-projections`), the host's general subagent (`general-purpose` on Claude Code) for a role that needs
+a capability outside the `role-worker` tool list, and the skill's own delegation for a child that holds commit
+authority or worktree ownership, such as adaptive-dev's builder role. A missing `role-worker` stops that delegation
+with its cause reported, never a runtime fallback (`ADR-role-worker-subagent`). Test:
+`packages/devkit/tests/integration/bundles/authoring/test_bundle.py`.
 Authors SHOULD specify fresh context without parent conversation inheritance where supported and report the
 limitation otherwise. Unavailable delegation or permissions leave explicit missing coverage. Review checks these
 semantic criteria; authoring bundle tests check distribution, self-containment and size.

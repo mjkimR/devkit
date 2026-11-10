@@ -129,6 +129,17 @@
       ]
     },
     {
+      "bundle": "devkit",
+      "id": "role-worker",
+      "kind": "subagent",
+      "paths": [
+        ".agents/agents/role-worker.md",
+        ".claude/agents/role-worker.md",
+        ".codex/agents/role-worker.toml",
+        ".devkit/managed/devkit/subagents/role-worker.md"
+      ]
+    },
+    {
       "bundle": "devkit-dev",
       "id": "project-structure",
       "kind": "instruction",
@@ -1013,6 +1024,10 @@
       "mode": 420,
       "sha256": "d0fd72993dd4166ae4b929d3f24d48d17d50455662594fe4a0dd5caef7393a14"
     },
+    ".agents/agents/role-worker.md": {
+      "mode": 420,
+      "sha256": "efb07b23ff58c0d3eae2c817d586c7f9c028dd22bc6e48508aee86d53ec863ea"
+    },
     ".agents/agents/scout.md": {
       "mode": 420,
       "sha256": "e29f854d6695e3f1fe88619b4ecd03c7ce45a5017288781fec4a341ed6d9e15d"
@@ -1027,7 +1042,7 @@
     },
     ".agents/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "af4061af224e89731fb83049281bd798146e7916822e0ddf7bf6bf8b70169405"
+      "sha256": "ef8dcf7614aeb2856ae7d6109485095d83a2aa83720765bc290b06425ff3bc97"
     },
     ".agents/skills/deep-research/agents/openai.yaml": {
       "mode": 420,
@@ -1039,7 +1054,7 @@
     },
     ".agents/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "71a6e814aef96f1c2d223fd7b716c56c8ae11a2305f2e397a0fd6f05c7481dcd"
+      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
     },
     ".agents/skills/deep-research/references/synthesis.md": {
       "mode": 420,
@@ -1313,6 +1328,10 @@
       "mode": 420,
       "sha256": "2a739cf9f4f7f77394bc8d116f8d23651c869ee9df9d2ed6bd34a9b8f44a20b9"
     },
+    ".claude/agents/role-worker.md": {
+      "mode": 420,
+      "sha256": "10a5caf953cd798aea5a785ab6df90785c159937a81e1d8313ba16cf7a2db6c2"
+    },
     ".claude/agents/scout.md": {
       "mode": 420,
       "sha256": "79baade426241d38d7be920dade2f5479ccf046ecece689c6ecb278aa2d24594"
@@ -1327,7 +1346,7 @@
     },
     ".claude/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "f41b4a81e70f355eb6be46d18d2c2dde19ccfe5f9f1395a9cd5272717a117cb6"
+      "sha256": "d126229921410fb7ec6ec127d3930b66df0781d9ee8b5f411051812640cda7fa"
     },
     ".claude/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
@@ -1335,7 +1354,7 @@
     },
     ".claude/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "71a6e814aef96f1c2d223fd7b716c56c8ae11a2305f2e397a0fd6f05c7481dcd"
+      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
     },
     ".claude/skills/deep-research/references/synthesis.md": {
       "mode": 420,
@@ -1597,6 +1616,10 @@
       "mode": 420,
       "sha256": "e6ec373111dcad4d7e5883f67db57128f8e40182df096fee86434f57625d9ee7"
     },
+    ".codex/agents/role-worker.toml": {
+      "mode": 420,
+      "sha256": "d9461b3a4362090085369266e2b49190094b65fa6df68788088e1559bd325aaf"
+    },
     ".codex/agents/scout.toml": {
       "mode": 420,
       "sha256": "dd860eec00e92b4b91eddd91dea7a2b8015556f235256ea8b99d26ec65928631"
@@ -1671,7 +1694,7 @@
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/roles.md": {
       "mode": 420,
-      "sha256": "3ec6ae20cbda7ee3070ec17e6223c33e932d84a387481db2963202cf8af8a3cf"
+      "sha256": "4c70f4a3aad7f08531324d1eeb66ff3bb5ea2aa62faa89744641b40f7d2547b8"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
       "mode": 420,
@@ -1707,7 +1730,7 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "af4061af224e89731fb83049281bd798146e7916822e0ddf7bf6bf8b70169405"
+      "sha256": "ef8dcf7614aeb2856ae7d6109485095d83a2aa83720765bc290b06425ff3bc97"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
@@ -1715,7 +1738,7 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "71a6e814aef96f1c2d223fd7b716c56c8ae11a2305f2e397a0fd6f05c7481dcd"
+      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md": {
       "mode": 420,
@@ -1795,7 +1818,7 @@
     },
     ".devkit/managed/devkit/bundle.toml": {
       "mode": 420,
-      "sha256": "21389d0058d6b1952b346647fb16293c33e0f7a61313f58b2b299970ba256139"
+      "sha256": "3729c0d57431f7900c7f46b8c2e0bc4236b2dc7516a01779569e1935805fc80f"
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
@@ -1808,6 +1831,10 @@
     ".devkit/managed/devkit/instructions/resource-kinds.md": {
       "mode": 420,
       "sha256": "dc4f2df707e983d1653b97339e5dfc1a3039d61b3dd87b8d29563b4a5d9f4a44"
+    },
+    ".devkit/managed/devkit/subagents/role-worker.md": {
+      "mode": 420,
+      "sha256": "bfdf670ded22794ac550b94e25c3f2b76c96bc7b97a2823b998380f35c37ab6b"
     },
     ".devkit/managed/docs/AGENTS.md": {
       "mode": 420,

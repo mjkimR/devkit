@@ -6,7 +6,11 @@
    - `roles/design-critic.md`: test a consequential assumption in a candidate after exploration.
 2. Resolve each selected role from the directory containing the invoked `SKILL.md`, not the working directory or
    this reference's directory. If the skill location is missing, locate and verify it before delegation.
-   Verify the selected role exists and pass its absolute installed path to a general child; load only that role.
+   Verify the selected role exists and pass its absolute installed path to a `role-worker` subagent; load only that
+   role. If the assignment interacts with a running UI, spawn the host's general subagent (`general-purpose` on
+   Claude Code) instead, because those tools are outside `role-worker`'s list.
+   If `role-worker` is unavailable, stop that delegation and report the missing subagent and its cause, such as a
+   deselected `devkit` bundle or a host without its projection; never spawn another subagent type in its place.
 3. Supply a self-contained assignment: role path to read first, problem and goal, premise, hard constraints versus
    preferences, relevant facts and source paths, permitted tools/actions, absolute read/write boundaries, stop
    condition and expected return. Include no product or retained-file writes in a role's write boundary.

@@ -65,7 +65,10 @@ Alternatives, research and criticism are optional means, not a required final re
    Review: `test_entry_preserves_improvement_scope_and_consumer_authority`.
 7. **Role packet**: WHEN delegating to a local role, the coordinator MUST pass the resolved absolute local role path,
    goal, relevant facts/artifacts, hard constraints, permitted actions, stop condition and expected return to a
-   general child. Review only: orchestration instruction and representative payload.
+   `role-worker` subagent, or to the host's general subagent (`general-purpose` on Claude Code) for an assignment
+   that interacts with a running UI. IF `role-worker` is unavailable, THEN the coordinator MUST stop that delegation
+   and report the missing subagent and its cause (`ADR-role-worker-subagent`).
+   Test: `test_entry_preserves_improvement_scope_and_consumer_authority`; review: representative payload.
 8. **Independent context**: WHERE the host supports fresh children, the coordinator SHOULD use fresh context without
    parent conversation inheritance and withhold peer conclusions from independent first passes.
    Review: `test_entry_preserves_improvement_scope_and_consumer_authority`.

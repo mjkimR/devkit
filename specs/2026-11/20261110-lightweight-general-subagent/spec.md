@@ -2,7 +2,7 @@
 id: SPEC-lightweight-general-subagent
 title: Lightweight general subagent for role-file delegation
 summary: Add a neutral, tool-limited role-worker subagent to the auto-selected devkit bundle and route skill-local role-file delegation to it, so role children start without the full general-purpose tool and skill context.
-status: planned
+status: in-progress
 created: 2026-11-10
 namespace: global
 related_capabilities:

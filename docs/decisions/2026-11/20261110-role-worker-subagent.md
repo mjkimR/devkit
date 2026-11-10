@@ -47,7 +47,7 @@ exposes no role or skill name and arrives wherever `devkit-dist` syncs, with the
 
 - The `devkit` bundle's `core` preset ships the `role-worker` subagent. Its Claude Code block allows only Read, Grep,
   Glob, Bash, Edit, Write, WebSearch, WebFetch and Agent; its Codex block is emulated with workspace-write and its
-  Antigravity block is unverified. → CAP-DIST-agent-projections (planned)
+  Antigravity block is unverified. → `CAP-DIST-agent-projections`
 - `role-worker` reads the role file its prompt names and follows it as the assignment contract; without one, it
   treats the prompt as the assignment.
 - A skill's instructions assign the subagent type per role or assignment: `role-worker` by default, and

@@ -106,6 +106,29 @@ Keys of the form `x-<name>` (`x-[a-z][a-z0-9-]*`, any YAML value) are extension 
 them; they stay readable in the managed copy and in `read_contract(...).extensions`. Any other unknown key is
 rejected.
 
+### Shared General Subagent
+
+The auto-selected `devkit` bundle's `core` preset ships the `role-worker` role contract
+(`ADR-role-worker-subagent`): a neutral, tool-limited general subagent that other bundles' skills delegate
+skill-local role files to. Its name and description name no skill, bundle or role, and it has no `level`.
+
+| Agent | Status | Native settings |
+| --- | --- | --- |
+| `claude-code` | `native` | `tools: [Read, Grep, Glob, Bash, Edit, Write, WebSearch, WebFetch, Agent]` |
+| `codex` | `emulated` | `sandbox_mode: workspace-write`; Codex has no tool allowlist |
+| `antigravity` | `unverified` | `tools: [view_file, grep_search, replace_file_content, run_command]`, `commandExecutionPolicy: sandbox` |
+
+1. **Shared role worker**: WHEN a project syncs the `devkit` bundle's `core` preset, devkit MUST project
+   `role-worker` for each selected agent with the status and native settings above and no model or effort field.
+   `packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py`.
+2. **Role-file procedure**: The `role-worker` contract MUST direct the child to read the role file its prompt names
+   before acting, to treat the prompt as the assignment when it names none, and to delegate only independent work,
+   preferring `role-worker` or a fitting dedicated subagent over `general-purpose`.
+   `packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py`.
+
+A project that sets `devkit = false` receives no `role-worker`; a skill that assigns it then stops that delegation
+and reports the cause instead of spawning another type (`CAP-DLV-deep-research`).
+
 ## 3. Subagent Model Levels
 
 1. **Default inheritance**: WHEN a common contract has no explicit level or project selection, devkit MUST retain

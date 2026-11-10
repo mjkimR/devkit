@@ -7,8 +7,14 @@ Impeccable sections apply only after the user selects Impeccable for this reques
 
 Resolve paths from the directory containing the invoked `SKILL.md`, not the working
 directory or this reference. If its location is unavailable, locate and verify the invoked skill first.
-Verify the selected role file exists and pass its resolved absolute path to a general subagent with the directive
-to read that file before acting. Do not load every role into the coordinator.
+Verify the selected role file exists and pass its resolved absolute path to the subagent type below, with the
+directive to read that file before acting. Do not load every role into the coordinator.
+
+- If the assignment interacts with a running UI (operating it, inspecting it in a browser or capturing it), spawn the
+  host's general subagent (`general-purpose` on Claude Code), because those tools are outside `role-worker`'s list.
+- Spawn a `role-worker` subagent for every other assignment.
+- If `role-worker` is unavailable, stop that delegation and report the missing subagent and its cause, such as a
+  deselected `devkit` bundle or a host without its projection; never spawn another subagent type in its place.
 
 ### Select assignments
 
