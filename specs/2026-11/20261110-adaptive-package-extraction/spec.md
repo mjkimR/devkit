@@ -1,14 +1,13 @@
 ---
 id: SPEC-adaptive-package-extraction
 title: Extract adaptive development into a devkit-adaptive distribution
-summary: Move the adaptive-dev bundle from the content-only devkit-catalog into a new devkit-adaptive distribution with unchanged bundle name, presets and assets, so adaptive development can gain commands while the catalog stays content-only.
+summary: "Move the adaptive-dev bundle from the content-only devkit-catalog into a new devkit-adaptive distribution with unchanged bundle name, presets and assets, so adaptive development can gain commands while the catalog stays content-only."
 status: planned
 created: 2026-11-10
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-adaptive-package-extraction] Extract adaptive development into a devkit-adaptive distribution
 
@@ -36,7 +35,7 @@ from `devkit-spec` stay as they are, and the next proposal adds commands without
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Extract adaptive development into a devkit-adaptive distribution so that system capabilities are extended.
+- **US-1**: As an agent installing adaptive development, I want its bundle in an independent wheel so commands can be added later without changing bundle behavior.
 
 ## 3. Non-Goals
 
@@ -266,15 +265,9 @@ For `PROP-adaptive-assignment-cli`: the consequences of the requirement on `devk
 of this source, are that unit's to state with the change that introduces them. `docs/materials/2026-11/20261110-adaptive-package-extraction/planning-evidence.md`
 set 2 holds the evidence this Planning collected.
 
-### 4. Lifecycle & Retirement Criteria
 
-<!--
-- Preliminary decisions: devkit spec proposal padr adaptive-package-extraction "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept adaptive-package-extraction --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff adaptive-package-extraction.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
+## Assumptions and baseline
 
+The accepted proposal remains applicable at base `9ab4f8e5ec0d1e4922013106199835ce6b74838e`. No new feature edge is introduced.
+The Host measured `just smoke` there: foundation 210 tests passed, then the catalog bundle-set assertion failed because it expected five of eight registered bundles. The planned assertion update covers this failure.
+Codex worker boundaries are emulated: every command uses the absolute assigned worktree, write scope is audited against the accepted input, and writes and commits request operation-specific sandbox approval.

@@ -2,55 +2,21 @@
 id: PLAN-adaptive-package-extraction
 spec: SPEC-adaptive-package-extraction
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-adaptive-package-extraction` Extract adaptive development into a devkit-adaptive distribution
+# Technical Plan: `SPEC-adaptive-package-extraction`
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
-- Target Docs Blueprint: `PROP-adaptive-package-extraction-target` (Living Spec targets for this plan and reconcile.md)
+## 1. Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+`ADR-adaptive-dev-distribution` partially supersedes ownership only. `ARCH-05-2-components` keeps content packages dependency-free; no features or cross-feature edges are added. The bundle tree must retain its Git identity. `ARCH-07-deployment` already requires unchanged bundles to retain their versions.
 
-### Planned Boundaries:
-- `packages/`
-- `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/`
-- `packages/devkit-catalog/pyproject.toml`
-- `packages/devkit-catalog/README.md`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev_documents.py`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_import.py`
-- `packages/devkit-catalog/tests/integration/bundles/test_adaptive_behavior_scorer.py`
-- `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py`
-- `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/`
-- `packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py`
-- `tools/devkit-dev/tests/integration/test_bundle_citations.py`
-- `tests/e2e/smoke.sh`
-- `scripts/_lib.sh`
-- `scripts/releases/prepare.py`
-- `packages/devkit/tests/integration/package/test_selective_releases.py`
-- `pyproject.toml`
-- `uv.lock`
-- `.devkit/architecture.toml`
-- `.github/workflows/ci.yml`
-- `AGENTS.md`
-- `README.md`
-- `guides/INSTALL_GUIDE.md`
-- `guides/install/`
-- `docs/capabilities/delivery/CAP-DLV-adaptive-development.md`
-- `docs/capabilities/harness/CAP-HARN-agent-guidance.md`
-- `docs/usecases/delivery/UC-advance-an-idea.md`
-- `docs/usecases/delivery/UC-import-third-party-agent-assets.md`
-- `docs/architecture/ARCH-05-1-containers.md`
-- `docs/architecture/ARCH-05-2-components.md`
-- `docs/architecture/ARCH-07-deployment.md`
-- `docs/decisions/2026-11/20261102-adaptive-development-and-research.md`
-- `docs/decisions/2026-11/20261106-skill-local-swarm-roles.md`
+## 2. Architecture Overview & Impact
 
-### Excluded Boundaries:
-- `packages/devkit-spec/`
-- `packages/devkit-dist/src/`
-- `packages/devkit/src/`
+Move adaptive-dev into `devkit_adaptive.bundles.adaptive_dev`, with three docstring-only initializers and a single `devkit.bundles` registration. Move six test/support files to the new package. The catalog drops its registration and adds only a development dependency for the research role-conflict test. Root configuration, short names, citation coverage and smoke install wiring follow the owner. No runtime dependencies or commands are added.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+## 3. Component & Interface Design
+
+The entry point is `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"`; dependencies remain empty. Release preparation first checks the same package, then finds a baseline bundle with the same name across baseline packages. Fingerprint equality retains its prior version; changed content receives the release version.
+
+## 6. Verification & Test Plan
+
+AC-01–04: package metadata assertion, moved integration tests, installed consumer without spec/catalog, catalog tests and bundle tree identity. AC-08: unchanged and changed moved-bundle release fixtures. AC-06: `uv lock --check`, `just lint-check`, `just check`, `just rules-check`, `just test adaptive`, `just test catalog`, `just test dev`, `just test-dist`, `just test-affected` and `just smoke`. Required unit/integration checks are synchronous; selected E2E run at a committed fixed SHA through `devkit exec`. AC-07: Living Spec comparison and stale-path search. The Host measured baseline smoke failure at `9ab4f8e`; the planned catalog assertion update addresses it. Final landed checks belong to the Host.
