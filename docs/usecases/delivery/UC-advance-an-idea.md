@@ -15,6 +15,7 @@ capabilities:
 entrypoints:
   - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md
   - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/references/orchestration.md
+  - packages/devkit-adaptive/src/devkit_adaptive/features/assignment/cli/commands.py
 ---
 
 # [UC-advance-an-idea] Advance an idea and leave resumable current context
