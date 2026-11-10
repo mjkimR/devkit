@@ -1,13 +1,13 @@
 schema = 1
-name = "uiux-improve"
+name = "app-uiux-improve"
 version = "0.1.6"
 default_preset = "core"
 
 [[assets]]
-id = "uiux-improve"
+id = "app-uiux-improve"
 kind = "skill"
-source = "skills/uiux-improve"
+source = "skills/app-uiux-improve"
 invocation = "user"
 
 [presets.core]
-assets = ["uiux-improve"]
+assets = ["app-uiux-improve"]

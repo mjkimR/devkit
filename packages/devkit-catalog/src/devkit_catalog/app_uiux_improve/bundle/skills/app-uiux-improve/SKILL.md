@@ -1,5 +1,5 @@
 ---
-name: uiux-improve
+name: app-uiux-improve
 description: "Explicitly invoked UI/UX improvement: inspect interfaces and user flows, select useful design perspectives, and carry requested changes through the existing project workflow and actual verification."
 ---
 

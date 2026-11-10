@@ -1,4 +1,4 @@
-"""Real dist/catalog wheels deploy uiux-improve without agt/docs/spec (SPEC-ux-design-exploration AC-06)."""
+"""Real dist/catalog wheels deploy app-uiux-improve without agt/docs/spec (SPEC-uiux-improve-ooux-impeccable AC-08, AC-11)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[6]
 ROLES = ("designer", "unconventional-designer", "reference-researcher", "critic")
 
 
-def test_installed_uiux_improvement_without_delivery_packages(tmp_path: Path) -> None:
+def test_installed_app_uiux_improve_without_delivery_packages(tmp_path: Path) -> None:
     env = {
         key: value for key, value in os.environ.items() if not key.startswith(("DEVKIT_", "PYTHONPATH", "VIRTUAL_ENV"))
     }
@@ -44,10 +44,10 @@ def test_installed_uiux_improvement_without_delivery_packages(tmp_path: Path) ->
         return run(python, "-m", "devkit_dist", *args, "-w", str(consumer), cwd=consumer)
 
     cli("sync")
-    skill = consumer / ".agents/skills/uiux-improve"
+    skill = consumer / ".agents/skills/app-uiux-improve"
     assert not skill.exists()
     before = json.loads(cli("config", "show"))["configuration"]["development"]["approach"]
-    cli("add", "uiux-improve")
+    cli("add", "app-uiux-improve")
     assert json.loads(cli("config", "show"))["configuration"]["development"]["approach"] == before
     assert yaml.safe_load((skill / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
     for role in ROLES:
@@ -59,10 +59,10 @@ def test_installed_uiux_improvement_without_delivery_packages(tmp_path: Path) ->
         assert (skill / relative).is_file()
     artifact = consumer / "design.md"
     artifact.write_text("User-owned design notes.\n")
-    cli("remove", "uiux-improve")
+    cli("remove", "app-uiux-improve")
     assert not skill.exists()
     assert artifact.read_text() == "User-owned design notes.\n"
-    cli("add", "uiux-improve")
+    cli("add", "app-uiux-improve")
     assert (skill / "SKILL.md").is_file()
     assert artifact.read_text() == "User-owned design notes.\n"
     cli("sync", "--check")

@@ -8,7 +8,7 @@ created_at: 2026-11-05
 usecases:
   - UC-improve-an-interface-and-user-flow
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/uiux_improve/bundle/skills/uiux-improve/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md
 ---
 
 # [CAP-DLV-uiux-improvement] UI/UX improvement

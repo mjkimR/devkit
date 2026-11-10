@@ -9,7 +9,7 @@ status: active
 capabilities:
   - CAP-DLV-uiux-improvement
 entrypoints:
-  - packages/devkit-catalog/src/devkit_catalog/uiux_improve/bundle/skills/uiux-improve/SKILL.md
+  - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/SKILL.md
 ---
 
 # [UC-improve-an-interface-and-user-flow] Improve an interface and user flow

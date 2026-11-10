@@ -1,4 +1,4 @@
-"""Opt-in UI/UX skill deployment and its instruction boundaries (SPEC-ux-design-exploration)."""
+"""Opt-in app-uiux-improve deployment and its instruction boundaries (SPEC-uiux-improve-ooux-impeccable)."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from devkit_dist.features.distribution.usecases.sync import sync_project
 from distsupport.guidance import assert_rule
 
 PACKAGE = Path(__file__).parents[3]
-BUNDLE = PACKAGE / "src/devkit_catalog/uiux_improve/bundle"
-SKILL = BUNDLE / "skills/uiux-improve"
+BUNDLE = PACKAGE / "src/devkit_catalog/app_uiux_improve/bundle"
+SKILL = BUNDLE / "skills/app-uiux-improve"
 ROLES = {"designer", "unconventional-designer", "reference-researcher", "critic"}
 HOSTS = ["codex", "claude-code", "antigravity"]
 
@@ -27,19 +27,19 @@ def _installed() -> list[InstalledBundle]:
 def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: Path) -> None:  # AC-01
     update_config(tmp_path, agents=HOSTS)
     sync_project(tmp_path, _installed())
-    assert not (tmp_path / ".devkit/managed/uiux-improve").exists()
-    update_config(tmp_path, presets={"uiux-improve": ["core"]})
+    assert not (tmp_path / ".devkit/managed/app-uiux-improve").exists()
+    update_config(tmp_path, presets={"app-uiux-improve": ["core"]})
     sync_project(tmp_path, _installed())
-    managed = tmp_path / ".devkit/managed/uiux-improve"
+    managed = tmp_path / ".devkit/managed/app-uiux-improve"
     assert {p.relative_to(managed).as_posix() for p in managed.rglob("*") if p.is_file()} == {
         "bundle.toml",
-        "skills/uiux-improve/SKILL.md",
-        "skills/uiux-improve/references/orchestration.md",
-        "skills/uiux-improve/references/design-guidance.md",
-        *(f"skills/uiux-improve/roles/{role}.md" for role in ROLES),
+        "skills/app-uiux-improve/SKILL.md",
+        "skills/app-uiux-improve/references/orchestration.md",
+        "skills/app-uiux-improve/references/design-guidance.md",
+        *(f"skills/app-uiux-improve/roles/{role}.md" for role in ROLES),
     }
-    shared = tmp_path / ".agents/skills/uiux-improve"
-    claude = tmp_path / ".claude/skills/uiux-improve"
+    shared = tmp_path / ".agents/skills/app-uiux-improve"
+    claude = tmp_path / ".claude/skills/app-uiux-improve"
     assert (shared / "SKILL.md").read_bytes() == (SKILL / "SKILL.md").read_bytes()
     assert yaml.safe_load((shared / "agents/openai.yaml").read_text())["policy"]["allow_implicit_invocation"] is False
     assert yaml.safe_load((claude / "SKILL.md").read_text().split("---", 2)[1])["disable-model-invocation"] is True
@@ -58,26 +58,26 @@ def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: P
         assert not (tmp_path / absent).exists()
     # The distribution-owned bundle inventory may name the selection; no design guidance is added.
     guidance = (tmp_path / "AGENTS.md").read_text()
-    assert all("uiux-improve" not in line or "Installed bundles:" in line for line in guidance.splitlines())
+    assert all("app-uiux-improve" not in line or "Installed bundles:" in line for line in guidance.splitlines())
     assert all(role not in guidance for role in ROLES)
 
 
 def test_removal_preserves_user_artifacts_and_other_selected_assets(tmp_path: Path) -> None:  # AC-06
     other = load_bundle(PACKAGE / "src/devkit_catalog/command_design/bundle")
     installed = [*_installed(), InstalledBundle("devkit-catalog", other.version, other)]
-    update_config(tmp_path, agents=HOSTS, presets={"uiux-improve": ["core"], "command-design": ["core"]})
+    update_config(tmp_path, agents=HOSTS, presets={"app-uiux-improve": ["core"], "command-design": ["core"]})
     sync_project(tmp_path, installed)
     artifact = tmp_path / "design/flow.md"
     artifact.parent.mkdir()
     artifact.write_text("A user-owned flow sketch.\n")
-    update_config(tmp_path, opt_out=["uiux-improve"])
+    update_config(tmp_path, opt_out=["app-uiux-improve"])
     sync_project(tmp_path, installed)
-    assert not (tmp_path / ".agents/skills/uiux-improve").exists()
+    assert not (tmp_path / ".agents/skills/app-uiux-improve").exists()
     assert (tmp_path / ".devkit/managed/command-design").is_dir()
     assert artifact.read_text() == "A user-owned flow sketch.\n"
-    update_config(tmp_path, presets={"uiux-improve": ["core"]})
+    update_config(tmp_path, presets={"app-uiux-improve": ["core"]})
     sync_project(tmp_path, installed)
-    assert (tmp_path / ".agents/skills/uiux-improve/SKILL.md").is_file()
+    assert (tmp_path / ".agents/skills/app-uiux-improve/SKILL.md").is_file()
     assert artifact.read_text() == "A user-owned flow sketch.\n"
 
 

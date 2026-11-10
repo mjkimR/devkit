@@ -8,8 +8,8 @@ plan: PLAN-uiux-improve-ooux-impeccable
 
 ## Phase 1: Rename
 
-- [ ] **Task 1**: Clean-break rename of the bundle, skill, module, entry point, data root and test paths, keeping every existing assertion with the new paths.
-  - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/uiux_improve/`, `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/`, `packages/devkit-catalog/pyproject.toml`, `.devkit/architecture.toml`, `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py`, `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`, `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/`, `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`
+- [x] **Task 1**: Clean-break rename of the bundle, skill, module, entry point, data root and test paths, keeping every existing assertion with the new paths.
+  - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/uiux_improve/`, `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/`, `packages/devkit-catalog/pyproject.toml`, `.devkit/architecture.toml`, `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py`, `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`, `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/`, `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`, `docs/capabilities/delivery/CAP-DLV-uiux-improvement.md`, `docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md`
   - _Requirements: AC-07, AC-08_
   - **Verification**: `just test devkit-catalog packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`; AC-07 `rg` scan after Task 4.
 
@@ -20,7 +20,7 @@ plan: PLAN-uiux-improve-ooux-impeccable
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-08, AC-09, AC-10_
   - **Verification**: `just test devkit-catalog packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`; `uv run devkit rules check --phase hygiene` on the skill directory; agent-asset ID scan.
 - [ ] **Task 3**: Add the human usage guide `bundle/README.md`, link it from the catalog README and assert its contents and its absence from agent-read files, the managed set and projections in the integration and E2E tests.
-  - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/README.md`, `packages/devkit-catalog/README.md`, `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`, `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`
+  - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/README.md`, `packages/devkit-catalog/README.md`, `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`, `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/`, `docs/capabilities/delivery/CAP-DLV-uiux-improvement.md`, `docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md`
   - _Requirements: AC-11_
   - **Verification**: `just test devkit-catalog packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`; `just test-affected --tier e2e`.
 
