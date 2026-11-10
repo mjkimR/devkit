@@ -1,38 +1,24 @@
 ---
-id: PROP-lightweight-general-subagent
+id: SPEC-lightweight-general-subagent
 title: Lightweight general subagent for role-file delegation
-summary: "Add a neutral, tool-limited role-worker subagent to the auto-selected devkit bundle and route skill-local role-file delegation to it, so role children start without the full general-purpose tool and skill context."
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-11-10
-target_area: capabilities/distribution/
+summary: Add a neutral, tool-limited role-worker subagent to the auto-selected devkit bundle and route skill-local role-file delegation to it, so role children start without the full general-purpose tool and skill context.
+status: planned
+created: 2026-11-10
 namespace: global
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/distribution/
-    - capabilities/delivery/
-    - capabilities/harness/
-    - packages/devkit-dist/src/devkit_dist/bundles/devkit/
-    - packages/devkit-catalog/src/devkit_catalog/deep_research/
-    - packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/
-    - packages/devkit-catalog/src/devkit_catalog/design_explore/
-    - packages/devkit-catalog/tests/
-    - packages/devkit-dist/tests/
-    - packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/skill-authoring/
-  excludes:
-    - packages/devkit-adaptive/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-lightweight-general-subagent] Lightweight general subagent for role-file delegation
+# [SPEC-lightweight-general-subagent] Lightweight general subagent for role-file delegation
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-lightweight-general-subagent on 2026-11-10.
+- **Preserved Materials**: `docs/materials/2026-11/20261110-lightweight-general-subagent`
+
+### 1. Background & Hypothesis
 
 `ADR-skill-local-research-roles` keeps deep-research's four role documents inside the skill and has the coordinator
 spawn a general subagent with the selected role file path (`CAP-DLV-deep-research` rules 1 and 11). The ADR avoids
@@ -58,11 +44,30 @@ WebSearch, WebFetch, Agent` starts with a median first-call input of at most 18k
 assignments with that tool list. The gain grows with the host's tool set (MCP servers, skills); a consumer with few
 MCP servers gains less.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Lightweight general subagent for role-file delegation so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1** (answered): neighbours with the same tool shape start at about 15k tokens; `development-worker` and
   `planning-worker` carry `Agent` and stay at about 15k, so the `Agent` listing costs at most a few thousand tokens
-  ([first-call-tokens.md](materials/first-call-tokens.md)).
+  ([first-call-tokens.md](../../../docs/materials/2026-11/20261110-lightweight-general-subagent/first-call-tokens.md)).
 - **Q2** (partly answered): the four deep-research roles read sources, use the web, run authorized experiments with
   Bash and write scratch notes; the tool list covers them. app-uiux-improve's `designer` and `critic` may inspect a
   running UI, which on Claude Code goes through a browser MCP server outside the list (`SKILL.md:36-37`); D3 assigns
@@ -74,7 +79,7 @@ MCP servers gains less.
 - **Q4** (answered): `swarm-worker` is not reused. Its contract carries commit authority and an owned implementation
   assignment, and `devkit-adaptive` is not always installed.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - **New `role-worker` subagent asset** in `devkit-dist`'s `devkit` bundle `core` preset (D1), as minimal distribution
   infrastructure shared by other bundles. Every project
@@ -104,7 +109,7 @@ MCP servers gains less.
   - `CAP-DLV-deep-research` rule 11, `CAP-DLV-uiux-improvement`, `CAP-DLV-design-exploration` and
     `CAP-HARN-agent-guidance` where they name a general subagent.
   - `CAP-DIST-agent-projections` or the owning distribution capability lists `role-worker` with its host statuses.
-  - `PADR-role-worker-subagent` supersedes in part `ADR-skill-local-research-roles` (the "general subagent" clause
+  - `ADR-role-worker-subagent` supersedes in part `ADR-skill-local-research-roles` (the "general subagent" clause
     only; rule 1, no registered research subagents, remains) and the `devkit`-bundle clause of
     `ADR-package-ownership-and-release-version`, which now admits general subagents shared by other bundles.
 - **Tests**:
@@ -115,7 +120,7 @@ MCP servers gains less.
   - Add a devkit-dist integration test that syncs the owning bundle and asserts the `role-worker` projection for all
     three hosts with their statuses and the Claude Code `tools` list.
 - **Manual check** (Development, review evidence, not a test): with the method of
-  [first-call-tokens.md](materials/first-call-tokens.md), at least five `role-worker` children have a median
+  [first-call-tokens.md](../../../docs/materials/2026-11/20261110-lightweight-general-subagent/first-call-tokens.md), at least five `role-worker` children have a median
   first-call input of at most 18k tokens, compared with a `general-purpose` sample from the same machine and Claude
   Code version.
 - **Out of scope**:
@@ -125,13 +130,13 @@ MCP servers gains less.
   - adaptive-dev's skill-local builder role (`delegation.md`), whose child holds commit authority and worktree
     ownership; `roles.md` names it as the exception.
 
-## 4. Planning decisions
+### 4. Planning decisions
 
 - Q1, Q3 and Q4 are settled as above; the Q3 host statuses and the no-role-file behaviour follow the
   `challenger-01` findings.
 - Release notes mention the new projection files that every consumer receives on upgrade.
 
-## 5. User decisions
+### 5. User decisions
 
 - **D1** (user): `role-worker` lives in the `devkit` bundle as minimal distribution infrastructure; no other existing
   bundle fits, because only `devkit` and `advisory` are auto-selected from `devkit-dist`.
@@ -139,9 +144,10 @@ MCP servers gains less.
 - **D3** (user): callers assign subagent types statically per role or assignment; running-UI interaction uses
   `general-purpose`, everything else `role-worker`.
 
-## 6. Lifecycle & Retirement Criteria
+### 6. Lifecycle & Retirement Criteria
 
 - On acceptance: `devkit spec proposal accept lightweight-general-subagent --by user`, then handoff to one
   `sdd-spec-feature` spec.
 - On rejection: `status: rejected` with the user's reason in the commit message. Role-file callers keep spawning a
   general subagent.
+

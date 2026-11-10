@@ -1,16 +1,16 @@
 ---
-id: PADR-role-worker-subagent
+id: ADR-role-worker-subagent
 title: Shared role-worker subagent for skill-local roles
 summary: "For skill-local role delegation, we ship a tool-limited role-worker subagent in the auto-selected devkit bundle and assign it statically per role, to cut each child's fixed context by about half, accepting one listing line in every consumer and a widened devkit-bundle contract."
-proposal: PROP-lightweight-general-subagent
+proposal: SPEC-lightweight-general-subagent
 supersedes: [ADR-skill-local-research-roles, ADR-package-ownership-and-release-version]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-role-worker-subagent] Shared role-worker subagent for skill-local roles
+# [ADR-role-worker-subagent] Shared role-worker subagent for skill-local roles
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 
 ---
@@ -20,7 +20,7 @@ created_at: 2026-11-10
 Skill-local roles (deep-research, app-uiux-improve, design-explore) pass a role file to a general subagent so that no
 role metadata enters global context. On Claude Code that subagent is `general-purpose`, which receives every tool,
 MCP tools included. It starts each child at about 36k input tokens, while subagents with a restricted tool list start
-at 11k to 16k on the same machine (`PROP-lightweight-general-subagent` materials). A per-role registered subagent
+at 11k to 16k on the same machine (`SPEC-lightweight-general-subagent` materials). A per-role registered subagent
 would cut the load but expose role descriptions outside explicit invocation. The `devkit` bundle, the only
 auto-selected `devkit-dist` bundle that fits, is limited to distribution guidance with instructions only.
 

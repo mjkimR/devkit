@@ -10,6 +10,8 @@ supersedes:
 
 # [ADR-skill-local-research-roles] Keep research roles inside the explicitly invoked skill
 
+Superseded in part by `ADR-role-worker-subagent`: the clause that a general subagent receives the selected role path and bounded assignment.
+
 ## 1. Context & Problem Statement
 
 Registered research roles expose descriptions outside explicit research invocation. The four procedures need
