@@ -19,8 +19,9 @@ The `app-uiux-improve` catalog bundle supplies an explicitly invoked entry for i
 user flows: web and desktop applications, dashboards, admin tools, settings and responsive views. Before a change
 restructures views or flows, the coordinator frames the affected domain objects (OOUX: objects, relationships, CTAs,
 attributes), from the consumer's glossary, object register and UX documents when they exist. It implements inline,
-optionally with local design perspectives, or delegates craft work to one session of the separately installed
-Impeccable skill when the user selects it, and carries accepted changes through the consumer's existing workflow.
+optionally with local design perspectives, and, when the user selects it, delegates craft work to one session of the
+separately installed Impeccable skill, before or after its own changes; it carries accepted changes through the
+consumer's existing workflow.
 Alternatives, research and criticism are optional means, not a required final report.
 `ADR-uiux-improvement-workflow-boundary` records the local-role and delivery-authority decision, and
 `ADR-impeccable-session-authority` the bounded Impeccable session and user-requested setup and cleanup.

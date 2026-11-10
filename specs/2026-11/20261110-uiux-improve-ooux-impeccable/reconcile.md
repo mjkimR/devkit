@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-uiux-improve-ooux-impeccable
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-uiux-improvement.md
     resolution: modified
@@ -31,8 +31,10 @@ sentence.
 ## Use case
 
 `UC-improve-an-interface-and-user-flow` keeps its ID and main scenario. The entrypoint is renamed, step 3 adds the
-framing, extensions 3c, 3d, 6b, 6c and 7a and scenarios 7 to 9 are added, and the postconditions keep consumer-owned
-files in place.
+framing, extensions 3c, 3d, 5c, 6b, 6c and 7a and scenarios 7 to 9 are added, and the postconditions keep consumer-owned
+files in place. The blueprint's 3c delegation is split into 3c (selection, resuming at step 4) and 5c (brief,
+session and acceptance, resuming at step 6), so synthesis and inline work can precede delegation as the skill orders
+them (reconcile-check-01 finding 1).
 
 ## Architecture
 

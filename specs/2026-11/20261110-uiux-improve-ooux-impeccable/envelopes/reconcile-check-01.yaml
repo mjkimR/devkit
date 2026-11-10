@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T00:35:59.298404Z'
+status: completed
+summary: 'reconcile-reviewer round 1 on 83b7c0a8..e4c4d93b: all four targets reflected per the blueprint, rule test references exist; one P2 on UC extension 3c skipping synthesis before delegation'
+findings:
+- issue: UC extension 3c branches at step 3 and resumes at step 6, skipping synthesis and the inline-then-refine order that the skill and guide describe
+  evidence: docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md:45-48
+  failure_condition: a reader following the use case sees no synthesis or inline work before delegation, contradicting SKILL.md steps 5-7 and the guide example
+  suggested_action: keep 3c for selection resuming at step 4 and add a step-5 extension for the brief, pause, session and acceptance resuming at step 6
+  resolution: open
+  severity: P2
+checks:
+  rules: PASS devkit rules check --ci --base 83b7c0a8
+diff_scope:
+  base: 83b7c0a82834d799fe01f6ff180511e97ee17075
+  head: e4c4d93ba4426d47338ad59017ae194bba3982fc

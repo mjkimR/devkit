@@ -42,18 +42,21 @@ entrypoints:
 - **3a.** A small request needs no team or research: the agent works inline; resumes at step 4.
 - **3b.** Fresh children are unavailable: the agent uses useful inline passes and discloses their shared context;
   resumes at step 4 without fabricated role findings.
-- **3c.** The user selects Impeccable: the agent completes the consumer workflow's pre-implementation steps, writes the
-  brief and delegates one session (a fresh child for refinement commands, a session the user operates for interactive
-  commands or when the child cannot load Impeccable or meets an upstream question), pausing its own product edits;
-  after the return it accepts listed product-file changes and resumes at step 6.
+- **3c.** The user selects Impeccable for craft work: the agent keeps its framing and local perspectives and resumes at
+  step 4; implementation follows 5c.
 - **3d.** Impeccable is selected but unavailable: the agent names the upstream install routes; the user installs it,
   or asks the agent to run a route that needs no prompt answers (resumes at 3c), or continues inline (resumes at
-  step 4).
+  step 4 without 5c).
 - **4a.** A product or scope decision exceeds existing authority: the agent presents the concrete choice and preserves
   independent useful work; dependent work waits and resumes at step 4 after the user's decision.
 - **5a.** Review-only request: the agent returns findings without product edits; the use case ends with the requested review.
 - **5b.** A workflow approval or tool is missing: the agent preserves useful partial work and names the blocker;
   the use case ends pending that requirement.
+- **5c.** Impeccable is selected: the agent completes the consumer workflow's pre-implementation steps, writes the
+  brief and delegates one session, before or after its own inline changes (a fresh child for refinement commands, a
+  session the user operates for interactive commands or when the child cannot load Impeccable or meets an upstream
+  question), pausing its own product edits while the session runs; after the return it accepts listed product-file
+  changes and resumes at step 6.
 - **6a.** A check exposes a defect: the agent fixes it within scope and repeats the affected check; resumes at step 6.
 - **6b.** The session changed a file outside its edit list, wrote session output or created or changed consumer
   context files, or attribution is unverifiable: the agent reports each class, reverts and deletes nothing on its own
@@ -124,7 +127,7 @@ brief and routing, coordinator acceptance, consumer context files and user-reque
 
 ### Scenario 7: Accept a delegated Impeccable session
 
-- **Covers**: 3c, 6b, 6c
+- **Covers**: 3c, 5c, 6b, 6c
 - **Given**: the user selected Impeccable, the project keeps a glossary and UX documents, and the session also changed
   one file outside its edit list.
 - **When**: the session returns and the agent compares the working directory with the recorded base.
