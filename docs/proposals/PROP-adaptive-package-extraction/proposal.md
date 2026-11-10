@@ -73,30 +73,32 @@ from `devkit-spec` stay as they are, and the next proposal adds commands without
 
 ## 2. Technical Spike Questions
 
-Planning answered the seven questions from repository evidence. `materials/planning-evidence.md` holds the evidence
-and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
+Planning answered the seven questions from repository evidence and the user's decisions.
+`materials/planning-evidence.md` holds the evidence and the option tables, `envelopes/scout-01.yaml` the wiring
+inventory. Where an earlier envelope differs from this document, this document holds.
 
 - **Q1 Layout**: distribution `devkit-adaptive` in `packages/devkit-adaptive/`, import package `devkit_adaptive`,
   bundle at `src/devkit_adaptive/bundles/adaptive_dev/bundle/`. The package holds three docstring-only initializers
   and the bundle; `ARCH-05-2-components` forbids empty layers, so `features/` and `cli.py` arrive with the first
   command.
-- **Q2 Base dependency**: none in this unit (`dependencies = []`). A requirement on `devkit-dist` or `devkit-agt`
-  without code that imports it would end `devkit bundle snapshot` support for the source
-  (`BUNDLE_SNAPSHOT_UNSUPPORTED`), and `devkit-agt` would install the auto-selected `harness` bundle for consumers
-  of the `agents` and `import` presets that run on `devkit-dist` alone. `PROP-adaptive-assignment-cli` decides the
-  base with its commands. Capability rule 2 holds either way, because nothing reaches `devkit-spec`.
-- **Q3 Existing selections**: a project that selected `adaptive-dev` and upgrades without installing
-  `devkit-adaptive` gets `SELECTION_INVALID` (`selected bundle is not installed: adaptive-dev`) from `devkit sync`
-  and under `errors` of `devkit status`; nothing is deleted. After it installs the package, its selection, overrides
-  and role keys apply unchanged, and the next sync rewrites the receipt's package record. Of the five options
-  compared, only a documented installation step breaks no other contract, and
-  `ADR-package-ownership-and-release-version` already declines migration paths and shims while there are no
-  external consumers. Section 3.6 states the step.
+- **Q2 Base dependency**: none in this unit (`dependencies = []`); the wheel is bundle-only at the move. A runtime
+  requirement without code that imports it would end `devkit bundle snapshot` support for the source
+  (`BUNDLE_SNAPSHOT_UNSUPPORTED`) and change the installed closure in a unit that promises no behavior change. The
+  base dependency is settled as `devkit-docs`, which itself requires `devkit-agt` and so `devkit-dist`, and
+  `PROP-adaptive-assignment-cli` introduces it together with the first commands. This unit adds neither the
+  requirement nor a document or guide change for it. Capability rule 2 holds, because `devkit-docs` does not reach
+  `devkit-spec`.
+- **Q3 Existing selections**: none to carry. Nothing uses the `adaptive-dev` bundle outside this repository, and
+  this repository does not select it, so the move has no migration path: no bridge, no crossing procedure and no
+  guide step for a project that selected the bundle while the catalog shipped it. The guides name `devkit-adaptive`
+  for a fresh installation only. `materials/planning-evidence.md` set 3 records, as an observation and not as a
+  requirement, what discovery reports when a selected bundle's distribution is missing.
 - **Q4 Decisions**: `PADR-adaptive-dev-distribution` supersedes the owning-wheel clauses of
   `ADR-adaptive-development-and-research` and nothing else. `ADR-skill-local-swarm-roles` decides no owner and gets
   a wording repair. The exclusion of a command line or runtime is `PROP-adaptive-assignment-cli`'s to change.
 - **Q5 Entry points**: `devkit.bundles` only. A `devkit.commands` entry is a mounted `devkit adaptive` group, which
-  is a new command.
+  is a new command. `PROP-adaptive-assignment-cli` adds that entry with the command group
+  `devkit adaptive assignment`; this unit registers nothing for it.
 - **Q6 Repository wiring**: the files of section 3.3. Workspace membership, the release inventory, the `just`
   recipes and the affected-test selector discover the package by directory and need no edit. Release preparation
   needs one: it looks up a bundle's previous version under its package name, so the moved bundle would take the
@@ -166,45 +168,35 @@ and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
 ### 3.5 Documents and guides
 
 - Living Spec: the changes of `target-docs.md`.
-- Guides: `guides/INSTALL_GUIDE.md` and `guides/install/` name `devkit-adaptive` as the package of `adaptive-dev`,
-  with its installation and upgrade commands. `guides/install/existing-repository.md` gains a subsection for an
-  existing selection beside "Upgrading across the package split", and the `SELECTION_INVALID` row of
-  `guides/INSTALL_GUIDE.md` names the move.
+- Guides: `guides/INSTALL_GUIDE.md`, `guides/install/new-repository.md`, `guides/install/existing-repository.md`,
+  `guides/install/adaptive-dev-sdd-adoption.md` and `guides/install/bundle-recommendations.md` name
+  `devkit-adaptive` wherever they name `devkit-catalog` as the package of `adaptive-dev`, and
+  `guides/INSTALL_GUIDE.md` gains its installation and upgrade commands beside the catalog's. Each edit describes a
+  fresh installation: in `guides/install/existing-repository.md` only the adaptive development paragraph changes,
+  and no guide gains a subsection, a troubleshooting row or a step for a project that selected the bundle before
+  the move.
 - Root `AGENTS.md` and `README.md`: the package tables, module and short-name lists and README links.
-
-### 3.6 An existing selection
-
-No bridge exists: the catalog neither requires `devkit-adaptive` nor keeps a second registration. The guide states
-this step:
-
-- Add `devkit-adaptive` to the dependency group that holds the project's devkit packages and move every devkit
-  requirement, the catalog included, to the same ref or release inventory in the same change.
-- Run `uv sync` and `uv run devkit sync`, then commit `pyproject.toml`, `uv.lock` and `.devkit/installation.json`.
-  The `[presets]` entry, overrides and `adaptive-dev:<role>` keys stay as they are.
-- `SELECTION_INVALID` (`selected bundle is not installed: adaptive-dev`) means the package is missing: install it
-  instead of following the error's `[FIX]`, which names `devkit remove adaptive-dev`. Nothing is deleted meanwhile.
-- `BUNDLE_PACKAGE_INVALID` (`duplicate installed bundle: adaptive-dev`) means a catalog from before the move sits
-  beside `devkit-adaptive`: an older pinned ref, an older wheel or a bundle source snapshot of the catalog that
-  was not refreshed. Move the catalog to the same ref, or refresh the snapshot.
-- A project whose catalog is a bundle source snapshot refreshes the wrapper and installs `devkit-adaptive` (or
-  snapshots it) instead of running the `devkit remove adaptive-dev` that the refresh reports as
-  `SNAPSHOT_DESELECT_REMOVED`.
 
 ## Non-Goals
 
 - **Scope Excluded**: a command, a `devkit.commands` entry point, a feature, a hook or a runtime requirement in
-  `devkit-adaptive`; `PROP-adaptive-assignment-cli` owns the commands and their base dependency.
+  `devkit-adaptive`; `PROP-adaptive-assignment-cli` owns the commands and introduces the requirement on
+  `devkit-docs`.
 - **Scope Excluded**: a change to the bundle's name, presets, asset IDs, asset text, projections or context file.
-- **Scope Excluded**: a change in `devkit-dist` or `devkit-agt`, including a hint in `SELECTION_INVALID` that names
-  the new package.
-- **Scope Excluded**: a runtime requirement of `devkit-catalog` on `devkit-adaptive`, an alias distribution, a shim
-  module or a second registration of the bundle.
+- **Scope Excluded**: a change in `devkit-dist` or `devkit-agt`.
+- **Scope Excluded**: compatibility for an existing selection of `adaptive-dev`: a migration path, a guide step or
+  troubleshooting text for it, a test of a selection that crosses the move, a runtime requirement of
+  `devkit-catalog` on `devkit-adaptive`, an alias distribution, a shim module, a second registration of the bundle
+  and an error hint that names the new package. Nothing uses the bundle outside this repository.
 - **Scope Excluded**: moving `deep-research` or another catalog bundle.
 - **Scope Excluded**: host lifecycle hooks; `PROP-adaptive-lifecycle-hooks` owns their investigation.
 - **Scope Excluded**: a release, a release installation variant, a version other than the one
   `just version-sync` selects, and a change to release preparation beyond the bundle lookup of section 3.3.
 
 ## Acceptance Criteria
+
+The criteria are AC-01 to AC-04 and AC-06 to AC-08. AC-05 was withdrawn with the compatibility for existing
+selections and its number is not reused, so the criteria keep the numbers under which the envelopes cite them.
 
 ### [AC-01] The distribution holds the bundle alone
 
@@ -244,18 +236,6 @@ this step:
   before the move on deployed assets, projections, approach inspection and preserved project-owned context still
   passes.
 
-### [AC-05] An existing selection crosses the move
-
-- **Given** a project synchronized with the `adaptive-dev` bundle provided by a distribution named
-  `devkit-catalog`, with a project-owned `.devkit/adaptive-dev.md`,
-- **When** the same bundle is provided by `devkit-adaptive` and `devkit sync` runs with the unchanged configuration,
-- **Then** the sync succeeds, the deployed and projected files are byte-identical, `.devkit/adaptive-dev.md` is
-  unchanged and the receipt's package record for `adaptive-dev` names `devkit-adaptive`. An integration test in
-  `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` asserts this with two `InstalledBundle`
-  values of the real bundle.
-- **And** `guides/install/existing-repository.md` states the step of section 3.6 with its commands, both codes and
-  the snapshot case, and the `SELECTION_INVALID` row of `guides/INSTALL_GUIDE.md` names `devkit-adaptive` (review).
-
 ### [AC-06] Repository checks
 
 - **Given** the workspace after `just init`,
@@ -277,6 +257,8 @@ this step:
   `devkit-adaptive` as the owner and installation package of `adaptive-dev`; the decision promoted from
   `PADR-adaptive-dev-distribution` is accepted, and `ADR-adaptive-development-and-research` stays accepted with one
   line naming the clauses that decision replaces.
+- **And** the five guides of section 3.5 name `devkit-adaptive` as the package of `adaptive-dev` for a fresh
+  installation and hold no step for a project that selected the bundle before the move (review).
 
 ### [AC-08] A moved bundle keeps its version at release preparation
 
@@ -295,19 +277,23 @@ this step:
 | Size | `M`, one spec | host |
 | Independence | The bundle keeps installing without `devkit-spec` | host |
 | Names and layout (Q1) | Section 3.1; settled by `ADR-package-ownership-and-release-version`, `ARCH-05-2-components` 1.1 and `CAP-DIST-content-packages` §1 | evidence |
-| Wheel contents (Q2, Q5) | No runtime requirement and only `devkit.bundles` at the move; follows from the user's scope, because either addition changes behavior (`materials/planning-evidence.md` sets 2 and 5). Recorded in `PADR-adaptive-dev-distribution` | evidence |
+| Wheel contents (Q2, Q5) | Bundle-only at the move: `dependencies = []` and only `devkit.bundles` (`materials/planning-evidence.md` sets 2 and 5). Recorded in `PADR-adaptive-dev-distribution` | user |
+| Base dependency | `devkit-docs`, which itself requires `devkit-agt` and so `devkit-dist`, introduced by `PROP-adaptive-assignment-cli` together with the first commands. This unit adds neither the requirement nor its consequences nor guide changes for it; its guides describe the installation that holds after the move alone: `devkit-docs` beside `devkit-adaptive`, without `devkit-spec` | user |
+| Follow-on command group | `PROP-adaptive-assignment-cli` adds `devkit adaptive assignment`. Information only: this unit registers `devkit.bundles` alone | user |
 | Architecture declaration | `kind = "content"` with `data_roots = ["bundles"]`; the first command changes the kind to `features` in the entry it has to edit anyway. `RULE-architecture` accepts both | planning |
 | Root development group | No entry for `devkit-adaptive`, as for the catalog; `just init` installs every member | planning |
 | Version | `0.1.6` for the package beside the bundle's unchanged `0.1.6`; the release tooling gives a package absent from the baseline the release version | evidence |
-| Bundle version at release | Release preparation finds a moved bundle's previous identity by bundle name (section 3.3, AC-08), so the existing MUST of `ARCH-07-deployment` 1.1 holds. The alternative, an exception to that MUST recorded in the PADR, was not taken: it changes a release contract to fit one lookup | planning |
+| Bundle version at release | Release preparation finds a moved bundle's previous identity by bundle name (section 3.3, AC-08), so the existing MUST of `ARCH-07-deployment` 1.1 holds and the unchanged moved bundle keeps its version. The alternative, an exception to that MUST recorded in the PADR, was not taken: it changes a release contract to fit one lookup | user |
 | Superseding decision (Q4) | One PADR limited to the owning wheel; no decision on a command line | evidence |
 | `dev_effort` | Stays `medium`: the change is a move verified by tree identity and existing tests plus one lookup in release preparation with its own test; nothing is released by it, and no `high` trigger of the effort reference applies | planning |
-| Existing selections (Q3) | No bridge; a documented installation step (section 3.6). A requirement of the catalog on `devkit-adaptive` ends snapshot support for every catalog bundle, a second registration fails every command, and `ADR-package-ownership-and-release-version` declines migration paths and shims while there are no external consumers (`materials/planning-evidence.md` set 3). Recorded in `PADR-adaptive-dev-distribution` | evidence |
+| Existing selections (Q3) | No compatibility and no bridge: nothing uses the `adaptive-dev` bundle outside this repository, so the move has no migration path, and the guides name `devkit-adaptive` for fresh installations only. Recorded in `PADR-adaptive-dev-distribution` | user |
+| Acceptance criteria numbering | AC-05 (an existing selection crosses the move) is withdrawn with its test and guide clause. AC-06 to AC-08 keep their numbers, because the recorded envelopes cite them | planning |
 | Test selection | `test_deep_research.py` imports `devkit_adaptive.bundles`; the catalog's development group names `devkit-adaptive` | planning |
 
-For `PROP-adaptive-assignment-cli`: adding a runtime requirement or a `devkit.commands` entry point ends snapshot
-support for this source, and a requirement on `devkit-agt` changes what a `devkit-dist`-only consumer of the
-`agents` and `import` presets installs (`materials/planning-evidence.md` set 2).
+For `PROP-adaptive-assignment-cli`: the consequences of the requirement on `devkit-docs` and of the
+`devkit.commands` entry point, for the installed closure, the `agents` and `import` presets and snapshot support
+of this source, are that unit's to state with the change that introduces them. `materials/planning-evidence.md`
+set 2 holds the evidence this Planning collected.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--

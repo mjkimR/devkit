@@ -93,8 +93,8 @@ No rule number, code, sentinel or agent-facing behavior changes.
   section.
 - `guides/INSTALL_GUIDE.md`, `guides/install/existing-repository.md`, `guides/install/new-repository.md`,
   `guides/install/adaptive-dev-sdd-adoption.md` and `guides/install/bundle-recommendations.md` name
-  `devkit-adaptive` as the package of `adaptive-dev`; the existing-repository guide gains the step for an existing
-  selection.
+  `devkit-adaptive` as the package of `adaptive-dev` for a fresh installation: devkit-docs beside `devkit-adaptive`,
+  without `devkit-spec`. No guide gains a step for a project that selected the bundle before the move.
 - `.devkit/architecture.toml` declares `devkit_adaptive` and removes the `adaptive_dev` data root of the catalog.
 - `scripts/releases/prepare.py` looks up a moved bundle's baseline identity by bundle name. `ARCH-07-deployment` 1.1
   already states the rule it implements, so that section needs no new sentence.
@@ -107,11 +107,11 @@ No rule number, code, sentinel or agent-facing behavior changes.
 | --- | --- | --- |
 | Owner of the `adaptive-dev` bundle | `devkit-catalog` (content only) | `devkit-adaptive` |
 | Entry point | `adaptive-dev = "devkit_catalog.adaptive_dev"` | `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"` |
-| Runtime requirements of the owning wheel | None | None; the first command adds them (`PROP-adaptive-assignment-cli`) |
+| Runtime requirements of the owning wheel | None | None; `PROP-adaptive-assignment-cli` adds the requirement on `devkit-docs` with the first commands |
 | Python code beside the bundle | None | Three docstring-only initializers |
 | Bundle name, presets, asset IDs, asset bytes | `adaptive-dev`, `core`, `agents`, `import` | Unchanged |
 | Requires `devkit-spec` | No | No |
 | Installation for adaptive development | devkit-docs plus `devkit-catalog` | devkit-docs plus `devkit-adaptive` |
 | Installation for the `agents` and `import` presets | `devkit-dist` plus `devkit-catalog` suffice | `devkit-dist` plus `devkit-adaptive` suffice |
-| A project that selected the bundle before the move | Synchronizes | Installs `devkit-adaptive` once; until then `devkit sync` stops with `SELECTION_INVALID` and deletes nothing |
+| Migration path for a selection made before the move | Not applicable | None: nothing uses the bundle outside this repository |
 | Bundle version at the next release | `0.1.6` until its content changes | Unchanged rule: release preparation finds the moved bundle by name |

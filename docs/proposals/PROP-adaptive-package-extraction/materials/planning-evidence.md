@@ -3,7 +3,8 @@
 Scope: the evidence and option comparisons Planning collected at `plan-adaptive-package-extraction` (base
 `881bced1`) for spike questions Q1 to Q7 of `PROP-adaptive-package-extraction`. Paths are relative to the repository
 root. Each set closes with the recommendation; the proposal's Planning decisions record what is settled and on
-which ground.
+which ground. The user's decisions replaced the recommendation of set 3 and settled the question set 2 left open;
+both sets say so where they close.
 
 ## Evidence boundary
 
@@ -16,6 +17,7 @@ which ground.
 - Not run: a built-wheel consumer that upgrades across the move. The wheels and a virtual environment were built
   under the proposal's ignored `.probe/`, but the host refused the script that edits the installed catalog metadata,
   so set 3 rests on the code, the contracts and the tests above. `.probe/s1_s2.sh` holds the unexecuted scenario.
+  The proposal no longer needs the run: an upgrade across the move is out of scope (set 3).
 
 ## Set 1: names and layout (Q1)
 
@@ -57,14 +59,19 @@ Facts:
 
 | Option | Evidence | Cost | Risk | Open |
 | --- | --- | --- | --- | --- |
-| 2a. `dependencies = []` in this unit; the first command adds its requirements | The catalog's own metadata (`packages/devkit-catalog/pyproject.toml:7`); no import exists | None in this unit; `PROP-adaptive-assignment-cli` edits `pyproject.toml` | None for existing installations: the same closure as today | The base of the commands, decided by `PROP-adaptive-assignment-cli` Q5 |
+| 2a. `dependencies = []` in this unit; the first command adds its requirements | The catalog's own metadata (`packages/devkit-catalog/pyproject.toml:7`); no import exists | None in this unit; `PROP-adaptive-assignment-cli` edits `pyproject.toml` | None: the same closure as today | The base of the commands, at the time of this comparison |
 | 2b. Pin `devkit-dist` (with `devkit-core`, `click`) in this unit | `devkit-mcp` precedent | Exact-pin and release-closure wiring for a package without code | The source stops being a snapshot source (`BUNDLE_SNAPSHOT_UNSUPPORTED`) in a unit that promises no behavior change | Same as 2a |
 | 2c. Pin `devkit-agt` in this unit | `devkit-spec`, `devkit-docs`, `devkit-viewer` precedent; worktree and execution features become importable | As 2b | As 2b, and a consumer of `adaptive-dev:agents` or `adaptive-dev:import` on `devkit-dist` alone receives `devkit-agt` and the auto-selected `harness` bundle, against `guides/install/bundle-recommendations.md:36` | Whether the commands need harness features at all |
 
 Recommendation: 2a. It is the only option that keeps the unit free of behavior change, and it leaves the base of
 the commands open instead of fixing it before their design exists.
 
-Consequences for `PROP-adaptive-assignment-cli` (Q5 there), recorded here because they follow from this evidence:
+Decision (user): 2a for this unit, so the wheel is bundle-only at the move. The base is settled as `devkit-docs`,
+which itself requires `devkit-agt` and so `devkit-dist`, and `PROP-adaptive-assignment-cli` introduces it together
+with the first commands. Options 2b and 2c compared a base of `devkit-dist` or `devkit-agt` before that decision;
+they and the list below remain as evidence and bind neither unit.
+
+What this evidence shows for `PROP-adaptive-assignment-cli` (Q5 there):
 
 - A requirement on `devkit-dist` and `devkit-core` keeps the `agents` and `import` presets installable without the
   harness; a requirement on `devkit-agt` changes what a `devkit-dist`-only consumer deploys.
@@ -73,10 +80,15 @@ Consequences for `PROP-adaptive-assignment-cli` (Q5 there), recorded here becaus
 - Rule 2 (installation without `devkit-spec`) holds under 2a, 2b and 2c alike, because none of them reaches
   `devkit-spec`.
 
-## Set 3: existing selections (Q3)
+## Set 3: a selected bundle whose distribution is missing (Q3)
 
-What the code does when a project selected `adaptive-dev`, upgrades to a catalog that no longer registers it and has
-not installed `devkit-adaptive`:
+Decision (user): no compatibility for existing selections. Nothing uses the `adaptive-dev` bundle outside this
+repository, so the move has no migration path, no bridge and no guide step, and Development writes and tests none.
+The recommendation Planning had made here, a documented installation step for an existing selection, is withdrawn
+with its option table. The rest of this set is an observation of current `devkit-dist` behavior, kept because a
+Development worktree can reach the same states. It is not a requirement, and no acceptance criterion rests on it.
+
+What the code does when a configuration selects `adaptive-dev` and no installed distribution registers it:
 
 | Command | Result | Evidence |
 | --- | --- | --- |
@@ -86,39 +98,17 @@ not installed `devkit-adaptive`:
 | `devkit add adaptive-dev` | Fails with `SELECTION_INVALID`, message `bundle is not installed: adaptive-dev`, `[FIX]` `uv run devkit list` | `test_output_contract.py:109-113` |
 | `devkit remove adaptive-dev` | Succeeds without the package and deletes the bundle's deployed files | `CAP-DIST-content-packages` §2 (Teardown); `test_builtin_selection.py:254-259` |
 
-`CAP-DIST-content-packages` §2 and `CAP-DIST-sync-and-transactions` (the retained-selection paragraph) state this as
-the contract: removal is always explicit, so a partial environment never deletes committed files.
+If an environment holds two distributions that register `adaptive-dev`, every command fails with
+`BUNDLE_PACKAGE_INVALID`, `duplicate installed bundle: adaptive-dev`
+(`services/installation/discovery.py:97-99`; `test_sync.py:299`; `CAP-DIST-content-packages` §1). This is why the
+catalog keeps no second registration.
 
-Once `devkit-adaptive` is installed, the bundle name, presets and asset IDs are unchanged, so the selection in
-`.devkit/config.toml`, overrides under `.devkit/overrides/adaptive-dev/` and `adaptive-dev:<role>` keys keep their
-meaning. The receipt's `packages` entry for the bundle records the providing distribution
-(`services/installation/inventory.py:422`; this repository's `.devkit/installation.json` records
-`{"bundle": "deep-research", "package": "devkit-catalog"}`), so the next `devkit sync` rewrites that entry to
-`devkit-adaptive` and the consumer commits the receipt, as after any package upgrade.
-
-If an environment holds a catalog that still registers `adaptive-dev` and `devkit-adaptive` together, every command
-fails with `BUNDLE_PACKAGE_INVALID`, `duplicate installed bundle: adaptive-dev`
-(`services/installation/discovery.py:97-99`; `test_sync.py:299`; `CAP-DIST-content-packages` §1). Three states
-reach it: Git requirements pinned to different refs (`guides/INSTALL_GUIDE.md:114-118` describes per-requirement
-pins), release wheels of different releases, and a bundle source snapshot of the catalog that was not refreshed
-(the wrapper carries every provider bundle; `CAP-DIST-content-packages`, "Snapshot Provider Replacement"). A refreshed
-wrapper reports `uv run devkit remove adaptive-dev` as `SNAPSHOT_DESELECT_REMOVED`
-(`services/snapshots/operations.py:93`), the same removal the `[FIX]` of `SELECTION_INVALID` names. The guide step
-therefore moves every devkit requirement to one ref and names both codes.
-
-| Option | Evidence | Cost | Risk | Open |
-| --- | --- | --- | --- | --- |
-| 3a. No bridge: the catalog drops the bundle; an existing project adds `devkit-adaptive` once; the guides document the step and the `SELECTION_INVALID` row names it | The `devkit:run` to `harness:run` move was accepted in place with guide text only (`ADR-package-ownership-and-release-version`, clause on `devkit:run`; `guides/install/existing-repository.md:224-242`; `guides/INSTALL_GUIDE.md:217`) | Guide text; one `uv add` and one receipt commit per consumer | The `[FIX]` of `SELECTION_INVALID` names `devkit remove adaptive-dev`; an agent that follows it removes the deployed bundle files (project-owned `.devkit/adaptive-dev.md` stays). Recovery is `uv add` and `devkit add adaptive-dev[:preset]` | None |
-| 3b. `devkit-catalog` requires `devkit-adaptive` | Works without consumer action for a Git installation (workspace sources) | The catalog gains a runtime requirement and an exact pin; it advances with every `devkit-adaptive` release; a release-wheel installation of the catalog must name the `devkit-adaptive` wheel | `devkit bundle snapshot` of the catalog is refused with `BUNDLE_SNAPSHOT_UNSUPPORTED` for every catalog bundle (`source.py:57-58`); every catalog consumer later inherits the requirements of the commands | Contradicts the content-only catalog without runtime dependencies (`CAP-DIST-content-packages` §6, `ARCH-05-2-components` 1.1) |
-| 3c. 3b for one release, then 3a | As 3b | Both costs, and a second consumer-visible change | As 3b for one release | Which release ends the bridge |
-| 3d. The catalog keeps a second `adaptive-dev` entry point or an alias distribution | None: two entry points with one name fail every command (`BUNDLE_PACKAGE_INVALID`) | Not viable | Not viable | `ADR-package-ownership-and-release-version` lists shim modules, alias distributions and alias presets as non-goals |
-| 3e. `devkit-dist` names the new package in `SELECTION_INVALID` for a moved bundle | No such table exists | A behavior change in `devkit-dist`, outside this proposal's boundaries | A hint table that must be kept for every later move | A separate proposal if moves recur; `ADR-package-ownership-and-release-version` declined a cross-bundle preset hint for the same reason |
-
-Recommendation: 3a. It is the only option that neither breaks another contract nor leaves the unit's boundaries,
-and it repeats the accepted handling of the earlier preset move. `ADR-package-ownership-and-release-version` also
-names "no compatibility shims or migration paths while there are no external consumers" as a driver
-(`docs/decisions/2026-11/20261102-package-ownership-and-release-version.md:94-95`). Existing selections stop at
-`SELECTION_INVALID` until the project adds the package.
+For Development: this repository does not select `adaptive-dev` (`.devkit/config.toml`), so its own `devkit sync`
+does not meet the first state. A test that runs `devkit add adaptive-dev` with the workspace interpreter (set 7)
+would meet it in an environment that lacks `devkit-adaptive`, and an environment that still holds the catalog's
+entry-point metadata from before the edit beside the new package would meet the second. Run `just init` after
+editing the two `pyproject.toml` files and before any `devkit` command or test. A stale environment was not
+reproduced in this Planning.
 
 ## Set 4: decision clauses (Q4)
 
@@ -168,7 +158,7 @@ marked "no edit" was checked and needs none.
 | CI | `.github/workflows/ci.yml:3-4` | Comment only; the workflows hold no package list |
 | This repository's selection | `.devkit/config.toml`, `.devkit/installation.json` | No edit: `adaptive-dev` is not selected here |
 | Root documents | `AGENTS.md:80`, `README.md:29-32`, `:70-71`, `:82`, `:205` | Add the package to the tables and lists |
-| Guides | `guides/INSTALL_GUIDE.md:83-125`, `:217`; `guides/install/existing-repository.md:256-257` and a migration subsection beside `:224-242`; `guides/install/new-repository.md:104-105`; `guides/install/adaptive-dev-sdd-adoption.md:21`; `guides/install/bundle-recommendations.md:35-36`, `:88` | Name `devkit-adaptive` as the package of `adaptive-dev`; add the installation and upgrade commands and the migration step of set 3 |
+| Guides | `guides/INSTALL_GUIDE.md:83-125`, `:140`; `guides/install/existing-repository.md:256-257`; `guides/install/new-repository.md:104-105`; `guides/install/adaptive-dev-sdd-adoption.md:21`; `guides/install/bundle-recommendations.md:35-36`, `:88` | Name `devkit-adaptive` as the package of `adaptive-dev` for a fresh installation and add its installation and upgrade commands beside the catalog's. No migration subsection and no edit to the `SELECTION_INVALID` row (`guides/INSTALL_GUIDE.md:217`) |
 | Living Spec | Set 4, plus the `entrypoints` of `UC-advance-an-idea` (2), `UC-import-third-party-agent-assets` (2) and `CAP-HARN-agent-guidance` (1) and the body of `CAP-HARN-agent-guidance` lines 473-475 and of `ARCH-05-1-containers` (container diagram and 2.7) | `RULE-code-entrypoints` fails on a frontmatter path that no longer exists; body paths are not rule-checked |
 
 Two existing inaccuracies sit on lines this change edits. `tests/e2e/smoke.sh:228` asserts five bundle names for
