@@ -44,6 +44,11 @@ catalog. Each item states what must hold after this unit; where the landed wordi
     exit code, and the stated limits of verification (proposal §3.2 to §3.6).
   - Frontmatter `entrypoints`: the feature's CLI module; `usecases`: `UC-advance-an-idea`.
 - `CAP-DLV-adaptive-development`:
+  - §1, the paragraph on decision ownership: the decision promoted from `PADR-adaptive-assignment-commands` owns
+    the command group and its naming (rules 13, 14, 18 and 19 where they name the commands), and the decision
+    promoted from `PADR-adaptive-requires-document-system` owns the requirement and the document defaults (rules 2,
+    26 and 27). The sentence that rules 26 and 27 "have no decision record" is corrected for the parts that
+    decision now owns; the import entry (rules 28 to 39) keeps the capability as its contract.
   - Rule 2 (independent installation): the `devkit-adaptive` distribution MUST require `devkit-docs` and MUST
     install without a devkit-spec distribution; installing it alone provides the document system and the harness,
     with the `docs` and `harness` bundles selected by their own `auto_select`. Test: the installed-consumer test.
@@ -86,7 +91,10 @@ catalog. Each item states what must hold after this unit; where the landed wordi
 
 - `UC-advance-an-idea`:
   - 5b: the Host records the assignment before dispatch and verifies the return.
-  - 5b1: a lead records its children under its own assignment and closes them before returning.
+  - 5b1: a `swarm-worker` lead records its children under its own assignment and closes them before returning;
+    the Host records the children of a verifier or planner lead from its return, or leaves them unrecorded.
+  - 5b3: the Host creates each writer's worktree with the harness worktree lifecycle, or with the project's
+    documented Git procedure where that lifecycle cannot be used.
   - 5b6: "in a project that maintains documents" is dropped; the governing documents are passed when the assignment
     is recorded, and an unresolved one is refused.
   - 5c: a return whose verification fails is rejected with its codes.
@@ -118,6 +126,9 @@ catalog. Each item states what must hold after this unit; where the landed wordi
   says its core is auto-selected by any installation that carries `devkit-docs`.
 - Decisions promoted at handoff: `PADR-adaptive-assignment-commands`, `PADR-adaptive-requires-document-system`
   (each supersedes in part `ADR-adaptive-development-and-research`) and `PADR-adaptive-assignment-ledger-storage`.
+- `ADR-worktree-isolated-parallel-workers` and `ADR-skill-local-swarm-roles` are not superseded and not edited:
+  the guidance follows the first one's order (harness lifecycle, then the project's Git procedure) and the second
+  one's read-only Git contract for `swarm-verifier`.
 - `ADR-adaptive-development-and-research` gains two partial-supersession lines:
   - for the clause "Identifiers and commands use `adaptive-dev`", which no longer covers the command group;
   - for "independent docs/catalog installation" in the clause on catalog ownership, which no longer means two
@@ -148,6 +159,8 @@ catalog. Each item states what must hold after this unit; where the landed wordi
   - `guides/install/adaptive-dev-sdd-adoption.md`: adopting SDD adds `devkit-spec` and keeps `devkit-adaptive`.
 - Bundle guidance: `delegation.md`, `orchestration.md`, `current-context.md`, `documents.md`, the current-context
   template, the three archetypes and the bundle constitution (proposal §3.7), with their content tests.
+- `scripts/affected_tests.py` and its assertion in `packages/devkit/tests/e2e/package/test_affected_tests.py`: the
+  adaptive documented-codes test is selected by a change under `docs/`.
 - `tests/e2e/smoke.sh`: the adaptive wheel with its sibling wheels and one `devkit adaptive assignment list` call.
 
 ---

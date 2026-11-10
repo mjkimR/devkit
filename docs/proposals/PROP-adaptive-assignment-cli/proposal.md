@@ -27,11 +27,12 @@ boundaries:
     - docs/architecture/ARCH-05-1-containers.md
     - docs/architecture/ARCH-05-2-components.md
     - docs/architecture/ARCH-07-deployment.md
-    - docs/decisions/2026-11/20261102-adaptive-development-and-research.md
+    - docs/decisions/
     - docs/development/reference/
+    - scripts/affected_tests.py
   excludes:
     - packages/devkit-spec/
-    - packages/devkit/
+    - packages/devkit/src/
     - packages/devkit-docs/
     - packages/devkit-core/
     - packages/devkit-dist/
@@ -118,8 +119,8 @@ The other choices, each with its reason:
   `devkit_dist` and the document index. It still writes its own worktree-list parser, status parser and prefix
   functions, because no public module holds them: the harness parser is a private function, the status parser lives
   in a feature without a public module, and the literal containment helper of `devkit-docs` is outside its
-  `public_modules`. No file under `packages/devkit/` or `packages/devkit-docs/` changes, and the feature declares no
-  `devkit_agt` edge (`materials/planning-evidence.md` §10).
+  `public_modules`. No source file under `packages/devkit/src/` or `packages/devkit-docs/` changes, and the feature
+  declares no `devkit_agt` edge (`materials/planning-evidence.md` §10).
 - **Governing documents are validated when an assignment is recorded**, in the assignment's worktree, so a document
   the assignee cannot read is refused (`materials/planning-evidence.md` §12). `verify` and `list` do not check them
   again.
@@ -127,6 +128,15 @@ The other choices, each with its reason:
   document system and the harness are requirements of that wheel. The conditions "where the commands are
   available", "when the docs bundle is selected" and "without assuming a harness is installed" are removed (§3.7).
   The fallback is tied to a command that cannot record, and to a project that opted out of the docs bundle.
+- **Worktrees follow the accepted order.** `ADR-worktree-isolated-parallel-workers` decides "Use the existing
+  harness lifecycle when available, otherwise the consuming project's documented Git procedure." The harness is
+  installed with every adaptive installation after this unit, so the guidance names `uv run devkit worktree` first
+  and the project's documented Git procedure for the case where that lifecycle cannot be used. The ADR is not
+  superseded and its file does not change.
+- **Only a `swarm-worker` lead records children.** `swarm-verifier` keeps "product sources and Git read-only" and
+  writes only assigned ignored outputs (`ADR-skill-local-swarm-roles`); a ledger write under the shared Git
+  directory does not fit that contract. `swarm-planner` has no shell. The Host records the children of such a lead
+  from its return, or leaves them unrecorded.
 - **Recording stays a SHOULD.** The Host may leave a bounded experiment unrecorded, and a failed verification never
   blocks `close` (root `AGENTS.md`, Proportionate Guardrails).
 - **Documents are still written only where the subject warrants.** With the document system always installed, "a
@@ -150,7 +160,8 @@ The other choices, each with its reason:
 - **The command contract gets its own capability**, CAP-DLV-adaptive-assignments. `CAP-DLV-adaptive-development`
   holds 39 agent-guidance rules; the commands have a tested, deterministic contract that
   `PROP-adaptive-lifecycle-hooks` will cite. The ID is written without backticks in this bundle because the document
-  does not exist yet (`RULE-document-reference`); Development backticks it in the promoted decisions once it does.
+  does not exist yet (`RULE-document-reference`); Development backticks it in the promoted decisions under
+  `docs/decisions/` once it does.
 - **The evidence scorer stays unchanged.** `adaptive_behavior_scorer.py` scores supplied evidence of agent behavior.
   The commands compare a repository with an assignment. Neither replaces the other.
 - **One spec, size `L`.** The requirement exists because the feature imports the document index, the guidance
@@ -444,19 +455,19 @@ distribution absent, `devkit adaptive` is click's usage error, exit `2`, without
 
 ### 3.7 Guidance
 
-The delegating agent runs the commands: the Host for its assignments and a role lead for its children. An assignee
-never runs them. The bundle text states each step without an installation condition. Before editing the bundle,
+The delegating agent runs the commands: the Host for its assignments and a `swarm-worker` lead for its children. An
+assignee never runs them. The bundle text states each step without an installation condition. Before editing the bundle,
 Development runs `uv run devkit get-context authoring` and applies its `agent-asset-writing` instruction; the rows
 below give the content each asset must carry, not its final wording.
 
 | Asset | Change |
 | --- | --- |
 | `skills/adaptive-dev/references/delegation.md` | Before dispatching a deliverable, record it with `new`, passing its governing documents as `--governing`, and put the ID in the payload. After the return, record it with `return`, then run `verify`; treat `result=fail` (status `rejected`) as a rejected return (existing step 15) and route its codes to repair, and do not read exit `1` alone as a failure, because `--strict` also gives it. On `ADAPTIVE_SCOPE_OVERLAP`, narrow the scope, close the finished assignment, sequence with `--depends-on`, or leave a bounded experiment unrecorded; never name a dependency that does not exist. On `ADAPTIVE_GOVERNING_UNRESOLVED`, correct the value, bring the document into the assignee's worktree, or pass the absolute path of a copy the assignee can read. Close with `close` after integrating or abandoning. The fallback paragraph below. |
-| `skills/adaptive-dev/references/orchestration.md` | Step 5 drops "without assuming a harness is installed": use the project's documented worktree procedure and permitted Git actions; a project that documents none may use the installed `uv run devkit worktree start\|status\|finish` on a `dev-<slug>` branch. The assignment commands accept any worktree of the repository, however it was created. A `swarm-worker` or `swarm-verifier` lead records each child with `--parent <its ID>` when the payload supplies that ID, and closes its children before it returns. A `swarm-planner` lead has no shell and records nothing; the Host records its children from the returned partition or leaves them unrecorded. On interruption and before a pause, run `list`. |
+| `skills/adaptive-dev/references/orchestration.md` | Step 5 drops "without assuming a harness is installed" and states the order of `ADR-worktree-isolated-parallel-workers`: create each writer's worktree with the installed harness lifecycle (`uv run devkit worktree start\|status\|finish` on a `dev-<slug>` branch); where that lifecycle cannot be used (it refuses the layout, or permission is missing), use the project's documented Git procedure; without either, serialize writers. The assignment commands accept any worktree of the repository, however it was created. A `swarm-worker` lead records each child with `--parent <its ID>` when the payload supplies that ID and permits it, and closes its children before it returns. A `swarm-verifier` or `swarm-planner` lead records nothing: the Host records its children from the returned partition or leaves them unrecorded. On interruption and before a pause, run `list`. |
 | `skills/adaptive-dev/references/current-context.md` | On resume run `list` beside reading `.devkit/adaptive-dev.md`. In a new context treat every `open` assignment as interrupted: no agent from an earlier context is assumed to run. For each one, read `worktree_state`, `commits`, `dirty` and `attention` from `list` and the goal, stop condition, commit grant, governing documents and checks from `show <id>`, then record a return from the retained state, dispatch it again, or close it as abandoned. Before pausing, name the outstanding assignment IDs and the next recovery action in the Markdown; the ledger holds their scope, base and checks. An ID the ledger lacks is stale context. |
 | `skills/adaptive-dev/references/documents.md` | Step 1 becomes unconditional: read `uv run devkit get-context docs` and the relevant writing instruction before authoring, and locate documents with `uv run devkit docs search\|list\|resolve\|refs`; keep the project's existing document destinations and formats where it has its own. One exception stays: in a project that opted out of the docs bundle, follow the project's own conventions. Step 2 becomes: if the project has no document yet, record that in current context, seed no document tree, and write the first document only when a retained subject warrants one (step 8), in the document system's kind and destination. Step 4 adds that the same documents are passed as `--governing` when the assignment is recorded. Step 12 becomes: include `uv run devkit rules check` on the changed documents in combined checks, with any further document check the project defines; report a check that could not run as unverified. Steps 3, 5 to 11 and 13 to 15 keep their content, the rule that documents are written only where the subject warrants and the rule that no per-change record is added included. |
 | `templates/current-context.md` | Under "Documents": "When the project has no document yet, say so here." Under "Next useful action": name outstanding assignments by ledger ID. |
-| `subagents/swarm-planner.md`, `swarm-worker.md`, `swarm-verifier.md` | One procedure sentence in each: when the payload supplies an assignment ID, return it with the result. `swarm-worker` and `swarm-verifier` add, self-contained: as a lead, when the payload permits it, record each child with `uv run devkit adaptive assignment new --parent <ID>` and close it before returning; if the command cannot record, report the children as unrecorded. No prerequisite is added (`CAP-DLV-adaptive-development` rule 19). |
+| `subagents/swarm-planner.md`, `swarm-worker.md`, `swarm-verifier.md` | One procedure sentence in each: when the payload supplies an assignment ID, return it with the result. `swarm-worker` alone adds, self-contained: as a lead, when the payload permits it, record each child with `uv run devkit adaptive assignment new --parent <ID>` and close it before returning; if the command cannot record, report the children as unrecorded. `swarm-verifier` and `swarm-planner` gain no command and keep their read-only Git contract. No prerequisite is added (`CAP-DLV-adaptive-development` rule 19). |
 | `AGENTS.md` (bundle constitution) | One line: record and verify delegated deliverables with `uv run devkit adaptive assignment`; a command that cannot record leaves the manual board in force. The existing line on `get-context docs` stays as it is. |
 
 Fallback, stated once in `delegation.md` and cited by the other files: when a recording command exits `2` with
@@ -544,15 +555,20 @@ public_modules = ["devkit_adaptive.features.assignment.usecases.listing"]
   revision resolver, the common-directory lookup, the prefix functions and the JSON Lines append.
 - No import of `devkit_spec` or `devkit_agt`. No use of `devkit worktree` or `devkit exec` by the commands: they
   create no worktree and run no process.
-- No file under `packages/devkit/`, `packages/devkit-docs/`, `packages/devkit-core/`, `packages/devkit-dist/` or
-  `packages/devkit-spec/` changes.
+- No source file under `packages/devkit/src/`, and no file under `packages/devkit-docs/`,
+  `packages/devkit-core/`, `packages/devkit-dist/` or `packages/devkit-spec/`, changes. The one edit under
+  `packages/devkit/` is the affected-test assertion named below.
 
 **Tests.**
 
 - Unit tests for the fold, the prefix rules, the two parsers and each check.
 - Integration tests on temporary repositories with a linked worktree through the CLI, one per scenario of §3.10.
-- A documented-codes test like `packages/devkit-spec/tests/integration/package/test_documented_codes.py`.
-- An import test over every module of the package.
+- A documented-codes test like `packages/devkit-spec/tests/integration/package/test_documented_codes.py`,
+  registered under `docs/` in the `DATA` list of `scripts/affected_tests.py` so that a docs-only change selects it;
+  `packages/devkit/tests/e2e/package/test_affected_tests.py` asserts that list and gains the same path.
+- An import test over every module of the package, run in a fresh interpreter (a `python -c` subprocess, as
+  `packages/devkit-dist/tests/integration/cli/test_cli_imports.py` does), because a shared pytest process may
+  already hold `devkit_spec`.
 - A package metadata test: the `dependencies` of `pyproject.toml` name `devkit-docs` at the version of
   `packages/devkit-docs/pyproject.toml` and no `devkit-spec`.
 - A snapshot refusal test: `devkit bundle snapshot` on the package source exits `2` with
@@ -576,8 +592,13 @@ installed. `target-docs.md` lists, per document, the statement that must hold. T
 passages for the move out of the catalog; where its wording names `devkit-docs` beside the adaptive wheel as a second
 requirement the consumer declares, this unit replaces it.
 
-Statements that stay true and are not edited: `devkit-docs` remains a valid installation of its own for document
-formats without adaptive development, and the catalog's content-only rule.
+Statements that stay true and are not edited:
+
+- `devkit-docs` remains a valid installation of its own for document formats without adaptive development.
+- The `deep-research` bundle stays in `devkit-catalog`; its installation statements ("devkit-docs plus
+  devkit-catalog" in `CAP-DLV-deep-research` and the deep-research row of
+  `guides/install/bundle-recommendations.md`) do not change.
+- The catalog's content-only rule.
 
 ### 3.10 Acceptance scenarios
 
@@ -645,15 +666,17 @@ Each scenario is a test on a temporary repository unless it says otherwise.
   into a fresh environment and shows:
   - the installed metadata of `devkit-adaptive` requires `devkit-docs` at exactly the built version and names no
     `devkit-spec`;
-  - `devkit-docs`, `devkit-agt` and `devkit-dist` are installed distributions and `devkit-spec` is not;
+  - `devkit-spec` is not an installed distribution (the sibling wheels are named by file, so their presence shows
+    nothing; the metadata check above carries the requirement);
   - after `devkit sync` in a consumer repository with one commit, the receipt's `selection.presets` holds
     `docs == ["core"]` and `harness == ["core"]`, and `.devkit/managed/adaptive-dev` does not exist until
     `devkit add adaptive-dev`;
   - `devkit adaptive assignment list --format json` exits `0` with an empty `assignments` list;
   - `devkit adaptive assignment new --owner o --goal g --governing CAP-NOPE-missing` exits `2` with
     `ADAPTIVE_GOVERNING_UNRESOLVED`, which shows the document index imports in the installed environment.
-- **AC-19**: A test imports every module of the package (`pkgutil.walk_packages`), the CLI module included, and then
-  finds no `devkit_spec` module in `sys.modules`.
+- **AC-19**: A test starts a fresh interpreter that imports every module of the package
+  (`pkgutil.walk_packages`), the CLI module included, and prints the loaded module names; the test finds no
+  `devkit_spec` module among them.
 - **AC-20**: Given a worktree that holds a document with a valid ID (written `<ID>` here) and the file
   `docs/notes.md`, when `new` records `--governing <ID> --governing docs/notes.md`, then `show` lists both and the
   JSON `governing` is `["<ID>", "docs/notes.md"]`. An alias of the document records `<ID>`. `--governing none` and
@@ -666,9 +689,11 @@ Each scenario is a test on a temporary repository unless it says otherwise.
   the reason `duplicate-id`.
 - **AC-22**: The package metadata test passes (§3.8), `packages/devkit/tests/integration/package/test_lockstep.py`
   passes, `uv lock --check` passes, and the snapshot refusal test shows `BUNDLE_SNAPSHOT_UNSUPPORTED`.
-- **AC-23**: `rg -n "devkit-docs (plus|and) devkit-(catalog|adaptive)" docs/capabilities docs/architecture guides
-  README.md packages/devkit-adaptive/README.md` prints nothing, and each statement of `target-docs.md` §1 to §4 is
-  present in its document (checked in the reconcile review).
+- **AC-23**: Each statement of `target-docs.md` §1 to §4 is present in its document (checked in the reconcile
+  review, one document at a time). As a search aid, `rg -nU "devkit-docs\s+(plus|and)\s+devkit-(catalog|adaptive)"
+  docs/capabilities docs/architecture guides README.md` then prints only statements about installing
+  `deep-research`, and `rg -n "docs/catalog" docs/capabilities docs/architecture guides` prints no statement about
+  adaptive development.
 
 ### 3.11 Prerequisite and order of work
 
@@ -686,9 +711,12 @@ missing entry to the root `pyproject.toml`, which this proposal owns for that pu
 
 An order that keeps each part verifiable:
 
-1. The requirement, `uv.lock`, the architecture declaration, the package metadata test and the snapshot refusal
-   test.
-2. Models, the event fold, the ledger repository and `new`, `list`, `show`, with governing validation.
+1. The requirement: the `dependencies` and `[tool.uv.sources]` lines of `pyproject.toml`, `uv.lock`, the
+   `dependencies` line of the architecture declaration, the package metadata test and the snapshot refusal test.
+2. Models, the event fold, the ledger repository and `new`, `list`, `show`, with governing validation; in the same
+   commit as the modules they name, the `devkit.commands` entry point and the `kind`, `features`,
+   `feature_dependencies` and `public_modules` lines of the architecture declaration (`RULE-architecture` reports
+   a declared module that does not exist).
 3. `return`, `verify`, `close` and nesting.
 4. The installed-consumer test and the smoke script.
 5. The bundle guidance and its content tests.
@@ -708,7 +736,11 @@ Assumptions the user confirms at `plan-accept`:
   checkout is refused unless its absolute path is passed.
 - With the document system always installed, the first document of a project that has none is written in the
   document system's kinds when a subject warrants one; no tree is seeded.
-- The guidance names `uv run devkit worktree` as an installed procedure a project may use and prescribes none.
+- The guidance names the harness worktree lifecycle first and the project's documented Git procedure second, as
+  `ADR-worktree-isolated-parallel-workers` decides for an installed harness. Adaptive guidance did not name
+  `uv run devkit worktree` before this unit.
+- Only a `swarm-worker` lead records its children; children of a verifier or planner lead are recorded by the Host
+  or not at all.
 - One spec at size `L`.
 
 ## 4. Lifecycle & Retirement Criteria

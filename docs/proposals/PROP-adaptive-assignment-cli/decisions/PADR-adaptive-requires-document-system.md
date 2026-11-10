@@ -67,6 +67,9 @@ the consumer declares side by side. The independence from `devkit-spec` in the s
   document, and document work adds no per-change record. → `CAP-DLV-adaptive-development` rule 27 (MUST).
 - The requirement adds no SDD stage, gate, envelope or approach change. The approach check of the `/adaptive-dev`
   entry is unchanged.
+- `ADR-worktree-isolated-parallel-workers` stays in force unchanged. Its clause "Use the existing harness lifecycle
+  when available, otherwise the consuming project's documented Git procedure" now always meets an installed
+  harness, so the orchestration guidance names `uv run devkit worktree` first. → `UC-advance-an-idea` 5b3.
 
 ## 5. Consequences
 

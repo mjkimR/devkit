@@ -67,9 +67,10 @@ group and no runtime service, scheduler or process runner.
   declared check has a recorded passing outcome. → CAP-DLV-adaptive-assignments §3 (MUST).
 - A failed verification is a negative result with exit code `1` and one stable code per failed check.
   → CAP-DLV-adaptive-assignments §4 (MUST).
-- The delegating agent runs the commands: the Host for its assignments, a role lead for its children. Assignees and
-  product-support roles run none of them, and no archetype requires them. → `CAP-DLV-adaptive-development` rules 13
-  and 19.
+- The delegating agent runs the commands: the Host for its assignments, a `swarm-worker` lead for its children.
+  Assignees, product-support roles and verifier or planner leads run none of them, because their contracts keep Git
+  read-only (`ADR-skill-local-swarm-roles`), and no archetype requires them. → `CAP-DLV-adaptive-development` rules
+  13 and 19.
 - Recording is the Host's standard delegation step and never a gate. The commands ship in the same wheel as the
   guidance, so the guidance states the steps without an availability condition. When a command cannot record (an
   unsupported repository, an unwritable or unreadable ledger, a denied write), the Host keeps the manual board and
