@@ -1,0 +1,45 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T02:09:52.727833Z'
+status: needs_input
+summary: 'Second Planning turn at medium: the answers to q1 and q2 of worker-01.yaml are recorded (answer-01.yaml) and folded into proposal.md, the PADR and target-docs.md; the challenger round is closed (reverify-02.yaml, 7 of 7 resolved); the bundle follows the refreshed base (66 ADRs, 27 pairs, two open PADRs naming supersedes, no dangling ID in the documents). One question waits for the user: the replaced scope of a second pair whose sources differ, found when the pairs were compared on this head. The next turn folds that answer; plan-accept follows.'
+findings: []
+assumptions:
+- 'ADR-adaptive-dev-distribution over ADR-adaptive-development-and-research, the pair the base gained, is not flagged: its pointer names ''owning-wheel clauses of the adaptive-dev bundle only'' and the later ADR''s Decision Outcome lists those clauses in detail; section 3.6 now states that the same clauses in other words or in more detail do not flag a pair.'
+- 'ADR-retire-native-approval-and-moved-ownership-clauses over ADR-steering-documents is not flagged: the scout reports a difference in naming only (a Confirmation item the pointer below the heading does not name, which the earlier ADR''s pointers at the affected statements do).'
+- 'The two open PADRs that name supersedes (PADR-adaptive-assignment-commands and PADR-adaptive-requires-document-system of the accepted PROP-adaptive-assignment-cli) need no user decision: each states its replaced scope in Decision Outcome prose, so section 3.6 already covers them, as PADRs or as ADRs after that proposal''s handoff. proposal.md names them only through materials/planning-evidence.md, so their handoff leaves no dead ID in it.'
+- Counts are pinned to c84a5485, the branch head after main at f0434e6e was merged; docs/decisions/ is identical at both.
+- AC-05 gained a clause that handoff changes neither status nor superseded_by, and AC-07 a scope=whole clause, as the testable form of the whole-replacement decision; AC-06 gained the decided scope of the swarm-roles pair.
+- 'dev_effort stays medium: the fold added no irreversible effect and no new component.'
+- 'No second challenger pass ran: the fold added no design beyond the two decisions. One scout ran because the pair comparison decides which questions exist.'
+- The unresolvable ID of the closed spec-depth attempt in materials/supersession-pointer-attempt.md is replaced by its slug; no spec document with that slug exists.
+unverified_areas:
+- The source comparison reads named clause groups in 21 pairs (two readers for 20 of them); a pair whose sources differ below that level may still surface in Development and becomes a question there.
+- Envelopes of the first turn (challenger-01.yaml, reverify-01.yaml, worker-01.yaml) keep the handed-off ID PROP-adaptive-package-extraction and the earlier counts as recorded; records are not edited.
+- Whether a statement that cites the proposal by ID stays equal to its pointer after handoff's reference rewrite; it stays an AC-05 clause.
+- Pairs or open PADRs that land on main after c84a5485; the migration covers the Development head.
+checks:
+  rules: PASS devkit rules check docs/proposals/ errors=0 (RULE-proposal-boundaries clean)
+  challenger: PASS round 1 closed by reverify-02.yaml, 7 of 7 resolved
+  scout: PASS 1 return recorded (scout-02.yaml), tree unchanged by the role
+  ids: PASS devkit docs resolve for the 60 IDs cited in proposal.md, the PADR, target-docs.md, materials/, feedback/ and the follow-up draft; only the example IDs ADR-example-new and ADR-example-old do not resolve
+  feedback: PASS swept twice, recorded=2 duplicates=0
+diff_scope:
+  base: c84a54854694dd9bf8125cdcfd7d439d95879862
+  head: a2366df82c4eead08a83c457165f3b6da5067b47
+questions:
+- id: q1
+  title: Scope of the steering-registers pair
+  prompt: Which parts of ADR-namespace-steering-directories does ADR-namespace-steering-registers replace?
+  context: 'The migration writes one fixed statement per existing pair and settles no scope by itself; the answer becomes the statement and the pointer text of this pair, and the rule compares text only, so nothing later catches a wrong scope. Comparing the pairs on the refreshed base found this second pair whose sources differ. The later ADR''s Decision Outcome says it "replaces the glossary-exclusion and package-glossary-location clauses" and that the earlier ADR''s "other decisions remain in force". The earlier ADR''s pointer names more: "namespace glossary locations and exclusions, root-only search synonyms, and the deferred namespace UX object register". In the earlier ADR the root-only synonyms stand inside its glossary item, and the deferred register is a follow-up in Consequences. Other outcome items of the later ADR place namespace UX object registers in the namespace steering directory and make search load namespace synonym files, without naming the earlier ADR.'
+  options:
+  - id: a
+    description: The pointer's scope. The statement names the namespace glossary locations and exclusions, the root-only search synonyms and the deferred namespace UX object register; the later ADR's Decision Outcome sentence is reworded to that scope and the earlier ADR's pointer keeps it. The later ADR's own outcome items on namespace registers and namespace synonym files support this scope.
+    recommended: true
+  - id: b
+    description: The Decision Outcome sentence's scope. The statement names the glossary-exclusion and package-glossary-location clauses only, and the earlier ADR's pointer narrows to them. The root-only synonyms and the deferred register then read as in force in the earlier ADR, although the later ADR's other outcome items change both.
+    recommended: false
+  allow_note: true
+activity_effort: medium
