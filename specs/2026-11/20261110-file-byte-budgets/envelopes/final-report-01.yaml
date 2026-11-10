@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:56:06.220946Z'
+status: completed
+summary: 'Replaced RULE-file-length line budgets with snapshot-aware raw bytes (default49152, project CAP/consolidated65536); obsolete keys explicitly fail. Current contracts/playbooks and matching partial ADR supersession align. Independent code and reconciliation reviews found zero findings; no deferred work. Only tracked sync output: .devkit/installation.json.'
+findings: []
+assumptions:
+- No production changes after e3717ccc; later commits only add measured evidence, reconciliation and workflow records. Rules reference was explicitly admitted by Host; no scope extensions.
+unverified_areas:
+- Host integration/final target verification remains pending. Source-specific hygiene8 to3 includes two unsplit CAPs and a historical material; Host separately merged CAP split.
+checks:
+  tests: 'PASS source e3717ccc: just test-affected --base 7bc401d4f599ff3373a01a11084e7719fe1272f0 --tier all: 4320 passed; devkit rules test RULE-file-length: 79 passed; focused regressions passed'
+  build: 'PASS Pyright via just check dev, agt, spec; generated check fef5ed1d: checked2 stale0; sync --check PASS'
+  lint: PASS just lint-check dev, agt, spec; cumulative CI rules and diff whitespace PASS at fef5ed1d
+diff_scope:
+  base: 25a33dc0640f854d6b767be5244236562332c0ae
+  head: fef5ed1d8c7f3cb69cbb54ee376206f1916dc56f

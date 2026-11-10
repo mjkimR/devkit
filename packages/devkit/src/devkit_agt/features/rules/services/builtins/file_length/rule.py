@@ -9,7 +9,7 @@ from devkit_core.core import FrontmatterError
 from devkit_agt.features.rules.models.contracts import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins.base import BaseRule
 
-DEFAULT_MAX_LINES = 400
+DEFAULT_MAX_BYTES = 48 * 1024
 _CONSOLIDATED_FEEDBACK_ID = re.compile(
     r"FB-consolidated-[a-z0-9]+(?:-[a-z0-9]+)*-(?:resolved|promoted|dismissed|forwarded)"
 )
@@ -31,28 +31,28 @@ def _is_consolidated_record(header: dict[str, object] | None) -> bool:
 
 @dataclass(frozen=True)
 class FileLengthSettings:
-    max_lines: int = DEFAULT_MAX_LINES
+    max_bytes: int = DEFAULT_MAX_BYTES
     extensions: list[str] = field(default_factory=lambda: [".md"])
-    consolidated_max_lines: int | None = None
+    consolidated_max_bytes: int | None = None
 
 
 class FileLengthRule(BaseRule):
-    def __init__(self, max_lines: int = DEFAULT_MAX_LINES) -> None:
+    def __init__(self, max_bytes: int = DEFAULT_MAX_BYTES) -> None:
         super().__init__(
             id="RULE-file-length",
             name="file-length-check",
-            description=f"Warn when a file exceeds line limits (default {max_lines} lines).",
+            description=f"Warn when a file exceeds byte limits (default {max_bytes} bytes).",
             phase=Phase.HYGIENE,
             severity=Severity.WARNING,
-            settings=FileLengthSettings(max_lines=max_lines),
+            settings=FileLengthSettings(max_bytes=max_bytes),
             guide="guide.md",
         )
 
     def validate_settings(self, settings: FileLengthSettings) -> None:
-        if settings.max_lines <= 0:
-            raise ValueError("max_lines must be a positive integer")
-        if settings.consolidated_max_lines is not None and settings.consolidated_max_lines <= 0:
-            raise ValueError("consolidated_max_lines must be a positive integer")
+        if settings.max_bytes <= 0:
+            raise ValueError("max_bytes must be a positive integer")
+        if settings.consolidated_max_bytes is not None and settings.consolidated_max_bytes <= 0:
+            raise ValueError("consolidated_max_bytes must be a positive integer")
         for ext in settings.extensions:
             if len(ext) < 2 or not ext.startswith(".") or any(c in ext for c in "/\\*?[]"):
                 raise ValueError(f"extensions must be literal dot-prefixed extensions, got {ext!r}")
@@ -68,17 +68,16 @@ class FileLengthRule(BaseRule):
             if p.suffix not in settings.extensions:
                 continue
 
-            text = ctx.cache.read_text(p)
-            lines = text.count("\n") + (0 if text.endswith("\n") or not text else 1)
-            limit = settings.max_lines
+            size = len(ctx.cache.read_bytes(p))
+            limit = settings.max_bytes
             consolidated = False
-            if lines > limit and settings.consolidated_max_lines is not None and p.suffix == ".md":
+            if size > limit and settings.consolidated_max_bytes is not None and p.suffix == ".md":
                 # Header validation belongs to document rules; preserve the ordinary finding on invalid headers.
                 with suppress(FrontmatterError):
                     consolidated = _is_consolidated_record(ctx.cache.get_frontmatter(p))
                 if consolidated:
-                    limit = max(limit, settings.consolidated_max_lines)
-            if lines > limit:
+                    limit = max(limit, settings.consolidated_max_bytes)
+            if size > limit:
                 remediation = (
                     "Review the consolidation group by topic while preserving every retained decision or outcome"
                     if consolidated
@@ -88,8 +87,8 @@ class FileLengthRule(BaseRule):
                     Violation(
                         rule_id=self.id,
                         file=rel,
-                        line=limit + 1,
-                        message=f"File exceeds line length limit ({lines} > {limit} lines)",
+                        line=1,
+                        message=f"File exceeds byte budget ({size} > {limit} bytes)",
                         remediation=remediation,
                         fixable=False,
                         severity=self.severity,

@@ -158,7 +158,7 @@ def test_load_project_rules_collects_load_and_policy_errors(tmp_path: Path) -> N
     _write(
         tmp_path,
         ".devkit/config.toml",
-        '[rules.severity_overrides]\nRULE-nope = "warning"\n[rules.settings.RULE-file-length]\nmax_lines = 10\n',
+        '[rules.severity_overrides]\nRULE-nope = "warning"\n[rules.settings.RULE-file-length]\nmax_bytes = 10\n',
     )
     project = load_project_rules(tmp_path, tmp_path / "extra")
     assert project.rules_dir == (tmp_path / "extra").resolve()
@@ -166,7 +166,7 @@ def test_load_project_rules_collects_load_and_policy_errors(tmp_path: Path) -> N
     assert [e.code for e in project.load_errors] == ["RULES_LOAD_FAILED"]
     assert [e.rule_id for e in project.policy_errors] == ["RULE-nope"]
     assert project.errors == [*project.load_errors, *project.policy_errors]
-    assert project.resolvers["RULE-file-length"].resolve().max_lines == 10
+    assert project.resolvers["RULE-file-length"].resolve().max_bytes == 10
 
 
 def test_rules_dir_and_receipt_rules_are_loaded_after_builtins(tmp_path: Path) -> None:

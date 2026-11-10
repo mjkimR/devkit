@@ -1,4 +1,4 @@
-"""``RULE-file-length``: files stay under a line budget (hygiene). Code in ``rule.py``, guide in ``guide.md``."""
+"""``RULE-file-length``: files stay under a byte budget (hygiene). Code in ``rule.py``, guide in ``guide.md``."""
 
 from __future__ import annotations
 

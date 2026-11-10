@@ -34,7 +34,7 @@ def _write_config(root: Path, body: str) -> Path:
     [
         ("[rules.settings]\nx = 1\n", "expected a table"),
         ('[rules.settings.RULE-x]\noverrides = "nope"\n', "expected an array"),
-        ("[[rules.settings.RULE-x.overrides]]\nmax_lines = 1\n", "path"),
+        ("[[rules.settings.RULE-x.overrides]]\nmax_bytes = 1\n", "path"),
         ('[[rules.settings.RULE-x.overrides]]\npath = "../up"\n', "parent segment"),
         ('[[rules.settings.RULE-x.overrides]]\npath = "docs/**"\n', "no settings besides path"),
         ('[rules.severity_overrides]\nRULE-x = "fatal"\n', "is not one of"),
@@ -56,20 +56,20 @@ class Demo:
     tags: list[str] = field(default_factory=lambda: ["a"])
 
 
-def _long_doc(root: Path, rel: str, lines: int) -> None:
+def _sized_doc(root: Path, rel: str, size: int) -> None:
     path = root / rel
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(f"line {i}" for i in range(lines)) + "\n", encoding="utf-8")
+    path.write_bytes(b"x" * size)
 
 
 def test_file_length_settings_apply_per_path(tmp_path: Path) -> None:
-    _long_doc(tmp_path, "docs/a.md", 50)
-    _long_doc(tmp_path, "docs/research/b.md", 50)
-    _long_doc(tmp_path, "notes.txt", 50)
+    _sized_doc(tmp_path, "docs/a.md", 50)
+    _sized_doc(tmp_path, "docs/research/b.md", 50)
+    _sized_doc(tmp_path, "notes.txt", 50)
     _write_config(
         tmp_path,
-        "[rules.settings.RULE-file-length]\nmax_lines = 30\nextensions = ['.md', '.txt']\n"
-        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/research/**'\nmax_lines = 100\n",
+        "[rules.settings.RULE-file-length]\nmax_bytes = 30\nextensions = ['.md', '.txt']\n"
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/research/**'\nmax_bytes = 100\n",
     )
     config = load_rules_config(tmp_path)
     ctx = RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE, rule_settings=dict(config.settings))
@@ -80,26 +80,26 @@ def test_file_length_settings_apply_per_path(tmp_path: Path) -> None:
 
 
 def test_file_length_default_settings_without_config(tmp_path: Path) -> None:
-    rule = FileLengthRule(max_lines=30)
-    _long_doc(tmp_path, "docs/a.md", 50)
+    rule = FileLengthRule(max_bytes=30)
+    _sized_doc(tmp_path, "docs/a.md", 50)
     ctx = RuleContext(workspace_root=tmp_path, phase=Phase.HYGIENE)
-    assert ctx.settings(rule) == FileLengthSettings(max_lines=30)
+    assert ctx.settings(rule) == FileLengthSettings(max_bytes=30)
     assert [v.file for v in evaluate_rules(ctx, [rule]).violations] == ["docs/a.md"]
 
 
 def test_evaluate_fails_before_checks_on_bad_settings(tmp_path: Path) -> None:
-    _long_doc(tmp_path, "docs/a.md", 500)
+    _sized_doc(tmp_path, "docs/a.md", 50000)
     ctx = RuleContext(
-        workspace_root=tmp_path, phase=Phase.HYGIENE, rule_settings={"RULE-file-length": RawSettings({"max_lines": -1})}
+        workspace_root=tmp_path, phase=Phase.HYGIENE, rule_settings={"RULE-file-length": RawSettings({"max_bytes": -1})}
     )
     result = evaluate_rules(ctx, [FileLengthRule()])
     assert result.violations == []
-    assert [str(e) for e in result.errors] == ["RULE-file-length: settings: max_lines must be a positive integer"]
+    assert [str(e) for e in result.errors] == ["RULE-file-length: settings: max_bytes must be a positive integer"]
     assert result.errors[0].code == "RULES_SETTINGS_INVALID" and result.errors[0].mode is ActionMode.INPUT_ERROR
 
 
 def test_severity_override_changes_reported_severity(tmp_path: Path) -> None:
-    _long_doc(tmp_path, "docs/a.md", 500)
+    _sized_doc(tmp_path, "docs/a.md", 50000)
     ctx = RuleContext(
         workspace_root=tmp_path, phase=Phase.HYGIENE, severity_overrides={"RULE-file-length": Severity.ERROR}
     )

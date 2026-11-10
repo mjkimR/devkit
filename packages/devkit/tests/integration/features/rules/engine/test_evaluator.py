@@ -40,7 +40,7 @@ def test_evaluator_autofix_convergence(temp_workspace: Path, workspace_cache: Wo
 def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
     doc_path = temp_workspace / "docs" / "long.md"
     doc_path.parent.mkdir(parents=True)
-    doc_path.write_text("\n".join(f"Line {i}" for i in range(500)), encoding="utf-8")
+    doc_path.write_bytes(b"x" * 49153)
 
     registry = default_rule_registry()
 

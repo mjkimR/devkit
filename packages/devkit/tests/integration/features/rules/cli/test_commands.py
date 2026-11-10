@@ -279,38 +279,45 @@ def test_cli_phases_command_flags_unknown_override(tmp_path: Path) -> None:
 # --- settings, severity overrides, guides, explain --------------------------
 
 
-def _long_doc(root: Path, rel: str, lines: int) -> None:
+def _sized_doc(root: Path, rel: str, size: int) -> None:
     path = root / rel
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(f"line {i}" for i in range(lines)) + "\n", encoding="utf-8")
+    path.write_bytes(b"x" * size)
 
 
 def test_cli_settings_override_by_path_and_guide_line(tmp_path: Path) -> None:
-    _long_doc(tmp_path, "docs/a.md", 50)
-    _long_doc(tmp_path, "docs/research/b.md", 50)
+    _sized_doc(tmp_path, "docs/a.md", 50)
+    _sized_doc(tmp_path, "docs/research/b.md", 50)
     _write_config(
         tmp_path,
-        "[rules.settings.RULE-file-length]\nmax_lines = 30\n"
-        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/research/**'\nmax_lines = 100\n",
+        "[rules.settings.RULE-file-length]\nmax_bytes = 30\n"
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/research/**'\nmax_bytes = 100\n",
     )
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
     assert result.exit_code == 0, result.output
     assert "docs/research/b.md" not in result.output
-    assert "[VIOLATION: RULE-file-length severity=warning file=docs/a.md line=31 status=open" in result.output
+    assert "[VIOLATION: RULE-file-length severity=warning file=docs/a.md line=1 status=open" in result.output
     assert " guide=" in result.output and "file_length/guide.md]" in result.output
+
+    as_json = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--format", "json"])
+    assert as_json.exit_code == 0
+    violation = json.loads(as_json.stdout)["violations"][0]
+    assert (violation["rule_id"], violation["file"], violation["line"]) == ("RULE-file-length", "docs/a.md", 1)
+    assert violation["message"] == "File exceeds byte budget (50 > 30 bytes)"
+    assert (violation["phase"], violation["severity"]) == ("hygiene", "warning")
 
 
 def test_cli_invalid_settings_fail_before_checks(tmp_path: Path) -> None:
-    _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_lines = 'many'\n")
+    _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_bytes = 'many'\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
     assert result.exit_code == 2
     data = json.loads(result.stdout)
     assert data["violations"] == [] and [e["code"] for e in data["errors"]] == ["RULES_SETTINGS_INVALID"]
-    assert "RULE-file-length: settings.max_lines: expected integer" in data["errors"][0]["message"]
+    assert "RULE-file-length: settings.max_bytes: expected integer" in data["errors"][0]["message"]
 
 
 def test_cli_severity_override_turns_warning_into_error(tmp_path: Path) -> None:
-    _long_doc(tmp_path, "docs/a.md", 500)
+    _sized_doc(tmp_path, "docs/a.md", 50000)
     _write_config(tmp_path, '[rules.severity_overrides]\nRULE-file-length = "error"\n')
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene"])
     assert result.exit_code == 1
@@ -321,23 +328,23 @@ def test_cli_explain_text_and_json(tmp_path: Path) -> None:
     _write_config(
         tmp_path,
         '[rules.severity_overrides]\nRULE-file-length = "error"\n'
-        "[rules.settings.RULE-file-length]\nmax_lines = 300\n"
-        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/**'\nmax_lines = 800\n",
+        "[rules.settings.RULE-file-length]\nmax_bytes = 300\n"
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'docs/**'\nmax_bytes = 800\n",
     )
     runner = CliRunner()
     text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
     assert text.exit_code == 0, text.output
     assert "severity=warning effective_severity=error" in text.output
-    assert "[SETTING: max_lines=300 default=400]" in text.output
-    assert "[SETTING_OVERRIDE: path=docs/** max_lines=800]" in text.output
+    assert "[SETTING: max_bytes=300 default=49152]" in text.output
+    assert "[SETTING_OVERRIDE: path=docs/** max_bytes=800]" in text.output
     assert "# [RULE-file-length]" in text.output
 
     as_json = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length", "--format", "json"])
     payload = json.loads(as_json.stdout)
     assert payload["errors"] == [] and payload["notices"] == []
     data = payload["rule"]
-    assert data["effective_severity"] == "error" and data["settings"]["settings"]["max_lines"] == 300
-    assert data["settings"]["overrides"] == [{"path": "docs/**", "max_lines": 800}]
+    assert data["effective_severity"] == "error" and data["settings"]["settings"]["max_bytes"] == 300
+    assert data["settings"]["overrides"] == [{"path": "docs/**", "max_bytes": 800}]
 
     unknown = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-nope"])
     assert unknown.exit_code == 2 and "unknown rule: RULE-nope" in unknown.stderr
@@ -691,7 +698,7 @@ def test_cli_invalid_exclude_pattern_fails_before_rules(tmp_path: Path) -> None:
 
 def test_cli_summary_only_prints_counts_not_findings(tmp_path: Path) -> None:
     _two_broken_docs(tmp_path)
-    _long_doc(tmp_path, "docs/long.md", 500)
+    _sized_doc(tmp_path, "docs/long.md", 50000)
     runner = CliRunner()
     result = runner.invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
     assert result.exit_code == 1
@@ -841,7 +848,7 @@ def test_cli_phases_validates_the_whole_policy(tmp_path: Path) -> None:
     _write_config(tmp_path, '[rules.severity_overrides]\nRULE-file-length = "warning"\n')
     result = CliRunner().invoke(cli, ["phases", "-w", str(tmp_path)])
     assert result.exit_code == 2 and "redundant" in result.stderr
-    _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_lines = 'x'\n")
+    _write_config(tmp_path, "[rules.settings.RULE-file-length]\nmax_bytes = 'x'\n")
     assert CliRunner().invoke(cli, ["phases", "-w", str(tmp_path)]).exit_code == 2
 
 
@@ -1007,11 +1014,11 @@ def test_check_refuses_a_hand_edited_managed_rule(tmp_path: Path) -> None:
 def test_cli_paths_with_spaces_or_brackets_are_quoted_in_sentinels(tmp_path: Path) -> None:
     _write_config(
         tmp_path,
-        "[[rules.settings.RULE-file-length.overrides]]\npath = 'my docs/**'\nmax_lines = 800\n",
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'my docs/**'\nmax_bytes = 800\n",
     )
     runner = CliRunner()
     text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
-    assert '[SETTING_OVERRIDE: path="my docs/**" max_lines=800]' in text.output
+    assert '[SETTING_OVERRIDE: path="my docs/**" max_bytes=800]' in text.output
 
     (tmp_path / "my docs").mkdir()
     (tmp_path / "my docs/a].md").write_text("[missing](nowhere.md)\n", encoding="utf-8")
@@ -1050,11 +1057,22 @@ def test_cli_staged_with_files_targets_the_files_not_the_phase(tmp_path: Path) -
 
 @pytest.mark.parametrize("budget", ["true", "'600'", "0", "-1"])
 def test_cli_invalid_consolidated_budget_returns_settings_error(tmp_path: Path, budget: str) -> None:
-    _write_config(tmp_path, f"[rules.settings.RULE-file-length]\nconsolidated_max_lines = {budget}\n")
+    _write_config(tmp_path, f"[rules.settings.RULE-file-length]\nconsolidated_max_bytes = {budget}\n")
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--format", "json"])
     assert result.exit_code == 2
     data = json.loads(result.stdout)
     assert data["violations"] == []
     assert [error["code"] for error in data["errors"]] == ["RULES_SETTINGS_INVALID"]
     assert "RULE-file-length" in data["errors"][0]["message"]
-    assert "consolidated_max_lines" in data["errors"][0]["message"]
+    assert "consolidated_max_bytes" in data["errors"][0]["message"]
+
+
+@pytest.mark.parametrize("key", ["max_lines", "consolidated_max_lines"])
+def test_cli_obsolete_line_keys_are_explicit_settings_errors(tmp_path: Path, key: str) -> None:
+    _write_config(tmp_path, f"[rules.settings.RULE-file-length]\n{key} = 600\n")
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--format", "json"])
+    assert result.exit_code == 2
+    data = json.loads(result.stdout)
+    assert data["violations"] == []
+    assert [error["code"] for error in data["errors"]] == ["RULES_SETTINGS_INVALID"]
+    assert key in data["errors"][0]["message"]

@@ -222,7 +222,7 @@ def evaluate(
     ``targets`` are workspace-relative files or directories (directories
     expand as in ``devkit rules check``); none means the whole workspace.
     ``settings`` is the ``[rules.settings.<rule id>]`` table as values, with
-    path overrides under ``"overrides"`` (``[{"path": "docs/**", "max_lines": 800}]``);
+    path overrides under ``"overrides"`` (``[{"path": "docs/**", "max_bytes": 800}]``);
     an invalid shape raises ``RulesConfigError`` and values that do not
     type-check are returned in ``errors``, as in a project run. ``phase``
     defaults to the rule's declared phase. ``exclude`` is ``[rules] exclude``

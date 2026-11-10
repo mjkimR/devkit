@@ -55,8 +55,8 @@ def test_settings_for_a_path_outside_the_workspace_is_refused(tmp_path: Path) ->
     rule = FileLengthRule()
     ctx = RuleContext(workspace_root=tmp_path)
     evaluate_rules(ctx, [rule])
-    assert ctx.settings(rule).max_lines == 400
-    assert ctx.settings(rule, tmp_path / "a.md").max_lines == 400
+    assert ctx.settings(rule).max_bytes == 49152
+    assert ctx.settings(rule, tmp_path / "a.md").max_bytes == 49152
     with pytest.raises(TargetError, match="outside the workspace"):
         ctx.settings(rule, tmp_path.parent / "elsewhere.md")
 

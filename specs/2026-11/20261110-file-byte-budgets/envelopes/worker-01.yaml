@@ -1,0 +1,24 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:56:33.739257Z'
+status: completed
+summary: Completed raw-byte budget replacement and AC-01 through AC-06 with independent code/reconcile reviews; source e3717ccc tested, no production change afterwards. Default48KiB, project CAP/consolidated64KiB, legacy keys rejected; builtin ownership/ID/hygiene phase retained. Sole tracked sync output .devkit/installation.json; no TierB extensions, questions, problems or deferred work. Host-admitted rules reference migrated. Ready for Host integration/final combined-head verification.
+findings: []
+assumptions:
+- Emulated isolation substitutes explicit assigned cwd/path scope, per-operation escalation for sibling writes/shared Git and caller before/after support-role HEAD/tree audits; no native boundary guarantee.
+unverified_areas:
+- Host owns final integrated checks against docs-merged target. Worker source hygiene includes two unsplit CAPs plus historical material55692B; no automatic material split was requested. No final landed claim.
+checks:
+  sync_start: PASS exit=0
+  tests: PASS source e3717ccc all-tier affected4320; builtin79; focused boundary, snapshot, settings and CLI regressions
+  lint: PASS Ruff dev, agt, spec; cumulative CI rules and whitespace at fef5ed1d
+  types: PASS Pyright dev, agt, spec
+  assets: PASS final sync no drift; generated checked2 stale0 at fef5ed1d
+  reviews: PASS independent code and reconciliation zero findings; caller HEAD/full-tree audits identical
+  measurement: PASS source-pinned hygiene8 to3 warnings, zero errors; baseline and after JSON committed
+diff_scope:
+  base: 25a33dc0640f854d6b767be5244236562332c0ae
+  head: b8ba0c91f2c7445be84ad1811739ab677b66fe9b
+activity_effort: medium

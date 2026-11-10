@@ -75,7 +75,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class FileLengthSettings:
-    max_lines: int = 400
+    max_bytes: int = 49152
     extensions: list[str] = field(default_factory=lambda: [".md"])
 
 class FileLengthRule(BaseRule):
@@ -85,8 +85,8 @@ class FileLengthRule(BaseRule):
                          settings=FileLengthSettings(), guide="guide.md")
 
     def validate_settings(self, settings: FileLengthSettings) -> None:
-        if settings.max_lines <= 0:
-            raise ValueError("max_lines must be a positive integer")
+        if settings.max_bytes <= 0:
+            raise ValueError("max_bytes must be a positive integer")
 
     def check(self, ctx: RuleContext) -> list[Violation]:
         for path in ctx.cache.find_files(ctx.workspace_root, extensions=None):

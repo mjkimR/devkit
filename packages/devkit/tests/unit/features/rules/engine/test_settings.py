@@ -91,8 +91,8 @@ def test_parse_settings_table() -> None:
             "rules": {
                 "settings": {
                     "RULE-file-length": {
-                        "max_lines": 300,
-                        "overrides": [{"path": "docs/**", "max_lines": 800}],
+                        "max_bytes": 300,
+                        "overrides": [{"path": "docs/**", "max_bytes": 800}],
                     }
                 },
                 "severity_overrides": {"RULE-file-length": "error"},
@@ -100,8 +100,8 @@ def test_parse_settings_table() -> None:
         }
     )
     raw = config.settings["RULE-file-length"]
-    assert raw.values == {"max_lines": 300}
-    assert raw.overrides[0].path == "docs/**" and raw.overrides[0].values == {"max_lines": 800}
+    assert raw.values == {"max_bytes": 300}
+    assert raw.overrides[0].path == "docs/**" and raw.overrides[0].values == {"max_bytes": 800}
     assert config.severity_overrides == {"RULE-file-length": Severity.ERROR}
 
 

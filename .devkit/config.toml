@@ -23,12 +23,12 @@ setup = "just init"  # a new worktree gets the workspace environment before its 
 exclude = ["docs/decisions/**", "docs/proposals/**", "docs/materials/**", "specs/**", "handbook/**"]
 
 [rules.settings.RULE-file-length]
-consolidated_max_lines = 600
+consolidated_max_bytes = 65536
 
-# Capabilities carry full contracts, interfaces and code tables; they are long by nature (RULE-file-length guide §5).
+# CAPs and consolidated records retain cohesive contracts; allow 64 KiB while ordinary files default to 48 KiB.
 [[rules.settings.RULE-file-length.overrides]]
 path = "docs/capabilities/**"
-max_lines = 600
+max_bytes = 65536
 
 ## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
 [tool.spec]

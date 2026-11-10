@@ -2039,7 +2039,7 @@
     },
     ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "e639ad5285c82331ee10023782ed0f9dbd11b6c9f390a62dc4c1bd3a7d360cae"
+      "sha256": "538a3673adbe8c91498d906dc049a2013c87ff322cd24b3b87a0f2616066c2bc"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -2051,7 +2051,7 @@
     },
     ".devkit/managed/spec/playbooks/feedback-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "4e1eb2c372c96456dbedc4012bf00a832be179553a8d7682c90837b68a87a03d"
+      "sha256": "ae7489d74712e88b2834d58b4278ac0bada040c6337da702d512a5805d52b585"
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,

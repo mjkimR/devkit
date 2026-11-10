@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-evaluation-lifecycle
 title: "Rule Evaluation Lifecycle"
-summary: "Single-pass repairs, target scoping, execution phases, Git snapshot evaluation and typed rule settings, including opt-in consolidated-record budgets."
+summary: "Single-pass repairs, target scoping, execution phases, Git snapshot evaluation and typed rule settings, including raw-byte file budgets and opt-in consolidated-record budgets."
 area: governance
 status: active
 entrypoints:
@@ -123,12 +123,12 @@ A rule declares typed settings with defaults (`CAP-GOV-rule-authoring`); a proje
 
 ```toml
 [rules.settings.RULE-file-length]
-max_lines = 300
+max_bytes = 49152
 extensions = [".md"]
 
 [[rules.settings.RULE-file-length.overrides]]
 path = "docs/research/**"
-max_lines = 800
+max_bytes = 98304
 ```
 
 - Every layer is validated before any rule runs: unknown keys, wrong types (`true` is not an integer, `"10"` is not a number), nulls for nonoptional fields and unsupported patterns fail with the rule ID in the message, and so does a rejection by the rule's `validate_settings`. Settings for an unknown rule, or for a rule that declares none, are errors.
@@ -136,9 +136,24 @@ max_lines = 800
 - `path` is workspace-relative. A standalone `**` matches zero or more segments; `*`, `?` and character classes match within one segment. Overrides apply in declaration order to every file they match, so later matching overrides win; keys an override omits keep the earlier value. Arrays replace.
 - `ctx.settings(rule, path)` returns the effective dataclass for a file; `devkit rules explain <RULE-id>` prints the defaults, the configured values and each override.
 
+### File byte budget
+
+1. **Raw evaluated bytes.** `RULE-file-length` MUST count `len(ctx.cache.read_bytes(path))` for each targeted
+   configured extension, preserving snapshot content, raw newline bytes and undecodable bytes
+   (`file_length/tests/test_rule.py`, rules snapshot integration tests).
+2. **Ordinary limit.** The builtin MUST default `max_bytes` to 49152, accept positive integers through typed
+   settings and reject obsolete `max_lines` and `consolidated_max_lines` keys with `RULES_SETTINGS_INVALID`
+   before rule execution (`file_length/tests/test_rule.py`, rules CLI integration tests).
+3. **File-level advisory.** WHEN bytes exceed the selected budget, the builtin MUST report a non-fixable finding
+   at line 1 with `File exceeds byte budget (<actual> > <limit> bytes)`. Exactly-at-budget files pass. Its default
+   phase and severity remain hygiene and warning (`file_length/tests/test_rule.py`, rules evaluator tests).
+
+The metric is raw bytes, normally UTF-8 for Markdown, not characters, normalized lines or tokens.
+`ADR-byte-based-file-budgets` records the metric and setting migration.
+
 ### Rule-local consolidated record budget
 
-1. **Opt-in budget.** WHERE `RULE-file-length.consolidated_max_lines` is configured, the rule MUST accept a
+1. **Opt-in budget.** WHERE `RULE-file-length.consolidated_max_bytes` is configured, the rule MUST accept a
    positive integer through the existing typed settings contract; omission defaults to `None` and preserves ordinary
    limits and remediation. Rule-owned `file_length/tests/test_rule.py` and rules CLI integration tests enforce it.
 2. **Record selection.** WHERE the option is enabled, WHEN targeted Markdown exceeds its ordinary limit, the rule
@@ -148,13 +163,14 @@ max_lines = 800
    `resolved`, `promoted`, `dismissed` and `forwarded`. Duplicates count once; whitespace-only aliases are empty.
    Missing/malformed headers or aliases and other IDs retain ordinary limits (`file_length/tests/test_rule.py`).
 3. **Budget precedence.** WHEN a record qualifies, the rule MUST use
-   `max(max_lines, consolidated_max_lines)` after existing path overrides (`file_length/tests/test_rule.py`).
-4. **Bounded warning.** WHEN an eligible record exceeds its selected budget, the rule MUST warn at selected limit
-   plus one with topic-review remediation preserving retained decisions and outcomes (`file_length/tests/test_rule.py`).
+   `max(max_bytes, consolidated_max_bytes)` after existing path overrides (`file_length/tests/test_rule.py`).
+4. **Bounded warning.** WHEN an eligible record exceeds its selected budget, the rule MUST warn at line 1 with
+   actual/limit bytes and topic-review remediation preserving retained decisions and outcomes (`file_length/tests/test_rule.py`).
 
 ADR selection is a heuristic: repeated renames can produce two aliases without consolidation. It grants no editing
-or consolidation authority. `ADR-consolidated-record-budgets` records the decision. The ordinary hygiene phase,
-severity, extension filtering, line counting and numeric message format remain unchanged. Internal `None` disables the option; TOML has no null literal, so omit the key to disable it. Boolean, string,
+or consolidation authority. `ADR-consolidated-record-budgets` records eligibility and rule-local selection;
+`ADR-byte-based-file-budgets` replaces its units and setting names. Hygiene phase, warning severity and extension
+filtering remain unchanged. Internal `None` disables the option; TOML has no null literal, so omit the key to disable it. Boolean, string,
 zero and negative configured values fail with `RULES_SETTINGS_INVALID`, the rule ID and exit 2.
 
 ## 6. Git Snapshot Gates
