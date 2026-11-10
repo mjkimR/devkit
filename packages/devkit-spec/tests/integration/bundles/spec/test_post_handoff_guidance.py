@@ -29,3 +29,18 @@ def test_a_sibling_conflict_takes_the_base_version_then_rules_fix() -> None:
     assert_rule(text, "conflicts in", "`docs/proposals/PROP-<other>/`")
     assert_rule(text, "Take the base version", "git checkout --theirs", "devkit rules fix <path>")
     assert_rule(text, "`PROP-<slug> was handed off`", "`SPEC-<slug>`", "commit the merge")
+
+
+def test_statements_replace_pointer_clarification() -> None:
+    from pathlib import Path
+
+    import devkit_spec
+
+    bundle = Path(devkit_spec.__file__).parent / "bundles/spec/bundle"
+    post = raw(POST_HANDOFF)
+    assert "clarif" not in post
+    consolidation = (bundle / "playbooks/adr-consolidation/SKILL.md").read_text()
+    assert "devkit docs supersession <ID>" in consolidation
+    assert "superseder's `Supersedes in part` statement" in consolidation
+    assert "without the source citation" in consolidation
+    assert "keep the statement and one reciprocal pointer equal" in consolidation

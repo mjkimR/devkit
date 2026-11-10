@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:39:54.422542Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both P2 fixes at medium effort: body-only source scanning and cumulative multiline pointer locations; 122 focused regressions pass.'
+findings:
+- issue: Wrapped statement text makes subsequent pointer locations incorrect
+  evidence: handoff.py:812 first + 2*i; in-memory two-pointer probe reported second line14 but actual15
+  failure_condition: Several promoted PADRs target one ADR and an earlier payload spans lines
+  suggested_action: Accumulate actual payload newlines and add wrapped multi-pointer regression
+  resolution: resolved
+  severity: P2
+- issue: YAML frontmatter can satisfy the required body statement
+  evidence: models/supersession.py:30 complete-source visible_lines; summary block produced statement payload with closing YAML delimiter
+  failure_condition: A frontmatter block scalar contains statement-shaped text
+  suggested_action: Scan only body with absolute line numbers and add reader rule and refusal regressions
+  resolution: resolved
+  severity: P2
+assumptions:
+- Medium initial independent review completed; implementer self-verified bounded fixes without scope expansion.
+checks:
+  tests: PASS 122 reader rule and handoff tests
+  lint: PASS whole rules and compileall
+diff_scope:
+  base: c5d8e631cd362a785fa7ac49beb110f03c70cf8c
+  head: 245db867a5106578283993986a95ce68d447a815

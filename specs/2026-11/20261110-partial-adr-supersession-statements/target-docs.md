@@ -2,7 +2,7 @@
 id: PROP-partial-adr-supersession-statements-target
 title: Target Living Spec Structure for PROP-partial-adr-supersession-statements
 status: draft
-proposal: PROP-partial-adr-supersession-statements
+proposal: SPEC-partial-adr-supersession-statements
 created_at: 2026-11-10
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
@@ -43,7 +43,7 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
     `superseded_by` add no reference-graph edge. It gains that `devkit docs supersession` reads them
     (`CAP-DOCS-document-lookup`).
   - The consolidation paragraph gains that a replacement keeps each statement and the pointer that repeats it equal.
-  - The decision cited is the ADR promoted from `PADR-partial-supersession-statements`, beside `ADR-decision-ledger`.
+  - The decision cited is the ADR promoted from `ADR-partial-supersession-statements`, beside `ADR-decision-ledger`.
 - `CAP-DOCS-document-lookup`:
   - Summary, section 1 and section 2 name four commands: `resolve`, `refs`, `list` and `supersession`.
   - A section "`devkit docs supersession ID`" after 3.3, with these rules:
@@ -103,11 +103,11 @@ No screen changes: the viewer is `PROP-viewer-decision-supersession`'s.
 
 - `ARCH-05-2-components`: the commands of `devkit_docs.features.documents` gain `docs supersession`. No layer,
   package or feature edge changes.
-- `PADR-partial-supersession-statements` becomes an ADR at handoff. It names no `supersedes`.
+- `ADR-partial-supersession-statements` becomes an ADR at handoff. It names no `supersedes`.
 - `docs/decisions/README.md`: the opening paragraph and the schema comments name the statement and that the pointer
   repeats it.
 - `docs/decisions/` (not listed under `targets`, because the files are found at Development time): each pair on the
-  Development head at its final verification (27 at `c84a5485`, `materials/planning-evidence.md` section 4) gets its
+  Development head at its final verification (27 at `c84a5485`, `docs/materials/2026-11/20261110-partial-adr-supersession-statements/planning-evidence.md` section 4) gets its
   statement and its repeating pointer, as section 3.6 of the proposal describes. No status, `supersedes` or
   `superseded_by` value changes; the `supersedes_clause` key of `ADR-skill-local-swarm-roles` is removed.
 

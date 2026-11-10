@@ -64,7 +64,10 @@ def test_the_handoff_result_passes_the_supersession_rule(tmp_path: Path) -> None
     padr = tmp_path / json.loads(created.stdout)["path"]
     text = padr.read_text(encoding="utf-8")
     placeholder = next(line for line in text.splitlines() if line.startswith("# supersedes:"))
-    padr.write_text(text.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
+    padr.write_text(
+        text.replace(placeholder, "supersedes: [ADR-old]") + "\nSupersedes in part `ADR-old`: the parser choice.\n",
+        encoding="utf-8",
+    )
     proposal = tmp_path / "docs/proposals/PROP-partial/proposal.md"
     accept(proposal)
     record_acceptance(proposal)

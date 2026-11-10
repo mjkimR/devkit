@@ -420,3 +420,40 @@ def test_refs_with_aliases(aliased: Path) -> None:
     ]
     by_alias = _docs("refs", "CAP-CORE-old", "--direction", "in", "--format", "json", workspace=aliased)
     assert json.loads(by_alias.stdout)["id"] == "CAP-CORE-new"
+
+
+def test_supersession_both_directions_alias_and_json(workspace: Path, write: Write) -> None:
+    write("docs/decisions/old.md", _doc("ADR-old", status="accepted"))
+    write(
+        "docs/decisions/middle.md",
+        _doc(
+            "ADR-middle",
+            "Supersedes in part `ADR-old`: the `fast` mode.\n",
+            supersedes="[ADR-old]",
+            status="accepted",
+            aliases="[ADR-alias]",
+        ),
+    )
+    write(
+        "docs/decisions/new.md",
+        _doc("ADR-new", "Supersedes in part `ADR-middle`: retries.\n", supersedes="ADR-middle", status="accepted"),
+    )
+    result = _docs("supersession", "ADR-alias", workspace=workspace)
+    assert result.exit_code == 0, result.output
+    assert "[SUPERSEDES: ADR-old scope=partial" in result.stdout
+    assert "[SUPERSEDED_BY: ADR-new scope=partial" in result.stdout
+    assert "the `fast` mode." in result.stdout and "line=6" in result.stdout
+    data = json.loads(_docs("supersession", "ADR-alias", "--format", "json", workspace=workspace).stdout)
+    assert data["id"] == "ADR-middle" and data["notices"] == []
+    assert data["supersedes"][0]["text"] == "the `fast` mode."
+    assert data["superseded_by"][0]["id"] == "ADR-new"
+    write("docs/decisions/old.md", _doc("ADR-old", status="superseded", superseded_by="ADR-alias"))
+    assert "scope=whole" in _docs("supersession", "ADR-middle", workspace=workspace).stdout
+
+
+@pytest.mark.parametrize(
+    "document_id,code", [("CAP-CORE-a", "ARGUMENT_INVALID"), ("ADR-unknown", "DOCS_ID_UNRESOLVED")]
+)
+def test_supersession_errors(docs: Path, document_id: str, code: str) -> None:
+    result = _docs("supersession", document_id, workspace=docs)
+    assert result.exit_code == 2 and code in result.stderr

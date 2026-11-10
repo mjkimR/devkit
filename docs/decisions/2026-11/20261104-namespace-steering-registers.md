@@ -39,8 +39,7 @@ local steering convention from applying to vocabulary.
 ## 4. Decision Outcome
 
 - Optional namespace glossary and UX object registers live in `docs/packages/<name>/steering/`, under the root
-  Markdown contract; `glossary.yaml` is accepted there. This replaces the glossary-exclusion and package-glossary-
-  location clauses of `ADR-namespace-steering-directories`; its other decisions remain in force.
+  Markdown contract; `glossary.yaml` is accepted there. The partial-supersession statement below names the replaced namespace clauses.
   → `CAP-DOCS-namespaces` 3.4 (MAY), `CAP-GOV-spec-rules` 3.14 (MUST).
 - This decision replaces only `ADR-ux-screens` clauses requiring one root-only register, unconditional root
   creation with the first UX document, and root-only writes of drafted register rows by `spec-sync`. Shared rows
@@ -59,6 +58,10 @@ local steering convention from applying to vocabulary.
   canonical location. → `CAP-GOV-spec-rules` 3.14 (MUST).
 - UX object representations and calls to action remain agent review concerns; link and coverage rules do not parse
   those registers. → `CAP-HARN-agent-guidance` Shared writing instructions (SHOULD).
+
+- Supersedes in part `ADR-namespace-steering-directories`: the namespace glossary locations and exclusions, the root-only search synonyms, and the deferred namespace UX object register; its other decisions remain in force.
+
+- Supersedes in part `ADR-ux-screens`: the clauses requiring one root-only register, unconditional root creation with the first UX document, and root-only writes of drafted register rows by `spec-sync`. Shared rows stay global, namespace rows stay local, and files are created only when needed; other screen and register contracts remain.
 
 ## 5. Consequences
 

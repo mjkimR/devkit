@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-partial-adr-supersession-statements
+by: user
+at: '2026-11-10T04:20:56.615985Z'

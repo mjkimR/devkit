@@ -126,6 +126,8 @@ changes no workflow policy and grants no commit, integration or publication auth
 stay in force, and clause 4 stays in force for local roles; an Impeccable child receives its brief and Impeccable's
 own instructions.
 
+- Supersedes in part `ADR-uiux-improvement-workflow-boundary`: Decision Outcome clause 2 coordinator-only implementation continuation, which now admits one user-selected, brief-bounded Impeccable session under coordinator acceptance. Its authority limitations, clauses 1 and 3, and clause 4 for local roles remain in force.
+
 ## 5. Consequences
 
 - Positive: the user can apply Impeccable's maintained commands within one improvement request while the coordinator's

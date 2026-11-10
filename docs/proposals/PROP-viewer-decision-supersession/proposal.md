@@ -10,7 +10,7 @@ priority: low                         # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
-depends_on: [PROP-partial-adr-supersession-statements]
+depends_on: [SPEC-partial-adr-supersession-statements]
 boundaries:
   owns:
     - packages/devkit-viewer/
@@ -26,7 +26,7 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`PROP-partial-adr-supersession-statements` makes the replaced scope of a partial supersession a fixed statement in the
+`SPEC-partial-adr-supersession-statements` makes the replaced scope of a partial supersession a fixed statement in the
 later ADR and adds `devkit docs supersession` for agents. Its Planning left the viewer out: the viewer change is a
 separate package, capability and verification chain (`materials/planning-evidence.md` section 6 there).
 
@@ -55,5 +55,5 @@ To be settled in Planning. Expected touch points: `packages/devkit-viewer/fronte
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning starts after `PROP-partial-adr-supersession-statements` is delivered, because the page reads the statement
+Planning starts after `SPEC-partial-adr-supersession-statements` is delivered, because the page reads the statement
 form that work defines. The draft is dropped if that work is rejected.

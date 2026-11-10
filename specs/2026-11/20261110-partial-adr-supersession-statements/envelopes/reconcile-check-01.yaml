@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:44:29.194229Z'
+status: completed
+summary: Independent medium reconcile review passed all42 targets and29 base/source/pointer/statement rows, with exactly two user-decided flagged scopes and no findings.
+findings: []
+assumptions:
+- Independent emulated reviewer used query-only commands; unchanged HEAD and before/after snapshot dd2e477e957d324dd11ba09e67d216da3ef02a4b.
+unverified_areas:
+- Host retains fixed-SHA E2E and final landed verification.
+checks:
+  targets: PASS all42 changed docs exactly match targets
+  ledger: PASS 29 equal statement-pointer pairs with faithful base evidence
+  contracts: PASS source equality body-only reader PADR whole-target exemptions handoff CLI and guidance
+diff_scope:
+  base: 2999c21d4e2bc26e4c6633124afc11c4e50e9144
+  head: 8e162534d6338ce6d288a25521dd296e57266ee8

@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-lookup
 title: Document Lookup
-summary: "Defines devkit docs resolve, refs and list: map IDs to paths, follow references both ways, and browse documents by kind, status (with a notice for an unused status), area, text, frontmatter field, history, namespace or owned code path, with feedback by severity, paging and JSON output."
+summary: "Defines devkit docs resolve, refs, supersession and list: map IDs to paths, follow references both ways, and browse documents by kind, status (with a notice for an unused status), area, text, frontmatter field, history, namespace or owned code path, with feedback by severity, paging and JSON output."
 area: documents
 status: active
 usecases:
@@ -15,9 +15,9 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-Three commands give an agent deterministic access to the document index (`CAP-DOCS-document-model`): `devkit docs
+Four commands give an agent deterministic access to the document index (`CAP-DOCS-document-model`): `devkit docs
 resolve` maps IDs to paths, `devkit docs refs` follows the references of one document in either direction, and
-`devkit docs list` browses documents with filters. They are the exact-match counterpart of `devkit docs search`
+`devkit docs list` browses documents with filters. `devkit docs supersession` lists a decision's replacements and their replaced scope. They are the exact-match counterpart of `devkit docs search`
 (`CAP-DOCS-document-search`), which ranks by meaning when the ID is not known. Each call loads the index through
 the parse memo of `CAP-DOCS-document-model` where the workspace has one (section 3.4 there), so a repeated call in an
 unchanged workspace parses again only documents whose frontmatter holds a value the memo cannot store. The memo never
@@ -25,7 +25,7 @@ changes an argument, output, code or exit status.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: `resolve`, `refs` and `list`: arguments, options, filters, ordering, paging, text sentinels, JSON
+- **In-Scope**: `resolve`, `refs`, `supersession` and `list`: arguments, options, filters, ordering, paging, text sentinels, JSON
   keys, exit codes and error codes.
 - **Out-of-Scope** (Non-Goals):
   - Ranking by meaning: `CAP-DOCS-document-search`.
@@ -47,7 +47,7 @@ changes an argument, output, code or exit status.
 2. **Warnings and notices**: files the index left out are `DOCS_DOCUMENT_INVALID` warnings, and an unknown
    `list --status` value is a `DOCS_LIST_STATUS_UNKNOWN` notice (3.4); both go to stderr (under `notices` in JSON).
    They MUST NOT change the exit code, except a warning under `--strict`.
-3. **Namespaces ignored for identity**: `resolve` and `refs` MUST resolve IDs repository-wide whatever namespace is
+3. **Namespaces ignored for identity**: `resolve`, `refs` and `supersession` MUST resolve IDs repository-wide whatever namespace is
    selected; only `list` (and `search`) narrows by namespace.
 
 ### 3.2 `devkit docs resolve ID...`
@@ -70,6 +70,18 @@ changes an argument, output, code or exit status.
 6. **Aliases**: `--direction in` includes references written with an alias that resolves to the document;
    `--direction out` groups a reference written with an alias under its canonical ID, as one target with the
    references written either way.
+
+### 3.3a `devkit docs supersession ID`
+
+1. **Decision identity**: the command MUST accept an ADR or PADR ID or alias; another kind fails with
+   `ARGUMENT_INVALID` (exit `2`). Unresolved and duplicated IDs retain the common lookup failures.
+2. **Both directions**: it MUST emit one `[SUPERSEDES: ...]` per `supersedes` entry, then one `[SUPERSEDED_BY: ...]`
+   per ADR naming this document in `supersedes`, each group in canonical ID order, without paging.
+3. **Scope**: a pair MUST carry `scope=whole` when its earlier ADR is `superseded` and `superseded_by` names the
+   later decision, else `scope=partial`.
+4. **Source text**: `line` and `text` MUST identify the later decision's statement for this pair; absence is `-`
+   in text and `null` in JSON. The text retains source markup. `path=-` and `status=-` mark an entry no single
+   document declares. The index and `refs` graph remain unchanged.
 
 ### 3.4 `devkit docs list [KIND]...`
 
@@ -152,6 +164,7 @@ changes an argument, output, code or exit status.
 ### 4.1 Usage
 
 ```bash
+devkit docs supersession ADR-example                # replaced decisions and replacement scopes
 devkit docs resolve CAP-CORE-search UC-find-docs     # the path of each ID
 devkit docs refs CAP-CORE-search                      # what it references
 devkit docs refs CAP-CORE-search --direction in       # what references it
@@ -184,11 +197,15 @@ alias; `list` prints
 `planning_branch=`, only on documents an overlay names. Values follow devkit's sentinel conventions: `-` for empty, `yes`/`no` for booleans, a JSON
 string when the value holds whitespace, quotes, brackets, `=` or a backslash.
 
+`supersession` prints `[SUPERSEDES: <id> scope= path= status= line= text=]` and
+`[SUPERSEDED_BY: <id> scope= path= status= line= text=]`.
+
 ### 4.3 JSON Keys (`--format json`)
 
 | Command | Keys |
 | --- | --- |
 | `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`, plus `alias`: the alias argument, `null` for a declared ID), `errors` (advisory objects), `notices` |
+| `supersession` | `id`, `supersedes`, `superseded_by` (records: `id`, `path`, `status`, `scope`, `line`, `text`), `notices` |
 | `refs` | `id`, `direction`, `total`, `offset`, `limit`, `items` (`id`, `path`, `status`, `references`: `target`, `source`, `path`, `field`, `line`, `column`, `bracket`), `notices`; `path` and `status` are `null` for an ID no single document declares |
 | `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks` (spec records); proposal records also `task_kind`, `planning_effort`, `dev_effort`; feedback records also `severity`, `scope`, `target`; a key without a value is left out; the fields of a status overlay (3.6), its `status` replacing the declared one), `notices` |
 
@@ -204,7 +221,7 @@ notices always exit `0`.
 | `DOCS_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
 | `DOCS_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID; `[TARGET]` lists them. |
 | `DOCS_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read or has malformed frontmatter; it is left out. A `refs` that then fails (`DOCS_ID_UNRESOLVED`) still reports these warnings, before the error in text and under `notices` of `{"error": ...}` in JSON. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A non-decision `supersession` ID; a negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
 | `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `list`: a malformed `[tool.docs]` table, namespaces included (`CAP-DOCS-namespaces`). |
 | `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
 | `DOCS_OVERLAY_FAILED` | `WARNING` | `devkit_docs.base.errors.OverlayFailedWarning` | `list`: a `devkit.docs.status_overlay` extension failed to load, raised, returned a malformed result, named a field that is no lower-case identifier or set a reserved field (3.6); its result is left out and the detail names it. The exit code is that of any other warning (4.4). |

@@ -13,10 +13,9 @@ aliases:
 
 # [ADR-mcp-runtime-and-shared-artifacts] Independent MCP runtime, immutable shared artifacts and revision-bound reports
 
-Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: native confirmation as the normal route, CLI/PR authorization as recovery and no extra approval after native confirmation (Host-approval clause).
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the Host-approval clause parts making native confirmation the normal route, CLI/PR authorization mere recovery, and extra approval unnecessary after native confirmation. Host approval authority and host permission prompts remain in force.
 
-Superseded in part by `ADR-selective-package-versions`: only the foundation-lockstep version qualifier in the
-first MCP runtime and project registration outcome; runtime, registration and approval decisions remain.
+Superseded in part by `ADR-selective-package-versions`: the foundation-lockstep qualifier in the first MCP runtime outcome; ownership, dependency directions, runtime, registration and approval decisions remain.
 
 - **Status**: Accepted
 - **Date**: 2026-11-02

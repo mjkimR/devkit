@@ -15,17 +15,9 @@ aliases:
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
-- Superseded in part by `ADR-namespace-steering-registers`: root-only object-register location, unconditional root
-  creation with the first UX document and root-only `spec-sync` writes of drafted register rows become optional
-  shared root and namespace-local registers, created only when their rows are needed; other clauses remain.
-- Superseded in part by `ADR-explicit-ux-coverage-exception-notation`: in Step links and coverage, the coverage rule's
-  "an interaction whose Step cell is empty" and "a step or extension that cites no UX ID" now exclude an item
-  classified `global: <reason>` or `off screen: <reason>`, "only a step that truly happens off-screen cites none"
-  gains that phrase, and the known limit "only the coverage warning on that step remains" no longer holds for a
-  classified step.
-- Superseded in part by `ADR-ux-coverage-step-targeting`: for the uncited-step report of the coverage rule only,
-  "it is reported on the UX document, or on the use case when only the use case is in the run" becomes the use case
-  when the run targets it, else the first listing UX document in the run.
+- Superseded in part by `ADR-namespace-steering-registers`: the clauses requiring one root-only register, unconditional root creation with the first UX document, and root-only writes of drafted register rows by `spec-sync`. Shared rows stay global, namespace rows stay local, and files are created only when needed; other screen and register contracts remain.
+- Superseded in part by `ADR-explicit-ux-coverage-exception-notation`: the Step links and coverage clauses for empty Step cells and uncited steps or extensions, which now exclude classifications with a reason; the off-screen phrase and the known limit that every uncited step retains a warning. Classified steps retain their flow effects.
+- Superseded in part by `ADR-ux-coverage-step-targeting`: the uncited-step report targeting clause only: the report belongs to a targeted use case, else the first targeted listing UX document; `RULE-ux-links` keeps its existing targeting.
 
 ---
 

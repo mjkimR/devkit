@@ -12,8 +12,7 @@ aliases:
 
 # [ADR-configuration-language-and-rendering] Configuration, language preference and execution-aware rendering
 
-Superseded in part by `ADR-local-and-pull-request-integration`: its confirmation-form text rules (schema-metadata explanations, verbatim provider prose, per-form language
-sampling) and "native approval routes" in local text.
+Superseded in part by `ADR-local-and-pull-request-integration`: the confirmation-form rules requiring explanations when schema metadata is omitted, verbatim source and provider prose, and language sampled once per form; and native approval routes in the local-text clause. Its other clauses remain in force.
 
 - **Status**: Accepted
 - **Date**: 2026-10-22

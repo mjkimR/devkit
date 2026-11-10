@@ -199,6 +199,8 @@ offer rare.
 
 ---
 
+- Supersedes in part `ADR-document-id-aliases`: the decision-record exemption from alias rewrites in the References outcome; historical files retain their existing treatment.
+
 ## 5. Consequences
 
 - **Positive**:

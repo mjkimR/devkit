@@ -10,7 +10,7 @@ created_at: 2026-11-04
 
 # [ADR-namespace-steering-directories] Namespace steering directories listed by the working directory's namespace
 
-Superseded in part by `ADR-namespace-steering-registers`: namespace glossary locations and exclusions, root-only search synonyms, and the deferred namespace UX object register.
+Superseded in part by `ADR-namespace-steering-registers`: the namespace glossary locations and exclusions, the root-only search synonyms, and the deferred namespace UX object register; its other decisions remain in force.
 
 - **Status**: Accepted
 - **Date**: 2026-11-04
@@ -148,6 +148,8 @@ registers.
   package's source path, and the pattern already exists for `devkit.config_template` and `devkit.docs.status_overlay`.
 
 ---
+
+- Supersedes in part `ADR-steering-documents`: the Directory clause excluding namespace copies and its rejected per-namespace-copy option, and the Listing mechanism rejection of an entry-point provider. Other clauses remain in force.
 
 ## 5. Consequences
 

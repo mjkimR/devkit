@@ -57,3 +57,13 @@ Capabilities and architecture documents state the lasting rules; the ADR records
   in-force decisions; a superseded ADR leaves browsing and search.
 - Otherwise the earlier ADR stays `accepted`, without `superseded_by`, and gains one line per partial superseder,
   below its heading or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."
+
+For each earlier ADR that is not superseded, write one statement in Decision Outcome, as its own paragraph or list item:
+
+```markdown
+Supersedes in part `ADR-<old>`: <the replaced clauses>.
+```
+
+The earlier ADR's pointer repeats the statement text, code spans included; only whitespace may differ.
+Keep the statement free of trace, source citation, nested list and relative link. For a whole replacement, use
+the same statement naming every decision, then set the earlier ADR superseded after handoff; the statement may stay.

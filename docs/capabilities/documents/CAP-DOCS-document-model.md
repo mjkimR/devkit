@@ -147,10 +147,18 @@ all states; use `--status open` for the actionable backlog. Spec completion neve
 Decision status is `proposed`, `accepted`, `superseded`, `rejected` or `deprecated`. An ADR MUST get
 `status: superseded` and `superseded_by` only when a later ADR replaces all of its in-force decisions; it is then
 historical by rule 8. A later ADR that replaces only part of an earlier one names it in `supersedes` and states the
-replaced clauses in its outcome; the earlier ADR MUST stay `accepted`, so browsing and search still return its
+replaced clauses in one fixed partial-supersession statement per target in Decision Outcome; the earlier ADR MUST stay `accepted`, so browsing and search still return its
 in-force clauses, MUST NOT carry `superseded_by`, and gains one body line per partial superseder, below its heading
 or at the affected statement: "Superseded in part by `ADR-<new>`: <the replaced clauses>."
-(`ADR-decision-ledger`).
+(`ADR-decision-ledger`, `ADR-partial-supersession-statements`).
+
+The statement MUST begin "Supersedes in part `ADR-<old>`:" as its own paragraph or list item. Its source text
+after the colon ends at the next blank line, list item or heading. One reciprocal pointer MUST repeat that source
+text, code spans and links included, after collapsing whitespace. Additional pointers at affected statements MAY
+carry local text. The statement SHOULD carry no trace, source citation, nested list or relative link. A whole
+replacement uses the same form while its target is not superseded; after the author sets whole-replacement metadata,
+the statement and pointer MAY stay. Visible-line masking excludes fences, comments, indented code and struck text;
+the reader does not validate section placement. `RULE-decision-supersession` checks consistency.
 
 **Consolidation groups**: an ADR consolidation MUST form each group by topic, with two or more members, and MUST place a
 wholly superseded ADR in the group of its superseder. WHEN a partially superseding member and its target land in
@@ -158,13 +166,16 @@ different groups, the target's replacement MUST leave out the replaced clauses, 
 state what it replaced and cite the target's replacement ID. An ADR kept outside the run whose `supersedes` names a
 consolidated member MUST name the member's replacement instead, and that replacement MUST carry the matching
 "Superseded in part by" line. WHEN a consolidated member partially supersedes an ADR kept outside the run, its
-replacement MUST list that ADR in `supersedes`, and the kept ADR's pointer MUST name the replacement
+replacement MUST list that ADR in `supersedes`, and the kept ADR's pointer MUST name the replacement and repeat its statement text
 (`ADR-decision-ledger`). On a decision, `supersedes` and `superseded_by` are metadata the index
 does not read (section 3.3 rule 6 covers Unit anchors), so they do not add reference-graph edges.
+`devkit docs supersession` reads these relationships and statements independently (`CAP-DOCS-document-lookup`).
 `RULE-decision-supersession` MUST report inconsistent status and `superseded_by`, unresolved or malformed ADR
 replacement metadata, a `supersedes` target without superseded status or a matching partial pointer, and a partial
 pointer without reciprocal `supersedes`. Whole replacements also require the successor to name the earlier ADR.
-The rule checks targeted ADRs, superseded records included, but excludes materials and PADRs. It resolves unique
+The rule checks targeted ADRs, superseded records included, but excludes materials and checks PADRs for statements only.
+It MUST also report missing, stray, duplicated or empty statements and a pair without one pointer that repeats
+the statement. Superseded targets are exempt from missing-statement and pointer-text checks. It resolves unique
 aliases without rewriting metadata. A wholly superseded ADR may retain earlier partial pointers; their reciprocal
 relationships remain checked. `RULE-document-reference` also resolves the ID an in-part line cites.
 Review determines whether the clauses are wholly or partly replaced; neither rule interprets decision meaning.

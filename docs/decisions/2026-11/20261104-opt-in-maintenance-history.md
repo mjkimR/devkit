@@ -42,6 +42,8 @@ We selected Option 1.
 - Frozen evidence and append-only integration amendments apply only to the selected history run. → `CAP-DLV-maintenance-history` rules 3, 10 and 14 (MUST).
 - This decision supersedes only the blanket applicability of section 4 first clause in `ADR-history-branch-publication`: its publication semantics apply to explicitly selected history runs. All other branch, root, publication, authority and identity decisions remain in force.
 
+- Supersedes in part `ADR-history-branch-publication`: the blanket applicability of section 4 first clause; its publication semantics apply to explicitly selected history runs. All other decisions remain in force.
+
 ## 5. Consequences
 
 - **Positive**: installing history does not alter maintenance execution; explicit composition retains the standalone feature.

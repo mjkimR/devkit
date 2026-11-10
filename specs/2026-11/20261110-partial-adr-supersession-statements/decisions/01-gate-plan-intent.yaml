@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-partial-adr-supersession-statements: Planning approved through plan-accept
+  only; Development is not started in this pickup. size L (one spec expected; Planning
+  re-judges the viewer split), planning_effort medium. No depends_on prerequisites.'
+by: user
+at: '2026-11-10T04:20:56.614120Z'

@@ -11,10 +11,10 @@ path it would create), then:
 2. copies ``target-docs.md`` into the spec bundle;
 3. promotes each ``decisions/PADR-<slug>.md`` to ``docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`` as an accepted
    ``ADR-<slug>`` (its frontmatter, ``summary`` included, is kept, except the scaffold's unchanged commented
-   ``supersedes`` line), and writes one "Superseded in part by ``ADR-<slug>``: <summary>" line below the heading of
+   ``supersedes`` line), and writes one "Superseded in part by ``ADR-<slug>``: <statement text>" line below the heading of
    each ADR its ``supersedes`` names that is not ``superseded`` and does not carry the pointer yet
    (``_plan_pointers``), so the partial replacement passes ``RULE-decision-supersession`` at the handoff commit;
-   Development replaces the summary with the replaced clauses. A target that does not resolve to one ADR is left
+   The pointer repeats the partial-supersession statement verbatim. A target that does not resolve to one ADR is left
    to ``RULE-document-reference``;
 4. moves open proposal ``feedback/*.md`` into the spec feedback directory; settled feedback follows generic extras.
    Moves ``materials/`` to ``docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/`` when it holds a file other than
@@ -73,6 +73,7 @@ from devkit_docs.features.documents.models.ids import ID_SOURCE, is_legacy_id
 from devkit_docs.features.documents.models.markdown import visible_lines
 from devkit_docs.features.documents.models.model import Document
 from devkit_docs.features.documents.models.namespace import GLOBAL
+from devkit_docs.features.documents.models.supersession import replacement_texts
 from devkit_docs.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 
 from devkit_spec.base.axes import (
@@ -741,20 +742,26 @@ def _supersedes_ids(value: object) -> list[str]:
 
 def _pointer_names(text: str) -> list[str]:
     """The IDs the visible "Superseded in part by" lines of ``text`` name."""
-    return [match.group(1) for line in visible_lines(text) for match in _PARTIAL_POINTER.finditer(line.text)]
+    return [item.id for item in replacement_texts(text) if item.pointer]
 
 
-def _clause(meta: dict[str, Any], decision: _Decision) -> str:
-    """The clause text of a pointer: the promoted ADR's ``summary``, else its ``title``, else its slug, as one line
-    ending in a sentence mark. Development replaces it with the replaced clauses."""
-    for key in ("summary", "title"):
-        value = meta.get(key)
-        if isinstance(value, str) and value.strip():
-            text = " ".join(value.split())
-            break
-    else:
-        text = decision.adr_id.removeprefix("ADR-")
-    return text if text.endswith((".", "!", "?")) else text + "."
+def _clause(index: DocumentIndex, target_id: str, decision: _Decision) -> str:
+    """The promoted decision's source statement text, copied verbatim into its pointer."""
+    statement = next(
+        (
+            item
+            for item in replacement_texts(decision.text)
+            if not item.pointer and index.canonical_id(item.id) == target_id and item.text
+        ),
+        None,
+    )
+    if statement is None:
+        raise ProposalInvalidError(
+            f"{decision.adr_id}: missing partial statement for {target_id}",
+            target_files=[str(decision.padr)],
+            fix=f"Add Supersedes in part `{target_id}`: <the replaced clauses>. to the PADR Decision Outcome",
+        )
+    return statement.text
 
 
 def _insert_pointer(text: str, pointer: str) -> tuple[str, int]:
@@ -794,13 +801,18 @@ def _plan_pointers(root: Path, index: DocumentIndex, decisions: list[_Decision])
             present = [by for by, _ in lines] + _pointer_names(original)
             if any(name in names or index.canonical_id(name) == decision.adr_id for name in present):
                 continue
-            lines.append((decision.adr_id, f"{SUPERSEDED_IN_PART} `{decision.adr_id}`: {_clause(meta, decision)}"))
+            lines.append(
+                (decision.adr_id, f"{SUPERSEDED_IN_PART} `{decision.adr_id}`: {_clause(index, found[0].id, decision)}")
+            )
     planned = []
     for target, (original, adr_id, lines) in wanted.items():
         if not lines:
             continue
         text, first = _insert_pointer(original, "\n\n".join(line for _, line in lines))
-        planned += [_Pointer(target, adr_id, by, original, text, first + 2 * i) for i, (by, _) in enumerate(lines)]
+        number = first
+        for by, pointer in lines:
+            planned.append(_Pointer(target, adr_id, by, original, text, number))
+            number += pointer.count("\n") + 2
     return planned
 
 
@@ -827,7 +839,13 @@ def _drop_supersedes_placeholder(text: str) -> str:
     if block is None:
         return text
     end = block.end
-    head = re.sub(rf"^{re.escape(SUPERSEDES_PLACEHOLDER)}[ \t]*\r?\n", "", text[:end], count=1, flags=re.MULTILINE)
+    placeholders = (
+        SUPERSEDES_PLACEHOLDER,
+        "# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in Decision Outcome",
+    )
+    head = text[:end]
+    for placeholder in placeholders:
+        head = re.sub(rf"^{re.escape(placeholder)}[ \t]*\r?\n", "", head, count=1, flags=re.MULTILINE)
     return head + text[end:]
 
 

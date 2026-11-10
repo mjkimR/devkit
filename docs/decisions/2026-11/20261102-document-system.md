@@ -22,10 +22,9 @@ aliases:
 
 # [ADR-document-system] The document system in devkit-docs and devkit-spec as its SDD layer
 
-Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the spec bundle's rule-asset distribution clause and the document templates and the docs skeleton in the devkit-spec methodology list (its lifecycle templates stay).
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the distribution clause assigning every rule asset to the spec bundle and the document templates and docs skeleton in its devkit-spec methodology list; lifecycle templates remain with devkit-spec.
 
-Superseded in part by `ADR-selective-package-versions`: only the root-version advancement and same-version
-qualifiers in the Document package and bundles Package clause; document and SDD ownership remain.
+Superseded in part by `ADR-selective-package-versions`: the root-version and same-version qualifiers in the Document package and bundles Package clause; document and SDD ownership and dependency directions remain.
 
 - **Status**: Accepted
 - **Date**: 2026-11-02
