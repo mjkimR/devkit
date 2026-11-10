@@ -30,7 +30,7 @@ def test_skill_routes_to_the_documents_reference_with_a_read_condition() -> None
 def test_documents_reference_uses_the_project_document_system_when_one_exists() -> None:
     text = DOCUMENTS.read_text()
     assert_rule(text, "existing document destinations", "`uv run devkit get-context docs`", "`uv run devkit docs")
-    assert_rule(text, "no document tree", "current context", "no document system")
+    assert_rule(text, "no document yet", "current context", "seed no document tree", "first document")
 
 
 def test_documents_reference_binds_assignments_and_shared_interfaces_to_documents() -> None:
@@ -91,3 +91,35 @@ def test_architect_and_builder_overlays_hold_to_governing_documents() -> None:
     builder = (SKILL / "roles/builder.md").read_text()
     assert_rule(builder, "governing documents", "report a mismatch", "instead of diverging")
     assert_rule(builder, "agreed interface and failure handling")
+
+
+def test_assignment_guidance_records_verifies_and_resumes_without_install_condition():
+    delegation = (SKILL / "references/delegation.md").read_text()
+    assert_rule(
+        delegation,
+        "assignment new",
+        "--governing",
+        "assignment return",
+        "assignment verify",
+        "result=fail",
+        "assignment close",
+        "cannot record",
+        "unrecorded",
+    )
+    assert_rule(
+        (SKILL / "references/current-context.md").read_text(),
+        "assignment list",
+        "open",
+        "interrupted",
+        "assignment show",
+        "ledger",
+    )
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert "without assuming a harness is installed" not in orchestration
+    assert_rule(orchestration, "uv run devkit worktree", "documented Git procedure")
+    assert_rule(orchestration, "--parent", "closes all children", "records nothing")
+    assert_rule(DOCUMENTS.read_text(), "first document", "seed no document tree")
+    assert_rule(DOCUMENTS.read_text(), "uv run devkit rules check", "unverified")
+    assert_rule(DOCUMENTS.read_text(), "--governing", "recording")
+    for name in ("product-clarifier", "product-researcher", "usage-reviewer"):
+        assert "devkit adaptive assignment" not in (BUNDLE / f"subagents/{name}.md").read_text()

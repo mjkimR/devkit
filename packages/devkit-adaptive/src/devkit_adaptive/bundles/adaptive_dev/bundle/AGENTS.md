@@ -13,3 +13,6 @@ Adaptive development can remain the project's approach; product size or elapsed 
 - Reusable swarm agents follow their caller's workflow and authority, including under SDD; selecting them grants no approach or host-setting change.
 - Give swarm workers commit authority only through an explicit assignment; keep product-support roles' index and HEAD unchanged.
 - Use the project's ordinary Git and host permissions; adaptive development requires no per-change SDD Unit, approval, envelope or immutable experiment history.
+
+- The delegating agent SHOULD record assignments and verify returns with `uv run devkit adaptive assignment`; if a command cannot record, keep the manual procedure and report assignments as unrecorded.
+- The ledger retains scope, base and checks; current context names outstanding assignment IDs and next recovery actions.

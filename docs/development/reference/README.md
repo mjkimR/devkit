@@ -22,3 +22,5 @@ distribution that ships the module (`ARCH-05-1-containers`).
 | `devkit_docs` | `devkit-docs` | [devkit-docs README](../../../packages/devkit-docs/README.md) | `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup` |
 | `devkit_spec` | `devkit-spec` | [devkit-spec README](../../../packages/devkit-spec/README.md) | `CAP-HARN-command-mount`, `CAP-DLV-delivery-workflows` |
 | `devkit_viewer` (devkit-viewer) | [Viewer](viewer.md) | `CAP-VIEW-repository-viewer` |
+
+- [Adaptive assignments](adaptive.md): record authority, resume outstanding work and verify returns.

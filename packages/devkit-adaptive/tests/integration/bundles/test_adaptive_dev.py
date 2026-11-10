@@ -280,16 +280,15 @@ def test_local_role_paths_resolve_from_installed_skill_not_cwd(tmp_path: Path, m
     assert not (skill.parent / "references/roles/builder.md").exists()
 
 
-def test_distribution_is_bundle_only_without_runtime_dependencies() -> None:
+def test_distribution_declares_runtime_and_command_entrypoint() -> None:
     metadata = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
     project = metadata["project"]
+    sibling = tomllib.loads((PACKAGE.parent / "devkit-docs/pyproject.toml").read_text())["project"]["version"]
+    core = tomllib.loads((PACKAGE.parent / "devkit-core/pyproject.toml").read_text())["project"]["version"]
     assert project["name"] == "devkit-adaptive"
-    assert project["dependencies"] == []
-    assert not project.get("optional-dependencies")
-    assert project["entry-points"] == {"devkit.bundles": {"adaptive-dev": "devkit_adaptive.bundles.adaptive_dev"}}
-    root = PACKAGE / "src/devkit_adaptive"
-    assert {p.relative_to(root).as_posix() for p in root.rglob("*.py")} == {
-        "__init__.py",
-        "bundles/__init__.py",
-        "bundles/adaptive_dev/__init__.py",
+    assert set(project["dependencies"]) == {f"devkit-docs=={sibling}", f"devkit-core=={core}", "click>=8.1.7"}
+    assert not any("devkit-spec" in requirement for requirement in project["dependencies"])
+    assert project["entry-points"] == {
+        "devkit.bundles": {"adaptive-dev": "devkit_adaptive.bundles.adaptive_dev"},
+        "devkit.commands": {"adaptive": "devkit_adaptive.cli:cli"},
     }

@@ -59,14 +59,14 @@ group and no runtime service, scheduler or process runner.
 - The command group is `devkit adaptive`, not `devkit adaptive-dev`. → `CAP-DLV-adaptive-development` rule 18 (MUST).
 
 - Adaptive development has a command group `devkit adaptive assignment` with the verbs `new`, `return`, `verify`,
-  `close`, `list` and `show`. → CAP-DLV-adaptive-assignments §4 (MUST).
+  `close`, `list` and `show`. → `CAP-DLV-adaptive-assignments` §4 (MUST).
 - The commands record and compare. They start no agent, run no declared check, create no worktree and block no
-  session. → CAP-DLV-adaptive-assignments §2 Scope Excluded.
+  session. → `CAP-DLV-adaptive-assignments` §2 Scope Excluded.
 - Verification compares repository facts with the assignment: the recorded base is an ancestor of the returned
   commit, the worktree HEAD is the returned commit, every changed path lies inside the write scope, and every
-  declared check has a recorded passing outcome. → CAP-DLV-adaptive-assignments §3 (MUST).
+  declared check has a recorded passing outcome. → `CAP-DLV-adaptive-assignments` §3 (MUST).
 - A failed verification is a negative result with exit code `1` and one stable code per failed check.
-  → CAP-DLV-adaptive-assignments §4 (MUST).
+  → `CAP-DLV-adaptive-assignments` §4 (MUST).
 - The delegating agent runs the commands: the Host for its assignments, a `swarm-worker` lead for its children.
   Assignees, product-support roles and verifier or planner leads run none of them, because their contracts keep Git
   read-only (`ADR-skill-local-swarm-roles`), and no archetype requires them. → `CAP-DLV-adaptive-development` rules
@@ -76,7 +76,7 @@ group and no runtime service, scheduler or process runner.
   unsupported repository, an unwritable or unreadable ledger, a denied write), the Host keeps the manual board and
   diff reading and reports the assignments as unrecorded. → `CAP-DLV-adaptive-development` rules 13 and 14 (SHOULD).
 - Recording validates the governing documents an assignment names (`ADR-adaptive-requires-document-system`).
-  → CAP-DLV-adaptive-assignments §3 (MUST).
+  → `CAP-DLV-adaptive-assignments` §3 (MUST).
 - The Host keeps these judgments: whether a returned result meets its goal, whether a recorded check outcome is
   true, whether an open assignment's agent is still running, capacity and allowance, shared-interface agreement, and
   acceptance of a result whose verification failed.
@@ -94,6 +94,6 @@ group and no runtime service, scheduler or process runner.
 
 ## 6. Confirmation
 
-Tests of the `assignment` feature in `devkit-adaptive` for each rule of CAP-DLV-adaptive-assignments, the
+Tests of the `assignment` feature in `devkit-adaptive` for each rule of `CAP-DLV-adaptive-assignments`, the
 documented-codes test of the package, and the bundle content tests that assert the recording steps and the fallback
 in the guidance.

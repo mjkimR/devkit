@@ -44,11 +44,50 @@ def test_installed_adaptive_dev_without_spec(tmp_path: Path) -> None:
     consumer = tmp_path / "consumer"
     consumer.mkdir()
     run("git", "init", "-q", str(consumer))
+    run(
+        "git",
+        "-C",
+        str(consumer),
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.test",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "base",
+    )
+    run(
+        python,
+        "-c",
+        "from importlib.metadata import requires, version; r=requires('devkit-adaptive'); assert 'devkit-docs=='+version('devkit-docs') in r; assert not any('devkit-spec' in x for x in r)",
+    )
 
     def cli(*args: str, expected: int = 0) -> str:
         return run(python, "-m", "devkit_dist", *args, "-w", str(consumer), cwd=consumer, expected=expected)
 
     cli("sync")
+    receipt = json.loads((consumer / ".devkit/installation.json").read_text())
+    assert receipt["selection"]["presets"]["docs"] == ["core"]
+    assert receipt["selection"]["presets"]["harness"] == ["core"]
+    assert json.loads(cli("adaptive", "assignment", "list", "--format", "json"))["assignments"] == []
+    missing = json.loads(
+        cli(
+            "adaptive",
+            "assignment",
+            "new",
+            "--owner",
+            "o",
+            "--goal",
+            "g",
+            "--governing",
+            "CAP-NOPE-missing",
+            "--format",
+            "json",
+            expected=2,
+        )
+    )
+    assert missing["error"]["code"] == "ADAPTIVE_GOVERNING_UNRESOLVED"
     assert not (consumer / ".devkit/managed/adaptive-dev").exists()
     cli("add", "adaptive-dev")
     assert not (consumer / ".devkit/adaptive-dev.md").exists()

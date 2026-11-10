@@ -28,7 +28,7 @@ repositories' runtime,
 `packages/devkit-docs` the document system (`devkit docs`, the document model and the document rules),
 `packages/devkit-spec` the Spec-Driven Development (SDD) extension built on it,
 `tools/devkit-dev` the repository development bundle and its structure rules,
-`packages/devkit-adaptive` the opt-in adaptive development bundle,
+`packages/devkit-adaptive` adaptive guidance and `devkit adaptive assignment` commands,
 `packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles,
 `packages/devkit-viewer` the local repository viewer (`devkit viewer serve`, with its Svelte frontend), `models/devkit-embed` the embedding model of the
 `search` extra of `devkit-dist` and `devkit-agt` (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
@@ -203,7 +203,7 @@ requirement on it, run `just model-build` (fetches and verifies the files, build
 
 - `ARCH-01-introduction-and-goals`: modules, interaction model, and the full documentation index.
 - [devkit-dist](packages/devkit-dist/README.md) and [devkit-agt](packages/devkit/README.md): module tables with links to each module's reference.
-- [devkit-adaptive](packages/devkit-adaptive/README.md): adaptive development guidance and reusable agents.
+- [devkit-adaptive](packages/devkit-adaptive/README.md): adaptive development guidance, reusable agents and assignment commands.
 - [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
 - [devkit-viewer](packages/devkit-viewer/README.md): the local repository viewer and its frontend commands (`just viewer ...`).
 - Handbook for people: a release snapshot of the Living Spec in English and Korean under `handbook/en/` and

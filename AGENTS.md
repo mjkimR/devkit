@@ -77,7 +77,7 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 | `devkit-docs` | Document system: document model, `devkit docs` commands, document rules |
 | `devkit-spec` | Spec-driven delivery commands and agent assets |
 | `devkit-starter` | Example external content package |
-| `devkit-adaptive` | Opt-in adaptive development bundle |
+| `devkit-adaptive` | Adaptive development bundle and `devkit adaptive` assignment commands |
 | `devkit-catalog` | Opt-in content bundles |
 | `devkit-viewer` | Local read-only Living Spec viewer and its Svelte library |
 

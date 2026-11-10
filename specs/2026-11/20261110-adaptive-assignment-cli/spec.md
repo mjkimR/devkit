@@ -309,118 +309,154 @@ distribution absent, `devkit adaptive` is click's usage error, exit `2`, without
 
 ## 4. Acceptance Criteria
 
-### [AC-01] Given a repository with a linked worktree, when `new` runs in the main worktree with `--worktree`,
+### [AC-01] Shared ledger from linked worktrees
 
-Given a repository with a linked worktree, when `new` runs in the main worktree with `--worktree`,
-  `--write src/a` and `--check tests`, then the assignment is `open` with the worktree HEAD as base, and `list` run
+- **Given** a repository with a linked worktree
+- **When** `new` runs in the main worktree with `--worktree`,
+  `--write src/a` and `--check tests`
+- **Then** the assignment is `open` with the worktree HEAD as base, and `list` run
   from the linked worktree prints it.
 
-### [AC-02] Given any command of the group has run, then `git status --porcelain` of every worktree is unchanged
+### [AC-02] No tracked or status changes
 
-Given any command of the group has run, then `git status --porcelain` of every worktree is unchanged
+- **Given** any command of the group has run
+- **Then** `git status --porcelain` of every worktree is unchanged
   and no tracked file changed.
+- **When** the specified public command or check runs.
 
-### [AC-03] Given an open assignment with `--write src/a`, when `new` records `--write src/a/x.py` or `--write .`
+### [AC-03] Literal overlap and sequencing
 
-Given an open assignment with `--write src/a`, when `new` records `--write src/a/x.py` or `--write .`
-  for another assignment, then it exits `2` with `ADAPTIVE_SCOPE_OVERLAP` and appends nothing; with
+- **Given** an open assignment with `--write src/a`
+- **When** `new` records `--write src/a/x.py` or `--write .`
+  for another assignment
+- **Then** it exits `2` with `ADAPTIVE_SCOPE_OVERLAP` and appends nothing; with
   `--depends-on <the first ID>` it succeeds; `--write src/ab` succeeds.
 
-### [AC-04] Given a returned assignment whose commits changed only paths under its write scope and whose declared
+### [AC-04] Passing return
 
-Given a returned assignment whose commits changed only paths under its write scope and whose declared
-  checks all have `pass`, when `verify` runs, then it exits `0`, prints `result=pass` and the status is `verified`.
+- **Given** a returned assignment whose commits changed only paths under its write scope and whose declared
+  checks all have `pass`
+- **When** `verify` runs
+- **Then** it exits `0`, prints `result=pass` and the status is `verified`.
 
-### [AC-05] Given a return whose commit renamed a file from inside the scope to outside it, or left an untracked
+### [AC-05] Committed and uncommitted scope violations
 
-Given a return whose commit renamed a file from inside the scope to outside it, or left an untracked
-  file outside the scope, when `verify` runs, then it exits `1` with `ADAPTIVE_SCOPE_VIOLATION`, lists each
+- **Given** a return whose commit renamed a file from inside the scope to outside it, or left an untracked
+  file outside the scope
+- **When** `verify` runs
+- **Then** it exits `1` with `ADAPTIVE_SCOPE_VIOLATION`, lists each
   offending path with `change=committed` or `change=uncommitted`, and the status is `rejected`. Given an uncommitted
   rename from inside the scope to outside it, then the new name is listed. Given an untracked nested repository
   `vendor/x` and the write entry `vendor`, then `scope` passes.
 
-### [AC-06] Given a return whose final commit does not descend from the base, then `verify` exits `1` with
+### [AC-06] Ancestry and moved HEAD
 
-Given a return whose final commit does not descend from the base, then `verify` exits `1` with
+- **Given** a return whose final commit does not descend from the base
+- **Then** `verify` exits `1` with
   `ADAPTIVE_BASE_NOT_ANCESTOR` and `scope` is `not-run`. Given the worktree HEAD moved after `return`, then `verify`
   exits `1` with `ADAPTIVE_HEAD_MOVED`.
+- **When** the specified public command or check runs.
 
-### [AC-07] Given declared checks `tests` and `lint` and a return with `tests=pass` only, then `verify` exits `1`
+### [AC-07] Declared check outcomes
 
-Given declared checks `tests` and `lint` and a return with `tests=pass` only, then `verify` exits `1`
+- **Given** declared checks `tests` and `lint` and a return with `tests=pass` only
+- **Then** `verify` exits `1`
   with `ADAPTIVE_CHECK_OUTCOME_MISSING`; with `lint=skipped` it exits `1` with `ADAPTIVE_CHECK_NOT_PASSED`.
+- **When** the specified public command or check runs.
 
-### [AC-08] Given an assignment without `--commit` and a return whose final commit is not the base, then `verify`
+### [AC-08] Commit authority and strict warnings
 
-Given an assignment without `--commit` and a return whose final commit is not the base, then `verify`
+- **Given** an assignment without `--commit` and a return whose final commit is not the base
+- **Then** `verify`
   exits `1` with `ADAPTIVE_COMMIT_NOT_GRANTED`. Given the same assignment with only uncommitted in-scope paths and
   HEAD at the base, then `verify --strict` exits `0` with `result=pass` and no warning; with `--commit` granted the
   same state reports `ADAPTIVE_UNCOMMITTED_CHANGES` and `verify --strict` exits `1` with `result=pass`.
+- **When** the specified public command or check runs.
 
-### [AC-09] Given a parent with `--write src` and `--commit`, when a child is recorded with `--write docs`, then
+### [AC-09] Child scope, depth and completion
 
-Given a parent with `--write src` and `--commit`, when a child is recorded with `--write docs`, then
+- **Given** a parent with `--write src` and `--commit`
+- **When** a child is recorded with `--write docs`, then
   `new` exits `2` with `ADAPTIVE_AUTHORITY_NOT_NARROWED`; a child of a child exits `2` with `ADAPTIVE_NESTING_DEPTH`;
   while a child is not closed, `verify` of the parent exits `1` and `close` of the parent exits `2`, both with
   `ADAPTIVE_CHILDREN_OUTSTANDING`.
+- **Then** the specified outcomes and codes hold.
 
-### [AC-10] Given a `rejected` assignment, when the worktree is repaired, `return` is recorded again and `verify`
+### [AC-10] Repair and repeated returns
 
-Given a `rejected` assignment, when the worktree is repaired, `return` is recorded again and `verify`
-  passes, then the status is `verified` and `show` lists both returns in its events.
+- **Given** a `rejected` assignment
+- **When** the worktree is repaired, `return` is recorded again and `verify`
+  passes
+- **Then** the status is `verified` and `show` lists both returns in its events.
 
-### [AC-11] Given a `rejected` assignment, when `close --outcome integrated` runs without `--reason`, then it exits
+### [AC-11] Reasoned unverified closing
 
-Given a `rejected` assignment, when `close --outcome integrated` runs without `--reason`, then it exits
+- **Given** a `rejected` assignment
+- **When** `close --outcome integrated` runs without `--reason`
+- **Then** it exits
   `2` with `ARGUMENT_INVALID`; with `--reason` it exits `0` with the `ADAPTIVE_CLOSED_UNVERIFIED` warning, and `1`
   under `--strict`.
 
-### [AC-12] Given three open assignments, one whose worktree directory was moved away without `git worktree
+### [AC-12] Resume observations and complete show
 
-Given three open assignments, one whose worktree directory was moved away without `git worktree
-  prune`, one with a commit and one untouched, when `list` runs in a fresh process, then it reports
+- **Given** three open assignments, one whose worktree directory was moved away without `git worktree
+  prune`, one with a commit and one untouched
+- **When** `list` runs in a fresh process
+- **Then** it reports
   `attention=worktree-missing`, `commits=1` and `attention=no-changes` respectively and exits `0`; closed
   assignments appear only with `--all`. In the same process `show <id>` prints the goal, the stop condition, the
   commit grant, the write scope, the governing documents and the declared checks that `new` recorded, in text and
   in JSON.
 
-### [AC-13] Given two processes that run `new` at the same time, then both assignments are recorded with distinct
+### [AC-13] Concurrent append and fragment recovery
 
-Given two processes that run `new` at the same time, then both assignments are recorded with distinct
+- **Given** two processes that run `new` at the same time
+- **Then** both assignments are recorded with distinct
   IDs and every ledger line parses. Given a ledger that ends with an unterminated fragment, then `list` succeeds with
   `ADAPTIVE_LEDGER_FRAGMENT_IGNORED`; after a following `new`, `list` exits `0` without the warning and every line
   of the file parses. A newline-terminated line that does not parse gives `ADAPTIVE_LEDGER_UNREADABLE`, exit `2`.
+- **When** the specified public command or check runs.
 
-### [AC-14] Given a directory outside a Git work tree, then every command exits `2` with
+### [AC-14] Repository and ledger errors
 
-Given a directory outside a Git work tree, then every command exits `2` with
+- **Given** a directory outside a Git work tree
+- **Then** every command exits `2` with
   `ADAPTIVE_REPOSITORY_UNSUPPORTED`. Given a repository without a commit, then `list` exits `0` with an empty list
   and `new` exits `2` with `ADAPTIVE_REVISION_UNRESOLVED`. Given a ledger directory that cannot be written, then
   `new` exits `2` with `ADAPTIVE_LEDGER_UNWRITABLE`. Given a linked worktree of a bare repository, then `new` and
   `list` succeed there and the ledger lies under the bare directory.
+- **When** the specified public command or check runs.
 
-### [AC-15] For every command, `--format json` prints exactly one compact object with the keys of §3.2, a failure
+### [AC-15] Compact JSON and sentinel text
 
-For every command, `--format json` prints exactly one compact object with the keys of §3.2, a failure
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** For every command, `--format json` prints exactly one compact object with the keys of §3.2, a failure
   prints `{"error": ..., "notices": ...}`, and text mode prints only the sentinels of §3.2 on stdout.
 
-### [AC-16] Every `ADAPTIVE_` code declared in the package appears in a document under `docs/` (documented-codes
+### [AC-16] Documented codes and architecture
 
-Every `ADAPTIVE_` code declared in the package appears in a document under `docs/` (documented-codes
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** Every `ADAPTIVE_` code declared in the package appears in a document under `docs/` (documented-codes
   test), and `devkit rules check` reports no `RULE-architecture`, `RULE-usecase-boundaries` or
   `RULE-advisory-unique-code` finding for the package.
 
-### [AC-17] The bundle content tests find, without an installation condition: the recording, verification and
+### [AC-17] Delegation and document guidance
 
-The bundle content tests find, without an installation condition: the recording, verification and
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** The bundle content tests find, without an installation condition: the recording, verification and
   closing steps and the fallback in `delegation.md`; the resume rule in `current-context.md`; the unconditional
   step 1, the new step 2 and the `devkit rules check` step in `documents.md`; and no "without assuming a harness is
   installed" in `orchestration.md`. They find no command name in the product-support role contracts, the
   `adaptive-import` skill or the conversion playbook. The three archetypes state no prerequisite.
 
-### [AC-18] The installed-consumer test builds the `devkit-adaptive` wheel and its sibling wheels, installs them
+### [AC-18] Installed adaptive distribution without SDD
 
-The installed-consumer test builds the `devkit-adaptive` wheel and its sibling wheels, installs them
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** The installed-consumer test builds the `devkit-adaptive` wheel and its sibling wheels, installs them
   into a fresh environment and shows:
   - the installed metadata of `devkit-adaptive` requires `devkit-docs` at exactly the built version and names no
     `devkit-spec`;
@@ -433,43 +469,50 @@ The installed-consumer test builds the `devkit-adaptive` wheel and its sibling w
   - `devkit adaptive assignment new --owner o --goal g --governing CAP-NOPE-missing` exits `2` with
     `ADAPTIVE_GOVERNING_UNRESOLVED`, which shows the document index imports in the installed environment.
 
-### [AC-19] A test starts a fresh interpreter that imports every module of the package
+### [AC-19] Fresh module imports without SDD
 
-A test starts a fresh interpreter that imports every module of the package
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** A test starts a fresh interpreter that imports every module of the package
   (`pkgutil.walk_packages`), the CLI module included, and prints the loaded module names; the test finds no
   `devkit_spec` module among them.
 
-### [AC-20] Given a worktree that holds a document with a valid ID (written `<ID>` here) and the file
+### [AC-20] Governing IDs, aliases, paths and none
 
-Given a worktree that holds a document with a valid ID (written `<ID>` here) and the file
-  `docs/notes.md`, when `new` records `--governing <ID> --governing docs/notes.md`, then `show` lists both and the
+- **Given** a worktree that holds a document with a valid ID (written `<ID>` here) and the file
+  `docs/notes.md`
+- **When** `new` records `--governing <ID> --governing docs/notes.md`
+- **Then** `show` lists both and the
   JSON `governing` is `["<ID>", "docs/notes.md"]`. An alias of the document records `<ID>`. `--governing none` and
   no `--governing` both record `[]`. `--governing none --governing <ID>` exits `2` with `ARGUMENT_INVALID`.
 
-### [AC-21] Given `--governing <an ID no document declares> --governing docs/absent.md`, then `new` exits `2` with one
+### [AC-21] Unresolved governing values and worktree locality
 
-Given `--governing <an ID no document declares> --governing docs/absent.md`, then `new` exits `2` with one
+- **Given** `--governing <an ID no document declares> --governing docs/absent.md`
+- **Then** `new` exits `2` with one
   `ADAPTIVE_GOVERNING_UNRESOLVED` that names both values and appends nothing. Given a document that exists
   uncommitted in the main worktree and not in the linked worktree of the assignment, then `--governing <its ID>`
   exits `2` with `ADAPTIVE_GOVERNING_UNRESOLVED`, and `--governing <absolute path of the main worktree's copy>`
   succeeds and records the absolute path. Given two documents that declare the same ID, then that ID is refused with
   the reason `duplicate-id`.
+- **When** the specified public command or check runs.
 
-### [AC-22] The package metadata test passes (§3.8), `packages/devkit/tests/integration/package/test_lockstep.py`
+### [AC-22] Pins, lockstep and snapshot refusal
 
-The package metadata test passes (§3.8), `packages/devkit/tests/integration/package/test_lockstep.py`
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** The package metadata test passes (§3.8), `packages/devkit/tests/integration/package/test_lockstep.py`
   passes, `uv lock --check` passes, and the snapshot refusal test shows `BUNDLE_SNAPSHOT_UNSUPPORTED`.
 
-### [AC-23] Each statement of `target-docs.md` §1 to §4 is present in its document (checked in the reconcile
+### [AC-23] Living Spec and installation consistency
 
-Each statement of `target-docs.md` §1 to §4 is present in its document (checked in the reconcile
+- **Given** the implemented distribution and its documented command contract.
+- **When** the named test or review runs.
+- **Then** Each statement of `target-docs.md` §1 to §4 is present in its document (checked in the reconcile
   review, one document at a time). As a search aid, `rg -nU "devkit-docs\s+(plus|and)\s+devkit-(catalog|adaptive)"
   docs/capabilities docs/architecture guides README.md` then prints only statements about installing
   `deep-research`, and `rg -n "docs/catalog" docs/capabilities docs/architecture guides` prints no statement about
   adaptive development.
-
-
-
 ## 5. Non-Goals
 
 - **Scope Excluded**: hooks, scheduling, process running, MCP, glob scopes, ledger pruning, migrations, SDD records in the adaptive product, public shared Git helpers and edits to other runtime packages.

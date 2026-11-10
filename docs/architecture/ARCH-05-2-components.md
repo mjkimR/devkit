@@ -82,7 +82,7 @@ its common CLI boundary, and docs and spec each own `adapters/cli.py` for the se
 may retain their existing bundle-only layouts. The content-only catalog owns the opt-in `deep-research` bundle under
 `devkit_catalog/deep_research/bundle/` and the `app-uiux-improve` and `design-explore` bundles below.
 `devkit_adaptive` owns the opt-in `adaptive-dev` bundle under `devkit_adaptive/bundles/adaptive_dev/bundle/`,
-with no feature, runtime module or dependency until its first command. Its entry, optional role contracts and context
+with the `assignment` feature and an exact-pinned requirement on `devkit-docs`. Its two feature edges are `devkit_dist.features.project` and `devkit_docs.features.documents`; the public read use case is `devkit_adaptive.features.assignment.usecases.listing`. Both devkit-spec and devkit-adaptive sit above devkit-docs and neither imports the other. Its entry, optional role contracts and context
 template remain independent of `deep-research`; neither bundle shares an asset with the other. Adaptive-dev also owns reusable `swarm-planner`, `swarm-worker` and `swarm-verifier` contracts,
 skill-local task overlays and orchestration references, and the user-invoked `adaptive-import` skill with its
 `agent-asset-conversion` playbook, which write converted assets into the consuming project's own bundle. Compatible external callers may reuse installed public

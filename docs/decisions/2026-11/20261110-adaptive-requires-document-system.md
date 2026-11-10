@@ -60,7 +60,7 @@ the consumer declares side by side. The independence from `devkit-spec` in the s
   bundles are auto-selected by their own declarations; `adaptive-dev` still deploys only after explicit selection.
   → `CAP-DLV-adaptive-development` §4, `ARCH-07-deployment`.
 - Recording an assignment validates its governing documents: an ID through the document index, a path by existence.
-  → CAP-DLV-adaptive-assignments §3 (MUST).
+  → `CAP-DLV-adaptive-assignments` §3 (MUST).
 - The document system's kinds, destinations and checks are the default for adaptive documents. A project's own
   document conventions stay in force where it has them. → `CAP-DLV-adaptive-development` rules 26 and 27.
 - A document is written only where its subject warrants one. No document tree is seeded for a project that has no

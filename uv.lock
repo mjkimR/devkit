@@ -437,6 +437,11 @@ wheels = [
 name = "devkit-adaptive"
 version = "0.1.6"
 source = { editable = "packages/devkit-adaptive" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-core" },
+    { name = "devkit-docs" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -444,6 +449,11 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "devkit-core", editable = "packages/devkit-core" },
+    { name = "devkit-docs", editable = "packages/devkit-docs" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]

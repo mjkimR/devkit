@@ -32,8 +32,7 @@ development approach, and no other asset of the bundle names or suggests it.
 
 `ADR-adaptive-development-and-research` owns the bundle's product-iteration contents and its retained approach check
 and current context, linking a research material by its ID, and the approach, bundle, entry and context-file names.
-The project-document linkage (rules 26 and 27) and the import entry with its playbook (rules 28 to 39) have no
-decision record; this capability is their contract.
+`ADR-adaptive-assignment-commands` owns the command group and recording steps; `ADR-adaptive-requires-document-system` owns the dependency and document defaults in rules 2, 26 and 27. The import entry with its playbook (rules 28 to 39) keeps this capability as its contract.
 `ADR-skill-local-swarm-roles` owns reusable execution agents and optional role leads;
 `ADR-worktree-isolated-parallel-workers` owns isolated writers and aggregate verification.
 
@@ -52,7 +51,7 @@ decision record; this capability is their contract.
   asset kinds and validation (`CAP-DIST-manifest-spec`) and playbook retrieval (`CAP-DIST-context-and-playbooks`).
 - **Scope Excluded**: a runtime scheduler, agent bus, mandatory role sequence, model routing, fixed
   management hierarchy, automatic approach switching, automatic implementation/publication, per-change SDD
-  artifacts and reconstructed experiment history; a document system created for a project that maintains none;
+  artifacts and reconstructed experiment history; a document tree seeded for a project that has no document;
   import of a whole pack or an unselected item, execution or installation of source content, a vendored or
   submodule copy of a source, and MCP server, hook or host configuration by the import.
 
@@ -64,7 +63,7 @@ decision record; this capability is their contract.
    playbook. `adaptive-dev:agents` MUST select only the three archetypes and `adaptive-dev:import` only the import
    skill and playbook, each with no adaptive entry, pointer or context template. No preset changes approach or caller
    lifecycle authority. Tests: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` and `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_import.py`.
-2. **Independent installation**: The bundle MUST install with devkit-docs and devkit-adaptive without a devkit-spec distribution.
+2. **Independent installation**: The devkit-adaptive distribution MUST require devkit-docs and install without a devkit-spec distribution; its installation provides the document system and harness with their own auto-selected core bundles.
    Test: `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py`.
 3. **Approach inspection**: WHEN the entry starts product work, the coordinator MUST inspect the effective common
    development approach rather than infer it from bundle selection.
@@ -96,7 +95,7 @@ decision record; this capability is their contract.
     unavailable nesting requires direct, flat or sequential fallback without settings changes. The role reports
     native/emulated availability truthfully.
 13a. **Assignment handoff**: WHEN delegating a deliverable, the coordinator MUST name one owner, dependency or
-    none, completion evidence and expected integration handoff alongside the existing assignment fields.
+    none, completion evidence and expected integration handoff alongside the existing assignment fields. It SHOULD record the assignment before dispatch and verify its return with `CAP-DLV-adaptive-assignments`; if a command cannot record, the existing manual obligations apply and the assignment is reported as unrecorded.
 13b. **Shared interface**: WHEN concurrent writers depend on an unsettled shared interface, the coordinator MUST
     assign its ownership and resolve it before dependent concurrent writes, or sequence those writers.
 13c. **Interface identity**: WHEN an assignment depends on a shared interface, the coordinator MUST provide the
@@ -116,7 +115,7 @@ decision record; this capability is their contract.
 14. **Current context ownership**: WHEN retained resume facts change or work pauses, the coordinator MUST update
     project-owned `.devkit/adaptive-dev.md`; roles return evidence or drafts instead of editing that file. Failure
     checkpoints MUST retain source identity, dirty/unmerged results, active ownership and next recovery action;
-    passing QA is not a prerequisite.
+    passing QA is not a prerequisite. Current context names outstanding assignment IDs and next actions; the ledger retains their ownership, base, scope and checks.
 15. **Context preservation**: WHEN sync, removal or re-selection runs, sync MUST preserve existing project-owned
     context and product notes. Tests: devkit-adaptive integration and installed-consumer tests.
 16. **Voluntary adoption**: WHEN the user explicitly requests SDD adoption, the coordinator MUST leave activation to
@@ -124,8 +123,8 @@ decision record; this capability is their contract.
 17. **Useful alternatives**: WHEN research choices affect resume, current facts SHOULD link retained notes, surviving
     alternatives and conditions that would reopen a choice, and link a retained research material by its `MAT-<slug>`
     ID rather than copy it.
-18. **One name**: Documents MUST call the approach "adaptive development"; identifiers and commands MUST use
-    `adaptive-dev`. The former `incubation` name MUST NOT be accepted: no `incubation` bundle alias
+18. **One name**: Documents MUST call the approach "adaptive development"; approach, bundle, entry skill and context-file identifiers MUST use
+    `adaptive-dev`; the command group is `devkit adaptive`. The former `incubation` name MUST NOT be accepted: no `incubation` bundle alias
     (`SELECTION_INVALID`) or approach value (`DEVELOPMENT_CONFIG_INVALID`), and no fallback read of
     `.devkit/incubation.md`. Tests: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` and
     `packages/devkit-dist/tests/integration/features/project/test_development.py`.
@@ -146,17 +145,15 @@ decision record; this capability is their contract.
 24. **No-progress diagnosis**: IF no assignment repair bound is supplied and two consecutive attempts produce the same symptom without material new diagnostic evidence, THEN the coordinator MUST change strategy before another equivalent attempt. Material evidence changes or tests a causal hypothesis, isolates a dependency or identifies a distinct failure. The trigger does not cap authorized work or establish completion.
 25. **Useful recovery facts**: WHEN a failed approach affects the next action, the Host MUST retain its reason, source identity, owner, surviving hypothesis, retry condition and next recovery action; on resume the coordinator rechecks applicability.
 
-26. **Governing documents**: WHERE the project maintains documents, WHEN the coordinator partitions a multi-writer
+26. **Governing documents**: WHEN the coordinator partitions a multi-writer
     build, it MUST find the documents that govern the goal and name them in each assignment by ID, by absolute path
     where a document has no ID, or as `none`; an assignee treats them as constraints and returns a conflict with one
-    to the Host instead of resolving it (`UC-advance-an-idea` 5b6). Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev_documents.py`.
+    to the Host instead of resolving it (`UC-advance-an-idea` 5b6). Recording validates the same governing values through `CAP-DLV-adaptive-assignments`. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev_documents.py`.
 27. **Current-state documents**: WHEN the Host integrates a retained result, it MUST update the current-state
     documents the subject warrants, describing current state and writing nothing for a discarded experiment, and
-    include the project's document checks in combined checks when the project defines them; an unavailable document
-    check is reported as unverified (`UC-advance-an-idea` 6c). The Host MUST map each retained behavior, structure or
+    include `uv run devkit rules check` on changed documents and any project-defined document checks in combined checks; a check that could not run is reported as unverified (`UC-advance-an-idea` 6c). The Host MUST map each retained behavior, structure or
     choice in current context to its document ID, to its path where the document has no ID, or to `undocumented`,
-    linking rather than copying content (`UC-advance-an-idea` 7c). IF the project maintains no document tree, THEN the
-    coordinator MUST record that fact in current context and create no document system. Document work adds no
+    linking rather than copying content (`UC-advance-an-idea` 7c). IF the project has no document yet, THEN the coordinator MUST record that fact in current context, MUST NOT seed a document tree and writes the first document only where a retained subject warrants one, in the document system's kinds. Document work adds no
     per-change record, SDD Unit, approval or envelope. Test: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev_documents.py`.
 
 28. **Explicit import entry**: The bundle MUST declare `adaptive-import` with `invocation = "user"`, and its other
@@ -209,9 +206,9 @@ import judgment are semantic agent contracts; keyword assertions alone do not es
 
 ### Distribution and entry
 
-Install devkit-docs and devkit-adaptive, then select `uv run devkit add adaptive-dev` (`adaptive-dev:core`).
-The two skills, six registered agent contracts and the playbook use existing projection and retrieval mechanisms. No
-adaptive-development runtime or CLI is added.
+Install devkit-adaptive, which requires the document system and harness, then select `uv run devkit add adaptive-dev` (`adaptive-dev:core`).
+The two skills, six registered agent contracts and the playbook use existing projection and retrieval mechanisms.
+`CAP-DLV-adaptive-assignments` defines `devkit adaptive assignment`. The distribution is not a bundle snapshot source (`BUNDLE_SNAPSHOT_UNSUPPORTED`).
 
 `uv run devkit config show` exposes `configuration.development.approach` and its source.
 The entry requires `adaptive-dev`; invalid policy propagates `DEVELOPMENT_CONFIG_INVALID`, exit 2.
@@ -333,12 +330,11 @@ retained research material IDs, useful surviving alternatives/reopening conditio
 they no longer inform work. A fresh context rechecks identities and applicability instead of replaying history.
 The template's `## Documents` section maps each retained behavior, structure or choice to its document ID, to its path
 where the document has no ID, or to `undocumented`; `undocumented` entries stay, because they show a later SDD adoption
-which retained items lack a document. A project without a document tree says so there.
+which retained items lack a document. A project that has no document yet says so there.
 
 ## Integration and final verification
 
 Adaptive development uses the same explicit-branch Git integration as SDD without task labels, claims or provider
 selection. The Host performs independent branch checks and, after approved landing and cleanup, synchronizes the
-landed dependencies and runs required final checks in fresh processes. No implicit Unit or verification ledger is
-created. A final failure leaves delivery unfinished until target repair and recheck pass
+landed dependencies and runs required final checks in fresh processes. Integration creates no implicit Unit; the assignment ledger is explicit and untracked. A final failure leaves delivery unfinished until target repair and recheck pass
 (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`).

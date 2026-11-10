@@ -132,6 +132,7 @@ def test_docs_select_the_tests_that_read_them(affected: ModuleType, path: str) -
             (
                 "packages/devkit-docs/tests/integration/package/test_documented_codes.py",
                 "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
+                "packages/devkit-adaptive/tests/integration/package/test_documented_codes.py",
                 f"{TESTS}/integration/features/rules/test_docs.py",
                 f"{TESTS}/integration/package/test_documented_codes.py",
                 f"{TESTS}/integration/features/workflow/test_library.py",

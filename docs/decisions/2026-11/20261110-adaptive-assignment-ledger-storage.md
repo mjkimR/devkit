@@ -46,15 +46,15 @@ assignment, or an append-only JSON Lines event log (chosen).
 Chosen: an append-only event log under the shared Git directory.
 
 - The ledger is `<git common dir>/devkit/adaptive/ledger.jsonl`, found with
-  `git rev-parse --path-format=absolute --git-common-dir`. → CAP-DLV-adaptive-assignments §4 (MUST).
+  `git rev-parse --path-format=absolute --git-common-dir`. → `CAP-DLV-adaptive-assignments` §4 (MUST).
 - Each line is one JSON event with a schema number, a UTC timestamp, an event type and the assignment ID. Commands
   append and never rewrite a line. The state of an assignment is the fold of its events.
-  → CAP-DLV-adaptive-assignments §4 (MUST).
+  → `CAP-DLV-adaptive-assignments` §4 (MUST).
 - Every write holds an exclusive lock on `<git common dir>/devkit/adaptive/lock` while it reads, validates and
-  appends. → CAP-DLV-adaptive-assignments §3 (MUST).
+  appends. → `CAP-DLV-adaptive-assignments` §3 (MUST).
 - Bytes after the last newline are a fragment of an interrupted append, not an event. A reader skips the fragment and
   reports a warning; a writer truncates it under the lock before appending. A newline-terminated line that cannot be
-  parsed, or an unknown schema number, stops the command. → CAP-DLV-adaptive-assignments §3 (MUST).
+  parsed, or an unknown schema number, stops the command. → `CAP-DLV-adaptive-assignments` §3 (MUST).
 - The file layout is private to the `assignment` feature. Other code and later hook handlers read assignments through
   `devkit adaptive assignment list --format json` or the feature's list use case.
 - `.devkit/adaptive-dev.md` stays Host-authored Markdown. No command reads or writes it.

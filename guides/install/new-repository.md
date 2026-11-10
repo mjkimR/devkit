@@ -101,7 +101,7 @@ through `uv run devkit add docs:docs-skeleton`; existing seeded files remain pro
 
 ### Adaptive development entry
 
-When the approved installation is for adaptive development, use devkit-docs plus devkit-adaptive and explicitly select
+When the approved installation is for adaptive development, use devkit-adaptive, which brings devkit-docs and the harness and explicitly select
 `uv run devkit add adaptive-dev`. Configure shared `[development] approach = "adaptive-dev"` and inspect
 `uv run devkit config show`; integration requires no readiness-provider selection. Follow
 [the adaptive development setup](../INSTALL_GUIDE.md#adaptive-development) for the complete configuration.

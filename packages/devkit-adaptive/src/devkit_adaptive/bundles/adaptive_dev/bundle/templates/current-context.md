@@ -12,7 +12,7 @@ Separate user decisions, implementation choices and assumptions needing evidence
 
 ## Documents
 
-Map each retained behavior, structure or choice to its document ID, or to its path where the document has no ID; mark one without a document `undocumented`. Link, never copy document content. When the project maintains no document tree, say so here.
+Map each retained behavior, structure or choice to its document ID, or to its path where the document has no ID; mark one without a document `undocumented`. Link, never copy document content. When the project has no document yet, say so here.
 
 ## Run and verify
 
@@ -27,3 +27,5 @@ When a failed approach still affects work, record its reason, source identity, o
 ## Next useful action
 
 One next executable action and what its result will decide. Link current product documents or retained evidence when present.
+
+Name outstanding assignments by ledger ID and their next recovery action; keep scope, base and checks in the ledger.

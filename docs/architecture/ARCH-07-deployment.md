@@ -175,12 +175,12 @@ paths remain ignored machine-local state. Removing a task checkout cannot remove
 configuration loss blocks new approval/resume; only the same approved call's exact terminal cleanup may finish.
 
 The devkit-docs wheel registers `docs = "devkit_docs.bundles.docs"` in `devkit.bundles`. Its default core is
-auto-selected alongside spec:core for devkit-spec installations. Built-wheel isolation without devkit-spec is
+auto-selected by every installation carrying devkit-docs, including adaptive and SDD installations. Built-wheel isolation without devkit-spec is
 verified by `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`.
 
 The devkit-adaptive wheel registers `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"`; it deploys only after explicit
 selection of `adaptive-dev:core`, `adaptive-dev:agents` or `adaptive-dev:import`. A clean adaptive-dev installation uses
-devkit-docs plus devkit-adaptive without devkit-spec. The adaptive distribution owns the entry, pointer, role contracts, managed
+devkit-adaptive alone without devkit-spec; it requires devkit-docs at an exact pin like every internal requirement. The adaptive distribution owns the entry, pointer, role contracts, managed
 current-context template, the explicitly invoked import entry and the conversion playbook
 (`CAP-DLV-adaptive-development`). The coordinator's
 `.devkit/adaptive-dev.md` remains project-owned and is never a seeded or overwritten deployment output. Built-wheel

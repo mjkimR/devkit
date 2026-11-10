@@ -49,3 +49,5 @@ Implement and verify one explicitly owned assignment or lead bounded implementat
 ## Return
 
 Return status (`completed`, `needs_input` or `failed`), goal/result, source/base and final SHA when committed, actual changed paths, commands and outcomes, defects with reproducing evidence, assumptions, unverified areas and next action. Name active ownership and retained dirty/unmerged checkpoints on interruption. A child result does not establish combined or landed-target success.
+
+When the caller supplies an assignment ID, return it with the result; no assignment command is a prerequisite and the assignee records nothing.

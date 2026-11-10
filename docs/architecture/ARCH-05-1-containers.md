@@ -54,6 +54,7 @@ graph TD
     PkgDist -.->|Dev dependency (asset distribution only)| DevTools
     PkgDevkit -.->|Dev dependency (CLI harness)| DevTools
     ModelEmbed -.->|Optional search extra| PkgDist
+    PkgAdaptive -->|Exact actual-version dependency| PkgDocs
     PkgDocs -->|Harness dependency| PkgDevkit
     PkgDocs -.->|Document commands and rules| DevTools
     PkgSpec -->|Document dependency| PkgDocs
@@ -158,7 +159,7 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
 - **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-repository-viewer`.
 
 ### 2.7 Opt-in and Example Content Packages
-- **`devkit-adaptive` (`packages/devkit-adaptive`)**: Owns the opt-in `adaptive-dev` bundle without runtime dependencies or commands. It tests its bundle against the manifest reader of `devkit-dist`.
+- **`devkit-adaptive` (`packages/devkit-adaptive`)**: Owns the opt-in `adaptive-dev` bundle and `devkit adaptive assignment` commands. It requires `devkit-docs`, `devkit-core` and `click` (internal wheels pinned to selected actual versions), and never imports `devkit_spec`.
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - Both test their bundles against the manifest reader of `devkit-dist`, their only development dependency.

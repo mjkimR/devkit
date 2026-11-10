@@ -18,7 +18,7 @@ If the spec package is absent, read [canonical package sources](../INSTALL_GUIDE
 and the [already-installed route](existing-repository.md#already-installed) before changing dependencies.
 Inspect the existing direct base requirement and its actual dependency group, source and ref. Present replacing
 that direct devkit-docs, devkit-agt or devkit-dist requirement with devkit-spec in the same group; do not append
-a second direct base requirement. Preserve the supported source/ref and keep an existing optional devkit-adaptive
+a second direct base requirement. Preserve the supported source/ref and keep the existing devkit-adaptive
 requirement. Apply only the approved replacement using the canonical procedure, including `--no-build-package pyyaml`.
 Use the project's real group rather than assuming every existing installation uses the development group.
 
