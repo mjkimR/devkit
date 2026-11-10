@@ -2,7 +2,7 @@
 id: PROP-adaptive-package-extraction-target
 title: Target Living Spec Structure for PROP-adaptive-package-extraction
 status: draft
-proposal: PROP-adaptive-package-extraction
+proposal: SPEC-adaptive-package-extraction
 created_at: 2026-11-10
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
@@ -30,7 +30,7 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
   - `entrypoints`: the four paths move to
     `packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/`.
   - §1: "catalog bundle" becomes the bundle of the `devkit-adaptive` distribution; a sentence names
-    the decision promoted from `PADR-adaptive-dev-distribution` as the owner of the packaging.
+    the decision promoted from `ADR-adaptive-dev-distribution` as the owner of the packaging.
   - §2 Scope Excluded: "new wheel" is removed. The runtime scheduler, agent bus, model routing and the other
     exclusions stay.
   - Rule 2: "MUST install with devkit-docs and devkit-adaptive without a devkit-spec distribution", with the moved
@@ -74,7 +74,7 @@ No rule number, code, sentinel or agent-facing behavior changes.
     registers `adaptive-dev = "devkit_adaptive.bundles.adaptive_dev"`; a clean installation uses devkit-docs plus
     `devkit-adaptive` without `devkit-spec`; the moved end-to-end test path. The following paragraph on
     `deep-research` starts with "The devkit-catalog wheel registers" instead of "The same wheel registers".
-- New decision: `PADR-adaptive-dev-distribution`, promoted at handoff. It supersedes in part
+- New decision: `ADR-adaptive-dev-distribution`, promoted at handoff. It supersedes in part
   `ADR-adaptive-development-and-research`.
 - `ADR-adaptive-development-and-research`: stays `accepted`; gains the line "Superseded in part by" the promoted
   decision, naming the owning-wheel clauses of the adaptive-dev bundle, and a reference repair in its Confirmation

@@ -1,16 +1,16 @@
 ---
-id: PADR-adaptive-dev-distribution
+id: ADR-adaptive-dev-distribution
 title: Ship the adaptive-dev bundle from a dedicated devkit-adaptive distribution
 summary: "For adaptive development that is to gain commands, we ship the adaptive-dev bundle from a dedicated devkit-adaptive wheel instead of the content-only devkit-catalog, to let it carry code while the catalog stays dependency-free, accepting one more wheel to release and install."
-proposal: PROP-adaptive-package-extraction
+proposal: SPEC-adaptive-package-extraction
 supersedes: [ADR-adaptive-development-and-research]
-status: draft
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-adaptive-dev-distribution] Ship the adaptive-dev bundle from a dedicated devkit-adaptive distribution
+# [ADR-adaptive-dev-distribution] Ship the adaptive-dev bundle from a dedicated devkit-adaptive distribution
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 - **Involved Components/Capabilities**: `packages/devkit-adaptive/`, `packages/devkit-catalog/`,
   `CAP-DLV-adaptive-development`, `CAP-HARN-agent-guidance`, `ARCH-05-1-containers`, `ARCH-05-2-components`,
@@ -34,7 +34,7 @@ A project selects the bundle by its name `adaptive-dev` in `.devkit/config.toml`
 distribution that provides it. The name, presets and asset IDs are consumer-facing; the owning wheel appears only in
 the installation command and the receipt. Nothing uses the bundle outside this repository.
 
-Evidence and option tables: `materials/planning-evidence.md` of `PROP-adaptive-package-extraction`.
+Evidence and option tables: `docs/materials/2026-11/20261110-adaptive-package-extraction/planning-evidence.md` of `SPEC-adaptive-package-extraction`.
 
 ## 2. Decision Drivers
 

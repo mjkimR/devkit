@@ -1,7 +1,7 @@
 # Planning evidence for PROP-adaptive-package-extraction
 
 Scope: the evidence and option comparisons Planning collected at `plan-adaptive-package-extraction` (base
-`881bced1`) for spike questions Q1 to Q7 of `PROP-adaptive-package-extraction`. Paths are relative to the repository
+`881bced1`) for spike questions Q1 to Q7 of `SPEC-adaptive-package-extraction`. Paths are relative to the repository
 root. Each set closes with the recommendation; the proposal's Planning decisions record what is settled and on
 which ground. The user's decisions replaced the recommendation of set 3 and settled the question set 2 left open;
 both sets say so where they close.
@@ -125,7 +125,7 @@ reproduced in this Planning.
 | `ARCH-07-deployment` | The paragraph "The devkit-catalog wheel registers `adaptive-dev = ...`" and the installation command list of 1.1 | Restated to `devkit-adaptive` | Architecture edit |
 
 Recommendation: one superseding decision limited to the owning wheel and its installation, promoted from
-`PADR-adaptive-dev-distribution`. The decision on a command line or runtime belongs to
+`ADR-adaptive-dev-distribution`. The decision on a command line or runtime belongs to
 `PROP-adaptive-assignment-cli`, because this unit adds neither.
 
 ## Set 5: entry points (Q5)
@@ -140,7 +140,7 @@ else.
 
 ## Set 6: repository wiring (Q6)
 
-`envelopes/scout-01.yaml` holds the inventory with its line evidence. The table lists what Development edits; a row
+historical Git `9ab4f8e5ec0d1e4922013106199835ce6b74838e:docs/proposals/PROP-adaptive-package-extraction/envelopes/scout-01.yaml` holds the inventory with its line evidence. The table lists what Development edits; a row
 marked "no edit" was checked and needs none.
 
 | Area | File | Edit |
