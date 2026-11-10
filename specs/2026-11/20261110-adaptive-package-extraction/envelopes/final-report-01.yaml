@@ -1,0 +1,22 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T01:16:53.804955Z'
+status: completed
+summary: Extracted adaptive-dev into bundle-only devkit-adaptive; bundle tree identical, catalog and install/docs wiring updated, moved release versions preserved. Independent code and reconciliation findings fixed.
+findings: []
+assumptions:
+- Smoke failure reproduced by Host baseline probe at b46086c; runtime/smoke sources equal 9ab4f8e, only disposable catalog inventory assertion corrected; FB-smoke-integration-stale-task-kind retained.
+- All source under packages/scripts/tests/tools is unchanged since 7e81bc8d; later commits contain ADR/README and workflow records only, so source test results are reused without relabelling E2E SHA.
+- Actual bundle name app-uiux-improve is retained in smoke inventory; proposal shorthand uiux-improve was not a rename instruction.
+unverified_areas:
+- Final landed runtime synchronization, generated checks and required affected tests are Host responsibilities; no merge or publication performed.
+checks:
+  tests: PASS affected unit/integration 6424 passed 3 skipped; isolated E2E 355 passed 13 skipped at b2cdb892; dist-only 1349 passed; dev 115 passed; adaptive/catalog integration 33/70 passed
+  build: PASS thirteen workspace wheels built by smoke; independent installed adaptive consumer passes in E2E without spec/catalog
+  lint: PASS full lint-check and check; rules --ci --base 9ab4f8e at cca7c35b; lock --check; sync --check
+  smoke: FAIL exit=1 unchanged smoke_integration.py --task-kind option; accepted AC-06 baseline exception, new owner assertion passed
+diff_scope:
+  base: 9ab4f8e5ec0d1e4922013106199835ce6b74838e
+  head: cca7c35bc8d199c16504fc26c44ca7604e85e24b
