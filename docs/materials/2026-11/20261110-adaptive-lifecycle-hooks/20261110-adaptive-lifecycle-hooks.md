@@ -9,7 +9,7 @@ summary: "Retained Planning evidence for Stop, SubagentStop and SessionStart hoo
 ## Outcome
 
 The proposal for lifecycle hook gates over the adaptive assignment ledger was rejected after its first Planning
-turn, with no delivery. The user's reason: the gates would not help much in their usage pattern.
+turn, with no delivery (`ADR-reject-adaptive-lifecycle-hooks`). The user's reason: the gates would not help much in their usage pattern.
 
 The evidence behind that choice:
 

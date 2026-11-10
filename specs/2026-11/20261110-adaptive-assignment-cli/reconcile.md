@@ -36,6 +36,6 @@ targets:
 
 All retained targets reflect assignment commands, the document-system requirement, governing validation and delegation guidance from the implementation. Historical ADR outcomes are preserved; two partial supersession pointers identify the replaced clauses. The earlier distribution ADR keeps its decision and only updates the follow-up source ID.
 
-No required scope is deferred. Hooks remain the separate `PROP-adaptive-lifecycle-hooks`. Inherited Planning feedback remains open unless separately fixed; no matching target alone resolves feedback.
+No required scope is deferred. Hooks remain the separate ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`). Inherited Planning feedback remains open unless separately fixed; no matching target alone resolves feedback.
 
 Independent review covered all14 targets. The implementer verified the three fixes against each named file: adaptive-only SDD addition versus actual direct-base replacement; harness-first flow and failed-return fallback; explicit runtime import and archetype-command boundaries. No remaining finding is waived. Entrypoint derivation retained the new capability CLI and added the same doorway to the use case; extra guidance-only CLI candidates were declined.

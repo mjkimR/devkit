@@ -49,7 +49,7 @@ from `devkit-spec` stay as they are, and the next proposal adds commands without
   `devkit-catalog` on `devkit-adaptive`, an alias distribution, a shim module, a second registration of the bundle
   and an error hint that names the new package. Nothing uses the bundle outside this repository.
 - **Scope Excluded**: moving `deep-research` or another catalog bundle.
-- **Scope Excluded**: host lifecycle hooks; `PROP-adaptive-lifecycle-hooks` owns their investigation.
+- **Scope Excluded**: host lifecycle hooks; ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`) owns their investigation.
 - **Scope Excluded**: a release, a release installation variant, a version other than the one
   `just version-sync` selects, and a change to release preparation beyond the bundle lookup of section 3.3.
 
@@ -243,7 +243,7 @@ inventory. Where an earlier envelope differs from this document, this document h
 | Subject | Decision | By |
 | --- | --- | --- |
 | Owner | `adaptive-dev` moves from `devkit-catalog` into its own distribution `devkit-adaptive`, shaped like `devkit-spec` | user |
-| Scope | No command and no behavior change; bundle name, presets and asset IDs stay; hooks are `PROP-adaptive-lifecycle-hooks` | user |
+| Scope | No command and no behavior change; bundle name, presets and asset IDs stay; hooks are ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`) | user |
 | Size | `M`, one spec | host |
 | Independence | The bundle keeps installing without `devkit-spec` | host |
 | Names and layout (Q1) | Section 3.1; settled by `ADR-package-ownership-and-release-version`, `ARCH-05-2-components` 1.1 and `CAP-DIST-content-packages` §1 | evidence |

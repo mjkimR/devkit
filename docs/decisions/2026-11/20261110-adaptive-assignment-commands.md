@@ -41,7 +41,7 @@ repository.
   one command group and a ledger to maintain.
 - **Commands that also dispatch agents, run declared checks or block completion**: closer to the reference
   harnesses, but it adds the process runner and gates that the milestone excludes or defers to
-  `PROP-adaptive-lifecycle-hooks`.
+  ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`).
 
 ## 4. Decision Outcome
 
@@ -89,8 +89,8 @@ group and no runtime service, scheduler or process runner.
 - Negative: a second place holds resume facts beside `.devkit/adaptive-dev.md`; the guidance states which holds what.
 - Risk: a recorded check outcome repeats what the assignee reported. The capability states that verification
   compares outcomes and does not run checks.
-- Follow-up: `PROP-adaptive-lifecycle-hooks` decides whether a host gate reads the ledger; it is triggered by that
-  proposal's Planning.
+- Follow-up: ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`) investigated whether a host gate reads the
+  ledger; `ADR-reject-adaptive-lifecycle-hooks` records that no gate is delivered.
 
 ## 6. Confirmation
 

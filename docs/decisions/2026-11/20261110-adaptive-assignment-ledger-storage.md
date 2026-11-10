@@ -19,7 +19,7 @@ created_at: 2026-11-10
 The assignment commands (`ADR-adaptive-assignment-commands`) need one record that the Host reads and writes from its
 checkout and a role lead from another worktree. Parallel writers each own a worktree on its own branch, so a file in
 the working tree is either tracked, and differs per branch, or ignored, and exists per checkout. A later consumer
-(`PROP-adaptive-lifecycle-hooks`) reads the same record from whichever checkout a host session runs in.
+(~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`)) reads the same record from whichever checkout a host session runs in.
 
 ## 2. Decision Drivers
 

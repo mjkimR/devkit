@@ -39,7 +39,7 @@ targets:
 
 The five installation guides describe fresh installs of docs plus adaptive; they add no migration path. Root package inventories and package READMEs name the dedicated owner. No new domain concept or screen is introduced.
 
-Deferred runtime commands and the requirement on devkit-docs remain in `PROP-adaptive-assignment-cli`; lifecycle-hook investigation remains in `PROP-adaptive-lifecycle-hooks`. Both destinations already exist and no acceptance criterion of this unit is deferred.
+Deferred runtime commands and the requirement on devkit-docs remain in `PROP-adaptive-assignment-cli`; lifecycle-hook investigation remains in ~~`PROP-adaptive-lifecycle-hooks`~~ (rejected in `8a725e5d`). Both destinations already exist and no acceptance criterion of this unit is deferred.
 
 Entrypoints were moved one-for-one from their existing bundle asset paths. Broad package and repository-tooling derivation candidates are rejected because they are not these documents' reading doorways.
 

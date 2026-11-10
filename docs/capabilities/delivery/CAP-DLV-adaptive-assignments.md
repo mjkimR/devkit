@@ -318,7 +318,7 @@ distribution absent, `devkit adaptive` is click's usage error, exit `2`, without
   last newline before it appends, so a fragment never becomes an earlier line.
 - `list` and `show` read without the lock.
 - The file format is private. `devkit adaptive assignment list --format json` and the list use case are the read
-  interface for other code, `PROP-adaptive-lifecycle-hooks` included; the list use case module is declared in
+  interface for other code; the list use case module is declared in
   `public_modules`.
 - No command deletes or rewrites an event, and no pruning command is added.
 
