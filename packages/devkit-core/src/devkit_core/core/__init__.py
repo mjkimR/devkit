@@ -14,7 +14,17 @@ from devkit_core.base.errors import (
 from devkit_core.core.deadline import Deadline
 from devkit_core.core.files import atomic_write_bytes, atomic_write_text, remove_empty_tree
 from devkit_core.core.frontmatter import Frontmatter, FrontmatterBlock
-from devkit_core.core.git import is_ancestor, run_git, run_git_text
+from devkit_core.core.git import (
+    StatusRecord,
+    WorktreeRecord,
+    is_ancestor,
+    parse_status_records,
+    parse_worktree_records,
+    run_git,
+    run_git_text,
+    status_records,
+    worktree_records,
+)
 from devkit_core.core.locks import file_lock
 from devkit_core.core.paths import is_safe_relpath, normalize_relpath, resolve_within
 from devkit_core.core.plugins import (
@@ -42,7 +52,9 @@ __all__ = [
     "PluginFailure",
     "PluginLoad",
     "PluginPackage",
+    "StatusRecord",
     "UnsafePathError",
+    "WorktreeRecord",
     "YamlBindingUnavailableError",
     "atomic_write_bytes",
     "atomic_write_text",
@@ -52,6 +64,8 @@ __all__ = [
     "iter_plugin_packages",
     "load_subclasses",
     "normalize_relpath",
+    "parse_status_records",
+    "parse_worktree_records",
     "remove_empty_tree",
     "require_libyaml",
     "resolve_within",
@@ -59,4 +73,6 @@ __all__ = [
     "run_git_text",
     "safe_compose",
     "safe_load",
+    "status_records",
+    "worktree_records",
 ]

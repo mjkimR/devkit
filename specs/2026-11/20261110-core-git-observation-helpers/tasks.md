@@ -8,7 +8,7 @@ plan: PLAN-core-git-observation-helpers
 
 ## Phase 1: Core readers
 
-- [ ] **Task 1.1**: Worktree and status records, parsers and runners in `devkit_core.core`, with tests and reference
+- [x] **Task 1.1**: Worktree and status records, parsers and runners in `devkit_core.core`, with tests and reference
   - **_Boundary**: `packages/devkit-core/src/devkit_core/core/git.py`,
     `packages/devkit-core/src/devkit_core/core/__init__.py`,
     `packages/devkit-core/tests/integration/core/test_git_observation.py`,
