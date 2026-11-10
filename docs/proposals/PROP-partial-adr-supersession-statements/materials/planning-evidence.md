@@ -61,7 +61,18 @@ Counts at `b3e4753d`: 65 ADRs; 26 pairs from 16 partly superseding ADRs to 18 ea
   `ADR-<old>`: …", "From `ADR-<old>`, … is retired", "This decision supersedes only …", "This replaces, in part, the
   clause of `ADR-<old>` …". No two ADRs written independently share a wording a pattern could extract.
 - One open PADR names `supersedes` (`PADR-adaptive-dev-distribution` in `PROP-adaptive-package-extraction`,
-  accepted); its Decision Outcome states the replaced parts in prose.
+  accepted); its Decision Outcome states the replaced parts in prose. On the base at `f0434e6e` that proposal is
+  handed off: `ADR-adaptive-dev-distribution` over `ADR-adaptive-development-and-research` is a further pair, and no
+  open PADR names `supersedes`.
+- One ADR carries a frontmatter copy of the replaced scope: `supersedes_clause` in `ADR-skill-local-swarm-roles`
+  ("Adaptive-dev role-set and role-authority clauses only; …"). Its Decision Outcome names "the role-set clauses"
+  only, while the earlier ADR's pointer matches the frontmatter key. The pairs were not otherwise compared clause by
+  clause, so further pairs whose sources differ may exist.
+- `visible_lines` blanks every inline code span that is not a single document ID
+  (`packages/devkit-docs/src/devkit_docs/features/documents/models/markdown.py:9-19`), so it locates a statement or
+  pointer but cannot supply its text; existing pointers hold such spans (`ADR-steering-documents`, `ADR-ux-screens`).
+- Decision Outcome items end with a trace, and items of a consolidated ADR end with a source ID in parentheses
+  (`ADR-decision-ledger`); one item of `ADR-selective-package-versions` states the replaced scope of two earlier ADRs.
 
 "Summary copy" marks the six pointers. "Extra pointers" counts the pointers at affected statements. "Outcome items"
 counts the Decision Outcome list items or paragraphs of the later ADR that name the earlier ADR by ID.
@@ -105,7 +116,8 @@ counts the Decision Outcome list items or paragraphs of the later ADR that name 
   (`decision_supersession.py:98-114`). It skips every document whose ID does not start with `ADR-`, so a PADR is not
   checked. It checks only targeted files, so a staged run that holds one ADR of a pair evaluates only that side.
 - The evaluator gives every finding its rule's severity (`materials/supersession-pointer-attempt.md` section 3), and
-  the per-finding severity model is a non-goal. A check added to this rule is therefore an error on `main` and at
+  the per-finding severity model is a non-goal. A project can override a whole rule's severity
+  (`packages/devkit/src/devkit_agt/features/rules/models/policy.py:81-85`). A check added to this rule is therefore an error on `main` and at
   every commit gate, and the existing ledger has to satisfy it in the change that adds it.
 - `SPEC-decision-supersession-check` Non-Goal 1 excluded automatic rewriting and PADR validation from the rule.
 - Options for keeping the two texts consistent after handoff:

@@ -81,12 +81,14 @@ replaced has no fixed form:
 We adopt **Option 1**.
 
 - A decision that replaces part of an ADR states the replaced scope in a partial-supersession statement: a list item
-  or paragraph of its Decision Outcome that begins "Supersedes in part `ADR-<old>`:" and runs to the end of that item
-  or paragraph. It writes one statement per earlier ADR its `supersedes` names that is not `superseded`. →
-  `CAP-DOCS-document-model` Decision supersession (MUST)
-- The earlier ADR's pointer "Superseded in part by `ADR-<new>`:" repeats the statement's text. The statement is the
-  source: a repair changes the statement and copies it to the pointer. Further pointers at the affected statements
-  keep their own text. → `CAP-DOCS-document-model` Decision supersession (MUST)
+  or paragraph of its own in Decision Outcome that begins "Supersedes in part `ADR-<old>`:". Its text runs to the next
+  blank line, list item or heading. It writes one statement per earlier ADR its `supersedes` names that is not
+  `superseded`. → `CAP-DOCS-document-model` Decision supersession (MUST)
+- A statement holds the replaced scope only: no trace, no source citation and no nested list.
+- The earlier ADR's pointer "Superseded in part by `ADR-<new>`:" repeats the statement's source text, code spans
+  included; whitespace may differ. The statement is the source: a repair changes the statement and copies it to the
+  pointer. Further pointers at the affected statements keep their own text. → `CAP-DOCS-document-model` Decision
+  supersession (MUST)
 - `devkit spec proposal handoff` writes the pointer from the promoted decision's statement and refuses, before any
   write, a `supersedes` entry that needs a pointer and has no statement. Nobody rewrites the pointer after handoff. →
   `CAP-DLV-proposal-planning` 4.5 step 4 (MUST)
@@ -108,7 +110,7 @@ We adopt **Option 1**.
   - The replaced scope exists in two files. The rule reports a difference at the commit gate, and the repair is a
     manual copy.
   - A repository that adopts this rule version with partly superseding ADRs gets errors until each has its statement
-    and matching pointer; the rule guide states the repair.
+    and matching pointer; the rule guide states the repair, and the existing severity override defers it.
   - A decision meant to replace a whole ADR through a PADR still passes through the partial form: its statement names
     every decision, handoff writes the pointer, and the author's edit then sets `status: superseded` and
     `superseded_by`.

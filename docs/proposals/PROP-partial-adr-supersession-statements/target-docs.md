@@ -27,10 +27,11 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 - `CAP-DOCS-document-model`, "Decision supersession":
   - The sentence "names it in `supersedes` and states the replaced clauses in its outcome" becomes a rule: a later
     ADR that replaces only part of an earlier one MUST carry, per such earlier ADR, one partial-supersession statement
-    in its Decision Outcome, a list item or paragraph that begins "Supersedes in part `ADR-<old>`:" and whose text
-    runs to the end of that item or paragraph.
+    in its Decision Outcome, a list item or paragraph of its own that begins "Supersedes in part `ADR-<old>`:" and
+    whose text runs to the next blank line, list item or heading. A statement SHOULD hold no trace, source citation
+    or nested list.
   - The pointer sentence gains: one pointer of the earlier ADR naming the superseder MUST repeat the statement's text
-    (equal after runs of whitespace are collapsed); the statement is the source, and a pointer at an affected
+    (source text, code spans included, equal after runs of whitespace are collapsed); the statement is the source, and a pointer at an affected
     statement MAY carry other text beside it.
   - The rule paragraph: `RULE-decision-supersession` also MUST report a missing, stray, duplicated or empty statement
     and an earlier ADR without a pointer that repeats the statement. "excludes materials and PADRs" becomes: it
@@ -61,14 +62,16 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
     and partial-supersession statements agree; historical ADRs checked, materials excluded, PADRs checked for
     statements only.
   - Section 3.17 gains three rules: missing statement (at the `supersedes` field), stray, duplicated or empty
-    statement (at the statement's line), and pointer text (once per pair, at the earlier ADR's first pointer naming
-    the superseder when targeted, else at the statement's line). Each is a non-fixable error. A pair whose earlier
-    ADR is `superseded` is exempt from the first and third.
+    statement (at the statement's line), and pointer text (once per pair that has a pointer naming the superseder,
+    at the earlier ADR's first such pointer when targeted, else at the statement's line). Each is a non-fixable
+    error. A pair whose earlier ADR is `superseded` is exempt from the first and third, and a pair without any
+    pointer keeps the existing replacement-target finding.
 - `CAP-DLV-proposal-planning`:
   - 4.4: the PADR's commented `supersedes` line names the statement to write in Decision Outcome.
   - 4.5 step 4: `<clause>` is the text of the promoted decision's statement for that ADR. The sentence that
     Development replaces it at `living-spec-draft` is removed. A `supersedes` entry that needs a pointer and has no
-    statement in the PADR MUST be refused with `SPEC_PROPOSAL_INVALID` before the first write. The remaining
+    statement in the PADR MUST be refused with `SPEC_PROPOSAL_INVALID` before the first write; a composed handoff
+    fails at its handoff step under its existing failure contract. The remaining
     sentences (placement, order, no second pointer, the sentinel, no `status: superseded`) stay.
   - The error table row of `SPEC_PROPOSAL_INVALID` gains the condition.
 
@@ -102,7 +105,7 @@ No screen changes: the viewer is `PROP-viewer-decision-supersession`'s.
 - `docs/decisions/` (not listed under `targets`, because the files are found at Development time): each pair of
   `materials/planning-evidence.md` section 4, and each pair that lands before Development, gets its statement and its
   repeating pointer, as section 3.6 of the proposal describes. No status, `supersedes` or `superseded_by` value
-  changes.
+  changes; the `supersedes_clause` key of `ADR-skill-local-swarm-roles` is removed.
 
 ---
 
