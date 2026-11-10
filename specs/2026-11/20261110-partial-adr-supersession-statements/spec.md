@@ -4,11 +4,10 @@ title: Structured partial-supersession statements for ADRs
 summary: Record each partial replacement once, as a fixed statement in the superseding ADR, let handoff copy it into the earlier ADR's pointer, let a rule keep both equal and let a devkit docs command list a decision's replacements, so earlier ADRs stay readable without manual pointer clarification.
 status: planned
 created: 2026-11-10
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DOCS-document-model, CAP-DOCS-document-lookup, CAP-GOV-spec-rules, CAP-DLV-proposal-planning]
+related_usecases: [UC-find-the-right-documents]
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-partial-adr-supersession-statements] Structured partial-supersession statements for ADRs
 
@@ -59,7 +58,7 @@ Partial supersession becomes reliable when the replaced scope is written once an
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Structured partial-supersession statements for ADRs so that system capabilities are extended.
+- **US-1**: As an agent authoring or reading an ADR, I want one explicit replacement statement to drive pointers, validation and lookup, so that I can identify which clauses remain in force.
 
 ## 3. Non-Goals
 
