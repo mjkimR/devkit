@@ -270,3 +270,18 @@ def test_create_padr_title_longer_than_proposal_slug_limit(workspace: Path) -> N
     created = CreateProposalDecisionUseCase().execute(workspace, "long-titles", long_title, today=TODAY)
     assert created.id == "PADR-planning-steps-split-between-a-spec-reference-and-the-worker-contract"
     assert (workspace / created.path).exists()
+
+
+def test_create_proposal_rolls_back_a_failed_write(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit_spec.features.proposals.usecases import scaffold
+
+    def broken(*_: object) -> str:
+        raise OSError("disk full")
+
+    before = sorted(workspace.rglob("*"))
+    with monkeypatch.context() as patch:
+        patch.setattr(scaffold, "_target_docs", broken)
+        with pytest.raises(OSError, match="disk full"):
+            create_proposal(workspace, "fast-engine", with_target_docs=True, today=TODAY)
+    assert sorted(workspace.rglob("*")) == before
+    assert create_proposal(workspace, "fast-engine", with_target_docs=True, today=TODAY).target_docs

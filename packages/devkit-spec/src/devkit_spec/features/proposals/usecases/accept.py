@@ -235,7 +235,7 @@ class AcceptProposalUseCase(BaseUseCase):
         not ``auto``), ``ProposalSlugError``, ``ProposalNotFoundError``, ``ProposalInvalidError``,
         ``ProposalAcceptRefusedError`` (a form the status does not allow, a single-file or unbound proposal),
         ``ProposalWrongWorktreeError`` (the Planning form off ``plan-<slug>``) and ``ProposalNotEligibleError`` (every
-        failed direct condition in its details). After writing the status: ``ProposalGateNotOpenError``, with the status
+        failed direct condition in its details; with ``check`` those conditions are returned as ``pending`` instead). After writing the status: ``ProposalGateNotOpenError``, with the status
         restored.
         """
         require_sdd(root)
@@ -304,6 +304,9 @@ class AcceptProposalUseCase(BaseUseCase):
                 )
         else:
             blocking = _direct_conditions(root, bundle, slug, meta, form, workspace, unit)
+            if blocking and check:
+                # The check answers negatively instead of refusing: eligible=no with the conditions, exit 1.
+                return AcceptResult(f"PROP-{slug}", rel, form, status, True, pending=tuple(blocking))
             if blocking:
                 raise ProposalNotEligibleError(
                     f"PROP-{slug} is not eligible for a direct acceptance ({form})",

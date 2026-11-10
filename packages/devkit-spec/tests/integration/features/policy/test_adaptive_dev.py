@@ -98,3 +98,24 @@ def test_root_attachment_preserves_bound_sdd_validation(tmp_path):
     run_git(tmp_path, "add", ".")
     run_git(tmp_path, "commit", "-qm", "generic root Unit")
     assert attach_check(tmp_path, "dev-demo", ".", "HEAD") == []
+
+
+def test_installed_cli_proposal_new_and_padr_refuse_before_writes(tmp_path, synced_template):
+    import json
+
+    from click.testing import CliRunner
+    from devkit_dist.cli import cli
+    from spec_support.delivery import _make_synced_repo
+
+    repo = _make_synced_repo(tmp_path, synced_template)
+    runner = CliRunner()
+    created = runner.invoke(cli, ["spec", "proposal", "new", "demo", "-w", str(repo)])
+    assert created.exit_code == 0, created.output
+    config_path = repo / ".devkit/config.toml"
+    config_path.write_text(config_path.read_text() + '\n[development]\napproach="adaptive-dev"\n')
+    before = sorted(path for path in repo.rglob("*") if ".git" not in path.parts)
+    for args in (["new", "other"], ["padr", "demo", "Pick a store"]):
+        result = runner.invoke(cli, ["spec", "proposal", *args, "-w", str(repo), "--format", "json"])
+        assert result.exit_code == 2, result.output
+        assert json.loads(result.stdout)["error"]["code"] == "SPEC_LIFECYCLE_INACTIVE"
+    assert sorted(path for path in repo.rglob("*") if ".git" not in path.parts) == before

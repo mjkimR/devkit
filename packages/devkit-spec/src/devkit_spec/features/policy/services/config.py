@@ -163,6 +163,12 @@ def read_spec_config(root: Path) -> SpecConfig:
     table = tool.get(TABLE, {}) if isinstance(tool, dict) else None
     if not isinstance(table, dict):
         raise SpecConfigError("config tool.spec: expected a table")
+    if "namespaces" in table:
+        raise SpecConfigError(
+            "config tool.spec.namespaces: namespaces moved to the document system",
+            fix="Rename each [[tool.spec.namespaces]] entry in .devkit/config.toml to [[tool.docs.namespaces]], "
+            "keeping its keys, then rerun",
+        )
     unknown = sorted(set(table) - {"worktree", "depth_escalation", "scope", "feedback"})
     if unknown:
         raise SpecConfigError(f"config tool.spec: unknown keys: {', '.join(unknown)}")
