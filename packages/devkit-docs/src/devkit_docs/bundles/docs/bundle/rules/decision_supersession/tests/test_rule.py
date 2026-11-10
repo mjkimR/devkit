@@ -24,6 +24,16 @@ def test_valid_whole_and_partial_replacements(tmp_path: Path) -> None:
     assert check(RULE, tmp_path, files) == []
 
 
+def test_a_comment_after_a_partial_statement_is_not_its_text(tmp_path: Path) -> None:
+    files = {
+        NEW: _doc(
+            "ADR-new", "supersedes: ADR-partial\n", "Supersedes in part `ADR-partial`: retries.\n<!-- note -->\n"
+        ),
+        "docs/decisions/partial.md": _doc("ADR-partial", body="Superseded in part by `ADR-new`: retries.\n"),
+    }
+    assert check(RULE, tmp_path, files) == []
+
+
 @pytest.mark.parametrize(
     "header,status",
     [
