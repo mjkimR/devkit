@@ -1,0 +1,17 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T01:12:11.889605Z'
+status: completed
+review: review-01.yaml
+summary: Implementer verified the original Outcome entry point restored; partial supersession pointer and Confirmation repairs retained.
+findings:
+- issue: Historical ADR Decision Outcome entry point changed despite partial supersession.
+  evidence: docs/decisions/2026-11/20261102-adaptive-development-and-research.md Decision Outcome names catalog ownership with the new adaptive module; target-docs requires retaining earlier clauses.
+  failure_condition: Reading the previous ownership decision makes it appear to have selected the new entry point.
+  suggested_action: Restore devkit_catalog.adaptive_dev only in that retained Outcome clause.
+  resolution: resolved
+  severity: P2
+checks:
+  adr_preservation: PASS

@@ -12,17 +12,17 @@ response-style = "devkit_catalog.response_style"
 maintenance = "devkit_catalog.maintenance"
 cli-tool = "devkit_catalog.cli_tool"
 command-design = "devkit_catalog.command_design"
-adaptive-dev = "devkit_catalog.adaptive_dev"
 deep-research = "devkit_catalog.deep_research"
-uiux-improve = "devkit_catalog.uiux_improve"
+app-uiux-improve = "devkit_catalog.app_uiux_improve"
 design-explore = "devkit_catalog.design_explore"
 
 [dependency-groups]
-dev = ["devkit-dist", "devkit-agt"]  # bundle tests use devkit-dist's manifest reader; rule tests the rules engine
+dev = ["devkit-dist", "devkit-agt", "devkit-adaptive"]  # bundle tests use devkit-dist's manifest reader; rule tests the rules engine
 
 [tool.uv.sources]
 devkit-dist = { workspace = true }
 devkit-agt = { workspace = true }
+devkit-adaptive = { workspace = true }
 
 [build-system]
 requires = ["hatchling==1.27.0"]

@@ -6,9 +6,8 @@ the project selects it with `devkit add`, and a preset picks its assets.
 
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
-| `adaptive-dev` | `core`, `agents`, `import` | Adaptive product iteration, optional support and mutable current context without SDD delivery records; `agents`: the three reusable swarm archetypes alone; `import`: the user-invoked `/adaptive-import` entry and its `agent-asset-conversion` playbook alone |
 | `deep-research` | `core` | A user-invoked research team that compares directions and retains one indexed material per investigation, under either development approach |
-| `uiux-improve` | `core` | User-invoked overall UI/UX improvement with optional local perspectives and implementation through the consumer workflow |
+| `app-uiux-improve` | `core` | User-invoked UI/UX improvement for software interfaces: proportionate object framing, optional local perspectives or a user-selected Impeccable session, and implementation through the consumer workflow |
 | `design-explore` | `core` | User-invoked general solution design with optional local premise exploration, mechanisms and tradeoffs; conversation-first result |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance`, `testing` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, performance passes, and test-management assessments |
@@ -21,32 +20,7 @@ uv run devkit list                                   # catalog bundles are liste
 uv run devkit add response-style                    # an opt-in catalog bundle
 ```
 
-## Adaptive development
-
-`uv run devkit add adaptive-dev` explicitly selects the `adaptive-dev` bundle. Install devkit-docs alongside catalog for
-shared document formats; devkit-spec is not required. `/adaptive-dev` checks the effective development approach through
-`uv run devkit config show` before product actions. Selection changes assets, not project policy.
-
-The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
-action, with optional product-clarifier, product-researcher and usage-reviewer assignments and no required team
-size or role sequence. A small question can stay inline.
-
-The coordinator keeps mutable current facts, retained note links and useful alternative reopening conditions in
-project-owned `.devkit/adaptive-dev.md`; sync never seeds or overwrites it.
-No per-change SDD Unit, envelope or immutable experiment history is required. Independent project checks still run.
-An explicit adoption request prepares spec assets while keeping adaptive development active, then uses the separately
-delivered `sdd-baseline` playbook for readiness and activation.
-
-`/adaptive-import <Git URL or local path> [conditions]` declares `invocation = "user"` and runs only when the user
-invokes it; no other asset of the bundle names or suggests it. It reads a third-party repository of subagents or
-skills as untrusted data in a temporary clone, executes nothing from it, recommends at most five fitting items and
-stops for one selection round. The selection invokes the `agent-asset-conversion` playbook
-(`uv run devkit playbook get adaptive-dev/agent-asset-conversion`), which rewrites each selected item, by default as a
-role overlay for `swarm-planner`, `swarm-worker` or `swarm-verifier`, without the source's authority, model or
-host-specific content, and places it in the project's own in-repository bundle with a provenance line. It never
-imports a whole pack, needs no approach check and changes no approach or host setting.
-`uv run devkit add adaptive-dev:import` adds the two assets to a project that selects only `adaptive-dev:agents`.
-`CAP-DLV-adaptive-development` holds the contract.
+Adaptive development ships in [devkit-adaptive](../devkit-adaptive/README.md).
 
 ## Deep research
 
@@ -73,12 +47,16 @@ See `CAP-DLV-deep-research`.
 
 ## UI/UX improvement
 
-`uv run devkit add uiux-improve` selects the content-only bundle with no required docs or spec package.
-Explicitly invoke `/uiux-improve <goal>` to inspect and improve a supplied interface or flow. Optional designer,
-unconventional-designer, reference-researcher and critic instructions stay inside the skill rather than registering
-global specialists. The coordinator carries requested implementation and actual checks through the consumer's
-existing workflow; review-only requests stay read-only. Selection starts no work and changes no development policy.
-No fixed team, design score, research report or comparison experiment is required. See `CAP-DLV-uiux-improvement`.
+`uv run devkit add app-uiux-improve` selects the content-only bundle with no required docs or spec package.
+Explicitly invoke `/app-uiux-improve <goal>` to improve a software interface or flow. Before restructuring views or
+flows, the coordinator frames the affected objects, from the project's glossary, object register and UX documents
+when they exist. It implements inline, optionally with the skill-local designer, unconventional-designer,
+reference-researcher and critic roles, or, on the user's selection, briefs one separately installed Impeccable session
+and accepts its changes against a recorded base. Implementation and checks follow the consumer's existing workflow;
+review-only requests stay read-only. Installation, ignore entries and cleanup happen only on the user's request.
+No fixed team, design score, research report or comparison experiment is required.
+Selection starts no work and changes no development policy. The [usage guide](src/devkit_catalog/app_uiux_improve/bundle/README.md)
+covers setup, the per-task flow and troubleshooting. See `CAP-DLV-uiux-improvement`.
 
 ## General solution exploration
 

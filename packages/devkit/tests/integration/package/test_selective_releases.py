@@ -595,3 +595,32 @@ def test_bootstrap_refuses_source_optional_metadata_mismatch(repo, tmp_path, mut
     with pytest.raises(AdvisoryError, match="complete dependency mismatch"):
         artifacts.bootstrap(root, "v0.1.0", "HEAD", originals, tmp_path / "invalid.json", "fixture/repo")
     assert not (tmp_path / "invalid.json").exists()
+
+
+@pytest.mark.parametrize("content_changed", [False, True])
+def test_moved_bundle_version_follows_content_not_distribution(repo, content_changed):
+    root, baseline, _ = repo
+    former = root / "packages/devkit-dist"
+    metadata = former / "pyproject.toml"
+    metadata.write_text(
+        metadata.read_text().replace('[project.entry-points."devkit.bundles"]\ndemo = "devkit_dist"\n', "")
+    )
+    new = root / "packages/devkit-moved"
+    module = new / "src/devkit_moved"
+    module.mkdir(parents=True)
+    (module / "__init__.py").write_text('"""Moved bundle fixture."""\n')
+    shutil.move(former / "src/devkit_dist/bundle", module / "bundle")
+    (new / "pyproject.toml").write_text(
+        '[project]\nname = "devkit-moved"\nversion = "0.1.0"\nrequires-python = ">=3.12"\ndependencies = []\n'
+        '[project.entry-points."devkit.bundles"]\ndemo = "devkit_moved"\n'
+        '[build-system]\nrequires = ["hatchling==1.27.0"]\nbuild-backend = "hatchling.build"\n'
+        '[tool.hatch.build.targets.wheel]\npackages = ["src/devkit_moved"]\n'
+    )
+    if content_changed:
+        (module / "bundle/policy.md").write_text("Changed moved policy.\n")
+    plan, _, _ = prepare.compute(root, baseline)
+    moved = plan["packages"]["devkit-moved"]
+    assert moved["version"] == "0.1.1"
+    assert moved["bundles"]["demo"]["version"] == ("0.1.1" if content_changed else "0.1.0")
+    assert plan["packages"]["devkit-dist"]["disposition"] == "changed"
+    assert plan["packages"]["devkit-dist"]["bundles"] == {}

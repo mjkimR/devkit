@@ -1,0 +1,68 @@
+# UI/UX improvement rename and Impeccable delegation: Planning evidence
+
+## 1. Identity and Boundary
+
+- Planning base: `f810077abd5583303b18105c690b95ca4ac73a3b` on `plan-uiux-improve-ooux-impeccable`.
+- Inspected on: 2026-11-10.
+- Scope: references to the current bundle in this repository, the release tag `v0.1.5` and the public
+  `pbakaus/impeccable` repository. No consumer project, Impeccable installation or host session was run.
+
+## 2. Rename references
+
+Search: `rg --hidden 'uiux[-_]improve|UC-improve-an-interface|CAP-DLV-uiux|ADR-uiux-improvement'` over the worktree,
+excluding `.git` and this proposal.
+
+| Path | Reference | Rename action |
+| :--- | :--- | :--- |
+| `packages/devkit-catalog/src/devkit_catalog/uiux_improve/` | module, `bundle.toml` `name` and asset `id`/`source`, skill directory and `SKILL.md` `name` | move to `app_uiux_improve/` and skill directory `app-uiux-improve` |
+| `packages/devkit-catalog/pyproject.toml:17` | entry point `uiux-improve = "devkit_catalog.uiux_improve"` | rename to `app-uiux-improve = "devkit_catalog.app_uiux_improve"` |
+| `.devkit/architecture.toml:195` | `devkit_catalog` `data_roots` entry `uiux_improve` | rename data root to `app_uiux_improve` |
+| `packages/devkit-catalog/README.md:11,65-70` | bundle table row and the UI/UX improvement section | rename and describe OOUX framing and optional delegation |
+| `guides/install/bundle-recommendations.md:37` | recommendation row and `uv run devkit add uiux-improve` | rename and keep the recommendation condition |
+| `docs/architecture/ARCH-05-2-components.md:87-89` | bundle name and `devkit_catalog/uiux_improve/bundle/` | rename |
+| `docs/capabilities/delivery/CAP-DLV-uiux-improvement.md` | entrypoint path, rule 1 preset, rule 13 test path, section 4 commands and registration | rename and restate the new rules |
+| `docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md` | entrypoint path | rename and add extensions |
+| `docs/decisions/2026-11/20261105-uiux-improvement-workflow-boundary.md:34` | bundle name in Decision Outcome clause 1 | reference repair; the handoff adds the partial-supersession line |
+| `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py` | bundle, skill and preset paths | move to `test_app_uiux_improve.py` |
+| `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/` | installed-consumer test | move to `tests/e2e/bundles/app_uiux_improve/` |
+| `docs/capabilities/delivery/CAP-DLV-design-exploration.md:29` | cites `CAP-DLV-uiux-improvement` by ID only | none while the capability ID is kept |
+| `specs/2026-11/20261105-ux-design-exploration/` | completed spec history | none: completed specs stay as history |
+
+- The release tag `v0.1.5` contains no path or `pyproject.toml` entry matching `uiux`
+  (`git ls-tree -r --name-only v0.1.5`, `git show v0.1.5:packages/devkit-catalog/pyproject.toml`).
+- The plan-intent decision records that no other workbench repository consumes `uiux-improve`.
+- No other tracked file names the bundle, module or skill.
+
+## 3. Upstream Impeccable facts
+
+A Planning scout read the public repository at `main` =
+[`a49e3e9be2daccdf96ccf1a081b73d7dd9f456fe`](https://github.com/pbakaus/impeccable/tree/a49e3e9be2daccdf96ccf1a081b73d7dd9f456fe)
+(plugin version 4.8.2) on 2026-11-10. Paths below are relative to that commit. The documentation site was not read.
+
+| Topic | Upstream evidence | Planning consequence |
+| :--- | :--- | :--- |
+| Install routes | `README.md` "Installation": `npx impeccable install` at the project root (asks project or global scope and offers the design hook); Claude Code: `/plugin marketplace add pbakaus/impeccable`, then install Impeccable from `/plugin`; "Manual copy, no Node required" copies `skills/impeccable` into the host's skill directory and skips the hook and subagents. `npx skills add` is not documented. | The skill names these three routes; the coordinator installs only on the user's request, through a route that needs no prompt answers, and otherwise hands the user the exact command (capability rule 19). |
+| Runtime | `README.md`: Node is needed only for `npx`; the skill runs a self-contained engine binary. | devkit gains no Node or npm dependency. |
+| Invocation | One skill, `impeccable` (`.agents/skills/impeccable/SKILL.md`), with 24 commands: `shape`, `init` (alias `teach`), `document`, `extract`, `critique`, `audit`, `polish`, `bolder`, `quieter`, `distill`, `harden`, `onboard`, `animate`, `colorize`, `typeset`, `layout`, `delight`, `overdrive`, `clarify`, `adapt`, `optimize`, `live`, `generate`, and `craft` (deprecated alias of ordinary new work). | The brief names commands by these identifiers; devkit copies none of their text. |
+| Commands that report | `audit`: "Don't fix issues; document them" (`reference/audit.md:1`). `critique` reports and stores a snapshot under `.impeccable/critique/` and "MUST run as two isolated sub-agents", declaring degraded output otherwise (`reference/critique.md:8,35-42`). | A critique inside a delegated child needs nested children; the session reports degraded coverage when they are unavailable. |
+| Commands that edit | `polish` edits UI as refinement (`reference/polish.md:3`); ordinary new work (`craft`) builds or changes UI. | Edits follow the brief's edit list. |
+| Context writers | `init` writes `PRODUCT.md` and `.impeccable/config.json` (`reference/init.md:56-58,100,114`); `document` writes `DESIGN.md` and `.impeccable/design.json` and does not silently overwrite (`reference/document.md:71,251-255`). | These files are consumer-owned project context. |
+| `shape` | A discovery interview in rounds of two or three questions, waiting for answers between rounds, then a seven-part brief presented for explicit confirmation; "shape never writes code or a direction contract" (`reference/shape.md:9-58`). The brief stays in conversation; no input format for an existing brief is documented. | `shape` needs the user in the loop. A fresh child cannot run it; the coordinator's framing takes its structural role there. |
+| Other interactive commands | Found by the Planning challenger at the same commit: a missing `PRODUCT.md` routes new work through `init` (`SKILL.md:75`); new work asks for confirmation before implementing ("Skip settled facts, not the confirmation", `reference/new-work.md:18-20`) and lets the user pick among directions (`:41`); `init` requires a real answer before writing `PRODUCT.md` (`reference/init.md:27-29`); `critique` ends with a question to the user (`reference/critique.md:3,15`) and on Codex asks before spawning sub-agents (`:44-47`); `polish` asks before changing claims (`reference/polish.md:18,80`). New work also writes `.impeccable/mocks/decision/` (`reference/new-work.md:53`). | A fresh child runs only refinement commands on existing surfaces and returns any upstream question as a blocker; new work, `init`, `shape` and `critique` run in a session the user operates. Session output under `.impeccable/` is reported separately from product edits. |
+| Project files and Git | `README.md` "Project files and git": "Shared artifacts stay tracked: config.json, live/config.json, design.json, surfaces/*.md, critique/*.md. Keep PRODUCT.md and DESIGN.md in the repo too. The rest is screenshots, caches, and runtime state." Its gitignore block lists `config.local.json`, `hook.cache.json`, `hook.pending.json`, `*.png`, `review/`, `questions/`, `live/server.json`, `live/sessions/`, `previews/`, `annotations/`, `cache/` and `manual-edit-*`. `reference/init.md:124` commits `.impeccable/critique/ignore.md` but not `critique/*.md`. | Upstream's own guidance differs on critique snapshots; the skill points to upstream guidance instead of restating a list. |
+| `.gitignore` edits | The README tells users to copy the block. No `.gitignore` write was found in the inspected installer sources (not exhaustive). | The coordinator adds ignore entries only on the user's request, confined to `.impeccable/` paths and shown first (capability rule 19). Unverified: the file upstream's unprefixed block is meant for. |
+| Detector and hooks | `npx impeccable detect <dir\|url>` runs 62 deterministic rules, exit 2 on findings. Hooks run after edits (Claude Code `PostToolUse` on `Edit\|Write` and `Stop`, written to `.claude/settings.local.json` for a project install; Codex needs approval at `/hooks`). | A user-installed hook can also react to the coordinator's own edits; a hook is installed only through an installer prompt the user answers, never by the coordinator's own choice. |
+| Live mode | `README.md` "Live mode": apply runs `codex` or `claude` with sandbox and approvals off. | The brief excludes `live`, because it bypasses the consumer's approvals. |
+| Scope guidance | `reference/init.md:7`: confirm shared versus app-specific scope before writing; `SKILL.md`: "Never repair drift as a side effect of a design task." No guidance on running Impeccable in a separate session beyond the critique sub-agents. | The edit list and stop condition come from the coordinator's brief. |
+| License | Apache-2.0 (`LICENSE`); `NOTICE.md` credits MIT-licensed platform references. | Nothing is copied; attribution applies only if later work copies text. |
+
+## 4. Host facts: can a fresh child load an installed Impeccable
+
+A Planning scout read the official host documentation on 2026-11-10 (WebFetch summaries; exact wording not
+re-verified). No host session was run.
+
+| Host | Evidence | Planning consequence |
+| :--- | :--- | :--- |
+| Claude Code | [Sub-agents](https://code.claude.com/docs/en/sub-agents), "Preload skills into subagents": without the `skills` field a subagent "can still discover and invoke project, user, and plugin skills through the Skill tool during execution"; a subagent starts with a fresh context and does not inherit skills the parent already invoked; skills that set `disable-model-invocation: true` cannot be preloaded; omitting `Skill` from `tools` blocks skills. The built-in general-purpose agent has "every tool available to subagents"; its `Skill` access is inferred, not stated. [Skills](https://code.claude.com/docs/en/skills): project skills load from `.claude/skills/`, plugin skills are namespaced `/plugin:skill`. | A fresh child can load Impeccable through the Skill tool when the host gives the child that tool. Unverified: the general-purpose agent's access and whether Impeccable's own frontmatter blocks model invocation. |
+| Codex | Skills ([build skills](https://learn.chatgpt.com/docs/build-skills)): Codex scans `.agents/skills` from the working directory up to the repository root. Sub-agents ([subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)): "Skills inherit from the parent, and a custom agent can disable individual skills with `skills.config`"; sub-agents inherit the sandbox policy. Skill discovery inside a sub-agent is not described. | Unverified: whether a Codex sub-agent loads an installed Impeccable. |
+| Any host, path-read fallback | A child that reads `SKILL.md` by path gets the prompt text but loses skill-scoped hooks and tool grants and must resolve bundled files itself (Claude Code skills page). | Rejected as a route: the child loads Impeccable through the host's skill mechanism or returns a blocker, and the command moves to the user's session. |

@@ -28,6 +28,7 @@ graph TD
         PkgDocs["packages/devkit-docs<br>(devkit-docs wheel, document system)"]
         PkgSpec["packages/devkit-spec<br>(devkit-spec wheel)"]
         PkgAdv["packages/devkit-advisory<br>(devkit-advisory wheel)"]
+        PkgAdaptive["packages/devkit-adaptive<br>(devkit-adaptive wheel)"]
         PkgCat["packages/devkit-catalog<br>(devkit-catalog wheel)"]
         PkgStart["packages/devkit-starter<br>(devkit-starter wheel)"]
         PkgViewer["packages/devkit-viewer<br>(devkit-viewer wheel, Svelte library tarball)"]
@@ -157,6 +158,7 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
 - **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-repository-viewer`.
 
 ### 2.7 Opt-in and Example Content Packages
+- **`devkit-adaptive` (`packages/devkit-adaptive`)**: Owns the opt-in `adaptive-dev` bundle without runtime dependencies or commands. It tests its bundle against the manifest reader of `devkit-dist`.
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - Both test their bundles against the manifest reader of `devkit-dist`, their only development dependency.
