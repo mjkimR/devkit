@@ -1,0 +1,12 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: 'Planning approved as an investigation: establish which host and devkit hook
+  capabilities are missing for Stop, SubagentStop and SessionStart gates and how large
+  the work to provide them is, before any delivery decision. Picked up while depends_on
+  PROP-adaptive-assignment-cli is still in Planning (override of prerequisite order
+  for Planning only).'
+by: user
+at: '2026-11-10T00:49:09.315126Z'
