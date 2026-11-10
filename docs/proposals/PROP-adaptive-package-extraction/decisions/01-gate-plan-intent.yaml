@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: 'Planning approved: move the adaptive-dev bundle into a devkit-adaptive distribution
+  as the first unit of MS-adaptive-development-runtime, with commands following in
+  PROP-adaptive-assignment-cli and hooks investigated separately in PROP-adaptive-lifecycle-hooks.'
+by: user
+at: '2026-11-09T23:59:24.344300Z'
