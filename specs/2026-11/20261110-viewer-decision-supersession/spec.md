@@ -1,55 +1,68 @@
 ---
-id: PROP-viewer-decision-supersession
+id: SPEC-viewer-decision-supersession
 title: Show decision supersession in the Living Spec viewer
-summary: "Show on a decision's viewer page which earlier ADRs it supersedes and which later ADRs supersede it, with the replaced scope from the partial-supersession statements, so a reader sees a partly replaced decision's state without running a command."
-status: accepted
-created_at: 2026-11-10
-target_area: capabilities/viewer/
+summary: Show on a decision's viewer page which earlier ADRs it supersedes and which later ADRs supersede it, with the replaced scope from the partial-supersession statements, so a reader sees a partly replaced decision's state without running a command.
+status: planned
+created: 2026-11-10
 namespace: global
-priority: low
-size: M
-planning_effort: medium
-dev_effort: medium
-depends_on: [SPEC-partial-adr-supersession-statements]
-boundaries:
-  owns:
-    - packages/devkit-viewer/
-    - docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
-    - docs/usecases/
-    - docs/ux/
-    - docs/steering/
-  excludes:
-    - packages/devkit-spec/
-    - docs/decisions/
-task_kind: feature
-workflow: sdd-proposal
+depends_on:
+  - SPEC-partial-adr-supersession-statements
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-viewer-decision-supersession] Show decision supersession in the Living Spec viewer
+# [SPEC-viewer-decision-supersession] Show decision supersession in the Living Spec viewer
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-viewer-decision-supersession on 2026-11-10.
+- **Preserved Materials**: `docs/materials/2026-11/20261110-viewer-decision-supersession`
+- Target Docs Blueprint: `PROP-viewer-decision-supersession-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 `SPEC-partial-adr-supersession-statements` makes the replaced scope of a partial supersession a fixed statement in the
 later ADR and adds `devkit docs supersession` for agents. Its Planning left the viewer out: the viewer change is a
-separate package, capability and verification chain (its retained `materials/planning-evidence.md` section 6).
+separate package, capability and verification chain (its retained `docs/materials/2026-11/20261110-viewer-decision-supersession/planning-evidence.md` section 6).
 
 The viewer's decision page shows `id`, `status`, `priority`, `milestone`, `target_area` and the title. It shows no
 `supersedes`, and it has no list of the documents that reference the page. A reader of a partly replaced ADR sees the
 "Superseded in part by" lines in its body and has to open each later ADR to see the rest.
 
-### Hypothesis
+#### Hypothesis
 
 A decision page that lists both directions (the earlier ADRs this decision supersedes, and the later ADRs that
 supersede it, each with `whole` or `partial` and the statement text) lets a reader judge a decision's state on one
 page.
 
-## 2. Planning Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Show decision supersession in the Living Spec viewer so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 Evidence is pinned to `7ed35b755138e9460e1de6f42d10b390886f448b`; see
-[planning evidence](materials/planning-evidence.md). `SPEC-partial-adr-supersession-statements` is completed on that
+[planning evidence](../../../docs/materials/2026-11/20261110-viewer-decision-supersession/planning-evidence.md). `SPEC-partial-adr-supersession-statements` is completed on that
 head. Planning uses `medium` effort, with a scout and a challenger; Development remains `medium`.
 
-### Data and compatibility
+#### Data and compatibility
 
 - Derive relations in the browser from the existing document index. Add no server endpoint, Python dependency,
   `RepositoryDataSource` method or cross-feature edge. `ADR-repository-viewer` already selects browser parsing.
@@ -69,7 +82,7 @@ head. Planning uses `medium` effort, with a scout and a challenger; Development 
   when its historical ADR has no statement. The viewer reports source facts; it does not enforce the governance
   rule, repair documents or declare the source valid.
 
-### Surfaces and scope
+#### Surfaces and scope
 
 - Use one shared supersession summary below the decision header and above the Markdown body in the Read book and
   rendered Files decision view. Raw mode remains the original source. Neither an extra tab nor a permanently
@@ -96,7 +109,7 @@ head. Planning uses `medium` effort, with a scout and a challenger; Development 
   source. No link is offered for an unresolved or
   ambiguous target. Keyboard users use ordinary focusable links and buttons.
 
-### UX candidates
+#### UX candidates
 
 | Candidate | Benefit | Cost | Recommendation |
 | --- | --- | --- | --- |
@@ -105,11 +118,11 @@ head. Planning uses `medium` effort, with a scout and a challenger; Development 
 
 The retained candidate and the contrasting candidate go to `plan-accept`; no user preference is fabricated.
 Screens are drafted in `target-docs.md` before code. The optional UX reviewer is offered by the Host.
-`PADR-viewer-indexed-decision-supersession` records the data-source and placement choice.
+`ADR-viewer-indexed-decision-supersession` records the data-source and placement choice.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Development scope
+#### Development scope
 
 - Frontend pure relation parser/index, a shared summary component, Read/Files/PADR integration and focused Vitest
   fixtures under `packages/devkit-viewer/frontend/`; generated app assets under
@@ -123,7 +136,7 @@ Screens are drafted in `target-docs.md` before code. The optional UX reviewer is
   only these exact new documents are intended within those directories.
 - Promote the PADR through normal handoff. No existing ADR decision is replaced.
 
-### Acceptance checks for the Development spec
+#### Acceptance checks for the Development spec
 
 1. **AC-1**: Given ADRs with outgoing, incoming, whole and partial relations, when either Read or rendered Files
    opens one, then both groups show deterministic ID/title/status/scope/text and same-view links.
@@ -146,7 +159,7 @@ Screens are drafted in `target-docs.md` before code. The optional UX reviewer is
 8. **AC-8**: Given the retained Screens draft, when Development completes, then its UX documents, step citations,
    object register and capability links are reflected and pass document rules; generated viewer assets are current.
 
-### Verification
+#### Verification
 
 - Pure relation/parser fixtures and shared-component behavior tests; Read and Files integration tests cover both
   directions, cross-namespace navigation, source/branch changes, incomplete/reload states and raw/handbook budgets.
@@ -156,21 +169,22 @@ Screens are drafted in `target-docs.md` before code. The optional UX reviewer is
   plus required rules/lint/types. No backend production change is planned. No speed claim requires a benchmark;
   request-count fixtures establish the stated scan trigger and reuse behavior.
 
-### Non-Goals
+#### Non-Goals
 
 - New server endpoints, Python dependencies, package/feature edges, or public source-interface fields.
 - A general reference graph, transitive supersession, governance validation, document repair or approval actions.
 - Incoming proposed PADR impact previews, arbitrary other-branch ADR reads or combining several Planning sources.
 - Rebuilding the viewer navigation, styling system, or unrelated document hygiene/splitting.
 
-### Unverified areas
+#### Unverified areas
 
 Browser/parser parity is source-inspected, not executed yet. Development must supply fixtures for the delivered
 Python query behavior and the intentional PADR display distinction. No host-wide API survey or performance
 measurement was made. UX reviewer scoring is recorded separately from the mandatory challenger findings.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 `SPEC-partial-adr-supersession-statements` is delivered; Planning can proceed. On acceptance, hand off through the
 normal proposal lifecycle at the retained `medium` Development effort. No source decisions or records are edited
 by this Planning turn. No separate deferred feature is required by the accepted scope.
+

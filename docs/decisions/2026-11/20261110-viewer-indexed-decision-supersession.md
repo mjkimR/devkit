@@ -1,13 +1,13 @@
 ---
-id: PADR-viewer-indexed-decision-supersession
+id: ADR-viewer-indexed-decision-supersession
 title: Derive viewer supersession from indexed decisions
 summary: "For decision readers, we derive supersession in the browser and show it beside each decision body, to retain one read-only viewer across hosts, accepting tested duplication of the document query semantics."
-proposal: PROP-viewer-decision-supersession
-status: draft
+proposal: SPEC-viewer-decision-supersession
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-viewer-indexed-decision-supersession] Derive viewer supersession from indexed decisions
+# [ADR-viewer-indexed-decision-supersession] Derive viewer supersession from indexed decisions
 
 ## 1. Context & Problem Statement
 
