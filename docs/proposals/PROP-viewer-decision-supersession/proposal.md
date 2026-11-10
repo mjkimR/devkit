@@ -2,7 +2,7 @@
 id: PROP-viewer-decision-supersession
 title: Show decision supersession in the Living Spec viewer
 summary: "Show on a decision's viewer page which earlier ADRs it supersedes and which later ADRs supersede it, with the replaced scope from the partial-supersession statements, so a reader sees a partly replaced decision's state without running a command."
-status: reviewing
+status: accepted
 created_at: 2026-11-10
 target_area: capabilities/viewer/
 namespace: global
