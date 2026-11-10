@@ -19,4 +19,19 @@ def test_every_use_case_of_this_repository_parses() -> None:
         keys = [step.key for step in parsed.main]
         assert keys == [str(n) for n in range(1, len(keys) + 1)] and keys, document.path
         assert any(step.extension for step in parsed.steps), document.path
-        assert all(step.screens == () for step in parsed.steps), document.path
+        if document.id == "UC-read-decision-supersession":
+            screen = ("UX-view-decision",)
+            panel = ("UX-view-decision", "UX-decision-supersession")
+            expected = {
+                "1": screen,
+                "2": screen,
+                "3": panel,
+                "4": panel,
+                "5": screen,
+                "3a": panel,
+                "3b": panel,
+                "4a": screen,
+            }
+            assert {step.key: step.screens for step in parsed.steps} == expected, document.path
+        else:
+            assert all(step.screens == () for step in parsed.steps), document.path

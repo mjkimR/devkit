@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-viewer-decision-supersession: Proceed with proposal Planning at medium
+  effort.'
+by: user
+at: '2026-11-10T05:06:51.667383Z'

@@ -1,9 +1,10 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local repository page and Svelte library with Planning overlays, paged dashboard lists, global and namespace milestone roadmaps, document details and the release handbook before the on-demand Living Spec."
+summary: "A read-only local repository page and Svelte library with Planning overlays, paged dashboard lists, global and namespace milestone roadmaps, decision supersession and the release handbook before the on-demand Living Spec."
 area: viewer
 status: active
+usecases: [UC-read-decision-supersession]
 entrypoints:
   - packages/devkit-viewer/src/devkit_viewer/
   - packages/devkit-viewer/frontend/src/app/
@@ -196,8 +197,8 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
   Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **ID links**: A `[ID]` prose reference or an inline code span holding exactly one ID of a document in the index,
   UX IDs included, MUST link to that document. Check: `frontend/src/lib/documents.test.ts`.
-- **One index**: For a data source and branch, the document index MUST start with the first Proposals or Specs view or
-  the book request, and a view change MUST NOT start another scan. Check:
+- **One index**: For a data source and branch, the document index MUST start only with a Proposals or Specs view,
+  a book request or a rendered Files decision; a view change MUST reuse an unexpired completed index. Check:
   `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Request lifetime**: The book request MUST last for the life of `SddViewer` across rail switches and host prop
   changes, and MUST hold only for the data source and branch it was made for, so a change of either returns the tab to
@@ -228,6 +229,22 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
   `handbook/<lang>/<page>` path. Check: `frontend/src/lib/SddViewer.test.ts`.
 
 The local source supports recursive metadata requests to avoid one HTTP call per directory. Library hosts without `dashboardList` retain selective full-document discovery to determine ordering and counts; their cold load may read all matching bodies, while the UI still pages cards. Other library hosts use a queue of at most six concurrent requests per scan; a completed request immediately frees its worker for queued work.
+
+### 4.4 Decision supersession
+
+`UC-read-decision-supersession`, `UX-view-decision` and `UX-decision-supersession` describe the reader's flow and surfaces.
+`ADR-viewer-indexed-decision-supersession` records the browser derivation and inline placement decision.
+
+1. **Surfaces**: WHEN a rendered ADR opens in Read or Files, the viewer MUST show outgoing Supersedes and incoming Superseded by groups below the header and above the body. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
+2. **Derivation**: The viewer MUST derive outgoing edges from the subject's supersedes and incoming edges only from later ADR supersedes fields in the full checkout index, before namespace filters. Body pointers alone create no edge. Check: `frontend/src/lib/features/document/supersession.test.ts`.
+3. **Identity**: The viewer MUST resolve canonical IDs before aliases and refuse ambiguous target navigation; missing or ambiguous written identities remain visible without links. Rows sort by canonical ID, written ID and path. Check: `frontend/src/lib/features/document/supersession.test.ts`.
+4. **Replacement scope**: A relation MUST be whole only when the earlier ADR is superseded and its superseded_by resolves to the later decision; otherwise it is partial. Check: `frontend/src/lib/features/document/supersession.test.ts`.
+5. **Statement text**: The viewer MUST read the later decision's first matching visible Supersedes in part statement using the source-aware Markdown boundaries of `CAP-DOCS-document-lookup`; it MUST preserve literal inline markup as escaped text and show Replacement scope not recorded when absent. Check: `frontend/src/lib/features/document/supersession.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
+6. **Proposed changes**: WHEN a PADR is rendered, the viewer MUST show outgoing Proposed supersession only, retain the actual Planning source badge when applicable, and exclude PADRs from applied ADR incoming lists. A proposal-detail related ADR opens its checkout copy in Files. Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
+7. **Loading and uncertainty**: IF indexing is pending or partly fails, THEN the viewer MUST keep the selected body readable, identify loading or Incomplete state, retain successful relations, list failed paths and offer Reload relations. An incomplete empty incoming list says No incoming relations found in the documents read. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
+8. **Freshness**: WHEN relations reload, the viewer MUST refresh peer documents while each summary continues using its exact displayed subject metadata and statement. Files opens saved subjects independently of the index TTL. Source or branch changes MUST prevent older loads publishing. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
+9. **Read budget**: Files MUST request the existing document index lazily only for a rendered ADR or PADR; this feature MUST NOT start a scan for raw mode, ordinary files, dashboard or handbook-only navigation. Read reuses its existing index; reload invalidates the source cache. Check: `frontend/src/lib/SddViewer.test.ts`, `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+10. **Navigation and safety**: Resolved targets MUST use focusable same-view links; Read reveals another namespace when needed. Relation metadata and statement text MUST render escaped, without inserting source HTML. Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`, `frontend/src/lib/features/document/SupersessionSummary.test.ts`.
 
 ## 5. Roadmap
 

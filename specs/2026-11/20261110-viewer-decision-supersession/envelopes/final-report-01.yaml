@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:41:47.994067Z'
+status: completed
+summary: Read/Files display canonical bidirectional ADR supersession and proposed PADR scope; source freshness, parser parity, uncertainty and safe navigation are verified, with six retained Living Spec targets.
+findings: []
+assumptions:
+- Host admitted only packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py to retain exact new screen citations and existing nonscreen checks.
+- Codex emulated boundaries use absolute worktree commands, per-operation approval and unchanged reviewer snapshots; no native confinement claim.
+unverified_areas:
+- Actual rendered layout and assistive-technology behavior were not checked because CUA reported browser access host unavailable; DOM interaction regressions and generated build passed.
+checks:
+  tests: PASS all-tier affected167 pytest at100fc774 and frontend167 Vitest
+  build: PASS viewer install pack build and generated viewer-assets stale0
+  lint: PASS viewer lint/check, docs lint/types, cumulative rules and sync checks
+diff_scope:
+  base: 5cf7d7a76ef8930e2e7c83d3b34a7f694989913a
+  head: ea0c220df3e0eedd96e557603161538473abe285

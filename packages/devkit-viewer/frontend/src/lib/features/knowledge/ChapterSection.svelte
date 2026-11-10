@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { RepositoryDocument } from '../../api/documents';
 	import { documentAnchor, bookGroup } from '../../api/documents';
+	import SupersessionSummary from '../document/SupersessionSummary.svelte';
+	import { isDecision } from '../document/supersession';
 
 	let {
 		doc,
@@ -10,7 +12,12 @@
 		lazyDiagrams,
 		trackHeading,
 		sourceLabel = undefined,
-		onOpen
+		onOpen,
+		documents = [],
+		relationLoading = false,
+		relationErrors = [],
+		onRelationOpen = onOpen,
+		onReloadRelations = () => {}
 	}: {
 		doc: RepositoryDocument;
 		html: string;
@@ -21,6 +28,11 @@
 		/** The Planning source a document was read from; the Files tab would show the checkout copy instead. */
 		sourceLabel?: string;
 		onOpen: (path: string) => void;
+		documents?: RepositoryDocument[];
+		relationLoading?: boolean;
+		relationErrors?: string[];
+		onRelationOpen?: (path: string) => void;
+		onReloadRelations?: () => void;
 	} = $props();
 
 	const fileLabel = (path: string) =>
@@ -40,6 +52,9 @@
 			<span class="chapter-group">{bookGroup(doc) ?? fileLabel(doc.path)}</span>
 			<h2>{doc.title}</h2>
 			<small>{doc.meta.id ? doc.meta.id + ' · ' : ''}{doc.path}</small>
+			{#if isDecision(doc)}<span class="decision-status"
+					>{typeof doc.meta.status === 'string' ? doc.meta.status : 'Unknown status'}</span
+				>{/if}
 		</div>
 		{#if sourceLabel}
 			<span class="source-badge" title="Planning source">{sourceLabel}</span>
@@ -47,6 +62,14 @@
 			<button onclick={() => onOpen(doc.path)}>View raw</button>
 		{/if}
 	</header>
+	<SupersessionSummary
+		subject={doc}
+		{documents}
+		loading={relationLoading}
+		errors={relationErrors}
+		onOpen={onRelationOpen}
+		onReload={onReloadRelations}
+	/>
 	{#key `${doc.path}-${branch}-${theme}-${doc.raw}`}
 		<article class="markdown-body" use:lazyDiagrams use:trackHeading>
 			{@html html}
@@ -68,6 +91,13 @@
 		gap: 16px;
 		padding-bottom: 20px;
 		border-bottom: 1px solid var(--border-panel);
+	}
+
+	.decision-status {
+		display: inline-block;
+		margin-left: 8px;
+		font-size: 12px;
+		color: var(--text-secondary);
 	}
 
 	.chapter h2 {

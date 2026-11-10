@@ -3,7 +3,7 @@ id: PROP-viewer-decision-supersession-target
 title: Viewer decision supersession target documents
 summary: "Blueprint for the viewer supersession contract, a decision-reading use case, the retained screen and summary panel, and their object register rows."
 status: draft
-proposal: PROP-viewer-decision-supersession
+proposal: SPEC-viewer-decision-supersession
 ---
 
 # [PROP-viewer-decision-supersession-target] Viewer decision supersession target documents
@@ -18,7 +18,7 @@ proposal: PROP-viewer-decision-supersession
   unavailable targets, missing statement, PADR source, partial reads, reload and source switches.
 - Create UX-view-decision and UX-decision-supersession under `docs/ux/viewer/` from the Screens drafts below.
 - Create `docs/steering/ux-objects.md` with the rows below. No visual style system is introduced.
-- Promote `PADR-viewer-indexed-decision-supersession` through handoff; no accepted ADR is superseded.
+- Promote `ADR-viewer-indexed-decision-supersession` through handoff; no accepted ADR is superseded.
 
 ## Use case draft: UC-read-decision-supersession
 

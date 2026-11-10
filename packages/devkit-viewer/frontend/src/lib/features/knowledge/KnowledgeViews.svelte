@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
+	import { clearRepositoryCache } from '../../api/cache';
 	import type { RepositoryDataSource } from '../../api/repository';
 	import {
 		indexDocuments,
@@ -49,8 +50,12 @@
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
+	let relationDocuments = $state<RepositoryDocument[]>([]);
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
+	let relationLoading = $state(false);
+	let relationReload = $state(0);
+	let loadedContext = $state.raw<{ source: RepositoryDataSource; branch: string } | null>(null);
 	let query = $state('');
 	let status = $state('');
 	let priority = $state('');
@@ -80,23 +85,55 @@
 	$effect(() => {
 		const repository = indexed ? source : null,
 			ref = branch;
+		relationReload;
+		const keep = untrack(
+			() => repository && loadedContext?.source === repository && loadedContext.branch === ref
+		);
 		const controller = new AbortController();
-		documents = [];
-		errors = [];
-		resolvedRequest = '';
-		loading = Boolean(repository);
-		selectedPath = '';
-		detailPath = '';
-		currentAnchor = '';
+		if (!keep) {
+			documents = [];
+			relationDocuments = [];
+			errors = [];
+			resolvedRequest = '';
+			selectedPath = '';
+			detailPath = '';
+			currentAnchor = '';
+			loadedContext = null;
+		}
+		loading = Boolean(repository) && !keep;
+		relationLoading = Boolean(repository);
 		if (repository)
-			void indexDocuments(repository, ref, controller.signal).then((result) => {
-				if (controller.signal.aborted) return;
-				documents = result.documents;
-				errors = result.errors;
-				loading = false;
-			});
+			void indexDocuments(repository, ref, controller.signal)
+				.then((result) => {
+					if (controller.signal.aborted) return;
+					const subjects = keep ? untrack(() => documents) : [];
+					relationDocuments = result.documents;
+					documents = [
+						...result.documents.map(
+							(doc) => subjects.find((subject) => subject.path === doc.path) ?? doc
+						),
+						...subjects.filter(
+							(subject) => !result.documents.some((doc) => doc.path === subject.path)
+						)
+					];
+					errors = result.errors;
+					loading = false;
+					relationLoading = false;
+					loadedContext = { source: repository, branch: ref };
+				})
+				.catch((error: unknown) => {
+					if (!controller.signal.aborted) {
+						errors = [String(error)];
+						loading = false;
+						relationLoading = false;
+					}
+				});
 		return () => controller.abort();
 	});
+	function reloadRelations() {
+		if (source) clearRepositoryCache(source);
+		relationReload++;
+	}
 
 	// The Proposals tab overlays Planning proposals; the checkout index above never waits for them.
 	let overlay = $state.raw<PlanningOverlay | undefined>();
@@ -361,6 +398,21 @@
 		onLocation(path, anchor, view, findDocument(path)?.meta ?? {});
 	}
 
+	async function openRelation(path: string) {
+		if (view !== 'book') {
+			onOpen(path);
+			return;
+		}
+		const fresh = relationDocuments.find((doc) => doc.path === path);
+		if (fresh) {
+			documents = documents.some((doc) => doc.path === path)
+				? documents.map((doc) => (doc.path === path ? fresh : doc))
+				: [...documents, fresh];
+			await tick();
+		}
+		await jump(path);
+	}
+
 	function linkNavigation(node: HTMLElement) {
 		node.addEventListener('click', followLink);
 		return {
@@ -469,6 +521,11 @@
 							{trackHeading}
 							sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
 							{onOpen}
+							documents={relationDocuments}
+							{relationLoading}
+							relationErrors={errors}
+							onReloadRelations={reloadRelations}
+							onRelationOpen={openRelation}
 						/>
 					{/each}
 					{#if !visibleDocs.length}

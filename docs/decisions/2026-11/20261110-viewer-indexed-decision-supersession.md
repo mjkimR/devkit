@@ -1,13 +1,13 @@
 ---
-id: PADR-viewer-indexed-decision-supersession
+id: ADR-viewer-indexed-decision-supersession
 title: Derive viewer supersession from indexed decisions
 summary: "For decision readers, we derive supersession in the browser and show it beside each decision body, to retain one read-only viewer across hosts, accepting tested duplication of the document query semantics."
-proposal: PROP-viewer-decision-supersession
-status: draft
+proposal: SPEC-viewer-decision-supersession
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-viewer-indexed-decision-supersession] Derive viewer supersession from indexed decisions
+# [ADR-viewer-indexed-decision-supersession] Derive viewer supersession from indexed decisions
 
 ## 1. Context & Problem Statement
 
@@ -35,14 +35,14 @@ blob. `SPEC-partial-adr-supersession-statements` defines the later ADR's stateme
 ## 4. Decision Outcome
 
 - Supersession is derived in the browser from indexed documents without a server endpoint or new dependency.
-  → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 - Read and rendered Files place a shared summary below the decision header. Files indexes only after opening a
   rendered decision, and body rendering does not wait for relations.
-  → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 - ADR incoming relations include only later ADRs. PADR pages label outgoing replacements as proposed and retain
-  their actual source context. → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  their actual source context. → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 - Incomplete reads remain visible and unresolved identities are not navigation links.
-  → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 
 This adds viewer behavior without replacing an existing ADR decision.
 

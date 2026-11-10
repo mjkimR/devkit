@@ -267,3 +267,146 @@ describe('SddViewer reading tab', () => {
 		}
 	});
 });
+
+describe('Files decision supersession', () => {
+	const initial = () => ({
+		'docs/decisions/old.md':
+			'---\nid: ADR-old\ntitle: Old decision\nstatus: accepted\n---\n# Old body',
+		'docs/decisions/new.md':
+			'---\nid: ADR-new\ntitle: New decision\nstatus: accepted\nsupersedes: ADR-old\n---\n# New body\n\nSupersedes in part `ADR-old`: displayed scope.',
+		'docs/plain.md': '# Ordinary body'
+	});
+	function fixture(files: Record<string, string>): RepositoryDataSource {
+		const listing = (root: string) => ({
+			items: Object.keys(files)
+				.filter((path) => path.startsWith(`${root}/`))
+				.map((path) => ({ path, name: path.split('/').at(-1)!, type: 'blob' }))
+		});
+		return {
+			info: async () => ({ default_branch: 'main' }),
+			tree: vi.fn(async (root: string) => listing(root)),
+			treeRecursive: vi.fn(async (root: string) => listing(root)),
+			blob: vi.fn(async (path: string) => ({ path, content: files[path], encoding: 'utf-8' }))
+		};
+	}
+	it('loads relations lazily, follows same-view links and does not scan ordinary/raw views', async () => {
+		const files = initial(),
+			source = fixture(files),
+			selected = vi.fn();
+		const view = render(SddViewer, {
+			dataSource: source,
+			initialView: 'files',
+			initialPath: 'docs/plain.md',
+			onselectpath: selected
+		});
+		await screen.findByText('Ordinary body');
+		expect(source.treeRecursive).not.toHaveBeenCalled();
+		await view.rerender({
+			dataSource: source,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md',
+			onselectpath: selected
+		});
+		await screen.findByRole('link', { name: /ADR-old — Old decision/ });
+		expect(source.treeRecursive).toHaveBeenCalledTimes(2);
+		await fireEvent.click(screen.getByRole('link', { name: /ADR-old — Old decision/ }));
+		await screen.findByRole('heading', { name: 'Old body' });
+		expect(selected).toHaveBeenLastCalledWith('docs/decisions/old.md');
+		await fireEvent.click(screen.getByRole('button', { name: /Raw/ }));
+		await view.rerender({
+			dataSource: source,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md',
+			onselectpath: selected
+		});
+		await screen.findByRole('button', { name: /Preview/ });
+		expect(document.querySelector('.supersession-summary')).toBeNull();
+		expect(source.treeRecursive).toHaveBeenCalledTimes(2);
+	});
+	it('keeps the displayed subject aligned within cache TTL and on relation-only reload', async () => {
+		const files: Record<string, string> = initial(),
+			source = fixture(files);
+		const view = render(SddViewer, {
+			dataSource: source,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md'
+		});
+		await screen.findByRole('link', { name: /ADR-old — Old decision/ });
+		await view.rerender({ dataSource: source, initialView: 'files', initialPath: 'docs/plain.md' });
+		await screen.findByText('Ordinary body');
+		files['docs/decisions/new.md'] = files['docs/decisions/new.md'].replace(
+			'displayed scope.',
+			'saved scope.'
+		);
+		await view.rerender({
+			dataSource: source,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md'
+		});
+		await waitFor(() =>
+			expect(document.querySelector('.replacement-text')?.textContent).toBe('saved scope.')
+		);
+		files['docs/decisions/new.md'] = files['docs/decisions/new.md'].replace(
+			'saved scope.',
+			'newer unseen scope.'
+		);
+		await fireEvent.click(screen.getByRole('button', { name: 'Reload relations' }));
+		await waitFor(() => expect(screen.queryByText('Loading supersession relations…')).toBeNull());
+		expect(document.querySelector('.replacement-text')?.textContent).toBe('saved scope.');
+		expect(document.querySelector('.markdown-body')?.textContent).toContain('saved scope.');
+	});
+	it('keeps the body usable on partial reads and retries failed paths', async () => {
+		const files = initial(),
+			source = fixture(files),
+			blob = source.blob;
+		let denied = true;
+		source.blob = vi.fn(async (...args) => {
+			if (args[0] === 'docs/decisions/old.md' && denied) throw new Error('denied');
+			return blob(args[0], args[1], args[2]);
+		});
+		render(SddViewer, {
+			dataSource: source,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md'
+		});
+		await screen.findByRole('heading', { name: 'New body' });
+		await screen.findByText(/Incomplete/);
+		expect(screen.getByText('docs/decisions/old.md: denied')).toBeTruthy();
+		denied = false;
+		await fireEvent.click(screen.getByRole('button', { name: 'Reload relations' }));
+		await screen.findByRole('link', { name: /ADR-old — Old decision/ });
+		expect(screen.queryByText(/Incomplete/)).toBeNull();
+	});
+	it('does not publish an old source scan after switching repositories', async () => {
+		const files = initial(),
+			first = fixture(files),
+			original = first.treeRecursive!;
+		let release!: () => void;
+		const pending = new Promise<void>((resolve) => (release = resolve));
+		first.treeRecursive = vi.fn(async (...args) => {
+			await pending;
+			return original(args[0], args[1], args[2]);
+		});
+		const view = render(SddViewer, {
+			dataSource: first,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md'
+		});
+		await screen.findByText('Loading supersession relations…');
+		const secondFiles = initial();
+		secondFiles['docs/decisions/new.md'] = secondFiles['docs/decisions/new.md']
+			.replaceAll('ADR-old', 'ADR-other')
+			.replace('displayed scope.', 'second source.');
+		const second = fixture(secondFiles);
+		await view.rerender({
+			dataSource: second,
+			initialView: 'files',
+			initialPath: 'docs/decisions/new.md'
+		});
+		await screen.findByText('ADR-other (missing target)');
+		release();
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(document.querySelector('.replacement-text')?.textContent).toBe('second source.');
+		expect(screen.queryByRole('link', { name: /ADR-old — Old decision/ })).toBeNull();
+	});
+});
