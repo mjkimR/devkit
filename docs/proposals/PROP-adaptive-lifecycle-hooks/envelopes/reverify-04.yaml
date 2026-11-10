@@ -1,0 +1,31 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T02:11:16.986813Z'
+status: completed
+review: challenger-04.yaml
+summary: 'Closes challenger-04, the cap round, by minor-fix self-verification by the planning-worker: both P3 findings are folded at 2600125f by applying the quoted replacement wording to the cells they name (the Specs cell of option (a) and the adaptive child row of the gaps file; the Step cell of CX-7b). No decision, size or spec count in the proposal changed and no finding recurred, so the loop ends without a further round. Two Decision needed findings stay open for plan-accept: challenger-01 finding 10 (question q1) and challenger-03 finding 2 (the conditional part of question q2).'
+findings:
+- issue: After the round 3 fold, whether W6 is a spec of its own is stated inconsistently, and the answer changes the spec count of options (a) and (b). The option (a) cell reads 1 (size L), plus W6 as a follow-up to the assignment unit, one further spec of size S, or inside this spec. The same file still says option (a) is at most one spec, the option (b) cell says 2 without the qualifier, and the adaptive child of the decomposition table depends on PROP-adaptive-assignment-cli with W6 while neither child lists W6 in its content. The proposal says (a) is 1 spec and (b) is 2, with W6 among the items of (a).
+  evidence: materials/devkit-gaps-and-work-breakdown.md:96, :108, :109, :170-171, :178; proposal.md:71, :183-184, :202-203, :225-228; materials/gate-behavior-and-measurement.md:39-43
+  failure_condition: The user answers q2 with (a) or (b) on the proposal's counts of 1 and 2. If W6 is a spec of its own, (a) is two specs and must also be returned for decomposition and (b) is three, with W6 in neither named child. If W6 is inside the gate's spec, the further spec of the (a) cell and the dependency with W6 are wrong. The turn that folds the answer cannot tell whether to carry one spec forward or return the proposal.
+  suggested_action: 'State one reading, the one the proposal''s counts imply: W6 travels inside the spec that holds W8. Replace the Specs cell of option (a) with: 1 (size L), with W6 inside it as a change to the delivered assignment feature. W6 is a spec of its own (size S) only if it is delivered earlier, so that observed runs with concurrent sessions count in the measurement. In the section 6 row Adaptive lifecycle gates replace the Content cell with: W7, and W6 and W8 under (b), with the measurement after delivery; and the Depends on cell with: The first child; the delivered commands of PROP-adaptive-assignment-cli.'
+  resolution: resolved
+  severity: P3
+- issue: 'Probe step CX-7b replaces the Stop command in .codex/hooks.json with a path that does not exist and a fallback, and no step sets it back. The steps after it read a Stop line in probe.log that this command can no longer write: CX-8, CX-9 and CX-10.'
+  evidence: materials/live-probes.md:120, :121-123, :166-167
+  failure_condition: CX-7 shows a held turn and the observer runs the Codex steps in order. After CX-7b, CX-8 logs a SessionStart line and no Stop line, and section 6 reads that as no hook in headless mode; CX-9 shows no Stop line whether or not the changed hook was skipped.
+  suggested_action: 'Append to the Step cell of CX-7b: then set the command back to the probe script''s absolute path and review the hook again, so that CX-8 to CX-10 still log Stop. The Observe cell, the criterion and section 6 stay as they are.'
+  resolution: resolved
+  severity: P3
+assumptions:
+- 'Evidence for the self-verification: git diff 2f0a6513 2600125f over materials/ shows four changed table cells and one clause; the clause is the wording the round offered for the package statement, and one sentence of the feedback record was corrected to match the proposal''s option counts'
+unverified_areas:
+- No host ran; every host fact stays documented or unprobed as classed in materials/host-capability-matrix.md
+checks:
+  rules: PASS devkit rules check on the proposal bundle, 0 errors
+diff_scope:
+  base: 2f0a65135d6efb9a3abffdb763c25c76f2e2ff11
+  head: 2600125f4eb2331e262b362465003ea6fb028df7
+activity_effort: high

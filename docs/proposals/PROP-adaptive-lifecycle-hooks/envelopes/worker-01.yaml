@@ -1,0 +1,97 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T02:11:31.634748Z'
+status: needs_input
+summary: 'First Planning turn: status set to reviewing; the investigation is folded into the proposal and five materials (host capability matrix with the documentation extraction, devkit gaps G1 to G16 with a sized work breakdown and five delivery options, gate behavior with the ledger needs and the measurement plan, live probe procedures). Two scout returns and four challenger rounds are recorded and closed in reverify-01 to reverify-04. No delivery is recommended before a measurement; four questions wait for the user, and two Decision needed findings are carried in them (q1; the conditional part of q2).'
+findings: []
+assumptions:
+- The number of specs depends on the delivery option and on how a Claude Code registration is installed, so the proposal keeps size L and is returned for decomposition only by the turn that folds an answer selecting a split
+- The assignment design was read at commit 0cf00a40 and again on main after its acceptance (caa50fa7); this worktree's base 79156358 predates that acceptance and the handoff of the extraction proposal and was not refreshed
+- Host facts are extracted from vendor documentation fetched on 2026-11-10 through a summarizing tool and are classed documented, code or probe; none is observed except one earlier record of Codex delivering SessionStart and Stop to a prototype logger
+unverified_areas:
+- 'No host was run and no hook was registered: every item of materials/host-capability-matrix.md section 4 waits for the probes of materials/live-probes.md'
+- No effect is measured; the failures F1 to F3 are defined against commands that are accepted and not delivered
+- Sizes are estimates from the code read; no test, sync or prototype was run. The size of a user-installed Claude Code adapter (W4u, M) is the least supported
+- That host transcripts hold tool calls and turn boundaries in a form observations O3, O4 and O6 can read; the Codex subagents page and the hook schemas in the Codex repository were not read
+- The scout-02 envelope states that the receipt has no migration reader; the capability text read does not say so, and the material states only that the reader's key set is strict
+checks:
+  rules: PASS devkit rules check on the proposal bundle, 0 errors
+  envelopes: PASS devkit workflow envelope check
+  challenger: PASS 4 rounds, 30 recorded findings (0 P1, 20 P2, 10 P3), 28 resolved, 2 Decision needed open as questions
+  probe: PASS the probe script printed valid JSON for synthetic events in every mode under the ignored probe path; no host ran it
+diff_scope:
+  base: 7915635847102233cd820c5fdde8c19545abd7c3
+  head: 2600125f4eb2331e262b362465003ea6fb028df7
+questions:
+- id: q1
+  title: Host of the adaptive Host sessions
+  prompt: On which host do you run the Host session of an adaptive development run, Codex, Claude Code or both?
+  context: The repository does not say; the project selects all three agents. The answer decides what every delivery option prevents and which is the smallest. devkit can register hooks on Codex only. On Codex, session-start injection is one spec of size M with no change to the hook response contract. On Claude Code any hook needs a new adapter first. Antigravity is not carried forward, because it documents no subagent event and no failure behavior. The comparison is in materials/devkit-gaps-and-work-breakdown.md section 5.
+  options:
+  - id: both
+    description: Both Codex and Claude Code. The measurement and the probes run on both hosts, and a delivery on Codex alone covers part of the runs. Taken as the working assumption if this is left unanswered, because the project selects both agents.
+    recommended: true
+  - id: claude-code
+    description: Claude Code only. Options (a) and (c) on Codex prevent nothing for you; the smallest delivery is session-start injection with a Claude Code adapter, one spec of size L if you install the registration yourself in each checkout, or two specs if devkit manages a settings file.
+    recommended: false
+  - id: codex
+    description: Codex only. No second host adapter is needed; every option stays within one spec, and the Claude Code probes are not run.
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Delivery option to carry forward
+  prompt: Which delivery option do you carry forward for the lifecycle hook gates?
+  context: 'Planning sized the work and found no measured effect: the failures a gate would prevent are defined against the assignment ledger, which is accepted and not delivered yet, so nothing can be measured now and no option can start before those commands exist. A gate that stays silent costs what having no gate costs; a gate that blocks a legitimate stop is a new cost. The criteria for delivery are fixed in materials/gate-behavior-and-measurement.md section 4.4 before any measurement. When you choose (b), or (c) with Claude Code, also say in the note how the Claude Code registration is installed: by you in each checkout (no change to the host configuration boundary; one spec for (c)) or by devkit in a settings file that also holds permission settings (a boundary change in three capabilities; the proposal is then returned for decomposition into a host unit and an adaptive unit).'
+  options:
+  - id: measure-then-decide-ended
+    description: 'Option (e), unit ended. Nothing is accepted for delivery now. The proposal is rejected with the reason "delivery decision deferred until the measurement; a criterion met reopens it as a new proposal"; before that the Host retains the five materials under docs/materials and opens a draft for the measurement. After the assignment commands are delivered you, or a Host session you authorize, observe ten adaptive runs per host or 30 days, whichever comes first, plus fifteen scripted runs per host; a criterion met opens a delivery proposal, none met is recorded as not delivered. Trade-off: the first runs with the commands have no gate, and the wait costs your observation time.'
+    recommended: true
+  - id: measure-then-decide-kept
+    description: Option (e), unit kept. The same measurement, but this proposal stays in review on its Planning branch until the result is read. Nothing moves and the questions stay with the unit; the materials are reachable only on that branch and the branch stays open through the Development of two other units.
+    recommended: false
+  - id: session-start-only
+    description: Option (c). Deliver session-start injection without the measurement. It blocks nothing and adds no response to the hook contract. On Codex it is one spec of size M; with Claude Code it needs an adapter (see the context). It addresses only a resumed Host that acts before reading the ledger, and its effect stays unmeasured. Development starts after the assignment commands are delivered.
+    recommended: false
+  - id: stop-gate-codex
+    description: Option (a). Deliver a blocking Stop gate and session-start injection on Codex only, one spec of size L that includes a small change to the delivered assignment feature. It prevents nothing in sessions on Claude Code, and the Codex behavior it relies on (the review step, the repeated stop after a tool call, a failed hook command) is unprobed.
+    recommended: false
+  - id: stop-gate-both-hosts
+    description: Option (b). Deliver the Stop gate and session-start injection on Codex and Claude Code, two specs; the proposal is returned for decomposition. The largest cost, and the gate's wrong blocks are accepted without a measurement.
+    recommended: false
+  - id: no-delivery
+    description: Option (d). Reject the proposal as not delivered, with no measurement planned. The Host retains the materials first. The failures keep the cost they have with the commands and guidance alone, and the question reopens only on a new observation.
+    recommended: false
+  allow_note: true
+- id: q3
+  title: When the live probes run
+  prompt: When should the live host probes of materials/live-probes.md run, and do you run them or authorize a Host session to?
+  context: Planning ran no host. Every host fact is taken from vendor documentation fetched on 2026-11-10 through a summarizing tool, except one earlier record of Codex delivering SessionStart and Stop to a prototype logger. A probe registers a hook in a throwaway directory and runs the host there; the host records its own trust entry for that directory, which the cleanup removes. Four items can remove an option before any measurement is taken - whether Stop fires inside a Codex subagent thread, which directory a subagent's stop reports, whether the repeated-stop signal survives a tool call, and whether a failed hook command holds a stop. Host behavior is bound to a host version, so a step a delivery criterion names is repeated at the decision anyway. Running them needs either your time (about twelve steps per host) or your authorization for a Host session to do it; say which in the note.
+  options:
+  - id: decisive-now
+    description: Run now only the steps that can remove an option, with the steps they need first; run the rest, and repeat any step a criterion names, on the host version current when the delivery decision is read. Least repeated work; the remaining facts stay documented-only until then.
+    recommended: true
+  - id: all-now
+    description: Run every step now on both hosts. Turns all documented host facts into observed ones for the retained materials; most of it is repeated at the decision if host versions have moved.
+    recommended: false
+  - id: at-decision
+    description: Run nothing now; run every step when the delivery decision is read. No repeated work, but an option the probes would have removed is measured first.
+    recommended: false
+  - id: none
+    description: Run no probe. Any delivery then rests on documentation alone, and the delivery criteria that name a probe cannot be met.
+    recommended: false
+  allow_note: true
+- id: q4
+  title: Session start after compaction
+  prompt: If session-start injection is delivered, should it also fire when the host reports that the session starts after a compaction?
+  context: Answer only if q2 selects an option with session-start injection; otherwise the question is carried unanswered into the retained material. You excluded compaction handling from this work. Both hosts document a compact value for the source of SessionStart, the same event the injection uses. Injecting there handles nothing about the compaction itself, and it is the moment when the assignment board held in context is lost. That the event fires after a compaction is taken from documentation and is one of the probe steps.
+  options:
+  - id: include-compact
+    description: Inject after a compaction as well. No extra work; it reads your exclusion as covering the handling of the compaction itself, not a session start that follows one.
+    recommended: true
+  - id: exclude-compact
+    description: Do not inject after a compaction; the handler ignores that source. Keeps the exclusion in its widest reading; after a compaction the Host relies on the guidance pointer alone.
+    recommended: false
+  allow_note: true
+activity_effort: high
