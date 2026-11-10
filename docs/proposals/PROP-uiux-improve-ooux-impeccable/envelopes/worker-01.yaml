@@ -1,0 +1,31 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-09T23:36:18.949289Z'
+status: needs_input
+summary: 'First Planning turn: applied all plan-intent corrections, added PADR-impeccable-session-authority (partial supersession of ADR-uiux-improvement-workflow-boundary clause 2), target-docs and planning evidence; one scout and one challenger round, findings 1-5 folded, finding 6 open as q1 (qualified name) for plan-accept.'
+findings: []
+checks:
+  rules: PASS devkit rules check on the proposal bundle
+  challenger: PASS 5 of 6 findings folded; 1 decision needed
+diff_scope:
+  base: ''
+  head: 8a83af968b5a95374a0dd8bc8c62fb0b10abb259
+questions:
+- id: q1
+  title: Qualified bundle and skill name
+  prompt: Which name replaces uiux-improve for the bundle, skill, entry point, module and test paths?
+  context: The name is the user-facing invocation (/<name> <goal>) and appears in the catalog README, the installation guide, ARCH-05-2-components, the entry point and the module path. The capability and use-case IDs stay unchanged either way. Development needs the name before it moves any path; the rename is a clean break with no alias.
+  options:
+  - id: a
+    description: app-uiux-improve (module app_uiux_improve). Keeps the recognizable uiux-improve stem and adds the software-application qualifier.
+    recommended: true
+  - id: b
+    description: software-ui-improve (module software_ui_improve). States the software scope most literally but drops the UX half of the current name.
+    recommended: false
+  - id: c
+    description: ooux-ui-improve (module ooux_ui_improve). Names the framing method; ties the public name to OOUX even for local changes that skip the framing.
+    recommended: false
+  allow_note: true
+activity_effort: medium
