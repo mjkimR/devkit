@@ -1,0 +1,13 @@
+kind: resolution
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T09:39:30.860740Z'
+status: completed
+summary: 'Host fixed the harness fixture within the approved scope: it now appends devkit-run to the current core preset by regex instead of matching a literal line; the harness test file passes (7/7).'
+findings: []
+assumptions:
+- The fix is a mechanical consequence of the approved devkit core preset change; Host authority within approved scope, outside the worker's write boundary.
+checks: {}
+resolves: worker-01.yaml
+activity_effort: medium
