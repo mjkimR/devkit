@@ -44,7 +44,7 @@ plan: PLAN-core-git-observation-helpers
 
 ## Phase 3: Checks
 
-- [ ] **Task 3.1**: Whole-change checks
+- [x] **Task 3.1**: Whole-change checks
   - **_Boundary**: `specs/2026-11/20261110-core-git-observation-helpers/`
   - _Requirements: AC-10_
   - **Verification**: `just lint-check`; `just check`; `just rules-check`;
