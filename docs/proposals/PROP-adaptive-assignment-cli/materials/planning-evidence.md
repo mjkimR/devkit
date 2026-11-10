@@ -91,8 +91,9 @@ engine, so nothing in this unit needs the second answer.
 
 ## 8. Contract statements that the commands touch
 
-- `ADR-adaptive-development-and-research`: "No new runtime, CLI or distribution mechanism." and "Identifiers and
-  commands use `adaptive-dev`."
+- `ADR-adaptive-development-and-research`: the decision clause "Identifiers and commands use `adaptive-dev`."
+  (traced to rule 18). "No new runtime, CLI or distribution mechanism." in the same record is a decision driver of
+  its deep-research part and is not superseded (challenger-01, finding 5).
 - `CAP-DLV-adaptive-development` §2 Scope Excluded: "a runtime scheduler, agent bus, new wheel"; §4: "No
   adaptive-development runtime or CLI is added."; the final section: "No implicit Unit or verification ledger is
   created."; rule 18: "identifiers and commands MUST use `adaptive-dev`".

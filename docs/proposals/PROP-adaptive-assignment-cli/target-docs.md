@@ -28,7 +28,7 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
   - Scope: recording, return, verification, closing and listing of delegated assignments. Scope Excluded: starting
     agents, running declared checks, creating worktrees, blocking a session, pruning, an MCP service, glob scopes.
   - Rules, one EARS sentence each with its test path: the ledger location and append-only writes under the lock;
-    the unparsable final line; the write-scope prefix rule; overlap refusal and its two exemptions; nesting depth
+    the unterminated final fragment; the write-scope prefix rule; overlap refusal and its two exemptions; nesting depth
     and narrowed authority; each verification check with its code; the changed-path definition; `close` with
     `--reason` and `ADAPTIVE_CLOSED_UNVERIFIED`; the facts `list` observes; no change to any tracked file or
     `git status` result; approach independence.
@@ -74,7 +74,9 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
   `devkit_dist.features.project` and its public list use case.
 - Decisions promoted at handoff: `PADR-adaptive-assignment-commands` (supersedes in part
   `ADR-adaptive-development-and-research`) and `PADR-adaptive-assignment-ledger-storage`.
-- `ADR-adaptive-development-and-research` gains the partial-supersession line for the two replaced clauses.
+- `ADR-adaptive-development-and-research` gains the partial-supersession line for one clause, "Identifiers and
+  commands use `adaptive-dev`", which no longer covers the command group. Under the other answer to q2 the PADR's
+  `supersedes` is removed and the ADR does not change.
 - The base dependency of `devkit-adaptive` is decided in `PROP-adaptive-package-extraction` (q1).
 
 ---

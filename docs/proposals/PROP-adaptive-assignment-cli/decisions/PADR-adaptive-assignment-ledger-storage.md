@@ -52,8 +52,9 @@ Chosen: an append-only event log under the shared Git directory.
   → CAP-DLV-adaptive-assignments §4 (MUST).
 - Every write holds an exclusive lock on `<git common dir>/devkit/adaptive/lock` while it reads, validates and
   appends. → CAP-DLV-adaptive-assignments §3 (MUST).
-- A reader ignores an unparsable final line and reports it as a warning; an unparsable earlier line or an unknown
-  schema number stops the command. → CAP-DLV-adaptive-assignments §3 (MUST).
+- Bytes after the last newline are a fragment of an interrupted append, not an event. A reader skips the fragment and
+  reports a warning; a writer truncates it under the lock before appending. A newline-terminated line that cannot be
+  parsed, or an unknown schema number, stops the command. → CAP-DLV-adaptive-assignments §3 (MUST).
 - The file layout is private to the `assignment` feature. Other code and later hook handlers read assignments through
   `devkit adaptive assignment list --format json` or the feature's list use case.
 - `.devkit/adaptive-dev.md` stays Host-authored Markdown. No command reads or writes it.
@@ -61,7 +62,7 @@ Chosen: an append-only event log under the shared Git directory.
 ## 5. Consequences
 
 - Positive: a lead and the Host see the same assignments; the working tree and index never change; an interrupted
-  append can damage only the last line.
+  append leaves at most one fragment, which the next write removes.
 - Negative: the ledger does not travel with a clone, a push or a copy of the working tree. Current context then names
   assignment IDs that the ledger lacks, and the Host recovers from the implementation as for stale context.
 - Negative: on a host whose sandbox protects the shared Git directory, each recording command needs approval. A
@@ -72,4 +73,5 @@ Chosen: an append-only event log under the shared Git directory.
 ## 6. Confirmation
 
 Integration tests that record from a linked worktree and list from the main worktree, that leave `git status`
-unchanged after each command, that append concurrently under the lock and that read a ledger with a torn final line.
+unchanged after each command, that append concurrently under the lock, and that read a ledger with an unterminated
+final fragment before and after the next write.

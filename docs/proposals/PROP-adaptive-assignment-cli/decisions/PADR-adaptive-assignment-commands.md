@@ -17,8 +17,9 @@ created_at: 2026-11-10
 
 ## 1. Context & Problem Statement
 
-`ADR-adaptive-development-and-research` delivered adaptive development as guidance with "No new runtime, CLI or
-distribution mechanism". The Host therefore keeps delegated assignments in its context and in
+Adaptive development is guidance: `CAP-DLV-adaptive-development` excludes a runtime scheduler and states that no
+adaptive-development runtime or CLI is added. `ADR-adaptive-development-and-research` names its identifiers and
+commands `adaptive-dev`. The Host therefore keeps delegated assignments in its context and in
 `.devkit/adaptive-dev.md`, which it updates when useful and before pausing. An unplanned interruption or a context
 compaction loses the outstanding assignments, and a returned result is checked by reading its diff.
 `MAT-adaptive-runtime-references` records that comparable harnesses write this state in code at each event, and that
@@ -44,10 +45,13 @@ repository.
 
 ## 4. Decision Outcome
 
-Chosen: commands that record and verify. This replaces two clauses of `ADR-adaptive-development-and-research`: the
-CLI part of "No new runtime, CLI or distribution mechanism", whose runtime part stays in force, and "Identifiers and
-commands use `adaptive-dev`", which stays in force for the approach value, the bundle, the entry skill and the
-context file.
+Chosen: commands that record and verify. This replaces one clause of `ADR-adaptive-development-and-research`:
+"Identifiers and commands use `adaptive-dev`" stays in force for the approach value, the bundle, the entry skill and
+the context file, and no longer covers the command group, which is named after the distribution. The capability
+sentence "No adaptive-development runtime or CLI is added" is replaced in `CAP-DLV-adaptive-development`; no decision
+clause holds it.
+
+- The command group is `devkit adaptive`, not `devkit adaptive-dev`. → `CAP-DLV-adaptive-development` rule 18 (MUST).
 
 - Adaptive development has a command group `devkit adaptive assignment` with the verbs `new`, `return`, `verify`,
   `close`, `list` and `show`. → CAP-DLV-adaptive-assignments §4 (MUST).

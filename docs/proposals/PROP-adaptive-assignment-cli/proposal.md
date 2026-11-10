@@ -117,7 +117,9 @@ devkit adaptive assignment new --owner <text> --goal <text>
 
 - `--id` defaults to `a<N>`, the first unused `N` counting from the number of recorded assignments plus one.
 - `--worktree` defaults to the worktree containing the workspace root. It must be a worktree of the same repository.
-- `--base` defaults to the HEAD of that worktree and must resolve to a commit.
+- `--base` defaults to the HEAD of that worktree and must resolve to a commit; a repository without a commit gives
+  `ADAPTIVE_REVISION_UNRESOLVED`. The base is the commit the assignee starts from, so record an assignment when it
+  is dispatched: a dependent assignment after its dependency's result is in its worktree.
 - `--write` is repeatable and takes a path relative to the worktree root, or an absolute path under it. No `--write`
   records a read-only assignment.
 - `--commit` records that the assignee may commit. Without it the assignee must leave HEAD at the base.
@@ -168,9 +170,12 @@ devkit adaptive assignment close <id> --outcome integrated|abandoned [--reason <
   `head-moved` (a return exists and HEAD is not its final commit) and `no-changes` (status `open`, HEAD is the base
   and `dirty` is `0`).
 
-`list` exits `0` whatever it lists.
+With a missing worktree, `head`, `commits` and `dirty` are null (`-` in text) and `attention` is
+`worktree-missing` alone. A closed assignment has `"observed": null` in JSON and `-` for the observed fields in
+text. `list` reads worktrees with the same Git commands as `verify` (§3.4) and exits `0` whatever it lists.
 
-**`show <id>`** prints one assignment with its declared checks, write scope and event history.
+**`show <id>`** prints one assignment with every recorded field, its current return and its event history. It is
+the read a new context uses to dispatch an assignment again.
 
 Text output, one sentinel per line, values rendered with `field_value`:
 
@@ -179,15 +184,27 @@ Text output, one sentinel per line, values rendered with `field_value`:
 | `new`, `return`, `close` | `[ASSIGNMENT: <id> status=<status> owner=<owner> role=<role> parent=<id> worktree=<path> base=<sha> final=<sha> outcome=<outcome>]`; `final` and `outcome` are `-` until set |
 | `verify` | one `[CHECK: <name> status=pass\|fail\|not-run\|not-applicable]` per check in the order of §3.4, one `[OUT_OF_SCOPE: <path> change=committed\|uncommitted]` per offending path, then `[VERIFICATION: <id> result=pass\|fail final=<sha> changed=<n> out_of_scope=<n>]` |
 | `list` | one `[ASSIGNMENT: <id> status=<status> owner=<owner> role=<role> parent=<id> worktree=<path> worktree_state=<state> head=<sha> commits=<n> dirty=<n> waiting_on=<ids> attention=<values> assigned_at=<timestamp>]` per assignment, lists comma-separated, then `[SUMMARY: open=<n> returned=<n> verified=<n> rejected=<n> closed=<n>]` |
-| `show` | the `[ASSIGNMENT: ...]` line, one `[WRITE: <path>]` per scope entry, one `[DECLARED_CHECK: <name> command=<text> outcome=<outcome>]` per declared check, one `[EVENT: <type> at=<timestamp>]` per event |
+| `show` | the `[ASSIGNMENT: ...]` line; `[GRANT: commit=yes\|no]`; one `[FIELD: <name> value=<text>]` for each of `goal`, `evidence`, `handoff`, `stop`, `return_summary` and `close_reason` that is set; one `[WRITE: <path>]` per scope entry; one `[GOVERNING: <id-or-path>]`, `[DEPENDS_ON: <id>]` and `[UNVERIFIED: <text>]` per entry; one `[DECLARED_CHECK: <name> command=<text> outcome=<outcome>]` per declared check; one `[EVENT: <type> at=<timestamp>]` per event |
 
 JSON output is one compact object (`ARCH-08-1-agent-output` §4):
 
 | Command | Object |
 | --- | --- |
 | `new`, `return`, `close`, `show` | `{"assignment": <assignment>, "notices": [...]}`; `show` adds `"events": [...]` |
-| `verify` | `{"id", "result", "final", "checks": {<name>: {"status", ...}}, "changed_paths": {"committed": [...], "uncommitted": [...], "preexisting_dirty": [...]}, "errors": [...], "notices": [...]}`; `errors` holds one advisory per failed check |
+| `verify` | `{"id", "result", "final", "checks": {...}, "changed_paths": {"committed": [...], "uncommitted": [...], "preexisting_dirty": [...]}, "errors": [...], "notices": [...]}`; `errors` holds one advisory per code that applies |
 | `list` | `{"assignments": [<assignment> plus "observed": {"worktree_state", "head", "commits", "dirty", "waiting_on", "attention"}], "summary": {"open", "returned", "verified", "rejected", "closed"}, "notices": [...]}` |
+
+The `checks` object of `verify` has exactly these keys and members:
+
+| Key | Members |
+| --- | --- |
+| `return` | `status`, `returned` (the return status) |
+| `base` | `status`, `base`, `final` |
+| `head` | `status`, `head`, `final` |
+| `commit` | `status` |
+| `scope` | `status`, `outside`: list of `{"path", "change"}` with `change` `committed` or `uncommitted` |
+| `checks` | `status`, `missing`: list of names, `not_passed`: list of `{"name", "outcome"}` |
+| `children` | `status`, `outstanding`: list of IDs |
 
 ### 3.3 Records
 
@@ -220,7 +237,9 @@ Write-scope rules:
 - Two entries overlap when one covers the other.
 - `new` refuses a scope with an entry that overlaps an entry of another assignment that is not `closed`
   (`ADAPTIVE_SCOPE_OVERLAP`), whatever their worktrees. Two assignments are exempt: the parent, and each assignment
-  named in `--depends-on`, because a dependent assignment is sequenced after it.
+  named in `--depends-on`, because a dependent assignment is sequenced after it. The advisory names the other
+  assignment and both entries, and its `[FIX]` lists the three routes: narrow the scope, close the other
+  assignment when its work is finished, or name it in `--depends-on` when this work is sequenced after it.
 - With `--parent`, each write entry must be covered by an entry of the parent, and `--commit` requires the parent's
   commit grant (`ADAPTIVE_AUTHORITY_NOT_NARROWED`). The parent must have no parent (`ADAPTIVE_NESTING_DEPTH`), which
   keeps the depth at Host, lead, child.
@@ -242,8 +261,9 @@ Write-scope rules:
 Changed paths are the union of:
 
 - committed: `git diff --no-renames --name-only -z <base> <final>`, so a rename counts under both names;
-- uncommitted: `git status --porcelain=v1 -z --untracked-files=all` in the worktree, both names of a rename or copy,
-  minus the paths in `dirty_at_assign`.
+- uncommitted: `git --no-optional-locks status --porcelain=v1 -z --untracked-files=all` in the worktree, both names
+  of a rename or copy, minus the paths in `dirty_at_assign`. `--no-optional-locks` keeps the command from taking
+  `index.lock` in a worktree where an assignee is working.
 
 Stated limits, which the capability and the reference page repeat:
 
@@ -255,8 +275,9 @@ Stated limits, which the capability and the reference page repeat:
   judges that result and records its reason at `close`.
 - A recorded outcome repeats the assignee's report; no check is run.
 
-In-scope uncommitted paths do not fail `scope`; `verify` reports them with the `ADAPTIVE_UNCOMMITTED_CHANGES`
-warning, because the final commit does not contain them.
+In-scope uncommitted paths do not fail `scope`. When the assignment grants commits, `verify` reports them with the
+`ADAPTIVE_UNCOMMITTED_CHANGES` warning, because the final commit does not contain them. Without the grant they are
+the expected result and no warning is raised.
 
 ### 3.5 Codes and exit codes
 
@@ -265,28 +286,32 @@ Exit `0`: success, warnings and notices included. Exit `1`: `verify` with a fail
 `devkit docs` only and does not change.
 
 Every code is one `AdvisoryError` subclass of a package base error, prefixed `ADAPTIVE_`
-(`RULE-advisory-unique-code`).
+(`RULE-advisory-unique-code`). The mode is the derived `[ACTION]` mode of `CAP-ADV-agent-advisory-protocol` §5; each
+class sets the fields that derive it (`input_error` for `INPUT_ERROR`, `actor = USER` for `INTERACTION`) and a `fix`.
 
-| Code | Level and exit | Raised when |
+| Code | Level, exit, mode | Raised when |
 | --- | --- | --- |
-| `ADAPTIVE_REPOSITORY_UNSUPPORTED` | error, `2` | The workspace root is not inside a non-bare Git work tree with at least one commit |
-| `ADAPTIVE_LEDGER_UNREADABLE` | error, `2` | A line other than the last cannot be parsed, or an event has an unknown schema number |
-| `ADAPTIVE_LEDGER_UNWRITABLE` | error, `2` | The ledger directory, lock or file cannot be created or written |
-| `ADAPTIVE_ASSIGNMENT_UNKNOWN` | error, `2` | An ID, `--parent` or `--depends-on` names no assignment |
-| `ADAPTIVE_ASSIGNMENT_EXISTS` | error, `2` | `new --id` names a recorded assignment |
-| `ADAPTIVE_ASSIGNMENT_CLOSED` | error, `2` | `return`, `verify` or `close` on a closed assignment, or `new --parent` naming one |
-| `ADAPTIVE_ASSIGNMENT_NOT_RETURNED` | error, `2` | `verify` on an assignment without a return |
-| `ADAPTIVE_WORKTREE_UNAVAILABLE` | error, `2` | `new`, a `return` without `--final`, or `verify` cannot read the assignment's worktree, or `--worktree` belongs to another repository |
-| `ADAPTIVE_REVISION_UNRESOLVED` | error, `2` | `--base` or `--final` does not resolve to a commit |
-| `ADAPTIVE_SCOPE_OVERLAP` | error, `2` | `new`: a write entry overlaps another open assignment; the advisory names the assignment and the entries |
-| `ADAPTIVE_AUTHORITY_NOT_NARROWED` | error, `2` | `new --parent`: a write entry or the commit grant exceeds the parent's |
-| `ADAPTIVE_NESTING_DEPTH` | error, `2` | `new --parent`: the parent has a parent |
-| `ADAPTIVE_CHILDREN_OUTSTANDING` | error, `1` from `verify`, `2` from `close` | A child is not closed |
-| `ADAPTIVE_RETURN_NOT_COMPLETED`, `ADAPTIVE_BASE_NOT_ANCESTOR`, `ADAPTIVE_HEAD_MOVED`, `ADAPTIVE_COMMIT_NOT_GRANTED`, `ADAPTIVE_SCOPE_VIOLATION`, `ADAPTIVE_CHECK_OUTCOME_MISSING`, `ADAPTIVE_CHECK_NOT_PASSED` | error, `1`, collected by `verify` | The check of §3.4 failed; `ADAPTIVE_SCOPE_VIOLATION` names at most 20 paths and the count of the rest |
-| `ADAPTIVE_UNCOMMITTED_CHANGES` | warning | `verify`: in-scope uncommitted paths exist |
+| `ADAPTIVE_REPOSITORY_UNSUPPORTED` | error, `2`, `INPUT_ERROR` | The workspace root is not inside a non-bare Git work tree |
+| `ADAPTIVE_LEDGER_UNREADABLE` | error, `2`, `INTERACTION` | A newline-terminated line cannot be parsed, or an event has an unknown schema number; the report asks whether to move the damaged ledger aside |
+| `ADAPTIVE_LEDGER_UNWRITABLE` | error, `2`, `INTERACTION` | The ledger directory, lock or file cannot be created or written; the report says the assignments stay unrecorded |
+| `ADAPTIVE_ASSIGNMENT_UNKNOWN` | error, `2`, `INPUT_ERROR` | An ID, `--parent` or `--depends-on` names no assignment |
+| `ADAPTIVE_ASSIGNMENT_EXISTS` | error, `2`, `INPUT_ERROR` | `new --id` names a recorded assignment |
+| `ADAPTIVE_ASSIGNMENT_CLOSED` | error, `2`, `INPUT_ERROR` | `return`, `verify` or `close` on a closed assignment, or `new --parent` naming one |
+| `ADAPTIVE_ASSIGNMENT_NOT_RETURNED` | error, `2`, `INPUT_ERROR` | `verify` on an assignment without a return |
+| `ADAPTIVE_WORKTREE_UNAVAILABLE` | error, `2`, `INPUT_ERROR` | `new`, a `return` without `--final`, or `verify` cannot read the assignment's worktree, or `--worktree` belongs to another repository |
+| `ADAPTIVE_REVISION_UNRESOLVED` | error, `2`, `INPUT_ERROR` | `--base` or `--final`, given or defaulted, does not resolve to a commit |
+| `ADAPTIVE_SCOPE_OVERLAP` | error, `2`, `INPUT_ERROR` | `new`: a write entry overlaps another open assignment (§3.3) |
+| `ADAPTIVE_AUTHORITY_NOT_NARROWED` | error, `2`, `INPUT_ERROR` | `new --parent`: a write entry or the commit grant exceeds the parent's |
+| `ADAPTIVE_NESTING_DEPTH` | error, `2`, `INPUT_ERROR` | `new --parent`: the parent has a parent |
+| `ADAPTIVE_CHILDREN_OUTSTANDING` | error, `1` from `verify`, `2` from `close`, `INPUT_ERROR` | A child is not closed |
+| `ADAPTIVE_RETURN_NOT_COMPLETED`, `ADAPTIVE_BASE_NOT_ANCESTOR`, `ADAPTIVE_HEAD_MOVED`, `ADAPTIVE_COMMIT_NOT_GRANTED`, `ADAPTIVE_SCOPE_VIOLATION`, `ADAPTIVE_CHECK_OUTCOME_MISSING`, `ADAPTIVE_CHECK_NOT_PASSED` | error, `1`, `INPUT_ERROR`, collected by `verify` | The check of §3.4 failed; `ADAPTIVE_SCOPE_VIOLATION` names at most 20 paths and the count of the rest |
+| `ADAPTIVE_UNCOMMITTED_CHANGES` | warning | `verify`: the assignment grants commits and in-scope uncommitted paths exist |
 | `ADAPTIVE_CLOSED_UNVERIFIED` | warning | `close --outcome integrated` on a status other than `verified` |
-| `ADAPTIVE_LEDGER_LINE_IGNORED` | warning | A reader skipped an unparsable final line |
+| `ADAPTIVE_LEDGER_FRAGMENT_IGNORED` | warning | A reader skipped an unterminated final fragment |
 | `ADAPTIVE_PREEXISTING_DIRTY` | notice | `verify`: paths in `dirty_at_assign` are still dirty |
+
+A verification failure is `INPUT_ERROR` because the Host corrects the returned work and verifies again
+(`CAP-ADV-agent-advisory-protocol` §6, the note under `BLOCKED`). No code derives `MAINTENANCE`.
 
 devkit's own codes pass through: `ARGUMENT_INVALID` (a malformed ID, a write entry with `*`, `?` or `[` or outside
 the worktree, a malformed `--check`, an unknown outcome, a missing required `--reason`), `LOCK_HELD` and
@@ -300,13 +325,15 @@ the worktree, a malformed `--check`, an unknown outcome, a missing required `--r
 - One event per line: `{"schema": 1, "at": <timestamp>, "event": "assigned"|"returned"|"verified"|"closed", "id":
   <id>, "data": {...}}`. `data` holds the fields that event sets (§3.3).
 - A write takes the exclusive lock (`devkit_core.core.file_lock`, 10 second bound), reads and folds the ledger,
-  validates, then appends one line and flushes it to disk. When the file does not end with a newline, the writer
-  starts on a new line.
+  validates, then appends one newline-terminated line and flushes it to disk.
+- Bytes after the last newline are a fragment of an interrupted append, not an event. A reader skips the fragment
+  with the `ADAPTIVE_LEDGER_FRAGMENT_IGNORED` warning. A writer, holding the lock, truncates the file back to the
+  last newline before it appends, so a fragment never becomes an earlier line.
 - `list` and `show` read without the lock.
 - The file format is private. `devkit adaptive assignment list --format json` and the list use case are the read
   interface for other code, `PROP-adaptive-lifecycle-hooks` included; the list use case module is declared in
   `public_modules`.
-- No command deletes or rewrites events, and no pruning command is added.
+- No command deletes or rewrites an event, and no pruning command is added.
 
 ### 3.7 Guidance
 
@@ -315,16 +342,16 @@ never runs them. Bundle text changes, each conditional on the commands being ava
 
 | Asset | Change |
 | --- | --- |
-| `skills/adaptive-dev/references/delegation.md` | Before dispatching a deliverable, record it with `new` and put the ID in the payload. After the return, record it with `return`, then run `verify`; treat exit `1` as a rejected return (existing step 15) and route its codes to repair. Close with `close` after integrating or abandoning. |
-| `skills/adaptive-dev/references/orchestration.md` | A lead records each child with `--parent <its ID>` when the payload supplies that ID, and closes its children before it returns. On interruption and before a pause, run `list`. |
-| `skills/adaptive-dev/references/current-context.md` | On resume run `list` beside reading `.devkit/adaptive-dev.md`. In a new context treat every `open` assignment as interrupted: no agent from an earlier context is assumed to run. For each one, read `worktree_state`, `commits`, `dirty` and `attention`, then record a return from the retained state, dispatch it again, or close it as abandoned. Before pausing, name the outstanding assignment IDs and the next recovery action in the Markdown; the ledger holds their scope, base and checks. An ID the ledger lacks is stale context. |
+| `skills/adaptive-dev/references/delegation.md` | Before dispatching a deliverable, record it with `new` and put the ID in the payload. After the return, record it with `return`, then run `verify`; treat `result=fail` (status `rejected`) as a rejected return (existing step 15) and route its codes to repair, and do not read exit `1` alone as a failure, because `--strict` also gives it. On `ADAPTIVE_SCOPE_OVERLAP`, narrow the scope, close the finished assignment, sequence with `--depends-on`, or leave a bounded experiment unrecorded; never name a dependency that does not exist. Close with `close` after integrating or abandoning. |
+| `skills/adaptive-dev/references/orchestration.md` | A `swarm-worker` or `swarm-verifier` lead records each child with `--parent <its ID>` when the payload supplies that ID, and closes its children before it returns. A `swarm-planner` lead has no shell and records nothing; the Host records its children from the returned partition or leaves them unrecorded. On interruption and before a pause, run `list`. |
+| `skills/adaptive-dev/references/current-context.md` | On resume run `list` beside reading `.devkit/adaptive-dev.md`. In a new context treat every `open` assignment as interrupted: no agent from an earlier context is assumed to run. For each one, read `worktree_state`, `commits`, `dirty` and `attention` from `list` and the goal, stop condition, commit grant and checks from `show <id>`, then record a return from the retained state, dispatch it again, or close it as abandoned. Before pausing, name the outstanding assignment IDs and the next recovery action in the Markdown; the ledger holds their scope, base and checks. An ID the ledger lacks is stale context. |
 | `templates/current-context.md` | One sentence under "Next useful action": name outstanding assignments by ledger ID when the commands are in use. |
-| `subagents/swarm-planner.md`, `swarm-worker.md`, `swarm-verifier.md` | One procedure sentence: when the payload supplies an assignment ID, return it with the result, and as a lead record children under it when the payload permits ledger writes. No prerequisite is added (`CAP-DLV-adaptive-development` rule 19). |
+| `subagents/swarm-planner.md`, `swarm-worker.md`, `swarm-verifier.md` | One procedure sentence in each: when the payload supplies an assignment ID, return it with the result. `swarm-worker` and `swarm-verifier` add, self-contained: as a lead, when the payload permits it, record each child with `uv run devkit adaptive assignment new --parent <ID>` and close it before returning; if the command cannot run, report the children as unrecorded. No prerequisite is added (`CAP-DLV-adaptive-development` rule 19). |
 | `AGENTS.md` (bundle constitution) | One line naming the command group as optional delegation support. |
 
 Fallback, stated once in `delegation.md` and cited by the other files: when `devkit adaptive assignment` is missing
-(click's usage error), exits `2` with `ADAPTIVE_REPOSITORY_UNSUPPORTED` or `ADAPTIVE_LEDGER_UNWRITABLE`, or the host
-denies the write, the Host keeps the board in its context and `.devkit/adaptive-dev.md`, checks returns by reading
+(click's usage error), exits `2` with `ADAPTIVE_REPOSITORY_UNSUPPORTED`, `ADAPTIVE_LEDGER_UNWRITABLE` or
+`ADAPTIVE_LEDGER_UNREADABLE`, or the host denies the write, the Host keeps the board in its context and `.devkit/adaptive-dev.md`, checks returns by reading
 the diff, reports the assignments as unrecorded, and does not reroute a denied write.
 
 Callers and roles:
@@ -386,7 +413,9 @@ Each scenario is a test on a temporary repository unless it says otherwise.
 - **AC-07**: Given declared checks `tests` and `lint` and a return with `tests=pass` only, then `verify` exits `1`
   with `ADAPTIVE_CHECK_OUTCOME_MISSING`; with `lint=skipped` it exits `1` with `ADAPTIVE_CHECK_NOT_PASSED`.
 - **AC-08**: Given an assignment without `--commit` and a return whose final commit is not the base, then `verify`
-  exits `1` with `ADAPTIVE_COMMIT_NOT_GRANTED`.
+  exits `1` with `ADAPTIVE_COMMIT_NOT_GRANTED`. Given the same assignment with only uncommitted in-scope paths and
+  HEAD at the base, then `verify --strict` exits `0` with `result=pass` and no warning; with `--commit` granted the
+  same state reports `ADAPTIVE_UNCOMMITTED_CHANGES` and `verify --strict` exits `1` with `result=pass`.
 - **AC-09**: Given a parent with `--write src` and `--commit`, when a child is recorded with `--write docs`, then
   `new` exits `2` with `ADAPTIVE_AUTHORITY_NOT_NARROWED`; a child of a child exits `2` with `ADAPTIVE_NESTING_DEPTH`;
   while a child is not closed, `verify` of the parent exits `1` and `close` of the parent exits `2`, both with
@@ -398,13 +427,16 @@ Each scenario is a test on a temporary repository unless it says otherwise.
   under `--strict`.
 - **AC-12**: Given three open assignments, one whose worktree was removed, one with a commit and one untouched, when
   `list` runs in a fresh process, then it reports `attention=worktree-missing`, `commits=1` and
-  `attention=no-changes` respectively and exits `0`; closed assignments appear only with `--all`.
+  `attention=no-changes` respectively and exits `0`; closed assignments appear only with `--all`. In the same
+  process `show <id>` prints the goal, the stop condition, the commit grant, the write scope and the declared checks
+  that `new` recorded, in text and in JSON.
 - **AC-13**: Given two processes that run `new` at the same time, then both assignments are recorded with distinct
-  IDs and every ledger line parses. Given a ledger whose last line is truncated, then `list` succeeds with
-  `ADAPTIVE_LEDGER_LINE_IGNORED` and the next write starts on a new line; a damaged earlier line gives
-  `ADAPTIVE_LEDGER_UNREADABLE`, exit `2`.
+  IDs and every ledger line parses. Given a ledger that ends with an unterminated fragment, then `list` succeeds with
+  `ADAPTIVE_LEDGER_FRAGMENT_IGNORED`; after a following `new`, `list` exits `0` without the warning and every line
+  of the file parses. A newline-terminated line that does not parse gives `ADAPTIVE_LEDGER_UNREADABLE`, exit `2`.
 - **AC-14**: Given a directory outside a Git work tree, then every command exits `2` with
-  `ADAPTIVE_REPOSITORY_UNSUPPORTED`. Given a ledger directory that cannot be written, then `new` exits `2` with
+  `ADAPTIVE_REPOSITORY_UNSUPPORTED`. Given a repository without a commit, then `list` exits `0` with an empty list
+  and `new` exits `2` with `ADAPTIVE_REVISION_UNRESOLVED`. Given a ledger directory that cannot be written, then `new` exits `2` with
   `ADAPTIVE_LEDGER_UNWRITABLE`.
 - **AC-15**: For every command, `--format json` prints exactly one compact object with the keys of §3.2, a failure
   prints `{"error": ..., "notices": ...}`, and text mode prints only the sentinels of §3.2 on stdout.
@@ -416,7 +448,8 @@ Each scenario is a test on a temporary repository unless it says otherwise.
   `adaptive-import` skill or the conversion playbook. The three archetypes state no prerequisite.
 - **AC-18**: The installed-consumer test installs `devkit-adaptive` without `devkit-spec`, runs
   `devkit adaptive assignment list --format json` and gets an empty `assignments` list with exit `0`.
-- **AC-19**: `python -c "import devkit_adaptive"` followed by a check of `sys.modules` finds no `devkit_spec` module.
+- **AC-19**: A test imports every module of the package (`pkgutil.walk_packages`), the CLI module included, and then
+  finds no `devkit_spec` module in `sys.modules`.
 
 ### 3.10 Open questions
 
@@ -424,7 +457,10 @@ Each scenario is a test on a temporary repository unless it says otherwise.
   (recommended) or `devkit-agt`. `materials/planning-evidence.md` §7 states what each allows and forbids.
 - **q2 Command group name**: `devkit adaptive assignment` (recommended) or `devkit adaptive-dev assignment`.
   `CAP-DLV-adaptive-development` rule 18 says commands use `adaptive-dev`; the distribution is `devkit-adaptive`.
-  `PADR-adaptive-assignment-commands` is written for the recommended name.
+  `PADR-adaptive-assignment-commands` is written for the recommended name and supersedes the naming clause of
+  `ADR-adaptive-development-and-research` in part. Under the other answer, the next Planning turn renames the group
+  in this bundle, removes the PADR's `supersedes` and its naming clause, and drops the ADR file from
+  `boundaries.owns`.
 
 Excluded: host lifecycle hooks (`PROP-adaptive-lifecycle-hooks`), a scheduler or process runner, model routing, SDD
 Units or envelopes, an MCP service, glob write scopes, ledger pruning, and any change to `devkit-spec`, `devkit-agt`
