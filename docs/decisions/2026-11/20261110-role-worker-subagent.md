@@ -49,12 +49,13 @@ exposes no role or skill name and arrives wherever `devkit-dist` syncs, with the
   Glob, Bash, Edit, Write, WebSearch, WebFetch and Agent; its Codex block is emulated with workspace-write and its
   Antigravity block is unverified. → `CAP-DIST-agent-projections`
 - `role-worker` reads the role file its prompt names and follows it as the assignment contract; without one, it
-  treats the prompt as the assignment.
+  treats the prompt as the assignment. → `CAP-DIST-agent-projections` (Shared General Subagent, rule 2)
 - A skill's instructions assign the subagent type per role or assignment: `role-worker` by default, and
   `general-purpose` for an assignment that needs a capability outside the `role-worker` tool list, such as
   interacting with a running UI. This is a fixed mapping, not a runtime fallback. → `CAP-DLV-deep-research` rule 11
-  (MUST)
+  (MUST), `CAP-DLV-uiux-improvement` rule 7, `CAP-DLV-design-exploration` rule 3, `CAP-HARN-agent-guidance`
 - A caller that cannot find `role-worker` stops that delegation and reports the missing subagent and its cause.
+  → `CAP-DLV-deep-research` rule 11, `CAP-DLV-uiux-improvement` rule 7, `CAP-DLV-design-exploration` rule 3
 - The `devkit` bundle holds distribution guidance and general subagents that other bundles share.
 
 Supersedes in part `ADR-skill-local-research-roles`: the clause that a general subagent receives the selected role path and bounded assignment.

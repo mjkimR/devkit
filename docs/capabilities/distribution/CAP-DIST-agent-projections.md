@@ -120,11 +120,13 @@ skill-local role files to. Its name and description name no skill, bundle or rol
 | `antigravity` | `unverified` | `tools: [view_file, grep_search, replace_file_content, run_command]`, `commandExecutionPolicy: sandbox` |
 
 1. **Shared role worker**: WHEN a project syncs the `devkit` bundle's `core` preset, devkit MUST project
-   `role-worker` for each selected agent with the status and native settings above and no model or effort field.
+   `role-worker` for each selected agent with the status and native settings above. The contract authors no
+   `level`, model or effort field, so its model follows §3: inherited unless the project selects a level.
    `packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py`.
 2. **Role-file procedure**: The `role-worker` contract MUST direct the child to read the role file its prompt names
-   before acting, to treat the prompt as the assignment when it names none, and to delegate only independent work,
-   preferring `role-worker` or a fitting dedicated subagent over `general-purpose`.
+   before acting and follow it as the assignment contract, to stop and return the cause without acting when that
+   file is missing or unreadable, to treat the prompt as the assignment when it names none, and to delegate only
+   independent work, preferring `role-worker` or a fitting dedicated subagent over `general-purpose`.
    `packages/devkit-dist/tests/integration/features/distribution/test_guide_bundle.py`.
 
 A project that sets `devkit = false` receives no `role-worker`; a skill that assigns it then stops that delegation
