@@ -8,7 +8,7 @@ target: the spec skill's references/planning.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -52,3 +52,5 @@ Bundle at the refreshed head, before this turn:
   accepted proposal on that commit name it.
 devkit rules check docs/proposals/ on that head: errors=0 (materials are excluded from RULE-document-reference).
 ```
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md: Clarifies rechecking the bundle's head-pinned evidence after a Host base refresh, limited to facts at the assigned worktree HEAD. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).

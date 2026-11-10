@@ -8,7 +8,7 @@ target: packages/devkit/src/devkit_agt/features/isolated_execution/
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-06
 ---
 
@@ -40,3 +40,5 @@ wait --clean: exit=2 phase=unknown outcome=unknown observer=unknown
 result.json: absent; executor checkout and records preserved
 native selected E2E at corrected source: 4 passed in 9.79s
 ```
+
+- **Disposition**: Dismissed: retire the historical incident without claiming a fix; its underlying cause remains unverified. Investigate only if Linux use produces a new occurrence with fresh execution and identity evidence; retain the existing cleanup guards.

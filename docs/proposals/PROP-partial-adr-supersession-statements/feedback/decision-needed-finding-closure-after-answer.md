@@ -8,7 +8,7 @@ target: the spec skill's references/planning.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -49,3 +49,5 @@ planning.md step 2: "When answers to earlier questions arrived, record them firs
 the decisions into `proposal.md` and the PADRs." (no reverify named)
 devkit workflow envelope check before this turn: reverify-01.yaml ... open_findings=2 review=challenger-01.yaml
 ```
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md: Names reverify of the original challenger round after an answer fully settles an open finding; partial and pending findings stay open. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).

@@ -4,16 +4,20 @@ Read this to run one Planning turn of a proposal on its `plan-<slug>` branch, fr
 
 ## Steps
 
+- After the Host refreshes the branch from the base, recheck the bundle's head-pinned evidence before folding answers: counts, inventories, cited IDs and claims about what exists. Update affected facts for the assigned worktree HEAD; make no claim about a base commit the worktree does not contain.
+
 1. On the first turn, set `status: reviewing` in `proposal.md` and commit.
    - If the proposal must be split (or has `needs_decompose: true`, or a `size` other than absent or exactly `S`, `M` or `L`), return it: set `status: draft` and `needs_decompose: true`, keep what you learned in `materials/`, close open questions with an `answer` envelope (`choice: null`, "Planning ended: returned to Backlog for decomposition"), commit and end. The Host continues with the [Backlog return procedure](backlog.md#return-from-planning-for-decomposition).
+   - If splitting depends on an option the user has not chosen, ask the option first; apply the return above in the turn that folds an answer selecting a split. Existing `needs_decompose` and size checks still apply.
 2. When answers to earlier questions arrived, record them first per [worker records](worker-records.md) §2, then fold the decisions into `proposal.md` and the PADRs.
+   - After folding an answer, reverify the original challenger round with `devkit workflow envelope reverify --unit <proposal dir> --stage spike --from envelopes/challenger-NN.yaml --resolve <N>` for each still-open `Decision needed:` finding fully settled by the answer; leave partially settled or pending findings open.
    - New PADR: only for a decision that meets the `decision-writing` admission criteria (When to Write); keep any other choice in the proposal's Planning decisions.
      Pass a short decision slug explicitly: `devkit spec proposal padr <slug> "<title>" --slug <decision-slug> --summary "<Y-statement>"`.
      Handoff retains that slug in the ADR ID. Read the scaffold before writing its body.
    - Withdraw a PADR the answers dropped by deleting its file in the fold commit (handoff promotes every PADR left in `decisions/`); name it and the reason in the proposal's Planning decisions and remove references to it.
 3. Review the proposal at the Planning `activity-effort` ([effort](effort.md); `high` rounds follow the [review loop](review-loop.md)).
    - Record each `scout` or `challenger` return with `devkit workflow envelope new --unit <proposal dir> --kind scout|challenger --stage spike --findings-file -`; comparisons and evidence go into `materials/`, created with its first file (the scaffold writes no empty directory, and a worktree holds none).
-   - After folding a `challenger` round, close it with `devkit workflow envelope reverify --unit <proposal dir> --stage spike --from envelopes/challenger-NN.yaml`: `--resolve <N>` per folded finding, `--waive "<N>=<reason>"` for a P2 or P3 not taken; leave `Decision needed:` findings open for `plan-accept`. A later reverify of the same round starts from its last reverify: pass only the findings that turn closes; a number naming a finding already closed is refused (`ENVELOPE_FINDING_CLOSED`).
+   - After folding a `challenger` round, close it with `devkit workflow envelope reverify --unit <proposal dir> --stage spike --from envelopes/challenger-NN.yaml`: `--resolve <N>` per folded finding, `--waive "<N>=<reason>"` for a P2 or P3 not taken; leave `Decision needed:` findings open for `plan-accept` until an answer fully settles them as in step 2. A later reverify of the same round starts from its last reverify: pass only the findings that turn closes; a number naming a finding already closed is refused (`ENVELOPE_FINDING_CLOSED`).
    - Wait for every support role you start before relying on it; a failed role is a problem.
    - When the proposal drafts screens (a Screens section of `target-docs.md`, `ux-writing`), offer the optional `ux-reviewer` (`spec-ux-review`), each round recorded as `ux-review-NN.yaml` at `spike`; its open findings go into the `plan-accept` request beside the `challenger` and `scout` envelopes.
    - `devkit workflow next` may list `spike` as done before any review ran; only the recorded `scout`, `challenger` and `reverify` envelopes are Planning evidence.

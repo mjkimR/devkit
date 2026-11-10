@@ -8,7 +8,7 @@ target: ARCH-05-1-containers
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -45,3 +45,5 @@ packages/devkit-docs/pyproject.toml:17-18      [project.entry-points."devkit.bun
 packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/bundle.toml:4-5  default_preset = "core", auto_select = true
 docs/architecture/ARCH-07-deployment.md:177    "The devkit-docs wheel registers `docs = "devkit_docs.bundles.docs"` in `devkit.bundles`."
 ```
+
+- **Disposition**: docs/architecture/ARCH-05-1-containers.md: Corrects the auto-selected docs bundle and docs/spec rule-asset ownership against the bundle registration and manifests. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).

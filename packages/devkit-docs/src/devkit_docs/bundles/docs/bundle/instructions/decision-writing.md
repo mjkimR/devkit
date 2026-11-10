@@ -44,6 +44,7 @@ Capabilities and architecture documents state the lasting rules; the ADR records
 - Write one list item per clause, as a declarative sentence without an RFC 2119 keyword.
 - End a clause that a capability or architecture document restates with its trace: the backticked ID, the section or
   rule that holds it and the keyword that document uses: "Exports write UTF-8. → `CAP-<AREA>-<slug>` rule 3 (MUST)."
+- If a proposal plans a restating document that does not exist yet, name its ID as plain text followed by "(planned)"; replace it with the backticked trace once the document exists and restates the clause.
 - Leave the trace off a clause that no document restates; it records rationale or context only.
 - If the restating document and the ADR differ, follow the restating document; the trace records where and how
   strongly the decision was restated.

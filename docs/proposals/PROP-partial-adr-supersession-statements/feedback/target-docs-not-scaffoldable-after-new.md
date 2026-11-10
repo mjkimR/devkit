@@ -8,7 +8,7 @@ target: devkit spec proposal new
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-10
 ---
 
@@ -46,3 +46,5 @@ devkit spec proposal --help: accept, check, handoff, new, padr, report
 devkit spec proposal new --help: "--with-target-docs  Also scaffold target-docs.md, the Living Spec blueprint"
 ls .devkit/managed/spec/templates/: proposal.md (no blueprint template)
 ```
+
+- **Disposition**: Dismissed: adding a scaffold command or template for an existing proposal is not required by the current contract. Manual authoring using the blueprint structure in `CAP-DLV-proposal-planning` section 4.4 is sufficient; no additional CLI or asset is planned.

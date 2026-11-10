@@ -8,7 +8,7 @@ target: devkit spec worker inspect
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -48,3 +48,5 @@ outside_scope: [docs/proposals/PROP-viewer-decision-supersession/proposal.md]
 errors: SPEC_WORKER_SCOPE_OUTSIDE "1 changed paths lie outside the authorized scope"
 with --scope for both directories: checks.scope = pass, outside_scope = []
 ```
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md: Documents explicit complete scope for an authorized Planning follow-up draft, repeating both proposal directories because --scope replaces derived scope. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).

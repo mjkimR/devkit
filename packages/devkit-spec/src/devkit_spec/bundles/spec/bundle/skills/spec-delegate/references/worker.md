@@ -14,6 +14,7 @@ A worker's range starts at the unit's last accepted head:
 
 Run `devkit spec worker inspect --format json` in the worktree. Override a derived input that differs from your record with `--base`, `--head`, `--scope`/`--scope-file`, `--unit` or `--base-checkout`; an override replaces the input, never unions with it. The accepted-turn `base`, ancestry and `changed_paths` remain the write audit.
 
+- If a Planning turn creates a follow-up draft, verify that it is permitted by the payload and role contract before including it in the complete inspection scope: `devkit spec worker inspect --format json --scope <proposal dir> --scope <follow-up proposal dir>`. Repeat the unit directory because the override replaces derived scope.
 - Cumulative rules use the independent `rules_base`, derived from the recorded base-branch merge base; `--rules-base` overrides only that input. Inspect its value and source (a manual `audit-base-fallback` when no base branch is recorded).
 - Absent optional reconcile adds no scope; malformed present records remain not-run. A not-run check is not a pass.
 - Pass `base`, `head` and `changed_paths` to read-only reviewers, and retain `rules_base` with the rules evidence.

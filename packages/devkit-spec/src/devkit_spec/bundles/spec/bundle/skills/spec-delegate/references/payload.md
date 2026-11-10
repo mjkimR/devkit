@@ -45,4 +45,4 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 - Add linked open source feedback to the write scope, by its actual path, only when the worker fixes it directly; otherwise update it yourself at completion.
 - Before delegating a move or deletion, add each document linking to the target as an exact link-repair-only write path.
 - Name the official documentation the work needs as read authority, separate from any mutation authority; if the worker cannot read it, supply the verified content.
-- Planning: when the turn needs newer base IDs or CLI features, refresh the branch and installed instructions first (the worker never merges). Name an ignored probe path inside the proposal directory, preparing one if none exists.
+- Planning: when the turn needs newer base IDs or CLI features, refresh the branch and installed instructions first (the worker never merges). Name an ignored probe path inside the assigned worktree, preparing one if none exists.

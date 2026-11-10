@@ -8,7 +8,7 @@ target: the spec-delegate skill's references/payload.md (Workers, Planning)
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -46,3 +46,5 @@ planning-worker.md: "Temporary probes: only the ignored path the payload names."
 .gitignore: "/tmp/" is the only rule that covers a probe path; no rule matches docs/proposals/**.
 payload of this turn: probes at <worktree>/tmp/planning-probes/ ("no ignored path exists inside the proposal directory").
 ```
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md: Allows an ignored probe path inside the assigned worktree. The ignored requirement remains; the original claim that no proposal-local ignored path can exist is not required for this correction. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).

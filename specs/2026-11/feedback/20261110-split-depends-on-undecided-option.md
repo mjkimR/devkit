@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/ref
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -57,3 +57,5 @@ planning.md, step 1:
 
 proposal.md of the unit, section 3.7 (options): (a) 1 spec, (b) 2 specs, (c) 1 or 2 specs, (d) 0, (e) 0 now.
 ```
+
+- **Disposition**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/planning.md: Asks an undecided option before a conditional split and applies decomposition when folding a split-selecting answer; existing size and needs_decompose checks remain. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).

@@ -124,8 +124,9 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
   document index and its memo, namespaces (`[[tool.docs.namespaces]]`), browse and search
   (`devkit_docs.features.documents`); the implementations of the nine document rules and the entrypoint path
   contract (`devkit_docs.features.governance`); the `DOCS_` codes and the proposal layout and effort vocabulary (`devkit_docs.base`).
-  It ships no bundle and knows no delivery process: the `devkit.docs.status_overlay` entry-point group lets a
-  delivery package change how `devkit docs list` shows a document's status.
+  It registers the auto-selected `docs` bundle with its default `core` preset, document instructions and document
+  rule assets. It knows no delivery process: the `devkit.docs.status_overlay` entry-point group lets a delivery
+  package change how `devkit docs list` shows a document's status.
 - **Dependencies**: `devkit-agt`, `devkit-core` and `click` (internal wheels pinned to selected actual versions); its `search` extra requires
   `devkit-agt[search]`. It never imports `devkit_spec` (`ADR-document-system`).
 - **Contracts**: `CAP-DOCS-document-model`.
@@ -136,9 +137,9 @@ their selected actual versions (`ADR-selective-package-versions`, `ARCH-07-deplo
   `devkit.commands`.
 - **Contents**: Proposals, spec bundles, delivery integration, code entrypoints (derive and apply), scope registry,
   delivery policy, worker inspection, the lifecycle rules, and the `spec` guidance bundle with its workflows,
-  rules, templates and opt-in docs skeleton. The bundle ships every rule asset, including the document rules,
-  whose wrappers import `devkit_docs`. It registers the `spec` status overlay that shows a draft proposal under
-  Planning as `reviewing`.
+  rules, templates and opt-in docs skeleton. The `spec` bundle ships lifecycle rule assets; the `docs` bundle
+  ships document rule assets whose wrappers import `devkit_docs`. `devkit-spec` registers the `spec` status overlay
+  that shows a draft proposal under Planning as `reviewing`.
 - **Dependencies**: `devkit-docs`, `devkit-agt`, `devkit-core` and `click` (internal wheels pinned to selected actual versions); its `search` extra
   requires `devkit-docs[search]`. Its proposal acceptance and handoff run through the `devkit spec proposal` CLI,
   and the base harness remains SDD-agnostic (`ADR-document-system`).

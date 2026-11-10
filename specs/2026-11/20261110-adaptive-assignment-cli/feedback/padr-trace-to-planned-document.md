@@ -8,7 +8,7 @@ target: the decision-writing instruction (Decision Outcome Clauses) and RULE-doc
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-10
 ---
 
@@ -51,3 +51,5 @@ created_at: 2026-11-10
 
 Second Planning turn (worktree at `622fa953`): `ADR-adaptive-requires-document-system`, written in that turn, has
 the same unquoted trace to the planned capability in one Decision Outcome clause.
+
+- **Disposition**: packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/instructions/decision-writing.md: Documents plain-text planned IDs until the restating document exists, then conversion to the backticked trace; reference validation remains unchanged. Verified by source/contract diff review, `uv run devkit rules check` and `just test-affected --base 5134e082d8296b1c68086638c72ab6abaa98674e` (2422 passed).
