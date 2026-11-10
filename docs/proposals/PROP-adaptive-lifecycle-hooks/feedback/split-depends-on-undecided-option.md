@@ -17,8 +17,8 @@ created_at: 2026-11-10
 ## 1. Friction / Question (friction, question)
 
 - **Context**: First Planning turn of an investigation-first proposal. The investigation compared five delivery
-  options. Two of them are one spec, two are two specs, and one delivers nothing. Which one is carried forward is a
-  question for the user in the same turn.
+  options. One is one spec, one is two, one is one or two, and two deliver nothing now. Which one is carried
+  forward is a question for the user in the same turn.
 - **Expectation**: Step 1 of the Planning reference says when a proposal is returned to Backlog for decomposition:
   "If the proposal must be split (or has `needs_decompose: true`, or a `size` other than absent or exactly `S`, `M`
   or `L`), return it".

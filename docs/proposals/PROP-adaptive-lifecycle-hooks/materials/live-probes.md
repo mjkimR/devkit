@@ -117,7 +117,7 @@ Start `codex` in the directory, trust the project and review the three hooks wit
 | CX-5 | Write `always` to `mode`, ask "Say hello."; interrupt after ten blocks; then `always-tool` | Whether the host ends the turn by itself, and after how many blocks, in each mode |
 | CX-6 | Write `slow` to `mode`, ask "Say hello." | Whether the turn ends or continues after the ten second timeout; what the host shows |
 | CX-7 | Write `fail` to `mode`, ask "Say hello." | Whether the turn ends; what the host shows |
-| CX-7b | Only if CX-7 shows a held turn: set the `Stop` command in `.codex/hooks.json` to `/ABSOLUTE/PATH/absent || echo '{}'`, review the changed hook, ask "Say hello." | Whether the turn ends: the host runs the command through a shell and a fallback releases the stop |
+| CX-7b | Only if CX-7 shows a held turn: set the `Stop` command in `.codex/hooks.json` to `/ABSOLUTE/PATH/absent || echo '{}'`, review the changed hook, ask "Say hello." Then set the command back to `/ABSOLUTE/PATH/probe.py` and review the hook again, so that CX-8 to CX-10 still log `Stop` | Whether the turn ends: the host runs the command through a shell and a fallback releases the stop |
 | CX-8 | Remove `mode`; run `codex exec "Say hello."` in the directory | Whether `SessionStart` and `Stop` lines appear |
 | CX-9 | Change `timeout` to `11` for `Stop` in `.codex/hooks.json`, start a new session, ask "Say hello." | Whether the changed hook is skipped until reviewed again |
 | CX-10 | Copy `.codex/hooks.json` unchanged into `wt/` (the command still names `main/probe.py`), start `codex` there, ask "Say hello." | Whether the same registration in a second checkout needs its own trust and review |

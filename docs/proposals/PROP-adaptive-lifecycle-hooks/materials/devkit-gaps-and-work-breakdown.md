@@ -105,7 +105,7 @@ registration and the verification remain, and the sync, removal, ownership and b
 
 | Option | Items | Specs | Prevents | Does not prevent | Unverified before delivery |
 | --- | --- | --- | --- | --- | --- |
-| (a) Codex only: blocking `Stop` and session start, no new host | W1, W3, W6, W7, W8 | 1 (size L), plus W6 as a follow-up to the assignment unit, one further spec of size S, or inside this spec | F1 and F2 in Host sessions on Codex | Anything on Claude Code or Antigravity; F3 | The Codex probes: the review step, a block, the repeated stop after a tool call, `Stop` inside subagent threads, timeout behavior; that Codex is launched with `devkit` on PATH (G12) |
+| (a) Codex only: blocking `Stop` and session start, no new host | W1, W3, W6, W7, W8 | 1 (size L), with W6 inside it as a change to the delivered assignment feature. W6 is a spec of its own (size S) only if it is delivered earlier, so that observed runs with concurrent sessions count in the measurement | F1 and F2 in Host sessions on Codex | Anything on Claude Code or Antigravity; F3 | The Codex probes: the review step, a block, the repeated stop after a tool call, `Stop` inside subagent threads, timeout behavior; that Codex is launched with `devkit` on PATH (G12) |
 | (b) Codex and Claude Code: blocking `Stop` and session start | (a) plus W4 or W4u | 2: the host hook contract with the Claude Code adapter (L with W4, M with W4u), and the adaptive gates (L) | F1 and F2 on both hosts | Antigravity; F3 | The same, plus the Claude Code probes and the decision of section 3.1 |
 | (c) Session-start injection only | Codex: W7, with W3 so that `devkit host status` shows the hook ran; W6 optional. With Claude Code: plus W4 or W4u | 1 (size M) on Codex; with Claude Code 2 under W4, or 1 (size L) under W4u | F2 | F1, F3 | `SessionStart` delivery of devkit's generated command and the visible context on each host; G12 |
 | (d) No delivery | None | 0 | Nothing beyond the commands and guidance | F1, F2 and F3 keep the cost they have without a gate | Nothing |
@@ -147,7 +147,7 @@ What option (e) consists of:
 Observations that bear on the choice:
 
 1. **No option as packaged can start now.** W6 to W9 depend on commands that are accepted and not delivered yet, in
-   a package that does not exist yet. W1 to W5 depend on nothing and could start, but they deliver a contract without a
+   a package that holds no assignment feature yet. W1 to W5 depend on nothing and could start, but they deliver a contract without a
    consumer, which `docs/materials/evaluations/agent-hooks.md` declined for that reason.
 2. **The cost is concentrated in the second host.** Without W4 the whole delivery is one spec whose host-feature part
    is two small changes. With W4 it is two specs, a change to the host configuration boundary and the decision of
@@ -175,7 +175,7 @@ spec, but not with the whole of option (a).
 | Child | Content | Area | Size | Depends on |
 | --- | --- | --- | --- | --- |
 | Host hook stop decision and Claude Code adapter | W1, W3, and W4 or W4u (W1 only under (b)) | `capabilities/host/` | L with W4, M with W4u | The Claude Code probes; the decision of section 3.1 |
-| Adaptive lifecycle gates | W7, and W8 under (b), with the measurement after delivery | `capabilities/delivery/` | L under (b), M under (c) | The first child; `PROP-adaptive-assignment-cli` with W6 |
+| Adaptive lifecycle gates | W7, and W6 and W8 under (b), with the measurement after delivery | `capabilities/delivery/` | L under (b), M under (c) | The first child; the delivered commands of `PROP-adaptive-assignment-cli` |
 
 - The narrow `SubagentStop` gate adds a third unit (W2, W6b, W9a) after those.
 - The candidate design the draft listed (a blocking response, `SubagentStop`, a second host adapter and adaptive
