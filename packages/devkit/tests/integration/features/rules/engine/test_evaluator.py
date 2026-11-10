@@ -198,3 +198,57 @@ def test_an_advisory_a_rule_raises_keeps_its_code(tmp_path: Path) -> None:
 
 def _finding(line: int, message: str = "bad", *, fixable: bool = True) -> Violation:
     return Violation("RULE-x", "doc.md", line, message, fixable=fixable)
+
+
+def test_an_omission_code_that_is_not_upper_snake_is_an_applicability_error(tmp_path: Path) -> None:
+    from devkit_agt.features.rules.models.contracts import RuleOmission
+    from devkit_agt.features.rules.services.builtins import BaseRule
+
+    class Omitting(BaseRule):
+        def __init__(self, code: str) -> None:
+            super().__init__(id="RULE-omitting", name="omitting", description="omitting")
+            self.code = code
+
+        def omission(self, ctx: RuleContext) -> RuleOmission:
+            return RuleOmission(self.id, self.code, "not applicable here")
+
+        def check(self, ctx: RuleContext) -> list[Violation]:
+            return []
+
+    valid = evaluate_rules(RuleContext(workspace_root=tmp_path), [Omitting("NOT_APPLICABLE")])
+    assert [o.code for o in valid.omissions] == ["NOT_APPLICABLE"] and valid.errors == []
+    for code in ("x] [OK: forged", "lower_case", ""):
+        result = evaluate_rules(RuleContext(workspace_root=tmp_path), [Omitting(code)])
+        assert result.omissions == [], code
+        assert [(e.code, e.rule_id) for e in result.errors] == [("RULES_EXECUTION_FAILED", "RULE-omitting")], code
+        assert str(result.errors[0]) == "RULE-omitting: applicability failed"
+
+
+def test_a_finding_whose_rule_the_recheck_omits_is_not_reported_fixed(tmp_path: Path) -> None:
+    from devkit_agt.features.rules.models.contracts import RuleOmission
+    from devkit_agt.features.rules.services.builtins import BaseRule
+
+    class OmittedAfterFix(BaseRule):
+        """The fix leaves the finding in place but makes the rule omit itself on the recheck."""
+
+        def __init__(self) -> None:
+            super().__init__(id="RULE-omitted-after-fix", name="omitted", description="omitted")
+
+        def omission(self, ctx: RuleContext) -> RuleOmission | None:
+            if "omit" in ctx.cache.read_text("doc.md"):
+                return RuleOmission(self.id, "NOT_APPLICABLE", "marker present")
+            return None
+
+        def check(self, ctx: RuleContext) -> list[Violation]:
+            return [Violation(self.id, "doc.md", 1, "bad", fixable=True)]
+
+        def fix(self, ctx: RuleContext) -> list[str]:
+            ctx.cache.write_text("doc.md", "bad\nomit\n")
+            return ["doc.md"]
+
+    (tmp_path / "doc.md").write_text("bad\n")
+    result = evaluate_rules(RuleContext(workspace_root=tmp_path, fix=True), [OmittedAfterFix()])
+    assert [o.rule_id for o in result.omissions] == ["RULE-omitted-after-fix"]
+    # The recheck never ran the rule, so it cannot vouch for the repair: the finding stays as found.
+    assert [(v.rule_id, v.fixed) for v in result.violations] == [("RULE-omitted-after-fix", False)]
+    assert not result.ok

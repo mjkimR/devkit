@@ -4,6 +4,7 @@ convergence recheck."""
 from __future__ import annotations
 
 import inspect
+import re
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
@@ -19,6 +20,8 @@ from devkit_agt.features.rules.models.policy import effective_severity, validate
 from devkit_agt.features.rules.models.settings import match_path
 
 logger = get_logger(__name__)
+
+_OMISSION_CODE = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*")
 
 
 @dataclass
@@ -90,9 +93,9 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     in ``skipped``. With ``ctx.fix`` (and not ``ctx.dry_run``) every selected
     autofixable rule fixes, then the rules ``scope_rules`` selects for the
     targets plus the modified files check again (every active rule when a fix
-    failed, since its writes are unknown): a fixable initial finding the
-    recheck no longer reports is returned with ``fixed`` set, followed by the
-    recheck's findings.
+    failed, since its writes are unknown): a fixable initial finding of a rule
+    the recheck ran that it no longer reports is returned with ``fixed`` set,
+    followed by the recheck's findings.
     """
     resolvers, policy_errors = validate_policy(
         rules,
@@ -127,7 +130,8 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     result.omissions = []
     rechecked = _applicable(ctx, rechecked, result)
     recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
-    result.violations = recheck if result.errors else _mark_fixed(initial, recheck)
+    ran = {rule.id for rule in rechecked}
+    result.violations = recheck if result.errors else _mark_fixed(initial, recheck, ran)
     return result
 
 
@@ -139,6 +143,8 @@ def _applicable(ctx: RuleContext, rules: Sequence[Rule], result: EvaluationResul
             if omit is not None:
                 if not isinstance(omit, RuleOmission):
                     raise TypeError("omission must return RuleOmission or None")
+                if not isinstance(omit.code, str) or _OMISSION_CODE.fullmatch(omit.code) is None:
+                    raise ValueError(f"omission code must be UPPER_SNAKE, got {omit.code!r}")
                 result.omissions.append(omit)
             else:
                 applicable.append(rule)
@@ -203,24 +209,30 @@ def _apply_fixes(ctx: RuleContext, rules: Sequence[Rule], errors: list[RuleProbl
     return modified
 
 
-def _mark_fixed(initial: Sequence[Violation], recheck: Sequence[Violation]) -> list[Violation]:
+def _mark_fixed(initial: Sequence[Violation], recheck: Sequence[Violation], ran: Iterable[str]) -> list[Violation]:
     """Fixed copies of the initial fixable findings the recheck no longer reports, then the recheck's findings.
 
     A finding counts as fixed when the recheck reports fewer findings with its
     identity (rule, file, message) than the initial check did; the line is not
-    compared, because a fix may move it. The inputs are not modified.
+    compared, because a fix may move it. Only a rule in ``ran`` (the IDs of the
+    rules the recheck ran) can vouch for a repair: a finding of a rule the
+    recheck omitted is returned as found. The inputs are not modified.
     """
     remaining = Counter(_finding_key(v) for v in recheck)
-    fixed: list[Violation] = []
+    checked = set(ran)
+    reported: list[Violation] = []
     for v in initial:
         if not v.fixable:
+            continue
+        if v.rule_id not in checked:
+            reported.append(v)
             continue
         key = _finding_key(v)
         if remaining[key] > 0:
             remaining[key] -= 1
             continue
-        fixed.append(replace(v, fixed=True))
-    return [*fixed, *recheck]
+        reported.append(replace(v, fixed=True))
+    return [*reported, *recheck]
 
 
 def _execution_error(rule: Rule, message: str, exc: Exception) -> RuleExecutionError:

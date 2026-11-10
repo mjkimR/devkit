@@ -89,9 +89,10 @@ later misses. Stores remain loaded separately from computed judgments across inv
 A rule MAY expose `omission(ctx) -> RuleOmission | None` through the optional applicability contract. Existing rules
 without the hook execute unchanged. `RuleOmission(rule_id, code, reason)` identifies a deliberate omission, distinct
 from target-scope `skipped` IDs and successful execution. The evaluator calls the hook for check and convergence
-recheck candidates; fix writes and failed-fix unknown writes retain existing all-active rescoping behavior.
+recheck candidates; fix writes and failed-fix unknown writes retain existing all-active rescoping behavior. A finding
+of a rule the convergence recheck omits is reported as found, never `fixed`.
 
 WHEN omissions exist, rules JSON MUST include `omissions: [{rule_id, code, reason}]` and text MUST emit one
-`[RULE_OMITTED: <id> code=<code> reason=<reason>]` per omission. Without omissions the existing JSON shape is retained.
-An omission does not suppress document rules or independent project checks. Applicability errors are rule-execution
-errors, not omissions. `packages/devkit/tests/unit/features/rules/engine/test_scoping.py` enforces rescoping.
+`[RULE_OMITTED: <id> code=<code> reason=<reason>]` per omission, each value one sentinel field. Without omissions the
+existing JSON shape is retained. An omission does not suppress document rules or independent project checks.
+Applicability errors, including a code that is not `UPPER_SNAKE`, are rule-execution errors, not omissions. `packages/devkit/tests/unit/features/rules/engine/test_scoping.py` enforces rescoping.
