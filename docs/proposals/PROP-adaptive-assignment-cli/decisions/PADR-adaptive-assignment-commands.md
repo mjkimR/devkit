@@ -1,0 +1,85 @@
+---
+id: PADR-adaptive-assignment-commands
+title: Adaptive assignment commands
+summary: For adaptive delegation whose assignment board lives only in the Host's context, we add a devkit adaptive assignment command group that records assignments and verifies returns against the repository, to make resume and return checks deterministic, accepting a CLI the first decision excluded.
+proposal: PROP-adaptive-assignment-cli
+supersedes: [ADR-adaptive-development-and-research]
+status: draft
+created_at: 2026-11-10
+---
+
+# [PADR-adaptive-assignment-commands] Adaptive assignment commands
+
+- **Status**: Draft
+- **Date**: 2026-11-10
+
+---
+
+## 1. Context & Problem Statement
+
+`ADR-adaptive-development-and-research` delivered adaptive development as guidance with "No new runtime, CLI or
+distribution mechanism". The Host therefore keeps delegated assignments in its context and in
+`.devkit/adaptive-dev.md`, which it updates when useful and before pausing. An unplanned interruption or a context
+compaction loses the outstanding assignments, and a returned result is checked by reading its diff.
+`MAT-adaptive-runtime-references` records that comparable harnesses write this state in code at each event, and that
+an adaptive assignment already names a worktree, a base and a write scope that a command can compare with the
+repository.
+
+## 2. Decision Drivers
+
+- Outstanding assignments survive an interruption without relying on conversation history.
+- A return is compared with repository facts, not with the shape of a report.
+- No scheduler, process runner, model routing or per-change SDD record enters adaptive development.
+- Reusable archetypes keep working for callers that never use the commands, including SDD callers.
+- Judgments that need product knowledge stay with the Host.
+
+## 3. Considered Options
+
+- **Keep guidance only**: no new surface, but the two failures above stay.
+- **Commands that record and verify, run by the delegating agent** (chosen): deterministic state and checks, with
+  one command group and a ledger to maintain.
+- **Commands that also dispatch agents, run declared checks or block completion**: closer to the reference
+  harnesses, but it adds the process runner and gates that the milestone excludes or defers to
+  `PROP-adaptive-lifecycle-hooks`.
+
+## 4. Decision Outcome
+
+Chosen: commands that record and verify. This replaces two clauses of `ADR-adaptive-development-and-research`: the
+CLI part of "No new runtime, CLI or distribution mechanism", whose runtime part stays in force, and "Identifiers and
+commands use `adaptive-dev`", which stays in force for the approach value, the bundle, the entry skill and the
+context file.
+
+- Adaptive development has a command group `devkit adaptive assignment` with the verbs `new`, `return`, `verify`,
+  `close`, `list` and `show`. → CAP-DLV-adaptive-assignments §4 (MUST).
+- The commands record and compare. They start no agent, run no declared check, create no worktree and block no
+  session. → CAP-DLV-adaptive-assignments §2 Scope Excluded.
+- Verification compares repository facts with the assignment: the recorded base is an ancestor of the returned
+  commit, the worktree HEAD is the returned commit, every changed path lies inside the write scope, and every
+  declared check has a recorded passing outcome. → CAP-DLV-adaptive-assignments §3 (MUST).
+- A failed verification is a negative result with exit code `1` and one stable code per failed check.
+  → CAP-DLV-adaptive-assignments §4 (MUST).
+- The delegating agent runs the commands: the Host for its assignments, a role lead for its children. Assignees and
+  product-support roles run none of them, and no archetype requires them. → `CAP-DLV-adaptive-development` rules 13
+  and 19.
+- The commands are optional for the Host. Where they are unavailable or a host denies the ledger write, the Host
+  keeps the manual board and diff reading. → `CAP-DLV-adaptive-development` rules 13 and 14 (WHERE).
+- The Host keeps these judgments: whether a returned result meets its goal, whether a recorded check outcome is
+  true, whether an open assignment's agent is still running, capacity and allowance, shared-interface agreement, and
+  acceptance of a result whose verification failed.
+- The commands apply under either development approach and write no SDD record.
+
+## 5. Consequences
+
+- Positive: resume lists outstanding assignments from recorded state; out-of-scope writes, a moved HEAD and a missing
+  check outcome have stable codes.
+- Negative: a second place holds resume facts beside `.devkit/adaptive-dev.md`; the guidance states which holds what.
+- Risk: a recorded check outcome repeats what the assignee reported. The capability states that verification
+  compares outcomes and does not run checks.
+- Follow-up: `PROP-adaptive-lifecycle-hooks` decides whether a host gate reads the ledger; it is triggered by that
+  proposal's Planning.
+
+## 6. Confirmation
+
+Tests of the `assignment` feature in `devkit-adaptive` for each rule of CAP-DLV-adaptive-assignments, the
+documented-codes test of the package, and the bundle content tests that assert the conditional wording in the
+guidance.

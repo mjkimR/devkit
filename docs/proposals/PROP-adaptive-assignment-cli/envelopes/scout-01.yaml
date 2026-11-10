@@ -1,0 +1,33 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:15:48.450264Z'
+status: completed
+summary: 'Reuse and state storage: the Git runner, is_ancestor, file_lock, atomic writes and path normalization are in devkit_core, and toplevel and common-dir lookup in devkit_dist, so the commands need no devkit_agt import. No public changed-path or worktree-list helper exists. Cross-worktree state precedent is the Git common directory; .devkit/transient/ is per checkout.'
+findings:
+- issue: Changed-path collection exists only in devkit_spec (worker inspect, scope observation) and in non-public devkit_agt helpers; no public module offers it.
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inspect.py:125-142,178-184; packages/devkit-spec/src/devkit_spec/features/scope/services/observation.py:173-233; .devkit/architecture.toml:81-96
+  suggested_action: 'Implement changed-path collection in the new feature with the same Git commands: diff --no-renames --name-only -z <base> <final> and status --porcelain=v1 -z --untracked-files=all.'
+  resolution: open
+- issue: devkit_core exports run_git, run_git_text, is_ancestor, file_lock, atomic_write_text and normalize_relpath; devkit_dist exposes the toplevel and absolute common-dir lookups in public modules.
+  evidence: packages/devkit-core/src/devkit_core/core/__init__.py:15-19,31-63; packages/devkit-core/src/devkit_core/core/git.py:71-197; packages/devkit-core/src/devkit_core/core/locks.py:60-80; packages/devkit-dist/src/devkit_dist/features/project/repositories/project.py:31,65; packages/devkit-dist/src/devkit_dist/features/project/repositories/invocation.py:34
+  suggested_action: Build the Git adapter on devkit_core; a devkit_agt dependency is not needed for these commands.
+  resolution: open
+- issue: Existing write-scope containment is a literal prefix match that rejects glob characters; the only public segment-aware glob matcher is in devkit_agt.
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inspect.py:196-199; packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py:58-62; packages/devkit-docs/src/devkit_docs/utils/paths.py:28-39; packages/devkit/src/devkit_agt/features/rules/models/settings.py:74-93
+  suggested_action: Use literal path prefixes for write scopes so containment, overlap and narrowing are exact.
+  resolution: open
+- issue: State that every linked worktree must see is stored under the Git common directory by devkit exec, the spec scope registry and the integration lock; .devkit/transient/ holds checkout-local state only.
+  evidence: packages/devkit/src/devkit_agt/features/isolated_execution/repositories/runs.py:36-46; packages/devkit-spec/src/devkit_spec/features/scope/repositories/location.py:3-6,33,59-65; packages/devkit/src/devkit_agt/features/worktree/services/merging.py:40-53; docs/capabilities/distribution/CAP-DIST-workspace-ownership.md:20-37,132,238
+  suggested_action: Store the ledger under <git common dir>/devkit/adaptive/.
+  resolution: open
+- issue: run_git inherits GIT_DIR, GIT_WORK_TREE and GIT_INDEX_FILE; the spec scope collector and the isolated-execution runner strip them.
+  evidence: packages/devkit-core/src/devkit_core/core/git.py:84-88; packages/devkit-spec/src/devkit_spec/features/scope/repositories/collection_git.py:23-29; packages/devkit/src/devkit_agt/features/worktree/repositories/execution.py:24-33
+  suggested_action: Development decides whether the adapter strips these variables; a later hook consumer makes inheritance a risk.
+  resolution: open
+unverified_areas:
+- The append code of the devkit-spec scope journal.jsonl was not located
+- No Git behavior was run by the scout; plumbing semantics rest on existing code
+checks: {}
+activity_effort: medium
