@@ -33,6 +33,7 @@ package, feature, layer or test tier. The rules agents most often need:
   Adapters call use cases; services and repositories never import use cases or adapters.
 - `devkit_core.base` never imports `devkit_core.core`; `devkit-core` imports no application package.
   `devkit-dist` never imports `devkit_agt` or the MCP SDK, and its tests pass without `devkit-agt` (`just test-dist`).
+- `devkit-adaptive` never imports `devkit_spec`.
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
 
 ## Documentation

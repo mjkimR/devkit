@@ -129,7 +129,7 @@ and current context, linking a research material by its ID, and the approach, bu
     `.devkit/incubation.md`. Tests: `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` and
     `packages/devkit-dist/tests/integration/features/project/test_development.py`.
 
-19. **Reusable execution contracts**: Public archetypes MUST omit a skill prerequisite and source model/effort defaults;
+19. **Reusable execution contracts**: Public archetypes MUST omit skill and assignment-command prerequisites and source model/effort defaults;
     compatible callers retain their own workflow and authority, including SDD. Existing bundle-qualified model policy applies.
     Projects MAY extend via distinct prefixed IDs or verified caller-owned absolute overlays without changing shipped defaults;
     overlays MUST NOT expand tool, write or Git permissions. Public IDs have one owning bundle.

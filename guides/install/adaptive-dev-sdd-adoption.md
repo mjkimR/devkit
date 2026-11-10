@@ -16,10 +16,11 @@ approach = "adaptive-dev"
 Reuse an existing table rather than add a duplicate. Preserve the project's other settings.
 If the spec package is absent, read [canonical package sources](../INSTALL_GUIDE.md#step-3-package-sources)
 and the [already-installed route](existing-repository.md#already-installed) before changing dependencies.
-Inspect the existing direct base requirement and its actual dependency group, source and ref. Present replacing
-that direct devkit-docs, devkit-agt or devkit-dist requirement with devkit-spec in the same group; do not append
-a second direct base requirement. Preserve the supported source/ref and keep the existing devkit-adaptive
-requirement. Apply only the approved replacement using the canonical procedure, including `--no-build-package pyyaml`.
+Inspect the existing direct requirements and their actual dependency group, source and ref. When the project declares
+only devkit-adaptive, present adding devkit-spec in that group while retaining devkit-adaptive. When a direct
+devkit-docs, devkit-agt or devkit-dist requirement exists, present replacing that direct base with devkit-spec in the
+same group instead of adding a second direct base. Preserve the supported source/ref and keep devkit-adaptive.
+Apply only the approved dependency change through the canonical procedure, including `--no-build-package pyyaml`.
 Use the project's real group rather than assuming every existing installation uses the development group.
 
 After dependency replacement, verify the runtime binding and then prepare assets:

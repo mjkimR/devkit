@@ -104,9 +104,9 @@ current-state project documents.
 ### Scenario 5: Validate optional support
 
 - **Covers**: 5b, 5c
-- **Given**: a separable usage-check scope and an optional role.
-- **When**: the role returns evidence or fails its boundary.
-- **Then**: the Host verifies actual paths and source-specific results before fold-back and keeps optional lead depth/capacity within the assignment; a failed or out-of-scope return supplies no completion or authority.
+- **Given** a recorded assignment with bounded write authority and an assignee return containing out-of-scope changes,
+- **When** the Host records the return and runs `uv run devkit adaptive assignment verify <id>`,
+- **Then** `result=fail` and `ADAPTIVE_SCOPE_VIOLATION` reject the return; if a command cannot record, the Host retains manual payload, diff and checkpoint checks and reports the assignment as unrecorded.
 
 ### Scenario 6: Report verification truthfully
 
