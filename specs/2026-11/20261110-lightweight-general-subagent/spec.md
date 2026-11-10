@@ -74,7 +74,8 @@ assignments with that tool list. Codex gains nothing, because its projection has
   - `.codex/agents/role-worker.toml` with `sandbox_mode = "workspace-write"`, `Host projection: emulated.` in
     `developer_instructions`, and no `model` or `model_reasoning_effort` key;
   - `.agents/agents/role-worker.md` with `tools: [view_file, grep_search, replace_file_content, run_command]`,
-    `subagent: true`, a prompt naming `Host projection: unverified.`, and no `model` key.
+    `commandExecutionPolicy: sandbox`, `subagent: true`, a prompt naming `Host projection: unverified.`, and no
+    `model` key.
 
 ### [AC-02] The devkit bundle admits shared subagents and stays out of AGENTS.md
 

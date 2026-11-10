@@ -90,6 +90,7 @@ def test_role_worker_projects_for_every_host_with_inherited_model(tmp_path: Path
     antigravity_head, antigravity_prompt = (target / ".agents/agents/role-worker.md").read_text().split("---\n")[1:]
     antigravity = yaml.safe_load(antigravity_head)
     assert antigravity["tools"] == ANTIGRAVITY_TOOLS and antigravity["subagent"] is True
+    assert antigravity["commandExecutionPolicy"] == "sandbox"
     assert "model" not in antigravity
     assert "Host projection: unverified." in antigravity_prompt
 
