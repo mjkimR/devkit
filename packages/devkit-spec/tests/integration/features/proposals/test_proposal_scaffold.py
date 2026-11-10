@@ -215,7 +215,10 @@ def test_create_padr(workspace: Path) -> None:
         "created_at": TODAY,
     }
     assert "# [PADR-use-go-ast-parser] Use Go AST Parser\n" in text
-    assert "\n# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part;" in text
+    assert (
+        "\n# supersedes: [ADR-<slug>]   # write Supersedes in part `ADR-<slug>`: <the replaced clauses>. in Decision Outcome"
+        in text
+    )
     assert "- **Status**: Draft\n" in text
     assert text.endswith("## 5. Consequences\n\n## 6. Confirmation\n")
     # padr created decisions/ itself: the scaffold leaves no empty directory behind.

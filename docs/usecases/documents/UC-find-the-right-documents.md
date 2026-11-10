@@ -22,7 +22,7 @@ created_at: 2026-10-13
   agent, and follow their references, without reading the whole `docs/` tree, so that the agent changes code against
   the current contract, cites documents by their exact IDs and spends its context budget only on documents that
   matter
-- **Scope**: `devkit docs resolve`, `refs`, `list` and `search` over the document index
+- **Scope**: `devkit docs resolve`, `refs`, `supersession`, `list` and `search` over the document index
 - **Trigger**: the agent starts or continues development work holding one handle: an ID quoted in a task or a review,
   a code path it is about to change, a free-text description of the intent, or a document it already has open
 - **Preconditions**: the project uses the `spec` bundle with devkit-spec installed; the Living Spec documents may be
@@ -64,6 +64,10 @@ created_at: 2026-10-13
   `DOCS_ID_UNRESOLVED`; the agent searches by meaning; resumes at 1a.
 - **2b.** Several documents declare the ID: the system fails with `DOCS_ID_DUPLICATE` and lists them; the use case
   ends, because a duplicate ID is fixed by hand.
+
+- **3a.** The document is a decision and the agent needs its replacements: it requests supersession; the system lists
+  the earlier and later decisions with whole or partial scope and the replaced clauses; resumes at step 5
+  (`CAP-DOCS-document-lookup`).
 
 ---
 
@@ -134,3 +138,10 @@ created_at: 2026-10-13
 - **Given**: two documents declare the same ID
 - **When**: the agent runs `devkit docs resolve <ID>`
 - **Then**: the command fails with `DOCS_ID_DUPLICATE`, its `[TARGET]` lists both documents, and it exits `2`
+
+
+### Scenario 9: Finds a decision's replaced clauses
+- **Covers**: 3a
+- **Given**: an ADR that is superseded in part
+- **When**: the agent runs `devkit docs supersession <ID>`
+- **Then**: it receives a `[SUPERSEDED_BY: ...]` line with `scope=partial` and the statement text and exits `0`

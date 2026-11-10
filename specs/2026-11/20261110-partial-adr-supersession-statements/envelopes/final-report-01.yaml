@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:45:03.966403Z'
+status: completed
+summary: Implemented statement-derived pointers, body-aware shared reader, ADR/PADR validation and docs supersession; migrated29 pairs with unchanged meaning and aligned guidance/Living Spec. Initial independent review P2s fixed and verified; independent reconcile passed42 targets. Source ready for Host integration and landed verification.
+findings: []
+assumptions:
+- Host-authorized initial scope addition root devkit_docs/cli.py registration only; no feature edge or TierB extension.
+- Medium effort with emulated boundaries verified by actual diff and unchanged reviewer snapshots.
+- .devkit/installation.json is the sole tracked sync output; sync_start PASS exit=0.
+unverified_areas:
+- Fixed-SHA E2E and synchronized final landed HEAD checks remain required with the Host; no integration or publication performed.
+checks:
+  tests: PASS just test-affected --base 2999c21d4e2bc26e4c6633124afc11c4e50e9144:2526 unit/integration tests;122 focused regressions
+  build: PASS compileall docs/spec source; no packaging contract change
+  lint: PASS docs/spec lint and pyright, whole rules and cumulative CI rules, sync --check
+diff_scope:
+  base: 2999c21d4e2bc26e4c6633124afc11c4e50e9144
+  head: 5a47e4d2613e4e25f9dd0706f4ca524060f4db70

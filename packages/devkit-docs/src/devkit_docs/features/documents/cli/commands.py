@@ -313,3 +313,39 @@ def list_cmd(
         args += scope.args(namespace, all_namespaces)
         _echo_list_page(len(selected), offset, limit, len(shown), result.hidden, args, workspace_root)
     _finish(notices)
+
+
+@click.command(name="supersession")
+@click.argument("document_id", metavar="ID")
+@WORKSPACE
+@FORMAT_OPTION
+@boundary
+def supersession_cmd(document_id: str, workspace_root: str | None, output_format: str) -> None:
+    """List a decision's replacements and the decisions that replace it."""
+    from devkit_docs.features.documents.usecases.supersession import SupersessionDocumentsUseCase
+
+    try:
+        canonical, outgoing, incoming, notices = SupersessionDocumentsUseCase().execute(
+            resolve_root(workspace_root), document_id
+        )
+    except AdvisoryError as exc:
+        echo_notices(getattr(exc, "notices", ()))
+        raise
+    if is_json(output_format):
+        echo_json(
+            {
+                "id": canonical,
+                "supersedes": outgoing,
+                "superseded_by": incoming,
+                "notices": [notice.to_dict() for notice in notices],
+            }
+        )
+    else:
+        for kind, records in (("SUPERSEDES", outgoing), ("SUPERSEDED_BY", incoming)):
+            for item in records:
+                click.echo(
+                    sentinel(
+                        kind, str(item["id"]), **{key: item[key] for key in ("scope", "path", "status", "line", "text")}
+                    )
+                )
+    _finish(notices)

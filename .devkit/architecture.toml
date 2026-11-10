@@ -109,6 +109,7 @@ dependencies = ["devkit_agt", "devkit_dist", "devkit_core", "devkit.advisory"]
 public_modules = [
     "devkit_docs.features.documents.models.ids",
     "devkit_docs.features.documents.models.markdown",
+    "devkit_docs.features.documents.models.supersession",
     "devkit_docs.features.documents.models.model",
     "devkit_docs.features.documents.models.namespace",
     "devkit_docs.features.documents.repositories.config",

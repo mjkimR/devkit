@@ -19,15 +19,15 @@ aliases:
 
 Superseded in part by `ADR-adaptive-assignment-commands`: the command-group part of "Identifiers and commands use `adaptive-dev`" only; the approach value, bundle, entry skill and context file retain `adaptive-dev`.
 
-Superseded in part by `ADR-adaptive-requires-document-system`: the independent docs/catalog installation clause only; adaptive development now installs through the single `devkit-adaptive` requirement, while independence from `devkit-spec` remains in force.
+Superseded in part by `ADR-adaptive-requires-document-system`: the independent docs/catalog installation clause only: adaptive development installs through the single `devkit-adaptive` requirement; independence from `devkit-spec` remains in force.
 
-Superseded in part by `ADR-adaptive-dev-distribution`: owning-wheel clauses of the adaptive-dev bundle only; the approach, assets, presets and unrelated decisions remain in force.
+Superseded in part by `ADR-adaptive-dev-distribution`: the adaptive-dev bundle owning-wheel clauses: its place in devkit-catalog and entry point, content-only catalog ownership and independent docs/catalog installation as far as they concern adaptive-dev, the rejection of a dedicated wheel, and the driver without another release wheel. Other decisions remain in force.
 
-Superseded in part by `ADR-skill-local-swarm-roles`: adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force. `CAP-DLV-adaptive-development` restates the retained support-role limits separately from reusable execution-agent authority and presets.
+Superseded in part by `ADR-skill-local-swarm-roles`: the adaptive-dev role-set and role-authority clauses only; approach, current-context and research-material decisions remain in force.
 
-Superseded in part by `ADR-post-merge-verification`: premerge project/session readiness, touched-Unit integration refusal and provider-activation clauses only; approach policy, Host branch checks, explicit SDD artifact checks and unrelated adoption/research decisions remain.
+Superseded in part by `ADR-post-merge-verification`: the premerge project/session readiness, touched-Unit integration refusal and provider-activation requirements only. Independent Host branch checks, approach policy, explicit SDD artifact checks, history and unrelated adoption/research decisions remain.
 
-Superseded in part by `ADR-skill-local-research-roles`: registered research-role projection and role-policy migration clauses.
+Superseded in part by `ADR-skill-local-research-roles`: the registered research-role projection and role-policy migration clauses only; bundle ownership, optionality and retained materials remain unchanged.
 
 - **Status**: Accepted
 - **Date**: 2026-11-02

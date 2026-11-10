@@ -9,7 +9,7 @@ created_at: 2026-11-05
 
 # [ADR-uiux-improvement-workflow-boundary] Keep UI/UX improvement opt-in and within the project delivery workflow
 
-Superseded in part by `ADR-impeccable-session-authority`: Decision Outcome clause 2 now admits one user-selected, brief-bounded Impeccable session whose changes the coordinator accepts before continuing; its no-policy-change and no-commit, integration or publication authority statements, clauses 1 and 3, and clause 4 for local roles stay in force.
+Superseded in part by `ADR-impeccable-session-authority`: Decision Outcome clause 2 coordinator-only implementation continuation, which now admits one user-selected, brief-bounded Impeccable session under coordinator acceptance. Its authority limitations, clauses 1 and 3, and clause 4 for local roles remain in force.
 
 ## 1. Context & Problem Statement
 

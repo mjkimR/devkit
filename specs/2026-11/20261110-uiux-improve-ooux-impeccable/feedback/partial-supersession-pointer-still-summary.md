@@ -38,4 +38,4 @@ Host commit after handoff: changes one line of the new ADR ("On promotion, this 
 
 ## Disposition
 
-- **Disposition**: `PROP-partial-adr-supersession-statements`: the replaced scope becomes a structured statement in the superseding ADR that handoff copies into the pointer and a rule checks, replacing the guidance-only clarification step.
+- **Disposition**: `SPEC-partial-adr-supersession-statements`: the replaced scope becomes a structured statement in the superseding ADR that handoff copies into the pointer and a rule checks, replacing the guidance-only clarification step.

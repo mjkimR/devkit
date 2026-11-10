@@ -82,6 +82,8 @@ group and no runtime service, scheduler or process runner.
   acceptance of a result whose verification failed.
 - The commands apply under either development approach and write no SDD record.
 
+- Supersedes in part `ADR-adaptive-development-and-research`: the command-group part of "Identifiers and commands use `adaptive-dev`" only; the approach value, bundle, entry skill and context file retain `adaptive-dev`.
+
 ## 5. Consequences
 
 - Positive: resume lists outstanding assignments from recorded state; out-of-scope writes, a moved HEAD and a missing

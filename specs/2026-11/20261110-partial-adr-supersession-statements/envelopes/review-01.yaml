@@ -1,0 +1,28 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:37:41.018660Z'
+status: completed
+summary: 'Two reproduced P2 defects: multiline pointer result locations and frontmatter accepted as a body statement; no scope or migration meaning changes.'
+findings:
+- issue: Wrapped statement text makes subsequent pointer locations incorrect
+  evidence: handoff.py:812 first + 2*i; in-memory two-pointer probe reported second line14 but actual15
+  failure_condition: Several promoted PADRs target one ADR and an earlier payload spans lines
+  suggested_action: Accumulate actual payload newlines and add wrapped multi-pointer regression
+  resolution: open
+  severity: P2
+- issue: YAML frontmatter can satisfy the required body statement
+  evidence: models/supersession.py:30 complete-source visible_lines; summary block produced statement payload with closing YAML delimiter
+  failure_condition: A frontmatter block scalar contains statement-shaped text
+  suggested_action: Scan only body with absolute line numbers and add reader rule and refusal regressions
+  resolution: open
+  severity: P2
+assumptions:
+- Independent emulated reviewer read only assigned worktree; unchanged HEAD and before/after snapshot fcb5c6481d4d35e73ffce2ccfc566e884501be7e.
+checks:
+  tests: PASS 2522 affected unit/integration tests
+  lint: PASS docs/spec lint types and whole rules
+diff_scope:
+  base: 2999c21d4e2bc26e4c6633124afc11c4e50e9144
+  head: c5d8e631cd362a785fa7ac49beb110f03c70cf8c

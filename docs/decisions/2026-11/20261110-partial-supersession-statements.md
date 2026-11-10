@@ -1,16 +1,15 @@
 ---
-id: PADR-partial-supersession-statements
+id: ADR-partial-supersession-statements
 title: Fixed partial-supersession statement in the superseding ADR
 summary: "For partial ADR replacement, we state the replaced clauses once as a fixed Decision Outcome sentence per earlier ADR and repeat that text in the earlier ADR's pointer, to keep both readable and checkable without post-handoff rewrites, accepting two copies a rule keeps equal."
-proposal: PROP-partial-adr-supersession-statements
-# supersedes: [ADR-<slug>]   # an ADR this decision replaces, wholly or in part; name the replaced clauses in Decision Outcome
-status: draft
+proposal: SPEC-partial-adr-supersession-statements
+status: accepted
 created_at: 2026-11-10
 ---
 
-# [PADR-partial-supersession-statements] Fixed partial-supersession statement in the superseding ADR
+# [ADR-partial-supersession-statements] Fixed partial-supersession statement in the superseding ADR
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-10
 - **Involved Components/Capabilities**: `docs/decisions/`, `capabilities/documents/`, `capabilities/governance/`,
   `capabilities/delivery/`, the `adr-consolidation` playbook
@@ -34,7 +33,7 @@ replaced has no fixed form:
   rewritten text.
 
 `SPEC-partial-adr-supersession` excluded a structured field to bound its scope; it kept "the status and a body line".
-`materials/planning-evidence.md` in the proposal holds the inventory and the option comparison.
+`docs/materials/2026-11/20261110-partial-adr-supersession-statements/planning-evidence.md` in the proposal holds the inventory and the option comparison.
 
 ## 2. Decision Drivers
 

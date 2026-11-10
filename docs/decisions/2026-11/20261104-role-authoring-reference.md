@@ -29,10 +29,11 @@ with skill orchestration authoring and can be loaded together only when needed.
 ## 4. Decision Outcome
 
 - `skill-authoring/references/roles.md` owns role placement, bounded delegation and path-resolution authoring;
-  the common instruction and playbook route to it conditionally. This replaces only the guidance-location clauses
-  of `ADR-shared-role-authoring`. → `CAP-HARN-agent-guidance` section 4.3 (SHOULD).
+  the common instruction and playbook route to it conditionally. → `CAP-HARN-agent-guidance` section 4.3 (SHOULD).
 - Existing local-versus-registered criteria, invocation distinctions and permission limits remain unchanged;
   the playbook retains its skill/playbook authoring trigger. → `CAP-HARN-agent-guidance` section 4.3 (SHOULD).
+
+- Supersedes in part `ADR-shared-role-authoring`: the guidance-location clauses for detailed role guidance and the direction of its conditional pointers; other authoring and permission decisions remain unchanged.
 
 ## 5. Consequences
 

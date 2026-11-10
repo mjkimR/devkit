@@ -57,6 +57,8 @@ Option 3 is selected for bounded task continuity and proportionate verification.
 - This partially replaces `ADR-orchestration-workers` only for rejection of unlisted paths that satisfy recorded
   Tier B admission. Its remaining range, sync-output, worktree, Git and host-permission decisions remain in force.
 
+- Supersedes in part `ADR-orchestration-workers`: rejection of unlisted paths that satisfy recorded Tier B admission only. Remaining range, sync-output, worktree, Git and host-permission decisions remain in force.
+
 ## 5. Consequences
 
 Routine adjacent-file misses can finish with a reviewable record. The generic workflow envelope gains an additive

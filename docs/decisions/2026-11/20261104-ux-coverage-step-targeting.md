@@ -57,6 +57,8 @@ Use case first, because the remediation lives there and the UX-document fallback
 
 ---
 
+- Supersedes in part `ADR-ux-screens`: the uncited-step report targeting clause only: the report belongs to a targeted use case, else the first targeted listing UX document; `RULE-ux-links` keeps its existing targeting.
+
 ## 5. Consequences
 
 - **Positive**: a whole-workspace run lists each gap on the use case that owns it; a navigation panel no longer

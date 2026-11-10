@@ -12,7 +12,7 @@ aliases:
 
 # [ADR-test-selection-and-ci] Affected tests locally, one run after each batch, complete CI overnight and at release
 
-Superseded in part by `ADR-post-merge-verification`: For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target.
+Superseded in part by `ADR-post-merge-verification`: permission to leave non-batch integrated-head testing to a later batch or nightly run. Affected selection, full fallback and full nightly/release CI remain.
 
 - **Status**: Accepted
 - **Date**: 2026-11-02

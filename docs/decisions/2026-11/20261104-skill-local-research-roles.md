@@ -29,12 +29,12 @@ compatibility machinery.
 
 ## 4. Decision Outcome
 
-- Deep research ships its four role documents inside the skill and registers no research subagents. This replaces
-  only the registered research-role projection and role-policy migration clauses of
-  `ADR-adaptive-development-and-research`; bundle ownership, optionality and retained materials remain unchanged.
+- Deep research ships its four role documents inside the skill and registers no research subagents. Bundle ownership, optionality and retained materials remain unchanged.
   → `CAP-DLV-deep-research` rule 1 (MUST).
 - A general subagent receives the selected role path and bounded assignment, with a fresh context where supported.
   Role instructions confer no native tool or sandbox settings. → `CAP-DLV-deep-research` rule 11 (MUST).
+
+- Supersedes in part `ADR-adaptive-development-and-research`: the registered research-role projection and role-policy migration clauses only; bundle ownership, optionality and retained materials remain unchanged.
 
 ## 5. Consequences
 

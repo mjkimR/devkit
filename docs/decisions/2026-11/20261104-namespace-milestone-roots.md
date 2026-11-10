@@ -86,6 +86,8 @@ identity, lifecycle and selection as they are.
 
 ---
 
+- Supersedes in part `ADR-roadmap-and-milestones-ledger`: the global-only milestone and deferred per-namespace roadmap clause and the global-root wording for live milestones. Other clauses remain in force; goals remain prose without IDs.
+
 ## 5. Consequences
 
 - **Positive**: a monorepo keeps each package's roadmap beside that package's capabilities and use cases; the global

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import click
 
-from devkit_docs.features.documents.cli.commands import list_cmd, refs_cmd, resolve_cmd
+from devkit_docs.features.documents.cli.commands import list_cmd, refs_cmd, resolve_cmd, supersession_cmd
 from devkit_docs.features.documents.cli.search import search_cmd
 
 DISTRIBUTION = "devkit-docs"
@@ -45,3 +45,5 @@ cli.add_command(resolve_cmd)
 cli.add_command(refs_cmd)
 cli.add_command(list_cmd)
 cli.add_command(search_cmd)
+
+cli.add_command(supersession_cmd)

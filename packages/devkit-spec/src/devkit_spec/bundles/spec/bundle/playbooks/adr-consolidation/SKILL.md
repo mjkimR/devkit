@@ -21,7 +21,7 @@ Read every ADR in scope, superseded ones included (`uv run devkit docs list deci
 - Group ADRs by topic: a group is one decision area a reader looks up, with two or more members.
 - Put a wholly superseded ADR (`superseded_by` in frontmatter) in the group of its superseder.
 - A partial supersession (`supersedes` with a "Superseded in part by" line) may cross groups. Note each crossing pair
-  in the group map; Step 2 handles it.
+  in the group map with `uv run devkit docs supersession <ID>`; Step 2 handles it.
 - Leave out an ADR that contradicts another in-effect ADR or no longer matches the code or the Living Spec, and record
   it with the `spec-feedback` skill.
 - Order members by `created_at`, then supersession order.
@@ -39,8 +39,9 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
 - Frontmatter: `status: accepted`, `created_at` today, `aliases:` every member ID and every alias a member declared;
   no `proposal`. Add `supersedes` only for an ADR kept outside the run that a member partially superseded; list the
   kept ADR there.
-- Section 4 lists only statements in effect, each ending with its source ID in parentheses; a clause a "Superseded
-  in part by" line names is not in effect.
+- Section 4 lists only clauses in effect, each ending with its source ID in parentheses. Read replaced clauses from
+  the superseder's `Supersedes in part` statement and leave them out of the earlier ADR's replacement. Carry each
+  statement as its own item without the source citation other Section 4 items end with.
 - Considered options keep each option a member rejected, labelled by that member. No History section.
 - For a crossing pair, the target's replacement leaves out the replaced clauses. The superseding replacement states
   what it replaced and cites the target's replacement ID.
@@ -52,6 +53,8 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
    If an ADR kept outside the run names a member in `supersedes`, name the member's replacement instead, and add the
    matching "Superseded in part by" line to that replacement. A kept ADR's own "Superseded in part by" line now names
    the member's replacement, which lists it in `supersedes` (Step 2).
+   When a replacement takes over either side, keep the statement and one reciprocal pointer equal in source text,
+   code spans included, after collapsing whitespace.
 2. Replace a retired ID in a `docs/steering/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
 3. Correct every path, test and rule ID in a replacement's Confirmation section that no longer exists; write "Review
    only" when no check exists.

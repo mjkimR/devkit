@@ -14,9 +14,9 @@ aliases:
 
 # [ADR-proposal-acceptance] Proposal acceptance, review reports and proposal records
 
-Superseded in part by `ADR-post-merge-verification`: For integration and tool upgrades, we verify landed content with its resulting runtime after branch checks, to simplify completion and remove old-runtime incompatibility, accepting temporary failures on the target.
+Superseded in part by `ADR-post-merge-verification`: optional same-process acceptance, merge and handoff composition only; `accept_and_handoff` retains authorized effects but yields to Host final verification before a fresh handoff invocation. Other acceptance decisions remain.
 
-Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the viewer exception clause and the native form rendering consequence.
+Superseded in part by `ADR-retire-native-approval-and-moved-ownership-clauses`: the native lifecycle approval clause, the consequence requiring separate live evidence for native form rendering, and the viewer exception clause. Conversational acceptance and the repository viewer protections remain in force.
 
 - **Status**: Accepted
 - **Date**: 2026-10-22

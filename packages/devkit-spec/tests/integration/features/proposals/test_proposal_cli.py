@@ -245,7 +245,10 @@ def test_handoff_reports_the_supersession_pointers_it_wrote(workspace: Path, wri
     padr = workspace / "docs/proposals/PROP-pointed/decisions/PADR-pick.md"
     text = padr.read_text(encoding="utf-8")
     placeholder = next(line for line in text.splitlines() if line.startswith("# supersedes:"))
-    padr.write_text(text.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
+    padr.write_text(
+        text.replace(placeholder, "supersedes: [ADR-old]") + "\nSupersedes in part `ADR-old`: the parser choice.\n",
+        encoding="utf-8",
+    )
     _accept(workspace, "pointed")
 
     result = _proposal(workspace, "handoff", "pointed")
@@ -257,7 +260,7 @@ def test_handoff_reports_the_supersession_pointers_it_wrote(workspace: Path, wri
     assert (
         (workspace / old)
         .read_text(encoding="utf-8")
-        .endswith("# [ADR-old] Old\n\nSuperseded in part by `ADR-pick`: For X, we pick, to win, accepting Y.\n")
+        .endswith("# [ADR-old] Old\n\nSuperseded in part by `ADR-pick`: the parser choice.\n")
     )
 
     write(old, "---\nid: ADR-old\nstatus: accepted\n---\n\n# [ADR-old] Old\n")
@@ -266,7 +269,10 @@ def test_handoff_reports_the_supersession_pointers_it_wrote(workspace: Path, wri
     padr = workspace / "docs/proposals/PROP-pointed-json/decisions/PADR-pick-again.md"
     text = padr.read_text(encoding="utf-8")
     placeholder = next(line for line in text.splitlines() if line.startswith("# supersedes:"))
-    padr.write_text(text.replace(placeholder, "supersedes: [ADR-old]"), encoding="utf-8")
+    padr.write_text(
+        text.replace(placeholder, "supersedes: [ADR-old]") + "\nSupersedes in part `ADR-old`: the parser choice.\n",
+        encoding="utf-8",
+    )
     _accept(workspace, "pointed-json")
     result = _proposal(workspace, "handoff", "pointed-json", "--format", "json")
     assert result.exit_code == 0, result.output

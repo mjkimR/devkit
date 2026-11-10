@@ -51,4 +51,4 @@ commit before a worker starts."
 
 ## Disposition
 
-- **Disposition**: `PROP-partial-adr-supersession-statements`: Q6 settles whether a post-handoff pointer clarification remains once handoff derives the pointer, and what the handoff docstrings and post-handoff reference then say.
+- **Disposition**: `SPEC-partial-adr-supersession-statements`: Q6 settles whether a post-handoff pointer clarification remains once handoff derives the pointer, and what the handoff docstrings and post-handoff reference then say.
