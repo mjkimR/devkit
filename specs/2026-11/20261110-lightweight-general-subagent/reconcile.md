@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-lightweight-general-subagent
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-agent-projections.md
     resolution: modified
