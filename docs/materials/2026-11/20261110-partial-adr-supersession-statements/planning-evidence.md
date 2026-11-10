@@ -13,7 +13,7 @@
   every PADR under `docs/proposals/`. To reproduce the counts: for each ADR, take each `supersedes` entry (a list or
   a single ID) that resolves to an ADR whose status is not `superseded` (a pair), then read the earlier ADR's visible
   "Superseded in part by" lines that name the later ADR.
-- `envelopes/scout-01.yaml` holds the command and viewer evidence of section 6.
+- historical Git `17130a880a069985f960e7eef3fe477af923dc33:docs/proposals/PROP-partial-adr-supersession-statements/envelopes/scout-01.yaml` holds the command and viewer evidence of section 6.
 - Correction to `materials/supersession-pointer-attempt.md`: 18 ADRs carry a "Superseded in part by" line, not 17.
 
 ## 2. Why the earlier spec excluded a structured field (Q1)
@@ -120,7 +120,7 @@ For each of the 21 pairs whose pointer below the heading is no summary copy, the
 Decision Outcome items of the later ADR that state the replaced scope (for `ADR-selective-package-versions` over
 `ADR-package-ownership-and-release-version`, the item that says "the old ADR"). The comparison is by named clause
 group: a source that names the same clauses in other words or in more detail counts as the same. The planning
-worker read all 21; `envelopes/scout-02.yaml` holds a separate reading of the 20 pairs without a user decision, made
+worker read all 21; historical Git `17130a880a069985f960e7eef3fe477af923dc33:docs/proposals/PROP-partial-adr-supersession-statements/envelopes/scout-02.yaml` holds a separate reading of the 20 pairs without a user decision, made
 without the first result, and it names the same differing pair.
 
 Two pairs name different clauses:
@@ -180,7 +180,7 @@ Pairs read as the same scope although the texts differ in detail:
 
 ## 6. Command and viewer evidence (Q5)
 
-From `envelopes/scout-01.yaml`:
+From historical Git `17130a880a069985f960e7eef3fe477af923dc33:docs/proposals/PROP-partial-adr-supersession-statements/envelopes/scout-01.yaml`:
 
 - `devkit docs` has four subcommands (`resolve`, `refs`, `list`, `search`). `refs` lists a pointer as one body
   reference among the others: `devkit docs refs ADR-test-selection-and-ci --direction in` returns 19 documents, all
