@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: User approved separating worker-native synchronous checks from Host-owned post-integration
+  asynchronous execution and documenting portable client adoption while preserving
+  native verification requirements.
+at: '2026-11-10T04:15:07.221369Z'
