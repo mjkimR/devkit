@@ -1,5 +1,7 @@
 <script lang="ts">
 	import FrontmatterHeader from './FrontmatterHeader.svelte';
+	import SupersessionSummary from './SupersessionSummary.svelte';
+	import type { RepositoryDocument } from '../../api/documents';
 	import MarkdownArticle from './MarkdownArticle.svelte';
 	import RawViewer from './RawViewer.svelte';
 	import EmptyPlaceholder from './EmptyPlaceholder.svelte';
@@ -11,7 +13,13 @@
 		error = null,
 		rawMode = false,
 		theme = 'dark',
-		diagramAction = undefined
+		diagramAction = undefined,
+		relationSubject = null,
+		relationDocuments = [],
+		relationLoading = false,
+		relationErrors = [],
+		onRelationOpen = () => {},
+		onReloadRelations = () => {}
 	}: {
 		currentBlob?: {
 			path: string;
@@ -24,6 +32,12 @@
 		rawMode?: boolean;
 		theme?: 'dark' | 'light';
 		diagramAction?: (node: HTMLElement) => { destroy: () => void };
+		relationSubject?: RepositoryDocument | null;
+		relationDocuments?: RepositoryDocument[];
+		relationLoading?: boolean;
+		relationErrors?: string[];
+		onRelationOpen?: (path: string) => void;
+		onReloadRelations?: () => void;
 	} = $props();
 </script>
 
@@ -49,6 +63,14 @@
 			{#if rawMode}
 				<RawViewer content={currentBlob.content} />
 			{:else}
+				{#if relationSubject}<SupersessionSummary
+						subject={relationSubject}
+						documents={relationDocuments}
+						loading={relationLoading}
+						errors={relationErrors}
+						onOpen={onRelationOpen}
+						onReload={onReloadRelations}
+					/>{/if}
 				{#key `${currentBlob.path}-${theme}`}
 					<MarkdownArticle html={currentBlob.html} {diagramAction} />
 				{/key}

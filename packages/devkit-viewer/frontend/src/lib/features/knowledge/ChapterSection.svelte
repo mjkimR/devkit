@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RepositoryDocument } from '../../api/documents';
 	import { documentAnchor, bookGroup } from '../../api/documents';
+	import SupersessionSummary from '../document/SupersessionSummary.svelte';
 
 	let {
 		doc,
@@ -10,7 +11,12 @@
 		lazyDiagrams,
 		trackHeading,
 		sourceLabel = undefined,
-		onOpen
+		onOpen,
+		documents = [],
+		relationLoading = false,
+		relationErrors = [],
+		onRelationOpen = onOpen,
+		onReloadRelations = () => {}
 	}: {
 		doc: RepositoryDocument;
 		html: string;
@@ -21,6 +27,11 @@
 		/** The Planning source a document was read from; the Files tab would show the checkout copy instead. */
 		sourceLabel?: string;
 		onOpen: (path: string) => void;
+		documents?: RepositoryDocument[];
+		relationLoading?: boolean;
+		relationErrors?: string[];
+		onRelationOpen?: (path: string) => void;
+		onReloadRelations?: () => void;
 	} = $props();
 
 	const fileLabel = (path: string) =>
@@ -47,6 +58,14 @@
 			<button onclick={() => onOpen(doc.path)}>View raw</button>
 		{/if}
 	</header>
+	<SupersessionSummary
+		subject={doc}
+		{documents}
+		loading={relationLoading}
+		errors={relationErrors}
+		onOpen={onRelationOpen}
+		onReload={onReloadRelations}
+	/>
 	{#key `${doc.path}-${branch}-${theme}-${doc.raw}`}
 		<article class="markdown-body" use:lazyDiagrams use:trackHeading>
 			{@html html}

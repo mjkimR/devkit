@@ -158,3 +158,89 @@ describe('KnowledgeViews Planning overlay', () => {
 		expect(screen.queryByText('worktree plan-a')).toBeNull();
 	});
 });
+
+describe('Read decision supersession', () => {
+	function decisions(): RepositoryDataSource {
+		const files: Record<string, string> = {
+			'docs/packages/a/decisions/old.md':
+				'---\nid: ADR-old\ntitle: Old decision\nstatus: accepted\n---\n# Old decision',
+			'docs/packages/b/decisions/new.md':
+				'---\nid: ADR-new\ntitle: New decision\nstatus: accepted\nsupersedes: ADR-old\n---\n# New decision\n\nSupersedes in part `ADR-old`: old clause.'
+		};
+		const listing = (root: string) => ({
+			items: Object.keys(files)
+				.filter((path) => path.startsWith(`${root}/`))
+				.map((path) => ({ path, name: path.split('/').at(-1)!, type: 'blob' }))
+		});
+		return {
+			info: async () => ({ default_branch: 'main' }),
+			tree: vi.fn(async (root) => listing(root)),
+			treeRecursive: vi.fn(async (root) => listing(root)),
+			blob: vi.fn(async (path) => ({ path, content: files[path], encoding: 'utf-8' }))
+		};
+	}
+	it('reuses its index and reveals cross-namespace related decisions in Read', async () => {
+		const source = decisions(),
+			onOpen = vi.fn();
+		render(KnowledgeViews, { ...props(source), view: 'book', bookRequested: true, onOpen });
+		await screen.findAllByText('old clause.');
+		expect(source.treeRecursive).toHaveBeenCalledTimes(2);
+		await fireEvent.change(screen.getByRole('combobox', { name: 'Scope' }), {
+			target: { value: 'a' }
+		});
+		expect(document.querySelectorAll('section.chapter')).toHaveLength(1);
+		await fireEvent.click(screen.getByRole('link', { name: /ADR-new — New decision/ }));
+		await waitFor(() => expect(document.querySelectorAll('section.chapter')).toHaveLength(2));
+		expect(onOpen).not.toHaveBeenCalled();
+		expect(source.treeRecursive).toHaveBeenCalledTimes(2);
+	});
+	it('labels a Planning PADR proposed and opens checkout target via Files callback', async () => {
+		const source = decisions();
+		const proposal =
+			'---\nid: PROP-test\ntitle: Test proposal\nstatus: reviewing\n---\n# Test proposal';
+		const padr =
+			'---\nid: PADR-test\ntitle: Test decision\nsupersedes: ADR-old\n---\nSupersedes in part `ADR-old`: proposed scope.';
+		source.planningProposals = vi.fn(async () => ({
+			sources: [
+				{
+					id: 'worktree:plan-test',
+					kind: 'worktree' as const,
+					label: 'worktree plan-test',
+					slug: 'test'
+				}
+			],
+			items: [
+				{
+					source: 'worktree:plan-test',
+					path: 'docs/proposals/PROP-test/proposal.md',
+					content: proposal,
+					encoding: 'utf-8'
+				}
+			],
+			errors: []
+		}));
+		source.planningTree = vi.fn(async () => ({
+			items: [
+				{ path: 'docs/proposals/PROP-test/proposal.md', name: 'proposal.md', type: 'blob' },
+				{
+					path: 'docs/proposals/PROP-test/decisions/PADR-test.md',
+					name: 'PADR-test.md',
+					type: 'blob'
+				}
+			]
+		}));
+		source.planningBlob = vi.fn(async (_source, path) => ({
+			path,
+			content: path.endsWith('proposal.md') ? proposal : padr,
+			encoding: 'utf-8'
+		}));
+		const onOpen = vi.fn();
+		render(KnowledgeViews, { ...props(source), onOpen });
+		await fireEvent.click(await screen.findByText('Test proposal'));
+		await fireEvent.click(await screen.findByRole('button', { name: 'decisions/PADR-test.md' }));
+		await screen.findByText('Proposed supersession');
+		expect(document.querySelector('.source-badge')?.textContent).toBe('worktree plan-test');
+		await fireEvent.click(screen.getByRole('link', { name: /ADR-old — Old decision/ }));
+		expect(onOpen).toHaveBeenCalledWith('docs/packages/a/decisions/old.md');
+	});
+});

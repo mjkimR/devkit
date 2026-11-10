@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { marked } from 'marked';
+	import { indexDocuments, parseBlob, type DocumentIndex } from './api/documents';
+	import { clearRepositoryCache } from './api/cache';
+	import { isDecision } from './features/document/supersession';
 	import DOMPurify from 'dompurify';
 	import { untrack, type Snippet } from 'svelte';
 
@@ -62,8 +65,15 @@
 		}
 	});
 
-	let view = $state<'dashboard' | 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>(
-		'dashboard'
+	type ViewerView = 'dashboard' | 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared';
+	let view = $state<ViewerView>(
+		untrack(() =>
+			['dashboard', 'files', 'book', 'proposals', 'specs', 'roadmap', 'shared'].includes(
+				initialView
+			)
+				? (initialView as ViewerView)
+				: 'dashboard'
+		)
 	);
 	let currentPath = $state('docs/');
 	let selectedSharedSlug = $state('');
@@ -90,6 +100,42 @@
 	let generation = 0;
 	let repoInfo = $state<RepositoryInfo | null>(null);
 	let fullscreenSvg = $state<string | null>(null);
+
+	let relationIndex = $state<DocumentIndex>({ documents: [], errors: [] });
+	let relationLoading = $state(false);
+	let relationReload = $state(0);
+	const relationSubject = $derived(
+		currentBlob ? parseBlob(currentBlob.path, currentBlob.content, 'utf-8') : null
+	);
+	$effect(() => {
+		const repository = source,
+			ref = branch,
+			subject = relationSubject;
+		const wanted = view === 'files' && !rawMode && isDecision(subject);
+		relationReload;
+		const controller = new AbortController();
+		relationIndex = { documents: [], errors: [] };
+		relationLoading = Boolean(repository && wanted);
+		if (repository && wanted)
+			void indexDocuments(repository, ref, controller.signal)
+				.then((result) => {
+					if (!controller.signal.aborted) {
+						relationIndex = result;
+						relationLoading = false;
+					}
+				})
+				.catch((error: unknown) => {
+					if (!controller.signal.aborted) {
+						relationIndex = { documents: [], errors: [String(error)] };
+						relationLoading = false;
+					}
+				});
+		return () => controller.abort();
+	});
+	function reloadRelations() {
+		if (source) clearRepositoryCache(source);
+		relationReload++;
+	}
 
 	function openFullscreen(svg: string) {
 		fullscreenSvg = svg;
@@ -135,7 +181,9 @@
 	// switches and holds only for the source and branch it was made for, so a switch drops it in the same update,
 	// before any view could index the new ref. A host deep link to a file under docs/ is the request.
 	let bookRequest = $state.raw<{ source: RepositoryDataSource | null; branch: string } | null>(
-		null
+		untrack(() =>
+			initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath) ? { source, branch } : null
+		)
 	);
 	const bookRequested = $derived(bookRequest?.source === source && bookRequest?.branch === branch);
 	const setBookRequested = (requested: boolean) => {
@@ -386,6 +434,12 @@
 					{rawMode}
 					theme={themeState.current}
 					diagramAction={diagramRenderer}
+					{relationSubject}
+					relationDocuments={relationIndex.documents}
+					{relationLoading}
+					relationErrors={relationIndex.errors}
+					onRelationOpen={(path) => navigateTo(path, false)}
+					onReloadRelations={reloadRelations}
 				/>
 			</div>
 		</div>
