@@ -34,9 +34,11 @@ def test_worktree_fields_and_unknown_keys() -> None:
         b"ignored before\0worktree /a\0HEAD abc\0branch refs/heads/main\0future value\0\0"
         b"worktree /b\0HEAD abc\0detached\0locked\0prunable gone\0\0"
         b"worktree /c\nd\0bare\0\0"
+        b"worktree /e\xff\0HEAD abc\0detached\0\0"
     )
     assert parse_worktree_records(raw) == [
         WorktreeRecord(Path("/a"), "abc", "refs/heads/main"),
         WorktreeRecord(Path("/b"), "abc", None, detached=True, locked="", prunable="gone"),
         WorktreeRecord(Path("/c\nd"), bare=True),
+        WorktreeRecord(Path(b"/e\xff".decode("utf-8", "surrogateescape")), "abc", None, detached=True),
     ]

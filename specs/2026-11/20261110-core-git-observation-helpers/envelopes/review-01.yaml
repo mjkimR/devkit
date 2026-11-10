@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:11:07.576706Z'
+status: completed
+summary: AC-01..AC-10 reviewed over 36 files; call sites preserve behavior; AC-05/06/08/09 tests fail on old code; AC-07 test does not
+findings:
+- issue: 'The AC-07 regression test cannot fail on the pre-change code and no test pins non-UTF-8 decoding of a worktree path: it patches devkit_core.core.git.run_git, which the old configuration.py never called, and asserts only the later refusal.'
+  evidence: packages/devkit-mcp/tests/integration/features/runtime/test_runtime.py:93-108; packages/devkit-core/tests/unit/core/test_git_observation.py:33-42
+  failure_condition: Reverting configuration.py to its strict .decode() over its own run_git, or mis-decoding a non-UTF-8 worktree path in parse_worktree_records, leaves every test passing.
+  suggested_action: Assert inside the mcp test that the injected listing was read; add a parse_worktree_records unit case with a non-UTF-8 path that round-trips through surrogateescape.
+  resolution: open
+  severity: P2
+checks:
+  tests: PASS just test-affected --base 1f8e0954 mode=full 6520 passed 4 skipped; just test-dist 1350 passed; --tier e2e 355 passed 13 skipped
+  lint: PASS just lint-check, just check, just rules-check exit 0
+diff_scope:
+  base: 1f8e0954cd2bd25cb93f0c0907e852440b2ba73f
+  head: 724c2f4961571dc24edd4c8a8e93f20bcc3bfbb7
