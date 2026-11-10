@@ -22,7 +22,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
-from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git, run_git_text
+from devkit_core.core import (
+    FrontmatterError,
+    GitError,
+    is_safe_relpath,
+    normalize_relpath,
+    run_git,
+    run_git_text,
+    worktree_records,
+)
 from devkit_core.core.frontmatter import parse
 from devkit_docs.features.governance import explicitly_targeted
 
@@ -128,9 +136,12 @@ def _integration_base(root: Path) -> str | None:
         recorded = ""
     if recorded:
         return recorded
-    listing = _git(root, "worktree", "list", "--porcelain") or ""
-    first = next((line for line in listing.splitlines() if line.startswith("branch ")), "")
-    base_branch = first.removeprefix("branch ").removeprefix("refs/heads/")
+    try:
+        listing = worktree_records(root)
+    except GitError:
+        listing = []
+    first = next((record.branch for record in listing if record.branch), "")
+    base_branch = first.removeprefix("refs/heads/")
     if base_branch and base_branch != branch:
         return base_branch
     remote_head = _git(root, "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD")

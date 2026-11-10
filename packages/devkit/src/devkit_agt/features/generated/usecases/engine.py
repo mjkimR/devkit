@@ -27,12 +27,12 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import ArgumentError, GitError, run_git
+from devkit_core.core import ArgumentError, GitError, run_git, status_records
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
-from devkit_agt.features.compact import run_command, status_records
+from devkit_agt.features.compact import run_command
 from devkit_agt.features.generated.models.errors import (
     CommandFailedError,
     ConflictsRemainWarning,
@@ -192,9 +192,8 @@ def snapshot(top: Path) -> dict[str, tuple[str, str]]:
     Comparing two snapshots names exactly the paths a command changed, also among files that were already dirty.
     """
     found: dict[str, tuple[str, str]] = {}
-    for status, raw in status_records(run_git(top, "status", "--porcelain=v1", "-z", "--untracked-files=all")):
-        path = _decode(raw)
-        found[path] = (_decode(status), _digest(top / path))
+    for record in status_records(top, optional_locks=True):
+        found[record.path] = (record.code, _digest(top / record.path))
     return found
 
 

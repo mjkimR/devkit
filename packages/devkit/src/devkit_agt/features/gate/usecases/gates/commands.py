@@ -32,9 +32,9 @@ import os
 from dataclasses import dataclass, field
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
-from devkit_core.core.git import run_git
+from devkit_core.core.git import status_records
 
-from devkit_agt.features.compact import CommandRun, run_command, status_records
+from devkit_agt.features.compact import CommandRun, run_command
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
 from devkit_agt.features.gate.models.errors import GateFindingsError, VerifyNotRunError, VerifyUnstagedNotice
@@ -53,9 +53,9 @@ class VerifyCommandsSettings:
 
 def _unstaged(ctx: GateContext) -> list[str]:
     """Tracked files with unstaged changes and untracked files, as Git reports them for this commit's index."""
-    raw = run_git(ctx.repo_root, "status", "--porcelain=v1", "-z", "--untracked-files=normal")
+    records = status_records(ctx.repo_root, untracked="normal", optional_locks=True)
     # Y is the work tree's column; "??" is untracked.
-    return [os.fsdecode(path) for status, path in status_records(raw) if status[1:2] != b" "]
+    return [record.path for record in records if record.code[1] != " "]
 
 
 def _not_run(run: CommandRun) -> bool:

@@ -4,8 +4,9 @@
 ``data.decode("utf-8", errors="surrogateescape")``, which keeps every name
 round-trippable. ``run_git_text`` applies that rule for callers that want text,
 ``run_git_result`` serves commands whose nonzero exit is an answer, and
-``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. These generic
-primitives live here; queries that encode one package's policy live in that package
+``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. ``worktree_records`` and
+``status_records`` read ``git worktree list --porcelain -z`` and ``git status --porcelain=v1 -z`` into records;
+their pure parsers serve callers that run Git themselves. These generic primitives live here; queries that encode one package's policy live in that package
 and are built on them. ``repository_facts`` scopes a memo of where a repository is.
 """
 
@@ -16,6 +17,7 @@ import subprocess
 from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
+from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple
 
@@ -195,3 +197,129 @@ def is_ancestor(cwd: Path, ancestor: str, descendant: str) -> bool:
             return False
         raise
     return True
+
+
+def _decode(raw: bytes) -> str:
+    return raw.decode("utf-8", errors="surrogateescape")
+
+
+@dataclass(frozen=True)
+class WorktreeRecord:
+    """One worktree of ``git worktree list --porcelain``.
+
+    ``path`` is Git's path, not resolved. ``head`` is Git's HEAD (all zeros for an unborn branch; ``None`` when Git
+    prints none, as for a bare repository). ``branch`` is the full ref, ``None`` when detached or bare. ``locked``
+    and ``prunable`` are ``None`` when absent, otherwise the reason (``""`` when Git gives none).
+    """
+
+    path: Path
+    head: str | None = None
+    branch: str | None = None
+    bare: bool = False
+    detached: bool = False
+    locked: str | None = None
+    prunable: str | None = None
+
+
+@dataclass(frozen=True)
+class StatusRecord:
+    """One record of ``git status --porcelain=v1 -z``.
+
+    ``code`` is the two-letter ``XY``; ``path`` is Git's path (an untracked directory keeps its trailing ``/``);
+    ``original`` is the source of a rename or copy (``R`` or ``C`` in either column), otherwise ``None``.
+    """
+
+    code: str
+    path: str
+    original: str | None = None
+
+
+def parse_worktree_records(raw: bytes) -> list[WorktreeRecord]:
+    """The records of ``git worktree list --porcelain -z`` output, in Git's order (the first is the main worktree).
+
+    Paths decode as UTF-8 with ``surrogateescape``. Fields before the first ``worktree`` field and unknown keys are
+    ignored; empty output is ``[]``.
+    """
+    records: list[WorktreeRecord] = []
+    fields: dict[str, str] | None = None
+
+    def close() -> None:
+        if fields is not None:
+            records.append(
+                WorktreeRecord(
+                    path=Path(fields["worktree"]),
+                    head=fields.get("HEAD"),
+                    branch=fields.get("branch"),
+                    bare="bare" in fields,
+                    detached="detached" in fields,
+                    locked=fields.get("locked"),
+                    prunable=fields.get("prunable"),
+                )
+            )
+
+    for item in _decode(raw).split("\0"):
+        key, _, value = item.partition(" ")
+        if key == "worktree":
+            close()
+            fields = {"worktree": value}
+        elif item and fields is not None:
+            fields.setdefault(key, value)
+    close()
+    return records
+
+
+def worktree_records(cwd: Path, *, deadline: Deadline | None = None) -> list[WorktreeRecord]:
+    """Run ``git worktree list --porcelain -z`` in ``cwd`` and parse it; raises as ``run_git`` does."""
+    return parse_worktree_records(run_git(cwd, "worktree", "list", "--porcelain", "-z", deadline=deadline))
+
+
+def parse_status_records(raw: bytes) -> list[StatusRecord]:
+    """The records of ``git status --porcelain=v1 -z`` output, in Git's order.
+
+    A rename or copy (``R`` or ``C`` in either column) is followed by its source field, kept as ``original``; a
+    missing source field raises ``GitError``. Empty fields (the trailing one) yield no record. Paths decode as UTF-8
+    with ``surrogateescape``.
+    """
+    records: list[StatusRecord] = []
+    fields = iter(_decode(raw).split("\0"))
+    for entry in fields:
+        if not entry:
+            continue
+        if len(entry) < 4 or entry[2] != " ":
+            raise GitError(f"malformed git status record: {entry!r}")
+        code, path = entry[:2], entry[3:]
+        original = None
+        if "R" in code or "C" in code:
+            original = next(fields, "")
+            if not original:
+                raise GitError(f"malformed git status record: {entry!r} lacks the source of its rename or copy")
+        records.append(StatusRecord(code, path, original))
+    return records
+
+
+def status_records(
+    cwd: Path,
+    *pathspecs: str,
+    untracked: str = "all",
+    renames: bool = True,
+    optional_locks: bool = False,
+    ignore_submodules: str | None = None,
+    deadline: Deadline | None = None,
+) -> list[StatusRecord]:
+    """Run ``git status --porcelain=v1 -z`` in ``cwd`` and parse it; raises as ``run_git`` does.
+
+    ``untracked`` is ``--untracked-files``'s value; ``renames=False`` passes ``--no-renames``;
+    ``optional_locks=False`` passes ``--no-optional-locks`` (the index is not refreshed on disk);
+    ``ignore_submodules`` is ``--ignore-submodules``'s value when given; ``pathspecs`` follow ``--``.
+    """
+    args = [
+        *(() if optional_locks else ("--no-optional-locks",)),
+        "status",
+        "--porcelain=v1",
+        "-z",
+        f"--untracked-files={untracked}",
+        *(() if renames else ("--no-renames",)),
+        *(() if ignore_submodules is None else (f"--ignore-submodules={ignore_submodules}",)),
+        *(("--", *pathspecs) if pathspecs else ()),
+    ]
+    return parse_status_records(run_git(cwd, *args, deadline=deadline))

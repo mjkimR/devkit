@@ -53,8 +53,9 @@ The group is `devkit adaptive assignment`, mounted by the entry point `adaptive 
 - performs no approach check and needs no bundle selection and no `.devkit/` directory.
 
 IDs match `^[a-z0-9][a-z0-9-]{0,39}$`. Revisions are stored as full commit IDs, resolved with
-`git rev-parse --verify --quiet <rev>^{commit}`. Timestamps are UTC, ISO 8601 with seconds and a `Z` suffix. Paths
-are compared after symlink resolution.
+`git rev-parse --verify --quiet --end-of-options <rev>^{commit}`; output other than a full hexadecimal commit ID (a
+leading `^` prints `^<id>`) is unresolved. Timestamps are UTC, ISO 8601 with seconds and a `Z` suffix. Paths are
+compared after symlink resolution.
 
 **`new`** records an assignment with status `open`.
 

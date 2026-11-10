@@ -108,6 +108,17 @@ def test_source_still_refuses_a_non_regular_material(repo):
         reports.source(root, "example", git(root, "rev-parse", "HEAD"))
 
 
+def test_dirty_source_names_real_paths_and_both_rename_names(repo):
+    root, _sha = repo
+    git(root, "mv", ".gitignore", "ignore.txt")
+    (root / 'quo"te.txt').write_text("x\n")
+    result = _cli("example", "--workspace-root", str(root), "--format", "json")
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "SPEC_REPORT_SOURCE_DIRTY"
+    assert error["advisory"]["target_files"] == ["ignore.txt", ".gitignore", 'quo"te.txt']
+
+
 def test_report_refusals_have_their_own_codes_and_targets(repo):
     root, _sha = repo
     (root / "scratch.txt").write_text("uncommitted\n")

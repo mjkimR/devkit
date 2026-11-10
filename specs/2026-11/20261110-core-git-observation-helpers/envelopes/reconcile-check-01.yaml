@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:12:06.580323Z'
+status: completed
+summary: 'reconcile-reviewer: both capability targets match the code; no other docs/ text describes a removed or changed parser; one P3 gap in the core quick reference'
+findings:
+- issue: docs/development/reference/core.md says parse_status_records raises GitError only for a rename or copy without its source field; any other malformed non-empty record also raises GitError.
+  evidence: packages/devkit-core/src/devkit_core/core/git.py:288-289; docs/development/reference/core.md:23
+  failure_condition: A caller relying on core.md expects a short or malformed field to be skipped and gets GitError.
+  suggested_action: Say that a malformed record, a rename or copy without its source field included, raises GitError.
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: 1f8e0954cd2bd25cb93f0c0907e852440b2ba73f
+  head: 724c2f4961571dc24edd4c8a8e93f20bcc3bfbb7
+activity_effort: medium

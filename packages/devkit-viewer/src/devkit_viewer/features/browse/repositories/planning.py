@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import run_git
+from devkit_core.core.git import parse_worktree_records, run_git
 
 from devkit_viewer.features.browse.models.errors import (
     ReadError,
@@ -60,21 +60,14 @@ def _slug(value: str) -> str | None:
 
 def _worktrees(root: Path) -> tuple[list[tuple[Path, str]], str | None]:
     """``(directory, slug)`` of every other existing worktree on a ``plan-*`` branch, and the checkout's own slug."""
-    output = run_git(root, "worktree", "list", "--porcelain").decode("utf-8", errors="surrogateescape")
     found: list[tuple[Path, str]] = []
     own: str | None = None
-    for block in output.split("\n\n"):
-        path = branch = ""
-        for line in block.splitlines():
-            if line.startswith("worktree "):
-                path = line.removeprefix("worktree ")
-            elif line.startswith("branch "):
-                branch = line.removeprefix("branch ")
-        match = _LOCAL.fullmatch(branch)
+    for record in parse_worktree_records(run_git(root, "worktree", "list", "--porcelain", "-z")):
+        match = _LOCAL.fullmatch(record.branch or "")
         slug = _slug(match["slug"]) if match else None
-        if not path or slug is None:
+        if slug is None:
             continue
-        directory = Path(path)
+        directory = record.path
         try:
             if directory.resolve() == root:
                 own = slug

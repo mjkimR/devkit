@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-core-git-observation-helpers
+by: user
+at: '2026-11-10T05:48:40.856321Z'

@@ -13,7 +13,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import FrontmatterError, run_git, run_git_text
+from devkit_core.core import FrontmatterError, run_git, run_git_text, status_records
 
 from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice, WorkerScopeUnresolvedError
 from devkit_spec.features.worker.services.extensions import inspect_extensions
@@ -123,23 +123,13 @@ def run_check(root: Path, args: Sequence[str]) -> dict[str, Any]:
 
 
 def dirty_paths(root: Path) -> list[str]:
-    # -z avoids quoting and also carries both sides of rename/copy entries.
-    values = os.fsdecode(
-        run_git(root, "--no-optional-locks", "status", "--porcelain=v1", "-z", "--untracked-files=all")
-    ).split("\0")
-    paths = []
-    index = 0
-    while index < len(values):
-        item = values[index]
-        index += 1
-        if not item:
-            continue
-        paths.append(item[3:])
-        if "R" in item[:2] or "C" in item[:2]:
-            if index < len(values) and values[index]:
-                paths.append(values[index])
-            index += 1
-    return sorted(set(paths))
+    # Both sides of a rename or copy are dirty.
+    paths = set()
+    for record in status_records(root):
+        paths.add(record.path)
+        if record.original is not None:
+            paths.add(record.original)
+    return sorted(paths)
 
 
 class InspectWorkerUseCase(BaseUseCase):

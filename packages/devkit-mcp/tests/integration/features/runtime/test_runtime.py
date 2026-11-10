@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from types import SimpleNamespace
@@ -88,6 +89,31 @@ def test_cloud_blocks_terminal_capture(clones):
         cloud(task)
         with pytest.raises(McpInteractiveError):
             capture_terminal_removal(task)
+
+
+def test_non_utf8_worktree_path_is_read(clones, monkeypatch):
+    import devkit_core.core.git as core_git
+
+    base, _ = clones
+    original = core_git.run_git
+    read = []
+
+    def listing(cwd, *args, **kwargs):
+        output = original(cwd, *args, **kwargs)
+        if args[:2] == ("worktree", "list"):
+            output += b"worktree /nonexistent/\xff\0HEAD " + b"0" * 40 + b"\0detached\0\0"
+            read.append(output)
+        return output
+
+    monkeypatch.setattr(core_git, "run_git", listing)
+    # The listing with the non-UTF-8 path is read (the base checkout stays first); the absent interpreter is the
+    # refusal.
+    with pytest.raises(configuration.RuntimeUnavailable, match="no verified retained interpreter"):
+        configuration.BuildLaunchDescriptorUseCase().execute(base, executable="/nonexistent/python")
+    assert len(read) == 1
+    records = core_git.parse_worktree_records(read[0])
+    assert records[0].path.resolve() == base.resolve()
+    assert os.fsencode(records[-1].path) == b"/nonexistent/\xff"
 
 
 def test_linked_interpreter_lexical_path_is_rejected(clones):

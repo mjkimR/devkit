@@ -14,11 +14,13 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit_core.core import StatusRecord, status_records
 from spec_support.delivery import _cli, _complete_proposal, _make_synced_repo, _start_worktree
 from spec_support.scope import git
 
 from devkit_spec.features.delivery.cli.proposals import proposal_group
-from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
+from devkit_spec.features.delivery.usecases import native_handoff
+from devkit_spec.features.delivery.usecases.native_handoff import HandoffBaseDirtyError, HandoffUseCase
 
 SUBJECT = "spec: hand off idea to Development"
 
@@ -102,6 +104,30 @@ def test_the_result_commit_equals_head_and_the_base_is_untouched(base: Path) -> 
     assert result["commit"] == git(_worktree(base), "rev-parse", "HEAD")
     assert result["errors"] == [] and result["next_command"].startswith("uv run devkit workflow next --unit specs/")
     assert git(base, "rev-parse", "HEAD") == reviewed and git(base, "status", "--porcelain") == ""
+
+
+def test_a_dirty_base_names_real_paths_and_both_rename_names(base: Path) -> None:
+    (base / "old.txt").write_text("content\n" * 20)
+    git(base, "add", "old.txt")
+    git(base, "commit", "-q", "-m", "old")
+    git(base, "mv", "old.txt", "new.txt")
+    (base / 'quo"te.txt').write_text("x\n")
+
+    with pytest.raises(HandoffBaseDirtyError) as caught:
+        HandoffUseCase(base).execute("idea", "low")
+
+    assert caught.value.code == "SPEC_HANDOFF_BASE_DIRTY"
+    assert list(caught.value.target_files) == ["new.txt", "old.txt", 'quo"te.txt']
+
+
+def test_dirty_paths_read_a_worktree_column_rename(base: Path) -> None:
+    (base / "old.txt").write_text("content\n" * 20)
+    git(base, "add", "old.txt")
+    git(base, "commit", "-q", "-m", "old")
+    (base / "old.txt").rename(base / "new.txt")
+    git(base, "add", "-N", "new.txt")
+    assert status_records(base, untracked="no") == [StatusRecord(" R", "new.txt", "old.txt")]  # worktree column only
+    assert native_handoff._dirty_paths(base) == ["new.txt", "old.txt"]
 
 
 # AC-02

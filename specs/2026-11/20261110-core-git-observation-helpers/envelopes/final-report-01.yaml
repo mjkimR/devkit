@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:15:48.580190Z'
+status: completed
+summary: devkit_core.core gains WorktreeRecord/StatusRecord with parse_worktree_records/worktree_records and parse_status_records/status_records; every in-scope worktree-list and status parser in devkit_agt, devkit_dist, devkit_spec, devkit_adaptive, devkit_mcp and devkit_viewer reads through them; compact status_records removed; adaptive revision lookup uses --end-of-options and a full-hex check (^HEAD test). Review PASS after one P2 test fix (reverify-01); reconcile resolved.
+findings: []
+assumptions:
+- optional_locks=True keeps gate, generated, native handoff and proposals report without --no-optional-locks as before
+- The non-UTF-8 real-Git core test skips on macOS APFS; the parser unit case and the devkit_mcp test cover that byte path
+checks:
+  tests: PASS just test-affected --base 1f8e0954 mode=full 6520 passed 4 skipped at 0c1994effa5803b7ac78bd78f5dedea65383772c; just test-dist 1350 passed at 0c1994effa5803b7ac78bd78f5dedea65383772c; just test-affected --tier e2e mode=full 355 passed 13 skipped at 724c2f49 (later commits change only unit/integration tests and docs)
+  build: PASS just check (pyright, all modules) exit 0
+  lint: PASS just lint-check exit 0; just rules-check exit 0
+diff_scope:
+  base: 1f8e0954cd2bd25cb93f0c0907e852440b2ba73f
+  head: 0c1994effa5803b7ac78bd78f5dedea65383772c

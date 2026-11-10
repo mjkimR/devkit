@@ -8,6 +8,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from devkit_core.core.git import parse_status_records
+
 from ..models.errors import SnapshotFailed
 from ..models.records import digest
 
@@ -27,13 +29,7 @@ def capture(root: Path, excluded: list[str]) -> tuple[dict[str, Any], bytes | No
     paths = ["--", ".", *(f":(top,literal,exclude){p}" for p in excluded)]
     source = git(root, "rev-parse", "HEAD").decode().strip()
     status = git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all", *paths)
-    entries = status.split(b"\0")
-    dirty_paths: list[str] = []
-    position = 0
-    while position < len(entries) and entries[position]:
-        entry = entries[position]
-        dirty_paths.append(os.fsdecode(entry[3:]))
-        position += 2 if b"R" in entry[:2] or b"C" in entry[:2] else 1
+    dirty_paths = [record.path for record in parse_status_records(status)]
     if not dirty_paths:
         return {
             "source_sha": source,

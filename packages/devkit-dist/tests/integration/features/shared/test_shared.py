@@ -24,7 +24,7 @@ from devkit_dist.features.shared.models.errors import (
     MissingError,
     SharedError,
 )
-from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
+from devkit_dist.features.shared.repositories.local import LocalAdapter, _worktrees, deadline, discover
 from devkit_dist.features.shared.usecases.service import adapter
 
 
@@ -45,6 +45,18 @@ def repository(tmp_path):
 @pytest.fixture
 def request_data():
     return PutRequest("proposal-review", "example", "a" * 40, "en", "# Report\n")
+
+
+def test_newline_worktree_paths_are_read(tmp_path):
+    root = (tmp_path / "re\npo").resolve()
+    root.mkdir()
+    run_git(root, "init", "-b", "main")
+    run_git(root, "-c", "user.name=F", "-c", "user.email=f@example.test", "commit", "--allow-empty", "-m", "fixture")
+    linked = (tmp_path / "link\ned").resolve()
+    run_git(root, "worktree", "add", "-b", "worker", str(linked))
+    context = discover(root)
+    assert context.main == root
+    assert _worktrees(context, deadline()) == [root, linked]
 
 
 def test_live_retry_expiry_and_cleanup(repository, request_data):

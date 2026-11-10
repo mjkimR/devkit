@@ -137,6 +137,14 @@ def test_checkout_on_a_plan_branch_has_no_source_for_itself(repo: Path, tmp_path
     assert not any(source.slug == "a" for source in sources.values())
 
 
+def test_worktree_with_a_newline_in_its_path_is_a_source(repo: Path, tmp_path: Path) -> None:
+    worktree = tmp_path / "wt\nplan-b"
+    git(repo, "worktree", "add", "-q", str(worktree), "plan-b")
+    sources, errors = planning_sources(repo)
+    assert errors == []
+    assert sources["worktree:plan-b"].worktree == worktree
+
+
 def test_source_reads_return_worktree_and_committed_content(repo: Path) -> None:
     listing = source_tree(repo, "worktree:plan-a", "docs/proposals/PROP-a", recursive=True)
     assert [item.path for item in listing] == [

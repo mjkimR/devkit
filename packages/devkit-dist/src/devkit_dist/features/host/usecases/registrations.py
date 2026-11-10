@@ -17,7 +17,7 @@ import tomlkit
 from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.core import atomic_write_bytes
-from devkit_core.core.git import run_git_text
+from devkit_core.core.git import run_git_text, worktree_records
 from devkit_core.core.locks import file_lock
 
 from devkit_dist.features.host.models.errors import HostError
@@ -286,16 +286,15 @@ class _Eligibility:
 
 
 def _foreign_worktree(root: Path, relative: str) -> bool:
-    for part in run_git_text(root, "worktree", "list", "--porcelain", "-z").split("\0"):
-        if part.startswith("worktree "):
-            other = Path(part[9:])
-            if (
-                other != root
-                and (other / relative).exists()
-                and not _tracked(other, relative)
-                and not _ignored(other, relative)
-            ):
-                return True
+    for record in worktree_records(root):
+        other = record.path
+        if (
+            other != root
+            and (other / relative).exists()
+            and not _tracked(other, relative)
+            and not _ignored(other, relative)
+        ):
+            return True
     return False
 
 

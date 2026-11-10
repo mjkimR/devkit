@@ -20,7 +20,7 @@ from pathlib import Path
 
 from devkit_core.base.errors import GitError
 from devkit_core.core.deadline import Deadline
-from devkit_core.core.git import run_git_text
+from devkit_core.core.git import run_git_text, worktree_records
 
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.shared.models.api import (
@@ -79,11 +79,10 @@ def discover(workspace: Path, budget: Deadline | None = None) -> RepositoryConte
         common = Path(
             run_git_text(top, "rev-parse", "--path-format=absolute", "--git-common-dir", deadline=budget)
         ).resolve()
-        records = run_git_text(top, "worktree", "list", "--porcelain", deadline=budget).split("\n\n")
-        first = records[0].splitlines()
-        if not first or "bare" in first or not first[0].startswith("worktree "):
+        records = worktree_records(top, deadline=budget)
+        if not records or records[0].bare:
             raise WorkspaceError("a retained non-bare main checkout is required")
-        main = Path(first[0][9:])
+        main = records[0].path
         _safe(main, directory=True)
         if (
             not main.is_dir()
@@ -124,11 +123,7 @@ def _lock(path: Path, budget: Deadline, *, write: bool, create: bool = False) ->
 
 
 def _worktrees(context: RepositoryContext, budget: Deadline) -> list[Path]:
-    return [
-        Path(line[9:])
-        for line in run_git_text(context.workspace, "worktree", "list", "--porcelain", deadline=budget).splitlines()
-        if line.startswith("worktree ")
-    ]
+    return [record.path for record in worktree_records(context.workspace, deadline=budget)]
 
 
 def _eligible(context: RepositoryContext, budget: Deadline) -> None:

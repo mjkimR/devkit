@@ -10,7 +10,7 @@ from importlib import metadata
 from pathlib import Path
 
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import run_git
+from devkit_core.core.git import worktree_records
 from devkit_dist.features.host.usecases.registrations import LaunchDescriptor, RuntimeUnavailable, common_dir
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 
@@ -91,8 +91,7 @@ class BuildLaunchDescriptorUseCase(BaseUseCase):
         common = common_dir(root)
         if common is None:
             raise RuntimeUnavailable("a retained runtime requires a Git checkout")
-        output = run_git(root, "worktree", "list", "--porcelain", "-z").decode()
-        worktrees = [Path(part[9:]).resolve() for part in output.split("\0") if part.startswith("worktree ")]
+        worktrees = [record.path.resolve() for record in worktree_records(root)]
         if not worktrees:
             raise RuntimeUnavailable("the retained base checkout is unavailable")
         executor = worktrees[0]

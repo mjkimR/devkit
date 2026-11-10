@@ -286,6 +286,14 @@ def test_explicit_empty_new_identity_does_not_append(repo, call, flag, code):
     assert not Ledger(repo).path.exists()
 
 
+@pytest.mark.parametrize("value", ["^HEAD", "-h", "--all"])
+def test_option_like_or_negated_revision_is_unresolved(repo, call, value):
+    result = call("new", "--owner", "o", "--goal", "g", "--base", value, expected=2)
+    assert result["error"]["code"] == "ADAPTIVE_REVISION_UNRESOLVED"
+    assert not Ledger(repo).path.exists()
+    assert assigned(call, "--base", "HEAD")["base"] == git(repo, "rev-parse", "HEAD")
+
+
 def test_explicit_empty_final_does_not_append(repo, call):
     assigned(call)
     before = Ledger(repo).path.read_bytes()

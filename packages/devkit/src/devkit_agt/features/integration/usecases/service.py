@@ -12,7 +12,7 @@ from uuid import uuid4
 from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import GitError
 from devkit_core.core import LockHeldError
-from devkit_core.core.git import run_git_text
+from devkit_core.core.git import run_git_text, worktree_records
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
 
@@ -359,8 +359,8 @@ class IntegrationService:
                 if exc.returncode is None:
                     observed["inspection_incomplete"] = True
         try:
-            entries = run_git_text(self.root, "worktree", "list", "--porcelain", "-z").split("\0")
-            observed["worktree_registered"] = f"worktree {plan.path}" in entries if plan.worktree_identity else None
+            paths = {str(record.path) for record in worktree_records(self.root)}
+            observed["worktree_registered"] = str(plan.path) in paths if plan.worktree_identity else None
         except GitError:
             observed["inspection_incomplete"] = True
         return observed
