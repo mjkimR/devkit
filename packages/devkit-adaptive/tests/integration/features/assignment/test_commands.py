@@ -300,3 +300,47 @@ def test_explicit_empty_final_does_not_append(repo, call):
     result = call("return", "a1", "--status", "completed", "--final", "", expected=2)
     assert result["error"]["code"] == "ADAPTIVE_REVISION_UNRESOLVED"
     assert Ledger(repo).path.read_bytes() == before
+
+
+def test_list_reports_unreadable_worktree_and_exits_zero(repo, call, tmp_path):
+    linked = tmp_path / "linked"
+    git(repo, "worktree", "add", "-qb", "dev", str(linked))
+    assigned(call, "--worktree", str(linked))
+    git(linked, "switch", "-q", "--orphan", "orphan")
+    observed = call("list")["assignments"][0]["observed"]
+    assert observed["worktree_state"] == "present"
+    assert observed["attention"] == ["worktree-unreadable"]
+    assert (observed["head"], observed["commits"], observed["dirty"]) == (None, None, None)
+    assert "attention=worktree-unreadable" in call("list", text=True)
+
+
+def test_given_final_resolves_in_assignment_worktree(repo, call, tmp_path):
+    linked = tmp_path / "linked"
+    git(repo, "worktree", "add", "-qb", "dev", str(linked))
+    assigned(call, "--worktree", str(linked), "--commit")
+    git(linked, "commit", "--allow-empty", "-qm", "work")
+    final = returned(call, "a1", "--final", "HEAD")["assignment"]["return"]["final"]
+    assert final == git(linked, "rev-parse", "HEAD") != git(repo, "rev-parse", "HEAD")
+    linked.rename(tmp_path / "moved")
+    head = git(repo, "rev-parse", "HEAD")
+    assert returned(call, "a1", "--final", "main")["assignment"]["return"]["final"] == head
+
+
+def test_malformed_event_data_is_unreadable(repo, call):
+    assigned(call)
+    with Ledger(repo).path.open("ab") as stream:
+        stream.write(b'{"schema":1,"at":"x","event":"verified","id":"a1","data":{}}\n')
+    assert call("list", expected=2)["error"]["code"] == "ADAPTIVE_LEDGER_UNREADABLE"
+
+
+def test_symlink_loop_scope_is_argument_error(repo, call):
+    (repo / "loop").symlink_to("loop")
+    assert call("new", "--owner", "o", "--goal", "g", "--write", "loop", expected=2)["error"]["code"] == (
+        "ARGUMENT_INVALID"
+    )
+    assert not Ledger(repo).path.exists()
+
+
+def test_transaction_body_oserror_is_not_ledger_unwritable(repo):
+    with pytest.raises(FileNotFoundError), Ledger(repo).transaction():
+        raise FileNotFoundError("body")

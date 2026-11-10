@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError, ExitCode
+from devkit_core.base.errors import GitError
 from devkit_core.core import is_ancestor
 
 from devkit_adaptive.base import errors as e
@@ -103,20 +104,30 @@ def verify(root: Path, value: Assignment, values: dict[str, Assignment]) -> Resu
 def observe(root: Path, value: Assignment, values: dict[str, Assignment]) -> dict[str, Any] | None:
     if value["status"] == "closed":
         return None
-    try:
-        tree = git.require_worktree(root, Path(value["worktree"]))
-    except e.WorktreeUnavailable:
+    waiting_on = [key for key in value["depends_on"] if values[key]["status"] != "closed"]
+
+    def degraded(state: str, attention: str) -> dict[str, Any]:
         return {
-            "worktree_state": "missing",
+            "worktree_state": state,
             "head": None,
             "commits": None,
             "dirty": None,
-            "waiting_on": [key for key in value["depends_on"] if values[key]["status"] != "closed"],
-            "attention": ["worktree-missing"],
+            "waiting_on": waiting_on,
+            "attention": [attention],
         }
-    head = git.head(tree)
-    ancestor = is_ancestor(tree, value["base"], head)
-    dirty = len(set(git.dirty(tree)).difference(value["dirty_at_assign"]))
+
+    try:
+        tree = git.require_worktree(root, Path(value["worktree"]))
+    except e.WorktreeUnavailable:
+        return degraded("missing", "worktree-missing")
+    try:
+        head = git.head(tree)
+        ancestor = is_ancestor(tree, value["base"], head)
+        dirty = len(set(git.dirty(tree)).difference(value["dirty_at_assign"]))
+        commits = git.count(tree, value["base"], head)
+    except (GitError, e.RevisionUnresolved):
+        # An unborn HEAD or an unreachable base: report what is known and keep listing.
+        return degraded("present", "worktree-unreadable")
     attention = []
     if not ancestor:
         attention.append("base-not-ancestor")
@@ -127,8 +138,8 @@ def observe(root: Path, value: Assignment, values: dict[str, Assignment]) -> dic
     return {
         "worktree_state": "present",
         "head": head,
-        "commits": git.count(tree, value["base"], head),
+        "commits": commits,
         "dirty": dirty,
-        "waiting_on": [key for key in value["depends_on"] if values[key]["status"] != "closed"],
+        "waiting_on": waiting_on,
         "attention": attention,
     }

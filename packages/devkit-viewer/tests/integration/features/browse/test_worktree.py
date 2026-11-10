@@ -141,6 +141,8 @@ def test_frontmatter_does_not_decode_body(repo: Path) -> None:
         (b"---\nid: MS-a\n...\nbody\n", "---\nid: MS-a\n---\n"),
         (b"---\n---\nbody\n", "---\n---\n"),
         (b" ---\nid: MS-a\n---\n", ""),
+        (b"---\xc2\xa0\nid: MS-a\n---\xc2\xa0\nbody\n", "---\nid: MS-a\n---\n"),
+        (b"---\nid: MS-a\n...\xe2\x80\x83\nbody\n", "---\nid: MS-a\n---\n"),
     ],
 )
 def test_frontmatter_follows_the_core_grammar(repo: Path, raw: bytes, envelope: str) -> None:

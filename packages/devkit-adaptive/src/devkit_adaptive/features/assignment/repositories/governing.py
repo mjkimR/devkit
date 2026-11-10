@@ -29,7 +29,11 @@ def resolve(root: Path, values: list[str]) -> list[str]:
                     raise
                 failures.append(f"{value}: {'duplicate-id' if exc.code == 'DOCS_ID_DUPLICATE' else 'unknown-id'}")
         else:
-            path = (root / value).resolve()
+            try:
+                path = (root / value).resolve()
+            except (OSError, RuntimeError):
+                failures.append(f"{value}: missing-path")
+                continue
             if not path.exists() or (not Path(value).is_absolute() and not path.is_relative_to(root)):
                 failures.append(f"{value}: missing-path")
             else:

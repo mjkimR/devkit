@@ -53,7 +53,13 @@ def mutate(root: Path, verb: str, options: dict[str, Any]) -> Result:
                     if options["status"] not in {"completed", "needs_input", "failed"}:
                         raise ArgumentError("--status must be completed, needs_input or failed")
                     final = options.get("final")
-                    tree = git.require_worktree(root, Path(value["worktree"])) if final is None else root
+                    # A given --final resolves in the assignment's worktree when present, else in this repository.
+                    try:
+                        tree = git.require_worktree(root, Path(value["worktree"]))
+                    except e.WorktreeUnavailable:
+                        if final is None:
+                            raise
+                        tree = root
                     data = {
                         "status": options["status"],
                         "final": git.revision(tree, "HEAD" if final is None else final),

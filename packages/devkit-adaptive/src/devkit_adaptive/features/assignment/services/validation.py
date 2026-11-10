@@ -35,7 +35,10 @@ def assignment(values: dict[str, Assignment], value: str, *, mutable: bool = Fal
 def scope(root: Path, values: list[str]) -> list[str]:
     result: list[str] = []
     for value in values:
-        path = (root / value).resolve()
+        try:
+            path = (root / value).resolve()
+        except (OSError, RuntimeError) as exc:
+            raise ArgumentError(f"write scope must be a resolvable path inside the worktree: {value}") from exc
         if not value or any(char in value for char in "*?[") or not path.is_relative_to(root):
             raise ArgumentError(f"write scope must be a literal path inside the worktree: {value}")
         entry = path.relative_to(root).as_posix()
