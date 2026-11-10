@@ -31,7 +31,7 @@ After context loss, rebuild state from `devkit worktree status`, `devkit spec sc
 {% endif %}
 ## Asynchronous verification
 
-For local-orchestrated verification, read [isolated execution](references/isolated-execution.md) before launching native commands in fixed-commit environments.
+For the local-orchestrated Host after landing, read [isolated execution](references/isolated-execution.md) before launching asynchronous integrated-result verification. Keep this Host procedure out of worker check payloads; workers run required native checks synchronously in their assigned worktree, including necessary selective E2E. A Host working in a worktree still owns the Host procedure; directory location does not select the role.
 
 ## Completion
 

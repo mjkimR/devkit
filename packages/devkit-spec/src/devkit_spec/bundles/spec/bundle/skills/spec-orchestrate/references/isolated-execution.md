@@ -1,4 +1,11 @@
-# Isolated verification in local-orchestrated work
+# Host-owned asynchronous verification after integration
+
+Apply this procedure only as the local-orchestrated Host verifying the integrated result after landing.
+Workers run required native checks synchronously in their assigned worktree, including necessary selective E2E;
+they do not launch or manage this Host execution lifecycle. Do not copy exec start/wait/cleanup into worker checks.
+Direct/session work keeps the project's existing native verification procedure and does not inherit this one.
+Select responsibility by actor and task, not by whether the current directory is a worktree.
+The general-purpose exec CLI remains available for separately requested uses; this workflow adds no runtime role or cwd restriction.
 
 Inspect repository documentation, scripts, runner configuration and CI to identify the actual required verification commands and their coverage before choosing execution groups.
 Establish which checks the retained synchronous command excludes and which checks the asynchronous command covers; a broad `npm test` or `pytest tests` can already include E2E.

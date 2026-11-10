@@ -237,3 +237,7 @@ omits devkit-spec. Bundle selection does not define a runtime lifecycle bypass.
 After approved integration lands, synchronize the target environment from its landed dependency declarations and
 run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
 report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.
+
+When the repository delegates work or upgrades verification instructions, follow
+[Verification ownership](install/verification-ownership.md) to separate worker-native checks from Host-owned
+post-integration asynchronous verification without changing existing required commands.

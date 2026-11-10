@@ -143,3 +143,6 @@ root. The full local `verify` recipe includes rules for a manual run; commit gat
 so select only suitable fast native checks there as shown in
 [Existing Repository, native verification](existing-repository.md#reuse-native-verification-commands).
 Selecting a recipe for a gate is explicit and independent of the presence of a justfile.
+
+For delegated work or verification-guidance upgrades, apply [Verification ownership](verification-ownership.md).
+Keep the project's native commands and CI requirements; sync does not rewrite project-owned verification prose.

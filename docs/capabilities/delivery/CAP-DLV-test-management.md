@@ -68,6 +68,10 @@ structure and isolated deployment, not consumer behavior or performance.
     selected asynchronous E2E after light required synchronous landed checks within existing completion rules.
     The direct Host owns bounded batches, collection, outstanding intervals and repair priority on failed/unknown
     results; an optional verifier assists and Git operators remain restricted to Git lifecycle work.
+12a. **Worker ownership**: WHEN recommending delegated verification, the agent MUST keep required native checks
+    synchronous in the worker's assigned worktree, including necessary selective E2E, and keep the Host's
+    post-integration asynchronous lifecycle out of worker payloads. Directory location does not choose the role;
+    direct/session work keeps native verification. Test: `packages/devkit-catalog/tests/integration/bundles/test_verification_ownership.py`.
 13. **Cloud example**: WHERE PR CI and nightly repair operate without an active Host, the recommendation SHOULD
     explain required PR CI including existing required E2E coverage, failed-CI rework, automatic merge under existing authority and accepted
     nightly detection of potentially broken combined main. The example adds no latest-base prospective testing,

@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:25:11.180558Z'
+status: completed
+summary: Separated worker-native synchronous checks from Host post-integration exec management; portable client adoption preserves existing commands, coverage, optional tooling and manually owned guidance.
+findings: []
+assumptions:
+- Later commits only contain AGENTS grammar, explicit no-devkit upgrade skip and workflow records; implementer reverified those changes without repeating broad tests.
+- Codex roles emulated; absolute cwd, per-operation escalations, matching reviewer snapshots and final scope inspection substitute native enforcement.
+unverified_areas:
+- Host integration, landed runtime/generated checks and final target coverage remain; no merge or publication performed.
+checks:
+  tests: PASS 1911 native affected unit/integration; 77 native selected E2E at67aa2f2b; 8 rendered ownership regressions
+  build: PASS rendered local/cloud worker projections and selected-bundle sync; no runtime/build interface changes
+  lint: PASS full lint-check/check, CI rules, sync --check and diff --check
+diff_scope:
+  base: 0d010ae82237ab918a972fea5891ab4e70f2d0a0
+  head: 4946893360dfa59fb0788d09ced1a2cf23c48735

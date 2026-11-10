@@ -16,6 +16,9 @@ user to choose a local/cloud policy mode, and preference answers authorize no co
 ## 2. Active local Host example
 
 Recommend frequent worker unit/integration checks and selective E2E when needed to demonstrate changed behavior.
+Have workers run required native checks synchronously in their assigned worktree and return source-specific
+evidence. Keep the Host's asynchronous launch, wait and cleanup out of worker payloads; an E2E label or inherited
+repository instruction does not select that execution lifecycle.
 After approved landing, recommend the established light synchronous group, including required native checks,
 then selected asynchronous E2E when independently runnable. Keep required verification pending while independent
 work proceeds; bounded merge batches can overlap waiting only within the consumer's existing completion rules.
@@ -55,7 +58,7 @@ failure is follow-up repair evidence, not proof that the merged combination pass
 
 ## 4. Optional devkit execution example
 
-When `devkit exec` is available, inspect installed help and setup/resource prerequisites before use. Resolve a full
+For the active Host's post-integration asynchronous verification, when `devkit exec` is available, inspect installed help and setup/resource prerequisites before use. Resolve a full
 locally available fixed commit SHA; pass the native argv after `--`. Use the consumer's documented invocation
 prefix in place of bare `devkit` below. These generic placeholders are examples, not executable consumer commands:
 

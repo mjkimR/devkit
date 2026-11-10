@@ -650,6 +650,15 @@ prompt.
    yields before handoff. The Host verifies the accepted landing and invokes handoff in a fresh process with the
    unchanged authorized scope, mode and effort (`CAP-DLV-proposal-planning`).
 
+The local-orchestrated Host MUST own post-integration asynchronous launch, collection, cleanup and final
+integrated coverage. Development workers MUST run required native checks synchronously in their assigned
+worktree, including necessary selective E2E, and return source-specific evidence. Worker payloads MUST NOT
+inherit the Host exec lifecycle; common completion guidance routes to it only for the Host after landing.
+Direct/session work retains native verification. Actor and task select responsibility, not directory location;
+the executor CLI has no role or cwd restriction. Rendered local/cloud and worker-projection regression tests in
+`packages/devkit-spec/tests/integration/bundles/spec/test_isolated_execution_guidance.py` check instruction routing;
+actual agent compliance is Review only. `ADR-verification-execution-ownership` records this boundary.
+
 Before choosing asynchronous verification, the Host inspects repository documentation, scripts, runner configuration and CI for actual required commands and coverage. It establishes independently runnable groups and verifies what the retained synchronous command excludes and what the asynchronous command covers, preserving all existing required coverage. Directory names and test labels establish neither E2E existence, cost nor independent runnability. If verification is unseparated, unclear or has no independently runnable subset, the Host keeps the existing required commands synchronously. Consumers need no E2E tier; guidance neither manufactures empty coverage nor automatically restructures verification. Overlapping broad commands do not establish reduced blocking by adding a duplicate E2E run. Devkit's selector commands are its own adoption example.
 
 Where independent required groups are established, local-orchestrated use keeps the project's known synchronous group synchronous and selected required E2E MAY run through `CAP-HARN-isolated-execution` while independent work continues. The Host records baseline B, tested SHA A and outstanding coverage; an ancestor pass never attests a later HEAD. Required final E2E passes at current landed HEAD or an explicit empty selection covers its complete uncovered interval, including generated repairs. At the next failed/unknown result check, hold further merges and prioritize repair. Background `wait --clean` composes observation and eligible cleanup, while execution tools own notification delivery and the Host owns acceptance. One outstanding run is the starting recommendation, not an executor policy.
