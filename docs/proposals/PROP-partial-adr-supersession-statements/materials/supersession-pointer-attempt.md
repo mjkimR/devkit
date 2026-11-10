@@ -2,9 +2,10 @@
 
 ## 1. Identity and Boundary
 
-- Source: the `spec`-depth attempt `SPEC-supersession-pointer-summary-check` on `dev-supersession-pointer-summary-check`,
-  started from `main` at `39cf1c39` (plan-intent commit `280626ea`). It stopped at `specify` with an uncommitted
-  `spec.md` draft and was closed by depth escalation into this proposal; its branch was discarded unmerged.
+- Source: the `spec`-depth attempt with the slug `supersession-pointer-summary-check` on
+  `dev-supersession-pointer-summary-check`, started from `main` at `39cf1c39` (plan-intent commit `280626ea`). It
+  stopped at `specify` with an uncommitted `spec.md` draft and was closed by depth escalation into this proposal; its
+  branch was discarded unmerged, so no spec document with that slug exists.
 - Inspected on: 2026-11-10.
 - Scope: `docs/decisions/`, `RULE-decision-supersession`, the rules evaluator, the `adr-consolidation` playbook and the
   `spec-next` post-handoff reference in this repository.

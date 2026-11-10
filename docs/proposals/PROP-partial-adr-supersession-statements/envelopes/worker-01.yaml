@@ -1,0 +1,55 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T01:35:58.512747Z'
+status: needs_input
+summary: 'First Planning turn at medium: Q1 to Q6 are settled from repository evidence, PADR-partial-supersession-statements records the fixed Decision Outcome statement, target-docs.md and AC-01 to AC-09 are drafted, and one challenger round is folded (5 of 7 findings resolved). Two questions wait for the user: the replaced scope of one pair whose sources differ, and the form of a whole replacement through a PADR. The next turn folds the answers; plan-accept follows.'
+findings: []
+assumptions:
+- 'Statement form (Q1) is taken by Planning, not asked: a fixed sentence ''Supersedes in part ADR-<old>:'' per earlier ADR in Decision Outcome, no frontmatter field; SPEC-partial-adr-supersession excluded a structured field to bound its scope and named no defect of one.'
+- 'The viewer leaves this proposal without a question: the draft and the plan-intent record left the split to Planning; PROP-viewer-decision-supersession is the follow-up draft, depending on this proposal.'
+- 'Other repositories get no new compatibility setting: they repair their pairs from the rule guide or defer with the existing severity override for RULE-decision-supersession.'
+- The frontmatter key supersedes_clause of ADR-skill-local-swarm-roles is removed by the migration, because the statement replaces it.
+- 'size stays L in one spec and dev_effort stays medium: the rule, the migration and the handoff change land together, nothing is released, and the change is reversible in Git.'
+- Counts (65 ADRs, 26 pairs, 18 earlier ADRs, 6 summary copies) hold at b3e4753d. The base moved to f0434e6e during the turn and holds at least one more pair; the branch was not refreshed, and the migration covers every pair on the Development head.
+- 'PADR-partial-supersession-statements names no supersedes: it fixes the form of what ADR-decision-ledger requires and leaves each of its clauses in force.'
+unverified_areas:
+- The 26 pairs were not compared clause by clause; further pairs whose sources name different scopes may surface in Development and become questions there.
+- Whether a statement that cites the proposal by ID stays equal to its pointer after handoff's reference rewrite; drafted as an AC-05 clause.
+- Whether another repository that installs the docs bundle holds partly superseding ADRs; nothing outside the worktree was read.
+- The viewer estimate and whether ADR-ux-screens requires drafted screens for it; both belong to PROP-viewer-decision-supersession.
+checks:
+  rules: PASS devkit rules check docs/proposals/ errors=0 (RULE-proposal-boundaries clean)
+  challenger: 'PASS 1 round, 7 findings: 5 resolved, 2 open as questions q1 and q2'
+  scout: PASS 1 return recorded, tree unchanged by both support roles
+  feedback: PASS swept, recorded=2 duplicates=0
+diff_scope:
+  base: b46086cbc7c7ab22aa4937552acf00af7bcb75da
+  head: f775b284702e37b0db176bfede31b4a8350c2df7
+questions:
+- id: q1
+  title: Replaced scope of the swarm-roles pair
+  prompt: Which clauses of ADR-adaptive-development-and-research does ADR-skill-local-swarm-roles replace?
+  context: 'The migration writes one fixed statement per existing pair from the text the ledger already holds, and it settles no scope by itself. For this pair the sources differ: the later ADR''s Decision Outcome sentence says it "partially supersedes the role-set clauses", while its frontmatter key supersedes_clause and the earlier ADR''s pointer say "role-set and role-authority clauses only". The answer becomes the statement and the pointer text of the pair. The rule compares text only, so nothing later catches a wrong scope. Development asks the same way for any further pair it finds with differing sources.'
+  options:
+  - id: a
+    description: Role-set and role-authority clauses. The statement takes the scope of the pointer and of the frontmatter key, and the Decision Outcome sentence is reworded to match. The later ADR's own outcome clauses on task overlays, Git authority and worker commits support this scope.
+    recommended: true
+  - id: b
+    description: Role-set clauses only. The statement takes the Decision Outcome sentence's scope, the earlier ADR's pointer narrows, and its role-authority clauses read as in force again.
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Whole replacement through a PADR
+  prompt: How does a PADR that replaces a whole ADR satisfy the statement check?
+  context: After this change the rule and the handoff require a statement for every supersedes entry whose ADR is not superseded. While the PADR is written the earlier ADR is still accepted, so a decision meant to replace it wholly is handled like a partial one. Handoff already writes a "Superseded in part by" pointer in that case and leaves status superseded and superseded_by to the author. None of the 65 ADRs is wholly superseded. The answer fixes the rule and handoff contract before Development starts.
+  options:
+  - id: a
+    description: Keep one form. The PADR writes "Supersedes in part ADR-<old>:" naming every decision, handoff writes the pointer, and the author then sets superseded and superseded_by. The "in part" sentence and pointer stay in the ledger as history, and devkit docs supersession shows scope=whole with that text. No scope is added.
+    recommended: true
+  - id: b
+    description: Add a whole form. A second fixed sentence ("Supersedes ADR-<old> as a whole.") satisfies the rule, and handoff then sets the earlier ADR's status superseded and superseded_by instead of writing a pointer. This changes the handoff contract that leaves a whole supersession to the author and adds rule, handoff and test work to this proposal.
+    recommended: false
+  allow_note: true
+activity_effort: medium

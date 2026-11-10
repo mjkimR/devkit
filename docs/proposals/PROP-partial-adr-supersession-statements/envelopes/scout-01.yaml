@@ -1,0 +1,55 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T01:16:12.967239Z'
+status: completed
+summary: 'Evidence for Q5: devkit docs refs lists partial pointers only as mixed body references and an ADR''s supersedes is not indexed, so a CLI view reads frontmatter and body text as the rule does (about four source files, CAP-DOCS-document-lookup). The viewer has no devkit-docs link, shows no supersedes and has no backlinks; a block there is a frontend change with a cross-document index or a new endpoint, a rebuilt committed page and CAP-VIEW-repository-viewer.'
+findings:
+- issue: 'An ADR''s supersedes is not indexed: the parser skips supersedes on every document that is not a proposal or spec anchor, and superseded_by is in no field tuple, so neither adds a reference or provenance entry.'
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/parse.py:69-70; packages/devkit-docs/src/devkit_docs/features/documents/models/model.py:11-17
+  suggested_action: 'Factual note: a command that lists decision replacements reads frontmatter and body text itself, as RULE-decision-supersession does, or changes this parse path.'
+  resolution: open
+- issue: The partial pointer reaches the index only as an ordinary body ID reference; the index has no fixed-sentence parser. The only reader of the sentence is the governance rule, through visible_lines.
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/models/parse.py:183-206; packages/devkit-docs/src/devkit_docs/features/governance/usecases/decision_supersession.py:17,33-34
+  suggested_action: 'Factual note: a pointer-aware listing classifies the body line in the use case or in the parser; the index does not do it today.'
+  resolution: open
+- issue: 'devkit docs refs --direction in mixes partial pointers with every other body reference: the text line shows only fields=body and count, and JSON gives line and column but not the sentence.'
+  evidence: uv run devkit docs refs ADR-test-selection-and-ci --direction in (19 documents, all fields=body); packages/devkit-docs/src/devkit_docs/features/documents/cli/commands.py:133-184; packages/devkit-docs/src/devkit_docs/features/documents/usecases/browse.py:319-337
+  suggested_action: 'Factual note: the refs contract is CAP-DOCS-document-lookup sections 3.3, 4.1, 4.2 and 4.3; an option on refs or a sibling subcommand touches commands.py, browse.py, test_cli_documents.py and those sections. devkit docs has four subcommands: resolve, refs, list, search.'
+  resolution: open
+- issue: No MCP tool or generated command listing mirrors devkit docs refs; bundle and skill text names the command without its options.
+  evidence: rg for refs_cmd, ReferenceDocumentsUseCase and 'devkit docs refs' under packages/ and docs/
+  suggested_action: 'Factual note: a new option or subcommand changes no generated listing.'
+  resolution: open
+- issue: 'The viewer backend does not use devkit-docs: it serves a fixed endpoint set over the working tree, and its distribution requires only devkit-core and devkit-agt.'
+  evidence: packages/devkit-viewer/src/devkit_viewer/features/browse/usecases/read.py:34-44; packages/devkit-viewer/pyproject.toml:7-10
+  suggested_action: 'Factual note: a Python endpoint that reads supersession adds a devkit-docs dependency edge that does not exist today.'
+  resolution: open
+- issue: The viewer's document page parses the raw blob's frontmatter in the browser and shows only id, status, priority, milestone, target_area and title. supersedes and superseded_by are not shown, and no backlink or incoming-reference list exists.
+  evidence: packages/devkit-viewer/frontend/src/lib/api/documents.ts:31-56,225-266; packages/devkit-viewer/frontend/src/lib/features/document/FrontmatterHeader.svelte:9-31
+  suggested_action: 'Factual note: showing the later ADRs that replace parts of a decision needs a cross-document index in the frontend (bodies or frontmatter of every decision) or a new endpoint; the forward direction is readable from the page''s own frontmatter.'
+  resolution: open
+- issue: The viewer's built page is committed (100 tracked files under src/devkit_viewer/static/) and ships in the wheel; a frontend change rebuilds and commits it and selects no pytest test.
+  evidence: git ls-files packages/devkit-viewer/src/devkit_viewer/static; packages/devkit-viewer/pyproject.toml:33-35; justfile:72-73; AGENTS.md Verification
+  suggested_action: 'Factual note: a viewer change adds just viewer lint, check, test and build to verification and changes CAP-VIEW-repository-viewer section 4, owned with ADR-repository-viewer.'
+  resolution: open
+- issue: No UX document exists (devkit docs list ux total=0) and docs/steering/ux-objects.md does not exist; no repository rule found requires drafted screens for a viewer change.
+  evidence: docs/ux/README.md:1-5,31-32; docs/steering/; docs/decisions/2026-11/20261102-ux-screens.md:3-4,37
+  suggested_action: 'Factual note: whether ADR-ux-screens applies to a viewer screen change is a judgment the repository text does not settle.'
+  resolution: open
+- issue: Consumers of the pointer sentence or a decision's supersedes outside docs/decisions/ and specs/ are the rule and its tests, the handoff pointer writer, the decision template comment and the decisions README; the viewer frontend reads neither.
+  evidence: packages/devkit-docs/src/devkit_docs/features/governance/usecases/decision_supersession.py:17,26-30,74-114; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:187-189,742-804; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/templates/decision.md:13
+  suggested_action: 'Factual note: a change to the pointer format or to how supersedes is read touches the rule, its tests and handoff.py.'
+  resolution: open
+assumptions:
+- 'Route: native Claude Code subagent, read-only; the tree snapshot before and after the run is identical (34d661f7) and HEAD stayed b3e4753d.'
+- File counts are estimates from the touched modules, not a design.
+unverified_areas:
+- devkit docs search options and index use (search.py not read).
+- Existing viewer tests for FrontmatterHeader and features/document; docs/development/reference and the viewer READMEs.
+- Whether ADR-ux-screens applies to devkit-viewer screens.
+checks: {}
+diff_scope:
+  base: ''
+  head: b3e4753db98854275ea34bc38ba0e030421828ff
