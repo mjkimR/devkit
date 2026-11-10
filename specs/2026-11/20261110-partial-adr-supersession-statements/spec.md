@@ -2,7 +2,7 @@
 id: SPEC-partial-adr-supersession-statements
 title: Structured partial-supersession statements for ADRs
 summary: Record each partial replacement once, as a fixed statement in the superseding ADR, let handoff copy it into the earlier ADR's pointer, let a rule keep both equal and let a devkit docs command list a decision's replacements, so earlier ADRs stay readable without manual pointer clarification.
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: [CAP-DOCS-document-model, CAP-DOCS-document-lookup, CAP-GOV-spec-rules, CAP-DLV-proposal-planning]
 related_usecases: [UC-find-the-right-documents]
