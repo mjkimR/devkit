@@ -1,0 +1,29 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:44:44.079981Z'
+status: completed
+summary: 'Second Planning turn: the user''s decisions recorded (answer-01, corrected for the base dependency by answer-02) and folded. Compatibility for existing selections is removed (section 3.6, AC-05 with its test and guide clause, both error codes and the snapshot case; the PADR clause is ''no migration path, because nothing uses the bundle''); the release-preparation lookup and AC-08 stay; the wheel stays bundle-only at the move, and devkit-docs is named as the base dependency PROP-adaptive-assignment-cli introduces with the group devkit adaptive assignment. AC-06 to AC-08 keep their numbers. No question for the user; the proposal waits for plan-accept.'
+findings: []
+assumptions:
+- dev_effort stays medium and size stays M with one spec (assumption 4 of worker-01, not settled by an answer); the user confirms it at plan-accept.
+- 'AC-05 is withdrawn and its number is not reused; AC-06 to AC-08 keep their numbers because challenger-01, reverify-01 and worker-01 cite them. AC-07 gained one review clause: the five guides name devkit-adaptive for a fresh installation and hold no step for an existing selection.'
+- Finding 2 of challenger-01 was resolved in reverify-01 by section 3.6 and AC-05, which this turn removed; its subject, an existing selection that crosses the move, is out of scope by the user's decision, so the finding needs no new closure.
+- 'boundaries.owns is unchanged: AC-05 needed no path of its own. Its test lived in packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py, which AC-01 still needs, and guides/INSTALL_GUIDE.md and guides/install/ still carry the fresh-installation edits.'
+- 'PROP-adaptive-assignment-cli itself was not edited (outside this run''s write boundary): its draft does not yet record devkit-docs as the base or the group devkit adaptive assignment.'
+unverified_areas:
+- No challenger round ran this turn; the fold is removals and wording from the user's decisions, checked by the planning worker's own search for dangling references and by the rules and envelope checks.
+- just smoke was not run; by reading, its catalog bundle assertion (tests/e2e/smoke.sh:228) fails at the base.
+- The release-preparation lookup by bundle name was designed from scripts/releases/prepare.py:222-228 and not prototyped.
+- A Development environment with stale entry-point metadata between the pyproject.toml edits and just init was not reproduced; materials set 3 records what discovery reports in that state.
+checks:
+  rules: PASS devkit rules check on the proposal directory and on proposal.md, errors=0 warnings=0
+  envelopes: PASS devkit workflow envelope check, no pending question, not blocked
+  references: PASS no reference to section 3.6, SELECTION_INVALID, BUNDLE_PACKAGE_INVALID or SNAPSHOT_DESELECT_REMOVED outside materials set 3; AC-05 named only as withdrawn
+  challenger: SKIP not required for removals and wording driven by user decisions
+  feedback: PASS swept, recorded 0
+diff_scope:
+  base: 4a46a6fb4700ed008f672c2aee93ba1583489847
+  head: 6a6f65431c598d1c79ac13a948ae1cbc604d7a54
+activity_effort: medium

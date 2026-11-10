@@ -1,0 +1,77 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:10:46.431181Z'
+status: completed
+summary: 'Inventory of repository wiring for moving adaptive-dev into packages/devkit-adaptive: four machine-checked surfaces (root pyproject and uv.lock, the architecture declaration, document entrypoints, tests and smoke that name the catalog path) plus guides and READMEs; just test-dist and the affected-test selector need no edit.'
+findings:
+- issue: Root pyproject.toml enumerates packages for pyright extraPaths, pytest testpaths and pytest pythonpath; the workspace members and the release inventory are discovered from packages/* and need no entry. devkit-catalog is neither a root dev dependency nor a uv source; just init syncs --all-packages.
+  evidence: pyproject.toml:2-3, :41, :44-45, :53-61, :71, :87, :91-92, :101; scripts/module.sh:95; scripts/releases/identity.py:102-112
+  suggested_action: Add packages/devkit-adaptive/src to extraPaths and packages/devkit-adaptive/tests to testpaths; add its tests/support to extraPaths; mirror the catalog for the dev group (no entry); run uv lock and commit uv.lock.
+  resolution: open
+- issue: Any pyproject.toml, uv.lock or tests/support change selects the full suite in just test-affected; the selector discovers packages by directory and requires exactly one identifier directory under each package src.
+  evidence: scripts/affected_tests.py:49-50, :203-216, :430-436
+  suggested_action: Keep one devkit_adaptive directory under packages/devkit-adaptive/src; expect a full selection for this change; no selector edit.
+  resolution: open
+- issue: The only per-module list in just and scripts is the short-name table; lint, check, test, test-cov and init discover modules from packages/*/pyproject.toml.
+  evidence: scripts/_lib.sh:64-76; justfile:9-38
+  suggested_action: Add 'adaptive devkit-adaptive' to the short names and to the README list of short names.
+  resolution: open
+- issue: just test-dist syncs only devkit-dist into a temporary environment and runs only packages/devkit-dist/tests, so it neither installs nor collects the new package; no devkit-dist test references the catalog's adaptive_dev path.
+  evidence: justfile:37-38; scripts/dist_only.sh:13, :35-36
+  suggested_action: No change; run just test-dist as an unchanged regression check.
+  resolution: open
+- issue: The consumer smoke names wheels explicitly and asserts the set of bundles whose package is devkit-catalog, including adaptive-dev.
+  evidence: tests/e2e/smoke.sh:36-38, :54, :194, :228, :239
+  suggested_action: Add the devkit_adaptive wheel to the consumer installation, remove adaptive-dev from the devkit-catalog set and assert that devkit-adaptive provides adaptive-dev.
+  resolution: open
+- issue: RULE-architecture reports a packages/*/src file outside a declared package root, checks that entry-point target modules exist and accepts a content package that holds only initializers and declared data roots; a features package needs no features directory but its feature declarations must be consistent.
+  evidence: tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/rule.py:125-149, :200-220, :232-238, :312-334; .devkit/architecture.toml:122-135, :191-195
+  suggested_action: Declare devkit_adaptive in .devkit/architecture.toml with data_roots [bundles] and remove adaptive_dev from the devkit_catalog data roots.
+  resolution: open
+- issue: The bundle citation test imports every shipping module statically and walks its bundle.toml files; without devkit_adaptive the adaptive-dev bundle's document citations are no longer checked and its sources no longer select the test.
+  evidence: tools/devkit-dev/tests/integration/test_bundle_citations.py:17-33, :41-43
+  suggested_action: Import devkit_adaptive.bundles and add it to SHIPPING.
+  resolution: open
+- issue: 'Catalog tests that are specific to adaptive-dev: test_adaptive_dev.py, test_adaptive_dev_documents.py, test_adaptive_import.py, test_adaptive_behavior_scorer.py, tests/support/adaptive_behavior_scorer.py and tests/e2e/bundles/adaptive_dev/test_installed_consumer.py. They import devkit.advisory, devkit_dist, distsupport, click and yaml, and no devkit_agt, devkit_docs or devkit_spec. They hard-code the bundle path, the package name devkit-catalog and the entry point value.'
+  evidence: packages/devkit-catalog/tests/integration/bundles/test_adaptive_dev.py:12-22, :30, :182; test_adaptive_dev_documents.py:5-10; test_adaptive_import.py:11-23, :276; test_adaptive_behavior_scorer.py:3-8; packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py:13, :25-33
+  suggested_action: Move the six files to packages/devkit-adaptive/tests/ in the same tiers; repoint the constants, the package name and the entry point value; build devkit-adaptive in the e2e wheel list.
+  resolution: open
+- issue: The catalog's deep-research test loads the adaptive-dev bundle by its catalog path to prove that both bundles select without a role conflict; test_bundles.py iterates the catalog's own entry points and adjusts itself.
+  evidence: packages/devkit-catalog/tests/integration/bundles/test_deep_research.py:18-21, :103-118; packages/devkit-catalog/tests/integration/bundles/test_bundles.py:9-12, :21-38
+  suggested_action: Repoint ADAPTIVE_DEV through REPOSITORY to the new bundle path; leave test_bundles.py unchanged.
+  resolution: open
+- issue: 'Frontmatter entrypoints that name the moved paths fail RULE-code-entrypoints once the files move: CAP-DLV-adaptive-development (4), UC-advance-an-idea (2), UC-import-third-party-agent-assets (2) and CAP-HARN-agent-guidance (1). No rule validates backticked body paths.'
+  evidence: docs/capabilities/delivery/CAP-DLV-adaptive-development.md:13-16; docs/usecases/delivery/UC-advance-an-idea.md:15-16; docs/usecases/delivery/UC-import-third-party-agent-assets.md:12-13; docs/capabilities/harness/CAP-HARN-agent-guidance.md:19; packages/devkit-docs/src/devkit_docs/bundles/docs/bundle/rules/code_entrypoints/guide.md:12-15
+  suggested_action: Repoint the nine entrypoints in the change that moves the files; add the two use cases and CAP-HARN-agent-guidance to the proposal's targets and boundaries.
+  resolution: open
+- issue: 'Body text that names the catalog as owner or cites moved paths: CAP-DLV-adaptive-development (test paths and the scorer command), ARCH-05-2-components 1.1, ARCH-07-deployment (the adaptive-dev paragraph), CAP-HARN-agent-guidance (lines 473-475), ARCH-05-1-containers (container list) and ADR-adaptive-development-and-research (entry point and test paths).'
+  evidence: docs/capabilities/delivery/CAP-DLV-adaptive-development.md:64, :66, :128, :150, :158, :161, :195, :200, :210, :294; docs/architecture/ARCH-05-2-components.md:82-83; docs/architecture/ARCH-07-deployment.md:181-188; docs/capabilities/harness/CAP-HARN-agent-guidance.md:473-475; docs/architecture/ARCH-05-1-containers.md:31, :160; docs/decisions/2026-11/20261102-adaptive-development-and-research.md:273
+  suggested_action: Restate the living documents; in the ADR add only the partial-supersession line and leave its clauses as written.
+  resolution: open
+- issue: 'Guides and READMEs name devkit-catalog as the package of adaptive-dev: INSTALL_GUIDE, existing-repository, new-repository, adaptive-dev-sdd-adoption, bundle-recommendations, the catalog README, the root README and the AGENTS.md package table.'
+  evidence: guides/INSTALL_GUIDE.md:83, :97, :107, :112, :125, :217; guides/install/existing-repository.md:256-257; guides/install/new-repository.md:104-105; guides/install/adaptive-dev-sdd-adoption.md:21; guides/install/bundle-recommendations.md:35-36, :88; packages/devkit-catalog/README.md:9, :26-49; README.md:29-32, :70-71, :82, :205; AGENTS.md:80
+  suggested_action: Name devkit-adaptive for the adaptive-dev rows and paragraphs, move the README section to a new package README and keep the other catalog bundles unchanged.
+  resolution: open
+- issue: 'Release tooling: a package absent from the baseline counts as changed and takes the release version; an internal requirement must be an exact pin; release notes generate installation closures for a fixed set of variants that has none for the catalog or for adaptive development.'
+  evidence: scripts/releases/prepare.py:199-209; scripts/releases/identity.py:56-70; scripts/releases/install.py:12-22
+  suggested_action: Write version 0.1.6 in the new pyproject.toml beside the bundle's 0.1.6 and leave the release version to just version-sync; add no installation variant in this unit.
+  resolution: open
+- issue: No change is needed in this repository's own .devkit/config.toml or receipt (adaptive-dev is not selected here), in the CI workflows (no per-package list), in the generated-artifact registry (viewer assets only), or in the first-party lists of the output-contract and log-namespace tests (the package has no command or logger).
+  evidence: .devkit/config.toml:4-11; .github/workflows/ci.yml:3-4, :51-58; .devkit/generated.toml:4-7; packages/devkit/tests/integration/package/test_agent_output_contract.py:43-66; packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/discovery.py:14-17
+  suggested_action: No change; update the ci.yml comment that lists packages.
+  resolution: open
+assumptions:
+- Document citations came from rg over docs/, not from devkit docs refs.
+- Completed specs and docs/materials cite the old paths as history; no rule validates them.
+unverified_areas:
+- No test, rule, uv lock or smoke was executed by the scout.
+- scripts/releases/prepare.py handling of a package absent from the baseline was read, not executed.
+- Whether the devkit-spec e2e scenario that runs devkit add adaptive-dev resolves the bundle from the workspace environment was not traced.
+- Lines that name adaptive-dev only as approach value or bundle name were sampled, not read exhaustively.
+checks: {}
+diff_scope:
+  base: 881bced14eca0f9d2a9a700812807e14c32173bc
+  head: 91a4acd666aebcf898a1d976584a4266e8370a1c
+activity_effort: medium

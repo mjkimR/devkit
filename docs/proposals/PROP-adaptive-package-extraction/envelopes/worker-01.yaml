@@ -1,0 +1,27 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T00:31:30.168376Z'
+status: completed
+summary: 'First Planning turn: status set to reviewing; spike questions Q1 to Q7 settled from repository evidence (materials/planning-evidence.md, scout-01), PADR-adaptive-dev-distribution written, acceptance criteria AC-01 to AC-08, boundaries and target documents updated; one challenger round of five findings folded and closed (reverify-01). No question for the user remains; the proposal waits for plan-accept.'
+findings: []
+assumptions:
+- 'Existing selections cross the move without a bridge, by a documented installation step: every alternative breaks an accepted contract (snapshot support of the catalog, unique bundle names) or leaves the unit, and ADR-package-ownership-and-release-version declines migration paths while there are no external consumers. The user confirms or overrules this at plan-accept.'
+- 'The unit adds one code change outside the move: release preparation looks up a moved bundle by name so its version stays (scripts/releases/prepare.py with a test), chosen over an exception to the MUST of ARCH-07-deployment 1.1.'
+- devkit-adaptive declares no runtime requirement and only devkit.bundles at the move; PROP-adaptive-assignment-cli decides the base (devkit-dist or devkit-agt) with its first command.
+- dev_effort stays medium and size stays M with one spec.
+unverified_areas:
+- 'A built-wheel consumer upgrade across the move was not executed: the host refused the probe script that edits installed catalog metadata. The existing-selection analysis rests on code, contracts and six passing devkit-dist tests; .probe/s1_s2.sh holds the unexecuted scenario.'
+- just smoke was not run; by reading, its catalog bundle assertion (tests/e2e/smoke.sh:228) fails at the base.
+- uv's resolution of devkit-adaptive added beside a catalog locked at another ref was not executed.
+- The release-preparation lookup by bundle name was designed from scripts/releases/prepare.py:222-228 and not prototyped.
+checks:
+  rules: PASS devkit rules check on the proposal directory, no RULE-proposal-boundaries report
+  tests: PASS 6/6 existing devkit-dist selection tests
+  challenger: PASS 5 findings, 5 resolved in reverify-01
+  feedback: PASS swept, recorded 0
+diff_scope:
+  base: 881bced14eca0f9d2a9a700812807e14c32173bc
+  head: f9b9f2c2488865e2ffd72ad6920e108d7f2ff066
+activity_effort: medium
