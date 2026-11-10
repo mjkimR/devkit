@@ -49,8 +49,8 @@ not measured results:
    desktop applications, dashboards, admin tools, settings and responsive views. It does not cover slide decks, game
    loops or media production.
 2. **Structure skipped.** Agents move to styling or code before modeling the domain objects, their relationships and
-   the actions on them, which produces fragmented screens and disjointed flows. Object-Oriented UX (OOUX) and its
-   ORCA steps (Objects, Relationships, CTAs, Attributes) anchor an interface in those domain objects first.
+   the actions on them, which produces fragmented screens and disjointed flows. Object-Oriented UX (OOUX) and its ORCA
+   steps (Objects, Relationships, CTAs, Attributes) anchor an interface in those domain objects first.
 3. **Generic craft.** Default output repeats generic patterns: nested cards, unmotivated gradients, one overused
    typeface, low-contrast secondary text and missing empty, loading and error states.
 
@@ -79,21 +79,21 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 
 1. **Proportionate OOUX framing**: name the relevant objects, relationships, CTAs and attributes before layout or
    styling when a request changes structure or flow, and skip the framing for a local change.
-2. **Documents first when they exist**: take the framing from the project's glossary, object register and UX
-   documents when present, pass their paths to Impeccable instead of restating them, and report the UX documents a
-   change makes stale instead of editing them. Without those documents, frame in conversation.
+2. **Documents first when they exist**: take the framing from the project's glossary, object register and UX documents
+   when present, cite their paths to Impeccable instead of restating them, and report the documents a change makes
+   stale instead of editing them in the skill run. Without those documents, frame in conversation.
 3. **Optional Impeccable delegation**: on the user's selection, pass the framing and an explicit file boundary to one
    Impeccable session, then accept, verify and deliver its changes through the consumer workflow.
 4. **Consumer-owned project files**: treat Impeccable's `PRODUCT.md`, `DESIGN.md` and shared `.impeccable/` files as
    project context the consumer keeps or ignores. `PRODUCT.md` can carry a short reference section to the OOUX
-   documents, so every Impeccable command reads the same object model.
+   documents, so Impeccable commands that load it read the same object model.
 5. **User-requested conveniences**: install Impeccable, add upstream-recommended ignore entries and remove named
    Impeccable output only when the user asks.
 6. **Qualified name**: rename the bundle and skill to `app-uiux-improve`, which adds the software-application
    qualifier. `uiux-improve` is absent from release tag `v0.1.5` and has no other consumer, so the rename is a clean
    break.
-7. **A guide the user can reread**: a human-facing usage guide beside the bundle explains setup, the per-task flow
-   and what the coordinator does and does not do.
+7. **A guide the user can reread**: a human-facing usage guide beside the bundle explains setup, the per-task flow and
+   what the coordinator does and does not do.
 
 ### Scope and non-goals
 
@@ -111,9 +111,11 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 - Non-goals:
   - Vendoring or bundling Impeccable source, prompt text, binaries or npm packages.
   - Adding a Node.js or npm dependency to `devkit-catalog` or `devkit-dist`.
-  - Installing Impeccable, its hooks or its CLI, or removing or ignoring any file, on the coordinator's own initiative.
+  - Installing Impeccable, its hooks or its CLI, or removing or ignoring any file, on the coordinator's own
+    initiative.
   - A dependency on `devkit-docs` or its document conventions: the skill reads those documents only where they exist.
-  - Writing or updating the consumer's glossary, object register or UX documents from the skill; it reports them.
+  - Writing or updating the consumer's glossary, object register or UX documents within the skill run; it reports
+    them, and the consumer workflow's own step updates them.
   - Copying object, attribute or state content into `PRODUCT.md` or `DESIGN.md`.
   - Shipping the usage guide to consumers or linking it from an agent-read file.
   - Non-software design domains (presentation decks, 3D or game graphics, video pipelines).
@@ -135,14 +137,14 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
   run in a session the user operates.
 - **Q4. Impeccable project files.** They are consumer-owned project context (§3.5). The skill reports what a session
   created or changed and points to upstream's commit-versus-ignore guidance. On the user's request it adds ignore
-  entries or removes named runtime and session output; `PRODUCT.md` and `DESIGN.md` change only on the user's
-  explicit direction.
-- **Q5. Inline fallback.** `references/design-guidance.md` keeps its lenses and adds the baseline craft checks in §3.3,
-  written originally.
-- **Q6. Tests.** The renamed integration test keeps the 12,288-byte, governance-ID and conditional-reference checks and
-  adds `assert_rule` checks for the new instructions and guide checks (§3.7).
-- **Q7. Child loading Impeccable.** Claude Code documents that a fresh subagent can discover and invoke project,
-  user and plugin skills through the Skill tool; Codex documents skill inheritance for sub-agents but not discovery
+  entries or removes named runtime and session output; `PRODUCT.md` and `DESIGN.md` change only on the user's explicit
+  direction.
+- **Q5. Inline fallback.** `references/design-guidance.md` keeps its lenses and adds the baseline craft checks in
+  §3.3, written originally.
+- **Q6. Tests.** The renamed integration test keeps the 12,288-byte, governance-ID and conditional-reference checks
+  and adds `assert_rule` checks for the new instructions and guide checks (§3.7).
+- **Q7. Child loading Impeccable.** Claude Code documents that a fresh subagent can discover and invoke project, user
+  and plugin skills through the Skill tool; Codex documents skill inheritance for sub-agents but not discovery
   ([planning evidence](materials/planning-evidence.md) §4). Loading is host-dependent, so a child that cannot load
   Impeccable returns a blocker and the command moves to the user's session (§3.4).
 
@@ -152,8 +154,8 @@ The skill gives the most leverage as an OOUX-grounded coordinator for software i
 
 - `app-uiux-improve` replaces `uiux-improve` in `bundle.toml` (`name`, asset `id`, `source`, preset `core`), the skill
   directory and its `SKILL.md` `name`. The `packages/devkit-catalog/pyproject.toml` entry point becomes
-  `app-uiux-improve = "devkit_catalog.app_uiux_improve"`, and the `.devkit/architecture.toml` `data_roots` entry becomes
-  `app_uiux_improve`.
+  `app-uiux-improve = "devkit_catalog.app_uiux_improve"`, and the `.devkit/architecture.toml` `data_roots` entry
+  becomes `app_uiux_improve`.
 - Development moves the module to `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/` (skill at
   `bundle/skills/app-uiux-improve/`, usage guide at `bundle/README.md`), the integration test to
   `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py` and the E2E test directory to
@@ -184,14 +186,15 @@ one-time steps are the user's; the coordinator helps only on request.
    completes the consumer workflow's steps that precede implementation (branch, worktree, required records).
 2. **Frame in proportion to the request** (§3.3), in the devkit session.
    - A local change (one component, one state, copy or spacing) proceeds without an ORCA pass.
-   - A change that adds, merges or reorders views or flows first names the affected objects, their relationships,
-     the CTAs on each object and the attributes each view shows, with their empty, loading, error and populated
-     states. The framing reads the project's OOUX documents when present and falls back to conversation.
+   - A change that adds, merges or reorders views or flows first names the affected objects, their relationships, the
+     CTAs on each object and the attributes each view shows, with their empty, loading, error and populated states.
+     The framing reads the project's OOUX documents when present and falls back to conversation.
    - A review-only request can use the same framing as a lens and ends with findings and no product edits.
    - Framing covers the objects the request touches, never an exhaustive audit of the product.
 3. **Choose the track.** Inline is the default: the coordinator implements, optionally with the four local roles,
    which stay available on both tracks. On the user's selection of Impeccable, the coordinator writes the brief
-   (§3.4): goal, OOUX document paths or framing, edit list, recorded base, commands and stop condition.
+   (§3.4): goal, the framing result citing the OOUX documents by path, consumer drafts by path, edit list, recorded
+   base, commands and stop condition.
 4. **Run the Impeccable session.** The coordinator makes no product edits until it returns.
    - (a) Refinement commands on existing surfaces (`polish`, `audit`, narrow refine commands): the coordinator spawns
      a fresh child that loads Impeccable, reads `PRODUCT.md` and the brief, edits only listed files and returns its
@@ -200,7 +203,7 @@ one-time steps are the user's; the coordinator helps only on request.
      who runs it in their own Impeccable session and reports back.
    - Where the host cannot give a child Impeccable, refinement also goes to the user's session.
 5. **Accept and continue** in the devkit session. The coordinator compares the working directory with the recorded
-   base, verifies the accepted changes, reports changes outside the edit list and the UX documents the change made
+   base, verifies the accepted changes, reports changes outside the edit list and each OOUX document the change made
    stale, and continues the consumer workflow.
 6. **Optional cleanup**, on the user's request only (§3.5).
 
@@ -216,14 +219,16 @@ naming SDD records.
   navigation paths; CTAs sit on the object they act on rather than in global menus; attributes separate identifiers
   from metadata. One worked example covers a two-object flow.
 - **Framing sources**, read only where the files exist:
-  - object names from the project glossary (`docs/steering/glossary.md`, plus a selected namespace glossary);
-  - representations and CTAs per role from the object register (`docs/steering/ux-objects.md`, plus a namespace
-    register);
+  - object names from the project glossary (`docs/steering/glossary.md`, plus a package-level glossary beside the
+    affected code, when present);
+  - representations and CTAs per role from the object register (`docs/steering/ux-objects.md`, plus a package-level
+    register beside the affected code, when present);
   - attributes, states and interactions from the UX documents (`docs/ux/<area>/`) of the affected screens.
   - Without them, the coordinator frames in conversation. A partial set is used as far as it goes.
   - The framing never writes these files; stale documents are reported after the change (§3.4 item 8).
-- **Baseline craft checks**: readable contrast for secondary text, a consistent type scale, no decorative gradients
-  or nested containers without a purpose, and empty, loading and error states for every changed view.
+  - The skill names these paths as an optional convention and no `devkit-docs` concept such as namespace selection.
+- **Baseline craft checks**: readable contrast for secondary text, a consistent type scale, no decorative gradients or
+  nested containers without a purpose, and empty, loading and error states for every changed view.
 - The provenance section keeps Impeccable as a reference and states that nothing is copied.
 
 The paths are named as an optional convention, so the bundle still installs and runs without `devkit-docs`
@@ -234,26 +239,30 @@ The paths are named as an optional convention, so the bundle still installs and 
 1. **Selection.** Without the user's selection, the coordinator neither starts an Impeccable session nor loads or
    invokes Impeccable in its own context; an installed Impeccable permits an offer. Output of a hook the user
    installed counts as consumer check evidence.
-2. **Availability.** If Impeccable is absent and the user wants it, the coordinator names the upstream routes:
-   `npx impeccable install`, Claude Code `/plugin marketplace add pbakaus/impeccable` followed by installing it from
-   `/plugin`, or a manual copy of `skills/impeccable`. On the user's request it runs a route it can run (the `npx`
-   installer or the manual copy) under the host's approvals; the user answers the installer's prompts, including its
-   hook offer, and runs the `/plugin` route. It never installs on its own initiative. The user can continue inline.
+2. **Availability.** If Impeccable is absent and the user wants it, the coordinator names the upstream routes: `npx
+   impeccable install`, Claude Code `/plugin marketplace add pbakaus/impeccable` followed by installing it from
+   `/plugin`, or a manual copy of `skills/impeccable`. On the user's request it runs only a route that needs no prompt
+   answers under the host's approvals: the manual copy, or the `npx` installer with non-interactive options whose
+   values (scope, hook) the user stated, where upstream documents such options. Otherwise it hands the user the exact
+   command; the user runs the interactive installer and the `/plugin` route and answers their prompts, including the
+   hook offer. It never installs on its own initiative. The user can continue inline.
 3. **Workflow first.** Complete the consumer workflow's steps that precede implementation (branch, worktree, required
    records) before delegating.
-4. **Brief.** Goal; the OOUX document paths as read-only context, or the conversation framing when no document
-   exists; absolute working directory; recorded base (HEAD, status and content hashes of the listed files under Git,
-   the listed files' hashes otherwise); the product files the session may edit; the files and concerns it leaves
-   unchanged (data schema, business logic, dependencies, the OOUX documents, files with uncommitted user edits unless
-   the user includes them); whether it may write consumer context files; the commands to run; the stop condition; the
-   expected return (changed files, commands run, detector or audit results, session output, degraded coverage,
-   blockers including any upstream question).
+4. **Brief.** Goal; the framing result for this request, citing the consumer's OOUX documents by path read-only
+   instead of restating them, or the conversation framing when none exist; consumer-supplied drafts or specifications
+   for the change, by path, read-only; absolute working directory; recorded base (HEAD, status and content hashes of
+   the listed files under Git, the listed files' hashes otherwise); the product files the session may edit; the files
+   and concerns it leaves unchanged (data schema, business logic, dependencies, the OOUX documents, files with
+   uncommitted user edits unless the user includes them); whether it may write consumer context files (`PRODUCT.md` or
+   `DESIGN.md` only on the user's explicit direction); the commands to run; the stop condition; the expected return
+   (changed files, commands run, detector or audit results, session output, degraded coverage, blockers including any
+   upstream question).
 5. **Command routing.** A fresh child runs only commands that refine existing surfaces without user answers: `polish`,
    `audit` and narrow refinement commands such as `distill`, `typeset` or `layout`. The child loads Impeccable through
    the host's skill mechanism; a child that cannot load it returns that as a blocker, and the coordinator moves the
    command to the user's session. New work, `init`, `shape` and `critique` ask the user questions (and `critique`
-   needs two isolated sub-agents), so they run in a session the user operates from the same brief. A child returns
-   any upstream question as a blocker and never answers it. No route uses `live`, which runs agents with sandbox and
+   needs two isolated sub-agents), so they run in a session the user operates from the same brief. A child returns any
+   upstream question as a blocker and never answers it. No route uses `live`, which runs agents with sandbox and
    approvals off.
 6. **`shape` and OOUX.** `shape` is an interactive interview that writes no code. The coordinator's framing covers its
    structural role for a fresh child. In a session the user runs, the user may run `shape` with the brief as its
@@ -263,25 +272,29 @@ The paths are named as an optional convention, so the bundle still installs and 
    verification. Report Impeccable session output (critique snapshots, mocks, hook and runtime state under
    `.impeccable/`) as session output, and any other change without reverting or deleting it. Report a moved HEAD, a
    missing base or unobservable ignored paths as unverifiable attribution or limited coverage. Report each OOUX
-   document whose states or interactions the accepted change made stale, for the consumer workflow to update (under
-   SDD, `spec-sync`). Continue accepted changes through the consumer workflow.
+   document (glossary, object register or UX document) the accepted change made stale; the skill run edits none of
+   them, and their update follows the consumer workflow's own step (under SDD, `spec-sync`; the skill text names no
+   stage). Continue accepted changes through the consumer workflow.
 
 ### 3.5 Impeccable project files, the `PRODUCT.md` anchor and user-requested setup
 
 - `PRODUCT.md` (`init`), `DESIGN.md` (`document`) and shared `.impeccable/` files (`config.json`, `design.json`,
   `surfaces/*.md`, critique snapshots) are persistent project context; upstream recommends committing them and
   ignoring runtime output (`config.local.json`, caches, screenshots, `review/`, `questions/`, live session state).
-- The consumer owns these files and decides their retention. The brief permits writes to `PRODUCT.md`, `DESIGN.md`,
-  `.impeccable/design.json`, `.impeccable/config.json` and `.impeccable/surfaces/` only when it lists them.
+- The consumer owns these files and decides their retention. The brief permits writes to `.impeccable/design.json`,
+  `.impeccable/config.json` and `.impeccable/surfaces/` only when it lists them, and lists `PRODUCT.md` or `DESIGN.md`
+  only on the user's explicit direction.
 - **OOUX anchor.** `PRODUCT.md` can hold a short section that names the project's glossary, object register and UX
-  document directory by path and says to read them before structural work. It references the documents and copies
-  none of their content, so the anchor cannot drift. The user writes it in the `init` session, or the coordinator
-  adds it on the user's request. Every Impeccable command reads `PRODUCT.md`, so every session sees the object model.
+  document directory by path and says to read them before structural work. It references the documents and copies none
+  of their content, so the anchor cannot drift. The user writes it in the `init` session, or the coordinator adds it
+  on the user's request. Impeccable commands that load `PRODUCT.md` (new work checks for it before acting) see the
+  reference section.
 - **Reporting.** The coordinator lists the context files a session created or changed and points to upstream's
   "Project files and git" guidance.
 - **User-requested conveniences.** On the user's request, and never on its own initiative, the coordinator may:
   - install Impeccable through an upstream route (§3.4 item 2);
-  - add upstream's recommended ignore entries to `.gitignore`;
+  - add upstream's recommended ignore entries, confined to `.impeccable/` paths (prefixed in the root `.gitignore` or
+    in `.impeccable/.gitignore`), after showing the user the exact lines;
   - remove Impeccable runtime or session output the user names (for example screenshots or `review/`);
   - add the OOUX anchor to `PRODUCT.md`.
 - `PRODUCT.md` and `DESIGN.md` are never part of a cleanup unless the user names them, because the anchor and design
@@ -306,11 +319,11 @@ bundle, read before or after installing it. It is not an agent asset:
 Contents, in this order:
 
 1. What the bundle is for (software interfaces) and what it does not do.
-2. One-time setup: selecting the bundle, installing Impeccable (three upstream routes, or the coordinator on
-   request), running `init` and adding the OOUX anchor to `PRODUCT.md`.
+2. One-time setup: selecting the bundle, installing Impeccable (three upstream routes, or the coordinator on request),
+   running `init` and adding the OOUX anchor to `PRODUCT.md`.
 3. Per-task flow (§3.2) with one example request.
-4. The two launch routes: a fresh child for refinement, the user's own session for interactive commands, and what
-   the user reports back.
+4. The two launch routes: a fresh child for refinement, the user's own session for interactive commands, and what the
+   user reports back.
 5. What the coordinator does and does not do (selection, pause, acceptance, no commit authority, no installation or
    cleanup without a request).
 6. OOUX document linkage: which documents the framing reads, the anchor and the report-only write-back.
@@ -324,21 +337,23 @@ Contents, in this order:
   relationships, CTAs and attributes before layout or styling changes; given a local change, it proceeds without an
   ORCA pass; given a review-only request, it returns findings with no product edits.
 - **AC-2:** Given the user selects Impeccable, the agent completes the consumer's pre-implementation workflow steps,
-  produces a self-contained brief with the working directory, recorded base, edit list, unchanged concerns,
-  context-file permission, routed commands without `live`, stop condition and expected return, and makes no product
-  edits until the session returns.
-- **AC-3:** Given a fresh child would need new work, `init`, `shape` or `critique`, the agent routes those commands to a
-  session the user operates; given a child meets an upstream question or cannot load Impeccable, the child returns it
-  as a blocker unanswered and the agent routes the command to the user's session.
-- **AC-4:** Given Impeccable is absent or not selected, the agent completes the improvement inline with the framing and
-  design guidance without loading Impeccable; when the user wants Impeccable, it names the three upstream install
-  routes and installs only on the user's request.
+  produces a self-contained brief with the framing result, consumer drafts by path, the working directory, recorded
+  base, edit list, unchanged concerns, context-file permission (`PRODUCT.md` or `DESIGN.md` only on the user's
+  explicit direction), routed commands without `live`, stop condition and expected return, and makes no product edits
+  until the session returns.
+- **AC-3:** Given a fresh child would need new work, `init`, `shape` or `critique`, the agent routes those commands to
+  a session the user operates; given a child meets an upstream question or cannot load Impeccable, the child returns
+  it as a blocker unanswered and the agent routes the command to the user's session.
+- **AC-4:** Given Impeccable is absent or not selected, the agent completes the improvement inline with the framing
+  and design guidance without loading Impeccable; when the user wants Impeccable, it names the three upstream install
+  routes, installs only on the user's request, runs only a route that needs no prompt answers and otherwise hands the
+  user the exact command.
 - **AC-5:** Given a session created or changed `PRODUCT.md`, `DESIGN.md` or shared `.impeccable/` context files, the
-  agent reports them as consumer-owned with upstream's retention guidance; it installs, adds ignore entries or removes
-  named runtime or session output only on the user's request, and changes `PRODUCT.md` or `DESIGN.md` only on the
-  user's explicit direction.
-- **AC-6:** Given the session changed a file outside its edit list, the agent reports that file and neither reverts nor
-  delivers it as accepted work; given HEAD moved or the base is missing, it reports attribution as unverifiable.
+  agent reports them as consumer-owned with upstream's retention guidance; it installs, adds ignore entries confined
+  to `.impeccable/` paths after showing them, or removes named runtime or session output only on the user's request,
+  and changes `PRODUCT.md` or `DESIGN.md`, or lets a session change them, only on the user's explicit direction.
+- **AC-6:** Given the session changed a file outside its edit list, the agent reports that file and neither reverts
+  nor delivers it as accepted work; given HEAD moved or the base is missing, it reports attribution as unverifiable.
 - **AC-7:** The bundle, skill, entry point, module, data root, tests, README, installation guide and component
   description use `app-uiux-improve` (module `app_uiux_improve`); no alias or entry point for the old `uiux-improve`
   bundle, skill or `uiux_improve` module remains.
@@ -346,9 +361,9 @@ Contents, in this order:
   passes the catalog integration tests; the installed-consumer test passes as `app-uiux-improve` without devkit-agt,
   devkit-docs or devkit-spec.
 - **AC-9:** Selection, invocation and delegation grant no commit, integration or publication authority.
-- **AC-10:** Given the project has a glossary, object register or UX documents, the agent frames from them and the brief
-  passes their paths read-only instead of restating objects; given they are absent, it frames in conversation; after
-  an accepted change, it reports the UX documents that need updating and edits none of them.
+- **AC-10:** Given the project has a glossary, object register or UX documents, the agent frames from them and the
+  brief cites their paths read-only instead of restating objects; given they are absent, it frames in conversation;
+  after an accepted change, it reports each OOUX document the change made stale and the skill run edits none of them.
 - **AC-11:** The usage guide exists at `bundle/README.md` with the contents in §3.6, contains no governance IDs, is
   linked from the catalog README, is linked from no agent-read bundle file and is absent from a synced consumer's
   managed and projected files.
@@ -357,16 +372,19 @@ Tests:
 
 - Move and rename the integration and E2E tests; keep every existing assertion with the new paths.
 - Add `assert_rule` checks: Impeccable neither loaded nor invoked without selection; workflow steps before delegating;
-  brief fields including working directory, base and OOUX document paths; command routing to the user-run session;
-  upstream questions and load failures returned as blockers; `live` excluded; no product edits while the session runs;
-  outside-list changes reported without revert; unverifiable attribution reported; stale UX documents reported, not
-  edited; framing sources conditional with the conversation fallback; context files reported; installation, ignore
-  entries and cleanup only on request; `PRODUCT.md` and `DESIGN.md` changed only on explicit direction; local change
-  without ORCA pass.
-- Guide checks (AC-11): the file exists and names each §3.6 section; no governance ID; the catalog README links it;
-  no file under the skill directory or `bundle.toml` names `README.md`; the synced managed set stays `bundle.toml` plus
-  the skill files, and no projected skill directory holds `README.md`. The installed-consumer test asserts the same
-  absence.
+  brief fields including framing result, OOUX document and draft paths, working directory and base; command routing to
+  the user-run session; upstream questions and load failures returned as blockers; `live` excluded; no product edits
+  while the session runs; outside-list changes reported without revert; unverifiable attribution reported; stale OOUX
+  documents reported, not edited in the skill run; framing sources conditional with the conversation fallback; context
+  files reported; installation, ignore entries and cleanup only on request; installer routes needing prompt answers
+  handed to the user; ignore entries confined to `.impeccable/` and shown first; `PRODUCT.md` and `DESIGN.md` changed
+  or permitted in a brief only on explicit direction; no namespace-selection concept or SDD stage named in the skill;
+  local change without ORCA pass.
+- Guide checks (AC-11): the file exists and names each §3.6 section; no governance ID; the catalog README links it; no
+  file under the skill directory or `bundle.toml` links or names a path to the bundle's own guide (`../README.md`,
+  `bundle/README.md`), while a pointer to Impeccable's README stays allowed; the synced managed set stays
+  `bundle.toml` plus the skill files, and no projected skill directory holds `README.md`. The installed-consumer test
+  asserts the same absence.
 - AC-1 to AC-6, AC-9 and AC-10 are instruction checks: the tests verify stated behavior, not model obedience.
 
 ### 3.8 Planning decisions
@@ -385,8 +403,8 @@ Tests:
   - A, framing source: framing reads the glossary, object register and UX documents when present and the brief passes
     their paths read-only; without them it frames in conversation. The read is conditional and adds no dependency on
     `devkit-docs` (capability rule 13).
-  - B, persistent anchor: `PRODUCT.md` gets a reference section, never a copy, written in the user's `init` session
-    or by the coordinator on request.
+  - B, persistent anchor: `PRODUCT.md` gets a reference section, never a copy, written in the user's `init` session or
+    by the coordinator on request.
   - C, report-only write-back: the coordinator reports the UX documents a change made stale; the consumer workflow
     updates them.
   - Rejected: copying objects into `PRODUCT.md` (drifts from the documents); the skill updating UX documents itself
@@ -403,10 +421,11 @@ Tests:
   `PADR-impeccable-session-authority` carries the change.
 - **Usage flow (by: user).** §3.2 states the one-time and per-task flow, the two launch routes and the SDD note that a
   new screen is drafted in Planning before Impeccable implements it.
-- **Child loading is host-dependent (Planning).** A child loads Impeccable through the host's skill mechanism. Claude
-  Code documents that path; Codex does not document it for sub-agents. A child that cannot load Impeccable returns a
-  blocker, and the command moves to the user's session. Rejected: a child reading Impeccable's `SKILL.md` by path,
-  because it loses skill-scoped hooks and tool grants and is not an upstream route.
+- **Child loading is host-dependent (Planning).** A child loads Impeccable through the host's skill mechanism. Loading
+  is unverified on every host: Claude Code documents Skill-tool discovery for subagents, and Codex documents only
+  skill inheritance for sub-agents. A child that cannot load Impeccable returns a blocker, and the command moves to
+  the user's session. Rejected: a child reading Impeccable's `SKILL.md` by path, because it loses skill-scoped hooks
+  and tool grants and is not an upstream route.
 - **Usage guide location (by: user, Planning choice of path).** The user asked for a human-facing guide to reread,
   read before or after installation, that is not an agent asset and is linked from no agent entry point. Chosen:
   `bundle/README.md` beside `bundle.toml`. Sync does not deploy it, the authoring rules do not scan it, and it sits
@@ -416,12 +435,18 @@ Tests:
   - Rejected: `guides/` (the repository defines it as agent-facing installation guides).
   - Rejected: a longer catalog README section (the user wants that README to stay a short pointer).
   - Rejected: `docs/` (the Living Spec holds capabilities, use cases, architecture and decisions, not usage guides).
+- **Challenger round 2 (Planning).** The brief cites the documents inside the framing result and adds consumer drafts
+  by path; a brief permits `PRODUCT.md` or `DESIGN.md` only on the user's explicit direction; the no-edit rule binds
+  the skill run, not the consumer workflow's later step; the coordinator runs only installer routes that need no
+  prompt answers; ignore entries stay confined to `.impeccable/` and are shown before writing. The upstream ignore
+  block's intended file and the installer's non-interactive options stay unverified; the design is safe either way.
 - **Development effort stays `medium`.** The added work is instruction text, one guide and test assertions with the
   same verification as before.
 
 ## 4. Lifecycle & Retirement Criteria
 
 On acceptance with `devkit spec proposal accept uiux-improve-ooux-impeccable`, the handoff creates the spec, promotes
-`PADR-impeccable-session-authority`, carries `PROP-uiux-improve-ooux-impeccable-target` and moves `materials/` into `docs/materials/`.
+`PADR-impeccable-session-authority`, carries `PROP-uiux-improve-ooux-impeccable-target` and moves `materials/` into
+`docs/materials/`.
 Development implements under the boundaries above and reconciles the Living Spec. The proposal bundle is removed by
 the handoff.
