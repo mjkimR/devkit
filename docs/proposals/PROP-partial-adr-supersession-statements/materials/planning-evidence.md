@@ -93,7 +93,7 @@ the result of section 4.1.
 | `ADR-local-and-pull-request-integration` | `ADR-configuration-language-and-rendering` | no | 3 | 1 | same |
 | `ADR-namespace-milestone-roots` | `ADR-roadmap-and-milestones-ledger` | no | 0 | 1 | same |
 | `ADR-namespace-steering-directories` | `ADR-steering-documents` | yes | 0 | 1 | summary copy |
-| `ADR-namespace-steering-registers` | `ADR-namespace-steering-directories` | no | 0 | 1 | differ (open) |
+| `ADR-namespace-steering-registers` | `ADR-namespace-steering-directories` | no | 0 | 1 | differ (decided) |
 | `ADR-namespace-steering-registers` | `ADR-ux-screens` | no | 0 | 1 | same |
 | `ADR-opt-in-maintenance-history` | `ADR-history-branch-publication` | no | 0 | 1 | same |
 | `ADR-post-merge-verification` | `ADR-adaptive-development-and-research` | no | 0 | 1 | same |
@@ -138,6 +138,8 @@ Two pairs name different clauses:
   - Other Decision Outcome items of the later ADR change both subjects without naming the earlier ADR: namespace UX
     object registers live in the namespace steering directory, and search loads the selected namespace's synonym
     files after the root's.
+  - The user decided the scope: the namespace glossary locations and exclusions, the root-only search synonyms and
+    the deferred namespace UX object register.
   - The scope is not decided.
 
 Pairs read as the same scope although the texts differ in detail:

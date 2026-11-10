@@ -82,8 +82,8 @@ Partial supersession becomes reliable when the replaced scope is written once an
 
 ## 2. Technical Spike Questions
 
-Planning answered the six questions from repository evidence, and the user decided the scope of one flagged pair and
-the form of a whole replacement (Planning decisions). `materials/planning-evidence.md` holds the inventory and the
+Planning answered the six questions from repository evidence, and the user decided the scope of the two flagged pairs
+and the form of a whole replacement (Planning decisions). `materials/planning-evidence.md` holds the inventory and the
 option tables, `envelopes/scout-01.yaml` the command and viewer evidence. Where an envelope differs from this
 document, this document holds.
 
@@ -228,9 +228,11 @@ The existing checks stay. The rule adds, as errors without a fixer:
     replaces the role-set and role-authority clauses. The statement names both, as the earlier ADR's pointer and the
     frontmatter key `supersedes_clause` do. The Decision Outcome sentence that names "the role-set clauses" only is
     reworded into that statement, and the pointer keeps its scope and repeats the statement's text.
-  - `ADR-namespace-steering-registers` over `ADR-namespace-steering-directories`. Its Decision Outcome names "the
-    glossary-exclusion and package-glossary-location clauses"; the earlier ADR's pointer also names "root-only search
-    synonyms" and "the deferred namespace UX object register". Its scope is an open question of this Planning.
+  - `ADR-namespace-steering-registers` over `ADR-namespace-steering-directories`, decided by the user: the later ADR
+    replaces the namespace glossary locations and exclusions, the root-only search synonyms and the deferred
+    namespace UX object register. The statement names all three, as the earlier ADR's pointer does. The Decision
+    Outcome sentence that names "the glossary-exclusion and package-glossary-location clauses" only is reworded into
+    that statement, and the pointer keeps its scope and repeats the statement's text.
 - The frontmatter key `supersedes_clause` of `ADR-skill-local-swarm-roles`, the only one in the ledger, is removed:
   the statement replaces it.
 - The six summary-copy pointers and the pointer written with "for" take the statement's text.
@@ -327,6 +329,9 @@ The existing checks stay. The rule adds, as errors without a fixer:
   pointers below a heading, the sentences the statements were reworded from and the removed `supersedes_clause` key;
 - **And** the statement of `ADR-skill-local-swarm-roles` for `ADR-adaptive-development-and-research` names the
   role-set and the role-authority clauses, and the earlier ADR's pointer repeats it;
+- **And** the statement of `ADR-namespace-steering-registers` for `ADR-namespace-steering-directories` names the
+  namespace glossary locations and exclusions, the root-only search synonyms and the deferred namespace UX object
+  register, and the earlier ADR's pointer repeats it;
 - **And** `reconcile.md` holds one row per pair with the earlier sentences, the earlier pointer and the new
   statement, and names every flagged pair with the decision its scope follows.
 
@@ -371,7 +376,7 @@ The existing checks stay. The rule adds, as errors without a fixer:
 | Migration (Q4) | All pairs in this change, the six summary copies included; text restated from the later ADR's own description | planning |
 | Pairs whose sources differ | The migration settles no scope: a flagged pair follows the user's decision, and Development asks for a flagged pair that has none. Sources that name the same clauses in other words or in more detail do not flag a pair | planning |
 | Scope of `ADR-skill-local-swarm-roles` over `ADR-adaptive-development-and-research` | The role-set and role-authority clauses. The Decision Outcome sentence is reworded to that scope, and the earlier ADR's pointer keeps it | user |
-| Scope of `ADR-namespace-steering-registers` over `ADR-namespace-steering-directories` | Open question of this Planning: the Decision Outcome names two clause groups, and the earlier ADR's pointer names two more subjects | planning |
+| Scope of `ADR-namespace-steering-registers` over `ADR-namespace-steering-directories` | The namespace glossary locations and exclusions, the root-only search synonyms and the deferred namespace UX object register: the scope the earlier ADR's pointer names; the Decision Outcome sentence is reworded to it | user |
 | `supersedes_clause` | Removed from `ADR-skill-local-swarm-roles`: a frontmatter copy of the scope is the form `PADR-partial-supersession-statements` rejects | planning |
 | Statement content | An item or paragraph of its own, without trace, source citation, nested list or relative link; text taken from the source lines | planning |
 | Open PADRs of other units | `docs/proposals/` is owned only for the statement of an open PADR that names `supersedes` on the Development head; two exist at `c84a5485` (3.6) | planning |
