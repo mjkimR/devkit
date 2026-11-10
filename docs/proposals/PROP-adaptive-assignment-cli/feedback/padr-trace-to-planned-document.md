@@ -48,3 +48,6 @@ created_at: 2026-11-10
  the exact ID"]
 [SUMMARY: errors=14 warnings=0 infos=0 fixed=0 rules=22]
 ```
+
+Second Planning turn (worktree at `622fa953`): `PADR-adaptive-requires-document-system`, written in that turn, has
+the same unquoted trace to the planned capability in one Decision Outcome clause.

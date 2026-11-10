@@ -1,0 +1,58 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T01:20:32.852620Z'
+status: completed
+review: challenger-02.yaml
+summary: 'All seven findings of challenger-02 are folded and were checked by the planning worker against the edited text; the challenger was not called again. 1: orchestration step 5 follows the order of ADR-worktree-isolated-parallel-workers, which stays unsuperseded. 2: AC-23 is a per-document check with a multi-line search aid, and the deep-research statements are named as unchanged. 3: AC-19 runs in a fresh interpreter. 4: boundaries own scripts/affected_tests.py and docs/decisions/ and exclude only packages/devkit/src/. 5: only a swarm-worker lead records children. 6: the entry point and feature declaration land with the modules they name. 7: target-docs corrects the ownership paragraph of the capability.'
+findings:
+- issue: 'The new orchestration step 5 contradicts a decision clause of the accepted ADR-worktree-isolated-parallel-workers: ''Use the existing harness lifecycle when available, otherwise the consuming project''s documented Git procedure.'' Step 5 puts the project''s documented procedure first and makes uv run devkit worktree optional where the project documents none. After this unit the harness is always installed, so the ADR''s first branch always applies. No PADR supersedes the clause, target-docs.md does not name the ADR, and its file is not owned.'
+  evidence: docs/decisions/2026-11/20261106-worktree-isolated-parallel-workers.md:18,41-42; docs/proposals/PROP-adaptive-assignment-cli/proposal.md:455,711; docs/proposals/PROP-adaptive-assignment-cli/target-docs.md:119-126; docs/capabilities/delivery/CAP-DLV-adaptive-development.md:38
+  failure_condition: A project documents its own worktree procedure and has the harness installed, which is every adaptive installation after this unit. The ADR requires the harness lifecycle; the shipped guidance requires the project procedure. Reconcile finds bundle text that contradicts an accepted ADR with no supersession pointer.
+  suggested_action: Write step 5 in the ADR's order (the installed uv run devkit worktree lifecycle, the project's documented Git procedure otherwise) and reword the section 3.12 bullet to match; or supersede the clause in a PADR.
+  resolution: resolved
+  severity: P1
+- issue: AC-23's rg check cannot print nothing and misses a statement it is meant to catch. The pattern matches the deep-research installation statements, which stay true and are not edited. rg matches per line, so it misses the wrapped sentence in CAP-HARN-agent-guidance and the docs/catalog form of rule 2.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:669-671,579-580; docs/capabilities/delivery/CAP-DLV-deep-research.md:135; guides/install/bundle-recommendations.md:37; docs/capabilities/harness/CAP-HARN-agent-guidance.md:473-474; docs/capabilities/delivery/CAP-DLV-adaptive-development.md:65
+  failure_condition: After a correct implementation the command still prints the two deep-research lines, so AC-23 fails; the CAP-HARN-agent-guidance sentence can stay unedited and the command prints nothing for it.
+  suggested_action: Replace the negative grep with a multi-line pattern whose remaining hits are deep-research statements, or with a positive assertion per document of target-docs.md, and name the deep-research statements as unchanged in section 3.9.
+  resolution: resolved
+  severity: P2
+- issue: AC-19 false-fails whenever the test shares a pytest process with anything that imports devkit_spec. It asserts inside the test that sys.modules holds no devkit_spec module; the repository runs pytest with xdist over several packages, and collecting a devkit-spec test module imports devkit_spec.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:555,655-656; scripts/module.sh:91,158; scripts/affected_tests.py:40-50; packages/devkit-dist/tests/integration/cli/test_cli_imports.py:33
+  failure_condition: just test adaptive passes, then just test, or a just test-affected run that falls back to mode=full, fails AC-19. This unit triggers that fallback itself by changing uv.lock and a pyproject.toml.
+  suggested_action: State in AC-19 and the section 3.8 test list that the import walk and the sys.modules check run in a fresh interpreter, as test_cli_imports.py does.
+  resolution: resolved
+  severity: P2
+- issue: 'Three edits the design needs fall outside boundaries.owns or inside excludes: registering the documented-codes test in the DATA list of scripts/affected_tests.py, whose exact set a test under the excluded packages/devkit/ asserts; backticking the new capability ID in the promoted ADR files under docs/decisions/; any supersession pointer on a second ADR.'
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:14-37,150-153,547-548,554; scripts/affected_tests.py:75-85; packages/devkit/tests/e2e/package/test_affected_tests.py:126-140
+  failure_condition: A later docs-only change removes an ADAPTIVE_ code from docs/; just test-affected selects the devkit, docs and spec documented-codes tests and not the adaptive one, so AC-16 regresses until nightly CI. An implementer who registers the test must edit an excluded path.
+  suggested_action: Add scripts/affected_tests.py, packages/devkit/tests/e2e/package/test_affected_tests.py and docs/decisions/ to owns and narrow the packages/devkit/ exclusion to its sources.
+  resolution: resolved
+  severity: P3
+- issue: The sentence planned for swarm-verifier.md conflicts with a constraint in the same file. A verifier lead is to run new --parent and close, which append to the ledger under the shared Git directory; the contract says the verifier writes only assigned ignored probe/test outputs, and ADR-skill-local-swarm-roles keeps product sources and Git read-only for it.
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:455,459; packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/subagents/swarm-verifier.md:7,34,37; docs/decisions/2026-11/20261106-skill-local-swarm-roles.md:59-60
+  failure_condition: A verifier lead that follows its constraints refuses the recording command, or on Codex needs approval for a write outside sandbox access. Its children stay unrecorded and the parent's children check never sees them.
+  suggested_action: Limit child recording to swarm-worker and have the Host record a verifier's children from its return, as for swarm-planner.
+  resolution: resolved
+  severity: P3
+- issue: 'Step 1 of the section 3.11 order is not verifiable as claimed: it lands the architecture declaration and the pyproject block before the modules they name exist (public_modules names the list use case, the devkit.commands entry point names devkit_adaptive.cli:cli).'
+  evidence: docs/proposals/PROP-adaptive-assignment-cli/proposal.md:494-495,521,687-691; tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/rule.py:289-292,323-330
+  failure_condition: At the end of step 1 devkit rules check reports a missing public module and a missing entry-point module, so the rules gate fails on a commit made in the stated order.
+  suggested_action: Move the features, feature_dependencies, public_modules and devkit.commands lines to step 2 and keep the dependencies lines of both files in step 1.
+  resolution: resolved
+  severity: P3
+- issue: 'target-docs.md leaves one sentence of CAP-DLV-adaptive-development section 1 false: rules 26 and 27 ''have no decision record; this capability is their contract''. The promoted PADR-adaptive-requires-document-system traces its decisions to rules 26 and 27, and PADR-adaptive-assignment-commands to rules 13, 14, 18 and 19.'
+  evidence: docs/capabilities/delivery/CAP-DLV-adaptive-development.md:33-38; docs/proposals/PROP-adaptive-assignment-cli/decisions/PADR-adaptive-requires-document-system.md:63-66; docs/proposals/PROP-adaptive-assignment-cli/target-docs.md:46-78
+  failure_condition: After reconcile the capability states that no decision record exists for rules that an accepted ADR now decides.
+  suggested_action: Add one item under CAP-DLV-adaptive-development in target-docs.md section 1 for the ownership paragraph.
+  resolution: resolved
+  severity: P3
+unverified_areas:
+- No rule or test ran against a devkit_adaptive tree; the checks named in the findings are reasoned from the rule and test sources
+checks: {}
+diff_scope:
+  base: fe1f18852a9e894392ecdeb5683fd72e19552b6e
+  head: f73db5508f651ae133494159347a57ac930a5c91
+activity_effort: medium
