@@ -1,0 +1,97 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T01:20:07.694070Z'
+status: completed
+summary: round 1; 12 findings (0 P1, 10 P2, 2 P3), one of them Decision needed. The gap matrix and sizes W1 to W8 mostly hold against the code; one headline claim is false (a live Codex hook delivery is recorded), the measurement cannot be read from its named sources, the gate table does not match the failure it targets, and option (e) is not specified as an executable option. Keeping size L and leaving the split to q1 is defensible against planning.md step 1.
+findings:
+- issue: The claim that the repository records no hook delivery by any host, the existing Codex path included, is false. A retained spike records an interactive Codex CLI 0.163.0 session in which a project .codex/hooks.json delivered SessionStart 1, Stop 2, UserPromptSubmit 2, PreToolUse 2 and PostToolUse 2 over two turns.
+  evidence: docs/materials/2026-10/20261017-hook-driven-integration-cleanup/codex-spike-evidence.md:17, :38-47; materials/host-capability-matrix.md:18-22, :89; proposal.md:103-105; materials/devkit-gaps-and-work-breakdown.md:27, :98-99
+  failure_condition: The user reads that nothing has been observed and treats basic Codex delivery of SessionStart and Stop as unknown, which inflates the value of option (c) as the first live observation and of probes CX-2 and CX-3.
+  suggested_action: 'Narrow the claim in the three places: Codex delivery of project-registered SessionStart and Stop command hooks was observed once (prototype logger, codex-cli 0.163.0, 2026-10-17). Still unobserved: devkit''s generated command, a block decision, stop_hook_active, subagent events, timeout and failure behavior, and everything on Claude Code. Cite the material and drop first live observation as a reason for (c).'
+  resolution: open
+  severity: P2
+- issue: 'Observations O1 to O5 are declared mechanical from the ledger or the working tree, but four cannot be read from the named sources. O4: list and show write no event, and reflog records HEAD moves, not edits, delegations or claims; the session start time has no source. O3: completion_claimed is a boolean a person supplies. O5 and F3: the recorded verification holds per-check statuses, not codes, and ADAPTIVE_UNCOMMITTED_CHANGES is a warning that never produces rejected. O2: default IDs are a<N>, so a search for a1 matches a10, and an earlier mention counts as named. O1: the ledger is shared by every worktree, so a list after the session attributes other sessions'' assignments to the observed one.'
+  evidence: materials/gate-behavior-and-measurement.md:151-164; PROP-adaptive-assignment-cli at 0cf00a40 proposal.md:118, :226, :278-280, :325-326, :332; docs/capabilities/delivery/CAP-DLV-adaptive-development.md:303; packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py:61
+  failure_condition: A resumed Host that runs list first leaves the same ledger and reflog trace as one that does not, so F2 cannot be counted and the SessionStart criterion cannot be evaluated. With two concurrent sessions in different worktrees, F1 counts the other session's open assignments.
+  suggested_action: 'Name a source that holds each fact. O3 and O4: a mechanical scan of the host transcript file for the first assignment command against the first edit or agent tool call, and state who fills completion_claimed by what rule. O2: whole-token match plus file modification after session start. O1: restrict to assignments with assigned_at inside the session, or require the recorded-checkout field before the measurement and say so in the W6 note. F3: define it on check statuses (scope, commit, children) and drop the warning code.'
+  resolution: open
+  severity: P2
+- issue: The decision criteria omit the term the material says decides the gate's value, and their thresholds have no stated basis. The pause scenario measures wrong blocks, yet no criterion before delivery uses its result. 2 of 10 and 2 of 5 are alternative triggers with no rationale. F1 counts any assignment not closed, so a verified but unclosed record triggers delivery. The ten observed sessions have no time bound or stop rule. Section 4.4 makes a released stop on timeout a delivery precondition, while live-probes section 6 treats a held turn as a design change.
+  evidence: materials/gate-behavior-and-measurement.md:172-178, :184-188, :190-193; materials/devkit-gaps-and-work-breakdown.md:100-101; materials/live-probes.md:132
+  failure_condition: 'Five of five pause runs name every ID, so every block there would be wrong, and two of five combined-check runs show F1: the criteria say deliver. Or ten qualifying sessions never accumulate on a host and option (e) never reaches a decision.'
+  suggested_action: Add a wrong-block criterion from the pause scenario, count F1 by status, give the measurement an end condition after which the result is recorded as not met, state the thresholds as chosen conventions with their sample-size limits, and reconcile section 4.4 with live-probes section 6 on a held turn.
+  resolution: open
+  severity: P2
+- issue: The Stop decision table does not match the failure it targets and its once-per-set rule does not bound blocks in an active build. (1) F1 is not closed and named nowhere, but condition 1 blocks on not closed alone, so a Host that already named the IDs before pausing is still blocked. (2) Condition 3 keys on IDs with statuses, so every new, return, verify or close changes the set and nearly every turn end blocks once. (3) The background_tasks release fires on any running task, so a long-running background shell releases every stop. (4) The reason text assumes the stopping session is the delegating Host; an unrelated session in the same checkout is told to act on assignments it does not own.
+  evidence: materials/gate-behavior-and-measurement.md:47-55, :62-63, :67, :75-79, :145, :161, :175; docs/capabilities/delivery/CAP-DLV-adaptive-development.md:114-117
+  failure_condition: A Host with five open assignments updates .devkit/adaptive-dev.md, asks the user a question and is blocked; it records one return, pauses again and is blocked again. A session with a dev server in the background is never blocked.
+  suggested_action: 'Either add an outstanding ID is not named in .devkit/adaptive-dev.md to the block condition, which matches F1 and may remove the per-session record, weighed against not a parsed lifecycle at CAP-DLV-adaptive-development.md:328; or state that the gate blocks about once per turn while the ledger changes and size the wrong-block cost on that basis. Limit the background_tasks release to subagent entries, extend CC-4 to record the entry type and a background shell, and add a third continuation: not this session''s assignments, change nothing and stop again.'
+  resolution: open
+  severity: P2
+- issue: The written probes do not settle the items the design depends on. (1) The probe's reason asks only for the word ACK, so the second stop follows no tool call, while the real gate asks for commands or a file edit first and Claude Code's continuation counter resets on a tool call. (2) N5 says the cwd of a SubagentStop for an assignee in another worktree needs a probe; no step observes it. (3) q3 rests on SessionStart firing with source compact; no step triggers a compaction. (4) CX-9 does not show whether the same registration in a second checkout needs a new review.
+  evidence: materials/live-probes.md:37, :64-67, :94-95, :100, :130; envelopes/scout-01.yaml:13; materials/gate-behavior-and-measurement.md:29, :117-119
+  failure_condition: All probes pass as written, the gate ships, and on the first real block the model runs a command before stopping. If the host then reports stop_hook_active false, the loop breaker falls back to condition 3 alone.
+  suggested_action: Add a mode whose reason asks for one shell command before stopping and record stop_hook_active on the next Stop on both hosts, also under always. Add a step with a subagent told to work in a second directory and record cwd on SubagentStop. Add a compaction step if q3 is kept. Add a second-checkout step for Codex trust.
+  resolution: open
+  severity: P2
+- issue: The statements that a SubagentStop gate is not buildable on the candidate ledger and that W9 reverses choices the assignment design made on purpose are stronger than the evidence, and its exclusion from every delivery option is presented as settled. A lead's unclosed children are a ledger condition that is true exactly when the lead must not stop; uncommitted paths under a commit grant and no-changes come from the list observation; an out-of-scope report before a return is a list-observation addition of W6's kind that needs no command run by the assignee.
+  evidence: proposal.md:52-53, :87; materials/gate-behavior-and-measurement.md:29-30, :87-100; materials/devkit-gaps-and-work-breakdown.md:73, :86-87; PROP-adaptive-assignment-cli at 0cf00a40 proposal.md:162-175, :346; docs/materials/2026-11/20261110-adaptive-runtime-references/20261110-adaptive-runtime-references.md:79-80; docs/capabilities/delivery/CAP-DLV-adaptive-development.md:135-137
+  failure_condition: The user reads the SubagentStop half as infeasible without redesigning the assignment feature and drops it, when a narrow gate for assignees in their own worktree needs a list-observation addition and one probe.
+  suggested_action: Split W9 into a narrow gate for isolated-worktree assignees (children outstanding, uncommitted paths under a commit grant, out-of-scope paths through an observation before the return), sized on its own with its dependency on the SubagentStop cwd probe, and an every-assignee gate that does need the design change. Reword proposal.md:52-53 and :87 and leave the exclusion to q1.
+  resolution: open
+  severity: P2
+- issue: Q3's answer that the receipt needs no new field and the removal rule applies unchanged (G9) holds for only one configuration of a Claude Code settings file. Hook ownership lives in the committed receipt and sync refuses when a recorded group is missing from an existing file, with no adopt mode. A Claude Code settings file routinely exists already, and the MCP reconciler keeps ownership in an ignored machine-local ledger so that the committed receipt remains portable.
+  evidence: proposal.md:65; materials/devkit-gaps-and-work-breakdown.md:42, :44, :137-138; packages/devkit-dist/src/devkit_dist/features/host/services/configuration.py:65-72; packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py:1141; docs/capabilities/host/CAP-HOST-lifecycle-observation.md:82-86; docs/decisions/2026-11/20261102-mcp-runtime-and-shared-artifacts.md:145-149; .gitignore
+  failure_condition: The preset is selected and the receipt committed. On another clone or worktree whose local Claude Code settings file already exists without the group, devkit sync fails with HOST_HOOK_CONFLICT until the user edits the file by hand.
+  suggested_action: 'Correct G9 and Q3: the receipt and removal rule carry over unchanged only for a tracked shared file. For a machine-local or ignored file, W4 needs an adopt-on-absent-group rule or a machine-local ownership store as MCP uses. Name which Claude Code file, and where its ownership is recorded, as an open decision attached to option (b) and to (c) with Claude Code; keep W4 at L with this as its main risk.'
+  resolution: open
+  severity: P2
+- issue: Option (e), the recommendation, is not specified as an executable option. It maps to no Planning outcome and names no state for the unit while it waits, no owner, no trigger and no end. W10 now contradicts q2's recommendation and section 3.6. Option (d) deletes the proposal directory at hygiene with the matrix and sizes, and no option says where the investigation is retained. No option can start before the commands exist is true of the options as packaged, not of W1 to W5. Option (c) on Codex lists W6 as a prerequisite although an injection that blocks nothing does not need N2 or N8.
+  evidence: proposal.md:165-171, :178-180, :153-155, :194-195; materials/devkit-gaps-and-work-breakdown.md:74, :84, :91-93; .devkit/managed/spec/skills/spec/references/planning.md:8; .devkit/managed/spec/skills/spec/references/backlog.md:7
+  failure_condition: The user answers q1 with (e). The proposal stays reviewing on an unmerged Planning branch through two other units' Development and an unbounded observation period, the materials are reachable only on that branch, and no record says who runs W10 or when the question reopens.
+  suggested_action: 'Define (e) concretely and put the variants in q1: the unit''s state while waiting, the owner of the probes and of the measurement, the trigger and the end condition. State the same retention for (d). Reword to no option as packaged; W1 to W5 could start but would have no consumer. State (c) on Codex with its true minimum.'
+  resolution: open
+  severity: P2
+- issue: 'The recommendation and q3 argue from the milestone: reason three for (e) is that the milestone asks for a decision based on a measured effect, and q3 is framed against the milestone''s exclusion. Planning judges options on their merits, never against a milestone; the recorded plan-intent asks for missing capabilities and sizes before any delivery decision and requires no measured effect.'
+  evidence: proposal.md:168-169; materials/gate-behavior-and-measurement.md:117-119; .devkit/managed/spec/skills/spec/references/backlog.md:72; decisions/01-gate-plan-intent.yaml:6-10
+  failure_condition: The user accepts (e) partly because a milestone asks for it, although the milestone binds nothing.
+  suggested_action: Remove the milestone as a reason and rest (e) on the two merit arguments. Attribute the compaction exclusion in q3 to the user's scope decision.
+  resolution: open
+  severity: P2
+- issue: 'A fact only the user holds decides the option comparison and is not asked: on which host or hosts adaptive Host sessions run. The fallback recommendation of (c) on Codex and the single-spec count for (a) both assume Codex.'
+  evidence: materials/devkit-gaps-and-work-breakdown.md:96-97; proposal.md:169-171, :178-182
+  failure_condition: The user chooses (a) or (c) on Codex as the cheap option while running adaptive sessions on Claude Code; the delivery prevents nothing, and the real smallest delivery includes W4.
+  suggested_action: 'Decision needed: ask the user, with q1, which host or hosts they run adaptive Host sessions on. State the smallest delivery per answer: Codex gives (c) at size M; Claude Code gives W4 first, hence two specs.'
+  resolution: open
+  severity: P2
+- issue: A devkit-side gap is missing from G1 to G15. The hook command finds the project from the event's cwd and validates against that checkout's receipt and host file, while the host loads the registration from the checkout it was started in. When an event carries a cwd in another worktree, dispatch validates against the wrong checkout and fails to an empty response. That is the case for a SubagentStop of an assignee in its own worktree, and for a Stop inside a Codex subagent thread if CX-4 shows one.
+  evidence: packages/devkit-dist/src/devkit_dist/features/host/cli.py:89-95; packages/devkit-dist/src/devkit_dist/features/project/repositories/project.py:102-127; packages/devkit-dist/src/devkit_dist/features/host/usecases/runner.py:63-78; materials/devkit-gaps-and-work-breakdown.md:36-50; materials/gate-behavior-and-measurement.md:29
+  failure_condition: A worker's worktree is on a branch whose receipt predates the preset, or its ignored .codex/hooks.json was never synced. Every SubagentStop there is HOST_HOOK_DISPATCH_FAILED and a silent release, and the per-session record lands under the wrong checkout's .devkit/transient/.
+  suggested_action: Add the gap, mapped to the SubagentStop item. The command already accepts --workspace-root, so an adapter with a project-directory variable can pin the root; Codex has no documented variable, so there it stays a limit that the cwd probe must size.
+  resolution: open
+  severity: P2
+- issue: 'Several documented cells have no extraction in scout-01: the SessionStart source values including compact, the common input fields session_id and cwd for Codex and Claude Code, and Claude Code workspace trust with no hook review step. proposal.md:101 also says Released, documented for Claude Code on timeout or failure, where the matrix classes the Stop outcome as inferred with a probe.'
+  evidence: materials/host-capability-matrix.md:37-38, :48-49, :55, :59; envelopes/scout-01.yaml:9-48; proposal.md:101, :181-182
+  failure_condition: The gate's session record, N3 and q3 rest on facts the recorded evidence does not hold; a reader cannot tell extracted from recalled.
+  suggested_action: Record the missing extractions in a scout envelope, or reclass those cells probe. Change proposal.md:101 to released, inferred from documented rules, with a probe.
+  resolution: open
+  severity: P3
+- issue: 'Three smaller inaccuracies. (1) G14 is not a gap for this work: a snapshot source may declare only devkit.bundles entry points and no dependencies, so a package with a handler entry point is refused before the handler check. (2) G12, the PATH precondition, is assigned to W4 only but applies equally to the Codex options, and (c) excludes W3, so nothing devkit-visible shows that its hook ran. (3) W1 changes a MUST of the capability and the advisory framing; its Documents column lists no decision record.'
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/snapshots/source.py:57-66; docs/capabilities/distribution/CAP-DIST-content-packages.md:250; materials/devkit-gaps-and-work-breakdown.md:47, :49, :65, :68, :82; docs/capabilities/host/CAP-HOST-lifecycle-observation.md:101-104, :124-127
+  failure_condition: Fifteen gaps counts one that needs no work; a Codex-only delivery is accepted with no step that shows the gate runs in the user's launch environment; W1's S omits the decision a changed MUST requires.
+  suggested_action: Mark G14 not applicable to a code-carrying package. Add the PATH precondition and W3, or the DK probe, to the Codex options. Add one decision on the blocking response to W1's Documents; W1 stays S in code.
+  resolution: open
+  severity: P3
+assumptions:
+- The other unit's design was judged at commit 0cf00a40 only
+- Host facts were judged against scout-01 and repository material; no vendor page was read
+unverified_areas:
+- No test, sync, host or probe was run; the timings were not measured again
+- Whether Claude Code exposes a per-session value to shell commands; whether either host keeps stop_hook_active true after a tool call inside a continuation; what cwd a SubagentStop carries
+- The HOST_HOOK_CONFLICT scenario for an existing Claude Code settings file is derived from code and capability text, not from a test
+checks: {}
+diff_scope:
+  base: 7915635847102233cd820c5fdde8c19545abd7c3
+  head: c2f42d49a7201445fc8160bab1a6b0881260faa1
