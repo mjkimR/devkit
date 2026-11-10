@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-delivery-document-hygiene
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-roles.md
     resolution: modified

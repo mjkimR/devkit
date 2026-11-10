@@ -2,7 +2,7 @@
 id: SPEC-delivery-document-hygiene
 title: Split delivery contracts by responsibility and trim reference duplication
 summary: "Separate delivery role and proposal lifecycle contracts into focused capabilities while preserving every existing guarantee, and trim duplicate distribution reference text without changing behavior."
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-proposal-planning]
 related_usecases: [UC-drive-development-to-integration, UC-plan-and-hand-off-a-proposal]

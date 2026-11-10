@@ -30,3 +30,6 @@ docs list --file, which returns CAP-DLV-delivery-roles for worker CLI and CAP-DL
 Independent reconciliation verified all20 targets, normalized block hashes, anchors, scenario bodies and backlinks.
 It found the clean-worktree whitespace check did not cover committed changes. The extra roles EOF blank line was
 removed, and the cumulative baseline diff is now checked explicitly. The change is whitespace-only.
+
+Final document content at c46dfaca: cumulative committed-range whitespace, rules, sync and tier-all affected17
+tests PASS. Only workflow evidence/status records follow this checked content.
