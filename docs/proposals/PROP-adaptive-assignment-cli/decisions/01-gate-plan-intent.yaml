@@ -1,0 +1,11 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: 'Planning approved in parallel with its prerequisite: the user picked this draft
+  up while depends_on PROP-adaptive-package-extraction is still in Planning (override
+  of prerequisite order for Planning only). Development is handed to another session
+  and is not part of this run.'
+by: user
+at: '2026-11-10T00:06:14.995566Z'
