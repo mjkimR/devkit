@@ -130,11 +130,20 @@ class GitHubHistory:
         response = self.request("GET", f"contents/{quote(path, safe='/')}?ref={quote(head, safe='')}")
         if response.status == 404:
             return None
-        if response.status != 200 or not isinstance(response.body, dict) or response.body.get("encoding") != "base64":
+        if response.status != 200 or not isinstance(response.body, dict):
             raise PublishFailed("Cannot read history file", f"{path}: HTTP {response.status}")
+        body = response.body
         try:
-            data = base64.b64decode(response.body["content"])
-            return data, response.body["sha"]
+            if body.get("encoding") == "none":
+                # The contents API omits content over 1 MB; the blob API returns it by SHA.
+                blob = self.ok("GET", "git/blobs/" + quote(body["sha"], safe=""))
+                if not isinstance(blob, dict) or blob.get("encoding") != "base64":
+                    raise PublishFailed("Cannot read history file", f"{path}: blob content unavailable")
+                body = {"content": blob["content"], "encoding": "base64", "sha": body["sha"]}
+            if body.get("encoding") != "base64":
+                raise PublishFailed("Cannot read history file", f"{path}: HTTP {response.status}")
+            data = base64.b64decode(body["content"])
+            return data, body["sha"]
         except (ValueError, KeyError, TypeError) as exc:
             raise PublishFailed("Malformed history file response") from exc
 

@@ -22,7 +22,7 @@ def clean(runs: Runs, run_id: str) -> RunRecord:
                 raise ValueError("only trustworthy terminal execution evidence permits cleanup")
             table = runtime.processes()
             supervisor = record.get("supervisor")
-            if supervisor and supervisor["pid"] in table:
+            if supervisor and runtime.same(supervisor, table.get(supervisor["pid"])):
                 raise ValueError("supervisor is still active or its PID identity is unresolved")
             if not runtime.confirmed_quiescence(record):
                 raise ValueError("positive managed-group quiescence proof is missing or incomplete")
@@ -66,7 +66,7 @@ def wait(runs: Runs, run_id: str, timeout: float | None, cleanup: bool) -> RunRe
                 # Result is written before supervisor exit; collect its shutdown before cleanup.
                 for _ in range(100):
                     identity = record.get("supervisor")
-                    if not identity or identity["pid"] not in runtime.processes():
+                    if not identity or not runtime.same(identity, runtime.processes().get(identity["pid"])):
                         break
                     time.sleep(0.02)
                 record = clean(runs, run_id)

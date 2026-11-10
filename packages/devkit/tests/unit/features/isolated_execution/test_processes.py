@@ -71,3 +71,21 @@ def test_owned_group_retires_after_empty_observation_and_never_readopts() -> Non
     reused = {103: {"pid": 103, "birth": "other", "ppid": 1, "pgid": 101}}
     _discover(known, 101, reused, unreaped=False, groups=groups)
     assert 103 not in known
+
+
+def test_process_table_is_locale_independent(monkeypatch) -> None:
+    # Under ko_KR/ja_JP, ps renders lstart in four tokens ("화 11/10 16:41:11 2026"),
+    # which misaligned positional parsing and dropped every process.
+    monkeypatch.setattr(runtime.sys, "platform", "darwin")
+    monkeypatch.setenv("LC_ALL", "ko_KR.UTF-8")
+
+    def ps(*args, **kwargs):
+        env = kwargs.get("env") or runtime.os.environ
+        if env.get("LC_ALL") == "C":
+            return SimpleNamespace(stdout="7 1 7 Tue Nov 10 16:41:11 2026 Ss test-process --flag\n")
+        return SimpleNamespace(stdout="7 1 7 화 11/10 16:41:11 2026 Ss test-process --flag\n")
+
+    monkeypatch.setattr(runtime.subprocess, "run", ps)
+    table = runtime.processes()
+    assert table[7]["argv"] == "test-process --flag"
+    assert table[7]["birth"] == "Tue Nov 10 16:41:11 2026"

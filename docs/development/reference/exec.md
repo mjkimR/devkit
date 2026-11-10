@@ -13,6 +13,8 @@ Devkit's `just test-affected` defaults to `--tier unit-integration`, excluding E
 
 Background the waiter through a tool that delivers completion if independent work should proceed. Without that delivery, inspect later. Wait timeout/interruption does not cancel; cancel retains the checkout; clean preserves logs/results outside it. Retain native artifacts before requesting clean. Setup uses worktree configuration or `--setup`; no implicit `.env` copy, profile map or local/cloud selector exists.
 
+Text output uses `[EXECUTION_RESULT: ...]`, `[EXECUTION_LIST: ...]`, `[EXECUTION_RUN: ...]`, `[EXECUTION_CLEANUP: outcome=... code=... detail=...]` (whenever cleanup evidence exists), `[EXECUTION_DETAIL: ...]` and `[EXECUTION_LOG_LINE: ...]` sentinels.
+
 | Code | Caller action |
 | --- | --- |
 | `EXECUTION_ARGUMENT_INVALID` | Supply a full local commit SHA, native argv and nonempty setup. |

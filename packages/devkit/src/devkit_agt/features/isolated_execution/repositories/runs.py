@@ -62,6 +62,9 @@ class Runs:
             target = directory / "result.json"
             if not target.exists():
                 target = directory / "state.json"
+            if not target.exists():
+                # Before the supervisor publishes state, the launcher's captured identity applies.
+                target = directory / "launch.json"
 
             def validated(value: RunRecord) -> RunRecord:
                 for key in ("run_id", "repository", "checkout", "sha", "argv"):
@@ -151,6 +154,10 @@ class Runs:
             if process.poll() is not None:
                 break
             time.sleep(0.01)
+        else:
+            # A slow but positively identified supervisor is still pending, not lost.
+            if record["supervisor"] and runtime.same(record["supervisor"], runtime.processes().get(process.pid)):
+                return record
         record.update(phase="unknown", outcome="unknown")
         return record
 
