@@ -117,36 +117,17 @@ The Git-tracked selection. Its keys, the selection rules and their resolution or
 
 ```toml
 schema = 1
-agents = ["codex", "claude-code"]     # optional; absent means every supported agent, [] means none
-guidance_block = true                 # optional; false stops sync from managing the block in root AGENTS.md
-override_drift = "warn"               # optional; "block" aborts sync while an override's upstream has changed
+agents = ["codex", "claude-code"]
 
 [presets]
-starter = "daily"                     # a preset name, "all", or an array of presets (union)
-devkit = false                        # opt out of an auto-selected bundle
-
-[playbooks]
-mode = "auto"                         # auto, lexical, dense or hybrid
-min_score = 0.1                       # BM25 floor
-min_similarity = 0.35                 # cosine floor of dense and hybrid
-limit = 5
-max_bytes = 8192
-
-[rules.severity_overrides]            # owned by devkit_agt.features.rules
-RULE-file-length = "error"
-
-[workflow]                            # owned by devkit_agt.features.workflow
-default = "direct-delivery"
-
-[worktree]                            # owned by devkit_agt.features.worktree
-pull_request = "required"             # integrate through pull requests only (default "auto")
-
-[gates.settings.message-nonempty]     # owned by devkit_agt.features.gate
-enabled = true
-
-[tool.example]                        # [tool.<name>] is passed through unread for tools built on devkit
-option = "on"
+starter = "daily"
+devkit = false  # opt out of an auto-selected bundle
 ```
+
+Generate the complete commented configuration with `uv run devkit config template`. Selection defaults,
+resolution order, rendering and configuration validation belong to `CAP-DIST-sync-and-transactions` §2.
+Engine-specific settings belong to their references linked below.
+
 
 A selection command that creates the file, and `devkit config template`, write commented managed-scope and update-policy keys,
 the tables installed engines register for the reserved top-level names (`devkit.config_tables`, entry point named

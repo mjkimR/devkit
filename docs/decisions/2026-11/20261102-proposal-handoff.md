@@ -106,7 +106,7 @@ clean committed input with one commit step that mirrors the composed acceptance.
 - **Link rewriting**: the relocation plan registers a file origin per moved leaf and a directory origin only for a
   subtree the handoff created whole, so the rewriting step changes a pre-existing Markdown file only in links that
   pointed into the proposal; the handoff's one other edit to a pre-existing file is the partial-supersession pointer
-  of `CAP-DLV-proposal-planning` (4.5, step 4). (ADR-merge-proposal-materials-per-leaf-at-handoff)
+  of `CAP-DLV-proposal-lifecycle` (§4.1, step 4). (ADR-merge-proposal-materials-per-leaf-at-handoff)
 - **Concurrent changes**: no guarantee. A file written at a planned path between preflight and its move may be
   replaced, as for the ADR writes; the contract states this window. (ADR-merge-proposal-materials-per-leaf-at-handoff)
 - **Reporting**: the handoff result and its JSON output carry whether the materials merged into an existing directory
@@ -165,9 +165,9 @@ clean committed input with one commit step that mirrors the composed acceptance.
   link at or above a planned path), carried extras against pre-existing files, junk on both sides, `EXDEV` and a
   failure injected mid-move keeping every pre-existing path byte-identical, and a preflight refusal leaving source and
   destination unchanged with no spec or ADR created. (ADR-merge-proposal-materials-per-leaf-at-handoff)
-- `CAP-DLV-proposal-planning` states the merge rules, the residual window and the result fields; review checks it
+- `CAP-DLV-proposal-lifecycle` states the merge rules, the residual window and the result fields; review checks it
   against the tests. (ADR-merge-proposal-materials-per-leaf-at-handoff)
 - Integration tests under `packages/devkit-spec/tests/integration/features/delivery/` cover the committed handoff
   (single parent, clean worktree, reported HEAD after a rewriting hook) and the refused commit (stopped result, dirty
-  paths kept, exit `1`, no next command). Review checks the `CAP-DLV-proposal-planning` composed handoff contract.
+  paths kept, exit `1`, no next command). Review checks the `CAP-DLV-proposal-lifecycle` composed handoff contract.
   (ADR-composed-handoff-commits-its-own-transaction)

@@ -71,7 +71,7 @@ identity, lifecycle and selection as they are.
   (`CAP-DOCS-namespaces` 3.2 rule 1) and is selected by `devkit docs list` and `search` as the other kinds are
   (3.3). → `CAP-DOCS-namespaces` 3.2, 3.3 (MUST, unchanged rules).
 - A direct proposal of any namespace declares membership through `milestone` naming a milestone at either root;
-  `devkit spec proposal new --milestone` accepts both. → `CAP-DLV-proposal-planning` (`--milestone`).
+  `devkit spec proposal new --milestone` accepts both. → `CAP-DLV-proposal-lifecycle` §4.5 (`--milestone`).
 - Milestone `depends_on` edges resolve across namespaces as any repository-wide reference does; the lifecycle
   guidance (activate, close, drop, reopen, merge) gains no namespace clause and names "the milestone's roadmap root"
   where it named `docs/roadmap/`.

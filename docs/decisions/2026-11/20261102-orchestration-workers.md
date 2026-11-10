@@ -60,7 +60,7 @@ Further gaps followed on the same runs:
   approved commands, while native spawning does not enforce a worker-specific path boundary.
 - The ordered Planning steps existed only in the `planning-worker` contract's `## Procedure` (steps 2 to 6), so a Host
   running Planning in `direct` mode had to read a subagent prompt written for another actor
-  (`FB-direct-planning-procedure-location`). `CAP-DLV-delivery-workflows` puts a procedure in the contract only "for a
+  (`FB-direct-planning-procedure-location`). `CAP-DLV-delivery-roles` puts a procedure in the contract only "for a
   role whose procedure no main session runs" (`SPEC-subagent-procedure-in-contract`), and a `direct` Host does run
   Planning. Moving the steps had to fit the bundle's byte budgets:
   `packages/devkit-spec/tests/integration/bundles/spec/test_bundle_budgets.py` caps every skill and playbook document
@@ -492,7 +492,7 @@ base-observation driver, and each mechanism that also names that case adds recur
   - `/spec-next` reports `[PENDING_QUESTION]`, `[BLOCKED]` and stale activity branches; the feedback hygiene playbook
     lists stale branches for the user to resume or discard. A stale branch's unit is shown only when an attach recorded
     it; the Host maps the slug otherwise. (ADR-run-records-and-activity-branches)
-  - The `planning-worker` row of the `CAP-DLV-delivery-workflows` role table names its procedure in
+  - The `planning-worker` row of the `CAP-DLV-delivery-roles` role table names its procedure in
     `spec/references/planning.md`, with the sentence on where worker procedures live; `CAP-HARN-agent-guidance` lists
     only the asset ids and needs no change. If the Planning reference grows past about 8 KB, split it rather than
     trimming another reference. (ADR-executor-neutral-planning-steps-in-a-spec-reference)
@@ -526,6 +526,6 @@ base-observation driver, and each mechanism that also names that case adds recur
 - `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py`: `spec-delegate/references/worker.md`
   and `payload.md` carry no pre-spawn base record and no unchanged-base requirement; `worker.md` requires the turn's
   own envelope and keeps the remaining range conditions.
-- The reconcile review checks that `CAP-DLV-delivery-workflows`' acceptance requirements name the turn's own `worker`
+- The reconcile review checks that `CAP-DLV-delivery-roles`' acceptance requirements name the turn's own `worker`
   envelope instead of an unchanged base, that its base-checkout observation names no Host comparison, and review
   confirmed that the two superseded clauses were named when the base-checkout decision was promoted.

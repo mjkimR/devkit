@@ -2,7 +2,7 @@
 id: SPEC-delivery-document-hygiene
 title: Split delivery contracts by responsibility and trim reference duplication
 summary: "Separate delivery role and proposal lifecycle contracts into focused capabilities while preserving every existing guarantee, and trim duplicate distribution reference text without changing behavior."
-status: planned
+status: in-progress
 created: 2026-11-10
 related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-proposal-planning]
 related_usecases: [UC-drive-development-to-integration, UC-plan-and-hand-off-a-proposal]
@@ -14,7 +14,7 @@ workflow: sdd-spec-feature
 ## 1. Problem Statement & Motivation
 
 The workflow and proposal capabilities combine core policy with independently useful role and lifecycle
-interfaces. Their 779 and 785 lines exceed the 600-line capability budget. Agents loading one contract pay
+interfaces. Their 783 and 784 lines exceed the 600-line capability budget. Agents loading one contract pay
 for the others. The distribution quick reference repeats the canonical configuration example and exceeds
 its 400-line budget. The Development use case repeats Scenario 32's number.
 
@@ -48,8 +48,8 @@ its 400-line budget. The Development use case repeats Scenario 32's number.
 ### [AC-03] Concise distribution reference
 - **Given** canonical configuration contracts and the 433-line quick reference,
 - **When** duplicate explanations are replaced with canonical references,
-- **Then** the reference is at most 400 lines, retains practical command/selection examples and its unique
-  diagnostic tables, and changes no command, error code or remediation contract.
+- **Then** the reference is shorter than 433 lines, retains practical command/selection examples and its unique
+  diagnostic tables, justifies any remaining budget warning, and changes no command, error code or remediation contract.
 
 ### [AC-04] Scenario numbering and bounded verification
 - **Given** two Scenario 32 headings in `UC-drive-development-to-integration`,

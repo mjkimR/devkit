@@ -1,0 +1,32 @@
+[
+  {
+    "source": "docs/capabilities/delivery/CAP-DLV-delivery-workflows.md",
+    "source_heading": "### 4.6 Role Contracts",
+    "destination": "docs/capabilities/delivery/CAP-DLV-delivery-roles.md",
+    "destination_heading": "### 4.1 Role Contracts",
+    "source_normalized_sha256": "a4eb3a13794b47e4cc200202dbe2be72866699054d8aaec0909c34b7a86f5347",
+    "expected_destination_normalized_sha256": "566c69863663a48075b320be413a9884704301981889b50fc6a8d6ed9fd14bb6",
+    "source_lines": 226,
+    "destination_lines": 226
+  },
+  {
+    "source": "docs/capabilities/delivery/CAP-DLV-delivery-workflows.md",
+    "source_heading": "## Worker result inspection",
+    "destination": "docs/capabilities/delivery/CAP-DLV-delivery-roles.md",
+    "destination_heading": "### 4.2 Worker result inspection",
+    "source_normalized_sha256": "4ba21241df6cbaae18f0a1c70070b08e12d6d51b7bcff839bfeba293ec2df909",
+    "expected_destination_normalized_sha256": "7fd7d50ed50523fbd8135d88cd90a2cbad091966c5eeebe22918246acd12dd17",
+    "source_lines": 76,
+    "destination_lines": 76
+  },
+  {
+    "source": "docs/capabilities/delivery/CAP-DLV-proposal-planning.md",
+    "source_heading": "### 4.5 Handoff Steps",
+    "destination": "docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md",
+    "destination_heading": "### 4.1 Handoff Steps",
+    "source_normalized_sha256": "fac69c03a8f1970b8a860ac30823b9cb0f7df763581118c903c54cc340731004",
+    "expected_destination_normalized_sha256": "90522a587255a2b83a4f2eaeb8077dd9964cc0dd979cf63db6555e091bc38ea0",
+    "source_lines": 479,
+    "destination_lines": 479
+  }
+]

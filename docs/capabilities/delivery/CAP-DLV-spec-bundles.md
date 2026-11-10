@@ -22,14 +22,14 @@ A spec bundle is the work unit of `spec`-depth work and of every handed-off prop
 `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` whose `spec.md` is the anchor of a devkit workflow unit. `devkit spec new`
 creates one without a proposal, writing the document IDs the spec rules expect (`devkit workflow new` would write an
 `id` the rules reject) and binding `spec.md` to a delivery workflow. The same skeleton writer serves
-`devkit spec proposal handoff` (`CAP-DLV-proposal-planning`), which fills it from the proposal body.
+`devkit spec proposal handoff` (`CAP-DLV-proposal-lifecycle`), which fills it from the proposal body.
 
 ## 2. Scope & Boundary
 
 - **In-Scope**: `devkit spec new` (`create_spec`), the bundle layout and directory naming, the `spec.md`, `plan.md`
   and `tasks.md` skeletons and their skeleton marker, the workflow binding of `spec.md` and the `sdd-spec-bugfix` variant.
 - **Out-of-Scope**:
-  - Proposals and handoff: `CAP-DLV-proposal-planning`.
+  - Proposal Planning: `CAP-DLV-proposal-planning`; handoff operations: `CAP-DLV-proposal-lifecycle`.
   - The stages that fill the skeletons and their checks: `CAP-DLV-delivery-workflows`.
   - Format, lifecycle, task coverage and reconcile rules over bundle files: `CAP-GOV-spec-rules`.
   - Namespace registration and resolution: `CAP-DOCS-namespaces`.

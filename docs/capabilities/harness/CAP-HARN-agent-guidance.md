@@ -37,7 +37,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
   `spec*` skills and their references, the playbooks and proposal template; the role
   contracts as deployed assets.
 - **Out-of-Scope**:
-  - Workflow definitions and role contract semantics: `CAP-DLV-delivery-workflows`.
+  - Workflow definitions: `CAP-DLV-delivery-workflows`; role contracts: `CAP-DLV-delivery-roles`.
   - The rule assets and their guides: `CAP-GOV-spec-rules`.
   - The commands the guidance invokes: `CAP-HARN-command-mount` and the capabilities it lists.
   - Distribution, projection, context loading and playbook search themselves: devkit.

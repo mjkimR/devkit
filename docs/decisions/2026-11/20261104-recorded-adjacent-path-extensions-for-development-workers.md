@@ -40,20 +40,20 @@ Option 3 is selected for bounded task continuity and proportionate verification.
 
 - Development workers admit an exact adjacent file only for an existing task and AC, with a task annotation and
   matching typed worker extension record. Initial declared scope remains distinct from extension admission.
-  → `CAP-DLV-delivery-workflows` worker write boundaries (MUST).
+  → `CAP-DLV-delivery-roles` worker write boundaries (MUST).
 - Explicit payload denies prevail; protected classes and unrelated features require Host authority before writing.
   Test weakening, independent Git/sandbox restrictions and publication authority remain unchanged.
-  → `CAP-DLV-delivery-workflows` worker write boundaries (MUST).
+  → `CAP-DLV-delivery-roles` worker write boundaries (MUST).
 - Optional `scope_extensions` records carry path, task, reason and requirements; old envelopes remain valid.
   → `CAP-DLV-workflow-envelopes` worker fields (MUST).
 - Inspection preserves its existing scope list and full-replacement flags and adds structural extension evidence.
   Semantic adjacency and custom protected paths are reviewed rather than advertised as automatic enforcement.
-  → `CAP-DLV-delivery-workflows` worker inspection (MUST).
+  → `CAP-DLV-delivery-roles` worker inspection (MUST).
 - A new task annotation and its reason are committed with the first source write. The typed list belongs to the
   single final or emergency worker envelope at turn end. Review checks annotation, task and AC before that record
   exists; Host validation and inspection subsequently enforce agreement. Rejected ranges retain existing recovery
   instead of discarding commits.
-  → `CAP-DLV-delivery-workflows` worker result validation (MUST).
+  → `CAP-DLV-delivery-roles` worker result validation (MUST).
 - This partially replaces `ADR-orchestration-workers` only for rejection of unlisted paths that satisfy recorded
   Tier B admission. Its remaining range, sync-output, worktree, Git and host-permission decisions remain in force.
 

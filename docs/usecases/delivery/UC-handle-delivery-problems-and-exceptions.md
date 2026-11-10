@@ -11,6 +11,7 @@ supporting_actors:
 status: active
 created_at: 2026-10-21
 capabilities:
+  - CAP-DLV-delivery-roles
   - CAP-DLV-delivery-workflows
   - CAP-DLV-workflow-envelopes
   - CAP-HARN-agent-guidance
