@@ -49,7 +49,7 @@ entrypoints:
 - **5b5.** Shared interface: if delegated deliverables depend on an unsettled interface, the coordinator assigns its owner and resolves it before concurrent dependent writes or sequences them. It supplies the agreed identity to dependent assignments and reassesses them if it changes. An interface that outlives its assignment is first recorded in its current-state document, marked as agreed until its implementation is integrated; that document's ID and source identity then identify it; resumes at step 5.
 - **5b1.** Optional role lead: if useful and supported within the Host-wide allowance, the lead delegates narrowed children at depth at most Host → lead → child, counts waiting leads and verifies its aggregate scope; a swarm-worker lead records children with its parent ID and closes them before returning; the Host records children of planner or verifier leads or leaves them unrecorded; resumes at step 6.
 - **5b2.** Missing nesting or unknown/exhausted capacity: the Host uses direct, flat or sequential execution with the same result/check contract and no host-setting change; resumes at step 5.
-- **5b3.** Concurrent writers: the Host assigns separate worktrees and exclusive ownership; parents wait before writing in child-owned checkouts. If isolation is unavailable, writers run serially; resumes at step 6.
+- **5b3.** Concurrent writers: the Host creates each writer's separate worktree through `uv run devkit worktree start|status|finish`, or through the project's documented Git procedure where that lifecycle cannot be used, and assigns exclusive ownership; parents wait before writing in child-owned checkouts. If isolation is unavailable, writers run serially; resumes at step 6.
 - **5b4.** Incompatible overlay or unavailable registered invocation: the Host reports the gap, rejects expanded permissions and selects compatible direct execution or explicitly labelled emulation; resumes at step 5.
 - **5b6.** Governing documents: before partitioning a multi-writer build, the coordinator finds the documents that govern the goal and names them in each assignment by ID or absolute path, or `none`. Recording passes them as `--governing` and refuses unresolved values. An assignee treats them as constraints and returns a conflict to the Host instead of resolving it; resumes at step 5.
 - **5c.** Failed or out-of-scope role result: the agent reports actual partial state and rejects a failed assignment verification with its codes as completion evidence; resumes at step 4 without discarding another actor's work.
@@ -101,7 +101,7 @@ current-state project documents.
 - **When**: the agent identifies the change.
 - **Then**: dependent work waits for product direction; implementation reconstruction inside the unchanged goal needs no SDD records.
 
-### Scenario 5: Validate optional support
+### Scenario 5: Reject an out-of-scope return
 
 - **Covers**: 5b, 5c
 - **Given** a recorded assignment with bounded write authority and an assignee return containing out-of-scope changes,
