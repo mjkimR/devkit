@@ -23,3 +23,10 @@ per-operation approval substitute for native confinement. No outside-worktree re
 Browser index derivation avoids a local-only endpoint and new host API requirements. A Python endpoint would reuse
 one parser, but would add runtime coupling and need an equivalent interface for remote library hosts. Retain the
 browser approach with parity fixtures. No performance measurement or production test is claimed by Planning.
+
+Mandatory challenger at `2456098ee37cf9bc646511611735ec94fef60499` found two P2 gaps.
+The design now derives subject metadata/statements from the exact displayed document rather than its cached
+index copy; relation reload retains that subject version. Proposal-detail PADR target links explicitly open the
+checkout ADR in Files, using the existing outside-bundle navigation path. Development AC-4/AC-5 and the Screens
+carry both regressions. Challenger snapshots both equal `287e05920bb406c5a26f4ed2a4dbfc3990fcd988` and HEAD
+remained unchanged; no outside-worktree read was reported.

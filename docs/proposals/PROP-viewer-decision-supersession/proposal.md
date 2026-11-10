@@ -75,7 +75,11 @@ head. Planning uses `medium` effort, with a scout and a challenger; Development 
   rendered Files decision view. Raw mode remains the original source. Neither an extra tab nor a permanently
   occupied side panel is needed for a secondary fact of the document being read.
 - Read reuses its complete source/branch document index, before namespace or view filters. Files requests that
-  index lazily only after opening a rendered ADR or PADR. An ordinary file, raw view, dashboard or handbook alone
+  index lazily only after opening a rendered ADR or PADR. For every surface, replace the same-path subject entry
+  in the relation input with the exact document currently displayed, including its raw metadata and statement.
+  Relation reload retains that displayed subject and refreshes only the other indexed documents; opening/reloading
+  the subject itself updates its body and relation input together. Related-document freshness follows the index
+  cache policy. An ordinary file, raw view, dashboard or handbook alone
   does not trigger this feature's scan. Existing cache expiry and abort/generation guards apply; loading relations
   never blocks the selected document body. A `Reload relations` action invalidates and reloads the source index.
 - On ADR pages the groups are `Supersedes` and `Superseded by`. Show both directions with ID, title when resolved,
@@ -87,7 +91,9 @@ head. Planning uses `medium` effort, with a scout and a challenger; Development 
   list then says `No incoming relations found in the documents read`, not `None recorded`. Keep failed paths
   visible and offer `Reload relations`. Source/branch switches and aborted loads cannot publish old results.
 - A resolved relation link opens the target document in the same viewer: Read scrolls to the target chapter,
-  clearing a namespace filter when needed; Files loads the target path. No link is offered for an unresolved or
+  clearing a namespace filter when needed; Files loads the target path. A PADR link from proposal detail opens
+  the checkout target ADR in Files within the same viewer, never inside the proposal bundle or from its Planning
+  source. No link is offered for an unresolved or
   ambiguous target. Keyboard users use ordinary focusable links and buttons.
 
 ### UX candidates
@@ -127,9 +133,12 @@ Screens are drafted in `target-docs.md` before code. The optional UX reviewer is
    whole/partial classification match the delivered query fixtures; missing text remains explicit. Include fences,
    indented code, comments, strikethrough, inline-code examples, CRLF and adjacent heading/list boundaries.
 4. **AC-4**: Given a PADR from checkout or a Planning bundle, when viewed, then only outgoing proposed replacement
-   is shown with source context; no PADR becomes an applied incoming ADR superseder.
+   is shown with source context; a proposal-detail link opens the checkout ADR in Files, and no PADR becomes an
+   applied incoming ADR superseder.
 5. **AC-5**: Given pending, partial or failed indexing, when a decision body renders, then the body remains usable
    and relation loading/incompleteness is explicit; reload retries, and changed sources cannot receive stale results.
+   A saved subject edit opened within the index TTL uses its displayed metadata/statement. Reloading relations
+   keeps the subject version aligned with the visible body.
 6. **AC-6**: Given raw mode, an ordinary file or handbook-only navigation, when viewed, then this feature starts no
    document scan; Read reuses its index and Files scans only for a rendered decision.
 7. **AC-7**: Given hostile title or statement markup, when rendered, then metadata and replacement text remain
@@ -158,7 +167,7 @@ Screens are drafted in `target-docs.md` before code. The optional UX reviewer is
 
 Browser/parser parity is source-inspected, not executed yet. Development must supply fixtures for the delivered
 Python query behavior and the intentional PADR display distinction. No host-wide API survey or performance
-measurement was made. UX reviewer status is reported separately by the Host.
+measurement was made. UX reviewer scoring is recorded separately from the mandatory challenger findings.
 
 ## 4. Lifecycle & Retirement Criteria
 

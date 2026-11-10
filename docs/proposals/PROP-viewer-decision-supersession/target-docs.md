@@ -31,7 +31,8 @@ proposal: PROP-viewer-decision-supersession
    Screen: UX-view-decision. Capability: `CAP-VIEW-repository-viewer`.
 3. The reader inspects the relation summary: both applied ADR directions, or outgoing proposed PADR replacements.
    Screen: UX-view-decision and panel UX-decision-supersession. Capability: `CAP-VIEW-repository-viewer`.
-4. The reader follows a resolved related decision; the viewer opens that target in the same view and updates its
+4. The reader follows a resolved related decision; Read and Files retain their view, while a PADR in proposal
+   detail opens the checkout target ADR in Files within the same viewer. The viewer updates its
    title/body/summary. Screen: UX-view-decision and panel UX-decision-supersession.
    Capability: `CAP-VIEW-repository-viewer`.
 5. The reader finishes after seeing the replacement scope or source uncertainty.
@@ -40,7 +41,9 @@ proposal: PROP-viewer-decision-supersession
 Extensions:
 
 - **3a**: While relations load, show loading text and keep the body available. If any indexed document fails, show
-  `Incomplete`, the failed paths and the relations found; `Reload relations` repeats step 3.
+  `Incomplete`, the failed paths and the relations found; `Reload relations` repeats step 3 using the exact
+  displayed subject version and refreshed related documents. Opening or reloading the subject updates body and
+  relation input together, even within a cached index TTL.
   Screen: UX-view-decision and panel UX-decision-supersession.
 - **3b**: If a target is missing or ambiguous, display its written ID without a link. If its statement is absent,
   show `Replacement scope not recorded`. The reader can continue reading and finish at step 5.
@@ -116,7 +119,7 @@ in deterministic ID order. Text wraps to the available width; no separate geomet
 
 - Supersession relations (section heading and loading/incomplete context).
   - `Supersedes` group (ADR only) or `Proposed supersession` group (PADR only).
-    - Related decision (written/canonical ID, title and status when resolved; same-view link only when unambiguous).
+    - Related decision (written/canonical ID, title and status when resolved; target link only when unambiguous; proposal-detail PADR links open the checkout ADR in Files).
     - Replacement scope (`whole` or `partial`; PADR group additionally says proposed).
     - Replacement text (escaped source text, or `Replacement scope not recorded`).
   - `Superseded by` group (ADR only, later ADRs only; same row facts).
@@ -140,7 +143,7 @@ superseded ADR is wholly invalid. An unresolved or ambiguous ID has no link and 
 
 | Trigger | Step | From | To | Target | Capability | Feedback |
 | --- | --- | --- | --- | --- | --- | --- |
-| Follow a resolved decision link | UC-read-decision-supersession 4 | populated | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Same-view target title/body/summary appears; Read reveals its namespace if needed |
+| Follow a resolved decision link | UC-read-decision-supersession 4 | populated | loading | UX-view-decision | `CAP-VIEW-repository-viewer` | Target title/body/summary appears; Read reveals its namespace, Files keeps its view, proposal-detail PADR opens checkout ADR in Files |
 | Reload relations | UC-read-decision-supersession 3a | populated, empty, incomplete, error | loading | | `CAP-VIEW-repository-viewer` | Source index reloads and replaces summary or shows failure |
 | Continue reading after an unavailable target | UC-read-decision-supersession 3b | populated, incomplete | populated, incomplete | | `CAP-VIEW-repository-viewer` | Written ID and missing-scope text remain visible without a broken control |
 
