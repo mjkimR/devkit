@@ -43,8 +43,8 @@ An adaptive handler would be the first production consumer of the hook path and 
 | G8 | Registration planning | The locked-restore condition generalized from `.codex/hooks.json` to each adapter's file. A hook definition names one host, so a bundle that targets two hosts ships one asset per event and host, and each gives one `unprojected` report per other selected agent | `sync.py:730`; `CAP-DIST-sync-and-transactions` `:495-496`; `CAP-HOST-lifecycle-observation` §2 (`:67-69`) |
 | G9 | Receipt, ownership and removal | A `host_hooks` record already holds `host`, `asset`, `event`, `handler`, `command`, `matcher`, `timeout`, and validation goes through the adapter, so a new host or event needs no new field. The ownership rule does not carry over to every Claude Code file. Ownership lives in the committed receipt, and sync refuses with `HOST_HOOK_CONFLICT` when a recorded group is missing from an existing file; no adopt mode exists. `.codex/hooks.json` rarely exists before devkit writes it. A Claude Code settings file routinely does, and where the file is ignored or machine-local, a second clone or worktree holds one without the group. The MCP reconciler avoids this by writing only untracked ignored files and keeping ownership in a machine-local ledger | `project/repositories/receipt.py:282-310` (strict keys at `:287`); `distribution/services/installation/receipt.py:86-99`; `host/services/configuration.py:65-72`; `CAP-DIST-sync-and-transactions` `:99-101`; `CAP-HOST-lifecycle-observation` §3 (`:82-93`, "No force/adopt mode exists" at `:85`); `ADR-mcp-runtime-and-shared-artifacts` (`:145-149`) |
 | G10 | `devkit host status` | The `--host` option accepts the second host. For a gate, status cannot show that the hook ever ran: only the `observe` handler writes `last_received`. Needed: the runner records the same metadata for every dispatched handler | `host/cli.py:48-57`; `host/usecases/status.py:43-79`; `CAP-HOST-lifecycle-observation` §5 "The built-in `observe` handler MUST store only ..." (`:142-145`) |
-| G11 | Handler-owned state | A loop breaker that survives between hook calls needs a store. The observer's files hold no session identity by rule; the handler's package keeps its own record with a hash of the session identity. Needed only by the state-only block condition (`gate-behavior-and-measurement.md` §3.1) | `CAP-HOST-lifecycle-observation` §4 "Handlers MUST NOT ... log sensitive event content" (`:131`), §5 (`:142-145`) |
-| G12 | Launch environment | The generated command is `devkit host hook ...`, resolved through the host's PATH. A host started without the project environment on PATH runs no hook and reports nothing to devkit. This holds for Codex today and for any further host | `CAP-HOST-lifecycle-observation` §4 (`:101-104`); `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation` (`:23-25`) |
+| G11 | Handler-owned state | A loop breaker that survives between hook calls needs a store. The observer's files hold no session identity by rule; the handler's package keeps its own record with a hash of the session identity. Needed by the state-only block condition, by the name-aware condition if a cancel is to last beyond one stop, and by the narrow `SubagentStop` gate if the host does not bound repeated blocks (`gate-behavior-and-measurement.md` §3.1, §3.2) | `CAP-HOST-lifecycle-observation` §4 "Handlers MUST NOT ... log sensitive event content" (`:131`), §5 (`:142-145`) |
+| G12 | Launch environment | The generated command is `devkit host hook ...`, resolved through the host's PATH. A host started without the project environment on PATH runs no hook and reports nothing to devkit. This holds for Codex today and for any further host. If a host holds a stop when the hook command fails (probe CX-7), a blocking gate needs a fallback in the generated command that prints `{}`, which changes the command the receipt records | `CAP-HOST-lifecycle-observation` §4 (`:101-104`); `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation` (`:23-25`) |
 | G13 | Handler package | A feature edge from the adaptive handler's feature to `devkit_dist.features.host` (the facade exports `HookEvent` and `HookResponse`; `models.hooks` is not a public module) and to the assignment feature; an entry point in `devkit.host.handlers` | `.devkit/architecture.toml:28-60`; `RULE-architecture`; `host/usecases/runner.py:21-37` |
 | G14 | Bundle source snapshots | Not a gap for this work. A snapshot refuses a hook whose handler is not `observe`, but a snapshot source may declare only `devkit.bundles` entry points, so a package that carries a handler is refused before that check | `distribution/services/snapshots/support.py:114-122`; `distribution/services/snapshots/source.py:57-66` |
 | G15 | Document drift in the sections above | The capability names the handler group `devkit_dist.features.host.handlers` at `:26` and `devkit.host.handlers` at `:113` (the code uses the second); its boundary list names module paths that moved; the reference page names `dispatch` and `inspect_host`, which the facade exports as `DispatchHostHook` and `InspectHost` | `CAP-HOST-lifecycle-observation` `:24-32`; `docs/development/reference/host.md:14-16` |
@@ -61,16 +61,25 @@ Earlier records, none of which rejects a stop gate:
 
 ### 3.1 The open decision inside a Claude Code adapter
 
-G7 and G9 leave one decision that no evidence here settles: which Claude Code file devkit writes and where its
-ownership is recorded.
+G7 and G9 leave one decision that no evidence here settles: how a Claude Code registration gets installed, and,
+where devkit writes it, into which file and with its ownership recorded where.
 
 | Choice | Consequence |
 | --- | --- |
-| The shared `.claude/settings.json`, tracked, ownership in the committed receipt | The existing ownership and removal rules carry over unchanged. The hook is registered for every clone and collaborator, and each needs `devkit` on the host's PATH. In a repository that ignores `.claude/`, as this one does, the file is per clone and an existing file without the group is a `HOST_HOOK_CONFLICT` |
+| The shared `.claude/settings.json`, tracked, ownership in the committed receipt | The existing ownership and removal rules of the hook path carry over unchanged; this departs from the MCP practice of writing only untracked ignored files. The hook is registered for every clone and collaborator, and each needs `devkit` on the host's PATH. In a repository that ignores `.claude/`, as this one does, the file is per clone and an existing file without the group is a `HOST_HOOK_CONFLICT` |
 | The local `.claude/settings.local.json`, ownership in a machine-local store as MCP registration uses | No conflict between clones and nothing shared. It needs an ownership store outside the receipt, and devkit then writes a file the host itself rewrites when the user approves a permission |
 | Either file with a rule that adopts an absent group | Removes the conflict; reverses "No force/adopt mode exists" |
+| No file written by devkit: the user installs the registration | devkit prints the matcher groups for the user to paste and only reads the settings files to verify a registration at dispatch and in `devkit host status`. The host configuration boundary, the ownership rule and the three distribution capabilities stay as they are. It costs a manual step per clone and after every change to a registration, sync neither installs nor removes the hook, and a missing registration is a silent release that only `devkit host status` shows. This is the third ownership model of `docs/materials/evaluations/agent-hooks.md` |
 
-The decision belongs to the adapter's own unit and is its main risk. It does not change the adapter's size.
+For `SubagentStop` only, Claude Code documents a further path: a `Stop` hook in a subagent's frontmatter becomes
+`SubagentStop` for that subagent, and devkit already writes the Claude Code role files as its own projections. The
+frontmatter keys devkit accepts do not include hooks today
+(`packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/subagents.py:26-39`), the path is
+extracted from documentation and unprobed, and it serves neither `SessionStart` nor the Host's `Stop`.
+
+The decision belongs to the adapter's own unit and is its main risk. The first three choices keep the adapter at
+size L (W4). The fourth makes it size M (W4u): the adapter module, the lookup, the command that prints the
+registration and the verification remain, and the sync, removal, ownership and boundary work falls away.
 
 ## 4. Work items
 
@@ -80,12 +89,13 @@ The decision belongs to the adapter's own unit and is its main risk. It does not
 | W2 | `SubagentStop` event for Codex (G4) | `codex.py` | About 2 cases | `CAP-HOST-lifecycle-observation` §2, `CAP-DIST-manifest-spec` | W1 for a decision on it | Low. The matcher rule for the event needs the vendor page read again | S |
 | W3 | Dispatch observation for every handler (G10) | `host/usecases/runner.py`, `host/services/observation.py` | About 2 cases | `CAP-HOST-lifecycle-observation` §5 | None | Low | S |
 | W4 | Claude Code hook adapter (G5 to G9, G12, G15) | New adapter module; `host/services/configuration.py`, `host/models/hooks/model.py`, `host/cli.py`, `distribution/usecases/sync.py`; an ownership store or an adopt rule under two of the three choices of section 3.1; optionally the hook definition for several hosts | 15 to 20 cases parallel to the Codex set, plus `test_cli.py`, `test_workspace_safety.py` and locked-sync cases | `CAP-HOST-lifecycle-observation` §1 to §5, `CAP-DIST-agent-projections`, `CAP-DIST-workspace-ownership`, `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions`, both reference pages, the installation guides, and the decision of section 3.1 | Probes CC-1 to CC-10 | Medium to high: the decision of section 3.1; devkit writes a file that holds permission settings; a host launched without the project environment runs no hook; first adapter for a second host | L |
+| W4u | Claude Code hook adapter with a registration the user installs (the fourth choice of section 3.1) | New adapter module; `host/services/configuration.py`, `host/models/hooks/model.py`, `host/cli.py` with a command that prints the registration; `distribution/services/installation/host_hooks.py` skips the host; dispatch and status read the settings files | About 10 cases: validation, rendering, printed registration, dispatch and status with a present and an absent registration | `CAP-HOST-lifecycle-observation` §1 to §5, `CAP-DIST-manifest-spec`, the host reference page, the installation guides | Probes CC-1 to CC-10 | Medium: every clone needs a manual step and nothing reports a clone that skipped it; a host launched without the project environment runs no hook | M |
 | W5 | Antigravity hook adapter | New adapter; the runner's `cwd` and event-name checks, because the input carries `workspacePaths` and no documented event name; another registration shape and response shape | A full parallel set | The same documents as W4 | Probe AG | High: failure and timeout behavior undocumented; no subagent event | L |
 | W6 | Ledger additions for a Host gate (N2, N3, N8 of `gate-behavior-and-measurement.md`) | The assignment feature of `devkit-adaptive`: one recorded field on `new`, a list read without observation, Git environment scrubbing | Unit and integration cases in that feature | The assignment capability that `PROP-adaptive-assignment-cli` creates | `PROP-adaptive-assignment-cli`; the change belongs to that unit or to a follow-up | Low. Records written before the field exists belong to no checkout | S |
 | W6b | Paths outside the scope in the `list` observation of an `open` assignment (N6) | The assignment feature: the changed-path collection `verify` uses, applied before a return | Unit and integration cases in that feature | The assignment capability | `PROP-adaptive-assignment-cli` | Low | S |
 | W7 | Session-start handler and hook preset | A new feature in `devkit-adaptive` with a handler entry point; hook assets and a preset in the `adaptive-dev` bundle; `.devkit/architecture.toml` | Unit cases for the text and its truncation; an integration case through `devkit host hook` on a temporary repository; the bundle preset tests; one installed-consumer case | `CAP-DLV-adaptive-development` rule 1 and §4, the assignment capability, one guidance sentence in the bundle | The delivered commands, `PROP-adaptive-package-extraction`. W6 is optional: without it the injection lists the whole repository | Low: nothing is blocked | M |
-| W8 | Host `Stop` gate handler | The feature of W7: one of the two block conditions of `gate-behavior-and-measurement.md` §3.1, the reason text, and a per-session record under `.devkit/transient/` (G11) for the state-only condition | Unit cases per row of the decision table; integration cases for block, repeated stop and unreadable ledger | The same capability with the decision table and the wrong-block statement; one guidance sentence; under the name-aware condition, the sentence of `CAP-DLV-adaptive-development` that the context file is not parsed | W1, W6, W7 | Medium: the behavior is the risk, not the code. A wrong block costs a turn and can push an agent to close assignments to pass | M |
-| W9a | Narrow `SubagentStop` gate, for an assignee in its own worktree | The feature of W7: the conditions of `gate-behavior-and-measurement.md` §3.2; the root pinning of G16 where the host offers a variable | Unit cases per condition; integration cases with a linked worktree | The same capability | W1, W2, W6b, W7; probes CC-3b or CX-4b | Medium to high: it is not buildable on a host that reports the Host's directory for a subagent, and on Codex G16 has no remedy documented | M |
+| W8 | Host `Stop` gate handler | The feature of W7: one of the two block conditions of `gate-behavior-and-measurement.md` §3.1, the reason text, and a per-session record under `.devkit/transient/` (G11) for the state-only condition | Unit cases per row of the decision table; integration cases for block, repeated stop and unreadable ledger | The same capability with the decision table and the wrong-block statement; one guidance sentence; under the name-aware condition, the sentence of `CAP-DLV-adaptive-development` that the context file is not parsed and the sentence "No command reads or writes it" of the ledger storage decision of `PROP-adaptive-assignment-cli` | W1, W6, W7 | Medium: the behavior is the risk, not the code. A wrong block costs a turn and can push an agent to close assignments to pass | M |
+| W9a | Narrow `SubagentStop` gate, for an assignee in its own worktree | The feature of W7: the conditions of `gate-behavior-and-measurement.md` §3.2; the root pinning of G16 where the host offers a variable; a record per subagent (G11) unless the probes show the host bounds repeated blocks | Unit cases per condition; integration cases with a linked worktree | The same capability | W1, W2, W6b, W7; probes CC-3b and CC-3c, or CX-4b and CX-4c | Medium to high: it is not buildable on a host that reports the Host's directory for a subagent; on Codex G16 has no remedy documented; no host states a cap on repeated `SubagentStop` blocks | M |
 | W9b | `SubagentStop` gate for every assignee | A host agent identity in the assignment record, written by the delegating agent after the subagent starts; then the handler | Both features | The assignment capability and its command decision | W9a and an accepted design change in the assignment feature | High: it changes who records what in the assignment design | L |
 | W10 | Probes and measurement | None | None | The results, recorded as material | Nothing for the probes; the delivered commands for the measurement | None to the code; it costs host sessions: about twelve steps per host for the probes; ten observed runs or 30 days, and fifteen scenario runs, per host for the measurement | Not a spec |
 
@@ -94,8 +104,8 @@ The decision belongs to the adapter's own unit and is its main risk. It does not
 | Option | Items | Specs | Prevents | Does not prevent | Unverified before delivery |
 | --- | --- | --- | --- | --- | --- |
 | (a) Codex only: blocking `Stop` and session start, no new host | W1, W3, W6, W7, W8 | 1 (size L), plus W6 in the assignment unit | F1 and F2 in Host sessions on Codex | Anything on Claude Code or Antigravity; F3 | The Codex probes: the review step, a block, the repeated stop after a tool call, `Stop` inside subagent threads, timeout behavior; that Codex is launched with `devkit` on PATH (G12) |
-| (b) Codex and Claude Code: blocking `Stop` and session start | (a) plus W4 | 2: the host hook contract with the Claude Code adapter (L), and the adaptive gates (L) | F1 and F2 on both hosts | Antigravity; F3 | The same, plus the Claude Code probes and the decision of section 3.1 |
-| (c) Session-start injection only | Codex: W7, with W3 so that `devkit host status` shows the hook ran; W6 optional. Both hosts: plus W4 | 1 (size M) on Codex; 2 with Claude Code | F2 | F1, F3 | `SessionStart` delivery of devkit's generated command and the visible context on each host; G12 |
+| (b) Codex and Claude Code: blocking `Stop` and session start | (a) plus W4 or W4u | 2: the host hook contract with the Claude Code adapter (L with W4, M with W4u), and the adaptive gates (L) | F1 and F2 on both hosts | Antigravity; F3 | The same, plus the Claude Code probes and the decision of section 3.1 |
+| (c) Session-start injection only | Codex: W7, with W3 so that `devkit host status` shows the hook ran; W6 optional. With Claude Code: plus W4 or W4u | 1 (size M) on Codex; with Claude Code 2 under W4, or 1 (size L) under W4u | F2 | F1, F3 | `SessionStart` delivery of devkit's generated command and the visible context on each host; G12 |
 | (d) No delivery | None | 0 | Nothing beyond the commands and guidance | F1, F2 and F3 keep the cost they have without a gate | Nothing |
 | (e) Decide after the measurement | W10, then one of (a) to (d) by the criteria of `gate-behavior-and-measurement.md` §4.4 | 0 now | Nothing until the decision | Until the decision, what (d) does not prevent | The effect itself, which is what the wait measures |
 
@@ -107,21 +117,30 @@ The smallest delivery depends on the host the user's adaptive Host sessions run 
 | Host of the Host sessions | Smallest delivery | Specs |
 | --- | --- | --- |
 | Codex | (c) on Codex | 1, size M |
-| Claude Code | W4, then W7 | 2: size L, then size M |
-| Both | (c) on Codex first; Claude Code only with W4 | 1, then 2 more |
+| Claude Code | W3, W4u and W7 with a registration the user installs; or W4, then W7, with a registration devkit manages | 1, size L; or 2: size L, then size M |
+| Both | (c) on Codex first; Claude Code with W4u or W4 added | 1, size M; then as the row above without W7 |
 
 What option (e) consists of:
 
 1. Nothing is accepted for delivery in this proposal now.
-2. The probes of `live-probes.md` need nothing and run whenever question q3 says.
+2. The probes of `live-probes.md` need nothing and run when question q3 says. The user runs them, or a Host session
+   the user authorizes to register a hook in a throwaway directory and run a host there.
 3. The measurement starts when the commands of `PROP-adaptive-assignment-cli` are delivered. The user takes it, or a
    Host session the user authorizes to run host sessions. It ends at ten observed runs per host or 30 days after that
    delivery, whichever comes first, with the constructed scenarios run five times each.
 4. At the end the counts are read against the fixed criteria. A criterion met opens a delivery proposal for the
    items it names; none met is recorded as "not delivered" with the counts.
-5. While it waits, the unit is either ended without acceptance, with the five materials of this directory retained
-   under `docs/materials/` so the hygiene pass that deletes a rejected proposal's directory does not remove them, or
-   kept in review on its Planning branch. The same retention applies to (d).
+5. While it waits, the unit takes one of two states.
+   - **Ended**: the proposal's status becomes `rejected` with the reason "delivery decision deferred until the
+     measurement; a criterion met reopens it as a new proposal". A later hygiene pass writes the rejection decision
+     from that sentence and deletes this directory. Before the status commit the Host moves the five materials under
+     `docs/materials/` with material IDs, replaces their references to this directory's envelopes and proposal
+     sections, and writes the answers to q1 and q3 into them. A draft proposal for the measurement, depending on
+     `PROP-adaptive-assignment-cli`, carries the trigger, the owner and the end, so Backlog holds the pending work.
+     This run writes none of that: its write scope is this directory.
+   - **Kept**: the proposal stays in review on its Planning branch. Nothing moves, the questions and answers stay
+     in its envelopes, and the materials are reachable only on that branch until the unit ends.
+   Option (d) is the ended state with the reason "not delivered" and without the measurement draft.
 
 Observations that bear on the choice:
 
@@ -130,28 +149,30 @@ Observations that bear on the choice:
    consumer, which `docs/materials/evaluations/agent-hooks.md` declined for that reason.
 2. **The cost is concentrated in the second host.** Without W4 the whole delivery is one spec whose host-feature part
    is two small changes. With W4 it is two specs, a change to the host configuration boundary and the decision of
-   section 3.1.
+   section 3.1; with W4u it is smaller and changes no boundary, at the price of a manual installation per clone.
 3. **Which host matters is not in the repository.** The project selects `antigravity`, `claude-code` and `codex`
    (`.devkit/installation.json`). If adaptive Host sessions run on Claude Code, options (a) and (c) on Codex prevent
    nothing there.
-4. **Session-start injection on Codex needs no change to the hook contract.** The existing context response covers
-   it. It is the smallest delivery.
+4. **Session-start injection on Codex needs no new response in the hook contract.** The existing context response
+   covers it. It is the smallest delivery.
 5. **The gate's value is the difference between F1 with and without it, minus its wrong blocks.** Neither term is
    known; the criteria of `gate-behavior-and-measurement.md` §4.4 use both.
 
 ## 6. Decomposition (Q7)
 
-The number of specs follows from W4. It is a complex module by itself, with its own decision, its own tests and a
-use for any bundle; everything else on the host side is two or three small changes that have no consumer apart from
-the gate and travel with it.
+The number of specs follows from the Claude Code adapter. W4 is a complex module by itself, with its own decision,
+its own tests and a use for any bundle; everything else on the host side is two or three small changes that have no
+consumer apart from the gate and travel with it. W4u is size M and can travel with a session-start handler in one
+spec, but not with the whole of option (a).
 
-- Options (a), (c) on Codex and (d) are at most one spec. The proposal keeps a single size under them.
-- Option (b), and (c) with Claude Code, are two specs. Under either, this proposal is returned for decomposition
-  with these children:
+- Options (a), (c) on Codex, (c) with Claude Code under W4u, and (d) are at most one spec. The proposal keeps a
+  single size under them.
+- Option (b), and (c) with Claude Code under W4, are two specs. Under either, this proposal is returned for
+  decomposition with these children:
 
 | Child | Content | Area | Size | Depends on |
 | --- | --- | --- | --- | --- |
-| Host hook stop decision and Claude Code adapter | W1, W3, W4 (W1 only under (b)) | `capabilities/host/` | L | The Claude Code probes; the decision of section 3.1 |
+| Host hook stop decision and Claude Code adapter | W1, W3, and W4 or W4u (W1 only under (b)) | `capabilities/host/` | L with W4, M with W4u | The Claude Code probes; the decision of section 3.1 |
 | Adaptive lifecycle gates | W7, and W8 under (b), with the measurement after delivery | `capabilities/delivery/` | L under (b), M under (c) | The first child; `PROP-adaptive-assignment-cli` with W6 |
 
 - The narrow `SubagentStop` gate adds a third unit (W2, W6b, W9a) after those.
@@ -168,7 +189,7 @@ history. Counts are the inbound references `devkit docs refs <ID> --direction in
 
 | Document | Inbound | Edited by |
 | --- | --- | --- |
-| `CAP-HOST-lifecycle-observation` | 26 | W1, W2, W3, W4 |
+| `CAP-HOST-lifecycle-observation` | 26 | W1, W2, W3, W4, W4u |
 | `CAP-DIST-agent-projections` | 26 | W4 |
 | `CAP-DIST-workspace-ownership` | 31 | W4 |
 | `CAP-DIST-manifest-spec` | 40 | W2, W4 |
@@ -177,6 +198,7 @@ history. Counts are the inbound references `devkit docs refs <ID> --direction in
 | `CAP-DLV-adaptive-development` | 39 | W7, W8 |
 | The assignment capability of `PROP-adaptive-assignment-cli` | not created yet | W6, W6b, W7, W8, W9a, W9b |
 
-`ADR-mcp-runtime-and-shared-artifacts` limits automatic writes of host files to project files that are untracked and
-ignored, and keeps the committed receipt portable (`:142-149`). W4 stays inside the project-file limit; its choice
-of section 3.1 decides how it meets the rest.
+`ADR-mcp-runtime-and-shared-artifacts` (`:142-149`) binds MCP registration: project files only, automatic writes
+only to untracked ignored files, a portable committed receipt. A hook adapter is bound by
+`CAP-HOST-lifecycle-observation` §3, which has no tracked-file test. The MCP clause is a precedent for the second
+choice of section 3.1, not a bar to the first.

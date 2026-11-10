@@ -58,14 +58,18 @@ assignment recorded from this checkout (N3) is not `closed`, and the host's `sto
 | --- | --- | --- |
 | Further condition | At least one outstanding ID does not occur as a whole token in `.devkit/adaptive-dev.md` | The set of outstanding IDs with their statuses differs from the set this session was last blocked for |
 | Matches F1 | Yes: a Host that named the IDs before pausing (`CAP-DLV-adaptive-development` rule 14) is not blocked | No: it blocks a correct pause |
-| Blocks in an active build | One per turn end at which a new ID is unnamed | About one per turn end, because every `new`, `return`, `verify` and `close` changes the set |
-| State the gate keeps | None | One record per session under `.devkit/transient/`, keyed by a hash of the session identity (gap G11) |
+| Blocks in an active build | One per turn end until every outstanding ID is named or closed. Acting on an assignment, a cancel by second stop and continuation 3 release that stop only | About one per turn end, because every `new`, `return`, `verify` and `close` changes the set |
+| State the gate keeps | None as stated. With none, a cancel is forgotten at the next turn end and an unrelated session in the checkout is blocked at every turn end. The record of the other column, applied to the unnamed set, makes a cancel last for the session; gap G11 then applies to both conditions | One record per session under `.devkit/transient/`, keyed by a hash of the session identity (gap G11) |
 | Contract it touches | `CAP-DLV-adaptive-development` says the file is "not managed/transient state or a parsed lifecycle" (`:328`), and the candidate ledger decision says "No command reads or writes it". A token search by a hook handler reads it | None |
 | What it misses | An ID named at an earlier pause whose status changed since | Nothing by construction |
 
-The sizing of the gate handler (W8, size M) holds under both. The choice is part of the specification if a gate is
-delivered; it is not settled here. The criteria of section 4.4 apply to whichever is chosen and, as written, the
-state-only condition cannot meet the wrong-block criterion when Hosts pause correctly.
+The sizing of the gate handler (W8, size M) holds under both, with or without the record. What selects the
+condition is one decision: whether a hook handler may read `.devkit/adaptive-dev.md`. Allowing it changes the
+sentence of `CAP-DLV-adaptive-development` quoted above and the sentence "No command reads or writes it" of the
+ledger storage decision in `PROP-adaptive-assignment-cli`. That decision is not settled here; it belongs to the
+specification if a gate is delivered. If it is refused, only the state-only condition remains, and by the
+wrong-block criterion of section 4.4 that condition is not deliverable on a host where Hosts name their assignments
+before pausing: no `Stop` gate is then delivered there.
 
 The reason names the outstanding IDs with their statuses and three valid continuations:
 
@@ -80,26 +84,26 @@ Release in every other case:
 | Case | Behavior | Why |
 | --- | --- | --- |
 | Repeated stop with no tool call in between | Release on `stop_hook_active` | The host's own loop signal; on Claude Code the host also overrides after eight such continuations |
-| Repeated stop after the model ran a tool | Release by the block condition itself: under the name-aware condition the IDs are named or the Host has acted; under the state-only condition the set is unchanged | Whether `stop_hook_active` is still true then is unknown on both hosts (probes CC-2b, CX-3b) |
+| Repeated stop after the model ran a tool | Under the name-aware condition: release only when every outstanding ID is named or closed; a `return`, a `verify` or a new dispatch leaves the IDs unnamed and the gate blocks again unless it keeps the record. Under the state-only condition: release when the set is unchanged | Whether `stop_hook_active` is still true then is unknown on both hosts (probes CC-2b, CX-3b) |
 | Subagents still running (Claude Code) | Release when `background_tasks` lists a running subagent | The pause is legitimate. Only if subagent entries can be told from background shell entries (probe CC-4); otherwise the release is dropped, because a background shell would release every stop |
 | Explicit cancel | The second stop is the cancel; a user interrupt runs no `Stop` hook on Claude Code. No cancel command is added | A command adds surface and a state to maintain |
 | No ledger, empty ledger, no repository | Release, no output | Nothing is outstanding |
 | Unreadable ledger, handler error, timeout inside devkit | Release with the existing warning on stderr, `{}` on stdout, exit `0` | `CAP-HOST-lifecycle-observation` §4: failures are advisory |
-| Stale assignments from an abandoned run | Blocked once, then named or closed as abandoned | The ledger has no age threshold (N10) |
+| Stale assignments from an abandoned run | Blocked until named or closed as abandoned (name-aware), or once per session (state-only) | The ledger has no age threshold (N10) |
 | The Host's `cwd` is another worktree at the stop | Released silently: the project lookup and the checkout filter both follow `cwd` (gap G16) | Known limit |
 
 Cost of each error:
 
 - **Wrong release** (the gate stays silent while work is outstanding): the outcome without a gate. The session ends,
   the ledger still holds the assignments, and the next `list` shows them. The harm is a completion claim the user
-  reads as final. A gate that cannot run (hook not reviewed on Codex, `devkit` not on the host's PATH, a timeout) is a
-  wrong release that nothing reports. This equality holds as long as the guidance a gate adds replaces no manual
+  reads as final. A gate that cannot run (hook not reviewed on Codex; on Claude Code `devkit` not on the host's PATH, or
+  a timeout) is a wrong release that nothing reports. This equality holds as long as the guidance a gate adds replaces no manual
   step.
 - **Wrong block** (the gate blocks a legitimate stop): one extra model turn each time. Three further costs exist only
   because a gate exists: an agent can clear the gate by closing assignments as `abandoned` or as `integrated` with a
   reason, which damages the record the gate reads; a headless run gains a turn after its final answer, which changes
   the output a script parses; and a session in the same checkout that has nothing to do with the delegation is
-  blocked once.
+  blocked, once with a record and at every turn end without one.
 
 A wrong release costs what the absence of the gate costs. A wrong block is a new cost. The gate is therefore biased
 to release, and the measurement in section 4 has to show that the status quo cost is real, and that the chosen
@@ -117,13 +121,17 @@ Two gates of different cost follow.
 | Condition | Source | Limit |
 | --- | --- | --- |
 | A lead stops while a child it recorded is not `closed` | Ledger (`parent`) | The candidate guidance already has a lead close its children before it returns |
-| A writer with a commit grant stops with uncommitted paths | `list` observation (`dirty`) | An assignment without the grant leaves uncommitted paths on purpose |
+| A writer with a commit grant stops with uncommitted paths | `list` observation (`dirty`) | An assignment without the grant leaves uncommitted paths on purpose. `verify` reports this as a warning, not a failed check, so F3 does not count it |
+| A writer without a commit grant stops with commits | `list` observation (`commits`) | Corresponds to the `commit` check |
 | A writer stops with paths outside its scope | `list` observation with W6b | Needs the addition; the largest expected value, because a worker that still runs can repair its own violation |
-| A writer stops with no change (`no-changes`) | `list` observation | A read-only or investigative assignment looks the same unless `write` is empty |
+| A writer stops with no change (`no-changes`) | `list` observation | A read-only or investigative assignment looks the same unless `write` is empty, and a correct result can be no change; the condition is kept only under the wrong-block term of section 4.4 |
 
-It depends on three things that are not established: the host reports the subagent's working directory as `cwd`
-(probes CC-3b, CX-4b); devkit dispatches correctly for a `cwd` in another worktree (gap G16); and W6b is added to
-the assignment feature. It needs no command run by an assignee and makes no command block a session.
+It depends on four things that are not established: the host reports the subagent's working directory as `cwd`
+(probes CC-3b, CX-4b); devkit dispatches correctly for a `cwd` in another worktree (gap G16); W6b is added to the
+assignment feature; and the host bounds repeated blocks of a subagent. None of these conditions has a naming
+release, a blocked worker runs tools before it stops again, and no host states a cap for `SubagentStop`. If
+`stop_hook_active` is false after a tool call (probes CC-3c, CX-4c), the gate keeps a record per subagent (gap G11)
+and blocks each condition once. It needs no command run by an assignee and makes no command block a session.
 
 **Every-assignee gate.** An assignee that shares the Host checkout, or a host that reports the Host's directory,
 cannot be mapped to an assignment. Covering it needs a host agent identity in the record, written by the delegating
@@ -184,7 +192,7 @@ account of what it did.
 
 | ID | Observation | Source | Kind |
 | --- | --- | --- | --- |
-| O1 | At session end: the session's assignments that are not `closed`, by status | `devkit adaptive assignment list --format json` after the session, restricted to assignments whose `assigned_at` lies inside the session, or to those recorded from the session's checkout once N3 exists | Computed |
+| O1 | At session end: the session's assignments that are not `closed`, by status | `devkit adaptive assignment list --format json` after the session. In a constructed scenario: every assignment, because the scenario has a repository of its own. In an observed run: the assignments whose `assigned_at` lies inside the session window and, for a resumed run, inside the window of the session it resumes; or those recorded from the session's checkout once N3 exists | Computed |
 | O2 | At session end: which of those IDs `.devkit/adaptive-dev.md` names | Each ID as a whole token (not preceded or followed by a letter, digit or hyphen) in a file modified after the session started | Computed |
 | O3 | Whether the final message claimed completion | The observer reads the last assistant message of the host transcript and sets `completion_claimed` in the evidence format the scorer reads (`CAP-DLV-adaptive-development`, evidence-scoring test support). Rule: true when the message says the requested work is done and names no outstanding assignment | Read by rule |
 | O4 | In a resumed session: whether an assignment command ran before the first edit or subagent call | The host transcript: the position of the first tool call whose command contains `devkit adaptive assignment` against the first file edit or subagent tool call. The ledger cannot show it, because `list` and `show` write no event | Computed from the transcript |
@@ -201,11 +209,17 @@ Failure counts:
   assignment left unclosed is bookkeeping. F1 is severe when O3 is true.
 - F2 is a resumed session where O4 is false.
 - F3 is a failed verification whose failed checks are only among `scope`, `commit` and `children`.
-- A would-be wrong block is a turn end in O6 at which the chosen block condition of section 3.1 would block although
-  every outstanding ID is named.
+- A would-be wrong block is a turn end in O6 at which a block condition of section 3.1 would block although every
+  outstanding ID is named. It is zero by definition for the name-aware condition, so it measures the state-only
+  condition only.
+- A would-be wrong block of the narrow `SubagentStop` gate is a return of an assignment with a write scope and a
+  commit grant whose final commit is its base, that passed verification and was closed as `integrated`: a result
+  accepted with no committed change, which the `no-changes` condition would have blocked. It is read from the
+  record `show <id> --format json` prints.
 
-Observed runs in a repository where another session records assignments during the window are counted only once N3
-exists; constructed scenarios run in a repository of their own with an empty ledger.
+Another session recording during the window shows as an assignment inside the window whose `new` call is absent
+from the session transcript. An observed run with such an assignment is counted only once N3 exists. Constructed
+scenarios run in a repository of their own with an empty ledger.
 
 ### 4.3 Scenarios
 
@@ -216,7 +230,7 @@ Run on each host the user works on, with the commands and guidance and no hook:
 | Observed runs | Real adaptive sessions that record at least three assignments, until ten are collected on a host or 30 days have passed since the commands were delivered, whichever comes first | F1, F2 (when resumed), F3 |
 | `interrupted-writer` | Three assignments dispatched; the Host session is ended while one writer runs; a new session resumes with the prompt "continue" | F2, and F1 at the end of the resumed session |
 | `combined-check` | Three assignments whose results pass alone and fail combined; the prompt asks for a report when the work is done | F1 with O3 |
-| Pause for input | Three assignments, one returning `needs_input`; the Host must ask the user | O6: would-be wrong blocks |
+| Pause for input | Three assignments, one returning `needs_input`; the Host must ask the user. Run only while the state-only condition is a candidate | O6: would-be wrong blocks of the state-only condition |
 
 Run each constructed scenario five times per host. A scenario run is one sample; the model and host version are
 recorded with it.
@@ -229,16 +243,20 @@ observed runs at the end of the window is judged on the constructed scenarios al
 
 | Decision | Criterion, read after the measurement |
 | --- | --- |
-| Deliver a Host `Stop` gate on a host | F1 (`open` or action due) in at least 2 observed runs on that host, or in at least 2 of 5 runs of `combined-check` with O3 true; and fewer than 3 of the 5 pause runs show a would-be wrong block under the block condition to be delivered; and the probes for that host show the hook delivered, the reason reaching the model and a release on the repeated stop |
+| Deliver a Host `Stop` gate on a host | F1 (`open` or action due) in at least 2 observed runs on that host, or in at least 2 of 5 runs of `combined-check` with O3 true; and the probes for that host show the hook delivered, the reason reaching the model, a release on the repeated stop, and a released stop when the hook command fails (CC-7, CX-7) or a fallback in the generated command that makes it so. With the name-aware condition the decision rests on these alone. The state-only condition also needs fewer than 3 of the 5 pause runs to show a would-be wrong block |
 | Deliver `SessionStart` injection on a host | F2 in at least 2 of 5 runs of `interrupted-writer`, or in at least 2 observed resumed runs, on that host |
-| Deliver the narrow `SubagentStop` gate on a host | F3 in at least 20% of recorded returns across the observed runs, with at least ten returns; and probes CC-3b or CX-4b show the subagent's own worktree as `cwd` |
+| Deliver the narrow `SubagentStop` gate on a host | F3 in at least 20% of recorded returns across the observed runs, with at least ten returns; and probes CC-3b or CX-4b show the subagent's own worktree as `cwd`. Its `no-changes` condition is included only if no would-be wrong block of that gate occurred in the window |
 | Add a host adapter | A gate or an injection meets its criterion on that host and the host is not Codex |
 | Do not deliver | No criterion met at the end of the window. The counts are recorded as the reason |
 
-A held turn on a timeout or a failed hook (probes CX-6, CX-7) is not a criterion: it adds a self-imposed deadline to
-the gate handler (`live-probes.md` §6).
+A held turn on a timeout inside the handler (probe CX-6) is not a criterion: it adds a self-imposed deadline to the
+gate handler. A held turn when the hook command itself fails (probe CX-7) is one: a host started without `devkit`
+on its PATH (gap G12) would then hold every stop, and neither a deadline nor devkit's own failure path runs in that
+case. The remedy is a fallback in the generated command that prints `{}`, which changes
+`CAP-HOST-lifecycle-observation` §4 and the command the receipt records and is added to W1; without it no `Stop`
+gate is delivered on that host (`live-probes.md` §6).
 
-After a delivery the same scenarios are repeated with the preset selected. The gate is kept when F1 falls and the
-pause scenario shows fewer than 3 wrong blocks in 5 runs. The baseline is the same scenario with the preset
+After a delivery the same scenarios are repeated with the preset selected, the pause scenario included. The gate is
+kept when F1 falls and the pause scenario shows fewer than 3 wrong blocks in 5 runs. The baseline is the same scenario with the preset
 deselected; the Host or the user takes both measurements in live host sessions, because a development worker cannot
 run a host with a hook registered.

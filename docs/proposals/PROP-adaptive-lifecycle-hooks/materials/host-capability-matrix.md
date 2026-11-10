@@ -77,8 +77,9 @@ Cell format: **supported**, **unsupported** or **unknown**, then the evidence cl
    settings, which the host configuration boundary of `CAP-DIST-agent-projections` reserves to the host.
 5. **Antigravity needs its own adapter and offers no subagent gate.** Its registration file, input fields and stop
    response differ from the other two, and it documents no subagent event.
-6. **A gate that cannot run releases silently on both hosts.** An unreviewed hook on Codex is skipped; a command
-   missing from PATH, a timeout or a failed dispatch releases the stop on Claude Code and inside devkit. No host
+6. **A gate that cannot run releases silently where the behavior is known.** An unreviewed hook on Codex is skipped;
+   a command missing from PATH, a timeout or a failed dispatch releases the stop on Claude Code and inside devkit.
+   What Codex does when the command fails or times out is unknown. No host
    reports this to the agent, and `devkit host status` cannot establish it.
 7. **A sync that changes a registration disables it on Codex until the user reviews it.** Trust is per hook hash.
    devkit's registration text is stable across syncs (`devkit host hook --host codex --asset <bundle:id>` plus
@@ -100,6 +101,7 @@ Cell format: **supported**, **unsupported** or **unknown**, then the evidence cl
 | A consecutive-block cap | Codex | Without one the gate's own loop breaker is the only release |
 | `stop_hook_active` on the second stop | Codex, Claude Code | The loop breaker relies on it |
 | The entry types in `background_tasks` | Claude Code | A release must count running subagents, not a background shell |
+| `stop_hook_active` and a host cap on `SubagentStop` after the subagent ran a tool | Codex, Claude Code | A subagent gate's conditions have no naming release; without a host bound it keeps its own record |
 | The shape of `background_tasks` on `Stop` | Claude Code | Lets a gate tell a pause that waits for running subagents from an end with nothing running |
 | Hooks under `codex exec` and `claude -p` | Codex, Claude Code | Headless runs are where a lost assignment is least visible |
 | Any Antigravity behavior beyond the event table | Antigravity | Only needed if Antigravity is carried forward |
