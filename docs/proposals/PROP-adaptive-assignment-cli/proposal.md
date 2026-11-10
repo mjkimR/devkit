@@ -2,7 +2,7 @@
 id: PROP-adaptive-assignment-cli
 title: Assignment ledger and return verification commands for adaptive delegation
 summary: "Add commands that record delegated assignments and verify a return against its assignment, and make devkit-adaptive require the document system, so a Host resumes from recorded state and checks scope, source identity, declared checks and governing documents deterministically."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
