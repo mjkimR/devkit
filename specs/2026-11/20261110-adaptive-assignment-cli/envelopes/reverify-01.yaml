@@ -1,0 +1,26 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T02:13:30.125767Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both fixes: list follows Git initialization; empty identity inputs are refused without appending events.'
+findings:
+- issue: Smoke invokes assignment list before Git initialization.
+  evidence: tests/e2e/smoke.sh list at line 196 precedes git init at line 320; full smoke exits ADAPTIVE_REPOSITORY_UNSUPPORTED.
+  failure_condition: Running just smoke on source 35eb5ebf stops before completing consumer checks.
+  suggested_action: Move list after Git initialization and rerun smoke.
+  resolution: resolved
+  severity: P2
+- issue: Explicitly empty IDs and revisions receive omitted-option defaults.
+  evidence: services/operations.py truthiness defaults and scratch/assignment/review-01/probe.py show empty --id, --base and --final exit 0.
+  failure_condition: An empty supplied identity is silently accepted rather than rejected with the contract code.
+  suggested_action: Apply defaults for None only and assert refusal without a new ledger event.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS assignment integration 32 cases including empty id/base/final regressions
+diff_scope:
+  base: 35eb5ebfddcd409b3f309540b25b9cda277740f1
+  head: 35eb5ebfddcd409b3f309540b25b9cda277740f1

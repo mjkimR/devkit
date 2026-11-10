@@ -278,3 +278,17 @@ def test_symlink_scope_is_normalized_and_both_rename_names_observed(repo, call):
     (repo / "src/a").write_text("changed")
     returned(call)
     assert call("verify", "a1")["result"] == "pass"
+
+
+@pytest.mark.parametrize("flag,code", [("--id", "ARGUMENT_INVALID"), ("--base", "ADAPTIVE_REVISION_UNRESOLVED")])
+def test_explicit_empty_new_identity_does_not_append(repo, call, flag, code):
+    assert call("new", "--owner", "o", "--goal", "g", flag, "", expected=2)["error"]["code"] == code
+    assert not Ledger(repo).path.exists()
+
+
+def test_explicit_empty_final_does_not_append(repo, call):
+    assigned(call)
+    before = Ledger(repo).path.read_bytes()
+    result = call("return", "a1", "--status", "completed", "--final", "", expected=2)
+    assert result["error"]["code"] == "ADAPTIVE_REVISION_UNRESOLVED"
+    assert Ledger(repo).path.read_bytes() == before

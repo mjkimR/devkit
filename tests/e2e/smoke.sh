@@ -193,7 +193,6 @@ echo "==> creating a fresh consumer project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
     uv add --no-build-package pyyaml --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" "$adaptive_wheel" "$docs_wheel" >/dev/null
-    uv run devkit adaptive assignment list
     uv run python -c '
 import yaml
 from devkit_core.core import YamlBindingUnavailableError, safe_load
@@ -318,6 +317,7 @@ PY
     done
     echo "--- devkit sync installs hooks, then commits through them"
     git init -q -b main .
+    uv run devkit adaptive assignment list
     git config user.email smoke@example.com
     git config user.name "devkit smoke"
     git config commit.gpgsign false

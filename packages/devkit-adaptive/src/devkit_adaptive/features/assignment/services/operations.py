@@ -56,7 +56,7 @@ def mutate(root: Path, verb: str, options: dict[str, Any]) -> Result:
                     tree = git.require_worktree(root, Path(value["worktree"])) if final is None else root
                     data = {
                         "status": options["status"],
-                        "final": git.revision(tree, final or "HEAD"),
+                        "final": git.revision(tree, "HEAD" if final is None else final),
                         "checks": validation.check_values(options.get("check", []), outcomes=True),
                         "unverified": options.get("unverified", []),
                         "summary": options.get("summary"),
@@ -108,7 +108,7 @@ def new(root: Path, values: dict[str, Assignment], options: dict[str, Any], at: 
     number = len(values) + 1
     while f"a{number}" in values:
         number += 1
-    identifier = validation.identifier(options.get("id") or f"a{number}")
+    identifier = validation.identifier(f"a{number}" if options.get("id") is None else options["id"])
     if identifier in values:
         raise e.AssignmentExists(f"assignment {identifier} already exists")
     tree = git.require_worktree(root, Path(options.get("worktree") or root))
@@ -123,7 +123,7 @@ def new(root: Path, values: dict[str, Assignment], options: dict[str, Any], at: 
         "role": options.get("role"),
         "goal": options["goal"],
         "worktree": str(tree),
-        "base": git.revision(tree, options.get("base") or "HEAD"),
+        "base": git.revision(tree, "HEAD" if options.get("base") is None else options["base"]),
         "write": write,
         "commit": commit,
         "checks": validation.check_values(options.get("check", [])),
