@@ -15,7 +15,7 @@ entrypoints:
 
 ## 1. Summary
 
-The `uiux-improve` catalog bundle supplies an explicitly invoked entry for overall interface and experience
+The `app-uiux-improve` catalog bundle supplies an explicitly invoked entry for overall interface and experience
 improvement. The coordinator selects useful design perspectives and carries requested changes through the
 consumer's existing workflow. Alternatives, research and criticism are optional means, not a required final report.
 `ADR-uiux-improvement-workflow-boundary` records the local-role and delivery-authority decision.
@@ -31,8 +31,8 @@ consumer's existing workflow. Alternatives, research and criticism are optional 
 
 ## 3. Business Rules and Policies
 
-1. **Opt-in distribution**: WHERE uiux-improve:core is selected, sync MUST deploy one skill and four local role files
-   without registered specialist subagents. Test: `packages/devkit-catalog/tests/integration/bundles/test_uiux_improve.py`.
+1. **Opt-in distribution**: WHERE app-uiux-improve:core is selected, sync MUST deploy one skill and four local role files
+   without registered specialist subagents. Test: `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`.
 2. **Explicit invocation**: The bundle MUST declare `invocation = "user"` and an explicit-only entry guard.
    Tests: `test_explicit_selection_projects_local_roles_and_user_only_entry` and `CAP-DIST-agent-projections`.
 3. **Consumer authority**: WHEN requested changes are implemented, the coordinator MUST follow the consumer's
@@ -62,7 +62,7 @@ consumer's existing workflow. Alternatives, research and criticism are optional 
     interface or flow and verification status, or preserve useful partial work with a concrete blocker.
     Review: `test_entry_preserves_improvement_scope_and_consumer_authority`.
 13. **Independent installation**: The bundle MUST install through dist/catalog without agt, docs or spec packages.
-    Test: `packages/devkit-catalog/tests/e2e/bundles/uiux_improve/test_installed_consumer.py`.
+    Test: `packages/devkit-catalog/tests/e2e/bundles/app_uiux_improve/test_installed_consumer.py`.
 14. **Artifact preservation**: WHEN the bundle is removed or reselected, sync MUST preserve user-owned design artifacts.
     Tests: `test_removal_preserves_user_artifacts_and_other_selected_assets` and the installed-consumer test.
 
@@ -72,8 +72,8 @@ root bundle inventory can name the selection; the bundle supplies no design guid
 
 ## 4. Interfaces and Data Contracts
 
-Select `uv run devkit add uiux-improve` or uiux-improve:core, then explicitly invoke `/uiux-improve <goal>`.
-Registration is `uiux-improve = "devkit_catalog.uiux_improve"`. No new command, code or runtime is added.
+Select `uv run devkit add app-uiux-improve` or app-uiux-improve:core, then explicitly invoke `/app-uiux-improve <goal>`.
+Registration is `app-uiux-improve = "devkit_catalog.app_uiux_improve"`. No new command, code or runtime is added.
 The bundle needs no devkit-spec or devkit-docs installation; consuming projects retain their own workflow requirements.
 
 The entry routes optional reads to `references/design-guidance.md` and `references/orchestration.md`. Local roles

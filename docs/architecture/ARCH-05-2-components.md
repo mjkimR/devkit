@@ -85,9 +85,11 @@ role contracts and context template add no runtime module or dependency, and nei
 asset with the other. Adaptive-dev also owns reusable `swarm-planner`, `swarm-worker` and `swarm-verifier` contracts,
 skill-local task overlays and orchestration references, and the user-invoked `adaptive-import` skill with its
 `agent-asset-conversion` playbook, which write converted assets into the consuming project's own bundle. Compatible external callers may reuse installed public
-contracts under their own workflow; private sibling assets and mandatory bundle dependencies are not introduced. The opt-in `uiux-improve` content bundle lives under
-`devkit_catalog/uiux_improve/bundle/`; its user-invoked entry and local design roles add no runtime dependency or
-shared orchestration module (`CAP-DLV-uiux-improvement`). The opt-in `design-explore` bundle lives under
+contracts under their own workflow; private sibling assets and mandatory bundle dependencies are not introduced. The opt-in `app-uiux-improve` content bundle lives under
+`devkit_catalog/app_uiux_improve/bundle/`; its user-invoked entry and local design roles add no runtime dependency or
+shared orchestration module, Impeccable stays an optional external skill the user installs or asks the coordinator to
+install, and the bundle directory also holds a human usage guide that sync does not deploy
+(`CAP-DLV-uiux-improvement`). The opt-in `design-explore` bundle lives under
 `devkit_catalog/design_explore/bundle/`; its user-invoked skill, local solution-explorer/researcher/critic roles
 and references are content only, with no runtime dependency, shared orchestration module or companion asset import
 (`CAP-DLV-design-exploration`). `CAP-DLV-adaptive-development` and `CAP-DLV-deep-research` own the agent behavior. `tools/devkit-dev` owns the repository's

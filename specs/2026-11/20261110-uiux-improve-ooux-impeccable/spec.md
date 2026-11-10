@@ -172,7 +172,7 @@ text (`assert_rule` over the named file), not model obedience.
 ### [AC-07] Clean-break rename
 
 - **Given** the repository after the change
-- **When** `rg -n '(^|[^-_a-z])uiux[-_]improve\b' --hidden -g '!.git' -g '!specs/' -g '!docs/materials/'` runs
+- **When** `rg -n '(^|[^-_a-z])uiux[-_]improve\b' --hidden -g '!.git' -g '!**/specs/**' -g '!**/docs/materials/**'` runs
   (the bare old name, not `app-uiux-improve`, `app_uiux_improve` or the kept `uiux-improvement` IDs)
 - **Then** it reports no match (exit 1), `pyproject.toml` declares
   `app-uiux-improve = "devkit_catalog.app_uiux_improve"`, the `.devkit/architecture.toml` data root is
