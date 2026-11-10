@@ -1,48 +1,26 @@
 ---
-id: PROP-remove-plan-intent-gate
+id: SPEC-remove-plan-intent-gate
 title: Remove the plan-intent gate
-summary: "Remove the plan-intent approval gate, its decision records and its guidance from the SDD workflows, because an explicit task instruction already supplies intent and the gate only adds a record, a commit and special cases in acceptance and handoff."
-status: accepted
-created_at: 2026-11-10
-target_area: capabilities/delivery/
-priority: low
-size: L
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja
-    - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/src/devkit_spec/features/policy/
-    - packages/devkit-spec/src/devkit_spec/base/errors.py
-    - packages/devkit-spec/tests/
-    - packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/usecases/delivery/
-    - docs/architecture/ARCH-04-delivery-strategy.md
-    - docs/architecture/ARCH-04-2-delivery-policy.md
-    - docs/decisions/
-    - handbook/en/concepts.md
-    - handbook/en/areas/delivery.md
-    - handbook/en/journeys/route-development-intent.md
-    - handbook/en/journeys/plan-and-hand-off-a-proposal.md
-  excludes:
-    - specs/
-    - packages/devkit/src/devkit_agt/
-task_kind: feature
-workflow: sdd-proposal
+summary: Remove the plan-intent approval gate, its decision records and its guidance from the SDD workflows, because an explicit task instruction already supplies intent and the gate only adds a record, a commit and special cases in acceptance and handoff.
+status: planned
+created: 2026-11-10
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-remove-plan-intent-gate] Remove the plan-intent gate
+# [SPEC-remove-plan-intent-gate] Remove the plan-intent gate
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-remove-plan-intent-gate on 2026-11-10.
+- **Preserved Materials**: `docs/materials/2026-11/20261110-remove-plan-intent-gate`
+
+### 1. Background & Hypothesis
 
 All six SDD workflows, including `sdd-overall-refactor`, declare `human_gate: plan-intent` at its intent stage. The default
-policy is `ask`, so each proposal pickup and each spec Unit records `decisions/01-gate-plan-intent.yaml` with
+policy is `ask`, so each proposal pickup and each spec Unit records historical Git `a74c84afc72b193f32131242b223b76539500ba0:docs/proposals/PROP-remove-plan-intent-gate/decisions/01-gate-plan-intent.yaml` with
 `devkit workflow answer` and commits it as its own commit.
 
 The gate settles nothing the conversation has not already settled:
@@ -69,10 +47,29 @@ The gate still costs:
 Hypothesis: removing the gate, rather than setting `plan-intent = "auto"`, makes the workflows and their guidance
 smaller with no loss of control, because nothing reads the record except the checks that exist to require it.
 
-## 2. Technical Spike Findings
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Remove the plan-intent gate so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Findings
 
 Evidence is pinned to source `4a6223361b6a60171be665db598b4a81b277d38f`; details are in
-`materials/planning-evidence.md`.
+`docs/materials/2026-11/20261110-remove-plan-intent-gate/planning-evidence.md`.
 
 - **Q1 Depth escalation**: record the reason, agreed intent and retained work in `spec.md` under a classification
   note. Do not replace the removed approval record with another record or a special commit requirement.
@@ -88,7 +85,7 @@ Evidence is pinned to source `4a6223361b6a60171be665db598b4a81b277d38f`; details
   from active policy output, warn with the existing `SPEC_APPROVAL_KEY_IGNORED` notice and instruct removal. Preserve
   generic custom workflow gates and their engine configuration semantics. No opt-in SDD intent gate remains.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Set `human_gate: false` and remove `gates.plan-intent` from all six SDD workflows, including
   `sdd-overall-refactor`. Remove gate prose while retaining intent stage IDs and their non-gate checks.
@@ -108,11 +105,11 @@ Evidence is pinned to source `4a6223361b6a60171be665db598b4a81b277d38f`; details
   changing unrelated decisions or accepted status. UX alternatives remain settled before implementation.
   Reconcile the four declared English handbook pages with the same behavior.
 
-### Planning decisions
+#### Planning decisions
 
 - Remove the gate rather than default it to `auto`: `auto` retains its declarations, policy handling and handoff
   special cases. Keeping the existing gate retains duplicate bookkeeping. The durable choice is recorded in
-  `PADR-remove-plan-intent-gate`.
+  `ADR-remove-plan-intent-gate`.
 - Task authorization remains an explicit instruction. Backlog items are never implicitly scheduled; goal, scope,
   expected bugfix behavior and classification remain stated before work begins. No replacement approval is added.
 - Development remains one feature spec at `medium` effort. It changes one lifecycle rule across its adapters, assets
@@ -120,7 +117,7 @@ Evidence is pinned to source `4a6223361b6a60171be665db598b4a81b277d38f`; details
 - Bundle synchronization outputs are admitted only through the existing sync-output class; generated files are
   regenerated, never hand-edited. Historical specs, materials and archived documents are not rewritten.
 
-### Acceptance and verification
+#### Acceptance and verification
 
 1. All six deployed workflows validate without declaring or requesting `plan-intent`; proposal `size: XL` still
    blocks eligibility. Other gate policies and bugfix Red/Green stages retain their behavior.
@@ -141,10 +138,11 @@ Non-Goals:
 - Rewriting committed `plan-intent` records in completed specs; Git history keeps them.
 - Changing `plan-accept`, `proposal-handoff` or `dev-integration`.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On Acceptance: recorded with `devkit spec proposal accept` (after Planning, or `--direct` for an eligible draft in
   Backlog); handed off to a spec bundle on `dev-remove-plan-intent-gate`; the proposal is deleted there and its
   decisions become ADRs.
 - On Rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes the
   rejection ADR and deletes the proposal.
+

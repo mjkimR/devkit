@@ -17,6 +17,9 @@ aliases:
 
 # [ADR-delivery-approval-and-lifecycle-authority] Delivery approval gates, Host CLI lifecycle authority and reusable git-operator execution
 
+Superseded in part by `ADR-remove-plan-intent-gate`: Task intent's gate/record requirement is removed; explicit task
+authorization and all later boundary policies remain.
+
 Superseded in part by `ADR-post-merge-verification`: the merge-time readiness and report-engine revalidation requirements only. Direction acceptance and retained-base approval authority remain.
 
 - **Status**: Accepted

@@ -14,6 +14,9 @@ aliases:
 
 # [ADR-delivery-classification] Classify delivery work by task-kind and planning-depth
 
+Superseded in part by `ADR-remove-plan-intent-gate`: Gates, Overall refactor workflow and Handoff target lose `plan-intent` and its
+carry. Classification axes, workflow/stage IDs, `plan-accept`, `dev-integration` and target workflow remain.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR, @minjae
