@@ -1,0 +1,33 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T05:25:11.877524Z'
+status: completed
+summary: Three AC defects reproduced in incoming ambiguity, scanner block reset and Read peer refresh; scope passes.
+findings:
+- issue: Ambiguous incoming superseders display the earlier ADR ID instead of the later ADR ID.
+  evidence: supersession.ts:300,311,334; ignored review-01/review.test.ts:14 reproduces ADR-old and missing rather than ADR-new and ambiguous.
+  failure_condition: Two later ADR documents declare the same ID and supersede the displayed earlier ADR.
+  suggested_action: Separate written target identity from the statement matching earlier identity and add a permanent regression.
+  resolution: open
+  severity: P1
+- issue: Statement parser retains indented-code state across fences and diverges from the Python query.
+  evidence: supersession.ts:189-193; ignored review-01/review.test.ts:22 compares Python replacement_texts with the TypeScript parser.
+  failure_condition: Indented code precedes a fence followed without a blank line by an indented statement classified as prose by the established scanner.
+  suggested_action: Reset indented state on non-indented block transitions and retain the parity fixture.
+  resolution: open
+  severity: P1
+- issue: Read Reload relations retains stale peer documents.
+  evidence: KnowledgeViews.svelte:107-115; ignored review-01/review.test.ts:36 retains initial incoming scope after its later ADR changed.
+  failure_condition: A related ADR changes after the book loads and the reader reloads relations on the earlier ADR.
+  suggested_action: Separate displayed bodies from refreshed relation index and override only each panel subject; add Read incoming reload regression.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated read-only role; before/after tracked tree fa6aadafe1d29cf041294c2aa2eef15d44446a46 and HEAD unchanged.
+checks:
+  probes: FAIL three executable review probes reproduced defects
+diff_scope:
+  base: 5cf7d7a76ef8930e2e7c83d3b34a7f694989913a
+  head: 128c03a60e3cdbae4353d74da8f91109ed9f9b1c

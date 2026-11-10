@@ -244,3 +244,49 @@ describe('Read decision supersession', () => {
 		expect(onOpen).toHaveBeenCalledWith('docs/packages/a/decisions/old.md');
 	});
 });
+
+it('Read relation reload refreshes peers while retaining each displayed subject body', async () => {
+	let scope = 'initial scope';
+	const files = () => ({
+		'docs/decisions/old.md':
+			'---\nid: ADR-old\ntitle: Earlier\nstatus: accepted\n---\n# Earlier body',
+		'docs/decisions/new.md': `---\nid: ADR-new\ntitle: Later\nstatus: accepted\nsupersedes: ADR-old\n---\n# Later body\n\nSupersedes in part \`ADR-old\`: ${scope}`
+	});
+	const listing = (root: string) => ({
+		items: Object.keys(files())
+			.filter((path) => path.startsWith(`${root}/`))
+			.map((path) => ({ path, name: path.split('/').at(-1)!, type: 'blob' }))
+	});
+	const source: RepositoryDataSource = {
+		info: async () => ({ default_branch: 'main' }),
+		tree: async (root) => listing(root),
+		treeRecursive: async (root) => listing(root),
+		blob: async (path) => ({
+			path,
+			content: files()[path as keyof ReturnType<typeof files>],
+			encoding: 'utf-8'
+		})
+	};
+	render(KnowledgeViews, { ...props(source), view: 'book', bookRequested: true });
+	await screen.findAllByText('initial scope');
+	scope = 'refreshed peer scope';
+	const earlier = document.getElementById('doc-docs%2Fdecisions%2Fold.md')!;
+	await fireEvent.click(
+		earlier.querySelector('button')!.textContent === 'Reload relations'
+			? earlier.querySelector('button')!
+			: [...earlier.querySelectorAll('button')].find(
+					(button) => button.textContent === 'Reload relations'
+				)!
+	);
+	await waitFor(() =>
+		expect(earlier.querySelector('.replacement-text')?.textContent).toBe('refreshed peer scope')
+	);
+	expect(
+		document.getElementById('doc-docs%2Fdecisions%2Fnew.md')!.querySelector('.markdown-body')
+			?.textContent
+	).toContain('initial scope');
+	expect(
+		document.getElementById('doc-docs%2Fdecisions%2Fnew.md')!.querySelector('.replacement-text')
+			?.textContent
+	).toBe('initial scope');
+});

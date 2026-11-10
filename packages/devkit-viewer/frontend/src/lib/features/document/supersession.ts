@@ -97,6 +97,7 @@ function visibleLines(lines: string[]): Map<number, string> {
 			masked = ' '.repeat(line.length);
 			blockComment = !line.includes('-->');
 		} else if (!(comment || codeSpan) && fence) {
+			inIndented = false;
 			const run = col - base <= 3 ? fenceRun(stripped) : '';
 			if (run[0] === fence[0] && run.length >= fence.length && !stripped.slice(run.length).trim())
 				fence = '';
@@ -122,6 +123,7 @@ function visibleLines(lines: string[]): Map<number, string> {
 					while (columns.length && columns.at(-1)! > col) columns.pop();
 				const run = col - base <= 3 ? fenceRun(stripped) : '';
 				if (run) {
+					inIndented = false;
 					fence = run;
 					hidden = true;
 				} else if (col - base <= 3 && stripped.startsWith('<!--')) {
@@ -331,7 +333,7 @@ export function deriveSupersession(
 							String(doc.meta.id).startsWith('ADR-') &&
 							ids(doc.meta.supersedes).some((id) => canonical(id) === subject.meta.id)
 					)
-					.map((later) => row(subject.meta.id, subject, later, resolve(later.meta.id)))
+					.map((later) => row(later.meta.id, subject, later, resolve(later.meta.id)))
 					.sort(sort)
 	};
 }

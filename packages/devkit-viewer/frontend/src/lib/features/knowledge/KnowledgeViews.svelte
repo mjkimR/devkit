@@ -50,6 +50,7 @@
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
+	let relationDocuments = $state<RepositoryDocument[]>([]);
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
 	let relationLoading = $state(false);
@@ -91,6 +92,7 @@
 		const controller = new AbortController();
 		if (!keep) {
 			documents = [];
+			relationDocuments = [];
 			errors = [];
 			resolvedRequest = '';
 			selectedPath = '';
@@ -104,7 +106,8 @@
 			void indexDocuments(repository, ref, controller.signal)
 				.then((result) => {
 					if (controller.signal.aborted) return;
-					const subjects = keep ? untrack(() => visibleDocs) : [];
+					const subjects = keep ? untrack(() => documents) : [];
+					relationDocuments = result.documents;
 					documents = [
 						...result.documents.map(
 							(doc) => subjects.find((subject) => subject.path === doc.path) ?? doc
@@ -503,7 +506,7 @@
 							{trackHeading}
 							sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
 							{onOpen}
-							{documents}
+							documents={relationDocuments}
 							{relationLoading}
 							relationErrors={errors}
 							onReloadRelations={reloadRelations}

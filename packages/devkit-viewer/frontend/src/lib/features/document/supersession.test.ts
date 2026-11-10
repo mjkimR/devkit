@@ -112,3 +112,28 @@ describe('replacement statement source parity', () => {
 		expect(replacementStatements(doc('ADR-new', '', body))[0]?.text).toBe('retained.');
 	});
 });
+
+it('retains ambiguous incoming superseder identity without arbitrary navigation', () => {
+	const old = doc('ADR-old');
+	const later = [
+		doc('ADR-new', 'supersedes: ADR-old', '', 'docs/a.md'),
+		doc('ADR-new', 'supersedes: ADR-old', '', 'docs/b.md')
+	];
+	const rows = deriveSupersession(old, [old, ...later]).incoming;
+	expect(rows).toHaveLength(2);
+	expect(
+		rows.every(
+			(row) =>
+				row.id === 'ADR-new' &&
+				row.written === 'ADR-new' &&
+				row.path === null &&
+				row.unavailable === 'ambiguous'
+		)
+	).toBe(true);
+});
+it('resets indented code at fence boundaries exactly as Python visible_lines', () => {
+	const body = '    code\n```\n```\n    Supersedes in part `ADR-old`: visible';
+	expect(replacementStatements(doc('ADR-new', '', body))).toEqual([
+		{ id: 'ADR-old', text: 'visible' }
+	]);
+});
