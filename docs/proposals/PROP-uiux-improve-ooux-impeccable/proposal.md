@@ -2,7 +2,7 @@
 id: PROP-uiux-improve-ooux-impeccable
 title: OOUX-framed UI/UX improvement and Impeccable delegation
 summary: "Rename uiux-improve to app-uiux-improve, ground framing in the consumer's OOUX documents when present, let a user-selected, brief-bounded Impeccable session edit product files under coordinator acceptance and add a human usage guide."
-status: reviewing
+status: accepted
 created_at: 2026-11-06
 target_area: capabilities/delivery/
 priority: high
