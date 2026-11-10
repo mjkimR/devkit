@@ -7,7 +7,7 @@ created: 2026-11-10
 namespace: global
 depends_on: [SPEC-partial-adr-supersession-statements]
 related_capabilities: [CAP-VIEW-repository-viewer]
-related_usecases: []
+related_usecases: [UC-read-decision-supersession]
 workflow: sdd-spec-feature
 ---
 

@@ -35,14 +35,14 @@ blob. `SPEC-partial-adr-supersession-statements` defines the later ADR's stateme
 ## 4. Decision Outcome
 
 - Supersession is derived in the browser from indexed documents without a server endpoint or new dependency.
-  → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 - Read and rendered Files place a shared summary below the decision header. Files indexes only after opening a
   rendered decision, and body rendering does not wait for relations.
-  → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 - ADR incoming relations include only later ADRs. PADR pages label outgoing replacements as proposed and retain
-  their actual source context. → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  their actual source context. → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 - Incomplete reads remain visible and unresolved identities are not navigation links.
-  → `CAP-VIEW-repository-viewer` planned decision supersession rules (MUST).
+  → `CAP-VIEW-repository-viewer` §4.4 decision supersession rules (MUST).
 
 This adds viewer behavior without replacing an existing ADR decision.
 
