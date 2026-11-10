@@ -24,7 +24,7 @@ def _installed() -> list[InstalledBundle]:
     return [InstalledBundle("devkit-catalog", bundle.version, bundle)]
 
 
-def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: Path) -> None:  # AC-01
+def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: Path) -> None:  # AC-07, AC-08
     update_config(tmp_path, agents=HOSTS)
     sync_project(tmp_path, _installed())
     assert not (tmp_path / ".devkit/managed/app-uiux-improve").exists()
@@ -62,7 +62,7 @@ def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: P
     assert all(role not in guidance for role in ROLES)
 
 
-def test_removal_preserves_user_artifacts_and_other_selected_assets(tmp_path: Path) -> None:  # AC-06
+def test_removal_preserves_user_artifacts_and_other_selected_assets(tmp_path: Path) -> None:  # AC-08
     other = load_bundle(PACKAGE / "src/devkit_catalog/command_design/bundle")
     installed = [*_installed(), InstalledBundle("devkit-catalog", other.version, other)]
     update_config(tmp_path, agents=HOSTS, presets={"app-uiux-improve": ["core"], "command-design": ["core"]})
@@ -81,7 +81,7 @@ def test_removal_preserves_user_artifacts_and_other_selected_assets(tmp_path: Pa
     assert artifact.read_text() == "A user-owned flow sketch.\n"
 
 
-def test_installed_text_is_self_contained_and_links_only_conditional_references() -> None:  # AC-05
+def test_installed_text_is_self_contained_and_links_only_conditional_references() -> None:  # AC-08
     text = (SKILL / "SKILL.md").read_text()
     linked = set(re.findall(r"`(references/[a-z-]+\.md)`", text))
     assert linked == {p.relative_to(SKILL).as_posix() for p in (SKILL / "references").glob("*.md")}
@@ -97,7 +97,7 @@ def test_installed_text_is_self_contained_and_links_only_conditional_references(
         assert not (SKILL / f"roles/{role}.md").read_text().startswith("---")
 
 
-def test_entry_preserves_improvement_scope_and_consumer_authority() -> None:  # AC-02, AC-03, AC-04
+def test_entry_preserves_improvement_scope_and_consumer_authority() -> None:  # AC-01, AC-09
     skill = (SKILL / "SKILL.md").read_text()
     assert_rule(skill, "review-only", "findings", "no product edits")
     assert_rule(skill, "existing development workflow", "implementation", "approvals")
@@ -118,3 +118,86 @@ def test_entry_preserves_improvement_scope_and_consumer_authority() -> None:  # 
         text = (SKILL / f"roles/{role}.md").read_text()
         assert_rule(text, "index", "HEAD unchanged")
         assert "retained files" in text
+
+
+def test_framing_is_proportionate_and_reads_ooux_documents_only_where_present() -> None:  # AC-01, AC-10
+    skill = (SKILL / "SKILL.md").read_text()
+    assert_rule(skill, "local change", "without an ORCA pass")
+    assert_rule(skill, "adds, merges or reorders views or flows", "objects", "relationships", "CTAs", "attributes")
+    assert_rule(skill, "review-only", "lens", "no product edits")
+    assert_rule(skill, "OOUX documents", "only where they exist", "edit none", "stale")
+    guidance = (SKILL / "references/design-guidance.md").read_text()
+    assert_rule(guidance, "skip it for a local change")
+    assert_rule(guidance, "domain nouns", "not widgets")
+    assert_rule(guidance, "`docs/steering/glossary.md`")
+    assert_rule(guidance, "`docs/steering/ux-objects.md`")
+    assert_rule(guidance, "`docs/ux/<area>/`")
+    assert_rule(guidance, "optional project convention", "if none exist, frame in conversation")
+    assert_rule(guidance, "never write these files", "report each one the change made stale")
+    assert_rule(guidance, "example", "customer", "invoice", "relationship", "ctas", "attributes", "states")
+    assert_rule(guidance, "readable contrast")
+    assert_rule(guidance, "consistent scale")
+    assert_rule(guidance, "decorative gradient", "nested container", "purpose")
+    assert_rule(guidance, "empty, loading and error states")
+    assert_rule(guidance, "copies none of its text")
+    for path in SKILL.rglob("*.md"):
+        text = path.read_text().lower()
+        assert "namespace" not in text, path
+        assert not re.search(r"spec-sync|living spec|sdd\b", text), path
+
+
+def test_impeccable_delegation_is_selected_briefed_routed_and_accepted() -> None:  # AC-02, AC-03, AC-04, AC-06, AC-09
+    skill = (SKILL / "SKILL.md").read_text()
+    assert_rule(skill, "impeccable only after the user selects it", "without that selection, work inline")
+    assert_rule(skill, "before product edits or delegation", "steps that precede implementation")
+    assert_rule(skill, "make no product edits until the session returns", "recorded base")
+    assert_rule(skill, "delegated impeccable session", "no commit, integration or publication permission")
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    # Selection and availability (AC-04).
+    assert_rule(orchestration, "not selected impeccable", "neither start a session nor load or invoke", "work inline")
+    assert_rule(orchestration, "installed impeccable permits an offer", "hook", "consumer check evidence")
+    assert_rule(
+        orchestration,
+        "`npx impeccable install`",
+        "`/plugin marketplace add pbakaus/impeccable`",
+        "manual copy",
+        "`skills/impeccable`",
+        "install only on the user's request",
+        "needs no prompt answers",
+        "hand the user the exact command",
+        "continue inline",
+    )
+    # Workflow first and the brief (AC-02).
+    assert_rule(orchestration, "steps that precede implementation before delegating")
+    assert_rule(orchestration, "framing result", "ooux documents by path", "read-only", "conversation framing")
+    assert_rule(orchestration, "drafts or specifications", "by path, read-only")
+    assert_rule(orchestration, "absolute working directory", "recorded base", "head", "content hashes")
+    assert_rule(orchestration, "edit list", "product files the session may edit")
+    assert_rule(orchestration, "data schema", "business logic", "dependencies", "the ooux documents", "uncommitted")
+    assert_rule(orchestration, "`product.md` or `design.md` only on the user's explicit direction")
+    assert_rule(orchestration, "stop condition", "expected return", "detector", "degraded coverage", "blockers")
+    # Routing (AC-03).
+    assert_rule(orchestration, "fresh child", "refine existing surfaces without user answers", "`polish`", "`audit`")
+    assert_rule(orchestration, "cannot load impeccable", "upstream question", "blocker", "never answers")
+    assert_rule(orchestration, "move the command to a session the user operates")
+    assert_rule(orchestration, "new work", "`init`", "`shape`", "`critique`", "their own impeccable session")
+    assert_rule(orchestration, "exclude `live`", "sandbox or approvals")
+    assert_rule(orchestration, "make no product edits until the session returns")
+    # Acceptance (AC-06, AC-10).
+    assert_rule(orchestration, "compare the working directory with the recorded base")
+    assert_rule(orchestration, "outside the edit list", "without reverting or deleting", "accepted work")
+    assert_rule(orchestration, "head moved", "base is missing", "unverifiable", "limited")
+    assert_rule(orchestration, "ooux document", "made stale", "edit none", "consumer workflow's own step")
+
+
+def test_project_files_setup_and_cleanup_follow_the_users_request() -> None:  # AC-05
+    orchestration = (SKILL / "references/orchestration.md").read_text()
+    assert_rule(orchestration, "`product.md`, `design.md`", "consumer-owned", "report", "project files and git")
+    assert_rule(orchestration, "ooux reference section", "by path", "copy none of their content")
+    assert_rule(orchestration, "on the user's request", "not on your own initiative")
+    assert_rule(orchestration, "ignore entries", "confined to `.impeccable/` paths", "after showing the user the exact")
+    assert_rule(orchestration, "remove impeccable runtime or session output the user names")
+    assert_rule(orchestration, "out of any cleanup", "only on the user's explicit direction")
+    assert_rule(orchestration, "user-requested change", "consumer workflow", "host's approvals")
+    skill = (SKILL / "SKILL.md").read_text()
+    assert_rule(skill, "install impeccable", "ignore entries", "`product.md` or `design.md`", "user's request")

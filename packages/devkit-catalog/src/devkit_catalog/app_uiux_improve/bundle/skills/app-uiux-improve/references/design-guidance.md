@@ -1,7 +1,37 @@
 # Design lenses
 
-Read when choosing or developing the design direction. Select the lenses relevant to the supplied goal instead
+Read when framing a request or choosing the design direction. Select the lenses relevant to the supplied goal instead
 of auditing every dimension. Start with the actual task, content and design-system constraints.
+
+## Object framing (ORCA)
+
+Frame before layout or styling when a request adds, merges or reorders views or flows. Skip it for a local change
+(one component, one state, copy or spacing). Frame the objects the request touches, not the whole product; no
+diagram or notation is required.
+
+- Objects: name the domain nouns users think in, not widgets ("Invoice", not "Table").
+- Relationships: state how objects connect; each relationship is a navigation path between their views.
+- CTAs: place each action on the object it acts on rather than in a global menu.
+- Attributes: separate the identifiers people scan for from supporting metadata, per view.
+- States: give every changed view its empty, loading, error and populated states.
+
+Example: a request merges "Customers" and "Invoices" pages. Objects: Customer, Invoice. Relationship: a Customer has
+many Invoices, so the Customer view lists them and each Invoice links back to its Customer. CTAs: "Send reminder" sits
+on an overdue Invoice, "Edit contact" on the Customer. Attributes: invoice number and amount identify an Invoice; issue
+date and status are metadata. States: a Customer with no Invoices shows an empty state with "Create invoice".
+
+### Framing sources
+
+Read these files only where they exist; use a partial set as far as it goes:
+
+- Object names: the project glossary (`docs/steering/glossary.md`, or a package glossary beside the affected code).
+- Representations and CTAs per role: the object register (`docs/steering/ux-objects.md`, or a package register
+  beside the affected code).
+- Attributes, states and interactions: the UX documents of the affected screens (`docs/ux/<area>/`).
+
+These paths are an optional project convention; the skill works without them. If none exist, frame in conversation.
+Never write these files during framing; after an accepted change, report each one the change made stale and leave
+its update to the consumer workflow's own step.
 
 ## Task and information
 
@@ -37,6 +67,15 @@ metrics. Its character can come from purposeful composition instead of adding gr
 - Add motion or playful feedback only when it serves state, orientation or comprehension. Respect the project's
   reduced-motion behavior and avoid making essential information depend on animation.
 
+## Baseline craft checks
+
+Apply these to every changed view, on both tracks:
+
+- Secondary and disabled text keeps readable contrast against its background.
+- Type sizes follow one consistent scale; one typeface is not stretched across every role without a reason.
+- No decorative gradient or nested container without a purpose it explains.
+- Every changed view has its empty, loading and error states.
+
 ## Choose and verify
 
 Compare relevant directions by task clarity, required effort, discoverability, recovery, content fit and
@@ -54,7 +93,9 @@ references, not copied instructions or evidence of effectiveness:
 - [Agency Agents design roles](https://github.com/msitarzewski/agency-agents/tree/main/design): separate practical
   design assignments and purposeful unconventional expression.
 - [Impeccable](https://github.com/pbakaus/impeccable): critique, bolder expression, distillation, delight and polish
-  as selectable perspectives.
+  as selectable perspectives. A user who selects Impeccable runs its maintained commands in a delegated session
+  instead; this guidance copies none of its text.
+- Object-Oriented UX (ORCA: objects, relationships, CTAs, attributes): the object framing order.
 - [Anthropic agent prompts](https://github.com/anthropics/claude-cookbooks/tree/main/patterns/agents/prompts): bounded
   researcher delegation.
 

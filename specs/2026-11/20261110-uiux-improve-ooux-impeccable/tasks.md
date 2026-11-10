@@ -15,7 +15,7 @@ plan: PLAN-uiux-improve-ooux-impeccable
 
 ## Phase 2: Instructions and guide
 
-- [ ] **Task 2**: Rewrite `SKILL.md`, `references/design-guidance.md` and `references/orchestration.md` for proportionate ORCA framing, conditional OOUX sources, baseline craft checks, user-selected Impeccable delegation, routing, acceptance, project files and user-requested setup and cleanup, with `assert_rule` tests.
+- [x] **Task 2**: Rewrite `SKILL.md`, `references/design-guidance.md` and `references/orchestration.md` for proportionate ORCA framing, conditional OOUX sources, baseline craft checks, user-selected Impeccable delegation, routing, acceptance, project files and user-requested setup and cleanup, with `assert_rule` tests.
   - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/app_uiux_improve/bundle/skills/app-uiux-improve/`, `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-08, AC-09, AC-10_
   - **Verification**: `just test devkit-catalog packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`; `uv run devkit rules check --phase hygiene` on the skill directory; agent-asset ID scan.
