@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/subagents.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/inventory.py
+  - packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/subagents/role-worker.md
 created_at: 2026-10-17
 ---
 
