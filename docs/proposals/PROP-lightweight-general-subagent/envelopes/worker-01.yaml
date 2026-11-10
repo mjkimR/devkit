@@ -1,0 +1,50 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-10T08:08:42.851108Z'
+status: needs_input
+summary: 'Planning run 1: measured first-call tokens, answered Q1/Q3/Q4, ran challenger round 1 and folded five findings; D1-D3 wait for the user.'
+findings: []
+checks: {}
+diff_scope:
+  base: ''
+  head: 6db0ba469328d78e8faae1090a318ad4b2585c9b
+questions:
+- id: d1
+  title: role-worker bundle placement
+  prompt: Where does role-worker live, given that ADR-package-ownership-and-release-version limits the devkit bundle to distribution guidance with instructions only?
+  context: Decides the owning bundle and whether the PADR also supersedes a devkit-bundle clause; it sets the files, tests and ADR scope of Development.
+  options:
+  - id: a
+    description: Keep it in the devkit bundle core preset; the PADR also supersedes in part the devkit-bundle clause and test_guide_bundle.py is updated.
+    recommended: true
+  - id: b
+    description: Add a separate small auto-selected devkit-dist bundle that holds only role-worker; the devkit bundle contract stays unchanged.
+    recommended: false
+  allow_note: true
+- id: d2
+  title: design-explore as a caller
+  prompt: Does design-explore, which passes role files to a general child the same way, also switch to role-worker?
+  context: Decides whether the role-file pattern is consistent across catalog skills and whether CAP-DLV-design-exploration changes.
+  options:
+  - id: a
+    description: Include design-explore and CAP-DLV-design-exploration in the scope.
+    recommended: true
+  - id: b
+    description: Exclude it and name it as an exception in roles.md.
+    recommended: false
+  allow_note: true
+- id: d3
+  title: app-uiux-improve running-UI inspection
+  prompt: How do app-uiux-improve roles cover running-UI inspection, which on Claude Code needs browser MCP tools outside role-worker's list?
+  context: Decides whether role-worker's tool list stays fixed and how UI evidence reaches designer and critic roles.
+  options:
+  - id: a
+    description: The coordinator inspects the running UI itself and passes screenshots or traces to the role; orchestration.md says so.
+    recommended: true
+  - id: b
+    description: An assignment that needs live interaction spawns general-purpose instead; role-worker serves the rest.
+    recommended: false
+  allow_note: true
+activity_effort: medium
