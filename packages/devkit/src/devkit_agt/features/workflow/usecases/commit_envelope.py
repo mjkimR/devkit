@@ -27,25 +27,28 @@ from devkit_agt.features.workflow.usecases.workspace import Workspace
 class CommitEnvelopeUseCase(BaseUseCase):
     """Coordinate eligibility checks and Git effects without changing authored evidence."""
 
-    def execute(self, workspace: Workspace, unit: str, file: str) -> dict[str, Any]:
+    def execute(self, workspace: Workspace, unit: str, file: str, anchor: str | None = None) -> dict[str, Any]:
         repo = EnvelopeCommitRepository(workspace.root)
         target = f"{unit}/{file}"
-        retry = f"uv run devkit workflow envelope commit --unit {shlex.quote(unit)} --file {shlex.quote(file)}"
+        selector = f" --anchor {shlex.quote(anchor)}" if anchor is not None else ""
+        retry = (
+            f"uv run devkit workflow envelope commit --unit {shlex.quote(unit)}{selector} --file {shlex.quote(file)}"
+        )
         try:
             before = repo.state()
             raw_unit = Path(unit)
             lexical = raw_unit if raw_unit.is_absolute() else workspace.root / raw_unit
             if any(part == ".." for part in raw_unit.parts):
                 raise EnvelopeCommitInvalidError("Unit path must not contain parent traversal")
-            repo.regular_path(lexical / workspace.locate_anchor(lexical))
-            ref = workspace.resolve_unit(unit)
+            repo.regular_path(lexical / workspace.locate_anchor(lexical, anchor))
+            ref = workspace.resolve_unit(unit, anchor=anchor)
             if not ref.binding.bound:
                 raise EnvelopeCommitInvalidError("Unit anchor must explicitly bind a workflow")
             anchor_path = (ref.dir / ref.anchor).relative_to(workspace.root).as_posix()
             anchor_entry = repo.tree_entry(before, anchor_path)
             if anchor_entry is None:
                 raise EnvelopeCommitInvalidError("Unit anchor must be tracked in HEAD")
-            anchor = parse(repo.blob(anchor_entry[1]).decode("utf-8"))
+            anchor_doc = parse(repo.blob(anchor_entry[1]).decode("utf-8"))
             selected = Path(file)
             if (
                 selected.parts != ("envelopes", selected.name)
@@ -66,7 +69,7 @@ class CommitEnvelopeUseCase(BaseUseCase):
             if envelope.kind == "reverify" and not any(e.name == envelope.review for e in loaded.all()):
                 raise EnvelopeCommitInvalidError("reverify names no existing review/challenger round")
             require_authored(envelope, ref.doc.id, ref.binding.segment, {s.id for s in ref.doc.stages})
-            subject, body = commit_message(str(anchor.get("id", "")), envelope)
+            subject, body = commit_message(str(anchor_doc.get("id", "")), envelope)
             target = path.relative_to(workspace.root).as_posix()
             already = repo.preflight(target, content, before)
             after = before if already else repo.commit(target, content, before, subject, body)
@@ -81,7 +84,10 @@ class CommitEnvelopeUseCase(BaseUseCase):
             if not exc.fix:
                 exc.fix = f"Correct the reported precondition, then run `{retry}`; combined changes use a manual commit"
             raise
-        except (WorkflowError, FrontmatterError, OSError, UnicodeError, ValueError) as exc:
+        except WorkflowError:
+            # Unit resolution errors (ANCHOR_AMBIGUOUS, UNIT_NOT_FOUND, ...) keep their own code and fix.
+            raise
+        except (FrontmatterError, OSError, UnicodeError, ValueError) as exc:
             raise EnvelopeCommitInvalidError(
                 str(exc), target_files=[target], fix=f"Correct the selected Unit/file, then run `{retry}`"
             ) from exc

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from devkit_agt.features.workflow.models.envelope import Envelope
 from devkit_agt.features.workflow.models.errors import EnvelopeCommitInvalidError
@@ -17,7 +18,8 @@ def commit_message(anchor_id: str, envelope: Envelope) -> tuple[str, str]:
             fix="Commit the [TARGET] envelope with a manual git commit: explicit envelope commit supports only SPEC"
             " and PROP anchor ids",
         )
-    subject = f"chore(workflow): record {match[1]} {envelope.kind}-{envelope.seq:02d}"
+    # The file stem, not the parsed sequence: worker-007.yaml keeps its three digits.
+    subject = f"chore(workflow): record {match[1]} {Path(envelope.name).stem}"
     body = f"workflow: {envelope.workflow}\nsegment: {envelope.segment}\nstage: {envelope.stage}"
     return subject, body
 

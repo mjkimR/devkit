@@ -10,6 +10,7 @@ from devkit_agt.features.workflow.models.errors import WorkflowError
 from devkit_agt.features.workflow.usecases.commit_envelope import CommitEnvelopeUseCase
 from devkit_agt.features.workflow.usecases.workspace import Workspace
 from devkit_core.core import run_git
+from devkit_dist.adapters.cli import field_value
 from testsupport.workflow import run_cli, simple_workspace
 
 UNIT = ".devkit/transient/work/u"
@@ -373,3 +374,48 @@ def test_hook_branch_switch_is_uncertain_and_preserved(repo: Path) -> None:
     assert not git(repo, "status", "--porcelain")
     assert "before_ref=refs/heads/different-branch-name" in str(caught.value.details)
     assert "after_ref=refs/heads/unexpected" in str(caught.value.details)
+
+
+def test_slow_commit_hook_is_not_bounded_by_the_git_query_timeout(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit_agt.features.workflow.repositories import envelope_commit
+    from devkit_core.core.git import DEFAULT_TIMEOUT
+
+    # A short stand-in for the default query timeout, so a hook slower than it needs no 60 s sleep.
+    def short(cwd: Path, *args: str, timeout: float | None = DEFAULT_TIMEOUT, **kwargs: object) -> bytes:
+        return run_git(cwd, *args, timeout=0.5 if timeout == DEFAULT_TIMEOUT else timeout, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(envelope_commit, "run_git", short)
+    hook(repo, "pre-commit", "sleep 1.5")
+    assert commit(repo)["outcome"] == "committed"
+
+
+def test_subject_uses_the_file_stem(repo: Path) -> None:
+    (repo / UNIT / FILE).rename(repo / UNIT / "envelopes/review-007.yaml")
+    assert commit(repo, "envelopes/review-007.yaml")["subject"] == "chore(workflow): record example review-007"
+
+
+def test_anchor_selects_among_several_and_ambiguity_keeps_its_code(repo: Path) -> None:
+    (repo / ".devkit/workflows/o.md").write_text(
+        "---\nid: o\nschema_version: 1\nlayout:\n  anchor: other.md\nstages:\n  - id: s\n    exit: [anchor-exists]\n---\n"
+    )
+    (repo / UNIT / "other.md").write_text("---\nid: SPEC-other\nworkflow: o\n---\n")
+    git(repo, "add", ".devkit/workflows/o.md", UNIT + "/other.md")
+    git(repo, "commit", "-m", "second anchor")
+    args = ("envelope", "commit", "--workspace-root", str(repo), "--unit", UNIT, "--file", FILE)
+    result = run_cli(*args)
+    assert result.exit_code == 2
+    assert "ANCHOR_AMBIGUOUS" in result.stderr
+    assert "ENVELOPE_COMMIT_INVALID" not in result.stderr
+    result = run_cli(*args, "--anchor", "task.md", "--format", "json")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["subject"] == "chore(workflow): record example review-01"
+
+
+def test_cli_text_quotes_fields(repo: Path) -> None:
+    spaced = ".devkit/transient/work/u v"
+    (repo / UNIT).rename(repo / spaced)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "move unit")
+    result = run_cli("envelope", "commit", "--workspace-root", str(repo), "--unit", spaced, "--file", FILE)
+    assert result.exit_code == 0, result.output
+    assert f"unit={field_value(spaced)} " in result.stdout

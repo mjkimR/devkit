@@ -43,7 +43,7 @@ devkit workflow envelope answer COMMON [--answers-to FILE] [--answers-file PATH|
 devkit workflow envelope resolution COMMON [--resolves FILE]
 devkit workflow envelope review COMMON VERIFY [--findings-file PATH|-]
 devkit workflow envelope reverify COMMON VERIFY [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]... [--findings-file PATH|-]
-devkit workflow envelope commit --unit DIR --file envelopes/NAME.yaml [--format text|json]  # explicitly commit one authored record
+devkit workflow envelope commit --unit DIR [--anchor FILE] --file envelopes/NAME.yaml [--format text|json]  # explicitly commit one authored record
 devkit workflow envelope check --unit DIR [--details] [--format text|json]   # every envelope file, contract violations and the hold
 ```
 
