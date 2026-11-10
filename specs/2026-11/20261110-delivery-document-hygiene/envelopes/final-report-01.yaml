@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T06:25:49.160317Z'
+status: completed
+summary: Split delivery role and lifecycle contracts into focused capabilities, preserved original portals and normative text, repaired current traces/backlinks and trimmed duplicated reference configuration.
+findings: []
+assumptions:
+- No package, runtime, agent-asset, alias or historical-spec changes; unchanged production verification supplied by Host.
+- Reference414 lines and other baseline advisory warnings intentionally retain unique facts; separate byte-budget policy is outside this Unit.
+unverified_areas:
+- Host integration and landed-result verification remain pending.
+checks:
+  tests: PASS 17 affected tier-all tests at c46dfaca; E2E explicit empty over cf1c4fd4 baseline
+  build: PASS structural and doorway validation; no runtime or generated output changes
+  lint: PASS cumulative rules, sync and committed-range whitespace
+diff_scope:
+  base: d43a6a63f99a7ab910eb9dc615535741c09901b1
+  head: 0a588f906f8a50fe2898fa2a039af0cd0de701de
