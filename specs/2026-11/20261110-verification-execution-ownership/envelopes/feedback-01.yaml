@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T04:24:49.172317Z'
+status: completed
+summary: Swept repository and upstream observations; no additional reusable issue beyond the implemented ownership correction.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0

@@ -2,7 +2,7 @@
 id: SPEC-verification-execution-ownership
 title: Separate Host and worker verification execution ownership
 summary: "Define worker-native synchronous verification and Host-owned post-integration asynchronous execution, with portable client adoption guidance that preserves existing verification contracts."
-status: in-progress
+status: completed
 created: 2026-11-10
 related_capabilities: [CAP-HARN-agent-guidance, CAP-DLV-delivery-workflows, CAP-DLV-test-management]
 related_usecases: []

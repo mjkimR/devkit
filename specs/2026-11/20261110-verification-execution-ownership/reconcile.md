@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-verification-execution-ownership
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
@@ -23,3 +23,7 @@ No required work is deferred and no source feedback was named as a direct-fix in
 
 Entrypoint derivation retained existing doorway declarations; candidates from broad task joins that point at
 tests, guides or another capability were declined. No entrypoint changes are needed for this wording/routing change.
+
+Independent code and reconciliation reviews returned no findings. The implementer verified the later AGENTS
+grammar, explicit no-devkit upgrade skip and unchanged task boundary labels. Native unit/integration and selected
+E2E passed in the assigned worktree; no execution checkout or exec lifecycle was used.
