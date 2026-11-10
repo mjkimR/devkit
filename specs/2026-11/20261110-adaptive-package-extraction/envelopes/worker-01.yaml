@@ -1,0 +1,27 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-10T01:17:22.971162Z'
+status: completed
+summary: Completed extraction, byte-identical bundle move, release lookup regression coverage, documentation and independent code/reconcile reviews; all source checks passed subject to the explicit baseline smoke exception. No Tier B extensions or sync outputs. Ready for Host integration and final landed verification.
+findings: []
+assumptions:
+- Codex worker/reviewer boundaries emulated; absolute worktree cwd, operation-specific escalations, committed scope audit and unchanged reviewer snapshots substitute for native enforcement.
+- E2E run 1ab4a6130cd64e8d9f3bbf0ba7a791f7 tested b2cdb892a7ec9080c74473e9290fcc56e099a321 from baseline 9ab4f8e; cleanup confirmed. Later commits only docs/records, no packages/scripts/tests/tools changes.
+- Host baseline smoke probe at b46086c reproduced the unchanged --task-kind error with runtime/smoke sources equal 9ab4f8e; scratch expected catalog set corrected to eight solely to reach that check.
+unverified_areas:
+- Host must perform integration, fresh runtime/dependency synchronization, generated artifact checks and final landed verification; no push or merge performed.
+checks:
+  sync_start: PASS exit=0
+  sync_final: PASS exit=0
+  tests: PASS affected full unit/integration 6424 passed 3 skipped; fixed-SHA E2E 355 passed 13 skipped; test-dist 1349 passed; dev 115 passed
+  lint: PASS full lint-check, full check, rules CI against 9ab4f8e, lock check
+  review: PASS independent code P2 fixed and implementer reverified
+  reconcile: PASS independent ten-target review P3 README fix reverified
+  bundle_identity: PASS tree 4be2226b66e45fc793e26269ec7dbb6a883dc926 identical
+  smoke: FAIL exit=1 existing --task-kind defect; permitted AC-06 exception verified at baseline
+diff_scope:
+  base: 6229393f57c1da082b48d510dbd1b4b67e12fe1c
+  head: 95701ccf924daeaa12004e5b040a44b762845778
+activity_effort: medium
