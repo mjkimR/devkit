@@ -2,7 +2,7 @@
 id: PROP-remove-plan-intent-gate
 title: Remove the plan-intent gate
 summary: "Remove the plan-intent approval gate, its decision records and its guidance from the SDD workflows, because an explicit task instruction already supplies intent and the gate only adds a record, a commit and special cases in acceptance and handoff."
-status: draft
+status: reviewing
 created_at: 2026-11-10
 target_area: capabilities/delivery/
 priority: low
