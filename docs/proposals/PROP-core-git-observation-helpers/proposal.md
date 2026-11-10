@@ -2,7 +2,7 @@
 id: PROP-core-git-observation-helpers
 title: Public Git observation helpers in devkit-core
 summary: "Add public devkit-core functions that read git worktree list and git status porcelain records and resolve a revision to a commit ID, and move the packages' private parsers to them, so each Git output is parsed once and tested once."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-10
 target_area: packages/devkit-core/
 priority: medium                      # critical | high | medium | low
