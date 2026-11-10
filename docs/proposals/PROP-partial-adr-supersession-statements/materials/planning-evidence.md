@@ -119,8 +119,9 @@ the result of section 4.1.
 For each of the 21 pairs whose pointer below the heading is no summary copy, the pointer's text was read against the
 Decision Outcome items of the later ADR that state the replaced scope (for `ADR-selective-package-versions` over
 `ADR-package-ownership-and-release-version`, the item that says "the old ADR"). The comparison is by named clause
-group: a source that names the same clauses in other words or in more detail counts as the same. One reader made
-it, without a second review.
+group: a source that names the same clauses in other words or in more detail counts as the same. The planning
+worker read all 21; `envelopes/scout-02.yaml` holds a separate reading of the 20 pairs without a user decision, made
+without the first result, and it names the same differing pair.
 
 Two pairs name different clauses:
 
@@ -146,7 +147,9 @@ Pairs read as the same scope although the texts differ in detail:
   entry point, content-only catalog ownership and independent docs/catalog installation as far as they concern
   `adaptive-dev`, the rejection of "Add a dedicated wheel", the driver "without another release wheel").
 - `ADR-retire-native-approval-and-moved-ownership-clauses` over `ADR-steering-documents`: Decision Outcome also names
-  the guidance test that asserts the listing; a further pointer at that statement marks it in the earlier ADR.
+  the guidance test that asserts the listing, a Confirmation item of the earlier ADR. The pointer below the heading
+  does not name it; the earlier ADR's pointers at the affected statements name "the matching Confirmation item". The
+  scout reports it as a difference in naming only.
 - `ADR-role-authoring-reference` over `ADR-shared-role-authoring`: Decision Outcome names "the guidance-location
   clauses"; the pointer names "placement of detailed role guidance and the direction of its conditional pointers",
   which are the earlier ADR's two outcome clauses.
