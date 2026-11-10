@@ -43,7 +43,9 @@ Evidence and option tables: `materials/planning-evidence.md` of `PROP-adaptive-p
 - The bundle name, presets, asset IDs and the context file name do not change.
 - The bundle installs without `devkit-spec`, and its `agents` and `import` presets install without `devkit-agt`.
 - The move itself changes no agent behavior and adds no command.
-- No alias distribution, shim module or duplicate registration (`ADR-package-ownership-and-release-version`).
+- No alias distribution, shim module, duplicate registration or migration path while there are no external
+  consumers (`ADR-package-ownership-and-release-version`).
+- An unchanged bundle keeps its version (`ARCH-07-deployment` §1.1).
 
 ## 3. Considered Options
 
@@ -66,6 +68,19 @@ Evidence and option tables: `materials/planning-evidence.md` of `PROP-adaptive-p
 - **Declare the requirements and a `devkit.commands` group at the move**: fewer edits later; a visible
   `devkit adaptive` group without subcommands, a harness installed for consumers that had none when the requirement
   is `devkit-agt`, and the end of snapshot support, all in a change that adds no function.
+
+### Existing selections
+
+- **No bridge; a documented installation step** (selected): the catalog stays dependency-free; a project that
+  selected the bundle adds `devkit-adaptive` once, and until then `devkit sync` stops with `SELECTION_INVALID`
+  and deletes nothing. The earlier move of the `run` preset to `harness` was handled the same way.
+- **`devkit-catalog` requires `devkit-adaptive`, permanently or for one release**: no step for a Git installation;
+  the catalog stops being a snapshot source for all of its bundles, advances with every `devkit-adaptive` release
+  and passes the later command requirements to every catalog consumer.
+- **A second registration or an alias distribution in the catalog**: two entry points with one bundle name fail
+  every command with `BUNDLE_PACKAGE_INVALID`.
+- **A hint in `SELECTION_INVALID` that names the new package**: a `devkit-dist` change with a table to maintain for
+  every later move; `ADR-package-ownership-and-release-version` declined the same hint for a moved preset.
 
 ## 4. Decision Outcome
 
@@ -92,6 +107,11 @@ discovery, materials and deep-research decisions stay in force, as do the names 
   feature, command or runtime module.
 - The change that adds the first command adds its requirements and decides their base (`devkit-dist` or
   `devkit-agt`) together with the effect on the `agents` and `import` presets and on snapshot support.
+- `devkit-catalog` gains no runtime requirement on `devkit-adaptive` and no second registration. A project that
+  selected the bundle installs `devkit-adaptive`; the installation guides state the step and the two codes it can
+  meet, `SELECTION_INVALID` and `BUNDLE_PACKAGE_INVALID`.
+- Release preparation identifies a moved bundle by its name, so the unchanged bundle keeps its version while the new
+  distribution takes the release version. → `ARCH-07-deployment` §1.1 (MUST)
 - A runtime scheduler, an agent bus and model routing stay excluded.
 
 `ARCH-05-2-components` §1.1 and the `adaptive-dev` paragraph of `ARCH-07-deployment` describe the owner, layout and
@@ -105,10 +125,13 @@ registration;
 - Positive: no asset, projection or guidance text changes, so the move is verifiable as an unchanged bundle tree.
 - Negative: the workspace, the release inventory, the consumer smoke and the installation guides carry one more
   wheel.
-- Negative: a project that selected `adaptive-dev` while the catalog shipped it needs `devkit-adaptive` in its
-  environment after the move.
-- Risk: an environment that holds a catalog release that still registers the bundle beside `devkit-adaptive` fails
-  every command with `BUNDLE_PACKAGE_INVALID`. Installing both from one commit or one release inventory avoids it
+- Negative: a project that selected `adaptive-dev` while the catalog shipped it has to install `devkit-adaptive`;
+  until then `devkit sync` stops with `SELECTION_INVALID`, whose `[FIX]` names `devkit remove adaptive-dev`. An
+  agent that follows the `[FIX]` instead of the guide removes the deployed bundle files and has to add the bundle
+  again; project-owned `.devkit/adaptive-dev.md` stays.
+- Risk: an environment that holds a catalog from before the move beside `devkit-adaptive` (an older pinned ref, an
+  older wheel or a bundle source snapshot that was not refreshed) fails every command with
+  `BUNDLE_PACKAGE_INVALID`. Moving every devkit requirement to one ref or one release inventory avoids it
   (`ARCH-07-deployment` §1.1).
 - Follow-up: when `PROP-adaptive-assignment-cli` adds the first command, it records the base requirement and the
   loss of snapshot support for this source.
@@ -123,6 +146,9 @@ registration;
   registered, so a remaining `adaptive_dev` directory fails.
 - `tests/e2e/smoke.sh`: `devkit-adaptive` provides `adaptive-dev` in an installed consumer.
 - `RULE-architecture` over `.devkit/architecture.toml`: the declared package root and its data root.
+- `packages/devkit/tests/integration/package/test_selective_releases.py`: a bundle moved unchanged to a new package
+  keeps its version.
+- The installation step for an existing selection: review of `guides/install/existing-repository.md`.
 - The absence of a runtime requirement and of a `devkit.commands` entry point at the move: a package metadata
   assertion in `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` until the first command
   replaces it.

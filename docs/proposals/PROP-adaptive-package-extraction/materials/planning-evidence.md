@@ -2,8 +2,8 @@
 
 Scope: the evidence and option comparisons Planning collected at `plan-adaptive-package-extraction` (base
 `881bced1`) for spike questions Q1 to Q7 of `PROP-adaptive-package-extraction`. Paths are relative to the repository
-root. Each set closes with the recommendation; the proposal's Planning decisions record what is settled and what
-waits for the user.
+root. Each set closes with the recommendation; the proposal's Planning decisions record what is settled and on
+which ground.
 
 ## Evidence boundary
 
@@ -98,9 +98,13 @@ meaning. The receipt's `packages` entry for the bundle records the providing dis
 
 If an environment holds a catalog that still registers `adaptive-dev` and `devkit-adaptive` together, every command
 fails with `BUNDLE_PACKAGE_INVALID`, `duplicate installed bundle: adaptive-dev`
-(`services/installation/discovery.py:97-99`; `test_sync.py:299`; `CAP-DIST-content-packages` §1). A Git
-installation resolves both packages from one commit, so this needs release wheels of different releases, which
-`ARCH-07-deployment` 1.1 does not support.
+(`services/installation/discovery.py:97-99`; `test_sync.py:299`; `CAP-DIST-content-packages` §1). Three states
+reach it: Git requirements pinned to different refs (`guides/INSTALL_GUIDE.md:114-118` describes per-requirement
+pins), release wheels of different releases, and a bundle source snapshot of the catalog that was not refreshed
+(the wrapper carries every provider bundle; `CAP-DIST-content-packages`, "Snapshot Provider Replacement"). A refreshed
+wrapper reports `uv run devkit remove adaptive-dev` as `SNAPSHOT_DESELECT_REMOVED`
+(`services/snapshots/operations.py:93`), the same removal the `[FIX]` of `SELECTION_INVALID` names. The guide step
+therefore moves every devkit requirement to one ref and names both codes.
 
 | Option | Evidence | Cost | Risk | Open |
 | --- | --- | --- | --- | --- |
@@ -111,8 +115,10 @@ installation resolves both packages from one commit, so this needs release wheel
 | 3e. `devkit-dist` names the new package in `SELECTION_INVALID` for a moved bundle | No such table exists | A behavior change in `devkit-dist`, outside this proposal's boundaries | A hint table that must be kept for every later move | A separate proposal if moves recur; `ADR-package-ownership-and-release-version` declined a cross-bundle preset hint for the same reason |
 
 Recommendation: 3a. It is the only option that neither breaks another contract nor leaves the unit's boundaries,
-and it repeats the accepted handling of the earlier preset move. It makes existing selections stop at
-`SELECTION_INVALID` until the project adds the package, which the user has to accept (question q1).
+and it repeats the accepted handling of the earlier preset move. `ADR-package-ownership-and-release-version` also
+names "no compatibility shims or migration paths while there are no external consumers" as a driver
+(`docs/decisions/2026-11/20261102-package-ownership-and-release-version.md:94-95`). Existing selections stop at
+`SELECTION_INVALID` until the project adds the package.
 
 ## Set 4: decision clauses (Q4)
 
@@ -157,17 +163,19 @@ marked "no edit" was checked and needs none.
 | `just` | `scripts/_lib.sh:64-76` | Add the short name `adaptive devkit-adaptive`; the recipes discover modules from `packages/*/pyproject.toml` and need no edit |
 | Affected tests | `scripts/affected_tests.py` | No edit: packages are discovered by directory (`:203-216`). The change selects the full suite, because it edits `pyproject.toml` files, `uv.lock` and a `tests/support` directory (`:49-50`, `:430-436`) |
 | Citation test | `tools/devkit-dev/tests/integration/test_bundle_citations.py:17-33` | Import `devkit_adaptive.bundles` and add it to `SHIPPING`; otherwise the bundle's document citations are no longer checked |
-| Consumer smoke | `tests/e2e/smoke.sh:54`, `:194`, `:228` | Install the `devkit_adaptive` wheel in the consumer; remove `adaptive-dev` from the set owned by `devkit-catalog`; assert that `devkit-adaptive` provides it |
-| Release | `scripts/releases/` | No edit: members come from the workspace (`identity.py:102-112`), and a package absent from the baseline counts as changed and takes the release version (`prepare.py:199-209`; `SPEC-selective-package-releases` 3.1). No installation variant is added (`install.py:12-22` has none for the catalog either) |
+| Consumer smoke | `tests/e2e/smoke.sh:54`, `:194`, `:228` | Install the `devkit_adaptive` wheel in the consumer; assert that `devkit-adaptive` provides `adaptive-dev`; set the bundles owned by `devkit-catalog` to the seven it registers after the move |
+| Release | `scripts/releases/prepare.py:225` | The bundle lookup of set 8. Otherwise no edit: members come from the workspace (`identity.py:102-112`), and a package absent from the baseline counts as changed and takes the release version (`prepare.py:199-209`; `SPEC-selective-package-releases` 3.1). No installation variant is added (`install.py:12-22` has none for the catalog either) |
 | CI | `.github/workflows/ci.yml:3-4` | Comment only; the workflows hold no package list |
 | This repository's selection | `.devkit/config.toml`, `.devkit/installation.json` | No edit: `adaptive-dev` is not selected here |
 | Root documents | `AGENTS.md:80`, `README.md:29-32`, `:70-71`, `:82`, `:205` | Add the package to the tables and lists |
 | Guides | `guides/INSTALL_GUIDE.md:83-125`, `:217`; `guides/install/existing-repository.md:256-257` and a migration subsection beside `:224-242`; `guides/install/new-repository.md:104-105`; `guides/install/adaptive-dev-sdd-adoption.md:21`; `guides/install/bundle-recommendations.md:35-36`, `:88` | Name `devkit-adaptive` as the package of `adaptive-dev`; add the installation and upgrade commands and the migration step of set 3 |
 | Living Spec | Set 4, plus the `entrypoints` of `UC-advance-an-idea` (2), `UC-import-third-party-agent-assets` (2) and `CAP-HARN-agent-guidance` (1) and the body of `CAP-HARN-agent-guidance` lines 473-475 and of `ARCH-05-1-containers` (container diagram and 2.7) | `RULE-code-entrypoints` fails on a frontmatter path that no longer exists; body paths are not rule-checked |
 
-Two existing inaccuracies sit on lines this change edits and were not run or traced further: `tests/e2e/smoke.sh:228`
-names five bundles for a catalog that registers eight, and `.devkit/architecture.toml:195` lists a `host_observer`
-data root that has no directory.
+Two existing inaccuracies sit on lines this change edits. `tests/e2e/smoke.sh:228` asserts five bundle names for
+`devkit-catalog`, while `discover_bundles()` in the workspace environment returns eight (`command-design`,
+`uiux-improve` and `design-explore` are missing from the assertion); by reading, `just smoke` fails there at the
+base, and it was not run in this Planning. `.devkit/architecture.toml:195` lists a `host_observer` data root that
+has no directory; the rule does not check data roots for existence.
 
 ## Set 7: tests (Q7)
 
@@ -179,7 +187,7 @@ data root that has no directory.
 | `.../integration/bundles/test_adaptive_behavior_scorer.py` | Same directory | None: the scorer path (`:8`) is relative to the tests directory |
 | `packages/devkit-catalog/tests/support/adaptive_behavior_scorer.py` | `packages/devkit-adaptive/tests/support/` | None; `CAP-DLV-adaptive-development` restates the command path |
 | `packages/devkit-catalog/tests/e2e/bundles/adaptive_dev/test_installed_consumer.py` | `packages/devkit-adaptive/tests/e2e/bundles/adaptive_dev/` | `ROOT` depth (`:13`); the wheel list (`:25-33`) builds `devkit-adaptive` instead of `devkit-catalog` |
-| `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py` | Stays | `ADAPTIVE_DEV` (`:21`) points through `REPOSITORY` at the new bundle path; the test keeps proving that both bundles select without a role conflict |
+| `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py` | Stays | `ADAPTIVE_DEV` (`:21`) is derived from a static import of `devkit_adaptive.bundles`. The selector links a test to a package by ownership or a static import (`scripts/affected_tests.py:233-249`, `:391-424`), so a path-only read would drop the role-conflict test from the selection for a bundle change |
 | `packages/devkit-catalog/tests/integration/bundles/test_bundles.py` | Stays | None: it iterates the catalog's own entry points |
 
 The moved tests import `devkit.advisory`, `devkit_dist`, `distsupport` (the support directory of `devkit-dist`),
@@ -199,3 +207,21 @@ A check that the bundle is unchanged needs no other checkout: the Git tree objec
 `packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle` at the base equals that of
 `packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle` at the head
 (`git rev-parse <base>:<old path>` against `git rev-parse HEAD:<new path>`).
+
+## Set 8: bundle version at the first release after the move
+
+Release preparation computes each bundle's version from the baseline entry of the same package
+(`scripts/releases/prepare.py:222-228`): a bundle keeps its version when its fingerprint equals the baseline's and
+takes the release version otherwise or when the baseline has none. The fingerprint is computed relative to the
+bundle root (`scripts/releases/identity.py:124-149`), so the moved tree has the fingerprint the baseline records
+under `devkit-catalog`, but the lookup under `devkit-adaptive` finds nothing and the bundle advances.
+`ARCH-07-deployment` 1.1 and `ADR-selective-package-versions` state that a bundle advances only when its own
+enumerated content changes (MUST).
+
+| Option | Evidence | Cost | Risk | Open |
+| --- | --- | --- | --- | --- |
+| 8a. Look up a moved bundle by name: when the package has no baseline entry for the bundle, use the baseline package that registered a bundle of that name | Bundle names are unique across installed packages (`CAP-DIST-content-packages` §1); the lookup is one expression at `prepare.py:225`; the fixture of `test_selective_releases.py:44-110` already builds a package with a bundle | One edit and one test case in the release tooling | A regression in release preparation, bounded by the new and existing cases | None |
+| 8b. Accept the advance and state it: a bundle first registered by a distribution takes the release version | No code | A clause in the PADR that makes an exception to a MUST of `ARCH-07-deployment` 1.1 and a partial supersession of `ADR-selective-package-versions` | A release contract changed to fit one lookup; a bundle version changes without an asset change | None |
+| 8c. No change | None | None | The first release after the move violates the MUST unless the bundle's text changed before it | Not viable as a plan |
+
+Recommendation: 8a. The contract stays as accepted and the implementation follows it.

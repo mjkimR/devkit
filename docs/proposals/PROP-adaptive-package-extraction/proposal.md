@@ -26,6 +26,8 @@ boundaries:
     - tools/devkit-dev/tests/integration/test_bundle_citations.py
     - tests/e2e/smoke.sh
     - scripts/_lib.sh
+    - scripts/releases/prepare.py
+    - packages/devkit/tests/integration/package/test_selective_releases.py
     - pyproject.toml
     - uv.lock
     - .devkit/architecture.toml
@@ -87,16 +89,21 @@ and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
   `devkit-adaptive` gets `SELECTION_INVALID` (`selected bundle is not installed: adaptive-dev`) from `devkit sync`
   and under `errors` of `devkit status`; nothing is deleted. After it installs the package, its selection, overrides
   and role keys apply unchanged, and the next sync rewrites the receipt's package record. Of the five options
-  compared, only a documented installation step breaks no other contract; the user decides (Planning decisions).
+  compared, only a documented installation step breaks no other contract, and
+  `ADR-package-ownership-and-release-version` already declines migration paths and shims while there are no
+  external consumers. Section 3.6 states the step.
 - **Q4 Decisions**: `PADR-adaptive-dev-distribution` supersedes the owning-wheel clauses of
   `ADR-adaptive-development-and-research` and nothing else. `ADR-skill-local-swarm-roles` decides no owner and gets
   a wording repair. The exclusion of a command line or runtime is `PROP-adaptive-assignment-cli`'s to change.
 - **Q5 Entry points**: `devkit.bundles` only. A `devkit.commands` entry is a mounted `devkit adaptive` group, which
   is a new command.
 - **Q6 Repository wiring**: the files of section 3.3. Workspace membership, the release inventory, the `just`
-  recipes and the affected-test selector discover the package by directory and need no edit.
-- **Q7 Tests**: six adaptive-dev test files move; `test_deep_research.py` stays and loads the bundle from its new
-  path. `just test-dist` syncs and collects `devkit-dist` only and is unaffected.
+  recipes and the affected-test selector discover the package by directory and need no edit. Release preparation
+  needs one: it looks up a bundle's previous version under its package name, so the moved bundle would take the
+  release version with unchanged content, against `ARCH-07-deployment` 1.1.
+- **Q7 Tests**: six adaptive-dev test files move; `test_deep_research.py` stays and locates the bundle through a
+  static import of `devkit_adaptive.bundles`, which keeps it selected by `just test-affected`. `just test-dist`
+  syncs and collects `devkit-dist` only and is unaffected.
 
 ## 3. Proposed Design & Impact
 
@@ -116,7 +123,8 @@ and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
 ### 3.2 The catalog
 
 - `packages/devkit-catalog/pyproject.toml` drops the `adaptive-dev` entry point; `src/devkit_catalog/adaptive_dev/`
-  is removed. The catalog keeps `dependencies = []` and gains no requirement on `devkit-adaptive`.
+  is removed. The catalog keeps `dependencies = []` and gains no runtime requirement on `devkit-adaptive`; its
+  development group gains `devkit-adaptive` with a workspace source for the test of section 3.4.
 - `packages/devkit-catalog/README.md` drops the table row and the section and points to the new package.
 
 ### 3.3 Repository wiring
@@ -127,11 +135,18 @@ and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
   `adaptive_dev` leaves the `devkit_catalog` data roots.
 - `scripts/_lib.sh`: the short name `adaptive devkit-adaptive`.
 - `tools/devkit-dev/tests/integration/test_bundle_citations.py`: `devkit_adaptive.bundles` joins `SHIPPING`.
-- `tests/e2e/smoke.sh`: the consumer installs the `devkit_adaptive` wheel; `adaptive-dev` leaves the set of bundles
-  provided by `devkit-catalog`, and the script asserts that `devkit-adaptive` provides it.
+- `tests/e2e/smoke.sh`: the consumer installs the `devkit_adaptive` wheel, and the script asserts that
+  `devkit-adaptive` provides `adaptive-dev`. The asserted set of bundles provided by `devkit-catalog` becomes the
+  seven it registers after the move: `response-style`, `maintenance`, `cli-tool`, `command-design`,
+  `deep-research`, `uiux-improve` and `design-explore`. The base asserts five names for a catalog that registers
+  eight, so Development runs `just smoke` at its base first and records every failure that exists before its edits.
+- `scripts/releases/prepare.py`: when the baseline holds no bundle of that name under the same package, release
+  preparation takes the previous identity from the baseline package that registered a bundle of that name. An
+  unchanged bundle then keeps its version across a change of owner (`ARCH-07-deployment` 1.1), while the new
+  distribution takes the release version and the catalog advances for its changed payload.
 - `.github/workflows/ci.yml`: the comment that lists packages.
-- No edit: `justfile`, `scripts/affected_tests.py`, `scripts/dist_only.sh`, `scripts/releases/`, this repository's
-  `.devkit/config.toml` and receipt.
+- No edit: `justfile`, `scripts/affected_tests.py`, `scripts/dist_only.sh`, the other modules of
+  `scripts/releases/`, this repository's `.devkit/config.toml` and receipt.
 
 ### 3.4 Tests
 
@@ -141,8 +156,12 @@ and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
   path constants, the package name and the entry point value.
 - The end-to-end test builds `devkit-adaptive` instead of `devkit-catalog` and asserts that neither `devkit-spec`
   nor `devkit-catalog` is installed.
-- `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py` stays and loads the adaptive-dev bundle
-  from its new path for the role-conflict test.
+- `packages/devkit-catalog/tests/integration/bundles/test_deep_research.py` stays. It imports
+  `devkit_adaptive.bundles` statically and derives the adaptive-dev bundle path from that module for the
+  role-conflict test, as `tools/devkit-dev/tests/integration/test_bundle_citations.py` does, so a change to the
+  bundle still selects the test.
+- `packages/devkit/tests/integration/package/test_selective_releases.py` gains a case in which a bundle moves
+  unchanged from one fixture package to a new one.
 
 ### 3.5 Documents and guides
 
@@ -155,13 +174,21 @@ and the option tables, `envelopes/scout-01.yaml` the wiring inventory.
 
 ### 3.6 An existing selection
 
-This subsection states the recommended option of question q1; the user's answer may replace it.
+No bridge exists: the catalog neither requires `devkit-adaptive` nor keeps a second registration. The guide states
+this step:
 
-A project that selected `adaptive-dev` adds `devkit-adaptive` to the dependency group that holds its devkit
-packages, runs `uv run devkit sync` and commits `pyproject.toml`, `uv.lock` and `.devkit/installation.json`. Its
-`[presets]` entry, overrides and `adaptive-dev:<role>` keys stay as they are. Until it adds the package,
-`devkit sync` stops with `SELECTION_INVALID` and deletes nothing. The guide tells the reader to install the package
-instead of following the error's `[FIX]`, which names `devkit remove adaptive-dev`.
+- Add `devkit-adaptive` to the dependency group that holds the project's devkit packages and move every devkit
+  requirement, the catalog included, to the same ref or release inventory in the same change.
+- Run `uv sync` and `uv run devkit sync`, then commit `pyproject.toml`, `uv.lock` and `.devkit/installation.json`.
+  The `[presets]` entry, overrides and `adaptive-dev:<role>` keys stay as they are.
+- `SELECTION_INVALID` (`selected bundle is not installed: adaptive-dev`) means the package is missing: install it
+  instead of following the error's `[FIX]`, which names `devkit remove adaptive-dev`. Nothing is deleted meanwhile.
+- `BUNDLE_PACKAGE_INVALID` (`duplicate installed bundle: adaptive-dev`) means a catalog from before the move sits
+  beside `devkit-adaptive`: an older pinned ref, an older wheel or a bundle source snapshot of the catalog that
+  was not refreshed. Move the catalog to the same ref, or refresh the snapshot.
+- A project whose catalog is a bundle source snapshot refreshes the wrapper and installs `devkit-adaptive` (or
+  snapshots it) instead of running the `devkit remove adaptive-dev` that the refresh reports as
+  `SNAPSHOT_DESELECT_REMOVED`.
 
 ## Non-Goals
 
@@ -170,12 +197,12 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
 - **Scope Excluded**: a change to the bundle's name, presets, asset IDs, asset text, projections or context file.
 - **Scope Excluded**: a change in `devkit-dist` or `devkit-agt`, including a hint in `SELECTION_INVALID` that names
   the new package.
-- **Scope Excluded**: a requirement of `devkit-catalog` on `devkit-adaptive`, an alias distribution, a shim module
-  or a second registration of the bundle.
+- **Scope Excluded**: a runtime requirement of `devkit-catalog` on `devkit-adaptive`, an alias distribution, a shim
+  module or a second registration of the bundle.
 - **Scope Excluded**: moving `deep-research` or another catalog bundle.
 - **Scope Excluded**: host lifecycle hooks; `PROP-adaptive-lifecycle-hooks` owns their investigation.
-- **Scope Excluded**: a release, a release installation variant and a version other than the one
-  `just version-sync` selects.
+- **Scope Excluded**: a release, a release installation variant, a version other than the one
+  `just version-sync` selects, and a change to release preparation beyond the bundle lookup of section 3.3.
 
 ## Acceptance Criteria
 
@@ -191,11 +218,12 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
 
 ### [AC-02] The bundle is unchanged
 
-- **Given** the base commit of the Development branch,
-- **When** `git rev-parse <base>:packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle` is compared with
-  `git rev-parse HEAD:packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle`,
+- **Given** the checked head and the merge base of that head and the integration target
+  (`git merge-base HEAD <target>`; the saved premerge target SHA at the final check),
+- **When** `git rev-parse <merge-base>:packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle` is compared
+  with `git rev-parse HEAD:packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle`,
 - **Then** both print the same tree object, so the name, version, presets, asset IDs and every asset byte are
-  identical.
+  identical, and an edit that landed on the target under the old path is carried to the new one.
 
 ### [AC-03] The catalog no longer ships the bundle
 
@@ -203,7 +231,8 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
 - **When** the catalog tests run (`just test catalog`),
 - **Then** `packages/devkit-catalog/pyproject.toml` registers no `adaptive-dev` entry point and declares
   `dependencies = []`, `src/devkit_catalog/adaptive_dev/` does not exist, `test_bundles.py` passes and the
-  role-conflict test of `test_deep_research.py` passes with the bundle loaded from `packages/devkit-adaptive/`.
+  role-conflict test of `test_deep_research.py` passes with the bundle located through its static import of
+  `devkit_adaptive.bundles`.
 
 ### [AC-04] Installation without devkit-spec and without the catalog
 
@@ -224,8 +253,8 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
   unchanged and the receipt's package record for `adaptive-dev` names `devkit-adaptive`. An integration test in
   `packages/devkit-adaptive/tests/integration/bundles/test_adaptive_dev.py` asserts this with two `InstalledBundle`
   values of the real bundle.
-- **And** `guides/install/existing-repository.md` states the step of section 3.6 with its commands, and the
-  `SELECTION_INVALID` row of `guides/INSTALL_GUIDE.md` names `devkit-adaptive` (review).
+- **And** `guides/install/existing-repository.md` states the step of section 3.6 with its commands, both codes and
+  the snapshot case, and the `SELECTION_INVALID` row of `guides/INSTALL_GUIDE.md` names `devkit-adaptive` (review).
 
 ### [AC-06] Repository checks
 
@@ -235,6 +264,8 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
 - **Then** each exits `0`; `just test adaptive` collects the moved tests, the citation test covers the
   `adaptive-dev` bundle through `devkit_adaptive.bundles`, and the smoke consumer reports `adaptive-dev` with the
   package `devkit-adaptive`.
+- **And** a `just smoke` failure that also occurs at the Development base, at a check outside the lines section 3.3
+  edits, does not fail this criterion; the final report names it with the base run that showed it.
 
 ### [AC-07] Living Spec, guides and decision
 
@@ -246,6 +277,14 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
   `devkit-adaptive` as the owner and installation package of `adaptive-dev`; the decision promoted from
   `PADR-adaptive-dev-distribution` is accepted, and `ADR-adaptive-development-and-research` stays accepted with one
   line naming the clauses that decision replaces.
+
+### [AC-08] A moved bundle keeps its version at release preparation
+
+- **Given** the fixture workspace of `packages/devkit/tests/integration/package/test_selective_releases.py` with a
+  completed baseline, in which a bundle moves with unchanged content from its package to a new package,
+- **When** release preparation computes the plan,
+- **Then** the bundle keeps its baseline version, the new package takes the release version and the former owner
+  is reported as changed; a bundle whose content changed in the move takes the release version.
 
 ## Planning decisions
 
@@ -260,13 +299,11 @@ instead of following the error's `[FIX]`, which names `devkit remove adaptive-de
 | Architecture declaration | `kind = "content"` with `data_roots = ["bundles"]`; the first command changes the kind to `features` in the entry it has to edit anyway. `RULE-architecture` accepts both | planning |
 | Root development group | No entry for `devkit-adaptive`, as for the catalog; `just init` installs every member | planning |
 | Version | `0.1.6` for the package beside the bundle's unchanged `0.1.6`; the release tooling gives a package absent from the baseline the release version | evidence |
+| Bundle version at release | Release preparation finds a moved bundle's previous identity by bundle name (section 3.3, AC-08), so the existing MUST of `ARCH-07-deployment` 1.1 holds. The alternative, an exception to that MUST recorded in the PADR, was not taken: it changes a release contract to fit one lookup | planning |
 | Superseding decision (Q4) | One PADR limited to the owning wheel; no decision on a command line | evidence |
-| `dev_effort` | Stays `medium`: the change is a move verified by tree identity and existing tests, nothing is released by it, and the consumer-facing step is the user's explicit choice | planning |
-| Existing selections (Q3) | Open: question q1. Recommended: no bridge, a documented installation step (section 3.6) | user, pending |
-
-`PADR-adaptive-dev-distribution` names "the catalog stays dependency-free" as a driver. If the answer to q1 makes
-the catalog require `devkit-adaptive`, the next Planning turn rewrites that driver, section 3.6, the Non-Goals and
-AC-03 and AC-05.
+| `dev_effort` | Stays `medium`: the change is a move verified by tree identity and existing tests plus one lookup in release preparation with its own test; nothing is released by it, and no `high` trigger of the effort reference applies | planning |
+| Existing selections (Q3) | No bridge; a documented installation step (section 3.6). A requirement of the catalog on `devkit-adaptive` ends snapshot support for every catalog bundle, a second registration fails every command, and `ADR-package-ownership-and-release-version` declines migration paths and shims while there are no external consumers (`materials/planning-evidence.md` set 3). Recorded in `PADR-adaptive-dev-distribution` | evidence |
+| Test selection | `test_deep_research.py` imports `devkit_adaptive.bundles`; the catalog's development group names `devkit-adaptive` | planning |
 
 For `PROP-adaptive-assignment-cli`: adding a runtime requirement or a `devkit.commands` entry point ends snapshot
 support for this source, and a requirement on `devkit-agt` changes what a `devkit-dist`-only consumer of the

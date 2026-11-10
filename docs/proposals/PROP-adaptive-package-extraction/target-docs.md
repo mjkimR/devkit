@@ -77,8 +77,9 @@ No rule number, code, sentinel or agent-facing behavior changes.
 - New decision: `PADR-adaptive-dev-distribution`, promoted at handoff. It supersedes in part
   `ADR-adaptive-development-and-research`.
 - `ADR-adaptive-development-and-research`: stays `accepted`; gains the line "Superseded in part by" the promoted
-  decision, naming the owning-wheel clauses of the adaptive-dev bundle, and a reference repair of the adaptive-dev
-  test paths in its Confirmation section. Its clauses stay as written.
+  decision, naming the owning-wheel clauses of the adaptive-dev bundle, and a reference repair in its Confirmation
+  section: the adaptive-dev test paths and the sentence that `tests/e2e/smoke.sh` lists `adaptive-dev` in the
+  catalog bundle set. Its clauses stay as written.
 - `ADR-skill-local-swarm-roles`: wording repair of the sentence "`ARCH-05-2-components` restates catalog ownership"
   to name the bundle's owner; no decision changes.
 
@@ -95,6 +96,8 @@ No rule number, code, sentinel or agent-facing behavior changes.
   `devkit-adaptive` as the package of `adaptive-dev`; the existing-repository guide gains the step for an existing
   selection.
 - `.devkit/architecture.toml` declares `devkit_adaptive` and removes the `adaptive_dev` data root of the catalog.
+- `scripts/releases/prepare.py` looks up a moved bundle's baseline identity by bundle name. `ARCH-07-deployment` 1.1
+  already states the rule it implements, so that section needs no new sentence.
 
 ---
 
@@ -110,4 +113,5 @@ No rule number, code, sentinel or agent-facing behavior changes.
 | Requires `devkit-spec` | No | No |
 | Installation for adaptive development | devkit-docs plus `devkit-catalog` | devkit-docs plus `devkit-adaptive` |
 | Installation for the `agents` and `import` presets | `devkit-dist` plus `devkit-catalog` suffice | `devkit-dist` plus `devkit-adaptive` suffice |
-| A project that selected the bundle before the move | Synchronizes | Installs `devkit-adaptive` once; until then `devkit sync` stops with `SELECTION_INVALID` and deletes nothing (recommended option of question q1) |
+| A project that selected the bundle before the move | Synchronizes | Installs `devkit-adaptive` once; until then `devkit sync` stops with `SELECTION_INVALID` and deletes nothing |
+| Bundle version at the next release | `0.1.6` until its content changes | Unchanged rule: release preparation finds the moved bundle by name |
