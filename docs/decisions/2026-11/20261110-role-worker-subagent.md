@@ -20,7 +20,7 @@ created_at: 2026-11-10
 Skill-local roles (deep-research, app-uiux-improve, design-explore) pass a role file to a general subagent so that no
 role metadata enters global context. On Claude Code that subagent is `general-purpose`, which receives every tool,
 MCP tools included. It starts each child at about 36k input tokens, while subagents with a restricted tool list start
-at 11k to 16k on the same machine (`SPEC-lightweight-general-subagent` materials). A per-role registered subagent
+at 11k to 16k on the same machine ([first-call-tokens.md](../../materials/2026-11/20261110-lightweight-general-subagent/first-call-tokens.md)). A per-role registered subagent
 would cut the load but expose role descriptions outside explicit invocation. The `devkit` bundle, the only
 auto-selected `devkit-dist` bundle that fits, is limited to distribution guidance with instructions only.
 
