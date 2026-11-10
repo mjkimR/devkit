@@ -1,14 +1,14 @@
-# devkit gaps and work breakdown for PROP-adaptive-lifecycle-hooks
+# devkit gaps and work breakdown for adaptive lifecycle hooks
 
 Scope: what devkit lacks for `Stop`, `SubagentStop` and `SessionStart` gates (spike question Q3 of
-`PROP-adaptive-lifecycle-hooks`), the work items that would provide it with their sizes, and the delivery options
+`MAT-adaptive-lifecycle-hooks`), the work items that would provide it with their sizes, and the delivery options
 compared (Q7). Paths are relative to the repository root; `host/` abbreviates
 `packages/devkit-dist/src/devkit_dist/features/host/`.
 
 ## 1. Evidence boundary
 
 - Read: the host feature, its callers in the distribution and project features, its tests and the documents that
-  state its contract, at commit `79156358`. `envelopes/scout-02.yaml` records the inbound-reference search.
+  state its contract, at commit `79156358`. The scout-02 envelope of the rejected proposal (commit `ad3d2ba3`) records the inbound-reference search.
 - Not run: no test, no sync and no host. Sizes are estimates from the code read, not from a prototype.
 - Host facts are those of `host-capability-matrix.md`, with its evidence classes.
 - Sizes use the proposal template's scale: S a single fix, M one or two sessions, L a complex module.

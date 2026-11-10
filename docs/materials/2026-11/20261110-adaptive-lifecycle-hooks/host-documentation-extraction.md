@@ -1,8 +1,8 @@
-# Host documentation extraction for PROP-adaptive-lifecycle-hooks
+# Host documentation extraction for adaptive lifecycle hooks
 
 Scope: what the `scout` of this Planning run extracted from the vendors' documentation on 2026-11-10, item by item.
 `host-capability-matrix.md` classes a cell `documented` only when this file holds the extraction.
-`envelopes/scout-01.yaml` records the scout's findings; this file records its per-host table.
+The scout-01 envelope of the rejected proposal (commit `ad3d2ba3`) records the scout's findings; this file records its per-host table.
 
 ## 1. Limits of the extraction
 

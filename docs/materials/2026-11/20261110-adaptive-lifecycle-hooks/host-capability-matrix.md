@@ -1,7 +1,7 @@
-# Host capability matrix for PROP-adaptive-lifecycle-hooks
+# Host capability matrix for adaptive lifecycle hooks
 
 Scope: what a `Stop`, `SubagentStop` or `SessionStart` gate needs from a host, and what Codex, Claude Code,
-Antigravity and devkit's host feature provide. It answers spike question Q2 of `PROP-adaptive-lifecycle-hooks` as far
+Antigravity and devkit's host feature provide. It answers spike question Q2 of `MAT-adaptive-lifecycle-hooks` as far
 as documentation and code can; section 4 lists what only a live host session can settle.
 
 ## 1. Evidence boundary
@@ -38,7 +38,7 @@ Sources:
 | CX-C | <https://developers.openai.com/codex/config-reference>, which redirects to <https://learn.chatgpt.com/docs/config-file/config-reference> |
 | AG-H | <https://antigravity.google/docs/hooks/> |
 
-The Gemini CLI hook pages were read as a neighbour product only and support no cell. `envelopes/scout-01.yaml`
+The Gemini CLI hook pages were read as a neighbour product only and support no cell. The scout-01 envelope of the rejected proposal (commit `ad3d2ba3`)
 records the scout's findings and `host-documentation-extraction.md` its extraction per item.
 
 ## 2. Matrix

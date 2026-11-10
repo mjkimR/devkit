@@ -1,4 +1,4 @@
-# Live probes for PROP-adaptive-lifecycle-hooks
+# Live probes for adaptive lifecycle hooks
 
 Scope: the exact procedure for each host observation that documentation cannot settle
 (`host-capability-matrix.md` §4). Planning ran none of them: registering a hook and running a host with it are outside

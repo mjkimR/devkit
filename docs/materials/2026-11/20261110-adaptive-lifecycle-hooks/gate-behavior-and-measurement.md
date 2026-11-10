@@ -1,6 +1,6 @@
-# Gate behavior, ledger needs and measurement for PROP-adaptive-lifecycle-hooks
+# Gate behavior, ledger needs and measurement for adaptive lifecycle hooks
 
-Scope: what a gate needs from the assignment ledger (spike questions Q4 to Q6 of `PROP-adaptive-lifecycle-hooks`),
+Scope: what a gate needs from the assignment ledger (spike questions Q4 to Q6 of `MAT-adaptive-lifecycle-hooks`),
 the behavior the sizing depends on, and the decision criteria and measurement plan for Q1 and Q8. The behavior is
 specified only as far as the sizing and the delivery decision need.
 
