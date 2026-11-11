@@ -1,15 +1,15 @@
 ---
-id: PADR-literal-read-test-selection
+id: ADR-literal-read-test-selection
 title: Select tests by their literal repository-path reads
 summary: For affected-test selection, we add the repository paths that test modules, conftests and local helpers read through root-anchored literal path expressions as dependencies, keeping the data table for other readers, to select new readers without new rows, accepting slower document-only selection.
-proposal: PROP-select-tests-by-read-document-paths
-status: draft
+proposal: SPEC-select-tests-by-read-document-paths
+status: accepted
 created_at: 2026-11-11
 ---
 
-# [PADR-literal-read-test-selection] Select tests by their literal repository-path reads
+# [ADR-literal-read-test-selection] Select tests by their literal repository-path reads
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-11
 
 ---
@@ -75,7 +75,7 @@ visible in source while keeping all existing checks.
 
 - **Positive**:
   - A new test that reads a repository file by literal path is selected for that file's changes with no table edit.
-  - The measured misses in `materials/read-path-survey.md` are selected.
+  - The measured misses in `docs/materials/2026-11/20261111-select-tests-by-read-document-paths/read-path-survey.md` are selected.
 - **Negative / Risks**:
   - A document-only selection now parses and scans every test-tree file: about 0.01 s becomes about 2 to 3 s on the
     measured machine.

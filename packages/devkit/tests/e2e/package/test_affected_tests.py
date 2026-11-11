@@ -118,10 +118,20 @@ def test_an_unmapped_path_selects_the_full_suite(affected: ModuleType) -> None:
     assert (selection.mode, selection.reason) == ("full", "new-directory/tool.py")
 
 
-@pytest.mark.parametrize("path", [".claude/skills/x/SKILL.md", ".agents/skills/x.md", "guides/install.md"])
+@pytest.mark.parametrize("path", [".claude/skills/x/SKILL.md", ".agents/skills/x.md"])
 def test_files_no_test_reads_select_nothing(affected: ModuleType, path: str) -> None:
     selection = affected.select(ROOT, [path, "README.md", "packages/devkit-spec/README.md"])
     assert (selection.mode, selection.paths, selection.reason) == ("none", (), "untested")
+
+
+# AC-04 (SPEC-select-tests-by-read-document-paths): guides/ selects the tests that read it by literal path.
+def test_guides_select_the_tests_that_read_them(affected: ModuleType) -> None:
+    selection = affected.select(ROOT, ["guides/install.md", "README.md", ".claude/skills/x/SKILL.md"])
+    assert (selection.mode, selection.paths, selection.reason) == (
+        "partial",
+        ("packages/devkit-catalog/tests/integration/bundles/test_deep_research.py",),
+        "reads",
+    )
 
 
 @pytest.mark.parametrize("path", ["docs/capabilities/gate/CAP-GATE-commit-gates.md", "docs/usecases-other/README.md"])
@@ -169,12 +179,23 @@ def test_architecture_config_alone_selects_structure_rule_and_integration_tests(
     selection = affected.select(ROOT, [".devkit/architecture.toml"])
     assert selection.mode == "partial"
     assert selection.reason == ".devkit/architecture.toml"
+    # The DATA rows, plus the tests whose layering helpers read the file
+    # (AC-01, SPEC-select-tests-by-read-document-paths).
     assert selection.paths == (
+        f"{DIST_TESTS}/integration/cli/test_cli_imports.py",
+        f"{DIST_TESTS}/unit/architecture/test_layering.py",
+        f"{TESTS}/integration/package/test_layering.py",
+        f"{TESTS}/integration/package/test_mounted_commands.py",
         "tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/tests",
         "tools/devkit-dev/tests",
     )
     assert (ROOT / "tools/devkit-dev/tests/integration/test_architecture.py").is_file()
-    assert affected.select(ROOT, [".devkit/config.toml"]).mode == "none"
+    config = affected.select(ROOT, [".devkit/config.toml"])
+    assert (config.mode, config.paths, config.reason) == (
+        "partial",
+        ("tools/devkit-dev/tests/integration/test_handbook_script.py",),
+        "reads",
+    )
 
 
 def test_script_with_e2e_target_respects_explicit_tier(affected: ModuleType) -> None:
@@ -319,7 +340,7 @@ def test_a_full_selection_runs_the_whole_suite(
 def test_an_empty_selection_runs_nothing(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
-    lines = invoke(affected, monkeypatch, ["guides/x.md"])
+    lines = invoke(affected, monkeypatch, [".claude/x.md"])
     assert lines == ["[TEST_SELECTION: mode=none base=main changed=1 paths=0 reason=untested]"]
     assert command == []
 
@@ -331,15 +352,31 @@ FRONTEND_LINE = (
 )
 
 
-@pytest.mark.parametrize("path", [FRONTEND, "scripts/viewer.sh"])
 def test_a_frontend_only_change_runs_no_pytest(
-    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]], path: str
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
-    selection = affected.select(ROOT, [path])
+    selection = affected.select(ROOT, [FRONTEND])
     assert (selection.mode, selection.paths, selection.reason, selection.frontend) == ("none", (), "frontend", True)
-    lines = invoke(affected, monkeypatch, [path])
+    lines = invoke(affected, monkeypatch, [FRONTEND])
     assert lines == ["[TEST_SELECTION: mode=none base=main changed=1 paths=0 reason=frontend]", FRONTEND_LINE]
     assert command == []
+
+
+# AC-04 (SPEC-select-tests-by-read-document-paths): a frontend path a test reads selects it and keeps the check.
+def test_a_frontend_path_a_test_reads_selects_it_and_keeps_the_frontend_check(
+    affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
+) -> None:
+    reader = f"{TESTS}/integration/package/test_viewer_script.py"
+    selection = affected.select(ROOT, ["scripts/viewer.sh"])
+    assert (selection.mode, selection.paths, selection.reason, selection.frontend) == (
+        "partial",
+        (reader,),
+        "frontend",
+        True,
+    )
+    lines = invoke(affected, monkeypatch, ["scripts/viewer.sh"])
+    assert lines == ["[TEST_SELECTION: mode=partial base=main changed=1 paths=1 reason=frontend]", FRONTEND_LINE]
+    assert command == [["bash", str(ROOT / "scripts/module.sh"), "test", "all", reader]]
 
 
 def test_a_mixed_change_keeps_the_other_selection(
@@ -741,3 +778,239 @@ def test_any_package_source_selects_the_all_sources_scan(affected: ModuleType) -
 def test_a_delivery_capability_selects_the_guidance_test_that_reads_it(affected: ModuleType) -> None:
     selection = affected.select(ROOT, ["docs/capabilities/delivery/CAP-DLV-delivery-roles.md"], include_e2e=True)
     assert "packages/devkit-spec/tests/integration/bundles/spec/test_scratch_cleanup_guidance.py" in selection.paths
+
+
+# SPEC-select-tests-by-read-document-paths: literal repository-path reads add their readers.
+
+
+# AC-01: each miss group of the Planning survey selects its reader at this head.
+@pytest.mark.parametrize(
+    "changed,reader",
+    [
+        (".devkit/architecture.toml", f"{DIST_TESTS}/unit/architecture/test_layering.py"),
+        (".devkit/architecture.toml", f"{TESTS}/integration/package/test_layering.py"),
+        (".devkit/config.toml", "tools/devkit-dev/tests/integration/test_handbook_script.py"),
+        ("scripts/viewer.sh", f"{TESTS}/integration/package/test_viewer_script.py"),
+        ("scripts/module.sh", f"{TESTS}/e2e/package/test_affected_tests.py"),
+        ("guides/install.md", "packages/devkit-catalog/tests/integration/bundles/test_deep_research.py"),
+        (
+            "packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja",
+            "packages/devkit-catalog/tests/integration/bundles/test_deep_research.py",
+        ),
+        (
+            "packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja",
+            "packages/devkit-docs/tests/integration/bundles/docs/test_distribution.py",
+        ),
+        (
+            "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md",
+            "packages/devkit-spec/tests/integration/bundles/spec/test_playbook_discovery_guidance.py",
+        ),
+        (
+            f"{TESTS}/integration/features/compact/fixtures/new.txt",
+            f"{TESTS}/integration/features/compact/test_corpus.py",
+        ),
+        (CITATIONS, f"{TESTS}/e2e/package/test_affected_tests.py"),
+        (
+            "packages/devkit-viewer/tests/integration/test_cli.py",
+            f"{TESTS}/integration/package/test_test_environment.py",
+        ),
+        (
+            "packages/devkit-catalog/README.md",
+            "packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py",
+        ),
+    ],
+)
+def test_each_measured_miss_selects_its_reader(affected: ModuleType, changed: str, reader: str) -> None:
+    assert (ROOT / reader).is_file()
+    selection = affected.select(ROOT, [changed], tier="all")
+    assert reader in selection.paths or any(reader.startswith(f"{path}/") for path in selection.paths)
+
+
+# AC-08: subprocess readers of the release recipes keep explicit rows.
+@pytest.mark.parametrize("changed", ["scripts/release.sh", "justfile"])
+def test_release_recipes_select_the_version_script_test(affected: ModuleType, changed: str) -> None:
+    assert f"{TESTS}/integration/package/test_version_script.py" in affected.select(ROOT, [changed]).paths
+
+
+# AC-02: read discovery never reduces a selection and keeps full triggers and existing reasons.
+@pytest.mark.parametrize(
+    "changed",
+    [
+        "uv.lock",
+        "new-directory/tool.py",
+        "docs/x.md",
+        "specs/2026-10/x/spec.md",
+        ".devkit/architecture.toml",
+        "scripts/module.sh",
+        f"{TESTS}/integration/features/compact/fixtures/new.txt",
+        "packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md",
+        ".claude/skills/x/SKILL.md",
+    ],
+)
+def test_read_discovery_only_adds_tests(affected: ModuleType, monkeypatch: pytest.MonkeyPatch, changed: str) -> None:
+    with_reads = affected.select(ROOT, [changed], tier="all")
+    monkeypatch.setattr(affected.Workspace, "readers", lambda self, changed: {})
+    without = affected.select(ROOT, [changed], tier="all")
+    assert (with_reads.mode == "full") == (without.mode == "full")
+    if without.mode == "full":
+        assert with_reads.reason == without.reason
+        return
+    assert set(without.paths) <= set(with_reads.paths)
+    if without.mode == "partial":
+        assert with_reads.reason == without.reason
+
+
+READ_FORMS = {
+    # Root-anchored reads in a test module, each read by its own module.
+    "packages/sample/tests/test_nested.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).resolve().parents[3]\n"
+        "def test_nested():\n"
+        "    assert (ROOT / 'guides/nested.md').read_text()\n"
+    ),
+    "packages/sample/tests/test_bound.py": (
+        "from pathlib import Path\n"
+        "GUIDE = Path(__file__).parent.parent.parent.parent / 'guides' / 'bound.md'\n"
+        "def test_bound():\n"
+        "    assert GUIDE.exists()\n"
+    ),
+    "packages/sample/tests/test_joined.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def test_joined():\n"
+        "    assert ROOT.joinpath('guides', 'joined.md').exists()\n"
+        "    assert Path(ROOT, 'guides/constructed.md').exists()\n"
+    ),
+    "packages/sample/tests/test_loop.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def test_loop():\n"
+        "    for name in ('one.md', 'two.md'):\n"
+        "        assert (ROOT / 'guides/loop' / name).exists()\n"
+    ),
+    "packages/sample/tests/test_called.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def _read(name):\n"
+        "    return (ROOT / 'guides/called' / name).read_text()\n"
+        "def test_called():\n"
+        "    assert _read('a.md')\n"
+    ),
+    "packages/sample/tests/test_glob.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def test_glob():\n"
+        "    assert list((ROOT / 'guides/skills').glob('*/SKILL.md'))\n"
+        "    assert list((ROOT / 'guides/tree').glob('*'))\n"
+        "    assert list((ROOT / 'guides/deep').rglob('*.md'))\n"
+    ),
+    "packages/sample/tests/test_listed.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def test_listed():\n"
+        "    assert list((ROOT / 'guides/listed').iterdir())\n"
+    ),
+    "packages/sample/tests/test_runtime.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def test_runtime(tmp_path):\n"
+        "    assert (ROOT / 'guides/runtime' / tmp_path.name).exists()\n"
+    ),
+    # Paths that are not root-anchored reads.
+    "packages/sample/tests/test_negative.py": (
+        "import subprocess\n"
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "def test_negative(tmp_path):\n"
+        "    (tmp_path / 'guides/negative.md').write_text('x')\n"
+        "    assert Path('guides/negative.md').exists() or 'guides/negative.md'\n"
+        "    subprocess.run(['true'], cwd=ROOT)\n"
+        "    assert Path(__file__).read_text()\n"
+    ),
+    # A conftest's read belongs to the test modules under its directory.
+    "packages/sample/tests/sub/conftest.py": (
+        "from pathlib import Path\nCONFIG = (Path(__file__).parents[4] / '.devkit/sub.toml').read_text()\n"
+    ),
+    "packages/sample/tests/sub/test_under.py": "def test_under(): pass\n",
+    # A helper's read belongs to the test modules that import it, directly or through another helper.
+    "packages/sample/tests/helpers/__init__.py": "",
+    "packages/sample/tests/helpers/reader.py": (
+        "from pathlib import Path\n"
+        "def read():\n"
+        "    return (Path(__file__).parents[4] / '.devkit/helper.toml').read_text()\n"
+    ),
+    "packages/sample/tests/helpers/relay.py": "from helpers.reader import read\n",
+    "packages/sample/tests/test_direct.py": "from helpers.reader import read\n",
+    "packages/sample/tests/test_relayed.py": "def test_relayed():\n    from helpers.relay import read\n",
+    # A package initializer reached only by a relative package import.
+    "packages/sample/tests/pkg/__init__.py": (
+        "from pathlib import Path\nTEXT = (Path(__file__).parents[4] / '.devkit/package.toml').read_text()\n"
+    ),
+    "packages/sample/tests/pkg/test_in_package.py": "from . import TEXT\n",
+    # A bound value no use resolves to (a rebound name, a class attribute) is read where it is bound.
+    "packages/sample/tests/test_unresolved_uses.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "GUIDE = ROOT / 'guides/rebound-a.md'\n"
+        "GUIDE = ROOT / 'guides/rebound-b.md'\n"
+        "class Paths:\n"
+        "    GUIDE = ROOT / 'guides/class.md'\n"
+        "    def test_class(self):\n"
+        "        assert self.GUIDE\n"
+        "def test_rebound():\n"
+        "    assert GUIDE.exists()\n"
+    ),
+}
+
+
+@pytest.fixture
+def read_root(tmp_path: Path) -> Path:
+    """Authored workspace whose test modules read repository paths in each supported form."""
+    for name, content in READ_FORMS.items():
+        put(tmp_path, name, content)
+    return tmp_path
+
+
+SAMPLE = "packages/sample/tests"
+
+
+# AC-07: each read form and attribution adds its reader.
+@pytest.mark.parametrize(
+    "changed,readers",
+    [
+        ("guides/nested.md", {"test_nested.py"}),
+        ("guides/bound.md", {"test_bound.py"}),
+        ("guides/joined.md", {"test_joined.py"}),
+        ("guides/constructed.md", {"test_joined.py"}),
+        ("guides/loop/two.md", {"test_loop.py"}),
+        ("guides/loop/three.md", set()),
+        ("guides/called/a.md", {"test_called.py"}),
+        ("guides/called/b.md", set()),
+        ("guides/skills/new/SKILL.md", {"test_glob.py"}),
+        ("guides/skills/new/other.md", set()),
+        ("guides/tree/new-directory/file.txt", {"test_glob.py"}),
+        ("guides/deep/a/b/c.md", {"test_glob.py"}),
+        ("guides/deep/a/b/c.txt", set()),
+        ("guides/listed/anything.txt", {"test_listed.py"}),
+        ("guides/runtime/x/y.md", {"test_runtime.py"}),
+        (".devkit/sub.toml", {"sub/test_under.py"}),
+        (".devkit/helper.toml", {"test_direct.py", "test_relayed.py"}),
+        (".devkit/package.toml", {"pkg/test_in_package.py"}),
+        ("guides/rebound-b.md", {"test_unresolved_uses.py"}),
+        ("guides/class.md", {"test_unresolved_uses.py"}),
+    ],
+)
+def test_literal_read_forms_select_their_readers(
+    affected: ModuleType, read_root: Path, changed: str, readers: set[str]
+) -> None:
+    selection = affected.select(read_root, [changed])
+    assert set(selection.paths) == {f"{SAMPLE}/{name}" for name in readers}
+    assert (selection.mode, selection.reason) == (("partial", "reads") if readers else ("none", "untested"))
+
+
+# AC-03: tmp_path literals, unanchored strings, the root itself and a test's own file add no reader.
+@pytest.mark.parametrize("changed", ["guides/negative.md", ".claude/x.md", f"{SAMPLE}/test_negative.py"])
+def test_paths_no_test_reads_by_an_anchored_literal_add_no_reader(
+    affected: ModuleType, read_root: Path, changed: str
+) -> None:
+    assert affected.Workspace(read_root).readers([changed]) == {}

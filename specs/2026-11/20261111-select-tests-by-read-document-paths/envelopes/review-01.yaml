@@ -1,0 +1,33 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:23:09.828127Z'
+status: completed
+summary: 'code-reviewer: AC-01..AC-08 covered by tests in test_affected_tests.py; imports->_direct refactor preserves behavior; writes inside scope; three P3 findings.'
+findings:
+- issue: _importers text prefilter misses `from . import x` / `from .. import x`, so reads in a package __init__.py reached that way are never attributed; the comment claiming the module name appears in every import form is false.
+  evidence: scripts/affected_tests.py:779-780; probe tmp/probe/review-01/probe_relative_init.py
+  failure_condition: A test-tree package __init__.py reads a repository path and a test reaches it only by a relative package import. None exists at this head.
+  suggested_action: Skip the prefilter for an __init__.py in the importer's own or an ancestor directory, or correct the comment.
+  resolution: open
+  severity: P3
+- issue: An anchored value bound to a name is dropped when no use of the name resolves (rebound name, class attribute, helper constant used only by importers).
+  evidence: scripts/affected_tests.py:517-525; probe tmp/probe/review-01/probe_forms.py; testsupport/layering.py:7 PYPROJECT
+  failure_condition: A future binding of a root-anchored path whose uses cannot resolve, at a path that is no full trigger or DATA prefix, selects no reader.
+  suggested_action: Treat the assigned value as an exact read when no resolvable use of the binding exists in its file.
+  resolution: open
+  severity: P3
+- issue: Two added lines exceed the 120-character line length.
+  evidence: scripts/affected_tests.py:5; packages/devkit/tests/e2e/package/test_affected_tests.py:182
+  failure_condition: Cosmetic only.
+  suggested_action: Rewrap both lines.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS pytest test_affected_tests.py AC subset 53 passed at 13a362bc; full file 137 passed
+  timing: PASS docs/x.md +1.09 s (1.098 enabled, 0.010 disabled)
+  lint: PASS just lint, just check, devkit rules check --ci --base main
+diff_scope:
+  base: f0ff818b1bc34752fe2c5cd77b0f19491e11b472
+  head: 13a362bca963e0825c094e3cd5204fdb6fdf5994

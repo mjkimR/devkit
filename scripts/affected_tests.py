@@ -1,14 +1,16 @@
 """Select and run the workspace tests the changes since a base ref can affect.
 
 The changed paths since the merge base (committed, staged, unstaged and untracked) map to test paths: shared
-foundations to the full suite, data files to the tests that read them, a source area to the test groups that depend
-on it or on an area importing it. Local development and integration use this selection; nightly and release full
-CI cover dependencies static imports cannot show. Shared foundations still select the full suite.
+foundations to the full suite, data files to the tests that read them (a fixed table plus the root-anchored
+literal path reads of the test tree), a source area to the test groups that depend on it or on an area importing
+it. Local development and integration use this selection; nightly and release full CI cover dependencies static
+imports cannot show. Shared foundations still select the full suite.
 """
 
 from __future__ import annotations
 
 import ast
+import fnmatch
 import logging
 import os
 import re
@@ -49,11 +51,13 @@ FULL_PREFIXES = (
 FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", f"{DIST_SRC}/__init__.py", "uv.lock"})
 FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 
-# The handbook script tests also read release.sh (and .devkit/config.toml, which selects no test: nightly CI covers it).
+# The handbook script tests also read release.sh; their literal read of .devkit/config.toml selects them for it.
 HANDBOOK_TESTS = "tools/devkit-dev/tests/integration/test_handbook_script.py"
+VERSION_TESTS = f"{DEVKIT}/tests/integration/package/test_version_script.py"
 # Reads every document ID of docs/ and specs/: a new document can collide with an ID shipped bundle text cites.
 CITATION_TESTS = "tools/devkit-dev/tests/integration/test_bundle_citations.py"
-# Repository files that tests read directly, which imports do not show: prefix -> test paths.
+# Repository files that tests read directly, which imports do not show: prefix -> test paths. Literal path reads in
+# the test tree add their readers on top (Workspace.readers); these rows cover readers that scan cannot see.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         ".devkit/architecture.toml",
@@ -96,12 +100,13 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("models/", (f"{DIST}/tests/unit/features/search", f"{DIST}/tests/integration/features/search")),
     ("scripts/module.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
     ("scripts/_lib.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
-    ("justfile", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
+    # test_version_script runs release.sh and `just release-build` by subprocess, which no literal read shows.
+    ("justfile", (f"{DEVKIT}/tests/integration/package/test_module_script.py", VERSION_TESTS)),
     ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/integration/package/test_test_environment.py",)),
     ("scripts/fetch_model.py", (f"{DIST}/tests/integration/features/search/test_packaging.py",)),
     ("scripts/affected_tests.py", (f"{DEVKIT}/tests/e2e/package/test_affected_tests.py",)),
     ("scripts/handbook.py", (HANDBOOK_TESTS,)),
-    ("scripts/release.sh", (HANDBOOK_TESTS,)),
+    ("scripts/release.sh", (HANDBOOK_TESTS, VERSION_TESTS)),
 )
 # Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
 # change in either devkit distribution.
@@ -117,15 +122,16 @@ SOURCE_TREE_TESTS = (
 # change.
 ALL_SOURCES_TESTS = (f"{DEVKIT}/tests/integration/package/test_agent_output_contract.py",)
 
-# The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
-# checks (Node and npm) instead, as the CI viewer job runs them, rebuilding the committed page last.
+# The devkit-viewer frontend: a change there names the frontend checks (Node and npm), as the CI viewer job runs them,
+# rebuilding the committed page last; it selects only the pytest tests that read it by a literal path.
 FRONTEND_PREFIXES = ("packages/devkit-viewer/frontend/", "scripts/viewer.sh")
 FRONTEND_CHECK = (
     "just viewer install && just viewer lint && just viewer check && just viewer test && just viewer pack"
     " && just viewer build"
 )
 
-# Paths no test reads: agent projections, guides, the handbook snapshot, CI and smoke scripts.
+# Paths that select no test unless a test reads them by a literal path: agent projections, guides, the handbook
+# snapshot, CI and smoke scripts.
 UNTESTED_PREFIXES = (
     "guides/",
     ".claude/",
@@ -138,7 +144,7 @@ UNTESTED_PREFIXES = (
     "handbook/",
 )
 UNTESTED_FILES = frozenset({".gitignore", ".python-version"})
-# Markdown at the repository root or a package root (README, AGENTS).
+# Markdown at the repository root or a package root (README, AGENTS), with the same literal-read exception.
 UNTESTED_MARKDOWN = re.compile(r"((packages|tools)/[^/]+/)?[^/]+\.md")
 
 # Calls whose first argument, a module name, is imported (as in the layering test).
@@ -161,6 +167,490 @@ class Group:
     depends: frozenset[str]
 
 
+@dataclass(frozen=True)
+class Read:
+    """A repository path a test-tree file reads: ``base`` and everything under it, or only what ``pattern`` matches."""
+
+    base: str  # repository-relative, never the root itself
+    pattern: str | None = None  # a literal glob pattern relative to base
+
+    def matches(self, path: str) -> bool:
+        if path == self.base:
+            return self.pattern is None
+        if not path.startswith(f"{self.base}/"):
+            return False
+        if self.pattern is None:
+            return True
+        # A new or deleted subdirectory changes the glob result too, so an ancestor below the base may match.
+        parts, pattern = path[len(self.base) + 1 :].split("/"), self.pattern.split("/")
+        return any(_glob_match(parts[:end], pattern) for end in range(1, len(parts) + 1))
+
+
+def _glob_match(parts: list[str], pattern: list[str]) -> bool:
+    """Segment-wise glob matching where ``**`` spans zero or more segments (``PurePath.match`` treats it as ``*``)."""
+    if not pattern:
+        return not parts
+    head, rest = pattern[0], pattern[1:]
+    if head == "**":
+        return any(_glob_match(parts[start:], rest) for start in range(len(parts) + 1))
+    return bool(parts) and fnmatch.fnmatchcase(parts[0], head) and _glob_match(parts[1:], rest)
+
+
+_SCOPES = (
+    ast.Module,
+    ast.FunctionDef,
+    ast.AsyncFunctionDef,
+    ast.Lambda,
+    ast.ClassDef,
+    ast.ListComp,
+    ast.SetComp,
+    ast.DictComp,
+    ast.GeneratorExp,
+)
+_IDENTITY_STEPS = frozenset({"resolve", "absolute"})
+_MAX_VALUES = 64  # expansion bound per expression: loop products beyond it read their base instead
+
+
+_Function = ast.FunctionDef | ast.AsyncFunctionDef
+_Item = ast.expr | tuple[ast.expr, ast.expr]  # an iterable's element; a pair for dict.items()
+
+
+@dataclass(frozen=True)
+class _Binding:
+    value: ast.expr | None  # None: bound to something the scan does not evaluate
+    loop: bool = False  # value is the iterable a loop variable ranges over
+    position: tuple[int, ...] = ()  # the index path of the variable in a tuple loop target
+    function: _Function | None = None  # a parameter: its values are the arguments of the file's calls
+    parameter: str = ""
+
+
+@dataclass(frozen=True)
+class _PathValue:
+    path: str  # absolute and normalized
+    exact: bool  # False once a runtime segment joined: the value stands for its base directory
+
+
+class _ReadScanner:
+    """The root-anchored literal path reads of one test-tree file, evaluated statically from ``Path(__file__)``."""
+
+    def __init__(self, root: Path, path: Path, tree: ast.Module) -> None:
+        self.root, self.path, self.tree = str(root), str(path), tree
+        self.parents: dict[ast.AST, ast.AST] = {}
+        self.scope_of: dict[ast.AST, ast.AST] = {}
+        self.outer: dict[ast.AST, ast.AST] = {}
+        self.bindings: dict[ast.AST, dict[str, list[_Binding]]] = {}
+        self._paths: dict[ast.AST, list[_PathValue] | None] = {}
+        self._strings: dict[ast.AST, list[str] | None] = {}
+        self._active: set[ast.AST] = set()
+        self.calls: dict[str, list[ast.Call]] = {}
+        self.loads: dict[str, int] = {}
+        self._index(tree, tree)
+
+    def _bind(self, scope: ast.AST, name: str, binding: _Binding) -> None:
+        self.bindings.setdefault(scope, {}).setdefault(name, []).append(binding)
+
+    def _bind_target(
+        self,
+        scope: ast.AST,
+        target: ast.AST,
+        value: ast.expr | None,
+        *,
+        loop: bool = False,
+        position: tuple[int, ...] = (),
+    ) -> None:
+        if isinstance(target, ast.Name):
+            self._bind(scope, target.id, _Binding(value, loop, position))
+        elif loop and isinstance(target, (ast.Tuple, ast.List)):
+            for index, element in enumerate(target.elts):
+                self._bind_target(scope, element, value, loop=True, position=(*position, index))
+        else:
+            for node in ast.walk(target):
+                if isinstance(node, ast.Name):
+                    self._bind(scope, node.id, _Binding(None))
+
+    def _index(self, node: ast.AST, scope: ast.AST) -> None:
+        """Record parents, enclosing scopes, calls by name and every name binding, once per binding site."""
+        inner = scope
+        if isinstance(node, _SCOPES) and node is not scope:
+            inner = node
+            self.outer[node] = scope
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                self._bind(scope, node.name, _Binding(None))
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                function = None if isinstance(node, ast.Lambda) else node
+                for arg in [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]:
+                    self._bind(inner, arg.arg, _Binding(None, function=function, parameter=arg.arg))
+                for arg in (node.args.vararg, node.args.kwarg):
+                    if arg:
+                        self._bind(inner, arg.arg, _Binding(None))
+            if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+                for generator in node.generators:
+                    self._bind_target(inner, generator.target, generator.iter, loop=True)
+        self.scope_of[node] = inner
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                self._bind_target(inner, target, node.value)
+        elif isinstance(node, (ast.AnnAssign, ast.NamedExpr)) and node.value is not None:
+            self._bind_target(inner, node.target, node.value)
+        elif isinstance(node, (ast.For, ast.AsyncFor)):
+            self._bind_target(inner, node.target, node.iter, loop=True)
+        elif isinstance(node, (ast.AugAssign, ast.Delete)):
+            for target in node.targets if isinstance(node, ast.Delete) else [node.target]:
+                self._bind_target(inner, target, None)
+        elif isinstance(node, (ast.With, ast.AsyncWith)):
+            for item in node.items:
+                if item.optional_vars is not None:
+                    self._bind_target(inner, item.optional_vars, None)
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for alias in node.names:
+                self._bind(inner, (alias.asname or alias.name).split(".")[0], _Binding(None))
+        elif isinstance(node, ast.ExceptHandler) and node.name:
+            self._bind(inner, node.name, _Binding(None))
+        elif isinstance(node, (ast.Global, ast.Nonlocal)):
+            for name in node.names:
+                self._bind(inner, name, _Binding(None))
+        elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            self.loads[node.id] = self.loads.get(node.id, 0) + 1
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            self.calls.setdefault(node.func.id, []).append(node)
+        for child in ast.iter_child_nodes(node):
+            self.parents[child] = node
+            self._index(child, inner)
+
+    def _lookup(self, node: ast.Name) -> _Binding | None:
+        scope: ast.AST | None = self.scope_of[node]
+        first = True
+        while scope is not None:
+            if first or not isinstance(scope, ast.ClassDef):
+                found = self.bindings.get(scope, {}).get(node.id)
+                if found:
+                    return found[0] if len(found) == 1 else None
+            first = False
+            scope = self.outer.get(scope)
+        return None
+
+    def _elements(self, binding: _Binding) -> list[ast.expr] | None:
+        """The expressions a name can stand for: its value, each loop element, or each call's argument."""
+        if binding.function is not None:
+            return self._arguments(binding.function, binding.parameter)
+        if binding.value is None:
+            return None
+        if not binding.loop:
+            return [binding.value]
+        items = self._iterable(binding.value)
+        if items is None:
+            return None
+        elements: list[ast.expr] = []
+        for item in items:
+            for index in binding.position:
+                if isinstance(item, tuple):
+                    item = item[index]
+                elif isinstance(item, (ast.Tuple, ast.List)) and index < len(item.elts):
+                    item = item.elts[index]
+                else:
+                    return None
+            if isinstance(item, tuple):
+                return None
+            elements.append(item)
+        return elements
+
+    def _dict(self, node: ast.expr) -> ast.Dict | None:
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            binding = self._lookup(node)
+            node = binding.value if binding and not binding.loop and binding.value is not None else node
+        if isinstance(node, ast.Dict) and all(key is not None for key in node.keys):
+            return node
+        return None
+
+    def _iterable(self, node: ast.expr, depth: int = 0) -> list[_Item] | None:
+        """The literal elements a loop ranges over: a literal sequence, a name bound to one, or a literal dict view."""
+        if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+            return None if any(isinstance(e, ast.Starred) for e in node.elts) else list(node.elts)
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and depth < 8:
+            binding = self._lookup(node)
+            if binding and not binding.loop and binding.function is None and binding.value is not None:
+                return self._iterable(binding.value, depth + 1)
+            return None
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and not node.args:
+            mapping = self._dict(node.func.value)
+            if mapping is None:
+                return None
+            keys = [key for key in mapping.keys if key is not None]
+            views: dict[str, list[_Item]] = {
+                "keys": list(keys),
+                "values": list(mapping.values),
+                "items": list(zip(keys, mapping.values, strict=True)),
+            }
+            return views.get(node.func.attr)
+        return None
+
+    def _arguments(self, function: _Function, parameter: str) -> list[ast.expr] | None:
+        """A parameter's arguments at every call of its function in this file, when every use is such a call."""
+        calls = self.calls.get(function.name, [])
+        scope = self.outer.get(function)
+        if not calls or self.loads.get(function.name) != len(calls) or scope is None:
+            return None
+        if len(self.bindings.get(scope, {}).get(function.name, [])) != 1:
+            return None
+        positional = [arg.arg for arg in [*function.args.posonlyargs, *function.args.args]]
+        defaults = dict(
+            zip(positional[len(positional) - len(function.args.defaults) :], function.args.defaults, strict=True)
+        )
+        for arg, default in zip(function.args.kwonlyargs, function.args.kw_defaults, strict=True):
+            if default is not None:
+                defaults[arg.arg] = default
+        arguments: list[ast.expr] = []
+        for call in calls:
+            if any(isinstance(arg, ast.Starred) for arg in call.args) or any(kw.arg is None for kw in call.keywords):
+                return None
+            keyword = next((kw.value for kw in call.keywords if kw.arg == parameter), None)
+            if parameter in positional and positional.index(parameter) < len(call.args):
+                arguments.append(call.args[positional.index(parameter)])
+            elif keyword is not None:
+                arguments.append(keyword)
+            elif parameter in defaults:
+                arguments.append(defaults[parameter])
+            else:
+                return None
+        return arguments
+
+    def strings(self, node: ast.AST) -> list[str] | None:
+        """The literal string values an expression can take, or None."""
+        if node in self._strings:
+            return self._strings[node]
+        if node in self._active:
+            return None
+        self._active.add(node)
+        try:
+            result = self._evaluate_strings(node)
+        finally:
+            self._active.discard(node)
+        if result is not None and len(result) > _MAX_VALUES:
+            result = None
+        self._strings[node] = result
+        return result
+
+    def _evaluate_strings(self, node: ast.AST) -> list[str] | None:
+        if isinstance(node, ast.Constant):
+            return [node.value] if isinstance(node.value, str) else None
+        if isinstance(node, ast.JoinedStr):
+            values = [""]
+            for part in node.values:
+                if isinstance(part, ast.FormattedValue):
+                    if part.format_spec is not None or part.conversion not in (-1, ord("s")):
+                        return None
+                    found = self.strings(part.value)
+                else:
+                    found = self.strings(part)
+                if found is None:
+                    return None
+                values = [value + item for value in values for item in found]
+            return values
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left, right = self.strings(node.left), self.strings(node.right)
+            return None if left is None or right is None else [a + b for a in left for b in right]
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            binding = self._lookup(node)
+            elements = self._elements(binding) if binding else None
+            if elements is None:
+                return None
+            values: list[str] = []
+            for element in elements:
+                found = self.strings(element)
+                if found is None:
+                    return None
+                values.extend(found)
+            return values
+        if isinstance(node, ast.Subscript) and (mapping := self._dict(node.value)) is not None:
+            keys = self.strings(node.slice)
+            chosen = [
+                value
+                for key, value in zip(mapping.keys, mapping.values, strict=True)
+                if keys is None or (isinstance(key, ast.Constant) and key.value in keys)
+            ]
+            values = []
+            for value in chosen or mapping.values:
+                found = self.strings(value)
+                if found is None:
+                    return None
+                values.extend(found)
+            return values
+        if isinstance(node, ast.Call) and _is_path_constructor(node.func) and node.args and not node.keywords:
+            parts = [self.strings(arg) for arg in node.args]
+            if any(part is None for part in parts):
+                return None
+            values = [""]
+            for part in parts:
+                values = [os.path.join(value, item) if value else item for value in values for item in part or ()]
+            return values
+        return None
+
+    def paths(self, node: ast.AST) -> list[_PathValue] | None:
+        """The anchored path values an expression can take, or None when it is not anchored at ``__file__``."""
+        if node in self._paths:
+            return self._paths[node]
+        if node in self._active:
+            return None
+        self._active.add(node)
+        try:
+            result = self._evaluate_paths(node)
+        finally:
+            self._active.discard(node)
+        if result is not None and len(result) > _MAX_VALUES:
+            result = sorted({_PathValue(value.path, False) for value in result}, key=lambda value: value.path)
+            result = result if len(result) <= _MAX_VALUES else None
+        self._paths[node] = result
+        return result
+
+    def _join(self, values: list[_PathValue], segments: list[ast.expr]) -> list[_PathValue]:
+        for segment in segments:
+            found = self.strings(segment)
+            joined: list[_PathValue] = []
+            for value in values:
+                if not value.exact or found is None:
+                    joined.append(_PathValue(value.path, False))
+                else:
+                    joined.extend(_PathValue(os.path.normpath(os.path.join(value.path, item)), True) for item in found)
+            values = list(dict.fromkeys(joined))
+        return values
+
+    def _evaluate_paths(self, node: ast.AST) -> list[_PathValue] | None:
+        if isinstance(node, ast.Call):
+            func = node.func
+            if _is_path_constructor(func) and node.args and not node.keywords:
+                first = node.args[0]
+                if isinstance(first, ast.Name) and first.id == "__file__":
+                    base = [_PathValue(self.path, True)]
+                else:
+                    base = self.paths(first)
+                return None if base is None else self._join(base, list(node.args[1:]))
+            if isinstance(func, ast.Attribute) and not node.keywords:
+                base = self.paths(func.value)
+                if base is None:
+                    return None
+                if func.attr in _IDENTITY_STEPS and not node.args:
+                    return base
+                if func.attr == "joinpath":
+                    return self._join(base, list(node.args))
+            return None
+        if isinstance(node, ast.Attribute) and node.attr == "parent":
+            base = self.paths(node.value)
+            return None if base is None else [_PathValue(os.path.dirname(v.path), v.exact) for v in base]
+        if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Attribute) and node.value.attr == "parents":
+            index = node.slice
+            if not (isinstance(index, ast.Constant) and type(index.value) is int and index.value >= 0):
+                return None
+            base = self.paths(node.value.value)
+            if base is None:
+                return None
+            values = []
+            for value in base:
+                path = value.path
+                for _ in range(index.value + 1):
+                    path = os.path.dirname(path)
+                values.append(_PathValue(path, value.exact))
+            return values
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            base = self.paths(node.left)
+            return None if base is None else self._join(base, [node.right])
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            binding = self._lookup(node)
+            elements = self._elements(binding) if binding else None
+            if elements is None:
+                return None
+            values = []
+            for element in elements:
+                found = self.paths(element)
+                if found is None:
+                    return None
+                values.extend(found)
+            return values
+        return None
+
+    def _extends(self, node: ast.AST) -> bool:
+        """Whether the enclosing expression continues this anchored path, so it, not the node, is the read."""
+        parent = self.parents.get(node)
+        target: ast.AST | None = None
+        if isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div) and parent.left is node:
+            target = parent
+        elif isinstance(parent, ast.Attribute) and parent.value is node:
+            grand = self.parents.get(parent)
+            subscripted = parent.attr == "parents" and isinstance(grand, ast.Subscript) and grand.value is parent
+            called = parent.attr in {*_IDENTITY_STEPS, "joinpath"} and isinstance(grand, ast.Call)
+            if parent.attr == "parent":
+                target = parent
+            elif subscripted or (called and isinstance(grand, ast.Call) and grand.func is parent):
+                target = grand
+        elif isinstance(parent, ast.Call) and _is_path_constructor(parent.func) and parent.args[:1] == [node]:
+            target = parent
+        return target is not None and self.paths(target) is not None
+
+    @cached_property
+    def _used_values(self) -> set[ast.AST]:
+        """Bound values some name use in the file resolves to; a binding without one is read where it is bound."""
+        used: set[ast.AST] = set()
+        for node in ast.walk(self.tree):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                binding = self._lookup(node)
+                if binding is not None and binding.value is not None and not binding.loop:
+                    used.add(binding.value)
+        return used
+
+    def reads(self) -> set[Read]:
+        found: set[Read] = set()
+        for node in ast.walk(self.tree):
+            if not isinstance(node, (ast.Call, ast.Attribute, ast.Subscript, ast.BinOp, ast.Name)):
+                continue
+            if isinstance(node, ast.Name) and not isinstance(node.ctx, ast.Load):
+                continue
+            values = self.paths(node)
+            if not values or self._extends(node):
+                continue
+            parent = self.parents.get(node)
+            targets = (
+                parent.targets
+                if isinstance(parent, ast.Assign)
+                else [parent.target]
+                if isinstance(parent, ast.AnnAssign)
+                else []
+            )
+            if (
+                targets
+                and getattr(parent, "value", None) is node
+                and all(isinstance(t, ast.Name) for t in targets)
+                and node in self._used_values
+            ):
+                continue  # binding a base to a name is not a read; its resolvable uses are
+            patterns: list[str] | None = None
+            grand = self.parents.get(parent) if parent else None
+            if (
+                isinstance(parent, ast.Attribute)
+                and parent.attr in {"glob", "rglob"}
+                and isinstance(grand, ast.Call)
+                and grand.func is parent
+                and grand.args
+            ):
+                patterns = self.strings(grand.args[0])
+                if patterns is not None and parent.attr == "rglob":
+                    patterns = [f"**/{pattern}" for pattern in patterns]
+            for value in values:
+                relative = os.path.relpath(value.path, self.root)
+                if relative in {".", ".."} or relative.startswith(f"..{os.sep}") or value.path == self.path:
+                    continue
+                relative = relative.replace(os.sep, "/")
+                if value.exact and patterns:
+                    found.update(Read(relative, pattern.strip("/")) for pattern in patterns if pattern.strip("/"))
+                else:
+                    found.add(Read(relative))
+        return found
+
+
+def _is_path_constructor(func: ast.expr) -> bool:
+    return (isinstance(func, ast.Name) and func.id == "Path") or (
+        isinstance(func, ast.Attribute) and func.attr == "Path"
+    )
+
+
 class UnsafeGraph(Exception):
     """An inventory or parse failure makes partial selection unsafe."""
 
@@ -172,6 +662,8 @@ class Workspace:
         self.root = root
         self.packages = self._packages()
         self._trees: dict[Path, ast.Module] = {}
+        self._sources: dict[Path, bytes] = {}
+        self._direct_cache: dict[Path, tuple[frozenset[str], tuple[Path, ...]]] = {}
         self._helper_paths: dict[tuple[Path, str], set[Path]] = {}
         self.homes: dict[str, str] = {}
         for home, namespace in HOMES.items():
@@ -231,10 +723,15 @@ class Workspace:
             return module if module in self.fine and len(parts) > 1 else "@devkit_spec"
         return parts[0] if parts[0] in self.packages.values() else None
 
+    def _source(self, path: Path) -> bytes:
+        if path not in self._sources:
+            self._sources[path] = path.read_bytes()
+        return self._sources[path]
+
     def _tree(self, path: Path) -> ast.Module:
         if path not in self._trees:
             try:
-                self._trees[path] = ast.parse(path.read_bytes())
+                self._trees[path] = ast.parse(self._source(path))
             except (OSError, SyntaxError, ValueError) as exc:
                 raise UnsafeGraph(path.relative_to(self.root).as_posix()) from exc
         return self._trees[path]
@@ -296,70 +793,81 @@ class Workspace:
             if path in seen:
                 continue
             seen.add(path)
-            for node in ast.walk(self._tree(path)):
-                names: list[tuple[str, bool]] = []
-                if isinstance(node, ast.Import):
-                    names = [(alias.name, False) for alias in node.names]
-                elif isinstance(node, ast.ImportFrom):
-                    module = node.module or ""
-                    if node.level:
-                        current = self.modules.get(path)
-                        if current:
-                            package = current if path.name == "__init__.py" else current.rpartition(".")[0]
-                            parents = package.split(".")
-                            module = ".".join(
-                                [*parents[: len(parents) - node.level + 1], *([module] if module else [])]
-                            )
-                        else:
-                            base = path.parent
-                            for _ in range(node.level - 1):
-                                base = base.parent
-                            target = base.joinpath(*module.split(".")) if module else base
-                            helpers = [target.with_suffix(".py"), target / "__init__.py"]
-                            helpers += [
-                                candidate
-                                for alias in node.names
-                                for candidate in (target / f"{alias.name}.py", target / alias.name / "__init__.py")
-                            ]
-                            resolved = [helper for helper in helpers if helper.is_file()]
-                            pending.extend(resolved)
-                            if not resolved and (owner := self._owner(path)):
-                                found.add(owner)
-                            continue
-                    names = [(module, True)] if module else []
-                    for alias in node.names:
-                        candidate = f"{module}.{alias.name}"
-                        if alias.name == "*" and module.startswith("devkit_spec"):
-                            found.add("@devkit_spec")
-                        elif candidate in self.fine:
-                            names.append((candidate, True))
-                        elif not module.startswith("devkit_spec"):
-                            names.append((candidate, False))
-                elif isinstance(node, ast.Call) and node.args:
-                    func = node.func
-                    called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
-                    if called in _IMPORTING_CALLS:
-                        first = node.args[0]
-                        if (
-                            isinstance(first, ast.Constant)
-                            and isinstance(first.value, str)
-                            and not first.value.startswith(".")
-                        ):
-                            names = [(first.value, False)]
-                        else:
-                            # A runtime name cannot establish any narrower dependency.
-                            if owner := self._owner(path):
-                                found.add(owner)
-                for name, exact_root in names:
-                    found |= self._module_dependencies(name, exact_root=exact_root)
-                    if name in {"devkit_dist.cli", "devkit_dist.__main__"}:
-                        found.add("@root_cli")
-                    if not self.node_of(name):
-                        helpers = self._helpers_for(path, name)
-                        pending.extend(helpers)
-                        if len(helpers) > 1 and (owner := self._owner(path)):
-                            found.add(owner)
+            nodes, helpers = self._direct(path)
+            found |= nodes
+            pending.extend(helpers)
         return found
+
+    def _direct(self, path: Path) -> tuple[frozenset[str], tuple[Path, ...]]:
+        """One file's dependency nodes and the local helper files its imports execute; cached per file."""
+        if path in self._direct_cache:
+            return self._direct_cache[path]
+        found: set[str] = set()
+        pending: list[Path] = []
+        for node in ast.walk(self._tree(path)):
+            names: list[tuple[str, bool]] = []
+            if isinstance(node, ast.Import):
+                names = [(alias.name, False) for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if node.level:
+                    current = self.modules.get(path)
+                    if current:
+                        package = current if path.name == "__init__.py" else current.rpartition(".")[0]
+                        parents = package.split(".")
+                        module = ".".join([*parents[: len(parents) - node.level + 1], *([module] if module else [])])
+                    else:
+                        base = path.parent
+                        for _ in range(node.level - 1):
+                            base = base.parent
+                        target = base.joinpath(*module.split(".")) if module else base
+                        helpers = [target.with_suffix(".py"), target / "__init__.py"]
+                        helpers += [
+                            candidate
+                            for alias in node.names
+                            for candidate in (target / f"{alias.name}.py", target / alias.name / "__init__.py")
+                        ]
+                        resolved = [helper for helper in helpers if helper.is_file()]
+                        pending.extend(resolved)
+                        if not resolved and (owner := self._owner(path)):
+                            found.add(owner)
+                        continue
+                names = [(module, True)] if module else []
+                for alias in node.names:
+                    candidate = f"{module}.{alias.name}"
+                    if alias.name == "*" and module.startswith("devkit_spec"):
+                        found.add("@devkit_spec")
+                    elif candidate in self.fine:
+                        names.append((candidate, True))
+                    elif not module.startswith("devkit_spec"):
+                        names.append((candidate, False))
+            elif isinstance(node, ast.Call) and node.args:
+                func = node.func
+                called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+                if called in _IMPORTING_CALLS:
+                    first = node.args[0]
+                    if (
+                        isinstance(first, ast.Constant)
+                        and isinstance(first.value, str)
+                        and not first.value.startswith(".")
+                    ):
+                        names = [(first.value, False)]
+                    else:
+                        # A runtime name cannot establish any narrower dependency.
+                        if owner := self._owner(path):
+                            found.add(owner)
+            for name, exact_root in names:
+                found |= self._module_dependencies(name, exact_root=exact_root)
+                if name in {"devkit_dist.cli", "devkit_dist.__main__"}:
+                    found.add("@root_cli")
+                if not self.node_of(name):
+                    helpers = self._helpers_for(path, name)
+                    pending.extend(helpers)
+                    if len(helpers) > 1 and (owner := self._owner(path)):
+                        found.add(owner)
+        result = (frozenset(found), tuple(pending))
+        self._direct_cache[path] = result
+        return result
 
     def _python(self, directory: Path, *, tests: bool) -> Iterator[Path]:
         if not directory.is_dir():
@@ -431,6 +939,76 @@ class Workspace:
                 depends.add("@devkit_spec")
             groups.append(Group(self._relative([path]), frozenset(depends)))
         return groups
+
+    @cached_property
+    def test_tree(self) -> list[Path]:
+        """Every Python file under a ``tests`` directory: test modules, embedded rule tests, conftests and helpers."""
+        files: list[Path] = []
+        for home in ("packages", "tools"):
+            for directory, names, filenames in os.walk(self.root / home):
+                names[:] = sorted(
+                    n for n in names if n not in {"__pycache__", "node_modules"} and not n.startswith(".")
+                )
+                base = Path(directory)
+                if "tests" in base.relative_to(self.root).parts:
+                    files.extend(base / name for name in sorted(filenames) if name.endswith(".py"))
+        return files
+
+    @cached_property
+    def read_map(self) -> list[tuple[Read, frozenset[str]]]:
+        """Each literal read of the test tree and the test modules it belongs to."""
+        tests = [path for path in self.test_tree if path.name.startswith("test_")]
+        owned: dict[Read, set[Path]] = {}
+        for path in self.test_tree:
+            if b"__file__" not in self._source(path):
+                continue  # no anchor, so no read; skipping the parse keeps a document-only selection cheap
+            reads = _ReadScanner(self.root, path, self._tree(path)).reads()
+            if not reads:
+                continue
+            if path.name.startswith("test_"):
+                modules = {path}
+            elif path.name == "conftest.py":
+                modules = {test for test in tests if path.parent in test.parents}
+            else:
+                modules = self._importers(path, tests)
+            for read in reads:
+                owned.setdefault(read, set()).update(modules)
+        return [(read, frozenset(self._relative(modules))) for read, modules in owned.items() if modules]
+
+    def _importers(self, helper: Path, tests: list[Path]) -> set[Path]:
+        """Test modules whose import discovery reaches a helper, directly, through other helpers or a conftest."""
+        found: set[Path] = set()
+        reached, pending = {helper}, [helper]
+        while pending:
+            target = pending.pop()
+            name = target.parent.name if target.name == "__init__.py" else target.stem
+            word = re.compile(rb"\b" + re.escape(name.encode()) + rb"\b")
+            # A relative package import (`from . import x`) runs the initializer without naming its package.
+            package = target.parent if target.name == "__init__.py" else None
+            for path in self.test_tree:
+                if path in reached:
+                    continue
+                # Every other import form names the module, so the text check skips only files that cannot reach it.
+                relative = package is not None and (path.parent == package or package in path.parents)
+                if not (relative or word.search(self._source(path))) or target not in self._direct(path)[1]:
+                    continue
+                reached.add(path)
+                if path.name.startswith("test_"):
+                    found.add(path)
+                elif path.name == "conftest.py":
+                    found.update(test for test in tests if path.parent in test.parents)
+                else:
+                    pending.append(path)
+        return found
+
+    def readers(self, changed: Iterable[str]) -> dict[str, set[str]]:
+        """Changed path -> the test modules that read it by a literal path."""
+        found: dict[str, set[str]] = {}
+        for path in changed:
+            tests = {test for read, modules in self.read_map if read.matches(path) for test in modules}
+            if tests:
+                found[path] = tests
+        return found
 
     def _relative(self, paths: Iterable[Path]) -> tuple[str, ...]:
         return tuple(p.relative_to(self.root).as_posix() for p in paths)
@@ -525,12 +1103,16 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
     paths: set[str] = set()
     causes: set[str] = set()
     nodes: set[str] = set()
+    uncaused: set[str] = set()  # paths that select nothing through the checks below
     for path in changed:
         data = [(prefix, tests) for prefix, tests in DATA if path.startswith(prefix)]
         for prefix, tests in data:
             paths.update(tests)
             causes.add(prefix)
+        if not data and not path.startswith(FRONTEND_PREFIXES):
+            uncaused.add(path)
         if re.fullmatch(r"(?:packages|tools)/[^/]+/src/.+", path):
+            uncaused.discard(path)
             if path.startswith((f"{DIST}/src/", f"{DEVKIT}/src/")):
                 paths.update(SOURCE_TREE_TESTS)
             paths.update(ALL_SOURCES_TESTS)
@@ -540,6 +1122,7 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
             nodes.add(node)
             causes.add(node)
         elif re.fullmatch(r"(?:packages|tools)/[^/]+/tests/.+", path):
+            uncaused.discard(path)
             name = path.rsplit("/", 1)[-1]
             paths.add(path if re.fullmatch(r"test_.+\.py", name) else path.rsplit("/", 1)[0])
             causes.add("tests")
@@ -549,6 +1132,11 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
             path in UNTESTED_FILES or path.startswith(UNTESTED_PREFIXES) or UNTESTED_MARKDOWN.fullmatch(path)
         ):
             return Selection("full", (), path, frontend)
+    # Literal reads only add tests: full triggers and the unknown-path fallback above keep precedence.
+    for path, readers in workspace.readers(changed).items():
+        paths.update(readers)
+        if path in uncaused:
+            causes.add("reads")
     if nodes:
         affected = workspace.dependents(nodes)
         for group in workspace.groups:

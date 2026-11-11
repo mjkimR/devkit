@@ -49,4 +49,4 @@ FAILED packages/devkit/tests/integration/package/test_agent_output_contract.py::
 just test-affected --base 2f40fe8c at d8e4394a: mode=partial, 5720 passed (test not selected)
 ```
 
-- **Disposition**: scripts/affected_tests.py: any package or tool source change now selects `ALL_SOURCES_TESTS` (test_agent_output_contract); verified by test_any_package_source_selects_the_all_sources_scan. The generic docs-path scan is queued as `PROP-select-tests-by-read-document-paths`.
+- **Disposition**: scripts/affected_tests.py: any package or tool source change now selects `ALL_SOURCES_TESTS` (test_agent_output_contract); verified by test_any_package_source_selects_the_all_sources_scan. The generic docs-path scan is delivered by `SPEC-select-tests-by-read-document-paths`.
