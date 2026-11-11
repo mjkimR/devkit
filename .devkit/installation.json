@@ -1750,7 +1750,7 @@
     },
     ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
       "mode": 420,
-      "sha256": "4f8622fff7ce22ce22f1f857bb67f8f6e4e0d484c62033fd1435704097b7385f"
+      "sha256": "e7a42f93d1ad709cf05f62cc2f3ebc8df8ffc22405d9a5cc6a52502acddc4a57"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,
@@ -1914,7 +1914,7 @@
     },
     ".devkit/managed/docs/guidance/docs-pointer.md": {
       "mode": 420,
-      "sha256": "fd31f01f8bb9154aaeff709bd0bfb15f10a528dc3470a96e6899104f9316399e"
+      "sha256": "edd58119efbb1ebfc41555ba78d1aeae24e6918e4add6dade46cc1a0feaa8342"
     },
     ".devkit/managed/docs/instructions/architecture-writing.md": {
       "mode": 420,
@@ -2114,7 +2114,7 @@
     },
     ".devkit/managed/response-style/guidance/response-pointer.md": {
       "mode": 420,
-      "sha256": "26e8552c3e8dde09a247c9035512aa9c1988d65e312b8c9b1e26a8398a373fa9"
+      "sha256": "b50698dfa98e8741ee407fa2720d4ee5c743176ffc103f8e45223d5be77609de"
     },
     ".devkit/managed/response-style/skills/response-style/SKILL.md": {
       "mode": 420,
@@ -2130,7 +2130,7 @@
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
-      "sha256": "d471d021462996616d0a13bb46a223ef0b69ea81babc75ea7889d2aa2e990357"
+      "sha256": "f5c4d31ea6752f277dab771aed8fc6ae7788abe48077a0b658a63c60998227f1"
     },
     ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md": {
       "mode": 420,
@@ -2509,7 +2509,7 @@
       "sha256": "918ff775e776b5fb5def06456a6235f3cf740b987592c4fbd59ce4bf3e37d242"
     }
   },
-  "guidance_block": "4c390f03e8296d4876867b5c30d5dad2266ed8baf1bd5140f2ff0a095b9854ad",
+  "guidance_block": "b39187269a8f7afda5c3f327f455c53be9364cdb85b02cde77314563397f41db",
   "packages": [
     {
       "bundle": "advisory",

@@ -2,107 +2,78 @@
 
 Personal developer tools monorepo: Python packages managed with `uv` workspaces and `just`.
 
-## Proportionate Guardrails
+## Guardrails
 
-- This is a personal project. Governance checks primarily prevent accidental
-  mistakes and keep development consistent.
-- Deliberate policy bypass by the repository owner is outside the threat model.
-  Do not add complexity solely to make local rules impossible to bypass.
-- Prefer simple checks at the relevant boundary. Add defensive layers only for
-  a concrete failure scenario with a meaningful consequence.
-- Keep safeguards proportionate to the impact of failure. Protect secrets,
-  destructive operations and published compatibility contracts with appropriate care.
+Checks here prevent accidental mistakes; deliberate bypass by the owner is outside the threat model. Add a check only
+at the relevant boundary for a concrete failure with a meaningful consequence; protect secrets, destructive
+operations and published compatibility contracts.
 
-## Architecture and Boundaries
+## Architecture
 
-`ARCH-05-2-components` is the contract for package layout, layering and test layout; the repository-owned
-`devkit-dev` rules (`RULE-usecase-boundaries` and the structure rules) enforce it. Read it before adding a
-package, feature, layer or test tier. The rules agents most often need:
+Read `ARCH-05-2-components` before adding a package, feature, layer or test tier; the `devkit-dev` rules enforce it.
 
 - Sources live in `packages/<package>/src/` or `tools/<tool>/src/`; tests in each package's
-  `tests/{unit,integration,e2e}/`, mirroring source ownership, with helpers in `tests/support/`. A rule's tests
-  live in `<rule>/tests/` (`CAP-GOV-rule-authoring`).
-- Each wheel owns its own regular package (`devkit-dist` → `devkit_dist`, `devkit-agt` → `devkit_agt`, others by
-  distribution name); `devkit-advisory` keeps the PEP 420 `devkit.advisory` namespace (no
-  `src/devkit/__init__.py`). No installed path belongs to two wheels.
+  `tests/{unit,integration,e2e}/` mirroring source ownership, helpers in `tests/support/`, a rule's tests in
+  `<rule>/tests/`.
+- Each wheel owns its regular package (`devkit-agt` → `devkit_agt`, others by distribution name); `devkit-advisory`
+  keeps the PEP 420 `devkit.advisory` namespace. No installed path belongs to two wheels.
 - Behavior lives under `features/<feature>/` with only the layers it needs (`cli`, `mcp`, `usecases`, `services`,
-  `repositories`, `models`); no package-level `core`. Business logic stays out of `__init__.py`.
-  Feature edges are declared in the `feature_dependencies` entries of `.devkit/architecture.toml`: a payload that
-  delegates a cross-feature choice names them in the write scope or states that a new feature edge is out of scope.
-- CLI/MCP/HTTP-exposed operations implement `devkit_core.base.usecase.BaseUseCase` with a typed `execute`.
-  Adapters call use cases; services and repositories never import use cases or adapters.
-- `devkit_core.base` never imports `devkit_core.core`; `devkit-core` imports no application package.
-  `devkit-dist` never imports `devkit_agt` or the MCP SDK, and its tests pass without `devkit-agt` (`just test-dist`).
-- `devkit-adaptive` never imports `devkit_spec`.
-- Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
+  `repositories`, `models`); no package-level `core`, no logic in `__init__.py`. Feature edges are declared in
+  `.devkit/architecture.toml` `feature_dependencies`; a payload delegating a cross-feature choice names them in its
+  write scope or rules a new edge out.
+- Exposed operations implement `devkit_core.base.usecase.BaseUseCase`; adapters call use cases, and services and
+  repositories never import use cases or adapters.
+- Never import `devkit_core.core` from `devkit_core.base`, an application package from `devkit-core`, `devkit_agt` or
+  the MCP SDK from `devkit-dist` (`just test-dist` passes without `devkit-agt`), or `devkit_spec` from
+  `devkit-adaptive`.
+- Keep `justfile` recipes thin; shared shell logic goes in `scripts/`.
 
 ## Documentation
 
-- `docs/capabilities/<area>/` is canonical for behavior and `docs/architecture/` for structure;
-  `docs/development/reference/`, package READMEs and bundled guide instructions are quick references kept in
-  step with them. `guides/` holds the consumer agents' installation guides: keep their commands, codes and bundle
-  recommendations in step with `docs/` and the packages.
-- Write documentation in English. The one exception is the release handbook's `handbook/<lang>/` for a language
-  other than `en` (`ADR-localized-handbook-language-exception`).
-- Before editing any bundle's skill, playbook, instruction or guide, also run `uv run devkit get-context authoring`
-  and apply its `agent-asset-writing` instruction (writing and bundle self-containment rules).
-- Do not commit `.env` or log secrets/PII.
+- `docs/capabilities/<area>/` is canonical for behavior, `docs/architecture/` for structure; keep
+  `docs/development/reference/`, package READMEs, bundle guides and `guides/` in step with them.
+- Write in English, except a non-`en` release handbook under `handbook/<lang>/`.
+- Before editing a bundle's skill, playbook, instruction, guidance fragment or guide, run
+  `uv run devkit get-context authoring` and apply `agent-asset-writing`.
+- Never commit `.env` or log secrets or PII.
 
 ## Agent-First Design
 
-`devkit`'s primary consumer is an AI coding agent. Every command, library API and guide follows
+The primary consumer is an AI coding agent. Before changing a command, library API or guide, follow
 `ARCH-08-1-agent-output`, `CAP-ADV-agent-advisory-protocol` and `CAP-CLI-agent-cli-toolkit`; in short:
 
-- stdout is the result: one-line `[KIND: ...]` sentinels, or exactly one JSON object under `--format json` or from
-  a JSON-only command (`ARCH-08-1`). Nothing terminal-dependent.
-- stderr carries Agent Advisory Protocol blocks, plus `[INFO]` lines only under `-v`.
-- Everything an agent must act on has a stable `UPPER_SNAKE` code and a deterministic `[ACTION]`; branch and test
-  on codes, never on message text.
-- Failures are raised as `AdvisoryError`; a successful operation returns warnings and notices under `notices`.
-  Exit codes: `0` success, `1` negative result, `2` could not run; warnings change them only under `--strict`.
-- Default output carries only what changes the agent's next step; diagnostics are `logging` calls.
-- Libraries never print: commands write through `devkit_dist.adapters.cli`.
+- stdout is the result: one-line `[KIND: ...]` sentinels or one JSON object. stderr carries advisory blocks, and
+  `[INFO]` only under `-v`.
+- Give everything an agent acts on a stable `UPPER_SNAKE` code and a deterministic `[ACTION]`; branch and test on
+  codes, never on message text.
+- Raise failures as `AdvisoryError`; return warnings under `notices`. Exit `0` success, `1` negative result, `2`
+  could not run; warnings change it only under `--strict`.
+- Default output carries only what changes the agent's next step; diagnostics go to `logging`. Libraries never
+  print; commands write through `devkit_dist.adapters.cli`.
 
 ## Packages
 
-Each package's README describes its modules; `docs/capabilities/<area>/` holds the contracts.
-
-| Package | Purpose |
-| --- | --- |
-| `devkit-core` | Shared foundation without CLI or application dependencies |
-| `devkit-dist` | Agent asset distribution and the `devkit` executable |
-| `devkit-agt` (`packages/devkit`) | Developer harness: rules, workflows, commit gates, worktrees, integration |
-| `devkit-mcp` | Optional MCP transport and registration provider |
-| `devkit-cli` | Agent-first command-line boundary (`devkit_cli`) |
-| `devkit-advisory` | Agent Advisory Protocol library (`devkit.advisory`) |
-| `devkit-docs` | Document system: document model, `devkit docs` commands, document rules |
-| `devkit-spec` | Spec-driven delivery commands and agent assets |
-| `devkit-starter` | Example external content package |
-| `devkit-adaptive` | Adaptive development bundle and `devkit adaptive` assignment commands |
-| `devkit-catalog` | Opt-in content bundles |
-| `devkit-viewer` | Local read-only Living Spec viewer and its Svelte library |
+`devkit-core` shared foundation · `devkit-dist` asset distribution and the `devkit` executable · `devkit-agt`
+(`packages/devkit`) harness: rules, workflows, commit gates, worktrees, integration · `devkit-mcp` MCP transport ·
+`devkit-cli` CLI boundary · `devkit-advisory` advisory library · `devkit-docs` document system · `devkit-spec`
+spec-driven delivery · `devkit-adaptive` adaptive development · `devkit-catalog` opt-in bundles · `devkit-viewer`
+Living Spec viewer · `devkit-starter` example content package. Each package's README describes its modules.
 
 ## Verification
 
-Run lint, type checks and the affected tests (`just test-affected`, keeping its `mode=full` fallback) before
-completing code changes; no separate local full-suite run is required. A viewer frontend change also runs the
-command its `[FRONTEND_CHECK: ...]` line names, whether or not pytest tests are selected. Commands: [setup](docs/development/setup.md#3-common-verification-commands).
-Integration, post-landing checks, selected E2E and CI: [CI/CD](docs/development/ci-cd.md).
+Before completing code changes, run lint, type checks and `just test-affected` (keep its `mode=full` fallback); no
+local full-suite run is required. A viewer frontend change also runs the command its `[FRONTEND_CHECK: ...]` line
+names. Commands: [setup](docs/development/setup.md#3-common-verification-commands); integration, post-landing checks,
+E2E and CI: [CI/CD](docs/development/ci-cd.md).
 
 <!-- DEVKIT:START -->
 ## devkit
 
-This repository installs agent assets with `devkit`. `.devkit/config.toml` selects
-bundles; `.devkit/installation.json` records what is deployed.
-
-- Before work on selected bundles' assets, run `uv run devkit get-context <bundle>` once per bundle per agent context. Installed bundles: `advisory`, `authoring`, `deep-research`, `devkit`, `devkit-dev`, `docs`, `harness`, `response-style`, `spec`.
-- For an unselected source bundle, read its `bundle.toml`, constitution and relevant instructions directly; selection is not required.
-- Entry skill `devkit-playbook`: find and run an operational playbook the user invokes or confirms.
-- Entry skill `devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit.
+- Before using a bundle's assets, run `uv run devkit get-context <bundle>` once per agent context. Installed: `advisory`, `authoring`, `deep-research`, `devkit`, `devkit-dev`, `docs`, `harness`, `response-style`, `spec`.
 - Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.
-- Before document work, run `uv run devkit get-context docs` once per agent context and follow its writing instructions. Read the listed steering documents when their summaries concern the decision.
-- Before replying, read and apply the `response-style` skill. Put the conclusion in the first sentence. Use `→ **Core sentence.** Explanation` for ordinary points; preserve required facts and formats, and make unfinished work and necessary user decisions clear.
-- Inspect `uv run devkit config show`: for sdd, run `uv run devkit get-context spec`. Start work with `/spec <intent>`; each new task intake runs its intake step first. `/spec-next` resumes SDD. For adaptive-dev, use its guidance and independent checks without SDD records.
+- Before document work, run `uv run devkit get-context docs`.
+- Before replying, read and apply the `response-style` skill: conclusion first, `→ **Core sentence.** Explanation` for ordinary points, required facts and formats kept, unfinished work and user decisions stated.
+- Read `uv run devkit config show`: under sdd, run `uv run devkit get-context spec` and start work with `/spec <intent>`; each new task intake runs its intake step first. For adaptive-dev, use its guidance and independent checks without SDD records.
 
-This block is managed by `devkit sync`; edit outside the markers only.
+Managed by `devkit sync`; edit outside the markers only.
 <!-- DEVKIT:END -->
