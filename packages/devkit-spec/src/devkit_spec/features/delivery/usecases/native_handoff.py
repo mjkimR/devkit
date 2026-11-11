@@ -159,7 +159,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"PROP-{slug} is not accepted on the base",
             f"status: {meta.get('status') or '-'}",
             target_files=[rel],
-            fix=f"Once the user accepts the proposal, run `{devkit_command(f'spec proposal accept {slug} --by user --mode accept_only')}`"
+            fix=f"Once the user accepts the proposal, run `{devkit_command(f'spec proposal accept-plan {slug} --by user --mode accept_only')}`"
             " from the base checkout, then rerun the same command",
         )
     if meta.get("needs_decompose") is True:

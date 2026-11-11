@@ -1,4 +1,4 @@
-"""The composed ``proposal accept --mode`` and ``proposal handoff --effort`` print their outcome by the agent-output
+"""The composed ``proposal accept-plan`` and ``proposal handoff --effort`` print their outcome by the agent-output
 contract (``ARCH-08-1-agent-output``): the status decides the exit code before ``--strict``, a stopped outcome never
 prints the success kind, errors come last with every advisory field, and the next step reaches text output too."""
 
@@ -95,10 +95,10 @@ def test_a_blocked_acceptance_that_did_nothing_is_the_error(tmp_path: Path, monk
     stale = _stale()
     _accept(monkeypatch, {"status": "blocked", "completed_steps": [], "errors": [stale], "notices": [WARNING]})
     # --strict never turns the failure (2) into a warning exit (1).
-    text = _run(tmp_path, "accept", "--strict", "idea", "--by", "user", "--mode", "accept_only")
+    text = _run(tmp_path, "accept-plan", "--strict", "idea", "--by", "user", "--mode", "accept_only")
     assert text.exit_code == 2, text.output
     assert text.stdout == "" and "SPEC_HANDOFF_STALE" in text.stderr
-    data = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_only", "--format", "json")
+    data = _run(tmp_path, "accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--format", "json")
     assert data.exit_code == 2
     document = json.loads(data.stdout)
     assert document["error"]["code"] == "SPEC_HANDOFF_STALE"
@@ -118,7 +118,7 @@ def test_a_stopped_acceptance_reads_the_handoff_errors(tmp_path: Path, monkeypat
             "next_action": "Inspect preserved handoff effects",
         },
     )
-    result = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low")
+    result = _run(tmp_path, "accept-plan", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low")
     assert result.exit_code == 1, result.output
     assert result.stdout.splitlines() == [
         "[ACCEPTED_STOPPED: PROP-idea status=needs_recovery mode=accept_and_handoff authority=user"
@@ -134,10 +134,10 @@ def test_a_refusal_renders_every_error_and_always_exits_2(tmp_path: Path, monkey
     first = ProposalInPlanningError("first", exit_code=ExitCode.FINDINGS).to_dict()  # its own exit code is 1
     second = _stale()
     _accept(monkeypatch, {"status": "blocked", "completed_steps": [], "errors": [first, second]})
-    text = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_only")
+    text = _run(tmp_path, "accept-plan", "idea", "--by", "user", "--mode", "accept_only")
     assert text.exit_code == 2 and text.stdout == ""
     assert text.stderr.index("(SPEC_PROPOSAL_IN_PLANNING)") < text.stderr.index("(SPEC_HANDOFF_STALE)")
-    data = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_only", "--format", "json")
+    data = _run(tmp_path, "accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--format", "json")
     assert data.exit_code == 2
     document = json.loads(data.stdout)
     assert document["error"]["code"] == "SPEC_HANDOFF_STALE"
@@ -191,7 +191,7 @@ def test_combined_acceptance_reports_pending_without_a_handoff_commit(
             "next_action": "Synchronize the landed runtime and verify before fresh handoff",
         },
     )
-    result = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low")
+    result = _run(tmp_path, "accept-plan", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low")
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
         "[ACCEPTED: PROP-idea status=accepted mode=accept_and_handoff authority=user completed=acceptance_commit,merge verification=pending handoff=not_started]",

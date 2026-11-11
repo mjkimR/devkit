@@ -2,7 +2,7 @@
 id: SPEC-split-composed-proposal-accept
 title: Split composed Planning acceptance into its own subcommand
 summary: Moves the composed Planning acceptance (accept, integrate and clean up plan-<slug>, optionally preparing handoff) out of devkit spec proposal accept into its own subcommand, so each command has one operation and one option set.
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-DLV-proposal-lifecycle
@@ -87,8 +87,8 @@ The feature changes how the local Host's acceptance step of `UC-plan-and-hand-of
 
 - **Given** `accept-plan <slug> --by user --mode accept_and_handoff` without `--effort`
 - **When** it runs
-- **Then** it refuses with `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` (exit `2`), whose `target_files` are `--mode` and
-  `--effort`, exactly as `accept --mode accept_and_handoff` did.
+- **Then** it refuses with `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` (exit `2`), whose `target_files` names `--effort`,
+  before any check or write, exactly as `accept --mode accept_and_handoff` did.
 
 ### [AC-04] `accept` keeps only the basic acceptance
 

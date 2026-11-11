@@ -48,7 +48,9 @@ None. The split moves a CLI form without changing an accepted decision: a breaki
   `tests/integration/features/delivery/test_composed_output.py` to `accept-plan` (AC-01, AC-05 via the asserted
   `[FIX]`); replace the `--check`/`--direct` usage-error test with `accept-plan` refusing `--check`, `--direct`,
   `--note` and a missing `--mode`, and `accept` refusing `--mode` and `--effort` (AC-02, AC-04).
-- `tests/integration/features/delivery/test_approval_error_modes.py` keeps the `target_files` assertion (AC-03).
+- An e2e test runs `accept-plan --mode accept_and_handoff` without `--effort` and asserts the refusal, its
+  `target_files` `--effort` and no write (AC-03); `test_approval_error_modes.py` keeps the class default
+  `target_files` (`--mode`, `--effort`).
 - `tests/integration/package/test_help_and_notices.py`: `accept-plan --help` names the modes, the effort and the
   read-only commands; `accept --help` names no `--mode`/`--effort` (AC-04, AC-06).
 - Handoff `[FIX]` assertion in the delivery tests (AC-05).

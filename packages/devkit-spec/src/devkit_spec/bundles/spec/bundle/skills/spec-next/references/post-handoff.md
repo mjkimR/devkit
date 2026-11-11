@@ -1,7 +1,7 @@
 # Post-handoff link check
 
 Run after `devkit spec proposal handoff <slug>`, after following each warning's `[FIX]`. The plain handoff commits
-nothing: commit these fixes with its writes. The composed handoff (`--effort`, `accept --mode accept_and_handoff`)
+nothing: commit these fixes with its writes. The composed handoff (`--effort`, `accept-plan --mode accept_and_handoff`)
 already committed its transaction (`commit=`). Review any unresolved links or rewritten references it reports
 (`SPEC_PROPOSAL_LINK_UNRESOLVED`, `SPEC_PROPOSAL_REFS_REWRITTEN`; JSON `handoff.unresolved`, `handoff.rewritten`),
 including those outside the new spec and promoted ADRs. Commit link fixes on `dev-<slug>` as a later Host commit before a worker starts.

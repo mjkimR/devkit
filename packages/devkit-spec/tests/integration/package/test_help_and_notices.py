@@ -13,8 +13,17 @@ def _help(*args: str) -> str:
 
 
 def test_help_names_every_composed_flag() -> None:
+    # SPEC-split-composed-proposal-accept AC-04, AC-06: one operation and one option set per acceptance command.
+    composed = _help("proposal", "accept-plan")
+    for text in ("accept_only", "accept_and_handoff", "Development activity-effort", "--by [user|policy]"):
+        assert text in composed
+    assert "devkit spec proposal report" in composed and "devkit workflow envelope check" in composed
+    assert "--check" not in composed and "--direct" not in composed and "--note" not in composed
     accept = _help("proposal", "accept")
-    assert "accept_only" in accept and "Development activity-effort" in accept
+    assert "--direct" in accept and "--check" in accept and "--note" in accept
+    for text in ("--mode", "--effort", "accept_only", "accept_and_handoff"):
+        assert text not in accept
+    assert "accept-plan" in _help("proposal")
     assert "Development activity-effort" in _help("proposal", "handoff")
     assert "--mode" not in _help("scope", "collect") and "--base" in _help("scope", "collect")
 

@@ -559,6 +559,22 @@ def test_handoff_stage_off_cannot_replace_required_plan_approvals(accepted_hando
         prepare(repo, "idea")
 
 
+# SPEC-split-composed-proposal-accept AC-05
+def test_a_handoff_of_an_unaccepted_proposal_names_the_composed_acceptance(accepted_handoff_base):
+    from devkit_spec.base.errors import HandoffNotReadyError
+    from devkit_spec.features.delivery.usecases.native_handoff import prepare
+
+    repo = accepted_handoff_base
+    anchor = repo / "docs/proposals/PROP-idea/proposal.md"
+    anchor.write_text(anchor.read_text().replace("status: accepted", "status: reviewing"))
+    git(repo, "commit", "-q", "--no-verify", "-am", "return the proposal to review")
+    with pytest.raises(HandoffNotReadyError) as caught:
+        prepare(repo, "idea")
+    fix = caught.value.to_dict()["advisory"]["fix"]
+    assert "`uv run devkit spec proposal accept-plan idea --by user --mode accept_only`" in fix
+    assert "accept idea" not in fix
+
+
 def test_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypatch):
     from devkit_agt.features.worktree.usecases import lifecycle
     from devkit_dist.features.host.usecases import registrations

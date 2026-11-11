@@ -59,7 +59,7 @@ def _proposal_error(error: AdvisoryError) -> AdvisoryError:
 def _accept_command(slug: str, mode: str, effort: str | None, by: str) -> str:
     """The caller's own composed command: its ``--by`` is kept, never replaced by ``user``."""
     tail = f" --effort {effort}" if mode == "accept_and_handoff" and effort else ""
-    return devkit_command(f"spec proposal accept {slug} --by {by} --mode {mode}{tail}")
+    return devkit_command(f"spec proposal accept-plan {slug} --by {by} --mode {mode}{tail}")
 
 
 def _base_checkout(root: Path, slug: str, command: str) -> None:
