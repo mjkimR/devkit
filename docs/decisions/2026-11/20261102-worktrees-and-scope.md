@@ -179,9 +179,9 @@ branch trees contain later evidence that can be read without modifying registrat
 
 ### Registry storage and read access
 
-- The registry keeps its Git common-directory storage and per-worktree ownership tokens, with a read-only query path.
-  Shared locks on an existing read-opened safe lock file serialize record and history reads against exclusive writers.
-  Query token lookup does no cleanup. Absent namespaces return empty without creation; existing namespaces missing a
+- The registry keeps its Git common-directory storage and per-worktree ownership tokens, with read-only access for `scope collect`.
+  Shared locks on an existing read-opened safe lock file serialize record reads against exclusive writers.
+  Read-only token lookup does no cleanup. Absent namespaces return empty without creation; existing namespaces missing a
   lock fail visibly. Mutations retain their present storage, ownership, cleanup and explicit permission requirements.
   No automatic fallback performs writes. (ADR-keep-shared-storage-and-separate-read-access)
 
@@ -243,7 +243,7 @@ Creation snapshots plus explicit Host collection, as specified in `SPEC-automati
     (ADR-branch-guards-and-close-discard)
   - The rejection, decomposition and close procedures name `finish --discard` and the closing answers of open questions
     (01 §5.2, §6.2, §7.4). (ADR-branch-guards-and-close-discard)
-  - Development verifies lock compatibility on Linux and macOS and query-wide absence of write calls.
+  - Development verifies lock compatibility on Linux and macOS and the absence of write calls on the read-only paths.
     (ADR-keep-shared-storage-and-separate-read-access)
   - Cross-PC snapshot sharing is reconsidered when it becomes an implementation requirement; this decision chooses no
     backend and promises no cloud adapter in this delivery. (ADR-host-owned-scope-observation)
@@ -257,8 +257,8 @@ Creation snapshots plus explicit Host collection, as specified in `SPEC-automati
   (ADR-worktrees-branches-and-scope)
 - `packages/devkit-spec/tests/integration/features/delivery/test_cleanup.py`: the post-finish cleanup of the proposal
   directory and the scope record. (ADR-worktrees-branches-and-scope)
-- `packages/devkit-spec/tests/integration/features/scope/`: scope registration, query, sweep and the read-only access
-  of queries. (ADR-worktrees-branches-and-scope)
+- `packages/devkit-spec/tests/integration/features/scope/`: scope registration, sweep and the read-only access
+  of collection. (ADR-worktrees-branches-and-scope)
 - Development verifies AC-01–AC-08 in `SPEC-automatic-scope-collection` with scope/delivery integration tests and
   source bundle guidance checks. Tests cover no token/registry writes, pinned-ref inputs, divergent refs, malformed or
   absent inputs, source/total deadlines, comparison truncation, dense-output/input size limits, fetch outcomes and

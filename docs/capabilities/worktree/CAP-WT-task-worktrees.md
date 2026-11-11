@@ -209,7 +209,7 @@ The package is laid out by layer under `features/worktree/`:
   area.
 - `cli.py`: `devkit worktree start|finish|status`, with the stale-branch report as `status --stale`.
 
-The lifecycle is generic. The scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
+The lifecycle is generic. The scope registry and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
 
 
 The library's `start(position, branch, ..., revision=COMMIT)` optionally pins the source commit. It resolves the

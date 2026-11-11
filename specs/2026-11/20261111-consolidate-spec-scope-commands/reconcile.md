@@ -15,11 +15,9 @@ targets:
   - file: docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md
     resolution: modified
   - file: docs/decisions/2026-11/20261102-worktrees-and-scope.md
-    resolution: waived
-    rationale: The handoff already added its Superseded in part line, which RULE-decision-supersession fixes to the superseder's statement; rewording the query and history mentions of its body is outside the Development write scope and is left for the Host.
+    resolution: modified
   - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
-    resolution: waived
-    rationale: Its post-finish sentence still names the scope registry journal; the file is outside the Development write scope, so dropping its journal mention is left for the Host before integration.
+    resolution: modified
 ---
 
 # Reconciliation: `SPEC-consolidate-spec-scope-commands`
@@ -50,20 +48,15 @@ proposal's materials correctly) records the decision. Each target below states t
 - `UC-run-parallel-work-safely`: step 1 and scenario 1 compare declarations through collection for units with a
   `plan-*` or `dev-*` source; step 5, extension 5c and scenarios 2-4 drop the mode, the snapshot/fetch conflict and
   the journal.
-- `ADR-worktrees-and-scope` (waived, spec assumption A1): unchanged. Its "Superseded in part" line, added at handoff,
-  must repeat the superseder's statement verbatim (`RULE-decision-supersession`); the body rewording of the
-  `query`/history mentions in §4, §5 and §6 that the statement announces is outside the Development write scope and
-  remains for the Host.
+- `ADR-worktrees-and-scope` (spec assumption A1): its "Superseded in part" line, added at handoff, repeats the
+  superseder's statement verbatim (`RULE-decision-supersession`); the Host reworded the `query`/history mentions of
+  §4 "Registry storage and read access", §5 and §6 to the remaining read-only collection, without changing a decision.
 
 - `CAP-COLL-shared-artifacts`: the store-boundary sentence names "any scope journal an earlier version left" instead
   of journals the registry keeps (review-01 P3).
 
-## Outside the write scope (for the Host)
-
-- `CAP-WT-task-worktrees` (`docs/capabilities/worktree/`, line 212) still says the post-finish extension covers "the
-  scope registry, its journal and the proposal-directory cleanup"; the journal no longer exists. The file is outside
-  this Development write scope, so the wording is left for the Host (review-01 P3).
-- `ADR-worktrees-and-scope` body rewording (assumption A1, above).
+- `CAP-WT-task-worktrees` (`docs/capabilities/worktree/`): the Host dropped "its journal" from the post-finish
+  sentence, since the journal no longer exists (review-01 P3).
 
 ## Entrypoints
 
