@@ -400,24 +400,30 @@ def test_a_question_recorded_at_direction_handoff_holds_the_composed_acceptance(
 
 # SPEC-git-operator-planning-completion-route AC-06; SPEC-split-composed-proposal-accept AC-02, AC-04
 @pytest.mark.parametrize(
-    "args",
+    ("args", "message"),
     [
-        ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--check"],
-        ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--direct"],
-        ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--note", "why"],
-        ["accept-plan", "idea", "--by", "user"],
-        ["accept", "idea", "--by", "user", "--mode", "accept_only"],
-        ["accept", "idea", "--by", "user", "--effort", "low"],
+        (["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--check"], "No such option '--check'"),
+        (["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--direct"], "No such option '--direct'"),
+        (["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--note", "why"], "No such option '--note'"),
+        (["accept-plan", "idea", "--by", "user"], "Missing option '--mode'"),
+        (["accept-plan", "idea", "--mode", "accept_only"], "Missing option '--by'"),
+        (["accept-plan", "idea", "--by", "other", "--mode", "accept_only"], "Invalid value for '--by'"),
+        (
+            ["accept-plan", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "extreme"],
+            "Invalid value for '--effort'",
+        ),
+        (["accept", "idea", "--by", "user", "--mode", "accept_only"], "No such option '--mode'"),
+        (["accept", "idea", "--by", "user", "--effort", "low"], "No such option '--effort'"),
     ],
 )
-def test_each_acceptance_form_refuses_the_other_forms_options(pending, args):
+def test_each_acceptance_form_refuses_the_other_forms_options(pending, args, message):
     repo, planning = pending
     before = git(repo, "show-ref")
 
     result = CliRunner().invoke(proposal_group, [*args, "-w", str(repo)])
 
     assert result.exit_code == 2 and result.stdout == "", result.output
-    assert "No such option" in result.stderr or "Missing option '--mode'" in result.stderr, result.stderr
+    assert message in result.stderr, result.stderr
     assert git(repo, "show-ref") == before
     assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
 
