@@ -60,8 +60,8 @@ facts (selection, file states, tool version, host hooks); it is not a readiness 
 
 The gate also counts this clone's planned optional MCP registration (`sync --check` adds registration writes to its
 actions): a clone that uses MCP is ready after `sync --registrations-only` (or a plain sync), not right after
-`sync --locked`. This follows the current `sync --check` behavior and needs no code; the alternative is the open
-question q1.
+`sync --locked`: planned registration writes count as not ready, so `sync --check` keeps failing until the
+registrations are applied (user decision on q1). This follows the current `sync --check` behavior and needs no code.
 
 A new problem class therefore needs the planner (which the gate runs) and the reference; adding it to `status` is
 an optional diagnostic, no longer a second gate to keep in step.
@@ -71,8 +71,8 @@ an optional diagnostic, no longer a second gate to keep in step.
 1. **Contract**: `docs/capabilities/distribution/` states the readiness criterion: `sync --check` exit `0` is the
    gate for a synchronized checkout, and `devkit status` is a report that does not detect desired-state changes
    (a selection, configuration or installed-package change without a sync, a removed guidance block, a missing
-   receipt), and that it plans this clone's MCP registration, so an unregistered MCP clone reports
-   `NOT_SYNCHRONIZED` until `uv run devkit sync --registrations-only`. Development picks the CAP-DIST document that
+   receipt). It also states that `sync --check` plans this clone's optional MCP registration, so an unregistered MCP
+   clone reports `NOT_SYNCHRONIZED` until `uv run devkit sync --registrations-only` (or a plain sync) applies it. Development picks the CAP-DIST document that
    owns sync checking (`CAP-DIST-sync-and-transactions`
    already says "`sync --check` remains the general synchronization gate").
 2. **Reference**: the `devkit status` section of `docs/development/reference/distribution.md` says the same in one
@@ -115,7 +115,10 @@ an optional diagnostic, no longer a second gate to keep in step.
   narrows how existing commands are documented and changes no command contract.
 - The excluded `usecases/` path keeps detection code out of scope; the matrix shows no detection gap to close in
   the gate.
-- MCP registration counts toward readiness (challenger finding 1, recommended option of q1, pending the answer).
+- Planned optional MCP registration writes count as not ready (user decision on q1, settling challenger finding 1):
+  `sync --check` keeps failing until the registrations are applied, and the contract, reference and guides state this
+  and order the steps as `guides/install/mcp.md` does. Excluding registration actions from `--check` was declined: it
+  would change the planner under the excluded `usecases/` path.
 - `status_checks` warnings (gate-hook health) are not part of readiness: they are warnings that change no exit code,
   and `devkit gate status` remains their check (challenger finding 3, waived).
 - `size` lowered from `M` to `S`: the change is documentation, bundle text and one help string.
