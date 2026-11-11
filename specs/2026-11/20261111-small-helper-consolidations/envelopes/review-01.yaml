@@ -1,0 +1,26 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:37:27.331782Z'
+status: completed
+summary: AC-01..AC-07 tested and passing on 6eb6ad7d; five probe sites, utf8 helper, moved test seams and doc rows verified; two P3 findings in projection quoting of non-shipped values
+findings:
+- issue: A flow-list item holding a tab between other characters is written unquoted and the projected header no longer parses
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/subagents.py:223,236-237
+  failure_condition: A role contract list setting such as tools has an item like a<TAB>b; PyYAML rejects the flow sequence
+  suggested_action: Quote such items, and add a tab item to the projection quoting test
+  resolution: open
+  severity: P3
+- issue: Non-shipped string settings, list items and names the old plain gate quoted are now plain (Bash(ls), a b, y, 1e3, 0o17), changing consumer projection bytes and letting a YAML 1.2 host read 1e3 as a number; not recorded in the spec
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/subagents.py:232,237
+  failure_condition: A project-owned role contract has a value outside ^[A-Za-z][A-Za-z0-9_./-]*$ that is not a YAML 1.1 special word
+  suggested_action: Keep the old plain gate in front of scalar, or record the byte change as an assumption
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS uv run pytest targeted suites 328 passed; implementer just test-affected mode=full 6784 passed 4 skipped; just test-dist 1402 passed
+  lint: PASS just lint; devkit rules check --ci --base 374e106c errors=0
+diff_scope:
+  base: 374e106c98782c12e2da54c619c2a2f08a59d277
+  head: 6eb6ad7d01073bfcd7c7cf2859a4787c8aa1ba7a

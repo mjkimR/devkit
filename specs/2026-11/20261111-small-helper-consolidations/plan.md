@@ -22,7 +22,7 @@ scalar with escaped line breaks.
 | `devkit_dist.adapters.cli` | Re-exports `utf8_output` beside the other `devkit_cli` names. |
 | `devkit_dist.features.host.cli` | `hook` calls the re-exported `utf8_output`; the local copy and its `contextlib`/`io` imports go. |
 | `devkit_core.core.frontmatter` | `scalar(value, *, quote="'", always_quote=False)`. |
-| `devkit_dist...bundles.subagents` | `_render_markdown` renders `name`, `description` and settings through `scalar` with `quote='"'`; `description` with `always_quote=True`; `_yaml_quote`, `_yaml_scalar`, `_YAML_PLAIN`, `_YAML_RESERVED` removed; `_yaml_value` keeps bool/int/flow-list rendering and always quotes a list item holding a YAML indicator character. |
+| `devkit_dist...bundles.subagents` | `_render_markdown` renders `description` through `scalar(quote='"', always_quote=True)`; `_yaml_scalar` keeps the identifier-only plain gate (`_YAML_PLAIN`, `_YAML_RESERVED`) for `name`, string settings and flow-list items and writes every value with `scalar(quote='"', always_quote=not plain)`; `_yaml_quote` removed. |
 | `devkit_core.core.git` | `tracked_paths` and `ignored_paths`. |
 | Five devkit-dist sites | `host/usecases/registrations.py`, `shared/repositories/local.py`, `distribution/services/installation/local_render.py`, `distribution/repositories/projection_git.py`, `distribution/usecases/sync.py` call the helpers and keep their own policies. |
 
@@ -56,8 +56,8 @@ Design choices (inside the agreed design):
   today. Paths are encoded and decoded with UTF-8 `surrogateescape`, matching `os.fsdecode` in `projection_git`.
 - `ignored_paths` intersects Git's echoed names with the given paths, so a trailing-slash path (shared storage's
   `.devkit/.shared/`) comes back as given.
-- Flow list items: `scalar`'s check is block-context only, so `_yaml_value` passes `always_quote=True` for an item
-  holding one of `,[]{}#?:&*!|>'"%@` or a backtick (spec assumption 2).
+- Plain gate: `scalar`'s read-back check is block-context and YAML 1.1 only, so the identifier-only gate stays in
+  front of it (spec assumption 2, after review-01).
 
 Site mapping:
 

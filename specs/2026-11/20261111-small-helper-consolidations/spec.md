@@ -77,16 +77,17 @@ shipped role contract changes. Evidence: `docs/materials/2026-11/20261111-small-
   form under `.devkit/managed/*/subagents/`, 26 files) rendered for `claude-code`, `codex` and `antigravity`
 - **When** the projections are rendered after the change
 - **Then** each of the 78 renderings has the same SHA-256 as before the change, `uv run devkit sync --check` exits
-  `0`, and `_yaml_quote`, `_yaml_scalar`, `_YAML_PLAIN` and `_YAML_RESERVED` no longer exist in `subagents.py`
+  `0`, the hand-rolled double quoter `_yaml_quote` no longer exists in `subagents.py`, and every quoted value is
+  rendered by `frontmatter.scalar`
 
 ### [AC-05] Projection quoting keeps today's bytes for the edge values
 - **Given** a role contract whose description holds a line break, a tab, a double quote, a backslash and the control
   character U+0001, and whose `claude-code` block sets the string setting `off` and a tool list with a plain item
-  and an item holding a flow indicator (`a,b`)
+  and the items `a,b`, `a<TAB>b`, `Bash(ls)` and `1e3`
 - **When** the `claude-code` projection is rendered
 - **Then** the header holds `name: reviewer`, a double-quoted description whose bytes equal the hand-rolled
   quoter's (`\n`, `\t`, `\"`, `\\`, `\x01` escapes), the setting as `"off"`, the plain list item unquoted and the
-  flow-indicator item double-quoted, and `yaml.safe_load` of the header returns the original values
+  other four items double-quoted as today, and `yaml.safe_load` of the header returns the original values
 
 ### [AC-06] Shared Git tracked and ignored probes
 - **Given** `devkit_core.core.git.tracked_paths(cwd, paths, *, deadline=None) -> set[str]` and
@@ -117,10 +118,13 @@ shipped role contract changes. Evidence: `docs/materials/2026-11/20261111-small-
    `\b`, `\v`, `\f`, `\r`, `\e`) where the hand-rolled quoter wrote `\x00`, `\x07`, `\x08`, `\x0B`, `\x0C`,
    `\x0D`, `\x1B`. Both forms load as the same string and no shipped description holds one, so the shipped-bytes
    contract holds; the planning evidence listed only NEL, LS, PS and non-printable characters as differences.
-2. **Flow list items**: `scalar`'s reads-back check covers block context only (`k: v`, `- v`), and PyYAML rejects
-   some plain values in a flow sequence (`[a?b]`) or splits them (`[a,b]`). Projection therefore always
-   double-quotes a list item holding a YAML indicator character and lets `scalar` decide otherwise; no shipped list
-   item holds one.
+2. **Plain gate kept**: `scalar`'s read-back check covers block context and YAML 1.1 only, so letting it decide
+   would write values such as `a<TAB>b` or `a?b` plain in a flow list (an unparsable header), `1e3` plain (a number
+   to a YAML 1.2 host) and `Bash(ls)` plain (new bytes for project-owned contracts). Projection therefore keeps its
+   identifier-only plain gate (`_YAML_PLAIN`, `_YAML_RESERVED`) for `name`, string settings and list items and lets
+   `scalar(..., quote='"', always_quote=not plain)` write every value, so no input changes bytes apart from
+   assumption 1. This narrows the proposal's removal list (`_yaml_scalar` stays as the gate); the goal of one quoting
+   owner and unchanged behavior holds.
 3. **Literal pathspecs**: `tracked_paths` passes each path with the `:(literal)` magic. `check-ignore` reads its
    input as path names; all current inputs are fixed devkit paths without glob characters, so no current result
    changes.

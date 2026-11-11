@@ -11,6 +11,7 @@ with ``status: unsupported`` gets no file. The body is the role's prompt.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -204,7 +205,7 @@ def _render_markdown(
 ) -> bytes:
     lines = [
         "---",
-        "name: " + scalar(contract.role, quote='"'),
+        "name: " + _yaml_scalar(contract.role),
         "description: " + scalar(description, quote='"', always_quote=True),
     ]
     lines.extend(f"{key}: {_yaml_value(value)}" for key, value in (*fixed, *block.settings))
@@ -219,8 +220,15 @@ def _render_codex(contract: Contract, block: HostBlock, description: str, prompt
     return ("\n".join(lines) + "\n").encode()
 
 
-# A plain item of a flow list must also survive flow context, where these characters end or reject it.
-_YAML_FLOW_INDICATORS = frozenset(",[]{}#?:&*!|>'\"%@`")
+# Only identifier-like values stay plain, in block and flow context alike and for any YAML 1.1 or 1.2 reader
+# (``1e3`` and ``y`` stay strings); everything else is double-quoted by the shared scalar.
+_YAML_PLAIN = re.compile(r"^[A-Za-z][A-Za-z0-9_./-]*$")
+_YAML_RESERVED = {"true", "false", "null", "yes", "no", "on", "off", "y", "n"}
+
+
+def _yaml_scalar(value: str) -> str:
+    plain = bool(_YAML_PLAIN.match(value)) and value.lower() not in _YAML_RESERVED
+    return scalar(value, quote='"', always_quote=not plain)
 
 
 def _yaml_value(value: Any) -> str:
@@ -229,12 +237,8 @@ def _yaml_value(value: Any) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, str):
-        return scalar(value, quote='"')
-    return "[" + ", ".join(_yaml_item(item) for item in value) + "]"
-
-
-def _yaml_item(item: str) -> str:
-    return scalar(item, quote='"', always_quote=bool(_YAML_FLOW_INDICATORS.intersection(item)))
+        return _yaml_scalar(value)
+    return "[" + ", ".join(_yaml_scalar(item) for item in value) + "]"
 
 
 def _toml_string(value: str) -> str:
