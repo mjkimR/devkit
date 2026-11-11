@@ -8,9 +8,9 @@ Canonical behavior: `CAP-INT-mcp-services`; final verification: `CAP-DLV-deliver
 | `devkit integration integrate BRANCH [--route local|pull-request] [--expected-digest DIGEST] [-w DIR] [--format json]` | Execute under Host-carried ask approval or retained-base auto policy |
 | `devkit worktree finish BRANCH` | Remaining cleanup after a landing whose cleanup stopped; it lands nothing (`--merge` refuses with `WORKTREE_MERGE_RETIRED`) |
 
-The commands take no task-kind, task-id, unit or claims. Integration needs no readiness provider; legacy
-`[integration] provider` is ignored, unknown keys are diagnosed. The explicit branch supplies deterministic PR
-body and merge text. No approval token, arbitrary cleanup path or merge strategy is accepted.
+The commands take no task-kind, task-id, unit or claims. Integration needs no readiness provider; `[integration]`
+accepts no keys, and the retired `provider` key is refused with a fix to delete it. The explicit branch supplies
+deterministic PR body and merge text. No approval token, arbitrary cleanup path or merge strategy is accepted.
 
 Under ask, present exact source, target and cleanup effects, obtain the user's conversational decision, then use
 `request.digest`. Missing or changed digests refuse before effects. Under auto the digest is optional and checked

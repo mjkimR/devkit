@@ -18,7 +18,7 @@ text within this spec's contract; devkit-dist `RESERVED_TABLES` and `CAP-DIST-sy
   `[integration]` only when absent or an empty table. A non-table raises `INTEGRATION_CONFIG_INVALID`
   ("integration must be a table") with fix "Remove [integration] or leave it empty; it accepts no keys". A table
   containing `provider` raises "integration key provider is retired" with fix "Delete provider from [integration];
-  the readiness-provider selection is retired and integration reads no provider". Any other key raises
+  the readiness-provider selection is retired". Any other key raises
   "integration accepts no keys: <sorted keys>" with fix "Remove <keys> from [integration]; it accepts no keys".
   `provider` is reported first when it appears with other keys, because its fix is the specific one (AC-01). The
   `policy()` docstring drops the legacy sentence. The normalized policy and its digest are unchanged.

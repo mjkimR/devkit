@@ -120,7 +120,7 @@ def test_preflight_preserves_dirty_or_locked_worktrees(repo, dirty):
 
 def test_required_pr_blocks_local_execution(repo):
     base, _ = repo
-    write(base, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\npull_request = "required"\n')
+    write(base, ".devkit/config.toml", '[worktree]\npull_request = "required"\n')
     git(base, "add", ".")
     git(base, "commit", "-qm", "require PR")
     with pytest.raises(PullRequestPolicyError):
@@ -130,7 +130,7 @@ def test_required_pr_blocks_local_execution(repo):
 def test_delete_branch_false_is_preserved(repo):
     base, worktree = repo
     for root in (base, worktree):
-        write(root, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\ndelete_branch = false\n')
+        write(root, ".devkit/config.toml", "[worktree]\ndelete_branch = false\n")
         git(root, "add", ".")
         git(root, "commit", "-qm", "keep branch")
     git(worktree, "merge", "--no-edit", "main")
@@ -217,22 +217,41 @@ def test_scoped_cleanup_receives_exact_targets_and_reports_partial_after_git_is_
     assert result.cleanup_steps == {"scoped": "failed"} and cleanup.attempts == 1
 
 
-def test_missing_provider_configuration_is_supported(repo):
+def test_empty_integration_table_is_supported(repo):
+    """AC-03: an empty [integration] table needs no setting (the fixture covers the absent table)."""
     base, worktree = repo
     for root in (base, worktree):
-        write(root, ".devkit/config.toml", "")
+        write(root, ".devkit/config.toml", "[integration]\n")
         git(root, "add", ".")
-        git(root, "commit", "-qm", "remove legacy provider")
+        git(root, "commit", "-qm", "add an empty integration table")
     assert integrate(IntegrationService(base)).verification == "pending"
 
 
-@pytest.mark.parametrize("config", ['[integration]\nunknown = "x"\n', 'integration = "x"\n'])
-def test_unknown_integration_configuration_is_actionable(repo, config):
+@pytest.mark.parametrize(
+    ("config", "named"),
+    [('[integration]\nunknown = "x"\nother = 1\n', "other, unknown"), ('integration = "x"\n', "[integration]")],
+)
+def test_unknown_integration_configuration_is_actionable(repo, config, named):
+    """AC-02: [integration] accepts no keys; other keys and a non-table shape name what to remove."""
     base, _ = repo
     write(base, ".devkit/config.toml", config)
     with pytest.raises(IntegrationConfigError) as raised:
         IntegrationService(base).prepare("dev-demo")
-    assert "Remove unknown keys" in (raised.value.fix or "")
+    assert raised.value.code == "INTEGRATION_CONFIG_INVALID"
+    assert f"Remove {named}" in (raised.value.fix or "") and "it accepts no keys" in (raised.value.fix or "")
+
+
+@pytest.mark.parametrize("config", ['[integration]\nprovider = "spec"\n', '[integration]\nprovider = "x"\nother = 1\n'])
+def test_retired_provider_key_is_refused_with_a_deletion_fix(repo, config):
+    """AC-01: the retired provider key is refused before any Git effect, with a fix to delete it."""
+    base, _ = repo
+    write(base, ".devkit/config.toml", config)
+    head = git(base, "rev-parse", "HEAD")
+    with pytest.raises(IntegrationConfigError) as raised:
+        IntegrationService(base).prepare("dev-demo")
+    assert raised.value.code == "INTEGRATION_CONFIG_INVALID" and "provider" in str(raised.value)
+    assert raised.value.fix == "Delete provider from [integration]; the readiness-provider selection is retired"
+    assert git(base, "rev-parse", "HEAD") == head
 
 
 @pytest.mark.parametrize("moved", [False, True], ids=["contains-base", "moved-base"])
@@ -246,7 +265,7 @@ def test_local_integration_lands_branch_only_and_plan_branches_without_network(
     write(
         base,
         ".devkit/config.toml",
-        '[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n',
+        '[workflow.approvals]\ndev-integration = "auto"\n',
     )
     write(base, ".gitignore", ".devkit/transient/\n")
     git(base, "add", ".")

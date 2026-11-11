@@ -41,8 +41,9 @@ devkit integration integrate <branch> [--route local|pull-request] [--expected-d
    envelopes, run content finish guards, validate rule imports or validate receipt schemas/consistency. The Host
    checks source workflow holds through its branch runtime and runs final checks after synchronizing landed
    dependencies. No test runner, runtime installer or verification ledger is part of integration.
-5. **Legacy configuration.** `[integration]` MAY be absent. Its legacy `provider` value is ignored and excluded from
-   the digest; unknown keys or invalid table shapes raise actionable `INTEGRATION_CONFIG_INVALID` diagnostics.
+5. **Integration table.** `[integration]` MAY be absent or an empty table; it accepts no keys. Any key raises an
+   actionable `INTEGRATION_CONFIG_INVALID` naming it: the retired readiness-provider key `provider` with a fix to
+   delete it, any other key or a non-table value with a fix to remove it.
 6. **Confirmed landing.** JSON and text MUST report `verification=pending` only after confirmed landing, including
    cleanup-only retries, and `verification=not_started` otherwise. `landed_sha` names the confirmed revision and is
    null before confirmation. `status=completed` and exit zero attest Git/cleanup effects only. The Host's later

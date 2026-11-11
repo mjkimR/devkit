@@ -42,7 +42,7 @@ entrypoints:
 - **2b.** absent live context or spec assets: the agent discovers current facts and presents the needed installation/selection effects while keeping adaptive development; resumes at step 3 after authorized preparation.
 - **4a.** missing/failed/skipped evidence or mismatch: the agent records the gap and presents correction, user-decided scope change or deferral; resumes at step 3 after correction, or ends in adaptive development without readiness.
 - **5a.** changed relevant source: the agent invalidates affected observations and resumes at step 3; stale evidence does not activate SDD.
-- **6a.** effects not authorized: the agent leaves adoption unactivated; this use case ends. Provider selection is unnecessary and legacy values are ignored.
+- **6a.** effects not authorized: the agent leaves adoption unactivated; this use case ends. Provider selection is unnecessary.
 - **7a.** partial installation/update/sync failure: the agent reports actual partial state and supported recovery; resumes at step 3 after source/evidence revalidation or ends with no successful-adoption claim.
 
 ## 4. Postconditions
@@ -101,7 +101,7 @@ freshness; partial-state recovery; subsequent SDD routing (`CAP-DLV-sdd-baseline
 
 ### Provider-free activation
 
-- **Given** a verified baseline with no provider setting or an ignored legacy provider value,
+- **Given** a verified baseline with no provider setting,
 - **When** the owner authorizes the ready approach and asset effects,
 - **Then** activation requires no provider edit or separate provider approval, and the agent verifies actual SDD routing and sync consistency.
 - **Covers**: step 7.

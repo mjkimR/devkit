@@ -17,7 +17,7 @@ def auto_repo(tmp_path, ready_provider):
     def create(method="no-ff", delete=True):
         base = init_repo(tmp_path / "auto")
         config = (
-            '[integration]\nprovider="fixture"\n[workflow.approvals]\ndev-integration="auto"\n'
+            '[workflow.approvals]\ndev-integration="auto"\n'
             f'[worktree]\nmerge="{method}"\ndelete_branch={str(delete).lower()}\n'
         )
         write(base, ".devkit/config.toml", config)
@@ -136,3 +136,11 @@ def test_cloud_transition_blocks_auto_retry(auto_repo, monkeypatch):
     with pytest.raises(McpInteractiveError), invocation(binding):
         integrate(service)
     assert worktree.exists()
+
+
+@pytest.mark.parametrize("approvals", [{}, {"workflow": {"approvals": {"dev-integration": "auto"}}}])
+def test_empty_integration_table_keeps_the_absent_table_digest(approvals):
+    """AC-03: an absent or empty [integration] table needs no setting and leaves the policy digest unchanged."""
+    from devkit_agt.features.integration.services.providers import policy_digest
+
+    assert policy_digest({**approvals, "integration": {}}) == policy_digest(approvals)

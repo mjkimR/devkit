@@ -44,12 +44,25 @@ def effective(config: dict[str, Any]) -> dict[str, Any]:
         found = value.get(key) if isinstance(value, dict) else None
         return found if isinstance(found, dict) else {}
 
-    legacy = config.get("integration", {})
-    if not isinstance(legacy, dict) or set(legacy) - {"provider"}:
+    reserved = config.get("integration", {})
+    if not isinstance(reserved, dict):
         raise IntegrationConfigError(
-            "integration accepts only the ignored legacy provider key",
+            "integration must be a table",
             target_files=[CONFIG_PATH],
-            fix="Remove unknown keys from [integration]; provider selection is no longer required",
+            fix="Remove [integration] or leave it empty; it accepts no keys",
+        )
+    if "provider" in reserved:
+        raise IntegrationConfigError(
+            "integration key provider is retired",
+            target_files=[CONFIG_PATH],
+            fix="Delete provider from [integration]; the readiness-provider selection is retired",
+        )
+    if reserved:
+        keys = ", ".join(sorted(reserved))
+        raise IntegrationConfigError(
+            f"integration accepts no keys: {keys}",
+            target_files=[CONFIG_PATH],
+            fix=f"Remove {keys} from [integration]; it accepts no keys",
         )
     approvals = table(table(config, "workflow"), "approvals")
     return {
@@ -90,7 +103,7 @@ def commit_config(root: Path, sha: str) -> dict[str, Any] | None:
 
 
 def policy(root: Path) -> str:
-    """Validate merge policy; provider is accepted only as an ignored legacy key."""
+    """Validate merge policy and return its effective digest."""
     config = read_project_config(root)
     approval(config, "dev-integration")
     return current_policy(root)
