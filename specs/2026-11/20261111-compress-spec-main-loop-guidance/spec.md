@@ -1,26 +1,22 @@
 ---
-id: PROP-compress-spec-main-loop-guidance
+id: SPEC-compress-spec-main-loop-guidance
 title: Compress the spec guidance of the main development loop
 summary: Shortens the spec guidance every development run reads (constitution, spec skill, sdd-spec-feature, worker contract and core references) conservatively, keeping each rule at one owner, after the peripheral pass shows which compression patterns hold.
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-11-11
-target_area: capabilities/delivery/
-priority: medium                       # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/delivery/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-11
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-compress-spec-main-loop-guidance] Compress the spec guidance of the main development loop
+# [SPEC-compress-spec-main-loop-guidance] Compress the spec guidance of the main development loop
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-compress-spec-main-loop-guidance on 2026-11-11.
+
+### 1. Background & Hypothesis
 
 A context-size check on 2026-11-11 measured the spec guidance an agent reads:
 - Always loaded, about 3.4K tokens: root guide, skill and agent descriptions.
@@ -67,7 +63,26 @@ A second peripheral pass tried both policies on the same groups:
 - Expect the main loop to yield more only where its rules are refused early by the CLI. Measure that before committing
   to the proposal's size goal.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Compress the spec guidance of the main development loop so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: What did the second peripheral pass (the two policies above, same date) yield per document? Which
   candidates did it reject, and why?
@@ -78,7 +93,7 @@ A second peripheral pass tried both policies on the same groups:
   development-worker contract, integrate and orchestrate skills) can move to references without hiding a rule
   the common path needs?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Scope: the spec constitution, the `spec` skill, `sdd-spec-feature`, the development-worker contract,
   envelope/worker-records/completion references, specify/plan/tasks/review/sync, delegate/orchestrate/integrate,
@@ -93,7 +108,8 @@ A second peripheral pass tried both policies on the same groups:
   Package versions stay unchanged.
 - Report sizes before and after for each document.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr compress-spec-main-loop-guidance "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -103,3 +119,4 @@ A second peripheral pass tried both policies on the same groups:
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+
