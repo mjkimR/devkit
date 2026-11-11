@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:49:47.817186Z'
+status: completed
+summary: 'Implementer re-verified reconcile-check-01: the P1 collection failure wording is restored in CAP-COLL 4.8/4.9 and the error docstring (461b152a1922cd5a8978230bf9ca3c8c7bace739); the two P2 out-of-scope reflections (ADR-worktrees-and-scope body, CAP-WT-task-worktrees journal mention) are waived targets left for the Host'
+findings: []
+assumptions:
+- The P2 items are outside the Development write scope and need Host authority
+checks:
+  codes_table: PASS test_documented_codes.py and test_collection.py 43 passed
+  rules: PASS devkit rules check docs/capabilities and the unit
+diff_scope:
+  base: d219dd4a7a1fbbbd4ad731dc6c66625026c8e8a2
+  head: 461b152a1922cd5a8978230bf9ca3c8c7bace739
