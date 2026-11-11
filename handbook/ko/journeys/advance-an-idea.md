@@ -5,13 +5,13 @@ sources:
   CAP-HARN-agent-guidance: null
   UC-advance-an-idea: null
 title: 아이디어 발전시키기
-translated_from: en/journeys/advance-an-idea.md@3d3914ad33f8593a
+translated_from: en/journeys/advance-an-idea.md@3158951e4942aa42
 ---
 
 # 아이디어 발전시키기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -19,17 +19,21 @@ translated_from: en/journeys/advance-an-idea.md@3d3914ad33f8593a
 - [개념](../concepts.md)
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
+- [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -37,6 +41,7 @@ translated_from: en/journeys/advance-an-idea.md@3d3914ad33f8593a
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](speed-up-selected-slow-operations.md)
 - [어드바이저리](../areas/advisory.md)
 - [에이전트 우선 CLI 도구 키트](../areas/cli.md)
@@ -65,12 +70,12 @@ translated_from: en/journeys/advance-an-idea.md@3d3914ad33f8593a
 
 출처: [`UC-advance-an-idea`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-advance-an-idea.md) (영어 원문),
 계약 [`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md) (영어 원문),
-진입 스킬 [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md) (영어 원문).
+진입 스킬 [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md) (영어 원문).
 SDD의 제안 숙성과는 별개이며, 그쪽은 [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)입니다.
 
 ## 시작하기 전에
 
-- `devkit-docs`와 `devkit-catalog`를 설치한 뒤 선택형 번들을 선택합니다: `uv run devkit add adaptive-dev`(프리셋 `core`). `devkit-spec`은 필요하지 않습니다. 번들은 `/adaptive-dev`, 지침 포인터, 선택적 지원 역할 세 개, 현재 컨텍스트 템플릿을 배포하며, 선택만으로 제품 파일이 생기지는 않습니다.
+- `devkit-adaptive`를 설치한 뒤 선택형 번들을 선택합니다: `uv run devkit add adaptive-dev`(프리셋 `core`). `devkit-spec`은 필요하지 않습니다. 번들은 `/adaptive-dev`, 지침 포인터, 선택적 지원 역할 세 개, 현재 컨텍스트 템플릿을 배포하며, 선택만으로 제품 파일이 생기지는 않습니다.
 - `.devkit/config.toml`에서 공유 개발 방식(development approach)을 설정합니다.
 
   ```toml
@@ -120,3 +125,9 @@ SDD의 제안 숙성과는 별개이며, 그쪽은 [제안 계획 후 넘기기]
 ## 최종 결과
 
 작업의 관찰된 결과, 이어서 진행하는 데 필요한 현재 사실과 지침, 명시적인 한계와 다음 단계가 남습니다. 개발 방식 전환, 지어낸 제품 결정, 건너뛴 검사의 통과를 주장하는 일은 없으며, 무관한 편집과 기존 SDD 이력은 그대로 유지됩니다. 관련 영역: [전달](../areas/delivery.md).
+
+## 제한된 작업 위임
+
+adaptive 번들은 `devkit-adaptive`가 제공하며 `devkit-docs`에 의존하고 `devkit-spec` 없이 동작합니다. Swarm planner·worker·verifier 계약으로 제한된 위임을 지원합니다. `devkit adaptive assignment new`로 할당을 기록하고 반환을 보고한 뒤 실제 diff와 선언된 검사 결과를 검증하고 수락합니다. 원장은 추가 권한을 부여하거나 검사를 실행하지 않습니다.
+
+외부 전문 자산은 [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)를 사용합니다.

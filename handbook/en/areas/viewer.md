@@ -2,16 +2,16 @@
 sources:
   ADR-release-handbook: e3e8ebe1591bba2371628761d8af35a69ba685b7
   ADR-repository-viewer: 4cb9669212aa58f1abeefed1c5715adcb3305324
-  CAP-COLL-shared-artifacts: 48963f805ec2282098d1adc9598100983283bacd
+  CAP-COLL-shared-artifacts: 092d06230b033004a559d4fa72907fac6d0e0f5d
   CAP-GEN-tracked-artifacts: ff8539b14d3af5890ba656e23b0e43c1d0d05fc8
-  CAP-VIEW-repository-viewer: 06eb3b29916d53305a91274860cad22fc5661d55
+  CAP-VIEW-repository-viewer: 2d5d20c1b78e7fb0dc93c192d91d9245901f88e5
 title: Viewer
 ---
 
 # Viewer
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,17 +20,21 @@ title: Viewer
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -38,6 +42,7 @@ title: Viewer
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)

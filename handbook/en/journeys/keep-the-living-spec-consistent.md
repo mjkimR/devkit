@@ -1,10 +1,10 @@
 ---
 sources:
-  CAP-DOCS-document-model: 016e923f03d861ba71b8fe6a4a88fed61a07ff6a
-  CAP-DOCS-namespaces: c30311a1b0b7bcf09517a9ec71e6b395569b6512
-  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
-  CAP-GOV-spec-rules: acbf3761f19f3d39c667de232c2808e62d18c23e
-  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
+  CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
+  CAP-DOCS-namespaces: f6a06f2fb6a7564ed6ede84c6375c1e401dedb91
+  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
+  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
+  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
 title: Keep the Living Spec consistent
 ---
@@ -12,7 +12,7 @@ title: Keep the Living Spec consistent
 # Keep the Living Spec consistent
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,16 +21,20 @@ title: Keep the Living Spec consistent
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -38,6 +42,7 @@ title: Keep the Living Spec consistent
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)

@@ -1,9 +1,9 @@
 ---
 sources:
-  CAP-GOV-evaluation-lifecycle: 254b7bb7cb4a21a547aa489868a4f1f62cc3a6f4
-  CAP-GOV-rule-authoring: 9157cd98c901c85839403748ffff93271586940c
-  CAP-GOV-rules-engine: 114f633a9af2f4a675d6ce0cc37291384ce1b5b7
-  CAP-GOV-spec-rules: acbf3761f19f3d39c667de232c2808e62d18c23e
+  CAP-GOV-evaluation-lifecycle: caf36057be3e5b74834b5a842eb9c35a17e5e22c
+  CAP-GOV-rule-authoring: 7e57e66ef161b56e775ffd7c1ede6a3a2b601257
+  CAP-GOV-rules-engine: 026e5296b64c9056723eb649a322007d74e4664d
+  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
   UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
@@ -13,7 +13,7 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -22,17 +22,21 @@ title: Governance rules
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -40,6 +44,7 @@ title: Governance rules
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)
@@ -127,11 +132,11 @@ RULE-document-summary = "hygiene"
 RULE-file-length = "error"
 
 [rules.settings.RULE-file-length]
-max_lines = 300
+max_bytes = 49152
 
 [[rules.settings.RULE-file-length.overrides]]
 path = "docs/research/**"
-max_lines = 800
+max_bytes = 98304
 ```
 
 The `linter` phase is what commits and CI enforce; `hygiene` is the wider periodic sweep. A parked rule prints its

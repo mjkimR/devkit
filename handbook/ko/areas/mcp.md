@@ -6,13 +6,13 @@ sources:
   CAP-MCP-runtime-registration: null
   UC-drive-development-to-integration: null
 title: MCP
-translated_from: en/areas/mcp.md@14946dc153763df5
+translated_from: en/areas/mcp.md@ad2799e914f6a28a
 ---
 
 # MCP
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,17 +21,21 @@ translated_from: en/areas/mcp.md@14946dc153763df5
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -39,6 +43,7 @@ translated_from: en/areas/mcp.md@14946dc153763df5
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -122,8 +127,7 @@ Codex는 `.codex/config.toml`, Claude Code는 `.mcp.json`, Antigravity는 `.agen
 `devkit mcp serve`는 모든 호출을 세 가지 위치에 바인딩합니다. 바로 유지되는 런타임, 실행자 체크아웃, 그리고 설정이 적용되는
 소유 설정 작업 공간(owning configuration workspace)입니다. 도구 입력을 통해서는 작업 공간을 변경할 수 없습니다.
 
-- **실행 클래스(Execution classes).** 각 도구는 `read_only`, `bounded_write`, `preflight`, `interactive`, `approved_resume`
-  중 하나로 선언되며, 선언되지 않은 도구는 `interactive`로 취급됩니다. 전송 계층은 확인 폼을 요청하지 않으며 비즈니스 권한도
+- **실행 클래스(Execution classes).** 각 도구는 `read_only` 또는 `bounded_write`로 선언되며, 미선언 도구는 `bounded_write`로 취급합니다. 읽기 전용 주석은 이 분류를 따릅니다. 전송 계층은 확인 폼을 요청하지 않으며 비즈니스 권한도
   부여하지 않습니다. 승인은 Host가 권한을 부여한 CLI의 몫입니다.
 - **클라우드 환경**에서는 읽기 전용 도구만 노출되며, 쓰기 작업은 거부됩니다. 가드 검사는 잠금 대기 후 및 실제 영향이 발생하기
   직전에 반복 수행됩니다.

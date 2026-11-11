@@ -1,27 +1,28 @@
 ---
 sources:
-  ARCH-08-1-agent-output: 86a790e9a7ff89af5e69e19a19746d3e0cde4f85
-  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
-  CAP-DLV-adaptive-development: 120b77c7814f67b082a728d0fdbec0108b852b00
-  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
-  CAP-DLV-sdd-baseline-adoption: bb6fc66abb97dd0113a4864be4a8dbeca761c704
-  CAP-GOV-spec-rules: acbf3761f19f3d39c667de232c2808e62d18c23e
-  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
+  ARCH-08-1-agent-output: 4921a21fa00c4cd4413b7a01236cc833944a458a
+  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
+  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-sdd-baseline-adoption: acd7cadb9c726ae861f26364cd831d3d1afa1c4c
+  CAP-GOV-spec-rules: 903255aa74c723fbf1e382808a1b7bfbcd9c68b2
+  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
   CAP-HARN-command-design: 55dfa957b84301d7a9897676145bec7e2486e71f
-  CAP-HARN-command-mount: 644fbd5907cc45cd5ea5e2c30d63c381e68c9457
+  CAP-HARN-command-mount: 9963e0253b7b23f53d30d2185998241d83cecd95
+  CAP-HARN-isolated-execution: 7b36ba1e9522527ede0d5a91189ee2ec1efcf6ff
   UC-adopt-in-an-existing-repository: 018001c6e9a67168a045c00dd6d3938b05cbecad
-  UC-adopt-sdd-from-adaptive-development: 50f14a785badd6a92574145079875b05eca9eede
-  UC-advance-an-idea: 0ce93e70e07d5a6a3d120257d9e318f680aec3e1
-  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
+  UC-adopt-sdd-from-adaptive-development: 1eb8461c21c7c3e6fa131c4efb88d7f7e07095f6
+  UC-advance-an-idea: 45c8acaee167f7472b70885cdcbac26fd133c39f
+  UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
-  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
+  UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Harness
 ---
 
 # Harness
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -30,17 +31,21 @@ title: Harness
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -48,6 +53,7 @@ title: Harness
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)
@@ -102,7 +108,7 @@ them through `devkit override create` or your project's own bundle.
 absent) or `adaptive-dev`. Installing or selecting bundles never changes it. Under adaptive development the `spec` guidance
 steps aside: ordinary work follows the project's adaptive development guidance and its independent checks, without implicit
 Units, envelopes or classification, while documents already bound to an SDD workflow keep their checks. The opt-in
-`adaptive-dev` bundle of `devkit-catalog` supplies that guidance and its `/adaptive-dev` entry; see
+`adaptive-dev` bundle of `devkit-adaptive` supplies that guidance and its `/adaptive-dev` entry; see
 [Advance an idea](../journeys/advance-an-idea.md). Moving a retained adaptive development product to SDD is the
 `sdd-baseline` playbook, described in [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md).
 
@@ -187,7 +193,7 @@ feedback in one batch) and `adr-compaction` (consolidate related ADRs without ch
   snapshot before ranking them. Closing, dropping or reopening a milestone is your decision, and the same commit
   moves a done or dropped milestone to `docs/roadmap/_archive/`.
 - **Parallel work**: before scheduling parallel work the Host observes what other worktrees are doing with
-  `devkit spec scope collect --mode worktrees`; workers carry no registration duty.
+  `devkit spec scope collect`; workers carry no registration duty.
 - **Stale branches**: leftover `plan-*` and `dev-*` branches are handled as in
   [Resolve stale activity branches](../journeys/resolve-stale-activity-branches.md).
 - **No session hijacking**: an agent never stops your session or active work without your direction.
@@ -236,3 +242,7 @@ See [Design necessary command entry points](../journeys/design-command-entrypoin
 - [CAP-DLV-adaptive-development](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md)
   and [CAP-DLV-sdd-baseline-adoption](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-sdd-baseline-adoption.md):
   the adaptive development approach and the move to SDD.
+
+## Commands at a fixed commit
+
+[Isolated execution](../journeys/execute-an-isolated-command.md) uses `devkit exec` to prepare a detached checkout and retain command evidence outside it. Launch success is pending; collect the result before claiming verification. Cancellation, observation and cleanup have separate outcomes.

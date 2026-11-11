@@ -1,17 +1,17 @@
 ---
 sources:
   CAP-DLV-drift-reconciliation: 4666e8d6bab265e18b275ce59b5f7d32b904a6d7
-  CAP-DOCS-document-lookup: 047987d53dc77f859357a545cfb01a2e161f80a1
-  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
+  CAP-DOCS-document-lookup: 63142a86681c0d154520316976a583a5d44f68bf
+  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
   UC-keep-the-living-spec-consistent: 6aa78b77ed1eb5a1f7f8b59742048c01319abccc
-  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
+  UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Traceability
 ---
 
 # Traceability
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Traceability links Living Spec documents to code. A capability or use case can declare `entrypoints`: the files

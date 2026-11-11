@@ -11,13 +11,13 @@ sources:
   UC-plan-and-hand-off-a-proposal: null
   UC-route-development-intent: null
 title: 개발 요청 라우팅하기
-translated_from: en/journeys/route-development-intent.md@fe933b58da74dc02
+translated_from: en/journeys/route-development-intent.md@da33e3b136d30c04
 ---
 
 # 개발 요청 라우팅하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -26,23 +26,28 @@ translated_from: en/journeys/route-development-intent.md@fe933b58da74dc02
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [병렬 작업 안전하게 실행하기](run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](speed-up-selected-slow-operations.md)
 - [어드바이저리](../areas/advisory.md)
 - [에이전트 우선 CLI 도구 키트](../areas/cli.md)
@@ -101,7 +106,7 @@ translated_from: en/journeys/route-development-intent.md@fe933b58da74dc02
 
    이 명령은 뼈대 `spec.md`, `plan.md`, `tasks.md`를 담은 `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`를 만들어 `sdd-spec-feature`에 연결하고, `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`로 끝납니다
    ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)).
-6. **의도 기록.** 사용자의 명시적 지시로 `plan-intent`를 기록합니다.
+6. **범위 확인.** 명시적 지시가 승인한 범위를 알리며 의도 승인 기록을 만들지 않습니다.
 7. **다음 단계 진행.** `devkit workflow next --unit <dir>`를 실행하고 안내되는 단계, 미충족 검사, 지정된 스킬을 따릅니다
    ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)).
 
@@ -112,28 +117,21 @@ translated_from: en/journeys/route-development-intent.md@fe933b58da74dc02
 | 개발 방식이 `adaptive-dev` | SDD 라우팅을 하지 않습니다. 에이전트는 프로젝트의 적응형 개발 지침과 독립적인 문서·프로젝트 검사를 따르며, 유닛을 만들지 않고 깊이도 정하지 않습니다. [아이디어 발전시키기](advance-an-idea.md)를 참고하십시오. 이미 SDD에 연결된 유닛은 자신의 검사를 유지합니다. |
 | `session` 깊이 | 대화로 의도를 합의하고 에이전트가 직접 `sdd-session-<task-kind>`를 따르며, 유닛, 엔벨로프, 게이트 기록, reconcile 문서를 쓰지 않습니다. |
 | `proposal` 깊이 | `devkit spec proposal new <slug>`로 `docs/proposals/PROP-<slug>/proposal.md` 초안을 만들고, [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)로 이어집니다. |
-| 지금 시작하지 않거나 규모가 너무 큰 경우 | Backlog에 하나 이상의 제안 초안으로 보관하고, 필요하면 마일스톤에 넣으며, `decomposed_from` 또는 `supersedes`로 출처를 보존합니다. 둘 이상의 스펙이나 다른 `task-kind`가 필요한 작업은 `size: XL`이며 `plan-intent` 전에 분할합니다. |
+| 지금 시작하지 않거나 규모가 너무 큰 경우 | Backlog에 하나 이상의 제안 초안으로 보관하고, 필요하면 마일스톤에 넣으며, `decomposed_from` 또는 `supersedes`로 출처를 보존합니다. 둘 이상의 스펙이나 다른 `task-kind`가 필요한 작업은 `size: XL`이며 Planning 전에 분할합니다. |
 | `overall-refactor` | 동작을 추가하지 않고 여러 영역을 재구성하는 경우로, 유닛, 제안, 번들 없이 `direct` 모드의 `sdd-overall-refactor`를 따릅니다. |
 | 계약에 대한 결함 | `devkit spec new <slug> --workflow sdd-spec-bugfix`: `spec.md`만 생성되며, 재현이 기록될 때까지 `reproduce` 단계가 열려 있습니다. |
 | "다음에 뭘 하지?"만 묻는 경우 | `spec-next`가 적격 대기 초안을 추천합니다(선행 조건, 마일스톤, 우선순위, 크기 기준). `needs_decompose`와 `XL` 초안은 `decomposer` 역할을 통한 Backlog 분할 작업으로 보고되며, 승인은 사용자에게 남습니다. |
 
-## 작업 의도 승인
+## 작업 권한
 
-`plan-intent` 정책이 `ask`(기본값)이고 목표, 범위, 검증, 종류, 깊이 중 미정인 것이 있으면 `devkit workflow next`가 `[WAITING: human gate:plan-intent]`를 출력합니다. 에이전트는 사용자에게 묻고, 답을 받은 후에만 기록합니다.
-
-```sh
-uv run devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user
-uv run devkit workflow answer --unit <dir> --request gate:plan-intent --action decline --by user --note "<reason>"
-```
-
-`auto`에서는 게이트가 정책으로 통과하며, 에이전트는 이를 사용자의 동의가 아니라 정책으로 보고합니다. 거절하면 작업이 종료됩니다.
+사용자의 명시적 지시가 목표와 범위를 승인합니다. 에이전트는 미정인 세부 사항을 확인한 뒤 관련 작업을 시작하며 의도 게이트 기록을 만들지 않습니다. 이후 제안 수락·Development 시작·최종 통합은 각각의 승인 정책을 유지합니다.
 
 ## 문제가 생겼을 때
 
 - **플레이북이 일치하는 경우:** 에이전트가 분류와 함께 한 줄로 안내하고 기다립니다. 확인하면 실행하고, 거절하면 이번 대화에서 다시 제안하지 않습니다. 이어지는 작업과 후속 요청에서는 검색하지 않습니다.
 - **`devkit spec new` 또는 `devkit spec proposal new`가 `SPEC_LIFECYCLE_INACTIVE`를 반환하는 경우:** 개발 방식이 적응형 개발이어서 SDD 유닛을 만들 수 없으며, 아무것도 쓰이지 않습니다. SDD로 전환하는 것은 사용자의 명시적 결정이며 [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)에서 설명합니다.
 - **`DEVELOPMENT_CONFIG_INVALID`:** `[development]` 테이블에 알 수 없는 키나 값이 있습니다. `.devkit/config.toml`을 고칠 때까지 정책에 의존하는 명령이 거부됩니다.
-- **`devkit spec policy`가 `SPEC_CONFIG_INVALID`를 반환하는 경우:** `[tool.spec]` 키를 알 수 없거나 게이트 정책이 `ask`나 `auto`가 아닙니다(예: `plan-intent = "off"`). `.devkit/config.toml`을 고칠 때까지 에이전트는 정책에 의존하는 작업을 멈춥니다.
+- **`devkit spec policy`가 `SPEC_CONFIG_INVALID`를 반환하는 경우:** `[tool.spec]` 키를 알 수 없거나 게이트 정책이 `ask`나 `auto`가 아닙니다(예: `plan-accept = "off"`). `.devkit/config.toml`을 고칠 때까지 에이전트는 정책에 의존하는 작업을 멈춥니다.
 - **`SPEC_WRONG_BRANCH`:** 체크아웃이 `dev-<slug>`에 있지 않아 아무것도 쓰이지 않았습니다. 그 브랜치를 시작하거나 이어서 `devkit spec new`를 다시 실행하십시오.
 - **`SPEC_EXISTS`:** 다른 문서, 제안, 번들이 이미 그 slug를 쓰고 있습니다(`[TARGET]`에 표시). 다른 slug를 고르십시오.
 - **워크트리가 필요한 경우:** `worktree=required`이거나, `auto`에서 체크아웃에 무관한 변경이나 다른 작업이 있으면 에이전트가 별도 워크트리에서 `dev-<slug>`를 시작합니다

@@ -1,16 +1,16 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
-  CAP-DLV-proposal-planning: 65becdbbd5615d0f69c7fae14d1a0c91d91204d1
-  CAP-DLV-spec-bundles: 4920f894d479c8c4a54379c07ed130d81356bec3
-  UC-plan-and-hand-off-a-proposal: e2ddba8f64ed51705b1f02682e562b20f0d34e37
+  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
+  CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
+  UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
 title: Plan and hand off a proposal
 ---
 
 # Plan and hand off a proposal
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -19,16 +19,20 @@ title: Plan and hand off a proposal
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -36,6 +40,7 @@ title: Plan and hand off a proposal
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
@@ -121,7 +126,7 @@ After the final Planning commit, the Host reviews the proposal, PADRs and envelo
 From the retained base checkout, after your direction decision:
 
 ```bash
-uv run devkit spec proposal accept <slug> --by user --mode accept_only
+uv run devkit spec proposal accept-plan <slug> --by user --mode accept_only
 ```
 
 This records acceptance and integrates Planning. A conflict-free moved base can land without a merge into

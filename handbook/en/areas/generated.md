@@ -1,7 +1,7 @@
 ---
 sources:
-  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
-  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
+  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
   CAP-GEN-tracked-artifacts: ff8539b14d3af5890ba656e23b0e43c1d0d05fc8
 title: Generated Files
 ---
@@ -9,7 +9,7 @@ title: Generated Files
 # Generated Files
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 Some files are produced by a command but tracked by Git: `uv.lock`, devkit's own receipt

@@ -5,13 +5,13 @@ sources:
   CAP-DLV-spec-bundles: null
   UC-plan-and-hand-off-a-proposal: null
 title: 제안 계획 후 넘기기
-translated_from: en/journeys/plan-and-hand-off-a-proposal.md@86ac8c82f9bdcfa3
+translated_from: en/journeys/plan-and-hand-off-a-proposal.md@7e56a36bfac89535
 ---
 
 # 제안 계획 후 넘기기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,16 +20,20 @@ translated_from: en/journeys/plan-and-hand-off-a-proposal.md@86ac8c82f9bdcfa3
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -37,6 +41,7 @@ translated_from: en/journeys/plan-and-hand-off-a-proposal.md@86ac8c82f9bdcfa3
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](speed-up-selected-slow-operations.md)
 - [어드바이저리](../areas/advisory.md)
 - [에이전트 우선 CLI 도구 키트](../areas/cli.md)
@@ -83,7 +88,7 @@ Backlog 단계에서 에이전트는 `sdd-proposal` 워크플로에 연결된 �
 uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Replaces the regex rule engine with an AST parser."
 ```
 
-생성된 초안과 제안된 Planning 작업 강도(effort)에 대한 사용자의 확인을 `plan-intent` 게이트 레코드로 기록합니다
+접수 시 명시적으로 요청된 초안 범위와 제안하는 Planning 작업 강도(effort)를 알립니다
 ([`CAP-DLV-proposal-planning`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-proposal-planning.md) (영어 원문)).
 `--milestone`에는 계획·진행 중인 마일스톤뿐 아니라 완료되거나 중단된 마일스톤도 지정할 수 있습니다. 완료·중단된
 마일스톤이면 소속을 다시 검토하라는 `SPEC_PROPOSAL_MILESTONE_INACTIVE` 알림만 추가됩니다.
@@ -91,7 +96,7 @@ uv run devkit spec proposal new fast-engine --title "Fast Engine" --summary "Rep
 초안의 `size`는 Planning을 시작할 수 있는지를 결정합니다. `S`, `M`, `L`(또는 크기 미지정)은 Planning 대상입니다.
 `XL`은 작업이 둘 이상의 스펙을 만들거나 성격이 다른 산출물(예: 버그 수정과 신규 기능)을 함께 묶는다는 뜻입니다. `XL`
 초안은 Backlog에서는 유효하지만, `devkit workflow next`가 `intent-proposal`의 크기 검사를 미충족(`detail="size=XL"`)으로
-보여 주며 `plan-intent` 요청이 열리지 않습니다. 에이전트는 이를 "먼저 분할하라"는 뜻으로 읽고, 검사를 통과하려고 크기를
+보여 줍니다. 에이전트는 이를 "먼저 분할하라"는 뜻으로 읽고, 검사를 통과하려고 크기를
 고치지 않습니다. 사용자의 결정에 따라 초안을 분할하거나(`devkit spec proposal new <child> --decomposed-from
 PROP-<parent>`, 부모의 마일스톤 유지) 하위 초안을 담는 마일스톤으로 승격하며, 필요하면 읽기 전용 `decomposer` 역할에
 분할안을 요청합니다
@@ -123,7 +128,7 @@ uv run devkit spec proposal padr fast-engine "Use AST parser"
 사용자의 방향 결정 후 유지되는 베이스 체크아웃에서 실행합니다.
 
 ```bash
-uv run devkit spec proposal accept <slug> --by user --mode accept_only
+uv run devkit spec proposal accept-plan <slug> --by user --mode accept_only
 ```
 
 수락을 기록하고 Planning을 통합합니다. 이동한 베이스와 충돌이 없으면 `plan-<slug>`에 먼저 병합할 필요가 없습니다.
@@ -143,7 +148,7 @@ uv run devkit spec proposal handoff fast-engine --effort medium
 이 명령은 `dev-<slug>` 브랜치와 워크트리를 생성하거나 검증하고, 설정과 동기화를 실행한 뒤 그곳으로 핸드오프합니다.
 핸드오프는 `sdd-spec-<task_kind>`에 연결된 스펙 번들을 만들고
 ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)),
-PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 옮기고, `plan-intent`와 `plan-accept` 기록을 이름 그대로
+PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 옮기고, `plan-accept` 기록을 이름 그대로
 승계하고, 제안을 가리키던 참조를 다시 쓴 뒤 제안을 제거합니다. 출력 라인이 옮겨진 내용을 알려 줍니다:
 `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]`, `[CARRIED_GATE: ...]`, `[REWRITTEN: ...]`, 그리고
 `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`.
@@ -159,7 +164,7 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 - **Planning이 필요 없는 경우.** 방향이 이미 정해진 초안이면 에이전트가 기본 체크아웃에서 자격을 읽기 전용으로 점검한 뒤,
   사용자의 명시적 결정에 따라 직접 수락(direct acceptance)을 기록합니다:
   `uv run devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"` 후 `--check`를 뺀 같은 명령.
-  기록되지 않은 `plan-intent`처럼 아직 남은 조건이 있으면 점검은 `eligible=no`로 답하고 종료 코드 `1`을 반환합니다.
+  점검은 모든 자격 제한 조건을 보고하며 의도 기록을 요구하지 않습니다.
   `XL` 초안은 직접 수락 대상이 될 수 없습니다.
 - **실제로는 작은 작업인 경우.** 착수 시점에 PADR이 없는 대기 초안을 `session` 작업으로 정할 수 있습니다. 에이전트는
   미해결 피드백을 보존하는 기본 브랜치 커밋 하나로 초안을 삭제하고 세션으로 작업합니다.
@@ -177,7 +182,7 @@ PADR을 수락된 ADR로 승격하며, 참고 자료와 미해결 피드백을 �
 | 코드 | 의미 | 해야 할 일 |
 | --- | --- | --- |
 | `SPEC_LIFECYCLE_INACTIVE` | 개발 방식이 적응형 개발이어서 제안 생성, 수락, 핸드오프를 쓸 수 없습니다. | `uv run devkit config show`를 확인하십시오. SDD로 전환할지는 사용자의 명시적 선택입니다([적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)). |
-| `SPEC_PROPOSAL_NOT_ELIGIBLE` | 직접 수락 조건을 충족하지 못했습니다(예: `size: XL`, 누락된 `plan-intent`). 각 조건과 해결 명령이 나열됩니다. | 조건을 해결하거나 Planning을 진행하십시오. |
+| `SPEC_PROPOSAL_NOT_ELIGIBLE` | 직접 수락 조건을 충족하지 못했습니다(예: `size: XL`). 각 조건과 해결 명령이 나열됩니다. | 조건을 해결하거나 Planning을 진행하십시오. |
 | `SPEC_PROPOSAL_GATE_NOT_OPEN` | 워크플로가 `plan-accept`를 열지 않았습니다(예: 피드백 정리 누락). 상태는 복원됩니다. | 나열된 검사를 충족한 뒤 다시 수락하십시오. |
 | `SPEC_PROPOSAL_APPROVAL_NOT_READY` | 합성 수락에서 Planning이 끝나지 않았습니다: 미충족 검사, 열린 질문, 보류, 또는 `plan-<slug>` 없음. | 그곳에서 Planning을 마친 뒤 다시 실행하십시오. |
 | `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` | 커밋 게이트가 수락 커밋을 거부했고, 두 수락 기록은 철회되었습니다. | `plan-<slug>`에서 `uv run devkit rules check`를 실행하고 고쳐 커밋한 뒤 다시 실행하십시오. |

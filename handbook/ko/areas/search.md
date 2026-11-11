@@ -11,7 +11,7 @@ translated_from: en/areas/search.md@4da1699e3a1980aa
 # 검색
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 검색(search) 기능은 `devkit playbook search` 및 `devkit docs search` 명령을 지원하는 랭킹 엔진입니다. 문서를

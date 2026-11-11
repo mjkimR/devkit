@@ -1,16 +1,16 @@
 ---
 sources:
-  ARCH-05-3-command-plugins: c24442cbd865aa153c23b8182ef5207bdc2b6b8f
-  ARCH-08-1-agent-output: 86a790e9a7ff89af5e69e19a19746d3e0cde4f85
-  CAP-ADV-agent-advisory-protocol: 572af49f008a71f993b3b82c2d457b7610529192
-  CAP-CLI-agent-cli-toolkit: 6bfd99780ae25184921a2004cd8ac4a2bdc25e67
+  ARCH-05-3-command-plugins: beafba907d0e5327b41c4f9646b00af31c430f7c
+  ARCH-08-1-agent-output: 4921a21fa00c4cd4413b7a01236cc833944a458a
+  CAP-ADV-agent-advisory-protocol: 573633a0ccdb58ba524583f27087f88f050d80a2
+  CAP-CLI-agent-cli-toolkit: b970358431b2a99d366e894d9b4bb20cae230fee
 title: Agent-first CLI toolkit
 ---
 
 # Agent-first CLI toolkit
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -19,17 +19,21 @@ title: Agent-first CLI toolkit
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -37,6 +41,7 @@ title: Agent-first CLI toolkit
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Collaboration](collaboration.md)
@@ -141,8 +146,7 @@ Each rule takes `include` and `exclude` patterns and documents its other setting
 ## Versioning
 
 `devkit-cli` depends only on `click` and `devkit-advisory`, and importing it loads nothing else. Because other
-repositories already consume it, it is a semver contract released in lockstep with `devkit-dist`, `devkit-agt` and
-`devkit-advisory`: within `0.x`, removing or renaming a public name bumps the minor version.
+repositories already consume it, its public API is a semver contract. Its version advances when its payload or exact internal pins change: within `0.x`, removing or renaming a public name bumps the minor version.
 
 ## Sources
 

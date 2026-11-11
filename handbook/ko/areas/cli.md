@@ -5,13 +5,13 @@ sources:
   CAP-ADV-agent-advisory-protocol: null
   CAP-CLI-agent-cli-toolkit: null
 title: 에이전트 우선 CLI 도구 키트
-translated_from: en/areas/cli.md@80bf8eebc7ebe4b0
+translated_from: en/areas/cli.md@153477c549b54a7b
 ---
 
 # 에이전트 우선 CLI 도구 키트
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,17 +20,21 @@ translated_from: en/areas/cli.md@80bf8eebc7ebe4b0
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -38,6 +42,7 @@ translated_from: en/areas/cli.md@80bf8eebc7ebe4b0
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [협업](collaboration.md)
@@ -142,7 +147,7 @@ def scan(output_format: str) -> None:
 ## 버전 관리
 
 `devkit-cli`는 `click`과 `devkit-advisory`에만 의존하며, 임포트 시 다른 불필요한 의존성을 로드하지 않습니다. 이미 다른 저장소에서
-런타임에 널리 활용하고 있으므로, 이 패키지는 `devkit-dist`, `devkit-agt`, `devkit-advisory`와 동일한 릴리스 주기를 갖는 semver 계약입니다.
+런타임에 널리 활용하고 있으므로, 공개 API는 semver 계약입니다. 페이로드나 정확한 내부 버전 고정이 바뀔 때 패키지 버전이 증가합니다.
 `0.x` 버전 범위 내에서도 공개 API 이름을 삭제하거나 변경하면 마이너 버전이 증가합니다.
 
 ## 출처

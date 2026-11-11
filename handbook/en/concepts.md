@@ -1,40 +1,40 @@
 ---
 sources:
-  ADR-delivery-classification: 54062bf6f8923b415cde2b503111a6c682325dee
-  ARCH-08-1-agent-output: 86a790e9a7ff89af5e69e19a19746d3e0cde4f85
-  ARCH-08-2-resource-taxonomy: bc6fb555940924532404e5d99a71e74cf0cd16cc
+  ADR-delivery-classification: 76377cf36ed7fadeaac4acf8d7bbfc2cb6a1c445
+  ARCH-08-1-agent-output: 4921a21fa00c4cd4413b7a01236cc833944a458a
+  ARCH-08-2-resource-taxonomy: 91ce1102bad86b280abec6ebd8da514dda2363cc
   ARCH-08-cross-cutting: 3bf334671a435d6d6956b2a8be623aafadd34924
-  CAP-ADV-agent-advisory-protocol: 572af49f008a71f993b3b82c2d457b7610529192
-  CAP-COLL-work-scope-registry: 648447161142a20d42839609f502b027f5c7d403
-  CAP-DIST-agent-projections: d3811102c439ab16edeb87f4c7b0de4868ae1d4f
+  CAP-ADV-agent-advisory-protocol: 573633a0ccdb58ba524583f27087f88f050d80a2
+  CAP-COLL-work-scope-registry: a2dea3a64550dfad9c3225650fbf433174d56773
+  CAP-DIST-agent-projections: 1c43d7e197a7f986584a8bfb12922bcdd2ca877b
   CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
   CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
-  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
-  CAP-DIST-workspace-ownership: d23d1e146e4a38ea8021b4ed5f52c39e529a80cd
-  CAP-DLV-adaptive-development: 120b77c7814f67b082a728d0fdbec0108b852b00
-  CAP-DLV-deep-research: 08c383e1a9a76e3e47679db645eeb7a751126b8e
-  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
-  CAP-DLV-design-exploration: 4fad9083aa058047d39e6956ff63b76f8232bd10
+  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DIST-workspace-ownership: 99e6662d7edc19d07fe05b94b42c892eece6ad57
+  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
+  CAP-DLV-deep-research: 9884a72877319901f9240bc506f168401fbac1c2
+  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-design-exploration: 2955370f17cfb55a293ea67eb545e7c5df5f4ffb
   CAP-DLV-human-interaction: 7926c28e1951896774e56bd201fbd5e3a474a673
-  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
-  CAP-DLV-proposal-planning: 65becdbbd5615d0f69c7fae14d1a0c91d91204d1
-  CAP-DLV-spec-bundles: 4920f894d479c8c4a54379c07ed130d81356bec3
-  CAP-DLV-uiux-improvement: 5b4b328d5933e2bcd67b719eff3c78a10e2386f4
-  CAP-DLV-workflow-envelopes: d9930340d63dab836aa1938f2e6cd2a8c4a23230
-  CAP-DLV-workflow-orchestration: a84a1b608390b8b2c825c2be5d8ff5a8f101e828
-  CAP-DOCS-document-model: 016e923f03d861ba71b8fe6a4a88fed61a07ff6a
-  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
-  CAP-GOV-rules-engine: 114f633a9af2f4a675d6ce0cc37291384ce1b5b7
-  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
-  CAP-INT-mcp-services: 6978ff46427e1a1091c65b488ca9c76734b4a4c0
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
+  CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
+  CAP-DLV-proposal-planning: 662fa1480ba8d769b450d2e56f13214abfb7c420
+  CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
+  CAP-DLV-uiux-improvement: 7c2ea122d1db7d44dbb2ba890bd576beba070943
+  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
+  CAP-DLV-workflow-orchestration: 5ad464a0ca56f3ad3beb141cf126ca309b9dffca
+  CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
+  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
+  CAP-GOV-rules-engine: 026e5296b64c9056723eb649a322007d74e4664d
+  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
 title: Concepts
 ---
 
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -42,17 +42,21 @@ title: Concepts
 - [Adopt devkit in an existing repository](journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](journeys/advance-an-idea.md)
+- [Assess a selected test suite](journeys/assess-test-management.md)
 - [Design necessary command entry points](journeys/design-command-entrypoints.md)
 - [Drive development to integration](journeys/drive-development-to-integration.md)
+- [Execute an isolated command](journeys/execute-an-isolated-command.md)
 - [Explore a design problem](journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](journeys/publish-a-weekly-report.md)
+- [Read decision supersession](journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -60,6 +64,7 @@ title: Concepts
 - [Review and refactor accumulated slop](journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](journeys/route-development-intent.md)
 - [Run parallel work safely](journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](journeys/speed-up-selected-slow-operations.md)
 - [Advisories](areas/advisory.md)
 - [Agent-first CLI toolkit](areas/cli.md)
@@ -202,7 +207,7 @@ Under SDD, every development request is classified on three axes before work sta
   - `proposal`: the direction itself is open, so a proposal is shaped and accepted before a spec exists.
 - **`activity-effort`**: `low`, `medium` or `high`, setting how thorough review and verification are.
 
-The agent proposes the classification; you confirm it. The combination names exactly one workflow,
+The agent states the classification and clarifies unresolved scope or constraints. The combination names exactly one workflow,
 `sdd-<planning-depth>[-<task-kind>]` (for example `sdd-spec-feature`), and the depth only rises during the work,
 except through a proposal's handoff or a reclassification you decide.
 
@@ -301,7 +306,7 @@ branch at a fixed path next to your repository, `<parent>/<repo>-wt-<branch>`, s
 without touching each other's files
 ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
 `devkit worktree start <branch>` creates one, `devkit worktree status` lists them, and `devkit worktree finish`,
-run from the base checkout, integrates a branch and removes its worktree. Project policy decides whether worktrees are used only when needed or always.
+run from the base checkout, cleans up an already-merged branch and its worktree. Integration uses `devkit integration`. Project policy decides whether worktrees are used only when needed or always.
 
 When tasks run in parallel, `devkit spec scope` compares the documents and code paths they declare, using observations of declarations and Git changes across worktrees. An overlap informs scheduling and integration order; it never blocks a write
 ([`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md)).
@@ -350,7 +355,7 @@ The [journeys](README.md#journeys) walk through each path; the [areas](README.md
 `.devkit/adaptive-dev.md`. The old bundle/approach values are rejected and the old context is not a fallback.
 Research material is cited by its `MAT-<slug>` ID instead of copied into current context.
 
-`deep-research`, `design-explore` and `uiux-improve` are opt-in user-only entries. Their skill-local roles are loaded
+`deep-research`, `design-explore` and `app-uiux-improve` are opt-in user-only entries. Their skill-local roles are loaded
 only for an assignment; selecting a bundle grants no implementation or publication authority.
 Research keeps one indexed material; exploration returns directions in conversation unless a destination is requested;
 UI/UX improvement implements requested changes through the consumer workflow and reports actual usage checks.

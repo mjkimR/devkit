@@ -9,13 +9,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 협업
-translated_from: en/areas/collaboration.md@3cb70669c57ecf8c
+translated_from: en/areas/collaboration.md@127d9a15c34a1539
 ---
 
 # 협업
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -24,17 +24,21 @@ translated_from: en/areas/collaboration.md@3cb70669c57ecf8c
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -42,6 +46,7 @@ translated_from: en/areas/collaboration.md@3cb70669c57ecf8c
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -78,27 +83,9 @@ translated_from: en/areas/collaboration.md@3cb70669c57ecf8c
 전체적인 흐름은 [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)(`UC-run-parallel-work-safely`) 가이드를 참고하십시오.
 본문에서 사용되는 기본 용어(워크트리, 스펙 번들, 제안 등)는 [개념](../concepts.md)에서 자세히 설명합니다.
 
-## 병렬 작업을 시작하기 전에 범위 비교하기
+## 선언된 범위 비교
 
-작업 범위는 문서에 선언된 명세와 Git이 추적한 실제 변경 사항을 바탕으로 취합됩니다.
-
-- 문서: 제안의 `target-docs.md` 또는 스펙 번들의 `reconcile.md`에 명시된 `targets` 목록
-- 코드: 다른 스펙 번들의 피드백 파일 경로를 포함하여 `tasks.md`의 `_Boundary` 항목에 선언된 경로. 번들 내에 아직 코드가 선언되지 않은
-  상태라면, 대상 capability 및 유스케이스의 `entrypoints`를 잠정적 후보 경로로 간주합니다.
-- Git 추적 코드: 작업 워크트리가 분기점(fork point) 이후 실제로 수정한 파일(커밋됨, 스테이징됨, 미스테이징됨, 추적되지 않음)
-
-계획 중인 둘 이상의 작업 간 충돌 여부를 사전에 확인하려면 각 작업의 선언 범위를 비교합니다. 이때 디스크에 아무것도 기록되지 않으며
-레지스트리나 Git 저장소 상태도 변경되지 않습니다.
-
-```sh
-devkit spec scope compare --proposal login-flow --spec specs/2026-10/20261020-audit-log
-```
-
-비교 대상 쌍마다 `[PAIR: ... docs= code= unresolved=]` 줄이 출력되고, 공유되는 경로마다 `[EVIDENCE: ...]` 줄이 뒤따릅니다.
-`unresolved` 개수는 중복(겹침) 항목만큼이나 주의 깊게 살펴봐야 합니다. 실제 경로로 변환할 수 없는 입력(아직 생성되지 않은 계획 문서,
-`entrypoints`가 지정되지 않은 대상, `_Boundary`가 `N/A`인 항목 등)도 누락 없이 집계되며, 이를 단순히 "중복 없음"으로 간주하여
-무시하지 않습니다. `[DIFF: ...]` 줄은 `reconcile.md`와 `target-docs.md`의 내용이 서로 불일치함을 의미하며, devkit이 이를 임의로
-병합하지 않습니다. 모든 경로는 `CAP-TRACE-code-entrypoints`에 정의된 리터럴 경로 규칙을 엄격히 따릅니다.
+작업에 활동 소스가 생긴 뒤 `uv run devkit spec scope collect`를 실행합니다. 작업 쌍별 공유 문서·코드 경로와 증거 출처·미해결 입력을 보고합니다. 생성 스냅샷·활동 ref·접근 가능한 워크트리 변경을 함께 읽으며 활동 소스가 없는 Backlog 초안은 제외합니다. 결과는 일정 판단 자료이며 쓰기 권한을 부여하지 않습니다.
 
 ## 실행 중인 작업 관찰하기
 
@@ -107,11 +94,10 @@ devkit spec scope compare --proposal login-flow --spec specs/2026-10/20261020-au
 수집하는 명령은 하나입니다.
 
 ```sh
-devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fetch <remote>]
+devkit spec scope collect [--base <ref>] [--fetch <remote>]
 ```
 
-- **관찰 깊이.** `snapshot`은 레지스트리의 생성 스냅샷만 읽고, `refs`는 로컬 및 원격 추적 `plan-*`/`dev-*` 브랜치를 더하며,
-  `worktrees`(기본값)는 접근 가능한 모든 워크트리의 선언과 커밋·스테이징·미스테이징·미추적 변경까지 더합니다.
+- **통합 수집.** 생성 스냅샷·활동 ref·접근 가능한 워크트리를 한 번에 읽습니다. 활동 소스가 없는 초안은 제외합니다.
 - **네트워크는 선택 사항.** `--fetch`가 없으면 원격 ref는 마지막으로 fetch한 상태 그대로입니다. `--fetch <remote>`(반복 가능,
   설정된 원격만)는 해당 원격 추적 브랜치만 갱신합니다. 다른 컴퓨터에서 push하지 않은 작업은 절대 보이지 않으므로, 여러 PC에서
   자주 작업한다면 선언과 변경을 풀 리퀘스트로 push하세요.
@@ -132,10 +118,6 @@ devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fet
 
 | 작업 목적 | 실행 명령어 |
 | --- | --- |
-| 현재 워크트리의 작업을 수동 등록(소유자 토큰 1회 출력) | `devkit spec scope register --spec <dir>` |
-| 모든 작업 기록과 현재 워크트리의 겹침 현황 확인 | `devkit spec scope query` |
-| 시작 예정인 번들과 기록 간의 겹침 검사 | `devkit spec scope query --spec <dir>` |
-| 작업 이벤트 히스토리 조회 | `devkit spec scope query --history [--task <id>]` |
 | 중단된 작업의 등록 철회 | `devkit spec scope release` |
 | 워크트리가 삭제된 잔여 기록 정리 | `devkit spec scope sweep --apply` |
 
@@ -145,7 +127,6 @@ devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fet
   기록이 고아 상태로 남지 않습니다.
 - 조회와 `collect`는 일체의 부작용을 유발하지 않습니다. 디렉터리, 잠금, 파일을 생성하지 않고 소유자 토큰도 건드리지 않습니다.
   응답이 비어 있거나 일부만 읽을 수 있다고 해서 겹침이 전혀 없다는 증거는 아닙니다.
-- 저널(`journal.jsonl`)은 단순 진단용입니다. 작업 겹침 여부를 판정하는 데는 전혀 관여하지 않습니다.
 - 작업이 `devkit worktree finish` 또는 `devkit integration integrate`를 통해 통합되면, devkit-spec의 완료 후 정리 루틴이
   해당 작업의 레지스트리 기록을 제거하고 인계된 제안 디렉터리를 정리합니다. 그 외의 오래된 잔여 기록은 명시적인 `sweep`으로
   정리하며, 읽은 뒤 바뀐 기록은 유지됩니다(`SPEC_SCOPE_STALE_REVISION`).

@@ -29,13 +29,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@07453de8123858fd
+translated_from: en/areas/delivery.md@c0c1ecbeb0654de4
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -44,17 +44,21 @@ translated_from: en/areas/delivery.md@07453de8123858fd
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -62,6 +66,7 @@ translated_from: en/areas/delivery.md@07453de8123858fd
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -121,7 +126,7 @@ Planning은 `plan-<slug>`에서 제안서, 예비 결정(PADR), 근거와 `targe
 유지되는 베이스 체크아웃에서 복합 수락(composed acceptance)을 실행하면 검토한 Planning 결과를 통합합니다.
 
 ```bash
-uv run devkit spec proposal accept <slug> --by user --mode accept_only
+uv run devkit spec proposal accept-plan <slug> --by user --mode accept_only
 ```
 
 `accept_and_handoff`에는 handoff 권한과 `--effort`도 필요합니다. Planning 반영 후 검증 대기·handoff 미시작 상태로 반환합니다.
@@ -158,7 +163,6 @@ high는 독립 검증이 필요합니다.
 
 | 경계 | 결정 |
 | --- | --- |
-| `plan-intent` | 목표와 범위. 명시적 작업 지시가 이를 충족합니다. |
 | `plan-accept` | 제안의 방향. |
 | `proposal-handoff` | Development 시작과 설치·워크트리 효과. |
 | `dev-integration` | 검증된 변경 반영과 한정된 정리. |
@@ -194,7 +198,7 @@ Host가 소스 런타임으로 내용을 검사한 뒤 명시적 브랜치 통�
 
 ## 적응형 개발
 
-docs·catalog를 설치하고 `uv run devkit add adaptive-dev`를 선택합니다.
+`devkit-adaptive`를 설치하고 `uv run devkit add adaptive-dev`를 선택합니다.
 `/adaptive-dev`는 변경별 SDD 기록 없이 유용한 질문, 한정된 실험, 대표 흐름 구현과 실제 사용 검사를 진행합니다.
 제품 작업 전에 공유 방식이 `adaptive-dev`인지 확인합니다. 선택적 역할은 product-clarifier, product-researcher, usage-reviewer입니다.
 조정자가 `.devkit/adaptive-dev.md`에 목표, 선택과 가정, 검사, 미확인 사항과 다음 행동을 유지합니다.
@@ -212,7 +216,7 @@ docs·catalog를 설치하고 `uv run devkit add adaptive-dev`를 선택합니�
   구현·커밋·게시 권한을 주지 않습니다.
 - `design-explore`는 구조·모델·워크플로의 해결 기제를 탐색하고 저장 위치 요청이 없으면 대화로 방향을 제시합니다.
   구현 권한을 주지 않습니다.
-- `uiux-improve`는 인터페이스·사용 흐름을 개선하며 요청한 구현을 소비 프로젝트의 절차로 진행합니다.
+- `app-uiux-improve`는 인터페이스·사용 흐름을 개선하며 요청한 구현을 소비 프로젝트의 절차로 진행합니다.
   리뷰 전용 요청에는 편집 없이 발견 사항을 반환합니다.
 
 고정된 역할 구성이나 점수 없이 필요한 스킬 내부 관점을 선택합니다.
@@ -264,3 +268,11 @@ review-refactor와 성능 작업은 이전·이후 동작을 비교하고 계약
 - [CAP-DLV-design-exploration](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-design-exploration.md) (영어 원문)
 - [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md) (영어 원문)
 - [CAP-DLV-maintenance-history](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-maintenance-history.md) (영어 원문)
+
+## 할당 증거와 수명주기 소유권
+
+`devkit-adaptive`가 adaptive 번들과 할당 명령을 소유합니다. `devkit adaptive assignment new`로 위임 전에 목표·리터럴 쓰기 경로·커밋 권한·선언된 검사·기준 문서를 기록합니다. `return`·`verify`·`close`는 공통 Git 원장에 증거를 남깁니다. 검증은 저장소 사실과 보고된 결과를 확인하며 에이전트를 시작하거나 테스트를 실행하지 않습니다. `list`는 관찰 사실을 보고하며 에이전트 생존을 주장하지 않습니다.
+
+제안 실행 인터페이스는 `CAP-DLV-proposal-lifecycle`, 작업자 권한과 반환 검증은 `CAP-DLV-delivery-roles`가 소유합니다. 로컬 Host의 통합 Planning 수락은 `devkit spec proposal accept-plan <slug> --by user --mode accept_only`를 사용합니다. 일반 `accept`에는 `--mode`와 `--effort`가 없습니다.
+
+[테스트 관리 평가](../journeys/assess-test-management.md)는 선택한 스위트를 상담하고 결정된 변경을 기본 워크플로로 보냅니다.

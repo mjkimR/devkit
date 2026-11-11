@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 병렬 작업 안전하게 실행하기
-translated_from: en/journeys/run-parallel-work-safely.md@4101bcda74d211e0
+translated_from: en/journeys/run-parallel-work-safely.md@a6203433bc403e5a
 ---
 
 # 병렬 작업 안전하게 실행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,23 +21,28 @@ translated_from: en/journeys/run-parallel-work-safely.md@4101bcda74d211e0
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
 - [오래된 활동 브랜치 정리하기](resolve-stale-activity-branches.md)
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](speed-up-selected-slow-operations.md)
 - [어드바이저리](../areas/advisory.md)
 - [에이전트 우선 CLI 도구 키트](../areas/cli.md)
@@ -84,14 +89,7 @@ translated_from: en/journeys/run-parallel-work-safely.md@4101bcda74d211e0
    ```
 
    자세한 내용은 [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md) (영어 원문)를 참고하십시오.
-2. **계획된 범위 비교.** 실제 작업을 시작하기 전에 계획된 작업 범위를 비교합니다. 이 단계에서는 선언된 명세만 읽으며 어떠한 변경도 기록하지 않습니다.
-
-   ```sh
-   uv run devkit spec scope compare --proposal <a> --proposal <b>
-   uv run devkit spec scope compare --spec <dir-a> --spec <dir-b>
-   ```
-
-   비교 대상 쌍마다 `[EVIDENCE: <path> ... kind=doc|code ...]` 증거가 포함된 `[PAIR: ... docs=N ...]` 센티널이 출력되고, 마지막에 `[SUMMARY: sets=2 pairs=1 overlapping=1]`이 표시됩니다.
+2. **기존 활동 소스 확인.** `uv run devkit spec scope collect`로 `plan-*` 또는 `dev-*` 소스가 있는 작업의 선언과 관찰된 변경을 비교합니다. 소스 없는 대기 초안은 제외하며 중첩과 함께 미해결 입력도 읽습니다.
 3. **작업 착수.** 병렬로 진행하기로 결정한 각 작업을 고유한 활동 브랜치와 독립된 작업 워크트리에서 시작합니다
    (`uv run devkit worktree start dev-<slug>`,
    [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
@@ -103,15 +101,13 @@ translated_from: en/journeys/run-parallel-work-safely.md@4101bcda74d211e0
 5. **필요할 때 관찰.** 증거가 필요하면 오케스트레이션 에이전트가 어느 체크아웃에서든 명시적으로 요청합니다.
 
    ```sh
-   uv run devkit spec scope collect                        # default --mode worktrees
-   uv run devkit spec scope collect --mode refs --fetch origin
+   uv run devkit spec scope collect
+   uv run devkit spec scope collect --fetch origin
    ```
 
-   모드는 관찰 깊이를 정합니다. `snapshot`은 레지스트리 기록만 읽고, `refs`는 로컬과 원격 추적 `plan-*`·`dev-*` 브랜치를
-   더하며, `worktrees`는 접근 가능한 각 워크트리의 선언과 커밋된·스테이징된·스테이징되지 않은·추적되지 않은 경로까지 더합니다.
-   `--fetch`는 설정된 원격 저장소를 먼저 갱신하며, 이 옵션이 없으면 원격 브랜치는 마지막 fetch 시점의 상태입니다. 출력에는 각
+   한 번의 수집은 생성 스냅샷·활동 ref·접근 가능한 워크트리의 선언과 변경을 함께 읽습니다. 활동 소스가 없는 초안은 제외합니다. `--fetch`는 설정된 원격 저장소를 먼저 갱신하며, 이 옵션이 없으면 원격 브랜치는 마지막 fetch 시점의 상태입니다. 출력에는 각
    `[SCOPE_CANDIDATE: ...]`와 `[SCOPE_OBSERVATION: ...]`, `[PAIR: ...]`와 `[EVIDENCE: ...]` 줄, 그리고
-   `[SUMMARY: ... coverage=complete|partial ...]`가 표시됩니다. 수집은 기록, 토큰, 저널을 전혀 바꾸지 않습니다.
+   `[SUMMARY: ... coverage=complete|partial ...]`가 표시됩니다. 수집은 기록, 토큰을 전혀 바꾸지 않습니다.
 6. **통합 순서 결정.** 범위 중첩, 각 관찰의 출처, 누락된 커버리지를 바탕으로 무엇을 계속 병렬로 진행할지 정합니다. 범위가 겹치는
    작업들은 순차적으로 통합하십시오.
 7. **작업 완료.** 통합 과정에서 워크트리가 제거되고, 완료 후속 정리 단계에서 해당 워크트리의 범위 기록이 삭제됩니다. 다른 작업의
@@ -131,10 +127,10 @@ translated_from: en/journeys/run-parallel-work-safely.md@4101bcda74d211e0
   누락된 부분을 감안해 판단하거나, 접근 문제를 해결한 뒤 다시 수집하십시오.
 - **`SPEC_SCOPE_COLLECTION_FAILED`:** 선택한 인벤토리 소스를 하나도 읽지 못했습니다. `[TARGET]`에 나온 소스의 접근 문제를 해결한 뒤
   다시 수집하십시오.
-- **`ARGUMENT_INVALID`:** 모드와 fetch 인자가 충돌하거나(예: `--mode snapshot`과 `--fetch`를 함께 지정), 예산 값이나 원격 이름이
+- **`ARGUMENT_INVALID`:** 예산 값이나 원격 이름이
   잘못되었습니다. 인자를 바로잡으십시오.
 - **다른 머신의 작업이 보이지 않는 경우:** 어떤 관찰도 다른 PC의 푸시되지 않았거나 커밋되지 않은 변경을 읽지 못합니다. 여러 PC에서
-  자주 작업한다면 선언과 변경 사항을 푸시하고, 가능하면 풀 리퀘스트를 사용하여 `refs` 모드가 볼 수 있게 하십시오.
+  자주 작업한다면 선언과 변경 사항을 푸시하고, 가능하면 풀 리퀘스트를 사용하여 수집으로 볼 수 있게 하십시오.
 - **워크트리가 삭제된 후에도 레지스트리 기록이 남아 있는 경우:** 워크트리 정리 단계가 실패했거나 `finish` 절차 없이 워크트리가 강제 삭제된 경우입니다. 기본 체크아웃에서 `uv run devkit spec scope sweep --apply`를 실행하십시오. 리비전 변동이 없는 유효하지 않은 기록은 안전하게 정리되며(`[SWEEP: <task> verdict=removed reason=worktree-missing ...]`), 리비전이 변경된 기록은 보존된 채 `SPEC_SCOPE_STALE_REVISION`으로 보고됩니다.
 
 ## 최종 결과

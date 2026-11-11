@@ -14,13 +14,13 @@ sources:
   CAP-DLV-uiux-improvement: null
   CAP-HARN-command-design: null
 title: devkit 핸드북
-translated_from: en/README.md@f68030dec2b7a813
+translated_from: en/README.md@b3306b4ddf4f5161
 ---
 
 # devkit 핸드북
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적으로 개발 작업을 수행하는 저장소를 위한 개발자 도구 모음입니다.
@@ -30,7 +30,7 @@ devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 주도적�
 
 ## devkit이 제공하는 것
 
-devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 동일한 버전으로 함께 릴리스되는 Python 휠 패키지로 배포됩니다
+devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 릴리즈 인벤토리가 실제 버전을 선택하는 Python 휠 패키지로 배포됩니다
 ([`ARCH-05-1-containers`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-05-1-containers.md) (영어 원문)):
 
 - **배포**(`devkit-dist`): 에이전트 자산을 번들 단위로 패키징하고, 프로젝트에서 선택한 번들을 `devkit sync`로 배포합니다. 스킬과 서브에이전트를 각 에이전트의 네이티브 디렉터리에 프로젝션하며, 필요한 시점에 지침 컨텍스트를 로드합니다. 공유 에이전트 자산만 필요한 저장소라면 이 패키지만 단독으로 설치하면 됩니다.
@@ -38,7 +38,7 @@ devkit은 단일 CLI 명령인 `devkit`으로 제공되며, 동일한 버전으�
 - **문서**(`devkit-docs`): Living Spec의 문서 모델, 문서 간 ID 해석·목록·검색·참조 추적을 담당하는 `devkit docs` 명령, 문서 규칙, 그리고 공통 형식과 작성 지침을 담은 자동 선택 `docs` 번들을 제공합니다. 특정 전달 절차에 대해서는 알지 못합니다.
 - **스펙 주도 전달**(`devkit-spec`): 제안 및 스펙 번들(`devkit spec`), 전달 정책, 워커 결과 점검, 스킬·워크플로·역할 계약을 담은 `spec` 번들, 그리고 문서의 일관성을 지키는 수명 주기 규칙을 제공합니다. `devkit-docs`를 기반으로 동작합니다.
 - **다른 저장소용 라이브러리**: `devkit-advisory`(Python 표준 라이브러리만 사용하는 독립적인 `devkit.advisory` 에이전트 어드바이저리 프로토콜)와 `devkit-cli`(click 기반 CLI 도구를 위한 에이전트 우선 출력 계약)를 제공합니다.
-- **선택 구성 요소**: `devkit-mcp`(선택적 MCP 런타임), `devkit-viewer`(로컬 읽기 전용 저장소 뷰어), `devkit-catalog`(`adaptive-dev`, `maintenance`, `response-style` 같은 옵트인 번들 카탈로그), 그리고 고밀도(dense) 및 하이브리드 문서 검색을 위한 `search` extra를 지원합니다.
+- **선택 구성 요소**: `devkit-mcp`(선택적 MCP 런타임), `devkit-viewer`(로컬 읽기 전용 저장소 뷰어), `devkit-catalog`(`maintenance`, `response-style` 같은 옵트인 번들 카탈로그), 그리고 고밀도(dense) 및 하이브리드 문서 검색을 위한 `search` extra를 지원합니다.
 
 이러한 구성 요소들이 추구하는 설계 목표인 결정적 결과, 트랜잭션 방식의 동기화, 엄격한 계층 분리, POSIX 전용 동작 원칙은
 [`ARCH-01-introduction-and-goals`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/architecture/ARCH-01-introduction-and-goals.md) (영어 원문)에

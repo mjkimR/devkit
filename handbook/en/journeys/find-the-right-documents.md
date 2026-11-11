@@ -1,17 +1,17 @@
 ---
 sources:
-  CAP-DOCS-document-lookup: 047987d53dc77f859357a545cfb01a2e161f80a1
-  CAP-DOCS-document-model: 016e923f03d861ba71b8fe6a4a88fed61a07ff6a
+  CAP-DOCS-document-lookup: 63142a86681c0d154520316976a583a5d44f68bf
+  CAP-DOCS-document-model: f8721682fd5a48b32c20f3417977802ddb61b571
   CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
-  CAP-DOCS-namespaces: c30311a1b0b7bcf09517a9ec71e6b395569b6512
-  UC-find-the-right-documents: fbfaa41c0802e14b1f363c666a5b4de450716895
+  CAP-DOCS-namespaces: f6a06f2fb6a7564ed6ede84c6375c1e401dedb91
+  UC-find-the-right-documents: 63fc40bfa2e3a24b2410dec381a6abec5837ba3d
 title: Find the right documents
 ---
 
 # Find the right documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,16 +20,20 @@ title: Find the right documents
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -37,6 +41,7 @@ title: Find the right documents
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)

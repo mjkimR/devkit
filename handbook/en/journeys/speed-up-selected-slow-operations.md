@@ -1,8 +1,8 @@
 ---
 sources:
-  CAP-DIST-content-packages: 2d99bc80b78d361bb4cad5caa3df90ad9e1a936f
+  CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
   CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
-  CAP-DLV-maintenance-history: ada7d8b89abb17dd3b396263b9b4aac18b2752e5
+  CAP-DLV-maintenance-history: b1e327e613097e1cc9b843934824a35b5f174e6c
   CAP-DLV-performance-pass: 77480522e4c42e9bd7b529e4968a9a901db640b8
   UC-speed-up-selected-slow-operations: 894ab77ba693970784eb66025a03e2a4b955e452
 title: Speed up selected slow operations
@@ -11,7 +11,7 @@ title: Speed up selected slow operations
 # Speed up selected slow operations
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,17 +20,21 @@ title: Speed up selected slow operations
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -38,6 +42,7 @@ title: Speed up selected slow operations
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
 - [Collaboration](../areas/collaboration.md)

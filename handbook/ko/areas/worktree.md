@@ -10,13 +10,13 @@ sources:
   UC-route-development-intent: null
   UC-run-parallel-work-safely: null
 title: 워크트리
-translated_from: en/areas/worktree.md@450be376e2d3a5a6
+translated_from: en/areas/worktree.md@4558db948dd1e53b
 ---
 
 # 워크트리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,17 +25,21 @@ translated_from: en/areas/worktree.md@450be376e2d3a5a6
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -43,6 +47,7 @@ translated_from: en/areas/worktree.md@450be376e2d3a5a6
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -129,26 +134,10 @@ Host가 주도하는 워크플로에서 통합은 `devkit integration`을 통해
 핵심 하위 명령은 다음과 같습니다.
 
 ```sh
-devkit worktree finish dev-login --merge [--local-only]
+uv run devkit worktree finish dev-login
 ```
 
-이 명령은 베이스 체크아웃에서 실행됩니다. 커밋되지 않은 변경 사항이나 추적되지 않는 파일이 있는 워크트리는 아무것도 바뀌기
-전에 거부되며(`WORKTREE_DIRTY`), 강제로 삭제되는 일은 없습니다. 그렇지 않으면 다음 순서로 엄격하게 진행됩니다.
-
-1. **통합(Integration).** 베이스는 특정 브랜치에 위치해야 하며 작업 트리가 깨끗해야 합니다. 또한 작업 브랜치는 이미 베이스의
-   최신 HEAD를 포함하고 있어야 합니다(`WORKTREE_MERGE_NOT_FF`: 베이스 브랜치를 작업 브랜치로 병합해야 하며, 각종 기록에서
-   커밋 SHA를 직접 인용하므로 rebase는 절대 사용하지 마십시오). 등록된 완료 가드(finish guard)들이 실행되며, devkit-agt는
-   유닛 내에 해결되지 않은 문제나 답변되지 않은 질문이 남아 있는 브랜치의 통합을 거부합니다(`WORKTREE_BLOCKED`). 이후 베이스는
-   별도의 체크아웃을 거치지 않고 직접 구성된 병합 커밋을 통해(또는 `merge = "ff-only"` 설정인 경우 fast-forward로) 브랜치
-   변경 사항을 반영하며, `--local-only` 플래그가 지정되지 않은 한 업스트림 원격 저장소로 push합니다.
-2. **워크트리 제거.** 검사 이후 변경 사항이 생겼다면 여기서도 `WORKTREE_DIRTY`로 중단됩니다.
-3. **브랜치 삭제.** `git branch -d` 명령으로 로컬 브랜치를 안전하게 삭제합니다(`delete_branch = false`로 설정된 경우 제외).
-4. **완료 후 확장 실행.** devkit-spec의 작업 범위 기록 정리나 전달 완료된 제안서 디렉터리 정리 등 완료 후속(post-finish)
-   확장 작업을 실행합니다.
-
-`--merge` 플래그 없이 `finish`를 실행하면 이미 병합이 완료된 브랜치에 대해서만 정리 작업을 수행합니다. squash나 rebase 방식으로
-병합된 풀 리퀘스트의 경우 Git 관점에서는 브랜치가 병합되지 않은 상태로 인식되므로, 이러한 브랜치는 사용자의 명시적 승인이 있을 때만
-삭제하세요.
+`finish`는 이미 병합된 브랜치를 확인한 뒤 깨끗한 소유 워크트리를 제거하고, 설정에 따라 로컬 브랜치를 삭제하고, 완료 후 확장을 실행합니다. 변경 파일이 있는 워크트리는 보존합니다. 병합·fetch·push를 수행하지 않으며 `--merge`는 `WORKTREE_MERGE_RETIRED`로 거부합니다. 통합은 `devkit integration`을 사용합니다.
 
 작업을 통합하지 않고 폐기하려는 경우(작업 포기, 대체, 태스크 분할 상향 등) `devkit worktree finish dev-login --discard`
 명령을 사용합니다. 깨끗한 상태의 워크트리를 제거하고 `git branch -D`로 브랜치를 강제 삭제합니다. 단, 원격 브랜치와 풀 리퀘스트는
@@ -183,7 +172,7 @@ devkit worktree finish dev-login --merge [--local-only]
 
 ```toml
 [worktree]
-pull_request = "auto"   # "required"로 설정하면 `finish --merge` 및 로컬 통합 경로를 거부함
+pull_request = "auto"   # "required"로 설정하면 로컬 통합 경로를 거부함
 delete_branch = true    # finish 완료 시 병합된 브랜치 삭제
 merge = "no-ff"         # 또는 "ff-only"
 setup = "uv sync"       # 새 워크트리마다 실행할 초기화 명령 (기본값: 없음)

@@ -1,17 +1,17 @@
 ---
 sources:
-  CAP-COLL-work-scope-registry: 648447161142a20d42839609f502b027f5c7d403
-  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
-  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
-  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
+  CAP-COLL-work-scope-registry: a2dea3a64550dfad9c3225650fbf433174d56773
+  CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
+  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
+  UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Run parallel work safely
 ---
 
 # Run parallel work safely
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,23 +20,28 @@ title: Run parallel work safely
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
@@ -92,15 +97,7 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
    ```
 
    See [`CAP-DLV-project-policy`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-project-policy.md).
-2. **Compare the planned scopes** before anything starts. This reads declarations only and writes nothing:
-
-   ```sh
-   uv run devkit spec scope compare --proposal <a> --proposal <b>
-   uv run devkit spec scope compare --spec <dir-a> --spec <dir-b>
-   ```
-
-   Each pair gets a `[PAIR: ... docs=N ...]` line with `[EVIDENCE: <path> ... kind=doc|code ...]` lines, then a
-   `[SUMMARY: sets=2 pairs=1 overlapping=1]`.
+2. **Inspect existing activity sources.** Run `uv run devkit spec scope collect` to compare declarations and observed changes from tasks with a `plan-*` or `dev-*` source. Queued drafts have no source and are excluded. Read unresolved inputs alongside overlaps.
 3. **Start the tasks** you decided to run in parallel, each on its activity branch in its own task worktree
    (`uv run devkit worktree start dev-<slug>`;
    [`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md)).
@@ -112,16 +109,14 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
 5. **Observe when you need evidence.** The orchestrating agent asks for it explicitly, from any checkout:
 
    ```sh
-   uv run devkit spec scope collect                        # default --mode worktrees
-   uv run devkit spec scope collect --mode refs --fetch origin
+   uv run devkit spec scope collect
+   uv run devkit spec scope collect --fetch origin
    ```
 
-   The mode chooses how deep to look: `snapshot` reads only the registry records, `refs` adds local and fetched
-   `plan-*` and `dev-*` branches, and `worktrees` adds each accessible worktree's declarations and its committed,
-   staged, unstaged and untracked paths. `--fetch` refreshes a configured remote first; without it, remote branches
+   One collection combines creation snapshots, activity refs and accessible worktree declarations and changes. Drafts without an activity source are excluded. `--fetch` refreshes a configured remote first; without it, remote branches
    are what the last fetch saw. Output lists each `[SCOPE_CANDIDATE: ...]` and `[SCOPE_OBSERVATION: ...]`, the
    `[PAIR: ...]` and `[EVIDENCE: ...]` lines, and a `[SUMMARY: ... coverage=complete|partial ...]`. Collecting changes
-   no record, token or journal.
+   no record or token.
 6. **Order integration.** Use the overlaps, where each observation came from, and the coverage that is missing to
    decide what keeps running in parallel; integrate overlapping work one after another.
 7. **Finish.** Integration removes the worktree, and the post-finish cleanup removes that worktree's scope record.
@@ -143,10 +138,9 @@ each missing source with its reason. Pairs that were not computed never count as
   with the gaps in view, or repair access and collect again.
 - **`SPEC_SCOPE_COLLECTION_FAILED`.** No selected inventory source could be read. Repair access to the sources named
   in `[TARGET]` and collect again.
-- **`ARGUMENT_INVALID`.** The mode and fetch arguments conflict (for example `--mode snapshot` with `--fetch`), or a
-  budget or remote is invalid. Correct the arguments.
+- **`ARGUMENT_INVALID`.** A budget or remote is invalid. Correct the arguments.
 - **Work on another machine is missing.** No observation reads another PC's unpushed or uncommitted changes. For
-  frequent multi-PC work, push declarations and changes, ideally through pull requests, so `refs` mode sees them.
+  frequent multi-PC work, push declarations and changes, ideally through pull requests, so collection sees them.
 - **A record outlives its worktree** (the cleanup failed, or the worktree was removed without a finish). From the base
   checkout run `uv run devkit spec scope sweep --apply`. Stale records whose revision is unchanged are removed
   (`[SWEEP: <task> verdict=removed reason=worktree-missing ...]`); a record whose revision moved is kept and reported

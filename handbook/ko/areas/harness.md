@@ -11,13 +11,13 @@ sources:
   UC-resolve-stale-activity-branches: null
   UC-route-development-intent: null
 title: 하네스
-translated_from: en/areas/harness.md@ac806783b311623f
+translated_from: en/areas/harness.md@4e7cd8050c194cc2
 ---
 
 # 하네스
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -26,17 +26,21 @@ translated_from: en/areas/harness.md@ac806783b311623f
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -44,6 +48,7 @@ translated_from: en/areas/harness.md@ac806783b311623f
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -96,7 +101,7 @@ approach)을 확인하게 합니다. SDD라면 이어서 `uv run devkit get-cont
 `.devkit/config.toml`의 `[development] approach`는 프로젝트가 공유하는 선택으로, `sdd`(값이 없을 때의 기본값) 또는
 `adaptive-dev`입니다. 번들을 설치하거나 선택해도 이 값은 바뀌지 않습니다. 적응형 개발에서는 `spec` 지침이 물러납니다. 일반
 작업은 프로젝트의 적응형 개발 지침과 독립적인 검사를 따르며, 암묵적인 유닛, 엔벨로프, 작업 분류를 만들지 않습니다. 이미 SDD
-워크플로에 묶인 문서는 기존 검사를 그대로 유지합니다. 그 지침과 `/adaptive-dev` 진입점은 `devkit-catalog`의 선택형 `adaptive-dev`
+워크플로에 묶인 문서는 기존 검사를 그대로 유지합니다. 그 지침과 `/adaptive-dev` 진입점은 `devkit-adaptive`의 선택형 `adaptive-dev`
 번들이 제공합니다. [아이디어 발전시키기](../journeys/advance-an-idea.md)를 참고하십시오. 적응형 개발으로 키운 결과물을
 SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)에서
 설명합니다.
@@ -109,8 +114,8 @@ SDD로 옮기는 절차는 `sdd-baseline` 플레이북이며, [적응형 개발�
 2. 사용자가 `/spec <intent>` 형태로 의도를 전달합니다. 새 작업을 접수할 때 `spec` 스킬은 먼저 `devkit playbook search`를
    실행하며, 요청한 작업과 정확히 일치하는 플레이북이 있는 경우에만 이를 추천합니다. 사용자가 승인하기 전까지는 아무것도 임의로
    실행되지 않습니다.
-3. 스킬이 `devkit spec policy`를 조회한 후 사용자가 검토하고 확정할 작업 분류를 제안합니다. 여기에는
-   `task-kind`(feature, bugfix, refactor), `planning-depth`(`session`, `spec`, `proposal` 중 작업 규모가 아니라 구현 전
+3. 스킬이 `devkit spec policy`를 조회한 후 작업 분류를 알리고 미정인 범위를 확인합니다. 여기에는
+   `task-kind`(feature, bugfix, overall-refactor), `planning-depth`(`session`, `spec`, `proposal` 중 작업 규모가 아니라 구현 전
    선결 결정 사항의 범위에 따라 결정됨), 그리고 각 활동별 실행 모드와 `activity-effort`가 포함됩니다.
 4. 제안된 분류에 매칭되는 워크플로(workflow) `sdd-<planning-depth>[-<task-kind>]`를 진행합니다(`CAP-DLV-delivery-workflows`).
    유닛(Unit) 단위의 깊이에서는 실제 코드 작성 전에 `spec.md`, `plan.md`, `tasks.md`를 반드시 먼저 작성해야 하며, `session`
@@ -182,7 +187,7 @@ devkit은 이미 존재하는 `docs/` 트리에 임의로 템플릿을 덮어쓰
   그룹화할 수 있습니다. `spec-next`는 로컬 베이스 스냅샷을 기준으로 직접적인 선행 조건 충족 여부를 확인한 후 초안들의
   우선순위를 정렬합니다. 마일스톤을 닫거나 중단하거나 다시 여는 것은 사용자의 결정이며, 완료되거나 중단된 마일스톤은 같은
   커밋에서 `docs/roadmap/_archive/`로 옮겨집니다.
-- **병렬 작업**: 병렬 작업을 배정하기 전에 Host는 `devkit spec scope collect --mode worktrees`로 다른 워크트리의 작업을
+- **병렬 작업**: 병렬 작업을 배정하기 전에 Host는 `devkit spec scope collect`로 다른 워크트리의 작업을
   관찰합니다. 워커에게는 범위 등록 의무가 없습니다.
 - **방치된 브랜치 정리**: 작업 후 남겨진 `plan-*` 및 `dev-*` 브랜치는
   [오래된 활동 브랜치 정리하기](../journeys/resolve-stale-activity-branches.md) 지침에 따라 체계적으로 정리합니다.
@@ -232,3 +237,7 @@ devkit 자체 버전을 출력).
 `command-design`은 필요한 justfile·CLI·MCP 진입점을 위한 선택형 카탈로그 지침입니다.
 동작·호출자를 확인하고 적절한 기존 경로를 재사용하며 문서에 적힌 실행 컨텍스트에서 추가를 검증합니다.
 [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)를 참고하십시오.
+
+## 고정 커밋에서 명령 실행
+
+[격리 실행](../journeys/execute-an-isolated-command.md)은 `devkit exec`로 분리 체크아웃을 준비하고 그 밖에 명령 증거를 보존합니다. 시작 성공은 대기 상태이며 결과를 수집하기 전에는 검증 통과로 보고하지 않습니다. 취소·관찰·정리는 각각의 결과를 갖습니다.

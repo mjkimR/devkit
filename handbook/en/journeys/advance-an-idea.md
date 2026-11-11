@@ -1,16 +1,17 @@
 ---
 sources:
-  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
-  CAP-DLV-adaptive-development: 120b77c7814f67b082a728d0fdbec0108b852b00
-  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
-  UC-advance-an-idea: 0ce93e70e07d5a6a3d120257d9e318f680aec3e1
+  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DLV-adaptive-assignments: 7801618ce66b8e3fe7fd270e4b5ed92cc53b02ba
+  CAP-DLV-adaptive-development: 43fcabe0e4b9ff9aba7c6092bb2d8da49f545454
+  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  UC-advance-an-idea: 45c8acaee167f7472b70885cdcbac26fd133c39f
 title: Advance an idea
 ---
 
 # Advance an idea
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -18,17 +19,21 @@ title: Advance an idea
 - [Concepts](../concepts.md)
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -36,6 +41,7 @@ title: Advance an idea
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
@@ -69,13 +75,13 @@ adaptive development for good.
 
 Source: [`UC-advance-an-idea`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-advance-an-idea.md),
 contract [`CAP-DLV-adaptive-development`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-adaptive-development.md),
-entry skill [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-catalog/src/devkit_catalog/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md).
+entry skill [`adaptive-dev`](https://github.com/mjkimR/devkit/blob/v0.1.6/packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/skills/adaptive-dev/SKILL.md).
 This is unrelated to proposal Planning in SDD, which is
 [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md).
 
 ## Before you start
 
-- Install `devkit-docs` and `devkit-catalog`, then select the opt-in bundle: `uv run devkit add adaptive-dev`
+- Install `devkit-adaptive`, then select the opt-in bundle: `uv run devkit add adaptive-dev`
   (preset `core`). `devkit-spec` is not required. The bundle deploys `/adaptive-dev`, its guidance pointer, three
   optional support roles and a current-context template; selecting it seeds no product files.
 - Set the shared development approach in `.devkit/config.toml`:
@@ -149,3 +155,9 @@ edit it. A later session rechecks what it relies on instead of trusting a stale 
 An observed outcome for the action, the current facts and instructions needed to resume it, and explicit limitations
 and next step. No approach switch, invented product decision or skipped-as-passed check is ever claimed, and
 unrelated edits and existing SDD history stay as they were. Area: [Delivery](../areas/delivery.md).
+
+## Delegating a bounded assignment
+
+The adaptive bundle now comes from `devkit-adaptive`, which requires `devkit-docs` and works without `devkit-spec`. Swarm planner, worker and verifier contracts support bounded delegated work. Record assignments with `devkit adaptive assignment new`, report returns and verify the actual diff and declared check outcomes before accepting them. The ledger grants no additional authority and runs no checks.
+
+For selected external specialist assets, use [Import selected third-party agent assets](import-third-party-agent-assets.md).

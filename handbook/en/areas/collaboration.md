@@ -1,20 +1,20 @@
 ---
 sources:
-  ADR-worktrees-and-scope: ecad544c26d52a22f31c234456778e116ac7345e
-  CAP-COLL-shared-artifacts: 48963f805ec2282098d1adc9598100983283bacd
-  CAP-COLL-work-scope-registry: 648447161142a20d42839609f502b027f5c7d403
-  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
-  CAP-MCP-runtime-registration: bdabf0119ad4adf8f41d31806748d3c717338f6a
-  CAP-TRACE-code-entrypoints: 28869f6594bcd1f8ee5e07281f15235772f75eef
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
-  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
+  ADR-worktrees-and-scope: 15b1f634c021a28952c5257a3e6e5795b8b0259d
+  CAP-COLL-shared-artifacts: 092d06230b033004a559d4fa72907fac6d0e0f5d
+  CAP-COLL-work-scope-registry: a2dea3a64550dfad9c3225650fbf433174d56773
+  CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
+  CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
+  CAP-TRACE-code-entrypoints: f85e685d002096791b5d75d3954edc3782f59f9b
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
+  UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Collaboration
 ---
 
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -23,17 +23,21 @@ title: Collaboration
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -41,6 +45,7 @@ title: Collaboration
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)
@@ -78,27 +83,9 @@ configuration. The end-to-end story is the journey [Run parallel work safely](..
 (`UC-run-parallel-work-safely`); the terms used here (worktree, spec bundle, proposal) are explained in
 [Concepts](../concepts.md).
 
-## Compare scopes before you start parallel work
+## Compare declared scopes
 
-A task's scope is assembled from what its documents declare and what Git observes:
-
-- documents: the `targets` of a proposal's `target-docs.md`, or of a spec bundle's `reconcile.md`;
-- code: the `_Boundary` entries of `tasks.md`, including the exact path of another spec bundle's feedback file; while
-  a bundle declares no code, the `entrypoints` of its target capabilities and use cases stand in as candidates;
-- observed code: what the task's worktree changed since its fork point (committed, staged, unstaged, untracked).
-
-To see whether two or more planned pieces of work collide, compare their declarations. Nothing is written and no
-registry or Git is involved:
-
-```sh
-devkit spec scope compare --proposal login-flow --spec specs/2026-10/20261020-audit-log
-```
-
-Each pair prints a `[PAIR: ... docs= code= unresolved=]` line followed by `[EVIDENCE: ...]` lines for every shared
-path. Read the `unresolved` count as carefully as the overlaps: an input that could not become a path (a planned
-document that does not exist yet, a target without `entrypoints`, a `_Boundary` of `N/A`) is counted, never silently
-treated as "no overlap". A `[DIFF: ...]` line means `reconcile.md` and `target-docs.md` disagree; devkit never merges
-the two lists for you. Paths follow the literal path rules of `CAP-TRACE-code-entrypoints`.
+Run `uv run devkit spec scope collect` after tasks have a `plan-*` or `dev-*` activity source. It compares declared and observed paths, reports each overlap and unresolved input, and preserves declaration disagreements rather than merging them. Queued drafts without an activity source are excluded. The result informs scheduling and grants no write authority.
 
 ## Observe running work
 
@@ -107,12 +94,10 @@ Workers have nothing to publish: they register no scope, send no updates and ack
 collects what the Host can see, read-only:
 
 ```sh
-devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fetch <remote>]
+devkit spec scope collect [--base <ref>] [--fetch <remote>]
 ```
 
-- **Depth.** `snapshot` reads only the registry's creation snapshots; `refs` adds the local and remote-tracking
-  `plan-*`/`dev-*` branches; `worktrees` (the default) adds every accessible worktree's declarations and its
-  committed, staged, unstaged and untracked changes.
+- **Collection.** One invocation reads creation snapshots, activity refs and accessible worktrees together. Drafts without a `plan-*` or `dev-*` source are excluded.
 - **Network is opt-in.** Without `--fetch`, remote refs are whatever was last fetched. `--fetch <remote>` (repeatable,
   configured remotes only) refreshes just their remote-tracking branches. Another machine's unpushed work is never
   visible; for frequent multi-PC work, push declarations and changes through pull requests.
@@ -121,8 +106,8 @@ devkit spec scope collect [--mode snapshot|refs|worktrees] [--base <ref>] [--fet
   `SPEC_SCOPE_COLLECTION_PARTIAL` with the missing coverage; uncomputed pairs never count as zero overlap. Only when
   no inventory source can be read at all does it fail with `SPEC_SCOPE_COLLECTION_FAILED`.
 
-The output lists the candidates (`[SCOPE_CANDIDATE: ...]`), each observation and the same `[PAIR: ...]` and
-`[EVIDENCE: ...]` lines as `compare`, ending with a summary that says whether coverage and comparisons are complete.
+The output lists the candidates (`[SCOPE_CANDIDATE: ...]`), each observation and pairwise `[PAIR: ...]` and
+`[EVIDENCE: ...]` lines, ending with a summary that says whether coverage and comparisons are complete.
 
 ### The shared registry
 
@@ -133,10 +118,6 @@ worktree. You rarely need the registry commands directly:
 
 | You want to | Run |
 | --- | --- |
-| Register this worktree's task by hand (prints its owner token once) | `devkit spec scope register --spec <dir>` |
-| See every record and this worktree's overlaps | `devkit spec scope query` |
-| Check a bundle about to start against the records | `devkit spec scope query --spec <dir>` |
-| Read the event history | `devkit spec scope query --history [--task <id>]` |
 | Withdraw an abandoned task | `devkit spec scope release` |
 | Remove records whose worktree is gone | `devkit spec scope sweep --apply` |
 
@@ -146,7 +127,6 @@ A few behaviours are worth knowing:
   (`SPEC_SCOPE_TOKEN_EXISTS`), so a record is never orphaned.
 - Queries and `collect` are side-effect free: they create no directory, lock or file and never touch owner tokens.
   An empty or partly readable answer is not proof that nothing overlaps.
-- The journal (`journal.jsonl`) is diagnostic only. It never feeds an overlap verdict.
 - When a task is integrated through `devkit worktree finish` or `devkit integration integrate`, devkit-spec's
   post-finish cleanup removes that task's record and prunes the handed-off proposal directory. Other stale records
   wait for an explicit `sweep`; one that changed since it was read is kept (`SPEC_SCOPE_STALE_REVISION`).

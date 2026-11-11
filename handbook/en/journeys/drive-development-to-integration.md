@@ -1,19 +1,19 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
-  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
-  CAP-DLV-workflow-envelopes: d9930340d63dab836aa1938f2e6cd2a8c4a23230
-  CAP-INT-mcp-services: 6978ff46427e1a1091c65b488ca9c76734b4a4c0
-  CAP-MCP-runtime-registration: bdabf0119ad4adf8f41d31806748d3c717338f6a
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
-  UC-drive-development-to-integration: 9eeb5fda80dba7727d7680c91f2989a521c3fd69
+  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
+  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
+  CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
+  CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
+  UC-drive-development-to-integration: 2893591134de64be66238b4102062f02e0e370c8
 title: Drive development to integration
 ---
 
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -22,16 +22,20 @@ title: Drive development to integration
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -39,6 +43,7 @@ title: Drive development to integration
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)

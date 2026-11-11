@@ -2,15 +2,15 @@
 sources:
   CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
   CAP-DOCS-document-search: 5c3aeeb42f829b6a089110cbcbb60a886c45fc55
-  CAP-SRCH-document-search: eb4e6c025f094a2252a888ed1bc00a428fb917ca
-  UC-find-the-right-documents: fbfaa41c0802e14b1f363c666a5b4de450716895
+  CAP-SRCH-document-search: 83f6f8ad76a2f12f0c4e5f0a4c719bfb7134dff9
+  UC-find-the-right-documents: 63fc40bfa2e3a24b2410dec381a6abec5837ba3d
 title: Search
 ---
 
 # Search
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 The search area is the ranking engine behind `devkit playbook search` and `devkit docs search`. It knows documents

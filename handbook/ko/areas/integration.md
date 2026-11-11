@@ -10,13 +10,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-drive-development-to-integration: null
 title: 통합
-translated_from: en/areas/integration.md@521a3f505a149d7c
+translated_from: en/areas/integration.md@41b9ee7b7b6a10c2
 ---
 
 # 통합
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,17 +25,21 @@ translated_from: en/areas/integration.md@521a3f505a149d7c
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -43,6 +47,7 @@ translated_from: en/areas/integration.md@521a3f505a149d7c
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -88,7 +93,7 @@ uv run devkit integration integrate dev-login --route local --expected-digest <d
 
 SDD와 적응형 개발(adaptive development)은 같은 명시적 브랜치 명령을 씁니다.
 task-kind, task-id, unit, claims 인자와 준비 상태 제공자 선택은 없습니다.
-기존 `[integration] provider`는 무시됩니다. Host가 소스 런타임으로 워크플로 보류와 필수 검사를 먼저 확인합니다.
+`[integration]` 테이블은 키를 허용하지 않습니다. 폐기된 `provider` 키를 제거합니다. Host가 소스 런타임으로 워크플로 보류와 필수 검사를 먼저 확인합니다.
 
 ## 경로 선택하기
 
@@ -128,7 +133,7 @@ Host가 동기화 후 최종 검사 전에 처리합니다. 알 수 없는 충�
 | `INTEGRATION_RUNTIME_IN_WORKTREE`, `WORKTREE_RUN_FROM_BASE` | 유지되는 베이스와 정리 범위 밖의 런타임을 씁니다. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Git·워크트리를 확인하고 보고된 남은 정리만 수행합니다. |
 
-병합이 확인된 표시된 워크트리는 `uv run devkit worktree finish <branch> --merge --local-only`로 남은 정리를 수행합니다.
+병합이 확인된 표시된 워크트리는 `uv run devkit worktree finish <branch>`로 남은 정리를 수행합니다.
 확장 기능만 남았다면 `uv run devkit spec proposal prune <slug>`처럼 소유 명령을 정확한 대상에 실행합니다.
 원격 결과가 불명확하면 쓰기를 반복하기 전에 확인합니다. 부분 정리의 종료 코드가 0이어도 남은 작업은 존재합니다.
 `landed_sha`는 확인된 반영을 식별합니다.

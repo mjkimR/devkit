@@ -11,13 +11,13 @@ sources:
   UC-reconcile-living-spec-drift: null
   UC-route-development-intent: null
 title: 배포
-translated_from: en/areas/distribution.md@5b4c708fa7959bff
+translated_from: en/areas/distribution.md@3d203b2745f8acd6
 ---
 
 # 배포
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -26,17 +26,21 @@ translated_from: en/areas/distribution.md@5b4c708fa7959bff
 - [기존 저장소에 devkit 도입하기](../journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](../journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](../journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](../journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](../journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](../journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](../journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](../journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](../journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](../journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](../journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](../journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](../journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](../journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](../journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](../journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](../journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](../journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](../journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](../journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -44,6 +48,7 @@ translated_from: en/areas/distribution.md@5b4c708fa7959bff
 - [누적된 군더더기 검토와 리팩터링](../journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](../journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](../journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](../journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](../journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](advisory.md)
 - [에이전트 우선 CLI 도구 키트](cli.md)
@@ -82,7 +87,7 @@ translated_from: en/areas/distribution.md@5b4c708fa7959bff
 ## devkit 설치와 번들 선택
 
 프로젝트의 개발(dev) 의존성에는 devkit 패키지를 정확히 하나만 선언해야 합니다. 단순 자산 배포 기능만 필요한 경우에는 `devkit-dist`를,
-거버넌스 하네스(규칙, 워크플로, 커밋 게이트, 워크트리, 통합 등)까지 필요한 경우에는 `devkit-agt`를 선언합니다. `devkit-agt`는 동일한 버전의
+거버넌스 하네스(규칙, 워크플로, 커밋 게이트, 워크트리, 통합 등)까지 필요한 경우에는 `devkit-agt`를 선언합니다. `devkit-agt`는 선택된 실제 버전의
 `devkit-dist`에 이미 의존하므로 두 패키지를 동시에 선언하지 마십시오(`ADR-package-ownership-and-release-version`). CLI 명령어는 항상 프로젝트
 가상환경 내에서 `uv run devkit ...` 형태로 실행하십시오. 시스템에 전역(global)으로 설치된 devkit은 프로젝트의 로컬 콘텐츠 패키지를
 인식하지 못합니다. 기존 코드베이스에 devkit을 처음 도입하는 단계별 가이드는
@@ -297,3 +302,11 @@ Antigravity의 추론 강도 덮어쓰기 없는 Flash에 대응합니다. 자�
 sync는 무시 규칙이 없는 미추적 프로젝션에 `PROJECTION_NOT_IGNORED`, 추적된 프로젝션에 `PROJECTION_TRACKED`를 경고합니다.
 정확한 수정 안내를 제공하되 루트 ignore 파일이나 Git index를 편집하지 않습니다.
 `PROJECTION_GIT_CHECK_FAILED`는 나머지 동기화를 실패시키지 않고 진단 불가를 보고합니다.
+
+## 릴리즈 인벤토리와 로컬 소스 스냅샷
+
+릴리즈 인벤토리(Release inventory)는 패키지별 실제 버전과 원본 wheel URL·체크섬을 기록합니다. 페이로드가 바뀐 패키지와 정확한 버전 고정의 역방향 의존 패키지가 릴리즈 버전을 받고 나머지는 배포된 식별자를 유지합니다. 모든 URL을 최신 태그로 만들지 않고 선택한 전체 인벤토리로 설치합니다.
+
+[번들 소스 스냅샷](../journeys/snapshot-bundle-sources.md)은 지원되는 콘텐츠 제공자 전체를 커밋된 로컬 패키지에 보존하고 명시적으로 검토한 갱신을 적용합니다. 소비자 수정은 프로젝트 오버라이드로 관리합니다.
+
+`devkit sync --check`가 원하는 상태에 대한 준비 상태 검사입니다. `devkit status`는 설치 기록에 대한 설치 상태를 진단하며 이를 대체하지 않습니다.

@@ -4,7 +4,7 @@ generated: true
 # Glossary
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -14,7 +14,11 @@ The terms of devkit as its documents use them, from the Living Spec glossary.
 
 | Term | Definition | Owner |
 | :--- | :--- | :--- |
+| **Release version** | One human-selected X.Y.Z assigned to changed distributions and their exact-pin dependents; excludes unchanged package and bundle identities. | `ADR-selective-package-versions` |
+| **Package version** | A distribution's actual static version, retained when its shipped payload is unchanged; excludes the newest release number. | `ADR-selective-package-versions` |
+| **Release inventory** | Completed artifact provenance and compatible actual package versions for one release; excludes an unpublished preparation plan. | `ARCH-07-deployment` |
 | **devkit bundle** | devkit's unit of distributable agent assets, declared in `bundle.toml`. Bundles ship instructions, playbooks, rules, workflows, subagents, gates, and guidance fragments. | `CAP-DIST-manifest-spec` |
+| **Bundle source snapshot** | Repository-committed source copy of a complete supported content provider, with provenance and explicit refresh through an ordinary local package; excludes governance Snapshot run evaluation and runtime-package vendoring. | `CAP-DIST-in-repo-bundles` |
 | **Subagent model level** | Distribution-owned preset (minimal, compact, lean, standard, deep or maximal) selecting native model family and supported effort for a common role contract, with inherit as the default; excludes delivery activity-effort and runtime model routing. | `CAP-DIST-agent-projections` |
 | **Preset** | A named asset selection of a bundle (e.g. `core`, `default`). | `CAP-DIST-manifest-spec` |
 | **Managed files** | Pristine synchronized copies under `.devkit/managed/<bundle>/`; never edited by hand. | `CAP-DIST-workspace-ownership` |

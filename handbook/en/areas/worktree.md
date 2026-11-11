@@ -1,21 +1,21 @@
 ---
 sources:
-  CAP-GATE-commit-gates: 2249929f68870aff9395cca7f2e149da88728c6b
-  CAP-INT-mcp-services: 6978ff46427e1a1091c65b488ca9c76734b4a4c0
-  CAP-MCP-runtime-registration: bdabf0119ad4adf8f41d31806748d3c717338f6a
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
-  UC-drive-development-to-integration: 9eeb5fda80dba7727d7680c91f2989a521c3fd69
-  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
+  CAP-GATE-commit-gates: 44870a0d5d27bfe999a110c60708ae5c777449da
+  CAP-INT-mcp-services: ef6ce6f9338b8d75e8cbd887f37932ecb58ac642
+  CAP-MCP-runtime-registration: fa73a69e865c0b0e356d968a9d393df58e819942
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
+  UC-drive-development-to-integration: 2893591134de64be66238b4102062f02e0e370c8
+  UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
-  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
-  UC-run-parallel-work-safely: 1c2015e4068145654e403f203edb4117d70a3b7f
+  UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
+  UC-run-parallel-work-safely: 0d974e0c636645b44666c8442980b3c83f3bdf72
 title: Worktree
 ---
 
 # Worktree
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -24,17 +24,21 @@ title: Worktree
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -42,6 +46,7 @@ title: Worktree
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)
@@ -123,26 +128,13 @@ in separate worktrees can be compared and observed by the orchestrating Host, se
 
 In the Host-driven workflow, integration goes through `devkit integration` (see [Integration](integration.md),
 `CAP-INT-mcp-services`), which uses the same merge and cleanup machinery after your decision or under `auto` policy.
-The underlying command is:
+After landing, cleanup can be retried with:
 
 ```sh
-devkit worktree finish dev-login --merge [--local-only]
+uv run devkit worktree finish dev-login
 ```
 
-It runs in the base checkout. A worktree with uncommitted or untracked changes is refused before anything changes
-(`WORKTREE_DIRTY`); it is never removed by force. Otherwise, in order:
-
-1. **Integrates.** The base must be on a branch and clean, and the task branch must already contain the base HEAD
-   (`WORKTREE_MERGE_NOT_FF`: merge the base into the branch, never rebase, since records cite commit SHAs). Installed
-   finish guards run; devkit-agt refuses a branch whose units hold an unresolved problem or unanswered question
-   (`WORKTREE_BLOCKED`). The base then lands the branch as a merge commit built outside any checkout (or a
-   fast-forward under `merge = "ff-only"`) and pushes to its upstream unless `--local-only`.
-2. **Removes** the worktree. If it became dirty since the check, `WORKTREE_DIRTY` stops it here too.
-3. **Deletes** the branch with `git branch -d` (unless `delete_branch = false`).
-4. Runs post-finish extensions, such as devkit-spec's cleanup of the scope record and handed-off proposal.
-
-Without `--merge`, `finish` only cleans up a branch that is already merged. A pull request merged by squash or rebase
-leaves the branch unmerged in Git's sense; remove that one only with your authorization.
+`finish` checks that the branch is already merged, removes its clean owned worktree, deletes the local branch when configured and runs post-finish extensions. Dirty worktrees are retained. It performs no merge, fetch or push. `--merge` refuses with `WORKTREE_MERGE_RETIRED`; use `devkit integration` to land work.
 
 To drop a task without integrating it (an abandon, a supersede, a depth escalation), use
 `devkit worktree finish dev-login --discard`. It removes a clean worktree and deletes the branch with `git branch -D`;
@@ -177,7 +169,7 @@ same report appears in `devkit rules check --phase hygiene`. Nothing is cleaned 
 
 ```toml
 [worktree]
-pull_request = "auto"   # "required" refuses `finish --merge` and the local integration route
+pull_request = "auto"   # "required" refuses the local integration route
 delete_branch = true    # finish deletes the merged branch
 merge = "no-ff"         # or "ff-only"
 setup = "uv sync"       # run in each new worktree (default: none)

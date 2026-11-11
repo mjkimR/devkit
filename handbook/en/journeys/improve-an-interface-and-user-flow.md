@@ -1,14 +1,14 @@
 ---
 sources:
-  CAP-DLV-uiux-improvement: 5b4b328d5933e2bcd67b719eff3c78a10e2386f4
-  UC-improve-an-interface-and-user-flow: dc2373431be7c44a583bf6deb5a23f8bc58b9adb
+  CAP-DLV-uiux-improvement: 7c2ea122d1db7d44dbb2ba890bd576beba070943
+  UC-improve-an-interface-and-user-flow: d890a54fdf4c3bf947315a371672d9dac286cbb3
 title: Improve an interface and user flow
 ---
 
 # Improve an interface and user flow
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -17,16 +17,20 @@ title: Improve an interface and user flow
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -34,6 +38,7 @@ title: Improve an interface and user flow
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
@@ -58,7 +63,7 @@ title: Improve an interface and user flow
 - [Glossary](../glossary.md)
 <!-- /handbook:generated -->
 
-With the opt-in `uiux-improve` bundle selected, explicitly invoke `/uiux-improve <goal>` and supply the interface,
+With the opt-in `app-uiux-improve` bundle selected, explicitly invoke `/app-uiux-improve <goal>` and supply the interface,
 user task and constraints. An improvement request can carry requested implementation through the consumer's
 existing workflow. A review-only request returns findings without product edits.
 
@@ -80,3 +85,7 @@ No fixed team, scoring, debate rounds, persistent memory or companion invocation
 
 - [UC-improve-an-interface-and-user-flow](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-improve-an-interface-and-user-flow.md)
 - [CAP-DLV-uiux-improvement](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-uiux-improvement.md)
+
+## Object framing and optional Impeccable work
+
+The entry is `/app-uiux-improve` from `app-uiux-improve`. For structure or flow changes, read the project's OOUX objects first. A user-selected Impeccable session receives one bounded brief while the coordinator pauses its product edits. Accept only its listed product-file changes; report unrelated changes without reverting or deleting them automatically. Consumer-owned context files stay in place. Stale OOUX documents are named for the consumer workflow to update.

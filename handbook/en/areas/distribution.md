@@ -1,22 +1,22 @@
 ---
 sources:
-  ADR-package-ownership-and-release-version: 1d01af1c73f10da6f5c913d0b84d6287861d84e9
-  CAP-DIST-agent-projections: d3811102c439ab16edeb87f4c7b0de4868ae1d4f
-  CAP-DIST-content-packages: 2d99bc80b78d361bb4cad5caa3df90ad9e1a936f
+  ADR-package-ownership-and-release-version: 5167ed25a252806c3536afe4edc770d19ad2ff8d
+  CAP-DIST-agent-projections: 1c43d7e197a7f986584a8bfb12922bcdd2ca877b
+  CAP-DIST-content-packages: 4f9b5893c0b732c10d59925ec4dbcc12c5146308
   CAP-DIST-context-and-playbooks: f8b3284cb8b92384bac15fd49128ed43e012bb5c
-  CAP-DIST-in-repo-bundles: 0b6247e85e653c3110c0a8d8ca2cfc301bc58fcc
+  CAP-DIST-in-repo-bundles: 7d71d79b481fbdf7cbc1c86d61fea924dfc924d6
   CAP-DIST-manifest-spec: c36062832b0a088f0cdfba7bea04c6eceb3ae0d4
-  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
-  CAP-DIST-workspace-ownership: d23d1e146e4a38ea8021b4ed5f52c39e529a80cd
+  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DIST-workspace-ownership: 99e6662d7edc19d07fe05b94b42c892eece6ad57
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
-  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
+  UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Distribution
 ---
 
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,17 +25,21 @@ title: Distribution
 - [Adopt devkit in an existing repository](../journeys/adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](../journeys/adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](../journeys/advance-an-idea.md)
+- [Assess a selected test suite](../journeys/assess-test-management.md)
 - [Design necessary command entry points](../journeys/design-command-entrypoints.md)
 - [Drive development to integration](../journeys/drive-development-to-integration.md)
+- [Execute an isolated command](../journeys/execute-an-isolated-command.md)
 - [Explore a design problem](../journeys/explore-a-design-problem.md)
 - [Find the latest maintenance run](../journeys/find-the-latest-maintenance-run.md)
 - [Find the right documents](../journeys/find-the-right-documents.md)
 - [Handle delivery problems and exceptions](../journeys/handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](../journeys/import-third-party-agent-assets.md)
 - [Improve an interface and user flow](../journeys/improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](../journeys/inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](../journeys/keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](../journeys/plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](../journeys/publish-a-weekly-report.md)
+- [Read decision supersession](../journeys/read-decision-supersession.md)
 - [Reconcile Living Spec drift](../journeys/reconcile-living-spec-drift.md)
 - [Record a maintenance run](../journeys/record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](../journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -43,6 +47,7 @@ title: Distribution
 - [Review and refactor accumulated slop](../journeys/review-and-refactor-accumulated-slop.md)
 - [Route a development request](../journeys/route-development-intent.md)
 - [Run parallel work safely](../journeys/run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](../journeys/snapshot-bundle-sources.md)
 - [Speed up selected slow operations](../journeys/speed-up-selected-slow-operations.md)
 - [Advisories](advisory.md)
 - [Agent-first CLI toolkit](cli.md)
@@ -82,7 +87,7 @@ presets, projects skills and subagents for each agent, and records every file it
 
 You declare exactly one devkit requirement in your dev dependencies: `devkit-dist` for distribution only, or
 `devkit-agt` when you want the harness (rules, workflows, commit gates, worktrees, integration). `devkit-agt`
-depends on `devkit-dist` at the same version, so never declare both (`ADR-package-ownership-and-release-version`). Always run
+depends on `devkit-dist` at its selected actual version, so never declare both (`ADR-package-ownership-and-release-version`). Always run
 the tool as `uv run devkit ...` from the project environment; a globally installed tool cannot see your project's
 content packages. Setting devkit up in a repository that already has code is the journey
 [Adopt in an existing repository](../journeys/adopt-in-an-existing-repository.md).
@@ -290,3 +295,11 @@ effort override on Antigravity. These resource mappings confer no authority and 
 Sync warns about untracked native projections without ignore coverage (`PROJECTION_NOT_IGNORED`) and tracked
 projections (`PROJECTION_TRACKED`). It gives exact repair advice but edits neither root ignore files nor the Git index.
 `PROJECTION_GIT_CHECK_FAILED` reports unavailable diagnostics without aborting an otherwise successful sync.
+
+## Release inventories and local source snapshots
+
+A release inventory records each package's actual version and original wheel URL and checksum. Changed payloads and their exact-pin dependents take the release version; unchanged packages keep their published identities. Install from the complete selected inventory rather than deriving every URL from its newest tag.
+
+[Bundle source snapshots](../journeys/snapshot-bundle-sources.md) preserve complete supported content providers in committed local packages with explicit reviewed refresh. Project overrides hold consumer adaptations.
+
+`devkit sync --check` is the readiness check against desired state. `devkit status` diagnoses installed state against the receipt and cannot replace it.

@@ -29,13 +29,13 @@ sources:
   CAP-INT-mcp-services: null
   CAP-WT-task-worktrees: null
 title: 개념
-translated_from: en/concepts.md@2c0c8649bde91cb9
+translated_from: en/concepts.md@9730a88bac55073c
 ---
 
 # 개념
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -43,17 +43,21 @@ translated_from: en/concepts.md@2c0c8649bde91cb9
 - [기존 저장소에 devkit 도입하기](journeys/adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](journeys/adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](journeys/advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](journeys/assess-test-management.md)
 - [필요한 명령 진입점 설계하기](journeys/design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](journeys/drive-development-to-integration.md)
+- [격리된 명령 실행하기](journeys/execute-an-isolated-command.md)
 - [설계 문제 탐색하기](journeys/explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](journeys/find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](journeys/find-the-right-documents.md)
 - [전달 문제와 예외 처리하기](journeys/handle-delivery-problems-and-exceptions.md)
+- [선택한 외부 에이전트 자산 가져오기](journeys/import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](journeys/improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](journeys/inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](journeys/keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](journeys/plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](journeys/publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](journeys/read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](journeys/reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](journeys/record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](journeys/research-an-idea-and-shape-a-roadmap.md)
@@ -61,6 +65,7 @@ translated_from: en/concepts.md@2c0c8649bde91cb9
 - [누적된 군더더기 검토와 리팩터링](journeys/review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](journeys/route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](journeys/run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](journeys/snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](journeys/speed-up-selected-slow-operations.md)
 - [어드바이저리](areas/advisory.md)
 - [에이전트 우선 CLI 도구 키트](areas/cli.md)
@@ -189,7 +194,7 @@ SDD에서는 모든 개발 요청이 작업을 시작하기 전에 세 가지 �
   - `proposal`: 기능 방향 자체가 열려 있으므로, 스펙을 작성하기 전에 제안을 구체화하고 승인을 먼저 받습니다.
 - **`activity-effort`**: 작업 노력 수준(`low`, `medium`, `high`)으로, 코드 리뷰와 검증을 얼마나 철저히 진행할지 결정합니다.
 
-작업 분류는 에이전트가 제안하고 사용자가 최종 확정합니다. 이 세 축의 조합에 따라 `sdd-<planning-depth>[-<task-kind>]`(예: `sdd-spec-feature`)라는 단 하나의 워크플로가 지정됩니다. 작업 진행 도중 기획 깊이(`planning-depth`)는 상향 조정만 가능하며, 제안 인계(handoff)를 거치거나 사용자가 직접 재분류(session reclassification)를 결정한 경우에만 예외가 인정됩니다.
+에이전트는 작업 분류를 알리고 미정인 범위와 제약을 확인합니다. 이 세 축의 조합에 따라 `sdd-<planning-depth>[-<task-kind>]`(예: `sdd-spec-feature`)라는 단 하나의 워크플로가 지정됩니다. 작업 진행 도중 기획 깊이(`planning-depth`)는 상향 조정만 가능하며, 제안 인계(handoff)를 거치거나 사용자가 직접 재분류(session reclassification)를 결정한 경우에만 예외가 인정됩니다.
 
 작업은 세 가지 **활동**(activity)을 거칩니다. **Backlog**는 당장 착수하지 않는 요청을 제안 초안 형태로 보관하며 우선순위를 관리합니다. **Planning**은 `plan-<slug>` 브랜치에서 제안을 구체화합니다. **Development**는 `dev-<slug>` 브랜치에서 실제 기능을 구현합니다. 각 활동은 하나의 모드로 실행됩니다. 기본 모드는 `direct`이며, 사용자의 요청에 따라 에이전트가 독립된 워크트리의 워커들에게 작업을 위임하는 경우에는 `local-orchestrated` 모드가 적용됩니다.
 
@@ -221,7 +226,9 @@ SDD에서는 모든 개발 요청이 작업을 시작하기 전에 세 가지 �
 **게이트**(gate)는 사용자의 명시적인 결정을 기다리는 단계입니다. `spec` 워크플로는 다음 세 게이트를 사용합니다
 ([`CAP-DLV-delivery-workflows`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-delivery-workflows.md) (영어 원문)):
 
-- `plan-intent`: 진행할 작업 내용에 합의합니다.
+명시적인 작업 지시가 해당 목표와 범위를 승인하며 의도 승인 기록은 만들지 않습니다.
+
+- `proposal-handoff`: Development 시작을 승인합니다.
 - `plan-accept`: 제안이 제시한 방향을 공식 수락합니다.
 - `dev-integration`: 구현이 완료된 작업의 최종 반영을 승인합니다.
 
@@ -281,7 +288,7 @@ devkit의 최우선 사용자는 에이전트이므로, 모든 CLI 명령은 일
 파일을 간섭하지 않고 동시에 병렬로 진행될 수 있도록 지원합니다
 ([`CAP-WT-task-worktrees`](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/worktree/CAP-WT-task-worktrees.md) (영어 원문)).
 `devkit worktree start <branch>`로 워크트리를 생성하고, `devkit worktree status`로 현재 활성 목록을 확인하며, 기본 체크아웃에서
-실행하는 `devkit worktree finish`로 브랜치를 통합하고 해당 워크트리를 정리합니다. 워크트리를 필요할 때만 선별적으로 사용할지 항상 사용할지는
+실행하는 `devkit worktree finish`로 이미 병합된 브랜치와 워크트리를 정리합니다. 통합은 `devkit integration`을 사용합니다. 워크트리를 필요할 때만 선별적으로 사용할지 항상 사용할지는
 프로젝트 정책에 따라 결정됩니다.
 
 작업이 병렬로 진행될 때는 `devkit spec scope` 명령이 각 작업에서 선언한 문서와 코드 경로를 모든 워크트리가 공유하는
@@ -312,8 +319,8 @@ Host가 반영된 런타임을 동기화하고 오래된 추적 생성물을 재
 `spec` 기획 깊이를 갖는 일반적인 기능 변경 작업은 다음과 같은 순서로 진행됩니다.
 
 1. `devkit sync`로 배포된 `spec` 번들의 컨텍스트를 에이전트가 `devkit get-context spec`으로 로드합니다.
-2. 사용자가 `/spec <intent>` 명령으로 개발 의도를 전달하면, 에이전트는 `devkit spec policy`를 확인하여 작업 분류를 제안합니다. 사용자가
-   이를 확정하면 `dev-<slug>` 브랜치와 스펙 번들을 생성하고 `plan-intent` 통과를 기록합니다.
+2. 사용자가 `/spec <intent>`로 개발 의도를 전달하면 에이전트는 `devkit spec policy`를 확인하고 분류를 알립니다.
+   명시적인 지시 범위에서 `dev-<slug>`와 스펙 번들을 생성하며 의도 승인 기록을 만들지 않습니다.
 3. 에이전트는 `devkit workflow next`의 안내에 따라 스펙 작성, 구현 계획 수립, 작업 목록 분할, 실제 구현, 리뷰 엔벨로프 작성, Living Spec 조정(reconcile), 최종 변경
    보고서 작성 단계를 순서대로 완수합니다.
 4. 그 과정에서 거버넌스 규칙과 커밋 게이트가 매 커밋마다 엄격하게 무결성을 검사합니다.
@@ -330,7 +337,7 @@ Host가 반영된 런타임을 동기화하고 오래된 추적 생성물을 재
 이전 번들·개발 방식 값은 거부하며 이전 컨텍스트를 대신 읽지 않습니다.
 조사 자료는 현재 컨텍스트에 복사하지 않고 `MAT-<slug>` ID로 인용합니다.
 
-`deep-research`, `design-explore`, `uiux-improve`는 선택형 사용자 전용 진입점입니다.
+`deep-research`, `design-explore`, `app-uiux-improve`는 선택형 사용자 전용 진입점입니다.
 스킬 내부 역할은 맡긴 작업에 필요한 경우에만 읽습니다. 번들 선택이 구현·게시 권한을 주지는 않습니다.
 조사는 하나의 색인된 자료를 남기고, 탐색은 저장 위치 요청이 없으면 대화에서 방향을 제시합니다.
 UI/UX 개선은 소비 프로젝트의 절차로 요청된 변경을 구현하고 실제 사용 검증을 보고합니다.

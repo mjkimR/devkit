@@ -1,17 +1,17 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
-  CAP-DLV-workflow-envelopes: d9930340d63dab836aa1938f2e6cd2a8c4a23230
-  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
-  UC-handle-delivery-problems-and-exceptions: e75045b25be4756f7975373e437320013d5c1995
+  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-workflow-envelopes: fe938e32e96dce8b2ed0a5124e59556d9d4d0860
+  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
+  UC-handle-delivery-problems-and-exceptions: 95b05bae6cd1c9cfa3f4ca276b34e14bc73df3a7
 title: Handle delivery problems and exceptions
 ---
 
 # Handle delivery problems and exceptions
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -20,16 +20,20 @@ title: Handle delivery problems and exceptions
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
@@ -37,6 +41,7 @@ title: Handle delivery problems and exceptions
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
@@ -100,7 +105,7 @@ While the problem has no resolution:
 
 - no gate from the problem's stage on passes, whatever policy or `--given` says;
 - the handoff is refused;
-- `devkit worktree finish --merge` refuses the branch with `WORKTREE_BLOCKED`.
+- The Host checks and resolves workflow holds before invoking `devkit integration`; `devkit worktree finish --merge` is retired with `WORKTREE_MERGE_RETIRED`.
 
 You can see the hold:
 

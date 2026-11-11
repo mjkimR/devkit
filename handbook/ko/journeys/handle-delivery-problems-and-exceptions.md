@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-handle-delivery-problems-and-exceptions: null
 title: 전달 문제와 예외 처리하기
-translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@795951bb01ea86f1
+translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@18726220169378d3
 ---
 
 # 전달 문제와 예외 처리하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `dabb86f9e659` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-05에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `f115e96c8059` 기준 devkit `v0.1.6` 스냅숏이며 2026-11-11에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -21,16 +21,20 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@795951bb
 - [기존 저장소에 devkit 도입하기](adopt-in-an-existing-repository.md)
 - [적응형 개발에서 SDD 도입하기](adopt-sdd-from-adaptive-development.md)
 - [아이디어 발전시키기](advance-an-idea.md)
+- [선택한 테스트 스위트 평가하기](assess-test-management.md)
 - [필요한 명령 진입점 설계하기](design-command-entrypoints.md)
 - [개발에서 통합까지 진행하기](drive-development-to-integration.md)
+- [격리된 명령 실행하기](execute-an-isolated-command.md)
 - [설계 문제 탐색하기](explore-a-design-problem.md)
 - [최신 유지보수 실행 찾기](find-the-latest-maintenance-run.md)
 - [알맞은 문서 찾기](find-the-right-documents.md)
+- [선택한 외부 에이전트 자산 가져오기](import-third-party-agent-assets.md)
 - [인터페이스와 사용 흐름 개선하기](improve-an-interface-and-user-flow.md)
 - [주간 저장소 진행 상황 점검하기](inspect-weekly-repository-progress.md)
 - [Living Spec 일관성 유지하기](keep-the-living-spec-consistent.md)
 - [제안 계획 후 넘기기](plan-and-hand-off-a-proposal.md)
 - [주간 보고서 게시하기](publish-a-weekly-report.md)
+- [결정 대체 관계 읽기](read-decision-supersession.md)
 - [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)
 - [유지보수 실행 기록하기](record-a-maintenance-run.md)
 - [아이디어 조사와 로드맵 구체화하기](research-an-idea-and-shape-a-roadmap.md)
@@ -38,6 +42,7 @@ translated_from: en/journeys/handle-delivery-problems-and-exceptions.md@795951bb
 - [누적된 군더더기 검토와 리팩터링](review-and-refactor-accumulated-slop.md)
 - [개발 요청 라우팅하기](route-development-intent.md)
 - [병렬 작업 안전하게 실행하기](run-parallel-work-safely.md)
+- [번들 소스를 로컬로 도입하고 갱신하기](snapshot-bundle-sources.md)
 - [선택한 느린 작업 빠르게 하기](speed-up-selected-slow-operations.md)
 - [어드바이저리](../areas/advisory.md)
 - [에이전트 우선 CLI 도구 키트](../areas/cli.md)
@@ -101,7 +106,7 @@ uv run devkit workflow envelope worker --unit <dir> --stage <stage> --effort <ef
 
 - 프로젝트 정책이나 `--given` 플래그 설정과 관계없이, 문제가 발생한 단계 이후의 모든 승인 게이트(gate)는 통과할 수 없습니다.
 - 다른 워커나 프로세스로의 핸드오프가 거부됩니다.
-- `devkit worktree finish --merge` 명령어가 `WORKTREE_BLOCKED` 에러를 발생시키며 브랜치 병합을 엄격히 거부합니다.
+- Host는 `devkit integration` 실행 전에 워크플로 보류를 확인하고 해결합니다. `devkit worktree finish --merge`는 폐기되어 `WORKTREE_MERGE_RETIRED`로 거부됩니다.
 
 현재의 보류 상태는 다음 명령어로 상세히 확인할 수 있습니다.
 

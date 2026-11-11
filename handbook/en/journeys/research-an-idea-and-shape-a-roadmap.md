@@ -1,15 +1,15 @@
 ---
 sources:
-  CAP-DLV-deep-research: 08c383e1a9a76e3e47679db645eeb7a751126b8e
-  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
-  UC-research-an-idea-and-shape-a-roadmap: df7aa8b063adb7e9d5ed68644b7e2ee72700a39e
+  CAP-DLV-deep-research: 9884a72877319901f9240bc506f168401fbac1c2
+  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  UC-research-an-idea-and-shape-a-roadmap: 3744a97ed5ecfa404e7127489576ca54dc43223c
 title: Research an idea and shape a roadmap
 ---
 
 # Research an idea and shape a roadmap
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -18,23 +18,28 @@ title: Research an idea and shape a roadmap
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Route a development request](route-development-intent.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
@@ -95,3 +100,7 @@ Implementation informed by the result starts later through the project's ordinar
 - [UC-research-an-idea-and-shape-a-roadmap](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/usecases/delivery/UC-research-an-idea-and-shape-a-roadmap.md)
 - [CAP-DLV-deep-research](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/delivery/CAP-DLV-deep-research.md)
 - [CAP-HARN-agent-guidance](https://github.com/mjkimR/devkit/blob/v0.1.6/docs/capabilities/harness/CAP-HARN-agent-guidance.md)
+
+## Optional cloud research
+
+When useful, the coordinator can prepare a bounded safe request for a user-operated cloud research application. It records awaiting user result, never claims a provider task ran, and does not poll or infer progress from elapsed time. Actual returns are associated with their investigation and reviewed as evidence, not instructions. Missing or unreadable reports leave the material partial with a resumable collection action.

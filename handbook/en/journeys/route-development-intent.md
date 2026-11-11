@@ -1,22 +1,22 @@
 ---
 sources:
-  ADR-decision-ledger: 5f393c36778713137fbbe406a7307153d8c42df2
-  CAP-DIST-sync-and-transactions: 231d34498b080f25b3ab13f0c97c6c21475eb0ee
-  CAP-DLV-delivery-workflows: 3239f814148a48be87ed6befa85cae48681e4519
-  CAP-DLV-project-policy: 8887a983196e8dc5bc3936327b30ef214314e07f
-  CAP-DLV-spec-bundles: 4920f894d479c8c4a54379c07ed130d81356bec3
-  CAP-HARN-agent-guidance: f0895c05d6f477fbc898329866f8f673bebf2a74
-  CAP-WT-task-worktrees: dae7b66b4ad24ea9aa812da83433b153f00adc50
-  UC-advance-an-idea: 0ce93e70e07d5a6a3d120257d9e318f680aec3e1
-  UC-plan-and-hand-off-a-proposal: e2ddba8f64ed51705b1f02682e562b20f0d34e37
-  UC-route-development-intent: c5ef3381db5cefc65ec9a805cd981b37df4618c6
+  ADR-decision-ledger: ad6ecb56b5655121cc19c4ec218962ad0b4fe21d
+  CAP-DIST-sync-and-transactions: d0837e092276ca06cecfc650bdd57053d781f79c
+  CAP-DLV-delivery-workflows: d8e0681c758ff00891d93ccad00a499d5bc55efb
+  CAP-DLV-project-policy: 69045e11fa4d0e8998f0b1ac44a30b403ab93425
+  CAP-DLV-spec-bundles: f45d148a35d479038b3059d3f6c41a44c1b041a4
+  CAP-HARN-agent-guidance: 1e589b087fa8ee5a91daddaefccc6756132dd970
+  CAP-WT-task-worktrees: 2f5c45415f121e1d1d47046f255be4d4163e24dc
+  UC-advance-an-idea: 45c8acaee167f7472b70885cdcbac26fd133c39f
+  UC-plan-and-hand-off-a-proposal: d8fdc0f510ff75159907de246ba4fc72b7b3e551
+  UC-route-development-intent: e3be291799759fd445b4dc4b6ddfe3c77c0addee
 title: Route a development request
 ---
 
 # Route a development request
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.6` at source commit `dabb86f9e659`, generated 2026-11-05. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.6` at source commit `f115e96c8059`, generated 2026-11-11. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -25,23 +25,28 @@ title: Route a development request
 - [Adopt devkit in an existing repository](adopt-in-an-existing-repository.md)
 - [Adopt SDD from adaptive development](adopt-sdd-from-adaptive-development.md)
 - [Advance an idea](advance-an-idea.md)
+- [Assess a selected test suite](assess-test-management.md)
 - [Design necessary command entry points](design-command-entrypoints.md)
 - [Drive development to integration](drive-development-to-integration.md)
+- [Execute an isolated command](execute-an-isolated-command.md)
 - [Explore a design problem](explore-a-design-problem.md)
 - [Find the latest maintenance run](find-the-latest-maintenance-run.md)
 - [Find the right documents](find-the-right-documents.md)
 - [Handle delivery problems and exceptions](handle-delivery-problems-and-exceptions.md)
+- [Import selected third-party agent assets](import-third-party-agent-assets.md)
 - [Improve an interface and user flow](improve-an-interface-and-user-flow.md)
 - [Inspect weekly repository progress](inspect-weekly-repository-progress.md)
 - [Keep the Living Spec consistent](keep-the-living-spec-consistent.md)
 - [Plan and hand off a proposal](plan-and-hand-off-a-proposal.md)
 - [Publish a weekly report](publish-a-weekly-report.md)
+- [Read decision supersession](read-decision-supersession.md)
 - [Reconcile Living Spec drift](reconcile-living-spec-drift.md)
 - [Record a maintenance run](record-a-maintenance-run.md)
 - [Research an idea and shape a roadmap](research-an-idea-and-shape-a-roadmap.md)
 - [Resolve stale activity branches](resolve-stale-activity-branches.md)
 - [Review and refactor accumulated slop](review-and-refactor-accumulated-slop.md)
 - [Run parallel work safely](run-parallel-work-safely.md)
+- [Adopt and refresh bundle sources locally](snapshot-bundle-sources.md)
 - [Speed up selected slow operations](speed-up-selected-slow-operations.md)
 - [Advisories](../areas/advisory.md)
 - [Agent-first CLI toolkit](../areas/cli.md)
