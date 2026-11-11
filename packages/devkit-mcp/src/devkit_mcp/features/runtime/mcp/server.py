@@ -75,7 +75,7 @@ def build_server(tools: dict[str, McpTool], binding: InvocationBinding, *, profi
             description=service.description,
             parameters=service.input_schema,
             annotations=ToolAnnotations(
-                read_only_hint=service.read_only,
+                read_only_hint=service.execution == "read_only",
                 destructive_hint=service.destructive,
                 open_world_hint=service.open_world,
             ),

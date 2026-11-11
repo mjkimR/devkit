@@ -2,7 +2,7 @@
 id: SPEC-mcp-tool-execution-classes
 title: Two MCP tool execution classes
 summary: Narrows McpTool.execution to read_only and bounded_write, derives the read-only hint from it and drops the separate read_only field.
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-MCP-runtime-registration

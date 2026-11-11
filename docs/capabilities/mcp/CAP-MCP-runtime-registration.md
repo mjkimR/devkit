@@ -11,7 +11,7 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py
   - packages/devkit-core/src/devkit_core/base/mcp.py
 created: 2026-10-20
-updated: 2026-10-22
+updated: 2026-11-11
 ---
 
 # [CAP-MCP-runtime-registration] MCP Runtime and Project Registration
@@ -21,9 +21,10 @@ updated: 2026-10-22
 `devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit_dist.features.host.services` and adapts the
 SDK-free contracts to FastMCP's stdio transport. `devkit_core.base.mcp` supplies the dependency-free `McpTool`, whose
 `invoke` takes only the validated arguments.
-Services declare execution as read_only, bounded_write, preflight, interactive or approved_resume; omitted classification is
-interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
-remain deterministic. The transport requests no form and grants no business authority; approval belongs to the
+Services declare execution as `read_only` or `bounded_write`; omitted classification is `bounded_write`, a guarded
+write. The MCP read-only annotation hint is derived from the class (true only for `read_only`) and cannot be declared
+separately; destructive and open-world hints remain descriptive. Schema validation and duplicate/unloadable service
+failures remain deterministic. The transport requests no form and grants no business authority; approval belongs to the
 Host-authorized CLI. Stdout contains only protocol traffic during serve.
 
 The server records the installed devkit source when it starts: the SHA-256 of every Python file under the import
@@ -43,8 +44,7 @@ MCP_RUNTIME_UNAVAILABLE (`INPUT_ERROR`, target `--executable`) and no new entry:
 before any write, and a warning after ordinary sync.
 
 Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents
-bounded writes, preflight and approved resume as well as interactive mutation; guards repeat after lock waits and before later
-effects. The cloud registration profile exposes only declared read-only tools, and no registration is created if
+bounded writes; guards repeat after lock waits and before later effects. The cloud registration profile exposes only declared read-only tools, and no registration is created if
 none exist. Transport availability remains host-dependent. The configuration root cannot be changed by tool input.
 Local Host approval can act on cloud-produced work because environment belongs to the calling Host, not the branch.
 

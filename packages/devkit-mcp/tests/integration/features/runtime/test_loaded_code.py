@@ -17,7 +17,7 @@ from fastmcp import Client
 from .test_runtime import git
 
 PACKAGE = "devkit_stale_fixture"
-Execution = Literal["read_only", "preflight", "interactive", "approved_resume", "bounded_write"]
+Execution = Literal["read_only", "bounded_write"]
 
 
 @pytest.fixture
@@ -56,7 +56,6 @@ def _tools(calls: list[str]) -> dict[str, McpTool]:
 
     return {
         "write": tool("write", "bounded_write"),
-        "prepare": tool("prepare", "preflight"),
         "read": tool("read", "read_only"),
     }
 
@@ -74,15 +73,14 @@ def test_changed_loaded_module_refuses_protected_tools(project, loaded):
     server = build_server(_tools(calls), ExecutionBinding(project, project))
     assert not _call(server, "write").is_error
     (loaded / "model.py").write_text("MEMBERS = ('SPEC', 'USECASE')\n")
-    for name in ("write", "prepare"):
-        result = _call(server, name)
-        assert result.is_error
-        assert result.structured_content is not None
-        error = result.structured_content["error"]
-        assert error["code"] == "MCP_RUNTIME_STALE"
-        assert error["advisory"]["mode"] == "INTERACTION"
-        assert "Restart or reconnect" in error["advisory"]["fix"]
-        assert any(f"{PACKAGE}.model" in detail for detail in error["advisory"]["details"])
+    result = _call(server, "write")
+    assert result.is_error
+    assert result.structured_content is not None
+    error = result.structured_content["error"]
+    assert error["code"] == "MCP_RUNTIME_STALE"
+    assert error["advisory"]["mode"] == "INTERACTION"
+    assert "Restart or reconnect" in error["advisory"]["fix"]
+    assert any(f"{PACKAGE}.model" in detail for detail in error["advisory"]["details"])
     assert calls == ["write"]
 
 
