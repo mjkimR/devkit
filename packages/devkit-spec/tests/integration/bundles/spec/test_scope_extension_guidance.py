@@ -26,7 +26,14 @@ def test_worker_three_tiers_and_final_record(environment: str) -> None:
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_review_and_host_check_annotation_before_record_and_final_agreement(environment: str) -> None:
-    review = raw("skills/spec-review/SKILL.md", environment)
+    assert_rule(
+        raw("skills/spec-review/SKILL.md", environment),
+        "`_boundary:`",
+        "initial payload",
+        "writes outside",
+        "(references/scope-extension.md)",
+    )
+    review = raw("skills/spec-review/references/scope-extension.md", environment)
     assert_rule(review, "scope extension:", "task", "ac", "before", "record exists")
     assert_rule(review, "p2", "p1", "explicit payload denies", "test weakening")
     assert_rule(review, "initial payload", "task diff", "omitted annotation", "material finding")
