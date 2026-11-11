@@ -11,7 +11,7 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   (ADR, MAT, SPEC) where the reason matters. Add no dated headings, correction notes ("changed from X to Y") or
   history sections.
 - The selected development approach defines decision revision and retention. Document formats alone do not require immutable decision history.
-- Temporary checklists and PR task lists belong in `specs/`, not `docs/`.
+- Keep temporary checklists and task lists in the selected approach's work records, not `docs/`.
 
 ## Decision Placement
 
@@ -39,7 +39,7 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 - Refer to ID-bearing documents by full ID in prose and exact ID in relationship fields, without Markdown paths; keep
   ordinary links for URLs, images, code paths and documents without IDs.
 - To rename a document whose ID derives from its path, move the file, set the new ID and keep the old ID in `aliases`
-  (for a spec bundle, on `spec.md`, `plan.md`, `tasks.md` and `reconcile.md`); follow the selected approach
+  on every file whose ID derives from the moved path; follow the selected approach
   when renaming accepted decisions. Then run `devkit rules fix` to move current references to the new ID.
 
 ## Steering documents

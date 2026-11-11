@@ -9,7 +9,7 @@ Take the next useful action toward the user's product goal, keeping enough curre
 
 ## Constraints
 
-- Before product actions, check the effective `configuration.development.approach` from `uv run devkit config show`, not bundle selection or installed packages. When it is not `adaptive-dev`, explain the shared `.devkit/config.toml` setting `[development] approach = "adaptive-dev"`; change it only on the user's direction.
+- Before product actions, check the effective `configuration.development.approach` from `uv run devkit config show`, not bundle selection or installed packages; if inspection fails, stop product work and report it. When it is not `adaptive-dev`, stop product work and explain the shared `.devkit/config.toml` setting `[development] approach = "adaptive-dev"`; change it only on the user's direction.
 
 ## Procedure
 

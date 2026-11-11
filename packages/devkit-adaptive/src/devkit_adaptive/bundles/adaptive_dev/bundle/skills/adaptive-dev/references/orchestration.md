@@ -14,11 +14,11 @@
 12. Route failed combined checks to the responsible writer with reproducing evidence; apply the repair and no-progress guidance in `evidence-and-iteration.md` and report unresolved defects explicitly.
 13. On failure or interruption, stop or collect active children before releasing ownership; return retained commits, dirty paths, active owners and next action to the Host.
 14. Preserve active, dirty or unmerged worktrees until results are retained or removal has separate authority; checkpointing does not require passing QA.
-15. Only the Host updates `.devkit/adaptive-dev.md`; record useful failed checks, unmerged/dirty results, source identity, ownership and recovery steps before pause or handoff.
+15. Before pause or handoff, the Host checkpoints current context per `current-context.md` step 6.
 
 Completion requires collected children, checked actual paths, source-specific check results and a Host checkpoint when resume facts changed. Packaging/projection checks establish no native invocation, path enforcement, performance or all-host support guarantee.
 
 A `swarm-worker` lead records children with `uv run devkit adaptive assignment new --parent <its ID>` only when its payload supplies the ID and permission, and closes all children before returning.
 A `swarm-verifier` or `swarm-planner` lead records nothing: the Host records its children from the returned partition or leaves them unrecorded.
-On interruption and before pausing, the Host runs `uv run devkit adaptive assignment list` and checkpoints outstanding IDs.
+On interruption and before pausing, the Host runs `uv run devkit adaptive assignment list` before checkpointing.
 Assignment commands accept every present worktree of the repository, however it was created.

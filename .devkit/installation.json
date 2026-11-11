@@ -1858,19 +1858,19 @@
     },
     ".devkit/managed/docs/instructions/contract-authoring.md": {
       "mode": 420,
-      "sha256": "76120d0d01f29eb7ad8e7ab518ff8661e2dad2e5d52868f350d3b858568d1447"
+      "sha256": "bd68277fd13ac247b4463763043d716ea941a0a51e6235532c0cff0628b11dba"
     },
     ".devkit/managed/docs/instructions/decision-writing.md": {
       "mode": 420,
-      "sha256": "25bde2a57cdb01692086f43fc7228f6c105819aded099332d236b8c5827a6639"
+      "sha256": "c1faec31b242c7facc899a55f348e9605e765512e1c576c525195bbaae6266df"
     },
     ".devkit/managed/docs/instructions/document-writing.md": {
       "mode": 420,
-      "sha256": "c8536301115e689375305f24421a931e44e048a8a76fc59270d86f96150a7786"
+      "sha256": "713f4f35aa62dab52064686881640945690a2e38742e39b9f977106398343b6d"
     },
     ".devkit/managed/docs/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "d3e2cd102e92d84b7bd37747772dc48e531bc1e00fa484aaaba316d139470c72"
+      "sha256": "cb57774c7ddc5f3a770be5aece45ce3281d187022b02793b52bdbdc4ea3b2e14"
     },
     ".devkit/managed/docs/instructions/usecase-writing.md": {
       "mode": 420,
@@ -1882,7 +1882,7 @@
     },
     ".devkit/managed/docs/rules/code_entrypoints/guide.md": {
       "mode": 420,
-      "sha256": "1fce4e5b6a5d30d6835c2d2e0f582628aa9848360d690a334d4a408f3498316b"
+      "sha256": "351ac862a143d7a30eee0679b4fe1823cbf5aa40eaeadac40a88c299feb6982b"
     },
     ".devkit/managed/docs/rules/code_entrypoints/rule.py": {
       "mode": 420,
@@ -1894,7 +1894,7 @@
     },
     ".devkit/managed/docs/rules/decision_supersession/guide.md": {
       "mode": 420,
-      "sha256": "91b41457bf309a16c0e8d38e446e5b6009faff23e8a9c57d9f0e1021efffe410"
+      "sha256": "fdabf41e7278d06a962b222be009b3499bb1e57a660383543a2427c5b9b8c402"
     },
     ".devkit/managed/docs/rules/decision_supersession/rule.py": {
       "mode": 420,
@@ -1930,7 +1930,7 @@
     },
     ".devkit/managed/docs/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "ed0e74bd690a73237f030ce686aa382b836d93e0192c1b74a4fe97a4f9cfcfaf"
+      "sha256": "a6df58fcce06166f622f3dd06ed68f35f4cf5171ee4abfdf63341b039a5eb564"
     },
     ".devkit/managed/docs/rules/id_convention/rule.py": {
       "mode": 420,
@@ -1978,7 +1978,7 @@
     },
     ".devkit/managed/docs/rules/ux_coverage/guide.md": {
       "mode": 420,
-      "sha256": "69ab9c530969aeb4091c8455e0203c2f51e7a750199c09cac954e7df7e2f61c9"
+      "sha256": "5a45f0ca045d4db59cf46cddc3b0079447508b9de5a35ebba72eaf084a84ce12"
     },
     ".devkit/managed/docs/rules/ux_coverage/rule.py": {
       "mode": 420,
@@ -2010,7 +2010,7 @@
     },
     ".devkit/managed/docs/templates/milestone.md": {
       "mode": 420,
-      "sha256": "d1846485a9dce3d7e97ec1c03519d7603b1c0c82f7234ccc3a1f86bd04628dee"
+      "sha256": "d6f7172760e39a14a3cdf515b83280f4a879e0bc7bffbb2122ea69d8ade45757"
     },
     ".devkit/managed/docs/templates/usecase.md": {
       "mode": 420,

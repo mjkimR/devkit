@@ -57,8 +57,9 @@ repository-wide, so a slug is unique across `docs/` and every package.
 - A path off the convention above (wrong depth, an undated or misdated partition, a non-kebab-case name, a dated
   feedback name inside a bundle, a slug whose first segment is a date or sequence number, chapter 09 or 12, a
   capability or use case outside an area directory, a milestone outside `docs/roadmap/` and every registered
-  `docs/packages/<name>/roadmap/`): `Invalid partition path:
-  <what the path must be>`. Nothing else is reported for the file until it is moved.
+  `docs/packages/<name>/roadmap/`, an archived milestone with a live status or vice versa): `Invalid partition
+  path: <what the path must be>`. Nothing else is reported for the file until it is moved; a misplaced milestone
+  stays indexed.
 - No frontmatter (or one never closed): `Missing YAML frontmatter; expected <field>: <ID>`.
 - A frontmatter `id` (`reconcile_id` in `reconcile.md`) other than the path requires (fixable): `Frontmatter <field>
   is "<declared>" but the path requires "<ID>"`.
@@ -86,8 +87,9 @@ repository-wide, so a slug is unique across `docs/` and every package.
    a document by ID.
 2. **Autofix**: `devkit rules fix` sets the `id` / `reconcile_id` and `area` lines (inserting a missing one: the ID as
    the first header line, `area` after the `id` line) and rewrites the heading token (in a spec bundle file, to
-   `SPEC-{slug}`). It never moves a file, never renames a duplicate slug, never rewrites a reference, needs the
-   frontmatter to exist for the field fixes, and skips completed spec bundles and files that are not valid UTF-8.
+   `SPEC-{slug}`). It never moves a file or changes lifecycle status, never renames a duplicate slug, never
+   rewrites a reference, needs the frontmatter to exist for the field fixes, and skips completed spec bundles and
+   files that are not valid UTF-8.
    It writes only the targets when the run names any.
 3. Add missing frontmatter with the ID, `title` and `status`; rename one of two duplicate slugs.
 4. Replace date- or number-based references with the slug ID by hand, written as `` `ADR-{slug}` ``,
@@ -104,7 +106,3 @@ No settings. Namespaces come from `[[tool.docs.namespaces]]` in `.devkit/config.
 
 No inline suppression. Quote an old date- or number-based identifier inside inline code or a code block, or keep it
 in a `materials/` directory; `[rules] exclude` removes a file from every rule.
-
-Milestone placement is checked against lifecycle status. Invalid archived live documents stay indexed so the
-rule can report them. Placement has no autofix: it never moves files or changes lifecycle status. Duplicate
-identities across root/archive remain errors. Existing metadata fixes and explicit historical targeting remain.

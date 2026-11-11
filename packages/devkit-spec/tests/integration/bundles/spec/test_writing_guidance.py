@@ -78,7 +78,7 @@ def test_the_decision_guide_and_template_mark_normative_outcome_clauses() -> Non
     assert_rule(guide, "an adr and to a padr alike", "at least one holds")
     for criterion in ("costly to reverse", "more than one package", "more than one viable option", "existing contract"):
         assert_rule(guide, criterion)
-    assert_rule(guide, "meets none of them", "planning decisions", "`plan.md`")
+    assert_rule(guide, "meets none of them", "work record", "selected development approach")
     planning = raw("skills/spec/references/planning.md")
     assert_rule(planning, "new padr", "admission criteria", "planning decisions")
     # SPEC-proposal-scaffold-and-handoff-pointers: the scaffold leaves no materials/ for the worktree to inherit.
