@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:31:25.352548Z'
+status: completed
+summary: 'Read discovery in scripts/affected_tests.py adds the tests that read a changed path by a root-anchored literal path (test modules, conftests, helpers); full triggers, unknown-path fallback and every DATA row kept; test_version_script joins the release.sh and justfile rows. ci-cd.md and ARCH-07 §1.3 describe it. AC-06: docs/x.md +1.10 s over the head with read discovery disabled (0.009 s -> 1.104 s, best of 3).'
+findings: []
+assumptions:
+- 'Before/after probe vs the base selector on 162 sampled paths: groups identical, 0 reductions, 0 reason changes.'
+- AGENTS.md Verification sentence on frontend selection is stale and deferred to FB-agents-guide-frontend-selection-wording (outside write scope).
+checks:
+  tests: PASS just test-affected --base main 16 passed (unit-integration); --tier e2e 140 passed (test_affected_tests.py)
+  build: PASS just check (Pyright) 0 errors
+  lint: PASS just lint; devkit rules check --ci --base main; devkit sync --check
+diff_scope:
+  base: f0ff818b1bc34752fe2c5cd77b0f19491e11b472
+  head: 4bf3da082319514ed9782425ff661f3b1d797da8
