@@ -1,19 +1,26 @@
 ---
 id: PROP-single-sync-readiness-gate
 title: One readiness gate for a synchronized checkout
-summary: Measures what devkit status and devkit sync --check each detect, then makes one of them the single readiness gate or documents the remaining split.
-status: draft                         # draft | reviewing | accepted | rejected
+summary: "Makes devkit sync --check the single readiness gate of a synchronized checkout, since it detects every problem devkit status does and more, and documents devkit status as a diagnostic report."
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/distribution/
 priority: low                         # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
+size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
     - capabilities/distribution/
+    - docs/development/reference/distribution.md
+    - packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/instructions/
+    - packages/devkit-dist/src/devkit_dist/features/distribution/cli/selection.py
+    - packages/devkit-adaptive/src/devkit_adaptive/bundles/adaptive_dev/bundle/playbooks/agent-asset-conversion/references/project-bundle.md
+    - docs/usecases/delivery/UC-import-third-party-agent-assets.md
+    - guides/
   excludes:
     - docs/decisions/
+    - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 ---
@@ -30,13 +37,91 @@ new problem class is added, documented and tested twice. Source: `docs/materials
 ## 2. Technical Spike Questions
 
 - **Q1**: Which problems does each command detect that the other does not (measured on fixtures)?
+  - **Answer**: [detection matrix](materials/detection-matrix.md). On 17 fixture scenarios, every problem that fails
+    `status` also fails `sync --check`. `sync --check` alone fails four of them: a removed guidance block, a preset added
+    to `config.toml` without a sync, `guidance_block = false` without a sync and a deleted receipt. By code it also
+    fails an installed package content change, which `status` cannot see. `status` compares the disk with the receipt
+    (what the last sync wrote); `sync --check` compares it with the desired state (what a sync would write now).
+  - Where both fail, `sync --check` exits `2` with the planner's first refusal and `status` exits `1` with every
+    problem listed. The overlap is smaller than the hypothesis assumed: `status` already reuses the planner's conflict,
+    guidance-block, subagent and selection helpers; its own logic is the file-state classification and the report fields.
 - **Q2**: Can `sync --check` be the single gate, with `status` kept as a diagnostic report?
+  - **Answer**: yes. Requiring both adds no detection; requiring only `status`, as the in-repo bundle and project-bundle
+    criteria do today, misses desired-state changes.
 
 ## 3. Proposed Design & Impact
 
-- Record the detection matrix first.
-- Then either route `status` problem detection through the sync planner or document the deliberate split, and change the completion criterion to one command where possible.
-- Any merge of outputs is a contract change: CAP-DIST, reference and the devkit bundle instruction.
+### Decision
+
+`devkit sync --check` exiting `0` is the one readiness criterion of a synchronized checkout. `devkit status` stays a
+read-only diagnostic report of the installed state against the receipt: its JSON fields, its `errors`, its exit
+codes and its detection logic are unchanged. It is the command to run when the gate fails or to read installed
+facts (selection, file states, tool version, host hooks); it is not a readiness gate.
+
+The gate also counts this clone's planned optional MCP registration (`sync --check` adds registration writes to its
+actions): a clone that uses MCP is ready after `sync --registrations-only` (or a plain sync), not right after
+`sync --locked`: planned registration writes count as not ready, so `sync --check` keeps failing until the
+registrations are applied (user decision on q1). This follows the current `sync --check` behavior and needs no code.
+
+A new problem class therefore needs the planner (which the gate runs) and the reference; adding it to `status` is
+an optional diagnostic, no longer a second gate to keep in step.
+
+### Changes (Development)
+
+1. **Contract**: `docs/capabilities/distribution/` states the readiness criterion: `sync --check` exit `0` is the
+   gate for a synchronized checkout, and `devkit status` is a report that does not detect desired-state changes
+   (a selection, configuration or installed-package change without a sync, a removed guidance block, a missing
+   receipt). It also states that `sync --check` plans this clone's optional MCP registration, so an unregistered MCP
+   clone reports `NOT_SYNCHRONIZED` until `uv run devkit sync --registrations-only` (or a plain sync) applies it. Development picks the CAP-DIST document that
+   owns sync checking (`CAP-DIST-sync-and-transactions`
+   already says "`sync --check` remains the general synchronization gate").
+2. **Reference**: the `devkit status` section of `docs/development/reference/distribution.md` says the same in one
+   sentence, replacing its closing "`sync --check` remains the check that says whether a sync is needed".
+3. **Completion criteria** become "`uv run devkit sync --check` exits `0`" (with any other non-readiness condition
+   they carry kept):
+   - the devkit bundle's `consumption.md` Completion section (both commands → `sync --check` only);
+   - the devkit bundle's `in-repo-bundle.md` "Done when" (`status` → `sync --check`);
+   - devkit-adaptive's `agent-asset-conversion/references/project-bundle.md` Completion (`status` exits `0` → `sync --check`
+     exits `0`; the fact that the bundle is selected is read from `devkit list` or the `status` selection, as a fact,
+     not a gate);
+   - Scenario 7 of `UC-import-third-party-agent-assets` (its Then clause).
+4. **Guides**: `guides/INSTALL_GUIDE.md` Step 5 keeps `sync --check` as the verification and presents `status` as
+   the diagnosis for a failed check; `guides/install/existing-repository.md` "Already installed" keeps `status` as a
+   report and adds `sync --check` as the readiness check after `sync --locked` and the optional
+   `sync --registrations-only` step, in the order `guides/install/mcp.md` uses.
+5. **CLI help**: the `devkit status` help (`cli/selection.py`) names `sync --check` as the readiness gate and drops
+   "MCP registration still to set up" from its notices list, which contradicts the reference and
+   `ADR-mcp-runtime-and-shared-artifacts` (general status emits no `MCP_REGISTRATION_PENDING`).
+
+### Non-Goals
+
+- No change to `status` or planner detection, codes, exit codes or JSON (`usecases/` is excluded).
+- No routing of `status` through the planner: the planner raises its first refusal, so `status` would lose its
+  listing of every problem at once, and the gate no longer depends on `status`.
+- No change to `sync --check`'s exit `2` for a refusal (conflict, unsafe path, journal, invalid selection): a
+  criterion of "exits `0`" already treats it as not ready.
+- No new document kind, ADR or feature edge.
+
+### Verification
+
+- `just test-affected` for the help text change; CLI help snapshot tests are updated if they cover `status`.
+- `uv run devkit rules check` on the changed documents and bundle assets, `uv run devkit bundle validate` for the
+  two changed bundles, and a search showing no remaining "`devkit status` ... exit `0`" readiness criterion in
+  bundles, guides or use cases.
+
+## Planning decisions
+
+- `sync --check` is the gate and `status` the report (Q1 and Q2 evidence). Recorded here, not as a PADR: it
+  narrows how existing commands are documented and changes no command contract.
+- The excluded `usecases/` path keeps detection code out of scope; the matrix shows no detection gap to close in
+  the gate.
+- Planned optional MCP registration writes count as not ready (user decision on q1, settling challenger finding 1):
+  `sync --check` keeps failing until the registrations are applied, and the contract, reference and guides state this
+  and order the steps as `guides/install/mcp.md` does. Excluding registration actions from `--check` was declined: it
+  would change the planner under the excluded `usecases/` path.
+- `status_checks` warnings (gate-hook health) are not part of readiness: they are warnings that change no exit code,
+  and `devkit gate status` remains their check (challenger finding 3, waived).
+- `size` lowered from `M` to `S`: the change is documentation, bundle text and one help string.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
