@@ -228,8 +228,33 @@ def trailing_comment(line: str, start: int) -> str | None:
         if quoted is None:
             return None
         value = quoted.end()
+    elif line[value : value + 1] in ("[", "{"):
+        value = _flow_end(line, value)
+        if value is None:
+            return None
     comment = _COMMENT.search(line, value)
     return comment.group() if comment else None
+
+
+def _flow_end(line: str, start: int) -> int | None:
+    """The index after the flow collection opening at ``line[start]``, skipping quoted scalars (``None``: unclosed)."""
+    depth, index = 0, start
+    while index < len(line):
+        char = line[index]
+        if char in ('"', "'"):
+            quoted = _QUOTED.match(line, index)
+            if quoted is None:
+                return None
+            index = quoted.end()
+            continue
+        if char in "[{":
+            depth += 1
+        elif char in "]}":
+            depth -= 1
+            if depth == 0:
+                return index + 1
+        index += 1
+    return None
 
 
 def _key(line: str) -> tuple[str, int] | None:

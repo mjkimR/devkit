@@ -432,6 +432,13 @@ def test_invalid_project_config(installed: list[InstalledBundle], bare: Path, co
         sync_project(bare, installed)
 
 
+def test_read_config_reports_unknown_fields_before_runtime_tables(bare: Path) -> None:
+    # The key check keeps its place ahead of the runtime tables when one file has both faults.
+    write_config(bare, "unknown_field = 42\n[execution]\nenvironment = 'nowhere'\n")
+    with pytest.raises(ConfigError, match="config: unknown fields"):
+        read_config(bare)
+
+
 @pytest.mark.parametrize(
     ("content", "problem"),
     [("schema = 2\n", "unsupported config schema"), ("[mcp]\nregister = 'yes'\n", "mcp.register: invalid value 'yes'")],

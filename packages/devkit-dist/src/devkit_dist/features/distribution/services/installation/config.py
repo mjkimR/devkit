@@ -53,6 +53,7 @@ from devkit_dist.features.project import (
     PLAYBOOK_MAX_BYTES_MAX,
     PLAYBOOK_MAX_BYTES_MIN,
     PLAYBOOK_MODES,
+    development_approach,
     playbook_value,
 )
 from devkit_dist.features.project.models.invocation import devkit_command
@@ -163,16 +164,20 @@ def _config_path(root: Path) -> Path:
 def _load(root: Path) -> tuple[dict[str, Any] | None, EffectiveConfig]:
     """The shared configuration (``None`` without the file) and the effective one, each file validated once.
 
-    ``read_shared_config`` checks the file, its schema and the runtime tables; this adds the top-level keys and the
-    ``[tool.*]`` tables, then ``effective_config`` the development approach and the local overlay.
+    The checks keep their order: file and schema, the top-level keys (``_known_fields``), the runtime tables, the
+    development approach and the ``[tool.*]`` tables; ``effective_config`` then reads the local overlay.
     """
-    data = read_shared_config(root)
+    data = read_shared_config(root, check=_known_fields)
     if data is not None:
-        unknown = set(data) - FIELDS
-        if unknown:
-            raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
+        development_approach(data)
         validate_tool_tables(data.get("tool"))
     return data, effective_config(root, data or {})
+
+
+def _known_fields(data: dict[str, Any]) -> None:
+    unknown = set(data) - FIELDS
+    if unknown:
+        raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
 
 
 def validate_tool_tables(tool: object) -> None:

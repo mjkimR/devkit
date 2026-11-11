@@ -95,3 +95,9 @@ def test_set_field_result_parses() -> None:
     updated = set_field(text, "status", "done")
     assert parse(updated).data == {"id": "X", "status": "done"}
     assert "# keep" in updated
+
+
+def test_a_quoted_hash_inside_a_flow_collection_is_not_a_comment() -> None:
+    text = "---\nworkflow_history: [{workflow: a, note: 'x #1'}]\ntags: [\"a #b\", c]  # keep\n---\nbody\n"
+    text = set_field(text, "workflow_history", "[new]")
+    assert set_field(text, "tags", "[c]") == "---\nworkflow_history: [new]\ntags: [c]  # keep\n---\nbody\n"

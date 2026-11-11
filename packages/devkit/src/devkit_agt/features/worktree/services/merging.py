@@ -54,7 +54,9 @@ def source_merge_method(base: Path, source: str) -> str | None:
         data = commit_config(base, source)
     except (GitError, ConfigError):
         return None
-    policy = worktree_policy(data) if data is not None else None
+    if data is None or not isinstance(table := data.get("worktree"), dict) or "merge" not in table:
+        return None
+    policy = worktree_policy(data)
     if policy is None or "merge" in invalid_policy_keys(policy):
         return None
     return policy["merge"]

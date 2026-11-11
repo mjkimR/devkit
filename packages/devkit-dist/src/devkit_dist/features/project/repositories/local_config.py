@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import re
 import stat
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -110,11 +111,12 @@ def merge_config(shared: dict[str, Any], local: dict[str, Any], *, path: Path | 
     return merged
 
 
-def read_shared_config(root: Path) -> dict[str, Any] | None:
+def read_shared_config(root: Path, *, check: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any] | None:
     """``.devkit/config.toml`` of ``root``, ``None`` when it does not exist.
 
     It must be a regular file (not a symlink) of schema 1 whose runtime tables (``RUNTIME_TABLES``) are valid; the
-    effective reader checks the rest it reads, and ``installation.config`` the keys only it knows.
+    effective reader checks the rest it reads, and ``installation.config`` the keys only it knows. ``check`` runs
+    right after the schema check, so a caller's own key check keeps its place before the runtime tables.
     """
     shared_file = root / CONFIG_PATH
     if shared_file.is_symlink() or (shared_file.exists() and not shared_file.is_file()):
@@ -124,6 +126,8 @@ def read_shared_config(root: Path) -> dict[str, Any] | None:
         return None
     if "schema" in shared and (type(shared["schema"]) is not int or shared["schema"] != 1):
         raise _invalid(CONFIG_PATH, "unsupported config schema")
+    if check is not None:
+        check(shared)
     validate_runtime_tables(shared, CONFIG_PATH)
     return shared
 
