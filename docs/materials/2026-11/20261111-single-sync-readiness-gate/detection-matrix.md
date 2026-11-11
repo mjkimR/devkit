@@ -50,7 +50,7 @@ Both commands also exit `0` on this worktree itself (356 managed files `ok`, no 
 ## Findings
 
 1. Every measured problem that fails `status` also fails `sync --check`. No measured scenario fails `status` alone,
-   and the challenger found no condition in code where it would (`envelopes/challenger-01.yaml`).
+   and the challenger found no condition in code where it would (historical Git `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-single-sync-readiness-gate/envelopes/challenger-01.yaml`).
 2. `sync --check` fails four measured scenarios that `status` passes, and by code also a package content change:
    `status` compares the disk with the receipt (what the last sync wrote), `sync --check` compares it with the
    desired state (what a sync would write now). Only the second answers "is this checkout synchronized".
