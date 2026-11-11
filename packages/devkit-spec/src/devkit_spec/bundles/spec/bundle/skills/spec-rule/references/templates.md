@@ -1,6 +1,8 @@
 # spec-rule templates
 
-Read this at Step 2 of the `spec-rule` skill. Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this fixable example (Markdown files under the configured paths end with a newline): rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
+Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this fixable
+example (Markdown files under the configured paths end with a newline): rename `RULE-myrepo-final-newline`,
+`final_newline` and the classes; keep the structure.
 
 ## Layout and registration
 
@@ -26,18 +28,18 @@ assets = ["final-newline"]
 
 ## Guide
 
-Sections, for an agent that just hit a violation:
+Write the guide for an agent that just hit a violation:
 
 ```markdown
 # [RULE-myrepo-final-newline] Final Newline
 
 ## 1. Overview
 
-What the rule guarantees and why; phase and severity; which files it checks and which not.
+What the rule guarantees and why; phase and severity; files checked and not checked.
 
 ## 2. Cause of Violation
 
-Each condition reported, with its message and where it is reported.
+Each reported condition, with its message and location.
 
 ## 3. Remediation
 
@@ -138,9 +140,10 @@ class FinalNewlineRule(BaseRule):
         return found
 ```
 
-- Do not pass `severity` or `phase` to a violation; the evaluator sets their effective values.
+- Pass no `severity` or `phase` to a violation; the evaluator sets their effective values.
 - For a rule without settings, omit `settings`, `validate_settings` and the `ctx.settings` call.
-- For a larger rule, keep the implementation in the bundle package (`<package>/rules/final_newline.py`, importable and type-checked) and let the deployed `rule.py` only subclass it; `guide.md` stays beside the deployed file.
+- For a larger rule, keep the implementation in the bundle package (`<package>/rules/final_newline.py`, importable
+  and type-checked) and let the deployed `rule.py` only subclass it; keep `guide.md` beside the deployed file.
 
 ## Tests
 
@@ -176,9 +179,12 @@ def test_settings_apply_per_path(tmp_path: Path) -> None:
     assert [v.file for v in check(RULE, tmp_path, files, settings=settings)] == ["guides/a.md"]
 ```
 
-`check` runs the real engine (settings parser, one fix pass, one recheck); `evaluate` returns the whole `EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not message text.
+`check` runs the real engine (settings parser, one fix pass, one recheck); `evaluate` returns the whole
+`EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not message text.
 
-With `inputs`, also test the skip and that the declaration is complete. `opened_files` records every workspace file opened while active; it, `evaluate` and `write_files` come from the same module, `match_path` from `devkit_agt.features.rules`:
+With `inputs`, also test the skip and that the declaration is complete. `opened_files` records every workspace file
+opened while active; it, `evaluate` and `write_files` come from the same module, `match_path` from
+`devkit_agt.features.rules`:
 
 ```python
 def test_inputs_cover_every_file_the_rule_reads(tmp_path: Path) -> None:

@@ -1,7 +1,5 @@
 # Rule configuration (`[rules]`)
 
-Read this when a rule declares settings a project may tune, or when a project changes how a rule runs.
-
 ## Declaring settings (rule author)
 
 - Pass a frozen dataclass instance with every default as `settings=` ([templates](templates.md#rule-file)). Fields
