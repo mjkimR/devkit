@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from devkit_docs.base.layout import PROPOSALS, bundle_of, is_proposal_anchor, is_spec_anchor, unnamespaced
 from devkit_docs.features.documents.models.ids import Kind
 
 # Frontmatter fields that reference other documents. A list field holds IDs, a scalar field one ID.
@@ -115,8 +116,14 @@ def _text(value: object) -> str:
 
 
 def is_unit_anchor(document: Document) -> bool:
-    """A proposal or spec anchor, excluding target blueprints and other bundle files."""
-    return (document.kind is Kind.SPEC and document.path.endswith("/spec.md")) or (
+    """A proposal or spec anchor (``base.layout``), excluding target blueprints and other bundle files: a proposal
+    bundle's ``proposal.md`` under ``docs/proposals/`` or a namespace's ``docs/packages/<name>/proposals/``, and a
+    global single-file proposal only when its file stem is its ID."""
+    if document.kind is Kind.SPEC:
+        return is_spec_anchor(document.path)
+    path = unnamespaced(document.path)
+    return (
         document.kind is Kind.PROPOSAL
-        and (document.path.endswith("/proposal.md") or document.path == f"docs/proposals/{document.id}.md")
+        and is_proposal_anchor(path)
+        and (bundle_of(path) is not None or document.path == f"{PROPOSALS}/{document.id}.md")
     )

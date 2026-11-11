@@ -18,7 +18,7 @@ from devkit_docs.features.documents.models.kinds import (
 from devkit_docs.features.documents.models.markdown import VisibleLine, visible_lines
 from devkit_docs.features.documents.models.milestones import milestone_path_valid
 from devkit_docs.features.documents.models.model import Document, Issue, Reference
-from devkit_docs.features.documents.models.parse import parse_document
+from devkit_docs.features.documents.models.parse import body_references, field_node, parse_document
 from devkit_docs.features.documents.repositories.index import (
     SOURCE_DIRECTORIES,
     TERMINAL_STATUSES,
@@ -42,9 +42,11 @@ __all__ = [
     "Reference",
     "Summary",
     "VisibleLine",
+    "body_references",
     "by_prefix",
     "definition",
     "definitions",
+    "field_node",
     "in_feedback",
     "in_source_directory",
     "is_document_file",

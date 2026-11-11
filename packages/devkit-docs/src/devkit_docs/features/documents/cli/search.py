@@ -15,13 +15,14 @@ from devkit_dist.adapters.cli import (
     echo_json,
     echo_notices,
     exit_on_warnings,
+    fields_line,
     is_json,
     resolve_root,
+    sentinel,
     workspace_option,
 )
 from devkit_dist.features.search import SearchMode
 
-from devkit_docs.adapters.cli import fields_line, sentinel
 from devkit_docs.features.documents import Kind
 from devkit_docs.features.documents.cli.commands import ALL_NAMESPACES, NAMESPACE
 from devkit_docs.features.documents.usecases.search import (

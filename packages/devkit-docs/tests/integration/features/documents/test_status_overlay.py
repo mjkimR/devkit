@@ -7,10 +7,10 @@ import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner, Result
+from devkit_core.core import extensions
 from devkit_dist.cli import cli as devkit_cli
 from docs_support.types import Write
 
@@ -48,10 +48,14 @@ class _Unreadable(Mapping[str, Mapping[str, str]]):
 
 
 def _install(monkeypatch: pytest.MonkeyPatch, **overlays: Callable[..., object] | None) -> None:
-    """Register ``overlays`` for the browse use case only, so devkit's own command entry points still load."""
+    """Register ``overlays`` as the status overlay group only, so devkit's own command entry points still load."""
     entries = [_Entry(name, overlay) for name, overlay in overlays.items()]
-    stub = SimpleNamespace(entry_points=lambda *, group: entries if group == browse.OVERLAY_GROUP else [])
-    monkeypatch.setattr(browse, "metadata", stub)
+    real = extensions.metadata.entry_points
+
+    def entry_points(*, group: str) -> object:
+        return entries if group == browse.OVERLAY_GROUP else real(group=group)
+
+    monkeypatch.setattr(extensions.metadata, "entry_points", entry_points)
 
 
 def _list(workspace: Path, *args: str) -> Result:

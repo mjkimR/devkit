@@ -16,7 +16,7 @@ class SupersessionDocumentsUseCase(BaseUseCase):
         self, root: Path, document_id: str
     ) -> tuple[str, list[dict[str, object]], list[dict[str, object]], Sequence[AdvisoryError]]:
         index = DocumentIndex.load(root)
-        try:
+        with index.problems_on_refusal():
             document = index.resolve(document_id)
             if not document.id.startswith(("ADR-", "PADR-")):
                 raise ArgumentError(
@@ -24,9 +24,6 @@ class SupersessionDocumentsUseCase(BaseUseCase):
                     target_files=[document_id],
                     fix="Pass an ADR or PADR ID or alias",
                 )
-        except AdvisoryError as exc:
-            vars(exc)["notices"] = tuple(index.problems)
-            raise
 
         def record(
             written: str, earlier: Document | None, later: Document | None, other: Document | None

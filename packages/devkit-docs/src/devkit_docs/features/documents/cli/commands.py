@@ -35,14 +35,17 @@ from devkit_dist.adapters.cli import (
     boundary,
     echo_json,
     echo_notices,
+    echo_page,
     exit_on_problems,
     exit_on_warnings,
+    fields_line,
     is_json,
     resolve_root,
+    sentinel,
     workspace_option,
 )
 
-from devkit_docs.adapters.cli import COMMAND, echo_page, fields_line, sentinel
+from devkit_docs.adapters.cli import COMMAND
 from devkit_docs.features.documents import Kind
 from devkit_docs.features.documents.usecases.browse import (
     ListDocumentsUseCase,
@@ -60,10 +63,6 @@ LIMIT = click.option(
     "--limit", "-n", type=int, default=DEFAULT_LIMIT, show_default=True, help="Items per page; 0 for all"
 )
 OFFSET = click.option("--offset", type=int, default=0, show_default=True, help="Items to skip")
-# Feedback ``severity`` values from the most to the least urgent; any other value, or none, ranks after them.
-# The proposal frontmatter fields ``list`` prints on proposal lines and records.
-# The feedback frontmatter fields ``list`` prints on feedback lines and records.
-
 
 NAMESPACE = click.option(
     "--namespace", default=None, help="Show this namespace and the global documents; global shows only those"
@@ -180,7 +179,7 @@ def refs_cmd(
                 )
             )
         args = ["refs", document.id, "--direction", direction, *_paging_args(workspace_root, limit)]
-        echo_page(len(keys), offset, limit, len(items), args)
+        echo_page(COMMAND, len(keys), offset, limit, len(items), args)
     _finish(notices)
 
 

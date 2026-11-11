@@ -56,16 +56,11 @@ class DocsConfigError(DocsError, ConfigError):
 
 
 class GlossaryInvalidError(DocsError):
-    """``docs/steering/glossary.yaml`` cannot be read or does not hold ``terms: [{primary, synonyms}]``
-    (``INPUT_ERROR``)."""
+    """A selected ``steering/glossary.yaml`` (global or of a registered namespace) cannot be read or does not hold
+    ``terms: [{primary, synonyms}]`` (``INPUT_ERROR``); the raiser names that file as the target and in the fix."""
 
     code = "DOCS_GLOSSARY_INVALID"
     input_error = True
-    target_files = ("docs/steering/glossary.yaml",)
-    fix = (
-        "Correct docs/steering/glossary.yaml: terms is a list of mappings, each with a primary string and an optional "
-        "synonyms list of strings"
-    )
 
 
 class ListStatusUnknownNotice(DocsError):

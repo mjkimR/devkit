@@ -29,9 +29,8 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import load_header, locate
-from devkit_core.core.yaml import safe_compose
 
-from devkit_docs.features.documents import Document, DocumentIndex, Kind, Reference, definition
+from devkit_docs.features.documents import Document, DocumentIndex, Kind, Reference, definition, field_node
 from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.services.namespaces import living_path
 from devkit_docs.features.governance import FIX_COMMAND, document_index, is_material, namespaces, reportable
@@ -200,14 +199,10 @@ def _append_items(text: str, field: str, ids: list[str]) -> str | None:
         return None
     newline = block.newline or "\n"
     try:
-        root = safe_compose(block.header, source="frontmatter fixer")
+        found = field_node(block.header, field, source="frontmatter fixer")
     except yaml.YAMLError:
         return None
-    if root is None:
-        root = yaml.MappingNode("tag:yaml.org,2002:map", [])
-    if not isinstance(root, yaml.MappingNode):
-        return None
-    node = next((value for key, value in root.value if isinstance(key, yaml.ScalarNode) and key.value == field), None)
+    node = found[1] if found is not None else None
     if node is None:
         entry = f"{field}:{newline}" + "".join(f"  - {item}{newline}" for item in ids)
         return text[: block.header_end] + entry + text[block.header_end :]

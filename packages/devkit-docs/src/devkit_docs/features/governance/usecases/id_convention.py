@@ -46,41 +46,34 @@ from pathlib import Path
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import FrontmatterBlock, locate
+from devkit_core.core.frontmatter import FrontmatterBlock, locate, set_field, trailing_comment
 
 from devkit_docs.features.documents import (
-    DocumentIndex,
     Kind,
     KindTableError,
     VisibleLine,
     definition,
     definitions,
-    in_feedback,
     milestone_path_valid,
     visible_lines,
 )
-from devkit_docs.features.documents.models.ids import legacy_references
+from devkit_docs.features.documents.models.ids import is_word_led_slug, legacy_references, word_led
+from devkit_docs.features.documents.models.markdown import body_start
 from devkit_docs.features.documents.models.namespace import Namespace
 from devkit_docs.features.documents.repositories.index import is_document_file
 from devkit_docs.features.documents.services.namespaces import docs_roots, living_path
 from devkit_docs.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces
-from devkit_docs.utils.text import trailing_comment
 
 RULE_ID = "RULE-id-convention"
 type Add = Callable[..., None]
 
 _DATED_NAME = re.compile(r"^(\d{8})-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
-_SLUG_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$", re.ASCII)
 _MONTH_NAME = re.compile(r"^(\d{4})-(\d{2})$", re.ASCII)
 _CAP_STEM = re.compile(r"^CAP-([A-Z0-9]+)-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
-_USECASE_STEM = re.compile(r"^UC-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
-_UX_STEM = re.compile(r"^UX-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _ARCH_STEM = re.compile(r"^ARCH-(?:(\d{2})(?:-([1-9]))?-)?([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
-_HAS_LETTER = re.compile(r"[a-z]")
 # Header lines, read as written; the value excludes surrounding blanks and a CR line ending.
 _ID_LINE = re.compile(r"^(id|reconcile_id):[ \t]*(.*?)[ \t]*(?=\r?$)", re.MULTILINE)
 _AREA_LINE = re.compile(r"^area:[ \t]*(.*?)[ \t]*(?=\r?$)", re.MULTILINE)
-_ANY_ID_LINE = re.compile(r"^id:.*?(?=\r?$)", re.MULTILINE)
 
 _SPEC_FILES = {"spec.md": "SPEC", "plan.md": "PLAN", "tasks.md": "TASKS", "reconcile.md": "REC"}
 # arc42 chapters that may hold a numbered ARCH document; 09 (decisions) and 12 (glossary) live elsewhere.
@@ -180,17 +173,12 @@ class _Target:
         return f"SPEC-{self.slug}" if self.kind is Kind.SPEC else self.expected_id
 
 
-def _has_letter(slug: str) -> bool:
-    """Whether the first segment of ``slug`` has a letter: ``001-foo`` is a retired sequence number."""
-    return _HAS_LETTER.search(slug.split("-", 1)[0]) is not None
-
-
 def _dated(month: str, name: str) -> tuple[str, str]:
     """``(slug, issue)`` of a ``<YYYYMMDD>-<slug>`` name inside a ``<YYYY-MM>`` partition. The first slug segment
     needs a letter, as in a Living Spec slug: ``20261014-2024-budget`` would give ``ADR-2024-budget``, which reads as
     the retired number-based ``ADR-2024``."""
     match = _DATED_NAME.match(name)
-    if match is None or not _has_letter(match.group(2)):
+    if match is None or not word_led(match.group(2)):
         return "", (
             "name must be {YYYYMMDD}-{slug} with a kebab-case slug whose first segment has a letter"
             f" (not a date or sequence number): {name}"
@@ -232,16 +220,12 @@ def _feedback(path: str) -> _Target:
     proposal = len(parts) == 5 and parts[:2] == ["docs", "proposals"] and parts[3] == "feedback"
     if len(parts) == 5 and parts[3] == "feedback":
         if proposal:
-            if (
-                not parts[2].startswith("PROP-")
-                or not _SLUG_NAME.fullmatch(parts[2][5:])
-                or not _has_letter(parts[2][5:])
-            ):
+            if not parts[2].startswith("PROP-") or not is_word_led_slug(parts[2][5:]):
                 issue = "proposal feedback must be inside a PROP-{slug} bundle"
         else:
             _, issue = _dated(parts[1], parts[2])
         if not issue:
-            if _DATED_NAME.match(name) or not _SLUG_NAME.match(name) or not _has_letter(name):
+            if _DATED_NAME.match(name) or not is_word_led_slug(name):
                 issue = (
                     "feedback file name must be a kebab-case slug without a date, whose first segment has a letter:"
                     f" {name}"
@@ -269,7 +253,7 @@ def _capability(target: Callable[..., _Target], parts: list[str], stem: str, doc
             path_issue=f"Capability must be stored at {docs_root}/capabilities/{{area}}/CAP-{{AREA}}-{{slug}}.md"
         )
     match = _CAP_STEM.match(stem)
-    if match is None or not _has_letter(match.group(2)):
+    if match is None or not word_led(match.group(2)):
         issue = (
             "file name must be CAP-{AREA}-{slug} with an upper-case area and a kebab-case slug"
             f" that is not a sequence number: {stem}"
@@ -278,31 +262,27 @@ def _capability(target: Callable[..., _Target], parts: list[str], stem: str, doc
     return target(slug=match.group(2), expected_id=stem, expected_area=parts[2])
 
 
-def _usecase(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
-    if len(parts) != 4:
-        return target(path_issue=f"Use case must be stored at {docs_root}/usecases/{{area}}/UC-{{slug}}.md")
-    match = _USECASE_STEM.match(stem)
-    if match is None or not _has_letter(match.group(1)):
-        issue = f"file name must be UC-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
-        return target(path_issue=issue)
-    return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
+def _area_slug(label: str, directory: str, prefix: str) -> _Grammar:
+    """The grammar of an area-scoped kind whose file stem is ``<prefix>-<slug>`` under ``<directory>/<area>/``."""
+    pattern = re.compile(rf"^{prefix}-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 
+    def grammar(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
+        if len(parts) != 4:
+            return target(path_issue=f"{label} must be stored at {docs_root}/{directory}/{{area}}/{prefix}-{{slug}}.md")
+        match = pattern.match(stem)
+        if match is None or not word_led(match.group(1)):
+            issue = f"file name must be {prefix}-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
+            return target(path_issue=issue)
+        return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
 
-def _ux(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
-    if len(parts) != 4:
-        return target(path_issue=f"UX document must be stored at {docs_root}/ux/{{area}}/UX-{{slug}}.md")
-    match = _UX_STEM.match(stem)
-    if match is None or not _has_letter(match.group(1)):
-        issue = f"file name must be UX-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
-        return target(path_issue=issue)
-    return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
+    return grammar
 
 
 def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
     if len(parts) != 3:
         return target(path_issue=f"Architecture document must be stored at {docs_root}/architecture/ARCH-{{slug}}.md")
     match = _ARCH_STEM.match(stem)
-    if match is None or not _has_letter(match.group(3)):
+    if match is None or not word_led(match.group(3)):
         issue = (
             "file name must be ARCH-{slug} or ARCH-{NN}[-{n}]-{slug} with an arc42 chapter number"
             f" and a kebab-case slug: {stem}"
@@ -321,8 +301,8 @@ def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, d
 # The path and stem grammar of each Living Spec kind: every Living Spec row of the kind table needs one.
 _LIVING_GRAMMARS: dict[Kind, _Grammar] = {
     Kind.CAPABILITY: _capability,
-    Kind.USECASE: _usecase,
-    Kind.UX: _ux,
+    Kind.USECASE: _area_slug("Use case", "usecases", "UC"),
+    Kind.UX: _area_slug("UX document", "ux", "UX"),
     Kind.ARCHITECTURE: _architecture,
 }
 
@@ -418,16 +398,6 @@ def _reference_files(ctx: RuleContext) -> list[str]:
     return files + _markdown(ctx, "specs")
 
 
-def _completed_bundles(index: DocumentIndex) -> set[str]:
-    """``specs/<month>/<bundle>`` of every completed spec bundle."""
-    return {"/".join(d.path.split("/")[:3]) for d in index.documents if index.is_historical(d)}
-
-
-def _historical(path: str, completed: set[str]) -> bool:
-    """Whether ``path`` is work history: a file of a completed bundle other than its feedback (``CAP-DOCS-document-model``)."""
-    return "/".join(path.split("/")[:3]) in completed and not in_feedback(path)
-
-
 def _block(text: str) -> FrontmatterBlock | None:
     """The frontmatter block; an unclosed one counts as none."""
     try:
@@ -456,9 +426,13 @@ def _field(header: str, name: str) -> str:
     return ""
 
 
-def _heading(text: str, block: FrontmatterBlock | None) -> VisibleLine | None:
-    """The first H1 line of the body outside code and comments; its text is the raw line."""
-    start, first_line = (block.end, block.body_line) if block else (0, 1)
+def _heading(text: str) -> VisibleLine | None:
+    """The first H1 line of the body (the whole text after an unclosed frontmatter) outside code and comments; its
+    text is the raw line."""
+    try:
+        start, first_line = body_start(text)
+    except FrontmatterError:
+        start, first_line = 0, 1
     for line in visible_lines(text, start=start, first_line=first_line, mask_links=False, keep_id_spans=False):
         if line.text.startswith("# "):
             raw = text[line.offset : line.offset + len(line.text)]
@@ -505,26 +479,6 @@ def _convention_lines(text: str) -> Iterator[VisibleLine]:
     yield from visible_lines(text, start=start, first_line=first_line, mask_links=False, keep_id_spans=False)
 
 
-def _set_field(header: str, name: str, value: str, newline: str) -> str:
-    """``header`` with every top-level ``name:`` line set to ``value``, keeping a trailing comment; a missing ``id`` /
-    ``reconcile_id`` becomes the first line, a missing ``area`` follows the ``id`` line."""
-    line = f"{name}: {value}"
-
-    def replace(match: re.Match[str]) -> str:
-        return line + (trailing_comment(match.group(), len(name) + 1) or "")
-
-    if name == "area":
-        if _AREA_LINE.search(header):
-            return _AREA_LINE.sub(replace, header)
-        anchor = _ANY_ID_LINE.search(header)
-        if anchor is not None:
-            return f"{header[: anchor.end()]}{newline}{line}{header[anchor.end() :]}"
-        return f"{line}{newline}{header}"
-    if any(match.group(1) == name for match in _ID_LINE.finditer(header)):
-        return _ID_LINE.sub(lambda match: replace(match) if match.group(1) == name else match.group(0), header)
-    return f"{line}{newline}{header}"
-
-
 class IdConventionRule(BaseRule):
     def __init__(self) -> None:
         super().__init__(
@@ -542,13 +496,12 @@ class IdConventionRule(BaseRule):
 
     def check(self, ctx: RuleContext) -> list[Violation]:
         index = document_index(ctx)
-        completed = _completed_bundles(index)
         found: list[Violation] = []
 
         def reportable(path: str) -> bool:
             if not ctx.is_file_targeted(path):
                 return False
-            return not (_historical(path, completed) or path in index.historical) or explicitly_targeted(ctx, path)
+            return not index.is_historical_path(path) or explicitly_targeted(ctx, path)
 
         def add(
             path: str, line: int, message: str, remediation: str, *, column: int = 0, fixable: bool = False
@@ -623,7 +576,7 @@ class IdConventionRule(BaseRule):
                     f" (or move the file to {target.docs_root}/{directory}/{area}/)",
                     fixable=True,
                 )
-        heading = _heading(text, block)
+        heading = _heading(text)
         token = _heading_token(heading, target.kind)
         if heading is not None and token is not None and token.group("id") not in target.allowed_tokens():
             add(
@@ -652,35 +605,26 @@ class IdConventionRule(BaseRule):
 
     def fix(self, ctx: RuleContext) -> list[str]:
         index = document_index(ctx)
-        completed = _completed_bundles(index)
         changed: list[str] = []
         for target in _targets(ctx):
             path = target.path
-            if (
-                target.path_issue
-                or not ctx.is_file_targeted(path)
-                or _historical(path, completed)
-                or path in index.historical
-            ):
+            if target.path_issue or not ctx.is_file_targeted(path) or index.is_historical_path(path):
                 continue
             text = ctx.cache.read_text_strict(path)
             if text is None:
                 continue
             block = _block(text)
             updated = text
-            heading = _heading(text, block)
+            heading = _heading(text)
             token = _heading_token(heading, target.kind)
             if heading is not None and token is not None and token.group("id") not in target.allowed_tokens():
                 start, end = (heading.offset + offset for offset in token.span("id"))
                 updated = updated[:start] + target.heading_id() + updated[end:]
-            if block is not None:  # the heading follows the header, so the header offsets still hold
-                header = block.header
-                newline = block.newline or "\n"
-                if _field(header, target.field) != target.expected_id:
-                    header = _set_field(header, target.field, target.expected_id, newline)
-                if target.expected_area and _field(header, "area") != target.expected_area:
-                    header = _set_field(header, "area", target.expected_area, newline)
-                updated = updated[: block.header_start] + header + updated[block.header_end :]
+            if block is not None:  # a missing id or reconcile_id becomes the first line, a missing area follows id
+                if _field(block.header, target.field) != target.expected_id:
+                    updated = set_field(updated, target.field, target.expected_id, missing="prepend")
+                if target.expected_area and _field(block.header, "area") != target.expected_area:
+                    updated = set_field(updated, "area", target.expected_area, missing="prepend", after="id")
             if updated != text:
                 ctx.cache.write_text(path, updated, dry_run=ctx.dry_run)
                 changed.append(path)

@@ -208,8 +208,8 @@ non-blank strings.
   duplicate keys, not a mapping; fixed by hand); a missing, blank or non-string `id`, `title` or `status`; a
   `planning_effort` or `dev_effort` in a proposal anchor (`docs/proposals/PROP-<slug>/proposal.md` or
   `docs/proposals/PROP-<slug>.md`) that is present and not a string naming `low`, `medium` or `high` (not fixable;
-  omission is allowed for legacy proposals); a `namespace` in `proposal.md` (under `docs/proposals/`) or `spec.md`
-  that is not a string naming `global` or a registered namespace (not fixable). The `namespace` field is checked in
+  omission is allowed for legacy proposals); a `namespace` in such a proposal anchor or a spec bundle's
+  `specs/<YYYY-MM>/<bundle>/spec.md` that is not a string naming `global` or a registered namespace (not fixable). The `namespace` field is checked in
   current proposals and specs, and in every one of them when the run targets `.devkit/config.toml`.
 - **Fix**: fills what is missing and leaves present values alone: `id` the ID the path derives, `title` the first
   `# ` heading (a leading ID token dropped) else the file stem, `status: draft` (`open` for proposal feedback, `planned` for milestones), and `created_at` today when none of

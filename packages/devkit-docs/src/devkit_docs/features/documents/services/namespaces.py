@@ -5,9 +5,10 @@ repository-wide. Every document belongs to one namespace:
 
 - a document under ``docs/packages/<name>/`` belongs to ``<name>``;
 - the files of a spec bundle (``specs/<YYYY-MM>/<bundle>/...``) or a proposal bundle
-  (``docs/proposals/<bundle>/...``) belong to the namespace their ``spec.md`` or ``proposal.md`` names in its
+  (``docs/proposals/PROP-<slug>/...``) belong to the namespace their ``spec.md`` or ``proposal.md`` names in its
   ``namespace`` frontmatter field, so a bundle keeps its package wherever the work happens; a single-file proposal
-  (``docs/proposals/<name>.md``) belongs to the namespace its own ``namespace`` field names;
+  (``docs/proposals/PROP-<slug>.md``) belongs to the namespace its own ``namespace`` field names (``base.layout``
+  ``anchor_of``);
 - everything else is ``global``.
 
 A selection (``--namespace``, ``--all-namespaces``, or detected from the current directory) shows its namespace plus
@@ -23,8 +24,10 @@ from pathlib import Path
 
 from devkit_core.base.errors import ArgumentError
 
+from devkit_docs.base.layout import anchor_of, unnamespaced
 from devkit_docs.features.documents import Document, DocumentIndex
-from devkit_docs.features.documents.models.namespace import GLOBAL, PACKAGES_DIR, Namespace
+from devkit_docs.features.documents.models.namespace import GLOBAL, Namespace
+from devkit_docs.utils.paths import ROOT, covers
 
 
 @dataclass(frozen=True)
@@ -38,10 +41,6 @@ class Selection:
         return self.name is None or namespace == self.name or (self.name != GLOBAL and namespace == GLOBAL)
 
 
-def _within(path: str, root: str) -> bool:
-    return root == "" or path == root or path.startswith(f"{root}/")
-
-
 def detect(namespaces: Sequence[Namespace], root: Path, cwd: Path) -> str | None:
     """The namespace the current directory selects, or ``None`` outside every package."""
     try:
@@ -50,9 +49,10 @@ def detect(namespaces: Sequence[Namespace], root: Path, cwd: Path) -> str | None
         return None
     relative = "" if relative == "." else relative
     for namespace in namespaces:
-        if _within(relative, namespace.docs):
+        if covers(namespace.docs, relative):
             return namespace.name
-    containing = [namespace for namespace in namespaces if _within(relative, namespace.path)]
+    # An empty source path (only a hand-built ``Namespace``; the configuration refuses one) contains everything.
+    containing = [namespace for namespace in namespaces if covers(namespace.path or ROOT, relative)]
     return max(containing, key=lambda namespace: len(namespace.path)).name if containing else None
 
 
@@ -89,17 +89,6 @@ def select(namespaces: Sequence[Namespace], root: Path, cwd: Path, name: str | N
     return Selection(detect(namespaces, root, cwd))
 
 
-def _bundle_anchor(path: str) -> str | None:
-    parts = path.split("/")
-    if len(parts) >= 4 and parts[0] == "specs" and parts[2] != "feedback":
-        return "/".join([*parts[:3], "spec.md"])
-    if len(parts) >= 4 and parts[:2] == ["docs", "proposals"]:
-        return "/".join([*parts[:3], "proposal.md"])
-    if len(parts) == 3 and parts[:2] == ["docs", "proposals"]:
-        return path
-    return None
-
-
 def namespace_resolver(index: DocumentIndex, namespaces: Sequence[Namespace]) -> Callable[[Document], str]:
     """A function giving the namespace each document of ``index`` belongs to (``global`` when none applies)."""
     by_path = {document.path: document for document in index.documents}
@@ -107,9 +96,9 @@ def namespace_resolver(index: DocumentIndex, namespaces: Sequence[Namespace]) ->
 
     def namespace_of(document: Document) -> str:
         for namespace in namespaces:
-            if _within(document.path, namespace.docs):
+            if covers(namespace.docs, document.path):
                 return namespace.name
-        anchor_path = _bundle_anchor(document.path)
+        anchor_path = anchor_of(document.path)
         anchor = by_path.get(anchor_path) if anchor_path else None
         declared = anchor.frontmatter.get("namespace") if anchor else None
         return declared if isinstance(declared, str) and declared in names else GLOBAL
@@ -125,11 +114,9 @@ def living_path(path: str, *, namespaces: Sequence[Namespace] | None) -> str:
     registered or not, for a caller without the configuration (``entrypoints.entrypoint_bearing``).
     """
     parts = path.split("/")
-    if len(parts) < 4 or "/".join(parts[:2]) != PACKAGES_DIR:
+    if namespaces is not None and len(parts) > 2 and parts[2] not in {namespace.name for namespace in namespaces}:
         return path
-    if namespaces is not None and parts[2] not in {namespace.name for namespace in namespaces}:
-        return path
-    return "/".join(["docs", *parts[3:]])
+    return unnamespaced(path)
 
 
 def docs_roots(namespaces: Sequence[Namespace]) -> list[str]:

@@ -1,4 +1,4 @@
-"""Paging shared by the ``devkit docs`` listings and their use cases (sentinel output: ``devkit_docs.adapters.cli``)."""
+"""Paging shared by the ``devkit docs`` listings and their use cases (sentinel output: ``devkit_dist.adapters.cli``)."""
 
 from __future__ import annotations
 

@@ -12,6 +12,7 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
+from devkit_core.core.extensions import ExtensionFailed, call_extensions
 
 from devkit_docs.base.errors import ListStatusUnknownNotice, OverlayFailedWarning
 from devkit_docs.features.documents import Document, DocumentIndex, Kind, Reference
@@ -23,13 +24,11 @@ from devkit_docs.utils.paths import normalize, overlaps
 
 _KIND_ORDER = {kind: position for position, kind in enumerate(Kind)}
 
-
+# Feedback ``severity`` values from the most to the least urgent; any other value, or none, ranks after them.
 SEVERITY_ORDER = ("critical", "blocked", "workaround", "noise")
-
-
+# The proposal frontmatter fields ``list`` prints on proposal lines and records.
 PROPOSAL_FIELDS = ("task_kind", "planning_effort", "dev_effort")
-
-
+# The feedback frontmatter fields ``list`` prints on feedback lines and records.
 FEEDBACK_FIELDS = ("severity", "scope", "target")
 
 
@@ -152,18 +151,21 @@ RESERVED_FIELDS = frozenset(
 
 def _overlays(index: DocumentIndex) -> tuple[dict[str, dict[str, str]], list[AdvisoryError]]:
     """``document ID -> display fields`` of every registered status overlay, in entry-point order, with a
-    ``DOCS_OVERLAY_FAILED`` warning for each overlay left out; a later overlay wins a field both set. Only the display
-    changes; no document is written."""
+    ``DOCS_OVERLAY_FAILED`` warning for each overlay left out (``call_extensions`` isolates each one, ``SystemExit``
+    and a failed discovery of the group included); a later overlay wins a field both set. Only the display changes; no
+    document is written."""
+
+    def call(entry: metadata.EntryPoint) -> dict[str, dict[str, str]]:
+        overlay: Overlay = entry.load()
+        return _overlay_result(overlay(index.root, index.documents))
+
     merged: dict[str, dict[str, str]] = {}
     failed: list[AdvisoryError] = []
-    for entry in sorted(metadata.entry_points(group=OVERLAY_GROUP), key=lambda item: (item.name, item.value)):
-        try:
-            overlay: Overlay = entry.load()
-            result = _overlay_result(overlay(index.root, index.documents))
-        except Exception as exc:
-            failed.append(_overlay_failed(entry.name, str(exc) or type(exc).__name__))
+    for outcome in call_extensions(OVERLAY_GROUP, call):
+        if isinstance(outcome, ExtensionFailed):
+            failed.append(_overlay_failed(outcome.name, outcome.problem))
             continue
-        for document_id, fields in result.items():
+        for document_id, fields in outcome.result.items():
             merged.setdefault(document_id, {}).update(fields)
     return merged, failed
 
@@ -324,12 +326,8 @@ class ReferenceDocumentsUseCase(BaseUseCase):
     ) -> tuple[Document, list[str], list[_RefGroup], Sequence[AdvisoryError]]:
         _check_page(limit, offset)
         index = DocumentIndex.load(root)
-        try:
+        with index.problems_on_refusal():
             document = index.resolve(document_id)
-        except AdvisoryError as exc:
-            # The documents left out while indexing still reach the caller with the refusal (ARCH-08-1 section 4).
-            vars(exc)["notices"] = tuple(index.problems)
-            raise
         groups = index.outgoing(document) if direction == "out" else index.incoming(document.id)
         keys = list(groups)
         shown = page(keys, offset, limit)

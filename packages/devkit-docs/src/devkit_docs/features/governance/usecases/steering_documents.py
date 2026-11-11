@@ -32,7 +32,7 @@ from devkit_core.core import frontmatter
 
 from devkit_docs.features.documents.services.namespaces import docs_roots
 from devkit_docs.features.governance import field_line, namespaces
-from devkit_docs.utils.text import foreign_letters
+from devkit_docs.features.governance.services.summary import summary_problem
 
 RULE_ID = "RULE-steering-documents"
 SYNONYMS = "glossary.yaml"
@@ -201,11 +201,12 @@ class SteeringDocumentsRule(BaseRule):
             "Write `summary:`: one English sentence saying when an agent reads this file"
             " (it is listed in every agent context)"
         )
-        if not isinstance(value, str) or not value.strip():
-            add(path, line, "steering document has no summary", remediation)
+        problem = summary_problem(value, limit)
+        if problem is None:
             return
-        letters = foreign_letters(value)
-        if letters:
-            add(path, line, f"summary must be English; it contains {''.join(letters[:5])}", remediation)
-        elif len(value.strip()) > limit:
-            add(path, line, f"summary has {len(value.strip())} characters ({limit} at most)", remediation)
+        if problem.blank:
+            add(path, line, "steering document has no summary", remediation)
+        elif problem.foreign:
+            add(path, line, f"summary must be English; it contains {problem.foreign}", remediation)
+        else:
+            add(path, line, f"summary has {problem.length} characters ({limit} at most)", remediation)

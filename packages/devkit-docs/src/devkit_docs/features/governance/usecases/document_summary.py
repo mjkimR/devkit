@@ -23,7 +23,7 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_docs.base.layout import SKELETON_MARKER
 from devkit_docs.features.documents import Document, Summary, definition
 from devkit_docs.features.governance import document_index, field_line, is_material, reportable
-from devkit_docs.utils.text import foreign_letters as foreign_letters
+from devkit_docs.features.governance.services.summary import summary_problem
 
 RULE_ID = "RULE-document-summary"
 REMEDIATION = (
@@ -90,12 +90,12 @@ class DocumentSummaryRule(BaseRule):
             if not required(document) or SKELETON_MARKER in ctx.cache.read_text(document.path):
                 return None
             return f"{document.id} has no summary"
-        if not isinstance(value, str) or not value.strip():
-            return "summary must be a non-empty string"
-        letters = foreign_letters(value)
-        if letters:
-            return f"summary must be English; it contains {''.join(letters[:5])}"
         limit = ctx.settings(self, document.path).max_length
-        if len(value.strip()) > limit:
-            return f"summary has {len(value.strip())} characters; keep it to one or two sentences ({limit} at most)"
-        return None
+        problem = summary_problem(value, limit)
+        if problem is None:
+            return None
+        if problem.blank:
+            return "summary must be a non-empty string"
+        if problem.foreign:
+            return f"summary must be English; it contains {problem.foreign}"
+        return f"summary has {problem.length} characters; keep it to one or two sentences ({limit} at most)"

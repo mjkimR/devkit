@@ -14,7 +14,18 @@ import re
 
 from devkit_docs.features.documents.models.kinds import Kind, definitions
 
-__all__ = ["ID_PATTERN", "ID_SOURCE", "PREFIXES", "Kind", "is_id", "is_legacy_id", "kind_of", "legacy_references"]
+__all__ = [
+    "ID_PATTERN",
+    "ID_SOURCE",
+    "PREFIXES",
+    "Kind",
+    "is_id",
+    "is_legacy_id",
+    "is_word_led_slug",
+    "kind_of",
+    "legacy_references",
+    "word_led",
+]
 
 # Built from the kind table at import (``ADR-kind-definition-table-keyed-on-the-declared-kind-enum``), in its order.
 PREFIXES: dict[str, Kind] = {row.prefix: row.kind for row in definitions()}
@@ -31,6 +42,18 @@ _LEGACY_REF = re.compile(
 _ARCH_REF = re.compile(r"\bARCH-\d{2}(?:-[0-9a-z]+)*", re.ASCII)
 _ARCH_SUBDOCUMENT = re.compile(r"^-[1-9](?=-|$)")
 _HAS_LETTER = re.compile(r"[a-z]")
+_SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*", re.ASCII)
+
+
+def word_led(slug: str) -> bool:
+    """Whether the first ``-`` segment of ``slug`` has a letter: ``001-foo`` is a retired sequence number, and
+    ``2024-budget`` reads as the number-based ``2024``."""
+    return _HAS_LETTER.search(slug.split("-", 1)[0]) is not None
+
+
+def is_word_led_slug(value: str) -> bool:
+    """Whether ``value`` is a kebab-case slug (``[a-z0-9]`` words joined by ``-``) whose first segment has a letter."""
+    return _SLUG.fullmatch(value) is not None and word_led(value)
 
 
 def is_id(value: str) -> bool:

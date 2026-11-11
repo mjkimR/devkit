@@ -8,7 +8,7 @@ import pytest
 from devkit_agt.features.rules import Violation
 from devkit_agt.features.rules.services.testing import check, load_rule
 
-from devkit_docs.features.governance.usecases.document_summary import foreign_letters
+from devkit_docs.utils.text import foreign_letters
 
 RULE = load_rule(__file__)
 

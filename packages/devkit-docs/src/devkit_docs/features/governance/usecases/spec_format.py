@@ -19,8 +19,8 @@ proposal ``PROP-<slug>.md`` or a PADR ``PROP-<slug>/decisions/PADR-<name>.md`` (
 ``docs/proposals/`` derives none, so its missing ``id`` is reported but not fixed (the fix still fills the other
 fields). It never touches a file the check accepts, a malformed block or a field of the wrong type. Done/dropped milestone documents are history and checked only when explicitly targeted.
 
-The ``namespace`` field of a bundle anchor (a ``proposal.md`` under ``docs/proposals/``, a ``spec.md`` under
-``specs/``), when present, must be a string naming ``global`` or a registered namespace; it is not fixable. Anchors are
+The ``namespace`` field of a bundle anchor (``docs/proposals/PROP-<slug>/proposal.md``, a single-file proposal
+``docs/proposals/PROP-<slug>.md`` or ``specs/<month>/<bundle>/spec.md``), when present, must be a string naming ``global`` or a registered namespace; it is not fixable. Anchors are
 reported as the other rules report documents (a completed spec only when explicitly targeted), except that a run
 targeting ``.devkit/config.toml`` checks every current anchor, because a change to the registry can invalidate them.
 On a proposal anchor (``docs/proposals/PROP-<slug>/proposal.md`` or ``docs/proposals/PROP-<slug>.md``), the optional
@@ -42,7 +42,16 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import BOM, load_header, locate, scalar
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
-from devkit_docs.base.layout import DEV_EFFORT, EFFORTS, PLANNING_EFFORT, PROPOSAL_FILE, PROPOSALS, TARGET_DOCS
+from devkit_docs.base.layout import (
+    DEV_EFFORT,
+    EFFORTS,
+    PLANNING_EFFORT,
+    PROPOSAL_FILE,
+    PROPOSALS,
+    TARGET_DOCS,
+    is_proposal_anchor,
+    is_spec_anchor,
+)
 from devkit_docs.features.documents import (
     Document,
     DocumentIndex,
@@ -59,7 +68,6 @@ from devkit_docs.features.governance import (
     document_index,
     explicitly_targeted,
     field_line,
-    is_proposal_anchor,
     namespaces,
     reportable,
 )
@@ -243,7 +251,10 @@ class SpecFormatRule(BaseRule):
         index = document_index(ctx)
         found: list[Violation] = []
         for document in index.documents:
-            if not _is_anchor(document.path) or NAMESPACE_FIELD not in document.frontmatter:
+            if (
+                not (is_proposal_anchor(document.path) or is_spec_anchor(document.path))
+                or NAMESPACE_FIELD not in document.frontmatter
+            ):
                 continue
             if not _namespace_checked(ctx, index, document):
                 continue
@@ -284,13 +295,6 @@ class SpecFormatRule(BaseRule):
                 ctx.cache.write_text(path, updated, dry_run=ctx.dry_run)
                 changed.append(path)
         return changed
-
-
-def _is_anchor(path: str) -> bool:
-    """Whether ``path`` is a bundle anchor that may declare a ``namespace``: a proposal's ``proposal.md`` under
-    ``docs/proposals/``, a single-file proposal ``docs/proposals/<file>.md`` or a spec bundle's ``spec.md`` under
-    ``specs/``."""
-    return is_proposal_anchor(path) or (path.startswith("specs/") and path.rsplit("/", 1)[-1] == "spec.md")
 
 
 def _namespace_checked(ctx: RuleContext, index: DocumentIndex, document: Document) -> bool:
