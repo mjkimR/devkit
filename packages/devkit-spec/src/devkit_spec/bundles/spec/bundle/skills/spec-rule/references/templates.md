@@ -182,9 +182,16 @@ def test_settings_apply_per_path(tmp_path: Path) -> None:
 `check` runs the real engine (settings parser, one fix pass, one recheck); `evaluate` returns the whole
 `EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not message text.
 
-With `inputs`, also test the skip and that the declaration is complete. `opened_files` records every workspace file
-opened while active; it, `evaluate` and `write_files` come from the same module, `match_path` from
-`devkit_agt.features.rules`:
+## Inputs
+
+Declare `inputs=("<pattern>", ...)` on a rule that reads files beyond its targets: workspace patterns
+(`[rules] exclude` `**` grammar) for every file whose content can change its findings. A run with explicit targets or
+a Git snapshot run (`--staged`, `--ci`) skips the rule when no target or diff path matches, deleted paths included;
+a change to `.devkit/config.toml` or `.devkit/installation.json`, or a run without targets, evaluates every rule.
+
+Test that a target matching each pattern reports a seeded violation, the skip, and that the declaration is complete:
+every file a whole-workspace check opens matches a pattern. `opened_files` records every workspace file opened while
+active; it, `evaluate` and `write_files` come from the same module, `match_path` from `devkit_agt.features.rules`:
 
 ```python
 def test_inputs_cover_every_file_the_rule_reads(tmp_path: Path) -> None:

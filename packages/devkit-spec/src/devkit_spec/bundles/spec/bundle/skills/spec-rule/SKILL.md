@@ -31,20 +31,14 @@ Read [templates](references/templates.md) before Step 2.
    - Severity `error` fails the run; `warning` and `info` do not. Record exceptions in `.devkit/config.toml` with a
      reason comment, not suppression comments.
    - Settings a project may tune ([config](references/config.md)).
-   - If the rule reads files beyond its targets (a whole-workspace scan, a configuration file), declare
-     `inputs=("<pattern>", ...)`: workspace patterns (`[rules] exclude` `**` grammar) for every file whose content can
-     change its findings. A rule that reports only its targets leaves `inputs` unset. A run with explicit targets or
-     a Git snapshot run (`--staged`, `--ci`) skips the rule when no target or diff path matches, deleted paths
-     included; a change to `.devkit/config.toml` or `.devkit/installation.json`, or a run without targets,
-     evaluates every rule.
+   - If the rule reads files beyond its targets (a whole-workspace scan, a configuration file), declare and test
+     `inputs` as [templates](references/templates.md#inputs) says; otherwise leave `inputs` unset.
 2. **Create** `rules/<name>/rule.py`, `guide.md` and `tests/test_rule.py`; register the asset in `bundle.toml` and the
    project's preset. Name an instruction that holds the rule's judgment with `related=("<bundle>:<asset-id>",)`.
 3. **Implement** `check`, each `Violation` with an actionable `remediation`. Add `fix` only when repository state
    determines exactly one result; a second fix run must change nothing.
 4. **Test** valid input, a violation, targeting, settings, the fix and its idempotency, with helpers in the test file
-   (`devkit rules test` runs without the project's `conftest.py`). With `inputs`, also test that a target matching
-   each pattern reports a seeded violation and, with `opened_files`, that every file a whole-workspace check opens
-   matches a pattern.
+   (`devkit rules test` runs without the project's `conftest.py`).
 5. **Validate**:
 
    ```bash

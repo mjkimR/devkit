@@ -979,7 +979,8 @@
       "id": "adr-consolidation",
       "kind": "playbook",
       "paths": [
-        ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md"
+        ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md",
+        ".devkit/managed/spec/playbooks/adr-consolidation/references/kept-adrs.md"
       ]
     },
     {
@@ -1198,7 +1199,7 @@
     },
     ".agents/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "2ac696c8944485c44aa2e9fa914e8f919f8093d24651bf8a9f0a545f158e07b6"
+      "sha256": "447ac176d7224eb61b5e7a9aba1e00cbb1c1e2a7ad500e3f9f37049afe0ad5a2"
     },
     ".agents/skills/spec-rule/references/config.md": {
       "mode": 420,
@@ -1206,7 +1207,7 @@
     },
     ".agents/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "3f444ced5e2f8aabb9af2046cdfb2e2142b6e3125c0b7cf08efd9d7c2e4a7443"
+      "sha256": "722782363b3063d0ac5e7a123ea9bd4e547a348131735f12c9c4e67fb7e96b09"
     },
     ".agents/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -1238,7 +1239,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "9f53c2b47c0dcd64870cd2770e4ac224776f196cf6cccfdb77323b20fc7504ff"
+      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1486,7 +1487,7 @@
     },
     ".claude/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "2ac696c8944485c44aa2e9fa914e8f919f8093d24651bf8a9f0a545f158e07b6"
+      "sha256": "447ac176d7224eb61b5e7a9aba1e00cbb1c1e2a7ad500e3f9f37049afe0ad5a2"
     },
     ".claude/skills/spec-rule/references/config.md": {
       "mode": 420,
@@ -1494,7 +1495,7 @@
     },
     ".claude/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "3f444ced5e2f8aabb9af2046cdfb2e2142b6e3125c0b7cf08efd9d7c2e4a7443"
+      "sha256": "722782363b3063d0ac5e7a123ea9bd4e547a348131735f12c9c4e67fb7e96b09"
     },
     ".claude/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -1526,7 +1527,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "9f53c2b47c0dcd64870cd2770e4ac224776f196cf6cccfdb77323b20fc7504ff"
+      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -2078,7 +2079,11 @@
     },
     ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "9bed5b05927af4a21a48ecc831f3fe2b8c7098b238960ce154fc5a05baa9760f"
+      "sha256": "b704196be97db5291c73523861cf32b0d39805b993eb0b50a9849de744955fff"
+    },
+    ".devkit/managed/spec/playbooks/adr-consolidation/references/kept-adrs.md": {
+      "mode": 420,
+      "sha256": "835d6fa40626d17ebbc4f64bbeca821e734b176563dec2c23f2cc6f60fb1b607"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -2098,11 +2103,11 @@
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
       "mode": 420,
-      "sha256": "a91353d67efea02d1c2840df496de5f690662c86b2dc94725736512374eb9c07"
+      "sha256": "73880a2dbbe67f8290ca1fde28b24afc36f2ce407eb25518e53687b4976c61e6"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
       "mode": 420,
-      "sha256": "4a0e53e314769e8521ff8fa614e518d39c47b1cb3c481d5aee1578df53415a8f"
+      "sha256": "7c2a376682d4f072929a585cada97354096deffd2699be3d921efaf503ae19e4"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
@@ -2250,7 +2255,7 @@
     },
     ".devkit/managed/spec/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "2ac696c8944485c44aa2e9fa914e8f919f8093d24651bf8a9f0a545f158e07b6"
+      "sha256": "447ac176d7224eb61b5e7a9aba1e00cbb1c1e2a7ad500e3f9f37049afe0ad5a2"
     },
     ".devkit/managed/spec/skills/spec-rule/references/config.md": {
       "mode": 420,
@@ -2258,7 +2263,7 @@
     },
     ".devkit/managed/spec/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "3f444ced5e2f8aabb9af2046cdfb2e2142b6e3125c0b7cf08efd9d7c2e4a7443"
+      "sha256": "722782363b3063d0ac5e7a123ea9bd4e547a348131735f12c9c4e67fb7e96b09"
     },
     ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -2290,7 +2295,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "9f53c2b47c0dcd64870cd2770e4ac224776f196cf6cccfdb77323b20fc7504ff"
+      "sha256": "3fe90f38a03b1bca9c9d4ea0e0e0dee322a1363db5a4aced5c0ecd132b741976"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,

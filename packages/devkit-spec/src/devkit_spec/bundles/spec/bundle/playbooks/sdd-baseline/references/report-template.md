@@ -3,6 +3,14 @@
 Copy this shape into the material report, replace placeholders with observed facts and keep source identity and
 current conclusions; the report is not a Unit or an approval envelope.
 
+Recovery rules, not part of the report:
+
+- If installation, policy update or sync fails, record the failed command and the actual partial policy, asset and
+  file state in the report, and report the next supported recovery action; claim neither successful adoption nor
+  automatic rollback.
+- Resume from the existing report after revalidating source and affected evidence, without duplicating baseline
+  documents.
+
 # SDD baseline: <retained product>
 
 ## Identity and selected scope

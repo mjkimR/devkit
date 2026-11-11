@@ -36,8 +36,8 @@ the groups.
 Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devkit/managed/docs/templates/decision.md`:
 
 - Frontmatter: `status: accepted`, `created_at` today, `aliases:` every member ID and every alias a member declared;
-  no `proposal`. Add `supersedes` only for an ADR kept outside the run that a member partially superseded, listing
-  that kept ADR.
+  no `proposal`. Write no `supersedes` unless a member partially superseded an ADR kept outside the run; then read
+  [kept ADRs](references/kept-adrs.md).
 - Section 4 lists only clauses in effect, each ending with its source ID in parentheses. Take replaced clauses from
   the superseder's `Supersedes in part` statement and leave them out of the earlier ADR's replacement; carry each
   such statement as its own item without the source citation.
@@ -49,9 +49,8 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
 ## Step 3: Apply and verify
 
 1. `git rm` the member files, then run `uv run devkit rules fix` to rewrite alias references in current documents.
-   If an ADR kept outside the run names a member in `supersedes`, name the member's replacement instead and add the
-   matching "Superseded in part by" line to that replacement. A kept ADR's own "Superseded in part by" line names
-   the member's replacement, which lists it in `supersedes` (Step 2). When a replacement takes over either side,
+   If an ADR kept outside the run is in a partial supersession with a member, apply
+   [kept ADRs](references/kept-adrs.md). When a replacement takes over either side of a partial supersession,
    keep the statement and one reciprocal pointer equal in source text, code spans included, after collapsing
    whitespace.
 2. Replace a retired ID in a `docs/steering/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.

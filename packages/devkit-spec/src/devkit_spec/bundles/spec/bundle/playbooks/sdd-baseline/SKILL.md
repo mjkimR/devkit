@@ -65,8 +65,8 @@ size and experiment count never start it.
 2. Present the ready report and revision, retained scope, actual check outcomes, selected SDD assets and exact
    policy effects. Reuse an explicit user decision already bound to the same source and effects; otherwise obtain
    that decision now. Preparation intent alone does not authorize activation against an unknown final scope.
-3. Edit only `.devkit/config.toml` to set `[development] approach = "sdd"`, in the existing `[development]` table
-   when present instead of a duplicate table, and preserve the rest of the shared configuration.
+3. Edit only `.devkit/config.toml` to set `[development] approach = "sdd"`, and preserve the rest of the shared
+   configuration.
    Preserve approval, worktree, other integration and project-check settings unless their change was authorized.
    Introduce no universal SDD settings profile and no second approach source.
 4. Run `uv run devkit sync`, `uv run devkit config show`, `uv run devkit spec policy` and `uv run devkit sync --check`.
@@ -77,11 +77,8 @@ size and experiment count never start it.
 
 ## Recovery
 
-- If installation, policy update or sync fails, record the failed command and the actual partial policy, asset and
-  file state, and report the next supported recovery action; claim neither successful adoption nor automatic
-  rollback.
-- Resume from the existing report after revalidating source and affected evidence, without duplicating baseline
-  documents.
+If installation, policy update or sync fails, or you resume an interrupted run, follow the recovery rules
+at the top of the [report template](references/report-template.md).
 
 ## Completion
 
