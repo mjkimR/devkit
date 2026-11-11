@@ -58,6 +58,15 @@ Hypothesis: two policies reduce the main-loop load without removing a procedure:
 
 Removing procedures or rules, or relaxing pinned tests, stays out of scope.
 
+A second peripheral pass tried both policies on the same groups:
+- Policy 1 dropped or reduced 5 sentences in all.
+- Policy 2 moved 5 rare branches, cutting entry documents by up to 558 bytes (spec-rule) and adding as much to
+  references.
+- Most candidates stayed. Many checks fire only after the work is done (linters, `assignment verify`, document
+  rules, commit gates). Others were authority or judgment rules, or already one-line triggers.
+- Expect the main loop to yield more only where its rules are refused early by the CLI. Measure that before committing
+  to the proposal's size goal.
+
 ## 2. Technical Spike Questions
 
 - **Q1**: What did the second peripheral pass (the two policies above, same date) yield per document? Which
