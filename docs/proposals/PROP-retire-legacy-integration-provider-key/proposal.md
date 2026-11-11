@@ -2,7 +2,7 @@
 id: PROP-retire-legacy-integration-provider-key
 title: Reject the legacy [integration] provider key
 summary: Removes the code path that accepts and ignores a legacy [integration] provider key, so the retired readiness-provider selection leaves no reader, diagnostic or documentation behind.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/integration/
 priority: low                         # critical | high | medium | low
