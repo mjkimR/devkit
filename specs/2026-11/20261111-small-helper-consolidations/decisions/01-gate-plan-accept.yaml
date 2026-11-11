@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-small-helper-consolidations
+by: user
+at: '2026-11-11T04:05:42.092245Z'

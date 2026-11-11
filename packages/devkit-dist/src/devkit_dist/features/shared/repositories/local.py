@@ -18,7 +18,7 @@ from pathlib import Path
 
 from devkit_core.base.errors import GitError
 from devkit_core.core.deadline import Deadline
-from devkit_core.core.git import run_git_text, worktree_records
+from devkit_core.core.git import ignored_paths, run_git_text, tracked_paths, worktree_records
 from devkit_core.core.locks import flock_fd
 
 from devkit_dist.features.project.repositories.invocation import guard_execution
@@ -142,7 +142,7 @@ def _eligible(context: RepositoryContext, budget: Deadline) -> None:
                 targets = ["/".join(components[:i]) for i in range(1, len(components) + 1)] if anchored else components
                 if any(fnmatch.fnmatchcase(value.casefold(), pattern.casefold()) for value in targets):
                     raise ExclusionError("an ancestor ignore rule can re-include shared storage")
-        if run_git_text(root, "ls-files", "--", RELATIVE, deadline=budget):
+        if tracked_paths(root, [RELATIVE], deadline=budget):
             raise ExclusionError("tracked shared storage cannot be hidden")
         if run_git_text(root, "ls-files", "--others", "--exclude-standard", "--", RELATIVE, deadline=budget):
             raise ExclusionError("exclusion would hide visible foreign content")
@@ -171,9 +171,11 @@ def _initialize(context: RepositoryContext, budget: Deadline) -> Path:
                 os.fsync(stream.fileno())
         for root in _worktrees(context, budget):
             try:
-                run_git_text(root, "check-ignore", "--", RELATIVE + "/", deadline=budget)
+                ignored = ignored_paths(root, [RELATIVE + "/"], deadline=budget)
             except GitError as exc:
                 raise ExclusionError("shared storage is not ignored in every registered worktree") from exc
+            if not ignored:
+                raise ExclusionError("shared storage is not ignored in every registered worktree")
         for part in (context.main / ".devkit", context.main / RELATIVE, context.main / RELATIVE / "artifacts"):
             _safe(part, directory=True)
             part.mkdir(mode=0o700, exist_ok=True)

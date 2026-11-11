@@ -1,4 +1,5 @@
-"""``devkit_core.core.git``: the isolated environment and session options, path lists and configuration reads."""
+"""``devkit_core.core.git``: the isolated environment and session options, path lists, tracked and ignored probes and
+configuration reads."""
 
 from __future__ import annotations
 
@@ -9,7 +10,7 @@ from pathlib import Path
 
 import pytest
 from devkit_core.core import GitError, changed_paths, dirty_paths, git_config, run_git, run_git_text
-from devkit_core.core.git import run_git_result
+from devkit_core.core.git import ignored_paths, run_git_result, tracked_paths
 
 
 def git(repo: Path, *args: str) -> str:
@@ -116,3 +117,46 @@ def test_git_config(repo: Path, tmp_path: Path) -> None:
     with pytest.raises(GitError) as raised:  # --local outside a repository: exit 128, not "unset"
         git_config(outside, "devkit.test", local=True)
     assert raised.value.returncode == 128
+
+
+@pytest.fixture
+def probed(repo: Path) -> Path:
+    (repo / "dir/sub").mkdir(parents=True)
+    (repo / "dir/sub/file.txt").write_text("x")
+    (repo / "tracked.txt").write_text("x")
+    (repo / "kept.log").write_text("x")
+    (repo / "a*b").write_text("x")
+    (repo / "axb").write_text("x")
+    (repo / ":x").write_text("x")  # without literal pathspecs, ":x" is the magic form of "x"
+    _commit(repo, "tracked files")
+    (repo / ".gitignore").write_text("*.log\n/build/\n")
+    (repo / "fresh.log").write_text("x")
+    (repo / "build").mkdir()
+    return repo
+
+
+def test_tracked_paths_are_literal_and_cover_directories(probed: Path) -> None:
+    asked = ["tracked.txt", "dir", "dir/sub/", "a*b", ":x", "fresh.log", "missing"]
+    assert tracked_paths(probed, asked) == {"tracked.txt", "dir", "dir/sub/", "a*b", ":x"}
+    assert tracked_paths(probed, ["a?b", "x"]) == set()  # neither a glob nor a stripped magic prefix matches
+
+
+def test_ignored_paths_follow_the_index_unless_asked_not_to(probed: Path) -> None:
+    asked = ["kept.log", "fresh.log", "build/", "tracked.txt"]
+    assert ignored_paths(probed, asked) == {"fresh.log", "build/"}
+    assert ignored_paths(probed, asked, no_index=True) == {"kept.log", "fresh.log", "build/"}
+    assert ignored_paths(probed, ["tracked.txt", "a*b"]) == set()  # Git exit 1: none ignored
+
+
+def test_probes_without_paths_run_no_git(tmp_path: Path) -> None:
+    missing = tmp_path / "missing"  # git -C on a missing directory would fail
+    assert tracked_paths(missing, []) == set()
+    assert ignored_paths(missing, [], no_index=True) == set()
+
+
+def test_probes_outside_a_repository_raise(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    for probe in (tracked_paths, ignored_paths):
+        with pytest.raises(GitError) as raised:
+            probe(tmp_path, ["x"])
+        assert raised.value.returncode == 128

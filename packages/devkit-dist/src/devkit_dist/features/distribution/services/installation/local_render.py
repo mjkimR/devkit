@@ -9,8 +9,7 @@ from pathlib import Path
 
 import tomlkit
 from devkit.advisory import Actor, ExitCode
-from devkit_core.base.errors import GitError
-from devkit_core.core.git import run_git
+from devkit_core.core.git import ignored_paths, tracked_paths
 
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content, json_content, signature
@@ -94,13 +93,8 @@ def require_ignored(root: Path, name: str, *, planned_ignore: bool = False) -> N
     if git_toplevel(root) is None:
         # Without an index there can be no tracked personal output. The managed ignore file is still planned.
         return
-    tracked = bool(run_git(root, "ls-files", "--", name).strip())
-    ignored = False
-    try:
-        ignored = bool(run_git(root, "check-ignore", "--no-index", "--", name).strip())
-    except GitError as exc:
-        if exc.returncode != 1:
-            raise
+    tracked = name in tracked_paths(root, [name])
+    ignored = name in ignored_paths(root, [name], no_index=True)
     if tracked or (not ignored and not planned_ignore):
         fix = (
             f"git rm --cached -- {name}; add an effective ignore rule for {name}"

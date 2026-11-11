@@ -6,7 +6,7 @@ same ``-q``/``-v``/``--strict`` options. It depends on ``click`` and ``devkit.ad
 else. ``devkit_cli.testing`` (tests only) is not imported here.
 """
 
-from devkit_cli.boundary import Boundary
+from devkit_cli.boundary import Boundary, utf8_output
 from devkit_cli.lazy import LazyGroup
 from devkit_cli.output import (
     FORMAT_OPTION,
@@ -38,4 +38,5 @@ __all__ = [
     "output_settings",
     "render_json",
     "report_exit_code",
+    "utf8_output",
 ]

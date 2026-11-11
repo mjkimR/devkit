@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import logging
 import subprocess
 import sys
@@ -10,7 +11,7 @@ import textwrap
 import click
 import pytest
 from devkit.advisory import AdvisoryError, ExitCode, Level
-from devkit_cli import FORMAT_OPTION, Boundary, Reported, echo_json, echo_notices, exit_on_warnings
+from devkit_cli import FORMAT_OPTION, Boundary, Reported, echo_json, echo_notices, exit_on_warnings, utf8_output
 from devkit_cli.testing import invoke
 
 boundary = Boundary("mytool")
@@ -213,6 +214,24 @@ def test_output_is_utf8_whatever_the_locale(tmp_path) -> None:
     env = {"PATH": "/usr/bin:/bin", "LC_ALL": "C", "LANG": "C", "PYTHONIOENCODING": "ascii"}
     result = subprocess.run([sys.executable, str(script)], capture_output=True, env=env, check=False)
     assert (result.returncode, result.stdout) == (0, "[PATH: 문서.md]\n".encode())
+
+
+def test_utf8_output_reconfigures_open_streams_and_skips_closed_ones(monkeypatch) -> None:
+    stdout = io.TextIOWrapper(io.BytesIO(), encoding="ascii", errors="strict")
+    stderr = io.TextIOWrapper(io.BytesIO(), encoding="ascii", errors="strict")
+    monkeypatch.setattr(sys, "stdout", stdout)
+    monkeypatch.setattr(sys, "stderr", stderr)
+    utf8_output()
+    assert [(s.encoding, s.errors) for s in (stdout, stderr)] == [("utf-8", "backslashreplace")] * 2
+    stdout.write("문서 \udcff")
+    stdout.flush()
+    assert stdout.buffer.getvalue() == "문서 \\udcff".encode()
+
+    closed = io.TextIOWrapper(io.BytesIO(), encoding="ascii")
+    closed.close()
+    monkeypatch.setattr(sys, "stdout", closed)
+    utf8_output()  # a closed stream keeps its settings and raises nothing
+    assert closed.encoding == "ascii"
 
 
 @pytest.mark.parametrize(

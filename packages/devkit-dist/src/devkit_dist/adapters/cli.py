@@ -7,7 +7,7 @@ The agent-first output contract (``docs/architecture/ARCH-08-1-agent-output.md``
   environment prefix, so ``-q/--quiet``, ``-v/--verbose`` and ``--strict`` read ``DEVKIT_QUIET``,
   ``DEVKIT_VERBOSE`` and ``DEVKIT_STRICT`` and ``-v`` prints every ``devkit`` log record as an ``[INFO]`` line;
 - the output helpers of ``devkit_cli`` (``FORMAT_OPTION``, ``echo_json``, ``echo_notices``, ``exit_on_warnings``,
-  ``exit_on_problems``, ``report_exit_code``, ``Reported``, ...), re-exported so command modules import one module;
+  ``exit_on_problems``, ``report_exit_code``, ``Reported``, ``utf8_output``, ...), re-exported so command modules import one module;
 - ``workspace_option`` (``-w/--workspace-root``) and ``resolve_root``: the explicit workspace root, else the devkit
   root found from the current directory (``devkit_dist.features.project.repositories.project``);
 - ``field_value`` and ``yes_no``: the one rendering of a sentinel field value (``ARCH-08-1-agent-output`` §3);
@@ -42,6 +42,7 @@ from devkit_cli import (
     output_settings,
     render_json,
     report_exit_code,
+    utf8_output,
 )
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core.logs import ROOT, get_logger
@@ -76,6 +77,7 @@ __all__ = [
     "resolve_output",
     "resolve_root",
     "sentinel",
+    "utf8_output",
     "version_option",
     "workspace_option",
     "yes_no",

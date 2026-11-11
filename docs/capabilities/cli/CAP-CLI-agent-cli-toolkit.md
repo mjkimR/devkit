@@ -111,6 +111,7 @@ layers (`from pkg.features import scan`), and the direction of imports in `featu
   | `exit_on_problems(problems, *, report=False)`, `highest_exit_code`, `report_exit_code` | Render collected problems and exit with the highest `exit_code`, or `1` for a status or show command. |
   | `OutputSettings`, `output_settings()`, `Reported(error)` | The running command's `quiet`, `verbose`, `strict`, `json`; an error whose JSON result is already printed. |
   | `LazyGroup(..., lazy_commands={name: "module:attribute"})` | Lazy subcommands; `resolve_lazy(ctx, name)` is the extension point. |
+  | `utf8_output()` | Makes `sys.stdout` and `sys.stderr` UTF-8 with `backslashreplace` (rule 7); `Boundary` runs it before every command, and a command whose stdout bypasses the boundary (a host's native protocol) calls it itself. A closed or non-`io.TextIOWrapper` stream is left as it is. |
 
 - **`devkit_cli.testing`** (tests only, not imported by the package root): `invoke(command, args=(), *, env=None)`
   returns `Outcome(exit_code, stdout, stderr, exception)`; `Outcome.json()` returns the one JSON object on stdout

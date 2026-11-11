@@ -16,6 +16,8 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from devkit_core.core.frontmatter import scalar
+
 from devkit_dist.features.distribution.models.errors import BundleError
 from devkit_dist.features.distribution.models.settings import NATIVE_DIRS, SLUG
 from devkit_dist.features.distribution.models.subagents import LEVELS, ModelSettings, SubagentPolicy
@@ -201,7 +203,11 @@ def render_projection(
 def _render_markdown(
     contract: Contract, block: HostBlock, description: str, prompt: str, fixed: tuple[tuple[str, Any], ...] = ()
 ) -> bytes:
-    lines = ["---", f"name: {_yaml_scalar(contract.role)}", f"description: {_yaml_quote(description)}"]
+    lines = [
+        "---",
+        "name: " + _yaml_scalar(contract.role),
+        "description: " + scalar(description, quote='"', always_quote=True),
+    ]
     lines.extend(f"{key}: {_yaml_value(value)}" for key, value in (*fixed, *block.settings))
     lines.append("---")
     return ("\n".join(lines) + "\n" + prompt).encode()
@@ -214,33 +220,15 @@ def _render_codex(contract: Contract, block: HostBlock, description: str, prompt
     return ("\n".join(lines) + "\n").encode()
 
 
+# Only identifier-like values stay plain, in block and flow context alike and for any YAML 1.1 or 1.2 reader
+# (``1e3`` and ``y`` stay strings); everything else is double-quoted by the shared scalar.
 _YAML_PLAIN = re.compile(r"^[A-Za-z][A-Za-z0-9_./-]*$")
 _YAML_RESERVED = {"true", "false", "null", "yes", "no", "on", "off", "y", "n"}
 
 
-def _yaml_quote(value: str) -> str:
-    """A YAML double-quoted scalar; line breaks and control characters are escaped, never folded."""
-    out = ['"']
-    for char in value:
-        code = ord(char)
-        if char in {"\\", '"'}:
-            out.append("\\" + char)
-        elif char == "\n":
-            out.append("\\n")
-        elif char == "\t":
-            out.append("\\t")
-        elif code < 0x20 or code == 0x7F:
-            out.append(f"\\x{code:02X}")
-        else:
-            out.append(char)
-    out.append('"')
-    return "".join(out)
-
-
 def _yaml_scalar(value: str) -> str:
-    if _YAML_PLAIN.match(value) and value.lower() not in _YAML_RESERVED:
-        return value
-    return _yaml_quote(value)
+    plain = bool(_YAML_PLAIN.match(value)) and value.lower() not in _YAML_RESERVED
+    return scalar(value, quote='"', always_quote=not plain)
 
 
 def _yaml_value(value: Any) -> str:

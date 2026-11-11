@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit_core.base.errors import GitError
+from devkit_core.core import git as core_git
 from devkit_dist.features.distribution.repositories import projection_git
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
@@ -129,16 +130,19 @@ def test_non_git_and_failed_query(
 ) -> None:
     assert notices(tmp_path, [NATIVE]) == []
 
-    original = projection_git.run_git
+    def failing(original):
+        def fail(cwd, *args, **kwargs):
+            if args[0] == failed_command:
+                raise GitError(
+                    "query failed", command=("git", failed_command), returncode=128, stderr="fatal: access denied"
+                )
+            return original(cwd, *args, **kwargs)
 
-    def fail(cwd, *args, **kwargs):
-        if args[0] == failed_command:
-            raise GitError(
-                "query failed", command=("git", failed_command), returncode=128, stderr="fatal: access denied"
-            )
-        return original(cwd, *args, **kwargs)
+        return fail
 
-    monkeypatch.setattr(projection_git, "run_git", fail)
+    # rev-parse runs in projection_git; the tracked probe runs Git through devkit_core.core.git.
+    for module in (projection_git, core_git):
+        monkeypatch.setattr(module, "run_git", failing(module.run_git))
     (finding,) = notices(root, [NATIVE])
     assert finding.code == "PROJECTION_GIT_CHECK_FAILED"
 
