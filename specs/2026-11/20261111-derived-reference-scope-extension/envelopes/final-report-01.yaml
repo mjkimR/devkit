@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T07:31:54.417534Z'
+status: completed
+summary: Tier B now admits an exact existing derived reference document (quick reference, user guide, README of a package or tool owning a changed source) restating changed behavior, with a named reason; AGENTS.md/CLAUDE.md, agent assets and release documents stay out. ADR-derived-reference-documents-as-worker-scope-extensions supersedes in part the earlier extension ADR; CAP-DLV-delivery-roles and three spec bundle assets restate it.
+findings: []
+assumptions:
+- 'Inspection code unchanged: protected() already rejects AGENTS.md/CLAUDE.md and admits the new class structurally'
+- Reconcile self-verified at medium (one package, one capability area)
+checks:
+  tests: PASS just test-affected --base main 1742 passed after the review fix; scope extension guidance and inspect tests 32 passed
+  build: PASS just check (pyright, all modules) 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main; devkit sync --check exit 0
+diff_scope:
+  base: 397360cd0fc5d92d02bf28e18f86169c1905dfcd
+  head: 6bc13362e740c619305661a32b76219b5fc4b609
