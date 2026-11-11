@@ -1,0 +1,22 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:26:08.240262Z'
+status: completed
+summary: 'Recovery run from build-verify after resolution-01 (Host scope extension, user decisions: retire devkit.finish_guard entirely; drop finish guards and fetch/push). Wrote ADR-single-local-landing-route with partial-supersession pointers; retired finish --merge (WORKTREE_MERGE_RETIRED, hidden flag), the guard group, workflow guard module and entry point, base fetch/push and FinishResult.push; plan_finish recorded-base refusal now names the switch; tests moved to integration/plan_finish or removed with dropped behavior; Living Spec, references and spec bundle text updated; sync output .devkit/installation.json committed. Review PASS after P2/P3 fix, reconcile verified, final report recorded. Not integrated.'
+findings: []
+assumptions:
+- 'Finish guards and base fetch/push are dropped, not moved: CAP-INT-mcp-services 4 / ADR-post-merge-verification and ARCH-04-2 (user decision)'
+- Paths beyond the original payload were added as Tier A by the Host recovery payload (ADR pointers, integration pull_request.py, e2e integration tests); no Tier B extension recorded
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main 6760 passed; --tier e2e 351 passed
+  lint: PASS just lint-check devkit; rules check --ci errors=0
+  types: PASS pyright 0 errors
+  sync: PASS devkit sync --check exit 0
+  envelopes: PASS envelope check
+diff_scope:
+  base: ''
+  head: fa6c41f3b7031b20e8a2b0959efb5228da6f68f7
+activity_effort: medium
