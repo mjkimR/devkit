@@ -162,15 +162,12 @@ stderr:
 
 ```text
 [WARN]   (OVERRIDE_DRIFT) upstream drift behind the override of starter:development
-[ACTION] CONTINUE — The operation succeeded; this does not block it. Do not retry
-         or undo it. Tell the user about it ([REPORT] when present); run [FIX]
-         only when they ask for it.
+[ACTION] CONTINUE — The operation succeeded; do not retry or undo it. Tell the user ([REPORT] when present); run [FIX] only when they ask.
 [TARGET] .devkit/overrides/starter/development.md
 [FIX]    devkit override diff starter:development
 [REPORT] Upstream changed an asset this project overrides; review the diff, then accept it or keep the override
 [NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: extras
-[ACTION] NOTE — For awareness only; nothing needs doing now. Continue. Mention it
-         when it bears on the task; run [FIX] only when the user asks for it.
+[ACTION] NOTE — For awareness; nothing to do now. Mention it when relevant; run [FIX] only when the user asks.
 [FIX]    devkit add extras
 [DETAIL] devkit add extras  (package extras-content; presets core; default core)
 ```
@@ -189,7 +186,7 @@ Exit code `0` (`1` with `--strict`). With `-q`, the `[NOTICE]` block is not prin
     {"code": "OVERRIDE_DRIFT", "level": "WARNING", "message": "upstream drift behind the override of starter:development", "exit_code": 0,
      "advisory": {"code": "OVERRIDE_DRIFT", "level": "WARNING", "mode": "CONTINUE", "action": "CONTINUE — The operation succeeded; ...", "fix": "devkit override diff starter:development", "...": "..."}},
     {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "message": "installed bundles not selected yet: extras", "exit_code": 0,
-     "advisory": {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "mode": "NOTE", "action": "NOTE — For awareness only; ...", "fix": "devkit add extras", "...": "..."}}
+     "advisory": {"code": "BUNDLE_UNSELECTED", "level": "NOTICE", "mode": "NOTE", "action": "NOTE — For awareness; ...", "fix": "devkit add extras", "...": "..."}}
   ]
 }
 ```

@@ -39,13 +39,11 @@ ACTION_TEXT: dict[ActionMode, str] = {
         "fail identically. Correct the flag, argument, or input file before rerunning."
     ),
     ActionMode.CONTINUE: (
-        "CONTINUE — The operation succeeded; this does not block it. Do not retry\n"
-        "or undo it. Tell the user about it ([REPORT] when present); run [FIX]\n"
-        "only when they ask for it."
+        "CONTINUE — The operation succeeded; do not retry or undo it. Tell the user ([REPORT] when present);"
+        " run [FIX] only when they ask."
     ),
     ActionMode.NOTE: (
-        "NOTE — For awareness only; nothing needs doing now. Continue. Mention it\n"
-        "when it bears on the task; run [FIX] only when the user asks for it."
+        "NOTE — For awareness; nothing to do now. Mention it when relevant; run [FIX] only when the user asks."
     ),
 }
 

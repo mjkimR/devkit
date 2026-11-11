@@ -178,9 +178,7 @@ skill's script is drift even when only its `SKILL.md` is overridden. On drift th
   override:
   ```text
   [WARN]   (OVERRIDE_DRIFT) upstream drift behind an override: starter:development
-  [ACTION] CONTINUE — The operation succeeded; this does not block it. Do not retry
-           or undo it. Tell the user about it ([REPORT] when present); run [FIX]
-           only when they ask for it.
+  [ACTION] CONTINUE — The operation succeeded; do not retry or undo it. Tell the user ([REPORT] when present); run [FIX] only when they ask.
   [TARGET] .devkit/overrides/starter/development.md
   [FIX]    uv run devkit override diff starter:development
   [REPORT] Upstream changed an asset this project overrides; whether to merge the change into the override (review the diff, then accept it) or keep the override as it is

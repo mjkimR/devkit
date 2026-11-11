@@ -88,9 +88,7 @@ A warning:
 
 ```text
 [WARN]   (ORPHAN_LEFT) left modified file in place: .devkit/managed/starter/old.md (no longer managed)
-[ACTION] CONTINUE — The operation succeeded; this does not block it. Do not retry
-         or undo it. Tell the user about it ([REPORT] when present); run [FIX]
-         only when they ask for it.
+[ACTION] CONTINUE — The operation succeeded; do not retry or undo it. Tell the user ([REPORT] when present); run [FIX] only when they ask.
 [TARGET] .devkit/managed/starter/old.md
 [REPORT] A hand-edited file is no longer managed by devkit; delete or move it
 ```
@@ -99,8 +97,7 @@ A notice, with and without its directive:
 
 ```text
 [NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: starter
-[ACTION] NOTE — For awareness only; nothing needs doing now. Continue. Mention it
-         when it bears on the task; run [FIX] only when the user asks for it.
+[ACTION] NOTE — For awareness; nothing to do now. Mention it when relevant; run [FIX] only when the user asks.
 [FIX]    devkit add starter
 [DETAIL] devkit add starter  (package devkit-starter; presets daily; default daily)
 [NOTICE] (TOOL_VERSION_CHANGED) devkit 0.4.0 -> 0.5.0
@@ -233,9 +230,7 @@ DEFER — Nothing is broken and nothing here is yours to fix.
 - **Set**: `level = WARNING`, `what_to_report` with what the user must learn or decide, and `fix` with the command for when they ask.
 
 ```text
-CONTINUE — The operation succeeded; this does not block it. Do not retry
-           or undo it. Tell the user about it ([REPORT] when present); run [FIX]
-           only when they ask for it.
+CONTINUE — The operation succeeded; do not retry or undo it. Tell the user ([REPORT] when present); run [FIX] only when they ask.
 ```
 
 #### `NOTE`: the operation succeeded; worth knowing
@@ -244,8 +239,7 @@ CONTINUE — The operation succeeded; this does not block it. Do not retry
 - **Set**: `level = NOTICE`; `fix` when there is an obvious follow-up. A notice without `fix` should be `brief = true`: it asks for nothing, so the repeated directive only costs context.
 
 ```text
-NOTE — For awareness only; nothing needs doing now. Continue. Mention it
-       when it bears on the task; run [FIX] only when the user asks for it.
+NOTE — For awareness; nothing to do now. Mention it when relevant; run [FIX] only when the user asks.
 ```
 
 ## 7. The Retry Directive Principle
