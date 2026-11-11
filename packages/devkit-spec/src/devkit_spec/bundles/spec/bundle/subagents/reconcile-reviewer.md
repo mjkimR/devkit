@@ -1,7 +1,7 @@
 ---
 role: reconcile-reviewer
 title: Reconcile Reviewer (independent reconcile verifier)
-description: Checks, at activity-effort medium or high, that the implementer's Living Spec changes and reconcile record cover the change and match the contract.
+description: Checks that the Living Spec changes and reconcile record cover the change.
 skill: spec-sync
 x-execution: isolated
 x-invocation: optional

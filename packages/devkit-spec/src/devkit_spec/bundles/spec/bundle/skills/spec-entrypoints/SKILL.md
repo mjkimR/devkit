@@ -1,6 +1,6 @@
 ---
 name: spec-entrypoints
-description: Derive capability/use case entrypoints from a spec bundle's tasks.md (_Boundary) and reconcile.md targets, review the candidates and write the chosen ones. Use during spec-sync, or across completed specs to backfill empty entrypoints.
+description: Derive, review and write capability/use case entrypoints from a spec's tasks.md and reconcile.md, during spec-sync or as a backfill across completed specs.
 ---
 
 # spec-entrypoints: Entrypoint Derivation and Sync

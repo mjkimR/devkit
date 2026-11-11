@@ -2,7 +2,7 @@
 role: git-operator
 level: lean
 title: Git Operator (reusable lifecycle executor)
-description: Executes exact Host-authorized lifecycle jobs through guarded CLI operations, returning verified effects and blockers while retaining procedural continuity.
+description: Runs Host-authorized lifecycle jobs through guarded CLI operations.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read, lifecycle]

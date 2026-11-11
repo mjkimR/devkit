@@ -1,7 +1,7 @@
 ---
 role: product-clarifier
 title: Product clarifier
-description: Clarifies candidate users, problems, alternatives and missing next-action questions without inventing user decisions.
+description: Clarifies users, problems, alternatives and open questions without inventing user decisions.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]

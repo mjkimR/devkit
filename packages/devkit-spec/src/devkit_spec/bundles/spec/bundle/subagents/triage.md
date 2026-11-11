@@ -1,7 +1,7 @@
 ---
 role: triage
 title: Triage (Backlog feedback grouping)
-description: Groups the open feedback the Host names by the feedback-hygiene playbook's Steps 1 and 2 and returns recommended destinations for the user's decision, without writing anything.
+description: Groups the named open feedback and recommends destinations; writes nothing.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]

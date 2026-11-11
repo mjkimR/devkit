@@ -1,6 +1,6 @@
 ---
 name: spec-tasks
-description: Decompose the technical plan into independently verifiable tasks in tasks.md, each with its expected file scope (_Boundary:) and the acceptance criteria it serves (_Requirements:).
+description: Decompose plan.md into verifiable tasks with their file scope (_Boundary:) and acceptance criteria (_Requirements:).
 ---
 
 # spec-tasks: Task Breakdown Workflow

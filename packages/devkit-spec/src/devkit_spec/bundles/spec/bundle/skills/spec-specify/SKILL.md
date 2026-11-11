@@ -1,6 +1,6 @@
 ---
 name: spec-specify
-description: Turn a feature request or defect report into a verifiable spec.md with Given/When/Then criteria and non-goals, creating the bundle with `devkit spec new`.
+description: Turn a feature request or defect report into spec.md with Given/When/Then criteria and non-goals (`devkit spec new`).
 ---
 
 # spec-specify: Specification Router

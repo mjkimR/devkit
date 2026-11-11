@@ -1,7 +1,7 @@
 ---
 role: product-researcher
 title: Product researcher
-description: Investigates one product or technical uncertainty through evidence or an explicitly bounded feasibility experiment.
+description: Investigates one product or technical uncertainty with evidence or a bounded experiment.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]

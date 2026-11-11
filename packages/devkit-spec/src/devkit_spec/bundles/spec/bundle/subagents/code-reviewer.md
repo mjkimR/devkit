@@ -1,7 +1,7 @@
 ---
 role: code-reviewer
 title: Code Reviewer (isolated spec-review executor)
-description: Reviews the actual diff against the acceptance criteria and check results and returns the review fields.
+description: Reviews the diff against the acceptance criteria and check results.
 skill: spec-review
 x-execution: isolated
 x-invocation: optional

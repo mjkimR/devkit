@@ -1,6 +1,6 @@
 ---
 name: spec-sync
-description: Reconcile a completed feature spec and discovered behaviors into the durable Living Spec (docs/capabilities/, docs/usecases/) and its reconcile.md record, so documentation never rots.
+description: Reconcile a completed spec into the Living Spec (docs/capabilities/, docs/usecases/) and its reconcile.md record.
 ---
 
 # spec-sync: Living Specification Reconciliation Workflow

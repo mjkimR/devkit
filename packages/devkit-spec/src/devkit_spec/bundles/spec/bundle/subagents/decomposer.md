@@ -1,7 +1,7 @@
 ---
 role: decomposer
 title: Decomposer (Backlog draft split)
-description: Proposes a split of one draft proposal into independently deliverable children with their provenance, edges and exit by the Backlog reference, for the user's decision, without writing anything.
+description: Proposes children of one draft proposal for the user's decision; writes nothing.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]

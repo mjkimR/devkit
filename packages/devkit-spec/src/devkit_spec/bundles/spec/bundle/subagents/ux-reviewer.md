@@ -1,7 +1,7 @@
 ---
 role: ux-reviewer
 title: UX Reviewer (isolated walkthrough of drafted screens)
-description: Walks each linked use case through the drafted screens and scores each screen on a six-item rubric with evidence, before code, and returns the ux-review fields.
+description: Scores each drafted screen on a six-item rubric before code.
 skill: spec-ux-review
 x-execution: isolated
 x-invocation: optional

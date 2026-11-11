@@ -1,6 +1,6 @@
 ---
 name: spec-review
-description: Verify the git diff, acceptance criteria and test results before declaring a task or feature complete; detects unexplained scope drift, phantom completion and unstated requirement drift.
+description: Verify the diff, acceptance criteria and test results before declaring a task or feature complete.
 ---
 
 # spec-review: Pre-Completion Verification Workflow

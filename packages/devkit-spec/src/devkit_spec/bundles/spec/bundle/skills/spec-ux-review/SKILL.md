@@ -1,6 +1,6 @@
 ---
 name: spec-ux-review
-description: Review drafted screens before code by walking each linked use case through them and scoring each screen on a six-item rubric with evidence; records ux-review envelopes without severity, at most two rounds.
+description: Review drafted screens before code by walking each linked use case through them and scoring each screen on a six-item rubric.
 ---
 
 # spec-ux-review: UX Walkthrough Review

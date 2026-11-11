@@ -1,7 +1,7 @@
 ---
 role: usage-reviewer
 title: Usage reviewer
-description: Exercises a representative product flow in an assigned test environment and reports observed behavior, gaps and failure conditions.
+description: Exercises a representative product flow and reports observed behavior and gaps.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]

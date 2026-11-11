@@ -1,6 +1,6 @@
 ---
 name: spec-plan
-description: Map spec requirements to the system architecture, check existing capabilities, ADRs and invariants, weigh technical tradeoffs, and write an implementation plan (plan.md) sized to the change.
+description: Write plan.md for a spec, mapping requirements to architecture, capabilities, ADRs and invariants and weighing tradeoffs.
 ---
 
 # spec-plan: Technical Planning Workflow

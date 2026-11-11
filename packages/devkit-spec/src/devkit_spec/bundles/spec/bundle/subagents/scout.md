@@ -2,7 +2,7 @@
 role: scout
 level: compact
 title: Scout (librarian and researcher)
-description: Answers one question with evidence from internal code, documents and constraints or external official sources, keeping the search out of the main session.
+description: Answers one question with internal or official-source evidence.
 x-execution: isolated
 x-invocation: optional
 x-git-actions: [read]
