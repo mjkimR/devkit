@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:59:27.465912Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer: the only finding is waived; guides/install/mcp.md is outside the declared write scope and is returned to the Host as a follow-up'
+findings:
+- issue: The consumer install guide still names the removed execution classes (refuses interactive/preflight/resume execution), out of step with CAP-MCP-runtime-registration.
+  evidence: guides/install/mcp.md:48
+  failure_condition: A consumer agent reading the guide believes interactive, preflight and approved_resume classes still exist.
+  suggested_action: 'Reword to: cloud exposes and runs only read_only tools and refuses bounded_write execution even through stale registrations; guides/ is outside the declared write scope, so the Host authorizes or tracks the follow-up.'
+  resolution: waived
+  waiver: guides/install/mcp.md is outside the declared write scope (denied); returned to the Host as a one-line follow-up
+  severity: P3
+checks: {}
+diff_scope:
+  base: 1f672104a80f0ca63034cffc1f7e179767e12ab7
+  head: a52cd6a3ae1b4b4f251897755e1a344f07e9e55f
+activity_effort: medium
