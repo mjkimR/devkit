@@ -21,7 +21,8 @@ and maps a package source file only through static imports. A test that reads a 
 skipped when only that file changes. At this head 37 reader pairs are missed: helper reads of
 `.devkit/architecture.toml`, bundle assets of another package, recipe scripts, `guides/` and package-root Markdown
 (which select nothing) and test data beside its reader. Every repository document read by literal path is already
-listed, so each new reader depends on someone adding a row. A missed reader lets a failing test reach `main` until the next complete CI (`ADR-test-selection-and-ci`).
+listed, so each new reader depends on someone adding a row. A missed reader lets a
+failing test reach `main` until the next complete CI (`ADR-test-selection-and-ci`).
 
 ## 2. Decision Drivers
 
