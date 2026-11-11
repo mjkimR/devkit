@@ -23,8 +23,8 @@ already imports `devkit_dist.adapters.cli`, so reusing `echo_page` adds no featu
 - `ARCH-08-1-agent-output` §3 gains a **Paging** paragraph: after the items a listing command that pages prints
   `[PAGE: total= offset= limit= count= next=]`; `next` is the following page's offset or `-` on the last page;
   `[NEXT_CMD: <command> ... --offset <next>]` repeats the command's own arguments and follows only when more items
-  follow; both come from `devkit_dist.adapters.cli.echo_page`; a command MAY add fields after `next` (as `docs list`
-  adds `hidden`); each command's capability states its limit bounds, default and whether `--limit 0` means all.
+  follow; both come from `devkit_dist.adapters.cli.echo_page`, except that a command adding fields after `next`
+  (`docs list`'s `hidden`) MAY print `[PAGE: ...]` with `fields_line` under the same rules; each command's capability states its limit bounds, default and whether `--limit 0` means all.
   Enforced by `packages/devkit-dist/tests/unit/adapters/test_sentinels.py` for the line format; use of `echo_page`
   is review only. §10 gains the checklist item.
 - `CAP-HARN-command-mount` §4.5 keeps its group facts (`--limit/-n` default 20, `0` for all, `hidden`,

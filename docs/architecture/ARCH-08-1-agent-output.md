@@ -56,17 +56,17 @@ Text-mode stdout is made of one-line sentinels:
 - A command that succeeds with nothing to report MUST print an `[OK: ...]` line, so an empty stdout never has to be interpreted.
 - A document a command is asked to print (`devkit rules explain`'s guide, `devkit workflow show`'s rendering) follows its sentinel lines as written, and so does the bounded excerpt of a failed command after its `[RUN_OUTPUT: ...]` (`devkit run`) or `[RULE_TEST_OUTPUT: ...]` (`devkit rules test`) line.
 
-**Paging.** A listing command that pages (it takes `--offset` and reports a `total`) MUST end its items with the shared paging lines, printed by `devkit_dist.adapters.cli.echo_page`:
+**Paging.** A listing command that pages (it takes `--offset` and reports a `total`) MUST end its items with the shared paging lines:
 
 ```text
-[PAGE: total=57 offset=0 limit=20 count=20 next=20]
-[NEXT_CMD: uv run devkit docs list capability --limit 20 --offset 20]
+[PAGE: total=25 offset=0 limit=20 count=20 next=20]
+[NEXT_CMD: uv run devkit exec list --limit 20 --offset 20]
 ```
 
 - `[PAGE: ...]` follows the items, also when there are none (`count=0`), so an empty page is an explicit result. `next` is the offset of the following page and `-` on the last page.
 - `[NEXT_CMD: ...]` repeats the command's own arguments with `--offset <next>` and is printed only when more items follow.
-- A command MAY add its own fields after `next` or its own lines after `[NEXT_CMD: ...]`, documented in its capability. Each command's capability states its `--limit` bounds and default, whether `--limit 0` means all items, and its error code for an out-of-bound value. A bounded listing that does not page prints no paging lines.
-- The line format is checked by `packages/devkit-dist/tests/unit/adapters/test_sentinels.py`; that a paging command uses `echo_page` is review only.
+- A command prints them with `devkit_dist.adapters.cli.echo_page`. A command that adds its own fields after `next` (`docs list`'s `hidden`) MAY instead print `[PAGE: ...]` with `fields_line` in the same field order, under the same `next` and `[NEXT_CMD: ...]` rules; its own fields and any lines after `[NEXT_CMD: ...]` are documented in its capability. Each command's capability states its `--limit` bounds and default, whether `--limit 0` means all items, and its error code for an out-of-bound value. A bounded listing that does not page prints no paging lines.
+- The line format is checked by `packages/devkit-dist/tests/unit/adapters/test_sentinels.py`; that a paging command prints them this way is review only.
 
 **Reserved names.** `ERROR`, `WARN`, `WARNING`, `NOTICE`, `INFO`, `DEBUG`, `ACTION`, `WHEN`, `TARGET`, `FIX`, `REPORT` and `DETAIL` are stderr sentinels and MUST NOT be used as a stdout `KIND`. Something that would read as `[NOTICE: ...]` on stdout is a notice and MUST go to stderr; a fact that merely mentions a notice-like state gets its own kind (for example `[STALE_APPROVAL: ...]`).
 
@@ -142,7 +142,7 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 - [ ] The result goes to stdout only: `[KIND: ...]` lines in text mode, one object under `--format json`; no reserved name used as a kind.
 - [ ] Every condition the agent must act on is an advisory with a code: raised as an `AdvisoryError` when the command cannot do its job or refuses, returned in `notices` at `WARNING` or `NOTICE` when it succeeded.
 - [ ] The library function returns its warnings and notices; the command prints the result, then `echo_notices`, then `exit_on_warnings`.
-- [ ] A listing command that pages prints `[PAGE: ...]` and `[NEXT_CMD: ...]` through `echo_page` (section 3), and its capability states its limit bounds.
+- [ ] A listing command that pages prints `[PAGE: ...]` and `[NEXT_CMD: ...]` through `echo_page`, or with `fields_line` when it adds fields after `next` (section 3), and its capability states its limit bounds.
 - [ ] Diagnostics are `logging` calls, not output.
 - [ ] The command goes through `boundary` (which adds the output options) and, when it prints text, takes `--format`.
 - [ ] Its reference documents the result lines, the JSON keys, and every error and notice code with its level.

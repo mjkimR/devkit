@@ -91,7 +91,7 @@ The grammar itself is stated only inside `CAP-HARN-command-mount` §4.5, which o
 - **When** a reader looks up the paging lines
 - **Then** `ARCH-08-1-agent-output` §3 states the `[PAGE]` and `[NEXT_CMD]` grammar and that per-command limit
   bounds stay in each command's capability, and §10 has a checklist item that a listing command that pages prints
-  them through `echo_page`; `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 refer to
+  them through `echo_page` (or `fields_line` when it adds fields after `next`, as `docs list` does); `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 refer to
   `ARCH-08-1-agent-output` for the grammar while keeping their own limits; and `rg -n EXECUTION_LIST` over
   `docs/architecture`, `docs/capabilities`, `docs/development` and `packages/devkit/src` matches only
   `EXECUTION_LIST_ARGUMENT_INVALID`
