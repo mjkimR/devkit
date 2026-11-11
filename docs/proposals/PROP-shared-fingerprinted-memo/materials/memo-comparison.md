@@ -52,11 +52,12 @@ Side-by-side reading of the two persistent memos X-9 names, as of the Planning b
 ## Consequences for the helper
 
 - Shareable: the transient-root check, symlink and non-regular rejection given the path parts, and the envelope
-  shape check returning a reason; each holds two strictness levels today, so sharing one rule is decision D1.
+  shape check returning a reason; each holds two strictness levels today, and D1 (user, option a) converges both on
+  the stricter rule.
 - Local by contract: the file name and directory layout, the fingerprint inputs, entry shape and validation, the
   serialization order, logging level and wording, writer authority and pruning.
 - Path safety is the one point where a single implementation either keeps two policies behind a parameter or
   converges on one; converging changes, slightly, when the docs memo is used (contract wording in
-  `CAP-DOCS-document-model` 3.4.3) and needs the user's choice. Challenger round 1 (`envelopes/challenger-01.yaml`)
+  `CAP-DOCS-document-model` 3.4.3); the user chose to converge (D1). Challenger round 1 (`envelopes/challenger-01.yaml`)
   narrowed the helper to the path check and the envelope shape check: reads, serialization and writes differ in
   ordering, skip rule and logging and already share `atomic_write_bytes`.

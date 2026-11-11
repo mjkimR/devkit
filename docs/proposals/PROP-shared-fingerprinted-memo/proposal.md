@@ -41,8 +41,8 @@ facts cache).
     contract (`CAP-DOCS-document-model` 3.4.3-3.4.5, `CAP-GOV-rules-engine` section 5); they stay local. What is
     the same is the envelope (`version`, `fingerprint`, `entries` under an existing `.devkit/transient/`), the atomic,
     unlocked, change-only write and the silent-miss failure policy. Path safety and the envelope shape check are each
-    implemented twice with different strictness (symlinked components, extra top-level keys); whether one rule
-    replaces both is decision D1 below.
+    implemented twice with different strictness (symlinked components, extra top-level keys); one rule replaces
+    both (Planning decision D1, decided by the user).
 
 ## 3. Proposed Design & Impact
 
@@ -100,12 +100,12 @@ they stay local (`envelopes/challenger-01.yaml` finding 2).
 - Scope narrowed to the path check and the envelope shape check; size `S` (challenger finding 2). Fingerprints, JSON
   parsing, entry validation, serialization and writes stay in each memo.
 - The non-finite-constant difference stays local with the JSON parse, so it is not changed.
-
-### Open decision for the user
-
-- **D1 (one rule for both memos)**: converge the path check on the stricter agt rule and the envelope shape check on
-  the stricter docs rule, or keep each memo's current rule behind helper parameters. See question `q1` of the
-  `worker` envelope.
+- **D1 (one rule for both memos)**, decided by the user (`envelopes/answer-01.yaml`, q1 option a): both memos use the
+  stricter agt path rule (every component from `.devkit/` down) and the stricter docs envelope shape (exactly
+  `version`, `fingerprint` and `entries`), with no strictness parameters on the helper; the docs memo passes `create`
+  for a writing load. Acceptance criteria: the differential table matches "before" except the D1 cases, and the path
+  sentences of `CAP-DOCS-document-model` 3.4.3 and `CAP-GOV-rules-engine` 5.3 state the converged rule. No PADR: the
+  choice is local to this refactor and changes no storage location, format or writer policy.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
