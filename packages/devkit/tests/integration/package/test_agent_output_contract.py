@@ -33,7 +33,7 @@ from pathlib import Path
 import click
 import pytest
 from click.testing import CliRunner
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, Level
 from devkit.advisory.advisory import Advisory
 from devkit.advisory.types import ActionMode
 from devkit_dist.cli import cli
@@ -47,6 +47,8 @@ PACKAGES = (
     "devkit_dist",
     "devkit_agt",
     "devkit_spec",
+    "devkit_docs",
+    "devkit_adaptive",
     "devkit_mcp",
     "devkit_viewer",
 )
@@ -242,6 +244,17 @@ def test_a_subclass_of_a_guardrail_error_declares_guardrail_itself() -> None:
         if owner is not cls and owner.guardrail is True and not owner.__name__.startswith("_"):
             problems.append(f"{cls.__module__}.{cls.__qualname__} inherits guardrail=True from {owner.__qualname__}")
     assert problems == []
+
+
+def test_a_notice_without_fix_is_brief() -> None:
+    """A notice asks for nothing, so without a ``fix`` its ``[ACTION]`` directive only costs context
+    (``CAP-ADV-agent-advisory-protocol``: a notice without fix should be brief)."""
+    problems = [
+        f"{cls.__module__}.{cls.__qualname__}"
+        for cls in _advisory_classes()
+        if cls.level is Level.NOTICE and not cls.fix and not cls.brief
+    ]
+    assert problems == [], "set brief = True on these notices, or give them a fix"
 
 
 # --- the command surface -------------------------------------------------------------------------------------------
