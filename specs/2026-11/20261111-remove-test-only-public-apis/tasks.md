@@ -16,7 +16,7 @@ plan: PLAN-remove-test-only-public-apis
   - **_Boundary**: `packages/devkit-core/src/devkit_core/core/git.py`, `packages/devkit-core/tests/integration/core/test_git_observation.py`
   - _Requirements: AC-02_
   - **Verification**: `just test devkit-core packages/devkit-core/tests/integration/core/test_git_observation.py`
-- [ ] **Task 1.3**: Remove `bm25_scores`, `SearchIndex.search(limit=)` and `SearchHit.to_dict`, with search tests
+- [x] **Task 1.3**: Remove `bm25_scores`, `SearchIndex.search(limit=)` and `SearchHit.to_dict`, with search tests
   - **_Boundary**: `packages/devkit-dist/src/devkit_dist/features/search/`, `packages/devkit-dist/tests/unit/features/search/test_lexical.py`, `packages/devkit-dist/tests/integration/features/search/test_index.py`
   - _Requirements: AC-03_
   - **Verification**: `just test-dist`

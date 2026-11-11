@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from devkit_dist.features.search import Bm25, bm25_scores, tokenize
+from devkit_dist.features.search import Bm25, tokenize
 
 
 def test_tokenize_casefolds_drops_accents_and_splits_on_non_word_characters() -> None:
@@ -20,18 +20,18 @@ def test_tokenize_keeps_other_scripts_composed() -> None:
 
 
 def test_bm25_length_normalization_and_term_frequency() -> None:
-    short, verbose = bm25_scores(["recovery replica", "recovery replica " + "other " * 50], "recovery")
+    short, verbose = Bm25(["recovery replica", "recovery replica " + "other " * 50]).scores("recovery")
     assert short > verbose > 0
-    scores = bm25_scores(["replica replica", "replica other", "unrelated words"], "replica")
+    scores = Bm25(["replica replica", "replica other", "unrelated words"]).scores("replica")
     assert scores[0] > scores[1] > scores[2] == 0
-    assert bm25_scores(["replica"], "replica replica") == bm25_scores(["replica"], "replica")
-    assert bm25_scores([], "replica") == []
-    assert bm25_scores([""], "replica") == [0]
+    assert Bm25(["replica"]).scores("replica replica") == Bm25(["replica"]).scores("replica")
+    assert Bm25([]).scores("replica") == []
+    assert Bm25([""]).scores("replica") == [0]
     assert all(math.isfinite(score) for score in scores)
 
 
-def test_an_index_scores_like_the_one_shot_function_for_every_query() -> None:
+def test_an_index_scores_every_query_like_a_fresh_index() -> None:
     documents = ["restore a replica", "publish a release", "replica lag alerts"]
     index = Bm25(documents)
     for query in ("replica", "release replica", "nothing"):
-        assert index.scores(query) == bm25_scores(documents, query)
+        assert index.scores(query) == Bm25(documents).scores(query)

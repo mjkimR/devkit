@@ -2,7 +2,6 @@
 
 import dataclasses
 from enum import StrEnum
-from typing import Any
 
 
 class SearchMode(StrEnum):
@@ -23,6 +22,3 @@ class SearchDocument:
 class SearchHit:
     id: str
     score: float
-
-    def to_dict(self) -> dict[str, Any]:
-        return dataclasses.asdict(self)
