@@ -1,12 +1,12 @@
 # Host-neutral role contract
 
-A role contract registers the role as its own agent on every host. Choose it when the role is selected outside swarm delegation, or needs a tool list or sandbox mode that no archetype supplies. It carries its own constraints and return contract, because no archetype wraps it.
+A role contract registers the role as its own agent on every host. No archetype wraps it, so it carries its own constraints and return contract.
 
 ## Write the file
 
 1. Create `subagents/<prefix>-<role>.md` in the project bundle from the skeleton below.
-2. Set `role` to the asset ID; the ID is prefixed with the project or bundle name and differs from every installed agent ID, because two bundles declaring one agent ID stop the sync with `BUNDLE_CONFLICT`.
-3. Give `hosts` one block per supported host: `claude-code`, `codex` and `antigravity`. A contract that omits one is invalid.
+2. Set `role` to the asset ID, prefixed with the project or bundle name and distinct from every installed agent ID; two bundles declaring one agent ID stop the sync with `BUNDLE_CONFLICT`.
+3. Give `hosts` one block each for `claude-code`, `codex` and `antigravity`; a contract that omits one is invalid.
 4. Copy the host settings from the archetype whose authority matches, then remove what the role does not need; add no tool or wider sandbox than that archetype has.
 5. For a host the project does not use, write `status: unsupported` and no other key; that host receives no file.
 6. Use `status: emulated` where the host's settings approximate the boundary and `status: unverified` where the role has not been run on that host; reserve `native` for a boundary the host enforces.
@@ -53,7 +53,7 @@ Return status (`completed`, `needs_input` or `failed`), result, source identity,
 Source: <url> at <commit>, `<path>`; rewritten for this project.
 ```
 
-The skeleton's host blocks are the read-only ones. For a role that writes, copy the blocks of the writing archetype and keep the constraint lines that match them.
+The skeleton's host blocks are read-only; for a role that writes, copy the writing archetype's blocks and keep the constraint lines that match them.
 
 ## Declare and deploy it
 
@@ -66,7 +66,7 @@ source = "subagents/<prefix>-<role>.md"
 
 - `uv run devkit bundle validate <bundle source>` refuses an unknown key, a missing host or a `level` combined with a native model or effort field (`BUNDLE_INVALID`).
 - `uv run devkit sync` renders one file per host from its block: `.claude/agents/<id>.md`, `.codex/agents/<id>.toml` and `.agents/agents/<id>.md`. A host whose status is `unsupported` receives none.
-- Each projection is prefixed with the contract's managed path and the host status, so the role states when the host does not enforce its boundaries.
+- Each projection is prefixed with the contract's managed path and host status, so the role states when the host does not enforce its boundaries.
 
 ## Select a model level without editing the contract
 
@@ -79,4 +79,4 @@ level = "lean"
 
 ## Use it
 
-Invoke the role through the host's registered-role mechanism so that its tool list and sandbox apply, and supply the same assignment fields an archetype receives.
+Invoke the role through the host's registered-role mechanism so its tool list and sandbox apply, and supply the assignment fields an archetype receives.

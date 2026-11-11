@@ -1,16 +1,14 @@
 # Role overlay
 
-A role overlay is a plain Markdown file an archetype reads first. It adds domain checks to an assignment; the archetype supplies the tools, the sandbox, the delegation limits and the return contract.
+A role overlay is a plain Markdown file an archetype reads first. It adds domain checks to an assignment; the archetype supplies the tools, sandbox, delegation limits and return contract.
 
 ## Write the file
 
 1. Create `roles/<prefix>-<role>.md` in the project bundle from the skeleton below; the file has no frontmatter.
-2. Name the one archetype from the mapping step in the second line.
-3. Start the numbered directives with reading the assignment, then give the domain checks, one directive per line.
-4. Keep the line stating that the overlay grants no added tool, Git or write permission.
-5. End the directives with the return line; add the role-specific evidence to it and keep the archetype's fields.
-6. End the file with the provenance line: source URL, commit and path.
-7. Keep the file to about 40 lines. If the kept material needs more, stop and choose a skill or a project document for it; splitting one role across overlays is no remedy.
+2. Name the one mapped archetype in the second line.
+3. Keep the skeleton's first directive (reading the assignment), its no-added-permission line and its return line; put the domain checks between them, one directive per line, and add the role-specific evidence to the return line.
+4. End the file with the provenance line: source URL, commit and path.
+5. Keep the file to about 40 lines. If the kept material needs more, stop and choose a skill or a project document for it; splitting one role across overlays is no remedy.
 
 ```markdown
 # <Role title>
@@ -46,8 +44,8 @@ source = "roles/<prefix>-<role>.md"
 ```
 
 - `uv run devkit bundle plan <bundle source> --agent <agent>` lists the asset with the one path `.devkit/managed/<bundle>/roles/<prefix>-<role>.md`, for every agent.
-- `uv run devkit sync` writes that managed copy, byte for byte. It registers no agent and no skill for the overlay in any host directory; a host learns of the role through an assignment.
-- After the source file changes, run `uv run devkit sync` again; the managed copy follows the source.
+- `uv run devkit sync` writes that managed copy byte for byte and registers no agent or skill for the overlay in any host directory; a host learns of the role through an assignment.
+- After the source file changes, run `uv run devkit sync` again.
 
 ## Use it in an assignment
 
@@ -63,5 +61,5 @@ Constitution entry for the overlay:
 
 ## Limits
 
-- An overlay sets no tool list, sandbox mode or model. If the role needs one of them, the role contract is the fitting form.
-- An archetype rejects an overlay that asks for more than the assignment permits; write the overlay so that it never does.
+- An overlay sets no tool list, sandbox mode or model; a role that needs one is a role contract.
+- An archetype rejects an overlay that asks for more than the assignment permits; never write one that does.
