@@ -38,6 +38,9 @@ with a location and a named maintenance cost; acting on every gap adds abstracti
 - Unneeded: is a command or option unused by documented workflows and callers?
 - Fragmented operations: does one user goal need several commands in a fixed sequence?
 - Grouping and naming: do the same concepts use different flag names or ordering across commands?
+- Output volume: does the default output of a frequently run command echo its inputs, repeat the same text across
+  lines or notices, or print what its log or files already hold? Name the cost as the bytes each run adds to the
+  agent's input.
 - Help: do help text and its source docstrings describe actual behavior, lead with the common usage and name a useful
   next step?
 
