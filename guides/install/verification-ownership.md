@@ -31,6 +31,10 @@ If the Host uses devkit for supported post-integration asynchronous coverage, it
 `wait`, result collection and guarded cleanup. The CLI remains general purpose for separately requested uses;
 no role or current-directory restriction is installed.
 
+After approved integration lands, synchronize the target environment from its landed dependency declarations and
+run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
+report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.
+
 ## Apply an upgrade
 
 1. Inventory existing required commands and their CI coverage before editing guidance.

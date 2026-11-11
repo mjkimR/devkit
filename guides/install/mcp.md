@@ -61,6 +61,6 @@ client-owned; see `CAP-INT-mcp-services`.
 
 ## Cloud setup
 
-For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. MCP service onboarding supports shared resources and report publication; lifecycle mutation still requires Host-carried authority and CLI execution.
-
-`sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.
+MCP service onboarding supports shared resources and report publication; lifecycle mutation still requires
+Host-carried authority and CLI execution. Follow [Cloud setup](../INSTALL_GUIDE.md#cloud-setup) for the cloud sync
+commands.

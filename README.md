@@ -142,10 +142,6 @@ uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory
 uv add --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
 ```
 
-Upgrading from a `devkit-agt` that predates `devkit-dist` deploys the new auto-selected `harness` bundle and moves
-the `devkit:run` preset to `harness:run`; the
-[installation guide](guides/install/existing-repository.md#upgrading-across-the-package-split) lists every change.
-
 Native skill and subagent copies go to Codex, Claude Code and Antigravity by
 default; narrow them with `devkit sync --agent codex` (repeatable). To try a sync
 without a consumer project, point `-w` at an existing empty directory:

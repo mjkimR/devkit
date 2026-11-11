@@ -5,9 +5,9 @@ description: Read before running, configuring or troubleshooting rules, commit g
 
 # Running the devkit harness
 
-- The engines own `[rules]`, `[gates]`, `[workflow]`, `[worktree]` and
-  `[integration]` in `.devkit/config.toml`; `uv run devkit config template --print`
-  shows the commented defaults the file lacks.
+- The engines own `[rules]`, `[gates]`, `[workflow]` and `[worktree]` in
+  `.devkit/config.toml`; `uv run devkit config template --print` shows the
+  commented defaults the file lacks.
 - If a selected bundle deploys workflows (for example `spec` from `devkit-spec`),
   sync generates the `devkit-workflow` entry skill: follow it instead of
   inferring a work unit's stage yourself; it runs `devkit workflow next`. Without
