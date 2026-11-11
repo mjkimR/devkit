@@ -8,7 +8,7 @@ plan: PLAN-select-tests-by-read-document-paths
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1.1**: Read discovery in the selector, with its tests
+- [x] **Task 1.1**: Read discovery in the selector, with its tests
   - **_Boundary**: `scripts/affected_tests.py`, `packages/devkit/tests/e2e/package/test_affected_tests.py`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-06, AC-07, AC-08_
   - **Verification**: `just test-e2e devkit packages/devkit/tests/e2e/package/test_affected_tests.py`; the AC-06
