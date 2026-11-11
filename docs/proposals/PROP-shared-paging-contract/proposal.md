@@ -12,6 +12,9 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - capabilities/harness/
+    - docs/development/reference/exec.md
+    - packages/devkit/src/devkit_agt/features/isolated_execution/
+    - packages/devkit/tests/unit/features/isolated_execution/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -30,12 +33,46 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
 ## 2. Technical Spike Questions
 
 - **Q1**: Can exec keep `EXECUTION_RUN` lines while emitting the shared page lines, and what limit bounds does it keep?
-- **Q2**: Does maintenance history need paging at all?
+  Yes. `echo_page` (`devkit_dist.adapters.cli`) only prints `[PAGE: ...]` and `[NEXT_CMD: ...]` after the items, so
+  `exec list` prints its `[EXECUTION_RUN: ...]` lines unchanged and then `echo_page("uv run devkit exec", total,
+  offset, limit, count, ["list", "--limit", str(limit)])`. `isolated_execution/cli.py` already imports from
+  `devkit_dist.adapters.cli`; no new import edge. The `next` value is the same: `ListExecutions` computes
+  `offset + limit` when below `total`, `echo_page` computes `offset + count`, equal whenever more items follow.
+  Exec keeps its bounds (limit 1-100, default 20, offset nonnegative, `EXECUTION_LIST_ARGUMENT_INVALID`): the
+  `--limit 0` "all" form of `docs list` is not adopted, because retained runs grow without a bound and each listed
+  run reads its manifest; `echo_page` already treats any positive limit correctly.
+- **Q2**: Does maintenance history need paging at all? No. `history list` is a "newest N runs" query over a remote
+  history branch: `listing()` reads year shards newest first and stops as soon as `limit` eligible runs are found.
+  A `total` would force reading every shard, and an offset over a branch that later publications prepend to shifts
+  between calls. No agent asset calls it (only `docs/development/reference/maintenance-history.md` shows one
+  example), and `--source-sha` and `--outcome` already narrow it. It stays a bounded, unpaged listing with
+  `HISTORY_LIST` and `HISTORY_RUN`; the shared grammar applies only to commands that page.
 
 ## 3. Proposed Design & Impact
 
-- Emit `[PAGE]`/`[NEXT_CMD]` through `echo_page` for `exec list`. Revise CAP-HARN-isolated-execution §4 (sentinel contract change).
-- Leave or align maintenance history depending on Q2.
+- `devkit exec list` text output: the `[EXECUTION_RUN: ...]` lines, then `[PAGE: total= offset= limit= count= next=]`
+  and, when more runs follow, `[NEXT_CMD: uv run devkit exec list --limit <N> --offset <next>]`, all through
+  `echo_page`. `[EXECUTION_LIST: ...]` is removed with no transition alias: no agent asset or command parses it (its
+  only consumer is `packages/devkit/tests/unit/features/isolated_execution/test_output.py`). An empty list prints
+  `[PAGE: total=0 offset=0 limit=20 count=0 next=-]`, which keeps the explicit empty-list result §4 requires.
+- JSON output is unchanged (`runs`, `total`, `offset`, `limit`, `next_offset`): JSON paging keys are out of scope.
+- Revise `CAP-HARN-isolated-execution` §4 (sentinel list and the list paging sentence) and
+  `docs/development/reference/exec.md` (sentinel list) to match.
+- Where the shared grammar is stated is the open question `q1` of this turn: today only `CAP-HARN-command-mount`
+  §4.5 states it, for the mounted `docs` and `spec` groups, and `ARCH-08-1-agent-output` says nothing about paging.
+  If the answer moves it to `ARCH-08-1-agent-output`, `boundaries.owns` gains that document.
+- Development: one feature spec, `sdd-spec-feature`; tests in `packages/devkit/tests/unit/features/isolated_execution/`.
+
+### Planning decisions
+
+- Exec keeps limit 1-100 (default 20) and its error code; it does not adopt `--limit 0` (Q1).
+- `maintenance history list` stays unpaged (Q2); `CAP-DLV-maintenance-history` is not changed.
+- `[EXECUTION_LIST: ...]` is dropped without an alias; JSON output keeps its current keys.
+
+### Non-Goals
+
+- JSON paging keys across commands; `--limit 0` for exec; paging for `maintenance history list`; a new shared
+  paging helper beyond `echo_page`; `docs list`'s own `hidden` and `[HISTORY_CMD]` lines.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
