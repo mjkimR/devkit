@@ -2,7 +2,7 @@
 id: SPEC-remove-integration-ui-action
 title: Remove the integration ui_action field
 summary: Removes the ui_action field from integration results and the devkit-spec composed output, since it always repeats authority.
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-INT-mcp-services
