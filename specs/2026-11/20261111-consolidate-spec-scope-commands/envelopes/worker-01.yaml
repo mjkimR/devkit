@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:51:10.290778Z'
+status: completed
+summary: 'Development from specify to final-change-report. Retired scope register/query/compare/update with the update path, journal and codes ACK_FAILED/TOKEN_MISSING/RECORD_MISSING/JOURNAL_*; creation registration reads dirty paths via services.observation (invalid-path kept), observe_git removed; collect --mode removed. Review PASS (1 P3, CAP-COLL-shared-artifacts fixed); reconcile P1 wording fixed. Sync output: .devkit/installation.json. Outcome vs base objects: commands 7->3, codes 20->15, scope LOC 4521->3299. Host items: reword ADR-worktrees-and-scope body query/history mentions and drop the journal mention in CAP-WT-task-worktrees (both outside write scope, waived in reconcile.md). Deviation: one git checkout -- of my own edited ADR file to restore it.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=full 6734 passed 4 skipped; e2e 3 passed
+  build: PASS just check devkit-spec
+  lint: PASS just lint-check; rules --ci --base main 0 errors; sync --check exit 0
+diff_scope:
+  base: ''
+  head: 7cdb85df7cff787af34e567bc004f80f3e1f086b
+activity_effort: medium
