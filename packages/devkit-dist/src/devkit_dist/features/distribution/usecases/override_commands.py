@@ -40,6 +40,7 @@ from devkit_dist.features.distribution.services.installation.extensions import r
 from devkit_dist.features.distribution.services.installation.overrides import (
     asset_files,
     baseline_rel,
+    copy_overrides,
     has_override,
     overridden_files,
     override_rel,
@@ -331,7 +332,7 @@ def accept_override(root: Path, installed: list[InstalledBundle], selector: str)
         assert receipt is not None
         item, asset = _find(installed, bundle_name, asset_id)
         current = upstream_digest(item.bundle, asset)
-        overrides = {bundle: dict(records) for bundle, records in receipt.overrides.items()}
+        overrides = copy_overrides(receipt.overrides)
         overrides[bundle_name][asset_id] = dataclasses.replace(record, baseline_upstream_sha256=current)
         updated = dataclasses.replace(
             receipt,

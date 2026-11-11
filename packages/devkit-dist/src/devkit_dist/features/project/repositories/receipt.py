@@ -65,17 +65,18 @@ from devkit_dist.features.project.models.receipt import (
     Selection,
     ToolRecord,
 )
+from devkit_dist.features.project.models.settings import SLUG
 from devkit_dist.features.project.models.strict_json import StrictJSONError, strict_json_loads
 
 # The guidance block ``devkit sync`` manages in the root ``AGENTS.md`` (its digest is ``guidance_block``).
 
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
-_SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 _REQUIRED = frozenset({"schema", "packages", "selection", "assets", "files"})
 _OPTIONAL = frozenset({"tool", "overrides", "seeded", "guidance_block", "host_hooks", "execution_environment"})
-# The modules whose code decides what a receipt may contain: this reader (accepted keys and types) and the receipt
-# models (``SCHEMA`` and record types). A change to either changes which receipts a runtime accepts.
-READER_MODULES: tuple[str, ...] = (__name__, Receipt.__module__)
+# The modules whose code decides what a receipt may contain: this reader (accepted keys and types), the receipt
+# models (``SCHEMA`` and record types) and the slug grammar (``SLUG``). A change to any changes which receipts a
+# runtime accepts.
+READER_MODULES: tuple[str, ...] = (__name__, Receipt.__module__, "devkit_dist.features.project.models.settings")
 
 
 def _fail(where: str, problem: str) -> ReceiptError:
@@ -101,7 +102,7 @@ def _string(value: Any, where: str) -> str:
 
 
 def _slug(value: Any, where: str) -> str:
-    if not isinstance(value, str) or not _SLUG.fullmatch(value):
+    if not isinstance(value, str) or not SLUG.fullmatch(value):
         raise _fail(where, "expected a lowercase slug")
     return value
 
@@ -288,7 +289,7 @@ def _host_hooks(value: Any) -> tuple[HostHookRecord, ...]:
         host = _slug(item["host"], f"{where}.host")
         asset = _string(item["asset"], f"{where}.asset")
         parts = asset.split(":")
-        if len(parts) != 2 or not all(_SLUG.fullmatch(part) for part in parts):
+        if len(parts) != 2 or not all(SLUG.fullmatch(part) for part in parts):
             raise _fail(where, "asset must be bundle:asset using lowercase slugs")
         if (host, asset) in seen:
             raise _fail(where, "duplicate host hook asset")

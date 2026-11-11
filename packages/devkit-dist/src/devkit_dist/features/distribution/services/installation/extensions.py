@@ -8,7 +8,8 @@ with the project root and the sync result as its JSON object
 notices: a string is a ``PostSyncNotice`` (``POST_SYNC_NOTICE``), an
 ``AdvisoryError`` is kept with its own code and level, except that an
 ``ERROR`` is lowered to ``WARNING``. An extension cannot fail the sync: the files are
-already on disk, so an exception or a malformed return value becomes a
+already on disk, so an exception (``SystemExit`` included), a malformed return value or a
+group that cannot be listed (named ``discovery``) becomes a
 ``PostSyncExtensionFailedNotice`` (``POST_SYNC_EXTENSION_FAILED``, a warning).
 """
 

@@ -15,9 +15,11 @@ from devkit_dist.features.distribution.models.errors import (
     ProjectionNotIgnoredNotice,
     ProjectionTrackedNotice,
 )
+from devkit_dist.features.distribution.models.settings import NATIVE_ROOTS
 
 LIMIT = 10
-NATIVE_ROOTS = (".agents/", ".claude/", ".codex/")
+# Where native projections live: the files these diagnostics inspect.
+PROJECTION_PREFIXES = tuple(f"{native}/" for native in NATIVE_ROOTS)
 
 
 def _paths(raw: bytes) -> set[str]:
@@ -31,8 +33,8 @@ def _ignore_pattern(name: str) -> str:
 
 def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterable[str]) -> list[AdvisoryError]:
     """Inspect desired ignore coverage and current/previous tracking, never changing the index or ignores."""
-    wanted = {name for name in desired if name.startswith(NATIVE_ROOTS)}
-    owned = wanted | {name for name in previous if name.startswith(NATIVE_ROOTS)}
+    wanted = {name for name in desired if name.startswith(PROJECTION_PREFIXES)}
+    owned = wanted | {name for name in previous if name.startswith(PROJECTION_PREFIXES)}
     if not owned:
         return []
     try:

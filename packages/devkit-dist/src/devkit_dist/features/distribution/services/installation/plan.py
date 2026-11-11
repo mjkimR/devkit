@@ -8,10 +8,11 @@ from typing import Any
 
 from devkit_dist.features.distribution.models.content import sha256
 from devkit_dist.features.distribution.models.results import asset_json
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES
 from devkit_dist.features.distribution.services.bundles.common import ALL
 from devkit_dist.features.distribution.services.bundles.manifest import Bundle
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
-from devkit_dist.features.distribution.services.installation.inventory import AGENTS, desired_inventory
+from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.receipt import AssetRecord, HostHookRecord
 
@@ -81,7 +82,7 @@ def plan_bundle(
             target="--preset",
         )
     preset = preset or bundle.default_preset or ALL
-    targets = sorted(set(agents)) if agents is not None else sorted(AGENTS)
+    targets = sorted(set(agents)) if agents is not None else list(AGENT_NAMES)
     item = InstalledBundle("(local source)", bundle.version, bundle)
     inventory = desired_inventory([item], {bundle.name: [preset]}, targets)
     return BundlePlan(

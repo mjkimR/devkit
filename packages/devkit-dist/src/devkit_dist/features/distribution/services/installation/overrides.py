@@ -11,7 +11,7 @@ commands that create, review, accept and remove overrides are in
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path, PurePosixPath
 
 from devkit.advisory import ExitCode
@@ -23,6 +23,11 @@ from devkit_dist.features.distribution.services.bundles.manifest import Asset, B
 from devkit_dist.features.distribution.services.bundles.templates import output_path
 from devkit_dist.features.distribution.services.installation.workspace import BASELINE, checked_path
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH, OverrideRecord
+
+
+def copy_overrides(overrides: Mapping[str, Mapping[str, OverrideRecord]]) -> dict[str, dict[str, OverrideRecord]]:
+    """A mutable copy of override records by bundle and asset ID (a receipt's ``overrides`` are read-only)."""
+    return {bundle: dict(records) for bundle, records in overrides.items()}
 
 
 def override_rel(bundle: str, rel: str) -> str:

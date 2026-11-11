@@ -43,7 +43,7 @@ from devkit_dist.features.distribution.services.installation.discovery import (
 )
 from devkit_dist.features.distribution.services.installation.engines import engine_notices
 from devkit_dist.features.distribution.services.installation.local_render import runtime_receipt
-from devkit_dist.features.distribution.services.installation.overrides import drift_advisory
+from devkit_dist.features.distribution.services.installation.overrides import copy_overrides, drift_advisory
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.status_checks import status_check_notices
 from devkit_dist.features.distribution.services.installation.transaction import pending_journal, project_lock
@@ -512,8 +512,4 @@ def get_project_listing(root: Path, installed: list[InstalledBundle]) -> Project
     ]
     if receipt is None:
         return ProjectListing(entries, notices=notices)
-    return ProjectListing(entries, receipt.asset_records, receipt.seeded, _plain_overrides(receipt), notices)
-
-
-def _plain_overrides(receipt: Receipt) -> dict[str, dict[str, OverrideRecord]]:
-    return {bundle: dict(records) for bundle, records in receipt.overrides.items()}
+    return ProjectListing(entries, receipt.asset_records, receipt.seeded, copy_overrides(receipt.overrides), notices)

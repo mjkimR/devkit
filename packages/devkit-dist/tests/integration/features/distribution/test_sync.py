@@ -21,7 +21,11 @@ from devkit_dist.features.distribution.models.errors import (
 )
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation import discovery, transaction
-from devkit_dist.features.distribution.services.installation.config import update_config
+from devkit_dist.features.distribution.services.installation.config import (
+    read_config,
+    read_playbook_config,
+    update_config,
+)
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, discover_bundles
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL, SEEN_BUNDLES, snapshot
 from devkit_dist.features.distribution.usecases.status import get_project_status
@@ -418,6 +422,7 @@ def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], tar
         ("[playbooks]\nmode = 'semantic'\n", "config playbooks: mode must be one of auto, lexical, dense, hybrid"),
         ("[playbooks]\nmin_similarity = 1.5\n", "config playbooks: min_similarity must be a number between 0 and 1"),
         ("[playbooks]\nmin_similarity = true\n", "config playbooks: min_similarity must be a number between 0 and 1"),
+        ("[playbooks]\nmin_score = true\n", "config playbooks: min_score must be a finite nonnegative number"),
         ("invalid toml [[\n", "invalid config"),
     ],
 )
@@ -425,6 +430,19 @@ def test_invalid_project_config(installed: list[InstalledBundle], bare: Path, co
     write_config(bare, content)
     with pytest.raises(ConfigError, match=error_match):
         sync_project(bare, installed)
+
+
+@pytest.mark.parametrize(
+    ("content", "problem"),
+    [("schema = 2\n", "unsupported config schema"), ("[mcp]\nregister = 'yes'\n", "mcp.register: invalid value 'yes'")],
+)
+def test_the_shared_file_checks_name_the_file(bare: Path, content: str, problem: str) -> None:
+    write_config(bare, content)
+    for read in (read_config, read_playbook_config):
+        with pytest.raises(ConfigError) as caught:
+            read(bare)
+        assert caught.value.message == f"{CONFIG_PATH}: {problem}"
+        assert list(caught.value.target_files) == [CONFIG_PATH]
 
 
 def test_sync_passes_tool_tables_through_unread(installed: list[InstalledBundle], bare: Path) -> None:

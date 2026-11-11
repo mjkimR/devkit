@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import fcntl
 import fnmatch
 import hashlib
 import json
@@ -11,7 +10,6 @@ import os
 import re
 import stat
 import tempfile
-import time
 import uuid
 from collections.abc import Callable, Iterator
 from dataclasses import asdict
@@ -21,6 +19,7 @@ from pathlib import Path
 from devkit_core.base.errors import GitError
 from devkit_core.core.deadline import Deadline
 from devkit_core.core.git import run_git_text, worktree_records
+from devkit_core.core.locks import flock_fd
 
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.shared.models.api import (
@@ -110,13 +109,8 @@ def _lock(path: Path, budget: Deadline, *, write: bool, create: bool = False) ->
     try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
             raise SharedError("lock must be regular")
-        while True:
-            budget.check("lock acquisition")
-            try:
-                fcntl.flock(fd, (fcntl.LOCK_EX if write else fcntl.LOCK_SH) | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                time.sleep(min(0.01, max(0, budget.remaining())))
+        budget.check("lock acquisition")
+        flock_fd(fd, target=path, shared=not write, deadline=budget, what="lock acquisition")
         yield
     finally:
         os.close(fd)

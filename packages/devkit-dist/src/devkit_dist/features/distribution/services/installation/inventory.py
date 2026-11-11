@@ -8,6 +8,7 @@ from pathlib import Path
 
 from devkit_dist.features.distribution.models.content import Content, normal_mode
 from devkit_dist.features.distribution.models.errors import BundleConflictError, BundleError, SelectionError
+from devkit_dist.features.distribution.models.settings import NATIVE_DIRS
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.models.unprojected import Unprojected
 from devkit_dist.features.distribution.services.bundles.fragments import read_fragment, references, render_fragment
@@ -23,7 +24,6 @@ from devkit_dist.features.distribution.services.bundles.manifest import Asset, B
 from devkit_dist.features.distribution.services.bundles.playbooks import playbook_entry
 from devkit_dist.features.distribution.services.bundles.subagents import (
     HOST_FILES,
-    SUBAGENT_DIRS,
     projection_path,
     read_contract,
     render_projection,
@@ -55,14 +55,6 @@ from devkit_dist.features.project.repositories.receipt import (
 
 # Shared entry skills generated when at least one asset of the kind is synchronized.
 GENERATED_SKILLS = {"playbook": playbook_skill, "workflow": workflow_skill}
-
-# Agent name -> (skill directory, subagent directory). Codex and Antigravity share the
-# ``.agents/skills`` standard, so identical skill projections are written once.
-AGENTS = {
-    "codex": (".agents/skills", SUBAGENT_DIRS["codex"]),
-    "claude-code": (".claude/skills", SUBAGENT_DIRS["claude-code"]),
-    "antigravity": (".agents/skills", SUBAGENT_DIRS["antigravity"]),
-}
 
 
 @dataclass(frozen=True)
@@ -320,7 +312,7 @@ class _BundleInventory:
             self.inventory.unprojected.append(Unprojected(self.bundle.name, asset.id, agent))
             return set()
         origin = self.bundle.root / source
-        skill_dir, subagent_dir = AGENTS[agent]
+        skill_dir, subagent_dir = NATIVE_DIRS[agent]
         owner = f"{self.bundle.name}:{asset.id}"
         if asset.kind == "skill":
             self.inventory.claim(f"{skill_dir}/{asset.id}", owner)
@@ -412,8 +404,8 @@ def desired_inventory(
     # Every bundle passed in is deployed, so each needs an explicit preset selection.
     if set(presets) != {item.bundle.name for item in installed}:
         raise SelectionError("inventory requires exactly one preset selection per bundle")
-    if set(agents) - AGENTS.keys():
-        raise SelectionError(f"unsupported agent selection: {sorted(set(agents) - AGENTS.keys())}")
+    if set(agents) - NATIVE_DIRS.keys():
+        raise SelectionError(f"unsupported agent selection: {sorted(set(agents) - NATIVE_DIRS.keys())}")
     if environment not in {"local", "cloud"}:
         raise SelectionError("execution environment must be local or cloud")
     inventory = Inventory()
@@ -433,7 +425,10 @@ def desired_inventory(
     for kind, module in GENERATED_SKILLS.items():
         if not any(asset.kind == kind for asset in inventory.assets):
             continue
-        projections = [(module.MANAGED_ROOT, None), *((f"{AGENTS[agent][0]}/{module.NAME}", agent) for agent in agents)]
+        projections = [
+            (module.MANAGED_ROOT, None),
+            *((f"{NATIVE_DIRS[agent][0]}/{module.NAME}", agent) for agent in agents),
+        ]
         for directory, agent in projections:
             if agent is not None:
                 inventory.claim(directory, f"generated skill {module.NAME}")

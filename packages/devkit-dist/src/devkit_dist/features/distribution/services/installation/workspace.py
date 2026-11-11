@@ -18,6 +18,7 @@ from devkit_core.core.paths import normalize_relpath
 
 from devkit_dist.features.distribution.models.content import Content
 from devkit_dist.features.distribution.models.errors import UnsafeWorkspaceError
+from devkit_dist.features.distribution.models.settings import NATIVE_DIRS
 from devkit_dist.features.project.repositories.receipt import (
     AGENTS_FILE,
     CONFIG_PATH,
@@ -47,14 +48,7 @@ DEVKIT_GITIGNORE_TEXT = """\
 BASELINE = f"{OVERRIDES_PATH}/.baseline"
 
 # Destinations the receipt may own: devkit's managed cache and native agent projections.
-OWNED_PREFIXES = (
-    f"{MANAGED_PATH}/",
-    ".agents/skills/",
-    ".agents/agents/",
-    ".claude/skills/",
-    ".codex/agents/",
-    ".claude/agents/",
-)
+OWNED_PREFIXES = (f"{MANAGED_PATH}/", *sorted({f"{path}/" for paths in NATIVE_DIRS.values() for path in paths}))
 # Installation metadata the receipt can never own.
 METADATA = frozenset({RECEIPT_PATH, JOURNAL, LOCK, SEEN_BUNDLES, DEPLOYED, CONFIG_PATH, AGENTS_FILE, DEVKIT_GITIGNORE})
 

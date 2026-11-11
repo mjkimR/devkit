@@ -23,7 +23,7 @@ from devkit_dist.features.distribution.models.results import (
     selection_json,
     tool_json,
 )
-from devkit_dist.features.distribution.models.settings import AGENT_NAMES
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES, NATIVE_ROOTS
 from devkit_dist.features.distribution.services.bundles.manifest import seed_target
 from devkit_dist.features.distribution.services.installation.config import parse_presets
 from devkit_dist.features.distribution.services.installation.workspace import (
@@ -46,7 +46,7 @@ from devkit_dist.features.project.repositories.receipt import (
 def asset_path_allowed(bundle: str, name: str) -> bool:
     """Whether an asset's recorded path is one devkit writes for ``bundle``: owned, or that bundle's override."""
     return name.startswith(f"{OVERRIDES_PATH}/{bundle}/") or (
-        name not in METADATA and name.startswith((f"{MANAGED_PATH}/", ".agents/", ".claude/", ".codex/"))
+        name not in METADATA and name.startswith((f"{MANAGED_PATH}/", *(f"{native}/" for native in NATIVE_ROOTS)))
     )
 
 

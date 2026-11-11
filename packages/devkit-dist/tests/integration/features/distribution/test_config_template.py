@@ -303,6 +303,34 @@ def test_a_failing_extension_is_a_warning_and_its_tables_are_left_out(
     assert "## [tool.other]: the settings; devkit passes" in _text(project)
 
 
+def _exit() -> object:
+    raise SystemExit(3)
+
+
+def test_an_extension_calling_sys_exit_is_a_warning(project: Path, tools: list[SimpleNamespace]) -> None:
+    tools.extend([_entry("demo", _exit), _entry("other", lambda: DEMO[:1], package=None)])
+    result = refresh_config_template(project)
+    assert result.state == "created"
+    assert [notice.code for notice in result.notices] == ["CONFIG_TEMPLATE_EXTENSION_FAILED"]
+    assert "config template extension demo failed: 3" in result.notices[0].message
+    assert "[tool.demo]" not in _text(project) and "# [tool.other]" in _text(project)
+
+
+def test_a_group_that_cannot_be_listed_is_one_warning(
+    project: Path, tools: list[SimpleNamespace], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def entry_points(group: str) -> list[SimpleNamespace]:
+        if group == config_template.GROUP:
+            raise RuntimeError("broken metadata")
+        return []
+
+    monkeypatch.setattr(config_template.metadata, "entry_points", entry_points)
+    result = refresh_config_template(project)
+    assert result.state == "created"
+    assert [notice.code for notice in result.notices] == ["CONFIG_TEMPLATE_EXTENSION_FAILED"]
+    assert "config template extension discovery failed: broken metadata" in result.notices[0].message
+
+
 def test_an_invalid_config_is_left_alone(project: Path, tools: list[SimpleNamespace]) -> None:
     _write(project, "schema = 1\nunknown = true\n")
     with pytest.raises(Exception, match="unknown fields") as raised:
