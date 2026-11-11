@@ -1,14 +1,15 @@
 ---
 id: SPEC-shared-paging-contract
 title: One paging contract for listing commands
-summary: Moves devkit exec list onto the shared PAGE and NEXT_CMD paging lines and decides paging for maintenance history list, so listing commands share one grammar.
+summary: "Moves devkit exec list text output onto the shared PAGE and NEXT_CMD paging lines and states that paging grammar once in the agent output architecture, so listing commands that page share one grammar; maintenance history list stays an unpaged bounded listing."
 status: planned
 created: 2026-11-11
-related_capabilities: []
+related_capabilities:
+  - CAP-HARN-isolated-execution
+  - CAP-HARN-command-mount
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-shared-paging-contract] One paging contract for listing commands
 
@@ -16,90 +17,89 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-shared-paging-contract on 2026-11-11.
 
-### 1. Background & Hypothesis
+Three paging contracts coexist. `echo_page` in `devkit_dist.adapters.cli` (used by `devkit docs` and the
+`devkit spec` entrypoint listings) prints `[PAGE: total= offset= limit= count= next=]` after the items and
+`[NEXT_CMD: ... --offset N]` when more items follow. `devkit exec list` prints its own `[EXECUTION_LIST: ...]`
+line before the runs, and `maintenance history list` takes only `--limit`. An agent parses each form separately,
+and a change to the shared format misses `exec`. Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
+finding C2-8.
 
-Three paging contracts coexist: `echo_page` (docs, spec entrypoints: `[PAGE: ...]` plus `[NEXT_CMD ... --offset N]`, `--limit 0` for all),
-`exec list` (its own `[EXECUTION_LIST: ...]` and JSON `next_offset`, limit 1-100) and `maintenance history list`
-(`--limit` only, no paging fields). Agents parse each separately, and a change to the shared format misses `exec`.
-Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md` C2-8.
+The grammar itself is stated only inside `CAP-HARN-command-mount` §4.5, which owns the `devkit spec` and
+`devkit docs` mounts, so a command outside those groups has no contract to follow.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement One paging contract for listing commands so that system capabilities are extended.
+- **US-1**: As an agent listing retained execution runs, I want `devkit exec list` to end with the same `[PAGE]`
+  and `[NEXT_CMD]` lines as `devkit docs list`, so one matcher pages every listing command.
+- **US-2**: As a developer adding a listing command, I want the paging grammar stated once in the agent output
+  architecture, so I reuse `echo_page` instead of inventing a third form.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: JSON paging keys across commands; `exec list --format json` keeps `runs`, `total`, `offset`,
+   `limit` and `next_offset`.
+2. **Scope Excluded**: `--limit 0` ("all") for `exec list`. **Rationale**: retained runs grow without a bound and
+   each listed run reads its manifest; exec keeps limit 1-100, default 20.
+3. **Scope Excluded**: paging for `maintenance history list`; `CAP-DLV-maintenance-history` is not changed.
+   **Rationale**: it is a "newest N runs" query that stops reading shards once `limit` runs are found; a `total`
+   would force reading every shard and an offset shifts as publications are prepended.
+4. **Scope Excluded**: a new shared paging helper beyond `echo_page`, and any change to `echo_page` or
+   `packages/devkit-dist/`.
+5. **Scope Excluded**: `docs list`'s own `hidden` field and `[HISTORY_CMD]` line, which stay in
+   `CAP-HARN-command-mount` §4.5 and `CAP-DOCS-document-lookup`.
+6. **Scope Excluded**: a transition alias for `[EXECUTION_LIST: ...]`; no agent asset or command parses it.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] A page with more runs ends with PAGE and NEXT_CMD
+- **Given** 25 retained runs
+- **When** an agent runs `uv run devkit exec list`
+- **Then** stdout is 20 `[EXECUTION_RUN: ...]` lines, then `[PAGE: total=25 offset=0 limit=20 count=20 next=20]`,
+  then `[NEXT_CMD: uv run devkit exec list --limit 20 --offset 20]`; the exit code is `0` and no
+  `[EXECUTION_LIST: ...]` line is printed
 
-## 5. Carried Proposal Notes
+### [AC-02] The last page has next=- and no NEXT_CMD
+- **Given** 25 retained runs
+- **When** an agent runs `uv run devkit exec list --offset 20`
+- **Then** stdout is 5 `[EXECUTION_RUN: ...]` lines, then `[PAGE: total=25 offset=20 limit=20 count=5 next=-]`,
+  and no `[NEXT_CMD: ...]` line
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] A custom limit is repeated in NEXT_CMD
+- **Given** 25 retained runs
+- **When** an agent runs `uv run devkit exec list --limit 5 --offset 5`
+- **Then** the last two lines are `[PAGE: total=25 offset=5 limit=5 count=5 next=10]` and
+  `[NEXT_CMD: uv run devkit exec list --limit 5 --offset 10]`
 
-### 2. Technical Spike Questions
+### [AC-04] An empty list is an explicit PAGE line
+- **Given** no retained runs
+- **When** an agent runs `uv run devkit exec list`
+- **Then** stdout is exactly `[PAGE: total=0 offset=0 limit=20 count=0 next=-]` followed by a newline, exit `0`
 
-- **Q1**: Can exec keep `EXECUTION_RUN` lines while emitting the shared page lines, and what limit bounds does it keep?
-  Yes. `echo_page` (`devkit_dist.adapters.cli`) only prints `[PAGE: ...]` and `[NEXT_CMD: ...]` after the items, so
-  `exec list` prints its `[EXECUTION_RUN: ...]` lines unchanged and then `echo_page("uv run devkit exec", total,
-  offset, limit, count, ["list", "--limit", str(limit)])`. `isolated_execution/cli.py` already imports from
-  `devkit_dist.adapters.cli`; no new import edge. The `next` value is the same: `ListExecutions` computes
-  `offset + limit` when below `total`, `echo_page` computes `offset + count`, equal whenever more items follow.
-  Exec keeps its bounds (limit 1-100, default 20, offset nonnegative, `EXECUTION_LIST_ARGUMENT_INVALID`): the
-  `--limit 0` "all" form of `docs list` is not adopted, because retained runs grow without a bound and each listed
-  run reads its manifest; `echo_page` already treats any positive limit correctly.
-- **Q2**: Does maintenance history need paging at all? No. `history list` is a "newest N runs" query over a remote
-  history branch: `listing()` reads year shards newest first and stops as soon as `limit` eligible runs are found.
-  A `total` would force reading every shard, and an offset over a branch that later publications prepend to shifts
-  between calls. No agent asset calls it (only `docs/development/reference/maintenance-history.md` shows one
-  example), and `--source-sha` and `--outcome` already narrow it. It stays a bounded, unpaged listing with
-  `HISTORY_LIST` and `HISTORY_RUN`; the shared grammar applies only to commands that page.
+### [AC-05] Exec keeps its limit bounds and error code
+- **Given** any repository
+- **When** an agent runs `uv run devkit exec list` with `--limit 0`, `--limit 101` or `--offset -1`
+- **Then** the command fails with `EXECUTION_LIST_ARGUMENT_INVALID` and exit `2`, printing no `[PAGE: ...]` line
 
-### 3. Proposed Design & Impact
+### [AC-06] JSON output is unchanged
+- **Given** 25 retained runs
+- **When** an agent runs `uv run devkit exec list --format json`
+- **Then** stdout is one JSON object with the keys `runs`, `total`, `offset`, `limit` and `next_offset`, and
+  `next_offset` is `20`
 
-- `devkit exec list` text output: the `[EXECUTION_RUN: ...]` lines, then `[PAGE: total= offset= limit= count= next=]`
-  and, when more runs follow, `[NEXT_CMD: uv run devkit exec list --limit <N> --offset <next>]`, all through
-  `echo_page`. `[EXECUTION_LIST: ...]` is removed with no transition alias: no agent asset or command parses it (its
-  only consumer is `packages/devkit/tests/unit/features/isolated_execution/test_output.py`). An empty list prints
-  `[PAGE: total=0 offset=0 limit=20 count=0 next=-]`, which keeps the explicit empty-list result §4 requires.
-- JSON output is unchanged (`runs`, `total`, `offset`, `limit`, `next_offset`): JSON paging keys are out of scope.
-- `ARCH-08-1-agent-output` gains a short paging subsection under §3 (stdout text): the `[PAGE: total= offset=
-  limit= count= next=]` line after the items, `[NEXT_CMD: ...]` only when more items follow, `next=-` on the last
-  page, and that each command's limit bounds (and whether it accepts `--limit 0`) stay in its own capability. §10
-  gains a checklist item: a listing command that pages uses these lines through `echo_page`.
-- `CAP-HARN-command-mount` §4.5 keeps its mounted-group facts and points to `ARCH-08-1-agent-output` for the
-  grammar instead of stating it; `CAP-HARN-isolated-execution` §4 (sentinel list and the list paging sentence) points
-  to it too and keeps exec's limits; `docs/development/reference/exec.md` (sentinel list) is updated to match.
-- Development: one feature spec, `sdd-spec-feature`; tests in `packages/devkit/tests/unit/features/isolated_execution/`.
+### [AC-07] The paging grammar is stated once and referenced
+- **Given** the Living Spec after this change
+- **When** a reader looks up the paging lines
+- **Then** `ARCH-08-1-agent-output` §3 states the `[PAGE]` and `[NEXT_CMD]` grammar and that per-command limit
+  bounds stay in each command's capability, and §10 has a checklist item that a listing command that pages prints
+  them through `echo_page`; `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 refer to
+  `ARCH-08-1-agent-output` for the grammar while keeping their own limits; and `rg -n EXECUTION_LIST` over
+  `docs/architecture`, `docs/capabilities`, `docs/development` and `packages` matches only
+  `EXECUTION_LIST_ARGUMENT_INVALID`
 
-#### Planning decisions
+## 5. Assumptions
 
-- Exec keeps limit 1-100 (default 20) and its error code; it does not adopt `--limit 0` (Q1).
-- `maintenance history list` stays unpaged (Q2); `CAP-DLV-maintenance-history` is not changed.
-- `[EXECUTION_LIST: ...]` is dropped without an alias; JSON output keeps its current keys.
-- The shared paging grammar is stated once in `ARCH-08-1-agent-output` (a short subsection and a §10 checklist
-  item); `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 point to it, and per-command limits stay
-  in each capability (user, q1).
-
-#### Non-Goals
-
-- JSON paging keys across commands; `--limit 0` for exec; paging for `maintenance history list`; a new shared
-  paging helper beyond `echo_page`; `docs list`'s own `hidden` and `[HISTORY_CMD]` lines.
-
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr shared-paging-contract "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept shared-paging-contract --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff shared-paging-contract.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
-
+- `echo_page` computes `next` as `offset + count`; `ListExecutions` computes `next_offset` as `offset + limit`.
+  They are equal whenever more runs follow, so text and JSON report the same next offset.
+- `[NEXT_CMD]` always repeats `--limit <N>`, also at the default, as `devkit docs list` does, so the line stays
+  correct if the default changes.
+- The `--offset` help text says to continue from the reported next offset instead of naming only the JSON key.
