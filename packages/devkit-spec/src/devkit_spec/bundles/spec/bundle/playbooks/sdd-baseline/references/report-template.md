@@ -1,7 +1,7 @@
 # Baseline report template
 
-Copy this shape into an ordinary material report and replace placeholders with observed facts.
-Keep source identity and current conclusions; this report is not a Unit or an approval envelope.
+Copy this shape into the material report, replace placeholders with observed facts and keep source identity and
+current conclusions; the report is not a Unit or an approval envelope.
 
 # SDD baseline: <retained product>
 
@@ -28,19 +28,18 @@ Keep source identity and current conclusions; this report is not a Unit or an ap
 
 ## Gaps and dispositions
 
-Record missing evidence and mismatches, their user-decided disposition and the affected recheck.
-Required gaps block readiness. Exclusions do not count as verified coverage.
+Record missing evidence and mismatches, their user-decided disposition and the affected recheck. Required gaps block
+readiness.
 
 ## Readiness and activation effects
 
-State whether all selected retained items are verified and applicable required checks passed.
-Identify the ready report/source, selected SDD assets, exact approach change.
-Do not invent provider activation effects or a separate approval for them.
-Name the existing explicit user authority for those same effects, or state that the decision is pending.
-Record real versus simulated decisions in a test exercise.
+- State whether all selected retained items are verified and applicable required checks passed.
+- Identify the ready report/source, selected SDD assets and exact approach change; invent no provider activation
+  effects or separate approval for them.
+- Name the existing explicit user authority for those same effects, or state that the decision is pending.
+- In a test exercise, record real versus simulated decisions.
 
 ## Observed final state or recovery
 
-Record actual policy/asset inspection, sync/check outcomes and next SDD routing after activation.
-For a partial failure, identify the failed command, current state, next supported recovery and stale evidence to recheck.
-Do not claim rollback or successful adoption from an unverified expectation.
+Record actual policy/asset inspection, sync/check outcomes and next SDD routing after activation. For a partial
+failure, identify the failed command, current state, next supported recovery and stale evidence to recheck.

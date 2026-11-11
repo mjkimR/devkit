@@ -2078,31 +2078,31 @@
     },
     ".devkit/managed/spec/playbooks/adr-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "538a3673adbe8c91498d906dc049a2013c87ff322cd24b3b87a0f2616066c2bc"
+      "sha256": "9bed5b05927af4a21a48ecc831f3fe2b8c7098b238960ce154fc5a05baa9760f"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
-      "sha256": "3817955889b73e52c0217911bae481f26c7d925658b27ab487decf9bccc3b59a"
+      "sha256": "451ba4e5e19c193352a78b91be270f19a101dbaeba68d59ecf5690e286924b55"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md": {
       "mode": 420,
-      "sha256": "ad7cd36a5febcf6aff94e2eee5922e407f8086af17b683b071bb0b42a131767a"
+      "sha256": "78923c37d6b3156c01c3af2f91c1af0222f0efd80d332297585c8470d741e44e"
     },
     ".devkit/managed/spec/playbooks/feedback-consolidation/SKILL.md": {
       "mode": 420,
-      "sha256": "ae7489d74712e88b2834d58b4278ac0bada040c6337da702d512a5805d52b585"
+      "sha256": "2bb3711df567d91635d6774e7a5e9e6de40e6a0e1b592a04e8112f1e96e5fcc4"
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "129032ff29ff3d578c88475f938f508f7ca72286b9ed07f11d15ba4c435ea18f"
+      "sha256": "add0a8be15eac4d46fb5fe5fd26bf5779a88bffda2c7182359a76a62176e4d7b"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
       "mode": 420,
-      "sha256": "8b09481b191382bdc458a4ae36f8524a83fa7085bb5ecfdaf16f3ab850f40623"
+      "sha256": "a91353d67efea02d1c2840df496de5f690662c86b2dc94725736512374eb9c07"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
       "mode": 420,
-      "sha256": "922646122de500e11fffd86fae4a2b143d6e4a7886172af78b1463ea265638fa"
+      "sha256": "4a0e53e314769e8521ff8fa614e518d39c47b1cb3c481d5aee1578df53415a8f"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
