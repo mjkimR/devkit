@@ -35,7 +35,8 @@ for a key no consumer needs. Source: `docs/materials/2026-11/20261111-review-ref
 
 - **Q1**: Does any consumer repository still carry `[integration] provider`? **Yes, one**: `resource-indexer`
   sets `provider = "spec"`; it pins devkit to rev `76bafbbb`, so it breaks only when it moves its pin
-  (`materials/legacy-key-inventory.md`). How to treat it is the open user decision (see Planning decisions).
+  (`materials/legacy-key-inventory.md`). Settled by the user: reject now; `resource-indexer` is a pilot consumer
+  that accepts the breakage and deletes the key when it next moves its pin.
 - **Q2**: Should `[integration]` stay in the reserved-table list? **Yes** (settled in Planning): removing it makes
   devkit-dist reject the table on every configuration read instead of only in `devkit integration`, and it changes
   devkit-dist for a key it never reads. The table stays a reserved namespace that currently accepts no keys.
@@ -59,13 +60,16 @@ for a key no consumer needs. Source: `docs/materials/2026-11/20261111-review-ref
 
 - Q2: keep `integration` in devkit-dist `RESERVED_TABLES`; devkit-dist and `docs/development/reference/distribution.md`
   do not change.
-- Pending user decision (q1): treatment of the one consumer still carrying the key.
+- Q1 (user): reject the legacy `provider` key now, with no deprecation period; the `INTEGRATION_CONFIG_INVALID` fix
+  names the retired key and says to delete it. `resource-indexer` is a pilot consumer that accepts breakage: no
+  compatibility handling and no consumer coordination.
 
 ### Non-Goals
 
 - No change to the `ready_provider` test fixtures or the exported `Readiness`/`Evidence` models: the fixtures guard
   the §4 content boundary and read no configuration.
-- No edit of any consumer repository; no deprecation-warning period unless the user chooses it.
+- No edit of any consumer repository, no deprecation-warning period or new notice code, and no compatibility
+  handling for `resource-indexer`.
 - No new feature edge.
 
 ## 4. Lifecycle & Retirement Criteria
