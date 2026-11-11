@@ -223,9 +223,10 @@ def status(workspace_root: str | None) -> None:
     whose package fails to load, a pending journal, override drift under
     override_drift = "block") are listed under errors in the JSON result; any
     exits 1. Warnings and notices (override drift under the default "warn", a
-    package the project does not deploy that fails to load, MCP registration
-    still to set up) are listed under notices. Output is JSON only: nothing is
-    repeated on stderr.
+    package the project does not deploy that fails to load) are listed under
+    notices. Output is JSON only: nothing is repeated on stderr. This is a
+    diagnostic report, not the readiness gate: `devkit sync --check` exiting 0
+    says the checkout is synchronized.
     """
     report = InspectProject().execute(resolve_root(workspace_root))
     echo_json(report.to_dict())

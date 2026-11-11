@@ -252,6 +252,15 @@ def test_status_with_problems_exits_one_whatever_their_own_codes(
     assert result.stderr == ""
 
 
+def test_status_help_names_sync_check_as_the_readiness_gate() -> None:
+    # Status is a diagnostic report; general status emits no MCP registration notice.
+    result = _invoke("status", "--help")
+    assert result.exit_code == 0
+    text = " ".join(result.output.split())
+    assert "not the readiness gate: `devkit sync --check` exiting 0" in text
+    assert "MCP registration" not in text
+
+
 def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
     item: InstalledBundle, target: Path
 ) -> None:

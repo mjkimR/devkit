@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:32:23.784069Z'
+status: completed
+summary: 'Development turn specify..final-change-report: spec/plan/tasks written; sync --check documented as single readiness gate in CAP-DIST-sync-and-transactions, reference, devkit bundle consumption.md and in-repo-bundle.md, adaptive-dev project-bundle.md, UC Scenario 7, INSTALL_GUIDE Step 5, existing-repository Already installed, status --help (+test). Sync output: .devkit/installation.json (listed in Task 2.1 _Boundary). code-reviewer PASS; reconcile-reviewer P2/P3 fixed and self-verified. No base measurement named: AC-03 search 2 matches at handoff, 0 at HEAD.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected 3255 passed 1 skipped; just test-dist 1401 passed
+  lint: PASS just lint; just check 0 errors; rules check --ci --base main
+  sync_check: PASS exit 0
+diff_scope:
+  base: ''
+  head: d9d7b748c90b9bc2083db38e59799789dffbf519
+activity_effort: medium

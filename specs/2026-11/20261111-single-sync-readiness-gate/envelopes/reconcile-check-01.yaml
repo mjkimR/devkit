@@ -1,0 +1,30 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:24:45.065485Z'
+status: completed
+summary: 'reconcile-reviewer: targets cover all 3 changed docs, text matches decisions and code, entrypoint rejections hold; P2 overstated status misses, P3 missing CAP-MCP no-impact note'
+findings:
+- issue: Readiness Gate section and reference say status does not detect a selection, configuration or installed-package change without a sync, but status reports subagent-projection and render-environment changes as NOT_SYNCHRONIZED
+  evidence: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md:527-528 vs :209-210; docs/development/reference/distribution.md:234-237; detection-matrix.md rows agent added and local environment cloud
+  failure_condition: A reader adds an agent to config.toml without a sync and expects status to exit 0; it exits 1
+  suggested_action: 'Name the measured misses instead: preset or guidance_block change, removed guidance block, missing receipt, installed-package content change; keep that status reports subagent projection and render environment changes'
+  resolution: open
+  severity: P2
+- issue: reconcile.md no-impact note omits CAP-MCP-runtime-registration, which owns the general status boundary and the check registration plan
+  evidence: specs/2026-11/20261111-single-sync-readiness-gate/reconcile.md; docs/capabilities/mcp/CAP-MCP-runtime-registration.md:92,105-108
+  failure_condition: A later reader cannot see the MCP capability was checked for impact
+  suggested_action: Add CAP-MCP-runtime-registration to the no-impact sentence
+  resolution: open
+  severity: P3
+unverified_areas:
+- MCP registration row read from code, not measured
+checks:
+  targets: PASS 3/3 docs files are targets
+  contradictions: PASS no other docs statement makes status a gate
+  decisions: PASS gate, report, MCP registration not ready; usecases diff empty
+diff_scope:
+  base: 2fcff57dc71189c30c74b34c5718e33547e3bba1
+  head: 2e0f86205035cd975e08715f380e222941a4d563
+activity_effort: medium

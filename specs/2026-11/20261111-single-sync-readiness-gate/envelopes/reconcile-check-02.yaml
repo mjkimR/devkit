@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:25:43.940446Z'
+status: completed
+summary: 'Self-verified fixes of reconcile-check-01 by the implementer: P2 narrowed in CAP-DIST Readiness Gate, reference sentence and AC-01 wording to the measured misses (status reports subagent projection and render environment changes); P3 added CAP-MCP-runtime-registration to the no-impact note. reconcile.md resolved; spec completed.'
+findings: []
+assumptions:
+- Wording-only fix within the agreed intent; no reviewer recall needed at medium (scope unchanged, correctness checked against the matrix)
+checks:
+  p2_fix: PASS CAP-DIST Readiness Gate agrees with the subagent policy paragraph and detection-matrix rows
+  p3_fix: PASS reconcile.md names CAP-MCP-runtime-registration
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 2fcff57dc71189c30c74b34c5718e33547e3bba1
+  head: 6b0e55544d1831b79ce5b0c00d8fc87ed9ba7e34
+activity_effort: medium

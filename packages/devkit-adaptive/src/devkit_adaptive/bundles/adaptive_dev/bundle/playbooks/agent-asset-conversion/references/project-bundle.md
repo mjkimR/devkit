@@ -89,5 +89,6 @@ uv run devkit get-context <repo>
 ## Completion
 
 - `uv run devkit bundle validate <bundle source>` exits `0`.
-- `uv run devkit status` exits `0` and its `selection.presets` names the bundle.
+- `uv run devkit sync --check` exits `0`.
+- `uv run devkit list` reports the bundle as selected.
 - `uv run devkit get-context <repo>` returns a constitution that lists every converted role.
