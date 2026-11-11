@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:04:40.231449Z'
+status: completed
+summary: 'Removed test-only public APIs: worktree finish/discard before_remove; status_records renames/ignore_submodules (pathspecs kept: production caller in maintenance_history snapshot); search bm25_scores, SearchIndex.search limit, SearchHit.to_dict. Tests migrated, Living Spec updated, review and reconcile PASS.'
+findings: []
+assumptions:
+- 'SM-3 *pathspecs kept: packages/devkit/src/devkit_agt/features/maintenance_history/repositories/snapshot.py capture passes pathspecs'
+- lifecycle.py change limited to before_remove for the concurrent finish --merge retirement; expect a textual merge near finish's signature and test_lifecycle.py
+checks:
+  tests: PASS just test-affected --base main --tier all (full fallback) 7115 passed 17 skipped; just test-dist 1400 passed
+  build: PASS just check (pyright) devkit devkit-core devkit-dist 0 errors
+  lint: PASS just lint-check devkit devkit-core devkit-dist; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: 57c63108ceae588732797aed50e8917f9bd2ea81
+  head: cd3e867b2ecc1f5d94979fb51f98eb0d87c04c36
