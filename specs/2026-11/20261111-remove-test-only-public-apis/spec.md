@@ -2,7 +2,7 @@
 id: SPEC-remove-test-only-public-apis
 title: Remove test-only public APIs
 summary: 'Removes public parameters and APIs only tests use: the worktree finish and discard before_remove hook, status_records renames/ignore_submodules, and search bm25_scores, SearchIndex.search limit and SearchHit.to_dict.'
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities: [CAP-WT-task-worktrees, CAP-SRCH-document-search]
 related_usecases: []

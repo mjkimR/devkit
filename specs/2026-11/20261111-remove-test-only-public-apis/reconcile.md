@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-remove-test-only-public-apis
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
     resolution: modified
