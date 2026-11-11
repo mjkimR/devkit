@@ -57,6 +57,7 @@ def scan(output_format: str) -> None:
 | `exit_on_problems`, `highest_exit_code`, `report_exit_code` | Exit codes of commands that collect problems |
 | `OutputSettings`, `output_settings`, `Reported` | The running command's options; an error whose JSON result is already printed |
 | `LazyGroup` | Subcommands imported only when they run |
+| `utf8_output()` | Make stdout and stderr UTF-8 with `backslashreplace`, as the boundary does, for a command whose stdout bypasses it (a host's native protocol) |
 | `devkit_cli.testing.invoke` | Tests: run a command and read `exit_code`, `stdout`, `stderr`, `json()` and `codes()` |
 
 Semantic argument checks raise `devkit.advisory.ArgumentError` (`ARGUMENT_INVALID`) through the boundary; click

@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from devkit_core.core import git as core_git
 from devkit_dist.features.host.usecases import registrations as r
 
 
@@ -89,8 +90,8 @@ def test_planning_asks_git_once_for_all_destinations_with_per_path_answers(repo,
     assert {item for item in relatives if eligibility.ignored(item)} == {".mcp.json", ".agents/mcp_config.json"}
     (repo / ".git/info/exclude").write_text("")
     calls = []
-    real = r.run_git_text
-    monkeypatch.setattr(r, "run_git_text", lambda *args, **kw: calls.append(args[1]) or real(*args, **kw))
+    real = core_git.run_git_result  # every Git call of the shared probes and run_git_text goes through it
+    monkeypatch.setattr(core_git, "run_git_result", lambda *args, **kw: calls.append(args[1]) or real(*args, **kw))
     none_ignored = r._Eligibility(repo, relatives)
     assert not any(none_ignored.ignored(item) for item in relatives)  # Git's exit status 1: nothing is ignored
     assert calls == ["check-ignore"]

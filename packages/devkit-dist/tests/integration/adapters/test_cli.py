@@ -145,6 +145,13 @@ _PROBE = textwrap.dedent("""
 """)
 
 
+def test_utf8_output_is_the_toolkit_helper() -> None:
+    import devkit_cli
+    from devkit_dist.adapters import cli as adapters_cli
+
+    assert adapters_cli.utf8_output is devkit_cli.utf8_output
+
+
 def test_output_is_utf8_whatever_the_locale() -> None:
     script = _PROBE + "cmd(['--mode', 'advisory', '--format', 'json'])\n"
     result = _run_python(script, LC_ALL="C", PYTHONIOENCODING="latin-1", PYTHONUTF8="0")

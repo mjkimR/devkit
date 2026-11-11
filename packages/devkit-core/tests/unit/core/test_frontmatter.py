@@ -230,3 +230,27 @@ def test_scalar_renders_one_line_that_reads_back(value: str, rendered: str) -> N
     assert frontmatter.scalar(value) == rendered
     assert "\n" not in rendered
     assert parse(f"---\nk: {rendered}\nl:\n  - {rendered}\n---\n").data == {"k": value, "l": [value]}
+
+
+@pytest.mark.parametrize(
+    ("value", "options", "rendered"),
+    [
+        ("off", {"quote": '"'}, '"off"'),
+        ("Read", {"quote": '"'}, "Read"),
+        ("PROP-x: y", {"quote": '"'}, '"PROP-x: y"'),
+        ("", {"quote": '"'}, '""'),
+        ("Read", {"always_quote": True}, "'Read'"),
+        ("Read", {"quote": '"', "always_quote": True}, '"Read"'),
+        ('say "hi"', {"quote": '"', "always_quote": True}, '"say \\"hi\\""'),
+        ("line\nbreak", {"always_quote": True}, '"line\\nbreak"'),
+        ("tab\tand\\", {"quote": '"', "always_quote": True}, '"tab\\tand\\\\"'),
+    ],
+)
+def test_scalar_quote_options(value: str, options: dict, rendered: str) -> None:
+    assert frontmatter.scalar(value, **options) == rendered
+    assert parse(f"---\nk: {rendered}\nl:\n  - {rendered}\n---\n").data == {"k": value, "l": [value]}
+
+
+def test_scalar_refuses_another_quote_character() -> None:
+    with pytest.raises(ValueError):
+        frontmatter.scalar("x", quote="`")  # type: ignore[arg-type]

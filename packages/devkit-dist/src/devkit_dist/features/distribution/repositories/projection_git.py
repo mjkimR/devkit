@@ -9,7 +9,7 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import run_git, run_git_result
+from devkit_core.core.git import ignored_paths, run_git, tracked_paths
 from devkit_dist.features.distribution.models.errors import (
     ProjectionGitCheckFailedNotice,
     ProjectionNotIgnoredNotice,
@@ -20,10 +20,6 @@ from devkit_dist.features.distribution.models.settings import NATIVE_ROOTS
 LIMIT = 10
 # Where native projections live: the files these diagnostics inspect.
 PROJECTION_PREFIXES = tuple(f"{native}/" for native in NATIVE_ROOTS)
-
-
-def _paths(raw: bytes) -> set[str]:
-    return {os.fsdecode(name) for name in raw.split(b"\0") if name}
 
 
 def _ignore_pattern(name: str) -> str:
@@ -40,23 +36,9 @@ def projection_git_notices(root: Path, desired: Iterable[str], previous: Iterabl
     try:
         # Ignore patterns are anchored at the repository root, so a devkit root below it needs its prefix.
         prefix = os.fsdecode(run_git(root, "rev-parse", "--show-toplevel", "--show-prefix")).split("\n")[1]
-        tracked = _paths(run_git(root, "ls-files", "-z", "--", ".")) & owned
+        tracked = tracked_paths(root, sorted(owned))
         candidates = sorted(wanted - tracked)
-        ignored = (
-            _paths(
-                run_git_result(
-                    root,
-                    "check-ignore",
-                    "--no-index",
-                    "--stdin",
-                    "-z",
-                    input=b"".join(os.fsencode(name) + b"\0" for name in candidates),
-                    ok_returncodes=(0, 1),
-                ).stdout
-            )
-            if candidates
-            else set()
-        )
+        ignored = ignored_paths(root, candidates, no_index=True)
     except GitError as exc:
         # Git has no distinct exit code for nonrepository vs access/discovery failures.
         # The shared runner fixes LC_ALL=C; only this explicit nonrepository response is a skip.

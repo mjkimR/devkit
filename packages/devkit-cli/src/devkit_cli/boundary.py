@@ -67,7 +67,7 @@ class _InfoFormatter(logging.Formatter):
         return "\n".join([f"[INFO]   {source}: {head}".rstrip(), *(f"{_CONTINUATION}{line}".rstrip() for line in rest)])
 
 
-def _utf8_output() -> None:
+def utf8_output() -> None:
     """Make stdout and stderr UTF-8 with ``backslashreplace``, so no output depends on the locale.
 
     A character UTF-8 cannot encode (a lone surrogate from a ``surrogateescape``-decoded path) is written as its
@@ -195,7 +195,7 @@ class Boundary:
             ) -> Any:
                 if adds_format:
                     kwargs.pop("output_format", None)
-                _utf8_output()
+                utf8_output()
                 try:
                     return guarded(*args, quiet=quiet, verbose=verbose, strict=strict, **kwargs)
                 except BrokenPipeError:  # also raised while rendering an error below

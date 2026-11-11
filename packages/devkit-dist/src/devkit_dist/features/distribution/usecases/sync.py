@@ -14,7 +14,7 @@ from types import MappingProxyType
 from devkit.advisory import AdvisoryError, ExitCode
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import repository_facts, run_git
+from devkit_core.core.git import repository_facts, tracked_paths
 
 from devkit_dist.features.distribution.models.content import Content, json_content, same_content, signature
 from devkit_dist.features.distribution.models.errors import (
@@ -1186,9 +1186,7 @@ def commit_locked(
         local_render.require_ignored(root, local_render.LOCAL_RENDER, planned_ignore=fresh_ignore)
     if locked:
         locked_actions = [a for a in actions if a.path not in (LOCAL_CONFIG_PATH, local_render.LOCAL_RENDER)]
-        tracked_changes = (
-            bool(changes) and git_toplevel(root) is not None and bool(run_git(root, "ls-files", "--", *changes).strip())
-        )
+        tracked_changes = bool(changes) and git_toplevel(root) is not None and bool(tracked_paths(root, list(changes)))
         if tracked_changes or not _restores_only(previous, receipt, locked_actions, deployed):
             raise _receipt_stale(previous, receipt, actions, deployed)
     require_writable(root, changes)

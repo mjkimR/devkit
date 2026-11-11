@@ -2,7 +2,7 @@
 id: SPEC-small-helper-consolidations
 title: Consolidate the remaining duplicated runtime helpers
 summary: 'Consolidates three deferred duplicates without changing behavior or projected bytes: a public devkit-cli UTF-8 output helper, subagent projection quoting through the shared frontmatter scalar, and shared Git tracked/ignored probes in devkit-core.'
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities: [CAP-CLI-agent-cli-toolkit, CAP-DIST-agent-projections]
 related_usecases: []
@@ -92,8 +92,9 @@ shipped role contract changes. Evidence: `docs/materials/2026-11/20261111-small-
 - **Given** `devkit_core.core.git.tracked_paths(cwd, paths, *, deadline=None) -> set[str]` and
   `ignored_paths(cwd, paths, *, no_index=False, deadline=None) -> set[str]`
 - **When** they run in a repository with a tracked file, a directory holding tracked files, a tracked file that an
-  ignore rule matches, an untracked ignored file, and a tracked file named `a*b` beside an untracked `axb`
-- **Then** `tracked_paths` returns the tracked file, the directory and `a*b` but not `axb` (literal pathspecs);
+  ignore rule matches, an untracked ignored file, and tracked files named `a*b`, `axb` and `:x`
+- **Then** `tracked_paths` returns the tracked file, the directory, `a*b` and `:x`, and nothing for `a?b` or `x`
+  (literal pathspecs: no glob match and no `:` magic);
   `ignored_paths` returns the untracked ignored file and, only with `no_index=True`, the tracked ignored file; no
   match (Git exit `1`) is the empty set; an empty `paths` returns the empty set without running Git; outside a
   repository both raise `GitError` with `returncode == 128`
@@ -102,7 +103,9 @@ shipped role contract changes. Evidence: `docs/materials/2026-11/20261111-small-
 - **Given** host registrations (`_tracked`, `_ignored`, `_Eligibility`), shared storage (`_eligible`,
   `_initialize`), `local_render.require_ignored`, `projection_git_notices` and the locked-sync tracked check
 - **When** their existing tests run
-- **Then** they pass unchanged: registrations still answer not ignored on any Git failure, shared storage still
+- **Then** they pass, unchanged except that the two tests which patch a module's own Git runner to observe or fail a
+  probe (`test_non_git_and_failed_query`, `test_planning_asks_git_once_for_all_destinations_with_per_path_answers`)
+  patch the same runner in `devkit_core.core.git`, keeping their assertions: registrations still answer not ignored on any Git failure, shared storage still
   raises `ExclusionError` when `.devkit/.shared/` is not ignored, `require_ignored` still raises any `GitError`
   other than exit `1`, and `projection_git_notices` still skips exit `128` "not a git repository" and turns other
   failures into `PROJECTION_GIT_CHECK_FAILED`; no `"ls-files", "--"` or `"check-ignore"` call remains in those

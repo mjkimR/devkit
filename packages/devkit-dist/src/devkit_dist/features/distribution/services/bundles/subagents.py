@@ -11,10 +11,11 @@ with ``status: unsupported`` gets no file. The body is the role's prompt.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
+
+from devkit_core.core.frontmatter import scalar
 
 from devkit_dist.features.distribution.models.errors import BundleError
 from devkit_dist.features.distribution.models.settings import NATIVE_DIRS, SLUG
@@ -201,7 +202,11 @@ def render_projection(
 def _render_markdown(
     contract: Contract, block: HostBlock, description: str, prompt: str, fixed: tuple[tuple[str, Any], ...] = ()
 ) -> bytes:
-    lines = ["---", f"name: {_yaml_scalar(contract.role)}", f"description: {_yaml_quote(description)}"]
+    lines = [
+        "---",
+        "name: " + scalar(contract.role, quote='"'),
+        "description: " + scalar(description, quote='"', always_quote=True),
+    ]
     lines.extend(f"{key}: {_yaml_value(value)}" for key, value in (*fixed, *block.settings))
     lines.append("---")
     return ("\n".join(lines) + "\n" + prompt).encode()
@@ -214,33 +219,8 @@ def _render_codex(contract: Contract, block: HostBlock, description: str, prompt
     return ("\n".join(lines) + "\n").encode()
 
 
-_YAML_PLAIN = re.compile(r"^[A-Za-z][A-Za-z0-9_./-]*$")
-_YAML_RESERVED = {"true", "false", "null", "yes", "no", "on", "off", "y", "n"}
-
-
-def _yaml_quote(value: str) -> str:
-    """A YAML double-quoted scalar; line breaks and control characters are escaped, never folded."""
-    out = ['"']
-    for char in value:
-        code = ord(char)
-        if char in {"\\", '"'}:
-            out.append("\\" + char)
-        elif char == "\n":
-            out.append("\\n")
-        elif char == "\t":
-            out.append("\\t")
-        elif code < 0x20 or code == 0x7F:
-            out.append(f"\\x{code:02X}")
-        else:
-            out.append(char)
-    out.append('"')
-    return "".join(out)
-
-
-def _yaml_scalar(value: str) -> str:
-    if _YAML_PLAIN.match(value) and value.lower() not in _YAML_RESERVED:
-        return value
-    return _yaml_quote(value)
+# A plain item of a flow list must also survive flow context, where these characters end or reject it.
+_YAML_FLOW_INDICATORS = frozenset(",[]{}#?:&*!|>'\"%@`")
 
 
 def _yaml_value(value: Any) -> str:
@@ -249,8 +229,12 @@ def _yaml_value(value: Any) -> str:
     if isinstance(value, int):
         return str(value)
     if isinstance(value, str):
-        return _yaml_scalar(value)
-    return "[" + ", ".join(_yaml_scalar(item) for item in value) + "]"
+        return scalar(value, quote='"')
+    return "[" + ", ".join(_yaml_item(item) for item in value) + "]"
+
+
+def _yaml_item(item: str) -> str:
+    return scalar(item, quote='"', always_quote=bool(_YAML_FLOW_INDICATORS.intersection(item)))
 
 
 def _toml_string(value: str) -> str:

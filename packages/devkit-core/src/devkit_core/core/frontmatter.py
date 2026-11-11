@@ -202,16 +202,20 @@ def _reads_back(value: str) -> bool:
     return mapping == {"k": value} and sequence == [value]
 
 
-def scalar(value: str) -> str:
+def scalar(value: str, *, quote: Literal["'", '"'] = "'", always_quote: bool = False) -> str:
     """``value`` as a one-line YAML scalar for a ``key: value`` header line or a ``- value`` list item.
 
-    Plain when it reads back as the same string (``plain title``, ``PROP-x``); otherwise single-quoted
-    (``'A: B'``, ``'off'``, ``''``), or double-quoted with escapes when it holds a line break or a character a
-    single-quoted scalar cannot carry (``"a\\nb"``), so the result never spans lines.
+    Plain when it reads back as the same string (``plain title``, ``PROP-x``); otherwise quoted with ``quote``:
+    single-quoted by default (``'A: B'``, ``'off'``, ``''``) or double-quoted with ``quote='"'`` (``"off"``).
+    A value holding a line break or a character a single-quoted scalar cannot carry is always double-quoted with
+    escapes (``"a\\nb"``), so the result never spans lines. ``always_quote=True`` quotes a value that could be
+    plain. Any ``quote`` other than ``'`` or ``"`` is a ``ValueError``.
     """
-    if not _LINE_BREAKS.intersection(value) and _reads_back(value):
+    if quote not in ("'", '"'):
+        raise ValueError(f"scalar quote must be ' or \", not {quote!r}")
+    if not always_quote and not _LINE_BREAKS.intersection(value) and _reads_back(value):
         return value
-    style = '"' if _LINE_BREAKS.intersection(value) else "'"
+    style = '"' if _LINE_BREAKS.intersection(value) else quote
     dumped = yaml.safe_dump(value, default_style=style, allow_unicode=True, width=2**31)
     return dumped.removesuffix("\n")
 
