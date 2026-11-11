@@ -2,7 +2,7 @@
 id: SPEC-compress-spec-main-loop-guidance
 title: Compress the spec guidance of the main development loop
 summary: Shortens the spec guidance every development run reads (constitution, spec skill, sdd-spec-feature, worker contract and core references) conservatively, keeping each rule at one owner, after the peripheral pass shows which compression patterns hold.
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities: []
 related_usecases: []
