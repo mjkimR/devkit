@@ -1,0 +1,29 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:18:09.603882Z'
+status: completed
+review: challenger-01.yaml
+summary: ''
+findings:
+- issue: 'Decision needed: with sync --check as the only gate, optional local MCP registration becomes a readiness requirement: in an MCP clone after sync --locked, sync --check exits 1 NOT_SYNCHRONIZED until sync --registrations-only runs, while status passes by contract. Change 4 places sync --check right after sync --locked in existing-repository.md, before the registrations-only step.'
+  evidence: usecases/sync.py:1018-1035,1051; cli/output.py:75-81; project/repositories/local_config.py:23 (mcp.register defaults to true); CAP-MCP-runtime-registration.md:105; CAP-DIST-sync-and-transactions.md:510-516; guides/install/mcp.md:29-36; guides/install/existing-repository.md:211-214; matrix fixtures all carried MCP_RUNTIME_UNAVAILABLE
+  failure_condition: a clone or CI checkout with devkit-mcp, a retained runtime and mcp.register not false, after sync --locked and before registrations-only or a plain sync
+  suggested_action: '(a) include it: order the guide steps as mcp.md does and state in the CAP and reference that sync --check plans this clone''s MCP registration; (b) exclude registration actions from --check, which needs usecases/ and changes scope'
+  resolution: open
+  severity: P2
+- issue: 'Matrix host-hook rows overstate: an edited or duplicated recorded hook group makes sync --check raise HookConflictError (exit 2), only a missing file plans a create (exit 1); the HOST_HOOK_DISPATCH_FAILED row names no sync --check result.'
+  evidence: host/services/configuration.py:65-72,79-82; services/installation/host_hooks.py:26-35; host/usecases/status.py:59-68
+  failure_condition: a reader defending the superset claim from the matrix; no behavior risk
+  suggested_action: correct rows 4 and 5 with the exit 1 / exit 2 split
+  resolution: resolved
+  severity: P3
+- issue: Dropping status from the consumption.md Completion hides devkit.status_checks warnings such as gate-hook health; sync --check never runs those providers. Warnings only, so exit semantics are unchanged.
+  evidence: usecases/status.py:447; CAP-GATE-commit-gates.md:23-27
+  failure_condition: a consumer with a missing Git hook dispatcher completes the devkit criterion without seeing the gate-hook warning
+  suggested_action: optionally keep status as a diagnostic in consumption.md, or accept the loss
+  resolution: waived
+  waiver: status_checks warnings change no exit code; devkit gate status remains their check
+  severity: P3
+checks: {}
