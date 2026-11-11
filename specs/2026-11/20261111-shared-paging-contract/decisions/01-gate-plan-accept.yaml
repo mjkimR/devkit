@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-shared-paging-contract
+by: user
+at: '2026-11-11T05:04:20.620899Z'

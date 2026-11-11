@@ -1,37 +1,48 @@
 ---
-id: PROP-shared-paging-contract
+id: SPEC-shared-paging-contract
 title: One paging contract for listing commands
 summary: Moves devkit exec list onto the shared PAGE and NEXT_CMD paging lines and decides paging for maintenance history list, so listing commands share one grammar.
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-11
-target_area: capabilities/harness/
-priority: low                         # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - architecture/ARCH-08-1-agent-output.md
-    - capabilities/harness/
-    - docs/development/reference/exec.md
-    - packages/devkit/src/devkit_agt/features/isolated_execution/
-    - packages/devkit/tests/unit/features/isolated_execution/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-11
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-shared-paging-contract] One paging contract for listing commands
+# [SPEC-shared-paging-contract] One paging contract for listing commands
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-shared-paging-contract on 2026-11-11.
+
+### 1. Background & Hypothesis
 
 Three paging contracts coexist: `echo_page` (docs, spec entrypoints: `[PAGE: ...]` plus `[NEXT_CMD ... --offset N]`, `--limit 0` for all),
 `exec list` (its own `[EXECUTION_LIST: ...]` and JSON `next_offset`, limit 1-100) and `maintenance history list`
 (`--limit` only, no paging fields). Agents parse each separately, and a change to the shared format misses `exec`.
 Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md` C2-8.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement One paging contract for listing commands so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Can exec keep `EXECUTION_RUN` lines while emitting the shared page lines, and what limit bounds does it keep?
   Yes. `echo_page` (`devkit_dist.adapters.cli`) only prints `[PAGE: ...]` and `[NEXT_CMD: ...]` after the items, so
@@ -49,7 +60,7 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
   example), and `--source-sha` and `--outcome` already narrow it. It stays a bounded, unpaged listing with
   `HISTORY_LIST` and `HISTORY_RUN`; the shared grammar applies only to commands that page.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - `devkit exec list` text output: the `[EXECUTION_RUN: ...]` lines, then `[PAGE: total= offset= limit= count= next=]`
   and, when more runs follow, `[NEXT_CMD: uv run devkit exec list --limit <N> --offset <next>]`, all through
@@ -66,7 +77,7 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
   to it too and keeps exec's limits; `docs/development/reference/exec.md` (sentinel list) is updated to match.
 - Development: one feature spec, `sdd-spec-feature`; tests in `packages/devkit/tests/unit/features/isolated_execution/`.
 
-### Planning decisions
+#### Planning decisions
 
 - Exec keeps limit 1-100 (default 20) and its error code; it does not adopt `--limit 0` (Q1).
 - `maintenance history list` stays unpaged (Q2); `CAP-DLV-maintenance-history` is not changed.
@@ -75,12 +86,13 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
   item); `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 point to it, and per-command limits stay
   in each capability (user, q1).
 
-### Non-Goals
+#### Non-Goals
 
 - JSON paging keys across commands; `--limit 0` for exec; paging for `maintenance history list`; a new shared
   paging helper beyond `echo_page`; `docs list`'s own `hidden` and `[HISTORY_CMD]` lines.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr shared-paging-contract "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -90,3 +102,4 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+
