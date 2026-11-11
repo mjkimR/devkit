@@ -1,40 +1,55 @@
 ---
-id: PROP-shared-fingerprinted-memo
+id: SPEC-shared-fingerprinted-memo
 title: One fingerprinted memo store for docs parse and rule facts
 summary: Moves the safe memo path check and the memo envelope shape check of the devkit-docs parse memo and the devkit-agt rule facts memo into one devkit-core helper, so path safety and envelope validation live once.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-11
-target_area: capabilities/governance/
-priority: low                         # critical | high | medium | low
-size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/governance/
-    - capabilities/documents/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-11
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-shared-fingerprinted-memo] One fingerprinted memo store for docs parse and rule facts
+# [SPEC-shared-fingerprinted-memo] One fingerprinted memo store for docs parse and rule facts
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-shared-fingerprinted-memo on 2026-11-11.
+- **Preserved Materials**: `docs/materials/2026-11/20261111-shared-fingerprinted-memo`
+
+### 1. Background & Hypothesis
 
 Two fingerprinted memos (the docs parse memo and the agt rule facts cache) each implement path safety and envelope
 validation. Every hardening must be repeated in both. Source: `docs/materials/2026-11/20261111-review-refactor-code-pass/report.md` X-9 (deferred: larger change; revisit with the
 facts cache).
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement One fingerprinted memo store for docs parse and rule facts so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which layer can own the helper without a new forbidden edge (devkit-core is the candidate)?
   - **Answer**: `devkit_core.core`, as a new module beside `files.py` and `paths.py`. Both memos already import
     `devkit_core.core` (`atomic_write_bytes`), so no package or feature edge is added; `ARCH-05-2-components` gives
     that package generic filesystem primitives, and the helper needs only the standard library. The only other
     reachable home, `devkit_agt.features.rules`, would make the docs memo depend on a rule-engine internal for a
-    storage concern. Evidence: `materials/memo-comparison.md` (Package placement).
+    storage concern. Evidence: `docs/materials/2026-11/20261111-shared-fingerprinted-memo/memo-comparison.md` (Package placement).
 - **Q2**: Do the two memos' invalidation and schema rules differ in ways a shared helper must keep apart?
   - **Answer**: yes. Fingerprint inputs and hash, entry shape and validation, serialization order, logging level,
     writer authority, pruning, directory creation and snapshot borrowing all differ and are each fixed by its
@@ -44,13 +59,13 @@ facts cache).
     implemented twice with different strictness (symlinked components, extra top-level keys); one rule replaces
     both (Planning decision D1, decided by the user).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Shared helper (`devkit_core.core`)
+#### Shared helper (`devkit_core.core`)
 
 The duplicated hardening is the path check (about 18 lines in each memo) and the envelope shape check (8-10 lines);
 reads, serialization and writes differ in ordering, skip rule and logging and already share `atomic_write_bytes`, so
-they stay local (`envelopes/challenger-01.yaml` finding 2).
+they stay local (historical Git `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-shared-fingerprinted-memo/envelopes/challenger-01.yaml` finding 2).
 
 - `safe_memo_path(root, parts, *, create)`: given the resolved root and the path parts below `.devkit/transient/`,
   return the memo path or the reason it is not used. It requires an existing `.devkit/transient/` directory, refuses a
@@ -61,7 +76,7 @@ they stay local (`envelopes/challenger-01.yaml` finding 2).
   it is a mapping of exactly `version`, `fingerprint` and `entries` with the expected integer version, the expected
   fingerprint and a mapping of entries, else the discard reason.
 
-### Kept local
+#### Kept local
 
 - docs: file name, JSON parse with its non-finite-constant refusal, parser fingerprint and module list, the tagged
   value codec, entry kinds, the writing-load rule and its entries-based change test, compact insertion-order
@@ -76,7 +91,7 @@ they stay local (`envelopes/challenger-01.yaml` finding 2).
   framework source today through `facts.py`; the docs parser fingerprint does not (`CAP-DOCS-document-model` 3.4.3
   lists read, parse and codec inputs).
 
-### Behavior and verification
+#### Behavior and verification
 
 - Outcomes change only for the cases decision D1 converges: a hand-made memo with extra top-level keys (agt) and a
   symbolic link at `.devkit/` or a resolve mismatch on a directory (docs). Neither writer produces either today.
@@ -94,20 +109,21 @@ they stay local (`envelopes/challenger-01.yaml` finding 2).
 - Documentation: `CAP-DOCS-document-model` 3.4.3 and `CAP-GOV-rules-engine` 5.3 state the converged path rule; no ADR
   changes (storage location, format and writer policy are unchanged).
 
-### Planning decisions
+#### Planning decisions
 
 - Helper home `devkit_core.core` (Q1), settled by evidence: no new package or feature edge.
 - Scope narrowed to the path check and the envelope shape check; size `S` (challenger finding 2). Fingerprints, JSON
   parsing, entry validation, serialization and writes stay in each memo.
 - The non-finite-constant difference stays local with the JSON parse, so it is not changed.
-- **D1 (one rule for both memos)**, decided by the user (`envelopes/answer-01.yaml`, q1 option a): both memos use the
+- **D1 (one rule for both memos)**, decided by the user (historical Git `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-shared-fingerprinted-memo/envelopes/answer-01.yaml`, q1 option a): both memos use the
   stricter agt path rule (every component from `.devkit/` down) and the stricter docs envelope shape (exactly
   `version`, `fingerprint` and `entries`), with no strictness parameters on the helper; the docs memo passes `create`
   for a writing load. Acceptance criteria: the differential table matches "before" except the D1 cases, and the path
   sentences of `CAP-DOCS-document-model` 3.4.3 and `CAP-GOV-rules-engine` 5.3 state the converged rule. No PADR: the
   choice is local to this refactor and changes no storage location, format or writer policy.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr shared-fingerprinted-memo "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -117,3 +133,4 @@ they stay local (`envelopes/challenger-01.yaml` finding 2).
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+
