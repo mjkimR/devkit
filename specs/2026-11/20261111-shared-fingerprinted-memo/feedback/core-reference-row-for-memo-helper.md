@@ -8,7 +8,7 @@ target: docs/development/reference/core.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 
