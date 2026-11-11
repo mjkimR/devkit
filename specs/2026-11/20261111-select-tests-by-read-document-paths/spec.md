@@ -169,4 +169,7 @@ selector map any changed file to its readers without hand-kept rows.
   segment. Without this, `test_lockstep.py`'s `_project(directory)` reads the whole `packages/` directory and
   `packages/devkit-viewer/frontend/src/lib/App.svelte` would select it, against AC-03.
 - Helper attribution resolves importers only for files with reads, pre-filtered by the helper's module name in the
-  importer's text, and reuses the selector's per-file import discovery.
+  importer's text (a package initializer in the importer's own or an ancestor directory skips the filter, because a
+  relative package import does not name it), and reuses the selector's per-file import discovery.
+- A path bound to a name is read through the name's uses; when no use in the file resolves to the binding (a rebound
+  name, a class attribute, a helper constant used only by importers), the bound value itself is the read.

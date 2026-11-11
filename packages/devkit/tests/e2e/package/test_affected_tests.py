@@ -179,7 +179,8 @@ def test_architecture_config_alone_selects_structure_rule_and_integration_tests(
     selection = affected.select(ROOT, [".devkit/architecture.toml"])
     assert selection.mode == "partial"
     assert selection.reason == ".devkit/architecture.toml"
-    # The DATA rows, plus the tests whose layering helpers read the file (AC-01, SPEC-select-tests-by-read-document-paths).
+    # The DATA rows, plus the tests whose layering helpers read the file
+    # (AC-01, SPEC-select-tests-by-read-document-paths).
     assert selection.paths == (
         f"{DIST_TESTS}/integration/cli/test_cli_imports.py",
         f"{DIST_TESTS}/unit/architecture/test_layering.py",
@@ -941,6 +942,24 @@ READ_FORMS = {
     "packages/sample/tests/helpers/relay.py": "from helpers.reader import read\n",
     "packages/sample/tests/test_direct.py": "from helpers.reader import read\n",
     "packages/sample/tests/test_relayed.py": "def test_relayed():\n    from helpers.relay import read\n",
+    # A package initializer reached only by a relative package import.
+    "packages/sample/tests/pkg/__init__.py": (
+        "from pathlib import Path\nTEXT = (Path(__file__).parents[4] / '.devkit/package.toml').read_text()\n"
+    ),
+    "packages/sample/tests/pkg/test_in_package.py": "from . import TEXT\n",
+    # A bound value no use resolves to (a rebound name, a class attribute) is read where it is bound.
+    "packages/sample/tests/test_unresolved_uses.py": (
+        "from pathlib import Path\n"
+        "ROOT = Path(__file__).parents[3]\n"
+        "GUIDE = ROOT / 'guides/rebound-a.md'\n"
+        "GUIDE = ROOT / 'guides/rebound-b.md'\n"
+        "class Paths:\n"
+        "    GUIDE = ROOT / 'guides/class.md'\n"
+        "    def test_class(self):\n"
+        "        assert self.GUIDE\n"
+        "def test_rebound():\n"
+        "    assert GUIDE.exists()\n"
+    ),
 }
 
 
@@ -976,6 +995,9 @@ SAMPLE = "packages/sample/tests"
         ("guides/runtime/x/y.md", {"test_runtime.py"}),
         (".devkit/sub.toml", {"sub/test_under.py"}),
         (".devkit/helper.toml", {"test_direct.py", "test_relayed.py"}),
+        (".devkit/package.toml", {"pkg/test_in_package.py"}),
+        ("guides/rebound-b.md", {"test_unresolved_uses.py"}),
+        ("guides/class.md", {"test_unresolved_uses.py"}),
     ],
 )
 def test_literal_read_forms_select_their_readers(

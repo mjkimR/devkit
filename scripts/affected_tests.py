@@ -1,9 +1,10 @@
 """Select and run the workspace tests the changes since a base ref can affect.
 
 The changed paths since the merge base (committed, staged, unstaged and untracked) map to test paths: shared
-foundations to the full suite, data files to the tests that read them (a fixed table plus the root-anchored literal
-path reads of the test tree), a source area to the test groups that depend on it or on an area importing it. Local development and integration use this selection; nightly and release full
-CI cover dependencies static imports cannot show. Shared foundations still select the full suite.
+foundations to the full suite, data files to the tests that read them (a fixed table plus the root-anchored
+literal path reads of the test tree), a source area to the test groups that depend on it or on an area importing
+it. Local development and integration use this selection; nightly and release full CI cover dependencies static
+imports cannot show. Shared foundations still select the full suite.
 """
 
 from __future__ import annotations
@@ -584,6 +585,17 @@ class _ReadScanner:
             target = parent
         return target is not None and self.paths(target) is not None
 
+    @cached_property
+    def _used_values(self) -> set[ast.AST]:
+        """Bound values some name use in the file resolves to; a binding without one is read where it is bound."""
+        used: set[ast.AST] = set()
+        for node in ast.walk(self.tree):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                binding = self._lookup(node)
+                if binding is not None and binding.value is not None and not binding.loop:
+                    used.add(binding.value)
+        return used
+
     def reads(self) -> set[Read]:
         found: set[Read] = set()
         for node in ast.walk(self.tree):
@@ -602,8 +614,13 @@ class _ReadScanner:
                 if isinstance(parent, ast.AnnAssign)
                 else []
             )
-            if targets and getattr(parent, "value", None) is node and all(isinstance(t, ast.Name) for t in targets):
-                continue  # binding a base to a name is not a read; its uses are
+            if (
+                targets
+                and getattr(parent, "value", None) is node
+                and all(isinstance(t, ast.Name) for t in targets)
+                and node in self._used_values
+            ):
+                continue  # binding a base to a name is not a read; its resolvable uses are
             patterns: list[str] | None = None
             grand = self.parents.get(parent) if parent else None
             if (
@@ -618,7 +635,7 @@ class _ReadScanner:
                     patterns = [f"**/{pattern}" for pattern in patterns]
             for value in values:
                 relative = os.path.relpath(value.path, self.root)
-                if relative == "." or relative.startswith("..") or value.path == self.path:
+                if relative in {".", ".."} or relative.startswith(f"..{os.sep}") or value.path == self.path:
                     continue
                 relative = relative.replace(os.sep, "/")
                 if value.exact and patterns:
@@ -966,9 +983,14 @@ class Workspace:
             target = pending.pop()
             name = target.parent.name if target.name == "__init__.py" else target.stem
             word = re.compile(rb"\b" + re.escape(name.encode()) + rb"\b")
+            # A relative package import (`from . import x`) runs the initializer without naming its package.
+            package = target.parent if target.name == "__init__.py" else None
             for path in self.test_tree:
-                # The module name appears in every import form, so the text check only skips files that cannot reach it.
-                if path in reached or not word.search(self._source(path)) or target not in self._direct(path)[1]:
+                if path in reached:
+                    continue
+                # Every other import form names the module, so the text check skips only files that cannot reach it.
+                relative = package is not None and (path.parent == package or package in path.parents)
+                if not (relative or word.search(self._source(path))) or target not in self._direct(path)[1]:
                     continue
                 reached.add(path)
                 if path.name.startswith("test_"):

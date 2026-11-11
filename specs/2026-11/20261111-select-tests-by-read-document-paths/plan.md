@@ -43,7 +43,7 @@ Read discovery lives in `scripts/affected_tests.py` beside `Workspace`:
   - Consumers: `.glob(<literal>)` and `.rglob(<literal>)` record the pattern (`rglob(p)` is `**/p`); a non-literal
     pattern and `.iterdir()` read the base.
   - Dropped: a value outside the root, equal to the root, or equal to the scanned file itself; the right-hand side of a
-    simple name binding (its uses are reads).
+    simple name binding that some use in the file resolves to (those uses are the reads).
 - `Workspace.readers(changed: Iterable[str]) -> dict[str, set[str]]`: changed path → test modules (repository
   relative) whose attributed reads match it.
   - Inventory: every `*.py` under a `tests` directory of `packages/*` and `tools/*`, `__pycache__` excluded.
