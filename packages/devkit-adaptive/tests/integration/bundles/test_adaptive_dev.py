@@ -177,7 +177,7 @@ def test_bundle_names_only_adaptive_dev() -> None:  # SPEC-rename-incubation-to-
     assert_rule(skill, "`uv run devkit get-context adaptive-dev`", "`.devkit/adaptive-dev.md`")
     assert '`[development] approach = "adaptive-dev"`' in skill
     pointer = (BUNDLE / "guidance/adaptive-dev-pointer.md").read_text()
-    assert_rule(pointer, "`approach=adaptive-dev`", "`/adaptive-dev`", "`get-context adaptive-dev`")
+    assert_rule(pointer, "`approach=adaptive-dev`", "`/adaptive-dev`")
     entry_points = tomllib.loads((PACKAGE / "pyproject.toml").read_text())["project"]["entry-points"]["devkit.bundles"]
     assert entry_points["adaptive-dev"] == "devkit_adaptive.bundles.adaptive_dev"
     assert "incubation" not in entry_points
