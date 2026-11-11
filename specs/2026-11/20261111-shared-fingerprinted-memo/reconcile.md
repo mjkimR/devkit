@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-shared-fingerprinted-memo
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified

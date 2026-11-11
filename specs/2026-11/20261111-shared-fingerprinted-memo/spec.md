@@ -2,7 +2,7 @@
 id: SPEC-shared-fingerprinted-memo
 title: One fingerprinted memo store for docs parse and rule facts
 summary: Moves the safe memo path check and the memo envelope shape check of the devkit-docs parse memo and the devkit-agt rule facts memo into one devkit-core helper, so path safety and envelope validation live once.
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities: [CAP-DOCS-document-model, CAP-GOV-rules-engine]
 related_usecases: []
