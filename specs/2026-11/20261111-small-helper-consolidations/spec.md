@@ -2,7 +2,7 @@
 id: SPEC-small-helper-consolidations
 title: Consolidate the remaining duplicated runtime helpers
 summary: 'Consolidates three deferred duplicates without changing behavior or projected bytes: a public devkit-cli UTF-8 output helper, subagent projection quoting through the shared frontmatter scalar, and shared Git tracked/ignored probes in devkit-core.'
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities: [CAP-CLI-agent-cli-toolkit, CAP-DIST-agent-projections]
 related_usecases: []

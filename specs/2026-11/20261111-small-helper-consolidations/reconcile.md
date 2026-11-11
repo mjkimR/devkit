@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-small-helper-consolidations
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md
     resolution: modified
