@@ -98,6 +98,9 @@ Text stdout, in this order:
 <excerpt>                                               the rest of stdout
 ```
 
+The `[RUN]` line shows the command's whole arguments up to 200 characters; a longer command ends with
+`... +N args`, the number of arguments left out. The log and `--format json` (`command`) keep every argument.
+
 An interrupted run prints the `[RUN]` line alone (section 2). `failures` and `output` in `[RUN_OMITTED]` count only when the excerpt is shown, that is when the command failed; `failures` counts the failed tests the view names nowhere. The command, summaries, last lines, node IDs and warning messages are JSON strings; `log`, `location` and a failure's `message` are bare unless they contain whitespace, quotes, brackets, `=` or a backslash, and `-` when empty. `output` and `shown` count characters, `filtered` lines.
 
 stderr in text mode, after the result: the relayed `[WARN]` and `[NOTICE]` blocks in output order, then the runner's own notices (`RUN_SLOW_COMMAND`), then the relayed `[ERROR]` blocks, so the decisive block ends the output. WHERE `--strict` is given, a relayed `[WARN]` block MUST make a run that passed exit `1`: the nested command receives `DEVKIT_STRICT=1` and fails on its own, but a wrapper (`|| true`, an npm script) may hide that, and the runner reported the warning either way. Under `-v`, `[INFO]` lines give the runner's run time and log path, and the size of the view against the output (`showed N characters for M of output (P%)`, stdout and relayed blocks against every character the command wrote).
@@ -106,7 +109,7 @@ stderr in text mode, after the result: the relayed `[WARN]` and `[NOTICE]` block
 
 **Tool options.** The largest remaining part of a failure is usually the tool's own report, which the tool can shorten reliably where the runner could only guess (on a real pytest failure log, the default long traceback's test source and argument values were 40% of the output; ruff's default format spends about 250 characters per finding on a code frame, its concise format about 85). A project that wants a shorter view sets the option in its recipe: `pytest --tb=short` (the failing line, the `E` lines and the location of each frame) and `ruff check --output-format=concise`. The `devkit-run` instruction recommends both.
 
-**Slow commands.** A command that runs at least `--slow-after` seconds (default 60, `0` turns it off) adds a `RUN_SLOW_COMMAND` notice suggesting a narrower run. It is reported after the result, like every notice: an agent sees a command's output only when it ends. `-q` hides it; it MUST NOT change the exit code.
+**Slow commands.** A command that runs at least `--slow-after` seconds (default 60, `0` turns it off) adds a `RUN_SLOW_COMMAND` notice with the run time, suggesting a narrower run; it does not repeat the command the `[RUN]` line names. It is reported after the result, like every notice: an agent sees a command's output only when it ends. `-q` hides it; it MUST NOT change the exit code.
 
 ## 6. Library
 

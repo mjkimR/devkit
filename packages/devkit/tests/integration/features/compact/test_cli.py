@@ -146,10 +146,21 @@ def test_json_is_one_object() -> None:
 def test_a_slow_command_notice_follows_the_result_and_quiet_hides_it() -> None:
     code = "import time; time.sleep(0.2)"
     result = _python(code, "--slow-after", "0.1")
-    assert result.exit_code == 0 and result.stderr.startswith("[NOTICE] (RUN_SLOW_COMMAND) ")
+    assert result.exit_code == 0 and result.stderr.startswith("[NOTICE] (RUN_SLOW_COMMAND) the command ran ")
+    assert "time.sleep" not in result.stderr  # the [RUN] line already names the command
     assert "[ACTION]" not in result.stderr  # a brief notice: nothing for the agent to do
     assert _python(code, "-q", "--slow-after", "0.1").stderr == ""
     assert _python(code, "--strict", "--slow-after", "0.1").exit_code == 0  # a notice never fails a run
+
+
+def test_a_long_command_is_cut_on_the_run_line_and_kept_in_json() -> None:
+    args = [f"tests/test_{i:03}.py" for i in range(100)]
+    result = _run("--", PY, "-c", "print('1 passed in 0.1s')", *args)
+    line = result.stdout.splitlines()[0]
+    assert re.match(r'\[RUN: ".{1,200} \.\.\. \+\d+ args" outcome=passed ', line), line
+    assert "tests/test_099.py" not in line
+    shown = _run("--format", "json", "--", PY, "-c", "print('1 passed in 0.1s')", *args)
+    assert json.loads(shown.stdout)["command"][-1] == "tests/test_099.py"
 
 
 def test_a_command_that_cannot_start_exits_2() -> None:

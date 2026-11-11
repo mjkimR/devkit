@@ -272,7 +272,7 @@ class RunCommand(BaseUseCase):
         if slow_after and duration >= slow_after:
             found.append(
                 SlowCommandNotice(
-                    f"{shlex.join(argv)} ran {duration:.0f}s, longer than --slow-after {slow_after:g}s",
+                    f"the command ran {duration:.0f}s, longer than --slow-after {slow_after:g}s",
                     "Narrow the run (a test path, a keyword filter) or look for slow fixtures and external waits; "
                     "--slow-after 0 turns this notice off",
                 )

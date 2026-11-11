@@ -23,6 +23,7 @@ import dataclasses
 import json
 import math
 import os
+import shlex
 import sys
 
 import click
@@ -52,6 +53,19 @@ _log = get_logger(__name__)
 
 def _quote(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
+
+
+COMMAND_BUDGET = 200  # characters of the [RUN] line's command; the log and --format json keep every argument
+
+
+def _shown_command(argv: tuple[str, ...]) -> str:
+    """The command as the [RUN] line shows it: whole arguments up to the budget, then ``... +N args``."""
+    shown: list[str] = []
+    for arg in argv:
+        if shown and len(shlex.join([*shown, arg])) > COMMAND_BUDGET:
+            return f"{shlex.join(shown)} ... +{len(argv) - len(shown)} args"
+        shown.append(arg)
+    return shlex.join(shown)
 
 
 def _outcome(run: CommandRun) -> str:
@@ -84,7 +98,7 @@ def _last_lines(run: CommandRun) -> tuple[str, ...]:
 def _text(run: CommandRun) -> str:
     found = run.scan
     lines = [
-        f"[RUN: {_quote(run.command)} outcome={_outcome(run)} exit={run.exit_code} log={field_value(str(run.log))}]"
+        f"[RUN: {_quote(_shown_command(tuple(run.argv)))} outcome={_outcome(run)} exit={run.exit_code} log={field_value(str(run.log))}]"
     ]
     lines += [f"[RUN_SUMMARY: {_quote(summary)}]" for summary in found.summaries]
     lines += [f"[RUN_LAST_LINE: {_quote(line)}]" for line in _last_lines(run)]
