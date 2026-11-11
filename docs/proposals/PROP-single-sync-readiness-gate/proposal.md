@@ -2,7 +2,7 @@
 id: PROP-single-sync-readiness-gate
 title: One readiness gate for a synchronized checkout
 summary: Measures what devkit status and devkit sync --check each detect, then makes one of them the single readiness gate or documents the remaining split.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/distribution/
 priority: low                         # critical | high | medium | low
