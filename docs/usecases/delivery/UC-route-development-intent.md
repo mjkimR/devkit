@@ -223,7 +223,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Covers**: 5c
 - **Given**: an observed behavior contradicts an existing contract and its current, expected and preserved behavior
   must be written down
-- **When**: the agent runs `devkit spec new <slug> --workflow sdd-spec-bugfix`
+- **When**: the agent runs `devkit spec new <slug> --task-kind bugfix`
 - **Then**: the bundle holds only `spec.md`, bound to `sdd-spec-bugfix`, and the `reproduce` stage stays open until a
   `red` envelope records `checks.reproduced`
 

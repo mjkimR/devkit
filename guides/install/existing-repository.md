@@ -246,14 +246,9 @@ harness and build dependencies separately installed. Unsupported source closure 
 Commit copied sources, provenance and deliberate bootstrap changes. The wrapper stays 0.0.0; original versions,
 digest and adoption commit identify its sources. Keep adaptations in project overrides, not edited generated sources.
 
-For an explicit update, preview and inspect before applying the two reported identities:
-
-    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets
-    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
-
-Follow any returned reinstall and explicit deselection actions, then sync. Refresh itself changes no dependency
-files, selection, overrides, receipt or Git. Verify a fresh consumer can install/sync without the private content
-origin given runtime/build prerequisites; copying content does not promise an all-network-free bootstrap.
+Verify a fresh consumer can install/sync without the private content origin given runtime/build prerequisites;
+copying content does not promise an all-network-free bootstrap. For a later update from the source, run
+`uv run devkit get-context devkit` and follow its `content-snapshot` instruction.
 
 For delegated work or verification-guidance upgrades, apply [Verification ownership](verification-ownership.md).
 Keep the project's native commands and CI requirements; sync does not rewrite project-owned verification prose.

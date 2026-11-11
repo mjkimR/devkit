@@ -25,6 +25,12 @@ id = "in-repo-bundle"
 kind = "instruction"
 source = "instructions/in-repo-bundle.md"
 
+# Copying a shared private content provider into the repository and refreshing the copy.
+[[assets]]
+id = "content-snapshot"
+kind = "instruction"
+source = "instructions/content-snapshot.md"
+
 # A neutral, tool-limited general subagent that other bundles' skills delegate role files to.
 [[assets]]
 id = "role-worker"
@@ -32,4 +38,4 @@ kind = "subagent"
 source = "subagents/role-worker.md"
 
 [presets.core]
-assets = ["consumption", "resource-kinds", "in-repo-bundle", "role-worker"]
+assets = ["consumption", "resource-kinds", "in-repo-bundle", "content-snapshot", "role-worker"]
