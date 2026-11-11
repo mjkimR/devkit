@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:23:56.440880Z'
+status: completed
+summary: 'devkit spec proposal accept-plan <slug> --by user|policy --mode accept_only|accept_and_handoff [--effort] runs PlanAcceptUseCase unchanged; accept keeps --by/--note/--direct/--check; emitted [FIX] commands, five spec skill sources, six capabilities, the use case and the integration quick reference name accept-plan; no shim, no ADR change. Outcome vs pre-change head ae0cdec: accept --help 40->27 lines with no --mode/--effort; accept-plan --help exit 2 (no such command) -> exit 0 naming modes, effort, proposal report and workflow envelope check.'
+findings: []
+assumptions:
+- CAP-HARN-agent-guidance was edited as a Tier B scope extension of Task 1.2 after the reconcile check; a concurrent unit edits harness docs, so a textual merge there is possible
+checks:
+  tests: PASS just test-affected partial 1714 passed; devkit-spec e2e delivery 52 passed; delivery+package+bundle suites 789 passed
+  build: PASS uv build --package devkit-spec; just check pyright 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main 0 errors; devkit sync --check OK
+diff_scope:
+  base: ae0cdec0197365d18bcbcc3ef2615675d143f824
+  head: f85c1d1d4b4b591ede50f11180c551bbf9a07c51
