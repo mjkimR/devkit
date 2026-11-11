@@ -156,7 +156,7 @@ def _findings_field(kind: str, open_findings: int) -> str:
     return "" if kind in RECORD_KINDS and not open_findings else f" open_findings={open_findings}"
 
 
-@envelope_group.command(name="new", hidden=True)
+@envelope_group.command(name="new")
 @click.option("--kind", required=True, help="Envelope kind, e.g. scout, red, final-report")
 @_common()
 @FINDINGS_FILE

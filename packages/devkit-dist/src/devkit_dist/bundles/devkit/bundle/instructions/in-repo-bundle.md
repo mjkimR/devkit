@@ -103,9 +103,10 @@ The wrapper preserves every bundle of the provider because duplicate bundle name
 Keep consumer adaptations in project overrides. Do not edit generated snapshot sources. The local wrapper version
 stays 0.0.0; source package/bundle versions, content digests and the adoption commit identify the snapshot.
 
-When upstream sources change, preview and inspect the returned file changes:
+When upstream sources change, preview (no digests) and inspect the returned file changes, then apply with both
+returned digests:
 
-    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --check
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets
     uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
 
 Apply requires both preview digests and refuses authored local changes. Unchanged sources write nothing.

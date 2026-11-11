@@ -31,10 +31,14 @@ from devkit_spec.features.scope.cli.output import echo_registered, registered_di
 @click.argument("slug")
 @click.option("--title", "-t", default=None, help="Spec title [default: the slug]")
 @click.option(
+    "--task-kind",
+    default=None,
+    help="task-kind of the work: feature or bugfix; spec.md is bound to sdd-spec-<task-kind> [default: feature]",
+)
+@click.option(
     "--workflow",
     default=None,
-    help="Workflow spec.md is bound to: sdd-spec-feature or sdd-spec-bugfix, the task-kind of the work "
-    "[default: sdd-spec-feature]",
+    help="Explicit workflow ID spec.md is bound to, instead of --task-kind [default: sdd-spec-feature]",
 )
 @click.option(
     "--namespace",
@@ -59,6 +63,7 @@ from devkit_spec.features.scope.cli.output import echo_registered, registered_di
 def spec_new_cmd(
     slug: str,
     title: str | None,
+    task_kind: str | None,
     workflow: str | None,
     namespace: str | None,
     summary: str | None,
@@ -71,6 +76,7 @@ def spec_new_cmd(
         resolve_root(workspace_root),
         slug,
         title=title,
+        task_kind=task_kind,
         workflow=workflow,
         namespace=namespace,
         summary=summary,

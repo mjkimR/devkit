@@ -2,7 +2,7 @@
 id: SPEC-cli-naming-consistency
 title: Consistent CLI option naming
 summary: 'Aligns CLI naming: bundle refresh previews without digests instead of a --check flag, workflow envelope new is listed in help, and spec new accepts --task-kind like proposal new.'
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-DIST-in-repo-bundles

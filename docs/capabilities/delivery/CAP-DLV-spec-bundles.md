@@ -41,8 +41,8 @@ creates one without a proposal, writing the document IDs the spec rules expect (
 
 ## 3. Business Rules & Policies
 
-1. **Validate before writing**: `devkit spec new` MUST check the slug, `--namespace`, `--summary`, slug availability
-   and an explicit `--workflow` before it writes anything; any refusal leaves the workspace unchanged.
+1. **Validate before writing**: `devkit spec new` MUST check the slug, `--namespace`, `--summary`, slug availability,
+   `--task-kind` and an explicit `--workflow` before it writes anything; any refusal leaves the workspace unchanged.
 2. **Slug normalization**: a leading `SPEC-` is dropped, then the proposal normalization applies (a leading `PROP-`
    and trailing `.md` dropped, every run of characters other than letters, digits, `_` and `-` becomes `-`, outer
    dashes trimmed, lower-cased). A slug with no letter or digit left, or longer than 59 characters (its activity
@@ -55,8 +55,10 @@ creates one without a proposal, writing the document IDs the spec rules expect (
    the frontmatter. devkit's `not-skeleton(<file>)` check keeps `specify` (or `plan-tasks`) open until the file is
    written for real and the line removed. A skeleton-marked `spec.md` is exempt from `RULE-document-summary` until it
    is written.
-5. **Binding**: `spec.md` is bound with devkit's `write_binding` (`workflow`) to `--workflow`,
-   default `sdd-spec-feature`. The bound workflow is the only record of the work's `task-kind`: `spec.md` has no
+5. **Binding**: `spec.md` is bound with devkit's `write_binding` (`workflow`) to `sdd-spec-<task-kind>` for
+   `--task-kind feature|bugfix`, or to an explicit `--workflow`, default `sdd-spec-feature`. `--task-kind feature`
+   binds like no option. Both options together, or a `--task-kind` outside `feature` and `bugfix`, is
+   `ARGUMENT_INVALID` (`[TARGET] --task-kind`). The bound workflow is the only record of the work's `task-kind`: `spec.md` has no
    `kind` field. An explicit workflow that does not resolve or validate, or that names by path a
    definition other than the one discovered for its id (devkit's `WORKFLOW_NOT_BINDABLE`: the binding records only
    the id, so later lookups would find another definition or none), is `SPEC_WORKFLOW_INVALID` before writing; a default that is not available leaves `spec.md` unbound with a `SPEC_UNBOUND` notice, whose
@@ -91,7 +93,7 @@ continues to create and bind only; delivery owns the composed operation.
 ### 4.1 Command
 
 ```text
-devkit spec new <slug> [--title/-t TEXT] [--summary TEXT] [--workflow <id>] [--namespace <name>]
+devkit spec new <slug> [--title/-t TEXT] [--summary TEXT] [--task-kind feature|bugfix | --workflow <id>] [--namespace <name>]
                        [--date YYYY-MM-DD] [-w/--workspace-root DIR] [--format text|json] [-q] [-v] [--strict]
 ```
 
@@ -99,13 +101,14 @@ devkit spec new <slug> [--title/-t TEXT] [--summary TEXT] [--workflow <id>] [--n
 | --- | --- |
 | `--title/-t` | Spec title (default: the slug). |
 | `--summary` | Write `summary: <text>` into `spec.md`: one or two English sentences saying what the spec defines. After stripping surrounding whitespace, empty, longer than 300 characters, or containing a letter outside the Latin script: `ARGUMENT_INVALID` (`[TARGET] --summary`), nothing written. |
-| `--workflow` | Workflow `spec.md` is bound to (default `sdd-spec-feature`; `sdd-spec-bugfix` writes `spec.md` only). |
+| `--task-kind` | Task kind of the work: `feature` (default) or `bugfix`; `spec.md` is bound to `sdd-spec-<task-kind>` (`bugfix` writes `spec.md` only). Excludes `--workflow`. |
+| `--workflow` | Explicit workflow ID `spec.md` is bound to (default `sdd-spec-feature`; `sdd-spec-bugfix` writes `spec.md` only). Excludes `--task-kind`. |
 | `--namespace` | Write `namespace: <name>`: `global` or a namespace registered in `[[tool.docs.namespaces]]`, else `ARGUMENT_INVALID` with the valid names in `[FIX]`. Omitted: the namespace of the current directory, if any (rule 7). |
 | `--date` | Bundle date (default: today): the directory name and `created`. |
 
 ```bash
 uv run devkit spec new login-flow --title "Login flow"              # sdd-spec-feature
-uv run devkit spec new crash-on-save --workflow sdd-spec-bugfix     # spec.md only
+uv run devkit spec new crash-on-save --task-kind bugfix             # sdd-spec-bugfix: spec.md only
 uv run devkit spec new login-flow --summary "Defines how users sign in with email and password."
 ```
 
