@@ -2,7 +2,7 @@
 id: PROP-shared-fingerprinted-memo
 title: One fingerprinted memo store for docs parse and rule facts
 summary: Moves the safe memo path check and the memo envelope shape check of the devkit-docs parse memo and the devkit-agt rule facts memo into one devkit-core helper, so path safety and envelope validation live once.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/governance/
 priority: low                         # critical | high | medium | low
