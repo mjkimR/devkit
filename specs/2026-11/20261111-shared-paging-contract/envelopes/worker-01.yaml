@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:14:08.766344Z'
+status: completed
+summary: 'Specified, built and verified SPEC-shared-paging-contract: exec list text prints EXECUTION_RUN lines then [PAGE]/[NEXT_CMD] via echo_page, EXECUTION_LIST dropped, limits/error code/JSON unchanged; ARCH-08-1 section 3 Paging paragraph and section 10 item, CAP-HARN-command-mount 4.5 and CAP-HARN-isolated-execution 4 point to it, exec reference updated. code-reviewer review-01 one P2 (ARCH wording vs docs list fields_line) fixed and reverified; reconcile-reviewer passed. No sync outputs, no scope extensions. Baseline: head before change printed [EXECUTION_LIST: ...]; after, probe on 24 runs printed [PAGE: total=24 offset=0 limit=2 count=2 next=2] and [NEXT_CMD: uv run devkit exec list --limit 2 --offset 2].'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main mode=partial 216 passed
+  build: PASS just check devkit 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main
+  sync: PASS devkit sync --check exit=0
+diff_scope:
+  base: e892c63d5799a0a260d38be09d960d3ac3e728ab
+  head: 28c06981ca1a8deca7091de996ac949ba87736cb
+activity_effort: medium
