@@ -180,3 +180,47 @@ difference decided); **C** contract change (own work item); **K** keep; **F** de
 | Contract changes (own work items, normal development workflow) | AO-01 retire `worktree finish --merge`; SM-2 `McpTool.execution` to `read_only`/`bounded_write`; AO-05b `ui_action` removal; AO-13, SM-3, DS-14 test-only public parameters/APIs |
 | Keep | AW-16, AO-18, AO-19, DC-15, DS-08 |
 | Defer | SP-1 (scope pipelines: own work item later), X-9, X-13, DS-09, DS-10 |
+
+## Changes
+
+Route: `sdd-overall-refactor`, branch `dev-review-refactor-2`; each commit body is the change record (findings,
+preservation evidence, differentials, verification before and after).
+
+| Commit | Change |
+| --- | --- |
+| `4539847e` | Phase 1: shared helpers in devkit-core, `devkit_dist.adapters.cli`, the agt scanner and docs parse |
+| `69f18d3b` | adaptive, mcp, viewer (SM-1/4/5/6/7, X-1, X-8, X-12, X-14 partly) |
+| `b967f06e` | devkit-dist (DS-01/02/03/04/05/07/11/12/13, X-1, X-2, X-3) |
+| `cfeb971a` | devkit-agt workflow and rules (AW-01..10, AW-12..15, AW-17, X-3, X-5, X-8) |
+| `ce093e23` | devkit-agt other features (AO-02..08, AO-10..12, AO-14..17, X-1, X-2, X-10, X-11) |
+| `6996b227` | devkit-docs (DC-1..6, DC-8..14, X-1, X-4..7, X-12) |
+| `0a6ff65c` | devkit-spec (SP-2/3/5/6/7/8, X-3, X-5..8, X-12) |
+| `90964fb2` | scripts, receipt and capability references |
+| `c4bd651c` | Independent review fixes (flow-collection comments, config check order, merge method) |
+
+## Behavior changes
+
+Approved in the round and applied: X-1 isolation of `SystemExit` and failed discovery everywhere (mcp and integration
+cleanup raise their own errors); X-4 docs code-span ends; X-5 frontmatter keys rewritten in place with comments kept,
+any `status` value replaced; X-8 sorted, de-duplicated dirty paths; AW-03 `as_posix` display outside the root; AW-08
+one fix text; DC-1 strict path grammar (non-`PROP-` names, wrong depth, feedback and paths outside a proposals root are
+no units; none occur in the repository); DS-01 bool never a number; DS-02 shared-file messages carry their target;
+DS-04 canonical inventory inputs; AO-08 maintenance gh calls hardened, last HTTP block read; X-10 template wrapping.
+
+## Not applied, with reason
+
+- AW-11: no module both `workflow` and `rules` may import holds a CLI quote helper.
+- DC-7: `list`'s page line carries `hidden=`, which the shared `echo_page` cannot emit.
+- AO-05 `_prepare(lifecycle, settle_generated)`: devkit-spec's composed acceptance needs both flags.
+- X-12 for the dist root: `devkit --version` must import no area (tested); the root keeps its own option.
+- X-14 `overlaps` and the scope observation `git config` reads (X-2/AO-11): the shared helpers would drop accepted
+  inputs or the scope runner's hardening.
+
+## Review
+
+Independent `code-reviewer` (medium): no P1/P2; three P3 fixed in `c4bd651c`.
+
+## Outcome
+
+`applied` (partially: see above). Follow-up contract work items: AO-01, SM-2, AO-05b, AO-13/SM-3/DS-14. Deferred:
+SP-1, X-9, X-13, DS-09, DS-10.
