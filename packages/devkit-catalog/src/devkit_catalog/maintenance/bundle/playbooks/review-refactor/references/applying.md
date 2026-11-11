@@ -1,22 +1,20 @@
 # Applying agreed changes
 
-Read §1 before a decision round that proposes changes, and the rest once the round approved them. The applied work is refactoring, not feature development: you work with
-the user in the conversation, with no planning or development worker and no work unit, unless the route below sends a
-work item to the feature workflow.
+Read §1 before a decision round that proposes changes, and the rest once the round approved them. Apply the work
+with the user in the conversation as refactoring, with no planning or development worker and no work unit, unless
+the route sends a work item to the feature workflow.
 
 ## 1. Work items and route
 
 1. Put the batch's agreed behavior-preserving changes into one work item; make each approved contract change its own
    work item (§8).
-2. Apply the single-module test once per work item: it is a single-module refactor when every source file its agreed
-   changes edit, call sites, imports and re-exports included, lies inside one feature or module of the repository's
-   declared layout. Leave following edits out of the test. Examples in a layered monorepo: one feature directory or
-   one package-level module of one package; on the guidance surface, one skill, playbook or instruction; on the CLI
-   surface, one command group's module.
+2. Apply the single-module test once per work item: it passes when every source file its agreed changes edit, call
+   sites, imports and re-exports included, lies inside one feature or module of the repository's declared layout.
+   Leave following edits out of the test. Examples: one feature directory or one package-level module of one
+   package; one skill, playbook or instruction; one CLI command group's module.
 3. Route the work item:
    - Several modules: the repository's workflow for a behavior-preserving refactor across several areas (with the
-     `spec` bundle, `sdd-overall-refactor`), even though the decision round agreed its changes, because the run's
-     direction settles batch by batch with the user.
+     `spec` bundle, `sdd-overall-refactor`), even though the decision round agreed its changes.
    - One module: the repository's feature workflow at the depth its own classification gives (with the `spec`
      bundle, `session` when the change touches no contract and no specification text).
    - No declared layout: name the route with the edited paths in the decision round; the user's approval settles it.
@@ -25,86 +23,82 @@ work item to the feature workflow.
 5. The batch's write scope is the edited paths the decision round states for its agreed changes, following edits
    included. Keep every edit inside it.
 
-Where the repository has no refactor workflow, the steps below are the procedure.
+If the repository has no refactor workflow, the steps below are the procedure.
 
 ## 2. Branch and edit tasks
 
-1. If the working tree holds changes that do not belong to the run (dirty paths recorded at intake, or edits the
-   user made since), stop and have the user commit, stash or exclude them; never discard them yourself.
-2. Create the work item's own branch; never commit to the base branch. With the `spec` bundle, use the branch the
+1. If the working tree holds changes outside the run (dirty paths recorded at intake, or edits the user made since),
+   stop and have the user commit, stash or exclude them; never discard them yourself.
+2. Create the work item's own branch instead of committing to the base branch; with the `spec` bundle, the branch the
    overall-refactor workflow's Git policy allows.
-3. Split the work item into edit tasks, each with its agreed change and its write scope. If the host supports
-   subagents, run them by §3; otherwise apply, verify and commit them yourself one after another by §4.
+3. Split the work item into edit tasks, each with its agreed change and write scope. If the host supports subagents,
+   run them by §3; otherwise apply, verify and commit them yourself one after another by §4.
 
 ## 3. Subagent edits
 
 1. Give each editing subagent the agreed edits and an explicit write scope: a subset of the batch's write scope,
-   disjoint from every other subagent working at the same time. For a consolidation onto a shared helper, include
-   the call-site option list from `criteria.md` §4.
-2. Run edit tasks with disjoint write scopes concurrently by default, each in its own isolated checkout (for example
-   a Git worktree) that you create at the work item branch's current commit.
-   - Before handing a checkout to its subagent, run the repository's documented setup there (its README or agent
-     guide; for example dependency installation and managed-asset synchronization), so verification and the
-     repository's checks run there as on the work item branch.
-   - Run edit tasks whose write scopes overlap, or a change that builds on another, one after another, each on the
+   disjoint from every concurrent subagent's. For a consolidation onto a shared helper, include the call-site option
+   list from `criteria.md` §4.
+2. Run edit tasks with disjoint write scopes concurrently, each in its own isolated checkout (for example a Git
+   worktree) created at the work item branch's current commit.
+   - Before handing over a checkout, run the repository's documented setup there (README or agent guide; for example
+     dependency installation and managed-asset synchronization).
+   - Run edit tasks with overlapping write scopes, or a change that builds on another, one after another, each on the
      previous checkpoint.
 3. Subagents leave their results uncommitted.
-4. Move each result onto the work item branch one at a time (for example as a patch applied with a three-way merge,
-   `git apply --3way`). If a result does not apply cleanly on the current checkpoint, discard the partial apply and
-   redo that task on the current checkpoint.
-5. Check each result against the diff before relying on it: the diff stays inside the assigned paths and matches the
-   agreed change. Compare `git diff --name-status` of the checkout, untracked files included, with the applied change
-   on the work item branch; an added, deleted or renamed file missing on one side blocks the commit.
+4. Move each result onto the work item branch one at a time (for example `git apply --3way`). If a result does not
+   apply cleanly on the current checkpoint, discard the partial apply and redo that task on the current checkpoint.
+5. Check each result against its diff: it stays inside the assigned paths and matches the agreed change. Compare
+   `git diff --name-status` of the checkout, untracked files included, with the applied change on the work item
+   branch; an added, deleted or renamed file missing on either side blocks the commit.
 6. Verify the change there and commit it alone by §4, through the repository's commit checks; never bypass them.
 7. Remove the checkouts you created once their results are committed or rejected.
 
-- Revert a rejected edit hunk by hunk; never reset a path another scope owns. Then redo the change or return it to
-  the decision round.
-- Neither you nor a subagent adds an exception, an ignore entry, a rule setting or a bypass of the repository's
-  checks (for example a layering exception, a lint ignore or `--no-verify`) to make a change pass. A subagent reports
-  the failure; you resolve the placement or return the change to the decision round.
+- Revert a rejected edit hunk by hunk instead of resetting a path another scope owns; then redo the change or return
+  it to the decision round.
+- Add no exception, ignore entry, rule setting or check bypass (for example a layering exception, a lint ignore or
+  `--no-verify`) to make a change pass. A subagent reports the failure; you resolve the placement or return the
+  change to the decision round.
 - Subagents never commit, ask the user, approve a change or write the run's records.
 
 ## 4. Commits and verification
 
 1. Run the change's relevant verification before and after it, with only that change applied on the previous
-   checkpoint; record both results and the preservation evidence from `criteria.md` §4 (reachability and, where it
-   applies, the differential comparison).
-2. After an agreed removal, recheck the branches, parameters, types, errors and helpers that only the removed path
+   checkpoint; record both results and the preservation evidence of `criteria.md` §4.
+2. After an agreed removal, recheck the branches, parameters, types, errors and helpers only the removed path
    reached. Remove those that became unreachable within the agreed change and its write scope; record each one you
    keep or defer, with the reason.
 3. Before each commit, confirm the working tree holds only the committed work plus the current change. Revert only
-   what the run itself wrote outside the change, such as files a verification run wrote; for anything else, stop as
-   in §2 step 1.
-4. Commit the change as a checkpoint: one commit per change, the change record in the commit body.
+   what the run wrote outside the change, such as verification output; for anything else, stop as in §2 step 1.
+4. Commit each change as its own checkpoint, with the change record in the commit body.
 5. At the work item's final head, run the repository's full verification on a clean tree (for example the full test
    suite, lint, type checks and governance rules).
 
 ## 5. Review
 
-Before integration, have the work item's diff reviewed by a fresh reviewer subagent when the host supports it,
-otherwise do a self-review and record it as such.
+Before integration, have the work item's diff reviewed by a fresh reviewer subagent when the host supports it;
+otherwise self-review and record it as such.
 
 - Brief the reviewer with each change's preservation claim. Ask for the inputs or states under which behavior
-  differs, each with a reproduction, plus the list of what it checked and found sound.
+  differs, each with a reproduction, plus what it checked and found sound.
 - Confirm each reported difference against the code, then fix it before integration or return it to the decision
   round as a behavior change.
 
-Where the repository's workflow defines review effort and bounded rounds (with the `spec` bundle, the run's activity
+If the repository's workflow defines review effort and bounded rounds (with the `spec` bundle, the run's activity
 effort, at `high` in bounded rounds), follow them.
 
 ## 6. Report
 
 Put the work item's report in the final response and the commit body: what changed and why, the approved behavior
 changes, every breaking change (each compatibility-policy removal with the inputs it no longer accepts), the
-verification results and anything left for follow-up.
+verification results and what is left for follow-up.
 
 ## 7. Integration
 
-Integrate only after the report, through the repository's integration path and its own integration approval; without
-a repository policy, the user's explicit approval. The decision round never supplies it. With the `spec` bundle, use
-the session integration path with task kind `overall-refactor`; a single-module work item uses its feature
-workflow's path.
+Integrate only after the report, through the repository's integration path and its own integration approval, or
+without a repository policy the user's explicit approval; the decision round never supplies it. With the `spec`
+bundle, use the session integration path with task kind `overall-refactor`; a single-module work item uses its
+feature workflow's path.
 
 Once the work item integrates or stops, update the run report's outcome with its integration state.
 
@@ -112,10 +106,10 @@ Once the work item integrates or stops, update the run report's outcome with its
 
 - The decision round may approve removing a command, option, public interface or compatibility path.
 - Before approving a removal, list the accepted decisions and the capability or architecture contracts that state
-  the removed behavior. The work item's intent and write scope include the decision change they need and those
-  documents.
+  the removed behavior; the work item's intent and write scope include those documents and the decision change they
+  need.
 - Route each approved removal as its own work item through the repository's normal development workflow, classified
-  by its own criteria, with the contract and documentation updated. Keep it apart from the batch's
+  by its own criteria, with the contract and documentation updated; keep it apart from the batch's
   behavior-preserving work item and never route it as a refactor.
 - Exception: a compatibility path covered by the declared compatibility policy (no external consumer for that
   package) is a behavior-preserving removal in the batch's work item; its change record still names the inputs no

@@ -1,16 +1,15 @@
 # Review criteria and evidence
 
-Read at the review step of a batch and again when you record a change's evidence. Every question needs a location
-and a named maintenance cost before it becomes a finding; reviewers, you included, over-report, and acting on every
-gap adds abstraction and defensive code.
+Read at the review step of a batch and again when you record a change's evidence. A question becomes a finding only
+with a location and a named maintenance cost; acting on every gap adds abstraction and defensive code.
 
 ## 1. Review questions
 
 ### Code
 
 - Duplicated behavior: do two or more places implement the same behavior, so a change to one must be repeated in the
-  others? Count behavior, not lines that look alike; deliberate parallel structure (test arrangements, command
-  boilerplate) is not duplication.
+  others? Count behavior, not similar lines; deliberate parallel structure (test arrangements, command boilerplate)
+  is not duplication.
 - Repeated technical helpers: is the same small technical operation (path handling, parsing, formatting) written in
   several modules instead of one utility?
 - Unnecessary abstraction: does a helper, base class, protocol, factory or configuration option have one caller or
@@ -28,10 +27,9 @@ gap adds abstraction and defensive code.
 - Duplication: is the same rule stated in several always-loaded or co-loaded files, where the copies can drift?
 - Conflicts: can two directives not both hold, or is precedence between nested guides unclear?
 - Obsolete exceptions: does a carve-out name removed code, a retired command or a temporary state?
-- Always-loaded context: does content load on every turn that only some tasks need, or sit where critical
-  directives get buried?
-- Keep: repository-specific operational constraints, decision criteria and examples the agent cannot infer. A
-  removal of one needs a ground from §3.
+- Always-loaded context: does content load on every turn that only some tasks need, or bury critical directives?
+- Keep: repository-specific operational constraints, decision criteria and examples the agent cannot infer; removing
+  one needs a ground from §3.
 
 ### CLI
 
@@ -49,9 +47,9 @@ gap adds abstraction and defensive code.
   code, guidance, options and commands.
 - Introduce a shared implementation only for demonstrated repeated behavior: at least two current callers with the
   same behavior, where a change to one must be repeated in the others.
-- If the implementations to consolidate do not behave identically, list each difference (accepted input, output,
-  error or side effect) with the behavior the consolidation keeps. The decision round presents the list and the
-  user's decision covers each difference; an approved difference is a behavior change of the report.
+- If the implementations to consolidate differ in behavior, list each difference (accepted input, output, error or
+  side effect) with the behavior the consolidation keeps. The decision round presents the list, the user's decision
+  covers each difference, and an approved difference is a behavior change of the report.
 - Treat removing a compatibility path (shim, legacy reader, version branch) as a contract change, unless the
   repository's declared compatibility policy states that no external consumer exists for that package. Either way,
   name the inputs or callers no longer accepted. In-repository reachability never proves the absence of external
@@ -77,9 +75,9 @@ Report the line or token delta, never as the justification.
 Record per consolidation or removal:
 
 - Reachability: static references and the repository's dynamic reach (entry points, plugin registries,
-  configuration, documentation, string dispatch). Include the non-package code roots (scripts, tools, task-runner
-  recipes, CI workflows), and search a moved or renamed name over the whole tracked tree (for example `git grep`).
-  Name each search (command, registry or configuration read) and its result.
+  configuration, documentation, string dispatch), including non-package code roots (scripts, tools, task-runner
+  recipes, CI workflows). Search a moved or renamed name over the whole tracked tree (for example `git grep`). Name
+  each search (command, registry or configuration read) and its result.
 - Call-site options: when call sites move onto a shared helper, list each call site's arguments that differ from the
   helper's defaults (environment, flags, scope, timeouts, error handling). Record each as kept through a named
   parameter, or return it to the decision round as a behavior change.
@@ -87,10 +85,10 @@ Record per consolidation or removal:
 - Differential comparison: for a change that consolidates or replaces a parser, scanner, matcher, file listing,
   serialized format or other function whose inputs can be enumerated or generated, run the old and new code on the
   same inputs: the repository's own corpus plus edge cases of the input domain (for example empty, malformed or
-  unclosed input and symbolic link loops). Record the input count and the result. Fix each difference unless it is
-  an approved behavior change, or return it to the decision round as a behavior change.
-  - Run the old code side by side from an extracted copy of the previous revision (for example `git archive`) or a
-    separate checkout. Never stash to run it, because the stash list is shared by every worktree of the repository.
+  unclosed input and symbolic link loops). Record the input count and the result. Fix each difference that is not an
+  approved behavior change, or return it to the decision round as a behavior change.
+  - Run the old code from an extracted copy of the previous revision (for example `git archive`) or a separate
+    checkout, not from a stash: the stash list is shared by every worktree of the repository.
 - Characterization test: add one only when some merged caller is exercised by no existing test.
 - Guidance: a retained-constraint map, listing each constraint of the removed or merged text and where it remains,
   plus the representative-task run when the removal relies on ground 4.
@@ -101,7 +99,7 @@ Place a consolidated helper at the lowest common owner every caller may already 
 declared layering. Make a new cross-package or foundation module, or any placement in a repository without declared
 layering, a decision in the round.
 
-Example order for a layered monorepo: feature-local first, then a package-level `utils` (technical helpers) or `base`
+Example order for a layered monorepo: feature-local, then a package-level `utils` (technical helpers) or `base`
 (contracts), then the shared foundation package only for generic primitives with no application dependency.
 
 ## 6. Recurrence prevention

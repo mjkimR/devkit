@@ -6,23 +6,25 @@ description: Manually generate a revision-bound weekly repository progress repor
 # Weekly report
 
 Run only when the user invoked or confirmed this playbook (`devkit-playbook`, `devkit playbook get
-maintenance/weekly-report` or a confirmed intake offer); load the returned bundle context once. Use existing tools and authorized connectors only. Generation runs no maintenance
-sweep, full test suite, automatic fix, feedback or proposal creation, and changes no source.
+maintenance/weekly-report` or a confirmed intake offer); load the returned bundle context once. Use existing tools
+and authorized connectors only. Generation runs no maintenance sweep, full test suite, automatic fix, feedback or
+proposal creation, and changes no source.
 
 ## 1. Capture identity and interval
 
 1. Record a credential-free repository identity, scope, HEAD SHA, integration ref and its SHA, generation time and
-   dirty paths with local Git only (`git rev-parse HEAD`, `git rev-parse <ref>^{commit}`, `git status --short`); do
-   not fetch or switch branches. A missing identity fails generation; a local ref does not prove remote freshness.
+   dirty paths with local Git only (`git rev-parse HEAD`, `git rev-parse <ref>^{commit}`, `git status --short`),
+   without fetching or switching branches. A missing identity fails generation; a local ref proves no remote
+   freshness.
 2. Use the user's start, end and timezone, or the previous complete Monday 00:00 to Monday 00:00 week in the user's
-   timezone (ask if it is unknown). Record inclusive start, exclusive end, timezone and both UTC offsets; resolve
-   local boundaries before converting (a DST week has 167 or 169 hours). A reversed, ambiguous or unresolved
-   interval fails generation.
+   timezone (ask if unknown). Record inclusive start, exclusive end, timezone and both UTC offsets; resolve local
+   boundaries before converting (a DST week has 167 or 169 hours). A reversed, ambiguous or unresolved interval
+   fails generation.
 3. Write to the owning work unit's materials or the repository's materials location (ask if neither exists) as an
-   ordinary local file: not a seven-day shared artifact, and not a tracked file on the default branch without the
+   ordinary local file, not a seven-day shared artifact, and not a tracked file on the default branch without the
    user's say. Use a prior report only when the user names one.
 4. Key the report by identity, scope and exact interval. Give each run a unique ID and a new, exclusively created
-   file; a rerun names the run it supersedes and never overwrites it.
+   file; a rerun names the run it supersedes instead of overwriting it.
 
 ## 2. Gather evidence
 
@@ -57,8 +59,9 @@ Write six sections: identity and evidence inventory; completed and integrated wo
 ADRs and behavior with IDs and commits; health per source with gaps; problems and ranked actions; prior comparison,
 limitations, generation outcome and a link to the outcome record.
 
-Read the file back and check its identity and every evidence link, or mark the link unavailable. Only then is
-generation complete; otherwise it fails and nothing is published. Record its SHA-256; changed content needs a new run.
+Read the file back and check its identity and every evidence link, or mark the link unavailable; only then is
+generation complete, otherwise it fails and nothing is published. Record its SHA-256; changed content needs a new
+run.
 
 ## 5. Record and publish
 
@@ -73,8 +76,7 @@ authority, attempts and evidence. Publication changes only this record.
 | unknown | Lost response or unverifiable destination; do not retry blindly. |
 
 Publish only to a destination the user selected, under the user's explicit authority, with an existing connector or
-command; nothing external happens implicitly. Check collisions first, replace a target only with authority naming
-it, and recheck the digest. Retry with the same run ID and bytes. Before retrying `unknown`, inspect the
+command. Check collisions first, replace a target only with authority naming it, and recheck the digest. Retry with the same run ID and bytes. Before retrying `unknown`, inspect the
 destination: a verified match is `published`, an unverifiable state stays `unknown` for the user to decide, and
 different content is a collision.
 

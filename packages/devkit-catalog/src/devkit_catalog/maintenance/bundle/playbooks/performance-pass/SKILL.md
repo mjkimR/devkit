@@ -6,22 +6,22 @@ description: Manually run a performance pass over user-selected slow commands or
 # Performance pass
 
 Run only when the user invoked or confirmed this playbook (`devkit-playbook`, `devkit playbook get
-maintenance/performance-pass` or a confirmed intake offer); selection never executes it. The outcome is a measured
-speedup of the operations the user selected, with each saving shown unprofiled against the previous revision.
-Invocation, an external runner naming this playbook and a clean measurement authorize no change. Only the user's
-decision round does: an unattended run stops at the decision round with nothing applied.
+maintenance/performance-pass` or a confirmed intake offer); selection never executes it. Invocation, an external
+runner naming this playbook and a clean measurement authorize no change; only the user's decision round does, so an
+unattended run stops at the decision round with nothing applied.
 
 ## Constraints for every run
 
 - Apply no change before the decision round approved it.
 - Keep every observable behavior of the targets; a speedup that changes one is a contract change with its own work
   item.
-- Report savings from unprofiled measurement on this machine in this session, never from a profile or from another
-  session's numbers; those are context only.
-- Never edit receipt-owned files (`.devkit/managed/`, agent projections): read them as evidence and send a change
-  against them to the source bundle, an upstream follow-up or `devkit override`.
-- If you find a correctness defect on the way, record it as a follow-up; never fix it in the pass.
-- Never stash or switch the working checkout; run an older revision from an extracted copy or a separate checkout.
+- Report savings only from unprofiled measurement on this machine in this session; a profile or another session's
+  numbers are context only.
+- Read receipt-owned files (`.devkit/managed/`, agent projections) as evidence only; send a change against them to
+  the source bundle, an upstream follow-up or `devkit override`.
+- Record a correctness defect found on the way as a follow-up instead of fixing it in the pass.
+- Run an older revision from an extracted copy or a separate checkout, never by stashing or switching the working
+  checkout: the stash list is shared by every worktree of the repository.
 
 ## 1. Intake
 
@@ -49,20 +49,17 @@ decision round does: an unattended run stops at the decision round with nothing 
 
 ## 3. Resolve review-refactor
 
-The application procedure and the preservation evidence are `review-refactor`'s, cited by file and heading. Resolve
-them before the decision round:
+The application procedure and the preservation evidence are `review-refactor`'s, cited by file and heading without
+its number, for example `review-refactor references/applying.md "Commits and verification"`. Resolve them before the
+decision round:
 
 1. Run `devkit playbook get maintenance/review-refactor`.
-2. For each cited file, read `references/<file>` next to the returned `source.path`. When that path is an override
-   directory without the file, read the same relative path under the bundle's managed directory
-   (`.devkit/managed/maintenance/playbooks/review-refactor/references/<file>`).
-3. Reading that text is reference reading, not an invocation: none of `review-refactor`'s intake, batches or decision
-   round starts.
-4. If a cited heading is missing from the file you read, stop the run and report the missing section; never
-   improvise the procedure.
-
-A citation names the file, then the heading without its number, for example
-`review-refactor references/applying.md "Commits and verification"`.
+2. Read each cited file at `references/<file>` next to the returned `source.path`. If that path is an override
+   directory without the file, read `.devkit/managed/maintenance/playbooks/review-refactor/references/<file>`.
+3. This is reference reading, not an invocation: none of `review-refactor`'s intake, batches or decision round
+   starts.
+4. If a cited heading is missing from the file you read, stop the run and report the missing section instead of
+   improvising the procedure.
 
 ## 4. Decision round
 
@@ -76,24 +73,22 @@ changes the route and the edited paths. Record each decision with its reason and
 | Defer | Reason, follow-up destination (existing or newly created) and restart condition. |
 | Keep | The reason the cost is accepted. |
 
-- Route: the run's agreed behavior-preserving changes form one work item that follows the repository's feature
-  workflow at the depth its own classification gives (with the `spec` bundle, `session` when no contract or
-  specification text changes), whether it edits one module or several. Never split or merge the work item to change
-  its route.
-- Do not follow `review-refactor references/applying.md "Work items and route"`: its direct-mode overall-refactor
-  route belongs to `review-refactor` runs, and this route replaces it.
-- State the route and the edited paths in the round; the edited paths, following edits included, are the write
-  scope.
-- Leave an unanswered candidate pending; nothing is applied for it.
-- The user's approval in the round is the recorded intent (goal, scope and non-goals) of the routed work item. It
-  never supplies the work item's integration approval.
+- Route: the run's agreed behavior-preserving changes form one work item through the repository's feature workflow
+  at the depth its own classification gives (with the `spec` bundle, `session` when no contract or specification
+  text changes), whether it edits one module or several. Never split or merge the work item to change its route.
+- This route replaces `review-refactor references/applying.md "Work items and route"`; do not follow that section.
+- State the route and the edited paths in the round. The edited paths, following edits included (tests of the
+  changed code, documentation naming it), are the write scope; keep every edit inside it.
+- Leave an unanswered candidate pending and apply nothing for it.
+- The user's approval is the routed work item's recorded intent (goal, scope and non-goals), never its integration
+  approval.
 - In an exercise, label decisions as simulated; they change only the fixture.
 
 ## 5. Apply agreed changes
 
 When the round approved changes, read `references/changes.md` and follow it. If HEAD or a relevant dirty path moved
-since intake, re-run the baseline and revalidate the evidence first, and take a change whose intent shifts back to
-the decision round.
+since intake, re-run the baseline and revalidate the evidence first, and return a change whose intent shifts to the
+decision round.
 
 ## 6. Report and completion
 
