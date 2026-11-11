@@ -1,0 +1,16 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:12:23.887052Z'
+status: completed
+review: review-01.yaml
+summary: 'worker verified: the ADR clause now traces to CAP-DLV-workflow-definitions binding (a0a170b3); text-only fix'
+findings:
+- issue: The ADR traces the today-only handoff history date to CAP-DLV-cli-and-output §1, but the restating sentence is in CAP-DLV-workflow-definitions Binding
+  evidence: docs/decisions/2026-11/20261111-remove-unused-cli-options-without-shims.md:74; docs/capabilities/delivery/CAP-DLV-workflow-definitions.md:186
+  failure_condition: A reader following the ADR trace lands in a document that only shows the synopsis
+  suggested_action: Point the clause at CAP-DLV-workflow-definitions Binding
+  resolution: resolved
+  severity: P3
+checks: {}
