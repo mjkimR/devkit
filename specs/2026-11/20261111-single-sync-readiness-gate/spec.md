@@ -2,7 +2,7 @@
 id: SPEC-single-sync-readiness-gate
 title: One readiness gate for a synchronized checkout
 summary: "Makes devkit sync --check the single readiness gate of a synchronized checkout, since it detects every problem devkit status does and more, and documents devkit status as a diagnostic report."
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-DIST-sync-and-transactions
@@ -64,8 +64,8 @@ keeps `devkit status` as a read-only diagnostic report, and aligns every complet
 - **When** a reader looks up what makes a checkout ready
 - **Then** one section states that `uv run devkit sync --check` exiting `0` is the readiness criterion of a
   synchronized checkout, that `devkit status` is a read-only report of the installed state against the receipt that
-  does not detect desired-state changes (a selection, configuration or installed-package change without a sync, a
-  removed guidance block, a missing receipt), and that planned optional MCP registration writes keep `sync --check`
+  misses desired-state changes other than subagent projection and render environment changes (a preset,
+  `guidance_block` or installed-package change without a sync, a removed guidance block, a missing receipt), and that planned optional MCP registration writes keep `sync --check`
   at exit `1` (`NOT_SYNCHRONIZED`) until `uv run devkit sync --registrations-only` or a plain sync applies them.
 
 ### [AC-02] The reference names the gate in the status section

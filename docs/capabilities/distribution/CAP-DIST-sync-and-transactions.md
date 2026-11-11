@@ -524,8 +524,9 @@ Completion criteria, guides and bundle instructions name this check alone (`SPEC
 
 `devkit status` is a read-only diagnostic report of the installed state against the receipt, what the last sync wrote;
 it lists every installed-state problem at once and reports installed facts (selection, file states, tool version,
-host hooks), but it is not a readiness gate. It does not detect desired-state changes: a selection, configuration or
-installed-package change without a sync, a removed guidance block or a missing receipt. Every problem that fails
+host hooks), but it is not a readiness gate. Of desired-state changes it reports only subagent projection and render
+environment changes (as `NOT_SYNCHRONIZED`); it misses a preset or `guidance_block` change without a sync, an
+installed-package content change without a sync, a removed guidance block and a missing receipt. Every problem that fails
 `status` also fails `sync --check`. A new problem class is therefore detected by the sync planner; reporting it in
 `status` is optional. `devkit.status_checks` warnings are not part of readiness.
 

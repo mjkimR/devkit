@@ -232,9 +232,9 @@ registration plans. Locked sync retains `MCP_REGISTRATION_PENDING` only for an a
 `write` it withheld; an absent provider, `None` or runtime-unavailable result does not invent that notice.
 Runtime-unavailable warnings remain on actual planning paths. Like every JSON-only command, status renders nothing on
 stderr: its `errors` and `notices` are in the result. `devkit status` is a diagnostic report, not the readiness gate:
-`uv run devkit sync --check` exiting `0` is, since only it also detects desired-state changes (a selection,
-configuration or package change without a sync, a removed guidance block, a missing receipt) and planned MCP
-registration writes (`CAP-DIST-sync-and-transactions`).
+`uv run devkit sync --check` exiting `0` is, since it also detects the desired-state changes status misses (a preset,
+`guidance_block` or installed-package change without a sync, a removed guidance block, a missing receipt) and planned
+MCP registration writes (`CAP-DIST-sync-and-transactions`).
 
 Optional installed packages contribute read-only checks through `devkit.status_checks`. Each callable accepts
 `root: Path` and returns a list or tuple of `AdvisoryError` values at `WARNING` or `NOTICE`. Checks run once in
