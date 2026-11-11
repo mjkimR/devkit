@@ -36,8 +36,8 @@ yet they keep the registry write path (update ACK, `--request-id` idempotency, j
 and two timeouts that no caller varies (C3-3). `query --history` switches the command into a journal reader with its
 own paging grammar (C3-6). Sources: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md` C3-2, C3-3, C3-6; `docs/materials/2026-11/20261111-review-refactor-code-pass/report.md` SP-1.
 
-Hypothesis: one observation entry (`collect`) plus `release`, `sweep` and at most a journal reader covers every
-documented workflow with one pipeline.
+Hypothesis: one observation entry (`collect`) plus `release` and `sweep` covers every documented workflow with one
+pipeline.
 
 ## 2. Technical Spike Questions
 
@@ -61,23 +61,22 @@ Evidence: `materials/scope-command-callers.md` (scout at the Planning head).
   of §4 "Registry storage and read access", §5 and §6 is reworded to the remaining read surfaces (collect and the
   `Registry` reads of release, sweep and cleanup) under the ADR-consolidation rule.
   `PADR-collect-only-scope-observation` supersedes the clauses in part; opt-in fetch, deadlines, read-only
-  collection, `--base` (recommended answer) and the post-finish cleanup stay.
-- **Q3**: Questions for the user (§6 Open questions): the recommendation retires `compare` without folding it and
-  removes the journal with its reader.
+  collection, `--base` (answer q4) and the post-finish cleanup stay.
+- **Q3**: Decided by the user (§6): `compare` is retired without a replacement (q2), and the journal is removed with
+  its reader (q1).
 
 ## 3. Proposed Design & Impact
 
 One feature spec in devkit-spec. Retirement, collect narrowing and the pipeline consolidation change one capability
 (`CAP-COLL-work-scope-registry`), one feature package and their tests together, and the pipeline consolidation
-depends on `update` going, so no decomposition is needed. The design below states the recommended answers of §6;
-an answer choosing another option is folded in the next Planning turn.
+depends on `update` going, so no decomposition is needed. The design below folds the user's answers recorded in §6.
 
 - **Retire** `devkit spec scope register`, `query` (and `--history`), `compare` and hidden `update`, with
   `UpdateScopeUseCase`, `Registry.update`, `request_id` replay, the `Ack` model and `[SCOPE_ACK]`,
   `QueryScopesUseCase`, `CompareScopesUseCase`, `services/compare.py` once nothing uses them, `_register_guidance`,
   and the codes `SPEC_SCOPE_ACK_FAILED`, `SPEC_SCOPE_TOKEN_MISSING` and `SPEC_SCOPE_RECORD_MISSING`. Keep `collect`,
   `release`, hidden `sweep`, creation registration and the post-finish cleanup.
-- **One paths-changed pipeline (SP-1)**: creation registration keeps recording the declarations, unresolved inputs,
+- **One paths-changed pipeline (SP-1, answer q3)**: creation registration keeps recording the declarations, unresolved inputs,
   base anchors (`base_revision` = HEAD at creation, `base_ref`) and the worktree's staged, unstaged and untracked
   paths at creation (the uncommitted handoff output: promoted ADRs, supersession edits, moved materials, and any other
   dirty file), but obtains the dirty paths from collect's observation service (`services/observation.py`), not from
@@ -87,9 +86,9 @@ an answer choosing another option is folded in the next Planning turn.
   branch-relative range otherwise. Paths the observation service reports as invalid are stored as unresolved
   `invalid-path` instead of being dropped (rule 2).
 - **Narrow `collect`** to `devkit spec scope collect [--base <ref>] [--fetch <remote>]... [--timeout <s>]
-  [--source-timeout <s>]`: it always observes records, local and remote-tracking `plan-*`/`dev-*` refs and
+  [--source-timeout <s>]` (`--base` kept, answer q4): it always observes records, local and remote-tracking `plan-*`/`dev-*` refs and
   accessible worktrees. `--mode` goes, with the JSON `mode` field and the fix strings that named it.
-- **Journal (recommended answer)**: removed with its reader: no `journal.jsonl` appends, no `Event` model, journal
+- **Journal (answer q1)**: removed with its reader: no `journal.jsonl` appends, no `Event` model, journal
   lock deadline, `SPEC_SCOPE_JOURNAL_UNAVAILABLE` or `SPEC_SCOPE_JOURNAL_LINE_INVALID`. An existing `journal.jsonl`
   is left in place, unread and untouched.
 - **Records**: existing records may carry `last_request_id`, `last_added`, `last_removed` and observed scopes from
@@ -147,8 +146,9 @@ strings. The `SPEC_SCOPE_COLLECTION_FAILED` fixes stop naming a mode; the report
 the limit. `--fetch` stays: it is the only bounded remote refresh (configured remotes, `plan-*`/`dev-*` namespace, no
 tags or pruning) that the ADR keeps for multi-PC visibility. `--timeout` and `--source-timeout` stay:
 `SPEC_SCOPE_COLLECTION_PARTIAL` names them as the recovery for `source-timeout`; its fix stops offering them for
-`result-limit`, which a budget does not fix. `--base` follows question q4 (recommended: keep). C3-3 is therefore
-taken for `--mode` only.
+`result-limit`, which a budget does not fix. `--base` stays (q4): it is the only override for remote-tracking
+`plan-*`/`dev-*` refs, which carry no `devkitBase` marker, when `<remote>/HEAD` and the main checkout branch differ.
+C3-3 is therefore taken for `--mode` only.
 
 ### Creation registration
 
@@ -161,7 +161,7 @@ unusable base as `unknown-base`.
 
 `own()` returns no record when the token or its record is gone; its only remaining caller, the post-finish cleanup,
 already treats both as nothing to release. `SPEC_SCOPE_TOKEN_MISSING` and `SPEC_SCOPE_RECORD_MISSING` therefore go
-with `SPEC_SCOPE_ACK_FAILED` (and the two journal codes under the recommended answer to q1). Kept:
+with `SPEC_SCOPE_ACK_FAILED` and the two journal codes (q1). Kept:
 `SPEC_SCOPE_STALE_REVISION` (sweep), `SPEC_SCOPE_TOKEN_MISMATCH` (`release --task-id`), `SPEC_SCOPE_RECORD_INVALID`,
 `SPEC_SCOPE_TIMEOUT` (fix without the `--request-id` retry), `SPEC_SCOPE_NOT_A_WORKTREE`,
 `SPEC_SCOPE_SPEC_NOT_FOUND`, `SPEC_SCOPE_INPUT_INVALID`, `SPEC_SCOPE_LOCK_UNSUPPORTED`,
@@ -173,7 +173,7 @@ verbose diagnostics of automatic registration.
 
 ### Use case wording
 
-`compare`'s retirement leaves queued Backlog drafts and drafts accepted with `--direct` on the base unobserved: collect
+`compare`'s retirement (q2) leaves queued Backlog drafts and drafts accepted with `--direct` on the base unobserved: collect
 compares declarations once a unit has a `plan-*` or `dev-*` source. UC-run-parallel-work-safely step 1 and scenario 1
 and CAP-DLV-proposal-planning say so instead of promising a comparison of every planned declaration. The practical
 loss is small: `future`-only overlap does not serialize Planning, and a handed-off `dev-*` source is observed.
@@ -190,12 +190,11 @@ without external consumers and no persisted-data migration (old records stay rea
 
 ## 6. Open questions
 
-Asked in this Planning turn's `worker` envelope; the design above follows the recommended options.
+None open. The user decided the first Planning turn's questions (`envelopes/answer-01.yaml`); each chose the
+recommended option, folded above:
 
-- **q1 Journal**: remove the journal and its reader (recommended); keep the writes with a `scope history` reader on
-  the shared paging grammar; or keep the writes without a reader.
-- **q2 compare**: retire without a replacement (recommended); fold declaration inputs into `collect`; or keep it.
-- **q3 Creation dirty paths**: keep recording them through collect's observation service (recommended), or record
-  declarations only and accept the loss for snapshot-only sources.
-- **q4 `--base`**: keep it (recommended); drop it and prefer `<remote>/HEAD` as the base of remote-tracking
-  candidates; or drop it and accept `unknown-base` for those candidates.
+- **q1 Journal**: the scope journal and its reader are removed, together with the journal error codes.
+- **q2 compare**: `devkit spec scope compare` is retired with no replacement.
+- **q3 Creation dirty paths**: creation registration keeps recording the dirty paths at creation, read through
+  collect's observation service.
+- **q4 `--base`**: the `collect --base` option is kept.

@@ -15,9 +15,8 @@ targets:
 
 # [Blueprint] PROP-consolidate-spec-scope-commands: Target Living Spec Structure
 
-The Living Spec changes if the proposal is accepted with the recommended answers of its §6 questions (journal
-removed, `compare` retired, creation dirty paths kept, `--base` kept). A different answer is folded in the next
-Planning turn.
+The Living Spec changes if the proposal is accepted, following the user's answers recorded in its §6 (journal
+removed, `compare` retired, creation dirty paths kept, `--base` kept).
 
 ---
 
@@ -45,7 +44,7 @@ Planning turn.
     `SPEC_SCOPE_RECORD_INVALID` and `SPEC_SCOPE_TOKEN_MISMATCH` without `update`/`query`; mark
     `SPEC_SCOPE_TOKEN_EXISTS`, `SPEC_SCOPE_TASK_EXISTS` and `SPEC_SCOPE_SHARED_WORKTREE` as verbose diagnostics of
     creation registration.
-  - §4.9: no `--mode` table; collect always reads records, refs and accessible worktrees; snapshot evidence is the
+  - §4.9: no `--mode` table; `--base` stays as the explicit base override; collect always reads records, refs and accessible worktrees; snapshot evidence is the
     creation-time record; the failure, metadata-limit and partial fixes name no mode and no budget for
     `result-limit`.
 - **Modify `CAP-HARN-command-mount`**: the §4.2 row becomes `devkit spec scope collect|release|sweep`; §4.6 examples

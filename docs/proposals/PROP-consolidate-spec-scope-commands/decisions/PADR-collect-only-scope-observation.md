@@ -42,12 +42,17 @@ its staged, unstaged and untracked listing contributes. Evidence: the proposal's
   service** (selected): one pipeline, smaller registry; records cannot be refreshed and stay creation-time
   snapshots.
 - **Keep the commands hidden** (rejected): the write path, its codes and its tests stay maintained for no caller.
-- **Creation records declarations only** (rejected, pending the proposal's question q3): drops the uncommitted
+- **Creation records declarations only** (rejected): drops the uncommitted
   handoff output that a snapshot-only source relies on.
 - **Keep `observe_git` for creation** (rejected): it duplicates collect's range logic for a range that is empty at
   creation.
-- **Fold `compare` into collect as declaration inputs** (rejected, pending q2): it adds input options to the command
+- **Fold `compare` into collect as declaration inputs** (rejected): it adds input options to the command
   being narrowed for drafts that `future`-only overlap would not serialize anyway.
+- **Keep the journal, with a `scope history` reader or without any reader** (rejected): it keeps the event model,
+  append locking and two warning codes for diagnostics nothing reads, in a file without retention.
+- **Drop `collect --base`** (rejected): remote-tracking `plan-*`/`dev-*` refs carry no base marker, so when
+  `<remote>/HEAD` and the main checkout branch differ they would report `unknown-base` with no override, or need a
+  new base-selection rule.
 
 ## 4. Decision Outcome
 
@@ -69,8 +74,10 @@ access", §5, §6) is reworded to the remaining read surfaces without changing t
   collect's observation service; `observe_git` is removed. Collect is the only implementation of the committed range
   and keeps the registration cap of `CAP-COLL-work-scope-registry` §4.1 for registered observations.
 - `collect` always observes at its full depth (records, local and remote-tracking `plan-*`/`dev-*` refs, accessible
-  worktrees). `--mode` is removed; `--base`, `--fetch`, `--timeout` and `--source-timeout` remain.
-- The registry journal and its reader are removed (pending q1); an existing journal file is left untouched.
+  worktrees). `--mode` is removed; `--base` (the explicit base override for candidates without a base marker),
+  `--fetch`, `--timeout` and `--source-timeout` remain.
+- The registry journal, its reader and the codes `SPEC_SCOPE_JOURNAL_UNAVAILABLE` and
+  `SPEC_SCOPE_JOURNAL_LINE_INVALID` are removed; an existing journal file is left untouched.
 
 ## 5. Consequences
 
