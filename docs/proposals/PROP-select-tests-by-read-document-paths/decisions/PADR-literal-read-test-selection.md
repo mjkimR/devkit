@@ -19,8 +19,9 @@ created_at: 2026-11-11
 `scripts/affected_tests.py` maps a changed non-source file to its readers only through the hand-kept `DATA` table
 and maps a package source file only through static imports. A test that reads a file its imports do not reach is
 skipped when only that file changes. At this head 37 reader pairs are missed: helper reads of
-`.devkit/architecture.toml`, bundle assets of another package, recipe scripts, `guides/` and package-root Markdown
-(which select nothing) and test data beside its reader. Every repository document read by literal path is already
+`.devkit/architecture.toml`, bundle assets of another package, recipe scripts, `guides/`, `.devkit/config.toml`,
+package-root Markdown and the frontend script `scripts/viewer.sh` (which select nothing) and test data beside its
+reader. Every repository document read by literal path is already
 listed, so each new reader depends on someone adding a row. A missed reader lets a
 failing test reach `main` until the next complete CI (`ADR-test-selection-and-ci`).
 
@@ -60,8 +61,11 @@ visible in source while keeping all existing checks.
   counts. → `ARCH-07-deployment` §1.3 (MUST)
 - A read that resolves to the repository root itself, or that the scan cannot resolve, adds nothing; it is not an
   import uncertainty and widens nothing. → `ARCH-07-deployment` §1.3 (MUST)
-- Reads only add tests: a path that selects the full suite still does, and a path that selects nothing today selects
-  its literal readers. → `ARCH-07-deployment` §1.3 (MUST)
+- Reads only add tests: a path that selects the full suite still does, and a path that selects nothing today,
+  `.devkit/` and frontend paths included, selects its literal readers; a path no test reads still selects nothing.
+  → `ARCH-07-deployment` §1.3 (MUST)
+- A frontend change keeps `reason=frontend` and the `[FRONTEND_CHECK: ...]` line whether or not literal readers add
+  pytest tests. → `ARCH-07-deployment` §1.3 (MUST)
 - The `DATA` table keeps every row, and readers by document ID, by subprocess in the repository root or through an
   unresolved base keep or gain explicit rows. Removing a row the scan now covers is a later, measured reduction.
   → `ARCH-07-deployment` §1.3 (MUST)
@@ -85,5 +89,6 @@ visible in source while keeping all existing checks.
 ## 6. Confirmation
 
 - `packages/devkit/tests/e2e/package/test_affected_tests.py`: positive fixtures for each read form and each measured
-  miss group, and negative fixtures for `tmp_path` literals, unanchored strings and a path no test reads.
+  miss group, and negative fixtures for `tmp_path` literals, unanchored strings and a path no test reads; a frontend
+  path with a literal reader (`scripts/viewer.sh`) and one without keep `reason=frontend` and the frontend check.
 - `ARCH-07-deployment` §1.3 restates the traced clauses after Development.

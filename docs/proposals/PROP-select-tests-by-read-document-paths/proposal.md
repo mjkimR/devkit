@@ -84,13 +84,15 @@ The decision and its alternatives are in `PADR-literal-read-test-selection`.
   subdirectory counts; `**` matches zero or more segments (Python 3.12 has no `PurePath.full_match`, and
   `PurePath.match` treats `**` like `*`). A read resolving to the repository root adds nothing.
 - **Order**: full triggers and the full fallback for unknown paths keep precedence. Otherwise the readers are added,
-  including for paths that select nothing today (`guides/`, package-root Markdown, `.devkit/` and a non-test file
-  under `tests/`); frontend paths per the open question below.
+  including for paths that select nothing today (`guides/`, package-root Markdown, `.devkit/`, a non-test file
+  under `tests/` and the frontend paths). A frontend change keeps `frontend=True`, `reason=frontend` and the
+  `[FRONTEND_CHECK: ...]` line; its literal readers make the mode `partial` (`scripts/viewer.sh` selects
+  `test_viewer_script.py`), and a frontend path no test reads still selects no pytest test.
 - **Kept and added rows**: every `DATA`, `SOURCE_TREE_TESTS` and `ALL_SOURCES_TESTS` entry stays.
   `packages/devkit/tests/integration/package/test_version_script.py` joins the `scripts/release.sh` and `justfile`
   rows, because it runs both by subprocess.
-- **Documents**: `docs/development/ci-cd.md` (the `just test-affected` selection bullets, the "select nothing" bullet
-  and Limits) and `ARCH-07-deployment` §1.3 (read discovery only adds tests; an unresolved read adds nothing and is
+- **Documents**: `docs/development/ci-cd.md` (the `just test-affected` selection bullets, the frontend bullet, the
+  "select nothing" bullet and Limits) and `ARCH-07-deployment` §1.3 (read discovery only adds tests; an unresolved read adds nothing and is
   not an import uncertainty). No capability documents the selector.
 - **Tests**: `packages/devkit/tests/e2e/package/test_affected_tests.py` gains positive fixtures for each read form
   (nested in a call, loop expansion, helper attribution, glob with a new subdirectory, `iterdir`) and each measured
@@ -104,19 +106,25 @@ The decision and its alternatives are in `PADR-literal-read-test-selection`.
   `ARCH-07-deployment` instead of `capabilities/governance/`, which documents no part of the selector.
 - Helper attribution runs in reverse (scan once, resolve importers only for helpers with reads) to keep a
   document-only selection near 2.5 s instead of running the full import discovery.
+- Frontend and `.devkit/` paths also select the tests that read them by literal path; a frontend change keeps
+  `[FRONTEND_CHECK]` and `reason=frontend`, and paths no test reads still select nothing (user decision, q1).
 - Retiring `DATA` rows the scan covers is out of scope: it reduces selection and needs the before/after collection
   matrices `ARCH-07-deployment` §1.3 asks for.
 
 ## Acceptance outline
 
-- Each miss group in `materials/read-path-survey.md` selects its reader, frontend per the open question.
+- Each miss group in `materials/read-path-survey.md` selects its reader, `scripts/viewer.sh` and
+  `.devkit/config.toml` included.
 - A change that selects the full suite today still does; a change's selection today stays a subset of its new
   selection on the same revision.
-- `.claude/skills/x/SKILL.md` still selects nothing; a `tmp_path` literal, an unanchored string and a read of the
+- `.claude/skills/x/SKILL.md` still selects nothing and
+  `packages/devkit-viewer/frontend/src/lib/App.svelte`, which no test reads, still returns `mode=none`,
+  `reason=frontend` and the `[FRONTEND_CHECK: ...]` line; a `tmp_path` literal, an unanchored string and a read of the
   test's own file add no reader.
 - Existing assertions expected to change: `test_affected_tests.py:121-124` (`guides/install.md` now selects
   `test_deep_research.py`, which reads `guides/**/*.md`), `:177` (`.devkit/config.toml` selects
-  `test_handbook_script.py`) and, if frontend readers are added, the frontend-only test at `:335`.
+  `test_handbook_script.py`) and the `scripts/viewer.sh` case of the frontend-only test at `:335` (now `partial`
+  with `test_viewer_script.py`, still `reason=frontend` with the `[FRONTEND_CHECK: ...]` line).
 - `docs/development/ci-cd.md` and `ARCH-07-deployment` §1.3 describe read discovery; untested prefixes are no longer
   described as selecting nothing when a test reads them.
 - Cost: a document-only selection adds at most 3 s over the worker's head with read discovery disabled, measured on
