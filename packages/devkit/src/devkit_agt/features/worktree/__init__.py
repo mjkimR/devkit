@@ -1,12 +1,12 @@
 """devkit_agt.features.worktree: activity branches and their task worktrees (``devkit worktree start|finish|status``, stale branches with ``status --stale``).
 
 A task runs on an activity branch ``plan-<slug>`` or ``dev-<slug>``, in ``<parent of base>/<base name>-wt-<branch>``
-or (``start_branch``) in the current checkout; ``attach`` continues an existing branch, ``finish`` integrates it into
-the base checkout (by default as a merge commit ``merging`` builds outside any checkout) and removes it, refusing
-instead of forcing at every step, and ``stale_branches`` reports branches nobody has moved for
+or (``start_branch``) in the current checkout; ``attach`` continues an existing branch, ``finish`` removes it once the base
+contains it (local landing is ``devkit integration integrate --route local``, which builds the merge commit with
+``merging`` outside any checkout), refusing instead of forcing at every step, and ``stale_branches`` reports branches nobody has moved for
 ``[worktree] stale_after``. SDD-agnostic: a methodology layer decides which tasks use a worktree
-and plugs in through ``before_remove`` and the ``devkit.post_finish``, ``devkit.finish_guard`` and
-``devkit.attach_check`` extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
+and plugs in through ``before_remove`` and the ``devkit.post_finish`` and ``devkit.attach_check``
+extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
 """
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
@@ -14,11 +14,9 @@ from devkit_agt.features.worktree.models.errors import (
     AddFailedError,
     AttachCheckFailedError,
     AttachRefusedError,
-    BaseBehindError,
     BaseDetachedError,
     BaseDirtyError,
     BaseOnBranchError,
-    BlockedError,
     BranchAheadNotice,
     BranchDeleteFailedError,
     BranchExistsError,
@@ -28,16 +26,14 @@ from devkit_agt.features.worktree.models.errors import (
     ConflictError,
     DirtyError,
     GitUnsupportedError,
-    GuardFailedError,
     LockedError,
     MergeConflictError,
     MergeFailedError,
     MergeNotFastForwardError,
+    MergeRetiredError,
     NestedError,
     NotFoundError,
     PullRequestPolicyError,
-    PushFailedWarning,
-    PushRejectedWarning,
     RemoteUncheckedWarning,
     RemoveFailedError,
     RunFromBaseError,
@@ -73,7 +69,7 @@ from devkit_agt.features.worktree.repositories.config import (
     worktree_policy,
 )
 from devkit_agt.features.worktree.repositories.markers import BASE_KEY, MARKER, UNIT_KEY, branch_marker, marker_key
-from devkit_agt.features.worktree.services.extensions import run_finish_guards, run_post_finish
+from devkit_agt.features.worktree.services.extensions import run_post_finish
 from devkit_agt.features.worktree.services.merging import (
     build_result,
     check_identity,
@@ -105,11 +101,9 @@ __all__ = [
     "AddFailedError",
     "AttachCheckFailedError",
     "AttachRefusedError",
-    "BaseBehindError",
     "BaseDetachedError",
     "BaseDirtyError",
     "BaseOnBranchError",
-    "BlockedError",
     "BranchAheadNotice",
     "BranchDeleteFailedError",
     "BranchExistsError",
@@ -124,17 +118,15 @@ __all__ = [
     "FinishPlan",
     "FinishResult",
     "GitUnsupportedError",
-    "GuardFailedError",
     "LockedError",
     "MergeConflictError",
     "MergeFailedError",
     "MergeNotFastForwardError",
+    "MergeRetiredError",
     "NestedError",
     "NotFoundError",
     "Position",
     "PullRequestPolicyError",
-    "PushFailedWarning",
-    "PushRejectedWarning",
     "RemoteUncheckedWarning",
     "RemoveFailedError",
     "RunFromBaseError",
@@ -177,7 +169,6 @@ __all__ = [
     "pull_request_policy_fix",
     "read_worktree_config",
     "rerun_from_base",
-    "run_finish_guards",
     "run_post_finish",
     "slug_of",
     "stale_branches",

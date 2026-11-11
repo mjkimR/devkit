@@ -2,7 +2,7 @@
 
 ```toml
 [worktree]
-pull_request = "auto"   # a pull request or finish --merge, as the task needs; "required": pull requests only
+pull_request = "auto"   # a pull request or local integration, as the task needs; "required": pull requests only
 delete_branch = true    # finish deletes the merged branch (`git branch -d`, never -D)
 merge = "no-ff"         # a merge commit per task; "ff-only": fast-forward only (linear history)
 setup = "uv sync"       # shell command run in a newly created worktree (default: none)
@@ -44,7 +44,7 @@ def config_tables() -> tuple[TemplateTable, ...]:
                 TemplateKey(
                     "pull_request",
                     "auto",
-                    "auto: a pull request or worktree finish --merge, as the task needs; required refuses --merge",
+                    "auto: a pull request or local integration, as the task needs; required refuses local integration",
                     kind='"auto" | "required"',
                 ),
                 TemplateKey("delete_branch", True, "worktree finish deletes the merged branch with git branch -d"),

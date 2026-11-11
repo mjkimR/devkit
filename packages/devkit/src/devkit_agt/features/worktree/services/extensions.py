@@ -1,25 +1,22 @@
-"""Extension points of ``devkit worktree``: ``devkit.post_finish``, ``devkit.finish_guard`` and ``devkit.attach_check``.
+"""Extension points of ``devkit worktree``: ``devkit.post_finish`` and ``devkit.attach_check``.
 
 Other packages register a callable under the ``devkit.post_finish`` entry-point group. After ``devkit worktree
 finish`` succeeded (the branch is merged, the worktree removed and the branch deleted as configured; never after a
 refusal) every extension is called in sorted entry-point name order as ``extension(base, result)``, with the base checkout's
 root and the finish result as its JSON object (``FinishResult.to_dict()``: ``slug``, ``path``, ``branch``,
-``merged``, ``push``, ``removed``, ``branch_deleted``). An extension cleans up what its package keeps per task. It returns
+``merged``, ``removed``, ``branch_deleted``, ``discarded``). An extension cleans up what its package keeps per task. It returns
 ``None`` or a list whose items become notices: a string is a ``PostFinishNotice`` (``POST_FINISH_NOTICE``), an
 ``AdvisoryError`` keeps its code and level, an ``ERROR`` lowered to ``WARNING``. An extension cannot fail the finish:
 an exception (``SystemExit`` included), a malformed return value or a group that cannot be listed becomes a
 ``PostFinishExtensionFailedNotice`` (``POST_FINISH_EXTENSION_FAILED``, a warning).
 
-The two check groups run before a change and fail closed. ``devkit.finish_guard``: before ``finish --merge`` changes
-anything, every extension is called as ``extension(base, branch, merge_base, tip)``, with the base checkout's root,
-the activity branch, the commit id of its merge base with the base HEAD (empty when there is none) and its tip.
-``devkit.attach_check``: before ``start --existing-branch`` changes anything, as ``extension(root, branch, unit,
-tip)``, with the base checkout's root, the branch, the unit directory relative to that root and the commit id the
-branch will be attached at; the files are read from ``tip`` (``git show <tip>:<unit>/...``), since no worktree may
-exist yet. Either returns ``None`` or a list of strings, each a reason to refuse: any reason refuses the command
-(``WORKTREE_BLOCKED``, ``WORKTREE_ATTACH_REFUSED``) with the reasons as details. An extension that raises (an
-advisory or ``SystemExit`` included) or returns anything else, or a group that cannot be listed (a ``discovery``
-failure), refuses it too (``WORKTREE_GUARD_FAILED``, ``WORKTREE_ATTACH_CHECK_FAILED``): what it checks was not
+``devkit.attach_check`` runs before a change and fails closed: before ``start --existing-branch`` changes anything,
+every extension is called as ``extension(root, branch, unit, tip)``, with the base checkout's root, the branch, the
+unit directory relative to that root and the commit id the branch will be attached at; the files are read from
+``tip`` (``git show <tip>:<unit>/...``), since no worktree may exist yet. It returns ``None`` or a list of strings,
+each a reason to refuse: any reason refuses the command (``WORKTREE_ATTACH_REFUSED``) with the reasons as details.
+An extension that raises (an advisory or ``SystemExit`` included) or returns anything else, or a group that cannot be
+listed (a ``discovery`` failure), refuses it too (``WORKTREE_ATTACH_CHECK_FAILED``): what it checks was not
 verified.
 """
 
@@ -35,14 +32,11 @@ from devkit_core.core.extensions import ExtensionFailed, call_extensions, run_ex
 from devkit_agt.features.worktree.models.errors import (
     AttachCheckFailedError,
     AttachRefusedError,
-    BlockedError,
-    GuardFailedError,
     PostFinishExtensionFailedNotice,
     PostFinishNotice,
 )
 
 GROUP = "devkit.post_finish"
-FINISH_GUARD_GROUP = "devkit.finish_guard"
 ATTACH_CHECK_GROUP = "devkit.attach_check"
 
 Extension = Callable[[Path, dict[str, Any]], "list[str | AdvisoryError] | None"]
@@ -86,18 +80,6 @@ def _reasons(group: str, invoke: Callable[[Callable[..., object]], object]) -> t
         else:
             reasons.extend(f"{outcome.name}: {item}" for item in outcome.result)
     return reasons, failures
-
-
-def run_finish_guards(base: Path, branch: str, merge_base: str, tip: str) -> None:
-    """Refuse the merge of ``branch`` when a ``devkit.finish_guard`` extension objects or fails."""
-    reasons, failures = _reasons(FINISH_GUARD_GROUP, lambda extension: extension(base, branch, merge_base, tip))
-    if failures:
-        raise GuardFailedError(
-            f"a {FINISH_GUARD_GROUP} extension failed, so {branch} was not verified; nothing was changed",
-            *failures,
-        )
-    if reasons:
-        raise BlockedError(f"{branch} is blocked from integration; nothing was changed", *reasons)
 
 
 def run_attach_checks(root: Path, branch: str, unit: str, tip: str) -> None:

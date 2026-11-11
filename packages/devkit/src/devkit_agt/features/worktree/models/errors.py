@@ -121,7 +121,7 @@ def rerun_from_base(
 
 
 class PullRequestPolicyError(_Guardrail):
-    """``finish --merge`` under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
+    """Local integration under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
 
     code = "WORKTREE_PR_POLICY"
 
@@ -191,24 +191,6 @@ class AttachCheckFailedError(WorktreeError):
     fix = "Repair or uninstall the package that registers the failing extension, then rerun"
 
 
-class BlockedError(_Interaction):
-    """A ``devkit.finish_guard`` extension refused to integrate the branch, ``finish --merge`` (``INTERACTION``).
-
-    Each reason is a detail (for example an unresolved problem envelope); nothing changed.
-    """
-
-    code = "WORKTREE_BLOCKED"
-    fix = "Resolve what each detail names on the branch, commit it, then rerun"
-
-
-class GuardFailedError(WorktreeError):
-    """A ``devkit.finish_guard`` extension raised or returned something other than a list of strings
-    (``MAINTENANCE``); ``finish --merge`` is refused, since the branch was not verified. Nothing changed."""
-
-    code = "WORKTREE_GUARD_FAILED"
-    fix = "Repair or uninstall the package that registers the failing extension, then rerun"
-
-
 class NotFoundError(_Interaction):
     """No worktree has the branch or its path (``INTERACTION``); a branch that exists nowhere is a mistyped name,
     raised with ``input_error`` (``INPUT_ERROR``) and ``[FIX]`` listing the worktrees and branches.
@@ -229,26 +211,15 @@ class LockedError(_Interaction):
 
 
 class BaseDetachedError(_Interaction):
-    """``finish --merge`` found the base checkout on a detached HEAD (``INTERACTION``); nothing changed.
+    """Local integration found the base checkout on a detached HEAD (``INTERACTION``); nothing changed.
 
-    A fast-forward would move no branch and the push would be skipped, leaving the task's commits on no branch
-    once the branch is deleted.
+    A fast-forward would move no branch, leaving the task's commits on no branch once the branch is deleted.
     """
 
     code = "WORKTREE_BASE_DETACHED"
     fix = (
         "Ask the user which branch the task integrates into, switch the base checkout to it with git switch, then rerun"
     )
-
-
-class BaseBehindError(_Interaction):
-    """``finish --merge`` fetched the base branch's upstream and it has commits the base lacks (``INTERACTION``).
-
-    The push after the merge would be rejected; nothing changed. The ``[FIX]`` brings the base up to date.
-    """
-
-    code = "WORKTREE_BASE_BEHIND"
-    fix = "Fast-forward the base onto its upstream (git pull --ff-only), integrate the base into the branch, then rerun"
 
 
 class BranchUnpushedError(_Interaction):
@@ -262,7 +233,7 @@ class BranchUnpushedError(_Interaction):
 
 
 class BaseDirtyError(_Interaction):
-    """``finish --merge`` found uncommitted changes in the base checkout (``INTERACTION``)."""
+    """Local integration found uncommitted changes in the base checkout (``INTERACTION``)."""
 
     code = "WORKTREE_BASE_DIRTY"
     fix = "Commit or stash the base checkout's changes, then rerun"
@@ -277,8 +248,7 @@ _MERGE_TARGET = (
 class MergeNotFastForwardError(WorktreeError):
     """The base moved on since the branch was created and this operation may not absorb it (``AUTO``).
 
-    ``finish --merge``, ``merge = "ff-only"`` and the pull-request route land only a branch that contains the base
-    HEAD; local ``devkit integration`` under ``merge = "no-ff"`` builds and checks that merge itself
+    ``merge = "ff-only"`` and the pull-request route land only a branch that contains the base HEAD; local ``devkit integration`` under ``merge = "no-ff"`` builds and checks that merge itself
     (``ADR-moved-target-merge``).
     """
 
@@ -326,13 +296,38 @@ class MergeFailedError(WorktreeError):
 
 
 class UnmergedError(_Interaction):
-    """``finish`` without ``--merge`` found the branch not merged into the base (``INTERACTION``); nothing changed."""
+    """``finish`` found the branch not merged into the base (``INTERACTION``); nothing changed. The ``[FIX]`` names
+    the local integration route; ``unmerged_fix`` composes it for the branch."""
 
     code = "WORKTREE_UNMERGED"
-    fix = (
-        "Merge the branch first (its pull request, or `finish --merge` unless pull requests are required); a "
-        "squash or rebase merge leaves the branch unmerged, so remove that worktree and branch only with the user's "
-        "authorization"
+
+
+def unmerged_fix(branch: str) -> str:
+    """The ``[FIX]`` of ``UnmergedError`` for ``branch``: land it through local integration (or its pull request)."""
+    quoted = shlex.quote(branch)
+    return (
+        f"Land the branch first: run `uv run devkit integration prepare {quoted} --route local`, then `uv run devkit"
+        f" integration integrate {quoted} --route local` (or merge its pull request); a squash or rebase merge leaves"
+        " the branch unmerged, so remove that worktree and branch only with the user's authorization"
+    )
+
+
+class MergeRetiredError(WorktreeError):
+    """``finish --merge`` was requested (``INPUT_ERROR``): local landing is ``devkit integration integrate --route
+    local`` only (``ADR-single-local-landing-route``). Raised before anything is read or changed; ``merge_retired_fix``
+    composes the ``[FIX]`` for the branch."""
+
+    code = "WORKTREE_MERGE_RETIRED"
+    input_error = True
+
+
+def merge_retired_fix(branch: str) -> str:
+    """The ``[FIX]`` of ``MergeRetiredError`` for ``branch``: the two local integration commands."""
+    quoted = shlex.quote(branch)
+    return (
+        f"Run `uv run devkit integration prepare {quoted} --route local`, present its scope, then run `uv run devkit"
+        f" integration integrate {quoted} --route local --expected-digest <digest>` (the digest is optional under"
+        " dev-integration = auto)"
     )
 
 
@@ -346,7 +341,7 @@ class DirtyError(_Interaction):
 class RemoveFailedError(_Interaction):
     """``git worktree remove`` failed for a reason other than uncommitted changes (``INTERACTION``).
 
-    Raised with the partial ``result`` (after the merge, under ``--merge``); rerunning the same command resumes.
+    Raised with the partial ``result``; rerunning the same command resumes.
     """
 
     code = "WORKTREE_REMOVE_FAILED"
@@ -382,23 +377,6 @@ class WorktreeConfigError(WorktreeError, ConfigError):
     code = "WORKTREE_CONFIG_INVALID"
     target_files = ()
     fix = "Correct the [worktree] table in .devkit/config.toml"
-
-
-class PushFailedWarning(WorktreeError):
-    """``finish --merge`` merged and cleaned up, but the base branch did not reach its upstream (``WARNING``)."""
-
-    code = "WORKTREE_PUSH_FAILED"
-    level = Level.WARNING
-
-
-class PushRejectedWarning(WorktreeError):
-    """``finish --merge`` merged and cleaned up, but the upstream moved on and rejected the push (``WARNING``).
-
-    The ``[FIX]`` integrates the upstream into the base, then pushes; rerunning the push alone fails identically.
-    """
-
-    code = "WORKTREE_PUSH_REJECTED"
-    level = Level.WARNING
 
 
 class BranchAheadNotice(WorktreeError):

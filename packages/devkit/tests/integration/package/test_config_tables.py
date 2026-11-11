@@ -37,8 +37,8 @@ HARNESS_TABLES = (
     "\n"
     "## Git worktree behavior: integration policy, branch cleanup, setup for new worktrees and stale branches.\n"
     "# [worktree]\n"
-    '#   pull_request = "auto"  # "auto" | "required"; auto: a pull request or worktree finish --merge, as the task'
-    " needs; required refuses --merge\n"
+    '#   pull_request = "auto"  # "auto" | "required"; auto: a pull request or local integration, as the task needs;'
+    " required refuses local integration\n"
     "#   delete_branch = true  # boolean; worktree finish deletes the merged branch with git branch -d\n"
     '#   merge = "no-ff"  # "no-ff" | "ff-only"; no-ff: a merge commit per task; ff-only: fast-forward only, wins in'
     " either policy\n"

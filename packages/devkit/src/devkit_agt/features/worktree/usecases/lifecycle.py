@@ -7,9 +7,9 @@ current checkout to it; ``attach`` gives an existing branch its worktree. Every 
 the marker ``branch.<branch>.devkitWorktree`` (the worktree or checkout path) in the common Git configuration, with
 ``devkitBase`` (the branch ``start_branch`` started from) and ``devkitUnit`` (the unit ``attach`` was given) beside
 it; ``git branch -d`` removes them with the branch, and a ``finish`` that keeps the branch unsets the marker.
-``finish`` runs in the base: it fast-forwards the base onto the branch and pushes it (``merge=True``) or verifies the
-branch is merged, removes the worktree and deletes the branch. Every step refuses instead of forcing, the checks of
-the worktree's branch, the base and the upstreams run before the first change, and rerunning resumes. ``status``
+``finish`` runs in the base: it verifies the branch is merged, removes the worktree and deletes the branch; it lands
+nothing (local landing is ``devkit integration integrate --route local``). Every step refuses instead of forcing, the
+checks of the worktree's branch and the base run before the first change, and rerunning resumes. ``status``
 changes nothing.
 """
 
@@ -41,9 +41,7 @@ from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH
 
 from devkit_agt.features.worktree.models.errors import (
     AddFailedError,
-    BaseBehindError,
     BaseDetachedError,
-    BaseDirtyError,
     BaseOnBranchError,
     BranchAheadNotice,
     BranchDeleteFailedError,
@@ -53,13 +51,8 @@ from devkit_agt.features.worktree.models.errors import (
     ConflictError,
     DirtyError,
     LockedError,
-    MergeFailedError,
-    MergeNotFastForwardError,
     NestedError,
     NotFoundError,
-    PullRequestPolicyError,
-    PushFailedWarning,
-    PushRejectedWarning,
     RemoteUncheckedWarning,
     RemoveFailedError,
     RunFromBaseError,
@@ -69,8 +62,8 @@ from devkit_agt.features.worktree.models.errors import (
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
-    pull_request_policy_fix,
     refuse_linked,
+    unmerged_fix,
 )
 from devkit_agt.features.worktree.models.lifecycle import (
     BranchStartResult,
@@ -81,9 +74,7 @@ from devkit_agt.features.worktree.models.lifecycle import (
     StatusResult,
     WorktreeStatus,
 )
-from devkit_agt.features.worktree.models.merging import merge_message
 from devkit_agt.features.worktree.repositories.markers import BASE_KEY, UNIT_KEY, branch_marker, marker_key
-from devkit_agt.features.worktree.services.merging import build_result, check_identity
 
 _log = get_logger(__name__)
 
@@ -91,8 +82,6 @@ ACTIVITY_PREFIXES = ("plan", "dev")  # Planning and Development activity branche
 BRANCH = re.compile(rf"(?:{'|'.join(ACTIVITY_PREFIXES)})-[a-z0-9][a-z0-9_-]*")
 BRANCH_LIMIT = 64  # characters of the whole branch name, prefix included
 LS_REMOTE_TIMEOUT = 30.0  # seconds to ask one remote whether it has the branch
-PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
-FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
 SETUP_TIMEOUT = 900.0  # seconds for the `setup` command (dependency installs)
 SYNC_TIMEOUT = 300.0  # seconds for `devkit sync --locked` in a new worktree
 CHECKOUT_TIMEOUT = 1800.0  # seconds for `git worktree add` and `remove`: a large checkout (LFS, slow hooks) takes long
@@ -434,7 +423,7 @@ class StartBranch(BaseUseCase):
 
         ``git switch -c`` carries uncommitted changes over to the branch. The same name rule and refusals as ``start``
         apply: a branch that exists locally or on a remote is ``WORKTREE_BRANCH_EXISTS``. The branch gets the marker
-        (the checkout's path) and ``devkitBase``, the branch the checkout was on, so ``finish --merge`` can integrate it
+        (the checkout's path) and ``devkitBase``, the branch the checkout was on, so local integration lands it
         from the base once the checkout is back on that branch. It runs in the base checkout (``WORKTREE_NESTED`` in a
         linked worktree, which ``finish`` would remove) on a branch (``WORKTREE_BASE_DETACHED`` otherwise: nothing would
         say where the task integrates).
@@ -1017,57 +1006,36 @@ def finish(
     position: Position,
     branch: str,
     *,
-    merge: bool = False,
-    pull_request: str = "auto",
     delete_branch: bool = True,
     before_remove: Callable[[FinishResult], None] | None = None,
-    guard: Callable[[str, str], None] | None = None,
-    network: str = "allow",
     before_step: Callable[[str, FinishResult], None] | None = None,
-    merge_method: str = "no-ff",
 ) -> FinishResult:
-    """Integrate the activity branch into the base, then remove its worktree and the branch.
+    """Remove the worktree and the branch of an activity branch the base HEAD already contains.
 
-    ``network="forbid"`` excludes fetch and push. ``before_step(step, result)`` runs immediately before each
-    local mutation (merge, worktree_remove, branch_delete or marker_clear); it may refuse by raising.
-
-    ``merge`` lands the branch on the base (it must be clean and on a branch, and contain the tip of its upstream
-    when one is configured and reachable) and pushes the base branch to that upstream. The branch must contain the
-    base HEAD (``WORKTREE_MERGE_NOT_FF`` otherwise); under ``merge_method="no-ff"`` (``[worktree] merge``) the base
-    fast-forwards onto a merge commit ``merging.build_result`` builds from the base HEAD and the tip, under
-    ``"ff-only"`` onto the tip. A branch the base already contains builds nothing (a rerun after the merge). A failed push is a
-    ``WORKTREE_PUSH_FAILED`` or ``WORKTREE_PUSH_REJECTED`` warning and does not stop the cleanup. Without ``merge``
-    the branch must already be merged into the base HEAD. With ``merge``, ``guard(merge_base, tip)`` runs after the
-    other checks and before the first change, with the commit ids of the branch's merge base with the base HEAD
-    (empty when there is none) and of its tip; it refuses by raising (the ``devkit.finish_guard`` extensions in the
-    CLI). The checks of the worktree's branch and lock, the base and the upstreams (including whether ``git branch
-    -d`` will accept the branch) run before the first change, and so does the check for uncommitted or untracked
-    changes in the worktree (``WORKTREE_DIRTY``; the removal still refuses a worktree that became dirty since).
-    ``before_remove`` runs once the merge is confirmed and before the worktree is
-    removed (a caller's own cleanup; it runs again on a rerun). A refusal after that carries the partial result as
-    ``error.result``, also an ``AdvisoryError`` that ``before_remove`` raises.
+    ``finish`` lands nothing: local landing is ``devkit integration integrate --route local``
+    (``ADR-single-local-landing-route``), and a branch the base does not contain is ``WORKTREE_UNMERGED``. It makes no
+    network call. ``before_step(step, result)`` runs immediately before each local mutation (worktree_remove,
+    branch_delete or marker_clear); it may refuse by raising. The checks of the worktree's branch and lock, the base
+    (including whether ``git branch -d`` will accept the branch) and the check for uncommitted or untracked changes in
+    the worktree (``WORKTREE_DIRTY``; the removal still refuses a worktree that became dirty since) run before the
+    first change. ``before_remove`` runs once the merge is confirmed and before the worktree is removed (a caller's
+    own cleanup; it runs again on a rerun). A refusal after that carries the partial result as ``error.result``,
+    also an ``AdvisoryError`` that ``before_remove`` raises.
 
     A branch without a worktree is finished only when ``start``, ``start_branch`` or ``attach`` marked it (its
     ``branch.<branch>.devkitWorktree`` marker): one whose worktree is already gone (what a stopped run leaves), or
-    one ``start_branch`` created, which ``merge`` integrates like a worktree's branch. Any other branch of that name
-    is ``WORKTREE_NOT_FOUND``, and nothing runs, merges, pushes or is deleted for it. The marker gates only this
-    path: a branch whose worktree exists finishes whether or not it carries it. It lasts until the finish
-    completes: ``git branch -d`` removes it with the branch, and without ``delete_branch`` it is unset once the
-    worktree is removed, so a rerun after a completed finish is ``WORKTREE_NOT_FOUND`` either way.
+    one ``start_branch`` created. Any other branch of that name is ``WORKTREE_NOT_FOUND``, and nothing runs or is
+    deleted for it. The marker gates only this path: a branch whose worktree exists finishes whether or not it
+    carries it. It lasts until the finish completes: ``git branch -d`` removes it with the branch, and without
+    ``delete_branch`` it is unset once the worktree is removed, so a rerun after a completed finish is
+    ``WORKTREE_NOT_FOUND`` either way.
     """
-    if network not in {"allow", "forbid"}:
-        raise ArgumentError("network must be allow or forbid")
     check_branch(branch)
     refuse_linked(
         position,
         RunFromBaseError,
         f"{position.root} is the worktree finish would remove",
     )
-    if merge and pull_request == "required":
-        raise PullRequestPolicyError(
-            '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally',
-            fix=pull_request_policy_fix(branch),
-        )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)
     if entry is None:
@@ -1085,7 +1053,7 @@ def finish(
                     " integrate or remove it",
                 )
             # Only a marked branch resumes, whether or not it is deleted: any other merged branch (the base's own
-            # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
+            # included) would otherwise run ``before_remove`` for a task that never existed.
             raise NotFoundError(
                 f"no worktree at {path_for(position, branch)} or on branch {branch}; the branch {branch} is merged"
                 f" into the base HEAD but has no {marker_key(branch)} marker, so devkit worktree start did not create"
@@ -1099,80 +1067,13 @@ def finish(
             )
         _log.info("%s has no worktree; finishing the marked branch alone", branch)
         result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
-        back = branch_marker(base, branch, BASE_KEY)
-        if merge and back and position.branch != back:
-            raise ConflictError(
-                f"{branch} was started from {back}, but the base checkout is on {position.branch or 'a detached HEAD'};"
-                f" finish --merge integrates it into {back}; nothing was changed",
-                fix=f"git -C {shlex.quote(str(base))} switch {back}, then rerun",
-            )
     else:
         result = FinishResult(branch, entry.path)
         _require_clean(entry.path)  # before any change: a dirty worktree is never removed, so nothing would finish
-    if merge:
-        if position.branch is None:
-            raise BaseDetachedError(
-                f"{base} is on a detached HEAD; the merge would move no branch and nothing would be pushed",
-                target_files=[str(base)],
-            )
-        if not _clean(base):
-            raise BaseDirtyError(f"{base} has uncommitted changes", target_files=[str(base)])
-    elif not _merged(base, ref, _head(base)):
-        raise UnmergedError(f"{branch} is not merged into the base HEAD; nothing was changed")
+    if not _merged(base, ref, _head(base)):
+        raise UnmergedError(f"{branch} is not merged into the base HEAD; nothing was changed", fix=unmerged_fix(branch))
     if delete_branch:
         _check_deletable(base, branch, position.branch)
-    if merge:
-        tip = run_git_text(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
-        head = _head(base)
-        if head is not None and not _merged(base, tip, head):
-            if not _merged(base, head, tip):
-                raise MergeNotFastForwardError(
-                    f"{branch} does not contain the base HEAD {head[:12]}; finish --merge lands only a branch that"
-                    " contains it; nothing was changed"
-                )
-            if merge_method == "no-ff":
-                check_identity(base)
-        if guard is not None:
-            guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
-        if network == "allow":
-            _check_upstream(position)
-        if run_git_text(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
-            raise ConflictError(
-                f"{branch} moved while finish checked it (it was {tip[:7]}); only the checked commit is merged;"
-                " nothing was changed",
-                fix="Let the run committing to it end, then rerun the same command",
-            )
-        landing = tip
-        if head is not None and _head(base) != head:
-            raise ConflictError(
-                f"the base HEAD moved while finish checked {branch} (it was {head[:7]}); nothing was changed",
-                fix="Let the run committing to the base end, then rerun the same command",
-            )
-        if head is not None and not _merged(base, tip, head):
-            # The commit the guard checked, not the branch ref, which a running worker could move meanwhile.
-            landing = build_result(
-                base,
-                branch=branch,
-                target_branch=position.branch or "HEAD",
-                target=head,
-                source=tip,
-                method=merge_method,
-            )
-        try:
-            if before_step is not None:
-                before_step("merge", result)
-            run_git(base, "merge", "--ff-only", "--quiet", landing)
-        except GitError as exc:
-            if exc.returncode is None:
-                raise
-            if network == "forbid" and _merged(base, _head(base), landing):
-                raise MergeFailedError(f"local merge of {branch} failed: {exc.stderr or exc.message}") from exc
-            raise MergeNotFastForwardError(f"{branch} cannot be fast-forwarded onto the base: {exc.stderr}") from exc
-        result.merged = True
-        if network == "allow":
-            _push(position, result)
-        else:
-            result.push = "excluded"
     # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included.
     with _carrying(result):
         if before_remove is not None:
@@ -1331,84 +1232,6 @@ def _check_deletable(base: Path, branch: str, into: str | None) -> None:
         " the merge; nothing was changed",
         fix=fix,
     )
-
-
-def _upstream(position: Position) -> tuple[str, str] | None:
-    """The base branch's configured remote and remote ref; ``None`` on a detached HEAD or without an upstream."""
-    if position.branch is None:
-        return None
-    remote = git_config(position.base, f"branch.{position.branch}.remote") or ""
-    merge_ref = git_config(position.base, f"branch.{position.branch}.merge") or ""
-    if not remote or remote == "." or not merge_ref:
-        return None
-    return remote, merge_ref
-
-
-def _check_upstream(position: Position) -> None:
-    """Refuse before the merge when the base branch's upstream has commits the base lacks: the push would fail.
-
-    The upstream ref is fetched (no prompts, within ``FETCH_TIMEOUT``). A fetch that fails (offline, an
-    unreachable remote, a remote ref that does not exist yet) skips the check: the merge stays local until the
-    push, which reports what remains.
-    """
-    upstream = _upstream(position)
-    if upstream is None:
-        return
-    remote, merge_ref = upstream
-    base = position.base
-    try:
-        run_git(base, "fetch", "--quiet", "--no-tags", remote, merge_ref, timeout=FETCH_TIMEOUT)
-    except GitError as exc:
-        _log.info("could not fetch %s %s; the base is not checked against it: %s", remote, merge_ref, exc.message)
-        return
-    tip = _query(base, "rev-parse", "--verify", "--quiet", "FETCH_HEAD^{commit}")
-    if tip is None or is_ancestor(base, tip, "HEAD"):
-        return
-    raise BaseBehindError(
-        f"{remote} {merge_ref} has commits the base branch {position.branch} lacks, so the push after the merge"
-        " would be rejected; nothing was changed",
-        fix=f"git -C {shlex.quote(str(base))} pull --ff-only {shlex.quote(remote)} {merge_ref}",
-        target_files=[str(base)],
-    )
-
-
-def _push(position: Position, result: FinishResult) -> None:
-    """Push the base branch to its configured upstream with an explicit refspec; never prompts, never forces."""
-    result.push = "no-upstream"
-    upstream = _upstream(position)
-    if upstream is None or position.branch is None:
-        return
-    remote, merge_ref = upstream
-    base = shlex.quote(str(position.base))
-    refspec = f"refs/heads/{position.branch}:{merge_ref}"
-    push = f"git -C {base} push {shlex.quote(remote)} {refspec}"
-    try:
-        run_git(position.base, "push", "--quiet", remote, refspec, timeout=PUSH_TIMEOUT)
-    except GitError as exc:
-        reason = exc.stderr or exc.message
-        if "[rejected]" in exc.stderr:  # the upstream moved on: pushing again fails identically
-            result.push = "rejected"
-            result.notices.append(
-                PushRejectedWarning(
-                    f"the base was merged and the worktree is being cleaned up, but {remote} rejected the push"
-                    f" because it has commits the base lacks: {reason}",
-                    fix=(
-                        f"git -C {base} fetch {shlex.quote(remote)} {merge_ref} && git -C {base} merge --no-ff -m"
-                        f" {shlex.quote(merge_message(f'{remote}/{_short(merge_ref)}', position.branch))} FETCH_HEAD"
-                        f" && {push}"
-                    ),
-                )
-            )
-            return
-        result.push = "failed"
-        result.notices.append(
-            PushFailedWarning(
-                f"the base was merged and the worktree is being cleaned up, but the push to {remote} failed: {reason}",
-                fix=push,
-            )
-        )
-        return
-    result.push = "pushed"
 
 
 def _short(ref: str) -> str:

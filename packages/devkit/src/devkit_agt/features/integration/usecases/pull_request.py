@@ -488,7 +488,6 @@ def execute(service: IntegrationService, record: _Record) -> IntegrationResult:
                 result.finish = finish(
                     locate(root),
                     plan.branch,
-                    network="forbid",
                     delete_branch=plan.delete_branch,
                     before_step=before_step,
                 )

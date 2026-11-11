@@ -1,17 +1,16 @@
-"""``devkit_agt.features.worktree.services.merging`` and ``finish --merge``: the result commit built outside the base checkout."""
+"""``devkit_agt.features.worktree.services.merging`` and ``plan_finish``: the result commit built outside the base
+checkout. Local landing itself is ``devkit integration`` (``tests/integration/features/integration``)."""
 
 from __future__ import annotations
 
 import ast
 import inspect
-import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 import devkit_agt.features.worktree.services.merging as merging
 import pytest
-from click.testing import CliRunner
 from devkit_agt.features.worktree import (
     CommitFailedError,
     GitUnsupportedError,
@@ -20,7 +19,6 @@ from devkit_agt.features.worktree import (
     MergeNotFastForwardError,
     WorktreeConfigError,
     build_result,
-    finish,
     locate,
     merge_method,
     plan_finish,
@@ -28,8 +26,6 @@ from devkit_agt.features.worktree import (
     start,
 )
 from devkit_core.base.errors import GitError
-from devkit_core.core.locks import file_lock
-from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 
 
@@ -230,35 +226,8 @@ def test_missing_identity_is_refused_before_any_change(repo: Path) -> None:
     git(repo, "config", "user.name", "")
     with pytest.raises(CommitFailedError):
         plan_finish(locate(repo), "dev-demo")
-    with pytest.raises(CommitFailedError):
-        finish(locate(repo), "dev-demo", merge=True, network="forbid")
     assert git(repo, "rev-parse", "HEAD") == head and git(repo, "rev-parse", "dev-demo") == tip
     assert plan_finish(locate(repo), "dev-demo", merge_method="ff-only").merge_method == "ff-only"
-
-
-def test_finish_merge_lands_a_merge_commit_and_a_rerun_builds_nothing(repo: Path) -> None:
-    path, tip = task(repo)
-    head = git(repo, "rev-parse", "HEAD")
-    result = finish(locate(repo), "dev-demo", merge=True, network="forbid", delete_branch=False)
-    landed = git(repo, "rev-parse", "HEAD")
-    assert result.merged and git(repo, "rev-parse", "HEAD^1", "HEAD^2").split() == [head, tip]
-    assert git(repo, "rev-parse", "HEAD^{tree}") == git(repo, "rev-parse", f"{tip}^{{tree}}")
-    assert not path.exists()
-    # What a run stopped after the merge leaves: the marked branch, already contained in the base.
-    git(repo, "config", "branch.dev-demo.devkitWorktree", str(path))
-    again = finish(locate(repo), "dev-demo", merge=True, network="forbid", delete_branch=False)
-    assert again.merged and git(repo, "rev-parse", "HEAD") == landed
-
-
-def test_finish_merge_ff_only_fast_forwards_and_refuses_an_advanced_base(repo: Path) -> None:
-    _, tip = task(repo)
-    moved = commit(repo, "theirs.txt")
-    with pytest.raises(MergeNotFastForwardError):
-        finish(locate(repo), "dev-demo", merge=True, network="forbid", merge_method="no-ff")
-    assert git(repo, "rev-parse", "HEAD") == moved
-    git(repo, "reset", "-q", "--hard", "HEAD~1")
-    finish(locate(repo), "dev-demo", merge=True, network="forbid", merge_method="ff-only")
-    assert git(repo, "rev-parse", "HEAD") == tip
 
 
 def test_source_policy_ff_only_wins(repo: Path) -> None:
@@ -267,18 +236,6 @@ def test_source_policy_ff_only_wins(repo: Path) -> None:
     assert merge_method(repo, "ff-only", "refs/heads/dev-demo") == "ff-only"
     commit(path, ".devkit/config.toml", '[worktree]\nmerge = "ff-only"\n')
     assert merge_method(repo, "no-ff", "refs/heads/dev-demo") == "ff-only"
-
-
-def test_cli_finish_merge_takes_the_integration_lock(repo: Path) -> None:
-    path, tip = task(repo)
-    with file_lock(repo / ".git" / merging.LOCK_NAME):
-        held = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--merge", "--local-only", "-w", str(repo)])
-        assert held.exit_code == 2 and "LOCK_HELD" in held.stderr and path.exists()
-    done = CliRunner().invoke(
-        cli, ["worktree", "finish", "dev-demo", "--merge", "--local-only", "-w", str(repo), "--format", "json"]
-    )
-    assert done.exit_code == 0, done.output
-    assert json.loads(done.stdout)["merged"] is True and git(repo, "rev-parse", "HEAD^2") == tip
 
 
 def test_plan_finish_plans_a_moved_target_only_with_advance_under_no_ff(repo: Path) -> None:

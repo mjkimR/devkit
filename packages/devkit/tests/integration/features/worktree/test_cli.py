@@ -27,6 +27,21 @@ def configure(root: Path, table: str) -> None:
     write(root, ".devkit/config.toml", f"schema = 1\n\n[worktree]\n{table}")
 
 
+def work(repo: Path) -> Path:
+    """Start ``dev-demo`` and commit one change in its worktree; return the worktree."""
+    assert invoke("start", "dev-demo", "-w", str(repo)).exit_code == 0
+    path = repo.parent / "repo-wt-dev-demo"
+    write(path, "work.txt", "x\n")
+    git(path, "add", ".")
+    git(path, "commit", "-q", "-m", "work")
+    return path
+
+
+def land(repo: Path, branch: str = "dev-demo") -> None:
+    """Land ``branch`` on the base as local integration does (a merge commit), so ``finish`` only cleans up."""
+    git(repo, "merge", "-q", "--no-ff", "-m", f"chore(merge): integrate {branch} into main", branch)
+
+
 def test_start_prints_the_worktree_and_the_cd_hint(repo: Path) -> None:
     result = invoke("start", "dev-demo", "-w", str(repo))
     path = repo.parent / "repo-wt-dev-demo"
@@ -55,27 +70,22 @@ def test_a_dirty_worktree_refuses_finish_before_any_change(repo: Path) -> None:
     configure(repo, 'pull_request = "auto"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "config")
-    assert invoke("start", "dev-demo", "-w", str(repo)).exit_code == 0
-    path = repo.parent / "repo-wt-dev-demo"
-    write(path, "work.txt", "x\n")
-    git(path, "add", ".")
-    git(path, "commit", "-q", "-m", "work")
+    path = work(repo)
+    land(repo)
     write(path, "wip.txt", "x\n")
-    head = git(repo, "rev-parse", "HEAD")
-    refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
+    refused = invoke("finish", "dev-demo", "-w", str(repo))
     assert refused.exit_code == 2 and refused.stdout == ""  # no result sentinel for a refused run
     assert "(WORKTREE_DIRTY)" in refused.stderr and f"[TARGET] {path}\n" in refused.stderr
     assert "--force" not in refused.stderr  # git's own hint is not relayed
-    assert git(repo, "rev-parse", "HEAD") == head  # nothing was merged
+    assert path.is_dir() and "refs/heads/dev-demo" in git(repo, "show-ref")  # nothing was removed
     (path / "wip.txt").unlink()
-    done = invoke("finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json")
+    done = invoke("finish", "dev-demo", "-w", str(repo), "--format", "json")
     assert done.exit_code == 0, done.output
     assert json.loads(done.stdout) == {
         "branch": "dev-demo",
         "slug": "demo",
         "path": str(path),
-        "merged": True,
-        "push": "no-upstream",
+        "merged": False,
         "removed": True,
         "branch_deleted": True,
         "discarded": False,
@@ -90,49 +100,99 @@ def test_a_refused_finish_in_json_carries_the_partial_result_and_the_error(repo:
     invoke("start", "dev-demo", "-w", str(repo))
     path = repo.parent / "repo-wt-dev-demo"
     write(path, "wip.txt", "x\n")
-    refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json")
+    refused = invoke("finish", "dev-demo", "-w", str(repo), "--format", "json")
     document = json.loads(refused.stdout)
     assert refused.exit_code == 2 and refused.stderr == ""
     assert document["error"]["code"] == "WORKTREE_DIRTY"
     assert document["error"]["advisory"]["target_files"] == [str(path)]
 
 
-def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_then_resumes(
-    repo: Path, tmp_path: Path, refuse_deleting: Callable[[Path, str], Path]
+def test_a_git_failure_during_cleanup_reports_progress_then_resumes(
+    repo: Path, refuse_deleting: Callable[[Path, str], Path]
 ) -> None:
-    configure(repo, 'pull_request = "auto"\n')
-    git(repo, "add", ".")
-    git(repo, "commit", "-q", "-m", "config")
-    git(repo, "remote", "add", "origin", str(tmp_path / "gone.git"))  # unreachable: the push fails
-    git(repo, "config", "branch.main.remote", "origin")
-    git(repo, "config", "branch.main.merge", "refs/heads/main")
-    invoke("start", "dev-demo", "-w", str(repo))
-    path = repo.parent / "repo-wt-dev-demo"
-    write(path, "work.txt", "x\n")
-    git(path, "add", ".")
-    git(path, "commit", "-q", "-m", "work")
+    path = work(repo)
+    land(repo)
     hook = refuse_deleting(repo, "dev-demo")
-    refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
+    refused = invoke("finish", "dev-demo", "-w", str(repo))
     assert refused.exit_code == 2
     assert refused.stdout == (
-        f"[WORKTREE_FINISH_PARTIAL: dev-demo path={path} merged=yes push=failed removed=yes branch_deleted=no"
-        " discarded=no]\n"
+        f"[WORKTREE_FINISH_PARTIAL: dev-demo path={path} merged=no removed=yes branch_deleted=no discarded=no]\n"
     )
-    assert "(WORKTREE_PUSH_FAILED)" in refused.stderr and "(WORKTREE_BRANCH_DELETE_FAILED)" in refused.stderr
+    assert "(WORKTREE_BRANCH_DELETE_FAILED)" in refused.stderr
     hook.unlink()
     done = invoke("finish", "dev-demo", "-w", str(repo))
     assert done.exit_code == 0, done.output
     assert (
         done.stdout
-        == f"[WORKTREE_FINISHED: dev-demo path={path} merged=no push=- removed=yes branch_deleted=yes discarded=no]\n"
+        == f"[WORKTREE_FINISHED: dev-demo path={path} merged=no removed=yes branch_deleted=yes discarded=no]\n"
     )
 
 
-def test_merge_is_refused_under_the_pull_request_policy(repo: Path) -> None:
-    configure(repo, 'pull_request = "required"\n')
-    invoke("start", "dev-demo", "-w", str(repo))
-    refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json")
-    assert refused.exit_code == 2 and json.loads(refused.stdout)["error"]["code"] == "WORKTREE_PR_POLICY"
+@pytest.mark.parametrize("flags", [(), ("--local-only",)], ids=["plain", "local-only"])
+def test_finish_of_a_landed_branch_makes_no_network_call(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, flags: tuple[str, ...]
+) -> None:
+    """AC-03: cleanup after a landing (local integration or a merged pull request) stays local."""
+    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
+
+    git(repo, "remote", "add", "origin", str(tmp_path / "gone.git"))
+    git(repo, "config", "branch.main.remote", "origin")
+    git(repo, "config", "branch.main.merge", "refs/heads/main")
+    path = work(repo)
+    land(repo)
+    called: list[str] = []
+    for name in ("run_git", "run_git_text"):
+        original = getattr(lifecycle, name)
+
+        def record(root: Path, *args: str, _original: Callable[..., object] = original, **kw: object) -> object:
+            called.append(args[0])
+            return _original(root, *args, **kw)
+
+        monkeypatch.setattr(lifecycle, name, record)
+    done = invoke("finish", "dev-demo", *flags, "-w", str(repo))
+    assert done.exit_code == 0, done.output
+    assert (
+        done.stdout
+        == f"[WORKTREE_FINISHED: dev-demo path={path} merged=no removed=yes branch_deleted=yes discarded=no]\n"
+    )
+    assert called and not set(called) & {"fetch", "push", "ls-remote"}
+
+
+def test_an_unmerged_branch_is_refused_with_the_integration_route(repo: Path) -> None:
+    path = work(repo)
+    refused = json.loads(invoke("finish", "dev-demo", "-w", str(repo), "--format", "json").stdout)["error"]
+    assert refused["code"] == "WORKTREE_UNMERGED"
+    fix = refused["advisory"]["fix"]
+    assert "uv run devkit integration prepare dev-demo --route local" in fix and "--merge" not in fix
+    assert path.is_dir()
+
+
+@pytest.mark.parametrize("extra", [(), ("--discard",)], ids=["merge", "merge-discard"])
+def test_finish_merge_is_retired_and_changes_nothing(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, extra: tuple[str, ...]
+) -> None:
+    """AC-01: ``--merge`` refuses with ``WORKTREE_MERGE_RETIRED`` naming the integration commands; nothing changes."""
+    from devkit_core.core import extensions as core_extensions
+
+    listed: list[str] = []
+    monkeypatch.setattr(core_extensions.metadata, "entry_points", lambda group: listed.append(group) or [])
+    path = work(repo)
+    before = (git(repo, "rev-parse", "HEAD"), git(repo, "show-ref"), git(repo, "config", "--get-regexp", "devkit"))
+    refused = invoke("finish", "dev-demo", "--merge", *extra, "-w", str(repo))
+    assert refused.exit_code == 2 and refused.stdout == ""
+    assert "[ERROR]  (WORKTREE_MERGE_RETIRED)" in refused.stderr
+    fix = next(line for line in refused.stderr.splitlines() if line.startswith("[FIX]"))
+    assert "uv run devkit integration prepare dev-demo --route local" in fix
+    assert "uv run devkit integration integrate dev-demo --route local --expected-digest <digest>" in fix
+    after = (git(repo, "rev-parse", "HEAD"), git(repo, "show-ref"), git(repo, "config", "--get-regexp", "devkit"))
+    assert after == before and path.is_dir() and listed == []  # no post-finish extension was even listed
+    advisory = json.loads(invoke("finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json").stdout)["error"]
+    assert (advisory["code"], advisory["advisory"]["mode"], advisory["advisory"]["level"]) == (
+        "WORKTREE_MERGE_RETIRED",
+        "INPUT_ERROR",
+        "ERROR",
+    )
+    assert "--merge" not in invoke("finish", "--help").stdout
 
 
 def test_status_lists_worktrees_branches_and_a_summary(repo: Path) -> None:
@@ -219,12 +279,13 @@ def test_post_finish_extensions_run_after_a_successful_finish_only(repo: Path, m
     write(path, "work.txt", "x\n")
     git(path, "add", ".")
     git(path, "commit", "-q", "-m", "work")
+    land(repo)
     write(path, "wip.txt", "x\n")
-    refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
+    refused = invoke("finish", "dev-demo", "-w", str(repo))
     assert refused.exit_code == 2 and seen == []  # a refusal runs no extension
 
     (path / "wip.txt").unlink()
-    done = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
+    done = invoke("finish", "dev-demo", "-w", str(repo))
     assert done.exit_code == 0, done.output
     assert [(base, result["slug"], result["branch"], result["removed"]) for base, result in seen] == [
         (repo, "demo", "dev-demo", True)
@@ -257,6 +318,6 @@ def test_commands_run_inside_a_linked_worktree_fix_with_the_same_command_on_the_
     assert nested["code"] == "WORKTREE_NESTED"
     assert nested["advisory"]["fix"] == f"uv run devkit worktree start dev-other --format json -w {repo}"
     assert any(f"keep working in {path}" in line for line in nested["advisory"]["details"])
-    refused = invoke("finish", "dev-demo", "--merge", "-w", str(path))
+    refused = invoke("finish", "dev-demo", "-w", str(path))
     assert refused.exit_code == 2 and "(WORKTREE_RUN_FROM_BASE)" in refused.stderr
-    assert f"[FIX]    uv run devkit worktree finish dev-demo --merge -w {repo}\n" in refused.stderr
+    assert f"[FIX]    uv run devkit worktree finish dev-demo -w {repo}\n" in refused.stderr

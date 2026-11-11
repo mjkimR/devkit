@@ -482,8 +482,6 @@ class IntegrationService:
                 result.finish = finish(
                     locate(self.root),
                     plan.branch,
-                    merge=False,
-                    network="forbid",
                     delete_branch=plan.delete_branch,
                     before_step=before_step,
                 )

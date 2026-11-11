@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -12,8 +11,6 @@ import yaml
 from devkit_agt.features.workflow.models.envelope import Envelope
 from devkit_agt.features.workflow.models.errors import AuthoringError
 from devkit_agt.features.workflow.services.envelope import load_envelopes
-from devkit_agt.features.workflow.usecases.integration import finish_guard
-from devkit_core.base.errors import GitError
 from testsupport.workflow import SIMPLE_UNIT, run_cli, write_config
 
 GATED = """---
@@ -357,94 +354,33 @@ def test_envelope_check_reports_the_hold(root: Path) -> None:
     assert data["blocked"] is True and [q["id"] for q in data["pending_questions"]] == ["q1", "q2"]
 
 
-# -- the integration guard ---------------------------------------------------------------------------------------------
+# -- the retired finish guard -----------------------------------------------------------------------------------------
 
 
-def _git(cwd: Path, *args: str) -> str:
-    return subprocess.run(["git", "-C", str(cwd), *args], check=True, capture_output=True, text=True).stdout.strip()
+def test_the_finish_guard_group_is_retired_and_envelope_check_keeps_the_hold(root: Path) -> None:
+    """AC-05: nothing registers or runs ``devkit.finish_guard``; ``envelope check`` reports each unresolved problem."""
+    import importlib
+    from importlib import metadata
 
+    import devkit_agt.features.worktree as worktree
+    import devkit_agt.features.worktree.models.errors as errors
+    import devkit_agt.features.worktree.services.extensions as extensions
 
-def _commit(repo: Path, message: str) -> str:
-    _git(repo, "add", "-A")
-    _git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", message)
-    return _git(repo, "rev-parse", "HEAD")
-
-
-def test_finish_guard_reads_the_units_the_branch_changed_at_its_tip(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-q", "-b", "main")
-    _write(repo / "docs/old", "worker-01.yaml", _problem())  # already on the base: not the branch's
-    (repo / "README.md").write_text("x\n")
-    base = _commit(repo, "base")
-    _git(repo, "switch", "-q", "-c", "dev-x")
-    unit = repo / "docs/specs/x"
+    assert [entry for entry in metadata.entry_points(group="devkit.finish_guard") if entry.dist and entry.dist.name == "devkit-agt"] == []  # fmt: skip
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("devkit_agt.features.workflow.usecases.integration")
+    for module, name in [(extensions, "run_finish_guards"), (extensions, "FINISH_GUARD_GROUP"), (worktree, "run_finish_guards")]:  # fmt: skip
+        assert not hasattr(module, name)
+    for name in ["BlockedError", "GuardFailedError", "BaseBehindError", "PushFailedWarning", "PushRejectedWarning"]:
+        assert not hasattr(errors, name) and not hasattr(worktree, name)
+    codes = {getattr(value, "code", None) for value in vars(errors).values()}
+    retired = {"WORKTREE_BLOCKED", "WORKTREE_GUARD_FAILED", "WORKTREE_BASE_BEHIND", "WORKTREE_PUSH_FAILED", "WORKTREE_PUSH_REJECTED"}  # fmt: skip
+    assert not codes & retired
+    unit = root / SIMPLE_UNIT
     _write(unit, "worker-01.yaml", _problem())
-    _write(unit, "worker-02.yaml", _question())
-    tip = _commit(repo, "work")
-    assert finish_guard(repo, "dev-x", base, tip) == [
-        "docs/specs/x/envelopes/worker-01.yaml: unresolved problem: tests cannot start",
-        "docs/specs/x/envelopes/worker-02.yaml: unanswered question q1: Format",
-        "docs/specs/x/envelopes/worker-02.yaml: unanswered question q2: Scope",
-    ]
-    # Uncommitted envelopes neither block nor clear: the guard reads the tip.
-    _write(unit, "resolution-01.yaml", {"kind": "resolution", "status": "completed", "resolves": "worker-01.yaml", "summary": "fixed"})  # fmt: skip
-    assert len(finish_guard(repo, "dev-x", base, tip)) == 3
-    answer = {"kind": "answer", "status": "completed", "answers_to": "worker-02.yaml"}
-    _write(unit, "answer-01.yaml", {**answer, "answers": [{"question": "q1", "decision": "a"}, {"question": "q2", "decision": "b"}]})  # fmt: skip
-    tip = _commit(repo, "resolve and answer")
-    assert finish_guard(repo, "dev-x", base, tip) == []
-    # Deleting a problem envelope does not clear it: a deleted file of a kept unit is read at the merge base.
-    _git(repo, "switch", "-q", "main")
-    _write(repo / "docs/specs/y", "worker-01.yaml", _problem())
-    (repo / "docs/specs/y/spec.md").write_text("y\n")
-    held_base = _commit(repo, "a held unit on the base")
-    _git(repo, "switch", "-q", "-c", "dev-y")
-    _git(repo, "rm", "-q", "docs/specs/y/envelopes/worker-01.yaml")
-    assert finish_guard(repo, "dev-y", held_base, _commit(repo, "delete the problem")) == [
-        "docs/specs/y/envelopes/worker-01.yaml: unresolved problem: tests cannot start"
-    ]
-    _git(repo, "rm", "-q", "-r", "docs/specs/y")
-    assert finish_guard(repo, "dev-y", held_base, _commit(repo, "drop the unit")) == []
-    # A malformed worker envelope holds: whether it reports a problem cannot be known.
-    _write(
-        repo / "docs/specs/z",
-        "worker-01.yaml",
-        {**_problem(), "problem": {"cause": "x", "recovery": "y", "severity": 1}},
-    )
-    malformed = finish_guard(repo, "dev-y", held_base, _commit(repo, "malformed"))
-    assert len(malformed) == 1 and "docs/specs/z/envelopes/worker-01.yaml: malformed worker envelope" in malformed[0]
-    # Git failures propagate (the guard runner refuses the merge): fail closed.
-    with pytest.raises(GitError):
-        finish_guard(repo, "dev-y", held_base, "0" * 40)
-
-
-def test_finish_merge_refuses_a_held_branch_through_the_installed_guard(tmp_path: Path) -> None:
-    from click.testing import CliRunner
-    from devkit_agt.features.worktree import locate, start
-    from devkit_dist.cli import cli
-
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-q", "-b", "main")
-    # `finish --merge` commits the merge itself; a CI runner has no global identity.
-    _git(repo, "config", "user.name", "t")
-    _git(repo, "config", "user.email", "t@t")
-    (repo / "README.md").write_text("x\n")
-    head = _commit(repo, "base")
-    worktree = start(locate(repo.resolve()), "dev-x").path
-    unit = worktree / "docs/specs/x"
-    _write(unit, "worker-01.yaml", _problem())
-    _commit(worktree, "work")
-    finish = ["worktree", "finish", "dev-x", "--merge", "-w", str(repo)]
-    refused = CliRunner().invoke(cli, finish)
-    assert refused.exit_code == 2 and "(WORKTREE_BLOCKED)" in refused.stderr
-    assert "docs/specs/x/envelopes/worker-01.yaml: unresolved problem: tests cannot start" in refused.stderr
-    assert _git(repo, "rev-parse", "HEAD") == head
-    _write(unit, "resolution-01.yaml", {"kind": "resolution", "status": "completed", "resolves": "worker-01.yaml", "summary": "fixed"})  # fmt: skip
-    _commit(worktree, "resolve")
-    assert CliRunner().invoke(cli, finish).exit_code == 0
-    assert (repo / "docs/specs/x/envelopes/resolution-01.yaml").is_file()
+    _write(unit, "worker-02.yaml", {**_problem(), "problem": {"cause": "a second cause", "recovery": "retry"}})
+    data = json.loads(run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json").stdout)
+    assert data["blocked"] is True and len(data["problems"]) == 2
 
 
 STAGED = """---

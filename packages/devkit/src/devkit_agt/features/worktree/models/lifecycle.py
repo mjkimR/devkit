@@ -76,15 +76,14 @@ class BranchStartResult:
 
 @dataclass
 class FinishResult:
-    """How far ``finish`` got; ``push`` is ``pushed``, ``rejected``, ``failed`` or ``no-upstream``, ``None`` without
-    a merge. ``removed`` is also ``True`` when there was no worktree to remove (a rerun after it was removed, or a
+    """How far ``finish`` got. ``merged`` is ``True`` only when the caller landed the branch (local integration sets
+    it); ``finish`` itself never merges. ``removed`` is also ``True`` when there was no worktree to remove (a rerun after it was removed, or a
     branch ``start_branch`` created, whose ``path`` is the checkout it was started in). ``discarded`` is ``True`` for
     ``discard``: the branch was deleted unmerged."""
 
     branch: str
     path: Path
     merged: bool = False
-    push: str | None = None
     removed: bool | None = False  # None: the branch never had a worktree (``start_branch``, made by hand)
     branch_deleted: bool = False
     discarded: bool = False
