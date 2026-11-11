@@ -31,7 +31,9 @@ def test_review_and_host_check_annotation_before_record_and_final_agreement(envi
     assert_rule(review, "p2", "p1", "explicit payload denies", "test weakening")
     assert_rule(review, "initial payload", "task diff", "omitted annotation", "material finding")
     assert_rule(review, "final host/inspect", "changed", "review")
-    assert_rule(raw("subagents/code-reviewer.md", environment), "follow the steps", "spec-review/skill.md", "diff_scope")
+    assert_rule(
+        raw("subagents/code-reviewer.md", environment), "follow the steps", "spec-review/skill.md", "diff_scope"
+    )
     host = raw("skills/spec-delegate/references/worker.md", environment)
     assert_rule(host, "prior-turn records", "retained", "highest worker sequence", "historical records alone")
     assert_rule(host, "checks.scope_extensions", "structural", "custom protected", "optional", "cloud")
