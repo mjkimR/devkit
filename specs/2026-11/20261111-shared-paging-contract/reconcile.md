@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-shared-paging-contract
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-08-1-agent-output.md
     resolution: modified

@@ -2,7 +2,7 @@
 id: SPEC-shared-paging-contract
 title: One paging contract for listing commands
 summary: "Moves devkit exec list text output onto the shared PAGE and NEXT_CMD paging lines and states that paging grammar once in the agent output architecture, so listing commands that page share one grammar; maintenance history list stays an unpaged bounded listing."
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-HARN-isolated-execution
