@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T05:07:45.801225Z'
+status: completed
+summary: 'Session sweep before direct acceptance: covered the review-refactor, drift, feedback-hygiene and peripheral compression work of this session. Recorded none. The only unrecorded observation (a cross-package phrase pin in test_deep_research.py not selected by affected tests) is the class PROP-select-tests-by-read-document-paths covers, live in Planning.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
