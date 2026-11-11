@@ -20,7 +20,7 @@ plan: PLAN-remove-test-only-public-apis
   - **_Boundary**: `packages/devkit-dist/src/devkit_dist/features/search/`, `packages/devkit-dist/tests/unit/features/search/test_lexical.py`, `packages/devkit-dist/tests/integration/features/search/test_index.py`
   - _Requirements: AC-03_
   - **Verification**: `just test-dist`
-- [ ] **Task 1.4**: Update the Living Spec for the removed members
+- [x] **Task 1.4**: Update the Living Spec for the removed members
   - **_Boundary**: `docs/capabilities/worktree/CAP-WT-task-worktrees.md`, `docs/capabilities/search/CAP-SRCH-document-search.md`, `docs/development/reference/worktree.md`, `docs/development/reference/search.md`, `docs/development/reference/core.md`
   - _Requirements: AC-04_
   - **Verification**: `uv run devkit rules check`
