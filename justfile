@@ -61,7 +61,7 @@ rules-explain *args:
 rules-test *args:
     uv run --no-active --package devkit-agt devkit rules test "$@"
 
-# Run the workflow engine CLI (new, bind, next, show, checks, validate, list, requests, answer, return, handoff, envelope)
+# Run the workflow engine CLI (new, bind, next, show, checks, validate, list, answer, return, handoff, envelope)
 workflow *args:
     uv run --no-active --package devkit-agt devkit workflow "$@"
 

@@ -85,11 +85,12 @@ without a subcommand.
 
 | Command | Capability |
 | --- | --- |
-| `devkit docs resolve`, `refs`, `list` | `CAP-DOCS-document-lookup` |
+| `devkit docs resolve`, `refs`, `list`, `supersession` | `CAP-DOCS-document-lookup` |
 | `devkit docs search` | `CAP-DOCS-document-search` |
 | `devkit spec entrypoints` | `CAP-TRACE-code-entrypoints` |
 | `devkit spec new` | `CAP-DLV-spec-bundles` |
-| `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check` | `CAP-DLV-proposal-lifecycle` |
+| `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check\|report` | `CAP-DLV-proposal-lifecycle` |
+| `devkit spec worker inspect` | `CAP-DLV-delivery-roles` |
 | `devkit spec policy` | `CAP-DLV-project-policy` |
 | `devkit spec scope compare\|collect\|register\|query\|update\|release\|sweep` | `CAP-COLL-work-scope-registry` |
 

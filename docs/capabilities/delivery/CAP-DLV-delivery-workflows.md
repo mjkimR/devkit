@@ -400,7 +400,7 @@ workers (§4.1.2) and worker-result inspection (§4.2). Stage assignments and re
 | `devkit workflow next --unit <dir> [--given <check>]...` | Current stage, unmet checks, `[NEXT_SKILL]`, `[WAITING]`, `[DELEGATE]`, `[SKIPPED]`. |
 | `devkit workflow show <id>` / `--unit <dir>` | Render a definition. |
 | `devkit workflow answer --unit <dir> --request gate:<gate> --action accept\|decline --by user` | Record a custom gate decision, or decline `plan-accept`. |
-| `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-planning`). |
+| `devkit spec proposal accept <slug> --by user [--note <text>] [--direct --note <reason>] [--check]` | Record a `plan-accept` acceptance with `status: accepted` in one step; `--direct` for an eligible draft on the base (`CAP-DLV-proposal-planning`). A local Host accepts a reviewed Planning branch with the composed `--mode accept_only\|accept_and_handoff` form (`CAP-DLV-proposal-lifecycle`); the basic form records it on the `cloud-pr` route. |
 | `devkit workflow return --unit <dir> --to <stage>` | Go back within the activity; voids later approvals and earlier envelopes of those stages. |
 | `devkit workflow bind --unit <dir> --workflow <id>` | Bind an unbound unit, or change its workflow. |
 | `devkit workflow validate` | Validate definitions; `SHARED_STAGE_MISMATCH` across definitions. |

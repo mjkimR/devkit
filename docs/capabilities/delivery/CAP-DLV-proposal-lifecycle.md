@@ -231,7 +231,8 @@ uv run devkit spec proposal new fast-engine-v2 --supersedes PROP-fast-engine    
 uv run devkit spec proposal new fast-engine --summary "Replaces the regex rule engine with an AST parser."
 uv run devkit spec proposal padr fast-engine "Use AST parser"        # decisions/PADR-use-ast-parser.md
 uv run devkit spec proposal padr fast-engine "2024 roadmap" --slug roadmap-2024
-uv run devkit spec proposal accept fast-engine --by user --note "..."                # plan-<slug>, after review
+uv run devkit spec proposal accept fast-engine --by user --mode accept_only        # local Host, plan-<slug> after review
+uv run devkit spec proposal accept fast-engine --by user --note "..."                # cloud-pr route (autohub), plan-<slug>
 uv run devkit spec proposal accept small-fix --by user --direct --check --note "<reason>"  # read-only first
 uv run devkit spec proposal accept small-fix --by user --direct --note "<reason>"   # base checkout, after the sweep
 uv run devkit spec proposal handoff fast-engine                      # status: accepted (plan-accept recorded)
@@ -444,7 +445,8 @@ partial result requires Git/worktree inspection; after an already-landed operati
 remaining cleanup. `ADR-delivery-approval-and-lifecycle-authority` defines Host authorization and recovery boundaries.
 
 The composed `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` is the
-single Planning acceptance route, and the Host runs it itself: it already includes the integration and cleanup, so
+single Planning acceptance route of a local Host, which runs it itself (the basic form without `--mode`
+records acceptance on the `cloud-pr` route): it already includes the integration and cleanup, so
 no git-operator job precedes or follows it, and git-operator has no acceptance operation. A refusal raised in
 preparation leaves nothing written. WHEN a refusal comes after the acceptance commit (a Git conflict or a target that moved between preparations), THEN the result is
 `needs_recovery` with `completed_steps` and the accepted, unmerged `plan-<slug>` returns to the Host with the

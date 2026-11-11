@@ -319,8 +319,8 @@ class OverrideDiff:
 class OverrideChange:
     """``devkit override create|remove|accept``: what changed under ``.devkit/overrides/``.
 
-    ``notices`` are those of the synchronization ``create`` and ``remove`` run
-    (post-sync extension output included); ``accept`` does not synchronize.
+    ``notices`` are those of the synchronization each command runs (post-sync extension
+    output included); ``accept`` synchronizes too unless it defers with ``OVERRIDE_SYNC_DEFERRED``.
     """
 
     bundle: str
