@@ -6,7 +6,7 @@ Canonical behavior: `CAP-INT-mcp-services`; final verification: `CAP-DLV-deliver
 | --- | --- |
 | `devkit integration prepare BRANCH [--route local|pull-request] [-w DIR] [--format json]` | Show exact Git and cleanup scope without landing |
 | `devkit integration integrate BRANCH [--route local|pull-request] [--expected-digest DIGEST] [-w DIR] [--format json]` | Execute under Host-carried ask approval or retained-base auto policy |
-| `devkit worktree finish BRANCH --merge --local-only` | Existing standalone merge/cleanup with its original guards |
+| `devkit worktree finish BRANCH --local-only` | Remaining cleanup after a landing whose cleanup stopped; it lands nothing (`--merge` refuses with `WORKTREE_MERGE_RETIRED`) |
 
 The commands take no task-kind, task-id, unit or claims. Integration needs no readiness provider; legacy
 `[integration] provider` is ignored, unknown keys are diagnosed. The explicit branch supplies deterministic PR

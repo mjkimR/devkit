@@ -20,9 +20,9 @@ usecases:
 
 # [CAP-WT-task-worktrees] Task Worktrees: Overview
 
-`devkit_agt.features.worktree` gives each activity of a task its own branch, and that branch its own Git worktree when the task needs one, and turns the end of the task into one deterministic command. An activity runs on the branch `plan-<slug>` (Planning) or `dev-<slug>` (Development), in `<parent of base>/<base name>-wt-<branch>`; `finish` integrates the branch into the base checkout (by default as a merge commit built outside any checkout), removes the worktree and deletes the branch. `start` MUST NOT start a new branch where its checks find one of that name, locally or on a remote (the limits of those checks are in `start` step 3): an existing branch is continued only through `start --existing-branch`. Every step MUST refuse instead of forcing. Rerunning the same command MUST resume where it stopped. Quick reference: [reference.md](../../development/reference/worktree.md). Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
+`devkit_agt.features.worktree` gives each activity of a task its own branch, and that branch its own Git worktree when the task needs one, and turns the end of the task into one deterministic command. An activity runs on the branch `plan-<slug>` (Planning) or `dev-<slug>` (Development), in `<parent of base>/<base name>-wt-<branch>`; `devkit integration integrate --route local` (`CAP-INT-mcp-services`) lands the branch on the base checkout (by default as a merge commit built outside any checkout); `finish` then removes the worktree and deletes the branch. `start` MUST NOT start a new branch where its checks find one of that name, locally or on a remote (the limits of those checks are in `start` step 3): an existing branch is continued only through `start --existing-branch`. Every step MUST refuse instead of forcing. Rerunning the same command MUST resume where it stopped. Quick reference: [reference.md](../../development/reference/worktree.md). Rules that bind an agent, a host or a playbook step are checked by review only unless they name a check.
 
-The module is SDD-agnostic: it MUST NOT decide which tasks use a worktree or depend on a document layout. It owns the branch names, so every host and agent computes the same ones. A methodology layer (devkit-spec) decides when a task gets a worktree, adds its own cleanup through a `devkit.post_finish` extension (or the library's `before_remove` callback), verifies that a branch and a unit belong together through a `devkit.attach_check` extension, and keeps any scope registry of its own. `devkit_agt.features.workflow` MUST refuse to integrate a branch whose units are blocked through a `devkit.finish_guard` extension.
+The module is SDD-agnostic: it MUST NOT decide which tasks use a worktree or depend on a document layout. It owns the branch names, so every host and agent computes the same ones. A methodology layer (devkit-spec) decides when a task gets a worktree, adds its own cleanup through a `devkit.post_finish` extension (or the library's `before_remove` callback), verifies that a branch and a unit belong together through a `devkit.attach_check` extension, and keeps any scope registry of its own. A branch whose units are blocked is held by the workflow gates and the Host's `devkit workflow envelope check` before integration is approved (`CAP-DLV-workflow-envelopes`), not by a worktree extension (`ADR-single-local-landing-route`).
 
 ## 1. Checkouts and Paths
 
@@ -67,7 +67,7 @@ to the checked-out task branch. The direct user SHOULD coordinate shared session
 separate worktree. The local orchestration Host coordinates workers, which still run in their own
 worktrees under `CAP-DLV-project-policy`. Shared-checkout use provides no isolation between concurrent sessions.
 
-The branch is integrated by `finish` like a worktree's ([section 3](#3-finish)) once the base checkout is back on the branch it started from: `finish --merge` MUST refuse from any other branch (`WORKTREE_CONFLICT`, whose `[FIX]` switches to the recorded `devkitBase`), since it would integrate the task into that branch instead. The finish result's `path` is the checkout the branch was started in, where a `devkit.post_finish` extension finds what it registered for the task.
+The branch is landed by `devkit integration integrate <branch> --route local` like a worktree's once the base checkout is back on the branch it started from: the integration route MUST refuse from any other branch (`WORKTREE_CONFLICT`, whose `[FIX]` switches to the recorded `devkitBase`), since it would integrate the task into that branch instead. `finish` then cleans it up ([section 3](#3-finish)). The finish result's `path` is the checkout the branch was started in, where a `devkit.post_finish` extension finds what it registered for the task.
 
 ## 2b. start --existing-branch
 
@@ -83,13 +83,20 @@ Then, in order: the base checkout is switched back to its `devkitBase` when it w
 
 ## 3. finish
 
-`--local-only` MUST exclude fetch and push, including with `--merge`. Local guards and safe cleanup MUST remain active.
-The library equivalent is `finish(..., network="forbid")` (`"allow"` preserves existing behavior). Successful local
-merging reports `push=excluded`. Public `plan_finish` and `validate_finish` bind exact repository, ref and cleanup
-identities (`plan_finish` records the merge method and whether the target already contains the branch; only with
+`finish` cleans up a branch the base already contains: it MUST NOT land a branch. The one local landing route is
+`devkit integration prepare <branch> --route local` followed by `devkit integration integrate <branch> --route local`
+(`--expected-digest <digest>` from the preparation under `dev-integration = "ask"`), `CAP-INT-mcp-services`
+(`ADR-single-local-landing-route`). `finish --merge` MUST refuse with `WORKTREE_MERGE_RETIRED` (`ERROR`,
+`INPUT_ERROR`, exit `2`) before it reads or changes anything, also with `--discard`; its `[FIX]` names both
+integration commands, and `finish --help` MUST NOT list the flag. The library `finish` takes no landing parameter
+(`merge`, `pull_request`, `guard`, `network`, `merge_method`), and `FinishResult` has no `push` field.
+
+`finish` MUST NOT call `git fetch`, `git push` or `git ls-remote`. `--local-only` stays accepted and changes nothing.
+Public `plan_finish` and `validate_finish` bind exact repository, ref and cleanup identities for the integration
+service (`plan_finish` records the merge method and whether the target already contains the branch; only with
 `advance=True`, which local integration alone sets, and under `merge = "no-ff"` does it plan a branch that does
-not contain the target, which `finish --merge`, `ff-only` and the pull-request route still refuse with
-`WORKTREE_MERGE_NOT_FF` (`ADR-local-and-pull-request-integration`); after the merge `validate_finish` accepts a base that contains
+not contain the target, which `ff-only` and the pull-request route refuse with `WORKTREE_MERGE_NOT_FF`
+(`ADR-local-and-pull-request-integration`); after the merge `validate_finish` accepts a base that contains
 the result, so later commits on the base are allowed), and `before_step` validates each mutation boundary for the
 `CAP-INT-mcp-services`. These APIs do not supply business approval.
 Installed callbacks and native Git hooks MUST obey the local-only contract; this API is not a process sandbox.
@@ -100,27 +107,25 @@ Installed callbacks and native Git hooks MUST obey the local-only contract; this
 - a branch the base checkout itself is on: `WORKTREE_CONFLICT`; for a branch `start --no-worktree` created it is the routine `WORKTREE_BASE_ON_BRANCH` (`AUTO`), whose `[FIX]` switches the base back to its recorded `devkitBase` for a rerun;
 - a locked worktree (`git worktree lock`): `WORKTREE_LOCKED`, whose `[FIX]` is `git worktree unlock <path>` once the user agrees;
 - neither a worktree nor a branch: `WORKTREE_NOT_FOUND`;
-- no worktree, and a branch without the marker (`start` did not create it, a `finish` already completed for it, or `start` created it before devkit recorded the marker: such branches are not resumed automatically): `WORKTREE_NOT_FOUND`, nothing changed, whatever `delete_branch` says. `finish` MUST NOT run caller cleanup, merge or push for such a branch, or delete it itself: when it is merged, with `delete_branch = true` the `[FIX]` is `git branch -d <branch>` once the user agrees; with `delete_branch = false` it says that nothing is left to finish.
-- no worktree, and a marked branch: it is finished without a removal: `removed=yes` when its worktree was removed earlier (by hand, or by a stopped run), `removed=-` when it never had one (`start --no-worktree`). Without `--merge` it MUST be merged like any other (`WORKTREE_UNMERGED`).
+- no worktree, and a branch without the marker (`start` did not create it, a `finish` already completed for it, or `start` created it before devkit recorded the marker: such branches are not resumed automatically): `WORKTREE_NOT_FOUND`, nothing changed, whatever `delete_branch` says. `finish` MUST NOT run caller cleanup for such a branch, or delete it itself: when it is merged, with `delete_branch = true` the `[FIX]` is `git branch -d <branch>` once the user agrees; with `delete_branch = false` it says that nothing is left to finish.
+- no worktree, and a marked branch: it is finished without a removal: `removed=yes` when its worktree was removed earlier (by hand, or by a stopped run), `removed=-` when it never had one (`start --no-worktree`). It MUST be merged like any other (`WORKTREE_UNMERGED`).
 
 These checks, and those of step 1, MUST run before the first change, so each of their refusals leaves the repository as it was; so does a worktree with uncommitted or untracked changes (`WORKTREE_DIRTY`, checked before step 1):
 
 The integration CLI authorizes these exact effects from shared base `dev-integration=auto` or after Host-carried conversational approval under `ask`, while preserving all dirty/locked/identity checks and selected branch retention (`CAP-INT-mcp-services`). This authority MUST NOT extend to automatic remote operations, force cleanup or unrelated worktrees.
 
-1. **Integrate.**
-   - With `--merge`: refused under `[worktree] pull_request = "required"` (`WORKTREE_PR_POLICY`; the default `"auto"` allows it). The base MUST be on a branch (`WORKTREE_BASE_DETACHED`: a fast-forward of a detached HEAD moves no branch and pushes nothing, so the task's commits would end up on no branch) and clean (`WORKTREE_BASE_DIRTY`). Every `devkit.finish_guard` entry point of the installed packages is then called, in sorted name order, as `extension(base, branch, merge_base, tip)`: the base checkout's root, the branch, the commit id of its merge base with the base HEAD (empty when there is none) and of its tip. It returns `None` or a list of reasons; any reason refuses with `WORKTREE_BLOCKED`, each reason a detail, and nothing changed. An extension that raises (`SystemExit` included) or returns anything else, or a group that cannot be listed (a `discovery` failure), refuses with `WORKTREE_GUARD_FAILED`: the branch was not verified. devkit-agt registers one: `devkit_agt.features.workflow` refuses a branch whose units hold an unresolved problem, an unanswered question or a malformed worker envelope (`CAP-DLV-workflow-envelopes`). The library's `finish` takes the same check as its `guard(merge_base, tip)` callback and runs no extension itself. When the base branch has a configured upstream (`branch.<base>.remote` and `.merge`), its remote ref is fetched first (never prompting, within 120 seconds); a fetched tip the base does not contain is `WORKTREE_BASE_BEHIND`, whose `[FIX]` is `git pull --ff-only` of it. A fetch that fails (offline, an unreachable remote, a remote ref that does not exist yet) skips this check: the push below reports what remains. Before the guards, the branch MUST contain the base HEAD (`WORKTREE_MERGE_NOT_FF` (`AUTO`) otherwise, whose `[FIX]` merges the base into the branch in its worktree with a message the commit-msg gate accepts and never rebases, since the task's records cite its commit SHAs), and under `[worktree] merge = "no-ff"` Git MUST have a committer identity (`WORKTREE_COMMIT_FAILED`). The command takes the Git common directory's devkit integration lock (`devkit-integration.lock`, shared with `CAP-INT-mcp-services`; `LOCK_HELD` while another integration holds it). The branch MUST still point at the commit the guard checked (`WORKTREE_CONFLICT` when a run committed to it meanwhile; rerun once it ends). Then the base lands it (`ADR-local-and-pull-request-integration`): under `merge = "no-ff"` (the default) `merging.build_result` builds, in the object store, a merge commit whose first parent is the base HEAD, whose second is the checked tip, whose tree is the branch's tree and whose message is `chore(merge): integrate <branch> into <base branch>` (`git commit-tree`, signed when `commit.gpgSign` is on, within 30 seconds, `WORKTREE_COMMIT_FAILED` with nothing changed on failure), and `git merge --ff-only <that commit>` fast-forwards the base onto it, so the base checkout never stops mid-merge; under `merge = "ff-only"` it fast-forwards onto the tip. `"ff-only"` in the base's or the branch's committed policy MUST win. A branch the base already contains builds nothing. The base branch is then pushed to that upstream (an explicit refspec, never forced, never prompting, within 120 seconds). A base branch without an upstream MUST NOT be pushed (`push=no-upstream`). A push the upstream rejects because it moved on since the fetch is a `WORKTREE_PUSH_REJECTED` warning (`push=rejected`) whose `[FIX]` fetches the upstream ref and merges it with `git merge --no-ff -m "chore(merge): integrate <remote>/<ref> into <base branch>" FETCH_HEAD`, then pushes: the task's commits keep their SHAs (`git pull --rebase`, and also `--rebase=merges`, would rewrite them), at the cost of the upstream's commits becoming the second parent of that merge, and a conflict leaves the base checkout mid-merge (`git merge --abort`). Any other failed push is a `WORKTREE_PUSH_FAILED` warning (`push=failed`) whose `[FIX]` is the push to rerun. Either way the cleanup MUST continue.
-   - Without `--merge`: the branch MUST already be an ancestor of the base HEAD (`WORKTREE_UNMERGED` otherwise, with nothing changed), the same test `status` reports as `merged`. A pull request merged by squash or rebase leaves the branch unmerged in this sense; an agent MUST remove that worktree and branch only with the user's authorization.
+1. **Check the merge.** The branch MUST already be an ancestor of the base HEAD (`WORKTREE_UNMERGED` otherwise, with nothing changed, whose `[FIX]` names `devkit integration prepare <branch> --route local`), the same test `status` reports as `merged`. A pull request merged by squash or rebase leaves the branch unmerged in this sense; an agent MUST remove that worktree and branch only with the user's authorization.
 
-   Before either (and before the guards), when the branch will be deleted (step 4), its upstream, if it has one that exists locally, MUST contain it: `git branch -d` checks a branch against its upstream rather than the base, so a task branch pushed with `-u` and committed to since would be refused after the merge. That is `WORKTREE_BRANCH_UNPUSHED`, whose `[FIX]` pushes the branch to its upstream.
-2. **Caller cleanup.** The library's `before_remove(result)` callback runs here, once the merge is confirmed and while the worktree still exists (it runs again on a rerun, so it MUST be idempotent). An `AdvisoryError` it raises reaches the library caller with the partial result as `error.result`, like the refusals below.
+   Before that, when the branch will be deleted (step 4), its upstream, if it has one that exists locally, MUST contain it: `git branch -d` checks a branch against its upstream rather than the base, so a task branch pushed with `-u` and committed to since would be refused. That is `WORKTREE_BRANCH_UNPUSHED`, whose `[FIX]` pushes the branch to its upstream.
+2. **Caller cleanup.** The library's `before_remove(result)` callback runs here, once the merge is checked and while the worktree still exists (it runs again on a rerun, so it MUST be idempotent). An `AdvisoryError` it raises reaches the library caller with the partial result as `error.result`, like the refusals below.
 3. **Remove** the worktree with `git worktree remove`, within 1800 seconds. A worktree that became dirty since the check is `WORKTREE_DIRTY` here too: `finish` MUST NOT remove it by force or relay Git's own `--force` hint. Any other failure is `WORKTREE_REMOVE_FAILED`; after a timeout the directory may be partly deleted while still registered (a rerun would report the deleted files as uncommitted changes), so its `[FIX]` is `git worktree remove --force <path>` once the user agrees.
 4. **Delete the branch** with `git branch -d` (`finish` MUST NOT use `-D`) when `[worktree] delete_branch = true` (the default), which removes the marker with it. A failure is `WORKTREE_BRANCH_DELETE_FAILED`. With `delete_branch = false` the branch stays and only its marker is unset (`git config --unset-all`), so a rerun after a completed finish is `WORKTREE_NOT_FOUND`, as it is once the branch is deleted; a failure to unset it is `GIT_FAILED` with the partial result, and the rerun resumes and unsets it.
 
-A refusal raised after step 1 carries the partial result: the command MUST print its progress as a `[WORKTREE_FINISH_PARTIAL: ...]` line, never the success line `[WORKTREE_FINISHED: ...]`, (or, under `--format json`, the result with the error under `errors`) and the warnings collected so far (`WORKTREE_PUSH_FAILED`, `WORKTREE_PUSH_REJECTED`) before the error, so the caller sees what is already done.
+A refusal raised after step 1 carries the partial result: the command MUST print its progress as a `[WORKTREE_FINISH_PARTIAL: ...]` line, never the success line `[WORKTREE_FINISHED: ...]`, (or, under `--format json`, the result with the error under `errors`) and the warnings collected so far before the error, so the caller sees what is already done.
 
 **Post-finish extensions.** After a successful `finish` (never after a refusal), the command calls every `devkit.post_finish`
 entry point of the installed packages, in sorted name order, as `extension(base, result)`: the base checkout's root (its repository root, which is also its devkit root) and the
-result as its JSON object (`branch`, `slug`, `path`, `merged`, `push`, `removed`, `branch_deleted`). A package cleans
+result as its JSON object (`branch`, `slug`, `path`, `merged`, `removed`, `branch_deleted`, `discarded`). A package cleans
 up what it keeps per task there (`devkit spec` prunes the handed-off proposal's directories and the task's scope
 record). An extension returns `None` or a list: a string becomes a `POST_FINISH_NOTICE` notice, an advisory keeps its code
 (an `ERROR` lowered to `WARNING`). It MUST NOT fail the finish: an advisory it raises keeps its code the same way, with an
@@ -129,12 +134,12 @@ its callback). The rules are those of the `devkit.post_sync` extensions (`devkit
 
 Rerunning the same command MUST resume once the cause is resolved:
 
-- an already merged branch passes step 1 without `--merge` (with `--merge` nothing is built or merged and the push runs again);
+- an already merged branch passes step 1;
 - when the worktree is already gone and the branch remains merged into the base HEAD and carries the marker (what a stopped run leaves, or a worktree removed by hand), `finish` skips step 3, reports `removed=yes` and runs step 4 (deleting the branch, or with `delete_branch = false` unsetting its marker). A marked branch that is merged and has no worktree is therefore finished by step 4 alone, whatever `delete_branch` says. The marker gates only this path: a branch whose worktree exists finishes whether or not it carries the marker (a branch created before devkit recorded it).
 
 ## 3a. finish --discard
 
-`finish <branch> --discard` closes a task without integrating it (a depth escalation, a supersede, an abandon): it drops the unmerged branch, on the authority the caller's close needs, and is the only path devkit offers for that. It runs in the base checkout and excludes `--merge` (`ARGUMENT_INVALID`). It finds the worktree as `finish` does (the same `WORKTREE_CONFLICT`, `WORKTREE_BASE_ON_BRANCH` and `WORKTREE_LOCKED` refusals, so the base checkout MUST NOT be on the branch), takes any activity branch, also one devkit did not start (another checkout, made by hand; its name says it is a task's), removes the worktree (`WORKTREE_DIRTY` with uncommitted or untracked changes: it MUST NOT force the removal) and deletes the branch with `git branch -D`. The `devkit.post_finish` extensions run as after `finish`, with `discarded: true` in the result, so a package releases what it kept for the task. Remote branches and pull requests are the caller's. The output is `[WORKTREE_FINISHED: ...]` with `merged=no discarded=yes`.
+`finish <branch> --discard` closes a task without integrating it (a depth escalation, a supersede, an abandon): it drops the unmerged branch, on the authority the caller's close needs, and is the only path devkit offers for that. It runs in the base checkout. It finds the worktree as `finish` does (the same `WORKTREE_CONFLICT`, `WORKTREE_BASE_ON_BRANCH` and `WORKTREE_LOCKED` refusals, so the base checkout MUST NOT be on the branch), takes any activity branch, also one devkit did not start (another checkout, made by hand; its name says it is a task's), removes the worktree (`WORKTREE_DIRTY` with uncommitted or untracked changes: it MUST NOT force the removal) and deletes the branch with `git branch -D`. The `devkit.post_finish` extensions run as after `finish`, with `discarded: true` in the result, so a package releases what it kept for the task. Remote branches and pull requests are the caller's. The output is `[WORKTREE_FINISHED: ...]` with `merged=no discarded=yes`.
 
 ## 4. status
 
@@ -147,14 +152,14 @@ Rerunning the same command MUST resume once the cause is resolved:
 
 ```toml
 [worktree]
-pull_request = "auto"   # default: a pull request or `finish --merge`, as the task needs; "required" refuses `--merge`
+pull_request = "auto"   # default: a pull request or local integration, as the task needs; "required": pull requests only
 delete_branch = true    # finish deletes the merged branch
 merge = "no-ff"         # default: each task lands as a merge commit; "ff-only": fast-forward only
 setup = "uv sync"       # run in each new worktree (default: none)
 stale_after = "14d"     # an activity branch idle this long is stale (default "14d"; "<N>d" or "<N>w")
 ```
 
-The table is read from the devkit project containing the directory a command runs in (`-w`, else the current directory). An unknown key, a wrong type, a `pull_request` other than `"auto"` or `"required"`, a `merge` other than `"no-ff"` or `"ff-only"` or a `stale_after` other than `"<N>d"` or `"<N>w"` (`N` from 1 to 9999) is `WORKTREE_CONFIG_INVALID`. `pull_request` states whether integration must go through a pull request, not whether one is opened: the Host-authorized `pull-request` CLI route in `CAP-INT-mcp-services` can push the task branch and open its PR. Under `"auto"` the caller chooses the route; `finish --merge` MUST remain local and refuse required PR policy with a directive naming the integration CLI route.
+The table is read from the devkit project containing the directory a command runs in (`-w`, else the current directory). An unknown key, a wrong type, a `pull_request` other than `"auto"` or `"required"`, a `merge` other than `"no-ff"` or `"ff-only"` or a `stale_after` other than `"<N>d"` or `"<N>w"` (`N` from 1 to 9999) is `WORKTREE_CONFIG_INVALID`. `pull_request` states whether integration must go through a pull request, not whether one is opened: the Host-authorized `pull-request` CLI route in `CAP-INT-mcp-services` can push the task branch and open its PR. Under `"auto"` the caller chooses the route; under `"required"` the local integration route MUST refuse with `WORKTREE_PR_POLICY`, whose directive names the pull-request route.
 
 ## 6. Stale Branches
 
@@ -183,7 +188,7 @@ The package is laid out by layer under `features/worktree/`:
   configuration, and `http_response`, the reader of `gh api --include` output; the integration and
   maintenance-history features use it too).
 - `services/`: `extensions.py`, the `devkit.post_finish` extension point (`run_post_finish`) on
-  `devkit_core.core.extensions` and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and
+  `devkit_core.core.extensions` and the fail-closed check group
   `devkit.attach_check` (`run_attach_checks`); `merging.py`, the result commit (`build_result`, `merge_message`,
   `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`): with
   `advance=True` (the integration service only) it merges a moved target with `git merge-tree --write-tree` (Git
@@ -196,7 +201,7 @@ The package is laid out by layer under `features/worktree/`:
   committer line of the parent with the later committer date, so its id depends only on the tree, the parents and
   the message.
 - `usecases/`: `lifecycle.py` (`locate`, `check_branch`, `path_for`, `start`, `StartBranch`, `attach`, `find`,
-  `finish`, `discard` and `WorktreeStatusQuery`), `configured.py` (project policy and extension guards applied to
+  `finish`, `discard` and `WorktreeStatusQuery`), `configured.py` (project policy and extension checks applied to
   them), `planning.py` (`plan_finish`, `validate_finish`) and `stale.py` (`stale_branches` and the `devkit.hygiene`
   extension `hygiene`; `gh` runs through the repositories' `run_gh` with a 60-second bound, and callers and tests
   can pass another `Runner`). `start` runs
@@ -225,8 +230,8 @@ cleanup already approved; see `CAP-MCP-runtime-registration`.
 The integration CLI reports confirmed Git landing and cleanup separately from final project verification.
 `verification=pending` with `landed_sha` identifies confirmed landing; unperformed or unknown landing reports
 `verification=not_started`. The Host synchronizes the landed runtime and runs required final checks before delivery
-completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). Standalone
-`devkit worktree finish --merge` retains its existing guards.
+completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). `devkit worktree finish`
+lands nothing (`WORKTREE_MERGE_RETIRED` for `--merge`).
 
 ## Execution-only checkouts
 

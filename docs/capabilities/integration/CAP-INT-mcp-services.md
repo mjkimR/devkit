@@ -132,7 +132,7 @@ approval or recovery journal survives the invocation.
 - If local merge did not land, inspect the reported source and target and obtain fresh Host authority before running
   another integration.
 - If local merge landed but worktree cleanup failed, inspect `devkit worktree status` and the target branch. When
-  the marked worktree remains, run `devkit worktree finish <branch> --merge --local-only`; its already-merged checks
+  the marked worktree remains, run `devkit worktree finish <branch> --local-only`; its already-merged checks
   perform only remaining guarded Git cleanup. When Git cleanup completed but a scoped post-finish action failed, run
   that extension's owning command against the exact reported cleanup target (proposal directories, for example, use
   `devkit spec proposal prune <slug>`).

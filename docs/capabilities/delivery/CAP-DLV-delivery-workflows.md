@@ -370,8 +370,7 @@ Envelopes are devkit envelope files under a unit's `envelopes/`, written with
 | `resolution` | the fix of a run's problem (`resolves: worker-NN.yaml`, `summary`) | whoever actually fixed it, with the fix |
 
 A unit is held while a `worker` envelope's problem has no `resolution` naming it (blocked) or a question has no
-`answer` (waiting): devkit passes no gate, by any source, and `devkit worktree finish --merge` refuses the branch
-(`WORKTREE_BLOCKED`); a pull request merges only while `devkit workflow envelope check --format json` reports
+`answer` (waiting): devkit passes no gate, by any source; the Host approves a local integration and a pull request merges only while `devkit workflow envelope check --format json` reports
 `"blocked": false` and no `pending_questions`. Unanswered questions are `choose` requests
 (`question:worker-NN.<id>`, `answer=envelope`) that `devkit workflow answer` refuses. Formats and roles:
 `ADR-orchestration-workers`.
@@ -409,7 +408,7 @@ workers (§4.1.2) and worker-result inspection (§4.2). Stage assignments and re
 | `devkit workflow envelope worker\|answer\|resolution --unit <dir> ...` | A run's record (`--stage` and `--effort` always; `--questions-file`, `--problem`, `--tried`, `--recovery`), its answers (`--answers-to`, `--answers-file`, `--settle`) or a fix (`--resolves`). |
 | `devkit workflow envelope check --unit <dir> [--format json]` | Malformed envelopes and the hold: `[BLOCKED]`, `[PENDING_QUESTION]`; `blocked`, `problems`, `pending_questions` in JSON. |
 | `devkit worktree start <branch> [--no-worktree \| --existing-branch <branch> --unit <dir>]` | Start `plan-<slug>` or `dev-<slug>` in a worktree or the current checkout, or continue an existing branch after devkit-spec's attach check (a `plan-` attach refuses a rejected or `needs_decompose` proposal and one not `accepted` whose `size` is not absent or `S`, `M` or `L`). |
-| `devkit worktree finish <branch> [--merge [--local-only]]` | Land the branch on the base as a merge commit, or a fast-forward under `[worktree] merge = "ff-only"` (skipping `fetch`/`push` when `--local-only`), remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension. |
+| `devkit worktree finish <branch> [--local-only]` | Clean up a branch the base already contains: remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension; no fetch or push. `devkit integration integrate <branch> --route local` lands a branch; `--merge` refuses with `WORKTREE_MERGE_RETIRED`. |
 | `devkit worktree status --stale` | Activity branches idle beyond `[worktree] stale_after`; also warned by `devkit rules check -p hygiene`. |
 
 ### 4.8 Branch verification and final landed verification

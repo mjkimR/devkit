@@ -132,8 +132,8 @@ required `BaseRepository`, Command registry or Unit of Work. CLI commands remain
   and entry-point targets. Its tests run with `devkit-agt` absent (`just test-dist`).
 - Entry-point groups preserve dependency inversion: `devkit.commands`, `devkit.post_sync`, `devkit.post_sync_preview`,
   `devkit.config_tables`, `devkit.config_template`, `devkit.context_documents`, `devkit.host.services`,
-  `devkit.mcp.registrations`, `devkit.hygiene`, `devkit.finish_guard` and `devkit.docs.status_overlay` retain their
-  public names. Their targets use the owning package namespace.
+  `devkit.mcp.registrations`, `devkit.hygiene` and `devkit.docs.status_overlay` retain their public names; the
+  `devkit.finish_guard` group is retired (`ADR-single-local-landing-route`). Their targets use the owning package namespace.
 - Domain MCP adapters consume `devkit_core.base.mcp` contracts. The optional MCP runtime adapts them
   to the SDK; dist discovers only the narrow registration launch provider.
 - Bundle rule code is content loaded by the rule engine. It uses public foundation and rule APIs;
