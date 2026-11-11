@@ -185,3 +185,4 @@ class PreexistingDirty(AdaptiveError):
 
     code = "ADAPTIVE_PREEXISTING_DIRTY"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line

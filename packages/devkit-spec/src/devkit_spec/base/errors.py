@@ -330,6 +330,7 @@ class PostFinishCleanupNotice(SpecError):
 
     code = "SPEC_POST_FINISH_CLEANUP"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class SpecSlugError(SpecError):

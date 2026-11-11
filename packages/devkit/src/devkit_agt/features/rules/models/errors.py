@@ -146,6 +146,7 @@ class PromotionReadyNotice(RulesError):
 
     code = "RULES_PROMOTION_READY"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class NoneActiveNotice(RulesError):
@@ -161,6 +162,7 @@ class RelatedUnresolvedNotice(RulesError):
 
     code = "RULES_RELATED_UNRESOLVED"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class HygieneNotice(RulesError):

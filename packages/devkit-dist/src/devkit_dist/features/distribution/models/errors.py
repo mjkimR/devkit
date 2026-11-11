@@ -210,6 +210,7 @@ class SyncNotice(DistributionError):
 
     code = "SYNC_NOTICE"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class ProjectionNotIgnoredNotice(SyncNotice):

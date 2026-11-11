@@ -385,6 +385,7 @@ class BranchAheadNotice(WorktreeError):
 
     code = "WORKTREE_BRANCH_AHEAD"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class RemoteUncheckedWarning(WorktreeError):
@@ -410,6 +411,7 @@ class StaleSkippedNotice(WorktreeError):
 
     code = "WORKTREE_STALE_SKIPPED"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class StalePullRequestsUnknownNotice(WorktreeError):
@@ -417,6 +419,7 @@ class StalePullRequestsUnknownNotice(WorktreeError):
 
     code = "WORKTREE_STALE_PR_UNKNOWN"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
 
 
 class SetupFailedWarning(WorktreeError):

@@ -79,6 +79,7 @@ class VerifyUnstagedNotice(GateError):
 
     code = "GATE_VERIFY_UNSTAGED"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line
     what_to_report = "The verification ran on files that are not part of this commit; its result may not match it"
 
 
