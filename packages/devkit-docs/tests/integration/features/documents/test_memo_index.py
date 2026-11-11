@@ -413,6 +413,32 @@ def test_a_directory_at_the_memo_path_is_left_alone(transient: Path, write: Writ
     assert (transient / MEMO).is_dir() and [p.name for p in (transient / MEMO).iterdir()] == ["kept"]
 
 
+@pytest.mark.parametrize("component", [".devkit", ".devkit/transient", ".devkit/transient/docs", MEMO])
+def test_a_symbolic_link_on_the_memo_path_is_never_read_or_written(
+    transient: Path, write: Write, parses: list[str], component: str
+) -> None:
+    _base(write)
+    _load(transient)
+    path = transient / component
+    moved = transient / "elsewhere" / path.name
+    moved.parent.mkdir(exist_ok=True)
+    path.rename(moved)
+    path.symlink_to(moved, target_is_directory=moved.is_dir())
+    stored = next((transient / "elsewhere").rglob("document-index.json")).read_bytes()
+    parses.clear()
+    view = _view(_load(transient))
+    assert len(parses) == 6 and path.is_symlink()
+    assert view == _view(_fresh(transient))
+    assert next((transient / "elsewhere").rglob("document-index.json")).read_bytes() == stored
+
+
+def test_a_file_in_place_of_the_memo_directory_is_left_alone(transient: Path, write: Write) -> None:
+    _base(write)
+    (transient / ".devkit/transient/docs").write_text("x", encoding="utf-8")
+    _assert_fresh(transient)
+    assert (transient / ".devkit/transient/docs").read_text(encoding="utf-8") == "x"
+
+
 @pytest.mark.skipif(os.name != "posix" or os.geteuid() == 0, reason="needs POSIX permissions without root")
 def test_an_unwritable_memo_directory_is_left_as_it_was(transient: Path, write: Write) -> None:
     _base(write)
@@ -549,3 +575,19 @@ def test_a_supplied_list_reuses_the_memo(transient: Path, write: Write, parses: 
     shutil.rmtree(transient / ".devkit/transient/docs")
     _load(transient, files=files)
     assert len(parses) == len(files)
+
+
+@pytest.mark.parametrize("writes", [True, False])
+def test_a_directory_appearing_after_open_is_never_read_or_replaced(
+    transient: Path, writes: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    (transient / ".devkit/transient/docs").mkdir()
+    memo = ParseMemo.open(transient.resolve(), writes=False)
+    assert memo is not None
+    memo._writes = writes  # a writing load reads at open; reading here models the file changing in between
+    (transient / MEMO).mkdir()
+    with caplog.at_level("INFO", logger="devkit"):
+        assert memo.stored("docs/a.md") is None
+        memo.save()
+    assert [r.getMessage().rsplit(": ", 1)[-1] for r in caplog.records] == ["not a regular file"]
+    assert (transient / MEMO).is_dir() and list((transient / MEMO).iterdir()) == []

@@ -58,6 +58,6 @@ Side-by-side reading of the two persistent memos X-9 names, as of the Planning b
   serialization order, logging level and wording, writer authority and pruning.
 - Path safety is the one point where a single implementation either keeps two policies behind a parameter or
   converges on one; converging changes, slightly, when the docs memo is used (contract wording in
-  `CAP-DOCS-document-model` 3.4.3); the user chose to converge (D1). Challenger round 1 (`envelopes/challenger-01.yaml`)
+  `CAP-DOCS-document-model` 3.4.3); the user chose to converge (D1). Challenger round 1 (historical Git `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-shared-fingerprinted-memo/envelopes/challenger-01.yaml`)
   narrowed the helper to the path check and the envelope shape check: reads, serialization and writes differ in
   ordering, skip rule and logging and already share `atomic_write_bytes`.

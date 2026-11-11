@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:45:19.997913Z'
+status: completed
+summary: 'reconcile-reviewer (nested, native): CAP-DOCS-document-model 3.4.3 and CAP-GOV-rules-engine 5.3 reflect the converged path and envelope rule and match the code; reconcile.md names both; no impact on ADR-document-system, ADR-rules-run-workspace-cache, ARCH-05-2-components confirmed; no findings'
+findings: []
+assumptions:
+- ADR-document-system Location bullet states a necessary condition (only when); the stricter shared rule does not contradict it
+- 'ADR-document-system docs/ created on the first write: now created at open of a writing load, which always writes in the same pass'
+checks: {}
+diff_scope:
+  base: 114177caa569febbdc50018276193e43906325b4
+  head: b7f04a19aa31393bf81ed080760f1a6677f25aed

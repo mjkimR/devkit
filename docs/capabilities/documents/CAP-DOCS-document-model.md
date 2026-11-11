@@ -267,8 +267,11 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
    the source of the read, parse and codec modules, the PyYAML version, libyaml presence and the Python version)
    (`ADR-document-system`). A stored result is a document,
    "no document", a malformed-frontmatter reason or an "unstorable" marker; a file that cannot be read or decoded
-   has no entry. The memo is not used when a symbolic link is at `.devkit/transient/`, `docs/` or the file, or the
-   file resolves outside the root. Deleting the file is always safe: the next load rebuilds it.
+   has no entry. The memo is used only on the safe memo path shared with the rule facts memo
+   (`devkit_core.core.memo`): no symbolic link, non-directory or directory that resolves elsewhere at any component
+   from `.devkit/` down, and a regular file or none at the memo path; a writing load creates a missing `docs/`. A memo
+   with any top-level key besides `version`, `fingerprint` and `entries` is discarded. Deleting the file is always
+   safe: the next load rebuilds it.
 4. **Memo writes**: only a load that walks the workspace with the default reader MUST write the memo, and only when
    its entries differ from those it read (a new, changed or removed file, or a discarded memo), by atomic replace
    without a lock; a load with a supplied file list or reader reads the memo and never writes it

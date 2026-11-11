@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:46:29.328759Z'
+status: completed
+summary: 'Development from specify to final-change-report: new devkit_core.core.memo (safe_memo_path, envelope_problem) adopted by the docs parse memo (create on writing load) and the agt facts memo (_FRAMEWORK adds core.memo); harness before.md committed at c234d7ee before source edits, after.md differs only in 8 D1 rows (docs symlink-devkit, docs non-directory-below, facts extra-key, facts nan-constant whose fixture adds an extra key); code-reviewer review-01 two P3 fixed and reverified; reconcile-reviewer pass; no scope extensions, no sync outputs; FB-core-reference-row-for-memo-helper asks the Host about a docs/development/reference/core.md row outside the write scope'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected mode=full 6805 passed 4 skipped; post-fix package tests 855 passed 1 skipped
+  build: PASS just check pyright 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main; devkit sync --check exit 0
+  harness: PASS after.md equals before.md except D1 rows
+diff_scope:
+  base: ''
+  head: 7f87d2f8c6e336d8d8ba17e7f13a4f12ec366a61
+activity_effort: medium

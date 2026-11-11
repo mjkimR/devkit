@@ -68,7 +68,9 @@ Library callers import the public API from `devkit_agt.features.rules`; built-in
    facts without adding advisories or changing findings, their order or exit status. Extractor programming failures
    retain normal rule execution semantics. `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
 3. **Safe memo paths**: WHEN an explicitly enabled writer flushes, it MUST use atomic per-rule JSON replacement under
-   an existing safe `.devkit/transient/`, rejecting symlinks and non-regular memo components.
+   an existing `.devkit/transient/`, on the safe memo path shared with the document parse memo
+   (`devkit_core.core.memo`): no symbolic link, non-directory or directory that resolves elsewhere at any component
+   from `.devkit/` down, and a regular file or none at the memo path. Readers refuse the same paths.
    `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
 4. **Persistence authority**: WHERE a project runs working-tree checks or fixes without dry run, the project use case
    MUST flush derived facts only after evaluation and rechecks finish without execution problems.
@@ -77,8 +79,8 @@ Library callers import the public API from `devkit_agt.features.rules`; built-in
    an explicit complete logical path set. Partial runs and caught source failures preserve unseen entries.
    `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/tests/test_rule.py`.
 
-The memo format is `version`, `fingerprint` and `entries`; each logical path maps to `digest`, canonical `context`
-and rule-codec `payload`. The memo is trusted local derived state, not authenticated execution state.
+The memo format is exactly `version`, `fingerprint` and `entries` (a memo with any other top-level key is discarded);
+each logical path maps to `digest`, canonical `context` and rule-codec `payload`. The memo is trusted local derived state, not authenticated execution state.
 Unchanged serialized bytes cause no replacement. Concurrent writers use last atomic replacement; lost entries cause
 later misses. Stores remain loaded separately from computed judgments across invalidations.
 `ADR-rules-run-workspace-cache` owns the storage and writer policy.

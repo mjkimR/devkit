@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:41:12.131334Z'
+status: completed
+summary: 'code-reviewer (nested subagent, native, medium initial pass): AC-01..AC-06 confirmed; harness rerun matches after.md (76/84 rows equal, 8 D1 rows); two P3 findings'
+findings:
+- issue: AC-04 names only extra-key, but the facts nan-constant rows also differ because the fixture appends NaN under an extra top-level key x; the harness no longer shows the facts parse accepting NaN
+  evidence: specs/2026-11/20261111-shared-fingerprinted-memo/spec.md AC-04; evidence/memo_harness.py nan-constant fixture; evidence/after.md
+  failure_condition: A literal check of AC-04 against the harness output fails on the nan-constant rows
+  suggested_action: Amend AC-04 to name nan-constant as the extra-key case of its fixture, keeping before.md immutable
+  resolution: open
+  severity: P3
+- issue: The lazy _read of a file-list docs load no longer checks S_ISREG before read_bytes, widening the window in which a FIFO created after open could be opened
+  evidence: packages/devkit-docs/src/devkit_docs/features/documents/repositories/memo.py _read
+  failure_condition: A non-regular file appears at the memo path between ParseMemo.open and the first stored() call
+  suggested_action: Keep a cheap S_ISREG check on the lstat result in _read
+  resolution: open
+  severity: P3
+assumptions:
+- 'Route: native isolated code-reviewer subagent nested in the development worker; reviewer reported reads only inside the worktree; snapshot diff before/after the run lists only the worker''s own feedback/ and reconcile.md drafts'
+checks:
+  tests: PASS pytest touched test files 160 passed; docs -k memo 130 passed; implementer just test-affected mode=full 6805 passed 4 skipped
+  lint: PASS just lint, just check, devkit rules check --ci --base main (implementer, not stale)
+  harness: PASS memo_harness.py rerun equals after.md
+diff_scope:
+  base: 114177caa569febbdc50018276193e43906325b4
+  head: 2b890f2451924d4191e39ca6fdb68312d05318be
