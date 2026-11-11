@@ -16,7 +16,7 @@ The root `AGENTS.md` gives test locations and commands. Put each test in the tie
 Example of the e2e boundary: `packages/devkit/tests/e2e/features/gate/test_hooks.py` runs a real `git commit` that
 triggers the commit-msg hook.
 
-`just test-affected` defaults to unit/integration. Select `--tier e2e` for E2E only, or `--tier all` for both;
-full fallback stays inside the selected tier. Workers run required native checks synchronously in their assigned
-worktree, including necessary selective E2E. The local-orchestrated Host owns post-integration asynchronous
-execution and final integrated coverage; workers do not inherit its exec launch, wait or cleanup procedure.
+`just test-affected` defaults to `--tier unit-integration`. Select `--tier e2e` for E2E only, or `--tier all` (or
+compatibility `--e2e`) for both; full fallback stays inside the selected tier. Workers run required native checks
+synchronously in their assigned worktree, including necessary selective E2E; for Host-owned asynchronous runs after
+integration, follow the `spec-orchestrate` skill's isolated-execution reference.

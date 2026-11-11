@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
 from spec_support.bundle_text import raw
 
 
-@pytest.mark.parametrize("workflow", ["sdd-spec-feature", "sdd-spec-bugfix"])
-def test_feature_and_bugfix_record_commit_boundary(workflow: str) -> None:
-    text = raw(f"workflows/{workflow}.md")
+def test_feature_record_commit_boundary_and_bugfix_inheritance() -> None:
+    text = raw("workflows/sdd-spec-feature.md")
     assert "devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml" in text
     for term in (
         "review/reverify",
@@ -16,12 +14,10 @@ def test_feature_and_bugfix_record_commit_boundary(workflow: str) -> None:
         "combined manual",
         "source/document",
         "multiple records",
-        "evidence SHAs",
-        "prepare integration after",
-        "HEAD",
-        "ENVELOPE_COMMIT_UNCERTAIN",
+        "references/envelope.md",
     ):
         assert term in text
+    assert "All other rules of the `sdd-spec-feature` body apply" in raw("workflows/sdd-spec-bugfix.md")
 
 
 def test_skills_keep_authoring_and_commit_separate() -> None:
@@ -36,6 +32,11 @@ def test_skills_keep_authoring_and_commit_separate() -> None:
         "problem/emergency",
         "no approval, push or merge authority",
         "do not rerun authoring",
+        "evidence SHAs",
+        "prepare integration after",
+        "HEAD",
+        "ENVELOPE_COMMIT_UNCERTAIN",
+        "source/document",
     ):
         assert term in envelopes
     assert "envelope commit" in raw("skills/spec-review/SKILL.md")

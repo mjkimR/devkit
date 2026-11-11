@@ -33,10 +33,7 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
   cleanup and integrated-result acceptance out of worker payloads. The local-orchestrated Host owns those steps
   after landing; sharing a worktree or inherited instructions does not transfer that responsibility.
 
-- Name initial declared paths and explicit denied paths separately for Development. An adjacent exact-file
-  extension remains within the approved task/AC only under the worker's recorded Tier B contract; explicit denies
-  prevail. New feature edges and protected classes cannot self-admit. Local/cloud use the same rules, with optional
-  inspect; semantic adjacency and custom protected paths remain reviewer judgments.
+- Name initial declared paths and explicit denied paths separately for Development.
 - Set the `diff_scope` base to the unit's [last accepted head](worker.md#the-last-accepted-head).
 - Name absolute paths for nested-role reads (the worktree's own startup skills and instructions and the effective role contract): a host skill catalog can list another checkout's copies. A generic native call also gets the absolute effective contract path and the emulation assumption.
 - If a `_Boundary:` includes a bundle source the project selects, the write scope admits, as a class, every tracked path `devkit sync` writes in the worktree after the change (seeded files, projected files, `.devkit/installation.json` and the managed `AGENTS.md` block), not only what `devkit sync --check` lists before the change: the worker runs the sync the change implies and records each output. `.devkit/managed/` is ignored and never a write path.

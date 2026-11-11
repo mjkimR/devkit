@@ -114,7 +114,7 @@ def test_roles_keep_optional_execution_and_coordinator_context_ownership() -> No
         content = (BUNDLE / f"subagents/{role}.md").read_bytes()
         contract = read_contract(content, "adaptive-dev", role)
         assert contract.hosts["codex"].status == "emulated"
-        assert_rule(contract.body, "only", "coordinator", "writes", "`.devkit/adaptive-dev.md`")
+        assert_rule(contract.body, "only", "Host", "writes", "`.devkit/adaptive-dev.md`")
         assert_rule(contract.body, "index", "HEAD", "unchanged")
         assert_rule(contract.body, "return", "`status`", "source/artifact identity", "failure conditions")
     researcher = (BUNDLE / "subagents/product-researcher.md").read_text()

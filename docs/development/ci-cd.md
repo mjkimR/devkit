@@ -68,8 +68,11 @@ start fresh processes. Run `uv run devkit sync`, check generated artifacts, rege
 then run `just test-affected --base <saved-target-sha>` on the final target HEAD with its `mode=full` fallback and
 frontend checks. A local-orchestrated batch may run this once after selected merges and repairs; all landed units
 remain pending until the combined head passes. Failed setup/imports/checks require target repair and recheck, not
-merge replay or automatic rollback. Report checked HEAD, commands and outcomes. Nightly CI is a backstop, not a
-substitute for final checks (`ADR-post-merge-verification`). Refresh checks when HEAD changes. Lint,
+merge replay or automatic rollback. Report checked HEAD, commands and outcomes. Never compare the target branch to itself. Nightly CI is a backstop, not a
+substitute for final checks (`ADR-post-merge-verification`). Workers run their required checks, including
+necessary selective E2E, synchronously in their worktree; after landing, the local-orchestrated Host runs selected
+E2E (`--tier e2e`) through `devkit exec` ([exec](reference/exec.md)) per the `spec-orchestrate` skill's
+isolated-execution reference. Refresh checks when HEAD changes. Lint,
 types and governance remain required:
 
 - **Selectors**: for a single module, the arguments before the first option are areas or paths that replace the

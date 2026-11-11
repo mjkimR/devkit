@@ -35,7 +35,8 @@ Reported at the offending list item, or at the `entrypoints` key:
 
 Not fixable: the rule never guesses whether the code moved or the declaration is obsolete. Restore the code, point
 the declaration at where the code moved, or remove an obsolete declaration.
-`devkit spec entrypoints derive --spec <bundle>` proposes paths from a spec bundle's `tasks.md` boundaries.
+With the spec package installed, `devkit spec entrypoints derive --spec <bundle>` proposes paths from a spec
+bundle's `tasks.md` boundaries.
 
 ## 4. Configuration
 
