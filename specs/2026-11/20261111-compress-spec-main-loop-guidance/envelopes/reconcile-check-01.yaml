@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:23:48.705628Z'
+status: completed
+summary: 'Independent reconcile check: CAP-HARN-agent-guidance covers the five new references; no other Living Spec doc cites moved or dropped text; delivery no-impact holds (each dropped sentence''s refusal stays specified in CAP-DLV).'
+findings: []
+checks:
+  reconcile: PASS findings=0
+diff_scope:
+  base: 905bea1a24f9abc6ef4bdefa910a51444bc7439f
+  head: 4e5a244162d18edd8fa2f4725e4c840b46de8078
+activity_effort: medium

@@ -59,13 +59,13 @@ docs/proposals/PROP-<slug>/envelopes/<kind>-<NN>.yaml
 
 - `kind` is `scout | challenger | review | reverify | reconcile-check | worker | answer | resolution | final-report`, or a kind a workflow check names (`red`, `green`, `feedback`). `NN` is a per-kind sequence: the highest is current, and every write takes the next number.
 - `review-NN` and `challenger-NN` record a round as found (every finding `open`); a `reverify-NN` closes it with `resolution: resolved | waived` per finding (a waiver states its reason). The latest round of each kind, or the reverify closing it, decides; a `challenger` reverify never counts for the review state.
-- Write envelopes with `devkit workflow envelope new --unit <dir> --kind <kind> [--stage <id>]` or `devkit workflow envelope <kind>`, never by editing YAML (`--help` lists the flags); `--head` must be a real commit. Check them with `devkit workflow envelope check --unit <dir>`.
+- Write envelopes with `devkit workflow envelope new --unit <dir> --kind <kind> [--stage <id>]` or `devkit workflow envelope <kind>`, never by editing YAML (`--help` lists the flags). Check them with `devkit workflow envelope check --unit <dir>`.
 - In the conversation, cite an envelope by its summary and path, never its whole content.
 
 
 ## 5. Explicit single-envelope commit
 
-Authoring remains write-only; `next`, `check` and `show` stay read-only. For one existing, fully authored envelope as the sole pending file, `devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml` stages that literal path and runs ordinary Git hooks/signing. The deterministic subject uses the tracked SPEC/PROP anchor slug and envelope identity. A clean exact record already in HEAD returns `already_committed` without a second commit. Modified history, skeletons, unrelated dirty paths, partial staging and unsupported Git state refuse before mutation. The command grants no approval, push or merge authority.
+Authoring remains write-only; `next`, `check` and `show` stay read-only. For one existing, fully authored envelope as the sole pending file, `devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml` stages that literal path and runs ordinary Git hooks/signing. The deterministic subject uses the tracked SPEC/PROP anchor slug and envelope identity. A clean exact record already in HEAD returns `already_committed` without a second commit. The command grants no approval, push or merge authority.
 
 Review/reverify and final-report are eligible after their associated work is committed. Feedback with no findings is eligible only when its envelope is the sole pending file. Keep source fixes, Living Spec reflection, accompanying source/document changes, multi-record Planning returns, acceptance/decision transactions and problem/emergency commits in their existing combined manual commits. Never detach a record from work it must accompany.
 

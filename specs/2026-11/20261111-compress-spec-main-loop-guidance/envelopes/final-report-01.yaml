@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:24:23.889657Z'
+status: completed
+summary: 'Main-loop policy pass over 16 spec guidance sources: edited documents shrink by 3594 bytes (spec-review -1111, spec-integrate -843, spec-specify -649, spec-sync -437, spec-orchestrate -325, envelope.md -150, worker-records.md -79); five new references (5208 bytes) hold the moved rare branches; 9 documents unchanged. Policy 1: 5 sentences dropped, each refused before effects with a FIX. Policy 2: 7 branches moved.'
+findings: []
+checks:
+  tests: 'PASS just test-affected --base 905bea1a: 1721 passed'
+  build: PASS devkit sync --check OK
+  lint: 'PASS devkit rules check --ci --base 905bea1a: 0 errors'
+diff_scope:
+  base: 905bea1a24f9abc6ef4bdefa910a51444bc7439f
+  head: d0becc0a4ff3dd4dc870dbc5cb634e7778f3d6ac
+activity_effort: medium

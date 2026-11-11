@@ -1,0 +1,26 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:21:34.818561Z'
+status: completed
+review: review-01.yaml
+summary: 'Both P3 notes waived: AC-02 isolates by document, the Screens pair is one branch whose shared test pins both sides.'
+findings:
+- issue: 'AC-02 per-document commit isolation is not met for spec-specify and spec-sync: both Screens moves land in one commit (73cc2334).'
+  evidence: 73cc2334 touches spec-specify/SKILL.md, spec-specify/references/screens.md, spec-sync/SKILL.md, spec-sync/references/screens.md and test_ux_guidance.py
+  failure_condition: Reverting only one of the two moves after feedback needs a manual split; the shared test_ux_guidance.py edit couples them.
+  resolution: waived
+  waiver: The Screens drafting (specify) and writing (sync) are one moved branch pinned by one test file; reverting it together is the intended unit, recorded in the change report.
+  severity: P3
+- issue: spec-review commit b235f058 mixes the Policy 1 'as open' drop with the Policy 2 scope-extension move.
+  evidence: git show b235f058 -- skills/spec-review/SKILL.md (Step 1 and Report hunks)
+  failure_condition: Reverting the scope-extension move alone also reverts the 'as open' wording.
+  resolution: waived
+  waiver: AC-02 isolates per document; the change report lists both spec-review edits under b235f058.
+  severity: P3
+checks: {}
+diff_scope:
+  base: 905bea1a24f9abc6ef4bdefa910a51444bc7439f
+  head: 0ddfb7983ba0d2f5d2b853cb8ca487818bbe5bb1
+activity_effort: medium

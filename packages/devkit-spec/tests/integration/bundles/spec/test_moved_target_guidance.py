@@ -14,11 +14,16 @@ def test_integrate_step_one_merges_the_base_only_after_a_reported_refusal(enviro
         "1. Merge the base into the task branch only to resolve what the CLI reports",
         "`WORKTREE_MERGE_CONFLICT`",
         "never rebase",
-        "`devkit generated resolve` first",
-        "`devkit rules fix`",
+        "[recovery](references/recovery.md)",
     )
-    assert_rule(integrate, "2. After such a merge", "reuse the source's verification")
+    assert_rule(integrate, "2. After such a merge", "affected checks")
     assert "repeat after an integration refused on a later target" not in integrate
+    recovery = raw("skills/spec-integrate/references/recovery.md", environment)
+    assert_rule(recovery, "only after the CLI reports `WORKTREE_MERGE_CONFLICT`", "`WORKTREE_MERGE_NOT_FF`")
+    assert_rule(recovery, "never rebase", "`git merge")
+    assert_rule(recovery, "`devkit generated resolve` first", "remaining by hand")
+    assert_rule(recovery, "`devkit rules fix`", "reference repairs")
+    assert_rule(recovery, "affected checks", "reuse the source's verification")
 
 
 def test_orchestrate_no_longer_requires_a_base_merge_before_integration() -> None:

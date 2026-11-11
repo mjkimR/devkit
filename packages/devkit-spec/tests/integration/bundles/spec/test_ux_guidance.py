@@ -49,7 +49,10 @@ def test_ux_writing_is_a_core_instruction_with_the_agreed_rules() -> None:
 
 
 def test_drafts_and_the_review_precede_the_plan() -> None:
-    specify = raw("skills/spec-specify/SKILL.md")
+    entry = raw("skills/spec-specify/SKILL.md")
+    assert_rule(entry, "**Screens**", "what a person sees", "UX review", "(references/screens.md)")
+    assert_rule(entry, "Screens section", "UX review", "(references/screens.md)", "before the plan")
+    specify = raw("skills/spec-specify/references/screens.md")
     assert_rule(specify, "**Screens**", "add", "`Screens` section", "`spec.md`", "`ux`", "`ux-writing`")
     assert_rule(specify, "**Screens**", "carry", "Screens drafts", "`target-docs.md`")
     assert_rule(specify, "Screens section", "offer", "optional UX review", "before the plan", "`ux-reviewer`")
@@ -60,9 +63,11 @@ def test_drafts_and_the_review_precede_the_plan() -> None:
 
 def test_spec_sync_writes_the_drafts_and_lists_them() -> None:
     sync = raw("skills/spec-sync/SKILL.md")
+    assert_rule(sync, "Screens", "`Screens` section", "(references/screens.md)")
+    assert_rule(sync, "every drafted screen", "`docs/ux/` target")
+    sync = raw("skills/spec-sync/references/screens.md")
     assert_rule(sync, "each draft", "`Screens` section", "`docs/ux/<area>/UX-<slug>.md`")
     assert_rule(sync, "`Screens` section", "register rows", "`docs/steering/ux-objects.md`")
-    assert_rule(sync, "every drafted screen", "`docs/ux/` target")
 
 
 def test_the_effort_table_and_acceptance_request_name_the_ux_review() -> None:
@@ -108,13 +113,13 @@ def test_ux_writing_maps_surfaces_beyond_pages_and_forms_onto_the_contract() -> 
 
 def test_namespace_ux_register_consumers_read_global_and_local() -> None:
     paths = (
-        "skills/spec-specify/SKILL.md",
-        "skills/spec-sync/SKILL.md",
+        "skills/spec-specify/references/screens.md",
+        "skills/spec-sync/references/screens.md",
         "skills/spec-ux-review/SKILL.md",
         "skills/spec-delegate/references/payload.md",
     )
     for path in paths:
         guide = raw(path)
         assert "docs/packages/<name>/steering/ux-objects.md" in guide, path
-    assert "read both" in raw("skills/spec-sync/SKILL.md")
+    assert "read both" in raw("skills/spec-sync/references/screens.md")
     assert "root and selected namespace" in raw("skills/spec-ux-review/SKILL.md")

@@ -21,7 +21,7 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
   nonempty single-line reason without parentheses, nonempty AC ID list owned by that task. Commit
   `(scope extension: <reason>)` on the owning `_Boundary:` with the first source change, then mirror it in this sole
   final/emergency record.
-- **Questions**: add `--questions-file -`, a YAML list of `id`, `title` (at most 40 characters), `prompt`, `context` (what the answer decides and why it matters now, for a reader who has not seen the work), `options` (`{id, description, recommended}`, one recommended) and `allow_note`. An option that depends on a condition also states what holds when it does not.
+- **Questions**: add `--questions-file -`, a YAML list of `id`, `title`, `prompt`, `context` (what the answer decides and why it matters now, for a reader who has not seen the work), `options` (`{id, description, recommended}`, one recommended) and `allow_note`. An option that depends on a condition also states what holds when it does not.
 - **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; `--status needs_input` when only the user can decide. A problem breaks the agreed goal, scope or contract or cannot be solved; a choice you can make, or waiting for answers, is not one.
 - **Emergency commit**: a run that stops on a problem commits its unfinished work with the envelope. Only this commit may use `git commit --no-verify`, and only on ordinary commit-gate refusal of the unfinished files, never for sandbox or approval denial; name each skipped check in `--tried`.
 - On any refused or unavailable approval, on every host, stop that operation and preserve the state; never reroute through another tool, path, process, broader request or setting.
@@ -41,7 +41,7 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 ```
 
 - One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds.
-- Name who decided each answer in its `by`: `user` for the user's decision, `host` for the Host's own decision within approved scope, `policy` for one a policy settles. The Host's rewritten answers name `by` per answer, and the recording run copies it; there is no `--by` flag. Any other value is refused (`ENVELOPE_ITEMS_INVALID`).
+- Name who decided each answer in its `by`: `user` for the user's decision, `host` for the Host's own decision within approved scope, `policy` for one a policy settles. The Host's rewritten answers name `by` per answer, and the recording run copies it; there is no `--by` flag.
 - A decision that settles one of the run's `assumptions` goes into `--settle N=<decision>` (`N` its 1-based position), not `constraints`.
 - When a rejection or return to Backlog ends the Planning, close every open question the same way (`choice: null`, the reason as the decision) in the commit that ends it.
 - An ambiguous answer becomes a new question, never a guess.
