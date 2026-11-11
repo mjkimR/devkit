@@ -75,7 +75,8 @@ the comparison is in `docs/materials/2026-11/20261111-shared-fingerprinted-memo/
 - **Then** it returns the memo path for the valid layout (also when the file is absent) and exactly one `PathRefusal`
   per other layout (`NO_TRANSIENT`, `SYMLINK`, `NOT_DIRECTORY`, `MISSING`, `NOT_REGULAR`); with `create` it creates
   missing directories below `transient/` and never `.devkit/` or `transient/`; no log record is emitted
-  (`packages/devkit-core/tests/unit/core/test_memo.py`).
+  (`packages/devkit-core/tests/integration/core/test_memo.py`, filesystem tests being integration tests per
+  `ARCH-05-2-components`).
 
 ### [AC-02] The envelope check accepts only the exact envelope
 - **Given** parsed objects: the exact envelope, a non-mapping, a missing key, an extra top-level key, a `bool` or other

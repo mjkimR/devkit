@@ -413,6 +413,32 @@ def test_a_directory_at_the_memo_path_is_left_alone(transient: Path, write: Writ
     assert (transient / MEMO).is_dir() and [p.name for p in (transient / MEMO).iterdir()] == ["kept"]
 
 
+@pytest.mark.parametrize("component", [".devkit", ".devkit/transient", ".devkit/transient/docs", MEMO])
+def test_a_symbolic_link_on_the_memo_path_is_never_read_or_written(
+    transient: Path, write: Write, parses: list[str], component: str
+) -> None:
+    _base(write)
+    _load(transient)
+    path = transient / component
+    moved = transient / "elsewhere" / path.name
+    moved.parent.mkdir(exist_ok=True)
+    path.rename(moved)
+    path.symlink_to(moved, target_is_directory=moved.is_dir())
+    stored = next((transient / "elsewhere").rglob("document-index.json")).read_bytes()
+    parses.clear()
+    view = _view(_load(transient))
+    assert len(parses) == 6 and path.is_symlink()
+    assert view == _view(_fresh(transient))
+    assert next((transient / "elsewhere").rglob("document-index.json")).read_bytes() == stored
+
+
+def test_a_file_in_place_of_the_memo_directory_is_left_alone(transient: Path, write: Write) -> None:
+    _base(write)
+    (transient / ".devkit/transient/docs").write_text("x", encoding="utf-8")
+    _assert_fresh(transient)
+    assert (transient / ".devkit/transient/docs").read_text(encoding="utf-8") == "x"
+
+
 @pytest.mark.skipif(os.name != "posix" or os.geteuid() == 0, reason="needs POSIX permissions without root")
 def test_an_unwritable_memo_directory_is_left_as_it_was(transient: Path, write: Write) -> None:
     _base(write)

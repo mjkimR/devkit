@@ -9,7 +9,9 @@ read, parse, scanner or codec module, PyYAML version, libyaml presence or Python
 version discards it.
 
 The memo is ``<root>/.devkit/transient/docs/document-index.json``, used only
-when ``.devkit/transient/`` is a directory and no symbolic link is on the way
+on the safe memo path of ``devkit_core.core.memo``: an existing
+``.devkit/transient/``, no symbolic link, non-directory or relocated directory
+from ``.devkit/`` down, and no non-regular file at the path
 (``ADR-parse-memo-location-and-format``). It is JSON in which every list,
 mapping, ``datetime`` and ``date`` of a frontmatter is a one-key tagged object
 (``l``, ``m`` as key-value pairs, ``t``, ``d``), so every key type and every
@@ -32,7 +34,6 @@ import json
 import math
 import os
 import pkgutil
-import stat
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -42,6 +43,7 @@ from typing import Any
 import yaml
 from devkit_core.core import atomic_write_bytes
 from devkit_core.core.logs import get_logger
+from devkit_core.core.memo import EnvelopeProblem, PathRefusal, envelope_problem, safe_memo_path
 
 from devkit_docs.features.documents.models.ids import Kind, kind_of
 from devkit_docs.features.documents.models.model import Document, Issue, Reference
@@ -387,24 +389,24 @@ def fingerprint() -> str | None:
 # --- the file -------------------------------------------------------------------------------------------------------
 
 
-def memo_path(root: Path) -> Path | None:
-    """The memo of the resolved ``root``, or ``None`` when ``.devkit/transient/`` is not a directory, a symbolic link
-    is on the way, or the path resolves outside ``root``."""
-    transient = root / MEMO_PARTS[0] / MEMO_PARTS[1]
-    if transient.is_symlink() or not transient.is_dir():
-        return None
-    path = transient.joinpath(*MEMO_PARTS[2:])
-    if path.parent.is_symlink() or path.is_symlink():
-        _log.info("document memo not used: a symbolic link at %s", path)
-        return None
+def memo_path(root: Path, *, create: bool = False) -> Path | None:
+    """The memo of the resolved ``root``, or ``None`` when ``safe_memo_path`` refuses it; ``create`` makes a missing
+    ``docs/`` directory. A refusal other than a missing ``.devkit/transient/`` or ``docs/`` logs one line."""
+    shown = root.joinpath(*MEMO_PARTS)
     try:
-        inside = path.resolve().is_relative_to(root)
-    except (OSError, RuntimeError):
-        inside = False
-    if not inside:
-        _log.info("document memo not used: %s resolves outside %s", path, root)
+        found = safe_memo_path(root, MEMO_PARTS[2:], create=create)
+    except OSError as exc:
+        _log.info("document memo %s not used: %s", shown, exc)
         return None
-    return path
+    if isinstance(found, Path):
+        return found
+    if found is PathRefusal.SYMLINK:
+        _log.info("document memo not used: a symbolic link at %s", shown)
+    elif found is PathRefusal.MOVED:
+        _log.info("document memo not used: %s resolves outside %s", shown, root)
+    elif found in (PathRefusal.NOT_DIRECTORY, PathRefusal.NOT_REGULAR):
+        _log.info("document memo %s not used: %s", shown, found)
+    return None
 
 
 class ParseMemo:
@@ -422,17 +424,17 @@ class ParseMemo:
         self._stored: dict[str, Any] | None = None
         self._kept: dict[str, Entry] = {}
         self._changed = False
-        self._writable = True
         self._unusable = 0
 
     @classmethod
     def open(cls, root: Path, *, writes: bool) -> ParseMemo | None:
-        """The memo of the resolved ``root``, or ``None`` when it has none (``memo_path``, ``fingerprint``)."""
-        path = memo_path(root)
-        if path is None:
-            return None
+        """The memo of the resolved ``root``, or ``None`` when it has none (``fingerprint``, ``memo_path``); a writing
+        load creates a missing ``docs/`` directory."""
         current = fingerprint()
         if current is None:
+            return None
+        path = memo_path(root, create=writes)
+        if path is None:
             return None
         memo = cls(path, current, writes=writes)
         if writes:
@@ -463,7 +465,7 @@ class ParseMemo:
         """Replace the file with the kept entries when this is a writing load and they changed; log any failure."""
         if self._unusable:
             _log.info("document memo %s: %d stored entries could not be rebuilt", self.path, self._unusable)
-        if not self._writes or not self._writable:
+        if not self._writes:
             return
         assert self._stored is not None
         if not self._changed and self._stored.keys() == self._kept.keys():
@@ -478,38 +480,23 @@ class ParseMemo:
     def _read(self) -> None:
         self._stored = {}
         try:
-            mode = os.lstat(self.path).st_mode
+            os.lstat(self.path)
         except FileNotFoundError:
             self._changed = True
             return
         except OSError as exc:
             self._discard(f"cannot be read: {exc}")
             return
-        if not stat.S_ISREG(mode):
-            self._writable = False
-            _log.info("document memo %s not used: not a regular file", self.path)
-            return
         try:
             loaded = json.loads(self.path.read_bytes().decode("utf-8"), parse_constant=_no_constant)
         except (OSError, ValueError, RecursionError) as exc:
             self._discard(f"cannot be read: {exc}")
             return
-        problem = self._problem(loaded)
+        problem = envelope_problem(loaded, FORMAT_VERSION, self._fingerprint)
         if problem is not None:
-            self._discard(problem)
+            self._discard("another parser fingerprint" if problem is EnvelopeProblem.FINGERPRINT else str(problem))
             return
         self._stored = loaded["entries"]
-
-    def _problem(self, loaded: object) -> str | None:
-        if type(loaded) is not dict or set(loaded) != {"version", "fingerprint", "entries"}:
-            return "not the expected shape"
-        if type(loaded["version"]) is not int or loaded["version"] != FORMAT_VERSION:
-            return "another version"
-        if loaded["fingerprint"] != self._fingerprint:
-            return "another parser fingerprint"
-        if type(loaded["entries"]) is not dict:
-            return "not the expected shape"
-        return None
 
     def _discard(self, reason: str) -> None:
         self._changed = True

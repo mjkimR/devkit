@@ -109,6 +109,22 @@ def test_corrupt_stores_are_silent_misses(root: Path, descriptor: FileFactsDescr
     assert WorkspaceCache(root).get_file_facts("one.py", descriptor) == ("one.py", 1)
 
 
+def test_an_extra_top_level_key_discards_the_memo(root: Path, descriptor: FileFactsDescriptor) -> None:
+    memo = warm(root, descriptor)
+    memo.write_text(json.dumps({**json.loads(memo.read_text()), "extra": 1}))
+    cache = WorkspaceCache(root, facts_writer=True)
+    with patch.object(cache, "get_python_ast", wraps=cache.get_python_ast) as parse:
+        assert cache.get_file_facts("one.py", descriptor) == ("one.py", 1)
+        assert parse.call_count == 1
+        cache.flush_file_facts()
+    assert set(json.loads(memo.read_text())) == {"version", "fingerprint", "entries"}
+
+
+def test_framework_fingerprint_covers_the_shared_memo_rules() -> None:
+    assert "core.memo" in [dependency.name for dependency in storage._FRAMEWORK]
+    assert all(dependency.source is not None for dependency in storage._FRAMEWORK)
+
+
 def test_bad_entry_codec_is_a_miss(root: Path, descriptor: FileFactsDescriptor) -> None:
     memo = warm(root, descriptor)
     value = json.loads(memo.read_text())

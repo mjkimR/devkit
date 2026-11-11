@@ -51,8 +51,9 @@ only `FINGERPRINT` is mapped by the docs memo to "another parser fingerprint".
 
 ## 4. Verification & Test Plan
 
-- `packages/devkit-core/tests/unit/core/test_memo.py`: every `PathRefusal` and `EnvelopeProblem` case of AC-01 and
-  AC-02, creation only below `transient/`, no log record.
+- `packages/devkit-core/tests/integration/core/test_memo.py`: every `PathRefusal` case of AC-01, creation only below
+  `transient/`, no log record; `packages/devkit-core/tests/unit/core/test_memo.py`: every `EnvelopeProblem` case of
+  AC-02.
 - Existing `packages/devkit-docs/tests/unit/features/documents/test_memo.py`,
   `packages/devkit-docs/tests/integration/features/documents/test_memo_index.py` and
   `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py` pass; `test_file_facts.py` gains

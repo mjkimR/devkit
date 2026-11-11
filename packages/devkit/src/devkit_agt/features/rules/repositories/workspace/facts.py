@@ -12,8 +12,9 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any, cast
 
-from devkit_core.core import atomic_write_bytes
+from devkit_core.core import atomic_write_bytes, memo
 from devkit_core.core.logs import get_logger
+from devkit_core.core.memo import envelope_problem, safe_memo_path
 
 from devkit_agt.features.rules.models.file_facts import FactsDependency, FileFactsDescriptor
 
@@ -42,6 +43,8 @@ _FRAMEWORK = (
     capture_facts_dependency("workspace.file_facts", str(Path(__file__).with_name("file_facts.py"))),
     capture_facts_dependency("workspace.cache", str(Path(__file__).with_name("cache.py"))),
     capture_facts_dependency("models.file_facts", str(Path(__file__).parents[2] / "models" / "file_facts.py")),
+    # The safe memo path and envelope rules this store applies.
+    capture_facts_dependency("core.memo", memo.__file__),
 )
 
 
@@ -88,24 +91,12 @@ def logical_path(path: str) -> bool:
 
 
 def memo_path(root: Path, rule_id: str, *, create: bool = False) -> Path | None:
-    """Require an existing transient directory; reject every symlink and obstructing component."""
+    """The rule's memo on the safe memo path of ``devkit_core.core.memo``, else ``None``; ``create`` makes missing
+    ``rules/`` and ``facts/`` directories."""
     if re.fullmatch(r"RULE-[A-Za-z0-9][A-Za-z0-9_-]*", rule_id) is None:
         return None
-    here = root
-    for part in (".devkit", "transient", "rules", "facts"):
-        here = here / part
-        if here.is_symlink():
-            return None
-        if not here.exists():
-            if not create or part in (".devkit", "transient"):
-                return None
-            here.mkdir(exist_ok=True)
-        if not here.is_dir() or here.resolve() != here:
-            return None
-    path = here / f"{rule_id}.json"
-    if path.is_symlink() or (path.exists() and not path.is_file()):
-        return None
-    return path
+    found = safe_memo_path(root, ("rules", "facts", f"{rule_id}.json"), create=create)
+    return found if isinstance(found, Path) else None
 
 
 @dataclass
@@ -128,13 +119,7 @@ class FactsStore:
                 return
             raw = path.read_bytes()
             value = json.loads(raw)
-            if (
-                type(value) is not dict
-                or type(value.get("version")) is not int
-                or value.get("version") != FORMAT_VERSION
-                or value.get("fingerprint") != self.fingerprint
-                or type(value.get("entries")) is not dict
-            ):
+            if envelope_problem(value, FORMAT_VERSION, self.fingerprint) is not None:
                 return
             entries: dict[str, dict[str, Any]] = {}
             for name, entry in value["entries"].items():
