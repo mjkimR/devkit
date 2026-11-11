@@ -2,7 +2,7 @@
 id: SPEC-retire-legacy-integration-provider-key
 title: Reject the legacy [integration] provider key
 summary: Removes the code path that accepts and ignores a legacy [integration] provider key, so the retired readiness-provider selection leaves no reader, diagnostic or documentation behind.
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-INT-mcp-services
