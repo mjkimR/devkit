@@ -1,6 +1,6 @@
 ---
 name: agent-asset-writing
-description: Read before writing or editing a skill, playbook, instruction or subagent. Defines directive writing, conditional loading and bundle self-containment.
+description: Read before writing or editing a skill, playbook, instruction, subagent or guidance fragment. Defines directive writing, conditional loading and bundle self-containment.
 ---
 
 # Agent Asset Writing
@@ -43,12 +43,24 @@ already knows, and cut every line that does not change its next action.
   [skill-authoring](../playbooks/skill-authoring/SKILL.md) for router structure, conditional references and role
   authoring; locate its effective copy with
   `devkit playbook get authoring/skill-authoring`.
+- For an unselected source bundle, read its `bundle.toml`, constitution and relevant instructions directly;
+  selection is not required.
 - Keep in the main file what every run needs: purpose and trigger, constraints, procedure, completion criteria.
 - Move what only some runs need into references one level deep, each linked with its read condition: "Read
   `references/recovery.md` when the sync fails." Never send the agent to read every reference up front.
 - Say whether the agent runs a script or reads it.
 - Leave out what another asset owns (link the owner), what a command's output already tells the agent, and
   time-relative facts ("recently", "the new API").
+
+## Guidance Fragments
+
+A `guidance` fragment lands in the root `AGENTS.md` block, which every agent and subagent session loads. Keep a line
+only when all hold; otherwise drop it:
+
+- Nearly every session needs it at a moment no skill description, constitution or command output marks.
+- No other loaded text says it: devkit's own block lines, skill descriptions, the bundle constitution `get-context`
+  returns, or a command refusal that names the fix.
+- It is one trigger with its condition and only the essence; details stay in the asset it points to.
 
 ## Self-Containment
 
