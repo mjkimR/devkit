@@ -2,7 +2,7 @@
 id: PROP-shared-paging-contract
 title: One paging contract for listing commands
 summary: Moves devkit exec list onto the shared PAGE and NEXT_CMD paging lines and decides paging for maintenance history list, so listing commands share one grammar.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/harness/
 priority: low                         # critical | high | medium | low
