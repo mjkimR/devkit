@@ -39,7 +39,7 @@ Option 3 is selected because it keeps references in step and gives reviewers one
 classes stay out.
 
 - A Development worker may record as a Tier B extension an exact existing quick-reference document, user guide or
-  the README of a package that owns a source the unit changes, when its edited passages restate a public name,
+  the README of a package or tool that owns a source the unit changes, when its edited passages restate a public name,
   command or behavior the task changes. → `CAP-DLV-delivery-roles` worker write boundaries (MAY).
 - The extension's reason names the changed symbol, command or contract ID; the edit adds no document or section
   and changes only the restating passages. → `CAP-DLV-delivery-roles` worker write boundaries (MUST).

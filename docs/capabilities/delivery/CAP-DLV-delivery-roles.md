@@ -312,9 +312,8 @@ scope: its annotation must still exist. Missing/mismatched evidence or recogniza
 or input leaves the check not-run with `SPEC_WORKER_SCOPE_UNRESOLVED` or the envelope format cause; it never passes.
 Recognizable protected classes include `.devkit/`, agent projections, agent instruction files (`AGENTS.md`,
 `CLAUDE.md`), `.github/`, other unit/proposal trees, architecture documents, rule directories and known dependency
-manifests/lockfiles. Semantic adjacency, custom
-protected paths, explicit payload denies and test weakening remain reviewer judgments. With no extensions the list
-is empty and the added check passes. Host validation MUST verify this evidence before overriding scope, then name
+manifests/lockfiles. Semantic adjacency, custom protected paths, explicit payload denies and test weakening remain
+reviewer judgments. With no extensions the list is empty and the added check passes. Host validation MUST verify this evidence before overriding scope, then name
 every admitted extension in the complete override. A narrower `--scope`/`--scope-file` still fails omitted paths;
 inspection MUST NOT union extensions into an explicit scope. Sync-output receipt checks remain independent.
 

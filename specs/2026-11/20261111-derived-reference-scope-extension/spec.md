@@ -59,7 +59,7 @@ This changes a `MUST` in `CAP-DLV-delivery-roles`; an ADR that supersedes in par
 - **When** `uv run devkit rules check` runs on the changed documents
 - **Then** an accepted ADR supersedes in part `ADR-recorded-adjacent-path-extensions-for-development-workers` for
   the qualifying Tier B classes, the earlier ADR carries the identical pointer statement, and the capability's
-  Tier B rule admits an exact existing quick-reference document, guide or a changed package's README whose edited
+  Tier B rule admits an exact existing quick-reference document, guide or the README of a package or tool that owns a changed source whose edited
   passages restate a public name, command or behavior the task changes, with a reason naming that symbol, command
   or contract ID
 - **And** the check reports 0 violations for these documents

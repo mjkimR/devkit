@@ -29,9 +29,10 @@ The range from `<accepted>` to the returned final HEAD `<returned>` (the commit 
   annotations; the highest worker sequence wins repeated paths. Historical records alone add no scope: the
   annotation must still exist. Confirm the annotation/reason accompanies the first source commit and that review
   covered necessity, documented same-feature ownership/test mirror, the exact affected existing Living Spec
-  document or a derived reference document (quick reference, user guide or a changed package's README restating
-  the changed behavior, never `AGENTS.md`/`CLAUDE.md` or agent assets), explicit denies, protected classes and test
-  strength. Missing evidence is P2, denied/non-adjacent/
+  document or a derived reference document (an existing quick reference, user guide or the README of a package or
+  tool owning a changed source, whose reason names the changed symbol, command or contract ID and whose edit changes
+  only the restating passages and adds no file or section; never `AGENTS.md`/`CLAUDE.md`, agent assets or release
+  documents), explicit denies, protected classes and test strength. Missing evidence is P2, denied/non-adjacent/
   out-of-goal writes are P1 and block the range. Changed metadata after review needs re-verification. New unannotated
   boundaries are checked against the payload/task diff; no sealed boundary journal is required.
 - `checks.scope_extensions` must pass with the additive top-level list. It checks structural annotation/record/task/
