@@ -1,0 +1,22 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:04:49.887295Z'
+status: completed
+summary: 'Development to final change report. Removed finish/discard before_remove (tests use before_step), status_records renames/ignore_submodules, search bm25_scores/SearchIndex.search limit/SearchHit.to_dict; *pathspecs kept (production caller snapshot.capture). Outcome measured on head by signature inspection and rg (no base checkout): 7 removed members, 0 production callers. Scope extension worktree/__init__.py docstring. Not integrated.'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main --tier all 7115 passed 17 skipped; just test-dist 1400 passed
+  lint: PASS lint-check, pyright, rules check --ci --base main
+diff_scope:
+  base: ''
+  head: c51e21d4eec9251f9f4ce9ef1cec0d937b6cf0a5
+scope_extensions:
+- path: packages/devkit/src/devkit_agt/features/worktree/__init__.py
+  task: 1
+  reason: its module docstring names the removed before_remove hook
+  requirements:
+  - AC-01
+activity_effort: medium

@@ -446,9 +446,9 @@ def test_finish_without_a_worktree_never_deletes_a_branch_start_did_not_create(r
 
 def test_finish_keeping_the_branch_never_resumes_a_branch_start_did_not_create(repo: Path) -> None:
     git(repo, "branch", "dev-old")  # merged into the base HEAD, no worktree, no marker
-    seen: list[FinishResult] = []
+    seen: list[str] = []
     with pytest.raises(NotFoundError, match=r"no branch\.dev-old\.devkitWorktree marker") as raised:
-        finish(locate(repo), "dev-old", delete_branch=False, before_remove=seen.append)
+        finish(locate(repo), "dev-old", delete_branch=False, before_step=lambda step, _: seen.append(step))
     assert raised.value.code == "WORKTREE_NOT_FOUND" and raised.value.result is None
     assert raised.value.fix is None and "delete_branch = false" in str(raised.value.what_to_report)
     assert seen == [] and git(repo, "branch", "--list", "dev-old").strip() == "dev-old"
@@ -457,13 +457,13 @@ def test_finish_keeping_the_branch_never_resumes_a_branch_start_did_not_create(r
 def test_finish_keeping_the_branch_resumes_after_a_removed_worktree_until_it_completes(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     git(repo, "worktree", "remove", str(created.path))  # what a stopped run leaves: the marked branch resumes
-    seen: list[bool | None] = []
-    done = finish(locate(repo), "dev-demo", delete_branch=False, before_remove=lambda r: seen.append(r.removed))
-    assert seen == [True] and (done.removed, done.branch_deleted) == (True, False)
+    seen: list[tuple[str, bool | None]] = []
+    done = finish(locate(repo), "dev-demo", delete_branch=False, before_step=lambda s, r: seen.append((s, r.removed)))
+    assert seen == [("marker_clear", True)] and (done.removed, done.branch_deleted) == (True, False)
     assert git(repo, "branch", "--list", "dev-demo").strip() == "dev-demo" and marker(repo, "dev-demo") == ""
     with pytest.raises(NotFoundError):
-        finish(locate(repo), "dev-demo", delete_branch=False, before_remove=lambda r: seen.append(r.removed))
-    assert seen == [True]  # the completed finish removed the marker: nothing runs again
+        finish(locate(repo), "dev-demo", delete_branch=False, before_step=lambda s, r: seen.append((s, r.removed)))
+    assert seen == [("marker_clear", True)]  # the completed finish removed the marker: nothing runs again
 
 
 def test_finish_keeping_a_branch_from_before_the_marker_completes_with_its_worktree(repo: Path) -> None:
@@ -521,11 +521,15 @@ def test_finish_merges_resumes_after_a_dirty_worktree_and_cleans_up(repo: Path) 
 
 def test_finish_without_branch_deletion_and_with_a_caller_cleanup(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
-    seen: list[tuple[bool | None, bool]] = []
+    seen: list[tuple[str, bool | None, bool]] = []
     result = finish(
-        locate(repo), "dev-demo", delete_branch=False, before_remove=lambda r: seen.append((r.removed, r.path.is_dir()))
+        locate(repo),
+        "dev-demo",
+        delete_branch=False,
+        before_step=lambda step, r: seen.append((step, r.removed, r.path.is_dir())),
     )
-    assert seen == [(False, True)] and result.removed and not result.branch_deleted
+    assert seen == [("worktree_remove", False, True), ("marker_clear", True, False)]
+    assert result.removed and not result.branch_deleted
     assert git(repo, "branch", "--list", "dev-demo").strip() == "dev-demo" and marker(repo, "dev-demo") == ""
     assert not created.path.exists()
 
@@ -537,11 +541,12 @@ def test_an_advisory_the_caller_cleanup_raises_carries_the_partial_result(repo: 
     class CleanupError(AdvisoryError):
         code = "CALLER_CLEANUP_FAILED"
 
-    def cleanup(result: FinishResult) -> None:
-        raise CleanupError("the caller's cleanup failed")
+    def cleanup(step: str, result: FinishResult) -> None:
+        if step == "worktree_remove":
+            raise CleanupError("the caller's cleanup failed")
 
     with pytest.raises(CleanupError) as raised:
-        finish(locate(repo), "dev-demo", merge=True, pull_request="auto", before_remove=cleanup)
+        finish(locate(repo), "dev-demo", merge=True, pull_request="auto", before_step=cleanup)
     partial = getattr(raised.value, "result", None)
     assert isinstance(partial, FinishResult)
     assert (partial.merged, partial.push, partial.removed, partial.branch_deleted) == (

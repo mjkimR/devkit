@@ -391,10 +391,9 @@ def test_discard_drops_an_unmerged_branch_and_its_worktree(repo: Path) -> None:
     with pytest.raises(DirtyError):
         discard(locate(repo), "dev-demo")  # never by force
     (created.path / "wip.txt").unlink()
-    seen: list[str] = []
-    done = discard(locate(repo), "dev-demo", before_remove=lambda result: seen.append(result.branch))
+    done = discard(locate(repo), "dev-demo")
     assert (done.discarded, done.merged, done.removed, done.branch_deleted) == (True, False, True, True)
-    assert seen == ["dev-demo"] and not created.path.exists() and git(repo, "branch", "--list", "dev-demo") == ""
+    assert done.branch == "dev-demo" and not created.path.exists() and git(repo, "branch", "--list", "dev-demo") == ""
     StartBranch().execute(locate(repo), "dev-solo")
     commit(repo, "solo.txt")
     with pytest.raises(BaseOnBranchError):

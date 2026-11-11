@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:00:15.442461Z'
+status: completed
+summary: 'code-reviewer PASS, no findings: AC-01..AC-04 confirmed, no production caller of removed members, migrated tests equal or stricter; Tier-B extension worktree/__init__.py admitted'
+findings: []
+checks:
+  tests: PASS just test-affected --base main --tier all (full fallback) 7115 passed 17 skipped; reviewer narrow pytest 6 passed
+  lint: PASS devkit rules check --ci --base 57c63108; just lint-check/check devkit devkit-core devkit-dist
+diff_scope:
+  base: 57c63108ceae588732797aed50e8917f9bd2ea81
+  head: 5a7b9440fdd9c7c6c47a30a98e99edc70177c5e8

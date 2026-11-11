@@ -363,16 +363,13 @@ def status_records(
     cwd: Path,
     *pathspecs: str,
     untracked: str = "all",
-    renames: bool = True,
     optional_locks: bool = False,
-    ignore_submodules: str | None = None,
     deadline: Deadline | None = None,
 ) -> list[StatusRecord]:
     """Run ``git status --porcelain=v1 -z`` in ``cwd`` and parse it; raises as ``run_git`` does.
 
-    ``untracked`` is ``--untracked-files``'s value; ``renames=False`` passes ``--no-renames``;
-    ``optional_locks=False`` passes ``--no-optional-locks`` (the index is not refreshed on disk);
-    ``ignore_submodules`` is ``--ignore-submodules``'s value when given; ``pathspecs`` follow ``--``.
+    ``untracked`` is ``--untracked-files``'s value; ``optional_locks=False`` passes ``--no-optional-locks`` (the
+    index is not refreshed on disk); ``pathspecs`` follow ``--``.
     """
     args = [
         *(() if optional_locks else ("--no-optional-locks",)),
@@ -380,8 +377,6 @@ def status_records(
         "--porcelain=v1",
         "-z",
         f"--untracked-files={untracked}",
-        *(() if renames else ("--no-renames",)),
-        *(() if ignore_submodules is None else (f"--ignore-submodules={ignore_submodules}",)),
         *(("--", *pathspecs) if pathspecs else ()),
     ]
     return parse_status_records(run_git(cwd, *args, deadline=deadline))

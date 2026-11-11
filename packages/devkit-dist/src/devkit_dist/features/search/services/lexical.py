@@ -53,8 +53,3 @@ class Bm25:
             )
             for frequency, length in zip(self._frequencies, self._lengths, strict=True)
         ]
-
-
-def bm25_scores(documents: Sequence[str], query: str) -> list[float]:
-    """BM25 of every document against ``query``, in document order."""
-    return Bm25(documents).scores(query)

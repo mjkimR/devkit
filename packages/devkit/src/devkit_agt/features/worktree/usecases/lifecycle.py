@@ -1020,7 +1020,6 @@ def finish(
     merge: bool = False,
     pull_request: str = "auto",
     delete_branch: bool = True,
-    before_remove: Callable[[FinishResult], None] | None = None,
     guard: Callable[[str, str], None] | None = None,
     network: str = "allow",
     before_step: Callable[[str, FinishResult], None] | None = None,
@@ -1043,9 +1042,8 @@ def finish(
     CLI). The checks of the worktree's branch and lock, the base and the upstreams (including whether ``git branch
     -d`` will accept the branch) run before the first change, and so does the check for uncommitted or untracked
     changes in the worktree (``WORKTREE_DIRTY``; the removal still refuses a worktree that became dirty since).
-    ``before_remove`` runs once the merge is confirmed and before the worktree is
-    removed (a caller's own cleanup; it runs again on a rerun). A refusal after that carries the partial result as
-    ``error.result``, also an ``AdvisoryError`` that ``before_remove`` raises.
+    Once the merge is confirmed, a refusal carries the partial result as ``error.result``, also an
+    ``AdvisoryError`` that ``before_step`` raises from then on.
 
     A branch without a worktree is finished only when ``start``, ``start_branch`` or ``attach`` marked it (its
     ``branch.<branch>.devkitWorktree`` marker): one whose worktree is already gone (what a stopped run leaves), or
@@ -1085,7 +1083,7 @@ def finish(
                     " integrate or remove it",
                 )
             # Only a marked branch resumes, whether or not it is deleted: any other merged branch (the base's own
-            # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
+            # included) would otherwise run its steps, merge and push for a task that never existed.
             raise NotFoundError(
                 f"no worktree at {path_for(position, branch)} or on branch {branch}; the branch {branch} is merged"
                 f" into the base HEAD but has no {marker_key(branch)} marker, so devkit worktree start did not create"
@@ -1173,10 +1171,8 @@ def finish(
             _push(position, result)
         else:
             result.push = "excluded"
-    # Every refusal from here on carries the partial result, an advisory ``before_remove`` raises included.
+    # Every refusal from here on carries the partial result, an advisory ``before_step`` raises included.
     with _carrying(result):
-        if before_remove is not None:
-            before_remove(result)
         if result.removed is False:
             if before_step is not None:
                 before_step("worktree_remove", result)
@@ -1201,7 +1197,7 @@ def finish(
 
 @contextlib.contextmanager
 def _carrying(result: FinishResult) -> Iterator[None]:
-    """Attach the partial ``result`` to a refusal raised in the block, an advisory a ``before_remove`` raises
+    """Attach the partial ``result`` to a refusal raised in the block, an advisory a ``before_step`` raises
     included, unless that caller's error defines a ``result`` of its own."""
     try:
         yield
@@ -1225,15 +1221,13 @@ def _marked_path(position: Position, branch: str) -> Path:
     return Path(value) if value else path_for(position, branch)
 
 
-def discard(
-    position: Position, branch: str, *, before_remove: Callable[[FinishResult], None] | None = None
-) -> FinishResult:
+def discard(position: Position, branch: str) -> FinishResult:
     """Drop an unmerged activity branch: remove its worktree and force-delete the branch (``git branch -D``).
 
     The close of a task (a depth escalation, a supersede, an abandon) is the only use; the caller decides it on the
     authority its close kind needs. Any activity branch is dropped, whether or not devkit started it;
-    a worktree with uncommitted or untracked changes is ``WORKTREE_DIRTY``: never removed by force. ``before_remove``
-    runs before the worktree is removed, as for ``finish``. Remote branches and pull requests are the caller's.
+    a worktree with uncommitted or untracked changes is ``WORKTREE_DIRTY``: never removed by force. Remote branches
+    and pull requests are the caller's.
     """
     check_branch(branch)
     refuse_linked(
@@ -1256,8 +1250,6 @@ def discard(
         result = FinishResult(branch, entry.path)
         _require_clean(entry.path)
     with _carrying(result):
-        if before_remove is not None:
-            before_remove(result)
         if result.removed is False:
             _remove(base, result.path)
             result.removed = True

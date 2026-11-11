@@ -11,7 +11,6 @@ from devkit_dist.features.search import (
     ModelInvalidError,
     ModelNotFoundError,
     SearchDocument,
-    SearchHit,
     SearchIndex,
     SearchMode,
 )
@@ -63,12 +62,10 @@ def test_hybrid_fuses_both_rankings(embedder: Embedder) -> None:
     assert hits[0].score == pytest.approx(2 / 61) and hits[2].score == pytest.approx(1 / 63)
 
 
-def test_limit_ties_and_results(embedder: Embedder) -> None:
+def test_ties_rank_by_id(embedder: Embedder) -> None:
     index = SearchIndex([SearchDocument("b", "replica"), SearchDocument("a", "replica")], embedder=embedder)
-    assert [hit.id for hit in index.search("replica", mode=SearchMode.LEXICAL)] == ["a", "b"]  # ties rank by id
-    assert [hit.id for hit in index.search("replica", mode=SearchMode.HYBRID, limit=1)] == ["a"]
-    assert index.search("replica", limit=0) == []
-    assert SearchHit("a", 0.5).to_dict() == {"id": "a", "score": 0.5}
+    assert [hit.id for hit in index.search("replica", mode=SearchMode.LEXICAL)] == ["a", "b"]
+    assert [hit.id for hit in index.search("replica", mode=SearchMode.HYBRID)] == ["a", "b"]
 
 
 def test_document_ids_must_be_unique() -> None:
