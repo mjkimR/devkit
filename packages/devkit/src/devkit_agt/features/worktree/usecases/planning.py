@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
 
 from devkit_core.core.git import run_git_text
@@ -96,7 +97,10 @@ def plan_finish(
         raise NotFoundError("local integration requires a linked worktree or a devkit-marked task branch")
     markers = _markers(position.base, branch)
     if entry is None and markers[1] and markers[1] != position.branch:
-        raise ConflictError("the base branch differs from the task's recorded base")
+        raise ConflictError(
+            f"the base branch differs from the task's recorded base {markers[1]}; nothing was changed",
+            fix=f"git -C {shlex.quote(str(position.base))} switch {markers[1]}, then rerun",
+        )
     path = entry.path if entry else _marked_path(position, branch)
     if entry and not _clean(path):
         raise DirtyError("the task worktree has uncommitted or untracked changes", target_files=[str(path)])

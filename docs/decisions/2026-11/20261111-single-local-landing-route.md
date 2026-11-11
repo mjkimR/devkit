@@ -86,14 +86,14 @@ We decided to adopt **Option 1**.
   accepted. → `CAP-WT-task-worktrees` §3 (MUST)
 - The `devkit.finish_guard` extension group, its runner and the workflow `workflow-envelopes` entry point are
   retired; the codes `WORKTREE_BLOCKED`, `WORKTREE_GUARD_FAILED`, `WORKTREE_BASE_BEHIND`, `WORKTREE_PUSH_FAILED` and
-  `WORKTREE_PUSH_REJECTED` no longer exist. → `ARCH-05-2-components` entry-point groups (MUST)
+  `WORKTREE_PUSH_REJECTED` no longer exist. → `ARCH-05-2-components` §1.2 entry-point groups
 - The envelope hold stays where the workflow puts it: `devkit workflow next` holds the gates from the holding run's
   stage on, and the Host runs `devkit workflow envelope check` before approving integration.
-  → `CAP-DLV-workflow-envelopes` holds (MUST)
+  → `CAP-DLV-workflow-envelopes` §4 (MUST)
 - The finish guards are dropped, not moved, because `ADR-post-merge-verification` forbids content finish guards in
   integration.
 - The base fetch and push are dropped, not moved, because the local route excludes fetch and push; publishing the
-  base is a separate Git effect under the Host's publication authority. → `ARCH-04-2-delivery-policy` (MUST)
+  base is a separate Git effect under the Host's publication authority. → `ARCH-04-2-delivery-policy` §4 (MUST)
 - The moved-target refusal of `finish --merge` is replaced by the moved-target build of the integration route.
 
 Supersedes in part `ADR-local-and-pull-request-integration`: the clauses that `[worktree] merge` applies to `devkit worktree finish --merge`, that the CLI `finish --merge` builds a merge commit only when the target did not advance and takes the integration lock, that `devkit worktree finish --merge` keeps refusing a moved target, and the mention of `finish --merge` among the callers that pass no conflict settler. All other decisions remain in force.

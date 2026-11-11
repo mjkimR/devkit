@@ -140,8 +140,9 @@ def test_a_branch_without_a_worktree_is_planned_and_finished_from_the_base(repo:
         finish(locate(repo), "dev-demo")
     assert "uv run devkit integration prepare dev-demo --route local" in (unmerged.value.fix or "")
     git(repo, "switch", "-q", "-c", "elsewhere")
-    with pytest.raises(ConflictError, match="recorded base"):
+    with pytest.raises(ConflictError, match="recorded base") as off_base:
         plan_finish(locate(repo), "dev-demo")  # local integration lands it on the branch it was started from only
+    assert off_base.value.fix == f"git -C {repo} switch main, then rerun"
     git(repo, "switch", "-q", "--detach", "main")
     with pytest.raises(BaseDetachedError):
         plan_finish(locate(repo), "dev-demo")
