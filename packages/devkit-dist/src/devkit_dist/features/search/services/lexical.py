@@ -53,4 +53,3 @@ class Bm25:
             )
             for frequency, length in zip(self._frequencies, self._lengths, strict=True)
         ]
-

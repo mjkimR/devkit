@@ -85,9 +85,7 @@ def test_pathspecs_untracked_and_options(repo: Path) -> None:
     (repo / "a.txt").write_text("changed\n")
     assert status_records(repo, "dir") == [StatusRecord("??", "dir/x")]
     assert status_records(repo, untracked="normal") == [StatusRecord(" M", "a.txt"), StatusRecord("??", "dir/")]
-    assert status_records(repo, untracked="no", optional_locks=True) == [
-        StatusRecord(" M", "a.txt")
-    ]
+    assert status_records(repo, untracked="no", optional_locks=True) == [StatusRecord(" M", "a.txt")]
 
 
 def test_non_utf8_path(repo: Path) -> None:
