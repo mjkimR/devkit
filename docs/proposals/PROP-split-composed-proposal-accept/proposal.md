@@ -48,8 +48,9 @@ what either operation does.
 
 ## 2. Technical Spike Questions
 
-- **Q1** (open, user question `q1`): the subcommand name and shape. Working candidate: `devkit spec proposal
-  accept-plan <slug> --by user|policy --mode accept_only|accept_and_handoff [--effort low|medium|high]`.
+- **Q1** (answered by the user, `q1` choice a): the subcommand is `devkit spec proposal accept-plan <slug> --by
+  user|policy --mode accept_only|accept_and_handoff [--effort low|medium|high]`, keeping the mode names and the use
+  case.
 - **Q2** (answered from the evidence at the worktree HEAD): the composed form is named by
   - code: the CLI adapter `features/delivery/cli/proposals.py` (`accept_cmd`, `_composed_check_refusal`, the module
     docstring), `usecases/native_plan_accept.py` (`_accept_command`, the command string a
@@ -78,8 +79,11 @@ what either operation does.
 
 ## 3. Proposed Design & Impact
 
-- Add the composed acceptance as its own `devkit spec proposal` subcommand (name and shape per `q1`) with only its
-  options (`--by`, the mode selection, `--effort`, `-w`, `--format`). It calls `PlanAcceptUseCase` exactly as
+- Add the composed acceptance as its own subcommand `devkit spec proposal accept-plan <slug> --by user|policy --mode
+  accept_only|accept_and_handoff [--effort low|medium|high]` (`q1`) with only its options (`--by`, `--mode`,
+  `--effort`, `-w`, `--format`); `--mode` is required. The mode names stay those of the use case, its approval reply
+  and its outputs, and the check that `--effort` belongs to `accept_and_handoff` stays in the use case
+  (`SPEC_PROPOSAL_APPROVAL_REPLY_INVALID`) as today. It calls `PlanAcceptUseCase` exactly as
   `accept --mode` does today: same sentinel kinds (`ACCEPTED`, `ACCEPTED_STOPPED`), fields, codes and exit codes.
 - Remove `--mode` and `--effort` from `accept`, with the guards (`--direct` and `--check` refused with `--mode`,
   `--effort` requires `--mode`). `accept` keeps `--by`, `--note`, `--direct` and `--check`; its help describes only
