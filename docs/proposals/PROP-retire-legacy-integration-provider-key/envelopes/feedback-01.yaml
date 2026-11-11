@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:08:42.840422Z'
+status: completed
+summary: 'Planning turn 1 swept: evidence gathering, proposal revision and rules check; no process or asset observation to record (product drift found is in the proposal scope)'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
