@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:57:24.662490Z'
+status: completed
+summary: Removed IntegrationResult.ui_action and its compact_dict emission; _compose_execute takes authority directly. devkit integration JSON and the spec proposal accept embedded integration object no longer carry ui_action; authority values unchanged. CAP-INT-mcp-services states the authority values.
+findings: []
+assumptions:
+- 'Output field no longer emitted: ui_action (no external consumers, no shim)'
+checks:
+  tests: PASS just test-affected --base main --tier all 2034 passed (incl. e2e test_plan_accept_cli, test_integration, test_base_advance)
+  build: PASS just check devkit and devkit-spec 0 errors
+  lint: PASS just lint-check devkit/devkit-spec; devkit rules check --ci --base main
+diff_scope:
+  base: ec42b3aa65cc799896c1c5bf804654f7e3e3bfe7
+  head: 18851bd84a3e881274e0b7ea9f2a6fe28a790ab7
