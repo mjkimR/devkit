@@ -727,3 +727,17 @@ def test_e2e_compatibility_flag_selects_all_tiers(
 ) -> None:
     invoke(affected, monkeypatch, ["uv.lock"], "--e2e")
     assert command[0][4:] == list(affected.select(ROOT, ["uv.lock"], tier="all").paths)
+
+
+def test_any_package_source_selects_the_all_sources_scan(affected: ModuleType) -> None:
+    # test_agent_output_contract scans every package's [FIX] literals, so a devkit-spec change alone must select it.
+    selection = affected.select(
+        ROOT, ["packages/devkit-spec/src/devkit_spec/features/delivery/usecases/specs.py"], include_e2e=True
+    )
+    assert selection.mode == "partial"
+    assert set(affected.ALL_SOURCES_TESTS) <= set(selection.paths)
+
+
+def test_a_delivery_capability_selects_the_guidance_test_that_reads_it(affected: ModuleType) -> None:
+    selection = affected.select(ROOT, ["docs/capabilities/delivery/CAP-DLV-delivery-roles.md"], include_e2e=True)
+    assert "packages/devkit-spec/tests/integration/bundles/spec/test_scratch_cleanup_guidance.py" in selection.paths

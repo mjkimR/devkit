@@ -8,7 +8,7 @@ target: .devkit/managed/spec/subagents/development-worker.md (Write boundaries, 
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-10
 ---
 
@@ -48,3 +48,5 @@ FAILED packages/devkit/tests/integration/bundles/harness/test_bundle.py::test_an
 SelectionError: asset devkit:devkit-run is not part of the selected presets: core
 1 failed, 317 passed
 ```
+
+- **Disposition**: Normal behavior: development-worker Tier B stops before a non-adjacent write by design, and the brittle fixture is already hardened (harness test_bundle regex with a count). Name foreseeable cross-package fixture tests in the initial scope instead; widening Tier B would need a proposal.

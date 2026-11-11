@@ -71,6 +71,11 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     (
+        # The scratch-cleanup guidance test reads the delivery roles capability by path.
+        "docs/capabilities/delivery/",
+        ("packages/devkit-spec/tests/integration/bundles/spec/test_scratch_cleanup_guidance.py",),
+    ),
+    (
         "docs/",
         (
             f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
@@ -108,6 +113,9 @@ SOURCE_TREE_TESTS = (
     f"{DEVKIT}/tests/integration/package/test_layering.py",
     f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
 )
+# Tests that scan the sources of every package (the [FIX] literal contract), run for any package or tool source
+# change.
+ALL_SOURCES_TESTS = (f"{DEVKIT}/tests/integration/package/test_agent_output_contract.py",)
 
 # The devkit-viewer frontend: pytest never exercises it, so a change there selects no tests and names the frontend
 # checks (Node and npm) instead, as the CI viewer job runs them, rebuilding the committed page last.
@@ -525,6 +533,7 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
         if re.fullmatch(r"(?:packages|tools)/[^/]+/src/.+", path):
             if path.startswith((f"{DIST}/src/", f"{DEVKIT}/src/")):
                 paths.update(SOURCE_TREE_TESTS)
+            paths.update(ALL_SOURCES_TESTS)
             node = _source_node(workspace, path)
             if not node:
                 return Selection("full", (), path, frontend)

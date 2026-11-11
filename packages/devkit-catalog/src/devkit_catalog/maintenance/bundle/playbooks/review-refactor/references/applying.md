@@ -39,7 +39,8 @@ Where the repository has no refactor workflow, the steps below are the procedure
 ## 3. Subagent edits
 
 1. Give each editing subagent the agreed edits and an explicit write scope: a subset of the batch's write scope,
-   disjoint from every other subagent working at the same time.
+   disjoint from every other subagent working at the same time. For a consolidation onto a shared helper, include
+   the call-site option list from `criteria.md` §4.
 2. Run edit tasks with disjoint write scopes concurrently by default, each in its own isolated checkout (for example
    a Git worktree) that you create at the work item branch's current commit.
    - Before handing a checkout to its subagent, run the repository's documented setup there (its README or agent
@@ -52,7 +53,8 @@ Where the repository has no refactor workflow, the steps below are the procedure
    `git apply --3way`). If a result does not apply cleanly on the current checkpoint, discard the partial apply and
    redo that task on the current checkpoint.
 5. Check each result against the diff before relying on it: the diff stays inside the assigned paths and matches the
-   agreed change.
+   agreed change. Compare `git diff --name-status` of the checkout, untracked files included, with the applied change
+   on the work item branch; an added, deleted or renamed file missing on one side blocks the commit.
 6. Verify the change there and commit it alone by §4, through the repository's commit checks; never bypass them.
 7. Remove the checkouts you created once their results are committed or rejected.
 
@@ -109,6 +111,9 @@ Once the work item integrates or stops, update the run report's outcome with its
 ## 8. Contract removals
 
 - The decision round may approve removing a command, option, public interface or compatibility path.
+- Before approving a removal, list the accepted decisions and the capability or architecture contracts that state
+  the removed behavior. The work item's intent and write scope include the decision change they need and those
+  documents.
 - Route each approved removal as its own work item through the repository's normal development workflow, classified
   by its own criteria, with the contract and documentation updated. Keep it apart from the batch's
   behavior-preserving work item and never route it as a refactor.

@@ -8,7 +8,7 @@ target: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 
@@ -47,3 +47,5 @@ before: optional(root, "config", "--local", "--get", key)
 after adoption: git_config(root, key)   # default scope, no --local
 unit and integration tests: passed in both states
 ```
+
+- **Disposition**: review-refactor references/criteria.md §4 adds the call-site option list for helper adoption; applying.md §3 step 1 passes it to the editing subagent.

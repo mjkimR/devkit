@@ -8,7 +8,7 @@ target: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 
@@ -47,3 +47,5 @@ worker-01: status=needs_input — removal contradicts ADR-local-and-pull-request
 ADR-worktrees-and-scope, ADR-package-ownership-and-release-version; ADR and workflow/usecases/integration.py outside scope
 recovery: resolution-01 + new ADR, unit completed, integrated fb2c9fbe
 ```
+
+- **Disposition**: review-refactor references/applying.md §8 now lists the accepted decisions and contracts stating a removed behavior before approval and puts the decision change and documents into the work item's intent and scope.
