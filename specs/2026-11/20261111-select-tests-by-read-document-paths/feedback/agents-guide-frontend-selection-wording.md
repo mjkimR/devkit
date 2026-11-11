@@ -8,7 +8,7 @@ target: AGENTS.md
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 

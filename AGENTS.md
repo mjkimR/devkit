@@ -85,8 +85,8 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 ## Verification
 
 Run lint, type checks and the affected tests (`just test-affected`, keeping its `mode=full` fallback) before
-completing code changes; no separate local full-suite run is required. A viewer frontend change selects no pytest
-test: run the command its `[FRONTEND_CHECK: ...]` line names. Commands: [setup](docs/development/setup.md#3-common-verification-commands).
+completing code changes; no separate local full-suite run is required. A viewer frontend change also runs the
+command its `[FRONTEND_CHECK: ...]` line names, whether or not pytest tests are selected. Commands: [setup](docs/development/setup.md#3-common-verification-commands).
 Integration, post-landing checks, selected E2E and CI: [CI/CD](docs/development/ci-cd.md).
 
 <!-- DEVKIT:START -->
