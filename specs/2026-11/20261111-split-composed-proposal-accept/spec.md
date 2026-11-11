@@ -1,33 +1,22 @@
 ---
-id: PROP-split-composed-proposal-accept
+id: SPEC-split-composed-proposal-accept
 title: Split composed Planning acceptance into its own subcommand
 summary: Moves the composed Planning acceptance (accept, integrate and clean up plan-<slug>, optionally preparing handoff) out of devkit spec proposal accept into its own subcommand, so each command has one operation and one option set.
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-11
-target_area: capabilities/delivery/
-priority: low                         # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: low                  # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/src/devkit_spec/base/errors.py
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-command-mount.md
-    - docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md
-    - docs/development/reference/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-11-11
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-split-composed-proposal-accept] Split composed Planning acceptance into its own subcommand
+# [SPEC-split-composed-proposal-accept] Split composed Planning acceptance into its own subcommand
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-split-composed-proposal-accept on 2026-11-11.
+
+### 1. Background & Hypothesis
 
 `devkit spec proposal accept` carries two operations selected by `--mode`
 (review-refactor run `rr-20261111-guidance-cli`, finding C3-4, deferred to this draft by the user):
@@ -46,7 +35,26 @@ aligned. The drift reconciliation of the same run had to scope the "single route
 Hypothesis: one subcommand per operation removes the guards and makes each `--help` complete, with no change to
 what either operation does.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Split composed Planning acceptance into its own subcommand so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1** (answered by the user, `q1` choice a): the subcommand is `devkit spec proposal accept-plan <slug> --by
   user|policy --mode accept_only|accept_and_handoff [--effort low|medium|high]`, keeping the mode names and the use
@@ -77,7 +85,7 @@ what either operation does.
   `PlanAcceptUseCase`; removing the composed branch leaves repair (`--direct`), `--check`, `--note` and the `cloud-pr`
   Planning acceptance unchanged.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Add the composed acceptance as its own subcommand `devkit spec proposal accept-plan <slug> --by user|policy --mode
   accept_only|accept_and_handoff [--effort low|medium|high]` (`q1`) with only its options (`--by`, `--mode`,
@@ -95,7 +103,7 @@ what either operation does.
   `CAP-HARN-command-mount` §4.2 adds the subcommand to the `proposal` catalog row.
 - Contract change, no behavior change in either operation.
 
-### Planning decisions
+#### Planning decisions
 
 - No shim for `accept --mode` (Q2 evidence); a caller passing it gets a click usage error (exit `2`).
 - `handoff --effort` (composed handoff in its own form) stays out of scope: it selects a mode by a flag without
@@ -104,7 +112,8 @@ what either operation does.
   (`ADR-local-and-pull-request-integration`, `ADR-proposal-handoff`) describe their decision at its time and stay
   unchanged (`docs/decisions/` excluded); `ADR-delivery-approval-and-lifecycle-authority` names no command form.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr split-composed-proposal-accept "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -114,3 +123,4 @@ what either operation does.
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+
