@@ -47,4 +47,4 @@ Failure: test_the_delivery_workflow_contract_mirrors_the_guidance read the old w
 Pointer-only repair: 5 passed; all positive and negative contract assertions retained.
 ```
 
-- **Disposition**: scripts/affected_tests.py: a `docs/capabilities/delivery/` DATA row selects test_scratch_cleanup_guidance; verified by test_a_delivery_capability_selects_the_guidance_test_that_reads_it. The class of tests reading documents by path is queued as `PROP-select-tests-by-read-document-paths`.
+- **Disposition**: scripts/affected_tests.py: a `docs/capabilities/delivery/` DATA row selects test_scratch_cleanup_guidance; verified by test_a_delivery_capability_selects_the_guidance_test_that_reads_it. The class of tests reading documents by path is queued as `SPEC-select-tests-by-read-document-paths`.

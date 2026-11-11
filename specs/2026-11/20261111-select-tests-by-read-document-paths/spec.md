@@ -1,29 +1,23 @@
 ---
-id: PROP-select-tests-by-read-document-paths
+id: SPEC-select-tests-by-read-document-paths
 title: Select tests by the repository paths they read
-summary: "Lets affected-test selection find tests that read a repository path through a root-anchored literal path expression, instead of listing each such test in the selector's data table."
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-11-11
-target_area: docs/development/
-priority: medium                       # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - scripts/affected_tests.py
-    - packages/devkit/tests/e2e/package/test_affected_tests.py
-    - docs/development/ci-cd.md
-    - docs/architecture/ARCH-07-deployment.md
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Lets affected-test selection find tests that read a repository path through a root-anchored literal path expression, instead of listing each such test in the selector's data table.
+status: planned
+created: 2026-11-11
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-select-tests-by-read-document-paths] Select tests by the repository paths they read
+# [SPEC-select-tests-by-read-document-paths] Select tests by the repository paths they read
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-select-tests-by-read-document-paths on 2026-11-11.
+- **Preserved Materials**: `docs/materials/2026-11/20261111-select-tests-by-read-document-paths`
+
+### 1. Background & Hypothesis
 
 `scripts/affected_tests.py` maps a changed non-source file to its readers only through the fixed `DATA` table keyed
 by path prefix, and a package source file only through static imports. A test that reads a file its imports do not
@@ -31,7 +25,7 @@ reach is skipped when only that file changes. Feedback hygiene fixed two such ga
 (`FB-docs-selection-misses-guidance-contract-tests`, `FB-affected-selection-misses-cross-package-fix-scan`); a
 failing test reached `main` while every final affected check passed.
 
-Planning measured the class at this head (`materials/read-path-survey.md`). Every literal read under `docs/`,
+Planning measured the class at this head (`docs/materials/2026-11/20261111-select-tests-by-read-document-paths/read-path-survey.md`). Every literal read under `docs/`,
 `examples/` and `models/` is already listed in `DATA`, so the document case is closed only by hand-kept rows. 37
 reader pairs are missed today: helper reads of `.devkit/architecture.toml`, bundle assets of another package, recipe
 scripts, `guides/`, `.devkit/config.toml`, a frontend script, package-root Markdown and test data beside its reader.
@@ -39,13 +33,55 @@ scripts, `guides/`, `.devkit/config.toml`, a frontend script, package-root Markd
 Hypothesis: collecting the repository paths that tests read through root-anchored literal path expressions lets the
 selector map any changed file to its readers without hand-kept rows.
 
-## Source feedback
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Select tests by the repository paths they read so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### Scenario 1 [AC-01]: Carried from proposal
+- Each miss group in `docs/materials/2026-11/20261111-select-tests-by-read-document-paths/read-path-survey.md` selects its reader, `scripts/viewer.sh` and
+  `.devkit/config.toml` included.
+
+### Scenario 2 [AC-02]: Carried from proposal
+- A change that selects the full suite today still does; a change's selection today stays a subset of its new
+  selection on the same revision.
+
+### Scenario 3 [AC-03]: Carried from proposal
+- `.claude/skills/x/SKILL.md` still selects nothing and
+  `packages/devkit-viewer/frontend/src/lib/App.svelte`, which no test reads, still returns `mode=none`,
+  `reason=frontend` and the `[FRONTEND_CHECK: ...]` line; a `tmp_path` literal, an unanchored string and a read of the
+  test's own file add no reader.
+
+### Scenario 4 [AC-04]: Carried from proposal
+- Existing assertions expected to change: `test_affected_tests.py:121-124` (`guides/install.md` now selects
+  `test_deep_research.py`, which reads `guides/**/*.md`), `:177` (`.devkit/config.toml` selects
+  `test_handbook_script.py`) and the `scripts/viewer.sh` case of the frontend-only test at `:335` (now `partial`
+  with `test_viewer_script.py`, still `reason=frontend` with the `[FRONTEND_CHECK: ...]` line).
+
+### Scenario 5 [AC-05]: Carried from proposal
+- `docs/development/ci-cd.md` and `ARCH-07-deployment` §1.3 describe read discovery; untested prefixes are no longer
+  described as selecting nothing when a test reads them.
+
+### Scenario 6 [AC-06]: Carried from proposal
+- Cost: a document-only selection adds at most 3 s over the worker's head with read discovery disabled, measured on
+  the same machine; the Planning figures are in `docs/materials/2026-11/20261111-select-tests-by-read-document-paths/read-path-survey.md`.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback
 
 - `FB-docs-selection-misses-guidance-contract-tests` (resolved by a `DATA` row): the generic read scan for documents.
 - `FB-affected-selection-misses-cross-package-fix-scan` (resolved by `ALL_SOURCES_TESTS`): its reader scans an
   unresolved base, which no literal scan sees, so it keeps its explicit mapping.
 
-## 2. Technical Spike Questions
+### 2. Technical Spike Questions
 
 - **Q1**: Which literal path forms do the existing tests use, and how many are statically recoverable?
   - Answer: 54 of 441 test-tree files read root-anchored paths. 324 reads resolve to an exact path, mostly
@@ -65,9 +101,9 @@ selector map any changed file to its readers without hand-kept rows.
     source selection, which already runs import discovery, adds about 1.5 s to about 4.3 s. No cache: the selector
     stays stateless and the scan reuses the in-process parsed trees.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-The decision and its alternatives are in `PADR-literal-read-test-selection`.
+The decision and its alternatives are in `ADR-literal-read-test-selection`.
 
 - **Read discovery**: scan every test-tree file once (test modules, embedded rule tests, conftests, helpers). A read
   is a maximal expression evaluated statically from `Path(__file__)` through `resolve`, `parent`, `parents[N]`, `/`
@@ -98,10 +134,10 @@ The decision and its alternatives are in `PADR-literal-read-test-selection`.
   (nested in a call, loop expansion, helper attribution, glob with a new subdirectory, `iterdir`) and each measured
   miss group, and negative fixtures for `tmp_path` literals, unanchored strings and a test's own file.
 
-## Planning decisions
+### Planning decisions
 
 - Scope covers every repository path, not only documents: the measured document reads are all listed already, and the
-  open misses lie elsewhere (`materials/read-path-survey.md`).
+  open misses lie elsewhere (`docs/materials/2026-11/20261111-select-tests-by-read-document-paths/read-path-survey.md`).
 - `target_area` and `boundaries.owns` name the selector, its test, `docs/development/ci-cd.md` and
   `ARCH-07-deployment` instead of `capabilities/governance/`, which documents no part of the selector.
 - Helper attribution runs in reverse (scan once, resolve importers only for helpers with reads) to keep a
@@ -111,26 +147,8 @@ The decision and its alternatives are in `PADR-literal-read-test-selection`.
 - Retiring `DATA` rows the scan covers is out of scope: it reduces selection and needs the before/after collection
   matrices `ARCH-07-deployment` §1.3 asks for.
 
-## Acceptance outline
+### 4. Lifecycle & Retirement Criteria
 
-- Each miss group in `materials/read-path-survey.md` selects its reader, `scripts/viewer.sh` and
-  `.devkit/config.toml` included.
-- A change that selects the full suite today still does; a change's selection today stays a subset of its new
-  selection on the same revision.
-- `.claude/skills/x/SKILL.md` still selects nothing and
-  `packages/devkit-viewer/frontend/src/lib/App.svelte`, which no test reads, still returns `mode=none`,
-  `reason=frontend` and the `[FRONTEND_CHECK: ...]` line; a `tmp_path` literal, an unanchored string and a read of the
-  test's own file add no reader.
-- Existing assertions expected to change: `test_affected_tests.py:121-124` (`guides/install.md` now selects
-  `test_deep_research.py`, which reads `guides/**/*.md`), `:177` (`.devkit/config.toml` selects
-  `test_handbook_script.py`) and the `scripts/viewer.sh` case of the frontend-only test at `:335` (now `partial`
-  with `test_viewer_script.py`, still `reason=frontend` with the `[FRONTEND_CHECK: ...]` line).
-- `docs/development/ci-cd.md` and `ARCH-07-deployment` §1.3 describe read discovery; untested prefixes are no longer
-  described as selecting nothing when a test reads them.
-- Cost: a document-only selection adds at most 3 s over the worker's head with read discovery disabled, measured on
-  the same machine; the Planning figures are in `materials/read-path-survey.md`.
-
-## 4. Lifecycle & Retirement Criteria
 <!--
 - Preliminary decisions: devkit spec proposal padr select-tests-by-read-document-paths "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -140,3 +158,4 @@ The decision and its alternatives are in `PADR-literal-read-test-selection`.
 - On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
+
