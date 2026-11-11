@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { documentAnchor, indexDocuments, parseBlob, renderDocument } from './documents';
 import type { RepositoryDataSource } from './repository';
+import { parseFrontmatterAndMarkdown } from './features/document/document-parser';
 
 const base64 = (text: string) => btoa(String.fromCharCode(...new TextEncoder().encode(text)));
 
@@ -18,6 +19,54 @@ describe('parseBlob', () => {
 
 	it('refuses frontmatter that is not YAML', () => {
 		expect(() => parseBlob('docs/a.md', '---\nid: [broken\n---\n# A\n', 'utf-8')).toThrow();
+	});
+});
+
+describe.each([
+	[
+		'repository blobs',
+		(text: string) => {
+			const doc = parseBlob('docs/decisions/ADR-demo.md', text, 'utf-8');
+			return { meta: doc.meta, body: doc.body };
+		}
+	],
+	[
+		'document preview',
+		(text: string) => {
+			const doc = parseFrontmatterAndMarkdown(text);
+			return { meta: doc.frontmatter, body: doc.content };
+		}
+	]
+])('frontmatter delimiters in %s', (_name, parse) => {
+	it.each([
+		['---\n', '...\n'],
+		['\uFEFF--- \t\r\n', '... \t\r\n'],
+		['---\n', '--- \t\n'],
+		['---\r\n', '...']
+	])('preserves metadata with opener %j and closer %j', (opener, closer) => {
+		const newline = opener.endsWith('\r\n') ? '\r\n' : '\n';
+		const body = closer.endsWith('\n') ? '# Decision\nBody\n---\n' : '';
+		expect(
+			parse(`${opener}id: ADR-demo${newline}status: superseded${newline}${closer}${body}`)
+		).toEqual({
+			meta: { id: 'ADR-demo', status: 'superseded' },
+			body
+		});
+	});
+
+	it('accepts an empty header and removes the BOM from plain Markdown', () => {
+		expect(parse('---\n...\nBody')).toEqual({ meta: {}, body: 'Body' });
+		expect(parse('\uFEFF# Plain').body).toBe('# Plain');
+	});
+
+	it('does not treat indented delimiters as an opener or closer', () => {
+		const plain = ' ---\nid: ADR-demo\n---\nBody';
+		expect(parse(plain).body).toBe(plain);
+		expect(() => parse('---\nid: ADR-demo\n ---\nBody')).toThrow();
+	});
+
+	it('refuses a frontmatter opener without a closing delimiter', () => {
+		expect(() => parse('---\nid: ADR-demo\n')).toThrow();
 	});
 });
 

@@ -60,8 +60,14 @@ def pending(tmp_path: Path, proposal_seed_template: Path):
 
 
 @pytest.mark.parametrize("mode", ["accept_only", "accept_and_handoff"])
-def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n"], ids=["lf", "crlf"])
+def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode, newline):
     repo, planning = pending
+    anchor = planning / "docs/proposals/PROP-idea/proposal.md"
+    original = anchor.read_bytes().replace(b"\n", newline)
+    anchor.write_bytes(original)
+    git(planning, "add", "--", str(anchor))
+    git(planning, "commit", "--allow-empty", "-m", "Record proposal line endings")
     result = CliRunner().invoke(
         proposal_group,
         [
@@ -87,7 +93,9 @@ def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
     assert payload["integration"]["authority"] == "host-conversation"
     assert "ui_action" not in payload["integration"]
     assert "acceptance_commit" in payload["completed_steps"]
-    assert "status: accepted" in (repo / "docs/proposals/PROP-idea/proposal.md").read_text()
+    assert (repo / "docs/proposals/PROP-idea/proposal.md").read_bytes() == original.replace(
+        b"status: reviewing", b"status: accepted", 1
+    )
     assert not planning.exists() and not git(repo, "branch", "--list", "dev-idea")
     assert payload["continuation"]["handoff_authorized"] is (mode == "accept_and_handoff")
 
@@ -142,8 +150,14 @@ def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending, 
         assert "mode=accept_only" in result.stdout and "mode=accept_and_handoff" not in result.stdout
 
 
-def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, tmp_path):
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n"], ids=["lf", "crlf"])
+def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, tmp_path, newline):
     repo, planning = pending
+    anchor = planning / "docs/proposals/PROP-idea/proposal.md"
+    original = anchor.read_bytes().replace(b"\n", newline)
+    anchor.write_bytes(original)
+    git(planning, "add", "--", str(anchor))
+    git(planning, "commit", "--allow-empty", "-m", "Record proposal line endings")
     hooks = tmp_path / "hooks"
     hooks.mkdir()
     (hooks / "pre-commit").write_text("#!/bin/sh\necho 'RULE-example refused the staged tree' >&2\nexit 1\n")
@@ -168,7 +182,7 @@ def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, t
     assert text.exit_code == 2 and text.stdout == ""
     assert "SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED" in text.stderr
     assert git(planning, "status", "--porcelain") == ""
-    assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
+    assert anchor.read_bytes() == original
     assert git(repo, "show-ref") == before
 
 

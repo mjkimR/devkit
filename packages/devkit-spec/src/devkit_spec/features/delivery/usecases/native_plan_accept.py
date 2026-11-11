@@ -258,9 +258,9 @@ class _Acceptance:
             self.acceptance_sha = request.context.finish.source_sha
             return self.acceptance_sha
         anchor = self.source / self.unit / "proposal.md"
-        original = anchor.read_text()
+        original = anchor.read_bytes()
         try:
-            expected_anchor = accepted_text(original).encode()
+            expected_anchor = accepted_text(original.decode("utf-8")).encode("utf-8")
         except ValueError as exc:
             raise ProposalInvalidError(
                 f"{self.unit}/proposal.md has no status line to change", target_files=[f"{self.unit}/proposal.md"]
@@ -284,7 +284,7 @@ class _Acceptance:
         except GitError as exc:
             # Nothing landed: withdraw this service's own two writes so the worktree is clean for the rerun.
             run_git_text(self.source, "reset", "-q", "--", *paths)
-            anchor.write_text(original)
+            anchor.write_bytes(original)
             (self.source / accepted.decision).unlink()
             self.completed.remove("acceptance_record")
             raise ProposalAcceptCommitRefusedError(

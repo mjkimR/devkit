@@ -1,4 +1,4 @@
-import { parseDocument } from 'yaml';
+import { parseFrontmatter } from '../../api/frontmatter';
 
 export interface Frontmatter {
 	id?: string;
@@ -15,13 +15,6 @@ export function parseFrontmatterAndMarkdown(text: string): {
 	frontmatter: Frontmatter | null;
 	content: string;
 } {
-	const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-	if (!match) return { frontmatter: null, content: text };
-	const document = parseDocument(match[1]);
-	if (document.errors.length) throw new Error(document.errors[0].message);
-	const parsed = document.toJS({ maxAliasCount: 100 });
-	return {
-		frontmatter: parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null,
-		content: text.slice(match[0].length)
-	};
+	const parsed = parseFrontmatter(text);
+	return { frontmatter: parsed.meta, content: parsed.body };
 }
