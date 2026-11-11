@@ -1,12 +1,12 @@
 ---
 id: PROP-shared-fingerprinted-memo
 title: One fingerprinted memo store for docs parse and rule facts
-summary: Joins the devkit-docs parse memo and the devkit-agt rule facts memo on one fingerprinted, path-safe memo helper, so envelope validation and path safety live once.
+summary: Moves the safe memo path check and the memo envelope shape check of the devkit-docs parse memo and the devkit-agt rule facts memo into one devkit-core helper, so path safety and envelope validation live once.
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/governance/
 priority: low                         # critical | high | medium | low
-size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
+size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
@@ -38,64 +38,74 @@ facts cache).
 - **Q2**: Do the two memos' invalidation and schema rules differ in ways a shared helper must keep apart?
   - **Answer**: yes. Fingerprint inputs and hash, entry shape and validation, serialization order, logging level,
     writer authority, pruning, directory creation and snapshot borrowing all differ and are each fixed by its
-    contract (`CAP-DOCS-document-model` 3.3-3.5, `CAP-GOV-rules-engine` section 5); they stay local. What is the same
-    is the envelope (`version`, `fingerprint`, `entries` under an existing `.devkit/transient/`), the shape check,
-    the atomic, unlocked, change-only write and the silent-miss failure policy. Path safety is implemented twice
-    with different strictness; whether one policy replaces both is decision D1 below.
+    contract (`CAP-DOCS-document-model` 3.4.3-3.4.5, `CAP-GOV-rules-engine` section 5); they stay local. What is
+    the same is the envelope (`version`, `fingerprint`, `entries` under an existing `.devkit/transient/`), the atomic,
+    unlocked, change-only write and the silent-miss failure policy. Path safety and the envelope shape check are each
+    implemented twice with different strictness (symlinked components, extra top-level keys); whether one rule
+    replaces both is decision D1 below.
 
 ## 3. Proposed Design & Impact
 
 ### Shared helper (`devkit_core.core`)
 
-- Safe memo path: given the root, the path parts below `.devkit/transient/` and whether a writer may create missing
-  directories, return the memo path or the reason it is not used. It requires an existing, non-symlinked
-  `.devkit/transient/` directory and refuses symbolic links and non-directories on the way, a non-regular file at
-  the path and a path resolving outside the root.
-- Envelope read: read the file, check the `{version, fingerprint, entries}` shape against the caller's format
-  version and fingerprint, and return the raw `entries` mapping or a discard reason; a missing file is a distinct,
-  silent outcome. It never logs: the caller logs the reason at its own level and wording.
-- Envelope write: serialize `{version, fingerprint, entries}` with the caller's ordering choice (insertion order or
-  sorted keys), skip the replacement when the bytes equal those read, and replace atomically through
-  `atomic_write_bytes`; an `OSError` or `ValueError` is returned as a reason, never raised as an advisory.
+The duplicated hardening is the path check (about 18 lines in each memo) and the envelope shape check (8-10 lines);
+reads, serialization and writes differ in ordering, skip rule and logging and already share `atomic_write_bytes`, so
+they stay local (`envelopes/challenger-01.yaml` finding 2).
+
+- `safe_memo_path(root, parts, *, create)`: given the resolved root and the path parts below `.devkit/transient/`,
+  return the memo path or the reason it is not used. It requires an existing `.devkit/transient/` directory, refuses a
+  symbolic link, a non-directory or a resolve mismatch at every component from `.devkit/` down, creates missing
+  directories below `.devkit/transient/` only when `create` is set, and refuses a non-regular file at the path. It
+  never logs and never raises for these outcomes.
+- `envelope_problem(loaded, version, fingerprint)`: a pure check of an already parsed object, returning `None` when
+  it is a mapping of exactly `version`, `fingerprint` and `entries` with the expected integer version, the expected
+  fingerprint and a mapping of entries, else the discard reason.
 
 ### Kept local
 
-- docs: file name, parser fingerprint and its module list, the tagged value codec, entry kinds, the "writing load"
-  rule, the unusable-entry count and its single `info` line.
-- agt: per-rule file name and rule-ID check, `facts_fingerprint` with the descriptor schema version and source
-  dependencies, entry validation and codec, pending/complete/prune, snapshot read-only borrowing, `debug` logging.
-- agt's framework fingerprint adds the new `devkit_core.core` module source, so a change to the envelope code
-  invalidates facts memos as a change to `facts.py` does today; the docs parser fingerprint covers read, parse and
-  codec modules only and does not add it (`CAP-DOCS-document-model` 3.3 lists its inputs).
+- docs: file name, JSON parse with its non-finite-constant refusal, parser fingerprint and module list, the tagged
+  value codec, entry kinds, the writing-load rule and its entries-based change test, compact insertion-order
+  serialization, the unusable-entry count and the `info` log lines.
+- agt: per-rule file name and rule-ID check, JSON parse, `facts_fingerprint` with the descriptor schema version and
+  source dependencies, per-entry validation and codec, pending/complete/prune, the byte-equality skip, canonical
+  serialization, snapshot read-only borrowing and `debug` logging of exceptions.
+- Each caller logs the helper's reason at its own level and wording; the docs memo passes `create` for a writing load
+  (at open, or by rechecking the path at save as agt does), so a missing `docs/` directory is still created silently
+  (`CAP-DOCS-document-model` 3.4.5).
+- agt's `_FRAMEWORK` fingerprint sources add the new `devkit_core.core` module, since the moved checks count as
+  framework source today through `facts.py`; the docs parser fingerprint does not (`CAP-DOCS-document-model` 3.4.3
+  lists read, parse and codec inputs).
 
 ### Behavior and verification
 
-- Each memo's file bytes, hits, misses, discards and log lines stay as today except where decision D1 changes the
-  docs memo's path policy. Both fingerprints change once, because each covers source files this change edits
-  (`memo.py` lies in a fingerprinted package; `facts.py` is a framework source): the first run after the change is
-  cold, which both contracts already allow (the memos are disposable derived state).
-- Differential tests over both corpora: the existing `test_memo.py`, `test_memo_index.py` and `test_file_facts.py`
-  pass unchanged, plus new unit tests of the helper in `packages/devkit-core/tests/unit/` covering each refusal
-  reason. Differential evidence for each memo: over the repository corpus, the `entries` the code before and after
-  the change writes are equal (the fingerprint aside), and over a fixture set of malformed, foreign-version,
-  symlinked and non-regular memo files both versions reach the same outcome (used, discarded or not used, written or
-  not) and log the same lines, except the cases D1 changes. The Development worker produces the "before" side from
-  its own worktree head before the first source edit and keeps it in the spec's materials.
-- Documentation: `CAP-GOV-rules-engine` section 5 and `CAP-DOCS-document-model` 3.3 name the shared helper for safe
-  storage only where they state the path rule; no ADR changes (storage location, format and writer policy are
-  unchanged).
+- Outcomes change only for the cases decision D1 converges: a hand-made memo with extra top-level keys (agt) and a
+  symbolic link at `.devkit/` or a resolve mismatch on a directory (docs). Neither writer produces either today.
+- Both fingerprints change once because each covers source this change edits (`memo.py` lies in a fingerprinted
+  package; `facts.py` is a framework source): the first run after the change is cold, which both contracts allow.
+- Tests: the existing `test_memo.py`, `test_memo_index.py` and `test_file_facts.py` pass, with
+  `test_file_facts.py`'s `_FRAMEWORK` patch still controlling the facts fingerprint; new unit tests of both helper
+  functions in `packages/devkit-core/tests/unit/` cover each refusal reason.
+- Differential evidence: a fixture harness drives only public entry points (`DocumentIndex.load`; `WorkspaceCache`
+  with `get_file_facts` and `flush_file_facts`, `facts_writer=True`), creates `.devkit/transient/` itself, and records
+  per fixture (malformed, foreign-version, extra-key, symlinked, non-regular and missing memo files) whether the memo
+  was used, discarded or not used, written or not, and its log records as logger, level and message without
+  `exc_info`. The Development worker commits the harness and its "before" table from its own worktree head before the
+  first source edit; after the change the table matches except the D1 cases.
+- Documentation: `CAP-DOCS-document-model` 3.4.3 and `CAP-GOV-rules-engine` 5.3 state the converged path rule; no ADR
+  changes (storage location, format and writer policy are unchanged).
 
 ### Planning decisions
 
-- Helper home `devkit_core.core` (Q1), settled by evidence.
-- Fingerprint computation stays in each memo: inputs and hashing differ by contract, and a shared hasher would move
-  two short loops while coupling two independently versioned input lists.
-- Entry validation and payload codecs stay in each memo (Q2).
+- Helper home `devkit_core.core` (Q1), settled by evidence: no new package or feature edge.
+- Scope narrowed to the path check and the envelope shape check; size `S` (challenger finding 2). Fingerprints, JSON
+  parsing, entry validation, serialization and writes stay in each memo.
+- The non-finite-constant difference stays local with the JSON parse, so it is not changed.
 
 ### Open decision for the user
 
-- **D1 (path policy)**: converge both memos on the stricter agt path rule (every component from `.devkit/` down
-  checked) or keep each memo's current rule behind a helper parameter. See the `worker` envelope question `q1`.
+- **D1 (one rule for both memos)**: converge the path check on the stricter agt rule and the envelope shape check on
+  the stricter docs rule, or keep each memo's current rule behind helper parameters. See question `q1` of the
+  `worker` envelope.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
