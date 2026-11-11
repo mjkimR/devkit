@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-split-composed-proposal-accept
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-lifecycle.md
     resolution: modified
@@ -11,6 +11,8 @@ targets:
   - file: docs/capabilities/delivery/CAP-DLV-project-policy.md
     resolution: modified
   - file: docs/capabilities/harness/CAP-HARN-command-mount.md
+    resolution: modified
+  - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
   - file: docs/usecases/delivery/UC-plan-and-hand-off-a-proposal.md
     resolution: modified
@@ -38,6 +40,10 @@ codes.
   table gives `accept-plan` its own row and the `accept` row describes only the basic form.
 - `CAP-DLV-project-policy` rule 4 names `accept-plan --mode accept_and_handoff` as a reader of `proposal-handoff`.
 - `CAP-HARN-command-mount` §4.2 adds `accept-plan` to the `proposal` catalog row; no other section changed.
+- `CAP-HARN-agent-guidance` (scope extension on Task 1.2, found by the reconcile check): the skills table names
+  `proposal accept-plan` for `spec-orchestrate`, `spec-next` and the local `spec-review-proposal`, keeping `proposal
+  accept` for its other environments and `accept --check`; the Host-authorized acceptance paragraph names
+  `devkit spec proposal accept-plan`.
 - `UC-plan-and-hand-off-a-proposal`: the scope lists `accept-plan`, and scenarios 24 and 25 run it.
 - `docs/development/reference/integration.md` (quick reference, not a Living Spec target) names the `accept-plan`
   command for a local Host.

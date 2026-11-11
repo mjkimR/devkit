@@ -13,6 +13,6 @@ plan: PLAN-split-composed-proposal-accept
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/e2e/features/delivery packages/devkit-spec/tests/integration/features/delivery packages/devkit-spec/tests/integration/package`
 - [x] **Task 1.2**: Spec bundle guidance names `accept-plan`, with the bundle test
-  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/, packages/devkit-spec/tests/integration/bundles/spec/, .devkit/installation.json (sync output)
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/, packages/devkit-spec/tests/integration/bundles/spec/, .devkit/installation.json (sync output), docs/capabilities/harness/CAP-HARN-agent-guidance.md (scope extension: restates the spec skills' commands, which now name the CAP-DLV-proposal-lifecycle accept-plan route)
   - _Requirements: AC-07_
   - **Verification**: `uv run pytest packages/devkit-spec/tests/integration/bundles/spec` and `uv run devkit sync --check`

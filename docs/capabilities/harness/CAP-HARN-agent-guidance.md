@@ -206,7 +206,7 @@ Living Spec and `specs/` holds feature specs.
 | Skill | Purpose | Commands it runs (under `devkit spec`; `docs ...` under `devkit docs`) |
 | --- | --- | --- |
 | `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; first runs intake playbook discovery with devkit's `devkit playbook search` (principle 7). | `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
-| `spec-next` | Orientation: diagnose work under way; when idle, filter queued drafts by direct prerequisites on one local base snapshot, then rank by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `docs list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal handoff` |
+| `spec-next` | Orientation: diagnose work under way; when idle, filter queued drafts by direct prerequisites on one local base snapshot, then rank by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `docs list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal accept-plan`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `docs list`, `docs refs`, `docs search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `docs list`, `docs refs`, `docs search` |
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `docs list spec` |
@@ -215,8 +215,8 @@ Living Spec and `specs/` holds feature specs.
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `docs list`, `docs refs`, `docs search`, `proposal new` |
 | `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation and cumulative check; obtain Host conversational approval, then run `devkit integration integrate` and recover from observed Git or PR state; clean up. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, compare working-tree snapshots taken before and after a support role, record its envelope (none for a Backlog role), validate a worker's committed range and handle its questions and problems. | |
-| `spec-review-proposal` | Review a committed proposal and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and present findings for approval. | `proposal report`, `proposal accept`, `proposal handoff` |
-| `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope collect` |
+| `spec-review-proposal` | Review a committed proposal and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and present findings for approval. | `proposal report`, `proposal accept-plan` (local), `proposal accept` (other environments), `proposal handoff` |
+| `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept-plan`, `scope collect` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`), after looking up existing feedback of every status. | `docs search`, `docs list feedback`, `docs resolve`, `policy` |
 | `spec-entrypoints` | Derive capability and use case entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `docs list capability` |
@@ -429,7 +429,7 @@ Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal 
 
 Proposal acceptance and handoff run through Host-authorized CLI operations (`ADR-delivery-approval-and-lifecycle-authority`).
 The Host reviews the proposal, every PADR and the envelopes at the final committed `plan-<slug>` source, presents
-the findings and effects, and invokes `devkit spec proposal accept` only after the user's decision under `ask`.
+the findings and effects, and invokes `devkit spec proposal accept-plan` only after the user's decision under `ask`.
 `devkit spec proposal report` renders an optional briefing; acceptance requires no published report, while shared
 proposal-review artifacts remain available for publication (`CAP-DLV-proposal-planning`,
 `CAP-COLL-shared-artifacts`). A report never carries approval or permissions. Refinement requires exclusive
