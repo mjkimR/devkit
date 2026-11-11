@@ -58,6 +58,11 @@ read-only diagnostic report of the installed state against the receipt: its JSON
 codes and its detection logic are unchanged. It is the command to run when the gate fails or to read installed
 facts (selection, file states, tool version, host hooks); it is not a readiness gate.
 
+The gate also counts this clone's planned optional MCP registration (`sync --check` adds registration writes to its
+actions): a clone that uses MCP is ready after `sync --registrations-only` (or a plain sync), not right after
+`sync --locked`. This follows the current `sync --check` behavior and needs no code; the alternative is the open
+question q1.
+
 A new problem class therefore needs the planner (which the gate runs) and the reference; adding it to `status` is
 an optional diagnostic, no longer a second gate to keep in step.
 
@@ -66,7 +71,9 @@ an optional diagnostic, no longer a second gate to keep in step.
 1. **Contract**: `docs/capabilities/distribution/` states the readiness criterion: `sync --check` exit `0` is the
    gate for a synchronized checkout, and `devkit status` is a report that does not detect desired-state changes
    (a selection, configuration or installed-package change without a sync, a removed guidance block, a missing
-   receipt). Development picks the CAP-DIST document that owns sync checking (`CAP-DIST-sync-and-transactions`
+   receipt), and that it plans this clone's MCP registration, so an unregistered MCP clone reports
+   `NOT_SYNCHRONIZED` until `uv run devkit sync --registrations-only`. Development picks the CAP-DIST document that
+   owns sync checking (`CAP-DIST-sync-and-transactions`
    already says "`sync --check` remains the general synchronization gate").
 2. **Reference**: the `devkit status` section of `docs/development/reference/distribution.md` says the same in one
    sentence, replacing its closing "`sync --check` remains the check that says whether a sync is needed".
@@ -80,7 +87,8 @@ an optional diagnostic, no longer a second gate to keep in step.
    - Scenario 7 of `UC-import-third-party-agent-assets` (its Then clause).
 4. **Guides**: `guides/INSTALL_GUIDE.md` Step 5 keeps `sync --check` as the verification and presents `status` as
    the diagnosis for a failed check; `guides/install/existing-repository.md` "Already installed" keeps `status` as a
-   report and adds `sync --check` as the readiness check after `sync --locked`.
+   report and adds `sync --check` as the readiness check after `sync --locked` and the optional
+   `sync --registrations-only` step, in the order `guides/install/mcp.md` uses.
 5. **CLI help**: the `devkit status` help (`cli/selection.py`) names `sync --check` as the readiness gate and drops
    "MCP registration still to set up" from its notices list, which contradicts the reference and
    `ADR-mcp-runtime-and-shared-artifacts` (general status emits no `MCP_REGISTRATION_PENDING`).
@@ -107,6 +115,9 @@ an optional diagnostic, no longer a second gate to keep in step.
   narrows how existing commands are documented and changes no command contract.
 - The excluded `usecases/` path keeps detection code out of scope; the matrix shows no detection gap to close in
   the gate.
+- MCP registration counts toward readiness (challenger finding 1, recommended option of q1, pending the answer).
+- `status_checks` warnings (gate-hook health) are not part of readiness: they are warnings that change no exit code,
+  and `devkit gate status` remains their check (challenger finding 3, waived).
 - `size` lowered from `M` to `S`: the change is documentation, bundle text and one help string.
 
 ## 4. Lifecycle & Retirement Criteria
