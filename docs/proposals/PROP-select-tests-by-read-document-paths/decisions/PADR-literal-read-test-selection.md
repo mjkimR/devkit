@@ -1,0 +1,82 @@
+---
+id: PADR-literal-read-test-selection
+title: Select tests by their literal repository-path reads
+summary: For affected-test selection, we add the repository paths that test modules, conftests and local helpers read through root-anchored literal path expressions as dependencies, keeping the data table for other readers, to select new readers without new rows, accepting slower document-only selection.
+proposal: PROP-select-tests-by-read-document-paths
+status: draft
+created_at: 2026-11-11
+---
+
+# [PADR-literal-read-test-selection] Select tests by their literal repository-path reads
+
+- **Status**: Draft
+- **Date**: 2026-11-11
+
+---
+
+## 1. Context & Problem Statement
+
+`scripts/affected_tests.py` maps a changed non-source file to its readers only through the hand-kept `DATA` table
+and maps a package source file only through static imports. A test that reads a file its imports do not reach is
+skipped when only that file changes. At this head seven reader pairs are missed: bundle assets of another package,
+`guides/` and package-root Markdown (which select nothing) and test data beside its reader. Every repository
+document read by literal path is already listed, so each new reader depends on someone adding a row. A missed
+reader lets a failing test reach `main` until the next complete CI (`ADR-test-selection-and-ci`).
+
+## 2. Decision Drivers
+
+- Select a test whose read of a changed file is visible in its source, without a hand-kept row.
+- Never reduce today's selection: explicit data checks, full triggers and the full fallback stay.
+- Keep the selector static and stateless; it never imports or runs inspected code.
+- Keep the added cost small next to a pytest run.
+
+## 3. Considered Options
+
+- **Add `DATA` rows for the measured misses** (rejected): cheapest now, but the class stays open and the next new
+  reader is missed again.
+- **A meta-test that fails when a literal read has no covering row** (rejected): runs only when the selector or that
+  test is selected, so a new reader added elsewhere still passes, and every finding still needs a row.
+- **Collect root-anchored literal reads as dependencies** (selected): closes the class for literal reads at the cost of
+  parsing every test-tree file for each selection.
+- **Record runtime file access** (rejected): needs executed tests and stored coverage, which
+  `ADR-test-selection-and-ci` excludes.
+
+## 4. Decision Outcome
+
+Chosen: collect root-anchored literal reads as dependencies, because it removes the hand-kept step for every reader
+visible in source while keeping all existing checks.
+
+- A path expression is a read when it evaluates statically from `Path(__file__)` through `resolve`, `parent`,
+  `parents[N]`, `/` with string literals, `joinpath` and names bound once to such an expression.
+  → `ARCH-07-deployment` §1.3 (MUST)
+- A read in a test module, one of its applicable conftests or a local helper it imports belongs to that test module.
+  → `ARCH-07-deployment` §1.3 (MUST)
+- A changed path selects a reader when it equals an exact read, lies under a directory read, matches a literal glob
+  pattern of a `glob` or `rglob` read, or lies under the resolved base of a join with a runtime segment.
+  → `ARCH-07-deployment` §1.3 (MUST)
+- Reads only add tests: a path that selects the full suite still does, and `guides/`, package-root Markdown and test
+  data select their literal readers instead of nothing. → `ARCH-07-deployment` §1.3 (MUST)
+- The `DATA` table keeps every row; readers by document ID, by subprocess in the repository root or through a base the
+  scan cannot resolve keep their rows. Removing a row the scan now covers is a later, measured reduction.
+  → `ARCH-07-deployment` §1.3 (MUST)
+- The scan reuses the selector's in-process parsed trees and stores nothing between runs.
+
+## 5. Consequences
+
+- **Positive**:
+  - A new test that reads a repository file by literal path is selected for that file's changes with no table edit.
+  - The measured misses in `materials/read-path-survey.md` are selected.
+- **Negative / Risks**:
+  - A document-only selection parses every test-tree file: about 0.01 s becomes about 1.5 s on the measured machine.
+  - A join with a runtime segment widens to its base directory: `test_lockstep.py` becomes a reader of all of
+    `packages/`.
+  - Reads through non-literal bases stay invisible; complete nightly and release CI remains the backstop.
+- **Follow-ups**:
+  - When a `DATA` row is fully covered by scanned reads, a later change may remove it with the before/after
+    collection matrices `ARCH-07-deployment` §1.3 asks for.
+
+## 6. Confirmation
+
+- `packages/devkit/tests/e2e/package/test_affected_tests.py`: positive fixtures for each read form and for the
+  measured misses, and negative fixtures for `tmp_path` literals and unanchored strings.
+- `ARCH-07-deployment` §1.3 restates the traced clauses after Development.
