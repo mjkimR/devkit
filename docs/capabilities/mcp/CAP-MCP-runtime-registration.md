@@ -43,10 +43,11 @@ interpreters. A linked-worktree interpreter or editable source is ineligible. No
 MCP_RUNTIME_UNAVAILABLE (`INPUT_ERROR`, target `--executable`) and no new entry: an error that refuses `mcp setup`
 before any write, and a warning after ordinary sync.
 
-Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents
-bounded writes; guards repeat after lock waits and before later effects. The cloud registration profile exposes only declared read-only tools, and no registration is created if
-none exist. Transport availability remains host-dependent. The configuration root cannot be changed by tool input.
-Local Host approval can act on cloud-produced work because environment belongs to the calling Host, not the branch.
+Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents bounded
+writes; guards repeat after lock waits and before later effects. The cloud registration profile exposes only declared
+read-only tools, and no registration is created if none exist. Transport availability remains host-dependent. The
+configuration root cannot be changed by tool input. Local Host approval can act on cloud-produced work because
+environment belongs to the calling Host, not the branch.
 
 Workspace identity loss or malformed configuration fails closed. A deliberate removal of the exact owning checkout
 may leave only terminal cleanup in the same approving call using its captured context. This exception cannot merge,

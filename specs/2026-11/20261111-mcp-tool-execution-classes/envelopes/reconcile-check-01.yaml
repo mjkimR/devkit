@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:01:48.357249Z'
+status: completed
+summary: 'reconcile-reviewer: CAP-MCP-runtime-registration matches the diff and AC-06, no missed docs; one P3 line wrap'
+findings:
+- issue: The edited cloud paragraph was not rewrapped; one line is 176 characters against about 120 around it.
+  evidence: docs/capabilities/mcp/CAP-MCP-runtime-registration.md:47
+  failure_condition: Cosmetic only; no contradiction.
+  suggested_action: Rewrap the paragraph to the surrounding width.
+  resolution: open
+  severity: P3
+assumptions:
+- ADR-mcp-runtime-and-shared-artifacts refusal of cloud interactive approval is decision history, not a class list; no superseding ADR needed
+unverified_areas:
+- Reviewer ran no tests or docs checks
+checks: {}
+diff_scope:
+  base: 1f672104a80f0ca63034cffc1f7e179767e12ab7
+  head: 209b328de2d53c0c40305c606ad7a717b8eaf471
