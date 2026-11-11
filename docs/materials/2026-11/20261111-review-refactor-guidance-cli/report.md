@@ -216,3 +216,45 @@ Final checks on `d8e4394a` against the saved baseline `2f40fe8c`:
 | lint, pyright | clean |
 | `devkit rules check --ci` | OK |
 | `devkit generated check` | 0 stale |
+
+## Drift reconciliation (follow-up run)
+
+Run of the `maintenance/drift-reconciliation` playbook over the 13 drift items above, at `6b8ae109` (clean), the
+user invoking it right after this run. Each item was rechecked at that revision before the decision round.
+
+| Key | Item | Evidence | User decision | Correction |
+| --- | --- | --- | --- | --- |
+| D1 | `OverrideChange` docstring: accept does not synchronize | deterministic | update docs | docstring |
+| D2 | devkit-dist `cli.py` docstring: host is the MCP server | deterministic | update docs | docstring |
+| D3 | host group help "DispatchHostHook" | deterministic | fix code (help) | help text |
+| D4 | reference `devkit list` "Like" → "Unlike" | deterministic | update docs | reference row |
+| D5 | `INTEGRATION_CLEANUP_INCOMPLETE` `[FIX]` reruns prepare for a deleted branch; CAP-INT names the owning extension command | deterministic | fix code | `[FIX]` in service and error class; regression assertion in test_pull_request |
+| D6 | maintenance history `start` row omits `--repository` | deterministic | update docs | CAP row |
+| D7 | justfile `workflow` comment lists `requests` | deterministic | update docs | comment |
+| D8 | `workflow new/bind` lack `--format` | rechecked: ARCH-08-1 requires only `-q/-v/--strict` on every command | no drift | none |
+| D9 | `proposal accept --mode` help says Development starts | deterministic | fix code (help) | help text |
+| D10 | command-mount catalog omits supersession, proposal report, worker inspect | deterministic | update docs | catalog rows |
+| D11 | composed accept is "the single route" vs basic-form examples | semantic: local guidance uses `--mode`; the basic form is the cloud-pr route | update docs | lifecycle §, example, delivery-workflows row |
+| D12 | CAP-COLL lists hidden `scope update/sweep` unmarked | deterministic | update docs | `(hidden)` markers |
+| D13 | `--milestone` help says global only | deterministic | fix code (help) | help text |
+
+Also repaired in the same change: the `spec new` `--task-kind`/`--workflow` conflict `[FIX]` (unit C) carried a
+placeholder. `test_fixes_carry_no_placeholder` failed on main, but affected selection had not run it. That gap is
+recorded as `FB-affected-selection-misses-cross-package-fix-scan`.
+
+The corrections landed at `19e5fe71`. Checks on that HEAD:
+
+| Check | Result |
+| --- | --- |
+| full `just test` | 7117 passed, 17 skipped |
+| branch `just test-affected --tier e2e` | 350 passed, 13 skipped |
+| lint, pyright, `devkit rules check --ci` | clean |
+| generated | 0 stale |
+
+Counts:
+
+| Detected | Resolved | Not drift | Deferred | Waived | Pending |
+| --- | --- | --- | --- | --- | --- |
+| 13 | 12 | 1 | 0 | 0 | 0 |
+
+This batch is fully reconciled. It makes no claim beyond these items.
