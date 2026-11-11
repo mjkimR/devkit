@@ -48,6 +48,6 @@ already imports `devkit_dist.adapters.cli`, so reusing `echo_page` adds no featu
   add CLI tests with a monkeypatched `ListExecutions` over 25 runs for the first page, last page and a custom limit
   (AC-01, AC-02, AC-03), JSON keys (AC-06), and invalid bounds through the CLI (AC-05). The existing use-case
   paging test stays.
-- AC-07: `rg -n EXECUTION_LIST docs/architecture docs/capabilities docs/development packages` and
+- AC-07: `rg -n EXECUTION_LIST docs/architecture docs/capabilities docs/development packages/devkit/src` and
   `uv run devkit rules check --ci --base main`.
-- `just lint`, `just typecheck`, `just test-affected` (with its `mode=full` fallback), `uv run devkit sync --check`.
+- `just lint`, `just check`, `just test-affected` (with its `mode=full` fallback), `uv run devkit sync --check`.

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
-from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, field_value, is_json, yes_no
+from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, echo_page, field_value, is_json, yes_no
 
 from devkit_agt.features.isolated_execution.models.record import RunRecord, exit_code, public_record
 from devkit_agt.features.isolated_execution.usecases.operations import (
@@ -77,7 +77,11 @@ def start(sha: str, setup: str | None, argv: tuple[str, ...], output_format: str
 @cli.command("list")
 @click.option("--limit", default=20, type=int, show_default=True, help="Runs per page, 1-100.")
 @click.option(
-    "--offset", default=0, type=int, show_default=True, help="Runs to skip, nonnegative; continue from next_offset."
+    "--offset",
+    default=0,
+    type=int,
+    show_default=True,
+    help="Runs to skip, nonnegative; continue from PAGE next or next_offset.",
 )
 @FORMAT_OPTION
 @boundary
@@ -87,13 +91,19 @@ def list_runs(output_format: str, limit: int, offset: int) -> None:
     if is_json(output_format):
         echo_json(page)
     else:
-        click.echo(
-            f"[EXECUTION_LIST: total={page['total']} offset={page['offset']} count={len(page['runs'])} next={field_value(str(page['next_offset']) if page['next_offset'] is not None else None)}]"
-        )
         for record in page["runs"]:
             click.echo(
                 f"[EXECUTION_RUN: id={field_value(record['run_id'])} sha={field_value(record.get('sha'))} phase={field_value(record['phase'])}]"
             )
+        limit = page["limit"]
+        echo_page(
+            "uv run devkit exec",
+            page["total"],
+            page["offset"],
+            limit,
+            len(page["runs"]),
+            ["list", "--limit", str(limit)],
+        )
 
 
 @cli.command("status")

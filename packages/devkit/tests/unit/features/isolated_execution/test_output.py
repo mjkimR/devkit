@@ -2,6 +2,7 @@
 
 import json
 
+import pytest
 from click.testing import CliRunner
 from devkit_agt.features.isolated_execution.cli import cli
 from devkit_agt.features.isolated_execution.usecases.operations import WaitExecution
@@ -39,7 +40,75 @@ def test_empty_list_has_explicit_text_result(monkeypatch) -> None:
     )
     result = CliRunner().invoke(cli, ["list"])
     assert result.exit_code == 0
-    assert result.stdout == "[EXECUTION_LIST: total=0 offset=0 count=0 next=-]\n"
+    assert result.stdout == "[PAGE: total=0 offset=0 limit=20 count=0 next=-]\n"
+
+
+def _paged_runs(monkeypatch, total: int = 25) -> None:
+    from devkit_agt.features.isolated_execution.usecases.operations import ListExecutions
+
+    def execute(self, root, *, limit: int = 20, offset: int = 0):
+        runs = [{"run_id": f"{index:032x}", "sha": "b" * 40, "phase": "passed"} for index in range(total)]
+        return {
+            "runs": runs[offset : offset + limit],
+            "total": total,
+            "offset": offset,
+            "limit": limit,
+            "next_offset": offset + limit if offset + limit < total else None,
+        }
+
+    monkeypatch.setattr(ListExecutions, "execute", execute)
+
+
+def test_list_text_pages_with_shared_page_lines(monkeypatch) -> None:
+    _paged_runs(monkeypatch)
+    result = CliRunner().invoke(cli, ["list"])
+    assert result.exit_code == 0
+    lines = result.stdout.splitlines()
+    assert len(lines) == 22
+    assert all(line.startswith("[EXECUTION_RUN: ") for line in lines[:20])
+    assert lines[20:] == [
+        "[PAGE: total=25 offset=0 limit=20 count=20 next=20]",
+        "[NEXT_CMD: uv run devkit exec list --limit 20 --offset 20]",
+    ]
+    assert "EXECUTION_LIST" not in result.stdout
+
+
+def test_list_text_last_page_has_no_next_command(monkeypatch) -> None:
+    _paged_runs(monkeypatch)
+    result = CliRunner().invoke(cli, ["list", "--offset", "20"])
+    assert result.exit_code == 0
+    lines = result.stdout.splitlines()
+    assert len(lines) == 6
+    assert all(line.startswith("[EXECUTION_RUN: ") for line in lines[:5])
+    assert lines[5] == "[PAGE: total=25 offset=20 limit=20 count=5 next=-]"
+
+
+def test_list_text_next_command_repeats_custom_limit(monkeypatch) -> None:
+    _paged_runs(monkeypatch)
+    result = CliRunner().invoke(cli, ["list", "--limit", "5", "--offset", "5"])
+    assert result.exit_code == 0
+    assert result.stdout.splitlines()[-2:] == [
+        "[PAGE: total=25 offset=5 limit=5 count=5 next=10]",
+        "[NEXT_CMD: uv run devkit exec list --limit 5 --offset 10]",
+    ]
+
+
+def test_list_json_keeps_its_keys(monkeypatch) -> None:
+    _paged_runs(monkeypatch)
+    result = CliRunner().invoke(cli, ["list", "--format", "json"])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert set(data) == {"runs", "total", "offset", "limit", "next_offset"}
+    assert data["next_offset"] == 20
+
+
+@pytest.mark.parametrize("args", [["--limit", "0"], ["--limit", "101"], ["--offset", "-1"]])
+def test_list_rejects_out_of_bound_paging(args, tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = CliRunner().invoke(cli, ["list", *args])
+    assert result.exit_code == 2
+    assert "EXECUTION_LIST_ARGUMENT_INVALID" in result.output
+    assert "[PAGE:" not in result.stdout
 
 
 def test_text_fields_quote_paths_and_preserve_cleanup_reason(monkeypatch) -> None:

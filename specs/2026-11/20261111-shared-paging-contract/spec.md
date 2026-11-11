@@ -2,7 +2,7 @@
 id: SPEC-shared-paging-contract
 title: One paging contract for listing commands
 summary: "Moves devkit exec list text output onto the shared PAGE and NEXT_CMD paging lines and states that paging grammar once in the agent output architecture, so listing commands that page share one grammar; maintenance history list stays an unpaged bounded listing."
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-HARN-isolated-execution
@@ -93,7 +93,7 @@ The grammar itself is stated only inside `CAP-HARN-command-mount` §4.5, which o
   bounds stay in each command's capability, and §10 has a checklist item that a listing command that pages prints
   them through `echo_page`; `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 refer to
   `ARCH-08-1-agent-output` for the grammar while keeping their own limits; and `rg -n EXECUTION_LIST` over
-  `docs/architecture`, `docs/capabilities`, `docs/development` and `packages` matches only
+  `docs/architecture`, `docs/capabilities`, `docs/development` and `packages/devkit/src` matches only
   `EXECUTION_LIST_ARGUMENT_INVALID`
 
 ## 5. Assumptions
@@ -102,4 +102,4 @@ The grammar itself is stated only inside `CAP-HARN-command-mount` §4.5, which o
   They are equal whenever more runs follow, so text and JSON report the same next offset.
 - `[NEXT_CMD]` always repeats `--limit <N>`, also at the default, as `devkit docs list` does, so the line stays
   correct if the default changes.
-- The `--offset` help text says to continue from the reported next offset instead of naming only the JSON key.
+- The `--offset` help text names both the `[PAGE]` `next` field and the JSON `next_offset` key.

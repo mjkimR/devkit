@@ -13,7 +13,7 @@ Devkit's `just test-affected` defaults to `--tier unit-integration`, excluding E
 
 Background the waiter through a tool that delivers completion if independent work should proceed. Without that delivery, inspect later. Wait timeout/interruption does not cancel; cancel retains the checkout; clean preserves logs/results outside it. Retain native artifacts before requesting clean. Setup uses worktree configuration or `--setup`; no implicit `.env` copy, profile map or local/cloud selector exists.
 
-Text output uses `[EXECUTION_RESULT: ...]`, `[EXECUTION_LIST: ...]`, `[EXECUTION_RUN: ...]`, `[EXECUTION_CLEANUP: outcome=... code=... detail=...]` (whenever cleanup evidence exists), `[EXECUTION_DETAIL: ...]` and `[EXECUTION_LOG_LINE: ...]` sentinels.
+Text output uses `[EXECUTION_RESULT: ...]`, `[EXECUTION_RUN: ...]`, `[EXECUTION_CLEANUP: outcome=... code=... detail=...]` (whenever cleanup evidence exists), `[EXECUTION_DETAIL: ...]` and `[EXECUTION_LOG_LINE: ...]` sentinels. `list` ends its runs with the shared paging lines (`ARCH-08-1-agent-output` section 3), for example `[PAGE: total=25 offset=0 limit=20 count=20 next=20]` and `[NEXT_CMD: uv run devkit exec list --limit 20 --offset 20]`; JSON keeps `runs`, `total`, `offset`, `limit` and `next_offset`.
 
 | Code | Caller action |
 | --- | --- |
