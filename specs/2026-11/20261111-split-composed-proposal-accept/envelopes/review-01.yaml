@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:17:28.753948Z'
+status: completed
+summary: 'code-reviewer (nested, medium) reviewed ae0cdec0..1acaac7f: AC-01..AC-06 met in code and tests, AC-07 met for skill sources; Living Spec drafts belong to living-spec-draft'
+findings:
+- issue: 'AC-02 option limits partly tested: no case for missing --by, invalid --by or invalid --effort on accept-plan; the parametrized refusal test accepts either of two messages for every case'
+  evidence: packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py:401-420
+  failure_condition: If accept-plan's --by became optional or its --by/--effort choices widened, no test fails
+  suggested_action: Add missing --by, --by other and --effort extreme cases expecting exit 2 and unchanged show-ref; pair each case with its exact click message
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected partial 1713 passed; delivery e2e+integration+package 130 passed; reviewer rerun 65 passed
+  lint: PASS just lint-check; just check pyright 0 errors
+  rules: PASS devkit rules check --ci --base main
+  sync: PASS devkit sync --check
+diff_scope:
+  base: ae0cdec0197365d18bcbcc3ef2615675d143f824
+  head: 1acaac7ff55c3f8739a5a8595bc88e8f1c8bbcd7
