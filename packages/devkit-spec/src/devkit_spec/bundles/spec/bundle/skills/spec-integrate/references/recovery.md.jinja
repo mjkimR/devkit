@@ -1,0 +1,21 @@
+# Integration recovery
+
+Read the section that matches the refusal or result `spec-integrate` reports.
+
+## Base merge after a Git refusal
+
+Run this in the task worktree, only after the CLI reports `WORKTREE_MERGE_CONFLICT`, or `WORKTREE_MERGE_NOT_FF` under `merge = "ff-only"` or on the PR route.
+
+1. Merge, never rebase (the unit's records cite its SHAs): `git merge -m "<subject>" <base-branch>`, from the local base{% if execution.environment == "local" %} without fetching{% endif %}.
+2. When the merge stops on conflicts, run `devkit generated resolve` first: it settles conflicts in registered generated files (the installation receipt `.devkit/installation.json`, and those `devkit generated list` shows) by regenerating them; resolve only the conflicts it reports as remaining by hand.
+3. Run `devkit rules fix` and commit any reference repairs after resolving a base merge.
+4. Run the repository's affected checks on `git diff --name-only <pre-merge-head> HEAD` (e.g. `just test-affected --base <base-ref>`); without one, reuse the source's verification.
+5. If the merge changed bundle sources, run `devkit sync` and commit its tracked changes before approval.
+{% if execution.environment == "local" %}
+## Unknown or partial result
+
+Inspect `devkit worktree status` and Git or PR state. If the local merge landed, run `devkit worktree finish <branch>` for only the remaining guarded cleanup.
+{% endif %}
+## Remote deletion failure
+
+A remote deletion failure preserves the local worktree and branch. Inspect the merged PR and remote ref, prepare the remaining scope and retry with its new digest.
