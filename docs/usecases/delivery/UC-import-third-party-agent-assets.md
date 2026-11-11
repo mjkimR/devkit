@@ -113,7 +113,7 @@ validation and trial.
 - **Covers**: 7f
 - **Given**: a project with a `pyproject.toml` and no package declaring a `devkit.bundles` entry point.
 - **When**: the first selected item is placed.
-- **Then**: a minimal package under `tools/` holds the bundle, it is a development dependency, `uv run devkit get-context <bundle>` returns a constitution listing the role, and `uv run devkit status` exits `0`.
+- **Then**: a minimal package under `tools/` holds the bundle, it is a development dependency, `uv run devkit get-context <bundle>` returns a constitution listing the role, and `uv run devkit sync --check` exits `0`.
 
 ### Scenario 8: Repair validation and label an unavailable trial
 

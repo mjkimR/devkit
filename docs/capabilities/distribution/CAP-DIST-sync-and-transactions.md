@@ -515,6 +515,25 @@ and destination inspection, and never loads the registration provider or probes 
 Explicit MCP and sync commands retain actual registration diagnostics. See `ADR-mcp-runtime-and-shared-artifacts`
 and `packages/devkit-dist/tests/integration/features/distribution/test_sync_reporting.py`.
 
+### Readiness Gate
+
+`uv run devkit sync --check` exiting `0` is the one readiness criterion of a synchronized checkout: it compares the
+workspace with the desired state, what a plain sync would write now. Exit `1` (`NOT_SYNCHRONIZED`) and exit `2` (a
+refusal such as `SYNC_CONFLICT`, `WORKSPACE_UNSAFE`, `TRANSACTION_PENDING` or `SELECTION_INVALID`) both mean not ready.
+Completion criteria, guides and bundle instructions name this check alone (`SPEC-single-sync-readiness-gate`).
+
+`devkit status` is a read-only diagnostic report of the installed state against the receipt, what the last sync wrote;
+it lists every installed-state problem at once and reports installed facts (selection, file states, tool version,
+host hooks), but it is not a readiness gate. It does not detect desired-state changes: a selection, configuration or
+installed-package change without a sync, a removed guidance block or a missing receipt. Every problem that fails
+`status` also fails `sync --check`. A new problem class is therefore detected by the sync planner; reporting it in
+`status` is optional. `devkit.status_checks` warnings are not part of readiness.
+
+The gate counts this clone's optional MCP registration: `sync --check` adds planned registration writes to its
+actions, so in a clone that uses MCP it exits `1` after `sync --locked` until `uv run devkit sync --registrations-only`
+(or a plain sync) applies them. A clone is restored in this order: `uv sync`, `uv run devkit sync --locked`, the
+optional `uv run devkit sync --registrations-only`, then `uv run devkit sync --check`.
+
 ### Bundle template inputs
 
 `bundles` is an additional accepted top-level configuration key. Each `[bundles.<bundle>.variables]` table supplies

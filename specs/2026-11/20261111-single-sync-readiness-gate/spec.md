@@ -2,7 +2,7 @@
 id: SPEC-single-sync-readiness-gate
 title: One readiness gate for a synchronized checkout
 summary: "Makes devkit sync --check the single readiness gate of a synchronized checkout, since it detects every problem devkit status does and more, and documents devkit status as a diagnostic report."
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-DIST-sync-and-transactions

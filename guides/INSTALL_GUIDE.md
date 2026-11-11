@@ -166,11 +166,13 @@ registers nothing.
 ## Step 5: Verify and report
 
 ```bash
-uv run devkit sync --check   # exit 0: the workspace matches the selection
-uv run devkit status         # exit 0: no problems in the installed state
+uv run devkit sync --check   # readiness: exit 0 means the workspace matches the selection
 uv run devkit gate status    # hooks installed (devkit-agt in Git repositories only)
 git status --short           # what the installation changed
 ```
+
+If `sync --check` fails, run `uv run devkit status` to diagnose: it lists every problem in the installed state at
+once. It is a report, not a second readiness check.
 
 Then report to the user:
 

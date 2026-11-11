@@ -81,4 +81,4 @@ Then run `uv sync` and `uv run devkit add <repo>`.
   with every change.
 
 Done when `uv run devkit bundle validate tools/<repo>-devkit/src/<repo>_devkit/bundle`
-passes and `uv run devkit status` exits `0`.
+passes and `uv run devkit sync --check` exits `0`.
