@@ -71,7 +71,7 @@ We decided to adopt **Option 1**.
 - `devkit workflow next` evaluates the unit against its binding (or the configured default) and has no `--workflow`
   option; `bind --workflow` changes the binding. → `CAP-DLV-workflow-definitions` binding (MUST)
 - `devkit workflow handoff` records the day it runs in the history and has no `--date` option.
-  → `CAP-DLV-cli-and-output` §1
+  → `CAP-DLV-workflow-definitions` binding
 - `devkit docs list` has no `--query` filter; ID and title lookup is `devkit docs search`.
   → `CAP-DOCS-document-lookup` list filters
 - Option 1 best satisfies all three drivers because no external consumer passes any of the options.
