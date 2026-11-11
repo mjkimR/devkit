@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from devkit_agt.features.rules import ChecklistItem, count_tasks, extract_links, scan
-from devkit_agt.features.rules.models.markdown import fenced_lines, prose_lines
+from devkit_agt.features.rules.models.markdown import closes_later, closing_run, fenced_lines, prose_lines
 
 
 def test_count_tasks_skips_frontmatter_and_fences() -> None:
@@ -128,3 +128,37 @@ def test_an_inline_comment_opener_without_a_closer_in_its_paragraph_is_literal()
 )
 def test_literal_comment_openers(text: str, masked: str) -> None:
     assert [line.text for line in scan(text)][-1] == masked
+
+
+@pytest.mark.parametrize(
+    ("line", "start", "char", "width", "expected"),
+    [
+        ("a `b` c", 3, "`", 1, 4),
+        ("a ``b`` `c`", 2, "`", 1, 8),  # a longer run is skipped whole
+        ("x ``", 0, "`", 1, -1),
+        ("~~a~~", 2, "~", 2, 3),
+        ("~~~a", 0, "~", 2, -1),
+        ("", 0, "`", 1, -1),
+    ],
+)
+def test_closing_run(line: str, start: int, char: str, width: int, expected: int) -> None:
+    assert closing_run(line, start, char, width) == expected
+
+
+@pytest.mark.parametrize(
+    ("following", "char", "width", "expected"),
+    [
+        (["still open", "closed ` here"], "`", 1, True),
+        (["", "closed ` here"], "`", 1, False),  # a blank line ends the paragraph
+        (["- item ` x"], "`", 1, False),  # so does a list item
+        (["# heading `"], "`", 1, False),  # an ATX heading
+        (["```", "`"], "`", 1, False),  # a fence
+        (["<!-- c `"], "`", 1, False),  # an HTML block
+        (["    indented ` closes"], "`", 1, True),  # indented text continues a paragraph
+        (["only `` here"], "`", 1, False),
+        (["gone~~"], "~", 2, True),
+        ([], "`", 1, False),
+    ],
+)
+def test_closes_later(following: list[str], char: str, width: int, expected: bool) -> None:
+    assert closes_later(following, char, width) is expected

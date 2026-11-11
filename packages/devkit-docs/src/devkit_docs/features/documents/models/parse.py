@@ -80,7 +80,9 @@ def parse_document(path: str, text: str) -> Document | None:
             continue
         refs = _field_references(document, name, data[name], nodes.get(name), line_starts, header_line)
         (document.provenance if name in PROVENANCE_FIELDS else document.references).extend(refs)
-    document.references.extend(_body_references(document, text, block.end, block.body_line))
+    document.references.extend(
+        body_references(text, path=document.path, source_id=document.id, start=block.end, first_line=block.body_line)
+    )
     return document
 
 
@@ -180,21 +182,29 @@ def _alias_problem(document_id: str, prefix: str, item: str, kept: list[str]) ->
     return None
 
 
-def _body_references(document: Document, text: str, start: int, first_line: int) -> list[Reference]:
+def body_references(
+    text: str, *, path: str, source_id: str | None = None, start: int = 0, first_line: int = 1
+) -> list[Reference]:
+    """The prose references of ``text[start:]`` (a document body, its first line numbered ``first_line``) at ``path``.
+
+    `` `ID` `` code spans and ``[ID]`` brackets in prose (``markdown.visible_lines``), in reading order, with offsets
+    into ``text``. ``source_id`` is the referring document's ID (``""`` in each reference without one, as for a README
+    or a material without frontmatter); only when it is given does a heading line ``# ... ID ...`` skip that ID.
+    """
     refs: list[Reference] = []
     for line in visible_lines(text, start=start, first_line=first_line):
-        heading = line.text.lstrip().startswith("# ")
+        heading = source_id is not None and line.text.lstrip().startswith("# ")
         found = [(match, False) for match in _CODE_SPAN_ID.finditer(line.text)]
         found += [(match, True) for match in _BRACKET_ID.finditer(line.text)]
         for match, bracket in sorted(found, key=lambda item: item[0].start()):
             target = match.group(1)
-            if heading and target == document.id:
+            if heading and target == source_id:
                 continue
             refs.append(
                 Reference(
                     target=target,
-                    source=document.id,
-                    path=document.path,
+                    source=source_id or "",
+                    path=path,
                     field=BODY,
                     line=line.number,
                     column=match.start(1) + 1,

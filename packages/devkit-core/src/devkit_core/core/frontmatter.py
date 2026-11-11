@@ -19,13 +19,16 @@ Grammar:
 ``locate`` returns the block's character offsets without parsing YAML, so a
 caller can rewrite the header and keep every other character of the text.
 ``parse`` returns the mapping and the body. ``scalar`` renders a string as a
-one-line YAML scalar for a ``key: value`` header line.
+one-line YAML scalar for a ``key: value`` header line. ``set_field`` rewrites one
+top-level ``key: value`` line in place, keeping its trailing comment
+(``trailing_comment``) and every other character of the text.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal, overload
 
 import yaml
 from yaml.constructor import ConstructorError
@@ -39,6 +42,10 @@ OPENER = "---"
 CLOSERS = frozenset({"---", "..."})
 # Characters YAML reads as a line break; a value holding one is never written plain.
 _LINE_BREAKS = frozenset("\n\r\x85\u2028\u2029")
+_COMMENT = re.compile(r"[ \t]+#[^\r\n]*$")  # a trailing YAML comment: "#" after whitespace
+_QUOTED = re.compile(r"\"(?:[^\"\\\r\n]|\\.)*\"|'(?:[^'\r\n]|'')*'")
+# The key of a top-level ``key:`` line (plain, double- or single-quoted); the first ``:`` after a plain key ends it.
+_KEY = re.compile(r"""(?:"(?P<double>[^"\\\r\n]*)"|'(?P<single>[^'\r\n]*)'|(?P<plain>[^\s"'#:\-][^\r\n:]*?))[ \t]*:""")
 
 
 @dataclass(frozen=True)
@@ -207,3 +214,123 @@ def scalar(value: str) -> str:
     style = '"' if _LINE_BREAKS.intersection(value) else "'"
     dumped = yaml.safe_dump(value, default_style=style, allow_unicode=True, width=2**31)
     return dumped.removesuffix("\n")
+
+
+def trailing_comment(line: str, start: int) -> str | None:
+    """The trailing YAML comment of the one-line value that starts at ``line[start:]`` (``None``: none).
+
+    A ``#`` counts only after whitespace and outside a quoted scalar: ``"draft #2"`` is a value, not a comment. An
+    unterminated quote has no comment. ``line`` holds no line ending; the comment runs to its end.
+    """
+    value = len(line) - len(line[start:].lstrip(" \t"))
+    if line[value : value + 1] in ('"', "'"):
+        quoted = _QUOTED.match(line, value)
+        if quoted is None:
+            return None
+        value = quoted.end()
+    comment = _COMMENT.search(line, value)
+    return comment.group() if comment else None
+
+
+def _key(line: str) -> tuple[str, int] | None:
+    """The key of a top-level ``key: value`` line (without its line ending) and where its value starts."""
+    if not line or line[0] in " \t#-":
+        return None
+    match = _KEY.match(line)
+    if match is None:
+        return None
+    name = match.group("double") if match.group("double") is not None else match.group("single")
+    return (name if name is not None else match.group("plain")), match.end()
+
+
+def _continues(lines: list[str], index: int) -> bool:
+    """Whether ``lines[index]`` belongs to the value of the key line above it: an indented line or a column-0
+    sequence item, or a blank line that more continuation follows."""
+    line = lines[index]
+    if line[:1] in (" ", "\t", "-"):
+        return True
+    if line.strip():
+        return False
+    following = index + 1
+    while following < len(lines) and not lines[following].strip():
+        following += 1
+    return following < len(lines) and lines[following][:1] in (" ", "\t", "-")
+
+
+Missing = Literal["append", "prepend"]
+
+
+@overload
+def set_field(
+    text: str, key: str, value: str, *, keep_comment: bool = ..., missing: Missing = ..., after: str | None = ...
+) -> str: ...
+@overload
+def set_field(
+    text: str, key: str, value: str, *, keep_comment: bool = ..., missing: None, after: str | None = ...
+) -> str | None: ...
+def set_field(
+    text: str,
+    key: str,
+    value: str,
+    *,
+    keep_comment: bool = True,
+    missing: Missing | None = "append",
+    after: str | None = None,
+) -> str | None:
+    """``text`` with its top-level frontmatter ``key`` set to ``value``; every other character is kept.
+
+    ``value`` is written verbatim after ``key: ``, so it must already be a one-line YAML scalar or flow collection
+    (``scalar`` renders a string). Each top-level ``key:`` line (plain, ``"key":`` or ``'key':``) is rewritten in
+    place, and the lines of its old block value (indented lines, column-0 sequence items, blank lines between them)
+    are removed; a nested key of the same name is untouched. With ``keep_comment`` the line keeps its trailing comment
+    (``trailing_comment``: a ``#`` after whitespace outside a quoted value). Line endings are kept: a new line takes
+    the block's (``\r\n`` or ``\n``).
+
+    A missing key is handled by ``missing``: ``"append"`` adds the line at the end of the header, ``"prepend"`` as
+    its first line, and ``None`` returns ``None`` (nothing to set). With ``after``, an added line goes right after
+    the first top-level ``after:`` line and its value when there is one. A text without a frontmatter block gets one
+    holding the line, before its first line, unless ``missing`` is ``None``.
+
+    Raises ``FrontmatterError`` when the text opens a block that never closes.
+    """
+    block = locate(text)
+    if block is None:
+        if missing is None:
+            return None
+        start = 1 if text.startswith(BOM) else 0
+        first = text[start:].split("\n", 1)[0]
+        newline = "\r\n" if first.endswith("\r") else "\n"
+        return f"{text[:start]}{OPENER}{newline}{key}: {value}{newline}{OPENER}{newline}{text[start:]}"
+    newline = block.newline or "\n"
+    lines = block.header.split("\n")
+    tail = lines.pop()  # "" after the header's last line ending
+    kept: list[str] = []
+    found = False
+    anchor: int | None = None
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        content = line.removesuffix("\r")
+        located = _key(content)
+        index += 1
+        if located is not None and located[0] == key:
+            found = True
+            comment = trailing_comment(content, located[1]) if keep_comment else None
+            kept.append(f"{key}: {value}{comment or ''}{line[len(content) :]}")
+            while index < len(lines) and _continues(lines, index):
+                index += 1
+            continue
+        kept.append(line)
+        if anchor is None and after is not None and located is not None and located[0] == after:
+            while index < len(lines) and _continues(lines, index):
+                kept.append(lines[index])
+                index += 1
+            anchor = len(kept)
+    if not found:
+        if missing is None:
+            return None
+        added = f"{key}: {value}{'\r' if newline == '\r\n' else ''}"
+        position = anchor if anchor is not None else (0 if missing == "prepend" else len(kept))
+        kept.insert(position, added)
+    header = "\n".join([*kept, tail])
+    return text[: block.header_start] + header + text[block.header_end :]

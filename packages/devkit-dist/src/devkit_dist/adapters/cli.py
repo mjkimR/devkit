@@ -10,7 +10,9 @@ The agent-first output contract (``docs/architecture/ARCH-08-1-agent-output.md``
   ``exit_on_problems``, ``report_exit_code``, ``Reported``, ...), re-exported so command modules import one module;
 - ``workspace_option`` (``-w/--workspace-root``) and ``resolve_root``: the explicit workspace root, else the devkit
   root found from the current directory (``devkit_dist.features.project.repositories.project``);
-- ``field_value`` and ``yes_no``: the one rendering of a sentinel field value (``ARCH-08-1-agent-output`` §3).
+- ``field_value`` and ``yes_no``: the one rendering of a sentinel field value (``ARCH-08-1-agent-output`` §3);
+  ``sentinel``, ``fields_line`` and ``echo_page`` build the sentinel lines on it;
+- ``version_option``: the ``--version`` flag of a command group, printing one ``[VERSION: <label> <version>]`` line.
 
 click only parses syntax here: every semantic argument check raises ``ArgumentError`` (``ARGUMENT_INVALID``)
 through the boundary, so a JSON caller still receives one document.
@@ -20,7 +22,8 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable
+import shlex
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -58,10 +61,12 @@ __all__ = [
     "boundary",
     "echo_json",
     "echo_notices",
+    "echo_page",
     "existing_directory",
     "exit_on_problems",
     "exit_on_warnings",
     "field_value",
+    "fields_line",
     "highest_exit_code",
     "is_json",
     "output_options",
@@ -70,6 +75,8 @@ __all__ = [
     "report_exit_code",
     "resolve_output",
     "resolve_root",
+    "sentinel",
+    "version_option",
     "workspace_option",
     "yes_no",
 ]
@@ -106,6 +113,53 @@ def field_value(value: object) -> str:
         return yes_no(value)
     text = str(value)
     return text if _BARE_VALUE.fullmatch(text) else json.dumps(text, ensure_ascii=False)
+
+
+def sentinel(name: str, positional: object, /, **fields: object) -> str:
+    """``[KIND: <positional> key=value ...]``, each value rendered by ``field_value``."""
+    parts = [field_value(positional), *(f"{key}={field_value(item)}" for key, item in fields.items())]
+    return f"[{name}: {' '.join(parts)}]"
+
+
+def fields_line(name: str, /, **fields: object) -> str:
+    """``[KIND: key=value ...]``, a sentinel without a positional value."""
+    return f"[{name}: {' '.join(f'{key}={field_value(item)}' for key, item in fields.items())}]"
+
+
+def echo_page(command: str, total: int, offset: int, limit: int, count: int, next_command: Sequence[str]) -> None:
+    """``[PAGE: total= offset= limit= count= next=]`` and, when more items follow, ``[NEXT_CMD: ...]``.
+
+    ``command`` is the command line's fixed prefix (``uv run devkit docs``); ``next_command`` is the command's own
+    argument list without ``--offset``, shell-quoted after it. ``limit`` ``0`` means no limit.
+    """
+    following = offset + count if limit and offset + count < total else None
+    click.echo(fields_line("PAGE", total=total, offset=offset, limit=limit, count=count, next=following))
+    if following is not None:
+        args = [*next_command, "--offset", str(following)]
+        click.echo(f"[NEXT_CMD: {command} {shlex.join(args)}]")
+
+
+def version_option[F: Callable[..., Any]](distribution: str, label: str | None = None) -> Callable[[F], F]:
+    """``--version``: print one ``[VERSION: <label> <version>]`` line, the installed version of ``distribution``, and
+    exit; ``label`` defaults to the distribution name (``devkit`` itself passes ``label="devkit"``)."""
+    shown = label or distribution
+
+    def print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:
+        if not value or ctx.resilient_parsing:
+            return
+        from importlib.metadata import version
+
+        click.echo(f"[VERSION: {shown} {version(distribution)}]")
+        ctx.exit()
+
+    return click.option(
+        "--version",
+        is_flag=True,
+        expose_value=False,
+        is_eager=True,
+        callback=print_version,
+        help=f"Print a [VERSION: {shown} <version>] line and exit",
+    )
 
 
 WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"
