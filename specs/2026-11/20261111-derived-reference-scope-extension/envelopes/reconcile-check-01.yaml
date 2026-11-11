@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T07:30:19.156212Z'
+status: completed
+summary: 'Self-verified: every affected document is a reconcile target or named no-impact, and CAP Tier B, ADR and the three bundle assets agree with the diff.'
+findings: []
+assumptions:
+- 'medium skip of reconcile-reviewer: one capability area (delivery) and one package (devkit-spec); every affected document identified via docs refs to the superseded ADR; nothing open to interpretation after review round 1'
+checks:
+  rules: PASS 0 errors
+  refs: PASS docs refs on the superseded ADR lists only unchanged envelope/history references besides targets
+diff_scope:
+  base: 2ad9b534c6b223b44febabaf358fe2b41e521544
+  head: e0f2a73c6d02ec46f3d4c561e62745684714bfe4
+activity_effort: medium

@@ -2,7 +2,7 @@
 id: SPEC-derived-reference-scope-extension
 title: Derived reference documents as recorded worker scope extensions
 summary: Let a Development worker record an exact existing quick-reference, package README or guide file that restates a changed public name or behavior as a Tier B extension, keeping AGENTS.md and protected classes out.
-status: planned
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-DLV-delivery-roles
