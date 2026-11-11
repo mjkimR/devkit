@@ -1,0 +1,23 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:14:40.991912Z'
+status: completed
+summary: 'Development through final-change-report: refresh previews without digests and drops --check; envelope new unhidden; spec new --task-kind; docs and bundle guidance updated; devkit sync output .devkit/installation.json (sync output, Task 2.1). Ready for dev-integration by the Host.'
+findings: []
+assumptions:
+- 'Baseline: CLI contract change with no performance outcome; before/after is the behavior change itself, measured by the tests'
+checks:
+  sync_start: PASS exit=0
+  lint: PASS just lint-check
+  types: PASS just check
+  tests: PASS just test-affected --base main 3715 passed 1 skipped
+  e2e: PASS just test-affected --base main --tier e2e 117 passed
+  rules: PASS uv run devkit rules check --ci --base main
+  sync: PASS uv run devkit sync --check
+  envelopes: PASS uv run devkit workflow envelope check (5 envelopes before final-report)
+diff_scope:
+  base: 479050697c969ff48a964c5bd07aa82fb9ce225c
+  head: 18cce6dd7d6e362fafdfc8a5b7b935146ca6c549
+activity_effort: medium

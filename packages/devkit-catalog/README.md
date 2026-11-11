@@ -33,16 +33,6 @@ indexed material under `docs/materials/`, which proposals, specs, decisions and 
 `MAT-<slug>` ID. The entry never commits; its report tells the user to commit the material through the project's
 Git policy. It creates no work unit, approval or envelope.
 
-An installation of the former `incubation` bundle from before the research split loses the research entry and the
-three moved roles on upgrade; sync removes their unmodified projections and announces the bundle once with
-`BUNDLE_UNSELECTED`. Before selecting it, move each customization of a moved role:
-
-- Remove research `incubation:<role>` and `deep-research:<role>` keys under `[subagents.roles]`; these roles are no longer registered subagents and stale keys fail sync.
-- Port role body customizations from `.devkit/overrides/incubation/subagents/<role>.md` or `.devkit/overrides/deep-research/subagents/<role>.md` into the skill override's `roles/<role>.md` through `devkit override`; remove obsolete subagent frontmatter.
-- Preserve host tool and sandbox restrictions through the invoking host; skill-local role files do not apply native execution settings.
-- Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
-  refused until then.
-
 See `CAP-DLV-deep-research`.
 
 ## UI/UX improvement

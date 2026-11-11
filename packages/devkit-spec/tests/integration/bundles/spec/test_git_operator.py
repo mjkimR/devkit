@@ -180,7 +180,6 @@ def test_planning_acceptance_is_the_hosts_composed_command_and_no_operator_job()
         "`cleanup`",
         "`inspect-recovery`",
     ]
-    assert_rule(raw(DISPATCH), "Dispatch no Planning acceptance", "the Host runs", COMPOSED_ACCEPT, "cleanup")
 
 
 # SPEC-git-operator-planning-completion-route AC-02

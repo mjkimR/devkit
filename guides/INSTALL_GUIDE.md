@@ -90,6 +90,10 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   for distribution without the harness: it deploys the `devkit` and `advisory` bundles and has no `devkit rules`,
   `devkit gate`, `devkit workflow` or `devkit run` (they fail with `HARNESS_COMMAND_UNAVAILABLE`). Adding the harness
   later replaces the `devkit-dist` requirement with the `devkit-agt` one in the same dependency group.
+- `devkit-docs` brings the harness and the auto-selected `docs` bundle (`docs:core`) without the SDD lifecycle.
+  `uv run devkit remove spec` removes lifecycle assets and routing guidance, but installed devkit-spec extensions
+  remain active: a document-only runtime omits devkit-spec. Restore docs after an explicit opt-out with
+  `uv run devkit add docs`.
 - `devkit-spec` brings `devkit-docs` (the `devkit docs` commands and the document model), `devkit-agt` and the
   auto-selected `docs` and `spec` bundles: the `/spec` entry skill, the spec-driven delivery workflows (with the generated
   `devkit-workflow` skill) and the `devkit spec` commands. Declare it only when
@@ -118,9 +122,6 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   pinned devkit requirement with the new ref instead, for example
   `uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git@<new-ref>#subdirectory=packages/devkit"`,
   then `uv sync` and `uv run devkit sync`.
-- The first upgrade from a
-  `devkit-agt` that predates `devkit-dist` follows
-  [Upgrading across the package split](install/existing-repository.md#upgrading-across-the-package-split).
 
 ### Adaptive development
 
@@ -139,20 +140,16 @@ actual-usage verification. Optional support roles are not mandatory phases. The 
 `.devkit/adaptive-dev.md` when useful. Leave that project-owned file available to normal version control and preserve
 its bytes during installation. No complete backlog or SDD Unit is needed before the first useful action.
 
-The absent approach defaults to `sdd`; selecting the adaptive-dev bundle never changes that value. Do not implicitly
-remove existing SDD assets or reopen its history. Retain project checks and use a separately requested verified
-[baseline procedure](install/adaptive-dev-sdd-adoption.md) for voluntary SDD adoption.
+The absent approach defaults to `sdd` and has no local or environment override; selecting the adaptive-dev bundle
+never changes that value. Adaptive development requires no eventual graduation or reconstructed delivery history. Do
+not implicitly remove existing SDD assets or reopen its history. Installed spec extensions reject new SDD lifecycle
+records in adaptive development while retaining existing SDD artifact checks. The Host independently verifies the
+branch, integrates its explicit name under ordinary approval, route and cleanup safeguards, then verifies the
+synchronized landed runtime before completion. Retain project checks and use a separately requested verified
+[baseline procedure](install/adaptive-dev-sdd-adoption.md) for voluntary SDD adoption; installing assets or changing
+the approach establishes no verified SDD baseline.
 
-An installation of the former `incubation` bundle from before the research split loses its explicit research
-entry and the `direction-explorer`, `discovery-critic` and `discovery-planner` roles on upgrade: sync removes their unmodified
-projections and announces the separate research bundle once with `BUNDLE_UNSELECTED`. Select it with
-`uv run devkit add deep-research` only when the user asks for that entry. Move each customization of a moved role first:
-
-- Remove research `incubation:<role>` and `deep-research:<role>` keys under `[subagents.roles]`; these roles are no longer registered subagents and stale keys fail sync.
-- Port role body customizations from `.devkit/overrides/incubation/subagents/<role>.md` or `.devkit/overrides/deep-research/subagents/<role>.md` into the skill override's `roles/<role>.md` through `devkit override`; remove obsolete subagent frontmatter.
-- Preserve host tool and sandbox restrictions through the invoking host; skill-local role files do not apply native execution settings.
-- Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
-  refused until then.
+Select the research bundle with `uv run devkit add deep-research` only when the user asks for that entry.
 
 ## Step 4: Recommend bundles
 
@@ -201,9 +198,7 @@ Run `uv run devkit sync`; the selected bundle must declare that input. Personal 
 untracked, including affected native projections. Shared receipt and root guidance remain canonical. Inspect the
 result with `uv run devkit config show --effective`. Governance and selection keys cannot be local.
 
-`uv run devkit sync --cloud` saves a cloud execution constraint in this checkout; `--local` returns to local.
-Cloud never grants approval. `--dry-run` and `--check` preview without persistence; `--no-save` keeps the selection
-for one invocation. `devkit worktree start` copies local preferences before setup into each new worktree; later edits
+`devkit worktree start` copies local preferences before setup into each new worktree; later edits
 are independent and attach preserves an existing file or intentional absence. Raw Git worktrees and clones need
 explicit provisioning. Do not commit the local file or render ledger.
 
@@ -216,27 +211,16 @@ explicit provisioning. Do not commit the local file or render ledger.
 | `WORKSPACE_UNSAFE` | `AGENTS.md` is a symlink | Ask the user: make `AGENTS.md` the real file, or set `guidance_block = false`. |
 | `GATE_HOOK_INSTALL_SKIPPED`, `GATE_HOOKS_PATH_SET` | `core.hooksPath` or a foreign hook layout keeps devkit's hooks out, so no gate runs | Report it; the installation is otherwise complete. |
 | `GATE_HOOK_ENTRY_MISSING` from `devkit gate status` | An enabled gate's stage has no devkit hook entry | Run `uv run devkit gate install`, then `uv run devkit gate status` again; if hooks were skipped (`GATE_HOOK_INSTALL_SKIPPED`), report that instead. |
-| `SELECTION_INVALID` | A selected bundle's package is not installed, or a selected preset does not exist (`devkit:run` became `harness:run`) | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`; replace a `devkit` `run` preset with `harness = "run"` under `[presets]`. |
+| `SELECTION_INVALID` | A selected bundle's package is not installed, or a selected preset does not exist | Run `uv sync`, or remove the bundle with `uv run devkit remove <bundle>`. |
 | `HARNESS_COMMAND_UNAVAILABLE`, `HARNESS_ENGINE_MISSING` | A harness command, or deployed rule, gate or workflow assets, with `devkit-dist` only | Tell the user; apply the `[FIX]` (switch to `devkit-agt`) only once they agree. |
 | `RECEIPT_STALE` from `devkit sync --locked` | The committed receipt does not match the installed packages | Run a plain `uv run devkit sync` and include its changes in the commit. |
 | uv reports `requires-python` incompatible | The project allows Python below 3.12 | Stop and ask the user (see the route document). |
 
 ## Cloud setup
 
-For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud mutation still requires a separately authorized CLI/PR route.
+For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud never grants approval: cloud mutation still requires a separately authorized CLI/PR route. `--dry-run` and `--check` preview without persistence.
 
 `sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.
-
-For document-only development, select devkit-docs instead of devkit-agt or devkit-spec. It brings the harness and
-auto-selects docs:core: shared writing instructions, document rules, templates and steering context.
-`uv run devkit add docs:docs-skeleton` optionally seeds absent document files. SDD needs docs+spec; use
-`uv run devkit add docs` to restore docs after an explicit opt-out. `uv run devkit remove spec` removes lifecycle
-assets and routing guidance, but installed devkit-spec extensions remain active. A clean document-only runtime
-omits devkit-spec. Bundle selection does not define a runtime lifecycle bypass.
-
-After approved integration lands, synchronize the target environment from its landed dependency declarations and
-run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
-report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.
 
 When the repository delegates work or upgrades verification instructions, follow
 [Verification ownership](install/verification-ownership.md) to separate worker-native checks from Host-owned

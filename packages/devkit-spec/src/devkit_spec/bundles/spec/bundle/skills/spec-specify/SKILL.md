@@ -20,7 +20,7 @@ without documents is `session` depth and needs no `spec.md`.
 - A handed-off bundle already exists and is bound: rewrite its `spec.md` in place, keeping carried content that
   still holds.
 - Otherwise, on `dev-<slug>`, run `devkit spec new <slug> --title "<Title>" --summary "<English sentence>"` (a defect:
-  add `--workflow sdd-spec-bugfix`). Never hand-make a bundle or its binding.
+  add `--task-kind bugfix`). Never hand-make a bundle or its binding.
 - Read each skeleton before rewriting it; some hosts refuse to overwrite an unread file.
 
 ## 3. Choose the reference

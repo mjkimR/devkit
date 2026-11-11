@@ -44,7 +44,7 @@ Run one turn of one spec unit's Development in the worktree the caller names, fr
 10. Commit at every stage boundary with write-scope paths only; fix a commit-gate refusal inside the write scope. Leave the worktree clean.
 11. On Codex, `workspace-write` confines no path: inherit the session model and reasoning effort; change no approval policy or host setting. Request a separate approval for each operation outside sandbox access (sibling-worktree writes, shared Git, network for verification), naming the operation, target and reason; use no broad persistent prefix, and take no earlier grant as later permission. On a refused or unavailable approval, stop that operation and preserve the state; never reroute through another tool, path, process or setting.
 
-{% if execution.environment == "local" %}Return verified committed scope to the Host; never request business approval through MCP. Branch checks do not attest the eventual landed head. The Host synchronizes its runtime and runs final required checks after approved Git effects before reporting delivery complete.
+{% if execution.environment == "local" %}Return verified committed scope to the Host; never request business approval.
 {% else %}Return your evidence to the Host without requesting business approval; a mutation needs a separately authorized CLI/PR route.
 {% endif %}
 ## Return
@@ -58,9 +58,9 @@ The fields of your committed `worker` envelope, with `final_head`: `git -C <work
 - Tier B, recorded extension: an exact adjacent file necessary for an existing task and AC within the approved
   goal. Before the first source commit, add it to the owning `_Boundary:` as
   `path` `(scope extension: <reason>)`; commit the annotation and reason with that first source change. Use one
-  nonempty reason line without parentheses. At turn end put `{path, task, reason, requirements}` in the sole final
-  or emergency `worker` envelope through `--scope-extensions-file <file|->`; `task` is the positive checklist
-  scanner ordinal and `requirements` lists AC IDs owned by that task. Review reads the annotation before this
+  nonempty reason line without parentheses; commas and colons are allowed. At turn end put
+  `{path, task, reason, requirements}` in the sole final or emergency `worker` envelope through
+  `--scope-extensions-file <file|->`; `task` is the positive checklist scanner ordinal and `requirements` lists AC IDs owned by that task. Review reads the annotation before this
   record exists; final Host/inspect compares them. A changed reason, task or extension after review is reverified.
 - Adjacent means the same documented feature ownership root or its project/plan-identified test mirror. Without
   a documented root use the declared file's parent; never infer package-wide ownership. An exact existing Living

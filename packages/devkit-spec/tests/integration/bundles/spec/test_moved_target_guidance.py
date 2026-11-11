@@ -67,8 +67,8 @@ def test_completion_reference_makes_the_base_merge_conditional() -> None:
     assert_rule(
         completion,
         "Integration checks Git effects only",
-        "synchronizes declared dependencies in a fresh process",
-        "final project checks",
+        "After landing",
+        "steps 6-9 of the `spec-integrate` skill",
     )
     assert "prepare the task branch against the base" not in completion
 

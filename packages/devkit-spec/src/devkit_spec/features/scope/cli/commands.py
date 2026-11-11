@@ -68,7 +68,11 @@ from devkit_spec.features.scope.usecases.sweep import SweepScopesUseCase
 
 @click.group(name="scope")
 def scope_group() -> None:
-    """Compare declared work scopes and share them between worktrees through a registry."""
+    """Observe and compare declared work scopes; the Host starts with collect.
+
+    collect observes host-visible work across worktrees and refs; compare checks declared scopes for overlap, and
+    register, query and release share scopes between worktrees through a registry.
+    """
 
 
 # --- shared rendering -------------------------------------------------------------------------------------------

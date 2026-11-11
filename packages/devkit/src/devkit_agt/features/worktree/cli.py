@@ -100,7 +100,11 @@ def _rerun_on_base(command: Callable[..., Any]) -> Callable[..., Any]:
 
 @click.group(name="worktree")
 def cli() -> None:
-    """Task worktrees: one checkout per activity branch (plan-<slug>, dev-<slug>), integrated and removed by finish."""
+    """Task worktrees: one checkout per activity branch (plan-<slug>, dev-<slug>).
+
+    Land a branch with `devkit integration integrate`; finish then removes its worktree and branch once the base
+    contains it.
+    """
 
 
 @cli.command(name="start")

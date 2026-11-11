@@ -45,8 +45,7 @@ def test_wait_notification_does_not_replace_completion_boundary() -> None:
     assert "git-operator remains a Git lifecycle executor" in text
     assert "no completion delivery" in text
     assert "execution, observer and cleanup outcomes separate" in text
-    completion = raw("skills/spec/references/completion.md")
-    assert "Required results remain pending" in completion
+    assert "Required results remain pending" in text
 
 
 def test_async_groups_require_actual_coverage_discovery_and_synchronous_fallback() -> None:
@@ -89,13 +88,13 @@ def test_worker_projection_keeps_native_checks_and_excludes_host_lifecycle(envir
 def test_common_completion_and_payload_route_by_actor_not_directory(environment: str) -> None:
     completion = flat(raw("skills/spec/references/completion.md", environment))
     assert "Only when acting as the local-orchestrated Host after integration, follow" in completion
-    assert "they do not load that Host procedure for ordinary worker checks" in completion
-    assert "Direct/session work retains" in completion
     payload = flat(raw("skills/spec-delegate/references/payload.md", environment))
     assert "Keep Host exec launch, wait, cleanup and integrated-result acceptance out of worker payloads" in payload
     host = flat(raw("skills/spec-orchestrate/references/isolated-execution.md", environment))
     assert "only as the local-orchestrated Host" in host
     assert "after landing" in host
     assert "actor and task, not by whether the current directory is a worktree" in host
+    assert "Do not copy exec start/wait/cleanup into worker checks" in host
+    assert "Direct/session work keeps the project's existing native verification procedure" in host
     assert "no runtime role or cwd restriction" in host
     assert "Do not require consumers to define E2E" in host

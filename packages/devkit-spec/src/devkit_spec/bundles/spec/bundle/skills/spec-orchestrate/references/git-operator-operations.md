@@ -32,4 +32,4 @@ extension failure inspect the exact extension target before the owning command; 
 After bundle changes land, base synchronization is a separate explicit intended effect with appropriate path
 permission. The Host accepts results and reports actual approval/policy authority; the operator grants none.
 
-The Host synchronizes landed dependencies in a fresh process, commits generated/repair changes and runs final required checks before reporting delivery complete. A successful Git operation does not attest these checks. Composed acceptance yields before handoff; after final checks pass, the Host invokes the existing handoff command with unchanged authorized scope and effort.
+A successful Git operation does not attest the Host's final required checks after landing.

@@ -36,8 +36,7 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
   --check lint="PASS devkit rules check --staged" --base <ref> --head $(git rev-parse HEAD)
 ```
 
-- If the final-report is the only pending file, run `devkit workflow envelope commit --unit <dir> --file envelopes/final-report-NN.yaml` after authoring. Prepare integration after that commit, because HEAD changes invalidate older preparation. Keep its evidence SHAs unchanged. Accompanying source/document changes and multiple records require a combined manual commit.
-- After a Git/hook/signing failure, fix the cause and retry the same file; do not rerun authoring. `ENVELOPE_COMMIT_UNCERTAIN` requires inspecting HEAD/index/worktree before any further mutation.
+- If the final-report is the only pending file, commit it by [section 5](#5-explicit-single-envelope-commit).
 - Omit what Git, `reconcile.md` and the latest review envelope already hold; record assumptions the user should see with `--assume`.
 - Add each item `devkit docs list feedback --status open --where severity=critical` lists to the report presented to the user, one line each: `FB-<slug> → <target>`.
 
@@ -68,4 +67,8 @@ docs/proposals/PROP-<slug>/envelopes/<kind>-<NN>.yaml
 
 Authoring remains write-only; `next`, `check` and `show` stay read-only. For one existing, fully authored envelope as the sole pending file, `devkit workflow envelope commit --unit <dir> --file envelopes/<kind>-<NN>.yaml` stages that literal path and runs ordinary Git hooks/signing. The deterministic subject uses the tracked SPEC/PROP anchor slug and envelope identity. A clean exact record already in HEAD returns `already_committed` without a second commit. Modified history, skeletons, unrelated dirty paths, partial staging and unsupported Git state refuse before mutation. The command grants no approval, push or merge authority.
 
-Review/reverify and final-report are eligible after their associated work is committed. Feedback with no findings is eligible only when its envelope is the sole pending file. Keep source fixes, Living Spec reflection, multi-record Planning returns, acceptance/decision transactions and problem/emergency commits in their existing combined manual commits. Never detach a record from work it must accompany.
+Review/reverify and final-report are eligible after their associated work is committed. Feedback with no findings is eligible only when its envelope is the sole pending file. Keep source fixes, Living Spec reflection, accompanying source/document changes, multi-record Planning returns, acceptance/decision transactions and problem/emergency commits in their existing combined manual commits. Never detach a record from work it must accompany.
+
+- Keep the record's evidence SHAs unchanged, and prepare integration after the record commit: a changed HEAD invalidates an older preparation.
+- A failed Git/hook/signing attempt retains the record and may leave it staged: fix the cause and retry the same file; do not rerun authoring.
+- On `ENVELOPE_COMMIT_UNCERTAIN`, inspect HEAD/index/worktree before any further mutation.

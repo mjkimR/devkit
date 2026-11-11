@@ -221,62 +221,16 @@ uv run devkit list               # bundles, their selection state and presets
 - Optional: add or diagnose MCP registration with [MCP onboarding](mcp.md); until `devkit-mcp` is installed, sync
   registers nothing.
 
-## Upgrading across the package split
-
-`devkit-agt` releases from before `devkit-dist` existed shipped everything in one wheel. Upgrading from one changes
-the following; check each with the user and commit the result together with `pyproject.toml` and `uv.lock`:
-
-- **Packages**: a Git requirement on `devkit-agt` brings `devkit-dist` from the same commit; a release-wheel
-  installation names the `devkit-dist`, `devkit-core` and `devkit-cli` wheels next to `devkit-agt` and `devkit-advisory`. A tool installation is
-  `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>`.
-- **The `harness` bundle**: the first `uv run devkit sync` deploys the new auto-selected `harness` bundle (the rules,
-  commit gates, workflows and `devkit run` guidance that left the `devkit` bundle), rewrites the `devkit` bundle's
-  managed files and records `devkit-dist` as the receipt's tool. A project that opted out with `devkit = false` gets
-  `harness` selected and opts out again with `harness = false`.
-- **`devkit:run`**: the `run` preset moved to `harness`. A `devkit = ["core", "run"]` (or `"run"`) selection stops the
-  sync with `SELECTION_INVALID` until it becomes `harness = "run"`; `devkit = "all"` keeps working but no longer
-  deploys the `devkit run` guidance.
-- **Overrides**: an override of `devkit:devkit-run` or `devkit:run-pointer` stops applying; re-create it with
-  `uv run devkit override create harness:<asset>` and carry the edit over. An override of `devkit:consumption` or of
-  the `devkit` constitution keeps applying with an upstream-drift report and still holds the old harness text:
-  remove those sections from it (`uv run devkit override diff`, then `accept`).
-
 ## Cloud setup
 
-For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud mutation still requires a separately authorized CLI/PR route.
-
-`sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.
-
-For document formats without SDD lifecycle obligations, choose devkit-docs instead of the base harness requirement.
-It auto-selects docs:core. For SDD, devkit-spec additionally selects spec:core. The document skeleton is opt-in
-through `uv run devkit add docs:docs-skeleton`; existing seeded files remain project-owned.
+Follow [Cloud setup](../INSTALL_GUIDE.md#cloud-setup) for cloud execution.
 
 ### Adaptive development entry
 
-When the approved installation is for adaptive development, use devkit-adaptive, which brings devkit-docs and the harness and explicitly select
-`uv run devkit add adaptive-dev`. Configure shared `[development] approach = "adaptive-dev"` and inspect
-`uv run devkit config show`; integration requires no readiness-provider selection. Follow
-[the adaptive development setup](../INSTALL_GUIDE.md#adaptive-development) for the complete configuration.
+For an approved adaptive development installation, follow
+[the adaptive development setup](../INSTALL_GUIDE.md#adaptive-development).
 
-Start or resume with `/adaptive-dev`. Product iteration and optional roles impose no mandatory team sequence. The
-coordinator keeps current facts in project-owned `.devkit/adaptive-dev.md`, which sync preserves. Asset selection
-alone changes no approach, and adaptive development does not require eventual graduation or reconstructed delivery
-history.
-
-An installation of the former `incubation` bundle from before the research split loses its explicit research
-entry and the `direction-explorer`, `discovery-critic` and `discovery-planner` roles on upgrade: sync removes their unmodified
-projections and announces the separate research bundle once with `BUNDLE_UNSELECTED`. Select it with
-`uv run devkit add deep-research` only when the user asks for that entry. Move each customization of a moved role first:
-
-- Remove research `incubation:<role>` and `deep-research:<role>` keys under `[subagents.roles]`; these roles are no longer registered subagents and stale keys fail sync.
-- Port role body customizations from `.devkit/overrides/incubation/subagents/<role>.md` or `.devkit/overrides/deep-research/subagents/<role>.md` into the skill override's `roles/<role>.md` through `devkit override`; remove obsolete subagent frontmatter.
-- Preserve host tool and sandbox restrictions through the invoking host; skill-local role files do not apply native execution settings.
-- Move or delete an edited projection that sync left with `ORPHAN_LEFT`; `uv run devkit add deep-research` is
-  refused until then.
-
-After approved integration lands, synchronize the target environment from its landed dependency declarations and
-run final required project checks in fresh processes. Regenerate and commit required artifacts before checks,
-report the checked HEAD and results, and repair/recheck a failing target before reporting delivery complete.
+Select the research bundle with `uv run devkit add deep-research` only when the user asks for that entry.
 
 ## Private content without recurring origin access
 
@@ -294,7 +248,7 @@ digest and adoption commit identify its sources. Keep adaptations in project ove
 
 For an explicit update, preview and inspect before applying the two reported identities:
 
-    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --check
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets
     uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
 
 Follow any returned reinstall and explicit deselection actions, then sync. Refresh itself changes no dependency

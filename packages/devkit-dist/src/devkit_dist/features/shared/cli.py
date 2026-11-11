@@ -29,15 +29,26 @@ def common(fn):
     return workspace_option()(FORMAT_OPTION(fn))
 
 
-def filters(fn):
-    for name, text in (
-        ("language", "Report language: ko or en"),
-        ("source-sha", "Full lowercase commit SHA the report reviewed"),
-        ("slug", "Lowercase kebab-case subject, up to 120 characters"),
-        ("kind", "Artifact kind: proposal-review"),
-    ):
-        fn = click.option("--" + name, required=True, help=text)(fn)
-    return fn
+FILTER_HELP = (
+    ("kind", "Artifact kind: proposal-review"),
+    ("slug", "Lowercase kebab-case subject, up to 120 characters"),
+    ("source-sha", "Full lowercase commit SHA the report reviewed"),
+    ("language", "Report language: ko or en"),
+)
+
+
+def filters(*optional: str):
+    """Declare the artifact metadata options from FILTER_HELP; names in ``optional`` become list filters."""
+
+    def decorate(fn):
+        for name, text in reversed(FILTER_HELP):
+            required = name not in optional
+            fn = click.option(
+                "--" + name, required=required, help=text if required else f"Only artifacts with this value. {text}"
+            )(fn)
+        return fn
+
+    return decorate
 
 
 def _artifact_line(uri: str, metadata: dict[str, Any]) -> str:
@@ -51,7 +62,7 @@ def _cursor(result: dict[str, Any]) -> None:
 
 
 @cli.command()
-@filters
+@filters()
 @common
 @boundary
 def put(kind: str, slug: str, source_sha: str, language: str, workspace_root: str | None, output_format: str) -> None:
@@ -87,10 +98,7 @@ def get(artifact_uri: str, workspace_root: str | None, output_format: str) -> No
 
 
 @cli.command(name="list")
-@click.option("--kind", required=True, help="Artifact kind: proposal-review")
-@click.option("--slug", required=True, help="Lowercase kebab-case subject")
-@click.option("--source-sha", help="Only artifacts of this full commit SHA")
-@click.option("--language", help="Only artifacts in this language: ko or en")
+@filters("source-sha", "language")
 @click.option("--cursor", help="Continue after the NEXT_CURSOR a previous page printed")
 @click.option("--limit", default=100, type=int, show_default=True, help="Entries per page, 1-100")
 @common

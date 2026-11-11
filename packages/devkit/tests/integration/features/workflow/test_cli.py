@@ -31,7 +31,7 @@ def test_help() -> None:
     for command in ("new", "bind", "checks", "validate"):
         assert _run(command, "--help").exit_code == 0
     envelope_help = _run("envelope", "--help")
-    assert not any(line.strip().startswith("new ") for line in envelope_help.output.splitlines())
+    assert any(line.strip().startswith("new ") for line in envelope_help.output.splitlines())
     assert _run("envelope", "new", "--help").exit_code == 0
 
 

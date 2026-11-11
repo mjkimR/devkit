@@ -65,7 +65,6 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
     assert_rule(body, "recheck", "source", "dirty paths", "invalidate")
     assert_rule(body, "reuse", "explicit user decision", "same source and effects")
     assert_rule(body, "edit only", "`.devkit/config.toml`", '`[development] approach = "sdd"`')
-    assert_rule(body, "Integration requires no readiness-provider selection", "ignored")
     assert "Preserve approval, worktree, other integration and project-check settings" in body
     assert_rule(body, "neither", "successful adoption", "automatic rollback")
     assert_rule(
@@ -76,7 +75,6 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
     assert "uv run devkit workflow envelope" not in flat_body
     report = raw("playbooks/sdd-baseline/references/report-template.md")
     assert "<verified/gap/excluded>" in report
-    assert_rule(report, "provider selection is unnecessary", "legacy", "ignored")
     assert "absent-provider configuration" not in report
     assert "project-to-spec" not in report
     assert_rule(report, "actual", "policy/asset inspection", "after activation")

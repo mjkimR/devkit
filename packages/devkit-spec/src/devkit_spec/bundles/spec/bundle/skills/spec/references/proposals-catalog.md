@@ -29,16 +29,4 @@ docs/proposals/PROP-{slug}/
 
 ## 3. CLI
 
-Keep no proposal tables in README files; the CLI reads frontmatter:
-
-```bash
-devkit spec proposal new <slug>                        # scaffold a proposal bundle
-devkit spec proposal new <slug> --milestone MS-<slug>  # with an existing milestone (an MS ID, not free text)
-devkit spec proposal new <slug> --with-target-docs     # with target-docs.md
-devkit spec proposal new <slug> --task-kind bugfix     # a defect: the spec follows sdd-spec-bugfix
-devkit spec proposal new <slug> --planning-effort low --dev-effort high  # explicit effort hints
-devkit spec proposal new <slug> --needs-decompose      # split in Backlog before Planning
-devkit spec proposal padr <slug> <title> --summary <text>  # PADR; the promoted ADR keeps the summary
-devkit docs list proposal                              # list proposals
-devkit spec proposal handoff <slug>                    # graduate (scaffold spec, remove bundle)
-```
+Keep no proposal tables in README files; the CLI reads frontmatter (`devkit docs list proposal`).

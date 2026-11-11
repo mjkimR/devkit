@@ -72,13 +72,7 @@ def test_delegation_orchestration_and_context_name_project_documents() -> None:
         "document checks",
         "representative usage checks",
     )
-    assert_rule(
-        (SKILL / "references/current-context.md").read_text(),
-        "map",
-        "retained behavior, structure or choice",
-        "document ID",
-        "`undocumented`",
-    )
+    assert_rule((SKILL / "references/current-context.md").read_text(), "fill each template section")
     template = (BUNDLE / "templates/current-context.md").read_text()
     assert "\n## Documents\n" in template
     assert_rule(template, "retained behavior, structure or choice", "document ID", "`undocumented`", "never copy")

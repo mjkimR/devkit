@@ -57,3 +57,36 @@ def test_spec_creation_registration_failure_preserves_primary_output(tmp_path: P
     result = CliRunner().invoke(cli, args)
     assert result.exit_code == 0, result.output
     assert "SPEC_SCOPE_" not in result.output and "SCOPE_ACK" not in result.output
+
+
+def test_spec_new_task_kind_selects_the_spec_workflow(tmp_path: Path) -> None:
+    task = development_worktree(tmp_path)
+    write_workflow(task, "sdd-spec-bugfix")
+    result = CliRunner().invoke(
+        cli, ["spec", "new", "fresh", "--task-kind", "bugfix", "-w", str(task), "--format", "json"]
+    )
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)
+    assert data["workflow"] == "sdd-spec-bugfix"
+    assert sorted(path.name for path in (task / data["dir"]).iterdir()) == ["spec.md"]
+
+
+def test_spec_new_feature_task_kind_binds_like_no_option(tmp_path: Path) -> None:
+    task = development_worktree(tmp_path)
+    initialized = CreateSpecUseCase().execute(task, "fresh", task_kind="feature", day=TODAY)
+    assert initialized.spec.workflow == "sdd-spec-feature"
+    assert (task / initialized.spec.dir / "plan.md").is_file()
+
+
+@pytest.mark.parametrize(
+    "options",
+    [["--task-kind", "bugfix", "--workflow", "sdd-spec-bugfix"], ["--task-kind", "chore"], ["--task-kind", " "]],
+)
+def test_spec_new_task_kind_refusals_write_nothing(tmp_path: Path, options: list[str]) -> None:
+    task = development_worktree(tmp_path)
+    write_workflow(task, "sdd-spec-bugfix")
+    result = CliRunner().invoke(cli, ["spec", "new", "fresh", *options, "-w", str(task), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "ARGUMENT_INVALID" and error["advisory"]["target_files"] == ["--task-kind"]
+    assert not list(task.glob("specs/*/*-fresh"))

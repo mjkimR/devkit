@@ -29,18 +29,8 @@ Run `spec-review` in isolation against the actual diff, acceptance criteria and 
 
 1. Run `uv run devkit get-context spec` once.
 2. Follow the Steps of `.devkit/managed/spec/skills/spec-review/SKILL.md`, or its override under `.devkit/overrides/`, against `diff_scope`.
-3. For Development scope extensions, read each `(scope extension: <reason>)` annotation, owning checklist task
-   ordinal and AC before the sole final/emergency worker record exists. Judge necessity, same-feature documented
-   ownership or identified test mirror, or an exact existing Living Spec document whose reason names the affected
-   contract ID. Explicit payload denies prevail. Protected classes, unrelated features/packages, new feature
-   edges, test weakening and work outside the approved goal require Host authority; report denied/non-adjacent/
-   out-of-goal writes as P1 and missing annotation/record evidence as P2. Check task-boundary additions against
-   the initial payload and task diff; an omitted annotation is a material finding, not authority from derived scope.
-   Final Host/inspect compares typed records with reviewed annotations; changed metadata after review is reverified.
-   Existing `(sync output)` admission stays independent. Apply the same contract locally and in cloud; inspect is
-   optional and structural, with semantic adjacency and custom protected paths left to review.
-4. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
-5. To back a timing, ordering or reactivity finding with executable evidence, you may write throwaway probe tests through the shell only under the ignored probe path the payload names, in this round's own subdirectory the payload names (for example `<worktree>/scratch/review-NN/`), and run them with the package's test command; for a viewer frontend change that is `just viewer probe <absolute round directory>` (`just viewer test` collects only `src/`). Never read or run another round's probes, and never delete a probe: removing the worktree cleans it, and the path is ignored, so `git status --short` stays unchanged. A probe is evidence (cite its failing output in `evidence`), never one of the unit's tests.
+3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
+4. To back a timing, ordering or reactivity finding with executable evidence, you may write throwaway probe tests through the shell only under the ignored probe path the payload names, in this round's own subdirectory the payload names (for example `<worktree>/scratch/review-NN/`), and run them with the package's test command; for a viewer frontend change that is `just viewer probe <absolute round directory>` (`just viewer test` collects only `src/`). Never read or run another round's probes, and never delete a probe: removing the worktree cleans it, and the path is ignored, so `git status --short` stays unchanged. A probe is evidence (cite its failing output in `evidence`), never one of the unit's tests.
 
 ## Return
 

@@ -159,41 +159,51 @@ def assignment() -> None:
 
 
 @assignment.command(name="new")
-@click.option("--owner", required=True)
-@click.option("--goal", required=True)
-@click.option("--id")
-@click.option("--role")
-@click.option("--worktree")
-@click.option("--base")
-@click.option("--write", multiple=True)
-@click.option("--commit", is_flag=True)
-@click.option("--check", multiple=True)
-@click.option("--governing", multiple=True)
-@click.option("--depends-on", multiple=True)
-@click.option("--parent")
-@click.option("--evidence")
-@click.option("--handoff")
-@click.option("--stop")
+@click.option("--owner", required=True, help="Who carries out the assignment")
+@click.option("--goal", required=True, help="What the assignment must achieve")
+@click.option("--id", help="Assignment ID matching ^[a-z0-9][a-z0-9-]{0,39}$; defaults to the first unused a<N>")
+@click.option("--role", help="Role the owner takes")
+@click.option(
+    "--worktree", help="Present worktree of this repository; defaults to the one containing the workspace root"
+)
+@click.option("--base", help="Commit the assignee starts from; defaults to the worktree HEAD")
+@click.option(
+    "--write", multiple=True, help="Granted write path relative to the worktree root, repeatable; none is read-only"
+)
+@click.option("--commit", is_flag=True, help="Grant commits; without it HEAD must stay at the base")
+@click.option("--check", multiple=True, help="Declared check <name>[=<command>], repeatable; the command is never run")
+@click.option(
+    "--governing",
+    multiple=True,
+    help="Constraining document ID or path, repeatable; the single value none records no document",
+)
+@click.option("--depends-on", multiple=True, help="ID of an assignment this one is sequenced after, repeatable")
+@click.option("--parent", help="ID of an unclosed top-level assignment whose authority this one narrows")
+@click.option("--evidence", help="Recorded evidence note for resume; not verified")
+@click.option("--handoff", help="Recorded handoff note for resume; not verified")
+@click.option("--stop", help="Recorded stop condition for resume; not verified")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
 def new_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
-    """New an assignment."""
+    """Record a new assignment with status open, its grant and its worktree base."""
     _run(NewAssignmentUseCase(), workspace_root, output_format, options, _print_assignment)
 
 
 @assignment.command(name="return")
 @click.argument("id")
-@click.option("--status", required=True)
-@click.option("--final")
-@click.option("--check", multiple=True)
-@click.option("--unverified", multiple=True)
-@click.option("--summary")
+@click.option("--status", required=True, help="Return status: completed, needs_input or failed")
+@click.option("--final", help="Final commit of the work; defaults to the assignment worktree's HEAD")
+@click.option(
+    "--check", multiple=True, help="Check outcome <name>=pass|fail|skipped|unavailable, repeatable; reported, never run"
+)
+@click.option("--unverified", multiple=True, help="Claim the assignee did not verify, repeatable")
+@click.option("--summary", help="Summary of what was returned")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
 def return_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
-    """Return an assignment."""
+    """Record the assignee's return and set status returned; a later return replaces the current one."""
     _run(ReturnAssignmentUseCase(), workspace_root, output_format, options, _print_assignment)
 
 
@@ -203,29 +213,29 @@ def return_cmd(workspace_root: str | None, output_format: str, **options: Any) -
 @FORMAT_OPTION
 @boundary
 def verify_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
-    """Verify an assignment."""
+    """Compare the current return with the repository and set status verified or rejected; exit 1 on fail."""
     _run(VerifyAssignmentUseCase(), workspace_root, output_format, options, _print_verification, errors=True)
 
 
 @assignment.command(name="close")
 @click.argument("id")
-@click.option("--outcome", required=True)
-@click.option("--reason")
+@click.option("--outcome", required=True, help="Close outcome: integrated or abandoned")
+@click.option("--reason", help="Why; required for abandoned, and for integrated when the status is not verified")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
 def close_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
-    """Close an assignment."""
+    """End an assignment with status closed; a parent with an unclosed child is refused."""
     _run(CloseAssignmentUseCase(), workspace_root, output_format, options, _print_assignment)
 
 
 @assignment.command(name="list")
-@click.option("--all", is_flag=True)
+@click.option("--all", is_flag=True, help="Include closed assignments")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
 def list_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
-    """List an assignment."""
+    """List the unclosed assignments with their observed worktree state; --all adds the closed ones."""
     _run(ListAssignmentsUseCase(), workspace_root, output_format, options, _print_list)
 
 
@@ -235,5 +245,5 @@ def list_cmd(workspace_root: str | None, output_format: str, **options: Any) -> 
 @FORMAT_OPTION
 @boundary
 def show_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
-    """Show an assignment."""
+    """Print one assignment with every recorded field, its current return and its event history."""
     _run(ShowAssignmentUseCase(), workspace_root, output_format, options, _print_details)

@@ -33,7 +33,7 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 - Set `reconcile.md` to `resolved` only when every target is reflected in the comparison diff or has a waiver of at least 20 non-whitespace characters. A required contract mismatch cannot be waived.
 - The rules require each `modified` target to change on the branch (commits since the merge base count) but do not prove semantic impact; compare it yourself.
 - Verify the reconciliation with a `reconcile-check` envelope at `living-spec-draft` at every effort ([effort](effort.md), [review loop](review-loop.md)). After review fixes or changed inputs, recheck the impact and return `reconcile.md` to `pending` for new targets.
-- Before integration approval, verify branch content and workflow holds with the source runtime. Integration checks Git effects only. After landing, the Host synchronizes declared dependencies in a fresh process, regenerates and commits required artifacts, and runs final project checks against the resulting target HEAD before reporting delivery complete. Save the premerge target SHA for affected-test selection. Failed setup, imports or checks leave verification unfinished; repair the target and recheck without replaying the merge or automatic rollback.
+- Before integration approval, verify branch content and workflow holds with the source runtime. Integration checks Git effects only. After landing, follow steps 6-9 of the `spec-integrate` skill before reporting delivery complete.
 
 A `session` task follows its workflow's completion conditions; never abandon remaining authorized work for a session time limit. For a task addressing named feedback, follow [source feedback](source-feedback.md).
 
@@ -49,7 +49,3 @@ Before deleting a source proposal or reporting completion, find concrete work th
 Never move required criteria or defects still in the agreed scope to a follow-up to claim completion.
 
 Only when acting as the local-orchestrated Host after integration, follow [isolated verification](../../spec-orchestrate/references/isolated-execution.md).
-Workers run required native checks synchronously in their assigned worktree, including necessary selective E2E,
-and return the command, source identity and result; they do not load that Host procedure for ordinary worker checks.
-Direct/session work retains the project's existing native verification procedure.
-Required results remain pending while independent work proceeds; the Host collects them and rechecks any uncovered landed interval before reporting completion.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.features.distribution.models.snapshots import SnapshotConflictError, SnapshotResult
@@ -32,7 +33,7 @@ class CreateBundleSnapshot(BaseUseCase):
 
 
 class RefreshBundleSnapshot(BaseUseCase):
-    """Preview sources or apply only the reviewed current/candidate digest pair."""
+    """Preview sources (neither digest) or apply only the reviewed current/candidate digest pair (both digests)."""
 
     def execute(
         self,
@@ -40,10 +41,10 @@ class RefreshBundleSnapshot(BaseUseCase):
         destination: Path,
         source: Path,
         *,
-        check: bool = False,
         expect: str | None = None,
         candidate: str | None = None,
     ) -> SnapshotResult:
+        check = _preview(expect, candidate)
         root = root.resolve()
         source = source.absolute()
         destination = destination_path(root, destination, source)
@@ -70,3 +71,17 @@ class RefreshBundleSnapshot(BaseUseCase):
                     destination, prepared.files, validate_package, creating=False, previous_files=old_files
                 )
             return outcome
+
+
+def _preview(expect: str | None, candidate: str | None) -> bool:
+    """Whether refresh previews (neither digest); ``ArgumentError`` naming the missing flag when only one is given."""
+    if expect is None and candidate is None:
+        return True
+    if expect is not None and candidate is not None:
+        return False
+    missing = "--candidate" if candidate is None else "--expect"
+    raise ArgumentError(
+        f"refresh apply requires both --expect and --candidate; {missing} is missing",
+        target_files=[missing],
+        fix="Preview without --expect and --candidate, then pass both digests it returns",
+    )

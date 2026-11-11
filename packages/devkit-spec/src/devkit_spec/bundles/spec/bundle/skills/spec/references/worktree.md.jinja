@@ -15,7 +15,7 @@ writer coordination and result acceptance; direct mode follows this procedure.
 - `proposal` Development: present the accepted proposal and its worktree/setup effects, obtain conversational approval under `ask`, then run `devkit spec proposal handoff <slug> --effort low|medium|high` from the retained base. Under `auto`, the command reads `proposal-handoff` from the base and uses the declared `dev_effort`.
   - The handoff commits its own transaction (`commit=`); continue in the returned worktree path at the selected effort, run the post-handoff link check, commit its fixes there as a later commit before a worker starts, then `devkit workflow next --unit <dir>`.
   - On a partial result, inspect `devkit worktree status` and keep the created worktree for recovery. On `SPEC_HANDOFF_COMMIT_REFUSED` the writes stay staged in that worktree: fix the cause its `[DETAIL]` shows and commit there; a rerun refuses the dirty worktree.
-- `spec` depth: `devkit worktree start dev-<slug>`, the printed `cd`, then `devkit spec new <slug>` (`--workflow sdd-spec-bugfix` for a defect); commit the agreed scope.
+- `spec` depth: `devkit worktree start dev-<slug>`, the printed `cd`, then `devkit spec new <slug>` (`--task-kind bugfix` for a defect); commit the agreed scope.
 - `session` depth bound for a PR: `dev-<slug>`, in a worktree only when the `GIT_POLICY` levels call for one, else `--no-worktree`; no bundle.
 - On `WORKTREE_BRANCH_EXISTS`, continue the branch ([branches](branches.md) §3) or choose another slug.
 

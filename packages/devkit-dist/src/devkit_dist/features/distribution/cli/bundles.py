@@ -62,15 +62,16 @@ def snapshot(source: Path, destination: Path, package_name: str, workspace_root:
 @bundle.command(name="refresh")
 @click.argument("destination", type=click.Path(path_type=Path))
 @click.option("--source", required=True, type=click.Path(path_type=Path), help="Accessible source content checkout.")
-@click.option("--check", is_flag=True, help="Preview differences and digests without writing.")
-@click.option("--expect", default=None, help="Current digest returned by preview; required for apply.")
-@click.option("--candidate", default=None, help="Reviewed candidate digest returned by preview; required for apply.")
+@click.option("--expect", default=None, help="Current digest returned by preview; with --candidate, applies.")
+@click.option(
+    "--candidate", default=None, help="Reviewed candidate digest returned by preview; with --expect, applies."
+)
 @WORKSPACE
 @_json_command
 def refresh(
-    destination: Path, source: Path, check: bool, expect: str | None, candidate: str | None, workspace_root: str | None
+    destination: Path, source: Path, expect: str | None, candidate: str | None, workspace_root: str | None
 ) -> object:
-    """Preview or explicitly adopt source changes without overwriting local edits."""
+    """Preview source changes (no digests) or adopt them (--expect and --candidate) without overwriting local edits."""
     return RefreshBundleSnapshot().execute(
-        resolve_root(workspace_root), destination, source, check=check, expect=expect, candidate=candidate
+        resolve_root(workspace_root), destination, source, expect=expect, candidate=candidate
     )

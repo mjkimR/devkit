@@ -62,7 +62,6 @@ Preparation and package selection do not activate SDD.
    Preparation intent alone does not authorize activation against an unknown final scope.
 3. Edit only `.devkit/config.toml` to set `[development] approach = "sdd"`; preserve the rest of the shared configuration.
    Use the existing `[development]` table when present instead of creating a duplicate table.
-   Integration requires no readiness-provider selection; an existing `[integration] provider` is ignored.
    Preserve approval, worktree, other integration and project-check settings unless their change was authorized.
    Do not introduce a universal SDD settings profile or a second approach source.
 4. Run `uv run devkit sync`, `uv run devkit config show`, `uv run devkit spec policy` and `uv run devkit sync --check`.
