@@ -21,9 +21,7 @@ never derive it from files yourself.
    what still blocks it, `[NEXT_SKILL]` names the skill that performs it, and
    `[RETURNS]` lists the stages this one may return to and why. `[STAGE: -
    complete=yes]` means the unit is finished. Free-text values in tagged lines
-   (details, reasons, notes) are JSON-quoted strings. `[BOUND_ELSEWHERE]` means
-   the unit was evaluated against a workflow other than its binding, so no
-   drift check ran.
+   (details, reasons, notes) are JSON-quoted strings.
    To take one of the `[RETURNS]` paths, run `uv run devkit workflow return
    --unit <dir> --to <stage>`; approvals for that stage and later ones are asked
    again. `[STALE_APPROVAL]` means the unit is back at an earlier stage and

@@ -1098,7 +1098,7 @@
     },
     ".agents/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
-      "sha256": "a58d0161862246aa0ca0cf9eca91ae6f87f4e773d6c78160b47a70f7ff99f86d"
+      "sha256": "1bd2ac4227e7899989a562e8a2a09bdb95a4ef4c19f2a5c682ed50d9a25e39d2"
     },
     ".agents/skills/devkit-workflow/agents/openai.yaml": {
       "mode": 420,
@@ -1394,7 +1394,7 @@
     },
     ".claude/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
-      "sha256": "a58d0161862246aa0ca0cf9eca91ae6f87f4e773d6c78160b47a70f7ff99f86d"
+      "sha256": "1bd2ac4227e7899989a562e8a2a09bdb95a4ef4c19f2a5c682ed50d9a25e39d2"
     },
     ".claude/skills/response-style/SKILL.md": {
       "mode": 420,
@@ -1650,7 +1650,7 @@
     },
     ".devkit/managed/_devkit/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
-      "sha256": "a58d0161862246aa0ca0cf9eca91ae6f87f4e773d6c78160b47a70f7ff99f86d"
+      "sha256": "1bd2ac4227e7899989a562e8a2a09bdb95a4ef4c19f2a5c682ed50d9a25e39d2"
     },
     ".devkit/managed/_devkit/skills/devkit-workflow/agents/openai.yaml": {
       "mode": 420,

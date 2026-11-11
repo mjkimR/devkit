@@ -8,7 +8,7 @@ target: devkit spec entrypoints derive
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-11-11
 ---
 
@@ -28,3 +28,5 @@ Category other: candidate relevance in entrypoint derivation.
 - **Suggestion**: join a target only with the boundaries of tasks whose `_Requirements` serve ACs that relate to it
   (or with paths under the target's documented ownership), and skip test paths, so a multi-area unit yields few
   reviewable candidates. Distinct from FB-derive-prints-every-pair, which grouped the output lines.
+
+- **Disposition**: Normal behavior: `CAP-TRACE-code-entrypoints` pairs every document with every candidate and leaves relevance to the spec-entrypoints review (Non-Goals, §3.5, §3.7). Revisit through a proposal if candidate lists keep growing.

@@ -77,8 +77,12 @@ Report the line or token delta, never as the justification.
 Record per consolidation or removal:
 
 - Reachability: static references and the repository's dynamic reach (entry points, plugin registries,
-  configuration, documentation, string dispatch). Name each search (command, registry or configuration read) and its
-  result.
+  configuration, documentation, string dispatch). Include the non-package code roots (scripts, tools, task-runner
+  recipes, CI workflows), and search a moved or renamed name over the whole tracked tree (for example `git grep`).
+  Name each search (command, registry or configuration read) and its result.
+- Call-site options: when call sites move onto a shared helper, list each call site's arguments that differ from the
+  helper's defaults (environment, flags, scope, timeouts, error handling). Record each as kept through a named
+  parameter, or return it to the decision round as a behavior change.
 - Verification: the relevant verification passing before and after the change, both results recorded.
 - Differential comparison: for a change that consolidates or replaces a parser, scanner, matcher, file listing,
   serialized format or other function whose inputs can be enumerated or generated, run the old and new code on the

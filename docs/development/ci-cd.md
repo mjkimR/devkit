@@ -95,7 +95,8 @@ types and governance remain required:
     `devkit_spec` uses module nodes, including package initializers. Fine tests keep their specific dependencies;
     opaque/root imports and known CLI, bundle and source-tree consumers retain broad owner dependencies.
     A `devkit-dist` or `devkit-agt` source change also selects mandatory whole-source-tree checks (layering,
-    documented codes, CLI wiring and stdout kinds). MCP changes retain their explicit integration consumers.
+    documented codes, CLI wiring and stdout kinds), and any package or tool source change selects the `[FIX]`
+    literal scan over every package's sources. MCP changes retain their explicit integration consumers.
   - Dependency discovery includes absolute/relative imports, literal dynamic import/resource calls, re-exports,
     executed initializers, transitive local helpers (including function-local imports), and ancestor conftests.
     Ambiguous static dependencies widen conservatively. Unreadable or unparseable relevant files, ambiguous source

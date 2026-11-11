@@ -8,7 +8,7 @@ target: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 
@@ -42,3 +42,5 @@ created_at: 2026-11-11
 scripts/releases/prepare.py: from <old manifest module> import IGNORED_NAMES  -> ImportError after the move
 per-package reachability searches: no hit outside packages/
 ```
+
+- **Disposition**: review-refactor references/criteria.md §4 Reachability names the non-package code roots and a whole-tree search for moved or renamed names.

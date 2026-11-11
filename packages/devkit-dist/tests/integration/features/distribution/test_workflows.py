@@ -137,7 +137,6 @@ def test_entry_skill_names_the_current_workflow_signals() -> None:
         "[STALE_APPROVAL]",
         "approvals of later stages still count",
         "ask the user when\n   unsure",
-        "[BOUND_ELSEWHERE]",
         "handoff --workflow <id>",
     ):
         assert text in body, text

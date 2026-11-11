@@ -8,7 +8,7 @@ target: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 
@@ -44,3 +44,5 @@ created_at: 2026-11-11
 applied patches: content edits present, 7 module deletions absent on the work item branch
 fix: git rm <7 paths>; afterwards the name-status sets of the checkout and the branch matched
 ```
+
+- **Disposition**: review-refactor references/applying.md §3 step 5 now compares `git diff --name-status` of the checkout (untracked included) with the applied change; a missing add, delete or rename blocks the commit.
