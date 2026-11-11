@@ -13,7 +13,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 APP = """import json, sys
 from pathlib import Path
 store = Path(sys.argv[1])
