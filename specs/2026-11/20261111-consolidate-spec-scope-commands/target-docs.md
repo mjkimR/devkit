@@ -2,7 +2,7 @@
 id: PROP-consolidate-spec-scope-commands-target
 title: Target Living Spec Structure for PROP-consolidate-spec-scope-commands
 status: draft
-proposal: PROP-consolidate-spec-scope-commands
+proposal: SPEC-consolidate-spec-scope-commands
 created_at: 2026-11-11
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
@@ -62,7 +62,7 @@ removed, `compare` retired, creation dirty paths kept, `--base` kept).
 
 ## 3. Decisions
 
-- Promote `PADR-collect-only-scope-observation`, superseding in part `ADR-worktrees-and-scope`; in that ADR add the
+- Promote `ADR-collect-only-scope-observation`, superseding in part `ADR-worktrees-and-scope`; in that ADR add the
   "Superseded in part by" line and reword the `query`/history mentions of §4 "Registry storage and read access", §5
   and §6 to the remaining read surfaces, without changing its other decisions.
 
@@ -73,4 +73,4 @@ removed, `compare` retired, creation dirty paths kept, `--base` kept).
   target-docs scaffold comment in `features/proposals/usecases/scaffold.py`; the `registered_dict` docstring; the
   `usecase_exceptions` entries for `query._record_warnings`/`query._spec_dir` in `.devkit/architecture.toml`.
 - The spec bundle's spec-orchestrate skill source (`collect` without `--mode`).
-- Tests listed in `materials/scope-command-callers.md`.
+- Tests listed in `docs/materials/2026-11/20261111-consolidate-spec-scope-commands/scope-command-callers.md`.

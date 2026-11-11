@@ -16,6 +16,13 @@ aliases:
 
 # [ADR-worktrees-and-scope] Worktree levels, branch guards and host-observed work scope
 
+Superseded in part by `ADR-collect-only-scope-observation`: in §4 "Host-owned scope observation", the clause that `scope collect`
+has `snapshot`, `refs` and default `worktrees` modes, and the clause that the maintenance `update` stays directly
+callable with its existing ACK contract; in §6, the clause that the maintenance ACK tests remain regression checks.
+Its other decisions, including opt-in fetch, bounded deadlines, read-only collection, the ownership tests and the
+post-finish cleanup, remain in force; its wording about `query` and history reads (§4 "Registry storage and read
+access", §5, §6) is reworded to the remaining read surfaces without changing those decisions.
+
 Superseded in part by `ADR-single-local-landing-route`: the clause that `[worktree] pull_request = "required"` makes devkit refuse `devkit worktree finish --merge`. All other decisions remain in force.
 
 - **Status**: Accepted

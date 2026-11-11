@@ -1,33 +1,24 @@
 ---
-id: PROP-consolidate-spec-scope-commands
+id: SPEC-consolidate-spec-scope-commands
 title: Consolidate the spec scope commands around collect
-summary: "Retires the devkit spec scope register, query, compare and hidden update commands with the registry update path and the second paths-changed pipeline, narrowing scope observation to collect beside release and sweep."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-11-11
-target_area: capabilities/collaboration/
-priority: low                         # critical | high | medium | low
-size: L                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/collaboration/
-    - capabilities/harness/
-    - capabilities/delivery/CAP-DLV-proposal-planning.md
-    - usecases/collaboration/
-    - decisions/2026-11/20261102-worktrees-and-scope.md
-    - packages/devkit-spec/
-    - .devkit/architecture.toml
-  excludes:
-    - packages/devkit/
-    - packages/devkit-dist/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Retires the devkit spec scope register, query, compare and hidden update commands with the registry update path and the second paths-changed pipeline, narrowing scope observation to collect beside release and sweep.
+status: planned
+created: 2026-11-11
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-consolidate-spec-scope-commands] Consolidate the spec scope commands around collect
+# [SPEC-consolidate-spec-scope-commands] Consolidate the spec scope commands around collect
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-consolidate-spec-scope-commands on 2026-11-11.
+- **Preserved Materials**: `docs/materials/2026-11/20261111-consolidate-spec-scope-commands`
+- Target Docs Blueprint: `PROP-consolidate-spec-scope-commands-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Guidance uses only `devkit spec scope collect` (spec-orchestrate), plus `sweep` and `release` (worktree reference).
 `register`, `query`, `compare` and the hidden `update` have no documented caller outside `CAP-COLL-work-scope-registry`,
@@ -39,15 +30,34 @@ own paging grammar (C3-6). Sources: `docs/materials/2026-11/20261111-review-refa
 Hypothesis: one observation entry (`collect`) plus `release` and `sweep` covers every documented workflow with one
 pipeline.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Consolidate the spec scope commands around collect so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which commands does any Host procedure, extension or CI still need (`register` is reached internally by handoff)?
 - **Q2**: `ADR-worktrees-and-scope` retains the hidden `update` and its ACK contract, and decides the collect modes. Which clauses need a superseding decision?
 - **Q3**: Should `compare` fold into collect's declared and future evidence, and should the journal become `scope history`?
 
-### Answers from Planning
+#### Answers from Planning
 
-Evidence: `materials/scope-command-callers.md` (scout at the Planning head).
+Evidence: `docs/materials/2026-11/20261111-consolidate-spec-scope-commands/scope-command-callers.md` (scout at the Planning head).
 
 - **Q1**: Only `collect` (spec-orchestrate, `CAP-HARN-agent-guidance`), `release` and `sweep` (spec worktree
   reference, spec-integrate, fix strings) have callers. devkit-agt reaches the post-finish cleanup through the
@@ -60,12 +70,12 @@ Evidence: `materials/scope-command-callers.md` (scout at the Planning head).
   ACK tests remain regression checks (the ownership and post-finish cleanup tests stay). The `query`/history wording
   of §4 "Registry storage and read access", §5 and §6 is reworded to the remaining read surfaces (collect and the
   `Registry` reads of release, sweep and cleanup) under the ADR-consolidation rule.
-  `PADR-collect-only-scope-observation` supersedes the clauses in part; opt-in fetch, deadlines, read-only
+  `ADR-collect-only-scope-observation` supersedes the clauses in part; opt-in fetch, deadlines, read-only
   collection, `--base` (answer q4) and the post-finish cleanup stay.
 - **Q3**: Decided by the user (§6): `compare` is retired without a replacement (q2), and the journal is removed with
   its reader (q1).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 One feature spec in devkit-spec. Retirement, collect narrowing and the pipeline consolidation change one capability
 (`CAP-COLL-work-scope-registry`), one feature package and their tests together, and the pipeline consolidation
@@ -101,7 +111,7 @@ depends on `update` going, so no decomposition is needed. The design below folds
   skill source, the target-docs scaffold comment, the `registered_dict` docstring and `.devkit/architecture.toml`'s
   `usecase_exceptions` entries for `query._record_warnings` and `query._spec_dir`.
 
-### Expected acceptance scenarios
+#### Expected acceptance scenarios
 
 - **AC-01**: Given the CLI, when `devkit spec scope --help` is read or `register`, `query`, `compare` or `update` is
   run, then only `collect`, `release` (and hidden `sweep`) exist and the removed names fail as Click usage errors
@@ -125,7 +135,8 @@ depends on `update` going, so no decomposition is needed. The design below folds
   scope feature names only existing commands and options (a test scans them for `scope register|query|compare|update`,
   `--request-id`, `--task-id` outside `release`, and `--mode`).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr consolidate-spec-scope-commands "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/ (created with its first file).
@@ -136,9 +147,9 @@ depends on `update` going, so no decomposition is needed. The design below folds
   commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
 -->
 
-## 5. Planning decisions
+### 5. Planning decisions
 
-### Collect options
+#### Collect options
 
 `--mode` goes: guidance passes only the default, every mode already reads the registry snapshots (so
 `--mode snapshot` never rescued `SPEC_SCOPE_COLLECTION_FAILED`), and the only other uses are tests and two fix
@@ -150,14 +161,14 @@ tags or pruning) that the ADR keeps for multi-PC visibility. `--timeout` and `--
 `plan-*`/`dev-*` refs, which carry no `devkitBase` marker, when `<remote>/HEAD` and the main checkout branch differ.
 C3-3 is therefore taken for `--mode` only.
 
-### Creation registration
+#### Creation registration
 
 Creation registration keeps its best-effort, verbose-only failure handling and its Git calls under the
 `[tool.spec.scope] timeout`. The Git-side unresolved reasons of §4.1 (`missing-base-ref`, `missing-base-revision`,
 `unknown-base-revision`) belonged to the committed range and are no longer stored on new records; collect reports an
 unusable base as `unknown-base`.
 
-### Codes and ownership lookup
+#### Codes and ownership lookup
 
 `own()` returns no record when the token or its record is gone; its only remaining caller, the post-finish cleanup,
 already treats both as nothing to release. `SPEC_SCOPE_TOKEN_MISSING` and `SPEC_SCOPE_RECORD_MISSING` therefore go
@@ -171,14 +182,14 @@ as the codes of creation registration's verbose diagnostics; their fixes stop na
 and `--task-id`. The sweep `--expect` argument fix names "a previous sweep". §4.8 marks the creation-only codes as
 verbose diagnostics of automatic registration.
 
-### Use case wording
+#### Use case wording
 
 `compare`'s retirement (q2) leaves queued Backlog drafts and drafts accepted with `--direct` on the base unobserved: collect
 compares declarations once a unit has a `plan-*` or `dev-*` source. UC-run-parallel-work-safely step 1 and scenario 1
 and CAP-DLV-proposal-planning say so instead of promising a comparison of every planned declaration. The practical
 loss is small: `future`-only overlap does not serialize Planning, and a handed-off `dev-*` source is observed.
 
-### Verification
+#### Verification
 
 Tests that exercise only retired commands are deleted; tests that used `register`, `query` or `update` as fixtures
 (scope `test_localfs.py` with `tests/support/spec_support/scope_contract.py`, delivery `test_cleanup.py`, e2e
@@ -188,9 +199,9 @@ tests. The help-hidden assertion in `tests/integration/package/test_help_and_not
 `just test-affected` covers the package. `dev_effort: medium` stays: one package and capability, a contract change
 without external consumers and no persisted-data migration (old records stay readable).
 
-## 6. Open questions
+### 6. Open questions
 
-None open. The user decided the first Planning turn's questions (`envelopes/answer-01.yaml`); each chose the
+None open. The user decided the first Planning turn's questions (historical Git `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-consolidate-spec-scope-commands/envelopes/answer-01.yaml`); each chose the
 recommended option, folded above:
 
 - **q1 Journal**: the scope journal and its reader are removed, together with the journal error codes.
@@ -198,3 +209,4 @@ recommended option, folded above:
 - **q3 Creation dirty paths**: creation registration keeps recording the dirty paths at creation, read through
   collect's observation service.
 - **q4 `--base`**: the `collect --base` option is kept.
+
