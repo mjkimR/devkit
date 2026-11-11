@@ -84,6 +84,8 @@ def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
     assert payload["status"] == "accepted" and payload["verification"] == "pending"
     assert payload["handoff_status"] == "not_started"
     assert payload["acceptance_authority"] == "user"
+    assert payload["integration"]["authority"] == "host-conversation"
+    assert "ui_action" not in payload["integration"]
     assert "acceptance_commit" in payload["completed_steps"]
     assert "status: accepted" in (repo / "docs/proposals/PROP-idea/proposal.md").read_text()
     assert not planning.exists() and not git(repo, "branch", "--list", "dev-idea")

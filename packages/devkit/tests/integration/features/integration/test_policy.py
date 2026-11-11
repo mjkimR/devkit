@@ -42,7 +42,8 @@ def test_auto_local_exact_effects_without_confirmation(auto_repo, method, delete
     service = IntegrationService(base)
     result = integrate(service)
     assert result.status == "completed", result.errors
-    assert result.authority == "policy" and result.ui_action is None
+    assert result.authority == "policy" and "ui_action" not in result.compact_dict()
+    assert not hasattr(result, "ui_action")
     assert result.request.approval_policy == "auto"
     assert not worktree.exists()
     assert ("refs/heads/dev-demo" in git(base, "show-ref")) is not delete

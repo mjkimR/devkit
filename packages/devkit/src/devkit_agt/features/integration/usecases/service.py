@@ -263,7 +263,7 @@ class IntegrationService:
         return self._run(request.id)
 
     def _compose_execute(
-        self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, ui_action: str
+        self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, authority: str
     ) -> IntegrationResult:
         """Hold the operation lock across acceptance and exact-target execution."""
         before = request.context.finish
@@ -314,10 +314,9 @@ class IntegrationService:
                     "integration target, policy, identities or cleanup scope changed after confirmation"
                 )
             lifecycle.before_merge(fresh.request)
-            fresh.ui_action = ui_action
             record = self._record(fresh.request.id)
             record.approved = True
-            fresh.authority = "policy" if ui_action == "policy" else "host-conversation"
+            fresh.authority = authority
             try:
                 return self._execute(record, False)
             finally:

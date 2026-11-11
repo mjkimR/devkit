@@ -2,7 +2,7 @@
 id: SPEC-remove-integration-ui-action
 title: Remove the integration ui_action field
 summary: Removes the ui_action field from integration results and the devkit-spec composed output, since it always repeats authority.
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-INT-mcp-services
@@ -58,8 +58,8 @@ There are no external consumers, so no compatibility shim is kept.
 ### [AC-03] Living Spec lists the result fields without ui_action
 
 - **Given** `CAP-INT-mcp-services` and `docs/development/reference/` pages
-- **When** `rg -n ui_action docs/capabilities docs/development/reference packages` runs
-- **Then** it finds no match, and the capability's JSON field list names `authority`.
+- **When** `rg -n ui_action docs/capabilities docs/development/reference packages/*/src` runs
+- **Then** it finds no match (tests keep only absence assertions), and the capability states that JSON carries `authority`.
 
 ## 5. Assumptions
 

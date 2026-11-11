@@ -21,7 +21,7 @@ invariant names it. The removal narrows output only; `ARCH-08-1-agent-output` is
   (`native_plan_accept.py`, `test_composition.py`), so the observable `authority` is unchanged.
 - `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py`: no code change; its
   embedded `integration` object loses the key through `compact_dict()` (AC-02).
-- `docs/capabilities/integration/CAP-INT-mcp-services.md`: add `authority` to the JSON field list (AC-03).
+- `docs/capabilities/integration/CAP-INT-mcp-services.md`: state that JSON carries `authority` and its values (AC-03).
 
 ## 3. Component & Interface Design
 
@@ -38,6 +38,6 @@ def _compose_execute(
 - AC-02: `test_composition.py` asserts `authority` and no `ui_action` in `compact_dict()`;
   `packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py` asserts the embedded `integration`
   object has no `ui_action`.
-- AC-03: `rg -n ui_action docs/capabilities docs/development/reference packages` returns nothing.
+- AC-03: `rg -n ui_action docs/capabilities docs/development/reference packages/*/src` returns nothing.
 - Commands: `just lint devkit`, `just check devkit`, `just test-affected --base main`,
   `just test-affected --base main --tier e2e`, `uv run devkit rules check`.
