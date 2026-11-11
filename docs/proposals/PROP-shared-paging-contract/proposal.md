@@ -11,6 +11,7 @@ planning_effort: low                  # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
+    - architecture/ARCH-08-1-agent-output.md
     - capabilities/harness/
     - docs/development/reference/exec.md
     - packages/devkit/src/devkit_agt/features/isolated_execution/
@@ -56,11 +57,13 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
   only consumer is `packages/devkit/tests/unit/features/isolated_execution/test_output.py`). An empty list prints
   `[PAGE: total=0 offset=0 limit=20 count=0 next=-]`, which keeps the explicit empty-list result §4 requires.
 - JSON output is unchanged (`runs`, `total`, `offset`, `limit`, `next_offset`): JSON paging keys are out of scope.
-- Revise `CAP-HARN-isolated-execution` §4 (sentinel list and the list paging sentence) and
-  `docs/development/reference/exec.md` (sentinel list) to match.
-- Where the shared grammar is stated is the open question `q1` of this turn: today only `CAP-HARN-command-mount`
-  §4.5 states it, for the mounted `docs` and `spec` groups, and `ARCH-08-1-agent-output` says nothing about paging.
-  If the answer moves it to `ARCH-08-1-agent-output`, `boundaries.owns` gains that document.
+- `ARCH-08-1-agent-output` gains a short paging subsection under §3 (stdout text): the `[PAGE: total= offset=
+  limit= count= next=]` line after the items, `[NEXT_CMD: ...]` only when more items follow, `next=-` on the last
+  page, and that each command's limit bounds (and whether it accepts `--limit 0`) stay in its own capability. §10
+  gains a checklist item: a listing command that pages uses these lines through `echo_page`.
+- `CAP-HARN-command-mount` §4.5 keeps its mounted-group facts and points to `ARCH-08-1-agent-output` for the
+  grammar instead of stating it; `CAP-HARN-isolated-execution` §4 (sentinel list and the list paging sentence) points
+  to it too and keeps exec's limits; `docs/development/reference/exec.md` (sentinel list) is updated to match.
 - Development: one feature spec, `sdd-spec-feature`; tests in `packages/devkit/tests/unit/features/isolated_execution/`.
 
 ### Planning decisions
@@ -68,6 +71,9 @@ Source: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md`
 - Exec keeps limit 1-100 (default 20) and its error code; it does not adopt `--limit 0` (Q1).
 - `maintenance history list` stays unpaged (Q2); `CAP-DLV-maintenance-history` is not changed.
 - `[EXECUTION_LIST: ...]` is dropped without an alias; JSON output keeps its current keys.
+- The shared paging grammar is stated once in `ARCH-08-1-agent-output` (a short subsection and a §10 checklist
+  item); `CAP-HARN-command-mount` §4.5 and `CAP-HARN-isolated-execution` §4 point to it, and per-command limits stay
+  in each capability (user, q1).
 
 ### Non-Goals
 
