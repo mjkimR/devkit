@@ -53,7 +53,7 @@ the whole toolchain through the one `devkit` executable of the project environme
 3. **Warnings and notices are results**: something a successful operation must report is returned under `notices`
    at `WARNING` or `NOTICE` and printed after the result; it never changes the exit code except under `--strict`.
 4. **Libraries never print**: commands write only through `devkit_dist.adapters.cli` (`boundary`, `echo_json`,
-   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.adapters.cli` or `devkit_docs.adapters.cli`.
+   `echo_notices`, `exit_on_warnings`, `sentinel`, `fields_line`, `echo_page`).
 5. **Every code is documented**: each `code` a `SpecError` or `DocsError` subclass declares MUST appear as
    `` `CODE` `` in a document under `docs/` (`packages/devkit-spec/tests/integration/package/test_documented_codes.py`,
    `packages/devkit-docs/tests/integration/package/test_documented_codes.py`).
