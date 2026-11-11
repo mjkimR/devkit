@@ -49,8 +49,10 @@ The documents were already one directive per line, and pinned guidance tests fix
 of the main loop would likely yield a similar few percent.
 
 Hypothesis: two policies reduce the main-loop load without removing a procedure:
-1. Drop or shrink to a pointer the guidance that restates a check a devkit command or rule enforces
-   deterministically, refusing before any effect with an actionable code and `[FIX]`.
+1. Shrink guidance that restates a check a devkit command or rule enforces deterministically, refusing before any
+   effect with an actionable code and `[FIX]`. When knowing the rule before acting avoids rework (the refusal would
+   come only after the work is done), keep a one-line essence and drop only the detail the refusal covers. Drop the
+   rule completely only when the refusal comes early and cheap and its fix is obvious.
 2. Move rare-case branches (recovery, unusual errors, exception paths, seldom-used modes) out of the entry
    documents into on-demand references, linked one level deep.
 
