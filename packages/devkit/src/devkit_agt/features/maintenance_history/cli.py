@@ -24,9 +24,19 @@ WORKSPACE = workspace_option()
 REPOSITORY = click.option("--repository", help="Credential-free owner/repo; defaults to config or origin")
 BRANCH = click.option("--branch", help="Dedicated history branch; defaults to config or maintenance-history")
 AUTHORITY = click.option("--authority", default="", help="Explicit user authority for this destination mutation")
-RUN = click.option("--run", required=True, type=click.Path(path_type=Path, file_okay=False))
-FILES = click.option("--file", "files", multiple=True, type=click.Path(path_type=Path, dir_okay=False))
-COMMITS = click.option("--applied-commit", "applied_commits", multiple=True)
+RUN = click.option(
+    "--run", required=True, type=click.Path(path_type=Path, file_okay=False), help="Local run directory start created"
+)
+FILES = click.option(
+    "--file",
+    "files",
+    multiple=True,
+    type=click.Path(path_type=Path, dir_okay=False),
+    help="Evidence file, repeatable: finish registers and freezes it; publish selects a frozen one",
+)
+COMMITS = click.option(
+    "--applied-commit", "applied_commits", multiple=True, help="Code commit that applied the run's changes, repeatable"
+)
 
 
 @click.group(name="maintenance")
@@ -72,13 +82,23 @@ def init_cmd(
 
 
 @history.command(name="start")
-@click.option("--playbook", required=True, type=click.Choice(PLAYBOOKS))
-@click.option("--scope", required=True)
-@click.option("--into", required=True, type=click.Path(path_type=Path, file_okay=False))
-@click.option("--report", required=True, type=click.Path(path_type=Path, dir_okay=False))
-@click.option("--timezone", "zone")
-@click.option("--supersedes", multiple=True)
-@click.option("--prior-run", "prior_runs", multiple=True)
+@click.option("--playbook", required=True, type=click.Choice(PLAYBOOKS), help="Maintenance playbook this run follows")
+@click.option("--scope", required=True, help="Nonempty description of what the run inspects")
+@click.option(
+    "--into",
+    required=True,
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Directory to create the unique run directory in",
+)
+@click.option(
+    "--report",
+    required=True,
+    type=click.Path(path_type=Path, dir_okay=False),
+    help="Report file the run writes; fixed for finish",
+)
+@click.option("--timezone", "zone", help="IANA timezone for local timestamps; defaults to the system timezone")
+@click.option("--supersedes", multiple=True, help="Run ID this run supersedes, repeatable")
+@click.option("--prior-run", "prior_runs", multiple=True, help="Run ID of an earlier related run, repeatable")
 @REPOSITORY
 @WORKSPACE
 @FORMAT_OPTION
@@ -114,12 +134,14 @@ def start_cmd(
 
 @history.command(name="finish")
 @RUN
-@click.option("--outcome", required=True, type=click.Choice(("completed", "failed", "interrupted")))
-@click.option("--result")
-@click.option("--report", type=click.Path(path_type=Path, dir_okay=False))
+@click.option("--outcome", required=True, type=click.Choice(("completed", "failed", "interrupted")), help="Run outcome")
+@click.option("--result", help="One-line result summary recorded with the outcome")
+@click.option(
+    "--report", type=click.Path(path_type=Path, dir_okay=False), help="Report path; must match the one start recorded"
+)
 @FILES
 @COMMITS
-@click.option("--follow-up", "follow_ups", multiple=True)
+@click.option("--follow-up", "follow_ups", multiple=True, help="Follow-up item to record, repeatable")
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
@@ -180,7 +202,7 @@ def publish_cmd(
 @history.command(name="update")
 @RUN
 @AUTHORITY
-@click.option("--integration-state", required=True)
+@click.option("--integration-state", required=True, help="Nonempty integration state to append as an amendment")
 @COMMITS
 @WORKSPACE
 @FORMAT_OPTION
@@ -207,11 +229,15 @@ def update_cmd(
 
 
 @history.command(name="list")
-@click.option("--playbook", required=True, type=click.Choice(PLAYBOOKS))
-@click.option("--source-sha")
-@click.option("--outcome", type=click.Choice(("completed", "failed", "interrupted")))
-@click.option("--include-superseded", is_flag=True)
-@click.option("--limit", default=20, type=click.IntRange(min=1))
+@click.option("--playbook", required=True, type=click.Choice(PLAYBOOKS), help="Playbook whose runs to list")
+@click.option("--source-sha", help="Only runs of this source commit SHA")
+@click.option(
+    "--outcome", type=click.Choice(("completed", "failed", "interrupted")), help="Only runs with this outcome"
+)
+@click.option("--include-superseded", is_flag=True, help="Include runs a later run supersedes")
+@click.option(
+    "--limit", default=20, type=click.IntRange(min=1), show_default=True, help="Maximum runs, newest first; positive"
+)
 @REPOSITORY
 @BRANCH
 @WORKSPACE
@@ -245,8 +271,8 @@ def list_cmd(
 
 
 @history.command(name="get")
-@click.option("--run-id", required=True)
-@click.option("--file", default="record.json")
+@click.option("--run-id", required=True, help="Published run ID: <playbook>-<YYYYMMDDTHHMMSSZ>-<8 hex>")
+@click.option("--file", default="record.json", show_default=True, help="Published file path within the run")
 @REPOSITORY
 @BRANCH
 @WORKSPACE
