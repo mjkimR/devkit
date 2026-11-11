@@ -84,28 +84,10 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 
 ## Verification
 
-Run lint, type checks and relevant tests before completing code changes. Devkit uses local-orchestrated
-development. Use `just test-affected` for development, review and the final integration content (keep its
-`mode=full` fallback); no separate local full-suite run is required. After landing, synchronize dependencies with
-`just init`, use fresh processes for `devkit sync` and `devkit generated check`, regenerate stale artifacts with
-`devkit generated regen <ids>` and commit them, then run `just test-affected --base <saved-target-sha>` on the final
-target HEAD with required lint/types/rules. Report the checked HEAD, commands and outcomes; never compare main to
-itself or substitute nightly CI for final checks. As the local-orchestrated Host after landing, follow the
-`spec-integrate` skill and the `spec-orchestrate` skill's isolated-execution reference (selected E2E through
-`devkit exec`). Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand.
-A viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names.
-
-| Target | Command |
-| --- | --- |
-| Lint & format / check (CI) | `just lint [module]` / `just lint-check [module]` |
-| Type check (Pyright) | `just check [module]` |
-| Tests | `just test-affected`, `just test <module> [area\|path...]`, full: `just test` |
-| devkit-dist without devkit-agt | `just test-dist` |
-| Coverage | `just test-cov [module] [area\|path...]` |
-| Governance rules | `just rules-check` / `just rules-fix` |
-| Bundle rule tests (run `uv run devkit sync` first after editing a bundle's `rules/<name>/tests/`; `devkit rules test` runs the deployed copy) | `just rules-test RULE-<id>` |
-| Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
-| Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint\|check\|test\|build` |
+Run lint, type checks and the affected tests (`just test-affected`, keeping its `mode=full` fallback) before
+completing code changes; no separate local full-suite run is required. A viewer frontend change selects no pytest
+test: run the command its `[FRONTEND_CHECK: ...]` line names. Commands: [setup](docs/development/setup.md#3-common-verification-commands).
+Integration, post-landing checks, selected E2E and CI: [CI/CD](docs/development/ci-cd.md).
 
 <!-- DEVKIT:START -->
 ## devkit
