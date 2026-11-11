@@ -575,3 +575,19 @@ def test_a_supplied_list_reuses_the_memo(transient: Path, write: Write, parses: 
     shutil.rmtree(transient / ".devkit/transient/docs")
     _load(transient, files=files)
     assert len(parses) == len(files)
+
+
+@pytest.mark.parametrize("writes", [True, False])
+def test_a_directory_appearing_after_open_is_never_read_or_replaced(
+    transient: Path, writes: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    (transient / ".devkit/transient/docs").mkdir()
+    memo = ParseMemo.open(transient.resolve(), writes=False)
+    assert memo is not None
+    memo._writes = writes  # a writing load reads at open; reading here models the file changing in between
+    (transient / MEMO).mkdir()
+    with caplog.at_level("INFO", logger="devkit"):
+        assert memo.stored("docs/a.md") is None
+        memo.save()
+    assert [r.getMessage().rsplit(": ", 1)[-1] for r in caplog.records] == ["not a regular file"]
+    assert (transient / MEMO).is_dir() and list((transient / MEMO).iterdir()) == []

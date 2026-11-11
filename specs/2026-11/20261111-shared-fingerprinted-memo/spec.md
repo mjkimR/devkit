@@ -98,8 +98,9 @@ the comparison is in `docs/materials/2026-11/20261111-shared-fingerprinted-memo/
 ### [AC-04] The facts memo keeps its outcomes except extra top-level keys
 - **Given** the same harness and table
 - **When** the harness runs on the changed head
-- **Then** every facts row (writer and reader) equals `before.md`, except `extra-key` (used before; not used after,
-  and the writer rewrites the file); the existing `test_file_facts.py` passes, its `_FRAMEWORK` patch still
+- **Then** every facts row (writer and reader) equals `before.md`, except `extra-key` and `nan-constant`, whose fixture
+  appends `NaN` under an extra top-level key `x` (used before; not used after, and the writer rewrites the file); the
+  existing `test_file_facts.py` passes, its `_FRAMEWORK` patch still
   controlling the facts fingerprint.
 
 ### [AC-05] Fingerprint coverage follows the moved checks

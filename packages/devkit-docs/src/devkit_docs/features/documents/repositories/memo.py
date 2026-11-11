@@ -34,6 +34,7 @@ import json
 import math
 import os
 import pkgutil
+import stat
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -480,12 +481,16 @@ class ParseMemo:
     def _read(self) -> None:
         self._stored = {}
         try:
-            os.lstat(self.path)
+            mode = os.lstat(self.path).st_mode
         except FileNotFoundError:
             self._changed = True
             return
         except OSError as exc:
             self._discard(f"cannot be read: {exc}")
+            return
+        if not stat.S_ISREG(mode):  # appeared after ``open`` checked the path: never read or replaced
+            self._writes = False
+            _log.info("document memo %s not used: not a regular file", self.path)
             return
         try:
             loaded = json.loads(self.path.read_bytes().decode("utf-8"), parse_constant=_no_constant)
