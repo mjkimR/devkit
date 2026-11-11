@@ -1,0 +1,14 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:11:06.368484Z'
+status: completed
+summary: 'First Planning turn: status reviewing; Q1-Q3 settled from code evidence with no user question. X-13: public devkit_cli.utf8_output re-exported by devkit_dist.adapters.cli (devkit-dist already depends on devkit-cli; devkit-core rejected as it would add a devkit-cli dependency). DS-09: frontmatter.scalar gains double-quote and always-quote options so projections keep identical bytes and the CAP-DIST-agent-projections quoted-description rule (probed over 17 shipped contracts). DS-10: tracked_paths/ignored_paths in devkit_core.core.git; five devkit-dist sites keep their ignore mode, deadline and failure mapping. No split, no PADR, no feature edge; target_area and boundaries moved to capabilities/cli/ and development/reference/. Evidence in materials/planning-evidence.md. Ready for plan-accept.'
+findings: []
+checks:
+  rules: PASS RULE-proposal-boundaries 0 reports
+diff_scope:
+  base: ''
+  head: 7df807307afd638241a20b5664b2a9ed6c2af9e1
+activity_effort: low
