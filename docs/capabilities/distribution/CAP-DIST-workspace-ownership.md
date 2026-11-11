@@ -87,8 +87,8 @@ See `CAP-HOST-lifecycle-observation`.
 6. **Host guidance block (root `AGENTS.md`)**: the
    `ARCH-08-2-resource-taxonomy` between `<!-- DEVKIT:START -->`
    and `<!-- DEVKIT:END -->`.
-   - Content: the installed bundle names, the once-per-bundle `devkit get-context` rule, the generated entry
-     skills, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given
+   - Content: the once-per-bundle `devkit get-context` rule with the installed bundle names, the rule against
+     editing managed and projected files, then the selected `guidance` fragments ordered by bundle name and asset id; deterministic for a given
      selection, source content and template inputs. A project MUST change a fragment with `devkit override create <bundle>:<asset>`, never inside
      the markers. Ordinary overridden instructions are cited by their override paths; template instructions are cited
      by their rendered managed `.md` paths, including when their raw `.md.jinja` source is overridden.

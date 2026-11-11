@@ -1,1 +1,1 @@
-- Before replying, read and apply the `response-style` skill. Put the conclusion in the first sentence. Use `→ **Core sentence.** Explanation` for ordinary points; preserve required facts and formats, and make unfinished work and necessary user decisions clear.
+- Before replying, read and apply the `response-style` skill: conclusion first, `→ **Core sentence.** Explanation` for ordinary points, required facts and formats kept, unfinished work and user decisions stated.

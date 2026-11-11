@@ -15,66 +15,42 @@ from __future__ import annotations
 import re
 
 from devkit_dist.features.distribution.models.content import sha256
-from devkit_dist.features.distribution.models.errors import DistributionError, GuidanceBlockError
+from devkit_dist.features.distribution.models.errors import GuidanceBlockError
 from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE
 from devkit_dist.features.project.repositories.receipt import GUIDANCE_END, GUIDANCE_START
 
 START = GUIDANCE_START
 END = GUIDANCE_END
 
-# One line per generated entry skill, keyed by the asset kind that triggers it.
-ENTRY_SKILLS = {
-    "playbook": "`devkit-playbook`: find and run an operational playbook the user invokes or confirms",
-    "workflow": "`devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit",
-}
-
 _START_LINE = re.compile(rf"^{re.escape(START)}[ \t]*\r?$", re.MULTILINE)
 _END_LINE = re.compile(rf"^{re.escape(END)}[ \t]*\r?$", re.MULTILINE)
 
 
-def render(bundles: list[str], entry_skills: list[str], fragments: list[str] | tuple[str, ...] = ()) -> str:
+def render(bundles: list[str], fragments: list[str] | tuple[str, ...] = ()) -> str:
     """Return the block text (markers included, no trailing newline) for a selection.
 
-    ``fragments`` are the selection's rendered ``guidance`` assets, placed after
-    devkit's own lines in the order the caller fixes (bundle, then asset ID).
+    Every agent and subagent session loads the block, so devkit's own lines carry only what no skill description,
+    constitution or command output already tells the agent. ``fragments`` are the selection's rendered ``guidance``
+    assets, placed after devkit's own lines in the order the caller fixes (bundle, then asset ID).
     """
+    if bundles:
+        context = (
+            "- Before using a bundle's assets, run `uv run devkit get-context <bundle>` once per agent context."
+            " Installed: " + ", ".join(f"`{b}`" for b in bundles) + "."
+        )
+    else:
+        context = "- No bundle is selected. `uv run devkit list` shows installed bundles; `uv run devkit add <bundle>` selects one."
     lines = [
         START,
         "## devkit",
         "",
-        "This repository installs agent assets with `devkit`. `.devkit/config.toml` selects",
-        "bundles; `.devkit/installation.json` records what is deployed.",
+        context,
+        "- Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.",
+        *fragments,
         "",
+        "Managed by `devkit sync`; edit outside the markers only.",
+        END,
     ]
-    if bundles:
-        lines.append(
-            "- Before work on selected bundles' assets, run `uv run devkit get-context <bundle>` once"
-            " per bundle per agent context. Installed bundles: " + ", ".join(f"`{b}`" for b in bundles) + "."
-        )
-    else:
-        lines.append(
-            "- No bundle is selected. `uv run devkit list` shows installed bundles;"
-            " `uv run devkit add <bundle>` selects one."
-        )
-    lines.append(
-        "- For an unselected source bundle, read its `bundle.toml`, constitution and relevant instructions directly;"
-        " selection is not required."
-    )
-    for kind in sorted(entry_skills):
-        if kind not in ENTRY_SKILLS:
-            raise DistributionError(f"unknown entry skill kind: {kind}")
-    for kind in sorted(entry_skills):
-        lines.append(f"- Entry skill {ENTRY_SKILLS[kind]}.")
-    lines.extend(
-        [
-            "- Never edit `.devkit/managed/` or projected agent files; change the source bundle"
-            " or use `devkit override`.",
-            *fragments,
-            "",
-            "This block is managed by `devkit sync`; edit outside the markers only.",
-            END,
-        ]
-    )
     return "\n".join(lines)
 
 

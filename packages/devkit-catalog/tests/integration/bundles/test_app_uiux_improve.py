@@ -58,7 +58,7 @@ def test_explicit_selection_projects_local_roles_and_user_only_entry(tmp_path: P
         assert not (tmp_path / absent).exists()
     # The distribution-owned bundle inventory may name the selection; no design guidance is added.
     guidance = (tmp_path / "AGENTS.md").read_text()
-    assert all("app-uiux-improve" not in line or "Installed bundles:" in line for line in guidance.splitlines())
+    assert all("app-uiux-improve" not in line or "Installed:" in line for line in guidance.splitlines())
     assert all(role not in guidance for role in ROLES)
 
 

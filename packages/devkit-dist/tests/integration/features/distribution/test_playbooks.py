@@ -15,7 +15,6 @@ from devkit_dist.features.distribution.models.errors import (
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.bundles.playbooks import read_playbook_header
 from devkit_dist.features.distribution.services.installation.config import update_config
-from devkit_dist.features.distribution.services.installation.guidance_block import ENTRY_SKILLS
 from devkit_dist.features.distribution.services.installation.playbook_skill import MANAGED_ROOT, skill_files
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
 from devkit_dist.features.distribution.usecases.context import GetContext
@@ -134,15 +133,13 @@ def test_generated_skill_is_spec_neutral(agent: str | None) -> None:
     assert_rule(raw, "retrieval", "no execution authority")
 
 
-def test_guidance_line_and_cli_help_are_spec_neutral() -> None:
-    line = ENTRY_SKILLS["playbook"]
-    assert line == "`devkit-playbook`: find and run an operational playbook the user invokes or confirms"
+def test_cli_help_is_spec_neutral() -> None:
     result = CliRunner().invoke(cli, ["playbook", "--help"])
     assert result.exit_code == 0
     assert "after explicit devkit-playbook invocation" not in result.output
     assert "retrieval grants no execution authority" in " ".join(result.output.split())
     for term in SPEC_ASSET_TERMS:
-        assert term not in line and term not in result.output, term
+        assert term not in result.output, term
 
 
 def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, target: Path) -> None:

@@ -1,1 +1,1 @@
-- Before document work, run `uv run devkit get-context docs` once per agent context and follow its writing instructions. Read the listed steering documents when their summaries concern the decision.
+- Before document work, run `uv run devkit get-context docs`.

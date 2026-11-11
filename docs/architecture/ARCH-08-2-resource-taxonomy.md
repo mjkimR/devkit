@@ -64,14 +64,14 @@ Each label maps to one manifest `kind` (see the `CAP-DIST-manifest-spec`): `inst
   ```markdown
   <!-- DEVKIT:START -->
   ## devkit
-  ... the once-per-bundle `devkit get-context` rule, the installed bundle names,
-  ... the generated entry skills, the selected bundles' guidance fragments,
+  ... the once-per-bundle `devkit get-context` rule with the installed bundle names,
+  ... the rule against editing managed files, the selected bundles' guidance fragments,
   ... and the "edit outside the markers" notice
   <!-- DEVKIT:END -->
   ```
 - **Consumption**: Read by any agent session upon entering the repository, including sessions started without a skill. It is the only entry point devkit provides for such sessions.
 - **Bundle Fragments**: A bundle adds lines with a `guidance` asset (Markdown list items, at most 300 bytes each). A fragment SHOULD be reserved for a pointer every session needs at a moment no skill marks, stated with its read condition, for example the `git-commits` line "Before drafting or creating a commit message, read `<path>`". `{path:<asset-id>}` resolves to the file agents read (the override, else the managed copy). Fragments follow devkit's own lines, ordered by bundle and asset id, so the block changes only with the selection.
-- **Token Budget**: devkit's own lines MUST stay under 1 KB (`test_guidance_block.py` checks it); each selected fragment adds at most 300 bytes. The block MUST NOT contain project-specific policies or domain rules: fragments point to them, and bundle-level guidance stays in each bundle's constitution and instructions, reached through `get-context`. The opt-in `RULE-agent-guide-size` measures the whole root guide, block included.
+- **Token Budget**: every agent and subagent session loads the block, so devkit's own lines and each fragment carry only what no skill description, constitution or command output already tells the agent; generated entry skills are not repeated there, because hosts list skill descriptions. devkit's own lines MUST stay under 1 KB (`test_guidance_block.py` checks it); each selected fragment adds at most 300 bytes. The block MUST NOT contain project-specific policies or domain rules: fragments point to them, and bundle-level guidance stays in each bundle's constitution and instructions, reached through `get-context`. The opt-in `RULE-agent-guide-size` measures the whole root guide, block included.
 - **Target Location**: Host project root `AGENTS.md`. Generated from the current selection and hash-guarded through the receipt; bytes outside the markers are project-owned. `guidance_block = false` in `.devkit/config.toml` turns it off. `CLAUDE.md` MUST NOT be written; projects that need one point it at `AGENTS.md` themselves. See `CAP-DIST-workspace-ownership`.
 
 #### 2. `package-constitution`

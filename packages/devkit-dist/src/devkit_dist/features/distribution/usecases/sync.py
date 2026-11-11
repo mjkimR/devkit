@@ -53,7 +53,6 @@ from devkit_dist.features.distribution.services.installation.engines import engi
 from devkit_dist.features.distribution.services.installation.extensions import run_post_sync, run_post_sync_preview
 from devkit_dist.features.distribution.services.installation.host_hooks import plan_host_hooks
 from devkit_dist.features.distribution.services.installation.inventory import (
-    GENERATED_SKILLS,
     Inventory,
     Seed,
     desired_inventory,
@@ -427,11 +426,7 @@ def _plan_inventory(
 
 def _render_block(selection: Selection, inventory: Inventory) -> str:
     """The guidance block a sync of ``selection`` writes."""
-    return guidance_block.render(
-        list(selection.presets),
-        [kind for kind in GENERATED_SKILLS if any(asset.kind == kind for asset in inventory.assets)],
-        inventory.fragments(),
-    )
+    return guidance_block.render(list(selection.presets), inventory.fragments())
 
 
 def planned_guidance_block(

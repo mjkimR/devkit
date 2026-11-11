@@ -62,14 +62,14 @@ def block_of(root: Path) -> str | None:
     return guidance_block.extract(path.read_text()) if path.exists() else None
 
 
-def test_block_is_created_with_selection_and_entry_skills(installed: list[InstalledBundle], target: Path) -> None:
+def test_block_is_created_with_the_selection(installed: list[InstalledBundle], target: Path) -> None:
     result = sync_project(target, installed).to_dict()
     assert {"path": AGENTS_FILE, "action": "create"} in result["actions"]
     text = (target / AGENTS_FILE).read_text()
     assert text.startswith(START + "\n") and text.endswith(END + "\n")
-    assert "Installed bundles: `team`." in text
-    assert "`devkit-playbook`" in text and "`devkit-workflow`" not in text
-    assert "managed by `devkit sync`" in text
+    assert "Installed: `team`." in text
+    assert "Entry skill" not in text  # the host lists skill descriptions itself
+    assert "Managed by `devkit sync`" in text
     assert len(text.encode()) < 1024
     receipt = json.loads((target / RECEIPT_PATH).read_text())
     assert receipt["guidance_block"] == guidance_block.digest(block_of(target) or "")
@@ -84,32 +84,18 @@ def test_block_follows_selection_changes(installed: list[InstalledBundle], targe
     sync_project(target, installed)
     update_config(target, presets={"team": ["minimal"]})
     result = sync_project(target, installed).to_dict()
-    assert {"path": AGENTS_FILE, "action": "update"} in result["actions"]
-    assert "`devkit-playbook`" not in (target / AGENTS_FILE).read_text()
+    assert all(action["path"] != AGENTS_FILE for action in result["actions"])  # the bundle list did not change
     sync_project(target, [], deselect=["team"])
     text = (target / AGENTS_FILE).read_text()
     assert "No bundle is selected" in text and "`team`" not in text
     assert "guidance_block" in json.loads((target / RECEIPT_PATH).read_text())
 
 
-@pytest.mark.parametrize("selected", [True, False])
-def test_source_authoring_context_does_not_require_selection(
-    installed: list[InstalledBundle], target: Path, selected: bool
-) -> None:
-    if not selected:
-        write_config(target, presets="")
-    config = (target / CONFIG_PATH).read_bytes()
+def test_block_names_the_get_context_rule_only_with_a_selection(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     text = (target / AGENTS_FILE).read_text()
-    assert (
-        "For an unselected source bundle, read its `bundle.toml`, constitution and relevant instructions directly"
-        in text
-    )
-    assert "selection is not required" in text
-    if selected:
-        assert "Before work on selected bundles' assets" in text
-        assert "`uv run devkit get-context <bundle>`" in text
-    assert (target / CONFIG_PATH).read_bytes() == config
+    assert "Before using a bundle's assets, run `uv run devkit get-context <bundle>` once per agent context" in text
+    assert "unselected source bundle" not in text  # bundle authors read it in the authoring instruction
 
 
 def test_bytes_outside_markers_are_preserved(installed: list[InstalledBundle], target: Path) -> None:
