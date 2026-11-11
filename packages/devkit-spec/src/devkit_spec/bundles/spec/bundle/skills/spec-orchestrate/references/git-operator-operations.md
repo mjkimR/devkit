@@ -12,7 +12,7 @@ cleanup identity; a role prompt cannot relax them. The Host retains business aut
 | `cleanup` | Only for an inspected merged resource with remaining authorized cleanup, run `uv run devkit worktree finish <branch>` from the retained base. Use an owning extension's command only for the exact reported remaining target. Never reconstruct cleanup with force deletion. |
 | `inspect-recovery` | Read `uv run devkit worktree status`, current refs, CLI advisory codes and relevant PR state where authorized. Return completed/remaining effects and supported next operation; inspection alone grants no repair authority. |
 
-Planning acceptance is no operator job: the Host runs the composed `uv run devkit spec proposal accept <slug>
+Planning acceptance is no operator job: the Host runs the composed `uv run devkit spec proposal accept-plan <slug>
 --by user|policy --mode accept_only|accept_and_handoff` itself, which already includes integration and cleanup.
 
 Under ask policy the Host first presents source, target, report and effects and obtains conversational approval.

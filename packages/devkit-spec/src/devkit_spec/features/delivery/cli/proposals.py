@@ -1,5 +1,5 @@
-"""``devkit spec proposal new|padr|accept|handoff|prune|check``: plan a proposal, record its preliminary decisions,
-record the user's acceptance, hand it off, and guard Backlog changes.
+"""``devkit spec proposal new|padr|accept|accept-plan|handoff|prune|check|report``: plan a proposal, record its
+preliminary decisions, record the user's acceptance, hand it off, and guard Backlog changes.
 
 Text output (paths are relative to the workspace root):
 
@@ -13,11 +13,12 @@ Text output (paths are relative to the workspace root):
 - ``accept``: ``[ACCEPTED: ...]`` with basic Backlog acceptance, and ``[ACCEPT_CHECK: ... eligible=yes|no]`` with
   ``--check`` and nothing written (exit ``1`` when not eligible). Refusals: ``SPEC_PROPOSAL_ACCEPT_REFUSED``,
   ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``, ``SPEC_PROPOSAL_GATE_NOT_OPEN``,
-  ``SPEC_PROPOSAL_POLICY_NOT_AUTO``. The composed ``--mode`` form and ``handoff --effort`` print through
-  ``_echo_composed``: the success kind, ``<KIND>_STOPPED`` after partial effects (exit ``1``), or the refusal itself
-  (exit ``2``). A composed acceptance that integrated adds ``target_sha=`` (the merged target), ``landed_sha=`` and the
-  delivery provider's ``disclosure=``. ``handoff --effort`` and ``accept --mode accept_and_handoff`` add ``commit=``:
-  the handoff's own commit, ``-`` when none landed (``SPEC_HANDOFF_COMMIT_REFUSED``).
+  ``SPEC_PROPOSAL_POLICY_NOT_AUTO``.
+- ``accept-plan`` (the composed acceptance) and ``handoff --effort`` print through ``_echo_composed``: the success
+  kind, ``<KIND>_STOPPED`` after partial effects (exit ``1``), or the refusal itself (exit ``2``). A composed
+  acceptance that integrated adds ``target_sha=`` (the merged target), ``landed_sha=`` and the delivery provider's
+  ``disclosure=``. ``handoff --effort`` and ``accept-plan --mode accept_and_handoff`` add ``commit=``: the handoff's
+  own commit, ``-`` when none landed (``SPEC_HANDOFF_COMMIT_REFUSED``).
 - ``check``: ``[PROPOSAL: <id> path= status=draft editable=yes]`` when Backlog may edit, split or delete the proposal;
   ``SPEC_PROPOSAL_IN_PLANNING`` (exit ``1``) while its ``plan-<slug>`` exists or once it left ``draft``.
 - ``handoff``: ``[HANDOFF: <proposal id> spec= dir= workflow=]`` (with ``dev_effort=`` when the proposal declared it),
@@ -64,11 +65,9 @@ from devkit_dist.adapters.cli import (
     sentinel,
     workspace_option,
 )
-from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_docs.base.layout import EFFORTS
 
 from devkit_spec.base.errors import SpecError
-from devkit_spec.base.units import proposal_unit
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
 from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
@@ -83,17 +82,6 @@ WORKSPACE = workspace_option()
 
 
 SUCCESS = frozenset({"accepted", "handed_off"})
-
-
-def _composed_check_refusal(slug: str) -> str:
-    """Why ``accept --mode`` has no dry run and which read-only commands give the Host its material instead."""
-    report = devkit_command(f"spec proposal report {slug}")
-    records = devkit_command(f"workflow envelope check --unit {proposal_unit(slug)}")
-    return (
-        "composed acceptance has no --check: its readiness refusals in preparation come before the first write, and "
-        f"a later failure returns needs_recovery with completed_steps; for read-only material run `{report}` and "
-        f"`{records}`"
-    )
 
 
 def _advisory(item: dict[str, Any]) -> AdvisoryError:
@@ -339,20 +327,6 @@ def padr_cmd(
     "no gate:plan-accept record and no worker envelope",
 )
 @click.option("--check", "check_only", is_flag=True, help="Run every check and write nothing")
-@click.option(
-    "--mode",
-    type=click.Choice(["accept_only", "accept_and_handoff"]),
-    default=None,
-    help="Compose the Host-authorized lifecycle from the retained base: accept and integrate plan-<slug> "
-    "(accept_only), or also hand off to Development, leaving the handoff not started (accept_and_handoff) "
-    "[default: the basic acceptance]",
-)
-@click.option(
-    "--effort",
-    type=click.Choice(list(EFFORTS)),
-    default=None,
-    help="With --mode accept_and_handoff: the Development activity-effort",
-)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
@@ -362,46 +336,14 @@ def accept_cmd(
     note: str,
     direct: bool,
     check_only: bool,
-    mode: str | None,
-    effort: str | None,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
-    """Accept proposal SLUG; with --mode, compose lifecycle effects.
+    """Record the plan-accept acceptance of proposal SLUG with status: accepted.
 
-    Without --mode, preserve the basic Backlog acceptance operation. With --mode, selects
-    acceptance only or acceptance plus handoff. Under ask policy this command follows Host conversational approval;
-    policy authority is available only when the retained base declares automatic plan-acceptance.
+    Integrating and cleaning up the Planning branch is `accept-plan`. Policy authority is available only when the
+    owning plan-accept policy is auto.
     """
-    if mode is not None:
-        if direct:
-            raise click.UsageError("composed acceptance cannot use --direct")
-        if check_only:
-            raise click.UsageError(_composed_check_refusal(slug))
-        result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
-        merged = {
-            key: result[name]
-            for key, name in (
-                ("target_sha", "target_sha"),
-                ("landed_sha", "landed_sha"),
-                ("verification", "verification"),
-                ("handoff", "handoff_status"),
-            )
-            if result.get(name)
-        }
-        _echo_composed(
-            "ACCEPTED",
-            slug,
-            result,
-            bool(result.get("completed_steps")),
-            mode=result.get("mode", mode),
-            authority=result.get("acceptance_authority", "-"),
-            completed=",".join(result.get("completed_steps", [])) or "-",
-            **merged,
-        )
-        return
-    if effort is not None:
-        raise click.UsageError("--effort requires --mode")
     result = AcceptProposalUseCase().execute(
         resolve_root(workspace_root), slug, by=actor, note=note, direct=direct, check=check_only
     )
@@ -432,6 +374,64 @@ def accept_cmd(
             status=result.status,
             decision=result.decision,
         )
+    )
+
+
+@proposal_group.command(name="accept-plan")
+@click.argument("slug")
+@click.option(
+    "--by",
+    "actor",
+    required=True,
+    type=click.Choice([ACTOR, "policy"]),
+    help="Decision authority: user acceptance or owning plan-accept=auto policy",
+)
+@click.option(
+    "--mode",
+    required=True,
+    type=click.Choice(["accept_only", "accept_and_handoff"]),
+    help="Accept and integrate plan-<slug> (accept_only), or also prepare the Development handoff, leaving it not "
+    "started (accept_and_handoff)",
+)
+@click.option(
+    "--effort",
+    type=click.Choice(list(EFFORTS)),
+    default=None,
+    help="The Development activity-effort; required by accept_and_handoff",
+)
+@WORKSPACE
+@FORMAT_OPTION
+@boundary
+def accept_plan_cmd(
+    slug: str, actor: str, mode: str, effort: str | None, workspace_root: str | None, output_format: str
+) -> None:
+    """Accept reviewed proposal SLUG and integrate and clean up plan-SLUG, from the retained base checkout.
+
+    It has no dry run: its readiness refusals come before the first write, and a later failure returns
+    needs_recovery with completed_steps. For read-only material run `devkit spec proposal report SLUG` and
+    `devkit workflow envelope check --unit <proposal dir>`. Under ask policy it follows the user's approval; policy
+    authority is available only when the retained base declares plan-accept=auto.
+    """
+    result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
+    merged = {
+        key: result[name]
+        for key, name in (
+            ("target_sha", "target_sha"),
+            ("landed_sha", "landed_sha"),
+            ("verification", "verification"),
+            ("handoff", "handoff_status"),
+        )
+        if result.get(name)
+    }
+    _echo_composed(
+        "ACCEPTED",
+        slug,
+        result,
+        bool(result.get("completed_steps")),
+        mode=result.get("mode", mode),
+        authority=result.get("acceptance_authority", "-"),
+        completed=",".join(result.get("completed_steps", [])) or "-",
+        **merged,
     )
 
 

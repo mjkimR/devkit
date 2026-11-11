@@ -173,9 +173,9 @@ removes it.
     command writes `status: accepted` (not for a repair; only the value changes) and records `gate:plan-accept`
     through devkit's `record_answer`, so the workflow decides whether `collect-feedback` passed, is switched off or is
     skipped by policy; when the gate does not open it restores `proposal.md` byte-for-byte and reports the unmet
-    checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every eligibility check and writes nothing; no intent prerequisite or pending-intent condition exists. Without `--mode` it never commits, merges or hands off, and Backlog commits a direct
-    acceptance on the base; with `--mode` it composes the commit, the Planning merge and an optional handoff
-    (Host-authorized proposal lifecycle CLI, below).
+    checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every eligibility check and writes nothing; no intent prerequisite or pending-intent condition exists. `accept` never commits, merges or hands off, and Backlog commits a direct
+    acceptance on the base; `devkit spec proposal accept-plan` composes the commit, the Planning merge and an optional
+    handoff (Host-authorized proposal lifecycle CLI, below).
 
 15. **Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent reviews the proposal, PADRs and envelopes directly for the final committed `plan-<slug>` source before presenting acceptance. Acceptance operates on the committed proposal directly and does not require a shared artifact report. `devkit spec proposal report <slug> [--source-sha <sha>]` can be run to inspect a summary briefing. Acceptance records `status: accepted` and `gate:plan-accept` on the committed proposal.
 

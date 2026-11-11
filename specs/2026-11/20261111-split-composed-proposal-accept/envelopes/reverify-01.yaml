@@ -1,0 +1,19 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:18:55.835927Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the P3 fix: test_each_acceptance_form_refuses_the_other_forms_options covers missing --by, --by other and --effort extreme and pins each case to its exact click message; test_plan_accept_cli.py 27 passed'
+findings:
+- issue: 'AC-02 option limits partly tested: no case for missing --by, invalid --by or invalid --effort on accept-plan; the parametrized refusal test accepts either of two messages for every case'
+  evidence: packages/devkit-spec/tests/e2e/features/delivery/test_plan_accept_cli.py:401-420
+  failure_condition: If accept-plan's --by became optional or its --by/--effort choices widened, no test fails
+  suggested_action: Add missing --by, --by other and --effort extreme cases expecting exit 2 and unchanged show-ref; pair each case with its exact click message
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: b0d95f88dee2bb6bfb38bcb351f0ea84efeab02d

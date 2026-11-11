@@ -65,7 +65,7 @@ def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
     result = CliRunner().invoke(
         proposal_group,
         [
-            "accept",
+            "accept-plan",
             "idea",
             "--by",
             "user",
@@ -97,7 +97,7 @@ def test_accept_cli_refuses_invalid_mode(pending):
     before = git(repo, "show-ref")
     result = CliRunner().invoke(
         proposal_group,
-        ["accept", "idea", "--by", "user", "--mode", "invalid_mode", "-w", str(repo)],
+        ["accept-plan", "idea", "--by", "user", "--mode", "invalid_mode", "-w", str(repo)],
     )
     assert result.exit_code == 2
     assert "Invalid value for '--mode'" in result.output
@@ -116,7 +116,7 @@ def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending, 
     result = CliRunner().invoke(
         proposal_group,
         [
-            "accept",
+            "accept-plan",
             "idea",
             "--by",
             "policy",
@@ -153,7 +153,7 @@ def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, t
 
     result = CliRunner().invoke(
         proposal_group,
-        ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
+        ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
     )
 
     # Nothing was done: the command fails outright with one error document (ARCH-08-1 section 4).
@@ -163,7 +163,7 @@ def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, t
     assert error["advisory"]["details"] == ["RULE-example refused the staged tree"]
     assert error["advisory"]["target_files"] == ["plan-idea"]
     text = CliRunner().invoke(
-        proposal_group, ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
+        proposal_group, ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
     )
     assert text.exit_code == 2 and text.stdout == ""
     assert "SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED" in text.stderr
@@ -173,9 +173,19 @@ def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, t
 
 
 def _accept_json(root: Path, *args: str) -> dict:
-    result = CliRunner().invoke(proposal_group, ["accept", "idea", *args, "-w", str(root), "--format", "json"])
+    result = CliRunner().invoke(proposal_group, ["accept-plan", "idea", *args, "-w", str(root), "--format", "json"])
     assert result.exit_code == 2, result.output
     return json.loads(result.output)["error"]
+
+
+# SPEC-split-composed-proposal-accept AC-03
+def test_accept_and_handoff_without_effort_is_refused_by_the_use_case(pending):
+    repo, planning = pending
+    before = git(repo, "show-ref")
+    error = _accept_json(repo, "--by", "user", "--mode", "accept_and_handoff")
+    assert error["code"] == "SPEC_PROPOSAL_APPROVAL_REPLY_INVALID"
+    assert error["advisory"]["target_files"] == ["--effort"]
+    assert git(repo, "show-ref") == before and planning.exists()
 
 
 def test_a_policy_acceptance_is_never_redirected_to_the_user(pending):
@@ -192,7 +202,7 @@ def test_a_policy_acceptance_is_never_redirected_to_the_user(pending):
     # Off the base checkout the fix keeps the caller's own --by policy command.
     error = _accept_json(planning, "--by", "policy", "--mode", "accept_only")
     assert error["code"] == "SPEC_PROPOSAL_WRONG_WORKTREE"
-    assert "uv run devkit spec proposal accept idea --by policy --mode accept_only" in error["advisory"]["fix"]
+    assert "uv run devkit spec proposal accept-plan idea --by policy --mode accept_only" in error["advisory"]["fix"]
     assert "--by user" not in json.dumps(error) and "<" not in error["advisory"]["fix"]
 
 
@@ -216,7 +226,7 @@ def test_accept_cli_integrates_a_moved_target_without_a_base_merge(pending):
     moved = _advance(repo, "docs/unrelated.md", "Unrelated base change.\n")
     result = CliRunner().invoke(
         proposal_group,
-        ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
+        ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
@@ -232,7 +242,7 @@ def test_accept_cli_text_names_the_merged_target_and_the_disclosure(pending):
     repo, _ = pending
     moved = _advance(repo, "docs/unrelated.md", "Unrelated base change.\n")
     result = CliRunner().invoke(
-        proposal_group, ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
+        proposal_group, ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
     )
     assert result.exit_code == 0, result.output
     line = result.stdout.splitlines()[0]
@@ -270,7 +280,8 @@ def test_accept_cli_refuses_reference_drift_on_the_prospective_result(pending):
     git(planning, "commit", "-am", "Cite the capability")
     _advance(repo, cited, None)
     result = CliRunner().invoke(
-        proposal_group, ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"]
+        proposal_group,
+        ["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
@@ -297,7 +308,7 @@ def test_acceptance_yields_before_handoff_evaluation(pending, monkeypatch):
     result = CliRunner().invoke(
         proposal_group,
         [
-            "accept",
+            "accept-plan",
             "idea",
             "--by",
             "user",
@@ -329,7 +340,7 @@ def test_acceptance_text_reports_pending_verification_and_fresh_continuation(pen
     _refuse_handoff_commit(repo, tmp_path)
     result = CliRunner().invoke(
         proposal_group,
-        ["accept", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)],
+        ["accept-plan", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "low", "-w", str(repo)],
     )
     assert result.exit_code == 0, result.output
     assert "verification=pending handoff=not_started" in result.stdout
@@ -387,23 +398,32 @@ def test_a_question_recorded_at_direction_handoff_holds_the_composed_acceptance(
     assert git(repo, "branch", "--list", "dev-idea") == ""
 
 
-# SPEC-git-operator-planning-completion-route AC-06
-def test_the_composed_form_refuses_check_and_names_the_read_only_material(pending):
+# SPEC-git-operator-planning-completion-route AC-06; SPEC-split-composed-proposal-accept AC-02, AC-04
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--check"], "No such option '--check'"),
+        (["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--direct"], "No such option '--direct'"),
+        (["accept-plan", "idea", "--by", "user", "--mode", "accept_only", "--note", "why"], "No such option '--note'"),
+        (["accept-plan", "idea", "--by", "user"], "Missing option '--mode'"),
+        (["accept-plan", "idea", "--mode", "accept_only"], "Missing option '--by'"),
+        (["accept-plan", "idea", "--by", "other", "--mode", "accept_only"], "Invalid value for '--by'"),
+        (
+            ["accept-plan", "idea", "--by", "user", "--mode", "accept_and_handoff", "--effort", "extreme"],
+            "Invalid value for '--effort'",
+        ),
+        (["accept", "idea", "--by", "user", "--mode", "accept_only"], "No such option '--mode'"),
+        (["accept", "idea", "--by", "user", "--effort", "low"], "No such option '--effort'"),
+    ],
+)
+def test_each_acceptance_form_refuses_the_other_forms_options(pending, args, message):
     repo, planning = pending
     before = git(repo, "show-ref")
-    args = ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
 
-    result = CliRunner().invoke(proposal_group, [*args, "--check"])
+    result = CliRunner().invoke(proposal_group, [*args, "-w", str(repo)])
 
     assert result.exit_code == 2 and result.stdout == "", result.output
-    message = " ".join(result.stderr.split())
-    assert "composed acceptance has no --check" in message
-    assert "readiness refusals in preparation come before the first write" in message
-    assert "needs_recovery with completed_steps" in message
-    assert "devkit spec proposal report idea`" in message
-    assert "devkit workflow envelope check --unit docs/proposals/PROP-idea`" in message
-    direct = CliRunner().invoke(proposal_group, [*args, "--direct"])
-    assert direct.exit_code == 2 and "composed acceptance cannot use --direct" in direct.stderr
+    assert message in result.stderr, result.stderr
     assert git(repo, "show-ref") == before
     assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
 
@@ -434,7 +454,7 @@ def test_partial_acceptance_retains_landed_revision_and_authorized_continuation(
     result = CliRunner().invoke(
         proposal_group,
         [
-            "accept",
+            "accept-plan",
             "idea",
             "--by",
             "user",
@@ -475,7 +495,7 @@ def test_partial_acceptance_retains_landed_revision_and_authorized_continuation(
 def test_cleanup_only_acceptance_retry_keeps_actual_no_ff_landing(pending, cleanup_fails_once):
     repo, planning = pending
     args = [
-        "accept",
+        "accept-plan",
         "idea",
         "--by",
         "user",

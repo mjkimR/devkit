@@ -142,7 +142,7 @@ class ProposalNeedsDecomposeError(SpecError):
 
 class ProposalWrongWorktreeError(SpecError):
     """A handoff runs in a checkout whose branch is not ``dev-<slug>``, the Planning form of ``accept`` in one whose
-    branch is not ``plan-<slug>``, or a composed ``accept --mode`` or ``handoff --effort`` off the retained base
+    branch is not ``plan-<slug>``, or a composed ``accept-plan`` or ``handoff --effort`` off the retained base
     checkout (``INPUT_ERROR``): the change would land on another task's branch. The fix names the checkout and the
     exact command."""
 
@@ -669,7 +669,7 @@ class ProposalApprovalStaleError(SpecError):
 
 
 class ProposalApprovalNotReadyError(SpecError):
-    """The composed acceptance (``proposal accept --mode``): the proposal on ``plan-<slug>`` is not ready for
+    """The composed acceptance (``proposal accept-plan``): the proposal on ``plan-<slug>`` is not ready for
     ``plan-accept``: Planning has unmet checks, open questions or holds, it needs decomposition, or it is not in
     review (``INTERACTION``); [DETAIL] lists the conditions and nothing was written."""
 

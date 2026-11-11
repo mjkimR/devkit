@@ -164,7 +164,7 @@ def test_evidence_kinds_and_host_permission_stay_separate() -> None:
         assert_rule(role, *tokens)
 
 
-COMPOSED_ACCEPT = "spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff"
+COMPOSED_ACCEPT = "spec proposal accept-plan <slug> --by user|policy --mode accept_only|accept_and_handoff"
 
 
 # SPEC-git-operator-planning-completion-route AC-01 (GOP-01)
@@ -195,6 +195,18 @@ def test_acceptance_skills_name_the_host_run_command_and_the_post_commit_recover
         ("Never make a rerun that would repeat a deterministic refusal",),
     ):
         assert_rule(review, *tokens)
+
+
+# SPEC-split-composed-proposal-accept AC-07
+def test_no_skill_source_names_the_retired_composed_accept_form() -> None:
+    import re
+
+    from spec_support.bundle_text import BUNDLE
+
+    retired = re.compile(r"proposal accept [^`]*--mode|accept --mode")
+    sources = sorted((BUNDLE / "skills").rglob("*.md*"))
+    assert sources  # the scan works
+    assert [str(path.relative_to(BUNDLE)) for path in sources if retired.search(path.read_text("utf-8"))] == []
 
 
 PAYLOAD = "skills/spec-delegate/references/payload.md"

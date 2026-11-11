@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:22:08.518560Z'
+status: completed
+summary: 'reconcile-reviewer (nested, medium): listed targets match the code and spec; CAP-HARN-agent-guidance is a missing target'
+findings:
+- issue: 'Missing reconcile target: CAP-HARN-agent-guidance §4.4 rows for spec-orchestrate and spec-review-proposal and the Host-authorized acceptance paragraph name `proposal accept` for the local Host Planning acceptance, which now runs `accept-plan`'
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:218-219, :432
+  failure_condition: An agent reads the skill-to-command mapping and runs the basic `accept` on plan-<slug>, which neither integrates nor cleans up
+  suggested_action: Name `proposal accept-plan` there (spec-next too, since workflow-signals names it), keep `proposal accept` for the basic route, and add the document to reconcile.md as modified
+  resolution: open
+  severity: P1
+checks:
+  stale_form_search: PASS no accept --mode outside decisions/materials
+  docs_vs_code: PASS
+diff_scope:
+  base: ae0cdec0197365d18bcbcc3ef2615675d143f824
+  head: f4d3d6260eb26a82ab59685a9ad98ad3ad78bb37
