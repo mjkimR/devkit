@@ -1,0 +1,26 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:19:27.826759Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified: plan_finish recorded-base refusal now carries [FIX] git -C <base> switch <devkitBase>, then rerun, asserted in test_branches.py; reference row lower-cased. worktree+integration integration tests 199 passed, ruff and pyright clean'
+findings:
+- issue: plan_finish refuses a --no-worktree branch off its recorded devkitBase with WORKTREE_CONFLICT but no switch [FIX], which CAP-WT-task-worktrees promises and finish --merge used to give
+  evidence: packages/devkit/src/devkit_agt/features/worktree/usecases/planning.py:99; docs/capabilities/worktree/CAP-WT-task-worktrees.md:70; packages/devkit/tests/integration/features/worktree/test_branches.py:143
+  failure_condition: 'start --no-worktree branch, base checkout on a third branch, devkit integration prepare <branch> --route local: unrelated [FIX]'
+  suggested_action: Pass fix='git -C <base> switch <devkitBase>, then rerun' in plan_finish and assert it in test_branches.py
+  resolution: resolved
+  severity: P2
+- issue: WORKTREE_CONFLICT row starts a clause with capital 'Local' after a semicolon
+  evidence: docs/development/reference/worktree.md:65
+  failure_condition: Cosmetic only
+  suggested_action: Lower-case 'local integration'
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS pytest tests/integration/features/worktree tests/integration/features/integration 199 passed
+diff_scope:
+  base: ''
+  head: a65204b61bc9b9c4571053c716401281e4b6f613

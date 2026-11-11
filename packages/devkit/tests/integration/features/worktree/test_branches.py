@@ -1,5 +1,5 @@
 """Activity branches: remote duplicates, ``start_branch`` (``--no-worktree``), ``attach`` (``--existing-branch``) and
-the finish guard."""
+the cleanup of a landed branch."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from devkit.advisory import ActionMode
 from devkit_agt.features.worktree import (
     AttachRefusedError,
     BaseDetachedError,
+    BaseDirtyError,
     BaseOnBranchError,
     BranchExistsError,
     BranchOutOfSyncError,
@@ -30,6 +31,7 @@ from devkit_agt.features.worktree import (
     discard,
     finish,
     locate,
+    plan_finish,
     start,
 )
 from devkit_core.base.errors import ArgumentError
@@ -127,22 +129,32 @@ def test_start_branch_refusals(repo: Path) -> None:
         StartBranch().execute(locate(repo), "other")
 
 
-def test_a_branch_without_a_worktree_is_integrated_from_the_base(repo: Path) -> None:
+def test_a_branch_without_a_worktree_is_planned_and_finished_from_the_base(repo: Path) -> None:
     StartBranch().execute(locate(repo), "dev-demo")
     commit(repo, "work.txt")
     with pytest.raises(BaseOnBranchError) as raised:  # routine: the agent switches back and reruns
-        finish(locate(repo), "dev-demo", merge=True)
+        finish(locate(repo), "dev-demo")
     assert raised.value.fix == f"git -C {repo} switch main" and raised.value.mode is ActionMode.AUTO
     git(repo, "switch", "-q", "main")
-    with pytest.raises(UnmergedError):
+    with pytest.raises(UnmergedError) as unmerged:
         finish(locate(repo), "dev-demo")
+    assert "uv run devkit integration prepare dev-demo --route local" in (unmerged.value.fix or "")
     git(repo, "switch", "-q", "-c", "elsewhere")
-    with pytest.raises(ConflictError, match="started from main") as off_base:
-        finish(locate(repo), "dev-demo", merge=True)  # it is integrated into the branch it was started from only
+    with pytest.raises(ConflictError, match="recorded base") as off_base:
+        plan_finish(locate(repo), "dev-demo")  # local integration lands it on the branch it was started from only
     assert off_base.value.fix == f"git -C {repo} switch main, then rerun"
+    git(repo, "switch", "-q", "--detach", "main")
+    with pytest.raises(BaseDetachedError):
+        plan_finish(locate(repo), "dev-demo")
     git(repo, "switch", "-q", "main")
-    done = finish(locate(repo), "dev-demo", merge=True)
-    assert (done.merged, done.removed, done.branch_deleted) == (True, None, True)  # None: it never had a worktree
+    write(repo, "stray.txt", "x\n")
+    with pytest.raises(BaseDirtyError):
+        plan_finish(locate(repo), "dev-demo")
+    (repo / "stray.txt").unlink()
+    assert plan_finish(locate(repo), "dev-demo").path == str(repo)
+    git(repo, "merge", "-q", "--no-ff", "-m", "chore(merge): integrate dev-demo into main", "dev-demo")
+    done = finish(locate(repo), "dev-demo")
+    assert (done.merged, done.removed, done.branch_deleted) == (False, None, True)  # None: it never had a worktree
     assert done.path == repo  # the checkout it was started in, where post-finish cleanup finds its records
     assert (repo / "work.txt").is_file() and git(repo, "branch", "--list", "dev-demo") == ""
 
@@ -265,50 +277,10 @@ def test_attach_refuses_the_branch_checked_out_elsewhere(repo: Path, tmp_path: P
 # -- finish guard -----------------------------------------------------------------------------------------------
 
 
-def test_the_guard_runs_before_the_merge_and_only_with_merge(repo: Path) -> None:
-    created = start(locate(repo), "dev-demo")
-    commit(created.path, "work.txt")
-    head, tip = git(repo, "rev-parse", "HEAD"), git(created.path, "rev-parse", "HEAD")
-    seen: list[tuple[str, str]] = []
-
-    def refuse(merge_base: str, branch_tip: str) -> None:
-        seen.append((merge_base, branch_tip))
-        raise ConflictError("blocked by the guard")
-
-    with pytest.raises(ConflictError, match="blocked by the guard") as raised:
-        finish(locate(repo), "dev-demo", merge=True, guard=refuse)
-    assert seen == [(head, tip)] and raised.value.result is None
-    assert git(repo, "rev-parse", "HEAD") == head and created.path.is_dir()
-    assert finish(locate(repo), "dev-demo", merge=True, guard=lambda *args: None).merged
-
-
 def entries(monkeypatch: pytest.MonkeyPatch, wanted: str, **callables: Any) -> None:
     """Make ``callables`` the only extensions of the entry-point group ``wanted``."""
     fake = [SimpleNamespace(name=name, value=f"fake:{name}", load=lambda c=c: c) for name, c in callables.items()]
     monkeypatch.setattr(core_extensions.metadata, "entry_points", lambda group=None: fake if group == wanted else [])
-
-
-def test_finish_guard_extensions_block_and_fail_closed(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    created = start(locate(repo), "dev-demo")
-    commit(created.path, "work.txt")
-    head = git(repo, "rev-parse", "HEAD")
-    seen: list[tuple[Any, ...]] = []
-
-    def blocking(*args: Any) -> list[str]:
-        seen.append(args)
-        return ["docs/specs/demo: unresolved problem envelopes/worker-02.yaml"]
-
-    entries(monkeypatch, extensions.FINISH_GUARD_GROUP, units=blocking, quiet=lambda *args: None)
-    result = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--merge", "-w", str(repo)])
-    assert result.exit_code == 2 and "(WORKTREE_BLOCKED)" in result.stderr
-    assert "units: docs/specs/demo: unresolved problem envelopes/worker-02.yaml" in result.stderr
-    assert seen == [(repo, "dev-demo", head, git(created.path, "rev-parse", "HEAD"))]
-    entries(monkeypatch, extensions.FINISH_GUARD_GROUP, broken=lambda *args: 3)
-    failed = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json"])
-    assert failed.exit_code == 2 and json.loads(failed.stdout)["error"]["code"] == "WORKTREE_GUARD_FAILED"
-    assert git(repo, "rev-parse", "HEAD") == head
-    entries(monkeypatch, extensions.FINISH_GUARD_GROUP, quiet=lambda *args: [])
-    assert CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--merge", "-w", str(repo)]).exit_code == 0
 
 
 def test_attach_check_extensions_refuse_and_fail_closed(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -371,19 +343,6 @@ def test_attach_refuses_a_named_remote_that_was_never_fetched(repo: Path, tmp_pa
     assert raised.value.fix == f"git -C {repo} fetch origin, then rerun"
 
 
-def test_finish_merges_the_commit_the_guard_checked(repo: Path) -> None:
-    created = start(locate(repo), "dev-demo")
-    commit(created.path, "work.txt")
-    head = git(repo, "rev-parse", "HEAD")
-
-    def moving(merge_base: str, tip: str) -> None:
-        commit(created.path, "late.txt")  # a run still committing while finish checks the branch
-
-    with pytest.raises(ConflictError, match="moved while finish checked it"):
-        finish(locate(repo), "dev-demo", merge=True, guard=moving)
-    assert git(repo, "rev-parse", "HEAD") == head
-
-
 def test_discard_drops_an_unmerged_branch_and_its_worktree(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     commit(created.path, "work.txt")
@@ -416,7 +375,7 @@ def test_finish_discard_runs_post_finish_and_excludes_merge(repo: Path, monkeypa
     seen: list[dict[str, Any]] = []
     entries(monkeypatch, "devkit.post_finish", spec=lambda base, result: seen.append(result))
     both = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--merge", "--discard", "-w", str(repo)])
-    assert both.exit_code == 2 and "ARGUMENT_INVALID" in both.stderr
+    assert both.exit_code == 2 and "(WORKTREE_MERGE_RETIRED)" in both.stderr and seen == []
     done = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "--discard", "-w", str(repo)])
     assert done.exit_code == 0 and "merged=no" in done.stdout and "discarded=yes" in done.stdout
     assert seen and seen[0]["discarded"] is True and seen[0]["branch"] == "dev-demo"

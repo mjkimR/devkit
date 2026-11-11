@@ -16,6 +16,8 @@ aliases:
 
 # [ADR-worktrees-and-scope] Worktree levels, branch guards and host-observed work scope
 
+Superseded in part by `ADR-single-local-landing-route`: the clause that `[worktree] pull_request = "required"` makes devkit refuse `devkit worktree finish --merge`. All other decisions remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-02
 - **Deciders**: @mjkimR

@@ -244,7 +244,7 @@ spec = "core"
 
 ## Git worktree behavior.
 # [worktree]
-#   pull_request = "auto"  # "auto" | "required"; required refuses worktree finish --merge
+#   pull_request = "auto"  # "auto" | "required"; required refuses local integration
 #   delete_branch = true   # boolean; delete the merged branch with git branch -d
 #   setup = "uv sync"      # example; string; unset: no setup command
 #   stale_after = "14d"    # "<N>d" | "<N>w"; idle plan-*/dev-* branches are reported

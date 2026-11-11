@@ -274,5 +274,5 @@ JSON success contains `unit`, `file`, `outcome`, `head`, `subject` and `notices`
 The integration CLI reports confirmed Git landing and cleanup separately from final project verification.
 `verification=pending` with `landed_sha` identifies confirmed landing; unperformed or unknown landing reports
 `verification=not_started`. The Host synchronizes the landed runtime and runs required final checks before delivery
-completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). Standalone
-`devkit worktree finish --merge` retains its existing guards.
+completion (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`, `ADR-post-merge-verification`). `devkit worktree finish`
+lands nothing (`WORKTREE_MERGE_RETIRED` for `--merge`, `ADR-single-local-landing-route`).

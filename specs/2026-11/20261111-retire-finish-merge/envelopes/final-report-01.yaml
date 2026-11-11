@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:25:55.970062Z'
+status: completed
+summary: 'finish --merge retired: devkit integration integrate --route local is the one local landing route (ADR-single-local-landing-route); finish is cleanup-only and network-free; --merge refuses with WORKTREE_MERGE_RETIRED; the devkit.finish_guard group, workflow guard, base fetch/push and their codes are removed; envelope hold stays in workflow gates and the Host''s envelope check; Living Spec, references and spec bundle text updated; review PASS after one P2/P3 fix; reconcile verified'
+findings: []
+checks:
+  tests: PASS just test-affected --base main mode=full 6760 passed 4 skipped; --tier e2e mode=full 351 passed 13 skipped
+  build: PASS just check devkit pyright 0 errors; devkit sync --check exit 0
+  lint: PASS just lint-check devkit; devkit rules check --ci --base main errors=0
+diff_scope:
+  base: fdf531d83f3337fbd9919ebf24401ae702f705bd
+  head: 55d58b419616fab59ca72f09df4ee6b2476becc1

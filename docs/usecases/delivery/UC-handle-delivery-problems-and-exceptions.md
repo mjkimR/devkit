@@ -154,7 +154,8 @@ capabilities:
 - **Given**: a held Unit whose recovery attempt did not fix the cause
 - **When**: the recovering worker ends its turn
 - **Then**: it writes no `resolution`, `devkit workflow envelope check --unit <dir>` still prints `[BLOCKED: ...]`,
-  and `devkit worktree finish --merge` refuses the branch with `WORKTREE_BLOCKED`
+  and `devkit workflow envelope check --unit <dir> --format json` reports `"blocked": true`, so the Host approves no
+  integration
 
 ### Scenario 9: An unviable direction closes a task without corrupting history
 - **Covers**: 5c

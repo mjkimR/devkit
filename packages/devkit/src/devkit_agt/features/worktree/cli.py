@@ -3,7 +3,7 @@ branch), finish it after the merge, report leftovers and stale branches.
 
 Text output: ``start`` prints ``[WORKTREE_STARTED: <branch> path= base= created= existing= unit= setup= synced=]``
 and ``[NEXT_CMD: cd <path>]``, or with ``--no-worktree`` ``[BRANCH_STARTED: <branch> checkout= from=]``; ``finish``
-prints ``[WORKTREE_FINISHED: <branch> path= merged= push= removed= branch_deleted=]``, or the same fields as
+prints ``[WORKTREE_FINISHED: <branch> path= merged= removed= branch_deleted= discarded=]``, or the same fields as
 ``[WORKTREE_FINISH_PARTIAL: ...]`` before a refusal that stopped it after it changed something; ``status`` prints one ``[WORKTREE: <path> ...]`` line per worktree, one ``[BRANCH:
 <name> head=]`` line per unmerged branch no worktree checks out, and ``[SUMMARY: ...]``; ``status --stale`` prints
 one ``[STALE_BRANCH: <branch> ...]`` line per stale activity branch and ``[SUMMARY: checked= branches= stale=
@@ -36,7 +36,14 @@ from devkit_dist.adapters.cli import (
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
-from devkit_agt.features.worktree.models.errors import NestedError, RunFromBaseError, WorktreeError, rerun_from_base
+from devkit_agt.features.worktree.models.errors import (
+    MergeRetiredError,
+    NestedError,
+    RunFromBaseError,
+    WorktreeError,
+    merge_retired_fix,
+    rerun_from_base,
+)
 from devkit_agt.features.worktree.models.lifecycle import FinishResult, Position
 from devkit_agt.features.worktree.usecases.configured import FinishActivity, LocateProject, StartActivity
 from devkit_agt.features.worktree.usecases.lifecycle import StartBranch, WorktreeStatusQuery
@@ -178,7 +185,7 @@ def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
     """The finish result line; ``WORKTREE_FINISH_PARTIAL`` for the progress of a run a refusal stopped."""
     return (
         f"[{kind}: {field_value(result.branch)} path={field_value(result.path)} merged={field_value(result.merged)}"
-        f" push={field_value(result.push)} removed={field_value(result.removed)}"
+        f" removed={field_value(result.removed)}"
         f" branch_deleted={field_value(result.branch_deleted)} discarded={field_value(result.discarded)}]"
     )
 
@@ -186,13 +193,7 @@ def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
 @cli.command(name="finish")
 @BRANCH
 @WORKSPACE
-@click.option(
-    "--merge",
-    is_flag=True,
-    help="Land the branch on the base first (a merge commit, or a fast-forward under [worktree] merge ="
-    ' "ff-only"; the branch must contain the base HEAD) and push the base to its upstream (refused under'
-    ' [worktree] pull_request = "required")',
-)
+@click.option("--merge", is_flag=True, hidden=True, help="Retired: refuses with WORKTREE_MERGE_RETIRED")
 @click.option(
     "--discard",
     is_flag=True,
@@ -201,28 +202,28 @@ def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
 @FORMAT_OPTION
 @boundary
 @_rerun_on_base
-@click.option("--local-only", is_flag=True, help="Exclude fetch and push; keep all local merge and cleanup guards")
+@click.option("--local-only", is_flag=True, help="Accepted for older guidance; finish makes no network call")
 def finish_cmd(
     branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str, local_only: bool
 ) -> None:
-    """Integrate BRANCH into the base, then remove its worktree and the branch; run it from the base.
+    """Remove the worktree and the branch of BRANCH once the base contains it; run it from the base.
 
-    Without --merge the branch must already be merged (for example through its pull request). With --merge the
-    installed devkit.finish_guard extensions check the branch first (WORKTREE_BLOCKED), the devkit integration lock
-    of the common Git directory is taken (LOCK_HELD while another integration runs), and the base fast-forwards onto
-    a merge commit built from the base HEAD and the branch tip (onto the tip under [worktree] merge = "ff-only" in
-    the base's or the branch's policy); a branch that does not contain the base HEAD is WORKTREE_MERGE_NOT_FF, and
-    one the base already contains builds nothing. --discard closes a task
-    instead: the branch is dropped unmerged, only on the authority its close needs. Rerun the same command after
-    resolving a refusal: the steps already done are skipped.
+    The branch must already be merged: land it locally with `devkit integration prepare BRANCH --route local` and
+    `devkit integration integrate BRANCH --route local`, or through its pull request; finish makes no network call.
+    --discard closes a task instead: the branch is dropped unmerged, only on the authority its close needs. Rerun the
+    same command after resolving a refusal: the steps already done are skipped.
     """
-    if merge and discard:
-        raise ArgumentError("--merge and --discard exclude each other", target_files=["--discard"])
+    del local_only  # finish makes no network call; the flag stays for the guidance that names it
+    if merge:
+        raise MergeRetiredError(
+            f"worktree finish --merge is retired; land {branch} with devkit integration --route local; nothing was"
+            " changed",
+            target_files=["--merge"],
+            fix=merge_retired_fix(branch),
+        )
     position, config = _position(workspace_root)
     try:
-        result = FinishActivity().execute(
-            position, config, branch, merge=merge, discard_branch=discard, local_only=local_only
-        )
+        result = FinishActivity().execute(position, config, branch, discard_branch=discard)
     except WorktreeError as error:
         partial = error.result
         if not isinstance(partial, FinishResult):

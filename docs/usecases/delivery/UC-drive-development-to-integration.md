@@ -254,7 +254,7 @@ The integration executor's coded refusals this section does not name, and their 
 ### Scenario 11: Pull request policy integrates through a remote pull request
 - **Covers**: 7b
 - **Given**: a project configured with `[worktree] pull_request = "required"`
-- **When**: the agent attempts `devkit worktree finish --merge` or local integration
+- **When**: the agent attempts local integration (`devkit integration prepare <branch> --route local`)
 - **Then**: the local command is refused with `WORKTREE_PR_POLICY`, and the agent integrates through
   `devkit integration integrate` with `--route pull-request`, which merges the pull request only after the required checks
   and reviews pass
@@ -277,8 +277,10 @@ The integration executor's coded refusals this section does not name, and their 
 ### Scenario 14: A held Unit is not merged
 - **Covers**: 7e
 - **Given**: a branch whose Unit holds a `worker` envelope problem that no `resolution` names
-- **When**: the agent runs `devkit worktree finish dev-<slug> --merge`
-- **Then**: the merge is refused with `WORKTREE_BLOCKED`, one detail per unresolved problem, and nothing changes
+- **When**: the Host runs `devkit workflow envelope check --unit <dir> --format json` with the source runtime before
+  approval
+- **Then**: it reports `"blocked": true` with one `problems` entry per unresolved problem, the Host invokes no
+  integration, and nothing changes
 
 ### Scenario 15: A moved base refuses the fast-forward
 - **Covers**: 8a

@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:59:00.936056Z'
+status: completed
+summary: 'Host extended the write scope (user decision): the new ADR-single-local-landing-route, the workflow guard module, packages/devkit/pyproject.toml, test_envelope_hold.py and the listed ARCH/UC/CAP-DIST documents; the devkit.finish_guard group is retired, not kept dormant. The ADR is recorded with partial-supersession pointers, so implementation proceeds inside the extended scope.'
+findings: []
+checks: {}
+resolves: worker-01.yaml

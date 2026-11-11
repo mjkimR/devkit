@@ -26,6 +26,11 @@ def upstream(repo: Path, branch: str) -> str:
     return git(repo, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
 
 
+def land(repo: Path, branch: str) -> None:
+    """Land ``branch`` on the base as local integration does (a merge commit), so ``finish`` only cleans up."""
+    git(repo, "merge", "-q", "--no-ff", "-m", f"chore(merge): integrate {branch} into main", branch)
+
+
 # -- branch.autoSetupMerge always ---------------------------------------------------------------------------------
 
 
@@ -34,14 +39,16 @@ def test_start_creates_untracked_branches_under_auto_setup_merge_always(repo: Pa
     created = start(locate(repo), "dev-wt")
     commit(created.path, "wt.txt")
     assert upstream(repo, "dev-wt") == ""
-    done = finish(locate(repo), "dev-wt", merge=True, network="forbid")
-    assert done.merged and done.branch_deleted
+    land(repo, "dev-wt")
+    done = finish(locate(repo), "dev-wt")
+    assert done.removed and done.branch_deleted
     StartBranch().execute(locate(repo), "dev-sw")
     commit(repo, "sw.txt")
     assert upstream(repo, "dev-sw") == ""
     git(repo, "switch", "-q", "main")
-    done = finish(locate(repo), "dev-sw", merge=True, network="forbid")
-    assert done.merged and done.branch_deleted
+    land(repo, "dev-sw")
+    done = finish(locate(repo), "dev-sw")
+    assert done.branch_deleted
 
 
 def test_a_branch_tracking_the_local_base_is_deletable_once_merged_into_it(repo: Path) -> None:
@@ -50,8 +57,9 @@ def test_a_branch_tracking_the_local_base_is_deletable_once_merged_into_it(repo:
     git(repo, "branch", "-q", "--set-upstream-to=main", "dev-demo")
     plan = plan_finish(locate(repo), "dev-demo")
     assert plan.delete_branch and plan.source_upstream == "refs/heads/main"
-    done = finish(locate(repo), "dev-demo", merge=True, network="forbid")
-    assert done.merged and done.branch_deleted and git(repo, "merge-base", "--is-ancestor", tip, "HEAD") == ""
+    land(repo, "dev-demo")
+    done = finish(locate(repo), "dev-demo")
+    assert done.branch_deleted and git(repo, "merge-base", "--is-ancestor", tip, "HEAD") == ""
 
 
 # -- a tag sharing a branch's name --------------------------------------------------------------------------------

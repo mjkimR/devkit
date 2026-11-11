@@ -10,7 +10,7 @@ Read this to start an activity's branch without a worktree, continue an existing
 ## 2. Branch only (`direct`, no worktree)
 
 - Start with `devkit worktree start <branch> --no-worktree`; it switches this checkout and carries uncommitted changes.
-- Integrate from the base branch: `git switch <from>`, then `devkit worktree finish <branch> --merge` (or the PR path). On `WORKTREE_CONFLICT` (finishing from a third branch), ask the user before switching: that checkout is someone's work in progress.
+- Integrate from the base branch: `git switch <from>`, then `devkit integration prepare <branch> --route local` and `devkit integration integrate <branch> --route local` as `spec-integrate` directs (or the PR path). On `WORKTREE_CONFLICT` (integrating from a third branch), ask the user before switching: that checkout is someone's work in progress.
 
 ## 3. Continue an existing branch
 

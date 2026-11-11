@@ -1,0 +1,24 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:55:45.200573Z'
+status: needs_input
+summary: 'Specify done (spec, plan, tasks committed at 645ca1a4): finish --merge refuses with WORKTREE_MERGE_RETIRED; finish guards and base push are dropped with reasons (CAP-INT 4 / ADR-post-merge-verification, ARCH-04-2), the devkit.finish_guard group retired. Implementation not started: it needs an ADR first and writes outside the payload scope.'
+findings: []
+assumptions:
+- 'Envelope hold is not carried into integration: CAP-INT-mcp-services 4 forbids content finish guards; the dev-integration gate hold and spec-integrate step 4 envelope check keep it'
+- 'Base push and upstream fetch are dropped: ARCH-04-2 requires the local route to exclude fetch and push'
+- The orphaned devkit.finish_guard group is retired, not kept dormant
+checks:
+  sync_start: PASS exit=0
+  rules_unit: PASS errors=0
+diff_scope:
+  base: 93556c3c730bc0e0a2ace68849efdcfc9759da16
+  head: 645ca1a40980dc5a8fcfd881bea1cda5ceb7b98a
+problem:
+  cause: 'The agreed change needs writes the payload scope does not grant. (1) The spec changes MUST clauses of CAP-WT-task-worktrees and CAP-DLV-workflow-envelopes and clauses of ADR-local-and-pull-request-integration, ADR-orchestration-workers, ADR-worktrees-and-scope and ADR-package-ownership-and-release-version, so a new ADR docs/decisions/2026-11/20261111-single-local-landing-route.md is required before implementation (new file, not a Tier B extension). (2) packages/devkit/tests/integration/features/workflow/test_envelope_hold.py invokes worktree finish --merge and fails once --merge refuses, whatever is chosen for the guard group; retiring the group also needs packages/devkit/src/devkit_agt/features/workflow/usecases/integration.py and packages/devkit/pyproject.toml (other feature and packaging declaration). (3) Living Spec mentions outside the declared docs scope: docs/architecture/ARCH-04-2-delivery-policy.md, ARCH-05-2-components.md, ARCH-06-runtime-view.md, docs/usecases/delivery/UC-drive-development-to-integration.md, UC-handle-delivery-problems-and-exceptions.md, docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md.'
+  attempts:
+  - 'Checked Tier B: test mirrors (test_config_tables.py, devkit-spec test_role_contracts.py) qualify and are named in tasks.md; the new ADR, the workflow feature and pyproject do not; designs keeping --merge working were rejected as contrary to the agreed intent'
+  recovery: 'Extend the write scope to the Task 1.1, 2.3 and 2.5 boundaries in tasks.md and send a recovery worker from build-verify (ADR first, then Tasks 2.1-2.5). Narrower alternative: keep devkit.finish_guard dormant, which removes the workflow source and pyproject from the request but still needs the ADR and test_envelope_hold.py'
+activity_effort: medium

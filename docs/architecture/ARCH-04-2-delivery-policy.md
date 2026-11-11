@@ -80,22 +80,23 @@ flowchart TD
     S([Integration step]) --> A{"Mode is cloud-pr?"}
     A -->|yes| P1[Pull Request<br/>mode requirement]:::need
     A -->|no| B{"pull_request = required?"}
-    B -->|yes| P2[Pull Request only<br/>finish --merge refused]:::req
+    B -->|yes| P2[Pull Request only<br/>local integration refused]:::req
     B -->|no · auto| C{"PR needed?<br/>branch protection · CI · external review"}
     C -->|yes| P3[Pull Request]:::need
-    C -->|no| M["Local merge & cleanup<br/>integration CLI (no push)<br/>or finish --merge (pushes base)"]
+    C -->|no| M["Local merge & cleanup<br/>integration CLI (no fetch or push)"]
     P2 & P3 --> W[Push & PR creation<br/>spec-integrate]
 
     classDef need fill:#dbeafe,stroke:#1d4ed8,color:#111
     classDef req fill:#fee2e2,stroke:#b91c1c,color:#111
 ```
 
-- When `pull_request = "required"`, local integration commands (`finish --merge`, `devkit integration integrate --route local`) MUST fail closed with `WORKTREE_PR_POLICY`.
+- When `pull_request = "required"`, local integration (`devkit integration prepare|integrate --route local`) MUST fail closed with `WORKTREE_PR_POLICY`.
 - The `devkit integration integrate` CLI MUST revalidate Git identities and retained approval policy after Host
   conversational approval. It MUST NOT evaluate source content through the premerge runtime. The Host checks the
   source branch with its runtime and runs final checks after synchronizing the landed runtime in fresh processes.
   Automatic authority MUST come only from the retained base's policy. Its `local` route MUST exclude
-  fetch and push, and it triggers scoped cleanup (`CAP-INT-mcp-services`). The separate `devkit worktree finish --merge` command pushes base upstream.
+  fetch and push, and it triggers scoped cleanup (`CAP-INT-mcp-services`). It is the only local landing route: `devkit worktree finish --merge` refuses with `WORKTREE_MERGE_RETIRED`, and publishing
+  the landed base is a separate Git effect under the Host's publication authority (`ADR-single-local-landing-route`).
 
 ---
 

@@ -13,9 +13,9 @@ from devkit_agt.features.integration import (
     IntegrationConfigError,
     IntegrationService,
 )
-from devkit_agt.features.worktree import PullRequestPolicyError, RemoveFailedError, finish, locate
+from devkit_agt.features.worktree import PullRequestPolicyError, RemoveFailedError, StartBranch, locate, start
 from devkit_core.base.errors import GitError
-from testsupport.rules import git, write
+from testsupport.rules import git, init_repo, write
 
 from .conftest import Entry
 
@@ -97,7 +97,7 @@ def test_merge_does_not_discover_or_call_readiness(repo, ready_provider, monkeyp
     original = providers.metadata.entry_points
 
     def entries(**kw):
-        assert kw.get("group") not in {"devkit.integration.readiness", "devkit.finish_guard"}
+        assert kw.get("group") != "devkit.integration.readiness"
         return original(**kw)
 
     monkeypatch.setattr(providers.metadata, "entry_points", entries)
@@ -235,13 +235,56 @@ def test_unknown_integration_configuration_is_actionable(repo, config):
     assert "Remove unknown keys" in (raised.value.fix or "")
 
 
-def test_public_local_only_finish_excludes_fetch_and_push(repo):
-    base, worktree = repo
+@pytest.mark.parametrize("moved", [False, True], ids=["contains-base", "moved-base"])
+@pytest.mark.parametrize("kind", ["no-worktree", "plan"])
+def test_local_integration_lands_branch_only_and_plan_branches_without_network(
+    tmp_path, ready_provider, monkeypatch, kind, moved
+):
+    """AC-04: the branches ``finish --merge`` landed (a ``start --no-worktree`` branch, a ``plan-<slug>`` worktree)
+    land through ``integrate --route local`` under automatic authority, with no fetch, push or ls-remote."""
+    base = init_repo(tmp_path / "repo")
+    write(
+        base,
+        ".devkit/config.toml",
+        '[integration]\nprovider = "fixture"\n[workflow.approvals]\ndev-integration = "auto"\n',
+    )
+    write(base, ".gitignore", ".devkit/transient/\n")
+    git(base, "add", ".")
+    git(base, "commit", "-qm", "configure integration")
     git(base, "remote", "add", "origin", "unreachable://fixture")
     git(base, "config", "branch.main.remote", "origin")
     git(base, "config", "branch.main.merge", "refs/heads/main")
-    result = finish(locate(base), "dev-demo", merge=True, network="forbid")
-    assert result.merged and result.push == "excluded" and not worktree.exists()
+    if kind == "no-worktree":
+        branch, checkout = "dev-solo", base
+        StartBranch().execute(locate(base), branch)
+    else:
+        branch = "plan-solo"
+        checkout = start(locate(base), branch).path
+    write(checkout, "ready.txt", "ready\n")
+    git(checkout, "add", ".")
+    git(checkout, "commit", "-qm", "implement fixture")
+    tip = git(checkout, "rev-parse", "HEAD")
+    if kind == "no-worktree":
+        git(base, "switch", "-q", "main")
+    if moved:
+        write(base, "other.txt", "other\n")
+        git(base, "add", ".")
+        git(base, "commit", "-qm", "move the base")
+    called = []
+    original = lifecycle.run_git
+
+    def run(root, *args, **kw):
+        called.append(args[0])
+        return original(root, *args, **kw)
+
+    monkeypatch.setattr(lifecycle, "run_git", run)
+    monkeypatch.setattr(merging, "run_git", run)
+    result = IntegrationService(base).execute_cli(branch)
+    assert result.status == "completed" and result.authority == "policy"
+    assert git(base, "merge-base", "--is-ancestor", tip, "HEAD") == ""
+    assert f"refs/heads/{branch}" not in git(base, "show-ref")
+    assert kind == "no-worktree" or not checkout.exists()
+    assert not set(called) & {"fetch", "push", "ls-remote"}
 
 
 def test_merge_permission_failure_has_correct_remedy_and_a_fresh_call_completes(repo, monkeypatch):

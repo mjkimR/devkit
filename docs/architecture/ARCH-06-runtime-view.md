@@ -73,7 +73,8 @@ sequenceDiagram
 
 1. **Start**: `devkit worktree start <branch> [--unit <dir>]` checks that no uncommitted conflicts exist, checks that the branch does not already exist, and creates a linked Git worktree under `.devkit/worktrees/<slug>`.
 2. **Execute**: The agent runs development tasks isolated within the allocated worktree.
-3. **Finish**: `devkit worktree finish [--merge]` validates that envelopes hold no unresolved questions or problems, commits final artifacts, integrates into the base branch, and safely removes the worktree.
+3. **Integrate**: after the Host's `devkit workflow envelope check` reports no unresolved question or problem, `devkit integration prepare <branch> --route local` and `devkit integration integrate <branch> --route local` land the branch on the base branch and clean up its worktree and branch.
+4. **Finish**: `devkit worktree finish <branch>` cleans up a branch the base already contains (a merged pull request, or a landing whose cleanup stopped); `--merge` refuses with `WORKTREE_MERGE_RETIRED`.
 
 ## Post-merge verification runtime
 

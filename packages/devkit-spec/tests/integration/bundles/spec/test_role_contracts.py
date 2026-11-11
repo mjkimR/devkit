@@ -367,7 +367,8 @@ def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
     assert "`validation`" not in flat(results)
     records = raw("skills/spec/references/worker-records.md")
     assert_rule(records, "`[BLOCKED: ...]`", "no `resolution`")
-    assert_rule(records, "`[BLOCKED: ...]`", "handoff", "`devkit worktree finish --merge`")
+    assert_rule(records, "`[BLOCKED: ...]`", "gates", "handoff")
+    assert "finish --merge" not in records
     assert_rule(records, "only a `resolution`", "clears")
 
 

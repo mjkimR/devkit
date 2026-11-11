@@ -53,7 +53,7 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 
 ## 3. Problems and resolutions
 
-`[BLOCKED: ...]` means a problem has no `resolution` naming it. It holds the gates from the problem's stage on, the handoff and `devkit worktree finish --merge`; `devkit workflow next` still names the stage where recovery runs. Only a `resolution` clears it.
+`[BLOCKED: ...]` means a problem has no `resolution` naming it. It holds the gates from the problem's stage on and the handoff; `devkit workflow next` still names the stage where recovery runs. Only a `resolution` clears it.
 
 - Decide the recovery inside the approved scope: fix or revert yourself (`git revert`, never reset), or send a new worker the recovery request. A recovery that needs the scope changed goes to the user and a close ([close](depth-and-close.md#close)).
 - Record a problem you find yourself in your own `worker` envelope (`--problem`).
