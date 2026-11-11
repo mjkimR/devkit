@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 from devkit_core.base.mcp import McpTool
+from devkit_dist.features.host.models.errors import HostMcpError
 from devkit_dist.features.project.repositories.invocation import (
     ExecutionBinding,
     McpInteractiveError,
@@ -121,7 +122,7 @@ def test_linked_interpreter_lexical_path_is_rejected(clones):
     candidate = task / ".venv/bin/python"
     candidate.parent.mkdir(parents=True)
     candidate.symlink_to(shutil.which("python3"))
-    assert configuration._linked_source(candidate)
+    assert configuration._any_linked_source([candidate])
 
 
 def test_dependency_path_checks_match_per_path_answers(clones, tmp_path):
@@ -139,7 +140,9 @@ def test_dependency_path_checks_match_per_path_answers(clones, tmp_path):
         [base / "lib/real.py", task / "mod.py"],
     ]
     for paths in groups:
-        assert configuration._any_linked_source(paths) == any(configuration._linked_source(p) for p in paths)
+        assert configuration._any_linked_source(paths) == any(
+            (parent / ".git").is_file() for p in paths for parent in (p, *p.parents)
+        )
         assert configuration._inside_task(paths, [task]) == any(
             p.is_relative_to(task) or p.resolve().is_relative_to(task) for p in paths
         )
@@ -166,6 +169,27 @@ def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_pa
         lambda **kw: [SimpleNamespace(name="fixture", value="fixture:create", load=lambda: lambda root: (tool, tool))],
     )
     with pytest.raises(Exception, match="cannot load"):
+        services.load_tools(tmp_path)
+
+
+@pytest.mark.parametrize("error", [SystemExit(2), RuntimeError("boom")])
+def test_service_or_discovery_failure_raises_host_mcp_error(monkeypatch, tmp_path, error):
+    def create(root):
+        raise error
+
+    monkeypatch.setattr(
+        services.metadata,
+        "entry_points",
+        lambda **kw: [SimpleNamespace(name="fixture", value="fixture:create", load=lambda: create)],
+    )
+    with pytest.raises(HostMcpError, match=f"MCP service fixture cannot load \\({type(error).__name__}\\)"):
+        services.load_tools(tmp_path)
+
+    def unlisted(**kw):
+        raise error
+
+    monkeypatch.setattr(services.metadata, "entry_points", unlisted)
+    with pytest.raises(HostMcpError, match="MCP service discovery cannot load"):
         services.load_tools(tmp_path)
 
 

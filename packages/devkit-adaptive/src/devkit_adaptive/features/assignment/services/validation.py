@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit_core.base.errors import ArgumentError
+from devkit_docs.utils.paths import covers
 
 from devkit_adaptive.base.errors import (
     AssignmentClosed,
@@ -13,7 +14,7 @@ from devkit_adaptive.base.errors import (
     NestingDepth,
     ScopeOverlap,
 )
-from devkit_adaptive.features.assignment.models.values import Assignment, covers, overlaps
+from devkit_adaptive.features.assignment.models.values import Assignment
 
 
 def identifier(value: str) -> str:
@@ -77,7 +78,7 @@ def authority(
             continue
         for mine in write:
             for theirs in other["write"]:
-                if overlaps(mine, theirs):
+                if covers(mine, theirs) or covers(theirs, mine):
                     raise ScopeOverlap(
                         f"assignment {other['id']} holds overlapping scope", f"new: {mine}; other: {theirs}"
                     )

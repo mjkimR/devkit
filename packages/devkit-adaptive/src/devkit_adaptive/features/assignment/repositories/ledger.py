@@ -12,7 +12,7 @@ from devkit_core.core import file_lock, run_git_text
 from devkit_adaptive.base.errors import LedgerFragmentIgnored, LedgerUnreadable, LedgerUnwritable
 from devkit_adaptive.features.assignment.models.values import Event, fold
 
-# Every field the assigned-event writer (services.operations.new) records; readers index them directly.
+# Every field the assigned-event writer (services.operations._assigned) records; readers index them directly.
 ASSIGNED_FIELDS = frozenset(
     {
         "id",

@@ -11,6 +11,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from devkit_core.core import git as core_git
 from viewer_fixtures import MakeRepo, commit_files, git
 
 from devkit_viewer.features.browse.http.server import ViewerServer
@@ -123,6 +124,7 @@ def test_scan_uses_three_batched_git_processes_and_writes_nothing(repo: Path, mo
         return original(cwd, *args, **kwargs)  # type: ignore[arg-type]
 
     monkeypatch.setattr(planning, "run_git", record)
+    monkeypatch.setattr(core_git, "run_git", record)  # the worktree list runs through core's worktree_records
     planning_proposals(repo)
     assert sorted(call[0] for call in calls) == ["cat-file", "for-each-ref", "worktree"]
     assert ("cat-file", "--batch") in calls

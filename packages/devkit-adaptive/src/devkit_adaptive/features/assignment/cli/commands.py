@@ -1,8 +1,10 @@
 """Agent-first adaptive assignment command adapters."""
 
+from collections.abc import Callable
 from typing import Any
 
 import click
+from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
     boundary,
@@ -64,64 +66,87 @@ def assignment_line(value: dict[str, Any], *, observed: bool = False) -> str:
     )
 
 
-def emit(result: Result, output_format: str, verb: str) -> None:
+def _print_verification(result: Result) -> None:
     payload = result.payload
+    for name, check in payload["checks"].items():
+        click.echo(line("CHECK", name, status=check["status"]))
+    for entry in payload["checks"]["scope"]["outside"]:
+        click.echo(line("OUT_OF_SCOPE", entry["path"], change=entry["change"]))
+    changed = set(payload["changed_paths"]["committed"]) | set(payload["changed_paths"]["uncommitted"])
+    click.echo(
+        line(
+            "VERIFICATION",
+            payload["id"],
+            result=payload["result"],
+            final=payload["final"],
+            changed=len(changed),
+            out_of_scope=len(payload["checks"]["scope"]["outside"]),
+        )
+    )
+    echo_notices(result.errors)
+
+
+def _print_list(result: Result) -> None:
+    for value in result.payload["assignments"]:
+        click.echo(assignment_line(value, observed=True))
+    click.echo(line("SUMMARY", **result.payload["summary"]))
+
+
+def _print_assignment(result: Result) -> None:
+    click.echo(assignment_line(result.payload["assignment"]))
+
+
+def _print_details(result: Result) -> None:
+    value = result.payload["assignment"]
+    click.echo(assignment_line(value))
+    click.echo(line("GRANT", commit=value["commit"]))
+    for name in ("goal", "evidence", "handoff", "stop", "return_summary", "close_reason"):
+        field = (
+            (value["return"] or {}).get("summary")
+            if name == "return_summary"
+            else (value["close"] or {}).get("reason")
+            if name == "close_reason"
+            else value.get(name)
+        )
+        if field is not None:
+            click.echo(line("FIELD", name, value=field))
+    for name, key in (("WRITE", "write"), ("GOVERNING", "governing"), ("DEPENDS_ON", "depends_on")):
+        for item in value[key]:
+            click.echo(f"[{name}: {field_value(item)}]")
+    for item in (value["return"] or {}).get("unverified", []):
+        click.echo(f"[UNVERIFIED: {field_value(item)}]")
+    outcomes = {item["name"]: item["outcome"] for item in (value["return"] or {}).get("checks", [])}
+    for item in value["checks"]:
+        click.echo(line("DECLARED_CHECK", item["name"], command=item["command"], outcome=outcomes.get(item["name"])))
+    for item in result.payload["events"]:
+        click.echo(line("EVENT", item["event"], at=item["at"]))
+
+
+def _run(
+    use_case: BaseUseCase,
+    workspace_root: str | None,
+    output_format: str,
+    options: dict[str, Any],
+    printer: Callable[[Result], None],
+    *,
+    errors: bool = False,
+) -> None:
+    """Execute ``use_case`` with the command's options and write its result; ``errors`` reports the result's errors
+    in the JSON document (the verification's findings)."""
+    result: Result = use_case.execute(
+        resolve_root(workspace_root),
+        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
+    )
     if is_json(output_format):
         echo_json(
             {
-                **payload,
-                **({"errors": [error.to_dict() for error in result.errors]} if verb == "verify" else {}),
+                **result.payload,
+                **({"errors": [error.to_dict() for error in result.errors]} if errors else {}),
                 "notices": [notice.to_dict() for notice in result.notices],
             }
         )
-    elif verb == "verify":
-        for name, check in payload["checks"].items():
-            click.echo(line("CHECK", name, status=check["status"]))
-        for entry in payload["checks"]["scope"]["outside"]:
-            click.echo(line("OUT_OF_SCOPE", entry["path"], change=entry["change"]))
-        changed = set(payload["changed_paths"]["committed"]) | set(payload["changed_paths"]["uncommitted"])
-        click.echo(
-            line(
-                "VERIFICATION",
-                payload["id"],
-                result=payload["result"],
-                final=payload["final"],
-                changed=len(changed),
-                out_of_scope=len(payload["checks"]["scope"]["outside"]),
-            )
-        )
-        echo_notices(result.errors)
-    elif verb == "list":
-        for value in payload["assignments"]:
-            click.echo(assignment_line(value, observed=True))
-        click.echo(line("SUMMARY", **payload["summary"]))
     else:
-        value = payload["assignment"]
-        click.echo(assignment_line(value))
-        if verb == "show":
-            click.echo(line("GRANT", commit=value["commit"]))
-            for name in ("goal", "evidence", "handoff", "stop", "return_summary", "close_reason"):
-                field = (
-                    (value["return"] or {}).get("summary")
-                    if name == "return_summary"
-                    else (value["close"] or {}).get("reason")
-                    if name == "close_reason"
-                    else value.get(name)
-                )
-                if field is not None:
-                    click.echo(line("FIELD", name, value=field))
-            for name, key in (("WRITE", "write"), ("GOVERNING", "governing"), ("DEPENDS_ON", "depends_on")):
-                for item in value[key]:
-                    click.echo(f"[{name}: {field_value(item)}]")
-            for item in (value["return"] or {}).get("unverified", []):
-                click.echo(f"[UNVERIFIED: {field_value(item)}]")
-            outcomes = {item["name"]: item["outcome"] for item in (value["return"] or {}).get("checks", [])}
-            for item in value["checks"]:
-                click.echo(
-                    line("DECLARED_CHECK", item["name"], command=item["command"], outcome=outcomes.get(item["name"]))
-                )
-            for item in payload["events"]:
-                click.echo(line("EVENT", item["event"], at=item["at"]))
+        printer(result)
     echo_notices(result.notices)
     if result.errors:
         raise SystemExit(1)
@@ -154,11 +179,7 @@ def assignment() -> None:
 @boundary
 def new_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
     """New an assignment."""
-    result = NewAssignmentUseCase().execute(
-        resolve_root(workspace_root),
-        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
-    )
-    emit(result, output_format, "new")
+    _run(NewAssignmentUseCase(), workspace_root, output_format, options, _print_assignment)
 
 
 @assignment.command(name="return")
@@ -173,11 +194,7 @@ def new_cmd(workspace_root: str | None, output_format: str, **options: Any) -> N
 @boundary
 def return_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
     """Return an assignment."""
-    result = ReturnAssignmentUseCase().execute(
-        resolve_root(workspace_root),
-        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
-    )
-    emit(result, output_format, "return")
+    _run(ReturnAssignmentUseCase(), workspace_root, output_format, options, _print_assignment)
 
 
 @assignment.command(name="verify")
@@ -187,11 +204,7 @@ def return_cmd(workspace_root: str | None, output_format: str, **options: Any) -
 @boundary
 def verify_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
     """Verify an assignment."""
-    result = VerifyAssignmentUseCase().execute(
-        resolve_root(workspace_root),
-        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
-    )
-    emit(result, output_format, "verify")
+    _run(VerifyAssignmentUseCase(), workspace_root, output_format, options, _print_verification, errors=True)
 
 
 @assignment.command(name="close")
@@ -203,11 +216,7 @@ def verify_cmd(workspace_root: str | None, output_format: str, **options: Any) -
 @boundary
 def close_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
     """Close an assignment."""
-    result = CloseAssignmentUseCase().execute(
-        resolve_root(workspace_root),
-        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
-    )
-    emit(result, output_format, "close")
+    _run(CloseAssignmentUseCase(), workspace_root, output_format, options, _print_assignment)
 
 
 @assignment.command(name="list")
@@ -217,11 +226,7 @@ def close_cmd(workspace_root: str | None, output_format: str, **options: Any) ->
 @boundary
 def list_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
     """List an assignment."""
-    result = ListAssignmentsUseCase().execute(
-        resolve_root(workspace_root),
-        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
-    )
-    emit(result, output_format, "list")
+    _run(ListAssignmentsUseCase(), workspace_root, output_format, options, _print_list)
 
 
 @assignment.command(name="show")
@@ -231,8 +236,4 @@ def list_cmd(workspace_root: str | None, output_format: str, **options: Any) -> 
 @boundary
 def show_cmd(workspace_root: str | None, output_format: str, **options: Any) -> None:
     """Show an assignment."""
-    result = ShowAssignmentUseCase().execute(
-        resolve_root(workspace_root),
-        {key: list(value) if isinstance(value, tuple) else value for key, value in options.items()},
-    )
-    emit(result, output_format, "show")
+    _run(ShowAssignmentUseCase(), workspace_root, output_format, options, _print_details)

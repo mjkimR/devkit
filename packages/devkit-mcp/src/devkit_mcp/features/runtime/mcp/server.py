@@ -8,7 +8,6 @@ longer matches it.
 from __future__ import annotations
 
 import json
-from contextlib import nullcontext
 from importlib.metadata import version
 from pathlib import Path
 from typing import Any
@@ -30,7 +29,7 @@ from devkit_mcp.features.runtime.usecases.loaded_code import GuardLoadedCodeUseC
 
 class _DevkitTool(Tool):
     _service: McpTool = PrivateAttr()
-    _binding: InvocationBinding | None = PrivateAttr()
+    _binding: InvocationBinding = PrivateAttr()
     _profile: str = PrivateAttr()
     _loaded_code: GuardLoadedCodeUseCase = PrivateAttr()
 
@@ -43,11 +42,11 @@ class _DevkitTool(Tool):
             ).is_valid(arguments):
                 raise HostMcpInputError("unknown tool or invalid arguments; inspect the tool's input schema")
             if self._service.execution == "read_only":
-                with invocation(self._binding) if self._binding is not None else nullcontext():
+                with invocation(self._binding):
                     result = await self._service.invoke(arguments)
             else:
                 self._loaded_code.execute()
-                with invocation(self._binding) if self._binding is not None else nullcontext():
+                with invocation(self._binding):
                     guard_execution()
                     result = await self._service.invoke(arguments)
             if not isinstance(result, dict):
@@ -64,9 +63,7 @@ class _DevkitTool(Tool):
         )
 
 
-def build_server(
-    tools: dict[str, McpTool], binding: InvocationBinding | None = None, *, profile: str = "local"
-) -> FastMCP:
+def build_server(tools: dict[str, McpTool], binding: InvocationBinding, *, profile: str = "local") -> FastMCP:
     mcp = FastMCP("devkit", version=version("devkit-mcp"))
     loaded_code = GuardLoadedCodeUseCase(RecordLoadedCodeUseCase().execute())
 
