@@ -14,5 +14,5 @@ description: Read before authoring or reviewing specifications, acceptance crite
 ## Scope and Verifiability
 
 - A Non-Goal states its **Scope Excluded**: exactly what will not be built. Add **Rationale** and **When to Reconsider** only when they help later decisions.
-- Replace vague qualifiers ("handle errors properly", "ensure high performance") with checkable contracts for the interface: exit codes, status/error codes, output lines, payload structures and Given/When/Then acceptance scenarios. Each scenario carries an ID that tasks cover (`RULE-task-coverage`).
+- Replace vague qualifiers ("handle errors properly", "ensure high performance") with checkable contracts for the interface: exit codes, status/error codes, output lines, payload structures and Given/When/Then acceptance scenarios, each with an ID.
 - Documentation code snippets and JSON payloads are non-normative examples unless designated as normative schemas.

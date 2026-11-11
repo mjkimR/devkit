@@ -16,7 +16,7 @@ These admission criteria apply to an ADR and to a PADR alike. Write one only whe
 - More than one viable option was weighed.
 - It changes an existing contract or lasting rule.
 
-Record a choice that meets none of them in the proposal's Planning decisions or the spec's `plan.md` instead.
+Record a choice that meets none of them in the work record the selected development approach defines.
 
 ## Summary
 

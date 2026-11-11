@@ -4,6 +4,7 @@ Apply this procedure only as the local-orchestrated Host verifying the integrate
 Workers run required native checks synchronously in their assigned worktree, including necessary selective E2E;
 they do not launch or manage this Host execution lifecycle. Do not copy exec start/wait/cleanup into worker checks.
 Direct/session work keeps the project's existing native verification procedure and does not inherit this one.
+Required results remain pending while independent work proceeds; the Host collects them and rechecks any uncovered landed interval before reporting completion.
 Select responsibility by actor and task, not by whether the current directory is a worktree.
 The general-purpose exec CLI remains available for separately requested uses; this workflow adds no runtime role or cwd restriction.
 

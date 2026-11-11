@@ -111,7 +111,7 @@ A session completes without document artifacts: no spec Unit, planning file, env
 
 ## Mode and branch
 
-A session runs in `direct` or through the `cloud-pr` general PR path (a Work Plan Item a Cloud Agent turns into a PR), never in `local-orchestrated`: a Host in that mode handles a session-depth task itself in `direct`. With a PR the work runs on `dev-<slug>`; without one on the current branch, except that on the base branch under `dev-integration = "ask"` the work runs on `dev-<slug>` (`devkit worktree start dev-<slug> --no-worktree`) or the user's OK is obtained before the commit (then the order is approval, commit, push), so nothing reaches the base before the approval (01 §6.1, 03 §3). Under `auto` the completion conditions are the authority and the commit may follow them.
+A session runs in `direct` or through the `cloud-pr` general PR path (a Work Plan Item a Cloud Agent turns into a PR), never in `local-orchestrated`: a Host in that mode handles a session-depth task itself in `direct`. With a PR the work runs on `dev-<slug>`; without one on the current branch, except that on the base branch under `dev-integration = "ask"` the work runs on `dev-<slug>` (`devkit worktree start dev-<slug> --no-worktree`) or the user's OK is obtained before the commit (then the order is approval, commit, push), so nothing reaches the base before the approval. Under `auto` the completion conditions are the authority and the commit may follow them.
 
 ## Stage rules
 

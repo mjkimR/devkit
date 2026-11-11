@@ -30,9 +30,7 @@ your own commits since (the post-handoff link fixes); an exit code alone never s
 effects is `needs_input` or `failed`, never completed. Inspect unknown/partial state before dispatching a supported,
 already-authorized remainder. Return changed scope/refs, dirty resources, active writers, source preparation,
 semantic conflicts or denied permission to the Host. Normal integration already includes cleanup; dispatch no
-redundant cleanup job. Dispatch no Planning acceptance either: the Host runs the composed
-`devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` itself, which already
-includes integration and cleanup.
+redundant cleanup job.
 
 The operator stops a preparation list at the first item that is not completed and returns later items under
 `not_attempted`. Verify each `items` entry as a single-job result against your own CLI/Git observation, or dispatch

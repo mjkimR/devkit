@@ -1,6 +1,6 @@
 ---
 name: document-writing
-description: Read before writing or editing any document (Living Spec, specs, guides, READMEs, agent assets). Defines the sentence-level baseline every document follows; the per-kind writing instructions add to it.
+description: Read before writing or editing any document (Living Spec, specs, guides, READMEs). Defines the sentence-level baseline every document follows; the per-kind writing instructions add to it.
 ---
 
 # Document Writing

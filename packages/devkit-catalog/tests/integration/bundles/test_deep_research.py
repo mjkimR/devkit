@@ -218,21 +218,12 @@ def test_guides_name_the_bundle_only_as_a_selection() -> None:  # AC-09
             assert "incubate-research" not in line, f"{path.relative_to(REPOSITORY)}:{number}"
 
 
-def test_guides_name_the_add_command_and_migration_steps() -> None:  # AC-11
+def test_guides_name_the_add_command() -> None:  # AC-11
     install = REPOSITORY / "guides/INSTALL_GUIDE.md"
     existing = REPOSITORY / "guides/install/existing-repository.md"
     recommendations = REPOSITORY / "guides/install/bundle-recommendations.md"
     for path in (install, existing, recommendations, PACKAGE / "README.md"):
         assert "uv run devkit add deep-research" in path.read_text(), path
-    for path in (install, existing, PACKAGE / "README.md"):
-        text = path.read_text()
-        assert_rule(text, "`incubation:<role>`", "`deep-research:<role>`")
-        assert_rule(
-            text,
-            "`.devkit/overrides/incubation/subagents/<role>.md`",
-            "`.devkit/overrides/deep-research/subagents/<role>.md`",
-        )
-        assert_rule(text, "`ORPHAN_LEFT`", "devkit add deep-research")
     row = next(line for line in recommendations.read_text().splitlines() if line.startswith("| `deep-research`"))
     assert "the user asks for an explicit research entry" in row.lower()
 

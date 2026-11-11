@@ -28,7 +28,7 @@ The payload gives one goal, absolute read/write boundaries, source/artifact iden
 - On an emulated host, say that explicit boundaries and before/after diff checks replace native isolation; claim no native guarantee.
 - Request each operation outside sandbox access through the host's approval mechanism. If it is denied or unavailable, stop it and report the actual partial state; never reroute through another path, process or tool.
 - Leave the index and HEAD unchanged: no commit, push, merge, reset, amend, checkout or publication.
-- Only the coordinator writes `.devkit/adaptive-dev.md`; return evidence instead.
+- Only the Host writes `.devkit/adaptive-dev.md`; return evidence instead.
 
 ## Procedure
 
@@ -36,7 +36,7 @@ The payload gives one goal, absolute read/write boundaries, source/artifact iden
 2. Separate known user decisions, recommendations and assumptions that need evidence.
 3. Identify candidate users, the problem, representative usage, constraints and signs of usefulness; compare candidates only far enough to select the next useful question or action.
 4. Reuse provided answers; return missing questions with a recommended option and its trade-off when evidence supports one.
-5. Return recommendations to the coordinator; never ask the user directly or decide the product direction.
+5. Return recommendations to the Host; never ask the user directly or decide the product direction.
 
 ## Return
 

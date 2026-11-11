@@ -44,10 +44,7 @@ Supersedes in part `ADR-example-old`: the retry policy.
 ```
 
 Each statement or pointer is a paragraph or list item; its text stops at a blank line, next item or heading.
-Source text includes code spans. Keep statements free of trace, source citation, nested list and relative link.
-The rule checks text, not meaning, and offers no fixer. After a repair, copy the statement into one pointer.
- A whole replacement instead sets the earlier ADR's
-`status: superseded` and `superseded_by: ADR-example-new`.
+Source text includes code spans.
 
 ## Configuration
 

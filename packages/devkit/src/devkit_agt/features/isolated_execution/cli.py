@@ -75,8 +75,10 @@ def start(sha: str, setup: str | None, argv: tuple[str, ...], output_format: str
 
 
 @cli.command("list")
-@click.option("--limit", default=20, type=int, show_default=True)
-@click.option("--offset", default=0, type=int, show_default=True)
+@click.option("--limit", default=20, type=int, show_default=True, help="Runs per page, 1-100.")
+@click.option(
+    "--offset", default=0, type=int, show_default=True, help="Runs to skip, nonnegative; continue from next_offset."
+)
 @FORMAT_OPTION
 @boundary
 def list_runs(output_format: str, limit: int, offset: int) -> None:
@@ -105,7 +107,9 @@ def status(run_id: str, output_format: str) -> None:
 
 @cli.command("logs")
 @click.argument("run_id")
-@click.option("--tail", default=100, type=int, show_default=True)
+@click.option(
+    "--tail", default=100, type=int, show_default=True, help="Last lines to print, 0-1000 (at most 64 KiB read)."
+)
 @FORMAT_OPTION
 @boundary
 def logs(run_id: str, tail: int, output_format: str) -> None:
@@ -116,11 +120,16 @@ def logs(run_id: str, tail: int, output_format: str) -> None:
 @cli.command("wait")
 @click.argument("run_id")
 @click.option("--clean", is_flag=True, help="Request guarded cleanup after a durable terminal result.")
-@click.option("--timeout", type=float, default=None)
+@click.option(
+    "--timeout",
+    type=float,
+    default=None,
+    help="Seconds to wait, finite and nonnegative; default waits until the run ends.",
+)
 @FORMAT_OPTION
 @boundary
 def wait(run_id: str, clean: bool, timeout: float | None, output_format: str) -> None:
-    """Observe internally; timeout or interruption leaves execution running."""
+    """Block until the run ends (or --timeout) and print its result; timeout or interruption leaves execution running."""
     output(WaitExecution().execute(Path.cwd(), run_id, timeout=timeout, clean=clean), output_format)
 
 

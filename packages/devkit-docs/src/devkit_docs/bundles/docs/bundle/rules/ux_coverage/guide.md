@@ -7,8 +7,7 @@ happens on, and each interaction of the document to name the step it serves. Not
 mail sent, a background job) and a screen may carry global controls no single task needs, so gaps are warnings, and
 an intended gap is classified with a reason so that it stops warning; contradictions are `RULE-ux-links`'s.
 
-- **Phase and severity**: `linter`, `warning` (devkit gives each rule one severity, the `RULE-spec-progress`
-  precedent), so it never blocks a commit.
+- **Phase and severity**: `linter`, `warning`, so it never blocks a commit.
 - **What is checked**: every current use case some current UX document lists, and every current UX document.
 - **Targeting**: a step report lands on the use case at the step's line when the run targets it, else on the first UX
   document listing the use case that the run targets (path order, at its `usecases` entry), because the fix (a citation

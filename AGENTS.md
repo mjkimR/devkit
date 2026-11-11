@@ -84,22 +84,10 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 
 ## Verification
 
-Run lint, type checks and relevant tests before completing code changes. Devkit uses local-orchestrated development. Use `just test-affected` for
-development, review and the final integration content (keep its `mode=full` fallback); no separate local
-full-suite run is required. Integration merges a conflict-free moved base itself with Git/authority checks. Save the target SHA before the first merge. After landing, synchronize dependencies with `just init`, use fresh processes for `devkit sync` and `devkit generated check`, regenerate stale artifacts with `devkit generated regen <ids>` and commit them, then run `just test-affected --base <saved-target-sha>` on the final target HEAD with required lint/types/rules. A local-orchestrated batch may verify once after selected merges and repairs; every landed unit stays pending until the combined head passes. Repair a failing target and recheck without merge replay or automatic rollback. Report the checked HEAD, commands and outcomes; never compare main to itself or substitute nightly CI for final checks. The affected selector defaults to `--tier unit-integration`; use `--tier e2e` for E2E only and `--tier all` (or compatibility `--e2e`) for both. Full fallback stays within the selected tier. Workers run required native checks synchronously in their assigned worktree, including necessary selective E2E; they do not inherit the Host exec lifecycle. Only the local-orchestrated Host, after landing and synchronous integrated checks, launches selected E2E at fixed SHA A with `uv run devkit exec start --ref <A> -- just test-affected --base <saved-target-sha> --tier e2e`. The Host backgrounds `uv run devkit exec wait <run-id> --clean --format json` through the execution tool, continues independent work and collects its final result. Start with one outstanding run; the executor imposes no concurrency policy. At the next failed/unknown result check, hold merges and prioritize repair. Keep the earliest uncovered baseline while main advances; final HEAD needs required passing E2E there or an explicit empty selection over the complete uncovered interval. Report exact checked SHAs; launch/cleanup success and tool completion delivery do not decide delivery completion. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
-viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names.
-
-| Target | Command |
-| --- | --- |
-| Lint & format / check (CI) | `just lint [module]` / `just lint-check [module]` |
-| Type check (Pyright) | `just check [module]` |
-| Tests | `just test-affected`, `just test <module> [area\|path...]`, full: `just test` |
-| devkit-dist without devkit-agt | `just test-dist` |
-| Coverage | `just test-cov [module] [area\|path...]` |
-| Governance rules | `just rules-check` / `just rules-fix` |
-| Bundle rule tests (run `uv run devkit sync` first after editing a bundle's `rules/<name>/tests/`; `devkit rules test` runs the deployed copy) | `just rules-test RULE-<id>` |
-| Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
-| Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint\|check\|test\|build` |
+Run lint, type checks and the affected tests (`just test-affected`, keeping its `mode=full` fallback) before
+completing code changes; no separate local full-suite run is required. A viewer frontend change selects no pytest
+test: run the command its `[FRONTEND_CHECK: ...]` line names. Commands: [setup](docs/development/setup.md#3-common-verification-commands).
+Integration, post-landing checks, selected E2E and CI: [CI/CD](docs/development/ci-cd.md).
 
 <!-- DEVKIT:START -->
 ## devkit
