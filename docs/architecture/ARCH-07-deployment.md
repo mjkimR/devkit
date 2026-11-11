@@ -142,7 +142,8 @@ Read discovery adds the tests that read a changed path by a root-anchored litera
 - The selector MUST treat as a read every maximal expression it evaluates statically from `Path(__file__)` through
   `resolve`, `parent`, `parents[N]`, `/` with literal segments, `joinpath` and names bound once to such an
   expression, including a call argument or method receiver; a loop variable over literal values expands into one
-  read per element.
+  read per element, and a parameter of a function called only by name in the same file takes its literal
+  arguments.
 - The selector MUST scan every Python file under a `tests` directory once and attribute a read in a test module to
   it, a read in a `conftest.py` to the test modules under its directory, and a read in a local helper to the test
   modules whose import discovery reaches that helper.

@@ -104,10 +104,15 @@ types and governance remain required:
   - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
   - Read discovery adds the tests that read a changed path by a root-anchored literal path
     (`ADR-literal-read-test-selection`). Every Python file under a `tests` directory is scanned for expressions built
-    from `Path(__file__)` with `resolve()`, `parent`, `parents[N]`, `/` or `joinpath` with literal segments, and
-    names bound once to them; a loop over literal values expands. A read in a test module belongs to it, a read in a
-    `conftest.py` to the test modules under its directory, and a read in a helper to the test modules that import
-    it. A changed path selects a reader when it equals the read path or lies under it; a literal `glob` or `rglob`
+    from `Path(__file__)` with `resolve()`, `parent`, `parents[N]`, `/`, `joinpath` or `Path(<anchored>, ...)`
+    with literal segments, and names bound once to them. Literal segments include f-strings whose parts resolve and
+    entries of a literal dict. A loop over literal values (a tuple, a list, or a literal dict's `keys()`, `values()`
+    or `items()`) expands into one read per value, up to 64; beyond that the value reads its base directory. A
+    function parameter takes the literal arguments of every call of that function in the same file when every use
+    of the function is such a call; otherwise it is a runtime segment. A path bound to a name is read through the
+    name's uses, and is itself the read when no use resolves to it. A read in a test module belongs to it, a read
+    in a `conftest.py` to the test modules under its directory, and a read in a helper to the test modules whose
+    imports reach it, directly or through another helper or a conftest. A changed path selects a reader when it equals the read path or lies under it; a literal `glob` or `rglob`
     pattern also matches a new or deleted subdirectory. `iterdir` and a join with a runtime segment read the base
     directory; a read of the repository root or one the scan cannot resolve adds nothing. Read discovery only adds
     tests: the rules above and the full-suite fallback below keep precedence.
