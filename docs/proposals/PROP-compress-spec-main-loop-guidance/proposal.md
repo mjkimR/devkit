@@ -33,22 +33,46 @@ the official Claude limits (`SKILL.md` under 500 lines; root guide under 200 lin
 and the reread cost, not overflow. The guidance and CLI review-refactor run removed only duplicated and obsolete
 text; it did not rewrite needed content shorter.
 
-Hypothesis: rewriting the main-loop documents for density, with each rule kept at one owner, cuts their size
-noticeably without changing agent behavior.
+The peripheral pass of the same day measured what wording compression alone yields. Each group was rewritten for
+density, with every rule kept:
+
+| Group | Change |
+| --- | --- |
+| spec references | -3.6% |
+| spec side skills | -1.1% |
+| spec playbooks | -3.9% |
+| catalog maintenance | -7.5% |
+| other catalog bundles | -4% |
+| adaptive bundle | -4% |
+
+The documents were already one directive per line, and pinned guidance tests fix many phrases. Wording compression
+of the main loop would likely yield a similar few percent.
+
+Hypothesis: two policies reduce the main-loop load without removing a procedure:
+1. Drop or shrink to a pointer the guidance that restates a check a devkit command or rule enforces
+   deterministically, refusing before any effect with an actionable code and `[FIX]`.
+2. Move rare-case branches (recovery, unusual errors, exception paths, seldom-used modes) out of the entry
+   documents into on-demand references, linked one level deep.
+
+Removing procedures or rules, or relaxing pinned tests, stays out of scope.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: Which compression patterns held in the peripheral pass (same date, the spec bundle's peripheral
-  references, side skills and playbooks), and which feedback did they draw?
-- **Q2**: What is the exact main-loop set, and in what order should it be done (smallest blast radius first)?
-- **Q3**: Which pinned guidance tests guard main-loop rules? Where they break, do they show a lost rule, or only
-  that the wording moved?
+- **Q1**: What did the second peripheral pass (the two policies above, same date) yield per document? Which
+  candidates did it reject, and why?
+- **Q2**: For each main-loop rule, does a command or rule enforce it before effects, with a code and `[FIX]` that
+  give the correct action? Authority, approval, irreversible or outward effects, judgment and post-effect
+  detection always stay in the guidance.
+- **Q3**: Which rare branches of the main-loop entry documents (constitution, `spec` skill, `sdd-spec-feature`,
+  development-worker contract, integrate and orchestrate skills) can move to references without hiding a rule
+  the common path needs?
 
 ## 3. Proposed Design & Impact
 
 - Scope: the spec constitution, the `spec` skill, `sdd-spec-feature`, the development-worker contract,
   envelope/worker-records/completion references, specify/plan/tasks/review/sync, delegate/orchestrate/integrate,
   and isolated-execution.
+- Apply Policy 1 and Policy 2 only. Wording compression is incidental.
 - Conservative mode:
   - one document per commit, so each can be reverted alone;
   - a retained-constraint map for every removed or merged sentence;
