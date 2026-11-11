@@ -258,6 +258,24 @@ def test_baseline_corruption_wrong_schema_and_pending_baseline_refuse(repo, monk
         prepare.compute(root, baseline)
 
 
+@pytest.mark.parametrize("metadata_version", ["2.4", "2.5", "2.6"])
+def test_wheel_metadata_version_compatibility(tmp_path, metadata_version):
+    wheel = tmp_path / "devkit_advisory-0.1.5-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr(
+            "devkit_advisory-0.1.5.dist-info/METADATA",
+            f"Metadata-Version: {metadata_version}\nName: devkit-advisory\nVersion: 0.1.5\n"
+            "Requires-Dist: example==1.0\n",
+        )
+    if metadata_version == "2.6":
+        with pytest.raises(AdvisoryError, match="unsupported metadata version"):
+            identity.wheel(wheel, "devkit-advisory", "0.1.5", set())
+    else:
+        fingerprint, requirements = identity.wheel(wheel, "devkit-advisory", "0.1.5", set())
+        assert len(fingerprint) == 64
+        assert requirements == ["example==1.0"]
+
+
 def test_canonical_container_fields_and_foreign_dist_info(repo, tmp_path):
     _, baseline, originals = repo
     entry = identity.inventory(baseline)["packages"]["devkit-advisory"]

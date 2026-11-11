@@ -169,7 +169,7 @@ def wheel(path: Path, name: str, version: str, manifests: set[str]) -> tuple[str
             canonicalize_name(parsed["Name"]) == name and parsed.get_all("Version") == [version],
             "wheel metadata identity mismatch",
         )
-        require(parsed.get("Metadata-Version") in {"2.1", "2.2", "2.3", "2.4"}, "unsupported metadata version")
+        require(parsed.get("Metadata-Version") in {"2.1", "2.2", "2.3", "2.4", "2.5"}, "unsupported metadata version")
         for member in members:
             p = PurePosixPath(member.filename)
             require(not p.is_absolute() and ".." not in p.parts, "unsafe wheel member")
