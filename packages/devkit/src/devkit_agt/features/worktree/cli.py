@@ -216,7 +216,7 @@ def finish_cmd(
     del local_only  # finish makes no network call; the flag stays for the guidance that names it
     if merge:
         raise MergeRetiredError(
-            f"worktree finish --merge is retired; land {branch} with devkit integration --route local; nothing was"
+            f"worktree finish --merge is retired; land {branch} with devkit integration integrate --route local; nothing was"
             " changed",
             target_files=["--merge"],
             fix=merge_retired_fix(branch),
