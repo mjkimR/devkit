@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:13:46.212663Z'
+status: completed
+summary: exec list text pages through echo_page ([PAGE]/[NEXT_CMD]); EXECUTION_LIST removed without alias; exec limits, error code and JSON keys unchanged; paging grammar stated in ARCH-08-1 section 3 and 10 with CAP-HARN-command-mount 4.5 and CAP-HARN-isolated-execution 4 pointing to it
+findings: []
+assumptions:
+- No critical open feedback
+checks:
+  tests: PASS just test-affected --base main mode=partial 216 passed
+  build: PASS just check devkit pyright 0 errors
+  lint: PASS just lint-check; devkit rules check --ci --base main; devkit sync --check
+diff_scope:
+  base: e892c63d5799a0a260d38be09d960d3ac3e728ab
+  head: 153db08a4e76df36c64d4ce28ed64179d86e2179
