@@ -1,0 +1,20 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T05:11:09.374012Z'
+status: completed
+review: review-01.yaml
+summary: 'Finding 1 resolved by the implementer: ARCH-08-1 section 3 and 10 allow fields_line for a command adding fields after next and the example uses exec list; text-only, diff limited to the named locations plus matching spec AC-07 and plan wording'
+findings:
+- issue: ARCH-08-1 section 3 Paging requires echo_page for every paging command and allows extra fields after next, but echo_page cannot add fields; docs list prints its PAGE line with hidden through fields_line, and the example shows a docs list PAGE line without hidden
+  evidence: docs/architecture/ARCH-08-1-agent-output.md:59-69 and :145; packages/devkit-docs/src/devkit_docs/features/documents/cli/commands.py:77-86
+  failure_condition: A paging command that needs an extra field, such as docs list, reviewed against the section 10 checklist cannot both use echo_page and add its field
+  suggested_action: Allow fields_line with the same field order and next and NEXT_CMD rules for a command that adds fields; use an example without extra fields
+  resolution: resolved
+  severity: P2
+checks:
+  lint: PASS devkit rules check --ci --base main
+diff_scope:
+  base: e892c63d5799a0a260d38be09d960d3ac3e728ab
+  head: d6fde153d698fb880b6509700e78fe3af59eadf6
