@@ -35,8 +35,8 @@ from devkit_agt.features.worktree.models.errors import (
 )
 from devkit_agt.features.worktree.models.lifecycle import Position
 from devkit_agt.features.worktree.repositories.config import read_worktree_config
+from devkit_agt.features.worktree.repositories.gh import CommandResult, Runner, run_gh
 from devkit_agt.features.worktree.repositories.markers import UNIT_KEY, branch_marker
-from devkit_agt.features.worktree.repositories.pull_request import CommandResult, Runner, run_gh
 from devkit_agt.features.worktree.usecases.lifecycle import BRANCH, BRANCH_LIMIT, locate
 
 _log = get_logger(__name__)

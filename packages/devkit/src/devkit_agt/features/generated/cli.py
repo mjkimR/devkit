@@ -30,8 +30,8 @@ from devkit_dist.adapters.cli import (
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.generated.models.errors import StaleError
+from devkit_agt.features.generated.models.listing import LISTED, unlisted
 from devkit_agt.features.generated.usecases.engine import (
-    LISTED,
     ArtifactRun,
     CheckArtifacts,
     ListArtifacts,
@@ -103,7 +103,7 @@ def _stale_error(result: RunResult) -> StaleError:
     paths = [path for item in result.stale for path in item.owned]
     return StaleError(
         f"{len(result.stale)} generated artifact(s) differ from what their command produces at {result.commit}",
-        *([f"... and {len(paths) - LISTED} more"] if len(paths) > LISTED else []),
+        *unlisted(len(paths)),
         target_files=paths[:LISTED],
         fix=f"{devkit_command('generated regen ' + ids)}, then commit the regenerated files",
     )

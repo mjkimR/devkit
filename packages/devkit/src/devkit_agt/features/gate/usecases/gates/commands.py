@@ -29,18 +29,33 @@ included (``devkit_agt.features.rules.commit_index``).
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
 from devkit_core.core.git import status_records
 
 from devkit_agt.features.compact import CommandRun, run_command
 from devkit_agt.features.gate.models.base import BaseGate
-from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
+from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage, more_line
 from devkit_agt.features.gate.models.errors import GateFindingsError, VerifyNotRunError, VerifyUnstagedNotice
 from devkit_agt.features.rules import COMMIT_INDEX_VARIABLE
 
 HOOK_GIT_VARIABLES = ("GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE", "GIT_PREFIX")
+UNSTAGED_LISTED = 10  # unstaged paths listed in the notice; the rest are counted
+
+
+def hook_environment(root: Path, environ: Mapping[str, str]) -> dict[str, str]:
+    """``environ`` without the hook's Git variables, its index passed as ``DEVKIT_GIT_INDEX_FILE``.
+
+    The index is absolute (Git may pass ``GIT_INDEX_FILE`` relative to the top level ``root``); without one, an
+    inherited ``DEVKIT_GIT_INDEX_FILE`` is kept as it is.
+    """
+    env = {key: value for key, value in environ.items() if key not in HOOK_GIT_VARIABLES}
+    if index := environ.get("GIT_INDEX_FILE"):
+        env[COMMIT_INDEX_VARIABLE] = str(root / index)
+    return env
 
 
 @dataclass(frozen=True)
@@ -97,9 +112,7 @@ class VerifyCommandsGate(BaseGate):
         if not settings.commands:
             return GateResult.skipped("no commands configured")
         unstaged = _unstaged(ctx)
-        env = {key: value for key, value in os.environ.items() if key not in HOOK_GIT_VARIABLES}
-        if index := os.environ.get("GIT_INDEX_FILE"):
-            env[COMMIT_INDEX_VARIABLE] = str(ctx.repo_root / index)  # Git may pass it relative to the top level
+        env = hook_environment(ctx.repo_root, os.environ)
         failed: list[tuple[str, CommandRun]] = []
         notices: list[AdvisoryError] = []
         for command in settings.commands:
@@ -112,8 +125,8 @@ class VerifyCommandsGate(BaseGate):
             notices.append(
                 VerifyUnstagedNotice(
                     f"the commands checked the working tree, which differs from the commit in {len(unstaged)} file(s)",
-                    *unstaged[:10],
-                    *([f"... and {len(unstaged) - 10} more"] if len(unstaged) > 10 else []),
+                    *unstaged[:UNSTAGED_LISTED],
+                    *more_line(len(unstaged), UNSTAGED_LISTED),
                 )
             )
         if failed:

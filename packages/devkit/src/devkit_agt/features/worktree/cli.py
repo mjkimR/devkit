@@ -36,7 +36,7 @@ from devkit_dist.adapters.cli import (
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
-from devkit_agt.features.worktree.models.errors import NestedError, RunFromBaseError, WorktreeError
+from devkit_agt.features.worktree.models.errors import NestedError, RunFromBaseError, WorktreeError, rerun_from_base
 from devkit_agt.features.worktree.models.lifecycle import FinishResult, Position
 from devkit_agt.features.worktree.usecases.configured import FinishActivity, LocateProject, StartActivity
 from devkit_agt.features.worktree.usecases.lifecycle import StartBranch, WorktreeStatusQuery
@@ -83,12 +83,10 @@ def _rerun_on_base(command: Callable[..., Any]) -> Callable[..., Any]:
 
     @functools.wraps(command)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        try:
+        with rerun_from_base(
+            lambda base, _checkout: devkit_command(_same_command(base)), (NestedError, RunFromBaseError)
+        ):
             return command(*args, **kwargs)
-        except (NestedError, RunFromBaseError) as error:
-            if error.base is not None:
-                error.fix = devkit_command(_same_command(error.base))
-            raise
 
     return wrapper
 

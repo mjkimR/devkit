@@ -20,6 +20,7 @@ from pathlib import Path
 
 import click
 from devkit.advisory import AdvisoryError, Level, as_advisory_error
+from devkit_core.core.paths import display_path
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
     boundary,
@@ -37,9 +38,9 @@ from devkit_dist.features.project.usecases.workspace import require_git_toplevel
 
 import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 import devkit_agt.features.gate.usecases.hooks.local_config as local_config
+from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import Outcome, Stage
 from devkit_agt.features.gate.models.errors import RulesWarningsNotice, StrictWarningsError
-from devkit_agt.features.gate.models.paths import display_path
 from devkit_agt.features.gate.usecases.runner import RunHookUseCase, StageReport
 from devkit_agt.features.gate.usecases.status import GateStatusUseCase
 
@@ -147,13 +148,12 @@ def uninstall_cmd(workspace_root: str | None, output_format: str) -> None:
         click.echo("[OK: no managed hooks]")
 
 
-def _setup(gate: object, settings: object) -> str | None:
-    """The gate's ``setup`` line for its effective ``settings``; ``None`` without settings or the method."""
-    describe = getattr(gate, "setup", None)
-    if settings is None or not callable(describe):
+def _setup(gate: BaseGate, settings: object) -> str | None:
+    """The gate's ``setup`` line for its effective ``settings``; ``None`` without settings."""
+    if settings is None:
         return None
     try:
-        shown = describe(settings)
+        shown = gate.setup(settings)
     except Exception:  # a gate's report must not break status; its problems are reported by validation
         return None
     return shown if isinstance(shown, str) and shown else None

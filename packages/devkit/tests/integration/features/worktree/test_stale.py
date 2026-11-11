@@ -14,7 +14,7 @@ import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
 from devkit_agt.features.worktree import locate, stale_branches
-from devkit_agt.features.worktree.repositories.pull_request import CommandResult
+from devkit_agt.features.worktree.repositories.gh import CommandResult
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 

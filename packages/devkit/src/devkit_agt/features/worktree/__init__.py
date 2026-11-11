@@ -52,6 +52,7 @@ from devkit_agt.features.worktree.models.errors import (
     WorktreeConfigError,
     WorktreeError,
     pull_request_policy_fix,
+    rerun_from_base,
 )
 from devkit_agt.features.worktree.models.lifecycle import (
     BranchStartResult,
@@ -63,9 +64,14 @@ from devkit_agt.features.worktree.models.lifecycle import (
     WorktreeStatus,
     slug_of,
 )
-from devkit_agt.features.worktree.models.merging import ConflictSettler
+from devkit_agt.features.worktree.models.merging import ConflictSettler, merge_message
 from devkit_agt.features.worktree.models.planning import FinishPlan
-from devkit_agt.features.worktree.repositories.config import read_worktree_config
+from devkit_agt.features.worktree.repositories.config import (
+    POLICY_DEFAULTS,
+    invalid_policy_keys,
+    read_worktree_config,
+    worktree_policy,
+)
 from devkit_agt.features.worktree.repositories.markers import BASE_KEY, MARKER, UNIT_KEY, branch_marker, marker_key
 from devkit_agt.features.worktree.services.extensions import run_finish_guards, run_post_finish
 from devkit_agt.features.worktree.services.merging import (
@@ -74,7 +80,6 @@ from devkit_agt.features.worktree.services.merging import (
     fast_forward,
     integration_lock,
     is_ancestor,
-    merge_message,
     merge_method,
 )
 from devkit_agt.features.worktree.usecases.lifecycle import (
@@ -95,6 +100,7 @@ from devkit_agt.features.worktree.usecases.stale import StaleBranch, StaleResult
 __all__ = [
     "BASE_KEY",
     "MARKER",
+    "POLICY_DEFAULTS",
     "UNIT_KEY",
     "AddFailedError",
     "AttachCheckFailedError",
@@ -160,6 +166,7 @@ __all__ = [
     "find",
     "finish",
     "integration_lock",
+    "invalid_policy_keys",
     "is_ancestor",
     "locate",
     "marker_key",
@@ -169,10 +176,12 @@ __all__ = [
     "plan_finish",
     "pull_request_policy_fix",
     "read_worktree_config",
+    "rerun_from_base",
     "run_finish_guards",
     "run_post_finish",
     "slug_of",
     "stale_branches",
     "start",
     "validate_finish",
+    "worktree_policy",
 ]

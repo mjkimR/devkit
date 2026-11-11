@@ -3,33 +3,39 @@
 from __future__ import annotations
 
 import os
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
 
-from devkit_core.core.git import parse_status_records
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git, status_records
 
 from ..models.errors import SnapshotFailed
 from ..models.records import digest
 
+FAILED = "Cannot capture inspected Git content"
+
+
+def _failed(command: str, exc: GitError) -> SnapshotFailed:
+    return SnapshotFailed(FAILED, f"git {command} exited {exc.returncode}")
+
 
 def git(root: Path, *args: str, index: str | None = None) -> bytes:
-    env = os.environ.copy()
-    env["GIT_OPTIONAL_LOCKS"] = "0"
-    if index:
-        env["GIT_INDEX_FILE"] = index
-    result = subprocess.run(["git", "-C", str(root), *args], env=env, capture_output=True, check=False)
-    if result.returncode:
-        raise SnapshotFailed("Cannot capture inspected Git content", f"git {args[0]} exited {result.returncode}")
-    return result.stdout
+    """``run_git`` without optional locks (the real index is never refreshed); a failure is ``SnapshotFailed``."""
+    try:
+        return run_git(root, "--no-optional-locks", *args, index=index)
+    except GitError as exc:
+        raise _failed(args[0], exc) from exc
 
 
 def capture(root: Path, excluded: list[str]) -> tuple[dict[str, Any], bytes | None]:
     paths = ["--", ".", *(f":(top,literal,exclude){p}" for p in excluded)]
     source = git(root, "rev-parse", "HEAD").decode().strip()
-    status = git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all", *paths)
-    dirty_paths = [record.path for record in parse_status_records(status)]
+    try:
+        records = status_records(root, *paths[1:], untracked="all")
+    except GitError as exc:
+        raise _failed("status", exc) from exc
+    dirty_paths = [record.path for record in records]
     if not dirty_paths:
         return {
             "source_sha": source,

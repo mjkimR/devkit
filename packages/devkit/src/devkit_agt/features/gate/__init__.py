@@ -6,7 +6,7 @@ does). ``devkit gate`` is a thin command line over them.
 """
 
 from devkit_agt.features.gate.models.base import BaseGate
-from devkit_agt.features.gate.models.contracts import Gate, GateContext, GateResult, Outcome, Stage
+from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Outcome, Stage
 from devkit_agt.features.gate.models.errors import (
     ForeignHookError,
     GateConfigError,
@@ -45,7 +45,6 @@ from devkit_agt.features.gate.usecases.runner import (
 __all__ = [
     "BaseGate",
     "ForeignHookError",
-    "Gate",
     "GateConfigError",
     "GateContext",
     "GateDefinitionError",

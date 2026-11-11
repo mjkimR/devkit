@@ -24,7 +24,8 @@ from devkit_dist.features.project.repositories.project import require_git_toplev
 
 import devkit_agt.features.gate.repositories.git as git
 from devkit_agt.features.compact import CommandInterrupted
-from devkit_agt.features.gate.models.contracts import Gate, GateContext, GateResult, Outcome, Stage, checked_notices
+from devkit_agt.features.gate.models.base import BaseGate
+from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Outcome, Stage, checked_notices
 from devkit_agt.features.gate.models.errors import GateConfigError, GateResultError
 from devkit_agt.features.gate.repositories.config import GatesConfig, load_gates_config, resolve_settings
 from devkit_agt.features.gate.usecases.registry import GateRegistry, project_registry
@@ -145,7 +146,7 @@ def run_stage(
     return StageReport(ctx.stage, tuple(runs), checked.errors)
 
 
-def _run_gate(gate: Gate, ctx: GateContext, config: GatesConfig, checked: Validation) -> GateRun:
+def _run_gate(gate: BaseGate, ctx: GateContext, config: GatesConfig, checked: Validation) -> GateRun:
     if not config.enabled(gate):
         return GateRun(gate.id, Outcome.SKIPPED, "disabled")
     if gate.id not in checked.settings:

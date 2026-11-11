@@ -14,6 +14,7 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import atomic_write_bytes, file_lock
+from devkit_core.core.git import git_config
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
@@ -111,7 +112,7 @@ def generated_by_pre_commit(path: Path) -> bool:
 def locate(cwd: Path) -> HooksLocation:
     """The managed hooks directory and the ``core.hooksPath`` override that bypasses it, if any."""
     directory = git.common_git_dir(cwd) / "hooks"
-    custom = git.config_value(cwd, HOOKS_PATH_KEY)
+    custom = (git_config(cwd, HOOKS_PATH_KEY) or "").strip() or None  # unset or blank: none
     if custom:
         # Git runs hooks from the work tree's top level, so a relative value is relative to it.
         candidate = Path(custom).expanduser()

@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 import json
-import subprocess
 
 import pytest
-from devkit_agt.features.worktree.models.pull_request import Repository
-from devkit_agt.features.worktree.repositories.pull_request import (
-    CommandResult,
-    GitHub,
-    PullRequestError,
-    run_gh,
-)
+from devkit_agt.features.integration.models.contracts import Repository
+from devkit_agt.features.integration.repositories.github import GitHub, PullRequestError
+from devkit_agt.features.worktree.repositories.gh import CommandResult
 from testsupport.rules import git, init_repo
 
 REPOSITORY = Repository(
@@ -138,16 +133,6 @@ def test_required_checks_are_structured_and_optional_checks_do_not_block(tmp_pat
 
     checks = GitHub(tmp_path, runner).checks(REPOSITORY, 42)
     assert [c["bucket"] for c in checks] == expected
-
-
-def test_runner_is_bounded_noninteractive_and_timeout_is_unknown(tmp_path, monkeypatch):
-    def timeout(args, **kwargs):
-        assert kwargs["timeout"] == 5 and kwargs["stdin"] == subprocess.DEVNULL
-        assert kwargs["env"]["GH_PROMPT_DISABLED"] == "1" and "GH_REPO" not in kwargs["env"]
-        raise subprocess.TimeoutExpired(args, 5)
-
-    monkeypatch.setattr(subprocess, "run", timeout)
-    assert run_gh(tmp_path, ["pr", "view", "1", "-R", REPOSITORY.selector]).returncode is None
 
 
 def test_multiple_push_destinations_refused_at_prepare_and_revalidation(tmp_path):

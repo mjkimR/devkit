@@ -1,14 +1,21 @@
-"""Bounded gh API transport with response status and header preservation."""
+"""Bounded gh API transport with response status and header preservation, on the worktree feature's hardened
+``run_gh``."""
 
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from devkit_agt.features.worktree.repositories.gh import http_response
+from devkit_agt.features.worktree.repositories.gh import run_gh as gh
+
 from ..models.errors import GhUnavailable, TransportFailure
 from ..models.records import canonical
+
+AUTH_TIMEOUT = 15.0  # seconds for the `gh auth status` that classifies a response-less failure
 
 
 @dataclass(frozen=True)
@@ -23,42 +30,27 @@ class Runner(Protocol):
 
 
 def run_gh(method: str, endpoint: str, payload: dict[str, Any] | None, timeout: float) -> Response:
-    args = ["gh", "api", "--include", "--method", method, "-H", "Accept: application/vnd.github+json", endpoint]
+    """One ``gh api`` request; ``GhUnavailable`` when gh is missing or logged out, ``subprocess.TimeoutExpired`` when
+    it does not answer within ``timeout``, ``TransportFailure`` when authenticated gh printed no HTTP response."""
+    args = ["api", "--include", "--method", method, "-H", "Accept: application/vnd.github+json", endpoint]
     if payload is not None:
         args += ["--input", "-"]
-    try:
-        completed = subprocess.run(
-            args,
-            input=canonical(payload) if payload is not None else None,
-            capture_output=True,
-            timeout=timeout,
-            check=False,
-        )
-    except FileNotFoundError as exc:
-        raise GhUnavailable("gh is unavailable") from exc
-    raw = completed.stdout.replace(b"\r\n", b"\n")
-    # gh --include can print intermediate HTTP blocks; the last block owns the body.
-    while raw.startswith(b"HTTP/"):
-        header, separator, body = raw.partition(b"\n\n")
-        if not separator:
-            break
-        lines = header.decode("utf-8", "replace").splitlines()
-        status = int(lines[0].split()[1])
-        headers = {
-            key.lower(): value.strip() for line in lines[1:] if ":" in line for key, value in [line.split(":", 1)]
-        }
-        if body.startswith(b"HTTP/"):
-            raw = body
-            continue
+    completed = gh(None, args, timeout=timeout, input=canonical(payload) if payload is not None else None)
+    if completed.returncode == 127:
+        raise GhUnavailable("gh is unavailable")
+    if completed.returncode is None:
+        raise subprocess.TimeoutExpired(["gh", *args], timeout)
+    response = http_response(completed.stdout)
+    if response is not None:
+        body = os.fsencode(response.body)
         try:
             content = json.loads(body) if body.strip() else None
         except ValueError:
             content = body.decode("utf-8", "replace")
-        return Response(status, headers, content)
-    try:
-        authenticated = subprocess.run(["gh", "auth", "status"], capture_output=True, timeout=15, check=False)
-    except subprocess.TimeoutExpired as exc:
-        raise TransportFailure("Cannot verify gh authentication during a transport failure") from exc
+        return Response(response.status, response.headers, content)
+    authenticated = gh(None, ["auth", "status"], timeout=AUTH_TIMEOUT)
+    if authenticated.returncode is None:
+        raise TransportFailure("Cannot verify gh authentication during a transport failure")
     if authenticated.returncode:
         raise GhUnavailable("gh is not authenticated", f"gh exit={completed.returncode}")
     raise TransportFailure("Authenticated gh returned no HTTP response")

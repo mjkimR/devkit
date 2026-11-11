@@ -1,27 +1,30 @@
-"""Bounded, injectable GitHub operations. Authentication remains owned by gh."""
+"""Bounded, injectable GitHub operations of the pull-request route. Authentication remains owned by gh."""
 
 from __future__ import annotations
 
 import json
-import os
-import subprocess
 import tempfile
-import threading
 import time
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 from urllib.parse import quote, urlparse
 
 from devkit.advisory import Actor, AdvisoryError, Retry
 from devkit_core.base.errors import GitError
 from devkit_core.core.git import run_git
 
-from devkit_agt.features.worktree.models.pull_request import Repository
+from devkit_agt.features.integration.models.contracts import Repository
+from devkit_agt.features.worktree import merge_message
+from devkit_agt.features.worktree.repositories.gh import CommandResult, Runner, http_response, run_gh
 
 NETWORK_TIMEOUT = 5.0
 NETWORK_BUDGET = 20.0
 PR_FIELDS = "number,url,state,isDraft,isCrossRepository,headRefName,headRefOid,baseRefName,mergeCommit,mergeStateStatus,mergeable,reviewDecision,statusCheckRollup"
+UNKNOWN_FIX = (
+    "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare"
+    " <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work;"
+    " do not repeat an unknown mutation"
+)
 
 
 class PullRequestError(AdvisoryError):
@@ -35,64 +38,33 @@ class PullRequestError(AdvisoryError):
         self.code = code
 
 
-@dataclass(frozen=True)
-class CommandResult:
-    returncode: int | None
-    stdout: str = ""
-    stderr: str = ""
-    http_status: int | None = None
-
-
-class Runner(Protocol):
-    def __call__(self, cwd: Path, args: list[str]) -> CommandResult: ...
-
-
-def run_gh(cwd: Path, args: list[str], *, timeout: float = NETWORK_TIMEOUT) -> CommandResult:
-    env = {**os.environ, "GH_PROMPT_DISABLED": "1", "NO_COLOR": "1", "GH_PAGER": "cat"}
-    # Repository discovery cannot inherit a caller's unrelated override.
-    env.pop("GH_REPO", None)
-    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
-        env.pop(key, None)
-    env["GIT_CONFIG_GLOBAL"] = os.devnull
-    env["GIT_CONFIG_SYSTEM"] = os.devnull
-    try:
-        result = subprocess.run(
-            ["gh", *args],
-            cwd=cwd,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            timeout=timeout,
-            check=False,
-        )
-    except FileNotFoundError:
-        return CommandResult(127)
-    except subprocess.TimeoutExpired:
-        return CommandResult(None)
-    return CommandResult(result.returncode, os.fsdecode(result.stdout), os.fsdecode(result.stderr))
+def _default_runner(cwd: Path, args: list[str]) -> CommandResult:
+    return run_gh(cwd, args, timeout=NETWORK_TIMEOUT)
 
 
 class GitHub:
     """All repository calls carry explicit identity; the runner is injectable for offline tests."""
 
-    def __init__(self, root: Path, runner: Runner = run_gh) -> None:
+    def __init__(self, root: Path, runner: Runner = _default_runner) -> None:
         self.root = root
         self.runner = runner
-        self._budget = threading.local()
+        self._deadline: float | None = None
 
     def begin_call(self) -> None:
-        self._budget.deadline = time.monotonic() + NETWORK_BUDGET
+        """Start the network budget of one CLI operation."""
+        self._deadline = time.monotonic() + NETWORK_BUDGET
 
     def _remaining(self) -> float:
-        if not hasattr(self._budget, "deadline"):
+        if self._deadline is None:
             self.begin_call()
-        return min(NETWORK_TIMEOUT, self._budget.deadline - time.monotonic())
+        assert self._deadline is not None
+        return min(NETWORK_TIMEOUT, self._deadline - time.monotonic())
 
     def _call(self, cwd: Path, args: list[str]) -> CommandResult:
         remaining = self._remaining()
         if remaining <= 0:
             return CommandResult(None)
-        if self.runner is run_gh:
+        if self.runner is _default_runner:
             return run_gh(cwd, args, timeout=remaining)
         return self.runner(cwd, args)
 
@@ -102,7 +74,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "Network budget exhausted before the next operation",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work; do not repeat an unknown mutation",
+                UNKNOWN_FIX,
             )
         return run_git(self.root, *args, timeout=remaining)
 
@@ -112,7 +84,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "GitHub observation timed out or exhausted the network budget",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work; do not repeat an unknown mutation",
+                UNKNOWN_FIX,
             )
         if result.returncode != 0:
             raise PullRequestError(
@@ -377,17 +349,13 @@ class GitHub:
                 "-f",
                 "merge_method=merge",
                 "-f",
-                f"commit_title=chore(merge): integrate {branch} into {target}",
+                f"commit_title={merge_message(branch, target)}",
                 "-f",
                 f"commit_message=Integrate source branch {branch} into {target}.",
             ],
         )
-        lines = result.stdout.splitlines()
-        status = None
-        if lines and lines[0].startswith("HTTP/"):
-            parts = lines[0].split()
-            if len(parts) > 1 and parts[1].isdigit():
-                status = int(parts[1])
+        response = http_response(result.stdout)
+        status = response.status if response is not None else None
         return CommandResult(result.returncode, result.stdout, result.stderr, status)
 
     def dependents(self, repository: Repository, branch: str) -> list[dict[str, Any]]:
@@ -431,7 +399,7 @@ class GitHub:
             raise PullRequestError(
                 "INTEGRATION_STEP_UNKNOWN",
                 "Git mutation outcome is unconfirmed",
-                "Inspect Git and pull-request state; after confirming the mutation outcome, run `uv run devkit integration prepare <branch> --route pull-request` and, after Host approval, integrate with the digest it prints for remaining work; do not repeat an unknown mutation",
+                UNKNOWN_FIX,
                 str(exc),
             ) from exc
 

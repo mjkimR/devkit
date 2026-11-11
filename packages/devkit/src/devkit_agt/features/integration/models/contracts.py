@@ -13,7 +13,25 @@ from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.lifecycle import FinishResult
 from devkit_agt.features.worktree.models.planning import FinishPlan
-from devkit_agt.features.worktree.models.pull_request import Repository
+
+
+@dataclass(frozen=True)
+class Repository:
+    """The GitHub repository the pull-request route is bound to: its remote, URLs and ``host/owner/name``."""
+
+    remote: str
+    fetch_url: str
+    push_url: str
+    host: str
+    name: str
+    delete_on_merge: bool
+
+    def public_scope(self) -> dict[str, Any]:
+        return {"remote": self.remote, "repository": self.selector, "delete_on_merge": self.delete_on_merge}
+
+    @property
+    def selector(self) -> str:
+        return f"{self.host}/{self.name}"
 
 
 def digest(value: Any) -> str:
@@ -165,18 +183,6 @@ class IntegrationRequest:
             return self.pr_number
         return "create" if self.route == "pull-request" else None
 
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self) | {
-            "repository": self.repository.public_scope() if self.repository else None,
-            "digest": self.digest,
-            "approval": {"gate": self.approval_gate, "policy": self.approval_policy},
-            "merge_method": self.context.finish.merge_method,
-            "network_operations": "excluded" if self.route == "local" else "approved-pull-request",
-            "route": self.route,
-            "remote": self.repository.public_scope() if self.repository else None,
-            "pull_request": self._pull_request(),
-        }
-
 
 STEPS = ("merge", "worktree_remove", "branch_delete", "marker_clear", "post_finish")
 
@@ -247,7 +253,8 @@ class IntegrationResult:
         return {"seeded": [item.to_dict() for item in self.seeded], "regenerate": regenerate_command(self.seeded)}
 
     def compact_dict(self) -> dict[str, Any]:
-        """Bounded default MCP result; detailed inspection uses the full serializer."""
+        """The result ``devkit integration`` prints: the approval scope, the step states and only the present
+        optional sections."""
         result: dict[str, Any] = {
             "request": self.request.approval_scope(),
             "status": self.status,
@@ -273,25 +280,3 @@ class IntegrationResult:
         if self.seeded:
             result["generated"] = self.generated()
         return result
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "request": self.request.to_dict(),
-            "status": self.status,
-            "verification": self.verification,
-            "landed_sha": self.landed_sha,
-            "authority": self.authority,
-            "ui_action": self.ui_action,
-            "steps": dict(self.steps),
-            "pull_request": dict(self.pull_request),
-            "landing": dict(self.landing),
-            "cleanup_steps": dict(self.cleanup_steps),
-            "finish": self.finish.to_dict() if self.finish else None,
-            "observed": self.observed,
-            "failing_operation": self.failing_operation,
-            "build": self.build(),
-            "generated": self.generated(),
-            "network_operations": "excluded" if self.request.route == "local" else "approved-pull-request",
-            "errors": [error.to_dict() for error in self.errors],
-            "notices": [notice.to_dict() for notice in self.notices],
-        }

@@ -42,7 +42,6 @@ from __future__ import annotations
 import dataclasses
 import re
 import sys
-import typing
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -58,21 +57,21 @@ from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
-from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
+from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable, prose, render_key
 
 import devkit_agt.features.gate.repositories.git as git
 import devkit_agt.features.gate.usecases.hooks.hooks as hooks
-from devkit_agt.features.gate.models.contracts import Gate
-from devkit_agt.features.gate.models.errors import GateTemplateNotice, HookInstallSkippedNotice
+from devkit_agt.features.gate.models.base import BaseGate
+from devkit_agt.features.gate.models.errors import GateDefinitionError, GateTemplateNotice, HookInstallSkippedNotice
 from devkit_agt.features.gate.repositories.config import (
     ENABLED_KEY,
     LOCAL_CONFIG,
     GateEntry,
     GatesConfig,
+    declared_settings,
     load_project_gates_config,
 )
 from devkit_agt.features.gate.usecases.registry import default_gate_registry, project_registry
-from devkit_agt.features.rules.models.settings import describe_setting_type
 
 HEADER = f"""\
 ## Clone-local settings of devkit commit gates: not tracked by Git, shared by every worktree of this clone.
@@ -121,38 +120,28 @@ def _project_keys(entry: GateEntry | None) -> set[str]:
     return set(entry.values) | ({ENABLED_KEY} if entry.enabled is not None else set())
 
 
-def _setting_line(item: dataclasses.Field[Any], kind: str, value: Any, project: set[str]) -> str:
-    if value is None:
-        inner = kind.removesuffix(" or null")
-        shown, note = _toml(_PLACEHOLDERS.get(inner, [])), f"{kind}; unset by default"
-    else:
-        shown, note = _toml(value), kind
-    help_text = item.metadata.get("help")
-    if isinstance(help_text, str) and help_text.strip():
-        note = f"{note}; {' '.join(help_text.split())}"
-    return _project_line(item.name, note) if item.name in project else f"#   {item.name} = {shown}  # {note}"
-
-
-def _setting_lines(gate: Gate, project: set[str]) -> list[str]:
-    defaults = gate.settings
-    if defaults is None or not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
-        return []
+def _setting_lines(gate: BaseGate, project: set[str]) -> list[str]:
     try:
-        hints = typing.get_type_hints(type(defaults))
-        fields = dataclasses.fields(defaults)
-        kinds = {item.name: describe_setting_type(hints[item.name]) for item in fields}
-    except Exception:  # an invalid declaration is reported by `devkit gate status`; show no settings for it
+        settings = declared_settings(gate) or ()
+    except GateDefinitionError:  # an invalid declaration is reported by `devkit gate status`; show no settings for it
         return []
     lines = []
-    for item in fields:
+    for setting in settings:
+        item = setting.item
         try:
-            lines.append(_setting_line(item, kinds[item.name], getattr(defaults, item.name), project))
+            key = _template_key(item, setting.kind, getattr(gate.settings, item.name))
+            # A key the project sets is prose naming it; its note is the one the commented default would carry.
+            line = render_key(key, indent="  ", example=True)
+            if item.name in project:
+                shown = key.example if key.default is None else key.default
+                line = _project_line(item.name, line.removeprefix(f"#   {item.name} = {_toml(shown)}  # "))
+            lines.append(line)
         except Exception as exc:  # a default TOML cannot represent: leave the key out rather than the whole template
             _log.info("gate %s: setting %s not shown in the template: %s", gate.id, item.name, exc)
     return lines
 
 
-def render_table(gate: Gate, project: GatesConfig | None = None) -> str:
+def render_table(gate: BaseGate, project: GatesConfig | None = None) -> str:
     """The commented ``[gates.settings.<id>]`` table of one gate.
 
     Keys that ``project`` (the ``.devkit/config.toml`` layer) sets for the gate
@@ -163,7 +152,7 @@ def render_table(gate: Gate, project: GatesConfig | None = None) -> str:
     description = " ".join(str(gate.description).split())
     enabled = f"#   {ENABLED_KEY} = {_toml(gate.enabled_by_default)}"
     lines = [
-        f"## {gate.stage.value} gate, {state} by default" + (f": {description}" if description else ""),
+        *prose(f"{gate.stage.value} gate, {state} by default" + (f": {description}" if description else "")),
         f"# [gates.settings.{gate.id}]",
         _project_line(ENABLED_KEY) if ENABLED_KEY in keys else enabled,
         *_setting_lines(gate, keys),
@@ -185,7 +174,7 @@ def _skipped(path: Path, problem: str, fix: str | None = None, target: str | Non
     return TemplateResult(path, TemplateState.SKIPPED, notice)
 
 
-def refresh_template(common_git_dir: Path, gates: list[Gate], project: GatesConfig | None = None) -> TemplateResult:
+def refresh_template(common_git_dir: Path, gates: list[BaseGate], project: GatesConfig | None = None) -> TemplateResult:
     """Create ``<common_git_dir>/devkit.config`` with every gate's table, or append the tables it lacks.
 
     ``project`` is the ``.devkit/config.toml`` layer (``load_project_gates_config``);
@@ -202,7 +191,7 @@ def refresh_template(common_git_dir: Path, gates: list[Gate], project: GatesConf
         return _skipped(path, f"cannot be written: {exc}", fix=writable)
 
 
-def _refresh(path: Path, gates: list[Gate], project: GatesConfig | None) -> TemplateResult:
+def _refresh(path: Path, gates: list[BaseGate], project: GatesConfig | None) -> TemplateResult:
     if path.is_symlink() or (path.exists() and not path.is_file()):
         return _skipped(path, "not a regular file")
     if not path.exists():
@@ -328,7 +317,7 @@ def _template_key(item: dataclasses.Field[Any], kind: str, value: Any) -> Templa
     if value is None:
         inner = kind.removesuffix(" or null")
         return TemplateKey(
-            item.name, None, f"unset by default; {note}".rstrip("; "), kind, _PLACEHOLDERS.get(inner, [])
+            item.name, None, "unset by default" + (f"; {note}" if note else ""), kind, _PLACEHOLDERS.get(inner, [])
         )
     return TemplateKey(item.name, value, note, kind)
 
@@ -343,11 +332,8 @@ def config_tables() -> tuple[TemplateTable, ...]:
     for gate in default_gate_registry().get_all():
         state = "on" if gate.enabled_by_default else "off"
         keys = [TemplateKey(ENABLED_KEY, gate.enabled_by_default, "false turns the gate off")]
-        defaults = gate.settings
-        if defaults is not None and dataclasses.is_dataclass(defaults) and not isinstance(defaults, type):
-            hints = typing.get_type_hints(type(defaults))
-            for item in dataclasses.fields(defaults):
-                keys.append(_template_key(item, describe_setting_type(hints[item.name]), getattr(defaults, item.name)))
+        for setting in declared_settings(gate) or ():
+            keys.append(_template_key(setting.item, setting.kind, getattr(gate.settings, setting.item.name)))
         description = " ".join(str(gate.description).split())
         tables.append(
             TemplateTable(

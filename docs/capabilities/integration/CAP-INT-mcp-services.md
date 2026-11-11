@@ -103,7 +103,7 @@ The Host synchronizes first, then regenerates and commits before final checks. T
 - **Checks pending.** WHEN required checks, required reviews or platform mergeability are not yet satisfied after the
   checked build, integrate MUST publish the source and PR, make no merge call and return `status=pending` with the
   `INTEGRATION_CHECKS_PENDING` notice. The merge then takes a fresh `prepare` and Host decision.
-  Covered by `packages/devkit/tests/integration/features/worktree/test_pull_request.py` and
+  Covered by `packages/devkit/tests/integration/features/integration/test_github.py` and
   `packages/devkit/tests/integration/features/integration/test_pull_request.py`.
 - Neither route changes host tool permission, filesystem permission, trust or publication policy.
 

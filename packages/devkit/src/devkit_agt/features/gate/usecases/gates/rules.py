@@ -11,7 +11,7 @@ it off with ``enabled = false``.
 
 While the rules run, the hook's ``GIT_DIR``, ``GIT_INDEX_FILE``, ``GIT_WORK_TREE`` and
 ``GIT_PREFIX`` are removed from the environment and the index is passed as
-``DEVKIT_GIT_INDEX_FILE``, as ``verify-commands`` does for its commands, so a rule that
+``DEVKIT_GIT_INDEX_FILE``, as ``verify-commands`` does for its commands (``hook_environment``), so a rule that
 runs Git in the materialized snapshot is not pointed at this repository; the
 environment is restored afterwards.
 
@@ -37,9 +37,9 @@ from devkit.advisory import Actor
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.gate.models.base import BaseGate
-from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
+from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage, more_line
 from devkit_agt.features.gate.models.errors import GateFindingsError, RulesWarningsNotice
-from devkit_agt.features.gate.usecases.gates.commands import HOOK_GIT_VARIABLES
+from devkit_agt.features.gate.usecases.gates.commands import HOOK_GIT_VARIABLES, hook_environment
 from devkit_agt.features.rules import COMMIT_INDEX_VARIABLE
 
 if TYPE_CHECKING:
@@ -52,13 +52,13 @@ MAX_LISTED = 20
 @contextmanager
 def _rules_environment(root: Path) -> Iterator[None]:
     """The hook's Git variables removed and its index passed as ``DEVKIT_GIT_INDEX_FILE`` until the block ends."""
-    saved = {name: os.environ.pop(name) for name in (*HOOK_GIT_VARIABLES, COMMIT_INDEX_VARIABLE) if name in os.environ}
-    if index := saved.get("GIT_INDEX_FILE"):
-        os.environ[COMMIT_INDEX_VARIABLE] = str(root / index)  # Git may pass it relative to the top level
+    names = (*HOOK_GIT_VARIABLES, COMMIT_INDEX_VARIABLE)
+    saved = {name: os.environ.pop(name) for name in names if name in os.environ}
+    os.environ.update(hook_environment(root, saved))
     try:
         yield
     finally:
-        for name in (*HOOK_GIT_VARIABLES, COMMIT_INDEX_VARIABLE):
+        for name in names:
             os.environ.pop(name, None)
         os.environ.update(saved)
 
@@ -69,9 +69,7 @@ def _listed(violations: Sequence[Violation]) -> list[str]:
         lines.append(f"{violation.rule_id} {violation.file}:{violation.line}: {violation.message}")
         if violation.remediation:
             lines.append(f"  fix: {violation.remediation}")
-    if len(violations) > MAX_LISTED:
-        lines.append(f"... and {len(violations) - MAX_LISTED} more")
-    return lines
+    return [*lines, *more_line(len(violations), MAX_LISTED)]
 
 
 def _not_run(problems: Sequence[RuleProblem]) -> RulesRunError:

@@ -15,8 +15,6 @@ from devkit_agt.features.integration.models.contracts import SeededArtifact, reg
 from devkit_agt.features.integration.models.errors import GeneratedSeededWarning
 from devkit_agt.features.worktree import MergeConflictError
 
-LISTED = 20  # conflicts listed in a refusal's details
-
 
 class GeneratedSeeding:
     """A ``ConflictSettler`` for one build onto ``target``; ``seeded`` holds what its call kept from one side."""
@@ -28,7 +26,7 @@ class GeneratedSeeding:
 
     def __call__(self, paths: tuple[str, ...], /) -> dict[str, str]:
         # Imported here so `devkit integration --help` loads no generated area.
-        from devkit_agt.features.generated import classify, load_registry_at
+        from devkit_agt.features.generated import LISTED, classify, load_registry_at, unlisted
 
         plan = classify(load_registry_at(self.root, self.target), paths)
         if plan.unowned:
@@ -38,12 +36,11 @@ class GeneratedSeeding:
                 else f"{path}: owned by no generated artifact"
                 for path in plan.unowned
             ]
-            extra = len(lines) - LISTED
             raise MergeConflictError(
                 f"the target's later commits conflict with the task branch in {len(plan.unowned)} file(s) no generated"
                 " artifact settles; nothing was changed on the target",
                 *lines[:LISTED],
-                *([f"... and {extra} more"] if extra > 0 else []),
+                *unlisted(len(lines)),
             )
         self.seeded = tuple(SeededArtifact(item.id, plan.owned[item.id], item.seed) for item in plan.owners)
         return plan.sides()

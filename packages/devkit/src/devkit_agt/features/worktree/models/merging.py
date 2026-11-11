@@ -18,3 +18,8 @@ class ConflictSettler(Protocol):
     """
 
     def __call__(self, paths: tuple[str, ...], /) -> Mapping[str, str]: ...
+
+
+def merge_message(branch: str, target_branch: str) -> str:
+    """The devkit-composed merge commit message; both names are validated branch names, never caller text."""
+    return f"chore(merge): integrate {branch} into {target_branch}"

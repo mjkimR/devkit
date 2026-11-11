@@ -198,14 +198,17 @@ payloads such as `pre-push` requires a replay contract so every child receives t
 ## 4. Gate Contract
 
 ```python
-class Gate(Protocol):
+@dataclass
+class BaseGate(ABC):
     id: str
     description: str
     stage: Stage                # pre-commit | commit-msg | post-commit
-    order: int                  # lower runs first within the stage
-    enabled_by_default: bool
-    settings: Any               # dataclass instance with defaults, or None
+    order: int = 100            # lower runs first within the stage
+    enabled_by_default: bool = True
+    settings: Any = None        # dataclass instance with defaults, or None
 
+    def setup(self, settings: Any) -> str | None: ...  # default None
+    @abstractmethod
     def run(self, ctx: GateContext) -> GateResult | None: ...
 ```
 
@@ -299,7 +302,8 @@ uncommented key replaces the `.devkit/config.toml` value as a whole (an array to
 #   enabled = true
 #   max_files = 50  # integer; Most files one commit may stage
 
-## pre-commit gate, on by default: Run the project's verification commands (format, lint, type check, tests) before a commit.
+## pre-commit gate, on by default: Run the project's verification commands (format, lint, type check, tests) before a
+## commit.
 # [gates.settings.verify-commands]
 #   enabled = true
 ##   commands: set in .devkit/config.toml; adding commands = <value> here replaces it  # array of strings; Shell commands run in order from the repository root; empty skips the gate

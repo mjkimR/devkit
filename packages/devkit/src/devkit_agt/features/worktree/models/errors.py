@@ -15,11 +15,16 @@ and unsets it). Before that,
 from __future__ import annotations
 
 import shlex
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_dist.base.errors import ConfigError
+
+if TYPE_CHECKING:
+    from devkit_agt.features.worktree.models.lifecycle import Position
 
 
 class WorktreeError(AdvisoryError):
@@ -86,14 +91,33 @@ def run_from_base_fix(base: object) -> str:
     return f"Rerun the same command with -w {shlex.quote(str(base))}, the base checkout"
 
 
-def from_base_error(
-    cls: type[RunFromBaseError] | type[NestedError], message: str, base: Path, checkout: Path, *details: str
-) -> RunFromBaseError | NestedError:
-    """``cls`` raised in the linked worktree ``checkout`` of the base checkout ``base``, both kept on the error
-    (``base``, ``checkout``) so a command line can name the same command for the base."""
-    error = cls(message, *details, target_files=[str(base)], fix=run_from_base_fix(base))
-    error.base, error.checkout = Path(base), Path(checkout)
-    return error
+def refuse_linked(
+    position: Position, cls: type[RunFromBaseError] | type[NestedError], message: str, *details: str
+) -> None:
+    """Raise ``cls`` when ``position`` is a linked worktree, with the base checkout and that worktree kept on the
+    error (``base``, ``checkout``) so a command line can name the same command for the base; nothing otherwise."""
+    if not position.linked:
+        return
+    error = cls(message, *details, target_files=[str(position.base)], fix=run_from_base_fix(position.base))
+    error.base, error.checkout = Path(position.base), Path(position.root)
+    raise error
+
+
+@contextmanager
+def rerun_from_base(
+    command: Callable[[Path, Path], str | None],
+    kinds: tuple[type[RunFromBaseError] | type[NestedError], ...] = (RunFromBaseError,),
+) -> Iterator[None]:
+    """Replace the ``[FIX]`` of a ``kinds`` error raised in the block that kept its base checkout and linked worktree
+    with ``command(base, checkout)``, the same command run for the base checkout; ``None`` keeps the fix."""
+    try:
+        yield
+    except kinds as error:
+        if error.base is not None and error.checkout is not None:
+            fix = command(error.base, error.checkout)
+            if fix is not None:
+                error.fix = fix
+        raise
 
 
 class PullRequestPolicyError(_Guardrail):
