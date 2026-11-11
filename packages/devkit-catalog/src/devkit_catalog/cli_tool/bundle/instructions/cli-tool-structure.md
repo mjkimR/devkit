@@ -6,8 +6,8 @@ description: Read before creating or restructuring a Python command-line tool th
 # Agent-Facing CLI Tools
 
 Follow this for a new tool and every command added to one; restructure an older tool only when the user asks. The
-`cli-tool` rules check the layout, layer imports, boundaries, library output and heavy imports (`devkit rules
-explain <RULE-id>` gives each fix); the `agent-advisory-python` instruction defines errors, notices and exit codes.
+`cli-tool` rules check layout, layer imports, boundaries, library output and heavy imports (`devkit rules explain
+<RULE-id>` gives each fix); the `agent-advisory-python` instruction defines errors, notices and exit codes.
 
 ## Dependencies
 
@@ -29,8 +29,7 @@ src/<package>/
     mcp.py, errors.py, utils.py               # optional
 ```
 
-The feature layout is required from the first command; a flat package is rebuilt when the second feature arrives.
-Each name may be a module or a directory whose inside is free. Imports go one way, `models`/`errors`/`utils` <-
+Use the feature layout from the first command. Each name may be a module or a directory whose inside is free. Imports go one way, `models`/`errors`/`utils` <-
 `repositories` <- `services` <- `usecases` <- `cli`/`mcp`; click and `devkit_cli` stay in CLI modules.
 
 - A command parses arguments, calls one use case and prints its result: no business logic, file or network access.

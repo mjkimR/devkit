@@ -1,7 +1,7 @@
 # app-uiux-improve usage guide
 
-This guide is for the person who uses the `app-uiux-improve` bundle. Read it before you select the bundle or later,
-when you want to recall the flow. It is not an agent asset: sync never deploys it, and no skill file links it.
+For the person who uses the `app-uiux-improve` bundle, before selecting it or to recall the flow. It is not an
+agent asset: sync never deploys it and no skill file links it.
 
 ## 1. What it is for
 
@@ -29,7 +29,7 @@ It does not:
 3. Run Impeccable's `init` in a session you operate. It asks you about the product and writes `PRODUCT.md`.
 4. Add an OOUX reference section to `PRODUCT.md`, in that `init` session or by asking the coordinator. The section
    names your glossary, object register and UX document directory by path and says to read them before structural
-   work. It copies none of their content, so it cannot drift from them:
+   work; it copies none of their content, so it cannot drift:
 
    ```markdown
    ## Object model

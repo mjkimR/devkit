@@ -1,13 +1,13 @@
 # Design lenses
 
-Read when framing a request or choosing the design direction. Select the lenses relevant to the supplied goal instead
-of auditing every dimension. Start with the actual task, content and design-system constraints.
+Select the lenses relevant to the supplied goal instead of auditing every dimension; start with the actual task,
+content and design-system constraints.
 
 ## Object framing (ORCA)
 
-Frame before layout or styling when a request adds, merges or reorders views or flows. Skip it for a local change
-(one component, one state, copy or spacing). Frame the objects the request touches, not the whole product; no
-diagram or notation is required.
+Frame before layout or styling when a request adds, merges or reorders views or flows; skip it for a local change
+(one component, one state, copy or spacing). Frame only the objects the request touches; no diagram or notation is
+required.
 
 - Objects: name the domain nouns users think in, not widgets ("Invoice", not "Table").
 - Relationships: state how objects connect; each relationship is a navigation path between their views.
@@ -22,16 +22,16 @@ date and status are metadata. States: a Customer with no Invoices shows an empty
 
 ### Framing sources
 
-Read these files only where they exist; use a partial set as far as it goes:
+Read these files only where they exist, using a partial set as far as it goes:
 
 - Object names: the project glossary (`docs/steering/glossary.md`, or a package glossary beside the affected code).
 - Representations and CTAs per role: the object register (`docs/steering/ux-objects.md`, or a package register
   beside the affected code).
 - Attributes, states and interactions: the UX documents of the affected screens (`docs/ux/<area>/`).
 
-These paths are an optional project convention; the skill works without them. If none exist, frame in conversation.
-Never write these files during framing; after an accepted change, report each one the change made stale and leave
-its update to the consumer workflow's own step.
+These paths are an optional project convention; if none exist, frame in conversation. Never write these files;
+after an accepted change, report each one the change made stale and leave its update to the consumer workflow's own
+step.
 
 ## Task and information
 
@@ -42,10 +42,7 @@ its update to the consumer workflow's own step.
 - Make states explain what happened, what remains and what action is available. Cover empty, loading, error and
   success states when the changed flow reaches them.
 - Preserve orientation across screens. When simplifying navigation, show how users regain context and recover.
-
-Example: a settings page can group choices by the person's goal, expose the most frequent action first and keep
-advanced choices reachable. Hiding every label behind an icon saves space while increasing interpretation work;
-compare that cost against the actual compact-layout requirement.
+- Weigh the interpretation cost of icon-only labels against the actual compact-layout requirement.
 
 ## Visual structure and character
 
@@ -55,9 +52,6 @@ compare that cost against the actual compact-layout requirement.
   a concrete purpose beyond surprise.
 - Check representative content density, long labels and narrow layouts. Preserve accessible contrast and readable
   text rather than judging a single ideal screenshot.
-
-Example: a dashboard can emphasize the next decision with a strong typographic region and quieter supporting
-metrics. Its character can come from purposeful composition instead of adding gradients to every card.
 
 ## Interaction and inclusion
 
@@ -79,24 +73,22 @@ Apply these to every changed view, on both tracks:
 ## Choose and verify
 
 Compare relevant directions by task clarity, required effort, discoverability, recovery, content fit and
-implementation cost. Use qualitative tradeoffs tied to the artifacts rather than a universal scorecard.
-A familiar design can be the best direction; an unusual idea can still reveal a worthwhile simplification.
+implementation cost, as qualitative tradeoffs tied to the artifacts rather than a universal scorecard. A familiar
+design can be the best direction; an unusual idea can still reveal a worthwhile simplification.
 
-After implementation, repeat the representative task and inspect its changed states. Record the tools and
-coverage actually used. A screenshot review does not establish interactive behavior or real-user usability.
+After implementation, repeat the representative task, inspect its changed states and record the tools and coverage
+actually used. A screenshot review does not establish interactive behavior or real-user usability.
 
 ## Reference provenance
 
-This guidance is written originally. The following repositories supplied structural and design-perspective
-references, not copied instructions or evidence of effectiveness:
+This guidance is written originally. These sources supplied structure and perspective, not copied instructions or
+evidence of effectiveness:
+[Agency Agents design roles](https://github.com/msitarzewski/agency-agents/tree/main/design) (practical and
+purposeful unconventional design assignments);
+[Impeccable](https://github.com/pbakaus/impeccable) (critique, bolder expression, distillation, delight and polish as
+perspectives; a user who selects Impeccable runs its maintained commands in a delegated session instead, and this
+guidance copies none of its text); Object-Oriented UX (the ORCA framing order: objects, relationships, CTAs,
+attributes); [Anthropic agent prompts](https://github.com/anthropics/claude-cookbooks/tree/main/patterns/agents/prompts)
+(bounded researcher delegation).
 
-- [Agency Agents design roles](https://github.com/msitarzewski/agency-agents/tree/main/design): separate practical
-  design assignments and purposeful unconventional expression.
-- [Impeccable](https://github.com/pbakaus/impeccable): critique, bolder expression, distillation, delight and polish
-  as selectable perspectives. A user who selects Impeccable runs its maintained commands in a delegated session
-  instead; this guidance copies none of its text.
-- Object-Oriented UX (ORCA: objects, relationships, CTAs, attributes): the object framing order.
-- [Anthropic agent prompts](https://github.com/anthropics/claude-cookbooks/tree/main/patterns/agents/prompts): bounded
-  researcher delegation.
-
-When copying upstream text in later work, inspect that revision's license and retain required attribution first.
+Before copying upstream text in later work, inspect that revision's license and retain required attribution.

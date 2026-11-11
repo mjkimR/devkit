@@ -1050,7 +1050,7 @@
     },
     ".agents/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "ef8dcf7614aeb2856ae7d6109485095d83a2aa83720765bc290b06425ff3bc97"
+      "sha256": "dc7f1252666781f7ca55bd01b5f2a8fb5b015a16fc16743ad59d78ed687cae22"
     },
     ".agents/skills/deep-research/agents/openai.yaml": {
       "mode": 420,
@@ -1058,35 +1058,35 @@
     },
     ".agents/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
-      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
+      "sha256": "94e1a236743863b8fc25a29a2b4e52d3b3d2c4bac06543b9a53d8e0cc59fbb6e"
     },
     ".agents/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
+      "sha256": "b3f14690eea19e22ebf9be0ce5c8241d810dc3588c0ad771cca3dda199533e31"
     },
     ".agents/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
+      "sha256": "fe1c5dbdb41c734b860cbea4b4916e525ff9980c12c51bf7bf690bcb0cd4a43d"
     },
     ".agents/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
+      "sha256": "7f648799751bbc4f2962bc134b3b2426731af38ae25aa9e839d90817ff40b3f7"
     },
     ".agents/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
+      "sha256": "ce29074b9b18fa99e3774e8713a081b62b0a096eea4857b108ef44a07ffd2881"
     },
     ".agents/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
+      "sha256": "01a8762bdce1df0d3bbc71bc7ba868adddb69b9e4c41fd893e1c2f20f7caa2aa"
     },
     ".agents/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
+      "sha256": "d711b5ab9a18c1452fdcd0f857c238aef54e8ee3ba1234e690b5dd0a4075ddaa"
     },
     ".agents/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
+      "sha256": "ec19c7e8643074cd8c5670d4878ce054f92b52519c044566808955c21df6acdc"
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1354,39 +1354,39 @@
     },
     ".claude/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "d126229921410fb7ec6ec127d3930b66df0781d9ee8b5f411051812640cda7fa"
+      "sha256": "ad40371adcf4949996679e5ed9643bdcffc50d564a2ff8df85765e8dc65fd81b"
     },
     ".claude/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
-      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
+      "sha256": "94e1a236743863b8fc25a29a2b4e52d3b3d2c4bac06543b9a53d8e0cc59fbb6e"
     },
     ".claude/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
+      "sha256": "b3f14690eea19e22ebf9be0ce5c8241d810dc3588c0ad771cca3dda199533e31"
     },
     ".claude/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
+      "sha256": "fe1c5dbdb41c734b860cbea4b4916e525ff9980c12c51bf7bf690bcb0cd4a43d"
     },
     ".claude/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
+      "sha256": "7f648799751bbc4f2962bc134b3b2426731af38ae25aa9e839d90817ff40b3f7"
     },
     ".claude/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
+      "sha256": "ce29074b9b18fa99e3774e8713a081b62b0a096eea4857b108ef44a07ffd2881"
     },
     ".claude/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
+      "sha256": "01a8762bdce1df0d3bbc71bc7ba868adddb69b9e4c41fd893e1c2f20f7caa2aa"
     },
     ".claude/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
+      "sha256": "d711b5ab9a18c1452fdcd0f857c238aef54e8ee3ba1234e690b5dd0a4075ddaa"
     },
     ".claude/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
+      "sha256": "ec19c7e8643074cd8c5670d4878ce054f92b52519c044566808955c21df6acdc"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1738,39 +1738,39 @@
     },
     ".devkit/managed/deep-research/skills/deep-research/SKILL.md": {
       "mode": 420,
-      "sha256": "ef8dcf7614aeb2856ae7d6109485095d83a2aa83720765bc290b06425ff3bc97"
+      "sha256": "dc7f1252666781f7ca55bd01b5f2a8fb5b015a16fc16743ad59d78ed687cae22"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/cloud-handoff.md": {
       "mode": 420,
-      "sha256": "21c340ce29c1b247288d4f61f8f3002829c6b314b21535c743099ef939bc401d"
+      "sha256": "94e1a236743863b8fc25a29a2b4e52d3b3d2c4bac06543b9a53d8e0cc59fbb6e"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/orchestration.md": {
       "mode": 420,
-      "sha256": "d79e4926c4c7b12990d4ba1fd693a559faf5c222a927e7426379301833133ecd"
+      "sha256": "b3f14690eea19e22ebf9be0ce5c8241d810dc3588c0ad771cca3dda199533e31"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/synthesis.md": {
       "mode": 420,
-      "sha256": "9009993b66060cd25418b825f4034b11c7a7bcab56a0433757e8df1a45c0e6ee"
+      "sha256": "fe1c5dbdb41c734b860cbea4b4916e525ff9980c12c51bf7bf690bcb0cd4a43d"
     },
     ".devkit/managed/deep-research/skills/deep-research/references/workspace.md": {
       "mode": 420,
-      "sha256": "7aa11d730953c672cd9c84c7b496c6da8d0ee3420da9345bdc4476a1a6889fee"
+      "sha256": "7f648799751bbc4f2962bc134b3b2426731af38ae25aa9e839d90817ff40b3f7"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/direction-explorer.md": {
       "mode": 420,
-      "sha256": "98d0ee66423d72e1ebe9cc76d4b614cfd48a8bd7ee29009b4e0825a37746a49a"
+      "sha256": "ce29074b9b18fa99e3774e8713a081b62b0a096eea4857b108ef44a07ffd2881"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/discovery-critic.md": {
       "mode": 420,
-      "sha256": "9c0354263f973bc4e8d3136cef2f597495e8d7ed6badf27b94ca14791453cc4e"
+      "sha256": "01a8762bdce1df0d3bbc71bc7ba868adddb69b9e4c41fd893e1c2f20f7caa2aa"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/discovery-planner.md": {
       "mode": 420,
-      "sha256": "9474b414f2d6f8648e4011d1690440a844dfefb9387905770eb93cb52887b88c"
+      "sha256": "d711b5ab9a18c1452fdcd0f857c238aef54e8ee3ba1234e690b5dd0a4075ddaa"
     },
     ".devkit/managed/deep-research/skills/deep-research/roles/research-investigator.md": {
       "mode": 420,
-      "sha256": "455eb0b102e67f6d6baccaf046d3058a3497b72ee4c8fc761773fa2126ec8db5"
+      "sha256": "ec19c7e8643074cd8c5670d4878ce054f92b52519c044566808955c21df6acdc"
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,

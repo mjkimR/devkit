@@ -2,10 +2,9 @@
 
 ## 1. Overview
 
-Agents call a tool many times per task, often for `--help` or one small command, and every call imports the CLI
-modules on its path. A heavy library imported at module level of a CLI module (an HTTP client, a data frame library,
-an LLM SDK, an ORM) is paid by every one of those calls, also when the command does not use it. This rule reports
-such imports so they move into the command that needs them.
+Every call of a tool, including `--help`, imports the CLI modules on its path, so a heavy library (an HTTP client,
+a data frame library, an LLM SDK, an ORM) imported at module level of a CLI module slows every command. This rule
+reports such imports so they move into the command that needs them.
 
 - **Phase and severity**: `linter`, `error`; it runs in `devkit rules check` and the commit gate. Shipped by the
   `cli-tool` bundle (`devkit add cli-tool`).
@@ -14,9 +13,8 @@ such imports so they move into the command that needs them.
   matches a heavy module when it is the module or one of its submodules (`google.cloud.storage` matches
   `google.cloud`); `from a import b` is matched as `a` and as `a.b`, and relative imports are resolved against the
   package of the file (below its last `src` directory).
-- **Not checked**: imports inside functions, imports under `if TYPE_CHECKING:` (annotations only), and modules that
-  are not CLI modules: a use case imports what it needs, and the command imports the use case inside its function
-  when the use case is heavy.
+- **Not checked**: imports inside functions, imports under `if TYPE_CHECKING:`, and modules that are not CLI
+  modules (a use case imports what it needs; the command imports a heavy use case inside its function).
 
 ## 2. Cause of Violation
 
