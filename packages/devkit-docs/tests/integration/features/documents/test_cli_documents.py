@@ -105,12 +105,17 @@ def test_list_hides_history_and_counts_tasks(docs: Path) -> None:
         (("usecase",), ["UC-b", "UC-c"]),
         (("--status", "Proposed,draft"), ["UC-c", "SPEC-open"]),
         (("--area", "ops"), ["UC-c"]),
-        (("--query", "usecase b"), ["UC-b"]),
     ],
 )
 def test_list_filters(docs: Path, args: tuple[str, ...], ids: list[str]) -> None:
     payload = json.loads(_docs("list", *args, "--format", "json", workspace=docs).stdout)
     assert [d["id"] for d in payload["documents"]] == ids
+
+
+def test_list_has_no_query_filter(docs: Path) -> None:
+    """SPEC-remove-unused-cli-options AC-08: ID and title lookup is ``docs search``; ``--query`` is unknown."""
+    refused = _docs("list", "--query", "usecase b", workspace=docs)
+    assert refused.exit_code == 2 and "No such option '--query'" in refused.stderr
 
 
 UNKNOWN_STATUS = "(DOCS_LIST_STATUS_UNKNOWN)"

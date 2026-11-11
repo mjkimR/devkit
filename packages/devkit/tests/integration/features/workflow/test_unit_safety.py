@@ -167,10 +167,11 @@ def test_anchor_must_be_a_present_candidate_and_agree_with_workflow(ambiguous: P
     unknown = _run("next", *unit, "--anchor", "other.md")
     assert unknown.exit_code == 2 and "(UNIT_NOT_FOUND)" in unknown.stderr
     assert "Pass --anchor one of: spec.md, proposal.md" in unknown.stderr
-    conflict = _run("next", *unit, "--workflow", "plan-proposal", "--anchor", "spec.md")
+    bind = ["bind", "-w", str(ambiguous), "--unit", "docs/proposals/dup", "--workflow", "plan-proposal"]
+    conflict = _run(*bind, "--anchor", "spec.md")
     assert conflict.exit_code == 2 and "(ANCHOR_MISMATCH)" in conflict.stderr
-    agreed = _run("next", *unit, "--workflow", "plan-proposal", "--anchor", "proposal.md")
-    assert agreed.exit_code == 0 and "[WORKFLOW: plan-proposal" in agreed.output
+    agreed = _run(*bind, "--anchor", "proposal.md")
+    assert agreed.exit_code == 0 and agreed.output.startswith("[BOUND: plan-proposal]")
     show = _run("show", "plan-proposal", "-w", str(ambiguous), "--anchor", "proposal.md")
     assert show.exit_code == 2 and "(ARGUMENT_INVALID)" in show.stderr
 
@@ -352,8 +353,9 @@ def test_bind_and_new_refuse_a_definition_path_outside_discovery(tmp_path: Path)
     with pytest.raises(WorkflowNotBindableError):
         CreateUnitUseCase().execute(Workspace(root), "v", workflow="elsewhere/x.md")
 
-    # Evaluating against the file without binding stays possible.
-    assert run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", "elsewhere/x.md").exit_code == 0
+    # The library still evaluates against the file without binding it.
+    ws = Workspace(root)
+    assert ws.evaluate_unit(ws.resolve_unit(SIMPLE_UNIT, "elsewhere/x.md"), lint=False).unit == SIMPLE_UNIT
 
 
 def test_a_path_whose_id_resolves_to_another_file_is_refused(tmp_path: Path) -> None:

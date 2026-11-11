@@ -91,7 +91,7 @@ Then, in order: the base checkout is switched back to its `devkitBase` when it w
 integration commands, and `finish --help` MUST NOT list the flag. The library `finish` takes no landing parameter
 (`merge`, `pull_request`, `guard`, `network`, `merge_method`), and `FinishResult` has no `push` field.
 
-`finish` MUST NOT call `git fetch`, `git push` or `git ls-remote`. `--local-only` stays accepted and changes nothing.
+`finish` MUST NOT call `git fetch`, `git push` or `git ls-remote`.
 Public `plan_finish` and `validate_finish` bind exact repository, ref and cleanup identities for the integration
 service (`plan_finish` records the merge method and whether the target already contains the branch; only with
 `advance=True`, which local integration alone sets, and under `merge = "no-ff"` does it plan a branch that does

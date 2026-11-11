@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import devkit_agt.features.workflow.usecases.handoff as handoff_module
@@ -224,9 +225,12 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     assert ineligible.exit_code == 2 and "(HANDOFF_INELIGIBLE)" in ineligible.stderr
 
     (root / unit / "spec.md").write_text("---\nstatus: draft\n---\n")
-    done = _run(
+    dated = _run(
         "handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "spec-driven", "--date", "2026-10-13"
     )
+    assert dated.exit_code == 2 and "No such option '--date'" in dated.stderr
+    assert "workflow: triage" in (root / unit / "task.md").read_text()
+    done = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "spec-driven")
     assert done.exit_code == 0, done.output
     assert done.output.startswith("[HANDED_OFF: from=triage to=spec-driven policy=")
     # An explicit choice is recorded as the handoff decision.
@@ -234,7 +238,7 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     assert "[HISTORY: triage]" in done.output
     anchor = (root / unit / "task.md").read_text()
     assert "workflow: spec-driven" in anchor and "workflow_history: [{workflow: triage, completed:" in anchor
-    assert "completed: '2026-10-13'" in anchor and anchor.endswith("---\n# login\n")
+    assert f"completed: '{date.today().isoformat()}'" in anchor and anchor.endswith("---\n# login\n")
 
     # The unit now follows spec-driven from its first stage; triage is history, not re-evaluated.
     nxt = _run("next", "-w", str(root), "--unit", unit, "--no-lint")

@@ -547,8 +547,7 @@ def _with_remote(repo: Path, tmp_path: Path) -> Path:
     return remote
 
 
-@pytest.mark.parametrize("local_only", [False, True], ids=["plain", "local-only"])
-def test_finish_of_a_landed_branch_leaves_the_upstream_alone(repo: Path, tmp_path: Path, local_only: bool) -> None:
+def test_finish_of_a_landed_branch_leaves_the_upstream_alone(repo: Path, tmp_path: Path) -> None:
     """AC-03: with a reachable upstream, cleanup neither fetches nor pushes; publishing the base is separate."""
     from click.testing import CliRunner
     from testsupport.cli import cli
@@ -558,8 +557,7 @@ def test_finish_of_a_landed_branch_leaves_the_upstream_alone(repo: Path, tmp_pat
     created = start(locate(repo), "dev-demo")
     commit(created.path, "work.txt")
     land(repo)
-    args = ["worktree", "finish", "dev-demo", "-w", str(repo), *(["--local-only"] if local_only else [])]
-    done = CliRunner().invoke(cli, args)
+    done = CliRunner().invoke(cli, ["worktree", "finish", "dev-demo", "-w", str(repo)])
     assert done.exit_code == 0, done.output
     assert "merged=no removed=yes branch_deleted=yes" in done.stdout and done.stderr == ""
     assert git(remote, "rev-parse", "main") == published and not (repo / ".git" / "FETCH_HEAD").exists()

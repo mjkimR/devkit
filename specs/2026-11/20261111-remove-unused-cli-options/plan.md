@@ -16,7 +16,7 @@ spec: SPEC-remove-unused-cli-options
   `docs/architecture`, `docs/usecases`, `guides/` and `docs/steering` for each flag).
 - Capability contracts that state a removed option and are rewritten: `CAP-WT-task-worktrees` §3 (`--local-only`),
   `CAP-DLV-cli-and-output` §1 synopsis and the `[BOUND_ELSEWHERE]` row, `CAP-DLV-workflow-definitions` (binding
-  section: `next --workflow <path>`), `CAP-DOCS-document-lookup` (`--query`), plus the mentions in
+  section: `next --workflow <path>`), `CAP-DLV-workflow-orchestration` (unit resolution: `--workflow` on `next`), `CAP-DOCS-document-lookup` (`--query`), plus the mentions in
   `CAP-INT-mcp-services`, `CAP-COLL-work-scope-registry` and `CAP-DLV-delivery-workflows`.
 - No new feature edge; `.devkit/architecture.toml` is untouched.
 

@@ -258,7 +258,7 @@ def test_envelope_check_reports_a_malformed_file_on_stderr_only(tmp_path: Path) 
 
 def test_handoff_prints_its_own_kind(tmp_path: Path) -> None:
     unit = _chain(tmp_path)
-    result = _run("handoff", "-w", str(tmp_path), "--unit", unit, "--no-lint", "--workflow", "hotfix", "--date", "2026-10-13")  # fmt: skip
+    result = _run("handoff", "-w", str(tmp_path), "--unit", unit, "--no-lint", "--workflow", "hotfix")
     assert result.exit_code == 0, result.stderr
     assert result.stdout.splitlines() == [
         "[HANDED_OFF: from=triage to=hotfix policy=ask decision=decisions/01-handoff.yaml]",

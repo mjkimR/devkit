@@ -192,7 +192,6 @@ def _present(entry: dict[str, object]) -> dict[str, object]:
 @click.argument("kinds", nargs=-1, type=click.Choice([str(kind) for kind in Kind]), metavar="[KIND]...")
 @click.option("--status", "-s", default=None, help="Comma-separated statuses to keep (case-insensitive)")
 @click.option("--area", "-a", default=None, help="Keep documents whose frontmatter area contains this text")
-@click.option("--query", "query", default=None, help="Keep documents whose ID or title contains this text")
 @click.option(
     "--history",
     is_flag=True,
@@ -225,7 +224,6 @@ def list_cmd(
     kinds: tuple[str, ...],
     status: str | None,
     area: str | None,
-    query: str | None,
     history: bool,
     where_items: tuple[str, ...],
     file: str | None,
@@ -249,7 +247,6 @@ def list_cmd(
         kinds,
         status,
         area,
-        query,
         file,
         history,
         namespace,
@@ -303,7 +300,7 @@ def list_cmd(
                 )
             )
         args = ["list", *kinds]
-        for flag, given in (("--status", status), ("--area", area), ("--query", query), ("--file", file)):
+        for flag, given in (("--status", status), ("--area", area), ("--file", file)):
             if given is not None:
                 args += [flag, given]
         args += ["--history"] if history else []

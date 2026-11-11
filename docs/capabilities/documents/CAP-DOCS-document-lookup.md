@@ -87,7 +87,8 @@ changes an argument, output, code or exit status.
 
 1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `ux`, `architecture`, `decision`, `proposal`,
    `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material`, `milestone` (default: all).
-2. **Filters** (all combine with AND):
+2. **Filters** (all combine with AND; `list` has no text filter: look up an ID or title text with `devkit docs search`,
+   `CAP-DOCS-document-search`):
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default
      history hiding: the documents whose status it names are listed whatever their history. Status vocabularies
      come from the templates, which a project may override, so a value is never rejected: one that no indexed
@@ -96,7 +97,6 @@ changes an argument, output, code or exit status.
      its `[FIX]` (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
      gives an empty page plus the notice.
    - `--area/-a TEXT`: case-insensitive substring of the frontmatter `area`.
-   - `--query TEXT`: case-insensitive substring of the ID or the title.
    - `--where FIELD=VALUE[,VALUE...]` (repeatable): documents whose frontmatter `FIELD` holds one of the values. The
      field name is case-sensitive; values are compared case-insensitively after trimming against the parsed value:
      a scalar's text, `true`/`false` for a boolean, the ISO 8601 form of a date or timestamp, any scalar element of a

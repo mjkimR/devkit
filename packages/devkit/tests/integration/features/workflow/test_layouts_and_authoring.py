@@ -145,14 +145,16 @@ def test_anchor_ambiguous_and_mismatch(two_layouts: Path) -> None:
     (unit / "spec.md").write_text("---\nid: dup\nstatus: planned\n---\n")
     ambiguous = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint")
     assert ambiguous.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in ambiguous.stderr and "--anchor" in ambiguous.stderr
-    explicit = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--workflow", "plan-proposal")
+    explicit = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--anchor", "proposal.md")
     assert explicit.exit_code == 0 and "[WORKFLOW: plan-proposal" in explicit.output
+    removed = _run("next", "-w", str(root), "--unit", "docs/proposals/dup", "--no-lint", "--workflow", "plan-proposal")
+    assert removed.exit_code == 2 and "No such option '--workflow'" in removed.stderr
 
     # bound to a workflow whose anchor is not the file that identifies the unit
     write_unit(root, "specs/2026-10/20261012-x", anchor="spec.md", extra="workflow: plan-proposal\n")
     mismatch = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--no-lint")
     assert mismatch.exit_code == 2 and "(ANCHOR_MISMATCH)" in mismatch.stderr and "proposal.md" in mismatch.stderr
-    missing = _run("next", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--workflow", "plan-proposal")
+    missing = _run("bind", "-w", str(root), "--unit", "specs/2026-10/20261012-x", "--workflow", "plan-proposal")
     assert missing.exit_code == 2 and "(UNIT_NOT_FOUND) proposal.md not found" in missing.stderr
 
 

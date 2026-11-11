@@ -117,7 +117,7 @@ stale = stale_branches(position, config.stale_after)                  # StaleRes
 
 ## Integration primitives
 
-`devkit worktree finish` makes no fetch, push or `ls-remote` call; `--local-only` is accepted and changes nothing.
+`devkit worktree finish` makes no fetch, push or `ls-remote` call.
 The public `finish` API takes `delete_branch` and optional `before_step(step, result)`.
 `build_result` builds the result commit in the object store and `fast_forward` moves the base onto it. `plan_finish` returns an
 immutable `FinishPlan`; `validate_finish` rechecks its identities allowing only declared completed transitions.

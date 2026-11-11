@@ -10,7 +10,6 @@ from pathlib import Path
 
 import click
 from devkit.advisory import AdvisoryError, Level
-from devkit_core.base.errors import ArgumentError
 
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
@@ -45,17 +44,12 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option("--host", default="codex", show_default=True, help="Host adapter; supported: codex")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
-def status(host: str, workspace_root: str | None, output_format: str) -> None:
+def status(workspace_root: str | None, output_format: str) -> None:
     """Inspect installed hooks and metadata-only observations; trust and permissions remain host-owned."""
-    if host not in SUPPORTED_HOSTS:
-        raise ArgumentError(
-            f"unsupported host: {host}", target_files=["--host"], fix=f"Pass --host {' or '.join(SUPPORTED_HOSTS)}"
-        )
-    report = InspectHost().execute(resolve_root(workspace_root), host)
+    report = InspectHost().execute(resolve_root(workspace_root), SUPPORTED_HOSTS[0])
     if is_json(output_format):
         echo_json(report.to_dict())
     else:

@@ -15,10 +15,10 @@ protocol, workspace API, rule sources), `ARCH-08-2-resource-taxonomy`.
 ## CLI usage
 
 ```bash
-devkit rules check [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--format text|json] [--summary-only] [TARGETS]...
-devkit rules check --staged [-w DIR] [--rules-dir DIR] [--format text|json] [--summary-only]
-devkit rules check --ci [--base REF] [-w DIR] [--rules-dir DIR] [--format text|json] [--summary-only]   # --base defaults to origin/main
-devkit rules fix [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--dry-run] [--format text|json] [--summary-only] [TARGETS]...
+devkit rules check [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--format text|json] [TARGETS]...
+devkit rules check --staged [-w DIR] [--rules-dir DIR] [--format text|json]
+devkit rules check --ci [--base REF] [-w DIR] [--rules-dir DIR] [--format text|json]   # --base defaults to origin/main
+devkit rules fix [-w DIR] [-p linter|hygiene] [--rules-dir DIR] [--dry-run] [--format text|json] [TARGETS]...
 devkit rules phases [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules explain RULE-ID [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules test [RULE-ID]... [-w DIR] [--rules-dir DIR] [--format text|json] [-- PYTEST-ARGS...]
@@ -126,10 +126,6 @@ parseable:
   in the run's phase (target scoping does not change it); then `[OK: ...]` when the command
   exits `0`. With `rules=0` the pass checked nothing, and a `RULES_NONE_ACTIVE`
   notice on stderr says so. A run that could not evaluate and found nothing prints no summary.
-- `--summary-only` replaces the `[VIOLATION: ...]` lines with one
-  `[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule
-  and keeps the other lines. Exit codes are unchanged; `--format json` ignores
-  the flag.
 - `phases`: one `[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]` line per rule.
 - `explain`: `[RULE: RULE-id name=... phase=... effective_phase=... severity=...
   effective_severity=... promote_to=... guide=... inputs=<pattern>,<pattern>]`

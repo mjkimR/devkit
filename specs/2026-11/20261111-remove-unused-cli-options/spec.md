@@ -65,7 +65,7 @@ Every removed option is refused by click before the command runs: exit `2`, stde
 ### [AC-02] Guidance names plain `finish` for the remaining cleanup
 - **Given** the spec bundle sources, `guides/`, `docs/capabilities/` and `docs/development/reference/`
 - **When** `git grep -n -- --local-only -- packages docs guides scripts justfile ':!docs/materials'` runs
-- **Then** it lists only accepted decision text, and every remaining-cleanup instruction reads
+- **Then** it lists only decision text and the test asserting the refusal, and every remaining-cleanup instruction reads
   `devkit worktree finish <branch>` with its existing wording kept
 
 ### [AC-03] `ADR-single-local-landing-route` is superseded in part
