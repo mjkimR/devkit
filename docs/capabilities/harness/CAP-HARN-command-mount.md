@@ -89,7 +89,7 @@ without a subcommand.
 | `devkit docs search` | `CAP-DOCS-document-search` |
 | `devkit spec entrypoints` | `CAP-TRACE-code-entrypoints` |
 | `devkit spec new` | `CAP-DLV-spec-bundles` |
-| `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check\|report` | `CAP-DLV-proposal-lifecycle` |
+| `devkit spec proposal new\|padr\|accept\|accept-plan\|handoff\|prune\|check\|report` | `CAP-DLV-proposal-lifecycle` |
 | `devkit spec worker inspect` | `CAP-DLV-delivery-roles` |
 | `devkit spec policy` | `CAP-DLV-project-policy` |
 | `devkit spec scope collect\|release\|sweep` | `CAP-COLL-work-scope-registry` |

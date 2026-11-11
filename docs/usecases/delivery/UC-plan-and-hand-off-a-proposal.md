@@ -36,7 +36,7 @@ capabilities:
 - **Goal**: The agent turns a request whose direction is open into a direction the user accepted on evidence and a
   spec bundle that carries it, so that the delivery that follows starts from a consistent Living Spec instead of
   dangling links to a deleted proposal.
-- **Scope**: the `sdd-proposal` workflow, `devkit spec proposal new|padr|check|accept|handoff` and the `spec`
+- **Scope**: the `sdd-proposal` workflow, `devkit spec proposal new|padr|check|accept|accept-plan|handoff` and the `spec`
   skill's Planning and Backlog procedures.
 - **Trigger**: The agent classifies a request as `proposal` depth (`UC-route-development-intent`, extension 3b), or
   the user picks a queued draft.
@@ -346,7 +346,7 @@ capabilities:
 - **Covers**: 7g
 - **Given**: a proposal in review on `plan-<slug>` with Planning complete, and a base that moved with an unrelated
   change since `plan-<slug>` branched
-- **When**: the agent runs `devkit spec proposal accept <slug> --by user --mode accept_only`
+- **When**: the agent runs `devkit spec proposal accept-plan <slug> --by user --mode accept_only`
 - **Then**: the command exits `0` with `[ACCEPTED: PROP-<slug> status=accepted ...]` naming `target_sha` (the moved
   base), `landed_sha` (the new base HEAD) and `verification`; the acceptance commit's only parent is the reviewed
   `plan-<slug>` HEAD, and the landed merge has the moved base as first and the acceptance commit as second parent
@@ -354,7 +354,7 @@ capabilities:
 ### Scenario 25: Changed proposal scope is refused before acceptance
 - **Covers**: 6a
 - **Given**: a moved target changed the reviewed proposal directory
-- **When**: the Host requests composed acceptance
+- **When**: the Host runs the composed acceptance (`devkit spec proposal accept-plan`)
 - **Then**: it refuses with SPEC_PROPOSAL_APPROVAL_NOT_READY before the acceptance commit and leaves Planning available for review
 
 ### Scenario 26: Acceptance yields before fresh handoff

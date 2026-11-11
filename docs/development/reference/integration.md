@@ -69,6 +69,8 @@ branch deletion remain. Remote deletion precedes local cleanup; a failure retain
 | `INTEGRATION_REMOTE_DELETE_BLOCKED` | Preserve the remote branch until changed-head/dependent-PR conditions resolve |
 
 
-Proposal acceptance keeps its explicit direction authority and eligibility. `accept_and_handoff` yields with
+Proposal acceptance keeps its explicit direction authority and eligibility. A local Host accepts a reviewed Planning
+branch with `devkit spec proposal accept-plan <slug> --by user|policy --mode accept_only|accept_and_handoff`;
+`accept_and_handoff` yields with
 verification pending and handoff not started. Synchronize/check the landed head, then invoke its existing handoff
 command in a fresh process with retained scope and effort (`CAP-DLV-proposal-planning`).
