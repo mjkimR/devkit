@@ -47,7 +47,7 @@ guess or switch it. The rest of this skill applies to SDD.
 | :--- | :--- | :--- |
 | `session` | `sdd-session-<task_kind>` | Agree the intent in the conversation; no records. |
 | `overall-refactor` | `sdd-overall-refactor` | `direct` only, with the user; no Unit. |
-| `spec` | `sdd-spec-<task_kind>` | On `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."` (`--workflow sdd-spec-bugfix` for a defect), commit. |
+| `spec` | `sdd-spec-<task_kind>` | On `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."` (`--task-kind bugfix` for a defect), commit. |
 | `proposal` | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix`; judge `size` against the `XL` definition ([backlog](references/backlog.md)), state it with `planning_effort` at intake. Planning on `plan-<slug>` per [planning](references/planning.md), or a direct acceptance ([backlog](references/backlog.md)). Development on `dev-<slug>` from `devkit spec proposal handoff <slug>`. |
 | Spike, independent review, or reconcile verification in an isolated context | Support role | `spec-delegate`, as the `activity-effort` asks. |
 | Integration preparation, or integration after CLI/PR `dev-integration` authorization | Integration | `spec-integrate`. |

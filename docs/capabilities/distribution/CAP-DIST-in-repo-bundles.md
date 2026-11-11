@@ -212,10 +212,11 @@ It copies upstream resources; managed/projection output is not a source, and no 
    source paths, remote URLs, credentials or timestamps.
 5. **Verified identity**: WHEN a commit is recorded, distribution MUST compare every copied input to that one
    captured immutable commit; equivalent unlinked source path spellings MUST produce identical provenance.
-6. **Snapshot preview**: WHERE refresh has --check, distribution MUST report deterministic additions, modifications,
-   removals, current/candidate digests and subsequent actions without writing files.
-7. **Reviewed adoption**: WHEN applying refresh, distribution MUST match both --expect and --candidate against the
-   current snapshot and prepared source before replacing it.
+6. **Snapshot preview**: WHERE refresh has neither --expect nor --candidate, distribution MUST report deterministic
+   additions, modifications, removals, current/candidate digests and subsequent actions without writing files.
+7. **Reviewed adoption**: WHEN refresh has both --expect and --candidate, distribution MUST match them against the
+   current snapshot and prepared source before replacing it; IF only one is given, THEN refresh MUST refuse
+   `ARGUMENT_INVALID` naming the missing flag before reading or writing the snapshot.
 8. **Authored drift**: IF authored changes or a changed captured previous tree are detected, THEN refresh MUST
    preserve/restore that actual tree and refuse `BUNDLE_SNAPSHOT_CONFLICT` without overwriting edits.
 9. **Replacement recovery**: IF staged or installed validation/write fails and restoration is possible, THEN
@@ -236,14 +237,15 @@ The dist-only suite retains installation without devkit-agt.
 ### Interface and state
 
     uv run devkit bundle snapshot SOURCE --to DEST --package NAME [-w ROOT]
-    uv run devkit bundle refresh DEST --source SOURCE --check [-w ROOT]
+    uv run devkit bundle refresh DEST --source SOURCE [-w ROOT]
     uv run devkit bundle refresh DEST --source SOURCE --expect CURRENT --candidate REVIEWED [-w ROOT]
 
 The commands print exactly one JSON object. Exit 0 statuses/codes are created/`BUNDLE_SNAPSHOT_CREATED`,
 preview/`BUNDLE_SNAPSHOT_PREVIEW`, updated/`BUNDLE_SNAPSHOT_UPDATED` and unchanged/`BUNDLE_SNAPSHOT_UNCHANGED`.
 Results carry destination, package, bundle versions, current_digest, candidate_digest, changes, packaging_changed,
 removed_selected, actions and notices. `BUNDLE_SNAPSHOT_INVALID`, `BUNDLE_SNAPSHOT_UNSUPPORTED`,
-`BUNDLE_SNAPSHOT_CONFLICT` and `BUNDLE_SNAPSHOT_WRITE_FAILED` use exit 2 with deterministic corrective directives.
+`BUNDLE_SNAPSHOT_CONFLICT` and `BUNDLE_SNAPSHOT_WRITE_FAILED` use exit 2 with deterministic corrective directives, as
+does `ARGUMENT_INVALID` for only one of `--expect` and `--candidate` (`[TARGET]` the missing flag).
 
 Schema 1 snapshot.json contains package; source name/version/commit/requires_python/metadata_sha256; bundle
 version/module pairs; ordered files with SHA256 and normalized modes (420 or 493); and aggregate digest. Payload

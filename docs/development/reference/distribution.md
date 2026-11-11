@@ -393,10 +393,11 @@ requirements explicitly, then use normal selection/sync. The command edits none 
 consumer dependency metadata, lock, config, receipt, overrides or Git. Runtime/harness/build dependencies remain
 separately installed. Keep consumer adaptations in project overrides, not generated snapshot sources.
 
-    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --check
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets
     uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
 
-Preview is read-only. Apply requires both returned digests, refuses authored source changes/additions and unknown
+Preview (neither digest) is read-only. Apply requires both returned digests; giving only one is
+`ARGUMENT_INVALID`. Apply refuses authored source changes/additions and unknown
 provenance, and stages/validates before replacement. A reported write/validation failure restores the prior
 package when recovery is possible. Derived __pycache__ and pyc files are excluded from drift; unchanged input
 writes nothing. Changed entry-point metadata returns an explicit package reinstall command, and removed selected

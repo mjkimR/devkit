@@ -17,7 +17,7 @@ created_at: 2026-10-17
 
 ## 1. Commands
 
-The default group help focuses on operating existing units. Authoring commands `new`, `bind`, `checks`, `validate` and `envelope new` remain callable with their own `--help` but are hidden from their parent help.
+The default group help focuses on operating existing units. Authoring commands `new`, `bind`, `checks` and `validate` remain callable with their own `--help` but are hidden from the group help. `envelope new` is listed in `devkit workflow envelope --help`: it is the only writer of envelope kinds without a command of their own.
 
 ```bash
 devkit workflow new <slug> [--workflow ID] [--date YYYY-MM-DD] [--status S]   # create a unit from the layout template and bind it

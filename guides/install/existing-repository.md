@@ -248,7 +248,7 @@ digest and adoption commit identify its sources. Keep adaptations in project ove
 
 For an explicit update, preview and inspect before applying the two reported identities:
 
-    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --check
+    uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets
     uv run devkit bundle refresh tools/team-assets-copy --source /checkout/team-assets --expect <current-digest> --candidate <reviewed-candidate-digest>
 
 Follow any returned reinstall and explicit deselection actions, then sync. Refresh itself changes no dependency

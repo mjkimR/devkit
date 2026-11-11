@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:10:54.175283Z'
+status: completed
+summary: 'reconcile-reviewer: four targets match the code at HEAD and no-impact reasoning holds; two code tables incomplete'
+findings:
+- issue: CAP-DLV-spec-bundles section 4.5 code table lists neither the --task-kind ARGUMENT_INVALID conditions nor --task-kind feature under SPEC_UNBOUND
+  evidence: docs/capabilities/delivery/CAP-DLV-spec-bundles.md section 4.5
+  failure_condition: An agent looking up ARGUMENT_INVALID or SPEC_UNBOUND from devkit spec new does not find the --task-kind cases
+  suggested_action: Add the --task-kind conditions to the ARGUMENT_INVALID row and --task-kind feature to the SPEC_UNBOUND row
+  resolution: open
+  severity: P2
+- issue: CAP-DIST-in-repo-bundles Interface and state exit-2 code list omits ARGUMENT_INVALID for one digest alone
+  evidence: docs/capabilities/distribution/CAP-DIST-in-repo-bundles.md Interface and state
+  failure_condition: The interface summary of outcome codes is incomplete
+  suggested_action: Add ARGUMENT_INVALID to the exit-2 list
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS uv run devkit rules check --ci --base 479050697c96
+diff_scope:
+  base: 479050697c969ff48a964c5bd07aa82fb9ce225c
+  head: 954eb951ed1747f491159eb62678293e12bf06d0
+activity_effort: medium

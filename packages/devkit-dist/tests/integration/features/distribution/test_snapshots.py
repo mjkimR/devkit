@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from devkit_core.base.errors import ArgumentError
 from devkit_dist.features.distribution.models.snapshots import (
     SnapshotConflictError,
     SnapshotInvalidError,
@@ -36,7 +37,7 @@ def create(checkout: tuple[Path, Path, Path]):
 
 def refresh(checkout: tuple[Path, Path, Path], *, apply: bool = False):
     root, source, destination = checkout
-    preview = RefreshBundleSnapshot().execute(root, destination, source, check=True)
+    preview = RefreshBundleSnapshot().execute(root, destination, source)
     if not apply:
         return preview
     return RefreshBundleSnapshot().execute(
@@ -104,14 +105,18 @@ def test_refresh_requires_both_reviewed_digests_and_detects_source_drift(checkou
     create(checkout)
     preview = refresh(checkout)
     old = read_tree(destination)
-    for expect, candidate in (
-        (None, None),
-        (preview.current_digest, None),
-        (None, preview.candidate_digest),
-        ("0" * 64, preview.candidate_digest),
+    assert preview.status == "preview" and preview.code == "BUNDLE_SNAPSHOT_PREVIEW"
+    for expect, candidate, missing in (
+        (preview.current_digest, None, "--candidate"),
+        (None, preview.candidate_digest, "--expect"),
     ):
+        with pytest.raises(ArgumentError) as refused:
+            RefreshBundleSnapshot().execute(root, destination, source, expect=expect, candidate=candidate)
+        assert refused.value.code == "ARGUMENT_INVALID" and list(refused.value.target_files) == [missing]
+    for expect, candidate in (("0" * 64, preview.candidate_digest), (preview.current_digest, "0" * 64)):
         with pytest.raises(SnapshotConflictError):
             RefreshBundleSnapshot().execute(root, destination, source, expect=expect, candidate=candidate)
+    assert read_tree(destination) == old
     (source / "src/private_content/alpha/bundle/check.sh").write_text("changed\n")
     with pytest.raises(SnapshotConflictError):
         RefreshBundleSnapshot().execute(
@@ -365,7 +370,7 @@ def test_source_path_spelling_does_not_change_provenance(checkout) -> None:
         subprocess.run(["git", "-C", str(source), *args], check=True, capture_output=True)
     first = create(checkout)
     alias = root / ".." / source.name
-    preview = RefreshBundleSnapshot().execute(root, destination, alias, check=True)
+    preview = RefreshBundleSnapshot().execute(root, destination, alias)
     assert preview.candidate_digest == first.candidate_digest
     assert preview.changes == {"added": [], "modified": [], "removed": []}
 

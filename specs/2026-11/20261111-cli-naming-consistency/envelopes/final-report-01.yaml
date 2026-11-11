@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:14:31.491738Z'
+status: completed
+summary: bundle refresh previews without digests (one digest ARGUMENT_INVALID, --check removed); workflow envelope new listed in help; spec new --task-kind feature|bugfix (exclusive with --workflow); contracts, reference, guide and spec/devkit bundle guidance updated; review P3 fixed, reconcile P2/P3 fixed
+findings: []
+assumptions:
+- handbook/, docs/usecases/UC-route-development-intent and the sdd-spec-bugfix workflow text keep --workflow sdd-spec-bugfix, which stays valid; outside write scope
+checks:
+  tests: PASS just test-affected --base main 3715 passed 1 skipped; --tier e2e 117 passed
+  build: PASS just check 0 errors; uv run devkit sync --check clean
+  lint: PASS just lint-check; uv run devkit rules check --ci --base main
+diff_scope:
+  base: 479050697c969ff48a964c5bd07aa82fb9ce225c
+  head: 5e68fb1d191e89492fe6b175b8e76fef494d164a
+activity_effort: medium

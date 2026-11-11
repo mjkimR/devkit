@@ -26,13 +26,20 @@ def test_json_snapshot_and_refresh_errors_use_stable_codes(tmp_path: Path) -> No
     assert created.exit_code == 0, created.output
     data = json.loads(created.stdout)
     assert data["code"] == "BUNDLE_SNAPSHOT_CREATED" and set(data["bundles"]) == {"alpha", "beta"}
-    refused = runner.invoke(cli, ["bundle", "refresh", "tools/copy", "--source", str(source), "-w", str(consumer)])
-    assert refused.exit_code == 2
-    assert json.loads(refused.stdout)["error"]["code"] == "BUNDLE_SNAPSHOT_CONFLICT"
-    preview = runner.invoke(
-        cli, ["bundle", "refresh", "tools/copy", "--source", str(source), "--check", "-w", str(consumer)]
-    )
-    assert preview.exit_code == 0 and json.loads(preview.stdout)["status"] == "preview"
+    refresh = ["bundle", "refresh", "tools/copy", "--source", str(source), "-w", str(consumer)]
+    preview = runner.invoke(cli, refresh)
+    assert preview.exit_code == 0, preview.output
+    previewed = json.loads(preview.stdout)
+    assert previewed["status"] == "preview" and previewed["code"] == "BUNDLE_SNAPSHOT_PREVIEW"
+    half = runner.invoke(cli, [*refresh, "--expect", previewed["current_digest"]])
+    assert half.exit_code == 2
+    half_error = json.loads(half.stdout)["error"]
+    assert half_error["code"] == "ARGUMENT_INVALID" and half_error["advisory"]["target_files"] == ["--candidate"]
+    stale = runner.invoke(cli, [*refresh, "--expect", "0" * 64, "--candidate", previewed["candidate_digest"]])
+    assert stale.exit_code == 2
+    assert json.loads(stale.stdout)["error"]["code"] == "BUNDLE_SNAPSHOT_CONFLICT"
+    assert runner.invoke(cli, [*refresh, "--check"]).exit_code == 2
+    assert "--check" not in runner.invoke(cli, ["bundle", "refresh", "--help"]).output
 
 
 def test_built_wrapper_fresh_clone_refresh_reinstall_and_rule_execution(tmp_path: Path) -> None:
@@ -130,7 +137,7 @@ def test_built_wrapper_fresh_clone_refresh_reinstall_and_rule_execution(tmp_path
     run("uv", "sync", "--project", str(clone))
     assert "private.invalid" not in (clone / "uv.lock").read_text()
     installed("sync", "--locked")
-    unchanged = json.loads(installed("bundle", "refresh", "tools/team-copy", "--source", str(offline), "--check"))
+    unchanged = json.loads(installed("bundle", "refresh", "tools/team-copy", "--source", str(offline)))
     assert unchanged["changes"] == {"added": [], "modified": [], "removed": []}
     installed("override", "create", "alpha:guide")
     override = clone / ".devkit/overrides/alpha/guide.md.jinja"
@@ -145,7 +152,7 @@ def test_built_wrapper_fresh_clone_refresh_reinstall_and_rule_execution(tmp_path
     beta.write_text(beta.read_text().replace('name = "beta"', 'name = "gamma"'))
     alpha = source / "src/private_content/alpha/bundle/guide.md.jinja"
     alpha.write_text(alpha.read_text().replace("alpha body.", "upstream changed."))
-    preview = json.loads(installed("bundle", "refresh", "tools/team-copy", "--source", str(source), "--check"))
+    preview = json.loads(installed("bundle", "refresh", "tools/team-copy", "--source", str(source)))
     assert preview["removed_selected"] == ["beta"] and preview["packaging_changed"]
     config = clone / ".devkit/config.toml"
     receipt = clone / ".devkit/installation.json"
