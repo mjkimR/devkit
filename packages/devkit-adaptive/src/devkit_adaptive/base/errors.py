@@ -181,8 +181,9 @@ class LedgerFragmentIgnored(AdaptiveError):
 
 
 class PreexistingDirty(AdaptiveError):
-    """preexisting dirty."""
+    """``verify``: paths already dirty at assignment are excluded from the check (``NOTICE``); nothing to correct."""
 
     code = "ADAPTIVE_PREEXISTING_DIRTY"
     level = Level.NOTICE
+    fix = None  # the base's input-correction fix does not apply to a notice
     brief = True  # informational: nothing to do, so no [ACTION] line

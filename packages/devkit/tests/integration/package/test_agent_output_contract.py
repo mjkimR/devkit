@@ -257,6 +257,18 @@ def test_a_notice_without_fix_is_brief() -> None:
     assert problems == [], "set brief = True on these notices, or give them a fix"
 
 
+def test_a_notice_does_not_inherit_an_error_fix() -> None:
+    """A notice's ``fix`` is its own follow-up; one inherited from an error base names a correction nothing needs."""
+    problems = []
+    for cls in _advisory_classes():
+        if cls.level is not Level.NOTICE or not cls.fix:
+            continue
+        owner = next(base for base in cls.__mro__ if "fix" in base.__dict__)
+        if owner.level is not Level.NOTICE:
+            problems.append(f"{cls.__module__}.{cls.__qualname__} inherits fix from {owner.__qualname__}")
+    assert problems == [], "declare the notice's own fix, or fix = None"
+
+
 # --- the command surface -------------------------------------------------------------------------------------------
 
 # Visible leaf commands without --format, and why.
