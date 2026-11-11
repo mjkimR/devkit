@@ -84,7 +84,7 @@ uv run devkit sync
 ```
 
 1. Run `bundle plan` once per agent the project selects, and compare each asset's `paths` with the destinations the form's reference names.
-2. After `sync`, confirm each destination file exists; read an `ASSET_UNPROJECTED` notice as the native-variant limit, not as a failure to fix by narrowing the project's agents.
+2. After `sync`, confirm each destination file exists. For a native variant, read the `sync` notice by `references/native-variant.md`.
 
 ## 8. Run one bounded trial
 

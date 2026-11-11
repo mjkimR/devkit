@@ -6,7 +6,7 @@ A native variant is the source file copied unchanged for the one host it was wri
 
 Read the file whole, tell the user each limit below and wait for the user's decision; the copy puts third-party instructions into the host as written.
 
-- Hosts without a variant receive no file, and every `uv run devkit sync` reports the asset with an `ASSET_UNPROJECTED` notice.
+- Hosts without a variant receive no file, and every `uv run devkit sync` reports the asset with an `ASSET_UNPROJECTED` notice. Read that notice as this limit, not as a failure to fix by narrowing the project's agents.
 - A model or effort value pinned in the file stays in force; the project's model level policy does not reach a native variant.
 - The file carries none of the swarm assignment and return contract: no absolute boundaries, no return fields, no rule against widening authority.
 - Auto-invocation wording and each authority the source grants (commit, push, pull request, package install, deployment) stay active on that host. Quote each such line to the user.

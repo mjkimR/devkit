@@ -20,6 +20,5 @@ The caller's lifecycle decides required records: adaptive iteration requires no 
 Before dispatch, the delegating agent SHOULD record the deliverable with `uv run devkit adaptive assignment new`, its governing documents as `--governing` and literal write paths as `--write`, and put the ID in the payload.
 After a return, run `uv run devkit adaptive assignment return <id>`, then `uv run devkit adaptive assignment verify <id>`; `result=fail` is a rejected return whose codes go to repair, while exit `1` alone may be a warning under `--strict`.
 After integrating or abandoning the result, run `uv run devkit adaptive assignment close <id>` with the outcome and required reason.
-On `ADAPTIVE_SCOPE_OVERLAP`, narrow the scope, close a finished assignment, sequence with `--depends-on` on an existing dependency, or leave a bounded experiment unrecorded.
-On `ADAPTIVE_GOVERNING_UNRESOLVED`, correct the value, bring the document into the assignee's worktree or pass an absolute path of a readable copy.
+On `ADAPTIVE_SCOPE_OVERLAP`, apply its `[FIX]` or leave a bounded experiment unrecorded.
 If a command cannot record, keep the manual payload, actual diff comparison and checkpoint procedure, report assignments as unrecorded and never reroute a denied write.
