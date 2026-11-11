@@ -13,9 +13,8 @@ CONTEXT_END = "<!-- /DEVKIT:CONTEXT -->"
 def context_prerequisite(bundle: str) -> str:
     return (
         f"{CONTEXT_START}\n"
-        f"Required first: `uv run devkit get-context {bundle}`, once per bundle per agent context"
-        " (skip if already loaded; reload after compaction). Apply the full constitution;"
-        " read instruction bodies only when relevant.\n"
+        f"Required first, once per agent context and again after compaction: `uv run devkit get-context {bundle}`."
+        " Apply its constitution; read instruction bodies only when relevant.\n"
         f"{CONTEXT_END}\n\n"
     )
 
