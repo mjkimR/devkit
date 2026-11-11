@@ -9,6 +9,6 @@ findings: []
 checks:
   rules: PASS 0 reports
 diff_scope:
-  base: ''
+  base: e4317d04ae744c9daf737c2856912a05569abba7
   head: b1832a929eb20c36102e65722b6a706e60995028
 activity_effort: medium
