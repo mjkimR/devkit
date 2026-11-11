@@ -5,8 +5,8 @@ or (``start_branch``) in the current checkout; ``attach`` continues an existing 
 the base checkout (by default as a merge commit ``merging`` builds outside any checkout) and removes it, refusing
 instead of forcing at every step, and ``stale_branches`` reports branches nobody has moved for
 ``[worktree] stale_after``. SDD-agnostic: a methodology layer decides which tasks use a worktree
-and plugs in through ``before_remove`` and the ``devkit.post_finish``, ``devkit.finish_guard`` and
-``devkit.attach_check`` extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
+and plugs in through the ``devkit.post_finish``, ``devkit.finish_guard`` and ``devkit.attach_check``
+extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
 """
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
