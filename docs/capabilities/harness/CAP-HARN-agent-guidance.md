@@ -231,7 +231,11 @@ envelope, final change report, integration result), `spec/references/git-policy.
 `spec-next/references/workflow-signals.md` (`devkit workflow next` lines and advisories),
 `spec-delegate/references/hosts.md` (spawning a role on each host), `spec-delegate/references/payload.md` (payload
 fields and rows per role), `spec-specify/references/feature.md` and
-`bugfix.md`, `spec-feedback/references/sweep.md` and `template.md`, `spec-rule/references/config.md` and
+`bugfix.md`, `spec-specify/references/screens.md` and `spec-sync/references/screens.md` (drafting and writing
+screens), `spec-review/references/scope-extension.md` (reviewing a grown `_Boundary:`),
+`spec-integrate/references/recovery.md` (base merge after a Git refusal, unknown or partial results, remote deletion
+failure), `spec-orchestrate/references/recovery.md` (context loss, returning to `direct`),
+`spec-feedback/references/sweep.md` and `template.md`, `spec-rule/references/config.md` and
 `templates.md`, `spec-entrypoints/references/backfill.md`.
 
 ### Delegation evidence and integration responsibilities
