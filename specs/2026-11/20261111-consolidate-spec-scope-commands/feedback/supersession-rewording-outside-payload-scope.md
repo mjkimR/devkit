@@ -8,7 +8,7 @@ target: the spec-orchestrate skill (Development payload write scope for partial 
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-11-11
 ---
 
