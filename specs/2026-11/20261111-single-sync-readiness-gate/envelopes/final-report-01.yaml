@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:32:02.428759Z'
+status: completed
+summary: sync --check is documented as the single readiness gate (CAP-DIST Readiness Gate, reference, 4 completion criteria, 2 guides, status help); status stays a diagnostic report; no detection, exit code or JSON change
+findings: []
+assumptions:
+- 'No baseline measurement was named; outcome measured on the AC-03 search: 2 matches at the handoff commit, 0 at HEAD'
+checks:
+  tests: PASS just test-affected 3255 passed 1 skipped (rerun on HEAD content); just test-dist 1401 passed
+  build: PASS uv run devkit sync --check exit 0; devkit and adaptive-dev bundle validate PASS
+  lint: PASS just lint; just check 0 errors; devkit rules check --ci --base main
+diff_scope:
+  base: 2fcff57dc71189c30c74b34c5718e33547e3bba1
+  head: ff24c91eca83852a32314f395e1ed34d8d428f08
