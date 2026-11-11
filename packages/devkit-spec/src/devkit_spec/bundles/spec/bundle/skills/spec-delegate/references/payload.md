@@ -41,5 +41,6 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 - Never ask a worker to delete a scratch file or fixture it created: authored scratch files stay in the ignored path inside the worktree, and removing the worktree (`devkit worktree finish` or integration cleanup) cleans them.
 - Add linked open source feedback to the write scope, by its actual path, only when the worker fixes it directly; otherwise update it yourself at completion.
 - Before delegating a move or deletion, add each document linking to the target as an exact link-repair-only write path.
+- If an ADR the handoff promoted supersedes another ADR in part and announces a rewording of that ADR's body, add the superseded ADR as an exact rewording-only write path; its "Superseded in part" line must repeat the superseder's statement and cannot carry the rewording.
 - Name the official documentation the work needs as read authority, separate from any mutation authority; if the worker cannot read it, supply the verified content.
 - Planning: when the turn needs newer base IDs or CLI features, refresh the branch and installed instructions first (the worker never merges). Name an ignored probe path inside the assigned worktree, preparing one if none exists.
