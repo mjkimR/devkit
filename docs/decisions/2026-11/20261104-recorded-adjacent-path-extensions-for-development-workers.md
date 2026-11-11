@@ -11,6 +11,8 @@ created_at: 2026-11-04
 
 # [ADR-recorded-adjacent-path-extensions-for-development-workers] Recorded adjacent-path extensions for development workers
 
+Superseded in part by `ADR-derived-reference-documents-as-worker-scope-extensions`: the list of documents that qualify as Tier B extensions, which gains derived reference documents. Its annotation, record, review, denial and inspection decisions remain in force.
+
 ## 1. Context & Problem Statement
 
 A required adjacent file may be absent from an estimated task boundary. Strict rejection stops the worker even

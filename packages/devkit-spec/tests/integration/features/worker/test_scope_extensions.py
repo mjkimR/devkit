@@ -138,6 +138,8 @@ def test_latest_record_wins_and_metadata_change_needs_new_record(repo: Path) -> 
         ".github/workflows/ci.yml",
         "uv.lock",
         "packages/devkit-viewer/frontend/package.json",
+        "AGENTS.md",
+        "packages/example/CLAUDE.md",
     ],
 )
 def test_protected_extension_fails_even_inside_derived_scope(repo: Path, path: str) -> None:
@@ -151,6 +153,19 @@ def test_protected_extension_fails_even_inside_derived_scope(repo: Path, path: s
     assert any(issue["path"] == path for issue in result["checks"]["scope_extensions"]["issues"])
     assert result["checks"]["scope"]["status"] == "pass"
     assert [e["code"] for e in result["errors"]] == ["SPEC_WORKER_SCOPE_EXTENSION_INVALID"]
+
+
+@pytest.mark.parametrize(
+    "path", ["docs/development/reference/core.md", "packages/example/README.md", "guides/INSTALL_GUIDE.md"]
+)
+def test_derived_reference_extension_passes(repo: Path, path: str) -> None:
+    tasks(repo, path=path, reason="restates devkit_core.core.memo")
+    write(repo, path, "reference\n")
+    write(repo, PATH, "pass\n")
+    worker(repo, 1, [{**EXTENSION, "path": path, "reason": "restates devkit_core.core.memo"}])
+    result = inspect(repo)
+    assert result["checks"]["scope_extensions"] == {"status": "pass"}
+    assert result["exit_code"] == 0
 
 
 def test_explicit_scope_and_scope_file_do_not_union_extensions(repo: Path, monkeypatch) -> None:
