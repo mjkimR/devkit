@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:12:17.142043Z'
+status: completed
+summary: 'code-reviewer: AC-01..AC-08 confirmed against the committed diff and tests; no P1/P2, one P3 ADR trace pointer'
+findings:
+- issue: The ADR traces the today-only handoff history date to CAP-DLV-cli-and-output §1, but the restating sentence is in CAP-DLV-workflow-definitions Binding
+  evidence: docs/decisions/2026-11/20261111-remove-unused-cli-options-without-shims.md:74; docs/capabilities/delivery/CAP-DLV-workflow-definitions.md:186
+  failure_condition: A reader following the ADR trace lands in a document that only shows the synopsis
+  suggested_action: Point the clause at CAP-DLV-workflow-definitions Binding
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected --base main 5563 passed 1 skipped; e2e 259 passed
+  lint: PASS just lint-check; just check; devkit rules check --ci --base main
+diff_scope:
+  base: 425d8e46837c4a03859090099475c3597c33bc45
+  head: 95e6c9daec5bff33c0c692fc34f1b4e82da18190

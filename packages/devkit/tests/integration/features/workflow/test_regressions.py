@@ -218,12 +218,15 @@ def test_b3_no_gate_request_or_human_wait_while_exit_checks_are_unmet(tmp_path: 
 
 
 def test_b4_evaluating_another_workflow_reports_binding(tmp_path: Path) -> None:
+    """The library still evaluates against another definition; ``next`` has no ``--workflow`` (SPEC-remove-unused-cli-options AC-06)."""
     root = _workspace(tmp_path, {"a": A, "b": B, "c": C, "d": D}, "a")
     assert _run("new", "-w", str(root), "u").exit_code == 0
-    result = _next(root, "--workflow", "d")
-    assert result.exit_code == 0, result.stderr
-    assert "[BOUND_ELSEWHERE: workflow=a]" in result.output and "[DRIFT" not in result.output
-    data = json.loads(_next(root, "--workflow", "d", "--format", "json").stdout)
+    refused = _next(root, "--workflow", "d")
+    assert refused.exit_code == 2 and "No such option '--workflow'" in refused.stderr
+    ws = Workspace(root)
+    result = ws.evaluate_unit(ws.resolve_unit(UNIT, "d"), lint=False)
+    assert "[BOUND_ELSEWHERE: workflow=a]" in render_evaluation(result) and "[DRIFT" not in render_evaluation(result)
+    data = result.to_dict()
     assert data["bound_elsewhere"] == "a" and "drift" not in data
 
 
@@ -389,7 +392,9 @@ def test_b13_envelope_sequences_past_99(tmp_path: Path) -> None:
 def test_r2_workflow_paths_resolve_against_the_workspace_root(tmp_path: Path) -> None:
     root = _workspace(tmp_path, {"a": A, "b": B, "c": C, "d": D}, "a")
     assert _run("new", "-w", str(root), "u").exit_code == 0
-    result = _next(root, "--workflow", ".devkit/workflows/d.md")
+    bound = _run("bind", "-w", str(root), "--unit", UNIT, "--workflow", ".devkit/workflows/d.md")
+    assert bound.exit_code == 0, bound.stderr
+    result = _next(root)
     assert result.exit_code == 0, result.stderr
     assert "[WORKFLOW: d " in result.output
 

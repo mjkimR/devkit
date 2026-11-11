@@ -5,7 +5,7 @@ from __future__ import annotations
 import click
 from devkit_dist.adapters.cli import FORMAT_OPTION, Reported, boundary, echo_json, is_json
 
-from devkit_agt.features.workflow.cli.app import ANCHOR, GIVEN, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
+from devkit_agt.features.workflow.cli.app import ANCHOR, GIVEN, NO_LINT, UNIT, WORKSPACE, cli, workspace
 from devkit_agt.features.workflow.cli.render import render_evaluation, render_requests
 from devkit_agt.features.workflow.models.decisions import ACTIONS
 from devkit_agt.features.workflow.usecases.answers import RecordAnswerUseCase, ReturnToStageUseCase
@@ -16,7 +16,6 @@ from devkit_agt.features.workflow.usecases.operations import EvaluateUnitUseCase
 @WORKSPACE
 @UNIT
 @ANCHOR
-@click.option("--workflow", "workflow_ref", default=None, help="Evaluate against this workflow instead of the binding")
 @GIVEN
 @click.option(
     "--view",
@@ -32,7 +31,6 @@ def next_cmd(
     workspace_root: str | None,
     unit: str,
     anchor: str | None,
-    workflow_ref: str | None,
     given: tuple[str, ...],
     view: str,
     no_lint: bool,
@@ -44,7 +42,7 @@ def next_cmd(
     unchanged after the result (on stderr in text, under "errors" in JSON) and sets the exit code.
     """
     ws = workspace(workspace_root)
-    result = EvaluateUnitUseCase(ws).execute(unit, workflow_ref, anchor=anchor, given=given, lint=not no_lint)
+    result = EvaluateUnitUseCase(ws).execute(unit, anchor=anchor, given=given, lint=not no_lint)
     lint_error = result.lint_error
     if view == "requests":
         if is_json(output_format):
@@ -153,9 +151,6 @@ def return_cmd(
     default=None,
     help="Candidate to continue with (recorded as the handoff decision); default: the recorded or automatic choice",
 )
-@click.option(
-    "--date", "when", default=None, help="Completion date recorded in the history, YYYY-MM-DD (default: today)"
-)
 @click.option("--by", "by", default="", help="Who chose the candidate given with --workflow")
 @GIVEN
 @NO_LINT
@@ -166,7 +161,6 @@ def handoff_cmd(
     unit: str,
     anchor: str | None,
     workflow_ref: str | None,
-    when: str | None,
     by: str,
     given: tuple[str, ...],
     no_lint: bool,
@@ -174,9 +168,8 @@ def handoff_cmd(
 ) -> None:
     """Hand a completed unit to one of its workflow's next candidates and rebind it."""
     ws = workspace(workspace_root)
-    day = parse_date(when)
     outcome = HandoffWorkflowUseCase(ws).execute(
-        unit, workflow_ref, anchor=anchor, when=day, by=by, given=given, lint=not no_lint
+        unit, workflow_ref, anchor=anchor, by=by, given=given, lint=not no_lint
     )
     if is_json(output_format):
         echo_json(outcome.to_dict())

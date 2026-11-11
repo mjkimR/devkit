@@ -364,7 +364,6 @@ class ListDocumentsUseCase(BaseUseCase):
         kinds: tuple[str, ...],
         status: str | None,
         area: str | None,
-        query: str | None,
         file: str | None,
         history: bool,
         namespace: str | None,
@@ -389,7 +388,6 @@ class ListDocumentsUseCase(BaseUseCase):
             if (not wanted or document.kind in wanted)
             and (not statuses or _shown_status(document, overlays).lower() in statuses)
             and (not area or area.lower() in document.area.lower())
-            and (not query or query.lower() in document.id.lower() or query.lower() in document.title.lower())
             and _matches(document, where)
             and scope.accepts(document)
             and (file is None or _overlaps(document, file))

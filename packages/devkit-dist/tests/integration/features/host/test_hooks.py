@@ -377,11 +377,12 @@ def test_import_output_is_discarded_before_status_json(
     assert result.exit_code == 0 and json.loads(result.stdout)["ok"]
 
 
-def test_status_refuses_an_unknown_host_and_a_directory_outside_any_project(project: Path, tmp_path: Path) -> None:
-    bad = CliRunner().invoke(cli, ["host", "status", "--host", "nope", "-w", str(project), "--format", "json"])
-    assert bad.exit_code == 2
-    error = json.loads(bad.stdout)["error"]
-    assert error["code"] == "ARGUMENT_INVALID" and error["advisory"]["target_files"] == ["--host"]
+def test_status_has_no_host_option_and_refuses_a_directory_outside_any_project(project: Path, tmp_path: Path) -> None:
+    """SPEC-remove-unused-cli-options AC-04: ``--host`` is an unknown option; status inspects the supported host."""
+    bad = CliRunner().invoke(cli, ["host", "status", "--host", "codex", "-w", str(project), "--format", "json"])
+    assert bad.exit_code == 2 and "No such option '--host'" in bad.stderr
+    plain = CliRunner().invoke(cli, ["host", "status", "-w", str(project), "--format", "json"])
+    assert plain.exit_code == 0 and json.loads(plain.stdout)["host"] == "codex"
     outside = tmp_path / "outside"
     outside.mkdir()
     refused = CliRunner().invoke(cli, ["host", "status", "-w", str(outside), "--format", "json"])

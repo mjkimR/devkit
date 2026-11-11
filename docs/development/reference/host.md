@@ -4,7 +4,7 @@ Canonical semantics: `CAP-HOST-lifecycle-observation`.
 
 | Command | Result |
 | --- | --- |
-| `devkit host status [--host codex] [-w DIR] [--format json]` | Read-only installation, handler and last observer status; exit 0 or 1 for findings, 2 when inspection cannot run, including an unsupported `--host` or a directory without `.devkit/` (`ARGUMENT_INVALID`) |
+| `devkit host status [-w DIR] [--format json]` | Read-only installation, handler and last observer status of the supported host (`codex`); exit 0 or 1 for findings, 2 when inspection cannot run, including a directory without `.devkit/` (`ARGUMENT_INVALID`) |
 | `devkit host hook --host codex --asset BUNDLE:ID [-w DIR]` | Native event JSON on stdin, native JSON response on stdout; advisory failures return `{}` and exit 0 |
 | `devkit bundle plan SOURCE --agent codex` | Managed files and `host_hooks` registrations, without writing |
 | `devkit sync --dry-run` | Preview shared-file and managed-file writes |

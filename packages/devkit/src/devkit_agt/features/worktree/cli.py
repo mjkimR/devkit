@@ -206,10 +206,7 @@ def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
 @FORMAT_OPTION
 @boundary
 @_rerun_on_base
-@click.option("--local-only", is_flag=True, help="Accepted for older guidance; finish makes no network call")
-def finish_cmd(
-    branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str, local_only: bool
-) -> None:
+def finish_cmd(branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str) -> None:
     """Remove the worktree and the branch of BRANCH once the base contains it; run it from the base.
 
     The branch must already be merged: land it locally with `devkit integration prepare BRANCH --route local` and
@@ -217,7 +214,6 @@ def finish_cmd(
     --discard closes a task instead: the branch is dropped unmerged, only on the authority its close needs. Rerun the
     same command after resolving a refusal: the steps already done are skipped.
     """
-    del local_only  # finish makes no network call; the flag stays for the guidance that names it
     if merge:
         raise MergeRetiredError(
             f"worktree finish --merge is retired; land {branch} with devkit integration integrate --route local; nothing was"

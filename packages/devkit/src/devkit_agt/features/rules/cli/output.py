@@ -1,8 +1,7 @@
 """Text and JSON rendering for ``devkit rules`` commands.
 
 Text output is one ``[KIND: ...]`` sentinel line per fact, without colour:
-``[VIOLATION: ...]`` per finding (``[RULE_COUNTS: ...]`` per rule with
-``--summary-only``), then ``[SUMMARY: errors=N warnings=N infos=N fixed=N rules=N]``
+``[VIOLATION: ...]`` per finding, then ``[SUMMARY: errors=N warnings=N infos=N fixed=N rules=N]``
 and ``[OK: ...]`` when the run passes; ``test`` prints ``[RULE_TEST: ...]`` per
 rule (with the failure view of a failed run) and ``[SUMMARY: rules=N ...]``. Free text (messages, remediations,
 descriptions) is written as a JSON string, so every fact stays on one line.
@@ -122,24 +121,16 @@ def print_violations(
     workspace_root: Path,
     *,
     rules: int,
-    summary_only: bool = False,
 ) -> None:
-    """Findings (or per-rule counts) and one summary line; a run with problems and no findings prints nothing.
+    """Findings and one summary line; a run with problems and no findings prints nothing.
 
     ``guides`` maps rule IDs to guide documents (``ProjectRun.guides``); ``rules`` is the number of rules active in
     the run's phase (``ProjectRun.active_rules``), so a pass that checked nothing reads ``rules=0``.
     """
     if errors and not violations:
         return
-    if summary_only:
-        by_rule: dict[str, list[Violation]] = {}
-        for v in violations:
-            by_rule.setdefault(v.rule_id, []).append(v)
-        for rule_id in sorted(by_rule):
-            click.echo(f"[RULE_COUNTS: {rule_id} {_count_fields(_counts(by_rule[rule_id]))}]")
-    else:
-        for v in violations:
-            click.echo(_violation_line(v, guides, workspace_root))
+    for v in violations:
+        click.echo(_violation_line(v, guides, workspace_root))
     click.echo(f"[SUMMARY: {_count_fields(_counts(violations))} rules={rules}]")
 
 

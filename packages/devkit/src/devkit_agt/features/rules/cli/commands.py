@@ -66,7 +66,6 @@ class RunRequest:
     dry_run: bool = False
     rules_dir: Path | None = None
     json: bool = False
-    summary_only: bool = False
     targets: tuple[str, ...] = ()
     snapshot: Snapshot | None = None
 
@@ -124,7 +123,6 @@ def _execute(request: RunRequest) -> None:
             run.guides,
             run.workspace_root,
             rules=len(run.active_rules),
-            summary_only=request.summary_only,
         )
         if run.ok:
             output.echo_ok()
@@ -156,11 +154,6 @@ _phase_option = click.option(
     default="linter",
     help="Rule phase to execute",
 )
-_summary_option = click.option(
-    "--summary-only",
-    is_flag=True,
-    help="Text output: per-rule counts, status lines and the summary only, no individual findings",
-)
 
 
 @cli.command(name="check")
@@ -168,7 +161,6 @@ _summary_option = click.option(
 @_phase_option
 @_rules_dir_option
 @_format_option
-@_summary_option
 @click.option("--staged", is_flag=True, help="Evaluate the exact staged Git tree instead of the working directory")
 @click.option("--ci", is_flag=True, help="Evaluate the HEAD tree against its merge base with --base")
 @click.option("--base", default="origin/main", show_default=True, help="Comparison base ref for --ci")
@@ -181,7 +173,6 @@ def check_cmd(
     phase: str,
     rules_dir: str | None,
     output_format: str,
-    summary_only: bool,
     staged: bool,
     ci: bool,
     base: str,
@@ -207,7 +198,6 @@ def check_cmd(
             phase=Phase(phase.lower()),
             rules_dir=_rules_path(rules_dir),
             json=is_json(output_format),
-            summary_only=summary_only,
             targets=files,
             snapshot=snapshot,
         )
@@ -224,7 +214,6 @@ def check_cmd(
     help="Report the initial findings, marking fixable ones, without running fixers or writing files",
 )
 @_format_option
-@_summary_option
 @click.argument("files", nargs=-1, type=str)
 @boundary
 def fix_cmd(
@@ -233,7 +222,6 @@ def fix_cmd(
     rules_dir: str | None,
     dry_run: bool,
     output_format: str,
-    summary_only: bool,
     files: tuple[str, ...],
 ) -> None:
     """Automatically apply safe deterministic repairs to files or directories."""
@@ -245,7 +233,6 @@ def fix_cmd(
             dry_run=dry_run,
             rules_dir=_rules_path(rules_dir),
             json=is_json(output_format),
-            summary_only=summary_only,
             targets=files,
         )
     )

@@ -618,7 +618,7 @@ def test_cli_missing_managed_rule_fails_in_working_tree_check(tmp_path: Path) ->
     assert "synchronized rule .devkit/managed/team/r.py is missing" in result.stderr
 
 
-# --- directory targets, exclusions, summary-only, exit codes ---------------
+# --- directory targets, exclusions, removed options, exit codes ---------------
 
 
 def _two_broken_docs(root: Path) -> None:
@@ -696,45 +696,18 @@ def test_cli_invalid_exclude_pattern_fails_before_rules(tmp_path: Path) -> None:
     assert "broken" not in result.stdout
 
 
-def test_cli_summary_only_prints_counts_not_findings(tmp_path: Path) -> None:
+def test_cli_summary_only_is_an_unknown_option(tmp_path: Path) -> None:
+    """SPEC-remove-unused-cli-options AC-05: ``check`` and ``fix`` refuse ``--summary-only``; findings stay listed."""
     _two_broken_docs(tmp_path)
-    _sized_doc(tmp_path, "docs/long.md", 50000)
     runner = CliRunner()
-    result = runner.invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
-    assert result.exit_code == 1
-    assert "[RULE_COUNTS: RULE-markdown-link errors=3 warnings=0 infos=0 fixed=0]" in result.output
-    assert "[RULE_COUNTS: RULE-file-length errors=0 warnings=1 infos=0 fixed=0]" in result.output
-    assert "[SUMMARY: errors=3 warnings=1 infos=0 fixed=0 rules=" in result.output
-    assert "[VIOLATION:" not in result.output and "docs/a.md" not in result.output
-
-    _fixable_link_workspace(tmp_path / "other")
-    fixed = runner.invoke(cli, ["fix", "-w", str(tmp_path / "other"), "--summary-only"])
-    assert fixed.exit_code == 0, fixed.output
-    assert "[RULE_COUNTS: RULE-markdown-link errors=0 warnings=0 infos=0 fixed=1]" in fixed.output
-    assert "status=fixed" not in fixed.output
-
-    clean = runner.invoke(cli, ["check", "-w", str(tmp_path / "other"), "--summary-only"])
-    assert clean.exit_code == 0 and "[OK: " in clean.output
-
-    as_json = runner.invoke(cli, ["check", "-w", str(tmp_path), "--summary-only", "--format", "json"])
-    assert len(json.loads(as_json.stdout)["violations"]) == 3  # JSON ignores the flag
-
-
-def test_cli_summary_only_keeps_sentinel_lines(tmp_path: Path) -> None:
-    _broken_link_workspace(tmp_path)
-    _write_config(tmp_path, '[rules.phase_overrides]\nRULE-markdown-link = "hygiene"\n')
-    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--phase", "hygiene", "--summary-only"])
-    assert "[PHASE_OVERRIDE: RULE-markdown-link=hygiene" in result.output
-    assert "[RULE_COUNTS: RULE-markdown-link errors=1 warnings=0 infos=0 fixed=0]" in result.output
-
-    (tmp_path / "repo-dir").mkdir()
-    root = _repo(tmp_path / "repo-dir")
-    (root / "docs").mkdir()
-    (root / "docs/a.md").write_text("[broken](missing.md)\n")
-    _git(root, "add", "docs")
-    staged = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--summary-only"])
-    assert staged.exit_code == 1
-    assert "[SNAPSHOT: mode=staged" in staged.output and "[VIOLATION:" not in staged.output
+    for command in ("check", "fix"):
+        refused = runner.invoke(cli, [command, "-w", str(tmp_path), "--summary-only"])
+        assert refused.exit_code == 2 and "No such option '--summary-only'" in refused.stderr
+    assert (tmp_path / "docs/a.md").read_text(encoding="utf-8") == "[broken](missing.md)\n"
+    result = runner.invoke(cli, ["check", "-w", str(tmp_path)])
+    assert result.exit_code == 1 and result.output.count("[VIOLATION: RULE-markdown-link") == 3
+    assert "[SUMMARY: errors=3 warnings=0 infos=0 fixed=0 rules=" in result.output
+    assert "[RULE_COUNTS:" not in result.output
 
 
 def test_cli_exit_codes_distinguish_violations_from_failures(tmp_path: Path) -> None:
@@ -829,8 +802,6 @@ def test_cli_info_findings_are_counted(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "[VIOLATION: RULE-markdown-link severity=info" in result.output
     assert "[SUMMARY: errors=0 warnings=0 infos=1 fixed=0 rules=" in result.output
-    summary = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--summary-only"])
-    assert "[RULE_COUNTS: RULE-markdown-link errors=0 warnings=0 infos=1 fixed=0]" in summary.output
 
 
 def test_cli_errors_without_findings_print_no_empty_summary(tmp_path: Path) -> None:

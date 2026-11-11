@@ -176,17 +176,17 @@ A stage with `human_gate` carries an implicit `human` check named `gate:<gate>`.
 
 ## 3. Binding
 
-`new` and `bind` write `workflow: <id>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file MUST be refused with `WORKFLOW_NOT_BINDABLE` before anything is written. `next --workflow <path>` still evaluates a unit against such a file without binding it. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
+`new` and `bind` write `workflow: <id>` into the anchor's frontmatter. The binding records only the id, which every unit command looks up among the discovered definitions, so `--workflow <path>` binds only the file discovered for its id (for example `.devkit/workflows/<id>.md`); any other definition file MUST be refused with `WORKFLOW_NOT_BINDABLE` before anything is written. Only the library (`Workspace.resolve_unit(unit, workflow)`) evaluates a unit against such a file without binding it; `next` evaluates the binding. `handoff` rebinds the unit to the chosen candidate and appends the finished segment to `workflow_history`, one flow-style line:
 
 ```yaml
 workflow: spec-driven
 workflow_history: [{workflow: triage, completed: '2026-10-13', last_decision: 2}]
 ```
 
-Binding updates MUST replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor MUST be replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten (any error, an interrupt included) MUST remove the decision record it wrote for `--workflow`. Only a process killed outright between the two writes leaves that record behind: an accepted `handoff` choice in the unchanged segment, which the next `handoff` uses. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments MUST NOT be re-evaluated.
+`completed` is the date `devkit workflow handoff` ran; a library caller may pass another date as `when` to `apply_handoff`. Binding updates MUST replace the whole value of the keys they write, including every line of a block-style value, and keep every other frontmatter line and the body. An anchor without frontmatter (read as unbound) gets a block holding the binding. The anchor MUST be replaced atomically (a temporary file in its directory, with its permission bits), so a failed write leaves it intact; a `handoff` whose anchor cannot be rewritten (any error, an interrupt included) MUST remove the decision record it wrote for `--workflow`. Only a process killed outright between the two writes leaves that record behind: an accepted `handoff` choice in the unchanged segment, which the next `handoff` uses. `last_decision` is the highest decision sequence number when the segment ended; decision records up to it belong to finished segments. After a handoff, `next` evaluates the new workflow from its first stage against the unit's files; finished segments MUST NOT be re-evaluated.
 
 On `next` (the policy lives in the library, `Workspace.evaluate_unit`):
 
-- Unbound anchor: evaluated against `--workflow` or the configured default; output says `bound=no`.
+- Unbound anchor: evaluated against the configured default; output says `bound=no`.
 - Bound: evaluated against the current definition; changes take effect without rebinding.
-- Bound to another workflow than the one evaluated (`--workflow`): `[BOUND_ELSEWHERE: workflow=<bound id>]` and JSON `bound_elsewhere` name the binding.
+- Bound to another workflow than the one evaluated (a library caller passing a workflow): `[BOUND_ELSEWHERE: workflow=<bound id>]` and JSON `bound_elsewhere` name the binding.

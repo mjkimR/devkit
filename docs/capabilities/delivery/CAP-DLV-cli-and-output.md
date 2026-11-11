@@ -22,8 +22,8 @@ The default group help focuses on operating existing units. Authoring commands `
 ```bash
 devkit workflow new <slug> [--workflow ID] [--date YYYY-MM-DD] [--status S]   # create a unit from the layout template and bind it
 devkit workflow bind --unit DIR [--anchor FILE] [--workflow ID]  # record or change the workflow binding
-devkit workflow next --unit DIR [--anchor FILE] [--workflow ID] [--given NAME]... [--no-lint] [--format text|json]
-devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]
+devkit workflow next --unit DIR [--anchor FILE] [--given NAME]... [--no-lint] [--format text|json]
+devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]
 devkit workflow next --view requests --unit DIR [--anchor FILE] [--no-lint] [--format text|json]   # requests-only view, using the same evaluation and error status as next
 devkit workflow answer --unit DIR [--anchor FILE] --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]
 devkit workflow return --unit DIR [--anchor FILE] --to STAGE [--note TEXT] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]  # go back; later approvals are asked again
@@ -136,7 +136,7 @@ Every line `next` prints, in this order (a line whose condition does not hold is
 | Line | When and what |
 | --- | --- |
 | `[WORKFLOW: <id> unit=<dir> status=<anchor status>\|- bound=yes\|no]` | Always first. `unit` is workspace-relative. |
-| `[BOUND_ELSEWHERE: workflow=<id>]` | The unit is bound to another workflow than the one evaluated (`--workflow`). |
+| `[BOUND_ELSEWHERE: workflow=<id>]` | The unit is bound to another workflow than the one evaluated (a library caller passing a workflow to `Workspace.resolve_unit`; `next` always evaluates the binding). |
 | `[DONE: <stage>...\|-]` | Always: the stages done, space-separated. |
 | `[GATE_PASSED: <gate> stage=<id> policy=P source=policy\|given\|decision:<file>]` | One per gate of a done stage, with what passed it. |
 | `[SKIPPED: <id> reason=stages.<id>=off\|approvals.<gate>=off]` | One per stage skipped by policy. |

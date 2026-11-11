@@ -35,7 +35,7 @@ Run the workflow's stages; at every boundary check with `devkit workflow next --
 
 - Through a PR: after the merge, run `devkit worktree finish <branch>`. A squash- or rebase-merged PR stays `WORKTREE_UNMERGED`; remove that worktree and branch only with the user's authorization.
 - A `.devkit/installation.json` conflict when integrating the base: keep either side, run `devkit sync` and stage the receipt it writes.
-- On `POST_FINISH_EXTENSION_FAILED`, resolve the cause, then run `devkit spec scope sweep --apply` and `devkit spec proposal prune <slug>`. After local integration already landed, `devkit worktree finish <branch> --local-only` validates and performs only the remaining guarded cleanup.
+- On `POST_FINISH_EXTENSION_FAILED`, resolve the cause, then run `devkit spec scope sweep --apply` and `devkit spec proposal prune <slug>`. After local integration already landed, `devkit worktree finish <branch>` validates and performs only the remaining guarded cleanup.
 - A refused finish runs no cleanup and leaves the task registered; `devkit spec scope release -w <worktree path>` withdraws an abandoned task.
 - `WORKTREE_DIRTY`: commit or discard in the worktree, never remove it by force. `WORKTREE_LOCKED`, and `WORKTREE_NOT_FOUND` for a merged branch devkit did not create: act only once the user agrees.
 

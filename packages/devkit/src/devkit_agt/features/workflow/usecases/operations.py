@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
 from pathlib import Path
 
 from devkit_core.base.usecase import BaseUseCase
@@ -45,15 +44,9 @@ class EvaluateUnitUseCase(BaseUseCase):
         self.workspace = workspace
 
     def execute(
-        self,
-        unit: str,
-        workflow: str | None = None,
-        *,
-        anchor: str | None = None,
-        given: Sequence[str] = (),
-        lint: bool = True,
+        self, unit: str, *, anchor: str | None = None, given: Sequence[str] = (), lint: bool = True
     ) -> UnitEvaluation:
-        ref = self.workspace.resolve_unit(unit, workflow, anchor=anchor)
+        ref = self.workspace.resolve_unit(unit, anchor=anchor)
         return self.workspace.evaluate_unit(ref, given=given, lint=lint)
 
 
@@ -69,14 +62,13 @@ class HandoffWorkflowUseCase(BaseUseCase):
         workflow: str | None = None,
         *,
         anchor: str | None = None,
-        when: date | None = None,
         by: str = "",
         given: Sequence[str] = (),
         lint: bool = True,
     ) -> HandoffOutcome:
         ref = self.workspace.resolve_unit(unit, anchor=anchor)
         result = self.workspace.evaluate_unit(ref, given=given, lint=lint)
-        return apply_handoff(plan_handoff(self.workspace, ref, result, workflow), when=when, by=by)
+        return apply_handoff(plan_handoff(self.workspace, ref, result, workflow), by=by)
 
 
 class ListChecksUseCase(BaseUseCase):

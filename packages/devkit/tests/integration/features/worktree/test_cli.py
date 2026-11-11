@@ -128,9 +128,8 @@ def test_a_git_failure_during_cleanup_reports_progress_then_resumes(
     )
 
 
-@pytest.mark.parametrize("flags", [(), ("--local-only",)], ids=["plain", "local-only"])
 def test_finish_of_a_landed_branch_makes_no_network_call(
-    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, flags: tuple[str, ...]
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """AC-03: cleanup after a landing (local integration or a merged pull request) stays local."""
     import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
@@ -149,13 +148,22 @@ def test_finish_of_a_landed_branch_makes_no_network_call(
             return _original(root, *args, **kw)
 
         monkeypatch.setattr(lifecycle, name, record)
-    done = invoke("finish", "dev-demo", *flags, "-w", str(repo))
+    done = invoke("finish", "dev-demo", "-w", str(repo))
     assert done.exit_code == 0, done.output
     assert (
         done.stdout
         == f"[WORKTREE_FINISHED: dev-demo path={path} merged=no removed=yes branch_deleted=yes discarded=no]\n"
     )
     assert called and not set(called) & {"fetch", "push", "ls-remote"}
+
+
+def test_finish_local_only_is_an_unknown_option(repo: Path) -> None:
+    """SPEC-remove-unused-cli-options AC-01: the retired no-op flag is a usage error and nothing is removed."""
+    path = work(repo)
+    land(repo)
+    refused = invoke("finish", "dev-demo", "--local-only", "-w", str(repo))
+    assert refused.exit_code == 2 and "No such option '--local-only'" in refused.stderr
+    assert path.is_dir() and git(repo, "branch", "--list", "dev-demo")
 
 
 def test_an_unmerged_branch_is_refused_with_the_integration_route(repo: Path) -> None:

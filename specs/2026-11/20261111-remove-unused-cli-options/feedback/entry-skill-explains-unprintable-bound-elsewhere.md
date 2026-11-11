@@ -1,0 +1,45 @@
+---
+id: FB-entry-skill-explains-unprintable-bound-elsewhere
+title: The devkit-workflow entry skill explains a sentinel the CLI no longer prints
+scope: repo
+kind: suggestion
+category: docs-mismatch
+target: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/workflow_skill.py
+origin: agent
+severity: noise
+recurring: false
+status: open
+created_at: 2026-11-11
+---
+
+# [FB-entry-skill-explains-unprintable-bound-elsewhere] The devkit-workflow entry skill explains a sentinel the CLI no longer prints
+
+## 2. Suggestion / Change Request (suggestion, change-request)
+
+- **Current Procedure**: The generated `devkit-workflow` entry skill tells agents that `[BOUND_ELSEWHERE]` means the
+  unit was evaluated against a workflow other than its binding. Since `SPEC-remove-unused-cli-options` removed
+  `devkit workflow next --workflow`, `next` always evaluates the binding, so an agent running the CLI never sees it;
+  only library callers of `Workspace.resolve_unit(unit, workflow)` can produce it.
+- **Proposed Procedure**: Drop the `[BOUND_ELSEWHERE]` sentence from the entry skill text and its assertion in
+  `packages/devkit-dist/tests/integration/features/distribution/test_workflows.py`, keeping the renderer for library
+  callers.
+- **Expected Benefit**: Fewer tokens in an always-loaded entry skill; no explanation of an unreachable signal.
+- **Cost & Risk**: None for CLI users; the text change is outside this unit's write scope.
+- **Attempted**: Hypothesis; not changed in this unit.
+
+## Diagnostic Details
+
+- **Reproduction**: `uv run devkit workflow next --unit <dir> --workflow <id>` exits 2 with `No such option`.
+- **Expected / Actual**: Entry skill signals match what the CLI prints / it explains one it cannot print.
+- **Versions**: branch `dev-remove-unused-cli-options`.
+- **Conditions**: not applicable.
+- **Workarounds Attempted**: not attempted.
+- **Related Assets**: `CAP-DLV-cli-and-output`, `CAP-DLV-workflow-definitions`.
+
+## Evidence
+
+```text
+workflow_skill.py: "`[BOUND_ELSEWHERE]` means the unit was evaluated against a workflow other than its binding,
+so no drift check ran."
+test_workflows.py asserts "[BOUND_ELSEWHERE]" is in the entry skill body.
+```

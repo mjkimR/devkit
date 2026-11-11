@@ -14,6 +14,8 @@ created_at: 2026-11-11
 
 # [ADR-single-local-landing-route] Land task branches locally only through the integration service
 
+Superseded in part by `ADR-remove-unused-cli-options-without-shims`: the clause that `--local-only` stays accepted, and the follow-up to retire the no-op `--local-only` flag. All other decisions remain in force.
+
 - **Status**: Accepted
 - **Date**: 2026-11-11
 - **Deciders**: user

@@ -1,0 +1,12 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T02:14:21.117614Z'
+status: completed
+summary: 'worker self-verified the reconcile-check-01 P2 fix: CAP-DLV-workflow-definitions now scopes completed to devkit workflow handoff and names apply_handoff when (f7389328); text-only, no expanded scope; rules check passes'
+findings: []
+checks: {}
+diff_scope:
+  base: 425d8e46837c4a03859090099475c3597c33bc45
+  head: f73893280819ec35510e6ee176f06ac7ac47e50d
