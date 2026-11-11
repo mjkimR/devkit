@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:50:38.213940Z'
+status: completed
+summary: 'Swept this Development run and its diff: recorded FB-supersession-rewording-outside-payload-scope; no duplicates (nearest hits concern pointer text, not payload scope)'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
