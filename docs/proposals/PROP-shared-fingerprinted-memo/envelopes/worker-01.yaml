@@ -1,0 +1,29 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:14:51.825217Z'
+status: needs_input
+summary: 'First Planning turn: status reviewing; Q1 (helper home devkit_core.core, no new edge) and Q2 (what stays local) answered with materials/memo-comparison.md; challenger round 1 narrowed the helper to safe_memo_path plus envelope_problem and resized to S; findings 1 and 3 stay open as decision D1 (q1).'
+findings: []
+checks: {}
+diff_scope:
+  base: ''
+  head: 2d0c66e063c6a097552f2561149e1ab012b879a3
+questions:
+- id: q1
+  title: One memo rule or two
+  prompt: Should the shared helper apply one rule to both memos (the stricter path check of the rule facts memo and the stricter envelope shape check of the docs parse memo), or keep each memo's current rule behind helper parameters?
+  context: 'Path safety and the envelope shape check exist twice with different strictness. Converging changes outcomes only for hand-made or unusual layouts: a facts memo with extra top-level keys is discarded, and the docs memo is no longer used under a symlinked .devkit/ or a directory whose resolved path differs; neither writer produces these, and both memos are disposable (one cold run). It also edits one path sentence each in CAP-DOCS-document-model 3.4.3 and CAP-GOV-rules-engine 5.3. Keeping two rules is strictly behavior-preserving but leaves the hardening split across parameters, which is what X-9 wanted to remove. This sets the Development scope and its acceptance criteria.'
+  options:
+  - id: a
+    description: 'Converge: one path rule (every component from .devkit/ down, docs creates directories on a writing load) and one exact envelope shape; update the two contract sentences.'
+    recommended: true
+  - id: b
+    description: Keep each memo's current rule behind helper parameters; strictly behavior-preserving, no contract edits, smaller benefit.
+    recommended: false
+  - id: c
+    description: Do not do this change (priority low, no failing contract); reject the proposal at plan-accept.
+    recommended: false
+  allow_note: true
+activity_effort: medium
