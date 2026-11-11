@@ -2,7 +2,7 @@
 id: SPEC-consolidate-spec-scope-commands
 title: Consolidate the spec scope commands around collect
 summary: Retires the devkit spec scope register, query, compare and hidden update commands with the registry update path, the journal and the second paths-changed pipeline, narrowing scope observation to collect beside release and sweep.
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities:
   - CAP-COLL-work-scope-registry

@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-consolidate-spec-scope-commands
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
     resolution: modified
@@ -17,6 +17,9 @@ targets:
   - file: docs/decisions/2026-11/20261102-worktrees-and-scope.md
     resolution: waived
     rationale: The handoff already added its Superseded in part line, which RULE-decision-supersession fixes to the superseder's statement; rewording the query and history mentions of its body is outside the Development write scope and is left for the Host.
+  - file: docs/capabilities/worktree/CAP-WT-task-worktrees.md
+    resolution: waived
+    rationale: Its post-finish sentence still names the scope registry journal; the file is outside the Development write scope, so dropping its journal mention is left for the Host before integration.
 ---
 
 # Reconciliation: `SPEC-consolidate-spec-scope-commands`

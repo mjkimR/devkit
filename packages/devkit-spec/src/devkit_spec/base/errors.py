@@ -456,13 +456,13 @@ class ScopeCollectionPartialWarning(ScopeError):
 
 
 class ScopeCollectionFailedError(ScopeError):
-    """``scope collect``: neither the ref nor the worktree inventory could be read (``INPUT_ERROR``); [TARGET] names
-    the unreadable sources."""
+    """``scope collect``: no inventory source (registry, refs or worktrees) could be read (``INPUT_ERROR``); [TARGET]
+    names the unreadable sources."""
 
     code = "SPEC_SCOPE_COLLECTION_FAILED"
     input_error = True
     fix = (
-        "Run it inside a Git work tree of the project (or pass it with -w) whose refs and worktree list Git can read, "
+        "Run it inside a Git work tree of the project (or pass it with -w) whose registry, refs or worktree list can be read, "
         "then rerun scope collect"
     )
 

@@ -1,0 +1,28 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:49:14.387014Z'
+status: completed
+summary: 'reconcile-reviewer at medium: six targets match the diff and the ADR; one P1 wording contradiction (collection failure condition) and two P2 out-of-scope reflections'
+findings:
+- issue: SPEC_SCOPE_COLLECTION_FAILED condition in CAP-COLL 4.8/4.9 and the error docstring says refs and worktrees, but a readable registry also counts as an inventory source.
+  evidence: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md 4.8 row and 4.9 exit paragraph; packages/devkit-spec/src/devkit_spec/features/scope/services/collection.py registry() and discover()
+  failure_condition: 'Registry readable while refs and worktree inventories fail: collect exits 0 partial, contract promised exit 2.'
+  resolution: open
+  severity: P1
+- issue: ADR-worktrees-and-scope body still names query and history reads that its Superseded line says are reworded.
+  evidence: docs/decisions/2026-11/20261102-worktrees-and-scope.md:23,182-183,246,260
+  failure_condition: A reader takes the query path and history reads as current decisions.
+  resolution: open
+  severity: P2
+- issue: CAP-WT-task-worktrees still names the scope registry's journal and is not a reconcile target.
+  evidence: docs/capabilities/worktree/CAP-WT-task-worktrees.md:212
+  failure_condition: A reader assumes devkit-spec still keeps a scope journal.
+  resolution: open
+  severity: P2
+checks:
+  codes_table: PASS test_documented_codes.py 4 passed
+diff_scope:
+  base: d219dd4a7a1fbbbd4ad731dc6c66625026c8e8a2
+  head: 15b3b22dccb7ea66f12e8f849d58111d09acc7cf

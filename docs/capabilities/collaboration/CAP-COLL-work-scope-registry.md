@@ -310,7 +310,7 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | `SPEC_SCOPE_RECORD_INVALID` | `WARNING` | `ScopeRecordInvalidWarning` | A record file cannot be read and was left out. An `ERROR` (`INTERACTION`, the token kept until the files are repaired or removed) only when the record a command needs may be unreadable: `release` without `--task-id` (and the post-finish cleanup of a base checkout task) when this worktree's record is not readable and an unreadable file may hold its token's hash; `release --task-id <id>` when that task's own record file cannot be read. |
 | `SPEC_SCOPE_SHARED_WORKTREE` | `WARNING` | `ScopeSharedWorktreeWarning` | Another task registered the same worktree (verbose diagnostic of creation registration). |
 | `SPEC_SCOPE_COLLECTION_PARTIAL` | `WARNING` | `ScopeCollectionPartialWarning` | Some requested source, input or comparison coverage is missing. |
-| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` (`INPUT_ERROR`; `MAINTENANCE` for the report limit) | `ScopeCollectionFailedError` | Neither the ref nor the worktree inventory can be read (`[TARGET]` names the failed sources, `[DETAIL]` each reason), or report metadata cannot fit the bounded result. |
+| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` (`INPUT_ERROR`; `MAINTENANCE` for the report limit) | `ScopeCollectionFailedError` | No inventory source (registry, refs or worktrees) can be read (`[TARGET]` names the failed sources, `[DETAIL]` each reason), or report metadata cannot fit the bounded result. |
 | `SPEC_POST_FINISH_CLEANUP` | `NOTICE` | `PostFinishCleanupNotice` | `ScopedCleanup.integration_run` removed an empty proposal directory or a finished worktree's scope record during approval-bound local integration. |
 
 devkit's own errors pass through: `ARGUMENT_INVALID` (4.4), `GIT_FAILED`, `SPEC_CONFIG_INVALID`.
@@ -395,8 +395,8 @@ unresolved input; a repeated source and reason merges its inputs into one proble
 (`missing-target-docs`, `missing-reconcile`) still count as gaps. Complete means
 requested observable layers for discovered candidates, not global/private visibility. Missing inputs, unknown bases,
 ambiguous identity, inaccessible/unstable sources and exhausted budgets produce `SPEC_SCOPE_COLLECTION_PARTIAL`.
-Usable results exit 0, warning-bearing results exit 1 only under `--strict`, and inability to read both the ref and
-the worktree inventory raises `SPEC_SCOPE_COLLECTION_FAILED` with exit 2. Invalid budgets and an unconfigured
+Usable results exit 0, warning-bearing results exit 1 only under `--strict`, and inability to read any inventory source
+(registry, refs or worktrees) raises `SPEC_SCOPE_COLLECTION_FAILED` with exit 2. Invalid budgets and an unconfigured
 `--fetch` remote are `ARGUMENT_INVALID`.
 
 Text renders `[SCOPE_CANDIDATE: source= activity= reason=]`, `[SCOPE_OBSERVATION: id= task=<id>|- unit=<dir>|-
