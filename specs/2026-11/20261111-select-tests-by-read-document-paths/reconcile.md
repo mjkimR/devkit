@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-select-tests-by-read-document-paths
-status: pending
+status: resolved
 targets:
   - file: docs/development/ci-cd.md
     resolution: modified

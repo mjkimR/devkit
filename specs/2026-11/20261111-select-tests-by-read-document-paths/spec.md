@@ -2,7 +2,7 @@
 id: SPEC-select-tests-by-read-document-paths
 title: Select tests by the repository paths they read
 summary: Lets affected-test selection find tests that read a repository path through a root-anchored literal path expression, instead of listing each such test in the selector's data table.
-status: in-progress
+status: completed
 created: 2026-11-11
 related_capabilities: []
 related_usecases: []
