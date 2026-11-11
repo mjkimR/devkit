@@ -19,6 +19,6 @@ def test_worker_records_name_direction_handoff_for_the_final_planning_return() -
     )
 
 
-def test_planning_step_six_names_direction_handoff() -> None:
+def test_planning_step_six_defers_the_stage_choice_to_worker_records() -> None:
     step = raw("skills/spec/references/planning.md").split("\n6. ", 1)[1]
-    assert_rule(step, "`[STAGE: - complete=yes]`", "still `reviewing`", "`direction-handoff`", "never `handoff` or `-`")
+    assert_rule(step, "[worker records](worker-records.md) §1", "`worker` envelope", "`--stage`")

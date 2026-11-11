@@ -26,12 +26,12 @@ def test_worker_three_tiers_and_final_record(environment: str) -> None:
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_review_and_host_check_annotation_before_record_and_final_agreement(environment: str) -> None:
-    for path in ["subagents/code-reviewer.md", "skills/spec-review/SKILL.md"]:
-        review = raw(path, environment)
-        assert_rule(review, "scope extension:", "task", "ac", "before", "record exists")
-        assert_rule(review, "p2", "p1", "explicit payload denies", "test weakening")
-        assert_rule(review, "initial payload", "task diff", "omitted annotation", "material finding")
-        assert_rule(review, "final host/inspect", "changed", "reverified" if path.startswith("subagents") else "review")
+    review = raw("skills/spec-review/SKILL.md", environment)
+    assert_rule(review, "scope extension:", "task", "ac", "before", "record exists")
+    assert_rule(review, "p2", "p1", "explicit payload denies", "test weakening")
+    assert_rule(review, "initial payload", "task diff", "omitted annotation", "material finding")
+    assert_rule(review, "final host/inspect", "changed", "review")
+    assert_rule(raw("subagents/code-reviewer.md", environment), "follow the steps", "spec-review/skill.md", "diff_scope")
     host = raw("skills/spec-delegate/references/worker.md", environment)
     assert_rule(host, "prior-turn records", "retained", "highest worker sequence", "historical records alone")
     assert_rule(host, "checks.scope_extensions", "structural", "custom protected", "optional", "cloud")

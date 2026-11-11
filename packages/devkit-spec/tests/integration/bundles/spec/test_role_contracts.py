@@ -340,7 +340,7 @@ def test_spec_delegate_passes_only_the_payload_to_a_projected_role() -> None:
 
 
 def test_tasks_name_the_docs_a_worker_must_write() -> None:
-    assert_rule(raw(TASKS), "development worker", "name expected `docs/` paths initially", "authority")
+    assert_rule(raw(TASKS), "development worker", "scope extension:", "name expected `docs/` paths initially")
 
 
 def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:

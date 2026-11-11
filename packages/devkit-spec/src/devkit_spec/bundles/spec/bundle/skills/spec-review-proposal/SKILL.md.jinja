@@ -23,4 +23,4 @@ Use for proposal review, design questions or requested changes before `plan-acce
 {% else %}- Nothing was accepted or handed off without separate authorization.
 {% endif %}
 
-After composed acceptance lands, synchronize dependencies and run required final checks in fresh processes. `accept_and_handoff` returns its authorized mode, scope and effort with handoff not started; after final verification passes invoke the existing handoff command. Preserve that authority for unchanged effects and revalidate changed scope. Never describe a pending continuation as completed handoff.
+After composed acceptance lands, `accept_and_handoff` returns its authorized mode, scope and effort with handoff not started; after the landed final checks (steps 6-9 of the `spec-integrate` skill) pass, invoke the existing handoff command. Preserve that authority for unchanged effects and revalidate changed scope. Never describe a pending continuation as completed handoff.

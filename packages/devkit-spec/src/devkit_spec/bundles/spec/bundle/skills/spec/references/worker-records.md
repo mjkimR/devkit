@@ -18,12 +18,9 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
 - `--head` is `git -C <worktree> rev-parse HEAD` after the last work commit; the commit that adds the envelope is the run's final HEAD.
 - **Development scope extensions**: optional `--scope-extensions-file <file|->` is a YAML list of
   `{path, task, reason, requirements}`: exact repository-relative file, positive checklist scanner task ordinal,
-  nonempty single-line reason without parentheses, nonempty AC ID list owned by that task. Duplicate paths,
-  malformed/nonliteral paths and use on another envelope kind are refused; old records without it remain valid.
-  Commit `(scope extension: <reason>)` on the owning `_Boundary:` with the first source change, then mirror it in
-  this sole final/emergency record. Review reads annotation/task/AC before the record; final Host/inspect compares
-  them and prior committed records for retained annotations, latest worker sequence winning repeated paths. A
-  historical record without a retained annotation adds no scope. Sync outputs remain an independent class.
+  nonempty single-line reason without parentheses, nonempty AC ID list owned by that task. Commit
+  `(scope extension: <reason>)` on the owning `_Boundary:` with the first source change, then mirror it in this sole
+  final/emergency record.
 - **Questions**: add `--questions-file -`, a YAML list of `id`, `title` (at most 40 characters), `prompt`, `context` (what the answer decides and why it matters now, for a reader who has not seen the work), `options` (`{id, description, recommended}`, one recommended) and `allow_note`. An option that depends on a condition also states what holds when it does not.
 - **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; `--status needs_input` when only the user can decide. A problem breaks the agreed goal, scope or contract or cannot be solved; a choice you can make, or waiting for answers, is not one.
 - **Emergency commit**: a run that stops on a problem commits its unfinished work with the envelope. Only this commit may use `git commit --no-verify`, and only on ordinary commit-gate refusal of the unfinished files, never for sandbox or approval denial; name each skipped check in `--tried`.
