@@ -18,7 +18,7 @@ from devkit_dist.features.search.models.errors import (
 from devkit_dist.features.search.services.dense import DEFAULT_MODEL, MODEL_GROUP, Embedder, load_embedder
 from devkit_dist.features.search.services.fusion import reciprocal_rank_fusion
 from devkit_dist.features.search.services.index import SearchIndex
-from devkit_dist.features.search.services.lexical import Bm25, bm25_scores, tokenize
+from devkit_dist.features.search.services.lexical import Bm25, tokenize
 
 __all__ = [
     "DEFAULT_MODEL",
@@ -33,7 +33,6 @@ __all__ = [
     "SearchHit",
     "SearchIndex",
     "SearchMode",
-    "bm25_scores",
     "load_embedder",
     "reciprocal_rank_fusion",
     "tokenize",

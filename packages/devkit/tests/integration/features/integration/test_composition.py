@@ -73,6 +73,8 @@ def test_composition_integrates_exact_acceptance_and_revokes_authority(repo, rea
     lifecycle = Lifecycle(worktree, ready_provider, existing=existing)
     result = compose(service, lifecycle)
     assert result.status == "completed" and result.authority == "host-conversation"
+    assert result.compact_dict()["authority"] == "host-conversation"
+    assert "ui_action" not in result.compact_dict()
     assert lifecycle.accepted and lifecycle.selected
     assert not worktree.exists()
     assert retained_authority(service, result) is False

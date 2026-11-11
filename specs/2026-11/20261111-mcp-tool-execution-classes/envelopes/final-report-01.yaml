@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:02:46.558851Z'
+status: completed
+summary: 'McpTool.execution narrowed to read_only|bounded_write (default bounded_write); read-only hint derived from it; read_only field removed; shared tools and CAP-MCP-runtime-registration follow. Follow-up for the Host: guides/install/mcp.md:48 still names the removed classes (outside write scope).'
+findings: []
+assumptions:
+- 'Removed classes need no dedicated error code: discovery refuses any class outside the Literal'
+checks:
+  tests: PASS just test-affected --base main mode=full 6764 passed 4 skipped at a52cd6a3 content; just test-dist 1400 passed; docs delta test-affected --base a52cd6a3 16 passed
+  build: PASS just check (pyright) devkit-core devkit-mcp devkit-dist 0 errors
+  lint: PASS just lint-check devkit-core devkit-mcp devkit-dist; devkit rules check --ci --base main
+diff_scope:
+  base: 1f672104a80f0ca63034cffc1f7e179767e12ab7
+  head: 397637ffa1cd28157b04fc22fa46c8e26a902342

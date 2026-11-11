@@ -15,7 +15,7 @@ class McpTool:
     description: str
     input_schema: dict[str, Any]
     invoke: Invocation
-    execution: Literal["read_only", "preflight", "interactive", "approved_resume", "bounded_write"] = "interactive"
-    read_only: bool = False
+    # ``read_only`` runs unguarded and advertises the read-only hint; every other tool is a guarded write.
+    execution: Literal["read_only", "bounded_write"] = "bounded_write"
     destructive: bool = False
     open_world: bool = False

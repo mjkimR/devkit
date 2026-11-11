@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:56:50.835802Z'
+status: completed
+summary: 'reconcile-reviewer PASS, no findings: CAP-INT-mcp-services authority sentence matches every route; no other Living Spec text names ui_action or the embedded integration keys'
+findings: []
+unverified_areas:
+- tests not rerun by the reviewer; documentation check only
+checks:
+  reconcile: PASS reconcile-reviewer
+diff_scope:
+  base: ec42b3aa65cc799896c1c5bf804654f7e3e3bfe7
+  head: 576009f7590e39409cef010e0bbd302ee5b7c08a

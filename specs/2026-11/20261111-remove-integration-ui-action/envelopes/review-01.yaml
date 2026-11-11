@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:55:29.695549Z'
+status: completed
+summary: 'code-reviewer PASS, no findings: AC-01 test_policy/test_cli, AC-02 test_composition and e2e test_plan_accept_cli, AC-03 rg over src and Living Spec; devkit-spec caller unchanged, authority values preserved'
+findings: []
+checks:
+  tests: PASS just test-affected --base main --tier all 2034 passed; reviewer rerun integration tests 48 passed
+  lint: PASS devkit rules check --ci --base ec42b3aa
+diff_scope:
+  base: ec42b3aa65cc799896c1c5bf804654f7e3e3bfe7
+  head: 6d01ecc479dcec63f1973bec8ed7fa8480ebdc48

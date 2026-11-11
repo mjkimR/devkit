@@ -70,7 +70,7 @@ Licensing: potion-base-8M and bge-base-en-v1.5 are MIT licensed; the package shi
 
 `devkit_dist.features.search` uses `devkit_core`, distribution project support and `devkit.advisory`; `devkit_dist.features.distribution` ranks `devkit playbook search` with it (`CAP-DIST-context-and-playbooks`).
 
-- `lexical.py`: `tokenize`, `Bm25`, `bm25_scores`.
+- `lexical.py`: `tokenize`, `Bm25`.
 - `dense.py`: `Embedder`, `load_embedder`, the model package layout.
 - `fusion.py`: `reciprocal_rank_fusion`.
 - `index.py`: `SearchIndex`, `SearchDocument`, `SearchHit`, `SearchMode`.

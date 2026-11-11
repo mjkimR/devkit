@@ -5,7 +5,7 @@ or (``start_branch``) in the current checkout; ``attach`` continues an existing 
 contains it (local landing is ``devkit integration integrate --route local``, which builds the merge commit with
 ``merging`` outside any checkout), refusing instead of forcing at every step, and ``stale_branches`` reports branches nobody has moved for
 ``[worktree] stale_after``. SDD-agnostic: a methodology layer decides which tasks use a worktree
-and plugs in through ``before_remove`` and the ``devkit.post_finish`` and ``devkit.attach_check``
+and plugs in through the ``devkit.post_finish`` and ``devkit.attach_check``
 extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
 """
 

@@ -69,7 +69,7 @@ A `finish` that a refusal stopped after it changed something prints its progress
 | `WORKTREE_UNIT_INVALID` | `ERROR` (`INPUT_ERROR`) | `UnitInvalidError` | `start --existing-branch`: `--unit` is empty, absolute, leaves the project, or is not a directory of the branch's tree. |
 | `WORKTREE_ATTACH_REFUSED` | `ERROR` (`INTERACTION`) | `AttachRefusedError` | A `devkit.attach_check` extension found that the branch and the unit do not belong together; each reason is a detail. Nothing changed. |
 | `WORKTREE_ATTACH_CHECK_FAILED` | `ERROR` (`MAINTENANCE`) | `AttachCheckFailedError` | A `devkit.attach_check` extension raised or returned something other than a list of strings; the attach is refused. |
-| `WORKTREE_NOT_FOUND` | `ERROR` (`INTERACTION`; `INPUT_ERROR` when the branch exists nowhere, a mistyped name, `[TARGET] BRANCH` and `[FIX]` `uv run devkit worktree status -w <base>`) | `NotFoundError` | No worktree has the branch's path or branch, and (for `finish`) the branch does not exist or lacks the `branch.<branch>.devkitWorktree` marker `start` records. A merged branch without the marker (also one `start` created before devkit recorded the marker: such branches are not resumed automatically) is never deleted: `[FIX]` is `git branch -d <branch>`, for once the user agrees. Nothing changed, whatever `delete_branch` says: no `before_remove` runs for such a branch. A completed finish removes the marker (with the branch, or unset when `delete_branch = false`), so its rerun is this too. `start --existing-branch`: the branch exists neither locally nor as a fetched remote-tracking ref, or a named remote's ref was never fetched while a local branch exists (`[FIX]` fetches). `finish --discard`: the branch does not exist. |
+| `WORKTREE_NOT_FOUND` | `ERROR` (`INTERACTION`; `INPUT_ERROR` when the branch exists nowhere, a mistyped name, `[TARGET] BRANCH` and `[FIX]` `uv run devkit worktree status -w <base>`) | `NotFoundError` | No worktree has the branch's path or branch, and (for `finish`) the branch does not exist or lacks the `branch.<branch>.devkitWorktree` marker `start` records. A merged branch without the marker (also one `start` created before devkit recorded the marker: such branches are not resumed automatically) is never deleted: `[FIX]` is `git branch -d <branch>`, for once the user agrees. Nothing changed, whatever `delete_branch` says: no `before_step` callback runs for such a branch. A completed finish removes the marker (with the branch, or unset when `delete_branch = false`), so its rerun is this too. `start --existing-branch`: the branch exists neither locally nor as a fetched remote-tracking ref, or a named remote's ref was never fetched while a local branch exists (`[FIX]` fetches). `finish --discard`: the branch does not exist. |
 | `WORKTREE_LOCKED` | `ERROR` (`INTERACTION`) | `LockedError` | `finish` found the worktree locked; `[FIX]` unlocks it. Nothing changed. |
 | `WORKTREE_BASE_DETACHED` | `ERROR` (`INTERACTION`) | `BaseDetachedError` | Local integration with the base on a detached HEAD, or `start --no-worktree` on one. Nothing changed. |
 | `WORKTREE_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `BaseDirtyError` | Local integration with uncommitted changes in the base. |
@@ -107,18 +107,18 @@ branch = start_branch(position, "dev-login")                          # BranchSt
 attached = attach(position, "dev-login", source="origin/dev-login", unit="docs/specs/login",
                   setup=config.setup, sync=True, check=lambda root, branch, unit, tip: ...)
 done = finish(position, "dev-login", delete_branch=config.delete_branch,
-              before_remove=lambda result: ...)                       # a branch the base already contains
+              before_step=lambda step, result: ...)                   # a branch the base already contains
 report = status(position)                                             # StatusResult(worktrees, branches)
 stale = stale_branches(position, config.stale_after)                  # StaleResult(checked, stale, notices, ...)
 ```
 
-`attach`'s `check` refuses by raising; the CLI passes the `devkit.attach_check` extensions (`run_attach_checks` in `devkit_agt.features.worktree.services.extensions`). A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_remove` raises (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<branch>.devkitWorktree` marker `start` records (`CAP-WT-task-worktrees`).
+`attach`'s `check` refuses by raising; the CLI passes the `devkit.attach_check` extensions (`run_attach_checks` in `devkit_agt.features.worktree.services.extensions`). A refusal raised after `finish` changed something has the partial `FinishResult` as `error.result`, also an `AdvisoryError` that `before_step` raises once the merge is confirmed (unless it defines a `result` of its own); rerunning `finish` resumes, also when only the merged branch is left and carries the `branch.<branch>.devkitWorktree` marker `start` records (`CAP-WT-task-worktrees`).
 
 
 ## Integration primitives
 
 `devkit worktree finish` makes no fetch, push or `ls-remote` call; `--local-only` is accepted and changes nothing.
-The public `finish` API takes `delete_branch`, `before_remove` and optional `before_step(step, result)`.
+The public `finish` API takes `delete_branch` and optional `before_step(step, result)`.
 `build_result` builds the result commit in the object store and `fast_forward` moves the base onto it. `plan_finish` returns an
 immutable `FinishPlan`; `validate_finish` rechecks its identities allowing only declared completed transitions.
 `run_post_finish` is the public extension runner. Approval, the integration lock and scoped partial recovery belong

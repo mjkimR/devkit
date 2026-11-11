@@ -79,11 +79,10 @@ class SearchIndex:
         query: str,
         *,
         mode: SearchMode = SearchMode.AUTO,
-        limit: int | None = None,
         min_score: float = 0.0,
         min_similarity: float = 0.0,
     ) -> list[SearchHit]:
-        """Matching documents, best first (ties by id); at most ``limit`` when given.
+        """Matching documents, best first (ties by id).
 
         The lexical ranking keeps documents whose BM25 score is positive and at
         least ``min_score``; the dense ranking those whose cosine similarity is
@@ -103,7 +102,7 @@ class SearchIndex:
                 ]
             )
             hits = _ranked(fused.items(), 0.0)
-        return hits if limit is None else hits[:limit]
+        return hits
 
     def _lexical(self, query: str, floor: float) -> list[SearchHit]:
         scores = self._bm25.scores(query)

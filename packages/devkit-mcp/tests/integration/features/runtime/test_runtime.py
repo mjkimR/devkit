@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import dataclasses
 import os
 import shutil
 import subprocess
@@ -18,8 +20,10 @@ from devkit_dist.features.project.repositories.invocation import (
     guard_execution,
 )
 from devkit_dist.features.project.usecases.invocation import invocation
+from devkit_mcp.features.runtime.mcp.server import build_server
 from devkit_mcp.features.runtime.usecases import configuration
 from devkit_mcp.features.runtime.usecases import discovery as services
+from fastmcp import Client
 
 
 def git(root, *args):
@@ -151,12 +155,15 @@ def test_dependency_path_checks_match_per_path_answers(clones, tmp_path):
         configuration._inside_task([base / "loop/x.py"], [task])
 
 
-def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_path):
+def test_service_classification_defaults_to_bounded_write(monkeypatch, tmp_path):
     async def call(args):
         return {}
 
-    tool = McpTool("fixture", "fixture", {"type": "object"}, call, read_only=True)
-    assert tool.execution == "interactive"
+    tool = McpTool("fixture", "fixture", {"type": "object"}, call)
+    assert tool.execution == "bounded_write"
+    assert "read_only" not in {field.name for field in dataclasses.fields(McpTool)}
+    with pytest.raises(TypeError):
+        McpTool("fixture", "fixture", {"type": "object"}, call, read_only=True)  # type: ignore[call-arg]
     monkeypatch.setattr(
         services.metadata,
         "entry_points",
@@ -170,6 +177,43 @@ def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_pa
     )
     with pytest.raises(Exception, match="cannot load"):
         services.load_tools(tmp_path)
+
+
+@pytest.mark.parametrize("execution", ["preflight", "interactive", "approved_resume"])
+def test_removed_execution_classes_fail_closed(monkeypatch, tmp_path, execution):
+    async def call(args):
+        return {}
+
+    tool = McpTool("fixture", "fixture", {"type": "object"}, call, execution=execution)  # type: ignore[arg-type]
+    monkeypatch.setattr(
+        services.metadata,
+        "entry_points",
+        lambda **kw: [SimpleNamespace(name="fixture", value="fixture:create", load=lambda: lambda root: (tool,))],
+    )
+    with pytest.raises(HostMcpError, match="MCP service fixture cannot load"):
+        services.load_tools(tmp_path)
+
+
+def test_read_only_hint_follows_execution(clones):
+    base, _ = clones
+
+    async def call(args):
+        return {}
+
+    server = build_server(
+        {
+            "reader": McpTool("reader", "reader", {"type": "object"}, call, execution="read_only"),
+            "writer": McpTool("writer", "writer", {"type": "object"}, call),
+        },
+        ExecutionBinding(base, base),
+    )
+
+    async def list_tools():
+        async with Client(server, mode="legacy") as client:
+            return await client.list_tools()
+
+    hints = {tool.name: tool.annotations.read_only_hint for tool in asyncio.run(list_tools()) if tool.annotations}
+    assert hints == {"reader": True, "writer": False}
 
 
 @pytest.mark.parametrize("error", [SystemExit(2), RuntimeError("boom")])

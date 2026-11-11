@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T00:57:33.978599Z'
+status: completed
+summary: 'Development complete through final-change-report: ui_action removed from IntegrationResult/compact_dict (integration JSON and the spec proposal accept embedding); _compose_execute parameter renamed to authority; CAP-INT-mcp-services states authority values. Review PASS, reconcile-check PASS, feedback swept. Outcome measured on head by tests asserting the key is absent; before (base) the composed path emitted ui_action equal to authority by code inspection of base contracts.py/service.py, no runtime base measurement. Integration not run (Host).'
+findings: []
+checks:
+  sync_start: PASS exit=0
+  tests: PASS just test-affected --base main --tier all 2034 passed
+  lint: PASS just lint-check devkit/devkit-spec; devkit rules check --ci --base main
+  types: PASS just check devkit/devkit-spec
+diff_scope:
+  base: ''
+  head: 4497595519460d22350e6b4ed26dce11870a1205
+activity_effort: medium

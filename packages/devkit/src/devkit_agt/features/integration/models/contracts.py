@@ -214,7 +214,6 @@ class IntegrationResult:
     request: IntegrationRequest
     status: str = "prepared"
     authority: str = "none"
-    ui_action: str | None = None
     steps: dict[str, str] = field(default_factory=lambda: dict.fromkeys(STEPS, "not_run"))
     cleanup_steps: dict[str, str] = field(default_factory=dict)
     finish: FinishResult | None = None
@@ -267,8 +266,6 @@ class IntegrationResult:
             "errors": [error.to_dict() for error in self.errors],
             "notices": [notice.to_dict() for notice in self.notices],
         }
-        if self.ui_action is not None:
-            result["ui_action"] = self.ui_action
         if self.cleanup_steps:
             result["cleanup_steps"] = dict(self.cleanup_steps)
         if self.failing_operation is not None:
