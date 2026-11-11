@@ -88,7 +88,7 @@ types and governance remain required:
   - Shared foundations (`devkit-core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
     `conftest.py`, `uv.lock`, the shared helpers in `tests/support/`) select the full suite.
   - Repository files that tests read (`docs/`, `specs/`, `examples/`, `models/`, the recipe scripts and `justfile`)
-    select those tests from a fixed table; `docs/` and `specs/` select the shipped-bundle citation test, which reads
+    select those tests from a fixed table, which keeps the readers read discovery (below) cannot see; `docs/` and `specs/` select the shipped-bundle citation test, which reads
     their document IDs.
   - A package source change selects individual `test_*.py` files, including embedded rule tests, through
     transitive static imports. Production nodes remain feature areas and coarse workspace packages by default;
@@ -102,16 +102,27 @@ types and governance remain required:
     Ambiguous static dependencies widen conservatively. Unreadable or unparseable relevant files, ambiguous source
     inventories, unknown sources and deleted/renamed fine modules that cannot be reconstructed select full.
   - A changed `test_*.py` in a `tests` directory selects itself; any other file there selects its directory.
-  - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) selects no pytest test:
-    pytest never exercises it. The result names the frontend checks instead (below); the page they rebuild under
+  - Read discovery adds the tests that read a changed path by a root-anchored literal path
+    (`ADR-literal-read-test-selection`). Every Python file under a `tests` directory is scanned for expressions built
+    from `Path(__file__)` with `resolve()`, `parent`, `parents[N]`, `/` or `joinpath` with literal segments, and
+    names bound once to them; a loop over literal values expands. A read in a test module belongs to it, a read in a
+    `conftest.py` to the test modules under its directory, and a read in a helper to the test modules that import
+    it. A changed path selects a reader when it equals the read path or lies under it; a literal `glob` or `rglob`
+    pattern also matches a new or deleted subdirectory. `iterdir` and a join with a runtime segment read the base
+    directory; a read of the repository root or one the scan cannot resolve adds nothing. Read discovery only adds
+    tests: the rules above and the full-suite fallback below keep precedence.
+  - The devkit-viewer frontend (`packages/devkit-viewer/frontend/`, `scripts/viewer.sh`) names the frontend checks
+    (below) and selects only the pytest tests that read it by literal path: `scripts/viewer.sh` selects
+    `test_viewer_script.py`, and a Svelte source no test reads selects none. The page the checks rebuild under
     `src/devkit_viewer/static/` is package source and selects the viewer's tests.
   - Agent projections (`.claude/`, `.agents/`, `.codex/`, `.devkit/`), `guides/`,
     `.github/`, the smoke and release scripts, `.gitignore`, `.python-version` and Markdown at the repository or a
-    package root select nothing.
+    package root select only the tests that read them by literal path, and nothing when no test does.
   - Any other path selects the full suite.
 - **Result**: stdout's first line is
   `[TEST_SELECTION: mode=<full|partial|none> base=<ref> changed=<n> paths=<n> reason=<text>]` (`reason=frontend`
-  for a frontend-only change). When a frontend path changed, the next line is
+  for a frontend-only change, also when it selects readers; `reads` names a path selected only by read
+  discovery). When a frontend path changed, the next line is
   `[FRONTEND_CHECK: just viewer install && just viewer lint && just viewer check && just viewer test && just viewer
   pack && just viewer build]`, the checks of the CI viewer job: the agent runs that command (Node and npm) and
   commits the rebuilt page with the sources. `--list` adds one `[TEST_PATH: <path>]` per path and runs nothing.
@@ -120,7 +131,8 @@ types and governance remain required:
   `TEST_BASE_UNKNOWN` (exit `2`), whose `[FIX]` lists the existing branches; a failing `git diff` or `git ls-files`
   is `TEST_CHANGES_UNREADABLE` (exit `2`), for the user to resolve in the repository before rerunning.
 - **Limits**: selection is static and does not execute production modules or pytest. Known subprocess/entry-point
-  consumers have explicit mappings; arbitrary runtime discovery is not inferred. Helper modules keep all their real
+  consumers, readers by document ID and reads through a base imported from another module have explicit mappings;
+  arbitrary runtime discovery is not inferred. Helper modules keep all their real
   imports even when only one helper function is used. Complete nightly/manual/release checks remain the backstop;
   an undetected runtime dependency can leave a regression until complete CI runs. Full-suite fallback is preserved.
 

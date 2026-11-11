@@ -70,7 +70,11 @@ selector map any changed file to its readers without hand-kept rows.
   - a `devkit-catalog` maintenance playbook →
     `packages/devkit-spec/tests/integration/bundles/spec/test_playbook_discovery_guidance.py`
   - `packages/devkit/tests/integration/features/compact/fixtures/<file>.txt` → `test_corpus.py` beside it
-  - `packages/devkit-spec/README.md` → at least one test that reads the `packages/devkit-spec` directory.
+  - test modules read as data: `tools/devkit-dev/tests/integration/test_bundle_citations.py` →
+    `test_affected_tests.py`; `packages/devkit-viewer/tests/integration/test_cli.py` →
+    `packages/devkit/tests/integration/package/test_test_environment.py`
+  - package-root Markdown: `packages/devkit-catalog/README.md` →
+    `packages/devkit-catalog/tests/integration/bundles/test_app_uiux_improve.py`.
 
 ### Scenario 2 [AC-02]: Read discovery never reduces selection
 
@@ -146,14 +150,23 @@ selector map any changed file to its readers without hand-kept rows.
 
 ## 6. Assumptions
 
-- AC-04 names `test_affected_tests.py:121-124`, `:177` and `:335` as the changed assertions. The
-  `.devkit/architecture.toml` path assertion (`:172`) changes too, because AC-01 requires its helper readers. The
-  same holds for the `packages/devkit-spec/README.md` companion path in the `:121-124` case, which now selects the
-  tests reading its package directory (survey: package-root directory reads).
+- AC-04 names `test_affected_tests.py:121-124`, `:177` and `:335` as the changed assertions. Two more change
+  because AC-01 requires them: the `.devkit/architecture.toml` path assertion (`:172`) adds its helper readers, and
+  the empty-selection command test (`:322`) uses `.claude/x.md` instead of `guides/x.md`, which
+  `test_deep_research.py` now reads through `guides/**/*.md`.
+- The survey's 21 package-root Markdown pairs came from package directories read as a whole. At this head the scan
+  finds no test that reads a package root as a directory; the package READMEs a test reads by exact path
+  (`packages/devkit-catalog/README.md`) select it, and `packages/devkit-spec/README.md`, which no test reads,
+  still selects nothing.
 - A changed path that had no other cause and gains readers reports the cause `reads` in `reason`; a path with
   another cause (a `DATA` prefix, a source node, `tests`, `frontend`) keeps its reason.
 - Names bound once are resolved per function scope with module scope as the fallback; a name bound in several places
-  of one scope, an imported name or a function parameter is not resolved. A string literal or f-string whose parts
-  resolve counts as a literal segment.
+  of one scope or an imported name is not resolved. A string literal, an f-string whose parts resolve, or an entry
+  of a literal dict counts as a literal segment.
+- "A loop variable over a literal tuple or list" includes tuple targets, a name bound once to such a literal and
+  the `keys()`, `values()` and `items()` of a literal dict. A function parameter takes the arguments of every call
+  of its function in the same file when every use of the function name is such a call; otherwise it is a runtime
+  segment. Without this, `test_lockstep.py`'s `_project(directory)` reads the whole `packages/` directory and
+  `packages/devkit-viewer/frontend/src/lib/App.svelte` would select it, against AC-03.
 - Helper attribution resolves importers only for files with reads, pre-filtered by the helper's module name in the
   importer's text, and reuses the selector's per-file import discovery.

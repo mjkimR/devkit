@@ -136,6 +136,28 @@ CI run the complete suite (`ADR-test-selection-and-ci`). The selector keeps thes
   independent positive and negative dependency fixtures; a measured reduction never justifies omitting required
   coverage.
 
+Read discovery adds the tests that read a changed path by a root-anchored literal path
+(`ADR-literal-read-test-selection`):
+
+- The selector MUST treat as a read every maximal expression it evaluates statically from `Path(__file__)` through
+  `resolve`, `parent`, `parents[N]`, `/` with literal segments, `joinpath` and names bound once to such an
+  expression, including a call argument or method receiver; a loop variable over literal values expands into one
+  read per element.
+- The selector MUST scan every Python file under a `tests` directory once and attribute a read in a test module to
+  it, a read in a `conftest.py` to the test modules under its directory, and a read in a local helper to the test
+  modules whose import discovery reaches that helper.
+- A changed path MUST select a reader when it equals an exact read or lies under a directory read. `iterdir`, a
+  join with a runtime segment and a non-literal glob pattern read their base directory; a literal `glob` or `rglob`
+  pattern selects when the changed path or one of its ancestors below the base matches it.
+- A read that resolves to the repository root, or that the scan cannot resolve, MUST add nothing; it is not an
+  import uncertainty and widens nothing.
+- Reads MUST only add tests: full-suite triggers and the unknown-path fallback keep precedence, and a path that
+  selects nothing otherwise, `.devkit/` and frontend paths included, selects its literal readers.
+- A frontend change MUST keep `reason=frontend` and the `[FRONTEND_CHECK: ...]` line whether or not literal readers
+  add pytest tests.
+- `DATA` MUST keep every row; readers by document ID, by subprocess in the repository root or through an unresolved
+  base keep or gain explicit rows. The scan stores nothing between runs.
+
 Checked by `packages/devkit/tests/e2e/package/test_affected_tests.py`; the deferred-import and reduction rules are
 review only.
 

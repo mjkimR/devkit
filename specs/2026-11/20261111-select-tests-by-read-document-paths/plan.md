@@ -33,10 +33,12 @@ Read discovery lives in `scripts/affected_tests.py` beside `Workspace`:
 - `_ReadScanner(root, path, tree).reads() -> set[Read]`: evaluates every maximal anchored expression in one file.
   - Anchor: `Path(__file__)` (also `pathlib.Path`); steps `.resolve()`, `.absolute()`, `.parent`, `.parents[N]`,
     `/ <segment>`, `.joinpath(<segments>)` and `Path(<anchored>, <segments>)`.
-  - Segments: string literals, f-strings whose parts resolve, and names bound once to such strings. A loop variable
-    over a literal tuple or list (statement or comprehension) yields one value per element.
+  - Segments: string literals, f-strings whose parts resolve, entries of a literal dict and names bound once to such
+    strings. A loop variable over a literal tuple or list, a name bound to one, or a literal dict's `keys()`,
+    `values()` or `items()` (statement or comprehension, tuple targets included) yields one value per element.
   - Names: resolved in the innermost function scope that binds them, else the module scope, only when bound exactly
-    once there. Function parameters, imports and repeated bindings stay unresolved.
+    once there. A function parameter takes the arguments (or default) of every call of its function in the same
+    file when every use of the function name is such a call. Imports and repeated bindings stay unresolved.
   - A segment that does not resolve turns the value into its base directory (`pattern=None`), and later steps keep it.
   - Consumers: `.glob(<literal>)` and `.rglob(<literal>)` record the pattern (`rglob(p)` is `**/p`); a non-literal
     pattern and `.iterdir()` read the base.
