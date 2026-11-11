@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:46:15.281278Z'
+status: completed
+summary: devkit_core.core.memo (safe_memo_path, envelope_problem) now holds the memo path and envelope rules for the docs parse memo and the rule facts memo (D1 converged rule); harness table equals before.md except the 8 D1 rows; CAP-DOCS-document-model 3.4.3 and CAP-GOV-rules-engine 5.3 restated
+findings: []
+assumptions:
+- 'Both memo fingerprints change once: the first docs and rules run after landing is cold'
+- 'docs/development/reference/core.md lacks a devkit_core.core.memo row (outside write scope): FB-core-reference-row-for-memo-helper'
+checks:
+  tests: 'PASS just test-affected mode=full 6805 passed 4 skipped at 2b890f24; after the review fix 9411da34: devkit-docs, devkit-core and rules workspace tests 855 passed 1 skipped; harness equals after.md'
+  build: PASS just check (pyright, all modules) 0 errors at 2b890f24; pyright devkit-docs 0 errors after the fix
+  lint: PASS just lint-check; devkit rules check --ci --base main; devkit sync --check exit 0
+diff_scope:
+  base: 114177caa569febbdc50018276193e43906325b4
+  head: 1e725624f84cd32f8a8c46e453edb283a1db1e2c
