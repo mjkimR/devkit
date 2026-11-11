@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -32,11 +33,21 @@ from devkit_spec.features.delivery.usecases.cleanup import (
     integration_validate,
 )
 from devkit_spec.features.policy.services.config import ScopeConfig
-from devkit_spec.features.scope import Deadline, FlockLocker, locate
+from devkit_spec.features.scope import Deadline, FlockLocker, RegisterScopeUseCase, locate, open_session
 
 
 def _scope(root: Path, *args: str) -> str:
     return CliRunner().invoke(devkit_cli, ["spec", "scope", *args, "-w", str(root)]).stdout
+
+
+def _register(root: Path, spec: str) -> str:
+    """Register ``spec`` from ``root`` as creation does and return its task ID."""
+    return RegisterScopeUseCase().execute(open_session(root), spec).record.task_id
+
+
+def _tasks(root: Path) -> list[str]:
+    session = open_session(root)
+    return [record.task_id for record in session.registry.query(session.location.namespace, Deadline(5))[0]]
 
 
 def _context(repo: Path, worktree: Path, *, branch: str = "dev-s") -> IntegrationContext:
@@ -85,8 +96,8 @@ def test_finish_prunes_the_proposal_and_removes_only_the_finished_worktree_recor
     git(repo, "worktree", "add", "-q", "-b", "b", str(other))
     write(other, "specs/2026-10/20261002-b/spec.md", "---\nid: SPEC-b\n---\n")
     write(other, "specs/2026-10/20261002-b/tasks.md", "- [ ] t\n  - _Boundary: src/a/\n")
-    assert "[SCOPE: SPEC-s " in _scope(finished, "register", "--spec", SPEC)
-    assert "[SCOPE: SPEC-b " in _scope(other, "register", "--spec", "specs/2026-10/20261002-b")
+    assert _register(finished, SPEC) == "SPEC-s"
+    assert _register(other, "specs/2026-10/20261002-b") == "SPEC-b"
     git(repo, "worktree", "remove", "--force", str(finished))
     git(repo, "worktree", "remove", "--force", str(other))
 
@@ -103,11 +114,11 @@ def test_a_task_of_the_base_checkout_releases_its_record(tmp_path: Path) -> None
     (repo / ".devkit/managed/spec").mkdir(parents=True)
     write(repo, "specs/2026-10/20261002-b/spec.md", "---\nid: SPEC-b\n---\n")
     write(repo, "specs/2026-10/20261002-b/tasks.md", "- [ ] t\n  - _Boundary: src/a/\n")
-    assert "[SCOPE: SPEC-b " in _scope(repo, "register", "--spec", "specs/2026-10/20261002-b")
+    assert _register(repo, "specs/2026-10/20261002-b") == "SPEC-b"
     # devkit reports a --no-worktree task (finished or discarded) with the base checkout's own path.
     lines = after_finish(repo, {"branch": "dev-b", "slug": "b", "path": str(repo), "discarded": True})
     assert lines == ["released the scope record of SPEC-b"]
-    assert "SPEC-b" not in _scope(repo, "query")
+    assert "SPEC-b" not in _tasks(repo)
     assert after_finish(repo, {"branch": "dev-b", "slug": "b", "path": str(repo)}) is None  # idempotent
 
 
@@ -149,7 +160,7 @@ def test_a_failed_prune_is_a_warning_and_the_sweep_still_runs(tmp_path: Path) ->
     locked.mkdir(parents=True)
     finished = tmp_path / "wt-s"
     git(repo, "worktree", "add", "-q", "-b", "s", str(finished))
-    assert "[SCOPE: SPEC-s " in _scope(finished, "register", "--spec", SPEC)
+    assert _register(finished, SPEC) == "SPEC-s"
     git(repo, "worktree", "remove", "--force", str(finished))
     locked.chmod(0)  # a directory that cannot be listed
     try:
@@ -182,8 +193,8 @@ def test_scoped_cleanup_plans_validates_and_runs_exact_targets(tmp_path: Path) -
     (repo / "docs/proposals/PROP-s/decisions").mkdir(parents=True)
     write(other, "specs/2026-10/20261002-b/spec.md", "---\nid: SPEC-b\n---\n")
     write(other, "specs/2026-10/20261002-b/tasks.md", "- [ ] t\n  - _Boundary: src/a/\n")
-    assert "[SCOPE: SPEC-s " in _scope(finished, "register", "--spec", SPEC)
-    assert "[SCOPE: SPEC-b " in _scope(other, "register", "--spec", "specs/2026-10/20261002-b")
+    assert _register(finished, SPEC) == "SPEC-s"
+    assert _register(other, "specs/2026-10/20261002-b") == "SPEC-b"
 
     targets = integration_plan(context)
     assert len(targets) == 2
@@ -209,7 +220,7 @@ def test_scoped_cleanup_refuses_stale_scope_record_revision(tmp_path: Path) -> N
     (repo / ".devkit/managed/spec").mkdir(parents=True)
     finished = tmp_path / "wt-s"
     git(repo, "worktree", "add", "-q", "-b", "dev-s", str(finished))
-    assert "[SCOPE: SPEC-s " in _scope(finished, "register", "--spec", SPEC)
+    assert _register(finished, SPEC) == "SPEC-s"
     context = _context(repo, finished)
     targets = integration_plan(context)
 
@@ -225,9 +236,11 @@ def test_scoped_cleanup_refuses_stale_scope_record_revision(tmp_path: Path) -> N
     else:
         raise AssertionError("expected StaleRequestError when scope namespace changed")
 
-    # Bump the scope record's revision in the worktree after planning.
-    write(finished, f"{SPEC}/tasks.md", "- [ ] t\n  - _Boundary: src/a/\n  - _Boundary: src/b/\n")
-    assert "[SCOPE_ACK: status=applied revision=2" in _scope(finished, "update", "--spec", SPEC)
+    # Another writer moves the scope record's revision after planning.
+    session = open_session(finished)
+    record = session.location.shared_path / session.location.namespace / "SPEC-s.json"
+    data = json.loads(record.read_text())
+    record.write_text(json.dumps(data | {"revision": 2}))
 
     try:
         integration_validate(context, targets)
@@ -253,7 +266,7 @@ def test_scoped_cleanup_partial_failure_and_idempotent_resume(tmp_path: Path) ->
     locked.mkdir(parents=True)
     finished = tmp_path / "wt-s"
     git(repo, "worktree", "add", "-q", "-b", "dev-s", str(finished))
-    assert "[SCOPE: SPEC-s " in _scope(finished, "register", "--spec", SPEC)
+    assert _register(finished, SPEC) == "SPEC-s"
     context = _context(repo, finished)
     targets = integration_plan(context)
     git(repo, "worktree", "remove", "--force", str(finished))
@@ -278,7 +291,7 @@ def test_scoped_cleanup_partial_failure_and_idempotent_resume(tmp_path: Path) ->
 def test_scoped_cleanup_base_checkout_releases_own_record_and_rejects_bad_targets(tmp_path: Path) -> None:
     repo = make_repo(tmp_path / "repo")
     (repo / ".devkit/managed/spec").mkdir(parents=True)
-    assert "[SCOPE: SPEC-s " in _scope(repo, "register", "--spec", SPEC)
+    assert _register(repo, SPEC) == "SPEC-s"
     context = _context(repo, repo)
     targets = integration_plan(context)
     assert len(targets) == 2
@@ -288,7 +301,7 @@ def test_scoped_cleanup_base_checkout_releases_own_record_and_rejects_bad_target
     outcome = integration_run(context, _finish_result(context), targets)
     assert outcome.done is True
     assert [n.message for n in outcome.notices] == ["released the scope record of SPEC-s"]
-    assert "SPEC-s" not in _scope(repo, "query")
+    assert "SPEC-s" not in _tasks(repo)
 
     try:
         integration_validate(context, (*targets, CleanupTarget("unknown-kind", "x", "1")))
@@ -323,3 +336,35 @@ def test_post_git_means_the_base_contains_the_result(tmp_path: Path) -> None:
     assert _is_post_git(repo, replace(context, result_sha=None))  # the source (ff-only, cleanup-only)
     git(repo, "reset", "-q", "--hard", "HEAD~2")
     assert not _is_post_git(repo, context)
+
+
+def test_cleanup_reads_legacy_records_and_leaves_the_journal(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".devkit/managed/spec").mkdir(parents=True)
+    finished = tmp_path / "wt-s"
+    git(repo, "worktree", "add", "-q", "-b", "dev-s", str(finished))
+    assert _register(finished, SPEC) == "SPEC-s"
+    session = open_session(repo)
+    directory = session.location.shared_path / session.location.namespace
+    record = directory / "SPEC-s.json"
+    legacy = json.loads(record.read_text()) | {"last_request_id": "req-2", "last_added": 3, "last_removed": 1}
+    record.write_text(json.dumps(legacy | {"revision": 3}))  # written by the retired update
+    journal = directory / "journal.jsonl"
+    journal.write_bytes(b'{"event": "update", "task": "SPEC-s"}\n')
+    context = _context(repo, finished)
+    targets = integration_plan(context)
+    assert targets[-1] == CleanupTarget(KIND_SCOPE, "SPEC-s", f"worktree:{session.location.namespace}:3")
+    git(repo, "worktree", "remove", "--force", str(finished))
+    outcome = integration_run(context, _finish_result(context), targets)
+    assert outcome.done is True and "removed the scope record of SPEC-s" in [n.message for n in outcome.notices]
+    assert journal.read_bytes() == b'{"event": "update", "task": "SPEC-s"}\n'
+
+
+def test_a_base_checkout_token_without_its_record_plans_no_scope_target(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path / "repo")
+    (repo / ".devkit/managed/spec").mkdir(parents=True)
+    assert _register(repo, SPEC) == "SPEC-s"
+    session = open_session(repo)
+    (session.location.shared_path / session.location.namespace / "SPEC-s.json").unlink()  # released elsewhere
+    targets = integration_plan(_context(repo, repo))
+    assert [target.kind for target in targets] == [KIND_PROPOSAL]

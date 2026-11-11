@@ -317,16 +317,6 @@ target = 'devkit_spec.features.scope.usecases.flow.open_session'
 reason = 'Construct the scope registry/deadline dependency from workspace settings and Git location; domain operations run in execute.'
 
 [[usecase_exceptions]]
-source = 'devkit_spec.features.scope.cli.commands'
-target = 'devkit_spec.features.scope.usecases.query._record_warnings'
-reason = 'Convert returned registry problems into advisories without I/O or registry changes.'
-
-[[usecase_exceptions]]
-source = 'devkit_spec.features.scope.cli.commands'
-target = 'devkit_spec.features.scope.usecases.query._spec_dir'
-reason = 'Normalize and validate the input bundle path before passing it to the scope operation.'
-
-[[usecase_exceptions]]
 source = 'devkit_spec.features.worker.cli.commands'
 target = 'devkit_spec.features.worker.usecases.summary.summarize_inspection'
 reason = 'Project complete inspection evidence into the requested compact CLI output without I/O.'

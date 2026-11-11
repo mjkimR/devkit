@@ -2,7 +2,7 @@
 id: SPEC-consolidate-spec-scope-commands
 title: Consolidate the spec scope commands around collect
 summary: Retires the devkit spec scope register, query, compare and hidden update commands with the registry update path, the journal and the second paths-changed pipeline, narrowing scope observation to collect beside release and sweep.
-status: planned
+status: in-progress
 created: 2026-11-11
 related_capabilities:
   - CAP-COLL-work-scope-registry
@@ -147,9 +147,9 @@ Historical record: `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP
 ### Assumptions (Development)
 
 - **A1 Superseded ADR body**: the Development write scope admits only the "Superseded in part" line of
-  `ADR-worktrees-and-scope`, not its body. The `query`/history mentions of its §4, §5 and §6 are therefore re-anchored
-  in that line (they now mean `collect` and the registry reads of `release`, `sweep` and the post-finish cleanup)
-  instead of being reworded in place.
+  `ADR-worktrees-and-scope`, and `RULE-decision-supersession` requires that line to repeat the superseder's statement
+  verbatim, so it stays as the handoff wrote it. The in-place rewording of the `query`/history mentions in its §4, §5
+  and §6, which that statement announces, is outside this write scope and is left for the Host.
 - **A2 Records keep the retired keys**: records stay schema version 1 and creation keeps writing `last_request_id`,
   `last_added` and `last_removed` with empty and zero values, so readers of either age see one shape; nothing reads
   them.

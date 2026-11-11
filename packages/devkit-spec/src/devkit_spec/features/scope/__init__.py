@@ -1,18 +1,16 @@
-"""devkit_spec.features.scope: compare declared work scopes and share them between worktrees through a registry.
+"""devkit_spec.features.scope: observe declared and changed work scopes and keep creation snapshots in a registry.
 
-``inputs`` builds a ``ScopeSet`` from a proposal or a spec bundle (and what Git observes in a worktree),
-``compare`` reports the overlaps of each pair, ``localfs`` is the file registry with its event journal, ``location``
-finds the registry and the worktree's token, and ``flow`` runs a worktree's own register, update (the ACK) and
-release. The purpose is detection before parallel work runs, never exclusive ownership. Contract: ``CAP-COLL-work-scope-registry`` (``docs/capabilities/collaboration/``).
+``inputs`` builds a ``ScopeSet`` from a proposal or a spec bundle, ``localfs`` is the file registry, ``location``
+finds the registry and the worktree's token, ``flow`` runs a worktree's creation registration and release, and
+``services.collection`` is the Host's explicit observation (``devkit spec scope collect``). The purpose is detection
+before parallel work runs, never exclusive ownership. Contract: ``CAP-COLL-work-scope-registry``
+(``docs/capabilities/collaboration/``).
 """
 
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import (
     Diff,
-    Event,
-    Evidence,
     Granularity,
-    PairResult,
     Problem,
     Record,
     ScopePath,
@@ -29,37 +27,25 @@ from devkit_spec.features.scope.repositories.localfs import (
     LocalRegistry,
 )
 from devkit_spec.features.scope.repositories.location import Location, default_namespace, load_token, locate
-from devkit_spec.features.scope.services.compare import compare, compare_all, compare_with
 from devkit_spec.features.scope.usecases.flow import (
-    SOURCE_HANDOFF,
-    AckStatus,
     Registered,
     RegisterScopeUseCase,
     ReleaseScopeUseCase,
     Session,
-    UpdateScopeUseCase,
     auto_register,
-    collect,
-    journal,
+    creation_scope,
     open_session,
     own,
-    slug_from_spec,
-    sweep_events,
 )
-from devkit_spec.features.scope.usecases.inputs import from_proposal, from_spec, kind_of, observe_git
+from devkit_spec.features.scope.usecases.inputs import from_proposal, from_spec, kind_of
 
 __all__ = [
-    "SOURCE_HANDOFF",
-    "AckStatus",
     "Deadline",
     "Diff",
-    "Event",
-    "Evidence",
     "FlockLocker",
     "Granularity",
     "LocalRegistry",
     "Location",
-    "PairResult",
     "Problem",
     "Record",
     "RegisterScopeUseCase",
@@ -73,24 +59,16 @@ __all__ = [
     "Stage",
     "SweepResult",
     "Unresolved",
-    "UpdateScopeUseCase",
     "Verdict",
     "auto_register",
-    "collect",
-    "compare",
-    "compare_all",
-    "compare_with",
+    "creation_scope",
     "default_namespace",
     "from_proposal",
     "from_spec",
-    "journal",
     "kind_of",
     "load_token",
     "locate",
-    "observe_git",
     "open_session",
     "own",
-    "slug_from_spec",
-    "sweep_events",
     "token_hash",
 ]

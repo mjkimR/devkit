@@ -216,7 +216,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation and cumulative check; obtain Host conversational approval, then run `devkit integration integrate` and recover from observed Git or PR state; clean up. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, compare working-tree snapshots taken before and after a support role, record its envelope (none for a Backlog role), validate a worker's committed range and handle its questions and problems. | |
 | `spec-review-proposal` | Review a committed proposal and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and present findings for approval. | `proposal report`, `proposal accept`, `proposal handoff` |
-| `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope collect --mode worktrees` |
+| `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope collect` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`), after looking up existing feedback of every status. | `docs search`, `docs list feedback`, `docs resolve`, `policy` |
 | `spec-entrypoints` | Derive capability and use case entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `docs list capability` |
@@ -254,16 +254,16 @@ tracked artifacts and commits before final checks (`ADR-post-merge-verification`
 
 Task writing, reconciliation and worker acceptance carry no scope publication, registration or ACK obligation.
 Creation retains best-effort automatic linked-worktree registration. Before scheduling or reconstructing parallel
-work, the Host uses `devkit spec scope collect --mode worktrees`; `snapshot` and `refs` select less live evidence.
-Fetch is explicit and separate from observation depth. The Host reads evidence by horizon: units whose `current`
+work, the Host uses `devkit spec scope collect`, which reads creation snapshots, `plan-*`/`dev-*` refs and accessible
+worktrees in one run. Fetch is explicit and separate from observation. The Host reads evidence by horizon: units whose `current`
 evidence overlaps run sequentially, while a pair with only `future` evidence (a Planning unit's declared or candidate
 paths) does not serialize Planning runs. Before a handoff the Host treats a unit's `future` evidence as `current`,
 so units whose `future` evidence overlaps are handed off and integrated sequentially. Partial coverage and unknown
 attribution inform both choices, never prove independence, and grant or refuse no write. Other-PC dirty/unpushed work is invisible; PRs improve published-change
 visibility. Future cloud snapshot sharing is a direction only. `workflow next` has no collection side effect.
-The hidden maintenance `update` is directly callable by an operator but is not a worker step.
 
-The contract is CAP-COLL-work-scope-registry; the rationale is ADR-host-owned-scope-observation. Source assets are
+The contract is CAP-COLL-work-scope-registry; the rationale is ADR-host-owned-scope-observation and
+`ADR-collect-only-scope-observation`. Source assets are
 `spec-tasks`, `spec-sync`, `spec-delegate/references/worker.md` and `spec-orchestrate`.
 
 ### Repository verification policy

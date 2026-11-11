@@ -51,16 +51,8 @@ from devkit_spec.features.proposals.usecases.prune import PruneProposalsUseCase
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 from devkit_spec.features.scope.models.model import Verdict
 from devkit_spec.features.scope.repositories.location import load_token
-from devkit_spec.features.scope.usecases.flow import (
-    ReleaseScopeUseCase,
-    Session,
-    journal,
-    open_session,
-    own,
-    sweep_events,
-)
+from devkit_spec.features.scope.usecases.flow import ReleaseScopeUseCase, Session, open_session, own
 
-SOURCE = "post-finish"
 KIND_PROPOSAL = "proposal-prune"
 KIND_SCOPE = "scope-record"
 _SWEEP_FIX = f"run {DEVKIT} spec scope sweep --apply to remove the finished worktree's scope record"
@@ -113,13 +105,8 @@ def _worktree_records(session: Session, base: Path, worktree: Path) -> dict[str,
     if worktree.resolve() == base.resolve():
         if load_token(session.location.token_path) is None:
             return {}
-        try:
-            mine = own(session)
-        except SpecError as exc:
-            if exc.code == "SPEC_SCOPE_RECORD_MISSING":
-                return {}
-            raise
-        return {mine.record.task_id: mine.record.revision}
+        mine = own(session)
+        return {} if mine is None else {mine.record.task_id: mine.record.revision}
     records, _ = session.registry.query(session.location.namespace, session.deadline)
     finished = worktree.resolve()
     return {record.task_id: record.revision for record in records if Path(record.worktree).resolve() == finished}
@@ -128,7 +115,7 @@ def _worktree_records(session: Session, base: Path, worktree: Path) -> dict[str,
 def _sweep(base: Path, worktree: Path) -> list[str | AdvisoryError]:
     session = open_session(base)
     if worktree.resolve() == base.resolve():  # a --no-worktree task: the base checkout's own record
-        released = ReleaseScopeUseCase().execute(session, source=SOURCE)
+        released = ReleaseScopeUseCase().execute(session)
         done = [f"released the scope record of {released.task}"] if released.task and not released.already else []
         return [*done, *released.notices]
     namespace = session.location.namespace
@@ -138,9 +125,8 @@ def _sweep(base: Path, worktree: Path) -> list[str | AdvisoryError]:
     if not expected:
         return []
     results = session.registry.sweep(namespace, True, expected, session.deadline, only=set(expected))
-    notices: list[str | AdvisoryError] = list(journal(session.registry, namespace, sweep_events(results, SOURCE)))
     removed = [result.task_id for result in results if result.verdict is Verdict.REMOVED]
-    return [f"removed the scope record of {task}" for task in removed] + notices
+    return [f"removed the scope record of {task}" for task in removed]
 
 
 def _scope_mode(base: Path, worktree: Path) -> str:
@@ -215,7 +201,7 @@ def _run_scoped_sweep(
         return True, []
     if worktree.resolve() == base.resolve():
         task_id = next(iter(current))
-        released = ReleaseScopeUseCase().execute(session, task_id=task_id, source=SOURCE)
+        released = ReleaseScopeUseCase().execute(session, task_id=task_id)
         done = [f"released the scope record of {released.task}"] if released.task and not released.already else []
         return True, [*done, *released.notices]
     namespace = session.location.namespace
@@ -223,10 +209,9 @@ def _run_scoped_sweep(
     results = session.registry.sweep(namespace, True, remaining, session.deadline, only=set(remaining))
     if any(result.reason == "stale-revision" for result in results):
         raise StaleRequestError("the finished worktree's scope record changed since the request was prepared")
-    notices: list[str | AdvisoryError] = list(journal(session.registry, namespace, sweep_events(results, SOURCE)))
     removed = [result.task_id for result in results if result.verdict is Verdict.REMOVED]
     all_removed = len(removed) == len(remaining) and all(result.verdict is Verdict.REMOVED for result in results)
-    return all_removed, [f"removed the scope record of {task}" for task in removed] + notices
+    return all_removed, [f"removed the scope record of {task}" for task in removed]
 
 
 class _Cleanup:

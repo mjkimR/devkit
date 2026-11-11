@@ -121,24 +121,14 @@ def _symbolic_head(cwd: Path, deadline: Deadline) -> str:
 def base_ref(location: Location, deadline: Deadline) -> str:
     """The branch the base checkout is on now (``refs/heads/<name>``): the best available guess at the task's base
     branch. devkit records no fork branch for a worktree, and the base checkout may have switched branches since the
-    worktree was created, so a consumer never trusts it alone (``observe_git`` checks it against the base revision).
+    worktree was created, so a consumer never trusts it alone (collect caps the range at the registration HEAD,
+    ``CAP-COLL-work-scope-registry`` 4.1).
 
     ``""`` when the base checkout is detached, or when this workspace is on that same branch (the base checkout
     itself): there no upstream commit can be told apart from the task's own.
     """
     ref = _symbolic_head(location.common_dir, deadline)  # the base checkout's HEAD lives in the common directory
     return "" if not ref or ref == _symbolic_head(location.root, deadline) else ref
-
-
-def ref_exists(root: Path, ref: str, deadline: Deadline) -> bool:
-    """Whether ``ref`` names a commit in the repository at ``root``."""
-    try:
-        run_git(root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}", deadline=deadline)
-    except GitError as exc:
-        if exc.returncode is None:
-            raise
-        return False
-    return True
 
 
 def save_token(path: Path, token: str) -> None:

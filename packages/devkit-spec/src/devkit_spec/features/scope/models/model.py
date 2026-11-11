@@ -1,4 +1,4 @@
-"""The data of the work-scope registry: scope paths, scope sets, records, comparison results and journal events.
+"""The data of the work-scope registry: scope paths, scope sets, records and sweep verdicts.
 
 Every path is workspace-relative and normalized by the entrypoint path contract (``devkit_spec.features.entrypoints``).
 ``to_dict`` gives the JSON form the registry stores and ``--format json`` prints; ``from_dict`` reads a stored
@@ -85,8 +85,9 @@ class Unresolved:
     """An input the analysis could not turn into a scope path; it never counts as ``no overlap``.
 
     ``reason``: ``planned-doc``, ``no-entrypoints``, ``not-a-path``, ``invalid-path``, ``excluded-tree``, ``waived``,
-    ``no-targets``, ``missing-target-docs``, ``missing-reconcile``, ``missing-tasks``, ``missing-base-revision``,
-    ``unknown-base-revision`` or ``missing-base-ref``.
+    ``no-targets``, ``missing-target-docs``, ``missing-reconcile`` or ``missing-tasks``; collect adds
+    ``unknown-base``. Records written before creation stopped reading a committed range may also hold
+    ``missing-base-revision``, ``unknown-base-revision`` or ``missing-base-ref``.
     """
 
     value: str
@@ -147,59 +148,13 @@ class ScopeSet:
 
 
 @dataclass(frozen=True)
-class Evidence:
-    """One overlapping path of a pair: ``path`` on the first side (with its granularity), ``other`` on the second."""
-
-    kind: str  # doc | code
-    path: str
-    granularity: Granularity
-    other: str
-    source: Source
-    other_source: Source
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "kind": self.kind,
-            "path": self.path,
-            "granularity": str(self.granularity),
-            "other": self.other,
-            "source": str(self.source),
-            "other_source": str(self.other_source),
-        }
-
-
-@dataclass(frozen=True)
-class PairResult:
-    """The comparison of two scope sets: evidence and counts only; ranking and weighting are the consumer's."""
-
-    a: str
-    b: str
-    docs: tuple[Evidence, ...]
-    code: tuple[Evidence, ...]
-    unresolved: int
-
-    @property
-    def overlapping(self) -> bool:
-        return bool(self.docs or self.code)
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "a": self.a,
-            "b": self.b,
-            "docs": [item.to_dict() for item in self.docs],
-            "code": [item.to_dict() for item in self.code],
-            "unresolved": self.unresolved,
-        }
-
-
-@dataclass(frozen=True)
 class Record:
     """One registered task scope (schema version 1). The registry stores the token's hash, never the token.
 
-    ``base_ref`` is the branch the base checkout was on, which the observed range forks from, never wider than
-    ``base_revision..HEAD`` (``""``: the fixed ``base_revision``; ``observe_git``);
-    ``last_added`` and ``last_removed`` are the counts of the update ``last_request_id`` applied, so a retried
-    request is answered with them.
+    ``base_revision`` is HEAD at creation and ``base_ref`` the branch the base checkout was on (``""`` when there is
+    none): collect caps a registered observation's committed range with them. ``last_request_id``, ``last_added`` and
+    ``last_removed`` are legacy keys of the retired update: creation writes them empty and zero, records written
+    earlier may carry other values, and nothing reads them.
     """
 
     namespace: str
@@ -296,18 +251,14 @@ class Record:
 
 @dataclass(frozen=True)
 class Problem:
-    """A registry file, or a line of the journal (``line`` > 0), that could not be read: ``reason`` ``parse`` or
-    ``permission``."""
+    """A registry file that could not be read: ``reason`` ``parse`` or ``permission`` (collect also reports
+    ``source-unreadable`` and ``input-limit``)."""
 
     file: str
     reason: str
-    line: int = 0
 
     def to_dict(self) -> dict[str, object]:
-        data: dict[str, object] = {"file": self.file, "reason": self.reason}
-        if self.line:
-            data["line"] = self.line
-        return data
+        return {"file": self.file, "reason": self.reason}
 
 
 class Verdict(StrEnum):
@@ -320,7 +271,7 @@ class Verdict(StrEnum):
 
 @dataclass(frozen=True)
 class SweepResult:
-    """The verdict on one record file; ``spec`` and ``worktree`` are journal context (empty when unreadable)."""
+    """The verdict on one record file; ``spec`` and ``worktree`` are the record's (empty when unreadable)."""
 
     task_id: str
     file: str
@@ -338,98 +289,6 @@ class SweepResult:
             "reason": self.reason,
             "revision": self.revision,
         }
-
-
-class EventKind(StrEnum):
-    REGISTER = "register"
-    UPDATE = "update"
-    RELEASE = "release"
-    SWEEP = "sweep"
-    GUARD = "guard"  # reserved for worktree guard refusal events
-
-
-@dataclass(frozen=True)
-class AckCounts:
-    added: int
-    removed: int
-    overlaps: int
-    unresolved: int
-
-
-@dataclass(frozen=True)
-class Event:
-    """One journal line: diagnostic history, never an input to overlap, stale or stage verdicts.
-
-    ``source`` names the command that recorded it when that is not the ``scope`` subcommand of the same name
-    (``handoff``). Empty values are left out of the JSON line.
-    """
-
-    event: str
-    at: str = ""
-    task: str = ""
-    slug: str = ""
-    revision: int = 0
-    request_id: str = ""
-    status: str = ""
-    counts: AckCounts | None = None
-    verdict: str = ""
-    reason: str = ""
-    code: str = ""
-    worktree: str = ""
-    spec: str = ""
-    source: str = ""
-
-    def matches(self, task: str) -> bool:
-        """Whether the event belongs to the task ID or slug ``task``."""
-        return bool(task) and task in (self.task, self.slug)
-
-    def to_dict(self) -> dict[str, object]:
-        data: dict[str, object] = {"at": self.at, "event": self.event}
-        for key in ("task", "slug"):
-            if getattr(self, key):
-                data[key] = getattr(self, key)
-        if self.revision:
-            data["revision"] = self.revision
-        for key in ("request_id", "status"):
-            if getattr(self, key):
-                data[key] = getattr(self, key)
-        if self.counts is not None:
-            data |= {
-                "added": self.counts.added,
-                "removed": self.counts.removed,
-                "overlaps": self.counts.overlaps,
-                "unresolved": self.counts.unresolved,
-            }
-        for key in ("verdict", "reason", "code", "worktree", "spec", "source"):
-            if getattr(self, key):
-                data[key] = getattr(self, key)
-        return data
-
-    @classmethod
-    def from_dict(cls, data: Any) -> Event:
-        mapping = _mapping(data, "event")
-        counts = None
-        if all(isinstance(mapping.get(key), int) for key in ("added", "removed", "overlaps", "unresolved")):
-            counts = AckCounts(mapping["added"], mapping["removed"], mapping["overlaps"], mapping["unresolved"])
-        revision = mapping.get("revision", 0)
-        if isinstance(revision, bool) or not isinstance(revision, int):
-            raise ValueError("revision must be an integer")
-        return cls(
-            event=_text(mapping, "event", required=True),
-            at=_text(mapping, "at"),
-            task=_text(mapping, "task"),
-            slug=_text(mapping, "slug"),
-            revision=revision,
-            request_id=_text(mapping, "request_id"),
-            status=_text(mapping, "status"),
-            counts=counts,
-            verdict=_text(mapping, "verdict"),
-            reason=_text(mapping, "reason"),
-            code=_text(mapping, "code"),
-            worktree=_text(mapping, "worktree"),
-            spec=_text(mapping, "spec"),
-            source=_text(mapping, "source"),
-        )
 
 
 def _mapping(data: Any, what: str) -> dict[str, Any]:
@@ -452,6 +311,3 @@ def _list(mapping: dict[str, Any], key: str) -> list[Any]:
     if not isinstance(value, list):
         raise ValueError(f"{key} must be a list")
     return value
-
-
-JOURNAL_FILE = "journal.jsonl"

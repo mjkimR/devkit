@@ -8,7 +8,8 @@ from devkit_spec.features.scope.models.model import Record
 
 
 def echo_registered(location: Location, record: Record, token: str) -> None:
-    """The ``[SCOPE]`` line of a registration: the only place its token is printed (``proposal handoff`` too)."""
+    """The ``[SCOPE]`` line of a creation registration (``proposal handoff``, ``spec new``): the only place its token
+    is printed."""
     click.echo(
         sentinel(
             "SCOPE",
@@ -25,7 +26,7 @@ def echo_registered(location: Location, record: Record, token: str) -> None:
 
 def registered_dict(location: Location, record: Record, token: str) -> dict[str, object]:
     """The registration as JSON: what the ``[SCOPE]`` line carries, with the unresolved inputs listed; no timestamps
-    or record internals (``query`` shows the record)."""
+    or record internals."""
     return {
         "task": record.task_id,
         "namespace": location.namespace,

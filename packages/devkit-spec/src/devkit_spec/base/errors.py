@@ -449,19 +449,20 @@ class ScopeCollectionPartialWarning(ScopeError):
     code = "SPEC_SCOPE_COLLECTION_PARTIAL"
     level = Level.WARNING
     fix = (
-        f"For source-timeout or result-limit run `{DEVKIT} spec scope collect --timeout 120 --source-timeout 30`; "
-        "a source that is identity-ambiguous or has an unknown base needs its unit committed on its activity branch"
+        f"For source-timeout run `{DEVKIT} spec scope collect --timeout 120 --source-timeout 30`; report a "
+        "result-limit; a source that is identity-ambiguous or has an unknown base needs its unit committed on its "
+        "activity branch"
     )
 
 
 class ScopeCollectionFailedError(ScopeError):
-    """``scope collect``: no selected inventory source could be read (``INPUT_ERROR``); [TARGET] names the
-    unreadable sources."""
+    """``scope collect``: neither the ref nor the worktree inventory could be read (``INPUT_ERROR``); [TARGET] names
+    the unreadable sources."""
 
     code = "SPEC_SCOPE_COLLECTION_FAILED"
     input_error = True
     fix = (
-        "Run it inside a Git work tree of the project (or pass it with -w) and select a readable source with --mode, "
+        "Run it inside a Git work tree of the project (or pass it with -w) whose refs and worktree list Git can read, "
         "then rerun scope collect"
     )
 
@@ -475,7 +476,8 @@ class ScopeNotAWorktreeError(ScopeError):
 
 
 class ScopeSpecNotFoundError(ScopeError):
-    """``--spec`` names no directory in the workspace (``INPUT_ERROR``)."""
+    """The spec bundle a creation registration names is not a directory of the workspace (``INPUT_ERROR``); creation
+    registration reports it only as a verbose diagnostic."""
 
     code = "SPEC_SCOPE_SPEC_NOT_FOUND"
     input_error = True
@@ -494,55 +496,33 @@ class ScopeInputInvalidError(ScopeError):
     )
 
 
-class ScopeTokenMissingError(ScopeError):
-    """This worktree holds no registry token: it registered no task, or released it (``INPUT_ERROR``)."""
-
-    code = "SPEC_SCOPE_TOKEN_MISSING"
-    input_error = True
-    fix = (
-        "A worktree that does not take part in the registry skips scope update; to take part, register first: "
-        f"{DEVKIT} spec scope register --spec with the spec bundle directory"
-    )
-
-
 class ScopeTokenExistsError(ScopeError):
-    """This worktree already registered a task; a second registration would orphan the first (``INPUT_ERROR``)."""
+    """This worktree already registered a task; a second registration would orphan the first (``INPUT_ERROR``).
+    A verbose diagnostic of creation registration."""
 
     code = "SPEC_SCOPE_TOKEN_EXISTS"
     input_error = True
-    fix = (
-        f"Keep the registration ({DEVKIT} spec scope query shows it with own=yes) and run {DEVKIT} spec scope update, "
-        f"or run {DEVKIT} spec scope release first"
-    )
+    fix = f"Keep the existing registration, or run {DEVKIT} spec scope release in this worktree first"
 
 
 class ScopeTaskExistsError(ScopeError):
-    """Another record of the namespace has the task ID (``INPUT_ERROR``)."""
+    """Another record of the namespace has the task ID (``INPUT_ERROR``). A verbose diagnostic of creation
+    registration."""
 
     code = "SPEC_SCOPE_TASK_EXISTS"
     input_error = True
-    fix = "Pass a distinct --task-id, or release the other record from the worktree that registered it"
-
-
-class ScopeRecordMissingError(ScopeError):
-    """The record of this worktree's token no longer exists: it was released or swept (``INPUT_ERROR``)."""
-
-    code = "SPEC_SCOPE_RECORD_MISSING"
-    input_error = True
     fix = (
-        f"Run {DEVKIT} spec scope release (it removes the orphaned token), then {DEVKIT} spec scope register --spec "
-        "with the spec bundle directory"
+        f"Release the other record from the worktree that registered it ({DEVKIT} spec scope sweep removes records of "
+        "removed worktrees)"
     )
 
 
 class ScopeTokenMismatchError(ScopeError):
-    """The token does not own the record: only the registering worktree updates or releases it (``BLOCKED``)."""
+    """The token does not own the record: only the registering worktree releases it (``BLOCKED``)."""
 
     code = "SPEC_SCOPE_TOKEN_MISMATCH"
     guardrail = True
-    fix = (
-        "Update or release the record from the worktree that registered it; sweep removes records of removed worktrees"
-    )
+    fix = "Release the record from the worktree that registered it; sweep removes records of removed worktrees"
 
 
 class ScopeStaleRevisionError(ScopeError):
@@ -561,8 +541,8 @@ class ScopeTimeoutError(ScopeError):
     actor = Actor.NONE
     retry = Retry.SAFE
     fix = (
-        "Retry once the other registry command has finished (an update with the --request-id its [SCOPE_ACK] "
-        "printed); raise [tool.spec.scope] timeout when the registry is busy for longer"
+        "Retry once the other registry command has finished; raise [tool.spec.scope] timeout when the registry is busy "
+        "for longer"
     )
 
 
@@ -592,17 +572,9 @@ class ScopeSharedPathError(ScopeError):
     fix = "Fix the permissions of the directory in [TARGET], or set [tool.spec.scope] shared_path to a writable one"
 
 
-class ScopeAckFailedError(ScopeError):
-    """``devkit spec scope update`` did not apply for a cause without its own code (``MAINTENANCE``); the record is
-    unchanged."""
-
-    code = "SPEC_SCOPE_ACK_FAILED"
-    fix = f"Fix the cause in [DETAIL], then rerun {DEVKIT} spec scope update"
-
-
 class ScopeSharedWorktreeWarning(ScopeError):
     """Another task of the namespace registered the same worktree (``WARNING``): changes observed there are
-    attributed to both."""
+    attributed to both. A verbose diagnostic of creation registration."""
 
     code = "SPEC_SCOPE_SHARED_WORKTREE"
     level = Level.WARNING
@@ -617,22 +589,6 @@ class ScopeRecordInvalidWarning(ScopeError):
     fix = (
         f"Delete the record file in [TARGET] once its task is known to be finished ({DEVKIT} spec scope sweep lists it)"
     )
-
-
-class ScopeJournalWarning(ScopeError):
-    """The event journal could not be written (``WARNING``); the operation itself succeeded or failed as reported."""
-
-    code = "SPEC_SCOPE_JOURNAL_UNAVAILABLE"
-    level = Level.WARNING
-    fix = "Make journal.jsonl in [TARGET] a writable file; the registry works without it"
-
-
-class ScopeJournalLineWarning(ScopeError):
-    """Lines of the event journal are not JSON events and were skipped (``WARNING``)."""
-
-    code = "SPEC_SCOPE_JOURNAL_LINE_INVALID"
-    level = Level.WARNING
-    fix = "Remove or repair the lines named in [DETAIL] of journal.jsonl in [TARGET]"
 
 
 class HandoffNotReadyError(SpecError):

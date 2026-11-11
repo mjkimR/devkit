@@ -11,8 +11,10 @@ spec: SPEC-consolidate-spec-scope-commands
   modes, the directly callable maintenance `update` with its ACK and the maintenance ACK regression tests. No other
   ADR or architecture document states a retired command, option or code (searched `docs/decisions`,
   `docs/architecture`, `docs/development/reference` and `guides/`).
-- `ADR-worktrees-and-scope` body: only its "Superseded in part" line is in the write scope (`SPEC-consolidate-spec-scope-commands`
-  assumption A1); the line re-anchors its `query`/history wording to the remaining read surfaces.
+- `ADR-worktrees-and-scope` body: only its "Superseded in part" line is in the write scope, and
+  `RULE-decision-supersession` fixes that line to the superseder's statement, so the ADR stays unchanged; the body
+  rewording of its `query`/history mentions is left for the Host (`SPEC-consolidate-spec-scope-commands` assumption
+  A1).
 - Capability contracts rewritten: `CAP-COLL-work-scope-registry` (§1-§4.9), `CAP-HARN-command-mount` §4.2 and §4.6,
   `CAP-HARN-agent-guidance` (spec-orchestrate row and "Host scope observation"), `CAP-DLV-proposal-planning`
   (`target-docs.md` reader), `UC-run-parallel-work-safely`.

@@ -92,7 +92,7 @@ without a subcommand.
 | `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check\|report` | `CAP-DLV-proposal-lifecycle` |
 | `devkit spec worker inspect` | `CAP-DLV-delivery-roles` |
 | `devkit spec policy` | `CAP-DLV-project-policy` |
-| `devkit spec scope compare\|collect\|register\|query\|update\|release\|sweep` | `CAP-COLL-work-scope-registry` |
+| `devkit spec scope collect\|release\|sweep` | `CAP-COLL-work-scope-registry` |
 
 ### 4.3 Shared Options
 
@@ -137,7 +137,7 @@ historical documents the selection left out, and a last `[HISTORY_CMD: ...]` lin
 
 Under `--format json` stdout carries exactly one object: the command's result with its `notices` (each
 `notice.to_dict()`), or, when the command fails, `{"error": {...}}` with the warnings and notices reported before it
-under `notices`. A command that reports a result and errors together (`resolve` with unresolved IDs, `scope update`,
+under `notices`. A command that reports a result and errors together (`resolve` with unresolved IDs,
 `scope sweep`) puts the errors under `errors` in its result object instead. In text mode the error block goes to stderr.
 
 ### 4.7 Exit Codes

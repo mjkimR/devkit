@@ -164,19 +164,16 @@ class Collector:
 
     def discover(self) -> None:
         self.registry()
-        if self.options.mode != "snapshot":
-            self.refresh()
-            for name, function in (("refs", inventory.refs), ("worktrees", inventory.worktrees)):
-                if name == "worktrees" and self.options.mode != "worktrees":
-                    continue
-                try:
-                    found = function(self.root, self.source_deadline())
-                    self.successful_inventory += 1
-                    self.layers[name] = "complete"
-                    self.candidates.extend(found)
-                except (AdvisoryError, OSError, ValueError, InputLimitError) as exc:
-                    self.layers[name] = "failed"
-                    self.problem(name, self.reason(exc))
+        self.refresh()
+        for name, function in (("refs", inventory.refs), ("worktrees", inventory.worktrees)):
+            try:
+                found = function(self.root, self.source_deadline())
+                self.successful_inventory += 1
+                self.layers[name] = "complete"
+                self.candidates.extend(found)
+            except (AdvisoryError, OSError, ValueError, InputLimitError) as exc:
+                self.layers[name] = "failed"
+                self.problem(name, self.reason(exc))
         self.candidates.extend(
             Candidate(source_id=f"snapshot:{record.task_id}", worktree=record.worktree, record=record)
             for record in self.records
@@ -192,7 +189,7 @@ class Collector:
             raise ScopeCollectionFailedError(
                 "No selected inventory source could be read",
                 *(detail(problem) for problem in self.problems),
-                target_files=failed or ["--mode"],
+                target_files=failed or ["refs", "worktrees"],
             )
 
     def snapshot(self, candidate: Candidate) -> Observation:
@@ -581,7 +578,6 @@ class Collector:
                 )
             )
         data: dict[str, Any] = dict(
-            mode=self.options.mode,
             started_at=self.started,
             finished_at=now(),
             coverage=dict(
@@ -613,7 +609,7 @@ class Collector:
             raise ScopeCollectionFailedError(
                 "Report metadata exceeds collection result limit",
                 input_error=False,
-                fix="Report the limit; a narrower --mode (snapshot) collects fewer sources",
+                fix="Report the limit: the report metadata does not fit the bounded result",
             )
         if self.deadline.expired():
             self.problem("finalization", "source-timeout")

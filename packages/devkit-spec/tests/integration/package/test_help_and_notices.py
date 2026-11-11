@@ -16,7 +16,7 @@ def test_help_names_every_composed_flag() -> None:
     accept = _help("proposal", "accept")
     assert "accept_only" in accept and "Development activity-effort" in accept
     assert "Development activity-effort" in _help("proposal", "handoff")
-    assert "update" not in _help("scope", "register")  # update is hidden
+    assert "--mode" not in _help("scope", "collect") and "--base" in _help("scope", "collect")
 
 
 def test_proposal_help_names_planning() -> None:  # SPEC-rename-incubation-to-adaptive-dev AC-07

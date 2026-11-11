@@ -12,7 +12,6 @@ from devkit_core import core
 
 from devkit_spec.base.errors import ScopeTimeoutError
 
-JOURNAL_SECONDS = 5.0  # one journal append, independent of the operation's own deadline
 ROLLBACK_SECONDS = 5.0  # removing a record whose token could not be saved, independent of the command's deadline
 
 
