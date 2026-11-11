@@ -9,7 +9,7 @@ plan: PLAN-retire-legacy-integration-provider-key
 ## Phase 1: Implementation
 
 - [x] **Task 1.1**: Refuse every `[integration]` key, the retired `provider` with its deletion fix, with tests
-  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/services/providers.py`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit/tests/e2e/features/integration/`
+  - **_Boundary**: `packages/devkit/src/devkit_agt/features/integration/services/providers.py`, `packages/devkit/tests/integration/features/integration/`, `packages/devkit/tests/e2e/features/integration/`, `packages/devkit-spec/tests/support/spec_support/delivery.py`, `tests/e2e/smoke_integration.py`, `packages/devkit-spec/tests/e2e/bundles/spec/test_sdd_baseline_scenarios.py`
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: `just test devkit tests/integration/features/integration tests/e2e/features/integration`
 - [x] **Task 1.2**: Living Spec and quick references state that `[integration]` accepts no keys

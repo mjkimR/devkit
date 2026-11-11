@@ -13,7 +13,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 
 APP = """import json, sys
 from pathlib import Path
@@ -72,7 +71,7 @@ Run `python checks/check_notes.py`; exercise add and list against the same store
 
 
 class Exercise:
-    def __init__(self, root: Path, provider: str | None = "project") -> None:
+    def __init__(self, root: Path) -> None:
         self.root = root
         self.env = {k: v for k, v in os.environ.items() if not k.startswith(("DEVKIT_", "PYTHONPATH"))}
         self.observations: list[dict[str, object]] = []
@@ -80,7 +79,7 @@ class Exercise:
         self.run("git", "config", "user.name", "Synthetic baseline exercise")
         self.run("git", "config", "user.email", "synthetic@example.invalid")
         (root / ".devkit").mkdir()
-        self.configure("adaptive-dev", provider)
+        self.configure("adaptive-dev")
         (root / "app.py").write_text(APP)
         (root / "checks").mkdir()
         (root / "checks/check_notes.py").write_text(CHECK)
@@ -111,10 +110,8 @@ class Exercise:
     def cli(self, *args: str, expected: int = 0) -> subprocess.CompletedProcess[str]:
         return self.run(sys.executable, "-m", "devkit_dist", *args, "-w", str(self.root), expected=expected)
 
-    def configure(self, approach: str, provider: str | None, preset: str = "core") -> None:
+    def configure(self, approach: str, preset: str = "core") -> None:
         config = f'[development]\napproach="{approach}"\n'
-        if provider is not None:
-            config += f'[integration]\nprovider="{provider}"\n'
         config += f'[presets]\nspec="{preset}"\n'
         (self.root / ".devkit/config.toml").write_text(config)
 
@@ -148,27 +145,22 @@ class Exercise:
         return path
 
 
-@pytest.mark.parametrize("initial_provider", ["project", "spec", None])
-def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(
-    tmp_path: Path, initial_provider: str | None
-) -> None:
-    exercise = Exercise(tmp_path / "consumer", initial_provider)
-    if initial_provider is None:
-        assert "[integration]" not in (exercise.root / ".devkit/config.toml").read_text()
-        assert exercise.config().get("integration", {}).get("provider") is None
+def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(tmp_path: Path) -> None:
+    exercise = Exercise(tmp_path / "consumer")
+    assert "[integration]" not in (exercise.root / ".devkit/config.toml").read_text()
     assert exercise.config()["development"]["approach"] == "adaptive-dev"
     inactive = exercise.cli("spec", "new", "next-change", expected=2)
     assert "SPEC_LIFECYCLE_INACTIVE" in inactive.stderr
     exercise.verify_product()
     exercise.report("verified", "Independent test, actual add/list and document checks passed.")
     assert not (exercise.root / "specs").exists()
-    # Simulated decision covers this exact source, retained scope, approach and necessary project-to-spec provider switch.
-    decision = f"activate {exercise.source} local notes; approach=sdd; provider=spec (was {initial_provider})"
+    # Simulated decision covers this exact source, retained scope and approach.
+    decision = f"activate {exercise.source} local notes; approach=sdd"
     assert exercise.source_identity() == exercise.source
-    exercise.configure("sdd", "spec")
+    exercise.configure("sdd")
     exercise.cli("sync")
     assert exercise.config()["development"]["approach"] == "sdd"
-    assert exercise.config()["integration"]["provider"] == "spec"
+    assert "[integration]" not in (exercise.root / ".devkit/config.toml").read_text()
     assert "approach=sdd" in exercise.cli("spec", "policy").stdout
     exercise.cli("sync", "--check")
     exercise.cli(
@@ -220,7 +212,7 @@ def test_actual_sync_failure_reports_partial_state_and_supported_recovery(tmp_pa
     exercise = Exercise(tmp_path / "consumer")
     exercise.verify_product()
     # Deliberately invalid selection is labelled test failure injection; no runtime is stubbed.
-    exercise.configure("sdd", "spec", preset="missing-synthetic-preset")
+    exercise.configure("sdd", preset="missing-synthetic-preset")
     failure = exercise.cli("sync", expected=2)
     assert "missing-synthetic-preset" in failure.stderr
     assert exercise.config()["development"]["approach"] == "sdd"  # no automatic rollback
@@ -230,7 +222,7 @@ def test_actual_sync_failure_reports_partial_state_and_supported_recovery(tmp_pa
         "synthetic activation + failure injection",
     )
     assert "partial state is SDD" in report.read_text()
-    exercise.configure("sdd", "spec")
+    exercise.configure("sdd")
     exercise.cli("sync")
     exercise.cli("sync", "--check")
     exercise.report(
