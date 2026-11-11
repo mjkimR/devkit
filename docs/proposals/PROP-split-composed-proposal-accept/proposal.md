@@ -2,7 +2,7 @@
 id: PROP-split-composed-proposal-accept
 title: Split composed Planning acceptance into its own subcommand
 summary: Moves the composed Planning acceptance (accept, integrate and clean up plan-<slug>, optionally preparing handoff) out of devkit spec proposal accept into its own subcommand, so each command has one operation and one option set.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/delivery/
 priority: low                         # critical | high | medium | low
