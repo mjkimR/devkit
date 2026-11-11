@@ -18,11 +18,11 @@ from pathlib import Path
 from typing import Any
 
 import click
+from devkit_core.core.paths import display_path
 from devkit_dist.adapters.cli import field_value
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity, Violation
-from devkit_agt.features.rules.models.paths import display_path
 from devkit_agt.features.rules.models.phases import (
     PhaseEntry,
     remaining_by_rule,

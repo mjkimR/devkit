@@ -47,14 +47,18 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from devkit_core.core.plugins import TESTS_DIRECTORY, PluginPackage, plugin_modules
-from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, RECEIPT_PATH
+from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation
 from devkit_agt.features.rules.models.errors import RuleLoadError, RulesRunError
 from devkit_agt.features.rules.repositories.config import parse_rules_config
 from devkit_agt.features.rules.repositories.discovery import resolve_managed_rules
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
-from devkit_agt.features.rules.services.builtins.base import managed_counterpart, override_counterpart
+from devkit_agt.features.rules.services.builtins.base import (
+    managed_counterpart,
+    managed_workspace,
+    override_counterpart,
+)
 from devkit_agt.features.rules.services.evaluator import EvaluationResult, evaluate_rules
 from devkit_agt.features.rules.services.registry import RuleRegistry
 from devkit_agt.features.rules.services.targets import expand_targets
@@ -75,16 +79,6 @@ def rule_directory(anchor: str | Path) -> Path:
         if candidate.name == TESTS_DIRECTORY:
             return candidate.parent
     return path
-
-
-def _workspace_of(managed: Path) -> Path | None:
-    """The workspace root a path under ``.devkit/managed/`` belongs to, else ``None``."""
-    marker = PurePosixPath(MANAGED_PATH).parts
-    parts = managed.parts
-    for index in range(len(parts) - len(marker) + 1):
-        if parts[index : index + len(marker)] == marker:
-            return Path(*parts[:index])
-    return None
 
 
 def _receipt_package(workspace: Path, managed: Path, folder: Path) -> PluginPackage:
@@ -133,7 +127,7 @@ def _rule_package(folder: Path) -> PluginPackage:
     managed = managed_counterpart(folder)
     base = managed if managed is not None and managed.is_dir() else folder
     deployed = managed if managed is not None else base
-    workspace = _workspace_of(deployed)
+    workspace = managed_workspace(deployed)
     if workspace is not None and (workspace / RECEIPT_PATH).exists():
         return _receipt_package(workspace, deployed, folder)
     override = override_counterpart(base)

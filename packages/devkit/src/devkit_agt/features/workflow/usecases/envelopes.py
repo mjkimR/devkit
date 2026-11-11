@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shlex
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -10,12 +11,13 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import GitError, run_git
 
-from devkit_agt.features.workflow.models.envelope import Envelopes
+from devkit_agt.features.workflow.models.definition import WorkflowDocument
+from devkit_agt.features.workflow.models.envelope import WORKER, EnvelopeFlags, Envelopes
 from devkit_agt.features.workflow.models.errors import EnvelopeFlagError, locate_envelope_errors, workflow_command
-from devkit_agt.features.workflow.repositories.git import is_revision
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions
 from devkit_agt.features.workflow.services.envelope import (
     FROM_LATEST,
+    check_head,
     compose_envelope,
     envelope_timestamp,
     load_envelopes,
@@ -23,19 +25,16 @@ from devkit_agt.features.workflow.services.envelope import (
     skeleton,
     write_envelope,
 )
-from devkit_agt.features.workflow.services.envelope.model import WORKER
 from devkit_agt.features.workflow.usecases.evaluate import current_envelopes
 from devkit_agt.features.workflow.usecases.workspace import UnitScope, Workspace
 
 
 def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
-    """Resolve supplied scope revisions before writing; retain lexical-only authoring outside Git."""
-    if head and not is_revision(head):
-        raise EnvelopeFlagError(
-            f"--head {head!r} must be a hexadecimal commit id",
-            target_files=["--head"],
-            fix="Pass --head $(git rev-parse HEAD)",
-        )
+    """Resolve supplied scope revisions before writing; retain lexical-only authoring outside Git.
+
+    ``--head`` is checked before Git resolves it, so a symbolic name (``HEAD``, a branch) is refused, not resolved.
+    """
+    check_head(head)
     if not (base or head):
         return base, head
     # Workspace.root is normalized to the Git top level inside a repository (including linked worktrees).
@@ -62,6 +61,16 @@ def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
     return resolved[0], resolved[1]
 
 
+def _scope_definition(ws: Workspace, scope: UnitScope) -> WorkflowDocument | None:
+    """The definition of the workflow the unit's envelopes record; ``None`` when it cannot be loaded or is another
+    workflow, so authoring never needs a valid definition."""
+    try:
+        doc = ws.load_definition(scope.binding.workflow or ws.config.default or "")
+    except AdvisoryError:
+        return None
+    return doc if doc.id == scope.workflow else None
+
+
 def _carried_from(ws: Workspace, scope: UnitScope, loaded: Envelopes) -> Envelopes:
     """The envelopes ``--from latest`` reads: the segment's, without those a later ``return`` re-opened.
 
@@ -70,11 +79,8 @@ def _carried_from(ws: Workspace, scope: UnitScope, loaded: Envelopes) -> Envelop
     authoring commands do not need a valid definition.
     """
     scoped = loaded.scoped(scope.workflow, scope.binding.segment)
-    try:
-        doc = ws.load_definition(scope.binding.workflow or ws.config.default or "")
-    except AdvisoryError:
-        return scoped
-    if doc.id != scope.workflow:
+    doc = _scope_definition(ws, scope)
+    if doc is None:
         return scoped
     decisions = load_decisions(scope.dir).segment(scope.workflow, scope.binding.segment_start)
     return current_envelopes(loaded, decisions, doc, scope.binding.segment)
@@ -87,11 +93,8 @@ def _require_declared_stage(ws: Workspace, scope: UnitScope, stage: str) -> None
     latest`` loads it: when it cannot be loaded, or is not the workflow the envelope records, the check is skipped,
     so a run can still be recorded on a missing or broken definition.
     """
-    try:
-        doc = ws.load_definition(scope.binding.workflow or ws.config.default or "")
-    except AdvisoryError:
-        return
-    if doc.id != scope.workflow:
+    doc = _scope_definition(ws, scope)
+    if doc is None:
         return
     declared = [s.id for s in doc.stages]
     if stage in declared:
@@ -113,79 +116,37 @@ class WriteEnvelopeUseCase(BaseUseCase):
         kind: str,
         *,
         workspace: Workspace,
-        authoring: bool,
         unit: str,
         anchor: str | None,
-        stage: str,
-        status: str | None,
-        summary: str | None,
-        assumptions: tuple[str, ...],
-        unverified: tuple[str, ...],
-        checks: tuple[str, ...],
-        base: str,
-        head: str,
-        effort: str,
-        findings_yaml: str | None = None,
-        source: str | None = None,
-        resolve: tuple[str, ...] = (),
-        waive: tuple[str, ...] = (),
-        scope_extensions_yaml: str | None = None,
-        questions_yaml: str | None = None,
-        answers_to: str = "",
-        answers_yaml: str | None = None,
-        settle: tuple[str, ...] = (),
-        problem: str = "",
-        attempts: tuple[str, ...] = (),
-        recovery: str = "",
-        resolves: str = "",
+        flags: EnvelopeFlags,
     ) -> dict[str, Any]:
         """Write the next <kind>-NN.yaml: a skeleton when no authoring flag is given, else the complete envelope."""
         ws = workspace
         scope = ws.unit_scope(unit, anchor=anchor)
         unit_dir, workflow, segment = scope.dir, scope.workflow, scope.binding.segment
         if kind == WORKER:
-            _require_declared_stage(ws, scope, stage)
+            _require_declared_stage(ws, scope, flags.stage)
         created = envelope_timestamp(unit_dir, workflow, scope.binding.segment_start)
+        authoring = flags.authoring
         if authoring:
-            base, head = _resolve_scope(ws.root, base, head)
+            base, head = _resolve_scope(ws.root, flags.base, flags.head)
             loaded = load_envelopes(unit_dir)
             draft = compose_envelope(
                 unit_dir=unit_dir,
                 unit=scope.rel,
                 envelopes=_carried_from(ws, scope, loaded)
-                if source == FROM_LATEST
+                if flags.source == FROM_LATEST
                 else loaded.scoped(workflow, segment),
                 loaded=loaded,
                 kind=kind,
-                stage=stage,
                 workflow=workflow,
                 segment=segment,
-                status=status,
-                summary=summary or "",
-                assumptions=assumptions,
-                unverified=unverified,
-                checks=checks,
-                base=base,
-                head=head,
-                findings_yaml=findings_yaml,
-                source=source,
-                resolve=resolve,
-                waive=waive,
-                scope_extensions_yaml=scope_extensions_yaml,
-                questions_yaml=questions_yaml,
-                answers_to=answers_to,
-                answers_yaml=answers_yaml,
-                settle=settle,
-                problem=problem,
-                attempts=attempts,
-                recovery=recovery,
-                resolves=resolves,
-                effort=effort,
+                flags=replace(flags, base=base, head=head),
             )
             body = render_envelope(draft, created)
             written_status, open_findings = draft.status, draft.open_findings()
         else:
-            body = skeleton(kind, stage, created, workflow, segment)
+            body = skeleton(kind, flags.stage, created, workflow, segment)
             written_status, open_findings = "needs_input", 0
         path, seq = write_envelope(unit_dir, kind, body)
         return {

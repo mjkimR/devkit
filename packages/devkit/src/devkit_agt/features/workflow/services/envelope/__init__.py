@@ -3,6 +3,7 @@
 from devkit_agt.features.workflow.models.envelope import (
     Answer,
     Envelope,
+    EnvelopeFlags,
     Envelopes,
     Finding,
     Hold,
@@ -14,6 +15,7 @@ from devkit_agt.features.workflow.models.envelope import (
 from devkit_agt.features.workflow.services.envelope.authoring import (
     FROM_LATEST,
     carried_findings,
+    check_head,
     compose_envelope,
     envelope_timestamp,
     parse_answers,
@@ -42,6 +44,7 @@ __all__ = [
     "STATUSES",
     "Answer",
     "Envelope",
+    "EnvelopeFlags",
     "Envelopes",
     "Finding",
     "Hold",
@@ -50,6 +53,7 @@ __all__ = [
     "Question",
     "Settle",
     "carried_findings",
+    "check_head",
     "collect_envelopes",
     "compose_envelope",
     "envelope_timestamp",

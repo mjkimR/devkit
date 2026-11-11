@@ -13,9 +13,13 @@ import yaml
 from devkit_core.core.yaml import safe_load
 
 from devkit_agt.features.workflow.models.envelope import (
+    ANSWER,
     CLOSABLE,
+    RESOLUTION,
+    WORKER,
     Answer,
     Envelope,
+    EnvelopeFlags,
     Envelopes,
     Finding,
     Problem,
@@ -36,14 +40,11 @@ from devkit_agt.features.workflow.models.errors import (
 from devkit_agt.features.workflow.repositories.git import is_revision
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions, utc_timestamp
 from devkit_agt.features.workflow.services.envelope.model import (
-    ANSWER,
     ANSWER_KEYS,
     EFFORTS,
     FINDING_KEYS,
     QUESTION_KEYS,
-    RESOLUTION,
     STATUSES,
-    WORKER,
     parse_answer,
     parse_envelope_text,
     parse_finding,
@@ -395,6 +396,16 @@ def apply_resolutions(
     return tuple(out)
 
 
+def check_head(head: str) -> None:
+    """Refuse a ``--head`` that is not a hexadecimal commit id (``EnvelopeFlagError``); ``""`` (none) passes."""
+    if head and not is_revision(head):
+        raise EnvelopeFlagError(
+            f"--head {head!r} must be a hexadecimal commit id",
+            target_files=["--head"],
+            fix="Pass --head $(git rev-parse HEAD)",
+        )
+
+
 def _check_flag_combination(kind: str, source: str | None, closing: bool, head: str, unit: str = "") -> None:
     """Refuse flag combinations that cannot produce a valid envelope of ``kind``."""
     if source is None and closing:
@@ -416,47 +427,21 @@ def _check_flag_combination(kind: str, source: str | None, closing: bool, head: 
             target_files=["--from"],
             fix="Add --from latest",
         )
-    if head and not is_revision(head):
-        raise EnvelopeFlagError(
-            f"--head {head!r} must be a hexadecimal commit id",
-            target_files=["--head"],
-            fix="Pass --head $(git rev-parse HEAD)",
-        )
+    check_head(head)
 
 
 def compose_envelope(
     *,
     unit_dir: Path,
     envelopes: Envelopes,
+    loaded: Envelopes,
     kind: str,
-    stage: str = "",
-    workflow: str = "",
-    segment: int | None = None,
-    status: str | None = None,
-    summary: str = "",
-    assumptions: Iterable[str] = (),
-    unverified: Iterable[str] = (),
-    checks: Iterable[str] = (),
-    base: str = "",
-    head: str = "",
-    findings_yaml: str | None = None,
-    source: str | None = None,
-    resolve: Iterable[str] = (),
-    waive: Iterable[str] = (),
-    scope_extensions_yaml: str | None = None,
-    questions_yaml: str | None = None,
-    answers_to: str = "",
-    answers_yaml: str | None = None,
-    settle: Iterable[str] = (),
-    problem: str = "",
-    attempts: Iterable[str] = (),
-    recovery: str = "",
-    resolves: str = "",
-    effort: str = "",
-    loaded: Envelopes | None = None,
-    unit: str = "",
+    flags: EnvelopeFlags,
+    workflow: str,
+    segment: int | None,
+    unit: str,
 ) -> Envelope:
-    """Validate the authoring flags of an envelope command and build the envelope to write.
+    """Validate the authoring ``flags`` of an envelope command and build the envelope to write.
 
     ``envelopes`` are those of the current segment (``--from latest`` reads
     them); ``workflow`` and ``segment`` scope the new envelope to it.
@@ -470,6 +455,7 @@ def compose_envelope(
     ``EnvelopeFlagError``, ``EnvelopeFromError``, ``EnvelopeFindingsError``,
     ``EnvelopeItemsError`` or ``EnvelopeReferenceError``.
     """
+    status, problem, questions_yaml = flags.status, flags.problem, flags.questions_yaml
     if status is None:
         status = "needs_input" if questions_yaml is not None else "failed" if problem else STATUSES[0]
     if status not in STATUSES:
@@ -478,19 +464,20 @@ def compose_envelope(
             target_files=["--status"],
             fix=f"Use one of {'|'.join(STATUSES)}",
         )
-    resolve_list = [parse_resolve_flag(r) for r in resolve]
-    settle_list = tuple(parse_settle_flag(s) for s in settle)
-    waive_map = dict(parse_waive_flag(w) for w in waive)
-    _check_flag_combination(kind, source, bool(resolve_list or waive_map), head, unit)
-    check_map = dict(parse_check_flag(c) for c in checks)
+    resolve_list = [parse_resolve_flag(r) for r in flags.resolve]
+    settle_list = tuple(parse_settle_flag(s) for s in flags.settle)
+    waive_map = dict(parse_waive_flag(w) for w in flags.waive)
+    source = flags.source
+    _check_flag_combination(kind, source, bool(resolve_list or waive_map), flags.head, unit)
+    check_map = dict(parse_check_flag(c) for c in flags.checks)
     findings: tuple[Finding, ...] = ()
     review = ""
     if source is not None:
         findings, review = carried_findings(envelopes, source, unit_dir, unit)
         findings = apply_resolutions(findings, resolve_list, waive_map)
-    if findings_yaml is not None:
-        findings = findings + parse_findings(findings_yaml, kind, unit)
-    attempt_list = tuple(attempts)
+    if flags.findings_yaml is not None:
+        findings = findings + parse_findings(flags.findings_yaml, kind, unit)
+    attempt_list, recovery, effort = tuple(flags.attempts), flags.recovery, flags.effort
     if (attempt_list or recovery) and not problem:
         raise EnvelopeFlagError(
             "--tried and --recovery describe a --problem",
@@ -504,11 +491,11 @@ def compose_envelope(
             fix=f"Use one of {'|'.join(EFFORTS)}",
         )
     extensions = ()
-    if scope_extensions_yaml is not None:
+    if flags.scope_extensions_yaml is not None:
         if kind != WORKER:
             raise EnvelopeFlagError("--scope-extensions-file is worker-only", target_files=["--scope-extensions-file"])
         try:
-            extensions = parse_scope_extensions(safe_load(scope_extensions_yaml))
+            extensions = parse_scope_extensions(safe_load(flags.scope_extensions_yaml))
         except (yaml.YAMLError, EnvelopeFormatError) as exc:
             raise EnvelopeItemsError(
                 f"--scope-extensions-file: {exc}",
@@ -518,27 +505,27 @@ def compose_envelope(
     draft = Envelope(
         kind=kind,
         status=status,
-        stage=stage,
+        stage=flags.stage,
         workflow=workflow,
         segment=segment,
-        summary=summary,
+        summary=flags.summary or "",
         review=review,
         findings=findings,
         checks=check_map,
-        diff_base=base,
-        diff_head=head,
-        assumptions=tuple(assumptions),
-        unverified_areas=tuple(unverified),
+        diff_base=flags.base,
+        diff_head=flags.head,
+        assumptions=tuple(flags.assumptions),
+        unverified_areas=tuple(flags.unverified),
         questions=parse_questions(questions_yaml) if questions_yaml is not None else (),
-        answers_to=Path(answers_to).name if answers_to else "",
-        answers=parse_answers(answers_yaml) if answers_yaml is not None else (),
+        answers_to=Path(flags.answers_to).name if flags.answers_to else "",
+        answers=parse_answers(flags.answers_yaml) if flags.answers_yaml is not None else (),
         settles=settle_list,
         problem=Problem(problem, recovery, attempt_list) if problem else None,
-        resolves=Path(resolves).name if resolves else "",
+        resolves=Path(flags.resolves).name if flags.resolves else "",
         activity_effort=effort,
         scope_extensions=extensions,
     )
-    _check_contract(draft, loaded if loaded is not None else envelopes)
+    _check_contract(draft, loaded)
     return draft
 
 

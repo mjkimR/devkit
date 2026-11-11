@@ -60,14 +60,6 @@ def read_anchor(anchor_path: Path, display: str | None = None) -> AnchorState:
     return AnchorState(frontmatter.field(data, "status"), binding_from(data))
 
 
-def read_binding(anchor_path: Path) -> Binding:
-    """Binding from the anchor's frontmatter; an anchor without the keys is unbound.
-
-    Raises ``AnchorInvalidError`` when the frontmatter cannot be read.
-    """
-    return read_anchor(anchor_path).binding
-
-
 def render_binding(text: str, binding: Binding) -> str:
     """``text`` (an anchor) with the binding recorded, preserving every other byte.
 

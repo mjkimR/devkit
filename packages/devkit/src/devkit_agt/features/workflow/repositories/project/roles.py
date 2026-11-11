@@ -25,7 +25,6 @@ from devkit_dist.features.project.repositories.receipt import (
     OVERRIDES_PATH,
     AssetRecord,
     Receipt,
-    load_receipt,
 )
 
 import devkit_agt.features.workflow.repositories.unit.frontmatter as frontmatter
@@ -80,14 +79,11 @@ def local_roles(workspace_root: Path, roles_dir: str) -> dict[str, str]:
     return roles
 
 
-def discover_roles(workspace_root: Path, roles_dir: str, receipt: Receipt | None = None) -> dict[str, str] | None:
+def discover_roles(workspace_root: Path, roles_dir: str, receipt: Receipt | None) -> dict[str, str] | None:
     """The project's role vocabulary, or ``None`` when no source exists at all.
 
-    ``receipt`` defaults to the workspace's installation receipt; a malformed
-    receipt raises ``devkit_dist.base.errors.ReceiptError``.
+    ``receipt`` is the workspace's installation receipt (``None`` when absent).
     """
-    if receipt is None:
-        receipt = load_receipt(workspace_root)
     if receipt is None and not (workspace_root / roles_dir).is_dir():
         return None
     roles = receipt_roles(workspace_root, receipt)

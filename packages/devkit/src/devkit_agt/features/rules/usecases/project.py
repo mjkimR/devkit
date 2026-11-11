@@ -12,7 +12,6 @@ evaluation), used by ``devkit rules phases``/``explain``.
 
 from __future__ import annotations
 
-import inspect
 import os
 import tempfile
 from collections.abc import Mapping, Sequence
@@ -21,9 +20,10 @@ from pathlib import Path, PurePosixPath
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
+from devkit_core.core.paths import display_path
 
 from devkit_agt.features.rules.models.config import RulesConfig
-from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation
+from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation, rule_file
 from devkit_agt.features.rules.models.errors import NoneActiveNotice, RuleProblem, RulesDirError, RulesRunError
 from devkit_agt.features.rules.models.markdown import local_target
 from devkit_agt.features.rules.models.phases import (
@@ -111,12 +111,9 @@ load_project_rules = LoadProjectRulesUseCase().execute
 
 
 def _source(rule: Rule, root: Path) -> str | None:
-    """The file defining ``rule``: workspace-relative when it lies inside ``root``, else absolute."""
-    try:
-        path = Path(inspect.getfile(type(rule))).resolve()
-    except (TypeError, OSError):
-        return None
-    return path.relative_to(root.resolve()).as_posix() if path.is_relative_to(root.resolve()) else str(path)
+    """The file defining ``rule``: workspace-relative when it lies inside ``root``, else absolute (both resolved)."""
+    path = rule_file(rule)
+    return display_path(path.resolve(), root.resolve()) if path is not None else None
 
 
 @dataclass(frozen=True)

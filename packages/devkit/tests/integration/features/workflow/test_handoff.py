@@ -12,7 +12,7 @@ from devkit_agt.features.workflow import (
     Options,
     evaluate_definition,
     parse_definition,
-    read_binding,
+    read_anchor,
     validate_definition,
     write_binding,
 )
@@ -113,11 +113,11 @@ def test_binding_history_round_trip(tmp_path: Path) -> None:
     anchor.write_text("---\nid: a\nstatus: planned\n---\n# a\n")
     history = (HistoryEntry("triage", "2026-10-12"),)
     write_binding(anchor, Binding("spec-driven", history))
-    assert read_binding(anchor) == Binding("spec-driven", history)
+    assert read_anchor(anchor).binding == Binding("spec-driven", history)
     text = anchor.read_text()
     assert text.count("workflow_history") == 1 and text.endswith("---\n# a\n")
     write_binding(anchor, Binding("hotfix", (*history, HistoryEntry("spec-driven", "2026-10-13"))))
-    binding = read_binding(anchor)
+    binding = read_anchor(anchor).binding
     assert [h.workflow for h in binding.history] == ["triage", "spec-driven"]
     assert anchor.read_text().count("workflow_history") == 1
     assert binding.to_dict()["workflow_history"][1] == {

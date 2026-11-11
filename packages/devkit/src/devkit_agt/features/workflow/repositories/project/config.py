@@ -13,7 +13,7 @@ from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
 
 from devkit_agt.features.workflow.models.errors import LayoutError, WorkflowConfigError
-from devkit_agt.features.workflow.models.ids import IDENT_HINT, is_ident
+from devkit_agt.features.workflow.models.ids import IDENT_PATTERN, is_ident
 from devkit_agt.features.workflow.models.layout import (
     LAYOUT_KEYS,
     TemplateLayout,
@@ -118,7 +118,7 @@ def _policy_table(section: dict[str, Any], key: str, allowed: Iterable[str], nam
     for name in sorted(raw):
         where = f"config {WORKFLOW_TABLE}.{key}.{name}"
         if not is_ident(name):
-            raise WorkflowConfigError(f"{where}: {names} match {IDENT_HINT}")
+            raise WorkflowConfigError(f"{where}: {names} match {IDENT_PATTERN}")
         value = raw[name]
         if not isinstance(value, str) or value not in allowed:
             raise WorkflowConfigError(f"{where}: {value!r} is not one of {choices}")

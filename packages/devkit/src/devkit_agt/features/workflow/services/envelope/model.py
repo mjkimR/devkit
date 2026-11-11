@@ -19,7 +19,10 @@ import yaml
 from devkit_core.core.yaml import safe_load
 
 from devkit_agt.features.workflow.models.envelope import (
+    ANSWER,
     DECIDERS,
+    RESOLUTION,
+    WORKER,
     WORKER_REF,
     Answer,
     Envelope,
@@ -32,7 +35,8 @@ from devkit_agt.features.workflow.models.envelope import (
     Settle,
 )
 from devkit_agt.features.workflow.models.errors import EnvelopeFormatError, EnvelopeKindError
-from devkit_agt.features.workflow.models.ids import IDENT_HINT, IDENT_PATTERN, is_ident
+from devkit_agt.features.workflow.models.ids import IDENT_PATTERN, is_ident
+from devkit_agt.features.workflow.models.requests import TITLE_LIMIT  # a question's title, like a request's
 from devkit_agt.features.workflow.repositories.unit.records import as_text, is_temporary, write_numbered
 
 ENVELOPES_DIR = "envelopes"
@@ -48,9 +52,6 @@ OPTION_KEYS = ("id", "description", "recommended")
 ANSWER_KEYS = ("question", "choice", "decision", "constraints", "by")
 SETTLE_KEYS = ("assumption", "decision")
 PROBLEM_KEYS = ("cause", "attempts", "recovery")
-TITLE_LIMIT = 40  # a question's title, like a request's
-# Kinds whose fields and status the contract fixes, besides review and reverify.
-ANSWER, WORKER, RESOLUTION = "answer", "worker", "resolution"
 
 
 def _text_list(value: Any, what: str) -> tuple[str, ...]:
@@ -63,11 +64,7 @@ def _text_list(value: Any, what: str) -> tuple[str, ...]:
 
 def parse_finding(item: Any, where: str) -> Finding:
     """One finding mapping; raises ``EnvelopeFormatError`` naming ``where``."""
-    if not isinstance(item, dict):
-        raise EnvelopeFormatError(f"{where}: expected a mapping")
-    unknown = set(item) - set(FINDING_KEYS)
-    if unknown:
-        raise EnvelopeFormatError(f"{where}: unknown keys {sorted(unknown)}")
+    item = _mapping(item, where, FINDING_KEYS)
     resolution = as_text(item.get("resolution")) or "open"
     if resolution not in RESOLUTIONS:
         raise EnvelopeFormatError(f"{where}.resolution {resolution!r} not in {'|'.join(RESOLUTIONS)}")
@@ -121,7 +118,7 @@ def _parse_envelope(rel: str, seq: int, name_kind: str, data: Any) -> Envelope:
         raise EnvelopeFormatError("checks: expected a mapping")
     workflow = as_text(data.get("workflow"))
     if workflow and not is_ident(workflow):
-        raise EnvelopeFormatError(f"workflow {workflow!r} must be a workflow id ({IDENT_HINT})")
+        raise EnvelopeFormatError(f"workflow {workflow!r} must be a workflow id ({IDENT_PATTERN})")
     segment = data.get("segment")
     if segment is not None and (not isinstance(segment, int) or isinstance(segment, bool) or segment < 0):
         raise EnvelopeFormatError("segment: expected a non-negative integer")
@@ -241,7 +238,7 @@ def _option(item: Any, where: str) -> Option:
     item = _mapping(item, where, OPTION_KEYS)
     option_id = as_text(item.get("id"))
     if not is_ident(option_id):
-        raise EnvelopeFormatError(f"{where}.id {option_id!r} must match {IDENT_HINT}")
+        raise EnvelopeFormatError(f"{where}.id {option_id!r} must match {IDENT_PATTERN}")
     return Option(option_id, as_text(item.get("description")), _flag(item, "recommended", where, False))
 
 
@@ -250,7 +247,7 @@ def parse_question(item: Any, where: str) -> Question:
     item = _mapping(item, where, QUESTION_KEYS)
     question_id = as_text(item.get("id"))
     if not is_ident(question_id):
-        raise EnvelopeFormatError(f"{where}.id {question_id!r} must match {IDENT_HINT}")
+        raise EnvelopeFormatError(f"{where}.id {question_id!r} must match {IDENT_PATTERN}")
     title = _required_text(item, "title", where)
     if len(title) > TITLE_LIMIT:
         raise EnvelopeFormatError(f"{where}.title: at most {TITLE_LIMIT} characters")
@@ -275,7 +272,7 @@ def parse_answer(item: Any, where: str) -> Answer:
     item = _mapping(item, where, ANSWER_KEYS)
     question = as_text(item.get("question"))
     if not is_ident(question):
-        raise EnvelopeFormatError(f"{where}.question {question!r} must match {IDENT_HINT}")
+        raise EnvelopeFormatError(f"{where}.question {question!r} must match {IDENT_PATTERN}")
     choice = item.get("choice")
     if choice is not None and not is_ident(choice):
         raise EnvelopeFormatError(f"{where}.choice {choice!r} must be an option id or null")
@@ -310,37 +307,31 @@ def parse_problem(value: Any) -> Problem:
     )
 
 
-def _questions(value: Any) -> tuple[Question, ...]:
+def _unique_items[T](
+    value: Any, field: str, parse: Callable[[Any, str], T], key: Callable[[T], object], duplicate: str
+) -> tuple[T, ...]:
+    """The optional list ``field``: each item through ``parse`` (named ``field[i]``), no two with the same ``key``
+    (else ``EnvelopeFormatError`` ``<field>: <duplicate>``); ``None`` is no items."""
     if value is None:
         return ()
     if not isinstance(value, list):
-        raise EnvelopeFormatError("questions: expected a list")
-    questions = tuple(parse_question(item, f"questions[{i}]") for i, item in enumerate(value))
-    if len({q.id for q in questions}) != len(questions):
-        raise EnvelopeFormatError("questions: question ids must be unique")
-    return questions
+        raise EnvelopeFormatError(f"{field}: expected a list")
+    items = tuple(parse(item, f"{field}[{i}]") for i, item in enumerate(value))
+    if len({key(item) for item in items}) != len(items):
+        raise EnvelopeFormatError(f"{field}: {duplicate}")
+    return items
+
+
+def _questions(value: Any) -> tuple[Question, ...]:
+    return _unique_items(value, "questions", parse_question, lambda q: q.id, "question ids must be unique")
 
 
 def _answers(value: Any) -> tuple[Answer, ...]:
-    if value is None:
-        return ()
-    if not isinstance(value, list):
-        raise EnvelopeFormatError("answers: expected a list")
-    answers = tuple(parse_answer(item, f"answers[{i}]") for i, item in enumerate(value))
-    if len({a.question for a in answers}) != len(answers):
-        raise EnvelopeFormatError("answers: one answer per question")
-    return answers
+    return _unique_items(value, "answers", parse_answer, lambda a: a.question, "one answer per question")
 
 
 def _settles(value: Any) -> tuple[Settle, ...]:
-    if value is None:
-        return ()
-    if not isinstance(value, list):
-        raise EnvelopeFormatError("settles: expected a list")
-    settles = tuple(parse_settle(item, f"settles[{i}]") for i, item in enumerate(value))
-    if len({s.assumption for s in settles}) != len(settles):
-        raise EnvelopeFormatError("settles: each assumption at most once")
-    return settles
+    return _unique_items(value, "settles", parse_settle, lambda s: s.assumption, "each assumption at most once")
 
 
 def _problem(value: Any) -> Problem | None:
@@ -443,7 +434,7 @@ def _check_references(out: Envelopes) -> None:
 def read_envelope(path: Path, rel: str) -> Envelope:
     """Read and validate the envelope file at ``path`` (reported as ``rel``); raises ``EnvelopeFormatError``."""
     if FILE.fullmatch(path.name) is None:
-        raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_HINT}", file=rel)
+        raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_PATTERN}", file=rel)
     try:
         text = path.read_text("utf-8")
     except (OSError, UnicodeError) as exc:
@@ -456,7 +447,7 @@ def parse_envelope_text(name: str, rel: str, text: str) -> Envelope:
     ``EnvelopeFormatError``. References to other envelopes are checked by ``collect_envelopes``."""
     match = FILE.fullmatch(name)
     if match is None:
-        raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_HINT}", file=rel)
+        raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_PATTERN}", file=rel)
     try:
         data = safe_load(text, source=rel)
     except yaml.YAMLError as exc:
@@ -529,7 +520,7 @@ def write_envelope(unit_dir: Path, kind: str, body: str) -> tuple[Path, int]:
     ``EnvelopeKindError`` (``ENVELOPE_KIND_INVALID``) for a malformed kind.
     """
     if not is_ident(kind):
-        raise EnvelopeKindError(f"kind {kind!r} must match {IDENT_HINT}")
+        raise EnvelopeKindError(f"kind {kind!r} must match {IDENT_PATTERN}")
 
     def sequence_of(name: str) -> int | None:
         match = FILE.fullmatch(name)

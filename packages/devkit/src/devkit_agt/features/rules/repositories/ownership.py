@@ -1,6 +1,6 @@
 """Workflow anchor ownership from committed frontmatter, without loading workflow definitions."""
 
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from devkit_core.core import FrontmatterError, GitError, run_git
 from devkit_core.core.frontmatter import parse
@@ -38,20 +38,3 @@ def committed_anchors(root: Path, revision: str) -> dict[str, tuple[str, ...]]:
         if ids := workflow_ids(data):
             result[path] = ids
     return result
-
-
-def touched_owners(anchors: dict[str, tuple[str, ...]], changed: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(
-        sorted(
-            {
-                str(PurePosixPath(anchor).parent)
-                for anchor in anchors
-                if any(
-                    str(PurePosixPath(anchor).parent) == "."
-                    or path == anchor
-                    or path.startswith(str(PurePosixPath(anchor).parent) + "/")
-                    for path in changed
-                )
-            }
-        )
-    )

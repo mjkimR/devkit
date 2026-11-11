@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 import yaml
 from click.testing import CliRunner
 from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.models.envelope import Envelope
 from devkit_agt.features.workflow.models.errors import EnvelopeFindingsError
-from devkit_agt.features.workflow.services.envelope import compose_envelope, load_envelopes, render_envelope
+from devkit_agt.features.workflow.services.envelope import load_envelopes, render_envelope
 from testsupport.gate import git
 from testsupport.workflow import write_config, write_unit
 
@@ -66,12 +68,14 @@ def test_authoring_outside_git_keeps_lexical_scope(workspace: Path) -> None:
 
 
 @pytest.mark.parametrize("severity", ["medium", "critical", "major", "P2"])
-def test_finding_severity_survives_review_and_reverify(tmp_path: Path, severity: str) -> None:
+def test_finding_severity_survives_review_and_reverify(
+    tmp_path: Path, compose: Callable[..., Envelope], severity: str
+) -> None:
     unit = write_unit(tmp_path, "work/a")
-    draft = compose_envelope(
-        unit_dir=unit,
-        envelopes=load_envelopes(unit),
-        kind="review",
+    draft = compose(
+        unit,
+        load_envelopes(unit),
+        "review",
         findings_yaml=f"- issue: bug\n  evidence: code.py:3\n  severity: {severity}\n- issue: other\n  evidence: code.py:5\n",
     )
     body = render_envelope(draft, "2026-10-17T00:00:00Z")
@@ -82,18 +86,20 @@ def test_finding_severity_survives_review_and_reverify(tmp_path: Path, severity:
     assert review is not None and review.open_findings() == 2
     assert review.to_dict()["findings"][0]["severity"] == severity
     assert "severity" not in review.to_dict()["findings"][1]
-    again = compose_envelope(unit_dir=unit, envelopes=loaded, kind="reverify", source="latest", resolve=["all"])
+    again = compose(unit, loaded, "reverify", source="latest", resolve=("all",))
     assert again.open_findings() == 0
     assert yaml.safe_load(render_envelope(again, "2026-10-17T00:00:01Z"))["findings"][0]["severity"] == severity
 
 
 @pytest.mark.parametrize("value", ['""', '"  "', "null", "2", "true", "[]", "{}"])
-def test_finding_severity_rejects_empty_and_non_string_values(tmp_path: Path, value: str) -> None:
+def test_finding_severity_rejects_empty_and_non_string_values(
+    tmp_path: Path, compose: Callable[..., Envelope], value: str
+) -> None:
     unit = write_unit(tmp_path, "work/a")
     with pytest.raises(EnvelopeFindingsError):
-        compose_envelope(
-            unit_dir=unit,
-            envelopes=load_envelopes(unit),
-            kind="review",
+        compose(
+            unit,
+            load_envelopes(unit),
+            "review",
             findings_yaml=f"- {{issue: bug, evidence: code.py:3, severity: {value}}}",
         )

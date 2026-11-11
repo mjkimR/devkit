@@ -14,24 +14,19 @@ import errno
 import os
 import re
 import secrets
-import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 
 from devkit_core.base.errors import UnsafePathError
-from devkit_core.core import Deadline, LockHeldError, LockUnsupportedError
+from devkit_core.core import LockUnsupportedError, flock_fd
 
 # ``.<name>.<12 hex digits>.tmp``: a file being written (or left by an interrupted write) next to ``<name>``.
 TEMPORARY = re.compile(r"\..+\.[0-9a-f]{12}\.tmp")
 LOCK_TIMEOUT = 10.0  # seconds a writer waits for another one; each holds the lock for one small file
-POLL_INTERVAL = 0.01
 # ``link`` errors of a file system without hard links (SMB, exFAT, some FUSE and bind mounts).
 _NO_HARD_LINKS = {errno.EPERM, errno.ENOTSUP, errno.EOPNOTSUPP, errno.EXDEV, errno.ENOSYS}
-# ``flock`` errors of a file system that cannot lock.
-_NO_LOCKS = {errno.ENOTSUP, errno.EOPNOTSUPP, errno.ENOLCK, errno.EINVAL, errno.ENOSYS}
 
 
 def as_text(value: Any) -> str:
@@ -49,14 +44,6 @@ def temporary_path(path: Path) -> Path:
     return path.with_name(f".{path.name}.{secrets.token_hex(6)}.tmp")
 
 
-def _fcntl() -> ModuleType:
-    try:
-        import fcntl
-    except ImportError as exc:
-        raise LockUnsupportedError("fcntl.flock is not available on this platform") from exc
-    return fcntl
-
-
 def _open_directory(directory: Path) -> int:
     """A descriptor of ``directory`` itself; ``UnsafePathError`` when it is a symbolic link or not a directory."""
     flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
@@ -72,6 +59,14 @@ def _open_directory(directory: Path) -> int:
         raise
 
 
+def _no_flock(directory: Path, exc: OSError) -> LockUnsupportedError:
+    return LockUnsupportedError(
+        f"the file system of {directory} does not support flock: {exc.strerror}",
+        target_files=[str(directory)],
+        fix="Keep the work unit on a local file system that supports flock",
+    )
+
+
 @contextmanager
 def locked(directory: Path) -> Iterator[None]:
     """Hold an exclusive ``flock`` on ``directory`` itself for the block.
@@ -80,32 +75,9 @@ def locked(directory: Path) -> Iterator[None]:
     ``LockHeldError`` (``LOCK_HELD``). Without ``fcntl``, or on a file system that cannot lock, it raises
     ``LockUnsupportedError`` (``LOCK_UNSUPPORTED``).
     """
-    fcntl = _fcntl()
-    limit = Deadline(LOCK_TIMEOUT)
     fd = _open_directory(directory)
     try:
-        while True:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                remaining = limit.remaining()
-                if remaining <= 0:
-                    raise LockHeldError(
-                        f"another process holds the lock on {directory}",
-                        what=f"waiting for the lock on {directory}",
-                        seconds=limit.seconds,
-                        target_files=[str(directory)],
-                    ) from None
-                time.sleep(min(POLL_INTERVAL, remaining))
-            except OSError as exc:
-                if exc.errno in _NO_LOCKS:
-                    raise LockUnsupportedError(
-                        f"the file system of {directory} does not support flock: {exc.strerror}",
-                        target_files=[str(directory)],
-                        fix="Keep the work unit on a local file system that supports flock",
-                    ) from exc
-                raise
+        flock_fd(fd, target=directory, timeout=LOCK_TIMEOUT, unsupported=lambda exc: _no_flock(directory, exc))
         yield
     finally:
         os.close(fd)

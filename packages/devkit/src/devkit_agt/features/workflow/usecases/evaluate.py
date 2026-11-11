@@ -87,7 +87,7 @@ class _Evaluator:
         self.all_decisions: Decisions = load_decisions(self.unit_dir)
         # Only records of this workflow written after the last handoff count.
         self.decisions = self.all_decisions.segment(doc.id, binding.segment_start)
-        returns = [r for r in self.decisions.records if r.kind == "return" and r.action == "accept"]
+        returns = self.decisions.accepted_returns()
         self.returns = [(r.seq, doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns]
         # Problems and questions hold the unit whatever their segment, and a return does not clear them.
         loaded = load_envelopes(self.unit_dir)
@@ -244,7 +244,7 @@ def current_envelopes(loaded: Envelopes, decisions: Decisions, doc: WorkflowDocu
     Evaluation and ``envelope reverify --from latest`` read the same set, so a reverify never closes a round that no
     longer counts.
     """
-    returns = [r for r in decisions.records if r.kind == "return" and r.action == "accept"]
+    returns = decisions.accepted_returns()
     return _after_returns(
         loaded.scoped(doc.id, segment),
         [(record_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],

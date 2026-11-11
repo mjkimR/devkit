@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-from devkit_dist.features.project.repositories.receipt import Receipt, load_receipt
+from devkit_dist.features.project.repositories.receipt import Receipt
 
 from devkit_agt.features.workflow.models.definition import WorkflowDocument, parse_definition
 from devkit_agt.features.workflow.models.errors import (
@@ -77,17 +77,14 @@ def managed_definition_paths(workspace_root: Path, receipt: Receipt | None) -> t
 
 
 def discover_definitions(
-    workspace_root: Path, definitions_dir: Path, receipt: Receipt | None = None
+    workspace_root: Path, definitions_dir: Path, receipt: Receipt | None
 ) -> tuple[list[WorkflowDocument], list[WorkflowError]]:
     """Project definitions plus workflow assets synchronized by devkit.
 
     A project definition shadows a synchronized one with the same id, so a
     repository can adapt a distributed workflow without editing managed files.
-    ``receipt`` defaults to the workspace's installation receipt; a malformed
-    receipt raises ``devkit_dist.base.errors.ReceiptError``.
+    ``receipt`` is the workspace's installation receipt (``None`` when absent).
     """
-    if receipt is None:
-        receipt = load_receipt(workspace_root)
     local, errors = load_definition_dir(definitions_dir)
     managed_paths, missing = managed_definition_paths(workspace_root, receipt)
     managed, managed_errors = _load_paths(managed_paths)

@@ -1,6 +1,6 @@
-"""Normal YAML spellings and root Unit companion ownership."""
+"""Normal YAML spellings of committed workflow anchors."""
 
-from devkit_agt.features.rules import committed_anchors, touched_owners
+from devkit_agt.features.rules import committed_anchors
 from testsupport.rules import git, init_repo, write
 
 
@@ -16,5 +16,3 @@ def test_quoted_workflow_and_history_keys(tmp_path):
     git(repo, "commit", "-qm", "record Units")
     anchors = committed_anchors(repo, "HEAD")
     assert anchors == {"anchor.md": ("sdd-spec-feature",), "other/anchor.md": ("sdd-spec-feature",)}
-    assert touched_owners(anchors, ("tasks.md",)) == (".",)
-    assert touched_owners({"other/anchor.md": ("sdd-spec-feature",)}, ("unrelated.py",)) == ()

@@ -22,7 +22,7 @@ from devkit_agt.features.workflow import (
     WorkflowNotBindableError,
     Workspace,
     parse_layout_spec,
-    read_binding,
+    read_anchor,
     validate_template,
 )
 from devkit_agt.features.workflow.cli import cli
@@ -235,7 +235,7 @@ def test_binding_is_written_into_an_anchor_without_frontmatter(tmp_path: Path) -
     anchor.write_text("# plain\n\nbody\n")
     write_binding(anchor, Binding("wf"))
     assert anchor.read_text() == "---\nworkflow: wf\n---\n# plain\n\nbody\n"
-    assert read_binding(anchor) == Binding("wf")
+    assert read_anchor(anchor).binding == Binding("wf")
 
 
 def test_binding_write_keeps_mode_and_original_on_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

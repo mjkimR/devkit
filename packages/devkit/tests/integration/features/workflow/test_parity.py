@@ -15,6 +15,7 @@ from devkit_agt.features.workflow import (
     validate_definition,
 )
 from devkit_agt.features.workflow.cli import cli
+from devkit_dist.features.project.repositories.receipt import load_receipt
 from testsupport.workflow import WORKFLOW, write_config, write_receipt, write_unit
 
 CONFIG = """schema = 1
@@ -38,7 +39,7 @@ def _receipt(root: Path, assets: list[dict]) -> None:
 
 
 def test_discover_roles_sources(tmp_path: Path) -> None:
-    assert discover_roles(tmp_path, ".devkit/roles") is None
+    assert discover_roles(tmp_path, ".devkit/roles", load_receipt(tmp_path)) is None
     _receipt(
         tmp_path,
         [
@@ -54,7 +55,7 @@ def test_discover_roles_sources(tmp_path: Path) -> None:
     contract = tmp_path / ".devkit/managed/team/subagents/reviewer.md"
     contract.parent.mkdir(parents=True)
     contract.write_text("---\nrole: code-reviewer\ntitle: R\n---\nbody\n")
-    roles = discover_roles(tmp_path, ".devkit/roles")
+    roles = discover_roles(tmp_path, ".devkit/roles", load_receipt(tmp_path))
     assert roles == {
         "reviewer": ".devkit/managed/team/subagents/reviewer.md",
         "code-reviewer": ".devkit/managed/team/subagents/reviewer.md",
@@ -64,7 +65,7 @@ def test_discover_roles_sources(tmp_path: Path) -> None:
     local.mkdir()
     (local / "scout.md").write_text("# local scout\n")
     (local / "Bad Name.md").write_text("ignored\n")
-    roles = discover_roles(tmp_path, ".devkit/roles")
+    roles = discover_roles(tmp_path, ".devkit/roles", load_receipt(tmp_path))
     assert roles is not None and roles["scout"] == ".devkit/roles/scout.md" and "Bad Name" not in roles
 
 

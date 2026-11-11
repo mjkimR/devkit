@@ -44,7 +44,7 @@ from devkit_agt.features.rules.models.settings import RawSettings, SettingsResol
 from devkit_agt.features.rules.models.snapshot import Snapshot
 from devkit_agt.features.rules.repositories.config import load_rules_config
 from devkit_agt.features.rules.repositories.discovery import ManagedRules, resolve_managed_rules
-from devkit_agt.features.rules.repositories.ownership import committed_anchors, touched_owners, workflow_ids
+from devkit_agt.features.rules.repositories.ownership import committed_anchors, workflow_ids
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
 from devkit_agt.features.rules.repositories.workspace.catalog import Document, DocumentCatalog
 from devkit_agt.features.rules.repositories.workspace.facts import capture_facts_dependency
@@ -146,7 +146,6 @@ __all__ = [
     "resolve_phases",
     "run_project_rules",
     "scan",
-    "touched_owners",
     "validate_pattern",
     "validate_policy",
     "workflow_ids",

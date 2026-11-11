@@ -3,7 +3,6 @@ convergence recheck."""
 
 from __future__ import annotations
 
-import inspect
 import re
 from collections import Counter
 from collections.abc import Iterable, Sequence
@@ -13,7 +12,15 @@ from devkit.advisory import AdvisoryError, Level
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 
-from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, RuleOmission, Severity, Violation
+from devkit_agt.features.rules.models.contracts import (
+    Autofixable,
+    Rule,
+    RuleContext,
+    RuleOmission,
+    Severity,
+    Violation,
+    rule_file,
+)
 from devkit_agt.features.rules.models.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit_agt.features.rules.models.phases import effective_phase, runs_in_phase
 from devkit_agt.features.rules.models.policy import effective_severity, validate_policy
@@ -263,8 +270,5 @@ def _execution_error(rule: Rule, message: str, exc: Exception) -> RuleExecutionE
             exit_code=exc.exit_code,
         )
     logger.exception(message)
-    try:
-        source = [inspect.getfile(type(rule))]
-    except (TypeError, OSError):
-        source = []
-    return RuleExecutionError(message, rule_id=rule.id, target_files=source)
+    source = rule_file(rule)
+    return RuleExecutionError(message, rule_id=rule.id, target_files=[str(source)] if source else [])

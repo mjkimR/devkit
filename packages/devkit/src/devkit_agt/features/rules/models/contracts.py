@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import os
 import unicodedata
 from dataclasses import dataclass
@@ -229,3 +230,12 @@ class Autofixable(Rule, Protocol):
     def fix(self, ctx: RuleContext) -> list[str]:
         """Apply safe deterministic fixes and return list of modified file paths."""
         ...
+
+
+def rule_file(rule: Rule) -> Path | None:
+    """The source file of the module defining ``rule``'s class (``inspect.getfile``), unresolved; ``None`` when the
+    class has none (a built-in or dynamically created class)."""
+    try:
+        return Path(inspect.getfile(type(rule)))
+    except (TypeError, OSError):
+        return None

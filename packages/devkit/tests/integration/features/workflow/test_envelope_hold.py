@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 import yaml
+from devkit_agt.features.workflow.models.envelope import Envelope
 from devkit_agt.features.workflow.models.errors import AuthoringError
-from devkit_agt.features.workflow.services.envelope import compose_envelope, load_envelopes
+from devkit_agt.features.workflow.services.envelope import load_envelopes
 from devkit_agt.features.workflow.usecases.integration import finish_guard
 from devkit_core.base.errors import GitError
 from testsupport.workflow import SIMPLE_UNIT, run_cli, write_config
@@ -264,13 +266,15 @@ def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
         (("--kind", "resolution", "--summary", "x", "--resolves", "worker-04.yaml"), "ENVELOPE_REFERENCE_INVALID"),
     ],
 )
-def test_authoring_refuses_what_the_contract_refuses(root: Path, args: tuple[str, ...], code: str) -> None:
+def test_authoring_refuses_what_the_contract_refuses(
+    root: Path, compose: Callable[..., Envelope], args: tuple[str, ...], code: str
+) -> None:
     unit = root / SIMPLE_UNIT
     loaded = load_envelopes(unit)
     kwargs: dict[str, object] = {}
     flags = list(args)
     pairs = dict(zip(flags[::2], flags[1::2], strict=True))
-    kwargs["kind"] = pairs.pop("--kind")
+    kind = pairs.pop("--kind")
     kwargs["summary"] = pairs.pop("--summary")
     mapping = {"--status": "status", "--recovery": "recovery", "--effort": "effort", "--resolves": "resolves"}
     for flag, value in pairs.items():
@@ -279,7 +283,7 @@ def test_authoring_refuses_what_the_contract_refuses(root: Path, args: tuple[str
         else:
             kwargs[mapping[flag]] = value
     with pytest.raises(AuthoringError) as caught:
-        compose_envelope(unit_dir=unit, envelopes=loaded, loaded=loaded, **kwargs)  # type: ignore[arg-type]
+        compose(unit, loaded, kind, **kwargs)
     assert caught.value.code == code
 
 
@@ -635,10 +639,12 @@ def test_a_worker_problem_lists_its_findings(root: Path) -> None:
     assert data["findings"][0]["issue"] == "a.py outside scope" and data["problem"]["cause"] == "boundary broken"
 
 
-def test_a_worker_envelope_without_stage_is_refused_with_the_flag_to_add(root: Path) -> None:
+def test_a_worker_envelope_without_stage_is_refused_with_the_flag_to_add(
+    root: Path, compose: Callable[..., Envelope]
+) -> None:
     refused = run_cli("envelope", "worker", "-w", str(root), "--unit", SIMPLE_UNIT, "--summary", "x")
     assert refused.exit_code == 2 and "Missing option '--stage'" in refused.stderr
     loaded = load_envelopes(root / SIMPLE_UNIT)
     with pytest.raises(AuthoringError, match="names the stage") as caught:
-        compose_envelope(unit_dir=root / SIMPLE_UNIT, envelopes=loaded, kind="worker", summary="x", effort="medium")
+        compose(root / SIMPLE_UNIT, loaded, "worker", summary="x", effort="medium")
     assert "Pass --stage" in (caught.value.fix or "")

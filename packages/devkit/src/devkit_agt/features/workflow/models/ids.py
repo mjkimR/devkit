@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 
 IDENT_PATTERN = r"[a-z][a-z0-9-]*"
-IDENT_HINT = IDENT_PATTERN
 IDENT = re.compile(IDENT_PATTERN)
 
 

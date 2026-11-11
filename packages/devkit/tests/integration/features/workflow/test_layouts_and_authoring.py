@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -17,9 +18,10 @@ from devkit_agt.features.workflow import (
     parse_layout_spec,
 )
 from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.models.envelope import Envelope
 from devkit_agt.features.workflow.models.errors import AuthoringError, DefinitionError
 from devkit_agt.features.workflow.services.definition.validation import validate_definition
-from devkit_agt.features.workflow.services.envelope import compose_envelope, load_envelopes, render_envelope
+from devkit_agt.features.workflow.services.envelope import load_envelopes, render_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
 PROPOSAL = """---
@@ -206,19 +208,19 @@ def test_cli_skips_off_stage_and_completes(workspace: Path) -> None:
 # --- envelope authoring -------------------------------------------------------------------
 
 
-def _draft(unit: Path, **kw: object) -> str:
-    draft = compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), **kw)  # type: ignore[arg-type]
-    return render_envelope(draft, "2026-10-12T00:00:00Z")
+def _draft(compose: Callable[..., Envelope], unit: Path, kind: str, **flags: object) -> str:
+    return render_envelope(compose(unit, load_envelopes(unit), kind, **flags), "2026-10-12T00:00:00Z")
 
 
-def test_compose_review_and_reverify_round_trip(tmp_path: Path) -> None:
+def test_compose_review_and_reverify_round_trip(tmp_path: Path, compose: Callable[..., Envelope]) -> None:
     unit = write_unit(tmp_path, "work/a")
     findings = (
         "- issue: Null deref\n  evidence: a.py:3\n- issue: Slow path\n  evidence: b.py:9\n  suggested_action: cache\n"
     )
     body = _draft(
+        compose,
         unit,
-        kind="review",
+        "review",
         stage="review",
         summary="two findings",
         findings_yaml=findings,
@@ -252,7 +254,9 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path) -> None:
     assert loaded is not None and loaded.open_findings() == 2 and loaded.assumptions == ("CI is green",)
     assert loaded.unverified_areas == ("perf",) and loaded.to_dict()["findings"][1]["suggested_action"] == "cache"
 
-    reverify = yaml.safe_load(_draft(unit, kind="reverify", source="latest", resolve=["1"], waive=["2=accepted cost"]))
+    reverify = yaml.safe_load(
+        _draft(compose, unit, "reverify", source="latest", resolve=["1"], waive=["2=accepted cost"])
+    )
     assert reverify["review"] == "review-01.yaml"
     assert [f["resolution"] for f in reverify["findings"]] == ["resolved", "waived"]
     # The waiver reason has its own key; the finding's suggested action is kept.
@@ -266,9 +270,9 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path) -> None:
     (unit / "envelopes/review-02.yaml").write_text(
         "kind: review\nstatus: completed\nfindings:\n  - {issue: c, evidence: d}\n"
     )
-    again = yaml.safe_load(_draft(unit, kind="reverify", source="latest", resolve=["all"]))
+    again = yaml.safe_load(_draft(compose, unit, "reverify", source="latest", resolve=["all"]))
     assert again["review"] == "review-02.yaml" and again["findings"][0]["resolution"] == "resolved"
-    from_file = yaml.safe_load(_draft(unit, kind="reverify", source="envelopes/review-01.yaml"))
+    from_file = yaml.safe_load(_draft(compose, unit, "reverify", source="envelopes/review-01.yaml"))
     assert from_file["review"] == "review-01.yaml" and len(from_file["findings"]) == 2
 
 
@@ -299,14 +303,17 @@ def test_compose_review_and_reverify_round_trip(tmp_path: Path) -> None:
         ({"kind": "review", "findings_yaml": "a: b\n"}, "ENVELOPE_FINDINGS_INVALID", "expected a YAML list"),
     ],
 )
-def test_compose_rejections(tmp_path: Path, kw: dict[str, object], code: str, match: str) -> None:
+def test_compose_rejections(
+    tmp_path: Path, compose: Callable[..., Envelope], kw: dict[str, object], code: str, match: str
+) -> None:
     unit = write_unit(tmp_path, "work/a")
+    flags = dict(kw)
     with pytest.raises(AuthoringError, match=match) as info:
-        compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), **kw)  # type: ignore[arg-type]
+        compose(unit, load_envelopes(unit), str(flags.pop("kind")), **flags)
     assert info.value.code == code
 
 
-def test_compose_out_of_range_numbers(tmp_path: Path) -> None:
+def test_compose_out_of_range_numbers(tmp_path: Path, compose: Callable[..., Envelope]) -> None:
     unit = write_unit(tmp_path, "work/a")
     (unit / "envelopes").mkdir()
     (unit / "envelopes/review-01.yaml").write_text(
@@ -314,17 +321,17 @@ def test_compose_out_of_range_numbers(tmp_path: Path) -> None:
     )
     for resolve, waive in ((["2"], []), ([], ["3=x"])):
         with pytest.raises(AuthoringError, match=r"1\.\.1") as caught:
-            compose_envelope(
-                unit_dir=unit,
-                envelopes=load_envelopes(unit),
-                kind="reverify",
+            compose(
+                unit,
+                load_envelopes(unit),
+                "reverify",
                 source="latest",
                 resolve=resolve,
                 waive=waive,
             )
         assert caught.value.code == "ENVELOPE_FLAG_INVALID"
     with pytest.raises(AuthoringError, match="file name must be") as caught:
-        compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), kind="reverify", source="notes.yaml")
+        compose(unit, load_envelopes(unit), "reverify", source="notes.yaml")
     assert caught.value.code == "ENVELOPE_FROM_INVALID"
 
 

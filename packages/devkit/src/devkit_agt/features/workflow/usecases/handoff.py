@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
-from devkit_dist.features.project.models.invocation import devkit_command
-
 from devkit_agt.features.workflow.models.binding import Binding, HistoryEntry
 from devkit_agt.features.workflow.models.checks import CheckResult
 from devkit_agt.features.workflow.models.decision_records import HANDOFF_REQUEST, Decision
@@ -42,7 +40,7 @@ def evaluate_handoff(
     recorded: Decision | None,
     policy: str,
     *,
-    unit: str = "",
+    unit: str,
 ) -> tuple[Handoff | None, HandoffChoiceIgnoredError | None]:
     """Evaluate every ``next`` candidate and apply the handoff policy.
 
@@ -57,21 +55,19 @@ def evaluate_handoff(
     for cand in doc.next:
         checks = tuple(eval_ref(ref) for ref in cand.when)
         results.append(CandidateResult(cand.workflow, cand.recommended, all(c.satisfied for c in checks), checks))
-    eligible = {c.workflow for c in results if c.eligible}
+    eligible = [c.workflow for c in results if c.eligible]
     ignored: HandoffChoiceIgnoredError | None = None
     if recorded is not None:
         if isinstance(recorded.value, str) and recorded.value in eligible:
             return Handoff(policy, tuple(results), recorded.value, recorded), None
-        choices = choice_commands(unit, [c.workflow for c in results if c.eligible])
+        choices = choice_commands(unit, eligible)
         ignored = HandoffChoiceIgnoredError(
             f"handoff choice {recorded.value!r} is not an eligible candidate of {doc.id}; ignored",
             *choices.details,
             file=recorded.file,
-            fix=choices.fix
-            if unit
-            else f"Record an eligible choice with `{devkit_command('workflow answer --request handoff')}`",
+            fix=choices.fix,
         )
-    chosen = next((c.workflow for c in results if c.eligible), None) if policy == "auto" else None
+    chosen = eligible[0] if eligible and policy == "auto" else None
     return Handoff(policy, tuple(results), chosen), ignored
 
 
@@ -136,8 +132,7 @@ def _policy_target(handoff: Handoff, policy: str, doc: WorkflowDocument, unit: U
             fix=f"Satisfy the `when` checks of a candidate in [DETAIL], then run"
             f" `{workflow_command(f'handoff --unit {unit.rel}')}`",
         )
-    eligible = [c.workflow for c in handoff.candidates if c.eligible]
-    recommended = [c.workflow for c in handoff.candidates if c.eligible and c.recommended]
+    eligible, recommended = list(handoff.eligible), handoff.recommended
     choices = choice_commands(unit.rel, eligible)
     raise HandoffChoiceRequiredError(
         f"handoff from {doc.id} requires a choice (approvals.{HANDOFF_GATE}=ask); after the user's answer run"

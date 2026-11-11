@@ -28,7 +28,7 @@ from devkit_agt.features.workflow import (
     Workspace,
     load_decisions,
     load_envelopes,
-    read_binding,
+    read_anchor,
     write_binding,
 )
 from devkit_agt.features.workflow.cli import cli
@@ -157,12 +157,12 @@ def test_semantic_argument_checks_are_argument_invalid(tmp_path: Path) -> None:
 def test_bind_unit_rebinds_and_keeps_history(tmp_path: Path) -> None:
     ws = Workspace(_workspace(tmp_path))
     unit = CreateUnitUseCase().execute(ws, "u")
-    old = read_binding(unit.anchor_path)
+    old = read_anchor(unit.anchor_path).binding
     write_binding(unit.anchor_path, type(old)("direct-delivery", (HistoryEntry("triage", "2026-10-12", 2),)))
     rebound = ws.bind_unit(unit.rel)
     assert rebound.binding.workflow == "direct-delivery"
     assert rebound.binding.history == (HistoryEntry("triage", "2026-10-12", 2),)
-    assert read_binding(unit.anchor_path) == rebound.binding
+    assert read_anchor(unit.anchor_path).binding == rebound.binding
 
 
 def test_workspace_loads_each_source_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

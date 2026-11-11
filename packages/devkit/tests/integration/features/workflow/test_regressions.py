@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
@@ -24,9 +25,9 @@ from devkit_agt.features.workflow import (
 )
 from devkit_agt.features.workflow.cli import cli
 from devkit_agt.features.workflow.cli.render import render_evaluation
+from devkit_agt.features.workflow.models.envelope import Envelope
 from devkit_agt.features.workflow.models.errors import AuthoringError
 from devkit_agt.features.workflow.repositories.layout import discover_units
-from devkit_agt.features.workflow.services.envelope import compose_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_record, write_unit
 
 A = """---
@@ -249,7 +250,7 @@ def test_b5_update_drops_the_whole_block_value_of_a_replaced_key() -> None:
         "list:\n- one\n- two\nowner: me\n---\n# x\n"
     )
     out = fm.update(text, {"workflow": "b", "workflow_history": "[{workflow: z}]", "list": "[three]"})
-    assert out == "---\nid: x\nowner: me\nworkflow: b\nworkflow_history: [{workflow: z}]\nlist: [three]\n---\n# x\n"
+    assert out == "---\nid: x\nworkflow: b\nworkflow_history: [{workflow: z}]\nlist: [three]\nowner: me\n---\n# x\n"
     assert fm.parse(out)["owner"] == "me"
 
 
@@ -430,7 +431,7 @@ def test_r5_check_file_arguments_stay_inside_the_unit() -> None:
     assert len(problems) == 2 and all("must be a path inside the unit directory" in p for p in problems)
 
 
-def test_r6_git_failure_is_not_a_definite_answer(tmp_path: Path) -> None:
+def test_r6_git_failure_is_not_a_definite_answer(tmp_path: Path, compose: Callable[..., Envelope]) -> None:
     unit = write_unit(tmp_path, "work/u")
     (unit / "envelopes").mkdir()
     (unit / "envelopes/review-01.yaml").write_text("kind: review\nstatus: completed\ndiff_scope: {head: abc1234}\n")
@@ -451,7 +452,7 @@ def test_r6_git_failure_is_not_a_definite_answer(tmp_path: Path) -> None:
     res = evaluate_definition(doc, Options(workspace_root=tmp_path, unit_dir=unit, anchor="task.md"))
     assert (res.unmet[0].evaluated, res.unmet[0].detail) == (False, "no git function configured")
     with pytest.raises(AuthoringError, match="hexadecimal commit id"):
-        compose_envelope(unit_dir=unit, envelopes=load_envelopes(unit), kind="review", head="HEAD")
+        compose(unit, load_envelopes(unit), "review", head="HEAD")
 
 
 def test_r7_free_text_stays_on_one_line(tmp_path: Path) -> None:

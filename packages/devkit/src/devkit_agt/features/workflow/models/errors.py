@@ -191,7 +191,10 @@ class WorkflowNotSelectedError(WorkflowError):
 
     code = "WORKFLOW_NOT_SELECTED"
     input_error = True
-    fix = "Pass --workflow with a workflow id `uv run devkit workflow validate` lists, or set [workflow].default in .devkit/config.toml"
+    fix = (
+        f"Pass --workflow with a workflow id `{workflow_command('validate')}` lists, or set [workflow].default in"
+        " .devkit/config.toml"
+    )
 
 
 class WorkflowInvalidError(WorkflowError):
@@ -216,7 +219,7 @@ class UnitNotFoundError(WorkflowError):
 
     code = "UNIT_NOT_FOUND"
     input_error = True
-    fix = "Pass --unit an existing unit directory; `uv run devkit workflow list` lists them"
+    fix = f"Pass --unit an existing unit directory; `{workflow_command('list')}` lists them"
 
 
 class UnitExistsError(WorkflowError):

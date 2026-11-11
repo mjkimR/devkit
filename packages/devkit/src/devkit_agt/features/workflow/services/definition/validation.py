@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from devkit_core.core.paths import display_path
+
 from devkit_agt.features.workflow.models.checks import DECLARABLE, Check, CheckClass, Registry
 from devkit_agt.features.workflow.models.definition import (
     HANDOFF_GATE,
@@ -30,7 +32,7 @@ from devkit_agt.features.workflow.models.errors import (
     SharedStageMismatchError,
     WorkflowError,
 )
-from devkit_agt.features.workflow.models.ids import IDENT_HINT, is_ident
+from devkit_agt.features.workflow.models.ids import IDENT_PATTERN, is_ident
 from devkit_agt.features.workflow.repositories.project.roles import is_builtin_role
 
 SHARED_STAGE_FIELDS = ("exit", "gate", "role", "isolation", "skills", "artifacts")
@@ -88,7 +90,7 @@ def validate_definition(
     """
     problems: list[DefinitionProblem] = []
     if not is_ident(doc.id):
-        problems.append(_problem("", "id", f"{doc.id!r} must match {IDENT_HINT}"))
+        problems.append(_problem("", "id", f"{doc.id!r} must match {IDENT_PATTERN}"))
     if doc.schema_version != SCHEMA_VERSION:
         problems.append(
             _problem(
@@ -154,7 +156,7 @@ def _candidate_problems(
     for i, c in enumerate(doc.next):
         where = f"next[{i}]"
         if not is_ident(c.workflow):
-            problems.append(_problem("", f"{where}.workflow", f"{c.workflow!r} must match {IDENT_HINT}"))
+            problems.append(_problem("", f"{where}.workflow", f"{c.workflow!r} must match {IDENT_PATTERN}"))
         elif c.workflow == doc.id:
             problems.append(_problem("", f"{where}.workflow", "a workflow cannot hand off to itself"))
         elif known is not None and c.workflow not in known:
@@ -185,7 +187,7 @@ def _stage_problems(
 ) -> list[DefinitionProblem]:
     problems: list[DefinitionProblem] = []
     if not is_ident(s.id):
-        problems.append(_problem(s.id, "id", f"{s.id!r} must match {IDENT_HINT}"))
+        problems.append(_problem(s.id, "id", f"{s.id!r} must match {IDENT_PATTERN}"))
     if s.id in seen:
         problems.append(_problem(s.id, "id", "duplicate stage id"))
     for key in s.unknown_keys:
@@ -199,7 +201,7 @@ def _stage_problems(
     if s.gate == HANDOFF_GATE:
         problems.append(_problem(s.id, "human_gate", f"{HANDOFF_GATE!r} is reserved for workflow handoff"))
     elif s.gate is not None and not is_ident(s.gate):
-        problems.append(_problem(s.id, "human_gate", f"gate name {s.gate!r} must match {IDENT_HINT}"))
+        problems.append(_problem(s.id, "human_gate", f"gate name {s.gate!r} must match {IDENT_PATTERN}"))
     for fld in ("entry", "exit"):
         for ref in getattr(s, fld):
             try:
@@ -246,12 +248,6 @@ def compare_shared_stages(docs: Iterable[WorkflowDocument]) -> list[SharedStageM
     return problems
 
 
-def _display_path(path: Path | None, root: Path | None) -> str | None:
-    if path is not None and root is not None and path.is_relative_to(root):
-        path = path.relative_to(root)
-    return path.as_posix() if path else None
-
-
 @dataclass(frozen=True)
 class DefinitionReport:
     """The validation result of one loaded definition."""
@@ -267,7 +263,7 @@ class DefinitionReport:
     def to_dict(self, root: Path | None = None) -> dict[str, Any]:
         return {
             "id": self.doc.id,
-            "path": _display_path(self.doc.path, root),
+            "path": display_path(self.doc.path, root),
             "ok": self.ok,
             "errors": [p.to_dict() for p in self.problems],
         }

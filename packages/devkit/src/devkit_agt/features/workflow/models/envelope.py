@@ -9,6 +9,7 @@ from typing import Any
 
 from devkit_agt.features.workflow.models.errors import EnvelopeFormatError
 
+# Kinds whose fields and status the contract fixes, besides review and reverify.
 WORKER, ANSWER, RESOLUTION = "worker", "answer", "resolution"
 
 CLOSABLE = ("review", "challenger")
@@ -134,6 +135,67 @@ class ScopeExtension:
 
     def to_dict(self) -> dict[str, Any]:
         return {"path": self.path, "task": self.task, "reason": self.reason, "requirements": list(self.requirements)}
+
+
+@dataclass(frozen=True)
+class EnvelopeFlags:
+    """The authoring flags of ``envelope new`` and the kind commands, as given; a default is a flag not given.
+
+    The ``*_yaml`` fields hold the text an item-file option (``--findings-file`` and the like) read. ``summary`` and
+    ``status`` are ``None`` when not given, which ``authoring`` tells apart from an empty value.
+    """
+
+    stage: str = ""
+    status: str | None = None
+    summary: str | None = None
+    assumptions: tuple[str, ...] = ()
+    unverified: tuple[str, ...] = ()
+    checks: tuple[str, ...] = ()
+    base: str = ""
+    head: str = ""
+    effort: str = ""
+    findings_yaml: str | None = None
+    source: str | None = None
+    resolve: tuple[str, ...] = ()
+    waive: tuple[str, ...] = ()
+    scope_extensions_yaml: str | None = None
+    questions_yaml: str | None = None
+    answers_to: str = ""
+    answers_yaml: str | None = None
+    settle: tuple[str, ...] = ()
+    problem: str = ""
+    attempts: tuple[str, ...] = ()
+    recovery: str = ""
+    resolves: str = ""
+
+    @property
+    def authoring(self) -> bool:
+        """Whether any flag but ``--stage`` was given: the envelope is then written complete, not as a skeleton."""
+        items = (self.findings_yaml, self.scope_extensions_yaml, self.questions_yaml, self.answers_yaml)
+        return (
+            self.status is not None
+            or self.summary is not None
+            or any(text is not None for text in items)
+            or any(
+                (
+                    self.assumptions,
+                    self.unverified,
+                    self.checks,
+                    self.base,
+                    self.head,
+                    self.source,
+                    self.resolve,
+                    self.waive,
+                    self.answers_to,
+                    self.settle,
+                    self.problem,
+                    self.attempts,
+                    self.recovery,
+                    self.resolves,
+                    self.effort,
+                )
+            )
+        )
 
 
 @dataclass(frozen=True)

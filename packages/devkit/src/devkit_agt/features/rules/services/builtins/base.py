@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import re
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -8,7 +7,7 @@ from typing import Any
 
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH
 
-from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity
+from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity, rule_file
 from devkit_agt.features.rules.models.errors import RuleDefinitionError
 from devkit_agt.features.rules.models.policy import check_inputs
 
@@ -62,9 +61,8 @@ def guide_path(rule: Rule) -> Path | None:
     name = getattr(rule, "guide", None)
     if not isinstance(name, str) or not name:
         return None
-    try:
-        module_file = Path(inspect.getfile(type(rule)))
-    except (TypeError, OSError):
+    module_file = rule_file(rule)
+    if module_file is None:
         return None
     for directory in (module_file.parent, managed_counterpart(module_file.parent)):
         if directory is not None and (path := (directory / name).resolve()).is_file():
@@ -88,10 +86,22 @@ def override_counterpart(path: Path) -> Path | None:
     return _counterpart(path, MANAGED_PATH, OVERRIDES_PATH)
 
 
+def managed_workspace(path: Path) -> Path | None:
+    """The workspace root a path under ``.devkit/managed/`` belongs to (the part of ``path`` before it), else ``None``."""
+    split = _split(path, MANAGED_PATH)
+    return Path(*split[0]) if split is not None else None
+
+
 def _counterpart(path: Path, source: str, target: str) -> Path | None:
+    split = _split(path, source)
+    return Path(*split[0], *PurePosixPath(target).parts, *split[1]) if split is not None else None
+
+
+def _split(path: Path, marker: str) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
+    """The parts of ``path`` before and after the first occurrence of the directory ``marker``, else ``None``."""
     parts = path.parts
-    marker = tuple(PurePosixPath(source).parts)
-    for index in range(len(parts) - len(marker) + 1):
-        if parts[index : index + len(marker)] == marker:
-            return Path(*parts[:index], *PurePosixPath(target).parts, *parts[index + len(marker) :])
+    marked = PurePosixPath(marker).parts
+    for index in range(len(parts) - len(marked) + 1):
+        if parts[index : index + len(marked)] == marked:
+            return parts[:index], parts[index + len(marked) :]
     return None
