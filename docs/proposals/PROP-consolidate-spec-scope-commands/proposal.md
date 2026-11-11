@@ -2,7 +2,7 @@
 id: PROP-consolidate-spec-scope-commands
 title: Consolidate the spec scope commands around collect
 summary: Retires or folds the devkit spec scope register, query, compare and hidden update commands and the second paths-changed pipeline into the Host's collect observation, keeping release, sweep and the journal.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: capabilities/collaboration/
 priority: low                         # critical | high | medium | low
