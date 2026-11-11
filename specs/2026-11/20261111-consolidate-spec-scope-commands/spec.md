@@ -1,208 +1,124 @@
 ---
 id: SPEC-consolidate-spec-scope-commands
 title: Consolidate the spec scope commands around collect
-summary: Retires the devkit spec scope register, query, compare and hidden update commands with the registry update path and the second paths-changed pipeline, narrowing scope observation to collect beside release and sweep.
+summary: Retires the devkit spec scope register, query, compare and hidden update commands with the registry update path, the journal and the second paths-changed pipeline, narrowing scope observation to collect beside release and sweep.
 status: planned
 created: 2026-11-11
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-COLL-work-scope-registry
+  - CAP-HARN-command-mount
+  - CAP-HARN-agent-guidance
+  - CAP-DLV-proposal-planning
+related_usecases:
+  - UC-run-parallel-work-safely
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-consolidate-spec-scope-commands] Consolidate the spec scope commands around collect
 
 ## 1. Problem Statement & Motivation
 
 Handed off from proposal PROP-consolidate-spec-scope-commands on 2026-11-11.
+
 - **Preserved Materials**: `docs/materials/2026-11/20261111-consolidate-spec-scope-commands`
-- Target Docs Blueprint: `PROP-consolidate-spec-scope-commands-target` (Living Spec targets for this plan and reconcile.md)
+  (`scope-command-callers.md`: callers, the update write path, codes and the two pipelines at the Planning head).
+- **Target Docs Blueprint**: `PROP-consolidate-spec-scope-commands-target` (Living Spec targets for this plan and
+  `reconcile.md`).
+- **Decision**: `ADR-collect-only-scope-observation`, superseding in part `ADR-worktrees-and-scope`.
 
-### 1. Background & Hypothesis
+Guidance uses only `devkit spec scope collect` (spec-orchestrate), plus `sweep` and `release` (spec worktree
+reference, spec-integrate). `register`, `query` (with its `--history` journal reader), `compare` and the hidden
+`update` have no documented caller outside `CAP-COLL-work-scope-registry`, yet they keep the registry write path
+(the update ACK, `--request-id` replay, journal events) and a second "paths changed since base" pipeline
+(`observe_git` beside collect's observation service). `collect --mode` selects a depth no caller varies: every mode
+already reads the registry snapshots, and the default is the only value guidance passes.
 
-Guidance uses only `devkit spec scope collect` (spec-orchestrate), plus `sweep` and `release` (worktree reference).
-`register`, `query`, `compare` and the hidden `update` have no documented caller outside `CAP-COLL-work-scope-registry`,
-yet they keep the registry write path (update ACK, `--request-id` idempotency, journal events) and a second
-"paths changed since base" pipeline (code-pass SP-1). `collect` exposes `--mode snapshot|refs`, `--base`, `--fetch`
-and two timeouts that no caller varies (C3-3). `query --history` switches the command into a journal reader with its
-own paging grammar (C3-6). Sources: `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md` C3-2, C3-3, C3-6; `docs/materials/2026-11/20261111-review-refactor-code-pass/report.md` SP-1.
-
-Hypothesis: one observation entry (`collect`) plus `release` and `sweep` covers every documented workflow with one
-pipeline.
+One observation entry (`collect`) plus `release` and `sweep` covers every documented workflow with one pipeline.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Consolidate the spec scope commands around collect so that system capabilities are extended.
+- **US-1**: As the orchestrating Host agent, I want `devkit spec scope` to offer only `collect`, `release` and the
+  hidden `sweep`, so that no command, option or fix string points me at a surface nobody needs.
+- **US-2**: As the Host, I want creation registration and `collect` to share one implementation of the paths a task
+  changed, so that a snapshot and a live observation of the same task cannot disagree on how the paths are read.
+- **US-3**: As a maintainer, I want the registry without its update path and journal, so that its records, locking
+  and codes are only what `collect`, `release`, `sweep` and the post-finish cleanup use.
+
+`UC-run-parallel-work-safely` changes: step 1 compares planned declarations through `collect` once a unit has a
+`plan-*` or `dev-*` source, and queued drafts are not observed.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: no replacement for `compare` or `query --history`, and no `scope history` command.
+2. **Scope Excluded**: no change to `collect`'s inventory, base selection, range rules, horizons, budgets, limits,
+   report shape (apart from the removed `mode` field) or its read-only access to the registry.
+3. **Scope Excluded**: no migration or rewrite of existing records or of an existing `journal.jsonl`; old records stay
+   readable as they are and an old journal file is neither read nor removed.
+4. **Scope Excluded**: no change to the `devkit.post_finish` extension's `ScopedCleanup` contract, its targets or its
+   notices, and no change to `packages/devkit/` or `packages/devkit-dist/`.
+5. **Scope Excluded**: no change to `release` or `sweep` options, outputs or exit codes; their journal side effect
+   goes with the journal.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Only collect, release and sweep remain
 
-## 5. Carried Proposal Notes
+- **Given** the installed `devkit spec` CLI
+- **When** `devkit spec scope --help` is read, and `devkit spec scope register`, `query`, `compare` or `update` is run
+- **Then** the help lists `collect` and `release` (and no other visible command), `sweep` stays a hidden command, each
+  removed name exits 2 with Click's `No such command` usage error, and no source or test asserts a `[SCOPE_ACK` line.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Creation registration records declarations and dirty paths through the observation service
 
-### 2. Technical Spike Questions
+- **Given** a linked worktree on `dev-<slug>` with uncommitted handoff output (a new file, a staged change and an
+  unstaged change) and one untracked path whose name is outside the path contract (contains a colon or a glob
+  character)
+- **When** `devkit spec proposal handoff` or `devkit spec new` registers the unit
+- **Then** the stored record holds the bundle's declared scopes, every valid dirty path as `observed`, the
+  declaration's unresolved inputs plus one `invalid-path` entry (source `observed`) for the invalid name,
+  `base_revision` = HEAD at creation and `base_ref` = the base checkout's branch, and no `missing-base-ref`,
+  `missing-base-revision` or `unknown-base-revision` reason; the `[SCOPE: ...]` line and JSON `scope` object keep their
+  fields and the commands exit 0 as before.
 
-- **Q1**: Which commands does any Host procedure, extension or CI still need (`register` is reached internally by handoff)?
-- **Q2**: `ADR-worktrees-and-scope` retains the hidden `update` and its ACK contract, and decides the collect modes. Which clauses need a superseding decision?
-- **Q3**: Should `compare` fold into collect's declared and future evidence, and should the journal become `scope history`?
+### [AC-03] Collect observes every source without a mode
 
-#### Answers from Planning
+- **Given** a registered `dev-*` worktree, an unregistered `dev-*` branch and a `plan-*` ref
+- **When** `devkit spec scope collect` runs with no options
+- **Then** it reports the snapshot, ref and worktree observations, the registered one with `range_method` =
+  `registered-cap` and the unregistered ones with `branch-relative`, the same horizons and coverage the former
+  default `worktrees` mode reported, and its JSON has no `mode` key.
 
-Evidence: `docs/materials/2026-11/20261111-consolidate-spec-scope-commands/scope-command-callers.md` (scout at the Planning head).
+### [AC-04] Collect options
 
-- **Q1**: Only `collect` (spec-orchestrate, `CAP-HARN-agent-guidance`), `release` and `sweep` (spec worktree
-  reference, spec-integrate, fix strings) have callers. devkit-agt reaches the post-finish cleanup through the
-  `devkit.post_finish` entry point, which uses the `Registry` operations `query`, `release` and `sweep`, never the
-  CLI. Creation registration calls `RegisterScopeUseCase` in-process. No CI job, script, other package or guidance
-  invokes `register`, `query`, `query --history`, `compare` or `update`; `Registry.update`, `request_id` replay, the
-  ACK model, the record's `last_*` fields and the journal's `update` events serve only the hidden `update`.
-- **Q2**: In `ADR-worktrees-and-scope` §4 "Host-owned scope observation", the collect-modes clause and the clause
-  keeping the maintenance `update` directly callable with its ACK contract; in §6, the clause that the maintenance
-  ACK tests remain regression checks (the ownership and post-finish cleanup tests stay). The `query`/history wording
-  of §4 "Registry storage and read access", §5 and §6 is reworded to the remaining read surfaces (collect and the
-  `Registry` reads of release, sweep and cleanup) under the ADR-consolidation rule.
-  `ADR-collect-only-scope-observation` supersedes the clauses in part; opt-in fetch, deadlines, read-only
-  collection, `--base` (answer q4) and the post-finish cleanup stay.
-- **Q3**: Decided by the user (§6): `compare` is retired without a replacement (q2), and the journal is removed with
-  its reader (q1).
+- **Given** the `collect` command
+- **When** it runs with `--mode <any value>`
+- **Then** it exits 2 with Click's `No such option` usage error; `--base`, `--fetch`, `--timeout` and
+  `--source-timeout` keep their validation (`ARGUMENT_INVALID`, exit 2, for a budget outside 1..300 or an unconfigured
+  remote) and their effects.
 
-### 3. Proposed Design & Impact
+### [AC-05] Records and journal from before the change
 
-One feature spec in devkit-spec. Retirement, collect narrowing and the pipeline consolidation change one capability
-(`CAP-COLL-work-scope-registry`), one feature package and their tests together, and the pipeline consolidation
-depends on `update` going, so no decomposition is needed. The design below folds the user's answers recorded in §6.
+- **Given** a registry namespace holding a record written before the change (with `last_request_id`, `last_added`,
+  `last_removed` and observed scopes) and an existing `journal.jsonl`
+- **When** `collect`, `release`, `sweep --apply` and the post-finish cleanup run against it
+- **Then** they read the record without a new warning, keep their outputs, codes and the `ScopedCleanup` contract,
+  write no journal line, and leave `journal.jsonl` byte-identical; a record written by creation registration after the
+  change still carries the `last_*` keys with their zero values (schema version 1 unchanged).
 
-- **Retire** `devkit spec scope register`, `query` (and `--history`), `compare` and hidden `update`, with
-  `UpdateScopeUseCase`, `Registry.update`, `request_id` replay, the `Ack` model and `[SCOPE_ACK]`,
-  `QueryScopesUseCase`, `CompareScopesUseCase`, `services/compare.py` once nothing uses them, `_register_guidance`,
-  and the codes `SPEC_SCOPE_ACK_FAILED`, `SPEC_SCOPE_TOKEN_MISSING` and `SPEC_SCOPE_RECORD_MISSING`. Keep `collect`,
-  `release`, hidden `sweep`, creation registration and the post-finish cleanup.
-- **One paths-changed pipeline (SP-1, answer q3)**: creation registration keeps recording the declarations, unresolved inputs,
-  base anchors (`base_revision` = HEAD at creation, `base_ref`) and the worktree's staged, unstaged and untracked
-  paths at creation (the uncommitted handoff output: promoted ADRs, supersession edits, moved materials, and any other
-  dirty file), but obtains the dirty paths from collect's observation service (`services/observation.py`), not from
-  `observe_git`. Its committed range is empty by construction (the start is the registration HEAD), so
-  `observe_git`, its range logic and its registry-side runner go. Collect is the only implementation of the committed
-  range and keeps the §4.1 registration cap and intersection rule for registered observations and the
-  branch-relative range otherwise. Paths the observation service reports as invalid are stored as unresolved
-  `invalid-path` instead of being dropped (rule 2).
-- **Narrow `collect`** to `devkit spec scope collect [--base <ref>] [--fetch <remote>]... [--timeout <s>]
-  [--source-timeout <s>]` (`--base` kept, answer q4): it always observes records, local and remote-tracking `plan-*`/`dev-*` refs and
-  accessible worktrees. `--mode` goes, with the JSON `mode` field and the fix strings that named it.
-- **Journal (answer q1)**: removed with its reader: no `journal.jsonl` appends, no `Event` model, journal
-  lock deadline, `SPEC_SCOPE_JOURNAL_UNAVAILABLE` or `SPEC_SCOPE_JOURNAL_LINE_INVALID`. An existing `journal.jsonl`
-  is left in place, unread and untouched.
-- **Records**: existing records may carry `last_request_id`, `last_added`, `last_removed` and observed scopes from
-  earlier updates; they stay readable and the `last_*` fields are no longer written.
-- **Documents**: listed in `target-docs.md`, including CAP-COLL §2, §3 rules 5, 6 and 8, §4.1 (the Git-side reasons,
-  the update re-detection paragraph and the register/update recollection sentence), §4.3 (record fields, operations,
-  deadline, journal, and the read-access MUST re-anchored from `query` to collect and the registry reads of
-  release, sweep and cleanup), §4.4-§4.6, §4.8, §4.9; CAP-HARN-command-mount §4.2 and §4.6; CAP-HARN-agent-guidance;
-  CAP-DLV-proposal-planning; UC-run-parallel-work-safely; `ADR-worktrees-and-scope`. Code-side: the spec-orchestrate
-  skill source, the target-docs scaffold comment, the `registered_dict` docstring and `.devkit/architecture.toml`'s
-  `usecase_exceptions` entries for `query._record_warnings` and `query._spec_dir`.
+### [AC-06] Codes and fix strings name only what exists
 
-#### Expected acceptance scenarios
+- **Given** the scope feature, its errors in `devkit_spec.base.errors` and the post-finish cleanup
+- **When** the codes test compares the `SPEC_SCOPE_*` codes (plus `SPEC_POST_FINISH_CLEANUP`) those classes define
+  with the code rows of `CAP-COLL-work-scope-registry` §4.8, and a test scans every `fix` of those classes and every
+  fix string in the scope feature
+- **Then** both sets are equal in both directions (`SPEC_SCOPE_ACK_FAILED`, `SPEC_SCOPE_TOKEN_MISSING`,
+  `SPEC_SCOPE_RECORD_MISSING`, `SPEC_SCOPE_JOURNAL_UNAVAILABLE` and `SPEC_SCOPE_JOURNAL_LINE_INVALID` are gone from
+  both), and no fix names `scope register`, `scope query`, `scope compare`, `scope update`, `--request-id`,
+  `--task-id` (outside `release`) or `--mode`.
 
-- **AC-01**: Given the CLI, when `devkit spec scope --help` is read or `register`, `query`, `compare` or `update` is
-  run, then only `collect`, `release` (and hidden `sweep`) exist and the removed names fail as Click usage errors
-  (exit 2, "No such command"), with no `[SCOPE_ACK]` anywhere.
-- **AC-02**: Given a linked worktree with uncommitted handoff output, when `devkit spec proposal handoff` or
-  `devkit spec new` registers the unit, then the record holds the declared scopes, the dirty paths at creation as
-  `observed`, the declaration unresolved inputs (plus `invalid-path` for invalid dirty paths), `base_revision` and
-  `base_ref`, and no committed-range reason; the `[SCOPE: ...]` line and JSON `scope` object keep their shape and the
-  commands their exit codes.
-- **AC-03**: Given registered and unregistered `dev-*`/`plan-*` sources, when `collect` runs with no options, then it
-  reports snapshot, ref and worktree observations with the §4.1 cap for registered ones and `branch-relative` for
-  unregistered ones, horizons and coverage as the current `worktrees` mode reports them.
-- **AC-04**: Given `collect --mode <any>`, the CLI refuses the unknown option as a usage error; `--base`, `--fetch`,
-  `--timeout` and `--source-timeout` keep their validation and effects.
-- **AC-05**: Given a registry with records written before the change (with `last_*` fields and observed scopes) and an
-  existing `journal.jsonl`, when `collect`, `release`, `sweep --apply` and the post-finish cleanup run, then they read
-  the records without new warnings, keep their outputs, codes and the `ScopedCleanup` contract, and leave
-  `journal.jsonl` unchanged.
-- **AC-06**: CAP-COLL §4.8 lists exactly the `SPEC_SCOPE_*` codes the scope feature and the cleanup define, checked
-  by a test that compares the defined codes with the table rows in both directions; every remaining `[FIX]` in the
-  scope feature names only existing commands and options (a test scans them for `scope register|query|compare|update`,
-  `--request-id`, `--task-id` outside `release`, and `--mode`).
+## 5. Decisions and assumptions
 
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr consolidate-spec-scope-commands "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept consolidate-spec-scope-commands --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff consolidate-spec-scope-commands.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
-
-### 5. Planning decisions
-
-#### Collect options
-
-`--mode` goes: guidance passes only the default, every mode already reads the registry snapshots (so
-`--mode snapshot` never rescued `SPEC_SCOPE_COLLECTION_FAILED`), and the only other uses are tests and two fix
-strings. The `SPEC_SCOPE_COLLECTION_FAILED` fixes stop naming a mode; the report-metadata limit fix says to report
-the limit. `--fetch` stays: it is the only bounded remote refresh (configured remotes, `plan-*`/`dev-*` namespace, no
-tags or pruning) that the ADR keeps for multi-PC visibility. `--timeout` and `--source-timeout` stay:
-`SPEC_SCOPE_COLLECTION_PARTIAL` names them as the recovery for `source-timeout`; its fix stops offering them for
-`result-limit`, which a budget does not fix. `--base` stays (q4): it is the only override for remote-tracking
-`plan-*`/`dev-*` refs, which carry no `devkitBase` marker, when `<remote>/HEAD` and the main checkout branch differ.
-C3-3 is therefore taken for `--mode` only.
-
-#### Creation registration
-
-Creation registration keeps its best-effort, verbose-only failure handling and its Git calls under the
-`[tool.spec.scope] timeout`. The Git-side unresolved reasons of §4.1 (`missing-base-ref`, `missing-base-revision`,
-`unknown-base-revision`) belonged to the committed range and are no longer stored on new records; collect reports an
-unusable base as `unknown-base`.
-
-#### Codes and ownership lookup
-
-`own()` returns no record when the token or its record is gone; its only remaining caller, the post-finish cleanup,
-already treats both as nothing to release. `SPEC_SCOPE_TOKEN_MISSING` and `SPEC_SCOPE_RECORD_MISSING` therefore go
-with `SPEC_SCOPE_ACK_FAILED` and the two journal codes (q1). Kept:
-`SPEC_SCOPE_STALE_REVISION` (sweep), `SPEC_SCOPE_TOKEN_MISMATCH` (`release --task-id`), `SPEC_SCOPE_RECORD_INVALID`,
-`SPEC_SCOPE_TIMEOUT` (fix without the `--request-id` retry), `SPEC_SCOPE_NOT_A_WORKTREE`,
-`SPEC_SCOPE_SPEC_NOT_FOUND`, `SPEC_SCOPE_INPUT_INVALID`, `SPEC_SCOPE_LOCK_UNSUPPORTED`,
-`SPEC_SCOPE_NAMESPACE_INVALID`, `SPEC_SCOPE_SHARED_PATH_UNAVAILABLE`, the collection codes and
-`SPEC_POST_FINISH_CLEANUP`. `SPEC_SCOPE_TOKEN_EXISTS`, `SPEC_SCOPE_TASK_EXISTS` and `SPEC_SCOPE_SHARED_WORKTREE` stay
-as the codes of creation registration's verbose diagnostics; their fixes stop naming `scope query`, `scope update`
-and `--task-id`. The sweep `--expect` argument fix names "a previous sweep". §4.8 marks the creation-only codes as
-verbose diagnostics of automatic registration.
-
-#### Use case wording
-
-`compare`'s retirement (q2) leaves queued Backlog drafts and drafts accepted with `--direct` on the base unobserved: collect
-compares declarations once a unit has a `plan-*` or `dev-*` source. UC-run-parallel-work-safely step 1 and scenario 1
-and CAP-DLV-proposal-planning say so instead of promising a comparison of every planned declaration. The practical
-loss is small: `future`-only overlap does not serialize Planning, and a handed-off `dev-*` source is observed.
-
-#### Verification
-
-Tests that exercise only retired commands are deleted; tests that used `register`, `query` or `update` as fixtures
-(scope `test_localfs.py` with `tests/support/spec_support/scope_contract.py`, delivery `test_cleanup.py`, e2e
-`test_integration.py`) register through the creation path or the `Registry` directly. The `observe_git` range tests
-are compared with collect's range tests before removal; a range case collect does not cover moves to the collection
-tests. The help-hidden assertion in `tests/integration/package/test_help_and_notices.py` changes with the command set.
-`just test-affected` covers the package. `dev_effort: medium` stays: one package and capability, a contract change
-without external consumers and no persisted-data migration (old records stay readable).
-
-### 6. Open questions
-
-None open. The user decided the first Planning turn's questions (historical Git `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-consolidate-spec-scope-commands/envelopes/answer-01.yaml`); each chose the
-recommended option, folded above:
+### Decided in Planning (user)
 
 - **q1 Journal**: the scope journal and its reader are removed, together with the journal error codes.
 - **q2 compare**: `devkit spec scope compare` is retired with no replacement.
@@ -210,3 +126,40 @@ recommended option, folded above:
   collect's observation service.
 - **q4 `--base`**: the `collect --base` option is kept.
 
+Historical record: `eb2d5dba4bfd08a06e492a0d427ad4a7afa27309:docs/proposals/PROP-consolidate-spec-scope-commands/envelopes/answer-01.yaml`.
+
+### Planning decisions carried
+
+- **Collect options**: `--mode` goes with the JSON `mode` field; `SPEC_SCOPE_COLLECTION_FAILED` fixes stop naming a
+  mode, and the report-metadata limit fix says to report the limit. `SPEC_SCOPE_COLLECTION_PARTIAL` offers the budgets
+  for `source-timeout` only, not for `result-limit`. `--fetch`, `--timeout`, `--source-timeout` and `--base` stay.
+- **Creation registration** keeps its best-effort, verbose-only failure handling and runs its Git reads under the
+  `[tool.spec.scope] timeout`. Its committed range is empty by construction, so the Git-side unresolved reasons of
+  §4.1 are no longer stored on new records; collect reports an unusable base as `unknown-base`.
+- **Codes**: `own()` returns no record when the token or its record is gone; `SPEC_SCOPE_TOKEN_MISSING`,
+  `SPEC_SCOPE_RECORD_MISSING`, `SPEC_SCOPE_ACK_FAILED` and the two journal codes go. `SPEC_SCOPE_TOKEN_EXISTS`,
+  `SPEC_SCOPE_TASK_EXISTS` and `SPEC_SCOPE_SHARED_WORKTREE` stay as verbose diagnostics of creation registration,
+  their fixes no longer naming `scope query`, `scope update` or `--task-id`. `SPEC_SCOPE_SPEC_NOT_FOUND` stays defined
+  and documented: creation registration raises it internally for a missing bundle and swallows it.
+- **Use case wording**: queued Backlog drafts and drafts accepted with `--direct` on the base stay unobserved until
+  they have a `plan-*` or `dev-*` source.
+
+### Assumptions (Development)
+
+- **A1 Superseded ADR body**: the Development write scope admits only the "Superseded in part" line of
+  `ADR-worktrees-and-scope`, not its body. The `query`/history mentions of its §4, §5 and §6 are therefore re-anchored
+  in that line (they now mean `collect` and the registry reads of `release`, `sweep` and the post-finish cleanup)
+  instead of being reworded in place.
+- **A2 Records keep the retired keys**: records stay schema version 1 and creation keeps writing `last_request_id`,
+  `last_added` and `last_removed` with empty and zero values, so readers of either age see one shape; nothing reads
+  them.
+- **A3 Dirty-path runner**: creation registration calls the observation service's dirty-path listing with the
+  command's `Deadline` (`[tool.spec.scope] timeout`), so a timeout still fails the registration (swallowed as a
+  verbose diagnostic) instead of returning partial coverage.
+- **A4 Sweep and release journal**: their journal appends were side effects only; removing them changes neither their
+  output nor their exit code.
+
+## 6. Source feedback
+
+None: the proposal was drafted from `docs/materials/2026-11/20261111-review-refactor-guidance-cli/report.md` (C3-2,
+C3-3, C3-6) and `docs/materials/2026-11/20261111-review-refactor-code-pass/report.md` (SP-1), not from feedback IDs.
