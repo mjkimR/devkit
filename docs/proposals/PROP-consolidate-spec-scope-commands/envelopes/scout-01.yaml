@@ -1,0 +1,29 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:17:45.824533Z'
+status: completed
+summary: Retired commands have no caller outside the scope feature; the update write path has no other user; creation registration becomes the only caller of the registry pipeline. Evidence in materials/scope-command-callers.md.
+findings:
+- issue: register, query, query --history, compare and hidden update have no CLI caller in guidance, CI or other packages; Registry.update, request_id replay, the Ack model and update journal events serve only the hidden update.
+  evidence: materials/scope-command-callers.md, Callers per command and The update write path
+  suggested_action: Retire them; keep creation registration, release, sweep, cleanup and journal writes.
+  resolution: open
+- issue: With update retired, record scopes freeze at creation; collect reads them as snapshot evidence in every mode.
+  evidence: services/collection.py discover/snapshot; CAP-COLL 4.9
+  suggested_action: State snapshot evidence as creation-time only in CAP-COLL 4.9 and the PADR.
+  resolution: open
+- issue: The two paths-changed pipelines differ in base selection, fork rule, invalid-path handling, runner and timeout behavior; after retirement only creation registration uses observe_git.
+  evidence: materials/scope-command-callers.md, The two paths-changed pipelines
+  suggested_action: Unify on the collection implementation, keeping the 4.1 registration cap.
+  resolution: open
+- issue: Collect guidance passes only the default mode; fix strings name --timeout, --source-timeout and --mode snapshot.
+  evidence: spec-orchestrate SKILL source; errors.py; services/collection.py
+  suggested_action: Narrow options and rewrite the fix strings together.
+  resolution: open
+assumptions:
+- Caller classification by reading source, tests and guidance; no tests run
+unverified_areas:
+- Test counts are approximate
+checks: {}
