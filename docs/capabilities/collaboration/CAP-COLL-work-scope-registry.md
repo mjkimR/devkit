@@ -243,9 +243,9 @@ sentinel per line, warnings follow on stderr, and JSON is one object with the sa
 | `devkit spec scope register --spec <dir> [--task-id <id>]` | Registers this worktree's task (task ID default: the spec ID) and prints its token once. |
 | `devkit spec scope query [--spec <dir>]` | Lists the namespace's records and this worktree's overlaps with the others (every pair when this worktree registered nothing, or its record is gone or may be unreadable). `--spec` compares that bundle's declared scope with every record not owned here, for a task about to start. |
 | `devkit spec scope query --history [--task <id>] [--limit <1-100>] [--cursor <cursor>]` | Prints the most recent 50 matching events in journal order by default. `--task` keeps events whose task ID or slug matches before paging; `--cursor` continues to older events using `next_cursor`. |
-| `devkit spec scope update --spec <dir> [--request-id <id>]` | Recollects the declared and observed scope, writes it, prints the overlaps and the ACK. |
+| `devkit spec scope update --spec <dir> [--request-id <id>]` (hidden) | Recollects the declared and observed scope, writes it, prints the overlaps and the ACK. |
 | `devkit spec scope release [--task-id <id>]` | Removes this worktree's record and token. Without a token it succeeds and changes nothing, with or without `--task-id`; with `--task-id`, the token must own that record. A token whose record is already gone is removed, unless an unreadable record file may hold that record. |
-| `devkit spec scope sweep [--apply] [--expect <task>=<rev>]...` | Reports stale, unverifiable and unreadable records; `--apply` removes stale ones whose revision is unchanged (without `--expect`, the revisions this command read first). |
+| `devkit spec scope sweep [--apply] [--expect <task>=<rev>]...` (hidden) | Reports stale, unverifiable and unreadable records; `--apply` removes stale ones whose revision is unchanged (without `--expect`, the revisions this command read first). |
 
 History cursors are bound to the namespace, task filter and preceding journal content. New appended events do not shift older pages. Invalid or stale cursors fail with `ARGUMENT_INVALID`; restart without a cursor. `next_cursor` is null after the oldest page. Journal-line warnings remain visible for every page.
 

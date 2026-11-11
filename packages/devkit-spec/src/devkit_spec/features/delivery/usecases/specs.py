@@ -58,7 +58,7 @@ def _task_kind_workflow(task_kind: str, workflow: str | None) -> str | None:
         raise ArgumentError(
             "--task-kind and --workflow both select the workflow; give one",
             target_files=["--task-kind"],
-            fix="Pass --task-kind feature|bugfix, or --workflow <id> for another workflow, not both",
+            fix="Drop --workflow to select by --task-kind, or drop --task-kind to keep the explicit --workflow",
         )
     if not task_kind.strip():
         raise ArgumentError(

@@ -2,7 +2,7 @@
 
 ``devkit sync``, ``add``, ``remove``, ``list``, ``status`` and the other
 distribution commands sit at the top level, with ``devkit host`` (native host
-hooks and the MCP server). ``devkit --version`` prints one
+lifecycle hooks; the MCP server is ``devkit mcp``, from ``devkit-mcp``). ``devkit --version`` prints one
 ``[VERSION: devkit <version>]`` line with the ``devkit-dist`` version.
 
 Commands load lazily: the root group knows each command only as a

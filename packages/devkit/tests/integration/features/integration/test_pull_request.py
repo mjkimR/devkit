@@ -438,7 +438,7 @@ def test_incomplete_cleanup_is_a_warning_and_later_scopes_still_run(remote_servi
     assert result.steps["post_finish"] == "failed" and result.failing_operation == "post_finish"
     warning = next(n for n in result.notices if n.code == "INTEGRATION_CLEANUP_INCOMPLETE")
     assert warning.level is Level.WARNING and "a-first" in warning.render()
-    assert "devkit integration prepare dev-demo --route pull-request" in warning.fix
+    assert "owning command" in warning.fix and "integration prepare" not in warning.fix  # the branch is gone
 
 
 def test_malformed_cleanup_result_is_a_contract_error(remote_service, monkeypatch):

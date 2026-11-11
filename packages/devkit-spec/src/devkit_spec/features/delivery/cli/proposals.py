@@ -185,7 +185,9 @@ def proposal_group() -> None:
 @click.argument("slug")
 @click.option("--title", "-t", default=None, help="Proposal title [default: the slug]")
 @click.option("--target-area", "-a", default=None, help="Capability area the proposal targets (capabilities/<area>/)")
-@click.option("--milestone", "-m", default=None, help="Existing global MS-<slug> milestone ID")
+@click.option(
+    "--milestone", "-m", default=None, help="Existing MS-<slug> milestone ID at the global or a namespace roadmap root"
+)
 @click.option(
     "--task-kind",
     default=None,
@@ -342,7 +344,8 @@ def padr_cmd(
     type=click.Choice(["accept_only", "accept_and_handoff"]),
     default=None,
     help="Compose the Host-authorized lifecycle from the retained base: accept and integrate plan-<slug> "
-    "(accept_only), or also start Development (accept_and_handoff) [default: the basic acceptance]",
+    "(accept_only), or also hand off to Development, leaving the handoff not started (accept_and_handoff) "
+    "[default: the basic acceptance]",
 )
 @click.option(
     "--effort",

@@ -40,7 +40,7 @@ def _utf8_output() -> None:
 
 @click.group()
 def cli() -> None:
-    """Host adapters: inspect lifecycle hooks and DispatchHostHook native events to services."""
+    """Host adapters: inspect lifecycle hooks and dispatch native host events to services."""
 
 
 @cli.command()

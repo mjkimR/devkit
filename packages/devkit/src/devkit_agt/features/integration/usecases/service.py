@@ -558,11 +558,6 @@ class IntegrationService:
                 "Git integration completed; scoped post-finish cleanup remains",
                 *[name for name, state in result.cleanup_steps.items() if state != "completed"],
             )
-            warning.fix = (
-                "Inspect the approved cleanup targets and actual Git or PR state, resolve the reported condition, then"
-                f" run `{prepare_command(request.context.finish.branch, request.route)}` and, after Host approval,"
-                " integrate with the digest it prints"
-            )
             result.notices.append(warning)
 
     def _land(

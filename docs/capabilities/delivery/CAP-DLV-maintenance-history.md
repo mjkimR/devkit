@@ -48,7 +48,7 @@ Commands are under `devkit maintenance history`; each accepts `--workspace-root`
 | Command | Input and result |
 | --- | --- |
 | `init` | `--authority`, optional repository/branch; `HISTORY_BRANCH_READY` with root/head SHA and authority; no local file |
-| `start` | `--playbook`, `--scope`, `--into`, `--report`; optional IANA `--timezone`, repeated `--prior-run`, `--supersedes`; `HISTORY_RUN_STARTED` |
+| `start` | `--playbook`, `--scope`, `--into`, `--report`; optional repository, IANA `--timezone`, repeated `--prior-run`, `--supersedes`; `HISTORY_RUN_STARTED` |
 | `finish` | `--run`, `--outcome`; optional `--result`, fixed `--report`, repeated `--file`, `--applied-commit`, `--follow-up`; `HISTORY_RUN_FINISHED` |
 | `publish` | `--run`, `--authority`, optional repository/branch and repeated `--file` selecting frozen files; `HISTORY_PUBLISHED` |
 | `update` | `--run`, `--authority`, `--integration-state`, optional repeated `--applied-commit`; `HISTORY_RUN_UPDATED` |
