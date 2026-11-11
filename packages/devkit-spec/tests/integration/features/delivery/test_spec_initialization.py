@@ -79,7 +79,8 @@ def test_spec_new_feature_task_kind_binds_like_no_option(tmp_path: Path) -> None
 
 
 @pytest.mark.parametrize(
-    "options", [["--task-kind", "bugfix", "--workflow", "sdd-spec-bugfix"], ["--task-kind", "chore"]]
+    "options",
+    [["--task-kind", "bugfix", "--workflow", "sdd-spec-bugfix"], ["--task-kind", "chore"], ["--task-kind", " "]],
 )
 def test_spec_new_task_kind_refusals_write_nothing(tmp_path: Path, options: list[str]) -> None:
     task = development_worktree(tmp_path)

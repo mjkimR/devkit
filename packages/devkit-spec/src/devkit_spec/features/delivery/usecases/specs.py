@@ -60,5 +60,11 @@ def _task_kind_workflow(task_kind: str, workflow: str | None) -> str | None:
             target_files=["--task-kind"],
             fix="Pass --task-kind feature|bugfix, or --workflow <id> for another workflow, not both",
         )
+    if not task_kind.strip():
+        raise ArgumentError(
+            "--task-kind is empty",
+            target_files=["--task-kind"],
+            fix="Pass --task-kind feature or bugfix, or omit it for feature",
+        )
     kind = require_task_kind(task_kind)
     return spec_workflow(kind) if kind != DEFAULT_TASK_KIND else None
