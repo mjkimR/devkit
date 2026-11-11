@@ -1,0 +1,49 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-11-11T03:14:31.192848Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Folded in 008abf9c: helper narrowed to safe_memo_path and envelope_problem (size S), CAP-DOCS citations fixed to 3.4.3-3.4.5, log comparison as logger/level/message without exc_info, public-entry-point harness committed before the first edit. Findings 1 and 3 stay open as decision D1 (q1).'
+findings:
+- issue: 'The shared envelope read changes one memo outside D1: extra top-level keys and NaN are handled differently'
+  evidence: memo.py:504 exact key set vs facts.py:131-136 value.get() tolerating extra keys; memo.py:493,519-520 parse_constant vs facts.py:130 plain json.loads; materials list extra-key tolerance under 'What is the same'
+  failure_condition: One shared rule makes agt discard files with extra keys or NaN in skipped entries, or docs accept them; the fixture differential reports a regression the proposal rules out
+  suggested_action: 'Decision needed: add envelope strictness to D1; recommend converging on the strict docs rule (neither writer produces extra keys or NaN); move the row to ''differs'''
+  resolution: open
+  severity: P2
+- issue: Envelope read/write add indirection, not shared hardening
+  evidence: path checks memo.py:390-407 and facts.py:90-108; envelope checks 8-10 lines; writes differ in ordering (memo.py:473 vs facts.py:67) and skip rule (memo.py:469 vs facts.py:193)
+  failure_condition: The full helper needs ordering, create, strictness, NaN and reason parameters while each memo keeps its own skip and logging; only path safety actually lives once
+  suggested_action: Share only safe_memo_path(root, parts, *, create) plus an optional pure envelope_problem check; keep reads, serialization and writes local; resize to S
+  resolution: resolved
+  severity: P2
+- issue: 'D1: converging on the agt path rule requires docs to create directories when it writes'
+  evidence: facts.py:99-101 returns None for a missing component unless create=True; docs relies on atomic_write_bytes creating docs/ (files.py:68); CAP-DOCS-document-model 3.4.5 creates a missing memo silently
+  failure_condition: ParseMemo.open with create=False on a fresh workspace returns None and the docs memo is never created again
+  suggested_action: 'Decision needed (D1): recommend converging, with docs passing create for a writing load; update the path sentence in CAP-DOCS-document-model 3.4.3'
+  resolution: open
+  severity: P2
+- issue: Contract citations point at the wrong CAP-DOCS-document-model sections
+  evidence: proposal and materials cite 3.3 and 3.5 (References, Aliases); memo rules are 3.4 items 3-5 (lines 264-280)
+  failure_condition: Development edits or checks the wrong section and the 3.4.3 path sentence goes stale
+  suggested_action: Cite 3.4.3-3.4.5
+  resolution: resolved
+  severity: P3
+- issue: '''Same log lines'' cannot hold mechanically for agt; materials overstate agt logging'
+  evidence: facts.py:154,163,203 log only exceptions at debug with exc_info; shape, version, fingerprint and path refusals log nothing
+  failure_condition: A byte comparison of agt logs fails after a correct refactor because traceback frames move
+  suggested_action: Compare (logger, level, getMessage()) without exc_info; correct the logging row
+  resolution: resolved
+  severity: P3
+- issue: Verification works only if the before harness is written first against public entry points
+  evidence: .devkit/transient/ is absent in a worktree; test_file_facts.py:94 patches storage._FRAMEWORK; test_memo_index.py:266 patches ParseMemo.open
+  failure_condition: A harness on internals cannot run unchanged after the change, so the before side is unverifiable or never produced
+  suggested_action: Harness uses DocumentIndex.load and WorkspaceCache get/flush_file_facts with facts_writer=True, creates .devkit/transient/ itself, and is committed with its before table before the first source edit; keep test_file_facts.py:94 controlling the fingerprint
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: 008abf9ce889206eb60e17114cba55f35002c1ab
