@@ -71,7 +71,8 @@ Markdown body. Get MUST return the full body for that exact URI. Adapter and use
 List requires kind/slug with optional source_sha/language, limit 1..100 and an opaque continuation cursor. Sweep
 MUST examine at most 100 entries in deterministic filename order, return a continuation cursor, and retain and
 report invalid files. Only an explicit apply MAY remove valid expired artifacts. Check/read/list and default sweep
-MUST NOT clean storage. Scope records, tokens and journals are outside this store and MUST remain unchanged. Logical
+MUST NOT clean storage. Scope records, tokens and any scope journal an earlier version left are outside this store and MUST remain
+unchanged. Logical
 expiry does not guarantee physical erasure after seven days.
 
 [shared] adapter defaults to local in effective configuration; checkout-local overlays MUST be validated and

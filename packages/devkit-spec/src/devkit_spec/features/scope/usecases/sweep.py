@@ -1,4 +1,4 @@
-"""Inspect and remove stale scope records while protecting revisions and journaling outcomes."""
+"""Inspect and remove stale scope records while protecting revisions."""
 
 from dataclasses import dataclass
 
@@ -8,7 +8,7 @@ from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as D
 
 from devkit_spec.base.errors import ScopeStaleRevisionError
 from devkit_spec.features.scope.models.model import SweepResult, Verdict
-from devkit_spec.features.scope.usecases.flow import Session, journal, sweep_events
+from devkit_spec.features.scope.usecases.flow import Session
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,7 @@ class SweepScopesUseCase(BaseUseCase):
             records, _ = session.registry.query(location.namespace, session.deadline)
             expected = {record.task_id: record.revision for record in records}
         results = session.registry.sweep(location.namespace, apply, expected or {}, session.deadline)
-        notices = journal(session.registry, location.namespace, sweep_events(results))
+        notices: list[AdvisoryError] = []
         counts = {str(verdict): sum(result.verdict is verdict for result in results) for verdict in Verdict}
         summary: dict[str, str | int] = {"namespace": location.namespace, **counts}
         moved = [result.task_id for result in results if result.reason == "stale-revision"]

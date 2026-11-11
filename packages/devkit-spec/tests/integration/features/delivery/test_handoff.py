@@ -27,7 +27,9 @@ def accepted_worktree(tmp_path: Path) -> Path:
 def test_handoff_registers_after_writing_spec_and_preserves_notices(accepted_worktree: Path) -> None:
     root = accepted_worktree
     session = open_session(root)
-    (session.location.shared_path / session.location.namespace / "journal.jsonl").mkdir(parents=True)
+    journal = session.location.shared_path / session.location.namespace / "journal.jsonl"
+    journal.parent.mkdir(parents=True)
+    journal.write_bytes(b'{"event": "register"}\n')  # an earlier version's journal stays untouched
     observed = []
 
     def before_registration() -> None:
@@ -43,9 +45,16 @@ def test_handoff_registers_after_writing_spec_and_preserves_notices(accepted_wor
     assert registered.record.spec == handed.dir
     assert load_token(registered.location.token_path) == registered.token
     assert any(notice.code == "SPEC_PROPOSAL_UNBOUND" for notice in handed.notices)
-    assert "SPEC_SCOPE_JOURNAL_UNAVAILABLE" not in [notice.code for notice in handed.notices]
+    assert not [notice.code for notice in handed.notices if notice.code.startswith("SPEC_SCOPE_")]
     assert registered.notices == []
-    assert "SPEC_SCOPE_JOURNAL_UNAVAILABLE" not in [notice.code for notice in completed.notices]
+    assert journal.read_bytes() == b'{"event": "register"}\n'
+    observed_paths = {path.path for path in registered.record.scopes if path.source == "observed"}
+    assert f"{handed.dir}/spec.md" in observed_paths, "the uncommitted handoff output is the creation snapshot"
+    assert not {item.reason for item in registered.record.unresolved} & {
+        "missing-base-ref",
+        "missing-base-revision",
+        "unknown-base-revision",
+    }
 
 
 def test_registration_failure_is_silent_after_a_successful_handoff(accepted_worktree: Path) -> None:

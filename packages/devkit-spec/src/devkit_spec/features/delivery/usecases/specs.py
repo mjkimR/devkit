@@ -48,7 +48,7 @@ class CreateSpecUseCase(BaseUseCase):
         spec = create_spec(
             root, slug, title=title, workflow=workflow, namespace=namespace, summary=summary, day=day, cwd=cwd
         )
-        registered = auto_register(root, spec.dir, source="spec-new")
+        registered = auto_register(root, spec.dir)
         return InitializedSpec(spec, registered, list(spec.notices))
 
 

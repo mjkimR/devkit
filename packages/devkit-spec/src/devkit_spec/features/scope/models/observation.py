@@ -12,7 +12,6 @@ from devkit_spec.features.scope.models.model import Record, ScopeSet
 
 @dataclass(frozen=True)
 class CollectionOptions:
-    mode: str = "worktrees"
     base: str | None = None
     fetch: tuple[str, ...] = ()
     timeout: int = 30

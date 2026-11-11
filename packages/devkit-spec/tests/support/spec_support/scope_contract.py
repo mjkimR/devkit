@@ -9,14 +9,8 @@ from collections.abc import Callable
 
 import pytest
 
-from devkit_spec.base.errors import (
-    ScopeRecordMissingError,
-    ScopeStaleRevisionError,
-    ScopeTaskExistsError,
-    ScopeTimeoutError,
-    ScopeTokenMismatchError,
-)
-from devkit_spec.features.scope import Deadline, Granularity, Registry, ScopePath, Source, Stage, token_hash
+from devkit_spec.base.errors import ScopeTaskExistsError, ScopeTimeoutError, ScopeTokenMismatchError
+from devkit_spec.features.scope import Deadline, Registry, token_hash
 from spec_support.scope import record
 
 
@@ -29,41 +23,13 @@ def register_query(registry: Registry) -> None:
     assert token and stored.revision == 1
     assert stored.token_hash == token_hash(token), "records store the hash, never the token"
     assert stored.scopes[0].first_seen
+    assert (stored.last_request_id, stored.last_added, stored.last_removed) == ("", 0, 0), "legacy keys stay empty"
     with pytest.raises(ScopeTaskExistsError):
         registry.register(record("a", "/wt/a2"), _deadline())
     registry.register(record("b", "/wt/b"), _deadline())
     records, problems = registry.query("ns", _deadline())
     assert problems == [] and [item.task_id for item in records] == ["a", "b"]
     assert registry.query("other", _deadline()) == ([], [])
-
-
-def update_revision_token(registry: Registry) -> None:
-    token, stored = registry.register(record("a", "/wt/a"), _deadline())
-    token_b, _ = registry.register(record("b", "/wt/b"), _deadline())
-    first = stored.scopes[0].first_seen
-    added = ScopePath("src/new.py", Granularity.UNKNOWN, Source.OBSERVED, Stage.BUILD)
-    proposed = stored.with_(scopes=(*stored.scopes, added))
-    updated = registry.update(token, stored.revision, "req-1", proposed, _deadline())
-    assert updated.revision == stored.revision + 1
-    assert updated.scopes[0].first_seen == first, "first_seen survives an update"
-    assert updated.scopes[1].first_seen
-    assert updated.token_hash == stored.token_hash
-    with pytest.raises(ScopeStaleRevisionError):
-        registry.update(token, stored.revision, "req-2", proposed, _deadline())
-    with pytest.raises(ScopeTokenMismatchError):
-        registry.update(token_b, updated.revision, "req-3", proposed, _deadline())
-    with pytest.raises(ScopeRecordMissingError):
-        registry.update(token, updated.revision, "req-4", record("missing", "/wt/m"), _deadline())
-    records, _ = registry.query("ns", _deadline())
-    assert {item.task_id: item.revision for item in records}["a"] == updated.revision, "rejections write nothing"
-
-
-def idempotent_request(registry: Registry) -> None:
-    token, stored = registry.register(record("a", "/wt/a"), _deadline())
-    applied = registry.update(token, stored.revision, "same", stored.with_(last_added=2, last_removed=1), _deadline())
-    again = registry.update(token, 42, "same", stored, _deadline())
-    assert again.revision == applied.revision, "a replayed request id is answered without a write"
-    assert (again.last_request_id, again.last_added, again.last_removed) == ("same", 2, 1)
 
 
 def release(registry: Registry) -> None:
@@ -105,8 +71,6 @@ def deadline(registry: Registry) -> None:
 
 SCENARIOS: list[Callable[[Registry], None]] = [
     register_query,
-    update_revision_token,
-    idempotent_request,
     release,
     shared_worktree,
     deadline,

@@ -65,7 +65,7 @@ def development(root: Path, slug: str, boundary: str, *, reconcile: bool = True)
 
 
 def collect(root: Path, **kwargs: Any) -> dict[str, Any]:
-    options = CollectionOptions(mode=kwargs.pop("mode", "refs"), **kwargs)
+    options = CollectionOptions(**kwargs)
     return CollectScopesUseCase().execute(root, options).data
 
 
@@ -88,20 +88,20 @@ def problems(data: dict[str, Any], branch: str) -> list[dict[str, Any]]:
 def test_ac01_disjoint_planning_writes_with_future_overlap_stay_informational(repo: Path) -> None:
     planning(repo, "a", CAP_A)
     planning(repo, "b", CAP_B, CAP_NEW)
-    normal = invoke(repo, "--mode", "refs", "--base", "main", "--format", "json")
-    strict = invoke(repo, "--mode", "refs", "--base", "main", "--format", "json", "--strict")
+    normal = invoke(repo, "--base", "main", "--format", "json")
+    strict = invoke(repo, "--base", "main", "--format", "json", "--strict")
     assert normal.exit_code == 0, normal.output
     assert strict.exit_code == 1
     data = json.loads(normal.stdout)
     assert set(data) == {
-        "mode", "started_at", "finished_at", "coverage", "inventory", "observations", "pairs", "summary", "notices"
+        "started_at", "finished_at", "coverage", "inventory", "observations", "pairs", "summary", "notices"
     }  # fmt: skip
     assert all(set(p) == {"a", "b", "docs", "code", "unresolved", "current", "future"} for p in data["pairs"])
     observed = {p["path"] for o in data["observations"] for p in o["scope"]["observed"]}
     assert {"docs/proposals/PROP-a/proposal.md", "docs/proposals/PROP-b/proposal.md"} <= observed
     assert pair(data, "plan-a", "plan-b")["future"] >= 1
     assert problems(data, "plan-b")[0]["inputs"] == ["planned-doc"]
-    text = invoke(repo, "--mode", "refs", "--base", "main")
+    text = invoke(repo, "--base", "main")
     assert text.exit_code == 0
     assert "[EVIDENCE: src/shared.py a=refs/heads/plan-a b=refs/heads/plan-b " in text.stdout
     assert "horizon=future]" in text.stdout
@@ -118,7 +118,7 @@ def test_ac02_planning_candidate_overlap_is_future(repo: Path) -> None:
     assert all({e["source"], e["other_source"]} == {"candidate"} for e in found["code"])
     assert found["current"] == 0 and found["future"] == len(found["docs"]) + len(found["code"])
     assert data["summary"]["overlapping"] == 1 and data["summary"]["current_overlapping"] == 0
-    text = invoke(repo, "--mode", "refs", "--base", "main").stdout
+    text = invoke(repo, "--base", "main").stdout
     line = next(x for x in text.splitlines() if x.startswith("[PAIR: a=refs/heads/plan-a b=refs/heads/plan-b"))
     assert f" code={len(found['code'])} " in line and line.endswith(f"current=0 future={found['future']}]")
     assert " overlapping=1 current_overlapping=0 " in text.splitlines()[-1]
@@ -165,7 +165,7 @@ def test_ac04_handed_off_proposal_on_a_dev_ref_is_current(repo: Path) -> None:
 
 def test_ac05_coverage_gap_names_its_unresolved_inputs(repo: Path) -> None:
     development(repo, "d", "`src/shared.py`, `docs/capabilities/x/`", reconcile=False)
-    result = invoke(repo, "--mode", "refs", "--base", "main", "--format", "json")
+    result = invoke(repo, "--base", "main", "--format", "json")
     data = json.loads(result.stdout)
     assert data["coverage"]["status"] == "partial"
     found = problems(data, "dev-d")

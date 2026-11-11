@@ -18,20 +18,14 @@ from devkit_spec.base.errors import (
     ScopeLockUnsupportedError,
     ScopeNamespaceError,
     ScopeSharedPathError,
-    ScopeStaleRevisionError,
+    ScopeTaskExistsError,
     ScopeTimeoutError,
 )
 from devkit_spec.features.scope import (
     Deadline,
-    Event,
     FlockLocker,
-    Granularity,
-    LocalRegistry,
     Problem,
     Registry,
-    ScopePath,
-    Source,
-    Stage,
     Verdict,
 )
 from devkit_spec.features.scope.models.registry import token_hash
@@ -145,16 +139,16 @@ def test_locker_errors_pass_through(tmp_path: Path) -> None:
 
 def test_flock_timeout_and_recovery(tmp_path: Path) -> None:
     fs = registry(tmp_path)
-    token, stored = fs.register(record("a", "/wt/a"), Deadline(5))
+    fs.register(record("a", "/wt/a"), Deadline(5))
     unlock = FlockLocker().acquire(tmp_path / "ns/.lock", Deadline(5))  # held by another holder
     started = time.monotonic()
     with pytest.raises(ScopeTimeoutError):
-        fs.update(token, stored.revision, "r1", stored, Deadline(0.2))
+        fs.register(record("b", "/wt/b"), Deadline(0.2))
     assert time.monotonic() - started < 2
     (tmp_path / "ns" / ".a.json.devkit-left-over.tmp").write_text("partial")  # an interrupted publish
     unlock()
-    updated = fs.update(token, stored.revision, "r2", stored, Deadline(5))
-    assert updated.revision == 2
+    _, stored = fs.register(record("b", "/wt/b"), Deadline(5))
+    assert stored.revision == 1
     _no_temp(tmp_path / "ns")
 
 
@@ -168,112 +162,108 @@ def test_unsafe_lock_file_is_a_shared_path_error(tmp_path: Path) -> None:
 
 def test_threads_contend_on_the_lock(tmp_path: Path) -> None:
     fs = registry(tmp_path)
-    token, stored = fs.register(record("a", "/wt/a"), Deadline(5))
     outcomes: list[str] = []
 
-    def write(request: str) -> None:
+    def write(worktree: str) -> None:
         try:
-            fs.update(token, stored.revision, request, stored, Deadline(5))
-            outcomes.append("applied")
-        except ScopeStaleRevisionError:
-            outcomes.append("stale")
+            fs.register(record("a", worktree), Deadline(5))
+            outcomes.append("registered")
+        except ScopeTaskExistsError:
+            outcomes.append("exists")
 
-    threads = [threading.Thread(target=write, args=(f"r{index}",)) for index in range(2)]
+    threads = [threading.Thread(target=write, args=(f"/wt/{index}",)) for index in range(2)]
     for thread in threads:
         thread.start()
     for thread in threads:
         thread.join()
-    assert sorted(outcomes) == ["applied", "stale"], "the same revision is applied once"
-    assert fs.query("ns", Deadline(5))[0][0].revision == 2
+    assert sorted(outcomes) == ["exists", "registered"], "one task ID is registered once"
+    assert [item.revision for item in fs.query("ns", Deadline(5))[0]] == [1]
 
 
 _HELPER = textwrap.dedent(
     """
     import sys
-    from devkit_spec.base.errors import ScopeStaleRevisionError
-    from devkit_spec.features.scope import Deadline, Granularity, LocalRegistry, ScopePath, Source, Stage
+    from devkit_spec.features.scope import Deadline, Granularity, LocalRegistry, Record, ScopePath, Source, Stage
 
-    shared, task, token, rounds = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+    shared, task, rounds = sys.argv[1], sys.argv[2], int(sys.argv[3])
     fs = LocalRegistry(__import__("pathlib").Path(shared), hostname="host-a")
+    path = ScopePath("src/shared.py", Granularity.FILE, Source.DECLARED_CODE, Stage.SPEC)
     for round in range(rounds):
-        while True:
-            own = next(item for item in fs.query("ns", Deadline(30))[0] if item.task_id == task)
-            path = ScopePath(f"src/round{round}.py", Granularity.UNKNOWN, Source.OBSERVED, Stage.BUILD)
-            try:
-                fs.update(token, own.revision, f"{task}-{round}", own.with_(scopes=(*own.scopes, path)), Deadline(30))
-                break
-            except ScopeStaleRevisionError:
-                continue
+        name = f"{task}-{round}"
+        token, _ = fs.register(Record("ns", name, f"/wt/{name}", scopes=(path,)), Deadline(30))
+        if round % 2:
+            fs.release("ns", name, token, Deadline(30))
     """
 )
 
 
-def test_processes_update_concurrently_through_flock(tmp_path: Path) -> None:
+def test_processes_register_and_release_concurrently_through_flock(tmp_path: Path) -> None:
     shared = tmp_path / "shared"
     fs = registry(shared)
-    shared_path = ScopePath("src/shared.py", Granularity.FILE, Source.DECLARED_CODE, Stage.SPEC)
-    tokens = {}
-    for task in ("task-a", "task-b", "task-c", "task-d"):
-        token, _ = fs.register(record(task, f"/wt/{task}").with_(scopes=(shared_path,)), Deadline(5))
-        tokens[task] = token
+    tasks = ("task-a", "task-b", "task-c", "task-d")
     processes = [
-        subprocess.Popen([sys.executable, "-c", _HELPER, str(shared), task, token, "5"], env=os.environ.copy())
-        for task, token in tokens.items()
+        subprocess.Popen([sys.executable, "-c", _HELPER, str(shared), task, "6"], env=os.environ.copy())
+        for task in tasks
     ]
     assert [process.wait(timeout=120) for process in processes] == [0, 0, 0, 0]
     records, problems = fs.query("ns", Deadline(5))
-    assert problems == [] and len(records) == 4
+    assert problems == []
+    assert [item.task_id for item in records] == sorted(f"{task}-{index}" for task in tasks for index in (0, 2, 4))
     for item in records:
-        assert item.revision == 6, item.task_id
-        assert [path.path for path in item.scopes][1:] == [f"src/round{index}.py" for index in range(5)]
+        assert item.revision == 1, item.task_id
         json.loads((shared / "ns" / f"{item.task_id}.json").read_text())
     _no_temp(shared / "ns")
 
 
 @pytest.mark.skipif(os.geteuid() == 0, reason="permissions are not enforced for root")
-def test_write_failure_leaves_the_record_intact(tmp_path: Path) -> None:
+def test_write_failure_leaves_the_records_intact(tmp_path: Path) -> None:
     fs = registry(tmp_path)
-    token, stored = fs.register(record("a", "/wt/a"), Deadline(5))
+    fs.register(record("a", "/wt/a"), Deadline(5))
     directory = tmp_path / "ns"
     before = (directory / "a.json").read_bytes()
     directory.chmod(0o500)  # no new file: the temp file cannot be created, so nothing is published
     try:
-        observed = ScopePath("src/x.py", Granularity.UNKNOWN, Source.OBSERVED, Stage.BUILD)
         with pytest.raises(ScopeSharedPathError):
-            fs.update(token, stored.revision, "r1", stored.with_(scopes=(observed,)), Deadline(5))
+            fs.register(record("b", "/wt/b"), Deadline(5))
     finally:
         directory.chmod(0o755)
     assert (directory / "a.json").read_bytes() == before
+    assert not (directory / "b.json").exists()
     _no_temp(directory)
-    assert fs.update(token, stored.revision, "r2", stored, Deadline(5)).revision == 2
+    assert fs.register(record("b", "/wt/b"), Deadline(5))[1].revision == 1
 
 
-def test_journal_appends_lines_and_reads_them_back_in_journal_order(tmp_path: Path) -> None:
+def test_records_written_before_the_update_retirement_stay_readable(tmp_path: Path) -> None:
     fs = registry(tmp_path)
-    fs.append(
-        "ns", [Event("register", at="2026-10-08T00:00:02.000000Z", task="SPEC-a", slug="a", revision=1)], Deadline(5)
-    )
-    journal = tmp_path / "ns/journal.jsonl"
-    with journal.open("ab") as handle:
-        handle.write(b'{"event": "upd')  # an interrupted append: no newline
-    fs.append("ns", [Event("release", at="2026-10-08T00:00:01.000000Z", task="SPEC-a")], Deadline(5))
-    lines = journal.read_text().splitlines()
-    assert len(lines) == 3 and lines[1] == '{"event": "upd'
-    events, problems = fs.history("ns", Deadline(5))
-    # append order under the namespace lock, never re-sorted by `at`: a wall-clock step back must not reorder it
-    assert [event.event for event in events] == ["register", "release"]
-    assert [(problem.file, problem.line, problem.reason) for problem in problems] == [("journal.jsonl", 2, "parse")]
-    assert json.loads(lines[0]) == {
-        "at": "2026-10-08T00:00:02.000000Z",
-        "event": "register",
-        "task": "SPEC-a",
-        "slug": "a",
-        "revision": 1,
+    fs.register(record("new", "/wt/new"), Deadline(5))
+    legacy = {
+        "schema_version": 1,
+        "namespace": "ns",
+        "task_id": "old",
+        "token_hash": "0" * 64,
+        "revision": 4,
+        "base_revision": "abc",
+        "base_ref": "refs/heads/main",
+        "worktree": "/wt/old",
+        "hostname": "host-a",
+        "spec": "specs/2026-10/20261001-old",
+        "scopes": [{"path": "src/old.py", "kind": "file", "source": "observed", "stage": "build", "first_seen": "x"}],
+        "unresolved": [{"value": "refs/heads/gone", "reason": "missing-base-ref", "source": "observed"}],
+        "updated_at": "2026-10-08T00:00:00.000000Z",
+        "last_request_id": "req-3",
+        "last_added": 2,
+        "last_removed": 1,
     }
-    assert registry(tmp_path).history("other", Deadline(5)) == ([], [])
-
-
-def test_record_reads_skip_the_journal(tmp_path: Path) -> None:
-    fs = LocalRegistry(tmp_path, hostname="host-a")
-    fs.append("ns", [Event("guard", at="2026-10-08T00:00:00.000000Z")], Deadline(5))
-    assert fs.query("ns", Deadline(5)) == ([], [])
+    (tmp_path / "ns/old.json").write_text(json.dumps(legacy))
+    journal = tmp_path / "ns/journal.jsonl"
+    journal.write_bytes(b'{"at": "2026-10-08T00:00:00.000000Z", "event": "update"}\n{"event": "upd')
+    before = journal.read_bytes()
+    records, problems = fs.query("ns", Deadline(5))
+    assert problems == [], "the legacy keys and observed scopes raise no problem"
+    old = next(item for item in records if item.task_id == "old")
+    assert (old.revision, old.last_request_id, old.last_added, old.last_removed) == (4, "req-3", 2, 1)
+    assert [path.path for path in old.scopes] == ["src/old.py"]
+    token, _ = fs.register(record("later", "/wt/later"), Deadline(5))
+    fs.release("ns", "later", token, Deadline(5))
+    fs.sweep("ns", True, {}, Deadline(5))
+    assert journal.read_bytes() == before, "no registry operation reads or writes the journal"

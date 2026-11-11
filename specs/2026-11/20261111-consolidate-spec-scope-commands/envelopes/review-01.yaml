@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:44:52.594052Z'
+status: completed
+summary: 'code-reviewer PASS at medium: AC-01..AC-06 confirmed by scope/delivery/package tests and an AC-03 probe; one P3 Living Spec drift finding'
+findings:
+- issue: 'Living Spec drift: CAP-WT-task-worktrees still names the scope registry''s journal in its post-finish coverage, and CAP-COLL-shared-artifacts lists journals among scope artifacts outside its store.'
+  evidence: docs/capabilities/worktree/CAP-WT-task-worktrees.md:212; docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md:74
+  failure_condition: A reader assumes the scope registry still keeps a journal that devkit-spec maintains during post-finish cleanup.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected mode=full 6734 passed 4 skipped; e2e test_integration 3 passed
+  lint: PASS just lint devkit-spec; just check devkit-spec 0 errors
+  rules: PASS devkit rules check --ci --base main
+diff_scope:
+  base: d219dd4a7a1fbbbd4ad731dc6c66625026c8e8a2
+  head: 05644cc536a9e76ec57144dea9b8a0e98b106eaf

@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T04:45:20.983312Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified: CAP-COLL-shared-artifacts wording fixed in a5284214; CAP-WT-task-worktrees part is outside the write scope and handed to the Host'
+findings:
+- issue: 'Living Spec drift: CAP-WT-task-worktrees still names the scope registry''s journal in its post-finish coverage, and CAP-COLL-shared-artifacts lists journals among scope artifacts outside its store.'
+  evidence: docs/capabilities/worktree/CAP-WT-task-worktrees.md:212; docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md:74
+  failure_condition: A reader assumes the scope registry still keeps a journal that devkit-spec maintains during post-finish cleanup.
+  resolution: waived
+  waiver: CAP-COLL-shared-artifacts part fixed in a5284214; the CAP-WT-task-worktrees sentence is outside the Development write scope and is recorded for the Host in reconcile.md
+  severity: P3
+checks:
+  rules: PASS devkit rules check docs/capabilities/collaboration
+diff_scope:
+  base: d219dd4a7a1fbbbd4ad731dc6c66625026c8e8a2
+  head: a52842148fb70b0dfa894150bf94b2d2ebc6d858
+activity_effort: medium

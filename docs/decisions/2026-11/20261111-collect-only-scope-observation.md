@@ -1,16 +1,16 @@
 ---
-id: PADR-collect-only-scope-observation
+id: ADR-collect-only-scope-observation
 title: Collect is the only scope observation surface
 summary: For the scope registry, we retire register, query, compare and hidden update with the update path, keep creation snapshots without their own Git range code and drop collect --mode, to keep one observation entry and one paths-changed pipeline, accepting creation-time records.
-proposal: PROP-consolidate-spec-scope-commands
+proposal: SPEC-consolidate-spec-scope-commands
 supersedes: [ADR-worktrees-and-scope]
-status: draft
+status: accepted
 created_at: 2026-11-11
 ---
 
-# [PADR-collect-only-scope-observation] Collect is the only scope observation surface
+# [ADR-collect-only-scope-observation] Collect is the only scope observation surface
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-11-11
 
 ---
@@ -25,7 +25,7 @@ reader behind `--history`) and `compare`. No guidance, CI job or other package i
 replay, the ACK model, the record's `last_*` fields and the journal's `update` events. The registry keeps a second
 "paths changed since base" pipeline (`observe_git`) beside collect's; after `update` goes its only caller is the
 creation registration, whose range starts at the registration HEAD, so its committed range is always empty and only
-its staged, unstaged and untracked listing contributes. Evidence: the proposal's `materials/scope-command-callers.md`.
+its staged, unstaged and untracked listing contributes. Evidence: the proposal's `docs/materials/2026-11/20261111-consolidate-spec-scope-commands/scope-command-callers.md`.
 
 ## 2. Decision Drivers
 

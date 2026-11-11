@@ -11,7 +11,7 @@ Use `local-orchestrated` instead of `direct` for an activity when units can run 
 
 - A unit is one activity of one slug on `plan-<slug>` or `dev-<slug>`, in its own worktree from `devkit worktree start <branch>` (`--existing-branch <branch> --unit <dir>` continues an existing branch). A `session`-depth task never becomes a unit.
 - You split, retain inline Planning, validate, and own user questions, problems and integration decisions. Delegate recurring lifecycle execution to `git-operator`; workers do one Planning/Development turn.
-- Split by dependency order, conflicting files and independent verification, not to create approval points. Read `devkit spec scope collect --mode worktrees` by horizon: units whose `horizon=current` evidence overlaps run sequentially, others in parallel; never two writers in one worktree. A pair with only `future` evidence (a Planning unit's declared or candidate paths) does not serialize Planning runs. Before handing a unit off, treat its `future` evidence as `current`: units whose `future` evidence overlaps are handed off and integrated sequentially. Partial coverage informs both choices and never proves independence; no result grants or refuses a write.
+- Split by dependency order, conflicting files and independent verification, not to create approval points. Read `devkit spec scope collect` by horizon: units whose `horizon=current` evidence overlaps run sequentially, others in parallel; never two writers in one worktree. A pair with only `future` evidence (a Planning unit's declared or candidate paths) does not serialize Planning runs. Before handing a unit off, treat its `future` evidence as `current`: units whose `future` evidence overlaps are handed off and integrated sequentially. Partial coverage informs both choices and never proves independence; no result grants or refuses a write.
 
 ## The loop per unit
 
@@ -21,7 +21,7 @@ Use `local-orchestrated` instead of `direct` for an activity when units can run 
 4. **Accept** Planning through `spec-review-proposal`, first naming any support role the effort required but no envelope shows. You run its composed `devkit spec proposal accept <slug> --by user|policy --mode accept_only|accept_and_handoff` yourself: it integrates and cleans up, then yields with verification pending and handoff not started. Synchronize and check the landed head in fresh processes before invoking the existing handoff command with the retained scope and effort; no redundant integration job follows acceptance.
 5. **Integrate** Development through `spec-integrate`, one unit at a time in overlap order. Delegate only guarded execution after Host authority.
 
-After context loss, rebuild state from `devkit worktree status`, `devkit spec scope collect --mode worktrees` and per-unit `devkit workflow next --unit <dir>`. Keep one conversation line per unit: slug, activity, stage, worker state. To return to `direct`, stop starting workers, validate running ones' results and continue the remaining units one at a time.
+After context loss, rebuild state from `devkit worktree status`, `devkit spec scope collect` and per-unit `devkit workflow next --unit <dir>`. Keep one conversation line per unit: slug, activity, stage, worker state. To return to `direct`, stop starting workers, validate running ones' results and continue the remaining units one at a time.
 
 ## Shared artifacts
 

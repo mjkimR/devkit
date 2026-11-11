@@ -378,7 +378,7 @@ status: draft
 proposal: PROP-{slug}
 created_at: {created}
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
-# devkit spec scope compare reads them to find overlaps with other work.
+# devkit spec scope collect reads them as future evidence once the proposal has a plan-* source.
 targets: []
 ---
 

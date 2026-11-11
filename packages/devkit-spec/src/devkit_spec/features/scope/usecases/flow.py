@@ -1,54 +1,31 @@
-"""The registry operations a worktree performs on its own task: register, update (the ACK), release, and journaling.
+"""The registry operations a worktree performs on its own task: creation registration and release.
 
-A worktree runs one task: everything Git observes there is attributed to it. Libraries never print: each function
-returns its result with the warnings to report (``notices``); journal failures are warnings only and never change
-an operation's outcome.
+A worktree runs one task: every dirty path Git reports there at creation is attributed to it. Libraries never print:
+each function returns its result with the warnings to report (``notices``).
 """
 
 from __future__ import annotations
 
 import contextlib
-import posixpath
 from collections.abc import Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
-from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_spec.base.errors import (
-    ScopeAckFailedError,
-    ScopeJournalWarning,
     ScopeRecordInvalidWarning,
-    ScopeRecordMissingError,
     ScopeSharedPathError,
     ScopeSharedWorktreeWarning,
-    ScopeStaleRevisionError,
-    ScopeTimeoutError,
     ScopeTokenExistsError,
-    ScopeTokenMissingError,
 )
-from devkit_spec.base.units import SPEC_DIR, is_spec_dir
-from devkit_spec.features.policy.repositories.branches import DEVELOPMENT_PREFIX, checkout
 from devkit_spec.features.policy.services.config import read_spec_config
-from devkit_spec.features.scope.models.deadline import JOURNAL_SECONDS, ROLLBACK_SECONDS, Deadline
-from devkit_spec.features.scope.models.model import (
-    AckCounts,
-    Event,
-    EventKind,
-    PairResult,
-    Problem,
-    Record,
-    ScopePath,
-    ScopeSet,
-    SweepResult,
-    Verdict,
-)
-from devkit_spec.features.scope.models.model import now as utc_now
-from devkit_spec.features.scope.models.registry import Registry, new_request_id, token_hash
+from devkit_spec.features.scope.models.deadline import ROLLBACK_SECONDS, Deadline
+from devkit_spec.features.scope.models.model import Problem, Record, ScopeSet
+from devkit_spec.features.scope.models.registry import Registry, token_hash
 from devkit_spec.features.scope.repositories.localfs import LocalRegistry
 from devkit_spec.features.scope.repositories.location import (
     Location,
@@ -57,14 +34,12 @@ from devkit_spec.features.scope.repositories.location import (
     incomplete_token,
     load_token,
     locate,
-    ref_exists,
     remove_token,
     save_token,
 )
-from devkit_spec.features.scope.services.compare import compare_with
-from devkit_spec.features.scope.usecases.inputs import from_spec, observe_git
-
-SOURCE_HANDOFF = "handoff"
+from devkit_spec.features.scope.repositories.source import FilesystemReader, ReadBudget
+from devkit_spec.features.scope.services.observation import add_paths, dirty
+from devkit_spec.features.scope.usecases.inputs import from_spec
 
 
 @dataclass(frozen=True)
@@ -84,65 +59,6 @@ def open_session(root: Path) -> Session:
     return Session(location, LocalRegistry(location.shared_path), deadline)
 
 
-# --- journal ------------------------------------------------------------------------------------------------------
-
-
-def slug_from_spec(spec: str) -> str:
-    """The slug of a spec directory named ``YYYYMMDD-<slug>``; ``""`` for any other name."""
-    match = SPEC_DIR.fullmatch(posixpath.basename(spec.rstrip("/")))
-    return match["slug"] if match else ""
-
-
-def record_event(kind: EventKind, record: Record, source: str = "") -> Event:
-    return Event(
-        event=str(kind),
-        task=record.task_id,
-        slug=slug_from_spec(record.spec),
-        revision=record.revision,
-        worktree=record.worktree,
-        spec=record.spec,
-        source=source,
-    )
-
-
-def sweep_events(results: Sequence[SweepResult], source: str = "") -> list[Event]:
-    """One ``sweep`` event per verdict other than ``active``."""
-    return [
-        Event(
-            event=str(EventKind.SWEEP),
-            task=result.task_id,
-            slug=slug_from_spec(result.spec),
-            revision=result.revision,
-            verdict=str(result.verdict),
-            reason=result.reason,
-            worktree=result.worktree,
-            spec=result.spec,
-            source=source,
-        )
-        for result in results
-        if result.verdict is not Verdict.ACTIVE
-    ]
-
-
-def journal(registry: LocalRegistry, namespace: str, events: Sequence[Event]) -> list[AdvisoryError]:
-    """Append ``events`` to the journal under its own deadline; a failure is one warning."""
-    if not events:
-        return []
-    stamp = utc_now()
-    stamped = [event if event.at else _at(event, stamp) for event in events]
-    try:
-        registry.append(namespace, stamped, Deadline(JOURNAL_SECONDS))
-    except (AdvisoryError, OSError) as exc:
-        target = str(registry.journal_path(namespace))
-        message = exc.message if isinstance(exc, AdvisoryError) else str(exc)
-        return [ScopeJournalWarning(f"the event journal could not be written: {message}", target_files=[target])]
-    return []
-
-
-def _at(event: Event, stamp: str) -> Event:
-    return replace(event, at=stamp)
-
-
 # --- register -----------------------------------------------------------------------------------------------------
 
 
@@ -154,20 +70,20 @@ class Registered:
     notices: list[AdvisoryError] = field(default_factory=list)
 
 
-def collect(
-    location: Location, spec_dir: str, base_revision: str, deadline: Deadline, stamp: str, *, base_ref: str = ""
-) -> ScopeSet:
-    """The declared scope of the bundle plus what Git observes in the worktree on the task's side of ``base_ref``
-    (since ``base_revision`` without one)."""
+def creation_scope(location: Location, spec_dir: str, deadline: Deadline) -> ScopeSet:
+    """The declared scope of the bundle plus the worktree's staged, unstaged and untracked paths, read through
+    collect's observation service (``services.observation``). The committed range is empty at creation (it starts at
+    the registration HEAD), so none is read; a dirty path outside the path contract is unresolved (``invalid-path``).
+    """
     scope = from_spec(location.root, spec_dir)
-    observed, unresolved = observe_git(location.root, base_revision, deadline, stamp, base_ref=base_ref)
-    scope.observed = observed
-    scope.unresolved += unresolved
+    reader = FilesystemReader(location.root, deadline, ReadBudget())
+    add_paths(scope, dirty(location.root, deadline), reader, deadline)
+    scope.observed.sort(key=lambda path: path.path)
     return scope
 
 
 class RegisterScopeUseCase(BaseUseCase):
-    def execute(self, session: Session, spec_dir: str, task_id: str | None = None, *, source: str = "") -> Registered:
+    def execute(self, session: Session, spec_dir: str, task_id: str | None = None) -> Registered:
         """Register the bundle at the workspace-relative ``spec_dir`` as this worktree's task and save its token.
 
         ``task_id`` defaults to the spec ID. The record keeps HEAD as ``base_revision`` and the branch the base checkout
@@ -177,10 +93,9 @@ class RegisterScopeUseCase(BaseUseCase):
         location, registry, deadline = session.location, session.registry, session.deadline
         if location.token_path.exists():
             raise ScopeTokenExistsError("this worktree already registered a task")
-        stamp = utc_now()
         base = head_revision(location.root, deadline)
         ref = base_ref(location, deadline)
-        scope = collect(location, spec_dir, base, deadline, stamp, base_ref=ref)
+        scope = creation_scope(location, spec_dir, deadline)
         record = Record(
             namespace=location.namespace,
             task_id=task_id or scope.id,
@@ -211,7 +126,6 @@ class RegisterScopeUseCase(BaseUseCase):
                     target_files=[stored.worktree],
                 )
             )
-        notices += journal(registry, location.namespace, [record_event(EventKind.REGISTER, stored, source)])
         return Registered(location, stored, token, notices)
 
 
@@ -225,14 +139,14 @@ def _rollback(registry: Registry, stored: Record, token: str) -> list[str]:
     return []
 
 
-def auto_register(root: Path, spec_dir: str, *, source: str) -> Registered | None:
+def auto_register(root: Path, spec_dir: str) -> Registered | None:
     """Retain best-effort creation snapshots without giving workers maintenance duties: every registration notice
     and failure is only a verbose diagnostic."""
     try:
         session = open_session(root)
         if not session.location.linked:
             return None
-        registered = RegisterScopeUseCase().execute(session, spec_dir, source=source)
+        registered = RegisterScopeUseCase().execute(session, spec_dir)
         for notice in registered.notices:
             _automatic_diagnostic(notice.code)
         registered.notices = []
@@ -262,22 +176,17 @@ class Own:
     problems: list[Problem]
 
 
-def own(session: Session, *, cleanup: bool = True) -> Own:
+def own(session: Session, *, cleanup: bool = True) -> Own | None:
     """This worktree's record (found by its token) and the other records of the namespace.
 
-    Raises ``ScopeTokenMissingError`` without a token, ``ScopeRecordMissingError`` when its record is gone and
-    ``SPEC_SCOPE_RECORD_INVALID`` at ``ERROR`` (``INTERACTION``) when it is not found while unreadable record files
-    may hold it (``Registry.may_hold``); unreadable files that cannot be it are only ``problems``.
+    ``None`` without a token or when its record is gone (released or swept). Raises ``SPEC_SCOPE_RECORD_INVALID`` at
+    ``ERROR`` (``INTERACTION``) when the record is not found while unreadable record files may hold it
+    (``Registry.may_hold``); unreadable files that cannot be it are only ``problems``.
     """
     location = session.location
     token = load_token(location.token_path, cleanup=cleanup)
     if token is None:
-        fix, candidates = _register_guidance(location.root)
-        raise ScopeTokenMissingError(
-            "this worktree holds no scope registry token",
-            *candidates,
-            fix="A worktree that does not take part in the registry skips scope update; to take part, " + fix,
-        )
+        return None
     records, problems = session.registry.query(location.namespace, session.deadline)
     digest = token_hash(token)
     mine = [record for record in records if record.token_hash == digest]
@@ -285,41 +194,9 @@ def own(session: Session, *, cleanup: bool = True) -> Own:
         suspects = _suspects(session, problems, digest)
         if suspects:
             raise _unreadable(location, suspects, _OWN_UNREADABLE)
-        fix, candidates = _register_guidance(location.root)
-        raise ScopeRecordMissingError(
-            "the record of this worktree's token no longer exists (released or swept)",
-            *candidates,
-            fix=f"Run `{DEVKIT} spec scope release` (it removes the orphaned token), then " + fix,
-        )
+        return None
     others = [record for record in records if record.token_hash != digest]
     return Own(token, mine[0], others, problems)
-
-
-def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
-    """The register step of a fix: the exact command for the one spec bundle of this ``dev-<slug>`` branch
-    (``specs/<YYYY-MM>/<YYYYMMDD>-<slug>``, the slug matched exactly), else where to find the bundle; with several
-    bundles of the slug they are the candidates in the details."""
-    found = checkout(root)
-    branch = found[1] if found is not None else ""
-    slug = branch.removeprefix(DEVELOPMENT_PREFIX) if branch.startswith(DEVELOPMENT_PREFIX) else ""
-    bundles = sorted(
-        path.relative_to(root).as_posix()
-        for path in root.glob("specs/*/*")
-        if slug and path.is_dir() and is_spec_dir(path.name, slug)
-    )
-    if len(bundles) == 1:
-        return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()
-    listing = devkit_command("docs list spec --history")
-    if bundles:
-        return (
-            f"register with `{DEVKIT} spec scope register --spec` and the bundle in [DETAIL] this worktree works on",
-            tuple(f"candidate: {path}" for path in bundles),
-        )
-    return (
-        f"register with `{DEVKIT} spec scope register --spec` and this worktree's spec bundle directory "
-        f"(`{listing}` lists the bundles)",
-        (),
-    )
 
 
 _OWN_UNREADABLE = (
@@ -356,133 +233,6 @@ def _unreadable(location: Location, problems: Sequence[Problem], message: str) -
     )
 
 
-# --- update -------------------------------------------------------------------------------------------------------
-
-
-class AckStatus:
-    APPLIED = "applied"
-    FAILED = "failed"
-    STALE = "stale"
-    TIMEOUT = "timeout"
-
-
-@dataclass
-class Ack:
-    """The outcome of one update; ``error`` is set unless ``status`` is ``applied``."""
-
-    status: str
-    request_id: str
-    revision: int = 0
-    added: int = 0
-    removed: int = 0
-    overlaps: int = 0
-    unresolved: int = 0
-    record: Record | None = None
-    pairs: list[PairResult] = field(default_factory=list)
-    problems: list[Problem] = field(default_factory=list)
-    error: AdvisoryError | None = None
-    notices: list[AdvisoryError] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "status": self.status,
-            "revision": self.revision,
-            "added": self.added,
-            "removed": self.removed,
-            "overlaps": self.overlaps,
-            "unresolved": self.unresolved,
-            "request_id": self.request_id,
-            "record": self.record.public_dict() if self.record else None,
-        }
-
-
-def _current_base_ref(location: Location, stored: str, deadline: Deadline) -> str:
-    """The record's base ref while it names a commit; else the base branch detected now (``base_ref``) when that one
-    does, so a renamed or deleted base branch, or one the base checkout took after a detached registration, stops
-    being unresolved; else the stored one (``observe_git`` then reports it as ``missing-base-ref``)."""
-    if stored and ref_exists(location.root, stored, deadline):
-        return stored
-    detected = base_ref(location, deadline)
-    if detected and detected != stored and ref_exists(location.root, detected, deadline):
-        return detected
-    return stored
-
-
-def _diff_scopes(before: Sequence[ScopePath], after: Sequence[ScopePath]) -> tuple[int, int]:
-    was = {path.key for path in before}
-    now = {path.key for path in after}
-    return len(now - was), len(was - now)
-
-
-class UpdateScopeUseCase(BaseUseCase):
-    def execute(self, session: Session, spec_dir: str, request_id: str | None = None, *, source: str = "") -> Ack:
-        """Recollect the bundle's declared and observed scope, write it with this worktree's token and the revision just
-        read, and compare it with the namespace's other records.
-
-        The observed range forks from the record's ``base_ref`` (``observe_git``); a record without one, or whose
-        ``base_ref`` no longer names a commit (renamed or deleted), takes the base branch detected now when that one does
-        (``_current_base_ref``). ``request_id`` retries an update
-        whose outcome was not observed: an ID the record already applied is answered from the stored record, with the
-        ``added`` and ``removed`` counts that request recorded, before anything is collected or written. Never raises
-        for a registry failure: the ACK carries it.
-        """
-        location, registry, deadline = session.location, session.registry, session.deadline
-        ack = Ack(status=AckStatus.APPLIED, request_id=request_id or new_request_id())
-        current: Record | None = None
-        try:
-            mine = own(session)
-            current = mine.record
-            ack.problems = mine.problems
-            if request_id and current.last_request_id == request_id:
-                stored = current  # already applied: answered from the stored record
-            else:
-                stamp = utc_now()
-                ref = _current_base_ref(location, current.base_ref, deadline)
-                scope = collect(location, spec_dir, current.base_revision, deadline, stamp, base_ref=ref)
-                added, removed = _diff_scopes(current.scopes, scope.all_paths())
-                proposed = current.with_(
-                    base_ref=ref,
-                    spec=spec_dir,
-                    scopes=tuple(scope.all_paths()),
-                    unresolved=tuple(scope.unresolved),
-                    last_added=added,
-                    last_removed=removed,
-                )
-                stored = registry.update(mine.token, current.revision, ack.request_id, proposed, deadline)
-        except AdvisoryError as exc:
-            ack.error = exc
-            if isinstance(exc, ScopeStaleRevisionError):
-                ack.status = AckStatus.STALE
-            elif isinstance(exc, ScopeTimeoutError):
-                ack.status = AckStatus.TIMEOUT
-            else:
-                ack.status = AckStatus.FAILED
-        except OSError as exc:
-            ack.error = ScopeAckFailedError(f"the scope update failed: {exc}")
-            ack.status = AckStatus.FAILED
-        else:
-            ack.revision = stored.revision
-            ack.added, ack.removed = stored.last_added, stored.last_removed  # a replay reports the counts it recorded
-            ack.record = stored
-            ack.unresolved = len(stored.unresolved)
-            ack.pairs = compare_with(stored.to_set(), [other.to_set() for other in mine.others])
-            ack.overlaps = sum(pair.overlapping for pair in ack.pairs)
-        event = Event(
-            event=str(EventKind.UPDATE),
-            task=current.task_id if current else "",
-            slug=slug_from_spec(spec_dir),
-            revision=ack.revision if ack.record else (current.revision if current else 0),
-            request_id=ack.request_id,
-            status=ack.status,
-            counts=AckCounts(ack.added, ack.removed, ack.overlaps, ack.unresolved) if ack.record else None,
-            worktree=str(location.root),
-            spec=spec_dir,
-            source=source,
-        )
-        ack.notices += journal(registry, location.namespace, [event])
-        return ack
-
-
 # --- release ------------------------------------------------------------------------------------------------------
 
 
@@ -498,7 +248,7 @@ class Released:
 
 
 class ReleaseScopeUseCase(BaseUseCase):
-    def execute(self, session: Session, task_id: str | None = None, *, source: str = "") -> Released:
+    def execute(self, session: Session, task_id: str | None = None) -> Released:
         """Remove this worktree's record with its token and delete the token; repeating is a no-op.
 
         Without a token nothing happens (``registered`` false), with or without ``task_id``; an incomplete token file
@@ -533,5 +283,4 @@ class ReleaseScopeUseCase(BaseUseCase):
             return Released(task_id or "", 0, registered=True, already=True)
         registry.release(location.namespace, target.task_id, token, deadline)
         remove_token(location.token_path)
-        notices = journal(registry, location.namespace, [record_event(EventKind.RELEASE, target, source)])
-        return Released(target.task_id, target.revision, registered=True, already=False, notices=notices)
+        return Released(target.task_id, target.revision, registered=True, already=False)

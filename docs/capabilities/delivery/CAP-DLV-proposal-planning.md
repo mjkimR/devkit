@@ -287,7 +287,8 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   commit, and the proposal's Planning decisions name its ID and the reason. Handoff promotes every PADR left there.
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
   `targets: []` (one `- file: <workspace-relative path>` per Living Spec file the proposal changes; read by
-  `devkit spec scope compare`). Its body covers the capability ledger, use cases, architecture and decisions,
+  `devkit spec scope collect` as `future` evidence once the proposal has a `plan-*` source, while a queued draft is
+  not observed). Its body covers the capability ledger, use cases, architecture and decisions,
   conventions and governance, and a before/after comparison. Under use cases, a `Screens (docs/ux/)` subsection holds
   the drafted screens when the proposal changes what a person sees: one draft per screen, modal or panel in the `ux`
   template's shape, with the use case step citations and root `docs/steering/ux-objects.md` or namespace

@@ -17,6 +17,13 @@ from devkit_dist.cli import cli as devkit_cli
 from spec_support.delivery import _cli, _complete_proposal, _make_synced_repo, _start_worktree
 from spec_support.scope import git, write
 
+from devkit_spec.features.scope import Deadline, RegisterScopeUseCase, open_session
+
+
+def _scope_tasks(root: Path) -> list[str]:
+    session = open_session(root)
+    return [record.task_id for record in session.registry.query(session.location.namespace, Deadline(5))[0]]
+
 
 def _complete_feature_spec(
     wt: Path, slug: str = "feat", *, date: str = "2026-10-17", extra: dict[str, str] | None = None
@@ -278,7 +285,7 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     (repo / "docs/proposals/PROP-feat/decisions").mkdir(parents=True)
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
     unit = _complete_feature_spec(wt, "feat")
-    assert "[SCOPE: SPEC-feat " in _cli(wt, "spec", "scope", "register", "--spec", unit)
+    assert RegisterScopeUseCase().execute(open_session(wt), unit).record.task_id == "SPEC-feat"
 
     # Forbid any git network subcommand (fetch, push, ls-remote) during prepare and integrate.
     real_run_git = core_git.run_git
@@ -294,7 +301,7 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     # 1. Preparing (the scope the Host presents) leaves worktree, branch, base, and scope record untouched.
     digest = service.prepare("dev-feat").request.digest
     assert wt.is_dir()
-    assert "SPEC-feat" in _cli(repo, "spec", "scope", "query")
+    assert "SPEC-feat" in _scope_tasks(repo)
 
     # 2. The approved invocation merges into base, removes worktree & branch, prunes proposal dir, sweeps scope record.
     completed = service.execute_cli("dev-feat", expected_digest=None if auto else digest)
@@ -307,7 +314,7 @@ def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     assert completed.cleanup_steps == {"spec": "completed"}
     assert not wt.exists()
     assert not (repo / "docs/proposals/PROP-feat").exists()
-    assert "SPEC-feat" not in _cli(repo, "spec", "scope", "query")
+    assert "SPEC-feat" not in _scope_tasks(repo)
 
 
 def test_integration_service_respects_delete_branch_false_and_pull_request_required(
@@ -346,7 +353,7 @@ def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_
     locked.mkdir(parents=True)
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
     unit = _complete_feature_spec(wt, "feat")
-    assert "[SCOPE: SPEC-feat " in _cli(wt, "spec", "scope", "register", "--spec", unit)
+    assert RegisterScopeUseCase().execute(open_session(wt), unit).record.task_id == "SPEC-feat"
 
     service = IntegrationService(repo)
 
@@ -361,7 +368,7 @@ def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_
     assert partial.steps["merge"] == "completed"
     assert partial.cleanup_steps == {"spec": "failed"}
     # Scope record was still swept even though proposal prune failed.
-    assert "SPEC-feat" not in _cli(repo, "spec", "scope", "query")
+    assert "SPEC-feat" not in _scope_tasks(repo)
 
     assert (repo / "docs/proposals/PROP-feat").exists()
     assert partial.verification == "pending"

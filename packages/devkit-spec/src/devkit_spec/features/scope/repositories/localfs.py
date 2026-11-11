@@ -1,8 +1,8 @@
-"""The local file registry: one JSON record per task under ``<shared>/<namespace>/``, and the namespace's journal.
+"""The local file registry: one JSON record per task under ``<shared>/<namespace>/``.
 
 - ``<task-id>.json`` (the task ID mapped to a safe file name) holds one ``Record``; ``.lock`` serializes every
   operation of the namespace with ``devkit_core.core.file_lock`` (``flock``, Linux and macOS; the OS releases it when
-  the process dies); ``journal.jsonl`` is the append-only event journal.
+  the process dies). A ``journal.jsonl`` an earlier version appended is neither read nor written.
 - Each operation reads, compares and writes inside one lock hold. A record is published with
   ``devkit_core.core.atomic_write_text`` (a ``.<name>.devkit-*.tmp`` file in the same directory, synced and renamed over
   the record), so a reader never sees a partial record; temp files an interrupted publish left behind are removed
@@ -37,17 +37,13 @@ from devkit_spec.base.errors import (
     ScopeLockUnsupportedError,
     ScopeNamespaceError,
     ScopeRecordInvalidWarning,
-    ScopeRecordMissingError,
     ScopeSharedPathError,
-    ScopeStaleRevisionError,
     ScopeTaskExistsError,
     ScopeTokenMismatchError,
 )
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import (
-    JOURNAL_FILE,
     SCHEMA_VERSION,
-    Event,
     Problem,
     Record,
     ScopePath,
@@ -124,8 +120,8 @@ def safe_name(identifier: str) -> str:
 
 
 def is_temp(name: str) -> bool:
-    """Whether ``name`` is a temp file of ``atomic_write_text`` (``.<record>.devkit-*.tmp``); records, the lock
-    file and the journal never are."""
+    """Whether ``name`` is a temp file of ``atomic_write_text`` (``.<record>.devkit-*.tmp``); records and the lock
+    file never are."""
     return name.startswith(".") and ".devkit-" in name and name.endswith(".tmp")
 
 
@@ -149,7 +145,7 @@ def _git_worktree_exists(path: str, deadline: Deadline) -> bool:
 
 
 class LocalRegistry:
-    """The file-based ``Registry`` and event journal on the shared directory ``shared``."""
+    """The file-based ``Registry`` on the shared directory ``shared``."""
 
     def __init__(
         self,
@@ -185,9 +181,6 @@ class LocalRegistry:
         """Whether the unreadable record file of ``problem`` may be the record of the token hashed to ``token_digest``:
         ``False`` only when the file is gone or its bytes can be read and do not contain that hash."""
         return _may_contain(self.namespace_dir(namespace) / problem.file, json.dumps(token_digest).encode("utf-8"))
-
-    def journal_path(self, namespace: str) -> Path:
-        return self.namespace_dir(namespace) / JOURNAL_FILE
 
     def _shared_error(self, exc: OSError, namespace: str) -> ScopeSharedPathError:
         return ScopeSharedPathError(
@@ -329,44 +322,6 @@ class LocalRegistry:
         with self._read_locked(namespace, deadline) as directory:
             return ([], []) if directory is None else self._read_all(directory)
 
-    def update(self, token: str, expected_revision: int, request_id: str, record: Record, deadline: Deadline) -> Record:
-        with self._locked(record.namespace, deadline):
-            path = self.record_path(record.namespace, record.task_id)
-            existing = self._read_own(path)
-            if existing is None:
-                raise ScopeRecordMissingError(
-                    f"no record for task {record.task_id} in the namespace", target_files=[str(path)]
-                )
-            if existing.token_hash != token_hash(token):
-                raise ScopeTokenMismatchError(
-                    f"the token does not own the record of task {record.task_id}", target_files=[str(path)]
-                )
-            if request_id and existing.last_request_id == request_id:
-                return existing
-            if existing.revision != expected_revision:
-                raise ScopeStaleRevisionError(
-                    f"the record of task {record.task_id} is at revision {existing.revision}, "
-                    f"not the revision {expected_revision} that was read",
-                    target_files=[str(path)],
-                )
-            stamp = self.now()
-            first_seen = {path.key: path.first_seen for path in existing.scopes if path.first_seen}
-            updated = record.with_(
-                schema_version=SCHEMA_VERSION,
-                token_hash=existing.token_hash,
-                revision=existing.revision + 1,
-                last_request_id=request_id,
-                updated_at=stamp,
-                hostname=record.hostname or existing.hostname,
-                base_revision=record.base_revision or existing.base_revision,
-                shared_worktree=existing.shared_worktree,
-                scopes=tuple(
-                    _seen(path, first_seen.get(path.key) or path.first_seen or stamp) for path in record.scopes
-                ),
-            )
-            self._write(path, updated)
-            return updated
-
     def release(self, namespace: str, task_id: str, token: str, deadline: Deadline) -> None:
         with self._locked(namespace, deadline) as directory:
             path = self.record_path(namespace, task_id)
@@ -441,45 +396,6 @@ class LocalRegistry:
                                 result = _verdict(result, Verdict.ERROR, str(exc))
                 results.append(result)
         return sorted(results, key=lambda result: result.task_id)
-
-    # --- the event journal ---------------------------------------------------------------------------------
-
-    def append(self, namespace: str, events: list[Event], deadline: Deadline) -> None:
-        if not events:
-            return
-        data = "".join(json.dumps(event.to_dict(), ensure_ascii=False) + "\n" for event in events).encode("utf-8")
-        with self._locked(namespace, deadline):
-            path = self.journal_path(namespace)
-            with open(path, "a+b") as handle:
-                size = handle.seek(0, os.SEEK_END)
-                if size:
-                    # an interrupted earlier append may have left a line without its newline: end it first
-                    handle.seek(size - 1)
-                    if handle.read(1) != b"\n":
-                        data = b"\n" + data
-                handle.write(data)
-
-    def history(self, namespace: str, deadline: Deadline) -> tuple[list[Event], list[Problem]]:
-        """The journal's events in append order, which the namespace lock serializes; never re-sorted by ``at``,
-        whose wall clock can step back."""
-        events: list[Event] = []
-        problems: list[Problem] = []
-        with self._read_locked(namespace, deadline) as directory:
-            if directory is None:
-                return [], []
-            try:
-                lines = self.journal_path(namespace).read_bytes().split(b"\n")
-            except FileNotFoundError:
-                return [], []
-            for number, raw in enumerate(lines, 1):
-                line = raw.strip()
-                if not line:
-                    continue
-                try:
-                    events.append(Event.from_dict(json.loads(line)))
-                except (ValueError, KeyError, TypeError):
-                    problems.append(Problem(JOURNAL_FILE, "parse", number))
-        return events, problems
 
 
 def _may_contain(path: Path, needle: bytes) -> bool:

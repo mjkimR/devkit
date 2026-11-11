@@ -2,44 +2,32 @@ from __future__ import annotations
 
 import json
 import os
-import threading
 import time
 from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, Level
-from spec_support.scope import SPEC, git, make_repo, write
+from spec_support.scope import CAP_A, SPEC, git, make_repo, write
 
 from devkit_spec.base.errors import (
     ScopeNotAWorktreeError,
-    ScopeRecordMissingError,
     ScopeSharedPathError,
-    ScopeStaleRevisionError,
     ScopeTimeoutError,
     ScopeTokenExistsError,
     ScopeTokenMismatchError,
-    ScopeTokenMissingError,
 )
 from devkit_spec.features.policy.services.config import ScopeConfig
 from devkit_spec.features.scope import (
-    AckStatus,
     Deadline,
-    FlockLocker,
-    Granularity,
     Record,
     RegisterScopeUseCase,
     ReleaseScopeUseCase,
-    ScopePath,
-    Session,
     Source,
-    Stage,
-    UpdateScopeUseCase,
     auto_register,
     default_namespace,
     locate,
     open_session,
     own,
-    slug_from_spec,
 )
 from devkit_spec.features.scope.repositories import location as location_module
 from devkit_spec.features.scope.repositories.location import SHARED_DIR, TOKEN_FILE, load_token, save_token
@@ -49,11 +37,6 @@ from devkit_spec.features.scope.usecases import flow
 @pytest.fixture
 def repo(tmp_path: Path) -> Path:
     return make_repo(tmp_path / "repo")
-
-
-def _events(session: Session) -> list[dict[str, object]]:
-    path = session.location.shared_path / session.location.namespace / "journal.jsonl"
-    return [json.loads(line) for line in path.read_text().splitlines()]
 
 
 def test_locate_defaults_and_configuration(repo: Path, tmp_path: Path) -> None:
@@ -74,52 +57,75 @@ def test_locate_defaults_and_configuration(repo: Path, tmp_path: Path) -> None:
         locate(outside, ScopeConfig(), Deadline(10))
 
 
-def test_register_update_release_flow(repo: Path) -> None:
+def test_register_release_flow(repo: Path) -> None:
     session = open_session(repo)
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.status == AckStatus.FAILED and isinstance(ack.error, ScopeTokenMissingError)
-
+    assert own(session) is None, "a worktree without a token owns no record"
     registered = RegisterScopeUseCase().execute(session, SPEC)
     stored = registered.record
-    assert (stored.task_id, stored.base_revision, stored.base_ref, stored.worktree) == (
+    assert (stored.task_id, stored.base_revision, stored.base_ref, stored.worktree, stored.revision) == (
         "SPEC-s",
         git(repo, "rev-parse", "HEAD"),
-        "",  # the base checkout itself: the range starts at base_revision
+        "",  # the base checkout itself has no base ref
         str(repo),
+        1,
     )
     assert session.location.token_path.read_text().strip() == registered.token
     assert session.location.token_path.stat().st_mode & 0o777 == 0o600
-    assert (
-        registered.token not in (session.location.shared_path / session.location.namespace / "SPEC-s.json").read_text()
-    )
-
-    other = Record(
-        namespace=session.location.namespace,
-        task_id="SPEC-other",
-        worktree="/wt/other",
-        scopes=(ScopePath("src/a/a.py", Granularity.FILE, Source.DECLARED_CODE, Stage.SPEC),),
-    )
-    session.registry.register(other, Deadline(5))
-    write(repo, "src/new.py", "n = 1\n")
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert (ack.status, ack.revision, ack.added, ack.removed, ack.overlaps) == (AckStatus.APPLIED, 2, 1, 0, 1)
-    assert ack.request_id and ack.error is None
-    assert (ack.pairs[0].code[0].path, ack.pairs[0].code[0].other) == ("src/a", "src/a/a.py")
-    again = UpdateScopeUseCase().execute(session, SPEC)
-    assert (again.status, again.added, again.revision) == (AckStatus.APPLIED, 0, 3)
-    replay = UpdateScopeUseCase().execute(session, SPEC, again.request_id)
-    assert (replay.status, replay.revision) == (AckStatus.APPLIED, 3), "an applied request id is not written twice"
+    path = session.location.shared_path / session.location.namespace / "SPEC-s.json"
+    data = json.loads(path.read_text())
+    assert registered.token not in path.read_text()
+    assert (data["schema_version"], data["last_request_id"], data["last_added"], data["last_removed"]) == (1, "", 0, 0)
+    mine = own(session)
+    assert mine is not None and mine.record == stored
 
     released = ReleaseScopeUseCase().execute(session)
-    assert (released.task, released.revision, released.already) == ("SPEC-s", 3, False)
+    assert (released.task, released.revision, released.already) == ("SPEC-s", 1, False)
     assert not session.location.token_path.exists()
     assert ReleaseScopeUseCase().execute(session).registered is False, "releasing again changes nothing"
-    events = _events(session)
-    assert [event["event"] for event in events] == ["update", "register", "update", "update", "update", "release"]
-    first_update = events[0]
-    assert first_update["status"] == "failed" and "task" not in first_update
-    applied = events[2]
-    assert (applied["task"], applied["slug"], applied["added"], applied["overlaps"]) == ("SPEC-s", "s", 1, 1)
+    assert not (session.location.shared_path / session.location.namespace / "journal.jsonl").exists()
+
+
+def test_creation_records_declarations_and_dirty_paths_without_a_committed_range(repo: Path, tmp_path: Path) -> None:
+    linked = tmp_path / "repo-wt-dev-s"
+    git(repo, "worktree", "add", "-q", "-b", "dev-s", str(linked))
+    write(linked, "docs/decisions/ADR-new.md", "---\nid: ADR-new\n---\n")  # untracked handoff output
+    write(linked, "src/b/b.py", "b = 2\n")
+    git(linked, "add", "src/b/b.py")  # staged
+    write(linked, "src/shared.py", "s = 2\n")  # unstaged
+    write(linked, "notes/odd:name.md", "x\n")  # outside the path contract
+    session = open_session(linked)
+    record = RegisterScopeUseCase().execute(session, SPEC).record
+    observed = [path.path for path in record.scopes if path.source is Source.OBSERVED]
+    assert observed == ["docs/decisions/ADR-new.md", "src/b/b.py", "src/shared.py"]
+    declared = {(path.source, path.path) for path in record.scopes if path.source is not Source.OBSERVED}
+    assert (Source.DECLARED_CODE, "src/a") in declared and (Source.DECLARED_DOC, CAP_A) in declared
+    reasons = [(item.value, item.reason, item.source) for item in record.unresolved]
+    assert ("notes/odd:name.md", "invalid-path", Source.OBSERVED) in reasons, "an invalid dirty path is never dropped"
+    assert not {item.reason for item in record.unresolved} & {
+        "missing-base-ref",
+        "missing-base-revision",
+        "unknown-base-revision",
+    }, "creation reads no committed range"
+    assert (record.base_revision, record.base_ref) == (git(linked, "rev-parse", "HEAD"), "refs/heads/main")
+    assert all(path.first_seen for path in record.scopes)
+
+
+def test_a_dirty_path_timeout_fails_the_registration(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    linked = tmp_path / "repo-wt-dev-s"
+    git(repo, "worktree", "add", "-q", "-b", "dev-s", str(linked))
+    session = open_session(linked)
+    listing = flow.dirty
+
+    def expired(root: Path, deadline: Deadline) -> list[str]:
+        return listing(root, Deadline(0))  # the command's deadline runs out while Git lists the dirty paths
+
+    monkeypatch.setattr(flow, "dirty", expired)
+    with pytest.raises(ScopeTimeoutError):
+        RegisterScopeUseCase().execute(session, SPEC)
+    assert not session.location.token_path.exists()
+    assert session.registry.query(session.location.namespace, Deadline(5))[0] == [], "nothing is registered"
 
 
 def test_second_registration_in_a_worktree_is_refused(repo: Path) -> None:
@@ -147,7 +153,8 @@ def test_a_registration_that_loses_the_token_race_is_rolled_back(repo: Path, mon
     assert [(item.task_id, item.shared_worktree) for item in records] == [("first", False)], (
         "the losing record is removed and the winner no longer shares the worktree"
     )
-    assert own(session).record.task_id == "first", "the winner keeps its token"
+    mine = own(session)
+    assert mine is not None and mine.record.task_id == "first", "the winner keeps its token"
 
 
 def test_token_files_are_complete_or_ignored(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, repo: Path) -> None:
@@ -215,132 +222,6 @@ def test_a_failed_rollback_is_a_detail_of_the_original_error(repo: Path, monkeyp
     assert "scope timeout" in raised.value.details[0]
 
 
-def test_a_retried_request_is_answered_from_the_stored_record(repo: Path) -> None:
-    session = open_session(repo)
-    RegisterScopeUseCase().execute(session, SPEC)
-    write(repo, "src/new.py", "n = 1\n")
-    write(repo, "src/other.py", "o = 1\n")
-    applied = UpdateScopeUseCase().execute(session, SPEC)
-    assert (applied.status, applied.revision, applied.added, applied.removed) == (AckStatus.APPLIED, 2, 2, 0)
-    (repo / SPEC).rename(repo / "specs/moved")  # collecting again would fail
-    replay = UpdateScopeUseCase().execute(session, SPEC, applied.request_id)
-    assert replay.error is None
-    assert (replay.status, replay.revision, replay.added, replay.removed) == (AckStatus.APPLIED, 2, 2, 0), (
-        "a replay reports the counts its request recorded"
-    )
-    assert replay.record == applied.record
-    assert UpdateScopeUseCase().execute(session, SPEC).status == AckStatus.FAILED, "a new request collects again"
-
-
-def test_observed_scope_forks_from_the_base_branch(repo: Path, tmp_path: Path) -> None:
-    linked = tmp_path / "repo-wt-task"
-    git(repo, "worktree", "add", "-q", "-b", "task", str(linked))
-    session = open_session(linked)
-    registered = RegisterScopeUseCase().execute(session, SPEC)
-    assert registered.record.base_ref == "refs/heads/main"
-    write(linked, "src/a/a.py", "a = 2\n")
-    git(linked, "commit", "-q", "-am", "task")
-    write(repo, "src/b/b.py", "b = 2\n")  # upstream work on the base branch
-    git(repo, "commit", "-q", "-am", "upstream")
-    git(linked, "merge", "-q", "--no-edit", "main")
-
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    observed = {path.path for path in ack.record.scopes if path.source is Source.OBSERVED} if ack.record else set()
-    assert observed == {"src/a/a.py"}, "what the task merged in from its base branch is not observed"
-
-    git(repo, "branch", "-m", "main", "trunk")
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.status == AckStatus.APPLIED and ack.record is not None
-    assert ack.record.base_ref == "refs/heads/trunk", "a renamed base branch is detected again"
-    assert not [item for item in ack.record.unresolved if item.reason == "missing-base-ref"]
-    assert {path.path for path in ack.record.scopes if path.source is Source.OBSERVED} == {"src/a/a.py"}
-
-    git(repo, "switch", "-q", "--detach")
-    git(repo, "branch", "-D", "trunk")
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.status == AckStatus.APPLIED and ack.record is not None
-    assert ("refs/heads/trunk", "missing-base-ref") in {(item.value, item.reason) for item in ack.record.unresolved}
-    observed = {path.path for path in ack.record.scopes if path.source is Source.OBSERVED}
-    assert {"src/a/a.py", "src/b/b.py"} <= observed, "an unresolvable base ref falls back to base_revision"
-
-    git(repo, "switch", "-q", "-c", "next")
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.record is not None and ack.record.base_ref == "refs/heads/next", "the next detection replaces it"
-    assert not [item for item in ack.record.unresolved if item.reason == "missing-base-ref"]
-
-
-def _observed(session: Session) -> set[str]:
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.record is not None, ack.error
-    return {path.path for path in ack.record.scopes if path.source is Source.OBSERVED}
-
-
-def test_a_base_checkout_on_another_branch_adds_no_upstream_paths(repo: Path, tmp_path: Path) -> None:
-    git(repo, "switch", "-q", "-c", "other")
-    write(repo, "src/b/b.py", "b = 'other'\n")
-    git(repo, "commit", "-q", "-am", "other")
-    git(repo, "switch", "-q", "main")
-    write(repo, "src/shared.py", "s = 'main'\n")  # main moves on after other forked
-    git(repo, "commit", "-q", "-am", "main")
-    git(repo, "switch", "-q", "other")  # the base checkout is on other when the task registers
-    linked = tmp_path / "repo-wt-task"
-    git(repo, "worktree", "add", "-q", "-b", "task", str(linked), "main")
-    session = open_session(linked)
-    assert RegisterScopeUseCase().execute(session, SPEC).record.base_ref == "refs/heads/other"
-    write(linked, "src/a/a.py", "a = 2\n")
-    git(linked, "commit", "-q", "-am", "task")
-    assert _observed(session) == {"src/a/a.py"}, "the range is never wider than base_revision..HEAD"
-
-
-def test_a_worktree_forked_from_another_branch_adds_no_upstream_paths(repo: Path, tmp_path: Path) -> None:
-    git(repo, "branch", "release")
-    linked = tmp_path / "repo-wt-release"
-    git(repo, "worktree", "add", "-q", "-b", "prep", str(linked), "release")
-    write(linked, "src/b/b.py", "b = 'release'\n")
-    git(linked, "commit", "-q", "-am", "release work")
-    git(linked, "switch", "-q", "--detach")
-    git(repo, "branch", "-f", "release", "prep")
-    task = tmp_path / "repo-wt-task"
-    git(repo, "worktree", "add", "-q", "-b", "task", str(task), "release")  # the base checkout stays on main
-    session = open_session(task)
-    assert RegisterScopeUseCase().execute(session, SPEC).record.base_ref == "refs/heads/main"
-    write(task, "src/a/a.py", "a = 2\n")
-    git(task, "commit", "-q", "-am", "task")
-    assert _observed(session) == {"src/a/a.py"}, "release's own commits are not the task's"
-
-
-def test_update_statuses_for_stale_timeout_and_orphaned_records(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    session = open_session(repo)
-    RegisterScopeUseCase().execute(session, SPEC)
-    original = session.registry.update
-
-    def moved_on(token: str, expected: int, request: str, record: Record, deadline: Deadline) -> Record:
-        original(token, expected, "someone-else", record, deadline)
-        return original(token, expected, request, record, deadline)
-
-    monkeypatch.setattr(session.registry, "update", moved_on)
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.status == AckStatus.STALE and isinstance(ack.error, ScopeStaleRevisionError)
-    monkeypatch.undo()
-
-    unlock = FlockLocker().acquire(session.location.shared_path / session.location.namespace / ".lock", Deadline(5))
-    timer = threading.Timer(0.5, unlock)  # the holder lets go before the journal append gives up
-    timer.start()
-    ack = UpdateScopeUseCase().execute(Session(session.location, session.registry, Deadline(0.2)), SPEC)
-    timer.join()
-    assert ack.status == AckStatus.TIMEOUT and isinstance(ack.error, ScopeTimeoutError)
-    assert ack.notices == [], "the journal append runs under its own deadline"
-
-    assert [event["status"] for event in _events(session) if event["event"] == "update"] == ["stale", "timeout"]
-    (session.location.shared_path / session.location.namespace / "SPEC-s.json").unlink()
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert isinstance(ack.error, ScopeRecordMissingError)
-    with pytest.raises(ScopeRecordMissingError):
-        own(session)
-    released = ReleaseScopeUseCase().execute(session)
-    assert released.already and not session.location.token_path.exists(), "an orphaned token is removed"
-
-
 def test_release_of_a_named_task(repo: Path) -> None:
     session = open_session(repo)
     # Without a token nothing of this worktree is registered: release succeeds and changes nothing (its --help).
@@ -377,8 +258,6 @@ def test_an_unreadable_own_record_keeps_the_token(repo: Path) -> None:
         assert error.target_files == (session.location.shown(path),) and error.details == ("SPEC-s.json: parse",)
         assert "token is kept" in error.message
     assert session.location.token_path.exists(), "the token of a record that cannot be read is kept"
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.status == AckStatus.FAILED and ack.error is not None and ack.error.code == "SPEC_SCOPE_RECORD_INVALID"
 
 
 def test_unrelated_unreadable_records_do_not_block_release(repo: Path) -> None:
@@ -395,45 +274,35 @@ def test_unrelated_unreadable_records_do_not_block_release(repo: Path) -> None:
 
     RegisterScopeUseCase().execute(session, SPEC)
     (directory / "SPEC-s.json").unlink()  # the record is gone: the token is orphaned
-    with pytest.raises(ScopeRecordMissingError):
-        own(session)
-    assert isinstance(UpdateScopeUseCase().execute(session, SPEC).error, ScopeRecordMissingError)
+    assert own(session) is None, "an orphaned token owns no record"
     released = ReleaseScopeUseCase().execute(session)
     assert released.already and not session.location.token_path.exists(), "the orphaned token is removed"
 
 
-def test_journal_failure_is_one_warning(repo: Path) -> None:
+def test_a_shared_worktree_is_a_creation_notice(repo: Path) -> None:
     session = open_session(repo)
-    (session.location.shared_path / session.location.namespace / "journal.jsonl").mkdir(parents=True)
+    session.registry.register(
+        Record(namespace=session.location.namespace, task_id="SPEC-x", worktree=str(repo)), Deadline(5)
+    )
     registered = RegisterScopeUseCase().execute(session, SPEC)
-    assert [notice.code for notice in registered.notices] == ["SPEC_SCOPE_JOURNAL_UNAVAILABLE"]
-    ack = UpdateScopeUseCase().execute(session, SPEC)
-    assert ack.status == AckStatus.APPLIED and [notice.code for notice in ack.notices] == [
-        "SPEC_SCOPE_JOURNAL_UNAVAILABLE"
-    ]
+    assert [notice.code for notice in registered.notices] == ["SPEC_SCOPE_SHARED_WORKTREE"]
 
 
 def test_auto_register_only_in_a_linked_worktree_at_either_level(repo: Path, tmp_path: Path) -> None:
-    assert auto_register(repo, SPEC, source="handoff") is None, "the base checkout never registers"
+    assert auto_register(repo, SPEC) is None, "the base checkout never registers"
     linked = tmp_path / "repo-wt-s"
     git(repo, "worktree", "add", "-q", "-b", "s", str(linked))
-    registered = auto_register(linked, SPEC, source="handoff")
+    registered = auto_register(linked, SPEC)
     assert registered is not None and registered.notices == []
     assert registered.record.worktree == str(linked)
     session = open_session(linked)
-    assert _events(session)[-1]["source"] == "handoff"
-    assert auto_register(linked, SPEC, source="handoff") is None, "automatic registration failures are silent"
+    assert not (session.location.shared_path / session.location.namespace / "journal.jsonl").exists()
+    assert auto_register(linked, SPEC) is None, "automatic registration failures are silent"
 
     for level in ("required", "auto"):
         write(linked, ".devkit/config.toml", f'[tool.spec]\nworktree = "{level}"\n')
         ReleaseScopeUseCase().execute(session)
-        assert auto_register(linked, SPEC, source="handoff") is not None, level
+        assert auto_register(linked, SPEC) is not None, level
     plain = tmp_path / "plain"
     write(plain, ".devkit/config.toml", "")
-    assert auto_register(plain, "specs/x", source="handoff") is None
-
-
-def test_slug_from_spec() -> None:
-    assert slug_from_spec("specs/2026-10/20261008-scope-journal") == "scope-journal"
-    assert slug_from_spec("specs/2026-10/20261008-x/") == "x"
-    assert slug_from_spec("specs/other") == ""
+    assert auto_register(plain, "specs/x") is None
