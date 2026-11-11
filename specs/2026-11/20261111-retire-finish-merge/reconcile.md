@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-retire-finish-merge
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-11/20261111-single-local-landing-route.md
     resolution: modified

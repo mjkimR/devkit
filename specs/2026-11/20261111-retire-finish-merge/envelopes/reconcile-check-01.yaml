@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-11-11T01:21:30.823803Z'
+status: completed
+summary: 'reconcile-reviewer (medium): all 19 reconcile.md targets match the code at 5df2063d; no stale finish --merge, finish guard, push or retired-code mention outside history; ADR traces and supersession pointers verified; no findings'
+findings: []
+checks:
+  reconcile: PASS 19/19 targets
+  stale_refs: PASS rg over docs, guides, READMEs, sources
+diff_scope:
+  base: fdf531d83f3337fbd9919ebf24401ae702f705bd
+  head: 5df2063d1a5e4038a6f2c6fa98f68634270c2e85
+activity_effort: medium
