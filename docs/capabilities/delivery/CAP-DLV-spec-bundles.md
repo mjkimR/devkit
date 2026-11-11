@@ -180,8 +180,8 @@ before anything is written; `DEFAULT_WORKFLOW` is `sdd-spec-feature`, `BUGFIX_WO
 | `SPEC_EXISTS` | `ERROR` (`INPUT_ERROR`) | `SpecExistsError` | A document declares `SPEC-<slug>` or `PROP-<slug>` as its ID or an alias, a proposal of the slug exists, or the bundle directory exists; `[TARGET]` lists them. |
 | `SPEC_WORKFLOW_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecWorkflowError` | `--workflow` names a workflow that does not resolve or validate, or a definition path other than the one discovered for its id; `[DETAIL]` carries devkit's code (`WORKFLOW_NOT_BINDABLE` for the latter). |
 | `SPEC_WRITE_FAILED` | `ERROR` (`MAINTENANCE`) | `SpecWriteError` | A write failed; what was written is removed. When the roll-back was incomplete, `[DETAIL]` lists what could not be removed. |
-| `SPEC_UNBOUND` | `NOTICE` | `SpecUnboundNotice` | No `--workflow` and `sdd-spec-feature` is not available: `spec.md` is unbound. |
-| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `--namespace` is neither `global` nor registered, or stripped `--summary` is empty, longer than 300 characters or not English. |
+| `SPEC_UNBOUND` | `NOTICE` | `SpecUnboundNotice` | No `--workflow` (or `--task-kind feature`) and `sdd-spec-feature` is not available: `spec.md` is unbound. |
+| `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `--namespace` is neither `global` nor registered, stripped `--summary` is empty, longer than 300 characters or not English, or `--task-kind` is given with `--workflow`, blank or outside `feature` and `bugfix` (`[TARGET] --task-kind`). |
 | `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `[tool.docs]` is malformed and the namespace is not `--namespace global` (it is validated or detected; `CAP-DOCS-namespaces`). |
 
 

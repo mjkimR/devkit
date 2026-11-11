@@ -244,7 +244,8 @@ The commands print exactly one JSON object. Exit 0 statuses/codes are created/`B
 preview/`BUNDLE_SNAPSHOT_PREVIEW`, updated/`BUNDLE_SNAPSHOT_UPDATED` and unchanged/`BUNDLE_SNAPSHOT_UNCHANGED`.
 Results carry destination, package, bundle versions, current_digest, candidate_digest, changes, packaging_changed,
 removed_selected, actions and notices. `BUNDLE_SNAPSHOT_INVALID`, `BUNDLE_SNAPSHOT_UNSUPPORTED`,
-`BUNDLE_SNAPSHOT_CONFLICT` and `BUNDLE_SNAPSHOT_WRITE_FAILED` use exit 2 with deterministic corrective directives.
+`BUNDLE_SNAPSHOT_CONFLICT` and `BUNDLE_SNAPSHOT_WRITE_FAILED` use exit 2 with deterministic corrective directives, as
+does `ARGUMENT_INVALID` for only one of `--expect` and `--candidate` (`[TARGET]` the missing flag).
 
 Schema 1 snapshot.json contains package; source name/version/commit/requires_python/metadata_sha256; bundle
 version/module pairs; ordered files with SHA256 and normalized modes (420 or 493); and aggregate digest. Payload
