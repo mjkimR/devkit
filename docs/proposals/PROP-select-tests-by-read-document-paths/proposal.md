@@ -2,7 +2,7 @@
 id: PROP-select-tests-by-read-document-paths
 title: Select tests by the repository paths they read
 summary: "Lets affected-test selection find tests that read a repository path through a root-anchored literal path expression, instead of listing each such test in the selector's data table."
-status: reviewing                       # draft | reviewing | accepted | rejected
+status: accepted                       # draft | reviewing | accepted | rejected
 created_at: 2026-11-11
 target_area: docs/development/
 priority: medium                       # critical | high | medium | low
