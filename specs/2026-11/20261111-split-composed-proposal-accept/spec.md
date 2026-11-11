@@ -4,11 +4,16 @@ title: Split composed Planning acceptance into its own subcommand
 summary: Moves the composed Planning acceptance (accept, integrate and clean up plan-<slug>, optionally preparing handoff) out of devkit spec proposal accept into its own subcommand, so each command has one operation and one option set.
 status: planned
 created: 2026-11-11
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-DLV-proposal-lifecycle
+  - CAP-DLV-proposal-planning
+  - CAP-DLV-delivery-workflows
+  - CAP-DLV-project-policy
+  - CAP-HARN-command-mount
+related_usecases:
+  - UC-plan-and-hand-off-a-proposal
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-split-composed-proposal-accept] Split composed Planning acceptance into its own subcommand
 
@@ -16,111 +21,106 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-split-composed-proposal-accept on 2026-11-11.
 
-### 1. Background & Hypothesis
-
-`devkit spec proposal accept` carries two operations selected by `--mode`
-(review-refactor run `rr-20261111-guidance-cli`, finding C3-4, deferred to this draft by the user):
+`devkit spec proposal accept` carries two operations selected by `--mode` (review-refactor run
+`rr-20261111-guidance-cli`, finding C3-4):
 
 - Without `--mode`, the basic acceptance only records `plan-accept` and `status: accepted`. It takes `--direct`,
-  `--check` and `--note`, and it is the form the `cloud-pr` route (autohub) uses for a Planning branch.
-- With `--mode accept_only|accept_and_handoff`, the composed acceptance also integrates and cleans up
-  `plan-<slug>`, and for `accept_and_handoff` it prepares the Development handoff, left not started. It is the only
-  Planning acceptance route of a local Host (`CAP-DLV-proposal-lifecycle`).
+  `--check` and `--note`, and it is the form the `cloud-pr` route uses for a Planning branch.
+- With `--mode accept_only|accept_and_handoff`, the composed acceptance also integrates and cleans up `plan-<slug>`,
+  and for `accept_and_handoff` it prepares the Development handoff, left not started. It is the only Planning
+  acceptance route of a local Host (`CAP-DLV-proposal-lifecycle`).
 
 Their option sets are disjoint and guarded by hand in the CLI adapter: `--direct` and `--check` are refused with
 `--mode`, `--effort` requires `--mode`, and `--note` is ignored under `--mode`. An agent cannot tell from `--help`
-which combinations are valid. Each change to acceptance must keep the guards, the two forms and three documents
-aligned. The drift reconciliation of the same run had to scope the "single route" sentence to the local Host.
+which combinations are valid, and each change to acceptance must keep the guards, the two forms and their documents
+aligned.
 
-Hypothesis: one subcommand per operation removes the guards and makes each `--help` complete, with no change to
-what either operation does.
+This spec moves the composed acceptance to its own subcommand, `devkit spec proposal accept-plan`, with only its
+options, and removes `--mode` and `--effort` from `accept`. Neither operation changes what it does: the same use
+cases run with the same sentinels, fields, error codes and exit codes.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Split composed Planning acceptance into its own subcommand so that system capabilities are extended.
+- **US-1**: As a local Host agent accepting a reviewed Planning branch, I want the composed acceptance to be its own
+  subcommand whose `--help` lists exactly its options, so that I can build the command without knowing which
+  `accept` flags exclude each other.
+- **US-2**: As an agent using the basic acceptance (`cloud-pr` route, `--direct` repair, `--check`), I want `accept`
+  to describe only that operation, unchanged.
+
+The feature changes how the local Host's acceptance step of `UC-plan-and-hand-off-a-proposal` is invoked.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: no change to what either acceptance does: `PlanAcceptUseCase` and `AcceptProposalUseCase`,
+   the mode names, the approval reply, the readiness and policy checks, sentinel kinds (`ACCEPTED`,
+   `ACCEPTED_STOPPED`, `ACCEPT_CHECK`), output fields, error codes and exit codes stay as they are.
+2. **Scope Excluded**: no compatibility shim. `accept --mode` and `accept --effort` become click usage errors
+   (exit `2`); the bundle guidance ships in the same `devkit-spec` wheel as the command and no external consumer
+   uses the composed form.
+3. **Scope Excluded**: `devkit spec proposal handoff --effort` (the composed handoff) keeps its form.
+4. **Scope Excluded**: no ADR change. ADRs that name `accept --mode` describe their decision at its time and stay
+   unchanged; `docs/decisions/` and the historical `docs/materials/` are not edited.
+5. **Scope Excluded**: `accept-plan` has no `--check`, `--direct` or `--note`; read-only material for the Host stays
+   `devkit spec proposal report` and `devkit workflow envelope check`.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] `accept-plan` runs the composed acceptance unchanged
 
-## 5. Carried Proposal Notes
+- **Given** a reviewed proposal on `plan-<slug>` that `accept --mode` accepted before this change
+- **When** the Host runs `devkit spec proposal accept-plan <slug> --by user|policy --mode accept_only`, or
+  `--mode accept_and_handoff --effort <low|medium|high>`, from the retained base checkout
+- **Then** it calls `PlanAcceptUseCase` with the same slug, mode, effort and authority and prints the same
+  `[ACCEPTED: ...]` or `[ACCEPTED_STOPPED: ...]` line, `--format json` document, notices and exit code (`0`, `1`
+  after partial effects, `2` when nothing was done) as `accept --mode` did, with the fields `mode=`, `authority=`,
+  `completed=`, `target_sha=`, `landed_sha=`, `verification=` and `handoff=` as before.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] `accept-plan` takes only its own options
 
-### 2. Technical Spike Questions
+- **Given** `devkit spec proposal accept-plan`
+- **When** it runs without `--mode`, with a `--mode` other than `accept_only` or `accept_and_handoff`, or with
+  `--check`, `--direct` or `--note`
+- **Then** click refuses it with a usage error and exit `2` before any check or write (missing option, invalid
+  choice or no such option); `--by` is required and limited to `user|policy`, `--effort` to `low|medium|high`.
 
-- **Q1** (answered by the user, `q1` choice a): the subcommand is `devkit spec proposal accept-plan <slug> --by
-  user|policy --mode accept_only|accept_and_handoff [--effort low|medium|high]`, keeping the mode names and the use
-  case.
-- **Q2** (answered from the evidence at the worktree HEAD): the composed form is named by
-  - code: the CLI adapter `features/delivery/cli/proposals.py` (`accept_cmd`, `_composed_check_refusal`, the module
-    docstring), `usecases/native_plan_accept.py` (`_accept_command`, the command string a
-    `SPEC_PROPOSAL_WRONG_WORKTREE` refusal names), `usecases/native_handoff.py` (the `[FIX]` naming `accept --by user
-    --mode accept_only`) and `base/errors.py` (docstrings; `target_files = ("--mode", "--effort")`);
-  - spec bundle sources: `spec-orchestrate/SKILL.md.jinja` and `references/git-operator-operations.md`,
-    `spec-review-proposal/SKILL.md.jinja`, `spec-next/references/workflow-signals.md.jinja` and
-    `references/post-handoff.md`;
-  - Living Spec: `CAP-DLV-proposal-lifecycle` (examples, the composed acceptance section, the
-    `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` row), `CAP-DLV-delivery-workflows` (the `proposal-handoff` policy row and the
-    command table), `CAP-DLV-project-policy` (rule 3's policy reader), `UC-plan-and-hand-off-a-proposal` (the composed
-    scenarios), `docs/development/reference/integration.md`; `CAP-HARN-command-mount` §4.2 lists the `proposal`
-    subcommands;
-  - tests: `tests/e2e/features/delivery/test_plan_accept_cli.py`, `tests/integration/features/delivery/`
-    (`test_composed_output.py`, `test_approval_error_modes.py`), `tests/integration/package/test_help_and_notices.py`,
-    `tests/integration/bundles/spec/` (`test_git_operator.py`, `test_sdd_baseline_guidance.py`).
+### [AC-03] The effort check stays in the use case
 
-  No external consumer uses it: devkit's external consumers are `devkit.advisory` and `devkit-cli`
-  (`ADR-remove-unused-cli-options-without-shims`), and the `cloud-pr` route (autohub) uses the basic form. Within
-  `0.x` a breaking CLI change is allowed in a minor release (`ARCH-05-3-command-plugins`, `docs/development/ci-cd.md`),
-  and the bundle guidance ships in the same `devkit-spec` wheel as the command, so the old form is removed without a
-  shim.
-- **Q3** (answered): yes. The basic path calls `AcceptProposalUseCase` on its own branch of `accept_cmd`, separate from
-  `PlanAcceptUseCase`; removing the composed branch leaves repair (`--direct`), `--check`, `--note` and the `cloud-pr`
-  Planning acceptance unchanged.
+- **Given** `accept-plan <slug> --by user --mode accept_and_handoff` without `--effort`
+- **When** it runs
+- **Then** it refuses with `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` (exit `2`), whose `target_files` are `--mode` and
+  `--effort`, exactly as `accept --mode accept_and_handoff` did.
 
-### 3. Proposed Design & Impact
+### [AC-04] `accept` keeps only the basic acceptance
 
-- Add the composed acceptance as its own subcommand `devkit spec proposal accept-plan <slug> --by user|policy --mode
-  accept_only|accept_and_handoff [--effort low|medium|high]` (`q1`) with only its options (`--by`, `--mode`,
-  `--effort`, `-w`, `--format`); `--mode` is required. The mode names stay those of the use case, its approval reply
-  and its outputs, and the check that `--effort` belongs to `accept_and_handoff` stays in the use case
-  (`SPEC_PROPOSAL_APPROVAL_REPLY_INVALID`) as today. It calls `PlanAcceptUseCase` exactly as
-  `accept --mode` does today: same sentinel kinds (`ACCEPTED`, `ACCEPTED_STOPPED`), fields, codes and exit codes.
-- Remove `--mode` and `--effort` from `accept`, with the guards (`--direct` and `--check` refused with `--mode`,
-  `--effort` requires `--mode`). `accept` keeps `--by`, `--note`, `--direct` and `--check`; its help describes only
-  the basic acceptance.
-- The new subcommand has no `--check`, so the custom `_composed_check_refusal` usage error goes; its help names the
-  read-only material instead (`devkit spec proposal report <slug>`, `devkit workflow envelope check --unit <dir>`).
-- Update the command strings the use cases emit (`_accept_command`, the `native_handoff` `[FIX]`), `base/errors.py`
-  docstrings and `target_files`, the spec bundle sources, the Living Spec documents and the tests listed under Q2.
-  `CAP-HARN-command-mount` §4.2 adds the subcommand to the `proposal` catalog row.
-- Contract change, no behavior change in either operation.
+- **Given** `devkit spec proposal accept`
+- **When** it runs with `--mode` or `--effort`
+- **Then** click refuses it with a "No such option" usage error and exit `2`; its `--help` names `--by`, `--note`,
+  `--direct` and `--check` and no `--mode`, `--effort`, `accept_only` or `accept_and_handoff`; the basic acceptance,
+  `--direct` repair, `--check` and `--note` behave as before.
 
-#### Planning decisions
+### [AC-05] Emitted commands name the new subcommand
 
-- No shim for `accept --mode` (Q2 evidence); a caller passing it gets a click usage error (exit `2`).
-- `handoff --effort` (composed handoff in its own form) stays out of scope: it selects a mode by a flag without
-  disjoint option sets, and the review-refactor run recorded no finding for it.
-- No ADR: the split moves a command form without changing an accepted decision. ADRs that name `accept --mode`
-  (`ADR-local-and-pull-request-integration`, `ADR-proposal-handoff`) describe their decision at its time and stay
-  unchanged (`docs/decisions/` excluded); `ADR-delivery-approval-and-lifecycle-authority` names no command form.
+- **Given** a composed acceptance off the retained base checkout, or a composed handoff of a proposal that is not
+  accepted on the base
+- **When** the refusal renders (`SPEC_PROPOSAL_WRONG_WORKTREE`, `SPEC_HANDOFF_NOT_READY`)
+- **Then** its `[FIX]` names `uv run devkit spec proposal accept-plan <slug> --by <by> --mode <mode>` (with
+  ` --effort <effort>` for `accept_and_handoff`), respectively `uv run devkit spec proposal accept-plan <slug> --by
+  user --mode accept_only`, and no emitted command names `accept ... --mode`.
 
-### 4. Lifecycle & Retirement Criteria
+### [AC-06] `accept-plan --help` is complete
 
-<!--
-- Preliminary decisions: devkit spec proposal padr split-composed-proposal-accept "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/ (created with its first file).
-- On acceptance (plan-accept): devkit spec proposal accept split-composed-proposal-accept --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff split-composed-proposal-accept.
-- On rejection: change only status: rejected, with the user's decision and reason as a decision sentence in the
-  commit message (no quote); a later hygiene pass writes the rejection ADR and deletes the proposal directory.
--->
+- **Given** `devkit spec proposal accept-plan --help`
+- **When** an agent reads it
+- **Then** it names `accept_only`, `accept_and_handoff`, the Development activity-effort and the read-only material
+  commands `devkit spec proposal report` and `devkit workflow envelope check`, and `devkit spec proposal --help`
+  lists `accept-plan`.
 
+### [AC-07] Guidance and Living Spec name one form per operation
+
+- **Given** the spec bundle skill sources, `CAP-DLV-proposal-lifecycle`, `CAP-DLV-proposal-planning`,
+  `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`, `CAP-HARN-command-mount` §4.2,
+  `UC-plan-and-hand-off-a-proposal` and `docs/development/reference/integration.md`
+- **When** they name the composed acceptance
+- **Then** they name `devkit spec proposal accept-plan` (in the full form `accept-plan <slug> --by user|policy --mode
+  accept_only|accept_and_handoff` where they spell it out), none names `accept --mode` or `accept <slug> ... --mode`,
+  and the basic form's description no longer mentions `--mode`.
